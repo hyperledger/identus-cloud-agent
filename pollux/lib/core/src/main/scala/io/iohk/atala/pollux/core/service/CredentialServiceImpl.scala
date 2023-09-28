@@ -2,8 +2,11 @@ package io.iohk.atala.pollux.core.service
 
 import io.circe.Json
 import io.circe.syntax.*
+import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
+import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.*
@@ -16,7 +19,7 @@ import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.repository.CredentialRepository
-import io.iohk.atala.pollux.vc.jwt.*
+import io.iohk.atala.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer, *}
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
@@ -31,10 +34,10 @@ import scala.language.implicitConversions
 object CredentialServiceImpl {
   val layer: URLayer[
     CredentialRepository & DidResolver & URIDereferencer & GenericSecretStorage & CredentialDefinitionService &
-      LinkSecretWithId,
+      LinkSecretWithId & DIDService & ManagedDIDService,
     CredentialService
   ] =
-    ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _, _, _))
+    ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _, _, _, _, _))
 
 //  private val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
   private val VC_JSON_SCHEMA_TYPE = "CredentialSchema2022"
@@ -47,6 +50,8 @@ private class CredentialServiceImpl(
     genericSecretStorage: GenericSecretStorage,
     credentialDefinitionService: CredentialDefinitionService,
     linkSecretWithId: LinkSecretWithId,
+    didService: DIDService,
+    managedDIDService: ManagedDIDService,
     maxRetries: Int = 5 // TODO move to config
 ) extends CredentialService {
 
@@ -356,12 +361,11 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def createPresentationPayload(
-      recordId: DidCommID,
-      subject: Issuer
+  private[this] def createPresentationPayload(
+      record: IssueCredentialRecord,
+      subject: JwtIssuer
   ): ZIO[WalletAccessContext, CredentialServiceError, PresentationPayload] = {
     for {
-      record <- getRecordWithState(recordId, ProtocolState.RequestPending)
       maybeOptions <- getOptionsFromOfferCredentialData(record)
     } yield {
       W3cPresentationPayload(
@@ -377,16 +381,71 @@ private class CredentialServiceImpl(
     }
   }
 
+  private[this] def getLongForm(
+      did: PrismDID,
+      allowUnpublishedIssuingDID: Boolean = false
+  ) = {
+    for {
+      didState <- managedDIDService
+        .getManagedDIDState(did.asCanonical)
+        .mapError(e => RuntimeException(s"Error occurred while getting did from wallet: ${e.toString}"))
+        .someOrFail(RuntimeException(s"Issuer DID does not exist in the wallet: $did"))
+        .flatMap {
+          case s @ ManagedDIDState(_, _, PublicationState.Published(_)) => ZIO.succeed(s)
+          case s => ZIO.cond(allowUnpublishedIssuingDID, s, RuntimeException(s"Issuer DID must be published: $did"))
+        }
+      longFormPrismDID = PrismDID.buildLongFormFromOperation(didState.createOperation)
+    } yield longFormPrismDID
+  }
+
+  private[this] def createJwtIssuer(
+      jwtIssuerDID: PrismDID,
+      verificationRelationship: VerificationRelationship
+  ) = {
+    for {
+      // Automatically infer keyId to use by resolving DID and choose the corresponding VerificationRelationship
+      issuingKeyId <- didService
+        .resolveDID(jwtIssuerDID)
+        .mapError(e => UnexpectedError(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
+        .someOrFail(UnexpectedError(s"Issuing DID resolution result is not found"))
+        .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
+        .someOrFail(
+          UnexpectedError(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
+        )
+      ecKeyPair <- managedDIDService
+        .javaKeyPairWithDID(jwtIssuerDID.asCanonical, issuingKeyId)
+        .mapError(e => UnexpectedError(s"Error occurred while getting issuer key-pair: ${e.toString}"))
+        .someOrFail(
+          UnexpectedError(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
+        )
+      (privateKey, publicKey) = ecKeyPair
+      jwtIssuer = JwtIssuer(
+        io.iohk.atala.pollux.vc.jwt.DID(jwtIssuerDID.toString),
+        ES256KSigner(privateKey),
+        publicKey
+      )
+    } yield jwtIssuer
+  }
+
   override def generateJWTCredentialRequest(
-      recordId: DidCommID,
-      signedPresentation: JWT
+      recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestPending)
+      subjectId <- ZIO
+        .fromOption(record.subjectId)
+        .mapError(_ => CredentialServiceError.UnexpectedError(s"Subject Id not found in record: ${recordId.value}"))
+      subjectDID <- ZIO
+        .fromEither(PrismDID.fromString(subjectId))
+        .mapError(_ => CredentialServiceError.UnsupportedDidFormat(subjectId))
+      longFormPrismDID <- getLongForm(subjectDID, true).mapError(err => UnexpectedError(err.getMessage))
+      jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
+      presentationPayload <- createPresentationPayload(record, jwtIssuer)
+      signedPayload = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, jwtIssuer)
       formatAndOffer <- ZIO
         .fromOption(record.offerCredentialFormatAndData)
         .mapError(_ => InvalidFlowStateError(s"No offer found for this record: $recordId"))
-      request = createDidCommRequestCredential(formatAndOffer._1, formatAndOffer._2, signedPresentation)
+      request = createDidCommRequestCredential(formatAndOffer._1, formatAndOffer._2, signedPayload)
       count <- credentialRepository
         .updateWithJWTRequestCredential(recordId, request, ProtocolState.RequestGenerated)
         .mapError(RepositoryError.apply) @@ CustomMetricsAspect.endRecordingTime(
@@ -614,15 +673,14 @@ private class CredentialServiceImpl(
       "issuance_flow_holder_req_generated_to_sent_ms_gauge"
     )
 
-  override def markCredentialGenerated(
-      recordId: DidCommID,
+  private[this] def markCredentialGenerated(
+      record: IssueCredentialRecord,
       issueCredential: IssueCredential
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
-      record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
       count <- credentialRepository
         .updateWithIssueCredential(
-          recordId,
+          record.id,
           issueCredential,
           IssueCredentialRecord.ProtocolState.CredentialGenerated
         )
@@ -632,12 +690,12 @@ private class CredentialServiceImpl(
       ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_issuer_credential_generated_to_sent")
       _ <- count match
         case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
+        case n => ZIO.fail(RecordIdNotFound(record.id))
       record <- credentialRepository
-        .getIssueCredentialRecord(recordId)
+        .getIssueCredentialRecord(record.id)
         .mapError(RepositoryError.apply)
         .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(recordId))
+          case None        => ZIO.fail(RecordIdNotFound(record.id))
           case Some(value) => ZIO.succeed(value)
         }
 
@@ -891,12 +949,21 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  override def createJWTCredentialPayloadFromRecord(
-      record: IssueCredentialRecord,
-      issuer: Issuer,
-      issuanceDate: Instant
-  ): ZIO[WalletAccessContext, CredentialServiceError, W3cCredentialPayload] = {
-    val credential = for {
+  override def generateJWTCredential(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+    for {
+      record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
+      issuingDID <- ZIO
+        .fromOption(record.issuingDID)
+        .mapError(_ => CredentialServiceError.UnexpectedError(s"Issuing Id not found in record: ${recordId.value}"))
+      issue <- ZIO
+        .fromOption(record.issueCredentialData)
+        .mapError(_ =>
+          CredentialServiceError.UnexpectedError(s"Issue credential data not found in record: ${recordId.value}")
+        )
+      longFormPrismDID <- getLongForm(issuingDID, true).mapError(err => UnexpectedError(err.getMessage))
+      jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.AssertionMethod)
       offerCredentialData <- ZIO
         .fromOption(record.offerCredentialData)
         .mapError(_ =>
@@ -921,15 +988,16 @@ private class CredentialServiceImpl(
             .mapError(t => RepositoryError(t)),
         payload => ZIO.logInfo("JWT Presentation Validation Successful!")
       )
+      issuanceDate = Instant.now()
       // TODO: get schema when schema registry is available if schema ID is provided
-      credential = W3cCredentialPayload(
+      w3Credential = W3cCredentialPayload(
         `@context` = Set(
           "https://www.w3.org/2018/credentials/v1"
         ), // TODO: his information should come from Schema registry by record.schemaId
         maybeId = None,
         `type` =
           Set("VerifiableCredential"), // TODO: This information should come from Schema registry by record.schemaId
-        issuer = issuer.did,
+        issuer = jwtIssuer.did,
         issuanceDate = issuanceDate,
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
         maybeCredentialSchema =
@@ -940,10 +1008,15 @@ private class CredentialServiceImpl(
         maybeEvidence = None,
         maybeTermsOfUse = None
       )
-    } yield credential
-
-    credential
-
+      signedJwtCredential = W3CCredential.toEncodedJwt(w3Credential, jwtIssuer)
+      issueCredential = IssueCredential.build(
+        fromDID = issue.from,
+        toDID = issue.to,
+        thid = issue.thid,
+        credentials = Seq(IssueCredentialIssuedFormat.JWT -> signedJwtCredential.value.getBytes)
+      )
+      record <- markCredentialGenerated(record, issueCredential)
+    } yield record
   }
 
   override def generateAnonCredsCredential(
@@ -964,29 +1037,14 @@ private class CredentialServiceImpl(
           )
         )
       }
-      issue = IssueCredential(
+      issueCredential = IssueCredential(
         body = body,
         attachments = attachments,
         from = requestCredential.to,
         to = requestCredential.from,
         thid = requestCredential.thid
       )
-      count <- credentialRepository
-        .updateWithIssueCredential(recordId, issue, ProtocolState.CredentialGenerated)
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.endRecordingTime(
-        s"${record.id}_issuance_flow_issuer_credential_pending_to_generated",
-        "issuance_flow_issuer_credential_pending_to_generated_ms_gauge"
-      ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_issuer_credential_generated_to_sent")
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
-      record <- credentialRepository
-        .getIssueCredentialRecord(record.id)
-        .mapError(RepositoryError.apply)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(recordId))
-          case Some(value) => ZIO.succeed(value)
-        }
+      record <- markCredentialGenerated(record, issueCredential)
     } yield record
   }
 

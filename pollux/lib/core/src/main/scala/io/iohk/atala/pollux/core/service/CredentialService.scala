@@ -8,12 +8,10 @@ import io.iohk.atala.mercury.protocol.issuecredential.{Attribute, IssueCredentia
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
-import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, ZIO}
 
 import java.nio.charset.StandardCharsets
-import java.time.Instant
 import java.util.UUID
 
 trait CredentialService {
@@ -69,14 +67,8 @@ trait CredentialService {
       subjectId: Option[String]
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def createPresentationPayload(
-      recordId: DidCommID,
-      subject: Issuer
-  ): ZIO[WalletAccessContext, CredentialServiceError, PresentationPayload]
-
   def generateJWTCredentialRequest(
-      recordId: DidCommID,
-      signedPresentation: JWT
+      recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def generateAnonCredsCredentialRequest(
@@ -91,11 +83,9 @@ trait CredentialService {
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def createJWTCredentialPayloadFromRecord(
-      record: IssueCredentialRecord,
-      issuer: Issuer,
-      issuanceDate: Instant
-  ): ZIO[WalletAccessContext, CredentialServiceError, W3cCredentialPayload]
+  def generateJWTCredential(
+      recordId: DidCommID,
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def generateAnonCredsCredential(
       recordId: DidCommID
@@ -108,11 +98,6 @@ trait CredentialService {
   def markOfferSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def markRequestSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
-
-  def markCredentialGenerated(
-      recordId: DidCommID,
-      issueCredential: IssueCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def markCredentialSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 

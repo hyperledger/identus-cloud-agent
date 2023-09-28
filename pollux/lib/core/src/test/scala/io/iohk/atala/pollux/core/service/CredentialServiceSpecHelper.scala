@@ -3,6 +3,7 @@ package io.iohk.atala.pollux.core.service
 import io.circe.Json
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
@@ -33,10 +34,13 @@ trait CredentialServiceSpecHelper {
       CredentialDefinitionServiceImpl.layer ++ defaultWalletLayer
 
   protected val credentialServiceLayer =
-    irisStubLayer ++ CredentialRepositoryInMemory.layer ++ didResolverLayer ++ ResourceURIDereferencerImpl.layer ++
-      GenericSecretStorageInMemory.layer >+> credentialDefinitionServiceLayer >+> ZLayer.succeed(
-        LinkSecretWithId("Unused Link Secret Id")
-      ) >>> CredentialServiceImpl.layer
+    CredentialRepositoryInMemory.layer ++
+      ZLayer.fromFunction(PrismDidResolver(_)) ++
+      ResourceURIDereferencerImpl.layer ++
+      GenericSecretStorageInMemory.layer >+>
+      credentialDefinitionServiceLayer ++
+      ZLayer.succeed(LinkSecretWithId("Unused Link Secret Id")) >>>
+      CredentialServiceImpl.layer
 
   protected def offerCredential(
       thid: Option[UUID] = Some(UUID.randomUUID())

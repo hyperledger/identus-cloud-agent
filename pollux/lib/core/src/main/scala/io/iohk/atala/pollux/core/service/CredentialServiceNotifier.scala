@@ -7,11 +7,9 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord}
-import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}
 
-import java.time.Instant
 import java.util.UUID
 
 class CredentialServiceNotifier(
@@ -84,10 +82,9 @@ class CredentialServiceNotifier(
     notifyOnSuccess(svc.acceptCredentialOffer(recordId, subjectId))
 
   override def generateJWTCredentialRequest(
-      recordId: DidCommID,
-      signedPresentation: JWT
+      recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-    notifyOnSuccess(svc.generateJWTCredentialRequest(recordId, signedPresentation))
+    notifyOnSuccess(svc.generateJWTCredentialRequest(recordId))
 
   override def generateAnonCredsCredentialRequest(
       recordId: DidCommID
@@ -109,12 +106,6 @@ class CredentialServiceNotifier(
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(svc.acceptCredentialRequest(recordId))
 
-  override def markCredentialGenerated(
-      recordId: DidCommID,
-      issueCredential: IssueCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-    notifyOnSuccess(svc.markCredentialGenerated(recordId, issueCredential))
-
   override def markCredentialSent(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
@@ -124,6 +115,16 @@ class CredentialServiceNotifier(
       issueCredential: IssueCredential
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(svc.receiveCredentialIssue(issueCredential))
+
+  override def generateJWTCredential(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+    notifyOnSuccess(svc.generateJWTCredential(recordId))
+
+  override def generateAnonCredsCredential(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+    notifyOnSuccess(svc.generateAnonCredsCredential(recordId))
 
   private[this] def notifyOnSuccess[R](effect: ZIO[R, CredentialServiceError, IssueCredentialRecord]) =
     for {
@@ -139,24 +140,6 @@ class CredentialServiceNotifier(
     } yield ()
     result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
   }
-
-  override def createPresentationPayload(
-      recordId: DidCommID,
-      subject: Issuer
-  ): ZIO[WalletAccessContext, CredentialServiceError, PresentationPayload] =
-    svc.createPresentationPayload(recordId, subject)
-
-  override def createJWTCredentialPayloadFromRecord(
-      record: IssueCredentialRecord,
-      issuer: Issuer,
-      issuanceDate: Instant
-  ): ZIO[WalletAccessContext, CredentialServiceError, W3cCredentialPayload] =
-    svc.createJWTCredentialPayloadFromRecord(record, issuer, issuanceDate)
-
-  override def generateAnonCredsCredential(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-    svc.generateAnonCredsCredential(recordId)
 
   override def reportProcessingFailure(
       recordId: DidCommID,

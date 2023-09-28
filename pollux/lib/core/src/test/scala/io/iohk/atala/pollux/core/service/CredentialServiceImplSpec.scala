@@ -2,25 +2,49 @@ package io.iohk.atala.pollux.core.service
 
 import io.circe.Json
 import io.circe.syntax.*
+import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
+import io.iohk.atala.castor.core.model.did.*
+import io.iohk.atala.castor.core.model.did.VerificationRelationship.AssertionMethod
+import io.iohk.atala.castor.core.service.MockDIDService
 import io.iohk.atala.mercury.model.{DidId, Message}
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.*
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
-import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
+import zio.mock.MockSpecDefault
 import zio.test.*
 import zio.test.Assertion.*
 
 import java.nio.charset.StandardCharsets
 import java.util.{Base64, UUID}
 
-object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSpecHelper {
+object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceSpecHelper {
 
-  override def spec =
-    suite("CredentialServiceImpl")(singleWalletSpec, multiWalletSpec).provide(credentialServiceLayer)
+  override def spec = suite("CredentialServiceImpl")(singleWalletSpec, multiWalletSpec)
+
+  private val (issuerOp, issuerKp, issuerDidMetadata, issuerDidData) =
+    MockDIDService.createDID(VerificationRelationship.AssertionMethod)
+
+  private val (holderOp, holderKp, holderDidMetadata, holderDidData) =
+    MockDIDService.createDID(VerificationRelationship.Authentication)
+
+  private val holderDidServiceExpectations =
+    MockDIDService.resolveDIDExpectation(holderDidMetadata, holderDidData)
+
+  private val issuerDidServiceExpectations =
+    MockDIDService.resolveDIDExpectation(issuerDidMetadata, issuerDidData)
+      ++ MockDIDService.resolveDIDExpectation(holderDidMetadata, holderDidData)
+
+  private val holderManagedDIDServiceExpectations =
+    MockManagedDIDService.getManagedDIDStateExpectation(holderOp)
+      ++ MockManagedDIDService.javaKeyPairWithDIDExpectation(holderKp)
+
+  private val issuerManagedDIDServiceExpectations =
+    MockManagedDIDService.getManagedDIDStateExpectation(issuerOp)
+      ++ MockManagedDIDService.javaKeyPairWithDIDExpectation(issuerKp)
 
   private val singleWalletSpec =
     suite("singleWalletSpec")(
@@ -246,7 +270,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
       },
       test("receiveCredentialOffer successfully creates a record") {
         for {
-          holderSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          holderSvc <- ZIO.service[CredentialService]
           subjectId = "did:prism:subject"
           offer = offerCredential()
           holderRecord <- holderSvc.receiveCredentialOffer(offer)
@@ -266,7 +290,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
       },
       test("receiveCredentialOffer can't be called twice with the same offer") {
         for {
-          holderSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          holderSvc <- ZIO.service[CredentialService]
           offer = offerCredential()
           _ <- holderSvc.receiveCredentialOffer(offer)
           exit <- holderSvc.receiveCredentialOffer(offer).exit
@@ -279,7 +303,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
       },
       test("acceptCredentialOffer updates the record's protocol state") {
         for {
-          holderSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          holderSvc <- ZIO.service[CredentialService]
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
@@ -306,7 +330,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
       },
       test("acceptCredentialOffer cannot be called twice for the same record") {
         for {
-          holderSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          holderSvc <- ZIO.service[CredentialService]
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
@@ -321,7 +345,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
       },
       test("acceptCredentialOffer should reject unsupported `subjectId` format") {
         for {
-          holderSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          holderSvc <- ZIO.service[CredentialService]
           offer = offerCredential()
           subjectId = "did:unknown:subject"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
@@ -335,7 +359,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
       },
       test("receiveCredentialRequest successfully updates the record") {
         for {
-          issuerSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          issuerSvc <- ZIO.service[CredentialService]
           issuerRecord <- issuerSvc.createRecord()
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
           request = requestCredential(Some(issuerRecord.thid))
@@ -347,7 +371,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
       },
       test("receiveCredentialRequest cannot be called twice for the same record") {
         for {
-          issuerSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          issuerSvc <- ZIO.service[CredentialService]
           issuerRecord <- issuerSvc.createRecord()
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
           request = requestCredential(Some(issuerRecord.thid))
@@ -362,7 +386,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
       },
       test("receiveCredentialRequest is rejected for an unknown 'thid'") {
         for {
-          issuerSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          issuerSvc <- ZIO.service[CredentialService]
           issuerRecord <- issuerSvc.createRecord()
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
           request = requestCredential(Some(DidCommID()))
@@ -376,7 +400,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
       },
       test("acceptCredentialRequest successfully updates the record") {
         for {
-          issuerSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          issuerSvc <- ZIO.service[CredentialService]
           issuerRecord <- issuerSvc.createRecord()
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
           request = requestCredential(Some(issuerRecord.thid))
@@ -389,7 +413,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
       },
       test("acceptCredentialRequest cannot be called twice for the same record") {
         for {
-          issuerSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          issuerSvc <- ZIO.service[CredentialService]
           issuerRecord <- issuerSvc.createRecord()
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
           request = requestCredential(Some(issuerRecord.thid))
@@ -403,29 +427,14 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           )
         }
       },
-      test("markCredentialGenerated updates the protocol state and saves the credential") {
-        for {
-          issuerSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
-          issuerRecord <- issuerSvc.createRecord()
-          _ <- issuerSvc.markOfferSent(issuerRecord.id)
-          request = requestCredential(Some(issuerRecord.thid))
-          requestReceivedRecord <- issuerSvc.receiveCredentialRequest(request)
-          requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(requestReceivedRecord.id)
-          issue = issueCredential()
-          credentialGeneratedRecord <- issuerSvc.markCredentialGenerated(issuerRecord.id, issue)
-        } yield {
-          assertTrue(credentialGeneratedRecord.protocolState == ProtocolState.CredentialGenerated) &&
-          assertTrue(credentialGeneratedRecord.issueCredentialData.contains(issue))
-        }
-      },
       test("receiveCredentialIssue successfully updates the record") {
         for {
-          holderSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          holderSvc <- ZIO.service[CredentialService]
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
           _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId))
-          _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
+          _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           _ <- holderSvc.markRequestSent(offerReceivedRecord.id)
           issue = issueCredential(thid = Some(offerReceivedRecord.thid))
           credentialReceivedRecord <- holderSvc.receiveCredentialIssue(issue)
@@ -433,18 +442,20 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           assertTrue(credentialReceivedRecord.protocolState == ProtocolState.CredentialReceived) &&
           assertTrue(credentialReceivedRecord.issueCredentialData.contains(issue))
         }
-      },
+      }.provideSomeLayer(
+        holderDidServiceExpectations.toLayer ++ holderManagedDIDServiceExpectations.toLayer >>> credentialServiceLayer
+      ),
       test("receiveCredentialIssue cannot be called twice for the same record") {
         for {
-          holderSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          holderSvc <- ZIO.service[CredentialService]
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
           _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId))
-          _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
+          _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           _ <- holderSvc.markRequestSent(offerReceivedRecord.id)
           issue = issueCredential(thid = Some(offerReceivedRecord.thid))
-          credentialReceivedRecord <- holderSvc.receiveCredentialIssue(issue)
+          _ <- holderSvc.receiveCredentialIssue(issue)
           exit <- holderSvc.receiveCredentialIssue(issue).exit
         } yield {
           assertTrue(exit match
@@ -452,15 +463,17 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
             case _                                                     => false
           )
         }
-      },
+      }.provideSomeLayer(
+        holderDidServiceExpectations.toLayer ++ holderManagedDIDServiceExpectations.toLayer >>> credentialServiceLayer
+      ),
       test("receiveCredentialIssue is rejected for an unknown 'thid'") {
         for {
-          holderSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          holderSvc <- ZIO.service[CredentialService]
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
           _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId))
-          _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
+          _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           _ <- holderSvc.markRequestSent(offerReceivedRecord.id)
           issue = issueCredential(thid = Some(DidCommID()))
           exit <- holderSvc.receiveCredentialIssue(issue).exit
@@ -470,11 +483,13 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
             case _                                                => false
           )
         }
-      },
+      }.provideSomeLayer(
+        holderDidServiceExpectations.toLayer ++ holderManagedDIDServiceExpectations.toLayer >>> credentialServiceLayer
+      ),
       test("Happy flow is successfully executed") {
         for {
-          issuerSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
-          holderSvc <- ZIO.service[CredentialService].provideLayer(credentialServiceLayer)
+          issuerSvc <- ZIO.service[CredentialService].provideSomeLayer(credentialServiceLayer)
+          holderSvc <- ZIO.service[CredentialService].provideSomeLayer(credentialServiceLayer)
           // Issuer creates offer
           offerCreatedRecord <- issuerSvc.createRecord()
           issuerRecordId = offerCreatedRecord.id
@@ -488,7 +503,7 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           // Holder accepts offer
           _ <- holderSvc.acceptCredentialOffer(holderRecordId, Some(subjectId))
           // Holder generates proof
-          requestGeneratedRecord <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
+          requestGeneratedRecord <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           // Holder sends offer
           _ <- holderSvc.markRequestSent(holderRecordId)
           msg <- ZIO.fromEither(requestGeneratedRecord.requestCredentialData.get.makeMessage.asJson.as[Message])
@@ -497,16 +512,22 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           // Issuer accepts request
           requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(issuerRecordId)
           // Issuer generates credential
-          issue = issueCredential(Some(requestAcceptedRecord.thid))
-          credentialGenerateRecord <- issuerSvc.markCredentialGenerated(issuerRecordId, issue)
+          credentialGenerateRecord <- issuerSvc.generateJWTCredential(issuerRecordId)
           // Issuer sends credential
           _ <- issuerSvc.markCredentialSent(issuerRecordId)
           msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.asJson.as[Message])
           // Holder receives credential
           _ <- holderSvc.receiveCredentialIssue(IssueCredential.readFromMessage(msg))
         } yield assertTrue(true)
-      }
-    ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
+      }.provideSomeLayer(
+        (holderDidServiceExpectations ++ issuerDidServiceExpectations).toLayer
+          ++ (holderManagedDIDServiceExpectations ++ issuerManagedDIDServiceExpectations).toLayer
+      )
+    ).provideSomeLayer(
+      (MockDIDService.empty ++ MockManagedDIDService.empty >>> credentialServiceLayer) ++ ZLayer.succeed(
+        WalletAccessContext(WalletId.random)
+      )
+    )
 
   private val multiWalletSpec =
     suite("multi-wallet spec")(
@@ -528,6 +549,6 @@ object CredentialServiceImplSpec extends ZIOSpecDefault with CredentialServiceSp
           assert(crossRecord1)(isNone) &&
           assert(crossRecord2)(isNone)
       }
-    )
+    ).provideSomeLayer(MockDIDService.empty ++ MockManagedDIDService.empty >>> credentialServiceLayer)
 
 }

@@ -8,13 +8,10 @@ import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.service.CredentialService
-import io.iohk.atala.pollux.vc.jwt.{JWT, JwtPresentation, W3CCredential}
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.metrics.*
-
-import java.time.Instant
 
 object IssueBackgroundJobs extends BackgroundJobsHelper {
 
@@ -219,14 +216,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
             ) =>
           val holderPendingToGeneratedFlow = for {
             credentialService <- ZIO.service[CredentialService]
-            subjectDID <- ZIO
-              .fromEither(PrismDID.fromString(subjectId))
-              .mapError(_ => CredentialServiceError.UnsupportedDidFormat(subjectId))
-            longFormPrismDID <- getLongForm(subjectDID, true)
-            jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
-            presentationPayload <- credentialService.createPresentationPayload(id, jwtIssuer)
-            signedPayload = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, jwtIssuer)
-            _ <- credentialService.generateJWTCredentialRequest(id, signedPayload)
+            _ <- credentialService.generateJWTCredentialRequest(id)
           } yield ()
 
           holderPendingToGeneratedFlow @@ HolderPendingToGeneratedSuccess.trackSuccess
@@ -386,22 +376,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
           // TODO Move all logic to service
           val issuerPendingToGeneratedFlow = for {
             credentialService <- ZIO.service[CredentialService]
-            longFormPrismDID <- getLongForm(issuerDID, true)
-            jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.AssertionMethod)
-            w3Credential <- credentialService.createJWTCredentialPayloadFromRecord(
-              record,
-              jwtIssuer,
-              Instant.now()
-            )
-            signedJwtCredential = W3CCredential.toEncodedJwt(w3Credential, jwtIssuer)
-            issueCredential = IssueCredential.build(
-              fromDID = issue.from,
-              toDID = issue.to,
-              thid = issue.thid,
-              credentials = Seq(IssueCredentialIssuedFormat.JWT -> signedJwtCredential.value.getBytes)
-            )
-            _ <- credentialService.markCredentialGenerated(id, issueCredential)
-
+            _ <- credentialService.generateJWTCredential(id)
           } yield ()
 
           issuerPendingToGeneratedFlow @@ IssuerPendingToGeneratedSuccess.trackSuccess
@@ -436,17 +411,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
             ) =>
           val issuerPendingToGeneratedFlow = for {
             credentialService <- ZIO.service[CredentialService]
-
-            issueCredential = IssueCredential.build(
-              fromDID = issue.from,
-              toDID = issue.to,
-              thid = issue.thid,
-              credentials = Seq.empty
-            )
             _ <- credentialService.generateAnonCredsCredential(id)
-            // TODO Move all logic to service
-            _ <- credentialService.markCredentialGenerated(id, issueCredential)
-
           } yield ()
 
           issuerPendingToGeneratedFlow @@ IssuerPendingToGeneratedSuccess.trackSuccess

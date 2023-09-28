@@ -4,7 +4,9 @@ import com.typesafe.config.ConfigFactory
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.memory.{DIDSecretStorageInMemory, GenericSecretStorageInMemory}
+import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
+import io.iohk.atala.castor.core.service.MockDIDService
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
 import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
@@ -82,7 +84,9 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
     didResolverLayer >+>
     ResourceURIDereferencerImpl.layer >+>
     CredentialRepositoryInMemory.layer >+>
-    ZLayer.succeed(LinkSecretWithId("")) >+>
+    ZLayer.succeed(LinkSecretWithId("Unused Linked Secret ID")) >+>
+    MockDIDService.empty >+>
+    MockManagedDIDService.empty >+>
     CredentialServiceImpl.layer >+>
     ConnectionRepositoryInMemory.layer >+>
     ConnectionServiceImpl.layer >+>
