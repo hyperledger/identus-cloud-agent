@@ -183,6 +183,8 @@ spec:
                 key: seed
                 optional: false
           {{- end }}
+          - name: API_KEY_AUTHENTICATE_AS_DEFAULT_USER
+            value: "true"
           {{- if .Values.server.useVault }}
           - name: VAULT_ADDR
             value: "http://{{ .Release.Namespace }}-vault.{{ .Release.Namespace }}:8200"
