@@ -1,3 +1,10 @@
+## [1.16.3](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.2...prism-agent-v1.16.3) (2023-09-28)
+
+
+### Bug Fixes
+
+* Adding labels [skip ci] ([#737](https://github.com/hyperledger-labs/open-enterprise-agent/issues/737)) ([5182098](https://github.com/hyperledger-labs/open-enterprise-agent/commit/5182098f7bc6db479ee64d7133389732a38d174a))
+
 ## [1.16.2](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.1...prism-agent-v1.16.2) (2023-09-28)
 
 
