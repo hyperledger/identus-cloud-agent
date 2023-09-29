@@ -1,4 +1,4 @@
-/*global _*/
+/*global __ENV*/
 
 import { Connection, ConnectionInvitation, ConnectionStateEnum } from "@input-output-hk/prism-typescript-client";
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";

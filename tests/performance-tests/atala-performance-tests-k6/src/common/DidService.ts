@@ -1,4 +1,4 @@
-/*global _*/
+/*global __ENV*/
 
 import { HttpService } from "./HttpService";
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";

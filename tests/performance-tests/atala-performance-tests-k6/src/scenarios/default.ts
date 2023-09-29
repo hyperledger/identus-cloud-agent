@@ -1,11 +1,13 @@
-import { Scenario, Threshold } from "k6/options";
+/*global __ENV*/
 
+import { Scenario, Threshold } from "k6/options";
 export const defaultScenarios: { [name: string]: Scenario } = {
   smoke: {
     // a simple test to ensure performance tests work and requests don't fail
-    executor: "constant-vus",
-    vus: 3,
-    duration: "10s",
+    executor: "shared-iterations",
+    vus: 1,
+    iterations: 1,
+    // duration: "2m",
     tags: { scenario_label: __ENV.SCENARIO_LABEL || "defaultScenarioLabel" }, // add label for filtering in observability platform
   },
 };
