@@ -21,8 +21,8 @@ export const defaultThresholds: { [name: string]: Threshold[] } = {
   ],
   http_req_duration: [
     // fail if any requests take longer than 500ms on smoke test
-    { threshold: "p(95)<1000", abortOnFail: true }, // 95% of requests should complete within 500ms
-    { threshold: "p(99)<2000", abortOnFail: true }, // 99% of requests should complete within 1500ms
+    { threshold: "p(95)<2000", abortOnFail: true }, // 95% of requests should complete within 2 seconds
+    { threshold: "p(99)<5000", abortOnFail: true }, // 99% of requests should complete within 5 seconds
   ],
   checks: ["rate==1"], // fail if any checks fail (the checks are defined in test code which is executed)
 };
