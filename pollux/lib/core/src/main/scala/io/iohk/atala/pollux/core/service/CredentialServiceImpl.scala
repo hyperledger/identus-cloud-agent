@@ -10,7 +10,7 @@ import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.*
-import io.iohk.atala.pollux.anoncreds.{AnoncredLib, CreateCredentialDefinition, CredentialOffer, LinkSecretWithId}
+import io.iohk.atala.pollux.anoncreds.{AnoncredLib, CreateCredentialDefinition, CredentialOffer}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.CredentialFormat.AnonCreds
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
@@ -35,7 +35,7 @@ import scala.language.implicitConversions
 object CredentialServiceImpl {
   val layer: URLayer[
     CredentialRepository & DidResolver & URIDereferencer & GenericSecretStorage & CredentialDefinitionService &
-      LinkSecretWithId & DIDService & ManagedDIDService,
+      LinkSecretService & DIDService & ManagedDIDService,
     CredentialService
   ] =
     ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _, _, _, _, _))
@@ -50,7 +50,7 @@ private class CredentialServiceImpl(
     uriDereferencer: URIDereferencer,
     genericSecretStorage: GenericSecretStorage,
     credentialDefinitionService: CredentialDefinitionService,
-    linkSecretWithId: LinkSecretWithId,
+    linkSecretService: LinkSecretService,
     didService: DIDService,
     managedDIDService: ManagedDIDService,
     maxRetries: Int = 5 // TODO move to config
@@ -533,7 +533,9 @@ private class CredentialServiceImpl(
         .mapError(err => UnexpectedError(err.toString))
       _ <- ZIO.logInfo(s"Cred Def Content => $credDefContent")
       credentialDefinition = anoncreds.CredentialDefinition(credDefContent)
-      linkSecret = linkSecretWithId
+      linkSecret <- linkSecretService
+        .fetchOrCreate()
+        .mapError(e => CredentialServiceError.LinkSecretError.apply(e.cause))
       createCredentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition, credentialOffer)
     } yield createCredentialRequest
   }
@@ -642,7 +644,9 @@ private class CredentialServiceImpl(
       metadata <- ZIO
         .fromOption(record.anonCredsRequestMetadata)
         .mapError(_ => CredentialServiceError.UnexpectedError(s"No request metadata Id found un record: ${record.id}"))
-      linkSecret = linkSecretWithId
+      linkSecret <- linkSecretService
+        .fetchOrCreate()
+        .mapError(e => CredentialServiceError.LinkSecretError.apply(e.cause))
       _ <- ZIO
         .attempt(
           AnoncredLib.processCredential(

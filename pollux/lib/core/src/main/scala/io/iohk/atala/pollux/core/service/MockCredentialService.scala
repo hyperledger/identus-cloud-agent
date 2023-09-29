@@ -98,14 +98,14 @@ object MockCredentialService extends Mock[CredentialService] {
         )
 
       override def createAnonCredsIssueCredentialRecord(
-                                                         pairwiseIssuerDID: DidId,
-                                                         pairwiseHolderDID: DidId,
-                                                         thid: DidCommID,
-                                                         credentialDefinitionGUID: UUID,
-                                                         claims: Json,
-                                                         validityPeriod: Option[Double],
-                                                         automaticIssuance: Option[Boolean],
-                                                         credentialDefinitionId: String
+          pairwiseIssuerDID: DidId,
+          pairwiseHolderDID: DidId,
+          thid: DidCommID,
+          credentialDefinitionGUID: UUID,
+          claims: Json,
+          validityPeriod: Option[Double],
+          automaticIssuance: Option[Boolean],
+          credentialDefinitionId: String
       ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
         proxy(
           CreateAnonCredsIssueCredentialRecord,

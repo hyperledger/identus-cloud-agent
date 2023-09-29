@@ -11,6 +11,7 @@ import io.iohk.atala.agent.walletapi.service.{
   WalletManagementServiceImpl
 }
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository, JdbcWalletNonSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
@@ -26,7 +27,6 @@ import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControl
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
-import io.iohk.atala.pollux.anoncreds.LinkSecretWithId
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
 import io.iohk.atala.pollux.credentialschema.controller.{
@@ -120,8 +120,6 @@ object MainApp extends ZIOAppDefault {
       _ <- preMigrations
       _ <- migrations
 
-      linkSecretLayer = ZLayer.succeed(LinkSecretWithId("Unused Link Secret ID"))
-
       app <- PrismAgentApp
         .run(didCommServicePort)
         .provide(
@@ -159,7 +157,7 @@ object MainApp extends ZIOAppDefault {
           ConnectionServiceImpl.layer >>> ConnectionServiceNotifier.layer,
           CredentialSchemaServiceImpl.layer,
           CredentialDefinitionServiceImpl.layer,
-          linkSecretLayer >>> CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
+          LinkSecretServiceImpl.layer >>> CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
           EntityServiceImpl.layer,
           ManagedDIDServiceWithEventNotificationImpl.layer,
