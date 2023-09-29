@@ -1,8 +1,10 @@
+/*global _*/
+
 import { HttpService } from "./HttpService";
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
 import { CreateManagedDIDResponse, DIDDocument, DidOperationSubmission, ManagedDID } from "@input-output-hk/prism-typescript-client";
-import {check, sleep} from "k6";
-import http from "k6/http";
+import {sleep} from "k6";
+
 
 /**
  * A service class for managing decentralized identifiers (DIDs) in the application.

@@ -3,7 +3,7 @@ import { Options } from 'k6/options';
 import { Issuer, Holder } from '../../actors';
 import { Connection, CredentialSchemaResponse } from '@input-output-hk/prism-typescript-client';
 import { defaultScenarios, defaultThresholds } from '../../scenarios/default';
-import { Schema } from 'copy-webpack-plugin';
+
 export let options: Options = {
   scenarios: {
     ...defaultScenarios

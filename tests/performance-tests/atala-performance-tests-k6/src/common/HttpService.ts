@@ -1,6 +1,6 @@
 
 import http from 'k6/http';
-import {bytes, check} from 'k6';
+import { check } from 'k6';
 import { RefinedResponse, ResponseType, RequestBody } from 'k6/http';
 
 /**

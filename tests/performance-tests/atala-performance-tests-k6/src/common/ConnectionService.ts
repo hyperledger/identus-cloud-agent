@@ -1,3 +1,5 @@
+/*global _*/
+
 import { Connection, ConnectionInvitation, ConnectionStateEnum } from "@input-output-hk/prism-typescript-client";
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
 import { HttpService } from "./HttpService";
@@ -66,7 +68,7 @@ export class ConnectionService extends HttpService {
       sleep(WAITING_LOOP_PAUSE_INTERVAL);
       iterations++;
     } while (state !== requiredState && iterations < WAITING_LOOP_MAX_ITERATIONS);
-    if (state != requiredState) {
+    if (state !== requiredState) {
       throw new Error(`Connection state is ${state}, required ${requiredState}`);
     }
   }
