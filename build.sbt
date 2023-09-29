@@ -65,7 +65,7 @@ lazy val V = new {
   val testContainersScala = "0.40.17"
 
   val doobie = "1.0.0-RC2"
-  val quill = "4.6.0.1"
+  val quill = "4.7.0"
   val flyway = "9.8.3"
   val postgresDriver = "42.2.27"
   val logback = "1.4.8"
@@ -81,9 +81,7 @@ lazy val V = new {
 
   val jsonSchemaValidator = "1.0.86"
 
-  // https://github.com/jopenlibs/vault-java-driver/issues/36
-  // v5.4.0 is not available on Maven yet.
-  val vaultDriver = "5.4.0"
+  val vaultDriver = "6.1.0"
   val micrometer = "1.11.2"
 }
 
