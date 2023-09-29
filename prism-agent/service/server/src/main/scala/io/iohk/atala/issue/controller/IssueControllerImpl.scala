@@ -13,12 +13,7 @@ import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.issue.controller.IssueController.toHttpError
-import io.iohk.atala.issue.controller.http.{
-  AcceptCredentialOfferRequest,
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecord,
-  IssueCredentialRecordPage
-}
+import io.iohk.atala.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
 import io.iohk.atala.pollux.core.model.DidCommID
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.service.CredentialService
@@ -71,10 +66,14 @@ class IssueControllerImpl(
       pageResult <- thid match
         case None =>
           credentialService
-            .getIssueCredentialRecords(offset = Some(pagination.offset), limit = Some(pagination.limit))
+            .getIssueCredentialRecords(
+              ignoreWithZeroRetries = false,
+              offset = Some(pagination.offset),
+              limit = Some(pagination.limit)
+            )
         case Some(thid) =>
           credentialService
-            .getIssueCredentialRecordByThreadId(DidCommID(thid))
+            .getIssueCredentialRecordByThreadId(DidCommID(thid), ignoreWithZeroRetries = false)
             .map(_.toSeq)
             .map(records => records -> records.length)
       (records, totalCount) = pageResult
