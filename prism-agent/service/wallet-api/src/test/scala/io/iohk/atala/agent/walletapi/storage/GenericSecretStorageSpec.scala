@@ -3,23 +3,19 @@ package io.iohk.atala.agent.walletapi.storage
 import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.model.Wallet
-import io.iohk.atala.agent.walletapi.service.WalletManagementService
-import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
-import io.iohk.atala.agent.walletapi.sql.JdbcGenericSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
-import io.iohk.atala.agent.walletapi.vault.VaultGenericSecretStorage
-import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
+import io.iohk.atala.agent.walletapi.service.{WalletManagementService, WalletManagementServiceImpl}
+import io.iohk.atala.agent.walletapi.sql.{JdbcGenericSecretStorage, JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
+import io.iohk.atala.agent.walletapi.vault.{VaultGenericSecretStorage, VaultWalletSecretStorage}
+import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
-import io.iohk.atala.test.container.DBTestUtils
-import io.iohk.atala.test.container.VaultTestContainerSupport
+import io.iohk.atala.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
+import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*
 
 import java.util.UUID
-import zio.json.ast.Json
-import io.iohk.atala.shared.models.WalletAccessContext
+import scala.util.Try
 
 object GenericSecretStorageSpec
     extends ZIOSpecDefault,
@@ -27,6 +23,16 @@ object GenericSecretStorageSpec
       PostgresTestContainerSupport,
       VaultTestContainerSupport,
       ApolloSpecHelper {
+
+  final case class TestSecret(json: Json) // to be moved to pollux?
+
+  given GenericSecret[UUID, TestSecret] = new {
+    override def keyPath(id: UUID): String = s"test-secret/${id.toString}"
+
+    override def encodeValue(secret: TestSecret): Json = secret.json
+
+    override def decodeValue(json: Json): Try[TestSecret] = Try(TestSecret(json))
+  }
 
   private def walletManagementServiceLayer =
     ZLayer.makeSome[WalletSecretStorage, WalletManagementService](
@@ -75,17 +81,17 @@ object GenericSecretStorageSpec
       for {
         storage <- ZIO.service[GenericSecretStorage]
         id = UUID.randomUUID()
-        secret = CredentialDefinitionSecret(json = Json.Obj("foo" -> Json.Str("bar")))
+        secret = TestSecret(json = Json.Obj("foo" -> Json.Str("bar")))
         _ <- storage.set(id, secret)
-        result: Option[CredentialDefinitionSecret] <- storage.get(id)
+        result: Option[TestSecret] <- storage.get(id)
       } yield assert(result)(isSome(equalTo(secret)))
     },
     test("insert item with same path return error") {
       for {
         storage <- ZIO.service[GenericSecretStorage]
         id = UUID.randomUUID()
-        secret1 = CredentialDefinitionSecret(json = Json.Obj("foo1" -> Json.Str("bar1")))
-        secret2 = CredentialDefinitionSecret(json = Json.Obj("foo2" -> Json.Str("bar2")))
+        secret1 = TestSecret(json = Json.Obj("foo1" -> Json.Str("bar1")))
+        secret2 = TestSecret(json = Json.Obj("foo2" -> Json.Str("bar2")))
         _ <- storage.set(id, secret1)
         exit <- storage.set(id, secret2).exit
       } yield assert(exit)(fails(anything))
@@ -107,7 +113,7 @@ object GenericSecretStorageSpec
         walletId2 <- walletSvc.createWallet(Wallet("wallet-2")).map(_.id)
         storage <- ZIO.service[GenericSecretStorage]
         id = UUID.randomUUID()
-        secret = CredentialDefinitionSecret(json = Json.Obj("foo" -> Json.Str("bar")))
+        secret = TestSecret(json = Json.Obj("foo" -> Json.Str("bar")))
         _ <- storage
           .set(id, secret)
           .provide(ZLayer.succeed(WalletAccessContext(walletId1)))
@@ -130,13 +136,13 @@ object GenericSecretStorageSpec
         storage <- ZIO.service[GenericSecretStorage]
         // wallet1 setup
         id1 = UUID.randomUUID()
-        secret1 = CredentialDefinitionSecret(json = Json.Obj("foo1" -> Json.Str("bar1")))
+        secret1 = TestSecret(json = Json.Obj("foo1" -> Json.Str("bar1")))
         _ <- storage
           .set(id1, secret1)
           .provide(ZLayer.succeed(WalletAccessContext(walletId1)))
         // wallet2 setup
         id2 = UUID.randomUUID()
-        secret2 = CredentialDefinitionSecret(json = Json.Obj("foo2" -> Json.Str("bar2")))
+        secret2 = TestSecret(json = Json.Obj("foo2" -> Json.Str("bar2")))
         _ <- storage
           .set(id2, secret2)
           .provide(ZLayer.succeed(WalletAccessContext(walletId2)))

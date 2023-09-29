@@ -2,7 +2,6 @@ package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.agent.walletapi.storage
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
-import io.iohk.atala.agent.walletapi.storage.CredentialDefinitionSecret
 import io.iohk.atala.pollux.anoncreds.{AnoncredLib, SchemaDef}
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.URISyntaxError
@@ -11,6 +10,7 @@ import io.iohk.atala.pollux.core.model.schema.CredentialSchema.parseCredentialSc
 import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import io.iohk.atala.pollux.core.model.schema.validator.JsonSchemaError
 import io.iohk.atala.pollux.core.model.schema.{CredentialDefinition, CredentialSchema}
+import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
 import io.iohk.atala.pollux.core.repository.CredentialDefinitionRepository
 import io.iohk.atala.pollux.core.repository.Repository.SearchQuery
 import io.iohk.atala.pollux.core.service.CredentialDefinitionService.Error.*

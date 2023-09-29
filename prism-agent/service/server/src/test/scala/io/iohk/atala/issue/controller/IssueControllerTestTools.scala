@@ -3,7 +3,7 @@ package io.iohk.atala.issue.controller
 import com.typesafe.config.ConfigFactory
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.walletapi.memory.{DIDSecretStorageInMemory, GenericSecretStorageInMemory}
+import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.service.MockDIDService

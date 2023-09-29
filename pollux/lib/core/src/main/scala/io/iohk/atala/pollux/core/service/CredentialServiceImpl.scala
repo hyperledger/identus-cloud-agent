@@ -18,6 +18,7 @@ import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
+import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
 import io.iohk.atala.pollux.core.repository.CredentialRepository
 import io.iohk.atala.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer, *}
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -835,26 +836,30 @@ private class CredentialServiceImpl(
     )
   }
 
-  private[this] def createAnonCredsCredentialOffer(credentialDefinitionId: UUID, restServiceUrl: String) = for {
-    credentialDefinition <- credentialDefinitionService
-      .getByGUID(credentialDefinitionId)
-      .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
-    cd = anoncreds.CredentialDefinition(credentialDefinition.definition.toString)
-    kcp = anoncreds.CredentialKeyCorrectnessProof(credentialDefinition.keyCorrectnessProof.toString)
-    maybeCredentialDefinitionSecret <- genericSecretStorage.get(credentialDefinition.guid).orDie
-    credentialDefinitionSecret <- ZIO
-      .fromOption(maybeCredentialDefinitionSecret)
-      .mapError(_ => CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinition.guid))
-    cdp = anoncreds.CredentialDefinitionPrivate(credentialDefinitionSecret.json.toString)
-    createCredentialDefinition = CreateCredentialDefinition(cd, cdp, kcp)
-    offer = AnoncredLib.createOffer(
-      createCredentialDefinition, {
-        val urlSuffix = s"credential-definition-registry/definitions/${credentialDefinition.guid.toString}/definition"
-        val urlPrefix = if (restServiceUrl.endsWith("/")) restServiceUrl else restServiceUrl + "/"
-        s"$urlPrefix$urlSuffix"
-      }
-    )
-  } yield offer
+  private[this] def createAnonCredsCredentialOffer(credentialDefinitionId: UUID, restServiceUrl: String) = {
+    for {
+      credentialDefinition <- credentialDefinitionService
+        .getByGUID(credentialDefinitionId)
+        .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
+      cd = anoncreds.CredentialDefinition(credentialDefinition.definition.toString)
+      kcp = anoncreds.CredentialKeyCorrectnessProof(credentialDefinition.keyCorrectnessProof.toString)
+      maybeCredentialDefinitionSecret <- genericSecretStorage
+        .get[UUID, CredentialDefinitionSecret](credentialDefinition.guid)
+        .orDie
+      credentialDefinitionSecret <- ZIO
+        .fromOption(maybeCredentialDefinitionSecret)
+        .mapError(_ => CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinition.guid))
+      cdp = anoncreds.CredentialDefinitionPrivate(credentialDefinitionSecret.json.toString)
+      createCredentialDefinition = CreateCredentialDefinition(cd, cdp, kcp)
+      offer = AnoncredLib.createOffer(
+        createCredentialDefinition, {
+          val urlSuffix = s"credential-definition-registry/definitions/${credentialDefinition.guid.toString}/definition"
+          val urlPrefix = if (restServiceUrl.endsWith("/")) restServiceUrl else restServiceUrl + "/"
+          s"$urlPrefix$urlSuffix"
+        }
+      )
+    } yield offer
+  }
 
   private[this] def createDidCommRequestCredential(
       format: IssueCredentialOfferFormat,
@@ -1090,7 +1095,9 @@ private class CredentialServiceImpl(
       attrValues = offerCredential.body.credential_preview.body.attributes.map { attr =>
         (attr.name, attr.value)
       }
-      maybeCredentialDefinitionSecret <- genericSecretStorage.get(credentialDefinition.guid).orDie
+      maybeCredentialDefinitionSecret <- genericSecretStorage
+        .get[UUID, CredentialDefinitionSecret](credentialDefinition.guid)
+        .orDie
       credentialDefinitionSecret <- ZIO
         .fromOption(maybeCredentialDefinitionSecret)
         .mapError(_ => CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinition.guid))
