@@ -39,8 +39,8 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
             isSubtype[ErrorResponse](
               equalTo(
                 ErrorResponse.badRequest(
-                  "Unsupported DID format",
-                  Some(s"The following DID is not supported: subjectId")
+                  "BadRequest",
+                  Some(s"Error parsing string as PrismDID: DID syntax must start with 'did:' prefix")
                 )
               )
             )
