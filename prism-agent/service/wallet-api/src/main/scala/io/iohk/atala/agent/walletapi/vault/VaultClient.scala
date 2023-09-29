@@ -88,7 +88,7 @@ object VaultKVClientImpl {
         .address(address)
         .token(token)
         .build()
-      val vault = Vault(config)
+      val vault = Vault.create(config)
       VaultKVClientImpl(vault)
     }
 }
