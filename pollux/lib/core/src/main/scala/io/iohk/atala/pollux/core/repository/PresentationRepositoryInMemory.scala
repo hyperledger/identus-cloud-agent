@@ -49,7 +49,7 @@ class PresentationRepositoryInMemory(
   }
 
   override def getPresentationRecords(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
   ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
     for {
       storeRef <- walletStoreRef

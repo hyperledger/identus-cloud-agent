@@ -99,10 +99,12 @@ private class PresentationServiceImpl(
   override def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID] =
     credential.maybeId.map(_.split("/").last).map(UUID.fromString)
 
-  override def getPresentationRecords(): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] = {
+  override def getPresentationRecords(
+      ignoreWithZeroRetries: Boolean
+  ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] = {
     for {
       records <- presentationRepository
-        .getPresentationRecords()
+        .getPresentationRecords(ignoreWithZeroRetries)
         .mapError(RepositoryError.apply)
     } yield records
   }
