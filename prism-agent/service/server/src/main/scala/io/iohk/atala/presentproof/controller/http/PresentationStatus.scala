@@ -128,10 +128,10 @@ object PresentationStatus {
         )
 
     object metaRetries
-      extends Annotation[Int](
-        description = "The maximum background processing attempts remaining for this record",
-        example = 5
-      )
+        extends Annotation[Int](
+          description = "The maximum background processing attempts remaining for this record",
+          example = 5
+        )
   }
 
   given encoder: JsonEncoder[PresentationStatus] =
