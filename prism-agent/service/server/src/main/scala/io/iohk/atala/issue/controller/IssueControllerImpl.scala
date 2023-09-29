@@ -3,13 +3,11 @@ package io.iohk.atala.issue.controller
 import io.iohk.atala.agent.server.ControllerHelper
 import io.iohk.atala.agent.walletapi.model.PublicationState
 import io.iohk.atala.agent.walletapi.model.PublicationState.{Created, PublicationPending, Published}
-import io.iohk.atala.agent.walletapi.model.error.GetManagedDIDError
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.model.{CollectionStats, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.api.util.PaginationUtils
 import io.iohk.atala.castor.core.model.did.PrismDID
-import io.iohk.atala.castor.core.model.error.DIDResolutionError
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
@@ -44,11 +42,7 @@ class IssueControllerImpl(
     ] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
       issuingDID <- extractPrismDIDFromString(request.issuingDID)
-      _ <- validateIssuingDID(issuingDID, allowUnpublished = true).mapError {
-        case e: ErrorResponse => e
-        case _ =>
-          ErrorResponse.internalServerError(detail = Some(s"Unexpected error while loading the PrismDID: $issuingDID"))
-      }
+      _ <- validatePrismDID(issuingDID, allowUnpublished = true)
       jsonClaims <- ZIO
         .fromEither(io.circe.parser.parse(request.claims.toString()))
         .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
@@ -112,6 +106,8 @@ class IssueControllerImpl(
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
     val result: ZIO[WalletAccessContext, CredentialServiceError | ErrorResponse, IssueCredentialRecord] = for {
+      subjectDID <- extractPrismDIDFromString(request.subjectId)
+      _ <- validatePrismDID(subjectDID, allowUnpublished = true)
       id <- extractDidCommIdFromString(recordId)
       outcome <- credentialService.acceptCredentialOffer(id, request.subjectId)
     } yield IssueCredentialRecord.fromDomain(outcome)
@@ -128,33 +124,38 @@ class IssueControllerImpl(
     mapIssueErrors(result)
   }
 
-  private def validateIssuingDID(
-      issuingDID: PrismDID,
+  private def validatePrismDID(
+      prismDID: PrismDID,
       allowUnpublished: Boolean
-  ): ZIO[WalletAccessContext, GetManagedDIDError | DIDResolutionError | ErrorResponse, Unit] = {
-    for {
-      maybeDIDState <- managedDIDService.getManagedDIDState(issuingDID.asCanonical)
-      maybeMetadata <- didService.resolveDID(issuingDID).map(_.map(_._1))
+  ): ZIO[WalletAccessContext, ErrorResponse, Unit] = {
+    val result = for {
+      maybeDIDState <- managedDIDService.getManagedDIDState(prismDID.asCanonical)
+      maybeMetadata <- didService.resolveDID(prismDID).map(_.map(_._1))
       result <- (maybeDIDState.map(_.publicationState), maybeMetadata.map(_.deactivated)) match {
         case (None, _) =>
-          ZIO.fail(ErrorResponse.badRequest(detail = Some("The issuing DID can't be found in the agent wallet")))
+          ZIO.fail(ErrorResponse.badRequest(detail = Some("The provided DID can't be found in the agent wallet")))
 
         case (Some(Created() | PublicationPending(_)), _) if allowUnpublished =>
           ZIO.succeed(())
 
         case (Some(Created() | PublicationPending(_)), _) =>
-          ZIO.fail(ErrorResponse.badRequest(detail = Some("The issuing DID is not published")))
+          ZIO.fail(ErrorResponse.badRequest(detail = Some("The provided DID is not published")))
 
         case (Some(Published(_)), None) =>
           ZIO.succeed(())
 
         case (Some(Published(_)), Some(true)) =>
-          ZIO.fail(ErrorResponse.badRequest(detail = Some("The issuing DID is published but deactivated")))
+          ZIO.fail(ErrorResponse.badRequest(detail = Some("The provided DID is published but deactivated")))
 
         case (Some(Published(_)), Some(false)) =>
           ZIO.succeed(())
       }
     } yield result
+    result.mapError {
+      case e: ErrorResponse => e
+      case _ =>
+        ErrorResponse.internalServerError(detail = Some(s"Unexpected error while loading the PrismDID: $prismDID"))
+    }
   }
 
   private def mapIssueErrors[R, T](
