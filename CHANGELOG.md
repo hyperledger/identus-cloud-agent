@@ -1,3 +1,10 @@
+## [1.16.4](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.3...prism-agent-v1.16.4) (2023-09-29)
+
+
+### Bug Fixes
+
+* Integration flow ATL-5777 ([#738](https://github.com/hyperledger-labs/open-enterprise-agent/issues/738)) ([7cf927c](https://github.com/hyperledger-labs/open-enterprise-agent/commit/7cf927cc267460cc1708e424c0a63ae96689a42a))
+
 ## [1.16.3](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.2...prism-agent-v1.16.3) (2023-09-28)
 
 
