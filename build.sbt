@@ -4,7 +4,7 @@ import org.scoverage.coveralls.Imports.CoverallsKeys.*
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
-    scalaVersion := "3.3.0",
+    scalaVersion := "3.3.1",
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
@@ -44,7 +44,7 @@ lazy val V = new {
   val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.15"
+  val zio = "2.0.18"
   val zioConfig = "3.0.7"
   val zioLogging = "2.0.1"
   val zioJson = "0.3.0"
@@ -55,17 +55,17 @@ lazy val V = new {
   val mockito = "3.2.16.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
-  val circe = "0.14.5"
+  val circe = "0.14.6"
 
   val tapir = "1.6.0"
   val tapirLegacy = "1.2.3" // TODO: remove
 
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
-  val testContainersScala = "0.40.17"
+  val testContainersScala = "0.41.0"
 
   val doobie = "1.0.0-RC2"
-  val quill = "4.6.0.1"
+  val quill = "4.7.3"
   val flyway = "9.8.3"
   val postgresDriver = "42.2.27"
   val logback = "1.4.8"
@@ -81,9 +81,7 @@ lazy val V = new {
 
   val jsonSchemaValidator = "1.0.86"
 
-  // https://github.com/jopenlibs/vault-java-driver/issues/36
-  // v5.4.0 is not available on Maven yet.
-  val vaultDriver = "5.4.0"
+  val vaultDriver = "6.1.0"
   val micrometer = "1.11.2"
 }
 

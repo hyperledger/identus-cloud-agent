@@ -5,7 +5,7 @@ import org.testcontainers.utility.DockerImageName
 
 object VaultTestContainer {
   def vaultContainer(
-      imageName: String = "vault:1.13.2",
+      imageName: String = "hashicorp/vault:1.15.0",
       vaultToken: Option[String] = None,
       verbose: Boolean = false
   ): VaultContainerCustom = {
