@@ -1,7 +1,5 @@
 package io.iohk.atala.pollux.sql.model.db
 
-import io.getquill.InsertMeta
-
 import io.getquill.*
 import io.getquill.doobie.DoobieContext
 import io.iohk.atala.shared.models.WalletId
@@ -31,7 +29,6 @@ object VerificationPolicySql extends DoobieContext.Postgres(SnakeCase) {
   import io.iohk.atala.pollux.sql.repository.VerificationPolicyExtensions._
 
   def insert(verificationPolicy: VerificationPolicy) = {
-    inline given InsertMeta[VerificationPolicy] = insertMeta(exclude = _.id, _.createdAt, _.updatedAt)
     run(quote(query[VerificationPolicy].insertValue(lift(verificationPolicy)).returning(vp => vp)))
   }
 
@@ -83,8 +80,6 @@ object VerificationPolicySql extends DoobieContext.Postgres(SnakeCase) {
     )
 
   def update(verificationPolicy: VerificationPolicy, nonce: Int) =
-    // TODO, compiler marks this import as unused, since it is new to scala 3 it can be broken for givens or this given is indeed unused
-    inline given UpdateMeta[VerificationPolicy] = updateMeta(exclude = _.id)
     run(
       quote(
         query[VerificationPolicy]
