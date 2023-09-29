@@ -59,13 +59,19 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "yq -i '.appVersion = \"${nextRelease.version}\"' ./infrastructure/charts/agent/Chart.yaml"
+          "prepareCmd": "yq eval -i '.appVersion = \"${nextRelease.version}\" | .version = \"${nextRelease.version}\"' ./infrastructure/charts/agent/Chart.yaml"
         }
       ],
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "yq -i -P '(.argocd-apps.itemTemplates[].items[] |= (select(.name == \"prism-agent-application-set\").targetRevision |= \"prism-agent-v${nextRelease.version}\"))' ./infrastructure/argocd-state/d-useast1-sjd4e/values.yaml"
+          "prepareCmd": "helm package -d infrastructure/charts -u infrastructure/charts/agent"
+        }
+      ],
+      [
+        "@semantic-release/exec",
+        {
+          "prepareCmd": "helm repo index --url \"https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts\" --merge index.yaml infrastructure/charts"
         }
       ],
       [
@@ -91,7 +97,8 @@
             "package-lock.json",
             "prism-agent/service/api/http/prism-agent-openapi-spec.yaml",
             "infrastructure/charts/agent/Chart.yaml",
-            "infrastructure/argocd-state/d-useast1-sjd4e/values.yaml"
+            "infrastructure/charts/index.yaml",
+            "infrastructure/charts/*.tgz"
           ],
           "message": "chore(release): cut atala prism ${nextRelease.version} release\n\n${nextRelease.notes}\n\nSigned-off-by: Anton Baliasnikov <anton.baliasnikov@iohk.io>"
         }
