@@ -156,8 +156,8 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: admin
       KEYCLOAK_DATABASE_VENDOR: dev-mem
       KEYCLOAK_EXTRA_ARGS: --import-realm
+      KEYCLOAK_EXTRA_ARGS_PREPENDED: --verbose
     volumes:
-      # - ./keycloak/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
       - ./keycloak/manage-realm.json:/opt/bitnami/keycloak/data/import/manage-realm.json
 
 volumes:
