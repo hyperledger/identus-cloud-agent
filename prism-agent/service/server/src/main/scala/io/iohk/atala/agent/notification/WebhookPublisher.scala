@@ -13,7 +13,6 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import zio.*
 import zio.http.*
-import zio.http.model.*
 import zio.json.*
 
 class WebhookPublisher(
@@ -24,10 +23,10 @@ class WebhookPublisher(
 
   private val config = appConfig.agent.webhookPublisher
 
-  private val baseHeaders = Headers.contentType(HeaderValues.applicationJson)
+  private val baseHeaders = Headers(Header.ContentType(MediaType.application.json))
 
   private val globalWebhookBaseHeaders = config.apiKey
-    .map(key => Headers.bearerAuthorizationHeader(key))
+    .map(key => Headers(Header.Authorization.Bearer(key)))
     .getOrElse(Headers.empty)
 
   private val parallelism = config.parallelism.getOrElse(1).max(1).min(10)
@@ -85,7 +84,7 @@ class WebhookPublisher(
     val walletWebhookTargets = webhooks
       .map(i => i.url -> i.customHeaders)
       .map { case (url, headers) =>
-        url -> headers.foldLeft(Headers.empty) { case (acc, (k, v)) => acc ++ Header(k, v) }
+        url -> headers.foldLeft(Headers.empty) { case (acc, (k, v)) => acc.addHeader(Header.Custom(k, v)) }
       }
     (walletWebhookTargets ++ globalWebhookTarget)
       .map { case (url, headers) => notifyWebhook(event, url.toString, headers) }
@@ -105,15 +104,21 @@ class WebhookPublisher(
         )
         .timeoutFail(new RuntimeException("Client request timed out"))(5.seconds)
         .mapError(t => UnexpectedError(s"Webhook request error: $t"))
-      resp <- response match
-        case Response(status, _, _, _, _) if status.isSuccess =>
-          ZIO.unit
-        case Response(status, _, _, _, maybeHttpError) =>
+
+      resp <-
+        if response.status.isSuccess then ZIO.unit
+        else {
+          val err = response match {
+            case Response.GetError(error) => Some(error)
+            case _                        => None
+          }
           ZIO.fail(
             UnexpectedError(
-              s"Unsuccessful webhook response: [status: $status] [error: ${maybeHttpError.getOrElse("none")}]"
+              s"Unsuccessful webhook response: [status: ${response.status} [error: ${err.getOrElse("none")}]"
             )
           )
+
+        }
     } yield resp
   }
 }
