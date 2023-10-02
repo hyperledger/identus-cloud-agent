@@ -8,7 +8,7 @@ import zio.*
 
 trait PresentationRepository {
   def createPresentationRecord(record: PresentationRecord): RIO[WalletAccessContext, Int]
-  def getPresentationRecords(ignoreWithZeroRetries: Boolean = true): RIO[WalletAccessContext, Seq[PresentationRecord]]
+  def getPresentationRecords(ignoreWithZeroRetries: Boolean): RIO[WalletAccessContext, Seq[PresentationRecord]]
   def getPresentationRecord(recordId: DidCommID): RIO[WalletAccessContext, Option[PresentationRecord]]
   def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,

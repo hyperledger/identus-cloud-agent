@@ -6,8 +6,7 @@ import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, RequestC
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.test.*
 import zio.test.Assertion.*
 import zio.{Exit, ZIO, ZLayer}
@@ -103,7 +102,7 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
-        records <- repo.getIssueCredentialRecords().map(_._1)
+        records <- repo.getIssueCredentialRecords(false).map(_._1)
       } yield {
         assertTrue(records.size == 2) &&
         assertTrue(records.contains(aRecord)) &&
@@ -117,7 +116,7 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
-        records <- repo.getIssueCredentialRecords(offset = Some(1)).map(_._1)
+        records <- repo.getIssueCredentialRecords(false, offset = Some(1)).map(_._1)
       } yield {
         assertTrue(records.size == 1) &&
         assertTrue(records.contains(bRecord))
@@ -130,7 +129,7 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
-        records <- repo.getIssueCredentialRecords(limit = Some(1)).map(_._1)
+        records <- repo.getIssueCredentialRecords(false, limit = Some(1)).map(_._1)
       } yield {
         assertTrue(records.size == 1) &&
         assertTrue(records.contains(aRecord))
@@ -145,7 +144,9 @@ object CredentialRepositorySpecSuite {
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
-        records <- repo.getIssueCredentialRecords(offset = Some(1), limit = Some(1)).map(_._1)
+        records <- repo
+          .getIssueCredentialRecords(false, offset = Some(1), limit = Some(1))
+          .map(_._1)
       } yield {
         assertTrue(records.size == 1) &&
         assertTrue(records.contains(bRecord))
@@ -159,7 +160,7 @@ object CredentialRepositorySpecSuite {
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         count <- repo.deleteIssueCredentialRecord(aRecord.id)
-        records <- repo.getIssueCredentialRecords().map(_._1)
+        records <- repo.getIssueCredentialRecords(false).map(_._1)
       } yield {
         assertTrue(count == 1) &&
         assertTrue(records.size == 1) &&
@@ -174,7 +175,7 @@ object CredentialRepositorySpecSuite {
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         count <- repo.deleteIssueCredentialRecord(DidCommID())
-        records <- repo.getIssueCredentialRecords().map(_._1)
+        records <- repo.getIssueCredentialRecords(false).map(_._1)
       } yield {
         assertTrue(count == 0) &&
         assertTrue(records.size == 2) &&
@@ -190,7 +191,7 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
-        record <- repo.getIssueCredentialRecordByThreadId(thid)
+        record <- repo.getIssueCredentialRecordByThreadId(thid, false)
       } yield assertTrue(record.contains(aRecord))
     },
     test("getIssueCredentialRecordByThreadId returns nothing for an unknown thid") {
@@ -200,7 +201,7 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
-        record <- repo.getIssueCredentialRecordByThreadId(DidCommID())
+        record <- repo.getIssueCredentialRecordByThreadId(DidCommID(), false)
       } yield assertTrue(record.isEmpty)
     },
     test("getIssueCredentialRecordsByStates returns valid records") {
@@ -481,10 +482,10 @@ object CredentialRepositorySpecSuite {
         record2 = issueCredentialRecord
         count1 <- repo.createIssueCredentialRecord(record1).provide(wallet1)
         count2 <- repo.createIssueCredentialRecord(record2).provide(wallet2)
-        ownWalletRecords1 <- repo.getIssueCredentialRecords().provide(wallet1)
-        ownWalletRecords2 <- repo.getIssueCredentialRecords().provide(wallet2)
+        ownWalletRecords1 <- repo.getIssueCredentialRecords(false).provide(wallet1)
+        ownWalletRecords2 <- repo.getIssueCredentialRecords(false).provide(wallet2)
         crossWalletRecordById <- repo.getIssueCredentialRecord(record2.id).provide(wallet1)
-        crossWalletRecordByThid <- repo.getIssueCredentialRecordByThreadId(record2.thid).provide(wallet1)
+        crossWalletRecordByThid <- repo.getIssueCredentialRecordByThreadId(record2.thid, false).provide(wallet1)
       } yield assert(count1)(equalTo(1)) &&
         assert(count2)(equalTo(1)) &&
         assert(ownWalletRecords1._1)(hasSameElements(Seq(record1))) &&

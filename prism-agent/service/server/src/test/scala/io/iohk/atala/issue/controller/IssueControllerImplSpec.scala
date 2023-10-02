@@ -1,6 +1,8 @@
 package io.iohk.atala.issue.controller
 
+import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import io.iohk.atala.api.http.ErrorResponse
+import io.iohk.atala.castor.core.service.MockDIDService
 import io.iohk.atala.container.util.MigrationAspects.migrate
 import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.issue.controller.http.AcceptCredentialOfferRequest
@@ -17,7 +19,7 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
   def spec = (httpErrorResponses @@ migrate(
     schema = "public",
     paths = "classpath:sql/pollux"
-  )).provideSomeLayerShared(testEnvironmentLayer)
+  )).provideSomeLayerShared(MockDIDService.empty ++ MockManagedDIDService.empty >>> testEnvironmentLayer)
 
   private val httpErrorResponses = suite("IssueControllerImp http failure cases")(
     test("provide incorrect subjectId to endpoint") {
@@ -37,8 +39,8 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
             isSubtype[ErrorResponse](
               equalTo(
                 ErrorResponse.badRequest(
-                  "Unsupported DID format",
-                  Some(s"The following DID is not supported: subjectId")
+                  "BadRequest",
+                  Some(s"Error parsing string as PrismDID: DID syntax must start with 'did:' prefix")
                 )
               )
             )

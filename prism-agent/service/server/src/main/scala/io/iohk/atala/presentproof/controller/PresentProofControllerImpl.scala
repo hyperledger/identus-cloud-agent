@@ -57,7 +57,7 @@ class PresentProofControllerImpl(
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatusPage] = {
     val result = for {
       records <- thid match
-        case None       => presentationService.getPresentationRecords()
+        case None       => presentationService.getPresentationRecords(ignoreWithZeroRetries = false)
         case Some(thid) => presentationService.getPresentationRecordByThreadId(DidCommID(thid)).map(_.toSeq)
     } yield PresentationStatusPage(
       records.map(PresentationStatus.fromDomain)

@@ -1,17 +1,14 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord.PublicationState
-import io.iohk.atala.pollux.core.model._
-import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError._
+import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
+import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.{ProtocolState, PublicationState}
+import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
-import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.time.Instant
-import io.iohk.atala.shared.models.WalletAccessContext
 
 class CredentialRepositoryInMemory(
     walletRefs: Ref[Map[WalletId, Ref[Map[DidCommID, IssueCredentialRecord]]]],
@@ -76,14 +73,15 @@ class CredentialRepositoryInMemory(
   }
 
   override def getIssueCredentialRecords(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
       offset: Option[Int],
       limit: Option[Int]
   ): RIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
-      paginated = store.values.toSeq.drop(offset.getOrElse(0)).take(limit.getOrElse(Int.MaxValue))
+      records = if (ignoreWithZeroRetries) store.values.filter(_.metaRetries > 0) else store.values
+      paginated = records.toSeq.drop(offset.getOrElse(0)).take(limit.getOrElse(Int.MaxValue))
     } yield paginated -> store.values.size
   }
 
@@ -209,20 +207,22 @@ class CredentialRepositoryInMemory(
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
-    } yield store.values
-      .filter(rec => states.contains(rec.protocolState) & (!ignoreWithZeroRetries | rec.metaRetries > 0))
+      records = if (ignoreWithZeroRetries) store.values.filter(_.metaRetries > 0) else store.values
+    } yield records
+      .filter(rec => states.contains(rec.protocolState))
       .take(limit)
       .toSeq
   }
 
   override def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
-    } yield store.values.find(_.thid == thid).filter(!ignoreWithZeroRetries | _.metaRetries > 0)
+      records = if (ignoreWithZeroRetries) store.values.filter(_.metaRetries > 0) else store.values
+    } yield records.find(_.thid == thid)
   }
 
   override def updateWithSubjectId(
