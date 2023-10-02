@@ -2,7 +2,7 @@ package io.iohk.atala.iam.entity.http.model
 
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.iam.entity.http.model.ApiKeyAuthenticationRequest.annotations
-import sttp.tapir.Schema
+import sttp.tapir.{Schema, Validator}
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate, validateEach}
 import sttp.tapir.Validator.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
@@ -15,7 +15,7 @@ case class ApiKeyAuthenticationRequest(
     entityId: UUID,
     @description(annotations.apikey.description)
     @encodedExample(annotations.apikey.example)
-    @validate(nonEmptyString)
+    @validate(all(minLength(16), maxLength(128)))
     apiKey: String
 )
 
