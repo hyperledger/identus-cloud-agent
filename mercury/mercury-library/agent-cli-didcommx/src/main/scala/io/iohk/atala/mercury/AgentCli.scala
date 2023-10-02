@@ -270,7 +270,7 @@ object AgentCli extends ZIOAppDefault {
           res
         case Method.GET -> Root / "test" => ZIO.succeed(Response.text("Test ok!"))
         case req =>
-          ZIO.logWarning(s"Deceived a not DID Comm v2 message: ${req}") *>
+          ZIO.logWarning(s"Received a not DID Comm v2 message: ${req}") *>
             ZIO.succeed(Response.text(s"The request must be a POST to root with the Header $header"))
       }
       .mapError(throwable => Response.fromHttpError(HttpError.InternalServerError(cause = Some(throwable))))
