@@ -2,16 +2,9 @@ import { group } from 'k6';
 import { Options } from 'k6/options';
 import { Issuer, Holder } from '../../actors';
 import { Connection, CredentialSchemaResponse } from '@input-output-hk/prism-typescript-client';
-import { defaultScenarios, defaultThresholds } from '../../scenarios/default';
+import { defaultOptions } from "../../scenarios/default";
 
-export let options: Options = {
-  scenarios: {
-    ...defaultScenarios
-  },
-  thresholds: {
-    ...defaultThresholds
-  }
-}
+export let options: Options = defaultOptions
 export const issuer = new Issuer();
 export const holder = new Holder();
 

@@ -2,15 +2,10 @@ import { group } from 'k6';
 import { Options } from 'k6/options';
 import {issuer, holder} from '../common';
 import { CredentialSchemaResponse } from '@input-output-hk/prism-typescript-client';
-import {defaultScenarios, defaultThresholds} from "../../scenarios/default";
-export let options: Options = {
-  scenarios: {
-    ...defaultScenarios
-  },
-  thresholds: {
-    ...defaultThresholds
-  }
-}
+import { defaultOptions } from "../../scenarios/default";
+
+export let options: Options = defaultOptions
+
 // This is setup code. It runs once at the beginning of the test, regardless of the number of VUs.
 export function setup() {
 
@@ -48,7 +43,7 @@ export default (data: { issuerDid: string; holderDid: string; issuerSchema: Cred
     issuer.createCredentialOffer();
     issuer.waitForCredentialOfferToBeSent();
   });
-  
+
   group('Holder achieves and accepts credential offer from Issuer', function () {
     holder.waitAndAcceptCredentialOffer(issuer.credential!.thid);
   });
