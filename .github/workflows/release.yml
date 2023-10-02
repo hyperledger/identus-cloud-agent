@@ -38,6 +38,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "lts/*"
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.12.2' # default is latest (stable)
+        id: install
       - name: Setup yq - portable yaml processor
         uses: mikefarah/yq@v4.34.2
       - uses: crazy-max/ghaction-import-gpg@v3
