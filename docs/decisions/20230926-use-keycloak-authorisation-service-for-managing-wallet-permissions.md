@@ -37,8 +37,22 @@ These questions are essential as we explore the integration options of an extern
 ## Considered Options
 
 1. Keycloak for authentication and associate the wallet permissions on the Agent.
+
+   In this option, the agent validates the JWT from Keycloak, extracting the payload and obtain the user identity.
+   Then, the agent stores the user's associated wallet information in its database.
+   Keycloak's responsibility lies solely in user authentication, as permissions management is internally managed by the agent.
+
 2. Keycloak for authentication and embed custom permission claims in the `access-token`.
+
+   In this option, the agent validates the JWT from Keycloak, extracting the payload containing custom claims related to the user's accessible wallets.
+   Wallet permissions are managed in Keycloak as user metadata, which needs to be configured to include this claim in the issued JWT.
+
 3. Keycloak for authentication and authorisation service  managing permissions.
+
+   In this option, the agent handles wallet resources on Keycloak using the [Protection API](https://www.keycloak.org/docs/latest/authorization_services/index.html#_service_protection_api).
+   Wallet permissions are managed through Keycloak's [authorisation service](https://www.keycloak.org/docs/latest/authorization_services/index.html).
+   When users intend to use the agent, it verifies wallet permissions by checking the Keycloak permission endpoint.
+   Similarly, Keycloak can also issue a self-contained JWT directly to users contains all the permission claims required by the agent.
 
 ## Decision Outcome
 
