@@ -118,7 +118,9 @@ object MockPresentationService extends Mock[PresentationService] {
 
       override def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID] = ???
 
-      override def getPresentationRecords(): IO[PresentationError, Seq[PresentationRecord]] = ???
+      override def getPresentationRecords(
+          ignoreWithZeroRetries: Boolean
+      ): IO[PresentationError, Seq[PresentationRecord]] = ???
 
       override def createPresentationPayloadFromRecord(
           record: DidCommID,

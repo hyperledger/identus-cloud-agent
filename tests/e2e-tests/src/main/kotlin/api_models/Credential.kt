@@ -19,6 +19,7 @@ data class Credential(
     var jwtCredential: String = "",
     var issuingDID: String = "",
     var connectionId: String = "",
+    var metaRetries: Int = 0,
 ): JsonEncoded
 
 object CredentialState {

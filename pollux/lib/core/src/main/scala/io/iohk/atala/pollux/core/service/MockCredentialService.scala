@@ -177,6 +177,7 @@ object MockCredentialService extends Mock[CredentialService] {
         proxy(ReportProcessingFailure, recordId, failReason)
 
       override def getIssueCredentialRecords(
+          ignoreWithZeroRetries: Boolean,
           offset: Option[Int] = None,
           limit: Option[Int] = None
       ): IO[CredentialServiceError, (Seq[IssueCredentialRecord], Int)] =
@@ -195,7 +196,8 @@ object MockCredentialService extends Mock[CredentialService] {
         ???
 
       override def getIssueCredentialRecordByThreadId(
-          thid: DidCommID
+          thid: DidCommID,
+          ignoreWithZeroRetries: Boolean
       ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = ???
     }
   }

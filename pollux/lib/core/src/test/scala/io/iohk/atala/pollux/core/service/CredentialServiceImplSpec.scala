@@ -227,7 +227,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           svc <- ZIO.service[CredentialService]
           aRecord <- svc.createRecord()
           bRecord <- svc.createRecord()
-          records <- svc.getIssueCredentialRecords().map(_._1)
+          records <- svc.getIssueCredentialRecords(false).map(_._1)
         } yield {
           assertTrue(records.size == 2) &&
           assertTrue(records.contains(aRecord)) &&

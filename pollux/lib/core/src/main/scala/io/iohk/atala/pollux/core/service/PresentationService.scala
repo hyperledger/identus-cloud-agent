@@ -27,7 +27,9 @@ trait PresentationService {
       format: CredentialFormat,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
-  def getPresentationRecords(): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]]
+  def getPresentationRecords(
+      ignoreWithZeroRetries: Boolean
+  ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]]
 
   def createPresentationPayloadFromRecord(
       record: DidCommID,

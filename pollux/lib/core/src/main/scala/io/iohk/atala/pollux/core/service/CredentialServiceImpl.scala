@@ -60,22 +60,24 @@ private class CredentialServiceImpl(
   import IssueCredentialRecord.*
 
   override def getIssueCredentialRecords(
+      ignoreWithZeroRetries: Boolean,
       offset: Option[Int],
       limit: Option[Int]
   ): ZIO[WalletAccessContext, CredentialServiceError, (Seq[IssueCredentialRecord], Int)] = {
     for {
       records <- credentialRepository
-        .getIssueCredentialRecords(offset = offset, limit = limit)
+        .getIssueCredentialRecords(ignoreWithZeroRetries = ignoreWithZeroRetries, offset = offset, limit = limit)
         .mapError(RepositoryError.apply)
     } yield records
   }
 
   override def getIssueCredentialRecordByThreadId(
-      thid: DidCommID
+      thid: DidCommID,
+      ignoreWithZeroRetries: Boolean
   ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]] =
     for {
       record <- credentialRepository
-        .getIssueCredentialRecordByThreadId(thid)
+        .getIssueCredentialRecordByThreadId(thid, ignoreWithZeroRetries)
         .mapError(RepositoryError.apply)
     } yield record
 
