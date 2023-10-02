@@ -12,6 +12,7 @@ import java.util.UUID
 case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends AuthenticationRepository {
 
   import AuthenticationRepositorySql.*
+  import AuthenticationRepositoryError.*
   override def insert(
       entityId: UUID,
       amt: AuthenticationMethodType,
@@ -29,16 +30,39 @@ case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends Authentica
         case sqlException: PSQLException
             if sqlException.getMessage
               .contains("ERROR: duplicate key value violates unique constraint \"unique_type_secret_constraint\"") =>
-          AuthenticationRepositoryError.AuthenticationCompromised(entityId, amt, secret)
+          AuthenticationCompromised(entityId, amt, secret)
         case otherSqlException: PSQLException =>
-          AuthenticationRepositoryError.StorageError(otherSqlException)
+          StorageError(otherSqlException)
         case unexpected: Throwable =>
-          AuthenticationRepositoryError.UnexpectedError(unexpected)
+          UnexpectedError(unexpected)
       }
-      .catchSome { case ac @ AuthenticationRepositoryError.AuthenticationCompromised(entityId, amt, secret) =>
-        val failure: IO[AuthenticationRepositoryError, Unit] = ZIO.fail(ac)
-        deleteByEntityIdAndTypeAndSecret(entityId, amt, secret).map(_ => ()) *> failure
+      .catchSome { case AuthenticationCompromised(eId, amt, s) =>
+        ensureThatTheApiKeyIsNotCompromised(eId, amt, s)
       }
+  }
+
+  private def ensureThatTheApiKeyIsNotCompromised(
+      entityId: UUID,
+      authenticationMethodType: AuthenticationMethodType,
+      secret: String
+  ): IO[AuthenticationRepositoryError, Unit] = {
+    val ac = AuthenticationCompromised(entityId, authenticationMethodType, secret)
+    val acZIO: IO[AuthenticationRepositoryError, Unit] = ZIO.fail(ac)
+
+    for {
+      authRecordOpt <- findAuthenticationMethodByTypeAndSecret(authenticationMethodType, secret)
+      authRecord <- ZIO.fromOption(authRecordOpt).mapError(_ => ac)
+      compromisedEntityId = authRecord.entityId
+      isTheSameEntityId = authRecord.entityId == entityId
+      isNotDeleted = authRecord.deletedAt.isEmpty
+      result <-
+        if (isTheSameEntityId && isNotDeleted)
+          ZIO.unit
+        else if (isNotDeleted)
+          delete(compromisedEntityId, authenticationMethodType, secret) *> acZIO
+        else
+          acZIO
+    } yield result
   }
 
   override def getEntityIdByMethodAndSecret(
@@ -81,7 +105,7 @@ case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends Authentica
       .map(_ => ())
   }
 
-  override def deleteByEntityIdAndTypeAndSecret(
+  override def delete(
       entityId: UUID,
       amt: AuthenticationMethodType,
       secret: String

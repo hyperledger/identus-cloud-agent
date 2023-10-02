@@ -52,7 +52,7 @@ trait AuthenticationRepository {
       amt: AuthenticationMethodType
   ): zio.IO[AuthenticationRepositoryError, Unit]
 
-  def deleteByEntityIdAndTypeAndSecret(
+  def delete(
       entityId: UUID,
       amt: AuthenticationMethodType,
       secret: String

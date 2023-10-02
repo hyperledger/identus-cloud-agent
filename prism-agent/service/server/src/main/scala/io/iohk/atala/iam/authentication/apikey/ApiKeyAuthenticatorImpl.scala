@@ -104,7 +104,7 @@ case class ApiKeyAuthenticatorImpl(
         .logError("Failed to compute SHA256 hash")
         .mapError(cause => AuthenticationError.UnexpectedError(cause.getMessage))
       _ <- repository
-        .deleteByEntityIdAndTypeAndSecret(entityId, AuthenticationMethodType.ApiKey, secret)
+        .delete(entityId, AuthenticationMethodType.ApiKey, secret)
         .mapError(are => AuthenticationError.UnexpectedError(are.message))
     } yield ()
   }
