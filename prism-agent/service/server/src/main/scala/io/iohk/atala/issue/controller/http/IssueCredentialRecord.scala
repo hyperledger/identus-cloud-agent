@@ -79,7 +79,10 @@ final case class IssueCredentialRecord(
     jwtCredential: Option[String] = None,
     @description(annotations.issuingDID.description)
     @encodedExample(annotations.issuingDID.example)
-    issuingDID: Option[String] = None
+    issuingDID: Option[String] = None,
+    @description(annotations.metaRetries.description)
+    @encodedExample(annotations.metaRetries.example)
+    metaRetries: Int
 )
 
 object IssueCredentialRecord {
@@ -114,7 +117,8 @@ object IssueCredentialRecord {
         issueCredential.attachments.collectFirst { case AttachmentDescriptor(_, _, Base64(jwt), _, _, _, _) =>
           jwt
         }
-      })
+      }),
+      metaRetries = domain.metaRetries
     )
 
   given Conversion[PolluxIssueCredentialRecord, IssueCredentialRecord] = fromDomain
@@ -220,6 +224,12 @@ object IssueCredentialRecord {
         extends Annotation[Option[String]](
           description = "Issuer DID of the verifiable credential object.",
           example = Some("did:prism:issuerofverifiablecredentials")
+        )
+
+    object metaRetries
+        extends Annotation[Int](
+          description = "The maximum background processing attempts remaining for this record",
+          example = 5
         )
 
   }

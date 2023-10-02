@@ -1,11 +1,10 @@
 package io.iohk.atala.pollux.core.model
 
-import io.iohk.atala.mercury.protocol.issuecredential.OfferCredential
-import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-import IssueCredentialRecord._
-import java.time.Instant
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
+import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
+
+import java.time.Instant
 
 final case class IssueCredentialRecord(
     id: DidCommID,

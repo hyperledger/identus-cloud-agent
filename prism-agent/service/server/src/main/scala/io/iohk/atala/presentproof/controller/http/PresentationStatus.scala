@@ -31,7 +31,10 @@ final case class PresentationStatus(
     data: Seq[String],
     @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
-    connectionId: Option[String] = None
+    connectionId: Option[String] = None,
+    @description(annotations.metaRetries.description)
+    @encodedExample(annotations.metaRetries.example)
+    metaRetries: Int
 )
 
 object PresentationStatus {
@@ -53,7 +56,8 @@ object PresentationStatus {
       status = domain.protocolState.toString,
       proofs = Seq.empty,
       data = data,
-      connectionId = domain.connectionId
+      connectionId = domain.connectionId,
+      metaRetries = domain.metaRetries
     )
   }
 
@@ -121,6 +125,12 @@ object PresentationStatus {
         extends Annotation[String](
           description = "The unique identifier of an established connection between the verifier and the prover.",
           example = "bc528dc8-69f1-4c5a-a508-5f8019047900"
+        )
+
+    object metaRetries
+        extends Annotation[Int](
+          description = "The maximum background processing attempts remaining for this record",
+          example = 5
         )
   }
 

@@ -94,7 +94,7 @@ object PresentationRepositorySpecSuite {
         bRecord = presentationRecord
         _ <- repo.createPresentationRecord(aRecord)
         _ <- repo.createPresentationRecord(bRecord)
-        records <- repo.getPresentationRecords()
+        records <- repo.getPresentationRecords(false)
       } yield {
         assertTrue(records.size == 2) &&
         assertTrue(records.contains(aRecord)) &&
@@ -363,8 +363,8 @@ object PresentationRepositorySpecSuite {
         record2 = presentationRecord
         count1 <- repo.createPresentationRecord(record1).provide(wallet1)
         count2 <- repo.createPresentationRecord(record2).provide(wallet2)
-        ownWalletRecords1 <- repo.getPresentationRecords().provide(wallet1)
-        ownWalletRecords2 <- repo.getPresentationRecords().provide(wallet2)
+        ownWalletRecords1 <- repo.getPresentationRecords(false).provide(wallet1)
+        ownWalletRecords2 <- repo.getPresentationRecords(false).provide(wallet2)
         crossWalletRecordById <- repo.getPresentationRecord(record2.id).provide(wallet1)
         crossWalletRecordByThid <- repo.getPresentationRecordByThreadId(record2.thid).provide(wallet1)
       } yield assert(count1)(equalTo(1)) &&

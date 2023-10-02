@@ -190,6 +190,7 @@ lazy val D_Castor = new {
     Seq(
       D.zio,
       D.zioTest,
+      D.zioMock,
       D.zioTestSbt,
       D.zioTestMagnolia,
       D.circeCore,

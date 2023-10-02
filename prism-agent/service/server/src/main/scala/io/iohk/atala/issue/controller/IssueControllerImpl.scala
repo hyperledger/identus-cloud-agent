@@ -1,10 +1,14 @@
 package io.iohk.atala.issue.controller
 
 import io.iohk.atala.agent.server.ControllerHelper
-import io.iohk.atala.api.http.model.CollectionStats
-import io.iohk.atala.api.http.model.PaginationInput
+import io.iohk.atala.agent.walletapi.model.PublicationState
+import io.iohk.atala.agent.walletapi.model.PublicationState.{Created, PublicationPending, Published}
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.api.http.model.{CollectionStats, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.api.util.PaginationUtils
+import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
@@ -23,7 +27,9 @@ import zio.{URLayer, ZIO, ZLayer}
 
 class IssueControllerImpl(
     credentialService: CredentialService,
-    connectionService: ConnectionService
+    connectionService: ConnectionService,
+    didService: DIDService,
+    managedDIDService: ManagedDIDService
 ) extends IssueController
     with ControllerHelper {
   override def createCredentialOffer(
@@ -36,6 +42,7 @@ class IssueControllerImpl(
     ] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
       issuingDID <- extractPrismDIDFromString(request.issuingDID)
+      _ <- validatePrismDID(issuingDID, allowUnpublished = true)
       jsonClaims <- ZIO
         .fromEither(io.circe.parser.parse(request.claims.toString()))
         .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
@@ -64,10 +71,14 @@ class IssueControllerImpl(
       pageResult <- thid match
         case None =>
           credentialService
-            .getIssueCredentialRecords(offset = Some(pagination.offset), limit = Some(pagination.limit))
+            .getIssueCredentialRecords(
+              ignoreWithZeroRetries = false,
+              offset = Some(pagination.offset),
+              limit = Some(pagination.limit)
+            )
         case Some(thid) =>
           credentialService
-            .getIssueCredentialRecordByThreadId(DidCommID(thid))
+            .getIssueCredentialRecordByThreadId(DidCommID(thid), ignoreWithZeroRetries = false)
             .map(_.toSeq)
             .map(records => records -> records.length)
       (records, totalCount) = pageResult
@@ -99,6 +110,8 @@ class IssueControllerImpl(
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
     val result: ZIO[WalletAccessContext, CredentialServiceError | ErrorResponse, IssueCredentialRecord] = for {
+      subjectDID <- extractPrismDIDFromString(request.subjectId)
+      _ <- validatePrismDID(subjectDID, allowUnpublished = true)
       id <- extractDidCommIdFromString(recordId)
       outcome <- credentialService.acceptCredentialOffer(id, request.subjectId)
     } yield IssueCredentialRecord.fromDomain(outcome)
@@ -115,6 +128,40 @@ class IssueControllerImpl(
     mapIssueErrors(result)
   }
 
+  private def validatePrismDID(
+      prismDID: PrismDID,
+      allowUnpublished: Boolean
+  ): ZIO[WalletAccessContext, ErrorResponse, Unit] = {
+    val result = for {
+      maybeDIDState <- managedDIDService.getManagedDIDState(prismDID.asCanonical)
+      maybeMetadata <- didService.resolveDID(prismDID).map(_.map(_._1))
+      result <- (maybeDIDState.map(_.publicationState), maybeMetadata.map(_.deactivated)) match {
+        case (None, _) =>
+          ZIO.fail(ErrorResponse.badRequest(detail = Some("The provided DID can't be found in the agent wallet")))
+
+        case (Some(Created() | PublicationPending(_)), _) if allowUnpublished =>
+          ZIO.succeed(())
+
+        case (Some(Created() | PublicationPending(_)), _) =>
+          ZIO.fail(ErrorResponse.badRequest(detail = Some("The provided DID is not published")))
+
+        case (Some(Published(_)), None) =>
+          ZIO.succeed(())
+
+        case (Some(Published(_)), Some(true)) =>
+          ZIO.fail(ErrorResponse.badRequest(detail = Some("The provided DID is published but deactivated")))
+
+        case (Some(Published(_)), Some(false)) =>
+          ZIO.succeed(())
+      }
+    } yield result
+    result.mapError {
+      case e: ErrorResponse => e
+      case _ =>
+        ErrorResponse.internalServerError(detail = Some(s"Unexpected error while loading the PrismDID: $prismDID"))
+    }
+  }
+
   private def mapIssueErrors[R, T](
       result: ZIO[R, CredentialServiceError | ConnectionServiceError | ErrorResponse, T]
   ): ZIO[R, ErrorResponse, T] = {
@@ -128,6 +175,6 @@ class IssueControllerImpl(
 }
 
 object IssueControllerImpl {
-  val layer: URLayer[CredentialService & ConnectionService, IssueController] =
-    ZLayer.fromFunction(IssueControllerImpl(_, _))
+  val layer: URLayer[CredentialService & ConnectionService & DIDService & ManagedDIDService, IssueController] =
+    ZLayer.fromFunction(IssueControllerImpl(_, _, _, _))
 }

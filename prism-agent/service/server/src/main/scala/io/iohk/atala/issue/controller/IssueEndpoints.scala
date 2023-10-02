@@ -26,7 +26,7 @@ object IssueEndpoints {
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("issue-credentials" / "credential-offers")
       .in(jsonBody[CreateIssueCredentialRecordRequest].description("The credential offer object."))
-      .errorOut(basicFailuresAndForbidden)
+      .errorOut(basicFailuresWith(FailureVariant.forbidden, FailureVariant.badRequest))
       .out(statusCode(StatusCode.Created))
       .out(jsonBody[IssueCredentialRecord].description("The issue credential record."))
       .tag("Issue Credentials Protocol")

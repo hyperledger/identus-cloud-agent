@@ -16,6 +16,7 @@ data class Connection(
     var myDid: String = "",
     var theirDid: String = "",
     var role: String = "",
+    var metaRetries: Int = 0,
 ): JsonEncoded
 
 object ConnectionState {
