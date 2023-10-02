@@ -63,7 +63,7 @@ class IssueControllerImpl(
             } yield record
           case AnonCreds =>
             for {
-              credentialDefinitionId <- ZIO
+              credentialDefinitionGUID <- ZIO
                 .fromOption(request.credentialDefinitionId)
                 .mapError(_ =>
                   ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
@@ -73,11 +73,17 @@ class IssueControllerImpl(
                   pairwiseIssuerDID = didIdPair.myDID,
                   pairwiseHolderDID = didIdPair.theirDid,
                   thid = DidCommID(),
-                  credentialDefinitionId = credentialDefinitionId,
+                  credentialDefinitionGUID = credentialDefinitionGUID,
                   claims = jsonClaims,
                   validityPeriod = request.validityPeriod,
-                  automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-                  appConfig.agent.restServiceUrl
+                  automaticIssuance = request.automaticIssuance.orElse(Some(true)), {
+                    val urlSuffix =
+                      s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
+                    val urlPrefix =
+                      if (appConfig.agent.restServiceUrl.endsWith("/")) appConfig.agent.restServiceUrl
+                      else appConfig.agent.restServiceUrl + "/"
+                    s"$urlPrefix$urlSuffix"
+                  }
                 )
             } yield record
     } yield IssueCredentialRecord.fromDomain(outcome)

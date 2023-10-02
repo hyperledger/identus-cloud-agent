@@ -43,25 +43,25 @@ class CredentialServiceNotifier(
     )
 
   override def createAnonCredsIssueCredentialRecord(
-      pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
-      thid: DidCommID,
-      credentialDefinitionId: UUID,
-      claims: Json,
-      validityPeriod: Option[Double],
-      automaticIssuance: Option[Boolean],
-      restServiceUrl: _root_.java.lang.String
+                                                     pairwiseIssuerDID: DidId,
+                                                     pairwiseHolderDID: DidId,
+                                                     thid: DidCommID,
+                                                     credentialDefinitionGUID: UUID,
+                                                     claims: Json,
+                                                     validityPeriod: Option[Double],
+                                                     automaticIssuance: Option[Boolean],
+                                                     credentialDefinitionId: _root_.java.lang.String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createAnonCredsIssueCredentialRecord(
         pairwiseIssuerDID,
         pairwiseHolderDID,
         thid,
-        credentialDefinitionId,
+        credentialDefinitionGUID,
         claims,
         validityPeriod,
         automaticIssuance,
-        restServiceUrl
+        credentialDefinitionId
       )
     )
 

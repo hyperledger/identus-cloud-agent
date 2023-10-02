@@ -157,15 +157,16 @@ private class CredentialServiceImpl(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       thid: DidCommID,
-      credentialDefinitionId: UUID,
+      credentialDefinitionGUID: UUID,
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
-      restServiceUrl: String
+      credentialDefinitionId: String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
+      _ <- Console.printLine(s"$credentialDefinitionService").orDie
       credentialDefinition <- credentialDefinitionService
-        .getByGUID(credentialDefinitionId)
+        .getByGUID(credentialDefinitionGUID)
         .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
       _ <- CredentialSchema
         .validateAnonCredsClaims(credentialDefinition.schemaId, claims.noSpaces, uriDereferencer)
@@ -175,10 +176,10 @@ private class CredentialServiceImpl(
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
         schemaId = credentialDefinition.schemaId,
-        credentialDefinitionId = credentialDefinitionId,
+        credentialDefinitionGUID = credentialDefinitionGUID,
         claims = attributes,
         thid = thid,
-        restServiceUrl
+        credentialDefinitionId
       )
       record <- ZIO.succeed(
         IssueCredentialRecord(
@@ -187,7 +188,7 @@ private class CredentialServiceImpl(
           updatedAt = None,
           thid = thid,
           schemaId = Some(credentialDefinition.schemaId),
-          credentialDefinitionId = Some(credentialDefinitionId),
+          credentialDefinitionId = Some(credentialDefinitionGUID),
           credentialFormat = CredentialFormat.AnonCreds,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,
@@ -807,10 +808,10 @@ private class CredentialServiceImpl(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       schemaId: String,
-      credentialDefinitionId: UUID,
+      credentialDefinitionGUID: UUID,
       claims: Seq[Attribute],
       thid: DidCommID,
-      restServiceUrl: String
+      credentialDefinitionId: String
   ) = {
     for {
       credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = Some(schemaId), attributes = claims))
@@ -818,7 +819,7 @@ private class CredentialServiceImpl(
         goal_code = Some("Offer Credential"),
         credential_preview = credentialPreview,
       )
-      attachments <- createAnonCredsCredentialOffer(credentialDefinitionId, restServiceUrl).map { offer =>
+      attachments <- createAnonCredsCredentialOffer(credentialDefinitionGUID, credentialDefinitionId).map { offer =>
         Seq(
           AttachmentDescriptor.buildBase64Attachment(
             mediaType = Some("application/json"),
@@ -836,10 +837,10 @@ private class CredentialServiceImpl(
     )
   }
 
-  private[this] def createAnonCredsCredentialOffer(credentialDefinitionId: UUID, restServiceUrl: String) = {
+  private[this] def createAnonCredsCredentialOffer(credentialDefinitionGUID: UUID, credentialDefinitionId: String) =
     for {
       credentialDefinition <- credentialDefinitionService
-        .getByGUID(credentialDefinitionId)
+        .getByGUID(credentialDefinitionGUID)
         .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
       cd = anoncreds.CredentialDefinition(credentialDefinition.definition.toString)
       kcp = anoncreds.CredentialKeyCorrectnessProof(credentialDefinition.keyCorrectnessProof.toString)
@@ -851,15 +852,8 @@ private class CredentialServiceImpl(
         .mapError(_ => CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinition.guid))
       cdp = anoncreds.CredentialDefinitionPrivate(credentialDefinitionSecret.json.toString)
       createCredentialDefinition = CreateCredentialDefinition(cd, cdp, kcp)
-      offer = AnoncredLib.createOffer(
-        createCredentialDefinition, {
-          val urlSuffix = s"credential-definition-registry/definitions/${credentialDefinition.guid.toString}/definition"
-          val urlPrefix = if (restServiceUrl.endsWith("/")) restServiceUrl else restServiceUrl + "/"
-          s"$urlPrefix$urlSuffix"
-        }
-      )
+      offer = AnoncredLib.createOffer(createCredentialDefinition, credentialDefinitionId)
     } yield offer
-  }
 
   private[this] def createDidCommRequestCredential(
       format: IssueCredentialOfferFormat,

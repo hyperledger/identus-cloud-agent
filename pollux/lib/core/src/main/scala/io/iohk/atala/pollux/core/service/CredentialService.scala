@@ -31,11 +31,11 @@ trait CredentialService {
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       thid: DidCommID,
-      credentialDefinitionId: UUID,
+      credentialDefinitionGUID: UUID,
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
-      restServiceUrl: String
+      credentialDefinitionId: String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   /** Return a list of records as well as a count of all filtered items */
