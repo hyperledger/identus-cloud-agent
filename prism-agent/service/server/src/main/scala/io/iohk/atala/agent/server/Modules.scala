@@ -4,6 +4,7 @@ import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.agent.server.config.SecretStorageBackend
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.memory.{
   DIDSecretStorageInMemory,
@@ -137,7 +138,7 @@ object RepoModule {
         .map(_.agent.secretStorage.backend)
         .tap(backend => ZIO.logInfo(s"Using '$backend' as a secret storage backend"))
         .flatMap {
-          case "vault" =>
+          case SecretStorageBackend.vault =>
             ZIO.succeed(
               ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
                 VaultDIDSecretStorage.layer,
@@ -146,7 +147,7 @@ object RepoModule {
                 vaultClientLayer,
               )
             )
-          case "postgres" =>
+          case SecretStorageBackend.postgres =>
             ZIO.succeed(
               ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
                 JdbcDIDSecretStorage.layer,
@@ -155,7 +156,7 @@ object RepoModule {
                 agentContextAwareTransactorLayer,
               )
             )
-          case "memory" =>
+          case SecretStorageBackend.memory =>
             ZIO.succeed(
               ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
                 DIDSecretStorageInMemory.layer,
@@ -163,11 +164,6 @@ object RepoModule {
                 GenericSecretStorageInMemory.layer
               )
             )
-          case backend =>
-            ZIO
-              .fail(s"Unsupported secret storage backend $backend. Available options are 'postgres', 'vault'")
-              .tapError(msg => ZIO.logError(msg))
-              .mapError(msg => Exception(msg))
         }
         .provide(SystemModule.configLayer)
     }.flatten

@@ -9,6 +9,7 @@ import zio.config.magnolia.Descriptor
 
 import java.net.URL
 import java.time.Duration
+import scala.util.Try
 
 final case class AppConfig(
     devMode: Boolean,
@@ -147,6 +148,22 @@ final case class DidCommEndpointConfig(http: HttpConfig, publicEndpointUrl: Stri
 final case class HttpConfig(port: Int)
 
 final case class SecretStorageConfig(
-    backend: String,
+    backend: SecretStorageBackend,
     vault: Option[VaultConfig],
 )
+
+enum SecretStorageBackend {
+  case vault, postgres, memory
+}
+
+object SecretStorageBackend {
+  given Descriptor[SecretStorageBackend] =
+    Descriptor.from(
+      Descriptor[String].transformOrFailLeft { s =>
+        Try(SecretStorageBackend.valueOf(s)).toOption
+          .toRight(
+            s"Invalid configuration value '$s'. Possible values: ${SecretStorageBackend.values.mkString("[", ", ", "]")}"
+          )
+      }(_.toString())
+    )
+}
