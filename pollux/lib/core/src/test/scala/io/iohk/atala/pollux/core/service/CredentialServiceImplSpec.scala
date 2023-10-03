@@ -58,7 +58,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
             pairwiseIssuerDid = DidId("did:peer:INVITER")
             pairwiseHolderDid = DidId("did:peer:HOLDER")
             thid = DidCommID(UUID.randomUUID().toString)
-            record <- svc.createRecord(
+            record <- svc.createJWTIssueCredentialRecord(
               thid = thid,
               pairwiseIssuerDID = pairwiseIssuerDid,
               pairwiseHolderDID = pairwiseHolderDid,
@@ -131,7 +131,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
                 |""".stripMargin)
               .getOrElse(Json.Null)
             thid = DidCommID(UUID.randomUUID().toString())
-            record <- svc.createRecord(
+            record <- svc.createJWTIssueCredentialRecord(
               thid = thid,
               pairwiseIssuerDID = pairwiseIssuerDid,
               pairwiseHolderDID = pairwiseHolderDid,
@@ -191,7 +191,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
               .getOrElse(Json.Null)
             thid = DidCommID(UUID.randomUUID().toString())
             record <- svc
-              .createRecord(
+              .createJWTIssueCredentialRecord(
                 thid = thid,
                 pairwiseIssuerDID = pairwiseIssuerDid,
                 pairwiseHolderDID = pairwiseHolderDid,
@@ -213,8 +213,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
         for {
           svc <- ZIO.service[CredentialService]
           thid = DidCommID()
-          aRecord <- svc.createRecord(thid = thid)
-          bRecord <- svc.createRecord(thid = thid).exit
+          aRecord <- svc.createJWTIssueCredentialRecord(thid = thid)
+          bRecord <- svc.createJWTIssueCredentialRecord(thid = thid).exit
         } yield {
           assertTrue(bRecord match
             case Exit.Failure(Cause.Fail(_: RepositoryError, _)) => true
@@ -225,8 +225,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
       test("getCredentialRecords returns the created records") {
         for {
           svc <- ZIO.service[CredentialService]
-          aRecord <- svc.createRecord()
-          bRecord <- svc.createRecord()
+          aRecord <- svc.createJWTIssueCredentialRecord()
+          bRecord <- svc.createJWTIssueCredentialRecord()
           records <- svc.getIssueCredentialRecords(false).map(_._1)
         } yield {
           assertTrue(records.size == 2) &&
@@ -237,7 +237,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
       test("getCredentialRecordsByState returns the correct records") {
         for {
           svc <- ZIO.service[CredentialService]
-          aRecord <- svc.createRecord()
+          aRecord <- svc.createJWTIssueCredentialRecord()
           records <- svc.getIssueCredentialRecordsByStates(
             ignoreWithZeroRetries = true,
             limit = 10,
@@ -255,16 +255,16 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
       test("getCredentialRecord returns the correct record") {
         for {
           svc <- ZIO.service[CredentialService]
-          aRecord <- svc.createRecord()
-          bRecord <- svc.createRecord()
+          aRecord <- svc.createJWTIssueCredentialRecord()
+          bRecord <- svc.createJWTIssueCredentialRecord()
           record <- svc.getIssueCredentialRecord(bRecord.id)
         } yield assertTrue(record.contains(bRecord))
       },
       test("getCredentialRecord returns nothing for an unknown 'recordId'") {
         for {
           svc <- ZIO.service[CredentialService]
-          aRecord <- svc.createRecord()
-          bRecord <- svc.createRecord()
+          aRecord <- svc.createJWTIssueCredentialRecord()
+          bRecord <- svc.createJWTIssueCredentialRecord()
           record <- svc.getIssueCredentialRecord(DidCommID())
         } yield assertTrue(record.isEmpty)
       },
@@ -360,7 +360,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
       test("receiveCredentialRequest successfully updates the record") {
         for {
           issuerSvc <- ZIO.service[CredentialService]
-          issuerRecord <- issuerSvc.createRecord()
+          issuerRecord <- issuerSvc.createJWTIssueCredentialRecord()
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
           request = requestCredential(Some(issuerRecord.thid))
           requestReceivedRecord <- issuerSvc.receiveCredentialRequest(request)
@@ -372,7 +372,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
       test("receiveCredentialRequest cannot be called twice for the same record") {
         for {
           issuerSvc <- ZIO.service[CredentialService]
-          issuerRecord <- issuerSvc.createRecord()
+          issuerRecord <- issuerSvc.createJWTIssueCredentialRecord()
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
           request = requestCredential(Some(issuerRecord.thid))
           requestReceivedRecord <- issuerSvc.receiveCredentialRequest(request)
@@ -387,7 +387,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
       test("receiveCredentialRequest is rejected for an unknown 'thid'") {
         for {
           issuerSvc <- ZIO.service[CredentialService]
-          issuerRecord <- issuerSvc.createRecord()
+          issuerRecord <- issuerSvc.createJWTIssueCredentialRecord()
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
           request = requestCredential(Some(DidCommID()))
           exit <- issuerSvc.receiveCredentialRequest(request).exit
@@ -401,7 +401,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
       test("acceptCredentialRequest successfully updates the record") {
         for {
           issuerSvc <- ZIO.service[CredentialService]
-          issuerRecord <- issuerSvc.createRecord()
+          issuerRecord <- issuerSvc.createJWTIssueCredentialRecord()
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
           request = requestCredential(Some(issuerRecord.thid))
           requestReceivedRecord <- issuerSvc.receiveCredentialRequest(request)
@@ -414,7 +414,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
       test("acceptCredentialRequest cannot be called twice for the same record") {
         for {
           issuerSvc <- ZIO.service[CredentialService]
-          issuerRecord <- issuerSvc.createRecord()
+          issuerRecord <- issuerSvc.createJWTIssueCredentialRecord()
           _ <- issuerSvc.markOfferSent(issuerRecord.id)
           request = requestCredential(Some(issuerRecord.thid))
           requestReceivedRecord <- issuerSvc.receiveCredentialRequest(request)
@@ -491,7 +491,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           issuerSvc <- ZIO.service[CredentialService].provideSomeLayer(credentialServiceLayer)
           holderSvc <- ZIO.service[CredentialService].provideSomeLayer(credentialServiceLayer)
           // Issuer creates offer
-          offerCreatedRecord <- issuerSvc.createRecord()
+          offerCreatedRecord <- issuerSvc.createJWTIssueCredentialRecord()
           issuerRecordId = offerCreatedRecord.id
           // Issuer sends offer
           _ <- issuerSvc.markOfferSent(issuerRecordId)
@@ -538,8 +538,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
         val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
         for {
           svc <- ZIO.service[CredentialService]
-          record1 <- svc.createRecord().provide(wallet1)
-          record2 <- svc.createRecord().provide(wallet2)
+          record1 <- svc.createJWTIssueCredentialRecord().provide(wallet1)
+          record2 <- svc.createJWTIssueCredentialRecord().provide(wallet2)
           ownRecord1 <- svc.getIssueCredentialRecord(record1.id).provide(wallet1)
           ownRecord2 <- svc.getIssueCredentialRecord(record2.id).provide(wallet2)
           crossRecord1 <- svc.getIssueCredentialRecord(record1.id).provide(wallet2)

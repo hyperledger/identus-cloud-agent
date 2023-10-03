@@ -101,25 +101,23 @@ trait CredentialServiceSpecHelper {
       })
   }
 
-  val defaultClaims = io.circe.parser
-    .parse("""
-        |{
-        | "name":"Alice",
-        | "address": {
-        |   "street": "Street Name",
-        |   "number": "12"
-        | }
-        |}
-        |""".stripMargin)
-    .getOrElse(Json.Null)
-
   extension (svc: CredentialService)
-    def createRecord(
+    def createJWTIssueCredentialRecord(
         pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
         pairwiseHolderDID: DidId = DidId("did:prism:holder-pairwise"),
         thid: DidCommID = DidCommID(),
         maybeSchemaId: Option[String] = None,
-        claims: Json = defaultClaims,
+        claims: Json = io.circe.parser
+          .parse("""
+              |{
+              | "name":"Alice",
+              | "address": {
+              |   "street": "Street Name",
+              |   "number": "12"
+              | }
+              |}
+              |""".stripMargin)
+          .getOrElse(Json.Null),
         validityPeriod: Option[Double] = None,
         automaticIssuance: Option[Boolean] = None
     ) = for {
@@ -135,6 +133,38 @@ trait CredentialServiceSpecHelper {
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
         issuingDID = issuingDID
+      )
+    } yield record
+
+    def createAnonCredsIssueCredentialRecord(
+        credentialDefinitionGUID: UUID,
+        pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
+        pairwiseHolderDID: DidId = DidId("did:prism:holder-pairwise"),
+        thid: DidCommID = DidCommID(),
+        claims: Json = io.circe.parser
+          .parse("""
+                |{
+                |  "emailAddress": "alice@wonderland.com",
+                |  "familyName": "Wonderland",
+                |  "dateOfIssuance": "2020-11-13T20:20:39+00:00",
+                |  "drivingLicenseID": "12345",
+                |  "drivingClass": "3"
+                |}
+                |""".stripMargin)
+          .getOrElse(Json.Null),
+        validityPeriod: Option[Double] = None,
+        automaticIssuance: Option[Boolean] = None,
+        credentialDefinitionId: String = "http://test.com/cred-def/1234",
+    ) = for {
+      record <- svc.createAnonCredsIssueCredentialRecord(
+        pairwiseIssuerDID = pairwiseIssuerDID,
+        pairwiseHolderDID = pairwiseHolderDID,
+        thid = thid,
+        claims = claims,
+        validityPeriod = validityPeriod,
+        automaticIssuance = automaticIssuance,
+        credentialDefinitionGUID = credentialDefinitionGUID,
+        credentialDefinitionId = credentialDefinitionId
       )
     } yield record
 

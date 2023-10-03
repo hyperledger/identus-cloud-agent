@@ -92,7 +92,7 @@ object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServ
           svc <- ZIO.service[CredentialService]
           ens <- ZIO.service[EventNotificationService]
 
-          offerCreatedRecord <- svc.createRecord()
+          offerCreatedRecord <- svc.createJWTIssueCredentialRecord()
           issuerRecordId = offerCreatedRecord.id
           _ <- svc.markOfferSent(issuerRecordId)
           _ <- svc.receiveCredentialRequest(requestCredential())
