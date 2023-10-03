@@ -155,10 +155,28 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KEYCLOAK_DATABASE_VENDOR: dev-mem
-      KEYCLOAK_EXTRA_ARGS: --import-realm
+      KEYCLOAK_EXTRA_ARGS: --health-enabled=true
       KEYCLOAK_EXTRA_ARGS_PREPENDED: --verbose
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://keycloak:8080/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  keycloak-init:
+    image: badouralix/curl-jq:ubuntu
+    command: /workspace/init-script.sh
+    environment:
+      KEYCLOAK_BASE_URL: http://keycloak:8080
+      KEYCLOAK_ADMIN_USER: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      REALM_NAME: atala-demo
+      PRISM_AGENT_CLIENT_SECRET: prism-agent-demo-secret
     volumes:
-      - ./keycloak/manage-realm.json:/opt/bitnami/keycloak/data/import/manage-realm.json
+      - ./keycloak/init-script.sh:/workspace/init-script.sh
+    depends_on:
+      keycloak:
+        condition: service_healthy
 
 volumes:
   pg_data_db:
