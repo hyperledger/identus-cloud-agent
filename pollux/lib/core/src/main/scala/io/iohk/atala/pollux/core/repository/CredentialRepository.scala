@@ -11,7 +11,7 @@ import zio.*
 trait CredentialRepository {
   def createIssueCredentialRecord(record: IssueCredentialRecord): RIO[WalletAccessContext, Int]
   def getIssueCredentialRecords(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
       offset: Option[Int] = None,
       limit: Option[Int] = None
   ): RIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)]
@@ -27,7 +27,7 @@ trait CredentialRepository {
 
   def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]]
 
   def updateCredentialRecordProtocolState(

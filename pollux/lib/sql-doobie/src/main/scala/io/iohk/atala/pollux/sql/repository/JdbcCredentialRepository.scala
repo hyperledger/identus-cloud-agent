@@ -126,7 +126,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
   }
 
   override def getIssueCredentialRecords(
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
       offset: Option[Int],
       limit: Option[Int]
   ): RIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)] = {
@@ -271,7 +271,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
 
   override def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
-      ignoreWithZeroRetries: Boolean = true,
+      ignoreWithZeroRetries: Boolean,
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
     val conditionFragment = Fragments.whereAndOpt(
       Some(fr"thid = $thid"),

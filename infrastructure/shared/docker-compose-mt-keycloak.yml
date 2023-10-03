@@ -1,0 +1,188 @@
+---
+# This is tempoarily used for development of keycloak integration.
+# To be merged in the main compose file and removed when integration is stable and complete.
+version: "3.8"
+
+services:
+  ##########################
+  # Database
+  ##########################
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,iris,agent,node_db"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_data_db:/var/lib/postgresql/data
+      - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+      - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
+    #    ports:
+    #      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "iris"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - debug
+
+  ##########################
+  # Services
+  ##########################
+
+  prism-node:
+    image: ghcr.io/input-output-hk/prism-node:${PRISM_NODE_VERSION}
+    environment:
+      NODE_PSQL_HOST: db:5432
+    depends_on:
+      db:
+        condition: service_healthy
+
+  vault-server:
+    image: hashicorp/vault:latest
+    #    ports:
+    #      - "8200:8200"
+    environment:
+      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN_ID}
+    command: server -dev -dev-root-token-id=${VAULT_DEV_ROOT_TOKEN_ID}
+    cap_add:
+      - IPC_LOCK
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  prism-agent:
+    image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
+    environment:
+      IRIS_HOST: iris
+      IRIS_PORT: 8081
+      CASTOR_DB_HOST: db
+      CASTOR_DB_PORT: 5432
+      CASTOR_DB_NAME: castor
+      CASTOR_DB_USER: postgres
+      CASTOR_DB_PASSWORD: postgres
+      POLLUX_DB_HOST: db
+      POLLUX_DB_PORT: 5432
+      POLLUX_DB_NAME: pollux
+      POLLUX_DB_USER: postgres
+      POLLUX_DB_PASSWORD: postgres
+      CONNECT_DB_HOST: db
+      CONNECT_DB_PORT: 5432
+      CONNECT_DB_NAME: connect
+      CONNECT_DB_USER: postgres
+      CONNECT_DB_PASSWORD: postgres
+      AGENT_DB_HOST: db
+      AGENT_DB_PORT: 5432
+      AGENT_DB_NAME: agent
+      AGENT_DB_USER: postgres
+      AGENT_DB_PASSWORD: postgres
+      DIDCOMM_SERVICE_URL: http://${DOCKERHOST}:${PORT}/didcomm
+      PRISM_NODE_HOST: prism-node
+      PRISM_NODE_PORT: 50053
+      VAULT_ADDR: ${VAULT_ADDR:-http://vault-server:8200}
+      VAULT_TOKEN: ${VAULT_DEV_ROOT_TOKEN_ID:-root}
+      SECRET_STORAGE_BACKEND: postgres
+      DEV_MODE: true
+      DEFAULT_WALLET_ENABLED:
+      DEFAULT_WALLET_SEED:
+      DEFAULT_WALLET_WEBHOOK_URL:
+      DEFAULT_WALLET_WEBHOOK_API_KEY:
+      DEFAULT_WALLET_AUTH_API_KEY:
+      GLOBAL_WEBHOOK_URL:
+      GLOBAL_WEBHOOK_API_KEY:
+      WEBHOOK_PARALLELISM:
+      ADMIN_TOKEN:
+      API_KEY_SALT:
+      API_KEY_ENABLED:
+      API_KEY_AUTHENTICATE_AS_DEFAULT_USER:
+      API_KEY_AUTO_PROVISIONING:
+    depends_on:
+      db:
+        condition: service_healthy
+      prism-node:
+        condition: service_started
+      vault-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://prism-agent:8085/_system/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui:v5.1.0
+    environment:
+      - 'URLS=[
+        { name: "Prism Agent", url: "/docs/prism-agent/api/docs.yaml" }
+        ]'
+
+  apisix:
+    image: apache/apisix:2.15.0-alpine
+    volumes:
+      - ./apisix/conf/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+      - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+    ports:
+      - "${PORT}:9080/tcp"
+    depends_on:
+      - prism-agent
+      - swagger-ui
+
+  keycloak:
+    image: bitnami/keycloak:22.0.3
+    ports:
+      - "9980:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_DATABASE_VENDOR: dev-mem
+      KEYCLOAK_EXTRA_ARGS: --health-enabled=true
+      KEYCLOAK_EXTRA_ARGS_PREPENDED: --verbose
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://keycloak:8080/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  keycloak-init:
+    image: badouralix/curl-jq:ubuntu
+    command: /workspace/init-script.sh
+    environment:
+      KEYCLOAK_BASE_URL: http://keycloak:8080
+      KEYCLOAK_ADMIN_USER: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      REALM_NAME: atala-demo
+      PRISM_AGENT_CLIENT_SECRET: prism-agent-demo-secret
+    volumes:
+      - ./keycloak/init-script.sh:/workspace/init-script.sh
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+volumes:
+  pg_data_db:
+  pgadmin:
+# Temporary commit network setting due to e2e CI bug
+# to be enabled later after debugging
+#networks:
+#  default:
+#    name: ${NETWORK}

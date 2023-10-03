@@ -127,7 +127,7 @@ class JdbcPresentationRepository(
   }
 
   override def getPresentationRecords(
-      ignoreWithZeroRetries: Boolean = true
+      ignoreWithZeroRetries: Boolean
   ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
     val conditionFragment = Fragments.whereAndOpt(
       Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")

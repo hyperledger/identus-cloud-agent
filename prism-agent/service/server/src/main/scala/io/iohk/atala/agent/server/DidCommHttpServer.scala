@@ -23,16 +23,14 @@ import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.http.*
-import zio.http.model.*
-
 import java.util.UUID
 
 object DidCommHttpServer {
 
   def run(didCommServicePort: Int) = {
     val server = {
-      val config = ServerConfig(address = new java.net.InetSocketAddress(didCommServicePort))
-      ServerConfig.live(config)(using Trace.empty) >>> Server.live
+      val config = Server.Config.default.copy(address = new java.net.InetSocketAddress(didCommServicePort))
+      ZLayer.succeed(config) >>> Server.live
     }
     for {
       _ <- ZIO.logInfo(s"Server Started on port $didCommServicePort")
@@ -48,12 +46,8 @@ object DidCommHttpServer {
       DIDResolver & DIDNonSecretStorage & AppConfig,
     Nothing
   ] = Http.collectZIO[Request] {
-    case req @ Method.POST -> !!
-        if req.headersAsList
-          .exists(h =>
-            h.key.toString.equalsIgnoreCase("content-type") &&
-              h.value.toString.equalsIgnoreCase(MediaTypes.contentTypeEncrypted)
-          ) =>
+    case req @ Method.POST -> Root
+        if req.rawHeader("content-type").fold(false) { _.equalsIgnoreCase(MediaTypes.contentTypeEncrypted) } =>
       val result = for {
         data <- req.body.asString.mapError(e => RequestBodyParsingError(e.getMessage))
         _ <- webServerProgram(data)

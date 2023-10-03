@@ -34,6 +34,7 @@ trait CredentialService {
 
   /** Return a list of records as well as a count of all filtered items */
   def getIssueCredentialRecords(
+      ignoreWithZeroRetries: Boolean,
       offset: Option[Int] = None,
       limit: Option[Int] = None
   ): ZIO[WalletAccessContext, CredentialServiceError, (Seq[IssueCredentialRecord], Int)]
@@ -49,7 +50,8 @@ trait CredentialService {
   ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]]
 
   def getIssueCredentialRecordByThreadId(
-      thid: DidCommID
+      thid: DidCommID,
+      ignoreWithZeroRetries: Boolean
   ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]]
 
   def receiveCredentialOffer(

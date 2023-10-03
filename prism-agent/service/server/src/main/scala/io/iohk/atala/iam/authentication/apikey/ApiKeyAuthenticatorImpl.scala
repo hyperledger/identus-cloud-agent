@@ -42,6 +42,8 @@ case class ApiKeyAuthenticatorImpl(
               UnexpectedError("Internal error")
             case AuthenticationRepositoryError.ServiceError(message) =>
               UnexpectedError("Internal error")
+            case AuthenticationRepositoryError.AuthenticationCompromised(entityId, amt, secret) =>
+              InvalidCredentials("API key is compromised")
           }
       }
     } else {
@@ -89,11 +91,12 @@ case class ApiKeyAuthenticatorImpl(
         .mapError(cause => AuthenticationError.UnexpectedError(cause.getMessage))
       _ <- repository
         .insert(entityId, AuthenticationMethodType.ApiKey, secret)
+        .logError(s"Insert operation failed for entityId: $entityId")
         .mapError(are => AuthenticationError.UnexpectedError(are.message))
     } yield ()
   }
 
-  override def delete(entityId: _root_.java.util.UUID, apiKey: String): IO[AuthenticationError, Unit] = {
+  override def delete(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit] = {
     for {
       saltAndApiKey <- ZIO.succeed(apiKeyConfig.salt + apiKey)
       secret <- ZIO
@@ -101,7 +104,7 @@ case class ApiKeyAuthenticatorImpl(
         .logError("Failed to compute SHA256 hash")
         .mapError(cause => AuthenticationError.UnexpectedError(cause.getMessage))
       _ <- repository
-        .deleteByEntityIdAndSecret(entityId, secret)
+        .delete(entityId, AuthenticationMethodType.ApiKey, secret)
         .mapError(are => AuthenticationError.UnexpectedError(are.message))
     } yield ()
   }

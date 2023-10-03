@@ -105,7 +105,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           pairwiseProverDid = DidId("did:peer:Prover")
           record1 <- svc.createRecord()
           record2 <- svc.createRecord()
-          records <- svc.getPresentationRecords()
+          records <- svc.getPresentationRecords(false)
         } yield {
           assertTrue(records.size == 2)
         }

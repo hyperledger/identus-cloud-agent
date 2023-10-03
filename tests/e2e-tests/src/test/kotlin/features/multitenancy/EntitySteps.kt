@@ -2,9 +2,12 @@ package features.multitenancy
 
 import api_models.CreateEntityRequest
 import api_models.AddApiKeyRequest
+import common.Ensure
 import common.Utils
 import interactions.Post
+import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
+import org.apache.http.HttpStatus.SC_CREATED
 import java.util.*
 
 class EntitySteps {
@@ -26,6 +29,9 @@ class EntitySteps {
                     )
                 },
         )
+        actor.attemptsTo(
+            Ensure.that(SerenityRest.lastResponse().statusCode).isEqualTo(SC_CREATED)
+        )
         return Utils.lastResponseObject("id", String::class)
     }
 
@@ -40,6 +46,9 @@ class EntitySteps {
                         )
                     )
                 },
+        )
+        actor.attemptsTo(
+            Ensure.that(SerenityRest.lastResponse().statusCode).isEqualTo(SC_CREATED)
         )
     }
 }
