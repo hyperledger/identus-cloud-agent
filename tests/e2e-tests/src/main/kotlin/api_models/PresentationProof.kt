@@ -11,6 +11,7 @@ data class PresentationProof(
     var proofs: List<String>? = null,
     var data: List<String>? = null,
     var role: String? = null,
+    var metaRetries: Int = 0,
 ): JsonEncoded
 
 object PresentationProofStatus {

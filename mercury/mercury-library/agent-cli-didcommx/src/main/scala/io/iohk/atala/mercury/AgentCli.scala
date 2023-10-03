@@ -2,9 +2,7 @@ package io.iohk.atala.mercury
 
 import scala.jdk.CollectionConverters.*
 import zio.*
-
-import zio.http._
-import zio.http.model._
+import zio.http.{Header as _, *}
 import java.io.IOException
 import io.iohk.atala.QRcode
 import io.iohk.atala.mercury._
@@ -252,14 +250,15 @@ object AgentCli extends ZIOAppDefault {
     } yield ()
   }
 
-  def webServer: HttpApp[DidOps & DidAgent & DIDResolver & HttpClient, Throwable] = {
+  private def webServer: App[DidOps & DidAgent & DIDResolver & HttpClient] = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
+    val (expectedKey, expectedValue) = header
+
     Http
       .collectZIO[Request] {
-        case req @ Method.POST -> !!
-            if req.headersAsList
-              .exists(h => h._1.toString.equalsIgnoreCase(header._1) && h._2.toString.equalsIgnoreCase(header._2)) =>
-          req.body.asString
+        case req @ Method.POST -> Root
+            if req.rawHeader(expectedKey).fold(false) { _.equalsIgnoreCase(expectedValue) } =>
+          val res = req.body.asString
             .catchNonFatalOrDie(ex => ZIO.fail(ParseResponse(ex)))
             .flatMap { data =>
               webServerProgram(data).catchAll { ex =>
@@ -267,19 +266,21 @@ object AgentCli extends ZIOAppDefault {
               }
             }
             .map(str => Response.text(str))
-        case Method.GET -> !! / "test" => ZIO.succeed(Response.text("Test ok!"))
+
+          res
+        case Method.GET -> Root / "test" => ZIO.succeed(Response.text("Test ok!"))
         case req =>
-          ZIO.logWarning(s"Recive a not DID Comm v2 messagem: ${req}") *>
+          ZIO.logWarning(s"Received a not DID Comm v2 message: ${req}") *>
             ZIO.succeed(Response.text(s"The request must be a POST to root with the Header $header"))
       }
-
+      .mapError(throwable => Response.fromHttpError(HttpError.InternalServerError(cause = Some(throwable))))
   }
 
   def startEndpoint: ZIO[DidOps & DidAgent & DIDResolver & HttpClient, IOException, Unit] = for {
-    _ <- Console.printLine("Setup a endpoint")
+    _ <- Console.printLine("Setup an endpoint")
     agentService <- ZIO.service[DidAgent]
 
-    defualtPort = UniversalDidResolver
+    defaultPort = UniversalDidResolver
       .resolve(agentService.id.value)
       .get()
       .getDidCommServices()
@@ -287,18 +288,18 @@ object AgentCli extends ZIOAppDefault {
       .toSeq
       .headOption
       .map(s => s.getServiceEndpoint())
-      .flatMap(e => URL.fromString(e).toOption)
+      .flatMap(e => URL.decode(e).toOption)
       .flatMap(_.port)
-      .getOrElse(8081) // defualt
+      .getOrElse(8081) // default
 
-    _ <- Console.printLine(s"Inserte endpoint port ($defualtPort defualt) for (http://localhost:port)")
+    _ <- Console.printLine(s"Insert endpoint port ($defaultPort default) for (http://localhost:port)")
     port <- Console.readLine.flatMap {
-      case ""  => ZIO.succeed(defualtPort)
-      case str => ZIO.succeed(str.toIntOption.getOrElse(defualtPort))
+      case ""  => ZIO.succeed(defaultPort)
+      case str => ZIO.succeed(str.toIntOption.getOrElse(defaultPort))
     }
     server = {
-      val config = ServerConfig(address = new java.net.InetSocketAddress(port))
-      ServerConfig.live(config)(using Trace.empty) >>> Server.live
+      val config = Server.Config.default.copy(address = new java.net.InetSocketAddress(port))
+      ZLayer.succeed(config) >>> Server.live
     }
     _ <- Server
       .serve(webServer)
@@ -318,7 +319,7 @@ object AgentCli extends ZIOAppDefault {
     // ZIO.when(haveServiceEndpoint)( // )
     _ <- Console.printLine("Enter the serviceEndpoint URL (defualt None) or port for http://localhost:port")
     serviceEndpoint <- Console.readLine.flatMap {
-      case ""                               => ZIO.succeed(None) // defualt
+      case ""                               => ZIO.succeed(None) // default
       case str if str.toIntOption.isDefined => ZIO.succeed(str.toIntOption.map(port => s"http://localhost:$port"))
       case str                              => ZIO.succeed(Some(str))
     }
@@ -460,8 +461,8 @@ object AgentCli extends ZIOAppDefault {
                 connectionRequest = ConnectionRequest.fromMessage(msg).toOption.get // TODO .get
                 _ <- ZIO.logInfo("Got ConnectionRequest: " + connectionRequest)
                 _ <- ZIO.logInfo("Creating New PeerDID...")
-//                peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = serviceEndpoint)) TODO
-//                _ <- ZIO.logInfo(s"My new DID => $peer")
+                //                peer <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = serviceEndpoint)) TODO
+                //                _ <- ZIO.logInfo(s"My new DID => $peer")
                 connectionResponse = ConnectionResponse.makeResponseFromRequest(msg).toOption.get // TODO .get
                 msgToSend = connectionResponse.makeMessage
                 _ <- MessagingService.send(msgToSend)

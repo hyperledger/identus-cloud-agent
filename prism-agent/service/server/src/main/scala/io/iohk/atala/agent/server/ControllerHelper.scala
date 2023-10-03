@@ -1,7 +1,11 @@
 package io.iohk.atala.agent.server
 
+import io.iohk.atala.agent.walletapi.model.PublicationState.Published
+import io.iohk.atala.agent.walletapi.model.error.GetManagedDIDError
+import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
-import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID}
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
@@ -58,5 +62,19 @@ trait ControllerHelper {
     ZIO
       .fromEither(PrismDID.fromString(maybeDid))
       .mapError(e => ErrorResponse.badRequest(detail = Some(s"Error parsing string as PrismDID: ${e}")))
+
+  protected def getLongFormPrismDID(
+      did: PrismDID,
+      allowUnpublishedIssuingDID: Boolean = false
+  ): ZIO[WalletAccessContext & ManagedDIDService, GetManagedDIDError, Option[LongFormPrismDID]] = {
+    for {
+      managedDIDService <- ZIO.service[ManagedDIDService]
+      maybeDIDState <- managedDIDService.getManagedDIDState(did.asCanonical).map {
+        case Some(s) if !allowUnpublishedIssuingDID && s.publicationState != Published => None
+        case s                                                                         => s
+      }
+      longFormPrismDID = maybeDIDState.map(ds => PrismDID.buildLongFormFromOperation(ds.createOperation))
+    } yield longFormPrismDID
+  }
 
 }

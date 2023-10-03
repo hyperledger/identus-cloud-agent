@@ -113,8 +113,10 @@ class PresentationServiceNotifier(
   override def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID] =
     svc.extractIdFromCredential(credential)
 
-  override def getPresentationRecords(): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] =
-    svc.getPresentationRecords()
+  override def getPresentationRecords(
+      ignoreWithZeroRetries: Boolean
+  ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] =
+    svc.getPresentationRecords(ignoreWithZeroRetries)
 
   override def createPresentationPayloadFromRecord(
       record: DidCommID,

@@ -45,6 +45,9 @@ case class Connection(
     @description(annotations.updatedAt.description)
     @encodedExample(annotations.updatedAt.example)
     updatedAt: Option[OffsetDateTime] = None,
+    @description(annotations.metaRetries.description)
+    @encodedExample(annotations.metaRetries.example)
+    metaRetries: Int,
     @description(annotations.self.description)
     @encodedExample(annotations.self.example)
     self: String = "",
@@ -80,6 +83,7 @@ object Connection {
       invitation = ConnectionInvitation.fromDomain(domain.invitation),
       createdAt = domain.createdAt.atOffset(ZoneOffset.UTC),
       updatedAt = domain.updatedAt.map(_.atOffset(ZoneOffset.UTC)),
+      metaRetries = domain.metaRetries,
       self = domain.id.toString,
       kind = "Connection",
     )
@@ -167,6 +171,12 @@ object Connection {
         extends Annotation[OffsetDateTime](
           description = "The date and time the connection record was last updated.",
           example = OffsetDateTime.parse("2022-03-10T12:00:00Z")
+        )
+
+    object metaRetries
+        extends Annotation[Int](
+          description = "The maximum background processing attempts remaining for this record",
+          example = 5
         )
 
     object self

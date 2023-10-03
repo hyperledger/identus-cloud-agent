@@ -168,15 +168,17 @@ class CredentialServiceNotifier(
     svc.getIssueCredentialRecord(recordId)
 
   override def getIssueCredentialRecordByThreadId(
-      thid: DidCommID
+      thid: DidCommID,
+      ignoreWithZeroRetries: Boolean
   ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]] =
-    svc.getIssueCredentialRecordByThreadId(thid)
+    svc.getIssueCredentialRecordByThreadId(thid, ignoreWithZeroRetries)
 
   override def getIssueCredentialRecords(
+      ignoreWithZeroRetries: Boolean,
       offset: Option[Int] = None,
       limit: Option[Int] = None
   ): ZIO[WalletAccessContext, CredentialServiceError, (Seq[IssueCredentialRecord], Int)] =
-    svc.getIssueCredentialRecords(offset, limit)
+    svc.getIssueCredentialRecords(ignoreWithZeroRetries, offset, limit)
 
   override def getIssueCredentialRecordsByStates(
       ignoreWithZeroRetries: Boolean,
