@@ -15,6 +15,7 @@ import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.InvalidCredentials
 import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import zio.Runtime.removeDefaultLoggers
 import zio.test.Assertion.*
 import zio.test.TestAspect.sequential
 import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, assert, *}
@@ -67,7 +68,9 @@ object ApiKeyAuthenticatorSpec extends ZIOSpecDefault, PostgresTestContainerSupp
       paths = "classpath:sql/agent"
     )
 
-    testSuite.provideSomeLayerShared(testEnvironmentLayer)
+    testSuite
+      .provideSomeLayerShared(testEnvironmentLayer)
+      .provide(removeDefaultLoggers)
   }
 
   val failWhenTheHeaderIsAnEmptyStringTest = test("should fail when the header is empty string")(
