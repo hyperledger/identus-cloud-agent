@@ -147,8 +147,8 @@ class IssueControllerImpl(
   ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
     val result: ZIO[WalletAccessContext, CredentialServiceError | ErrorResponse, IssueCredentialRecord] = for {
       _ <- request.subjectId match
-          case Some(did) => extractPrismDIDFromString(did).flatMap(validatePrismDID(_, true))
-          case None => ZIO.succeed(())
+        case Some(did) => extractPrismDIDFromString(did).flatMap(validatePrismDID(_, true))
+        case None      => ZIO.succeed(())
       id <- extractDidCommIdFromString(recordId)
       outcome <- credentialService.acceptCredentialOffer(id, request.subjectId)
     } yield IssueCredentialRecord.fromDomain(outcome)

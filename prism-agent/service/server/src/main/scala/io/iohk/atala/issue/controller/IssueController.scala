@@ -40,6 +40,8 @@ object IssueController {
     error match
       case CredentialServiceError.RepositoryError(cause) =>
         ErrorResponse.internalServerError(title = "RepositoryError", detail = Some(cause.toString))
+      case CredentialServiceError.LinkSecretError(cause) =>
+        ErrorResponse.internalServerError(title = "LinkSecretError", detail = Some(cause.toString))
       case CredentialServiceError.RecordIdNotFound(recordId) =>
         ErrorResponse.notFound(detail = Some(s"Record Id not found: $recordId"))
       case CredentialServiceError.OperationNotExecuted(recordId, info) =>

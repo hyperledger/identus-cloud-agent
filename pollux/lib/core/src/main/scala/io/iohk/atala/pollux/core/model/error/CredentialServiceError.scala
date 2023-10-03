@@ -9,6 +9,8 @@ sealed trait CredentialServiceError
 
 object CredentialServiceError {
   final case class RepositoryError(cause: Throwable) extends CredentialServiceError
+
+  final case class LinkSecretError(cause: Throwable) extends CredentialServiceError
   final case class RecordIdNotFound(recordId: DidCommID) extends CredentialServiceError
   final case class OperationNotExecuted(recordId: DidCommID, info: String) extends CredentialServiceError
   final case class ThreadIdNotFound(thid: DidCommID) extends CredentialServiceError

@@ -101,6 +101,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
   val testEnvironmentLayer = zio.test.testEnvironment ++
     pgContainerLayer ++
     contextAwareTransactorLayer ++
+    GenericSecretStorageInMemory.layer >+> LinkSecretServiceImpl.layer ++
     GenericSecretStorageInMemory.layer >+> credentialDefinitionServiceLayer >+>
     controllerLayer ++
     DefaultEntityAuthenticator.layer
