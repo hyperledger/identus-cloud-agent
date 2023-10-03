@@ -28,10 +28,8 @@ class PresentProofControllerImpl(
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
     val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] = for {
-      format <- CredentialFormat.fromString(request.format) match
-        case Some(value) => ZIO.succeed(value)
-        case None        => ZIO.fail(PresentationError.UnsupportedCredentialFormat(request.format))
       didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
+      credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
       record <- presentationService
         .createPresentationRecord(
           pairwiseVerifierDID = didIdPair.myDID,
@@ -46,7 +44,7 @@ class PresentProofControllerImpl(
             )
           },
           options = request.options.map(x => Options(x.challenge, x.domain)),
-          format = format,
+          format = credentialFormat,
         )
     } yield PresentationStatus.fromDomain(record)
 
