@@ -166,7 +166,6 @@ private class CredentialServiceImpl(
       credentialDefinitionId: String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
-      _ <- Console.printLine(s"$credentialDefinitionService").orDie
       credentialDefinition <- credentialDefinitionService
         .getByGUID(credentialDefinitionGUID)
         .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
@@ -306,14 +305,13 @@ private class CredentialServiceImpl(
         attachment.data match
           case Base64(value) =>
             for {
-              credentialOffer <- ZIO
+              _ <- ZIO
                 .attempt(CredentialOffer(value))
                 .mapError(e =>
                   CredentialServiceError.UnexpectedError(
                     s"Unexpected error parsing credential offer attachment: ${e.toString}"
                   )
                 )
-              _ <- ZIO.logInfo(s"Credential Offer parsed => $credentialOffer")
             } yield ()
           case _ =>
             ZIO.fail(
@@ -531,7 +529,6 @@ private class CredentialServiceImpl(
       credDefContent <- uriDereferencer
         .dereference(new URI(credentialOffer.getCredDefId))
         .mapError(err => UnexpectedError(err.toString))
-      _ <- ZIO.logInfo(s"Cred Def Content => $credDefContent")
       credentialDefinition = anoncreds.CredentialDefinition(credDefContent)
       linkSecret <- linkSecretService
         .fetchOrCreate()
@@ -639,7 +636,6 @@ private class CredentialServiceImpl(
       credDefContent <- uriDereferencer
         .dereference(new URI(credential.getCredDefId))
         .mapError(err => UnexpectedError(err.toString))
-      _ <- ZIO.logInfo(s"Cred Def Content => $credDefContent")
       credentialDefinition = anoncreds.CredentialDefinition(credDefContent)
       metadata <- ZIO
         .fromOption(record.anonCredsRequestMetadata)

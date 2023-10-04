@@ -32,8 +32,9 @@ trait CredentialServiceSpecHelper {
     CredentialDefinitionRepositoryInMemory.layer ++ ResourceURIDereferencerImpl.layer >>>
       CredentialDefinitionServiceImpl.layer ++ defaultWalletLayer
 
-  protected val credentialServiceLayer: URLayer[DIDService & ManagedDIDService & URIDereferencer, CredentialService] =
-    ZLayer.makeSome[DIDService & ManagedDIDService & URIDereferencer, CredentialService](
+  protected val credentialServiceLayer
+      : URLayer[DIDService & ManagedDIDService & URIDereferencer, CredentialService & CredentialDefinitionService] =
+    ZLayer.makeSome[DIDService & ManagedDIDService & URIDereferencer, CredentialService & CredentialDefinitionService](
       CredentialRepositoryInMemory.layer,
       ZLayer.fromFunction(PrismDidResolver(_)),
       credentialDefinitionServiceLayer,
