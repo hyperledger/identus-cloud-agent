@@ -1,8 +1,7 @@
 package io.iohk.atala.iam.authentication.apikey
 
 import io.iohk.atala.agent.server.config.AppConfig
-import zio.{URLayer, ZLayer}
-import zio.ZIO
+import zio.*
 
 case class ApiKeyConfig(salt: String, enabled: Boolean, authenticateAsDefaultUser: Boolean, autoProvisioning: Boolean)
 

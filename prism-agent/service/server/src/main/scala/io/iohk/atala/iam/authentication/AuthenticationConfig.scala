@@ -7,7 +7,15 @@ import zio.config.magnolia.*
 
 import scala.util.Try
 
-final case class AuthenticationConfig(method: AuthMethod, admin: AdminConfig, apiKey: ApiKeyConfig)
+// TODO: make auth config optional
+final case class AuthenticationConfig(method: AuthMethod, admin: AdminConfig, apiKey: ApiKeyConfig) {
+  def isEnabled: Boolean = {
+    val isNoneMethod = method == AuthMethod.none
+    val isApiKeyMethodAndDisabled = (method == AuthMethod.apiKey) && !apiKey.enabled
+    val isDisabled = isNoneMethod || isApiKeyMethodAndDisabled
+    !isDisabled
+  }
+}
 
 enum AuthMethod {
   case none, apiKey, keycloak

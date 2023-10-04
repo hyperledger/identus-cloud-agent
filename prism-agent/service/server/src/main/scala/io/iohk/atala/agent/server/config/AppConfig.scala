@@ -134,8 +134,10 @@ final case class AgentConfig(
     defaultWallet: DefaultWalletConfig
 ) {
   def validate: Either[String, Unit] = {
-    if (!defaultWallet.enabled && !authentication.apiKey.enabled)
-      Left("The default wallet cannot be disabled if the apikey authentication is disabled.")
+    if (!defaultWallet.enabled && !authentication.isEnabled)
+      Left(
+        "The default wallet must be enabled if the authentication is disabled. Default wallet is required for the single-tenant mode."
+      )
     else
       Right(())
   }

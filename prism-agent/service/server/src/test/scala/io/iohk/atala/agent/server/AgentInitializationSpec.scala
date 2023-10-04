@@ -10,6 +10,7 @@ import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
+import io.iohk.atala.iam.authentication.AuthMethod
 import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticatorImpl
 import io.iohk.atala.iam.authentication.apikey.JdbcAuthenticationRepository
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -54,12 +55,31 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         _ <- AgentInitialization.run.overrideConfig()
       } yield assertCompletes
     ),
-    test("fail when both apikey and default wallet are disabled")(
+    test("do not fail the default wallet is disabled, but any authentication is enabled") {
+      for {
+        _ <- AgentInitialization.run.overrideConfig(
+          enableDefaultWallet = false,
+          authMethod = AuthMethod.keycloak
+        )
+      } yield assertCompletes
+    },
+    test("fail when the default wallet is disabled and authentication is not set") {
       for {
         exit <- AgentInitialization.run
           .overrideConfig(
+            enableDefaultWallet = false,
+            authMethod = AuthMethod.none
+          )
+          .exit
+      } yield assert(exit)(fails(isSubtype[RuntimeException](anything)))
+    },
+    test("fail when the default wallet is disabled and authentication is set to apiKey but disabled")(
+      for {
+        exit <- AgentInitialization.run
+          .overrideConfig(
+            enableDefaultWallet = false,
+            authMethod = AuthMethod.apiKey,
             enableApiKey = false,
-            enableDefaultWallet = false
           )
           .exit
       } yield assert(exit)(fails(isSubtype[RuntimeException](anything)))
@@ -133,7 +153,8 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         seed: Option[String] = None,
         webhookUrl: Option[URL] = None,
         webhookApiKey: Option[String] = None,
-        enableApiKey: Boolean = true
+        enableApiKey: Boolean = true,
+        authMethod: AuthMethod = AuthMethod.apiKey
     ): ZIO[R, E, A] = {
       for {
         appConfig <- ZIO.service[AppConfig]
@@ -147,6 +168,7 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
             appConfig.copy(
               agent = agentConfig.copy(
                 authentication = authConfig.copy(
+                  method = authMethod,
                   apiKey = apiKeyConfig.copy(
                     enabled = enableApiKey
                   )
