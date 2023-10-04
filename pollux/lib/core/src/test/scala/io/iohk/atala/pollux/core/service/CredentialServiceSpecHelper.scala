@@ -3,14 +3,14 @@ package io.iohk.atala.pollux.core.service
 import io.circe.Json
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.*
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.{ClaimFormat, Ldp, Options, PresentationDefinition}
 import io.iohk.atala.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory}
 import io.iohk.atala.pollux.vc.jwt.*
@@ -32,15 +32,15 @@ trait CredentialServiceSpecHelper {
     CredentialDefinitionRepositoryInMemory.layer ++ ResourceURIDereferencerImpl.layer >>>
       CredentialDefinitionServiceImpl.layer ++ defaultWalletLayer
 
-  protected val credentialServiceLayer =
-    CredentialRepositoryInMemory.layer ++
-      ZLayer.fromFunction(PrismDidResolver(_)) ++
-      ResourceURIDereferencerImpl.layer ++
-      GenericSecretStorageInMemory.layer >+>
-      credentialDefinitionServiceLayer ++
-      GenericSecretStorageInMemory.layer >+>
-      LinkSecretServiceImpl.layer >>>
+  protected val credentialServiceLayer: URLayer[DIDService & ManagedDIDService & URIDereferencer, CredentialService] =
+    ZLayer.makeSome[DIDService & ManagedDIDService & URIDereferencer, CredentialService](
+      CredentialRepositoryInMemory.layer,
+      ZLayer.fromFunction(PrismDidResolver(_)),
+      credentialDefinitionServiceLayer,
+      GenericSecretStorageInMemory.layer,
+      LinkSecretServiceImpl.layer,
       CredentialServiceImpl.layer
+    )
 
   protected def offerCredential(
       thid: Option[UUID] = Some(UUID.randomUUID())
