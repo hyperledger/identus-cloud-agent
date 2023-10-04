@@ -51,7 +51,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = "https://maven.pkg.github.com/input-output-hk/atala-prism-building-blocks/"
+            url = "https://maven.pkg.github.com/hyperledger-labs/open-enterprise-agent/"
             credentials {
                 username = System.getenv("ATALA_GITHUB_ACTOR")
                 password = System.getenv("ATALA_GITHUB_TOKEN")
