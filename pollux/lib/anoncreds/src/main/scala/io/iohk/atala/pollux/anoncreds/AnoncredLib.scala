@@ -98,11 +98,11 @@ object AnoncredLib {
     anoncreds
       .Prover()
       .processCredential(
-        credential,
-        metadata,
-        linkSecret.secret,
-        credentialDefinition,
-        null
+        credential, // Credential,
+        metadata, //  CredentialRequestMetadata,
+        linkSecret.secret, // LinkSecret,
+        credentialDefinition, //  CredentialDefinition,
+        null // evRegDef: RevocationRegistryDefinition?
       )
   }
 
@@ -132,6 +132,47 @@ object AnoncredLib {
         null, // RevocationRegistryId? rev_reg_id,
         null, // RevocationStatusList? rev_status_list,
         null, // CredentialRevocationConfig? revocation_config
+      )
+  }
+
+  type SchemaId = String
+  type CredentialDefinitionId = String
+
+  def createPresentation(
+      presentationRequest: PresentationRequest,
+      credentials: Seq[Credential],
+      selfAttested: Map[String, String],
+      linkSecret: LinkSecret,
+      schemas: Map[SchemaId, SchemaDef],
+      credentialDefinitions: Map[CredentialDefinitionId, CredentialDefinition],
+  ): Presentation = {
+    anoncreds
+      .Prover()
+      .createPresentation(
+        presentationRequest,
+        credentials.map(e => e: uniffi.anoncreds.Credential).asJava, // sequence<Credential> credentials,
+        selfAttested.asJava, // record<string, string>? self_attested,
+        linkSecret, // LinkSecret link_secret,
+        schemas.view.mapValues(i => i: uniffi.anoncreds.Schema).toMap.asJava, // record<SchemaId, Schema> schemas,
+        credentialDefinitions.view.mapValues(i => i: uniffi.anoncreds.CredentialDefinition).toMap.asJava
+        // record<CredentialDefinitionId, CredentialDefinition> credential_definitions
+      )
+  }
+
+  def verifyPresentation(
+      presentation: Presentation,
+      presentationRequest: PresentationRequest,
+      schemas: Map[SchemaId, SchemaDef],
+      credentialDefinitions: Map[CredentialDefinitionId, CredentialDefinition],
+  ): Boolean = {
+    anoncreds
+      .Verifier()
+      .verifyPresentation(
+        presentation, // Presentation presentation,
+        presentationRequest, // PresentationRequest presentation_request,
+        schemas.view.mapValues(i => i: uniffi.anoncreds.Schema).toMap.asJava, // record<SchemaId, Schema> schemas,
+        credentialDefinitions.view.mapValues(i => i: uniffi.anoncreds.CredentialDefinition).toMap.asJava
+        // record<CredentialDefinitionId, CredentialDefinition> credential_definitions
       )
   }
 }

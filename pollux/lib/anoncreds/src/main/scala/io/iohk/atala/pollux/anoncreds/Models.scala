@@ -10,7 +10,9 @@ import uniffi.anoncreds.{
   CredentialRequest as UniffiCredentialRequest,
   CredentialRequestMetadata as UniffiCredentialRequestMetadata,
   LinkSecret as UniffiLinkSecret,
-  Schema as UniffiSchema
+  Schema as UniffiSchema,
+  Presentation as UniffiPresentation,
+  PresentationRequest as UniffiPresentationRequest,
 }
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
@@ -252,5 +254,35 @@ object Credential {
   given Conversion[UniffiCredential, Credential] with {
     def apply(credential: UniffiCredential): Credential =
       Credential(credential.getJson())
+  }
+}
+
+// ****************************************************************************
+
+case class PresentationRequest(data: String)
+object PresentationRequest {
+  given Conversion[PresentationRequest, UniffiPresentationRequest] with {
+    def apply(presentationRequest: PresentationRequest): UniffiPresentationRequest =
+      UniffiPresentationRequest(presentationRequest.data)
+  }
+
+  given Conversion[UniffiPresentationRequest, PresentationRequest] with {
+    def apply(presentationRequest: UniffiPresentationRequest): PresentationRequest =
+      PresentationRequest(presentationRequest.getJson())
+  }
+}
+
+// ****************************************************************************
+
+case class Presentation(data: String)
+object Presentation {
+  given Conversion[Presentation, UniffiPresentation] with {
+    def apply(presentation: Presentation): UniffiPresentation =
+      UniffiPresentation(presentation.data)
+  }
+
+  given Conversion[UniffiPresentation, Presentation] with {
+    def apply(presentation: UniffiPresentation): Presentation =
+      Presentation(presentation.getJson())
   }
 }
