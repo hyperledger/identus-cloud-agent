@@ -27,6 +27,7 @@ object DIDRegistrarEndpoints {
     .in("did-registrar" / "dids")
     .in(extractFromRequest[RequestContext](RequestContext.apply))
     .securityIn(apiKeyHeader)
+    .securityIn(bearerAuthHeader)
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 
@@ -37,7 +38,6 @@ object DIDRegistrarEndpoints {
     ManagedDIDPage,
     Any
   ] = baseEndpoint.get
-    .securityIn(bearerAuthHeader)
     .in(paginationInput)
     .errorOut(EndpointOutputs.basicFailuresAndForbidden)
     .out(statusCode(StatusCode.Ok).description("List Prism Agent managed DIDs"))
@@ -50,7 +50,7 @@ object DIDRegistrarEndpoints {
     )
 
   val createManagedDid: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, CreateManagedDidRequest),
     ErrorResponse,
     CreateManagedDIDResponse,
@@ -70,7 +70,7 @@ object DIDRegistrarEndpoints {
     )
 
   val getManagedDid: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, String),
     ErrorResponse,
     ManagedDID,
@@ -84,7 +84,7 @@ object DIDRegistrarEndpoints {
     .description("Get DID stored in Prism Agent's wallet")
 
   val publishManagedDid: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, String),
     ErrorResponse,
     DIDOperationResponse,
@@ -98,7 +98,7 @@ object DIDRegistrarEndpoints {
     .description("Publish the DID stored in Prism Agent's wallet to the VDR.")
 
   val updateManagedDid: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, String, UpdateManagedDIDRequest),
     ErrorResponse,
     DIDOperationResponse,
@@ -126,7 +126,7 @@ object DIDRegistrarEndpoints {
     )
 
   val deactivateManagedDid: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, String),
     ErrorResponse,
     DIDOperationResponse,

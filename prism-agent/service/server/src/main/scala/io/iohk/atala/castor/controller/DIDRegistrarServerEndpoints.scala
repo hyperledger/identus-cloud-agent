@@ -4,7 +4,6 @@ import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.SecurityLogic
-import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
 import zio.*
@@ -27,7 +26,7 @@ class DIDRegistrarServerEndpoints(
 
   private val createManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.createManagedDid
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.securityLogic(_)(authenticator))
       .serverLogic { entity =>
         { case (rc, createManagedDidRequest) =>
           didRegistrarController
@@ -38,7 +37,7 @@ class DIDRegistrarServerEndpoints(
 
   private val getManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.getManagedDid
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.securityLogic(_)(authenticator))
       .serverLogic { entity =>
         { case (rc, did) =>
           didRegistrarController
@@ -49,7 +48,7 @@ class DIDRegistrarServerEndpoints(
 
   private val publishManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.publishManagedDid
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.securityLogic(_)(authenticator))
       .serverLogic { entity =>
         { case (rc, did) =>
           didRegistrarController
@@ -60,7 +59,7 @@ class DIDRegistrarServerEndpoints(
 
   private val updateManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.updateManagedDid
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.securityLogic(_)(authenticator))
       .serverLogic { entity =>
         { case (rc, did, updateRequest) =>
           didRegistrarController
@@ -71,7 +70,7 @@ class DIDRegistrarServerEndpoints(
 
   private val deactivateManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.deactivateManagedDid
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.securityLogic(_)(authenticator))
       .serverLogic { entity =>
         { case (rc, did) =>
           didRegistrarController
