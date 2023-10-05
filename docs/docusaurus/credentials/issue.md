@@ -1,3 +1,6 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Issue Credentials
 
 In Atala PRISM, the [Issue Credentials Protocol](/docs/concepts/glossary#issue-credentials-protocol) allows you to create, retrieve, and manage issued [verifiable credentials (VCs)](/docs/concepts/glossary#verifiable-credentials) between a VC issuer and a VC holder.
@@ -16,10 +19,23 @@ The Issuer and Holder interact with the PRISM Agent API to perform the operation
 
 Before using the Issuing Credentials protocol, the following conditions must be present:
 
+<Tabs groupId="vc-formats">
+<TabItem value="jwt" label="JWT">
+
 1. Issuer and Holder PRISM Agents up and running
 2. A connection must be established between the Issuer and Holder PRISM Agents (see [Connections](../connections/connection.md))
 3. The Issuer must have a published PRISM DID, and the [DID document](/docs/concepts/glossary#did-document) must have at least one `assertionMethod` key for issuing credentials (see [Create DID](../dids/create.md) and [Publish DID](../dids/publish.md))
 4. The Holder must have a PRISM DID, and the DID document must have at least one `authentication` key for presenting the proof.
+
+</TabItem>
+<TabItem value="anoncreds" label="AnonCreds">
+
+1. Issuer and Holder PRISM Agents up and running
+2. A connection must be established between the Issuer and Holder PRISM Agents (see [Connections](../connections/connection.md))
+3. The Issuer must have created an AnonCreds Credential Definition as described [here](../credential-definitions/credential-definitions.md).
+
+</TabItem>
+</Tabs>
 
 ## Overview
 
@@ -61,18 +77,21 @@ This section describes the Issuer role's available interactions with the PRISM A
 To start the process, the issuer needs to create a credential offer.
 To do this, make a `POST` request to the [`/issue-credentials/credential-offers`](/agent-api/#tag/Issue-Credentials-Protocol/operation/createCredentialOffer) endpoint with a JSON payload that includes the following information:
 
+<Tabs groupId="vc-formats">
+<TabItem value="jwt" label="JWT">
+
 1. `claims`: The data stored in a verifiable credential. Claims get expressed in a key-value format. The claims contain the data that the issuer attests to, such as name, address, date of birth, and so on.
 2. `issuingDID`: The DID referring to the issuer to issue this credential from
 3. `connectionId`: The unique ID of the connection between the holder and the issuer to offer this credential over.
-4. `schemaId`: An optional field that, if specified, contains a valid URL to an existing VC schema. 
-The PRISM agent must be able to dereference the specified URL (i.e. fetch the VC schema content from it), in order to validate the provided claims against it.
-When not specified, the claims fields is not validated and can be any valid JSON object.
-Please refer to the [Create VC schema](../schemas/create.md) doc for details on how to create a VC schema.     
+4. `schemaId`: An optional field that, if specified, contains a valid URL to an existing VC schema.
+   The PRISM agent must be able to dereference the specified URL (i.e. fetch the VC schema content from it), in order to validate the provided claims against it.
+   When not specified, the claims fields is not validated and can be any valid JSON object.
+   Please refer to the [Create VC schema](../schemas/create.md) doc for details on how to create a VC schema.
+5. `credentialFormat`: The format of the credential that will be issued - `JWT` in this case. When not specified, the default value is `JWT`. 
+
 
 :::note
-
-The issuingDID and connectionId properties come from completing the pre-requisite steps of listed above
-
+The `issuingDID` and `connectionId` properties come from completing the pre-requisite steps listed above
 :::
 
 Once the request initiates, a new credential record for the issuer gets created with a unique ID. The state of this record is now `OfferPending`.
@@ -93,11 +112,52 @@ curl -X 'POST' \
             "drivingLicenseID": "12345",
             "drivingClass": 3
           },
+          "credentialFormat": "JWT",
           "issuingDID": "did:prism:9f847f8bbb66c112f71d08ab39930d468ccbfe1e0e1d002be53d46c431212c26",
           "connectionId": "9d075518-f97e-4f11-9d10-d7348a7a0fda",
           "schemaId": "http://localhost:8080/prism-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2"
         }'
 ```
+
+</TabItem>
+<TabItem value="anoncreds" label="AnonCreds">
+
+1. `claims`: The data stored in a verifiable credential. AnonCreds claims get expressed in a flat, "string -> string", key-value pair format. The claims contain the data that the issuer attests to, such as name, address, date of birth, and so on.
+2. `connectionId`: The unique ID of the connection between the holder and the issuer to offer this credential over.
+3. `credentialDefinitionId`: The unique ID of the [credential definition](../credential-definitions/credential-definitions.md) that has been created by the issuer as a prerequisite. Please refer to the [Create AnonCreds Credential Definition](../credential-definitions/credential-definitions.md) doc for details on how to create a credential definition.
+4. `credentialFormat`: The format of the credential that will be issued - `AnonCreds` in this case.  
+
+:::note
+The `connectionId` and `credentialDefinitionId` properties come from completing the pre-requisite steps listed above
+:::
+
+Once the request initiates, a new credential record for the issuer gets created with a unique ID. The state of this record is now `OfferPending`.
+
+```shell
+# Issuer POST request to create a new credential offer
+curl -X 'POST' \
+  'http://localhost:8080/prism-agent/issue-credentials/credential-offers' \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -H "apikey: $API_KEY" \
+    -d '{
+          "claims": {
+            "emailAddress": "alice@wonderland.com",
+            "givenName": "Alice",
+            "familyName": "Wonderland",
+            "dateOfIssuance": "2020-11-13T20:20:39+00:00",
+            "drivingLicenseID": "12345",
+            "drivingClass": "3"
+          },
+          "credentialFormat": "AnonCreds",
+          "connectionId": "9d075518-f97e-4f11-9d10-d7348a7a0fda",
+          "credentialDefinitionId": "5d737816-8fe8-3492-bfe3-1b3e2b67220b"
+        }'
+```
+
+</TabItem>
+</Tabs>
+
 
 ### Sending the Offer to the Holder
 
@@ -165,6 +225,9 @@ curl "http://localhost:8090/prism-agent/issue-credentials/records" \
 
 To accept the offer, the Holder can make a `POST` request to the [`/issue-credentials/records/{recordId}/accept-offer`](/agent-api/#tag/Issue-Credentials-Protocol/operation/acceptCredentialOffer) endpoint with a JSON payload that includes the following information:
 
+<Tabs groupId="vc-formats">
+<TabItem value="jwt" label="JWT">
+
 1. `holder_record_id`: The unique identifier of the issue credential record known by the holder PRISM Agent.
 2. `subjectId`: This field represents the unique identifier for the subject of the verifiable credential. It is a short-form PRISM [DID](/docs/concepts/glossary#decentralized-identifier) string, such as `did:prism:subjectIdentifier`.
 
@@ -178,6 +241,23 @@ curl -X POST "http://localhost:8090/prism-agent/issue-credentials/records/$holde
           "subjectId": "did:prism:subjectIdentifier"
      }'
 ```
+
+</TabItem>
+<TabItem value="anoncreds" labal="AnonCreds">
+
+1. `holder_record_id`: The unique identifier of the issue credential record known by the holder PRISM Agent.
+
+```shell
+# Holder POST request to accept the credential offer
+curl -X POST "http://localhost:8090/prism-agent/issue-credentials/records/$holder_record_id/accept-offer" \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -H "apikey: $API_KEY" \
+    -d '{}'
+```
+
+</TabItem>
+</Tabs>
 
 This request will change the state of the record to `RequestPending`.
 
@@ -206,4 +286,15 @@ stateDiagram-v2
 
 The following diagram shows the end-to-end flow for an issuer to issue a VC to a holder.
 
+<Tabs groupId="vc-formats">
+<TabItem value="jwt" label="JWT">
+
 ![](issue-flow.png)
+
+</TabItem>
+<TabItem value="anoncreds" label="AnonCreds">
+
+![](anoncreds-issue-flow.png)
+
+</TabItem>
+</Tabs>
