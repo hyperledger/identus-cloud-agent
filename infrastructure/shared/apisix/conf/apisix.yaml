@@ -6,6 +6,8 @@ routes:
   - uri: /prism-agent/*
     upstream_id: 4
     plugins:
+      cors:
+        allow_origins: "*"
       proxy-rewrite:
         regex_uri: ["^/prism-agent/(.*)", "/$1"]
   - uri: /docs/prism-agent/api/*
