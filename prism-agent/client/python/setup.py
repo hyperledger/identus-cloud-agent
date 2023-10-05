@@ -11,7 +11,7 @@
 
 from setuptools import setup, find_packages  # noqa: H301
 
-NAME = "prism-python-client"
+NAME = "open-enterprise-agent-python-client"
 VERSION = "0.0.1"
 
 REQUIRES = [
@@ -29,7 +29,7 @@ setup(
     description="Prism Agent Client",
     author="Allain Magyar",
     author_email="",
-    url="https://github.com/input-output-iohk/prism-client-generator",
+    url="https://github.com/hyperledger-labs/open-enterprise-agent",
     keywords=["Prism Agent"],
     python_requires=">=3.7",
     install_requires=REQUIRES,
