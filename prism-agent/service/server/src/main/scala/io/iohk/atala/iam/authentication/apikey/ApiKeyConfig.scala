@@ -7,6 +7,5 @@ case class ApiKeyConfig(salt: String, enabled: Boolean, authenticateAsDefaultUse
 
 object ApiKeyConfig {
   val layer: URLayer[AppConfig, ApiKeyConfig] =
-    ZLayer.fromZIO(ZIO.service[AppConfig].map(_.agent.authentication.apiKey))
-
+    ZLayer.fromFunction((conf: AppConfig) => conf.agent.authentication.apiKey)
 }

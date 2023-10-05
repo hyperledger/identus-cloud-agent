@@ -2,31 +2,15 @@ package io.iohk.atala.iam.authentication
 
 import io.iohk.atala.iam.authentication.admin.AdminConfig
 import io.iohk.atala.iam.authentication.apikey.ApiKeyConfig
-import zio.config.*
-import zio.config.magnolia.*
+import io.iohk.atala.iam.authentication.keycloak.KeycloakConfig
 
-import scala.util.Try
+final case class AuthenticationConfig(
+    admin: AdminConfig,
+    apiKey: ApiKeyConfig,
+    keycloak: KeycloakConfig
+) {
 
-// TODO: make auth config optional
-final case class AuthenticationConfig(method: AuthMethod, admin: AdminConfig, apiKey: ApiKeyConfig) {
-  def isEnabled: Boolean = {
-    val isNoneMethod = method == AuthMethod.none
-    val isApiKeyMethodAndDisabled = (method == AuthMethod.apiKey) && !apiKey.enabled
-    val isDisabled = isNoneMethod || isApiKeyMethodAndDisabled
-    !isDisabled
-  }
-}
+  /** Return true if at least 1 authentication method is enabled (exlcuding admin auth method) */
+  def isNonAdminEnabled: Boolean = apiKey.enabled || keycloak.enabled
 
-enum AuthMethod {
-  case none, apiKey, keycloak
-}
-
-object AuthMethod {
-  given Descriptor[AuthMethod] =
-    Descriptor.from(
-      Descriptor[String].transformOrFailLeft { s =>
-        Try(AuthMethod.valueOf(s)).toOption
-          .toRight(s"Invalid configuration value '$s'. Possible values: ${AuthMethod.values.mkString("[", ", ", "]")}")
-      }(_.toString())
-    )
 }

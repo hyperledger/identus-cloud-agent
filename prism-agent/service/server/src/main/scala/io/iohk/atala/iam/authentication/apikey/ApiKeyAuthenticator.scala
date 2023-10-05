@@ -25,8 +25,7 @@ trait ApiKeyAuthenticator extends Authenticator {
         case other =>
           ZIO.fail(InvalidCredentials("ApiKey key is not provided"))
       }
-    } else
-      ZIO.fail(AuthenticationMethodNotEnabled("ApiKey API authentication is not enabled"))
+    } else ZIO.fail(AuthenticationMethodNotEnabled("ApiKey API authentication is not enabled"))
   }
 
   def isEnabled: Boolean
