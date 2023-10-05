@@ -13,16 +13,8 @@ object AdminApiKeySecurityLogic {
     .mapTo[AdminApiKeyCredentials]
     .description("Admin API Key")
 
-  def securityLogic(credentials: AdminApiKeyCredentials): ZIO[Authenticator, ErrorResponse, Entity] =
-    ZIO
-      .service[Authenticator]
-      .flatMap(_.authenticate(credentials))
-      .mapError(error => AuthenticationError.toErrorResponse(error))
-
+  // TODO: remove
   def securityLogic(credentials: AdminApiKeyCredentials)(authenticator: Authenticator): IO[ErrorResponse, Entity] =
-    ZIO
-      .succeed(authenticator)
-      .flatMap(_.authenticate(credentials))
-      .mapError(error => AuthenticationError.toErrorResponse(error))
+    authenticator.authenticate(credentials).mapError(error => AuthenticationError.toErrorResponse(error))
 
 }

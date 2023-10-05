@@ -1,7 +1,9 @@
 package io.iohk.atala.castor.controller
 
+import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
+import io.iohk.atala.iam.authentication.SecurityLogic
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
@@ -14,7 +16,7 @@ class DIDRegistrarServerEndpoints(
 
   private val listManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.listManagedDid
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.securityLogic(_)(authenticator))
       .serverLogic { entity =>
         { case (rc, paginationInput) =>
           didRegistrarController

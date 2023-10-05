@@ -14,6 +14,8 @@ import io.iohk.atala.castor.controller.http.{
 }
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
+import io.iohk.atala.iam.authentication.oidc.JwtCredentials
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.bearerAuthHeader
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
@@ -29,12 +31,13 @@ object DIDRegistrarEndpoints {
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 
   val listManagedDid: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, PaginationInput),
     ErrorResponse,
     ManagedDIDPage,
     Any
   ] = baseEndpoint.get
+    .securityIn(bearerAuthHeader)
     .in(paginationInput)
     .errorOut(EndpointOutputs.basicFailuresAndForbidden)
     .out(statusCode(StatusCode.Ok).description("List Prism Agent managed DIDs"))

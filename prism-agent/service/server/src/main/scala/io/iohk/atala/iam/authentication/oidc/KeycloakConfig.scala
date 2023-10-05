@@ -1,4 +1,4 @@
-package io.iohk.atala.iam.authentication.keycloak
+package io.iohk.atala.iam.authentication.oidc
 
 import zio.*
 import io.iohk.atala.agent.server.config.AppConfig

@@ -29,6 +29,7 @@ trait ApiKeyAuthenticator extends Authenticator {
   }
 
   def isEnabled: Boolean
+
   def authenticate(apiKey: String): IO[AuthenticationError, Entity]
 
   def add(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit]

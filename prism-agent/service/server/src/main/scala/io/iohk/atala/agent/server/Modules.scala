@@ -32,8 +32,8 @@ import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticator
 import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticatorImpl
 import io.iohk.atala.iam.authentication.apikey.ApiKeyConfig
 import io.iohk.atala.iam.authentication.apikey.AuthenticationRepository
-import io.iohk.atala.iam.authentication.keycloak.KeycloakAuthenticatorImpl
-import io.iohk.atala.iam.authentication.keycloak.KeycloakConfig
+import io.iohk.atala.iam.authentication.oidc.KeycloakAuthenticatorImpl
+import io.iohk.atala.iam.authentication.oidc.KeycloakConfig
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
