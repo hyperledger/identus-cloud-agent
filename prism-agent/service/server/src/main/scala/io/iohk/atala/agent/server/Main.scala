@@ -21,9 +21,7 @@ import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migration
 import io.iohk.atala.event.controller.EventControllerImpl
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
-import io.iohk.atala.iam.authentication.admin.{AdminApiKeyAuthenticatorImpl, AdminConfig}
-import io.iohk.atala.iam.authentication.apikey.{ApiKeyAuthenticatorImpl, ApiKeyConfig, JdbcAuthenticationRepository}
-import io.iohk.atala.iam.authentication.keycloak.{KeycloakConfig, KeycloakAuthenticatorImpl}
+import io.iohk.atala.iam.authentication.apikey.JdbcAuthenticationRepository
 import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
@@ -114,9 +112,6 @@ object MainApp extends ZIOAppDefault {
           DidCommX.liveLayer,
           // infra
           SystemModule.configLayer,
-          AdminConfig.layer,
-          ApiKeyConfig.layer,
-          KeycloakConfig.layer,
           ZioHttpClient.layer,
           // observability
           DefaultJvmMetrics.live.unit,
@@ -138,7 +133,7 @@ object MainApp extends ZIOAppDefault {
           EventControllerImpl.layer,
           // domain
           AppModule.apolloLayer,
-          AppModule.didJwtResolverlayer,
+          AppModule.didJwtResolverLayer,
           DIDOperationValidator.layer(),
           DIDResolver.layer,
           HttpURIDereferencerImpl.layer,
@@ -154,10 +149,7 @@ object MainApp extends ZIOAppDefault {
           VerificationPolicyServiceImpl.layer,
           WalletManagementServiceImpl.layer,
           // authentication
-          AdminApiKeyAuthenticatorImpl.layer >+>
-            ApiKeyAuthenticatorImpl.layer >+>
-            KeycloakAuthenticatorImpl.layer >+>
-            DefaultAuthenticator.layer,
+          AppModule.authenticatorLayer,
           // grpc
           GrpcModule.prismNodeStubLayer,
           // storage

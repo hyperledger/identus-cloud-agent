@@ -3,6 +3,7 @@ package io.iohk.atala.presentproof.controller
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.presentproof.controller.PresentProofEndpoints.{
   getAllPresentations,
@@ -74,9 +75,9 @@ class PresentProofServerEndpoints(
 }
 
 object PresentProofServerEndpoints {
-  def all: URIO[PresentProofController & Authenticator, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[PresentProofController & DefaultAuthenticator, List[ZServerEndpoint[Any, Any]]] = {
     for {
-      authenticator <- ZIO.service[Authenticator]
+      authenticator <- ZIO.service[DefaultAuthenticator]
       presentProofController <- ZIO.service[PresentProofController]
       presentProofEndpoints = new PresentProofServerEndpoints(presentProofController, authenticator)
     } yield presentProofEndpoints.all

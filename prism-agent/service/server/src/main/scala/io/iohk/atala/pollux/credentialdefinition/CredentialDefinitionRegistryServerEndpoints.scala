@@ -4,6 +4,7 @@ import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.pollux.credentialdefinition
 import io.iohk.atala.pollux.credentialdefinition.CredentialDefinitionRegistryEndpoints.*
@@ -73,10 +74,10 @@ class CredentialDefinitionRegistryServerEndpoints(
 }
 
 object CredentialDefinitionRegistryServerEndpoints {
-  def all: URIO[CredentialDefinitionController & Authenticator, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[CredentialDefinitionController & DefaultAuthenticator, List[ZServerEndpoint[Any, Any]]] = {
     for {
       credentialDefinitionRegistryService <- ZIO.service[CredentialDefinitionController]
-      authenticator <- ZIO.service[Authenticator]
+      authenticator <- ZIO.service[DefaultAuthenticator]
       credentialDefinitionRegistryEndpoints = new CredentialDefinitionRegistryServerEndpoints(
         credentialDefinitionRegistryService,
         authenticator

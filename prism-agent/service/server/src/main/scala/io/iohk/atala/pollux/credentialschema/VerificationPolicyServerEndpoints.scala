@@ -3,6 +3,7 @@ package io.iohk.atala.pollux.credentialschema
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.pollux.credentialschema.VerificationPolicyEndpoints.*
 import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyController
@@ -101,9 +102,9 @@ class VerificationPolicyServerEndpoints(controller: VerificationPolicyController
 }
 
 object VerificationPolicyServerEndpoints {
-  def all: URIO[VerificationPolicyController & Authenticator, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[VerificationPolicyController & DefaultAuthenticator, List[ZServerEndpoint[Any, Any]]] = {
     for {
-      authenticator <- ZIO.service[Authenticator]
+      authenticator <- ZIO.service[DefaultAuthenticator]
       controller <- ZIO.service[VerificationPolicyController]
       endpoints = new VerificationPolicyServerEndpoints(controller, authenticator)
     } yield endpoints.all

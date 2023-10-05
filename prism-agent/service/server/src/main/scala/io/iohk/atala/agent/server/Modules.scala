@@ -6,15 +6,34 @@ import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.config.SecretStorageBackend
 import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.memory.{
-  DIDSecretStorageInMemory,
-  GenericSecretStorageInMemory,
-  WalletSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.memory.{ DIDSecretStorageInMemory, GenericSecretStorageInMemory, WalletSecretStorageInMemory }
+import io.iohk.atala.agent.walletapi.service.EntityService
+import io.iohk.atala.agent.walletapi.service.WalletManagementService
+import io.iohk.atala.agent.walletapi.sql.JdbcGenericSecretStorage
+import io.iohk.atala.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcWalletSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
+import io.iohk.atala.agent.walletapi.storage.{DIDSecretStorage, WalletSecretStorage}
+import io.iohk.atala.agent.walletapi.util.SeedResolver
+import io.iohk.atala.agent.walletapi.vault.{
+  VaultDIDSecretStorage,
+  VaultKVClient,
+  VaultKVClientImpl,
+  VaultWalletSecretStorage
 }
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcGenericSecretStorage, JdbcWalletSecretStorage}
 import io.iohk.atala.agent.walletapi.storage.{DIDSecretStorage, GenericSecretStorage, WalletSecretStorage}
 import io.iohk.atala.agent.walletapi.vault.*
 import io.iohk.atala.castor.core.service.DIDService
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
+import io.iohk.atala.iam.authentication.admin.AdminApiKeyAuthenticator
+import io.iohk.atala.iam.authentication.admin.AdminApiKeyAuthenticatorImpl
+import io.iohk.atala.iam.authentication.admin.AdminConfig
+import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticator
+import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticatorImpl
+import io.iohk.atala.iam.authentication.apikey.ApiKeyConfig
+import io.iohk.atala.iam.authentication.apikey.AuthenticationRepository
+import io.iohk.atala.iam.authentication.keycloak.KeycloakAuthenticatorImpl
+import io.iohk.atala.iam.authentication.keycloak.KeycloakConfig
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
@@ -41,6 +60,23 @@ object AppModule {
 
   val didJwtResolverlayer: URLayer[DIDService, JwtDidResolver] =
     ZLayer.fromFunction(PrismDidResolver(_))
+
+  val authenticatorLayer: URLayer[
+    AppConfig & WalletManagementService & AuthenticationRepository & EntityService,
+    DefaultAuthenticator & ApiKeyAuthenticator
+  ] =
+    ZLayer.makeSome[
+      AppConfig & WalletManagementService & AuthenticationRepository & EntityService,
+      DefaultAuthenticator & ApiKeyAuthenticator
+    ](
+      AdminConfig.layer,
+      ApiKeyConfig.layer,
+      KeycloakConfig.layer,
+      DefaultAuthenticator.layer,
+      AdminApiKeyAuthenticatorImpl.layer,
+      ApiKeyAuthenticatorImpl.layer,
+      KeycloakAuthenticatorImpl.layer,
+    )
 }
 
 object GrpcModule {

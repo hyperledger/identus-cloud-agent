@@ -24,6 +24,6 @@ case class DefaultAuthenticator(
 }
 
 object DefaultAuthenticator {
-  val layer: URLayer[AdminApiKeyAuthenticator & ApiKeyAuthenticator & KeycloakAuthenticator, Authenticator] =
+  val layer: URLayer[AdminApiKeyAuthenticator & ApiKeyAuthenticator & KeycloakAuthenticator, DefaultAuthenticator] =
     ZLayer.fromFunction(DefaultAuthenticator(_, _, _))
 }

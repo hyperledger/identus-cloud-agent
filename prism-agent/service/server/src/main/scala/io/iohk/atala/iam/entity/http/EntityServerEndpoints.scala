@@ -4,6 +4,7 @@ import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.admin.{AdminApiKeyCredentials, AdminApiKeySecurityLogic}
 import io.iohk.atala.iam.entity.http.EntityEndpoints.*
 import io.iohk.atala.iam.entity.http.controller.EntityController
@@ -102,10 +103,10 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
 }
 
 object EntityServerEndpoints {
-  def all: URIO[EntityController & Authenticator, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[EntityController & DefaultAuthenticator, List[ZServerEndpoint[Any, Any]]] = {
     for {
       entityController <- ZIO.service[EntityController]
-      auth <- ZIO.service[Authenticator]
+      auth <- ZIO.service[DefaultAuthenticator]
       entityEndpoints = new EntityServerEndpoints(entityController, auth)
     } yield entityEndpoints.all
   }

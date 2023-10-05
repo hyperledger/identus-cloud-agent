@@ -1,6 +1,7 @@
 package io.iohk.atala.castor.controller
 
 import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
@@ -89,9 +90,9 @@ class DIDRegistrarServerEndpoints(
 }
 
 object DIDRegistrarServerEndpoints {
-  def all: URIO[DIDRegistrarController & Authenticator, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[DIDRegistrarController & DefaultAuthenticator, List[ZServerEndpoint[Any, Any]]] = {
     for {
-      authenticator <- ZIO.service[Authenticator]
+      authenticator <- ZIO.service[DefaultAuthenticator]
       didRegistrarController <- ZIO.service[DIDRegistrarController]
       didRegistrarEndpoints = new DIDRegistrarServerEndpoints(didRegistrarController, authenticator)
     } yield didRegistrarEndpoints.all

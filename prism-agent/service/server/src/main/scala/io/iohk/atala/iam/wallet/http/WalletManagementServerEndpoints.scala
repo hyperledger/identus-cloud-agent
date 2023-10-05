@@ -3,6 +3,7 @@ package io.iohk.atala.iam.wallet.http
 import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.admin.AdminApiKeyCredentials
 import io.iohk.atala.iam.authentication.admin.AdminApiKeySecurityLogic
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementController
@@ -38,10 +39,10 @@ class WalletManagementServerEndpoints(controller: WalletManagementController, au
 }
 
 object WalletManagementServerEndpoints {
-  def all: URIO[WalletManagementController & Authenticator, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[WalletManagementController & DefaultAuthenticator, List[ZServerEndpoint[Any, Any]]] = {
     for {
       walletManagementController <- ZIO.service[WalletManagementController]
-      auth <- ZIO.service[Authenticator]
+      auth <- ZIO.service[DefaultAuthenticator]
       walletManagementServerEndpoints = WalletManagementServerEndpoints(walletManagementController, auth)
     } yield walletManagementServerEndpoints.all
   }

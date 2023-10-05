@@ -5,6 +5,7 @@ import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.connect.controller.ConnectionEndpoints.*
 import io.iohk.atala.connect.controller.http.{AcceptConnectionInvitationRequest, CreateConnectionRequest}
 import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
@@ -67,9 +68,9 @@ class ConnectionServerEndpoints(connectionController: ConnectionController, auth
 }
 
 object ConnectionServerEndpoints {
-  def all: URIO[ConnectionController & Authenticator, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[ConnectionController & DefaultAuthenticator, List[ZServerEndpoint[Any, Any]]] = {
     for {
-      authenticator <- ZIO.service[Authenticator]
+      authenticator <- ZIO.service[DefaultAuthenticator]
       connectionController <- ZIO.service[ConnectionController]
       connectionEndpoints = new ConnectionServerEndpoints(connectionController, authenticator)
     } yield connectionEndpoints.all

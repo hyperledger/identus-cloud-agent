@@ -1,6 +1,7 @@
 package io.iohk.atala.event.controller
 
 import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
@@ -51,9 +52,9 @@ class EventServerEndpoints(
 }
 
 object EventServerEndpoints {
-  def all: URIO[EventController & Authenticator, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[EventController & DefaultAuthenticator, List[ZServerEndpoint[Any, Any]]] = {
     for {
-      authenticator <- ZIO.service[Authenticator]
+      authenticator <- ZIO.service[DefaultAuthenticator]
       eventController <- ZIO.service[EventController]
       eventEndpoints = new EventServerEndpoints(eventController, authenticator)
     } yield eventEndpoints.all

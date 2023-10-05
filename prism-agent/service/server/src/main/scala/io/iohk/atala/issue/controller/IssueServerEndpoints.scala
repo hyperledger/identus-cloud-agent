@@ -3,6 +3,7 @@ package io.iohk.atala.issue.controller
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.issue.controller.IssueEndpoints.*
 import io.iohk.atala.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest}
@@ -78,9 +79,9 @@ class IssueServerEndpoints(issueController: IssueController, authenticator: Auth
 }
 
 object IssueServerEndpoints {
-  def all: URIO[IssueController & Authenticator, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[IssueController & DefaultAuthenticator, List[ZServerEndpoint[Any, Any]]] = {
     for {
-      authenticator <- ZIO.service[Authenticator]
+      authenticator <- ZIO.service[DefaultAuthenticator]
       issueController <- ZIO.service[IssueController]
       issueEndpoints = new IssueServerEndpoints(issueController, authenticator)
     } yield issueEndpoints.all
