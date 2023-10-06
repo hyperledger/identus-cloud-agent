@@ -26,6 +26,6 @@ object SecurityLogic {
   def securityLogic(credentials: (ApiKeyCredentials, JwtCredentials))(
       authenticator: Authenticator
   ): IO[ErrorResponse, Entity] =
-    securityLogic(credentials._1, credentials._2)(authenticator)
+    securityLogic(credentials._2, credentials._1)(authenticator)
 
 }

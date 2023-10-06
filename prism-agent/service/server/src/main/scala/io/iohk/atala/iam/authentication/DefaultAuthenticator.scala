@@ -17,8 +17,8 @@ case class DefaultAuthenticator(
 
   override def authenticate(credentials: Credentials): IO[AuthenticationError, Entity] = credentials match {
     case adminApiKeyCredentials: AdminApiKeyCredentials => adminApiKeyAuthenticator(adminApiKeyCredentials)
-    case apiKeyCredentials: ApiKeyCredentials => apiKeyAuthenticator(apiKeyCredentials)
-    case keycloakCredentials: JwtCredentials => keycloakAuthenticator(keycloakCredentials)
+    case apiKeyCredentials: ApiKeyCredentials           => apiKeyAuthenticator(apiKeyCredentials)
+    case keycloakCredentials: JwtCredentials            => keycloakAuthenticator(keycloakCredentials)
   }
 
 }

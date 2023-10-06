@@ -82,6 +82,9 @@ lazy val V = new {
 
   val vaultDriver = "6.1.0"
   val micrometer = "1.11.2"
+
+  val nimbusJwt = "10.0.0"
+  val keycloak = "22.0.4"
 }
 
 /** Dependencies */
@@ -110,9 +113,10 @@ lazy val D = new {
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.1"
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.3.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
+
   // Customized version of numbus jose jwt
   // from https://github.com/goncalo-frade-iohk/Nimbus-JWT_Fork/commit/8a6665c25979e771afae29ce8c965c8b0312fefb
-  val jwk: ModuleID = "io.iohk.atala" % "nimbus-jose-jwt" % "10.0.0"
+  val nimbusJwt: ModuleID = "io.iohk.atala" % "nimbus-jose-jwt" % V.nimbusJwt
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
   val scalaPbRuntime: ModuleID =
@@ -285,7 +289,7 @@ lazy val D_Pollux_VC_JWT = new {
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
   val circeDependencies: Seq[ModuleID] = Seq(D.circeCore, D.circeGeneric, D.circeParser)
   val baseDependencies: Seq[ModuleID] =
-    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.jwk :+ scalaTest
+    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ scalaTest
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
@@ -337,6 +341,7 @@ lazy val D_PrismAgent = new {
   val flyway = "org.flywaydb" % "flyway-core" % V.flyway
 
   val vaultDriver = "io.github.jopenlibs" % "vault-java-driver" % V.vaultDriver
+  val keycloakAuthz = "org.keycloak" % "keycloak-authz-client" % V.keycloak
 
   // Dependency Modules
   val baseDependencies: Seq[ModuleID] = Seq(
@@ -374,6 +379,8 @@ lazy val D_PrismAgent = new {
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
     baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop, D.zioMock, vaultDriver)
+
+  lazy val iamDependencies: Seq[ModuleID] = Seq(keycloakAuthz, D_Pollux_VC_JWT.jwtCirce) // TODO: cleanup
 
   lazy val serverDependencies: Seq[ModuleID] =
     baseDependencies ++ tapirDependencies ++ postgresDependencies ++ Seq(D.zioMock, D.mockito)
@@ -417,7 +424,7 @@ lazy val models = project
     ), // TODO try to remove this from this module
     // libraryDependencies += D.didScala
   )
-  .settings(libraryDependencies += D.jwk) //FIXME just for the DidAgent
+  .settings(libraryDependencies += D.nimbusJwt) //FIXME just for the DidAgent
 
 /* TODO move code from agentDidcommx to here
 models implementation for didcommx () */
@@ -539,7 +546,7 @@ lazy val resolver = project // maybe merge into models
       D.peerDidcommx,
       D.munit,
       D.munitZio,
-      D.jwk,
+      D.nimbusJwt,
     ),
     testFrameworks += new TestFramework("munit.Framework")
   )
@@ -758,9 +765,11 @@ lazy val prismAgentWalletAPI = project
   .settings(prismAgentConnectCommonSettings)
   .settings(
     name := "prism-agent-wallet-api",
-    libraryDependencies ++= D_PrismAgent.keyManagementDependencies ++ D_PrismAgent.postgresDependencies ++ Seq(
-      D.zioMock
-    )
+    libraryDependencies ++=
+      D_PrismAgent.keyManagementDependencies ++
+        D_PrismAgent.iamDependencies ++
+        D_PrismAgent.postgresDependencies ++
+        Seq(D.zioMock)
   )
   .dependsOn(
     agentDidcommx,
