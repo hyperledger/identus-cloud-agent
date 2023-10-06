@@ -88,7 +88,7 @@ class PoCNewLib extends AnyFlatSpec {
         "name":"proof_req_1",
         "version":"0.1",
         "requested_attributes": {
-            "sex":{"name":"sex","restrictions":{"cred_def_id":"$CRED_DEF_ID","attr::sex::value":"M"}}
+            "sex":{"name":"sex"}
         }
        }""".stripMargin
 
