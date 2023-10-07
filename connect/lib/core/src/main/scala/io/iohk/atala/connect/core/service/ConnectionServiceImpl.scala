@@ -74,6 +74,18 @@ private class ConnectionServiceImpl(
     } yield records
   }
 
+  override def getConnectionRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: ProtocolState*
+  ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = {
+    for {
+      records <- connectionRepository
+        .getConnectionRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+        .mapError(RepositoryError.apply)
+    } yield records
+  }
+
   override def getConnectionRecord(
       recordId: UUID
   ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] = {

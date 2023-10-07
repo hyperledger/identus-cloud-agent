@@ -51,6 +51,12 @@ trait CredentialService {
       states: IssueCredentialRecord.ProtocolState*
   ): ZIO[WalletAccessContext, CredentialServiceError, Seq[IssueCredentialRecord]]
 
+  def getIssueCredentialRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: IssueCredentialRecord.ProtocolState*
+  ): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
+
   def getIssueCredentialRecord(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]]

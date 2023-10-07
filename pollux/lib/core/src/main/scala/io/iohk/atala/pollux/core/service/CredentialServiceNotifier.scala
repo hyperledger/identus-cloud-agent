@@ -8,7 +8,7 @@ import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCre
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import io.iohk.atala.shared.models.WalletAccessContext
-import zio.{URLayer, ZIO, ZLayer}
+import zio.{URLayer, ZIO, ZLayer, IO}
 
 import java.util.UUID
 
@@ -171,6 +171,13 @@ class CredentialServiceNotifier(
       states: IssueCredentialRecord.ProtocolState*
   ): ZIO[WalletAccessContext, CredentialServiceError, Seq[IssueCredentialRecord]] =
     svc.getIssueCredentialRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+
+  override def getIssueCredentialRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: IssueCredentialRecord.ProtocolState*
+  ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] =
+    svc.getIssueCredentialRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
 }
 
 object CredentialServiceNotifier {

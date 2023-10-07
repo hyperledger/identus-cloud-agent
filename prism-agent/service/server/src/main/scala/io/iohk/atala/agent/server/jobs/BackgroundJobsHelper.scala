@@ -10,6 +10,8 @@ import io.iohk.atala.mercury.{AgentPeerService, DidAgent}
 import io.iohk.atala.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{ZIO, ZLayer}
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
 
 trait BackgroundJobsHelper {
 
@@ -70,6 +72,18 @@ trait BackgroundJobsHelper {
       peerDID <- managedDidService.getPeerDID(myDid)
       agent = AgentPeerService.makeLayer(peerDID)
     } yield agent
+  }
+
+  def buildWalletAccessContextLayer(
+      myDid: DidId
+  ): ZIO[DIDNonSecretStorage, WalletNotFoundError, WalletAccessContext] = {
+    for {
+      nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
+      maybePeerDIDRecord <- nonSecretStorage.getPeerDIDRecord(myDid).orDie
+      peerDIDRecord <- ZIO.fromOption(maybePeerDIDRecord).mapError(_ => WalletNotFoundError(myDid))
+      _ <- ZIO.logInfo(s"PeerDID record successfully loaded in DIDComm receiver endpoint: $peerDIDRecord")
+      walletAccessContext = WalletAccessContext(peerDIDRecord.walletId)
+    } yield walletAccessContext
   }
 
 }

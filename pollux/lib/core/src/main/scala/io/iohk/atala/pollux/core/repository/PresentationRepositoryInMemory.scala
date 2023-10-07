@@ -157,6 +157,26 @@ class PresentationRepositoryInMemory(
       .toSeq
   }
 
+  override def getPresentationRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: ProtocolState*
+  ): Task[Seq[PresentationRecord]] = {
+    for {
+      refs <- walletRefs.get
+      stores <- ZIO.foreach(refs.values.toList)(_.get)
+    } yield {
+      stores
+        .flatMap(_.values)
+        .filter { rec =>
+          (!ignoreWithZeroRetries || rec.metaRetries > 0) &&
+          states.contains(rec.protocolState)
+        }
+        .take(limit)
+        .toSeq
+    }
+  }
+
   override def getPresentationRecordByThreadId(
       thid: DidCommID,
   ): RIO[WalletAccessContext, Option[PresentationRecord]] = {

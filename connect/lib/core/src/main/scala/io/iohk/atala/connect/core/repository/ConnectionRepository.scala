@@ -5,7 +5,7 @@ import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
 import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.RIO
-
+import zio.Task
 import java.util.UUID
 
 trait ConnectionRepository {
@@ -18,6 +18,12 @@ trait ConnectionRepository {
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): RIO[WalletAccessContext, Seq[ConnectionRecord]]
+
+  def getConnectionRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: ConnectionRecord.ProtocolState*
+  ): Task[Seq[ConnectionRecord]]
 
   def getConnectionRecord(recordId: UUID): RIO[WalletAccessContext, Option[ConnectionRecord]]
 
@@ -50,4 +56,5 @@ trait ConnectionRepository {
       recordId: UUID,
       failReason: Option[String],
   ): RIO[WalletAccessContext, Int]
+
 }

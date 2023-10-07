@@ -134,6 +134,12 @@ object MockPresentationService extends Mock[PresentationService] {
           state: PresentationRecord.ProtocolState*
       ): IO[PresentationError, Seq[PresentationRecord]] = ???
 
+      override def getPresentationRecordsByStatesForAllWallets(
+          ignoreWithZeroRetries: Boolean,
+          limit: Int,
+          state: PresentationRecord.ProtocolState*
+      ): IO[PresentationError, Seq[PresentationRecord]] = ???
+
       override def getPresentationRecord(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = ???
 
       override def getPresentationRecordByThreadId(thid: DidCommID): IO[PresentationError, Option[PresentationRecord]] =

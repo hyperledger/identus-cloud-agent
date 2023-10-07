@@ -195,6 +195,26 @@ class CredentialRepositoryInMemory(
       .toSeq
   }
 
+  override def getIssueCredentialRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: ProtocolState*
+  ): Task[Seq[IssueCredentialRecord]] = {
+    for {
+      refs <- walletRefs.get
+      stores <- ZIO.foreach(refs.values.toList)(_.get)
+    } yield {
+      stores
+        .flatMap(_.values)
+        .filter { rec =>
+          (!ignoreWithZeroRetries || rec.metaRetries > 0) &&
+          states.contains(rec.protocolState)
+        }
+        .take(limit)
+        .toSeq
+    }
+  }
+
   override def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean,

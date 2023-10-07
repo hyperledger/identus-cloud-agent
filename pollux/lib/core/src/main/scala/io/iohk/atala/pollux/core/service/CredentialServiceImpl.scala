@@ -230,6 +230,18 @@ private class CredentialServiceImpl(
     } yield records
   }
 
+  override def getIssueCredentialRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: IssueCredentialRecord.ProtocolState*
+  ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
+    for {
+      records <- credentialRepository
+        .getIssueCredentialRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+        .mapError(RepositoryError.apply)
+    } yield records
+  }
+
   override def receiveCredentialOffer(
       offer: OfferCredential
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {

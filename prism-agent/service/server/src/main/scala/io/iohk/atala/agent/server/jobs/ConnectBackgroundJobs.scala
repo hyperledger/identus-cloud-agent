@@ -18,6 +18,8 @@ import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.metrics.*
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
 
 object ConnectBackgroundJobs extends BackgroundJobsHelper {
 
@@ -26,7 +28,7 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
       connectionService <- ZIO.service[ConnectionService]
       config <- ZIO.service[AppConfig]
       records <- connectionService
-        .getConnectionRecordsByStates(
+        .getConnectionRecordsByStatesForAllWallets(
           ignoreWithZeroRetries = true,
           limit = config.connect.connectBgJobRecordsLimit,
           ConnectionRecord.ProtocolState.ConnectionRequestPending,
@@ -40,7 +42,7 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
   private[this] def performExchange(
       record: ConnectionRecord
   ): URIO[
-    DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & WalletAccessContext & AppConfig,
+    DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & DIDNonSecretStorage & AppConfig,
     Unit
   ] = {
     import ProtocolState.*
@@ -98,23 +100,25 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
             _
           ) if metaRetries > 0 =>
         val inviteeProcessFlow = for {
-
-          didCommAgent <- buildDIDCommAgent(request.from)
-          resp <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
-            .gauge("connection_flow_invitee_send_connection_request_ms_gauge")
-            .trackDurationWith(_.toMetricsSeconds)
-          connectionService <- ZIO.service[ConnectionService]
-          _ <- {
-            if (resp.status >= 200 && resp.status < 300)
-              connectionService.markConnectionRequestSent(id)
-                @@ InviteeConnectionRequestMsgSuccess
-                @@ CustomMetricsAspect.endRecordingTime(
-                  s"${record.id}_invitee_pending_to_req_sent",
-                  "connection_flow_invitee_pending_to_req_sent_ms_gauge"
-                )
-            else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ InviteeConnectionRequestMsgFailed
-          }
-        } yield ()
+          walletAccessContext <- buildWalletAccessContextLayer(request.from)
+          result <- (for {
+            didCommAgent <- buildDIDCommAgent(request.from).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+            resp <- MessagingService.send(request.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
+              .gauge("connection_flow_invitee_send_connection_request_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
+            connectionService <- ZIO.service[ConnectionService]
+            _ <- {
+              if (resp.status >= 200 && resp.status < 300)
+                connectionService.markConnectionRequestSent(id).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                  @@ InviteeConnectionRequestMsgSuccess
+                  @@ CustomMetricsAspect.endRecordingTime(
+                    s"${record.id}_invitee_pending_to_req_sent",
+                    "connection_flow_invitee_pending_to_req_sent_ms_gauge"
+                  )
+              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ InviteeConnectionRequestMsgFailed
+            }
+          } yield ()).mapError(e => (walletAccessContext, e))
+        } yield result
 
         // inviteeProcessFlow // TODO decrease metaRetries if it has a error
 
@@ -142,22 +146,26 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
             _
           ) if metaRetries > 0 =>
         val inviterProcessFlow = for {
-          didCommAgent <- buildDIDCommAgent(response.from)
-          resp <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
-            .gauge("connection_flow_inviter_send_connection_response_ms_gauge")
-            .trackDurationWith(_.toMetricsSeconds)
-          connectionService <- ZIO.service[ConnectionService]
-          _ <- {
-            if (resp.status >= 200 && resp.status < 300)
-              connectionService.markConnectionResponseSent(id)
-                @@ InviterConnectionResponseMsgSuccess
-                @@ CustomMetricsAspect.endRecordingTime(
-                  s"${record.id}_inviter_pending_to_res_sent",
-                  "connection_flow_inviter_pending_to_res_sent_ms_gauge"
-                )
-            else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ InviterConnectionResponseMsgFailed
-          }
-        } yield ()
+          walletAccessContext <- buildWalletAccessContextLayer(response.from)
+          result <- (for {
+            didCommAgent <- buildDIDCommAgent(response.from).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+            resp <- MessagingService.send(response.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
+              .gauge("connection_flow_inviter_send_connection_response_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
+            connectionService <- ZIO.service[ConnectionService]
+            _ <- {
+              if (resp.status >= 200 && resp.status < 300)
+                connectionService.markConnectionResponseSent(id).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                  @@ InviterConnectionResponseMsgSuccess
+                  @@ CustomMetricsAspect.endRecordingTime(
+                    s"${record.id}_inviter_pending_to_res_sent",
+                    "connection_flow_inviter_pending_to_res_sent_ms_gauge"
+                  )
+              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ InviterConnectionResponseMsgFailed
+            }
+          } yield ()).mapError(e => (walletAccessContext, e))
+        } yield result
+
         inviterProcessFlow
           @@ InviterProcessConnectionRecordPendingSuccess.trackSuccess
           @@ InviterProcessConnectionRecordPendingFailed.trackError
@@ -169,19 +177,26 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
     }
 
     exchange
-      .tapError(e =>
-        for {
-          connectService <- ZIO.service[ConnectionService]
-          _ <- connectService
-            .reportProcessingFailure(record.id, Some(e.toString))
-            .tapError(err =>
-              ZIO.logErrorCause(
-                s"Connect - failed to report processing failure: ${record.id}",
-                Cause.fail(err)
+      .tapError({
+        case walletNotFound: WalletNotFoundError =>
+          ZIO.logErrorCause(
+            s"Connect - Error processing record: ${record.id}",
+            Cause.fail(walletNotFound)
+          )
+        case ((walletAccessContext, e)) =>
+          for {
+            connectService <- ZIO.service[ConnectionService]
+            _ <- connectService
+              .reportProcessingFailure(record.id, Some(e.toString))
+              .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+              .tapError(err =>
+                ZIO.logErrorCause(
+                  s"Connect - failed to report processing failure: ${record.id}",
+                  Cause.fail(err)
+                )
               )
-            )
-        } yield ()
-      )
+          } yield ()
+      })
       .catchAll(e => ZIO.logErrorCause(s"Connect - Error processing record: ${record.id} ", Cause.fail(e)))
       .catchAllDefect(d => ZIO.logErrorCause(s"Connect - Defect processing record: ${record.id}", Cause.fail(d)))
   }

@@ -190,6 +190,13 @@ object MockCredentialService extends Mock[CredentialService] {
       ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] =
         ???
 
+      override def getIssueCredentialRecordsByStatesForAllWallets(
+          ignoreWithZeroRetries: Boolean,
+          limit: Int,
+          states: IssueCredentialRecord.ProtocolState*
+      ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] =
+        ???
+
       override def getIssueCredentialRecord(
           recordId: DidCommID
       ): IO[CredentialServiceError, Option[IssueCredentialRecord]] =

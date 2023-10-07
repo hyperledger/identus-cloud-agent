@@ -12,6 +12,7 @@ import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.metrics.*
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
 
 object IssueBackgroundJobs extends BackgroundJobsHelper {
 
@@ -20,7 +21,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
       credentialService <- ZIO.service[CredentialService]
       config <- ZIO.service[AppConfig]
       records <- credentialService
-        .getIssueCredentialRecordsByStates(
+        .getIssueCredentialRecordsByStatesForAllWallets(
           ignoreWithZeroRetries = true,
           limit = config.pollux.issueBgJobRecordsLimit,
           IssueCredentialRecord.ProtocolState.OfferPending,
@@ -164,24 +165,27 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
             ) =>
           val sendOfferFlow = for {
             _ <- ZIO.log(s"IssueCredentialRecord: OfferPending (START)")
-            didCommAgent <- buildDIDCommAgent(offer.from)
-            resp <- MessagingService
-              .send(offer.makeMessage)
-              .provideSomeLayer(didCommAgent) @@ Metric
-              .gauge("issuance_flow_issuer_send_offer_ms_gauge")
-              .trackDurationWith(_.toMetricsSeconds)
-            credentialService <- ZIO.service[CredentialService]
-            _ <- {
-              if (resp.status >= 200 && resp.status < 300)
-                credentialService.markOfferSent(id) @@
-                  IssuerSendOfferMsgSucceed @@
-                  CustomMetricsAspect.endRecordingTime(
-                    s"${record.id}_issuer_offer_pending_to_sent_ms_gauge",
-                    "issuance_flow_issuer_offer_pending_to_sent_ms_gauge"
-                  )
-              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ IssuerSendOfferMsgFailed
-            }
-          } yield ()
+            walletAccessContext <- buildWalletAccessContextLayer(offer.from)
+            result <- (for {
+              didCommAgent <- buildDIDCommAgent(offer.from).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+              resp <- MessagingService
+                .send(offer.makeMessage)
+                .provideSomeLayer(didCommAgent) @@ Metric
+                .gauge("issuance_flow_issuer_send_offer_ms_gauge")
+                .trackDurationWith(_.toMetricsSeconds)
+              credentialService <- ZIO.service[CredentialService]
+              _ <- {
+                if (resp.status >= 200 && resp.status < 300)
+                  credentialService.markOfferSent(id).provideSomeLayer(ZLayer.succeed(walletAccessContext)) @@
+                    IssuerSendOfferMsgSucceed @@
+                    CustomMetricsAspect.endRecordingTime(
+                      s"${record.id}_issuer_offer_pending_to_sent_ms_gauge",
+                      "issuance_flow_issuer_offer_pending_to_sent_ms_gauge"
+                    )
+                else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ IssuerSendOfferMsgFailed
+              }
+            } yield ()).mapError(e => (walletAccessContext, e))
+          } yield result
 
           sendOfferFlow @@ IssuerSendOfferSucceed.trackSuccess
             @@ IssuerSendOfferFailed.trackError
@@ -204,7 +208,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               RequestPending,
-              Some(_),
+              Some(offer),
               None,
               _,
               _,
@@ -215,9 +219,14 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.generateJWTCredentialRequest(id)
-          } yield ()
+            walletAccessContext <- buildWalletAccessContextLayer(offer.to)
+            result <- (for {
+              credentialService <- ZIO.service[CredentialService]
+              _ <- credentialService
+                .generateJWTCredentialRequest(id)
+                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+            } yield ()).mapError(e => (walletAccessContext, handleCredentialErrors(e)))
+          } yield result
 
           holderPendingToGeneratedFlow @@ HolderPendingToGeneratedSuccess.trackSuccess
             @@ HolderPendingToGeneratedFailed.trackError
@@ -239,7 +248,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               RequestPending,
-              Some(_),
+              Some(offer),
               None,
               _,
               _,
@@ -250,9 +259,14 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.generateAnonCredsCredentialRequest(id)
-          } yield ()
+            walletAccessContext <- buildWalletAccessContextLayer(offer.to)
+            result <- (for {
+              credentialService <- ZIO.service[CredentialService]
+              _ <- credentialService
+                .generateAnonCredsCredentialRequest(id)
+                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+            } yield ()).mapError(e => (walletAccessContext, handleCredentialErrors(e)))
+          } yield result
 
           holderPendingToGeneratedFlow @@ HolderPendingToGeneratedSuccess.trackSuccess
             @@ HolderPendingToGeneratedFailed.trackError
@@ -286,23 +300,28 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderGeneratedToSentFlow = for {
-            didCommAgent <- buildDIDCommAgent(request.from)
-            resp <- MessagingService
-              .send(request.makeMessage)
-              .provideSomeLayer(didCommAgent) @@ Metric
-              .gauge("issuance_flow_holder_send_request_ms_gauge")
-              .trackDurationWith(_.toMetricsSeconds)
-            credentialService <- ZIO.service[CredentialService]
-            _ <- {
-              if (resp.status >= 200 && resp.status < 300)
-                credentialService.markRequestSent(id) @@ HolderSendReqSucceed
-                  @@ CustomMetricsAspect.endRecordingTime(
-                    s"${record.id}_issuance_flow_holder_req_generated_to_sent",
-                    "issuance_flow_holder_req_generated_to_sent_ms_gauge"
-                  )
-              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ HolderSendReqFailed
-            }
-          } yield ()
+            walletAccessContext <- buildWalletAccessContextLayer(request.from)
+            result <- (for {
+              didCommAgent <- buildDIDCommAgent(request.from).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+              resp <- MessagingService
+                .send(request.makeMessage)
+                .provideSomeLayer(didCommAgent) @@ Metric
+                .gauge("issuance_flow_holder_send_request_ms_gauge")
+                .trackDurationWith(_.toMetricsSeconds)
+              credentialService <- ZIO.service[CredentialService]
+              _ <- {
+                if (resp.status >= 200 && resp.status < 300)
+                  credentialService
+                    .markRequestSent(id)
+                    .provideSomeLayer(ZLayer.succeed(walletAccessContext)) @@ HolderSendReqSucceed
+                    @@ CustomMetricsAspect.endRecordingTime(
+                      s"${record.id}_issuance_flow_holder_req_generated_to_sent",
+                      "issuance_flow_holder_req_generated_to_sent_ms_gauge"
+                    )
+                else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ HolderSendReqFailed
+              }
+            } yield ()).mapError(e => (walletAccessContext, e))
+          } yield result
 
           holderGeneratedToSentFlow @@ HolderGeneratedToSentSucceed.trackSuccess
             @@ HolderGeneratedToSentFailed.trackError
@@ -326,7 +345,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               Some(true),
               RequestReceived,
               _,
-              _,
+              Some(request),
               _,
               _,
               _,
@@ -336,9 +355,12 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
             ) =>
           val issuerReceivedToPendingFlow = for {
-            credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.acceptCredentialRequest(id)
-          } yield ()
+            walletAccessContext <- buildWalletAccessContextLayer(request.to)
+            result <- (for {
+              credentialService <- ZIO.service[CredentialService]
+              _ <- credentialService.acceptCredentialRequest(id).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+            } yield ()).mapError(e => (walletAccessContext, e))
+          } yield result
 
           issuerReceivedToPendingFlow @@ IssuerReceivedToPendingSuccess.trackSuccess
             @@ IssuerReceivedToPendingFailed.trackError
@@ -375,9 +397,12 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
           // Set ProtocolState to CredentialGenerated
           // TODO Move all logic to service
           val issuerPendingToGeneratedFlow = for {
-            credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.generateJWTCredential(id)
-          } yield ()
+            walletAccessContext <- buildWalletAccessContextLayer(issue.from)
+            result <- (for {
+              credentialService <- ZIO.service[CredentialService]
+              _ <- credentialService.generateJWTCredential(id).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+            } yield ()).mapError(e => (walletAccessContext, e))
+          } yield result
 
           issuerPendingToGeneratedFlow @@ IssuerPendingToGeneratedSuccess.trackSuccess
             @@ IssuerPendingToGeneratedFailed.trackError
@@ -410,9 +435,14 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
             ) =>
           val issuerPendingToGeneratedFlow = for {
-            credentialService <- ZIO.service[CredentialService]
-            _ <- credentialService.generateAnonCredsCredential(id)
-          } yield ()
+            walletAccessContext <- buildWalletAccessContextLayer(issue.from)
+            result <- (for {
+              credentialService <- ZIO.service[CredentialService]
+              _ <- credentialService
+                .generateAnonCredsCredential(id)
+                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+            } yield ()).mapError(e => (walletAccessContext, e))
+          } yield result
 
           issuerPendingToGeneratedFlow @@ IssuerPendingToGeneratedSuccess.trackSuccess
             @@ IssuerPendingToGeneratedFailed.trackError
@@ -446,19 +476,24 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
             ) =>
           val sendCredentialManualIssuanceFlow = for {
-            didCommAgent <- buildDIDCommAgent(issue.from)
-            resp <- MessagingService
-              .send(issue.makeMessage)
-              .provideSomeLayer(didCommAgent) @@ Metric
-              .gauge("issuance_flow_issuer_send_credential_msg_ms_gauge")
-              .trackDurationWith(_.toMetricsSeconds)
-            credentialService <- ZIO.service[CredentialService]
-            _ <- {
-              if (resp.status >= 200 && resp.status < 300)
-                credentialService.markCredentialSent(id) @@ IssuerSendCredentialMsgSuccess
-              else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ IssuerSendCredentialMsgFailed
-            }
-          } yield ()
+            walletAccessContext <- buildWalletAccessContextLayer(issue.from)
+            result <- (for {
+              didCommAgent <- buildDIDCommAgent(issue.from).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+              resp <- MessagingService
+                .send(issue.makeMessage)
+                .provideSomeLayer(didCommAgent) @@ Metric
+                .gauge("issuance_flow_issuer_send_credential_msg_ms_gauge")
+                .trackDurationWith(_.toMetricsSeconds)
+              credentialService <- ZIO.service[CredentialService]
+              _ <- {
+                if (resp.status >= 200 && resp.status < 300)
+                  credentialService
+                    .markCredentialSent(id)
+                    .provideSomeLayer(ZLayer.succeed(walletAccessContext)) @@ IssuerSendCredentialMsgSuccess
+                else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ IssuerSendCredentialMsgFailed
+              }
+            } yield ()).mapError(e => (walletAccessContext, e))
+          } yield result
 
           sendCredentialManualIssuanceFlow @@ IssuerSendCredentialSuccess.trackSuccess
             @@ IssuerSendCredentialFailed.trackError
@@ -471,24 +506,40 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
     } yield ()
 
     aux
-      .tapError(e =>
-        for {
-          credentialService <- ZIO.service[CredentialService]
-          _ <- credentialService
-            .reportProcessingFailure(record.id, Some(e.toString))
-            .tapError(err =>
-              ZIO.logErrorCause(
-                s"Issue Credential - failed to report processing failure: ${record.id}",
-                Cause.fail(err)
-              )
+      .tapError(
+        {
+          case walletNotFound: WalletNotFoundError =>
+            ZIO.logErrorCause(
+              s"Issue Credential- Error processing record: ${record.id}",
+              Cause.fail(walletNotFound)
             )
-        } yield ()
+          case ((walletAccessContext, e)) =>
+            for {
+              credentialService <- ZIO.service[CredentialService]
+              _ <- credentialService
+                .reportProcessingFailure(record.id, Some(e.toString))
+                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                .tapError(err =>
+                  ZIO.logErrorCause(
+                    s"Issue Credential - failed to report processing failure: ${record.id}",
+                    Cause.fail(err)
+                  )
+                )
+            } yield ()
+
+        }
       )
       .catchAll(e => ZIO.logErrorCause(s"Issue Credential - Error processing record: ${record.id} ", Cause.fail(e)))
       .catchAllDefect(d =>
         ZIO.logErrorCause(s"Issue Credential - Defect processing record: ${record.id}", Cause.fail(d))
       )
 
+  }
+
+  private[this] def handleCredentialErrors
+      : PartialFunction[Throwable | CredentialServiceError, CredentialServiceError] = {
+    case e: CredentialServiceError => e
+    case t: Throwable              => CredentialServiceError.UnexpectedError(t.getMessage())
   }
 
 }

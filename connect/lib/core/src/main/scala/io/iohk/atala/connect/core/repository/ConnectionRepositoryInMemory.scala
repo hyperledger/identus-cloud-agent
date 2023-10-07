@@ -155,6 +155,30 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       .getOrElse(ZIO.succeed(0))
   } yield count
 
+  def updateAfterFailForAllWallets(
+      recordId: UUID,
+      failReason: Option[String],
+  ): Task[Int] = walletRefs.get.flatMap { wallets =>
+    ZIO.foldLeft(wallets.values)(0) { (acc, walletRef) =>
+      for {
+        records <- walletRef.get
+        count <- records.get(recordId) match {
+          case Some(record) =>
+            walletRef.update { r =>
+              r.updated(
+                recordId,
+                record.copy(
+                  metaRetries = record.metaRetries - 1,
+                  metaLastFailure = failReason
+                )
+              )
+            } *> ZIO.succeed(1) // Record updated, count as 1 update
+          case None => ZIO.succeed(0) // No record updated
+        }
+      } yield acc + count
+    }
+  }
+
   override def getConnectionRecordByThreadId(thid: String): RIO[WalletAccessContext, Option[ConnectionRecord]] = {
     for {
       storeRef <- walletStoreRef
@@ -181,6 +205,27 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       .filter(rec => (ignoreWithZeroRetries & rec.metaRetries > 0) & states.contains(rec.protocolState))
       .take(limit)
       .toSeq
+  }
+
+  override def getConnectionRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: ConnectionRecord.ProtocolState*
+  ): Task[Seq[ConnectionRecord]] = {
+
+    for {
+      refs <- walletRefs.get
+      stores <- ZIO.foreach(refs.values.toList)(_.get)
+    } yield {
+      stores
+        .flatMap(_.values)
+        .filter { rec =>
+          (!ignoreWithZeroRetries || rec.metaRetries > 0) &&
+          states.contains(rec.protocolState)
+        }
+        .take(limit)
+        .toSeq
+    }
   }
 
   override def createConnectionRecord(record: ConnectionRecord): RIO[WalletAccessContext, Int] = {

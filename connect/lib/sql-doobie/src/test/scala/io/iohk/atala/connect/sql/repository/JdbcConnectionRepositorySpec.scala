@@ -20,7 +20,8 @@ object JdbcConnectionRepositorySpec extends ZIOSpecDefault, PostgresTestContaine
     Migrations.layer,
     dbConfig,
     pgContainerLayer,
-    contextAwareTransactorLayer
+    contextAwareTransactorLayer,
+    systemTransactorLayer
   )
 
   override def spec: Spec[TestEnvironment with Scope, Any] =
