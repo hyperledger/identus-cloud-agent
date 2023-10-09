@@ -1,0 +1,60 @@
+plugins:
+  - name: proxy-rewrite
+
+routes:
+  - uri: /issuer/prism-agent/*
+    upstream_id: 1
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/issuer/prism-agent/(.*)", "/$1"]
+  - uri: /issuer/didcomm*
+    upstream_id: 2
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/issuer/didcomm(.*)", "/$1"]
+  - uri: /verifier/prism-agent/*
+    upstream_id: 3
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/verifier/prism-agent/(.*)", "/$1"]
+  - uri: /verifier/didcomm*
+    upstream_id: 4
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/verifier/didcomm(.*)", "/$1"]
+  - uri: /holder/prism-agent/*
+    upstream_id: 5
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/holder/prism-agent/(.*)", "/$1"]
+  - uri: /holder/didcomm*
+    upstream_id: 6
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/holder/didcomm(.*)", "/$1"]
+upstreams:
+  - id: 1
+    nodes:
+      "issuer-oea:8085": 1 # tapir
+    type: roundrobin
+  - id: 2
+    nodes:
+      "issuer-oea:8090": 1 # didcom
+    type: roundrobin
+  - id: 3
+    nodes:
+      "verifier-oea:8085": 1 # tapir
+    type: roundrobin
+  - id: 4
+    nodes:
+      "verifier-oea:8090": 1 # didcom
+    type: roundrobin
+  - id: 5
+    nodes:
+      "holder-oea:8085": 1 # tapir
+    type: roundrobin
+  - id: 6
+    nodes:
+      "holder-oea:8090": 1 # didcom
+    type: roundrobin
+#END

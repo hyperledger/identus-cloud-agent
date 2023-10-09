@@ -1,0 +1,304 @@
+---
+version: "3.8"
+
+services:
+  issuer-db:
+    image: postgres:13
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,agent"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - issuer_pg_data_db:/var/lib/postgresql/data
+      - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+      - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "castor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  verifier-db:
+    image: postgres:13
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,agent"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - verifier_pg_data_db:/var/lib/postgresql/data
+      - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+      - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
+    ports:
+      - 5433:5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "castor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  holder-db:
+    image: postgres:13
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,agent"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - holder_pg_data_db:/var/lib/postgresql/data
+      - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+      - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
+    ports:
+      - 5434:5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "castor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  node-db:
+    image: postgres:13
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: "node_db"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - node_pg_data_db:/var/lib/postgresql/data
+      - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+      - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "node_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  prism-node:
+    image: ghcr.io/input-output-hk/prism-node:${PRISM_NODE_VERSION}
+    environment:
+      NODE_PSQL_HOST: node-db:5432
+      NODE_LEDGER: in-memory
+      NODE_REFRESH_AND_SUBMIT_PERIOD: 1s
+      NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD: 1s
+      NODE_WALLET_MAX_TPS: 1000
+    depends_on:
+      node-db:
+        condition: service_healthy
+
+  issuer-oea:
+    image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
+    environment:
+      IRIS_HOST: iris
+      IRIS_PORT: 8081
+      CASTOR_DB_HOST: issuer-db
+      CASTOR_DB_PORT: 5432
+      CASTOR_DB_NAME: castor
+      CASTOR_DB_USER: postgres
+      CASTOR_DB_PASSWORD: postgres
+      POLLUX_DB_HOST: issuer-db
+      POLLUX_DB_PORT: 5432
+      POLLUX_DB_NAME: pollux
+      POLLUX_DB_USER: postgres
+      POLLUX_DB_PASSWORD: postgres
+      CONNECT_DB_HOST: issuer-db
+      CONNECT_DB_PORT: 5432
+      CONNECT_DB_NAME: connect
+      CONNECT_DB_USER: postgres
+      CONNECT_DB_PASSWORD: postgres
+      AGENT_DB_HOST: issuer-db
+      AGENT_DB_PORT: 5432
+      AGENT_DB_NAME: agent
+      AGENT_DB_USER: postgres
+      AGENT_DB_PASSWORD: postgres
+      DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/issuer/didcomm
+      PRISM_NODE_HOST: prism-node
+      PRISM_NODE_PORT: 50053
+      SECRET_STORAGE_BACKEND: postgres
+      DEV_MODE: true
+      DEFAULT_WALLET_ENABLED:
+      DEFAULT_WALLET_SEED:
+      # DEFAULT_WALLET_WEBHOOK_URL:
+      # DEFAULT_WALLET_WEBHOOK_API_KEY:
+      # DEFAULT_WALLET_AUTH_API_KEY:
+      # GLOBAL_WEBHOOK_URL:
+      # GLOBAL_WEBHOOK_API_KEY:
+      # WEBHOOK_PARALLELISM:
+      ADMIN_TOKEN:
+      API_KEY_SALT:
+      API_KEY_ENABLED:
+      API_KEY_AUTHENTICATE_AS_DEFAULT_USER:
+      API_KEY_AUTO_PROVISIONING:
+      ISSUE_BG_JOB_RECORDS_LIMIT: 25
+      ISSUE_BG_JOB_RECURRENCE_DELAY: 2 seconds
+      ISSUE_BG_JOB_PROCESSING_PARALLELISM: 5
+      PRESENTATION_BG_JOB_RECORDS_LIMIT: 25
+      PRESENTATION_BG_JOB_RECURRENCE_DELAY: 2 seconds
+      PRESENTATION_BG_JOB_PROCESSING_PARALLELISM: 5
+      CONNECT_BG_JOB_RECORDS_LIMIT: 25
+      CONNECT_BG_JOB_RECURRENCE_DELAY: 2 seconds
+      CONNECT_BG_JOB_PROCESSING_PARALLELISM: 5
+    depends_on:
+      issuer-db:
+        condition: service_healthy
+      prism-node:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://issuer-oea:8085/_system/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  verifier-oea:
+    image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
+    environment:
+      IRIS_HOST: iris
+      IRIS_PORT: 8081
+      CASTOR_DB_HOST: verifier-db
+      CASTOR_DB_PORT: 5432
+      CASTOR_DB_NAME: castor
+      CASTOR_DB_USER: postgres
+      CASTOR_DB_PASSWORD: postgres
+      POLLUX_DB_HOST: verifier-db
+      POLLUX_DB_PORT: 5432
+      POLLUX_DB_NAME: pollux
+      POLLUX_DB_USER: postgres
+      POLLUX_DB_PASSWORD: postgres
+      CONNECT_DB_HOST: verifier-db
+      CONNECT_DB_PORT: 5432
+      CONNECT_DB_NAME: connect
+      CONNECT_DB_USER: postgres
+      CONNECT_DB_PASSWORD: postgres
+      AGENT_DB_HOST: verifier-db
+      AGENT_DB_PORT: 5432
+      AGENT_DB_NAME: agent
+      AGENT_DB_USER: postgres
+      AGENT_DB_PASSWORD: postgres
+      DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/verifier/didcomm
+      PRISM_NODE_HOST: prism-node
+      PRISM_NODE_PORT: 50053
+      SECRET_STORAGE_BACKEND: postgres
+      DEV_MODE: true
+      DEFAULT_WALLET_ENABLED:
+      DEFAULT_WALLET_SEED:
+      # DEFAULT_WALLET_WEBHOOK_URL:
+      # DEFAULT_WALLET_WEBHOOK_API_KEY:
+      # DEFAULT_WALLET_AUTH_API_KEY:
+      # GLOBAL_WEBHOOK_URL:
+      # GLOBAL_WEBHOOK_API_KEY:
+      # WEBHOOK_PARALLELISM:
+      ADMIN_TOKEN:
+      API_KEY_SALT:
+      API_KEY_ENABLED:
+      API_KEY_AUTHENTICATE_AS_DEFAULT_USER:
+      API_KEY_AUTO_PROVISIONING:
+      ISSUE_BG_JOB_RECORDS_LIMIT: 25
+      ISSUE_BG_JOB_RECURRENCE_DELAY: 2 seconds
+      ISSUE_BG_JOB_PROCESSING_PARALLELISM: 5
+      PRESENTATION_BG_JOB_RECORDS_LIMIT: 25
+      PRESENTATION_BG_JOB_RECURRENCE_DELAY: 2 seconds
+      PRESENTATION_BG_JOB_PROCESSING_PARALLELISM: 5
+      CONNECT_BG_JOB_RECORDS_LIMIT: 25
+      CONNECT_BG_JOB_RECURRENCE_DELAY: 2 seconds
+      CONNECT_BG_JOB_PROCESSING_PARALLELISM: 5
+    depends_on:
+      verifier-db:
+        condition: service_healthy
+      prism-node:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://verifier-oea:8085/_system/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  holder-oea:
+    image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
+    environment:
+      IRIS_HOST: iris
+      IRIS_PORT: 8081
+      CASTOR_DB_HOST: holder-db
+      CASTOR_DB_PORT: 5432
+      CASTOR_DB_NAME: castor
+      CASTOR_DB_USER: postgres
+      CASTOR_DB_PASSWORD: postgres
+      POLLUX_DB_HOST: holder-db
+      POLLUX_DB_PORT: 5432
+      POLLUX_DB_NAME: pollux
+      POLLUX_DB_USER: postgres
+      POLLUX_DB_PASSWORD: postgres
+      CONNECT_DB_HOST: holder-db
+      CONNECT_DB_PORT: 5432
+      CONNECT_DB_NAME: connect
+      CONNECT_DB_USER: postgres
+      CONNECT_DB_PASSWORD: postgres
+      AGENT_DB_HOST: holder-db
+      AGENT_DB_PORT: 5432
+      AGENT_DB_NAME: agent
+      AGENT_DB_USER: postgres
+      AGENT_DB_PASSWORD: postgres
+      DIDCOMM_SERVICE_URL: http://host.docker.internal:${PORT}/holder/didcomm
+      PRISM_NODE_HOST: prism-node
+      PRISM_NODE_PORT: 50053
+      SECRET_STORAGE_BACKEND: postgres
+      DEV_MODE: true
+      DEFAULT_WALLET_ENABLED:
+      DEFAULT_WALLET_SEED:
+      # DEFAULT_WALLET_WEBHOOK_URL:
+      # DEFAULT_WALLET_WEBHOOK_API_KEY:
+      # DEFAULT_WALLET_AUTH_API_KEY:
+      # GLOBAL_WEBHOOK_URL:
+      # GLOBAL_WEBHOOK_API_KEY:
+      # WEBHOOK_PARALLELISM:
+      ISSUE_BG_JOB_RECORDS_LIMIT: 25
+      ISSUE_BG_JOB_RECURRENCE_DELAY: 2 seconds
+      ISSUE_BG_JOB_PROCESSING_PARALLELISM: 5
+      PRESENTATION_BG_JOB_RECORDS_LIMIT: 25
+      PRESENTATION_BG_JOB_RECURRENCE_DELAY: 2 seconds
+      PRESENTATION_BG_JOB_PROCESSING_PARALLELISM: 5
+      CONNECT_BG_JOB_RECORDS_LIMIT: 25
+      CONNECT_BG_JOB_RECURRENCE_DELAY: 2 seconds
+      CONNECT_BG_JOB_PROCESSING_PARALLELISM: 5
+      ADMIN_TOKEN:
+      API_KEY_SALT:
+      API_KEY_ENABLED:
+      API_KEY_AUTHENTICATE_AS_DEFAULT_USER:
+      API_KEY_AUTO_PROVISIONING:
+    depends_on:
+      holder-db:
+        condition: service_healthy
+      prism-node:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://holder-oea:8085/_system/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  apisix:
+    image: apache/apisix:2.15.0-alpine
+    volumes:
+      - ./apisix/conf/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+      - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+    ports:
+      - "${PORT}:9080/tcp"
+    depends_on:
+      - issuer-oea
+      - verifier-oea
+      - holder-oea
+
+volumes:
+  issuer_pg_data_db:
+  verifier_pg_data_db:
+  holder_pg_data_db:
+  node_pg_data_db:
+  pgadmin:
+# Temporary commit network setting due to e2e CI bug
+# to be enabled later after debugging
+#networks:
+#  default:
+#    name: ${NETWORK}
