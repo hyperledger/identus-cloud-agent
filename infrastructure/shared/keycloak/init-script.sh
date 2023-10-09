@@ -51,6 +51,24 @@ function create_prism_agent_client() {
 		}"
 }
 
+function create_sample_user() {
+	local access_token=$1
+	local username=$2
+	local password=$3
+
+	curl --request POST "$KEYCLOAK_BASE_URL/admin/realms/$REALM_NAME/users" \
+		--fail -s \
+		-H "Authorization: Bearer $access_token" \
+		-H "Content-Type: application/json" \
+		--data-raw "{
+			\"id\": \"$username\",
+			\"username\": \"$username\",
+			\"firstName\": \"$username\",
+			\"enabled\": true,
+			\"credentials\": [{\"value\": $password, \"temporary\": false}]
+		}"
+}
+
 echo "Getting admin access token ..."
 ADMIN_ACCESS_TOKEN=$(get_admin_token)
 
@@ -59,3 +77,6 @@ create_realm $ADMIN_ACCESS_TOKEN
 
 echo "Creating a new prism-agent client ..."
 create_prism_agent_client $ADMIN_ACCESS_TOKEN
+
+echo "Creating a new sample user ..."
+create_sample_user $ADMIN_ACCESS_TOKEN "alice" "1234"
