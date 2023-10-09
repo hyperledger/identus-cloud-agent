@@ -16,7 +16,7 @@ semantic interoperability of the Credential.
 The PRISM Platform supports the following specifications of the credential schemas:
 
 - [Verifiable Credentials JSON Schema 2022](https://w3c-ccg.github.io/vc-json-schemas/)
-- [AnonCreds Schema](https://hyperledger.github.io/anoncreds-spec/#term:schemas) - planned
+- [AnonCreds Schema](https://hyperledger.github.io/anoncreds-spec/#term:schemas)
 
 The signed credential schema allows doing following verifications:
 
@@ -27,6 +27,7 @@ The author can use credential schema to issue the following types of verifiable 
 
 - JSON Verifiable Credential
 - JSON-LD Verifiable Credential
+- Anoncred Verifiable Credential
 - all types above but encoded as JWT
 
 Limitations and constraints of the PRISM Platform v2.0:
@@ -74,11 +75,20 @@ Resource identifier of the given credential schema composed from the author's [D
 
 It is a type of the supported JSON Schema of the credential schema.
 It describes the JSON Schema of the Credential Schema described in this document.
-In the current implementation, this field must always be the value in the following example:
+
+**JWT Credential Schema Example:**
 
 ```json
 {
   "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
+}
+```
+
+**AnonCred Credential Schema Example:**
+
+```json
+{
+  "type" : "AnoncredSchemaV1"
 }
 ```
 
@@ -195,6 +205,25 @@ JSON Schema must be composed according to <https://json-schema.org/draft/2020-12
     "drivingClass"
   ],
   "additionalProperties": true
+}
+```
+
+---
+
+### schema (AnonCred Schema)
+
+A valid [ANONCRED-SCHEMA](https://hyperledger.github.io/anoncreds-spec/#term:schemas) where the credential schema semantic gets defined.
+**Example:**
+
+```json
+{
+  "name": "Birth Certificate Schema",
+  "version": "1.0",
+  "attrNames": [
+    "location",
+    "birthday"
+  ],
+  "issuerId": "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
 }
 ```
 
