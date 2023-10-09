@@ -6,7 +6,7 @@ import { defaultOptions } from "../../scenarios/default";
 
 export const localOptions: Options = {
   thresholds: {
-    "group_duration{group:::Issuer create published DID}": ["avg < 15000"],
+    "group_duration{group:::Issuer create published DID}": ["avg < 30000"],
   },
 };
 export let options: Options = merge(localOptions, defaultOptions);

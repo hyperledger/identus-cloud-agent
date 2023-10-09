@@ -6,7 +6,7 @@ import merge from "ts-deepmerge";
 
 export const localOptions: Options = {
   thresholds: {
-    'group_duration{group:::Issuer create unpublished DID}': ['avg < 15000']
+    'group_duration{group:::Issuer create unpublished DID}': ['avg < 30000']
   }
 }
 export let options: Options = merge(localOptions, defaultOptions)

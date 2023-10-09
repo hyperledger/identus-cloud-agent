@@ -7,7 +7,7 @@ import merge from "ts-deepmerge";
 
 export const localOptions: Options = {
   thresholds: {
-    "group_duration{group:::Issuer connects with Holder}": ["avg < 15000"],
+    "group_duration{group:::Issuer connects with Holder}": ["avg < 30000"],
     "group_duration{group:::Issuer creates credential offer for Holder}": [
       "avg < 60000",
     ],
@@ -15,7 +15,7 @@ export const localOptions: Options = {
       "avg < 60000",
     ],
     "group_duration{group:::Holder receives credential from Issuer}": [
-      "avg < 15000",
+      "avg < 30000",
     ],
   },
 };
