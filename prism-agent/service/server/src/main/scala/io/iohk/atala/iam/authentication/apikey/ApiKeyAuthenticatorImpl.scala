@@ -46,11 +46,7 @@ case class ApiKeyAuthenticatorImpl(
               InvalidCredentials("API key is compromised")
           }
       }
-    } else {
-      ZIO.fail(
-        AuthenticationMethodNotEnabled(s"Authentication method not enabled: ${AuthenticationMethodType.ApiKey.value}")
-      )
-    }
+    } else ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
   }
 
   protected[apikey] def provisionNewEntity(apiKey: String): IO[AuthenticationRepositoryError, Entity] = synchronized {

@@ -13,12 +13,16 @@ object SecurityLogic {
   def securityLogic(credentials: Credentials, others: Credentials*)(
       authenticator: Authenticator
   ): IO[ErrorResponse, Entity] = {
-    val head = authenticator.authenticate(credentials)
-    val tail = others.map(authenticator.authenticate)
     ZIO
-      .firstSuccessOf(head, tail)
-      .catchSome { case AuthenticationMethodNotEnabled(_) =>
-        ZIO.succeed(Entity.Default)
+      .validateFirst(credentials +: others)(authenticator.authenticate)
+      .catchAll { errors =>
+        val isAllMethodsDisabled = errors.forall {
+          case AuthenticationMethodNotEnabled(_) => true
+          case _                                 => false
+        }
+
+        if (isAllMethodsDisabled) ZIO.succeed(Entity.Default)
+        else ZIO.fail(errors.head) // cannot fail, always non-empty
       }
       .mapError(AuthenticationError.toErrorResponse)
   }

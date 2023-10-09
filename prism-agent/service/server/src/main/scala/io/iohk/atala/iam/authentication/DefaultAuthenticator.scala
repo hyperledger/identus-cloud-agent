@@ -1,7 +1,6 @@
 package io.iohk.atala.iam.authentication
 
 import io.iohk.atala.agent.walletapi.model.Entity
-import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
 import io.iohk.atala.iam.authentication.admin.{AdminApiKeyAuthenticator, AdminApiKeyCredentials}
 import io.iohk.atala.iam.authentication.apikey.{ApiKeyAuthenticator, ApiKeyCredentials}
 import io.iohk.atala.iam.authentication.oidc.{KeycloakAuthenticator, JwtCredentials}

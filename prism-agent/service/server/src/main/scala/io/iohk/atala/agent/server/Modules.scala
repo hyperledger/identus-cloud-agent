@@ -61,7 +61,7 @@ object AppModule {
   val didJwtResolverlayer: URLayer[DIDService, JwtDidResolver] =
     ZLayer.fromFunction(PrismDidResolver(_))
 
-  val authenticatorLayer: URLayer[
+  val authenticatorLayer: RLayer[
     AppConfig & WalletManagementService & AuthenticationRepository & EntityService,
     DefaultAuthenticator & ApiKeyAuthenticator
   ] =

@@ -134,7 +134,7 @@ final case class AgentConfig(
     defaultWallet: DefaultWalletConfig
 ) {
   def validate: Either[String, Unit] = {
-    if (!defaultWallet.enabled && !authentication.isNonAdminEnabled)
+    if (!defaultWallet.enabled && !authentication.isEnabledExcludingAdmin)
       Left(
         "The default wallet must be enabled if all the authentication methods are disabled. Default wallet is required for the single-tenant mode."
       )

@@ -20,6 +20,8 @@ object AuthenticationError {
 
   case class ServiceError(message: String) extends AuthenticationError
 
+  case class ResourceNotPermitted(message: String) extends AuthenticationError
+
   def toErrorResponse(error: AuthenticationError): ErrorResponse =
     ErrorResponse(
       status = sttp.model.StatusCode.Forbidden.code,

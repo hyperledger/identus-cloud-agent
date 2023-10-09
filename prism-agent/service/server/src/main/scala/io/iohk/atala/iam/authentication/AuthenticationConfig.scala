@@ -11,6 +11,6 @@ final case class AuthenticationConfig(
 ) {
 
   /** Return true if at least 1 authentication method is enabled (exlcuding admin auth method) */
-  def isNonAdminEnabled: Boolean = apiKey.enabled || keycloak.enabled
+  def isEnabledExcludingAdmin: Boolean = apiKey.enabled || keycloak.enabled
 
 }
