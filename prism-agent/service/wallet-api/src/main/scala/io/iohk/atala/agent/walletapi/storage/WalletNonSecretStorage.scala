@@ -36,6 +36,7 @@ object WalletNonSecretStorageError {
 trait WalletNonSecretStorage {
   def createWallet(wallet: Wallet, seedDigest: Array[Byte]): IO[WalletNonSecretStorageError, Wallet]
   def getWallet(walletId: WalletId): IO[WalletNonSecretStorageError, Option[Wallet]]
+  def getWallets(walletIds: Seq[WalletId]): IO[WalletNonSecretStorageError, Seq[Wallet]]
   def listWallet(
       offset: Option[Int] = None,
       limit: Option[Int] = None

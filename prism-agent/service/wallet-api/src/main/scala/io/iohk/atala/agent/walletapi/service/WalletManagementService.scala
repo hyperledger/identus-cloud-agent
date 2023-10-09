@@ -45,6 +45,8 @@ trait WalletManagementService {
 
   def getWallet(walletId: WalletId): IO[WalletManagementServiceError, Option[Wallet]]
 
+  def getWallets(walletIds: Seq[WalletId]): IO[WalletManagementServiceError, Seq[Wallet]]
+
   /** @return A tuple containing a list of items and a count of total items */
   def listWallets(
       offset: Option[Int] = None,

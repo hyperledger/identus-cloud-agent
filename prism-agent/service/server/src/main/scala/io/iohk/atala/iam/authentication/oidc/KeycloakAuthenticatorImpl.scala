@@ -42,13 +42,11 @@ class KeycloakAuthenticatorImpl(
 
   private def getPermittedWallet(resourceIds: Seq[String]): IO[AuthenticationError, WalletId] = {
     val walletIds = resourceIds.flatMap(id => Try(UUID.fromString(id)).toOption).map(WalletId.fromUUID)
-
-    // TODO: check in batch
-    ZIO
-      .foreach(walletIds)(walletId => walletService.getWallet(walletId))
-      .mapBoth(e => AuthenticationError.UnexpectedError(e.toThrowable.getMessage()), _.flatten)
+    walletService
+      .getWallets(walletIds)
+      .mapError(e => AuthenticationError.UnexpectedError(e.toThrowable.getMessage()))
       .flatMap {
-        case head :: Nil => ZIO.succeed(head.id)
+        case head +: Nil => ZIO.succeed(head.id)
         case Nil =>
           ZIO.fail(AuthenticationError.ResourceNotPermitted("No wallet permissions found."))
         case ls =>
@@ -72,12 +70,12 @@ class KeycloakAuthenticatorImpl(
 
   private def introspectRpt(rpt: String): IO[AuthenticationError, List[String]] = {
     for {
-      tokenIntrospection <- ZIO
+      introspection <- ZIO
         .attemptBlocking(client.protection().introspectRequestingPartyToken(rpt))
         .logError
         .mapError(e => AuthenticationError.UnexpectedError(e.getMessage()))
-      permissions = tokenIntrospection.getPermissions().asScala.toList
-    } yield permissions.map(i => i.getResourceId())
+      permissions = introspection.getPermissions().asScala.toList
+    } yield permissions.map(_.getResourceId())
   }
 
   /** Return true if the token is RPT. Check whether property '.authorization' exists. */
