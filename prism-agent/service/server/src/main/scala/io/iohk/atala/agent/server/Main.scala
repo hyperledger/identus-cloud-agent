@@ -11,6 +11,7 @@ import io.iohk.atala.agent.walletapi.service.{
   WalletManagementServiceImpl
 }
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository, JdbcWalletNonSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
@@ -156,7 +157,7 @@ object MainApp extends ZIOAppDefault {
           ConnectionServiceImpl.layer >>> ConnectionServiceNotifier.layer,
           CredentialSchemaServiceImpl.layer,
           CredentialDefinitionServiceImpl.layer,
-          CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
+          LinkSecretServiceImpl.layer >>> CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
           EntityServiceImpl.layer,
           ManagedDIDServiceWithEventNotificationImpl.layer,
@@ -166,7 +167,6 @@ object MainApp extends ZIOAppDefault {
           // authentication
           AdminApiKeyAuthenticatorImpl.layer >+> ApiKeyAuthenticatorImpl.layer >+> DefaultAuthenticator.layer,
           // grpc
-          GrpcModule.irisStubLayer,
           GrpcModule.prismNodeStubLayer,
           // storage
           RepoModule.agentContextAwareTransactorLayer ++ RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
@@ -184,7 +184,7 @@ object MainApp extends ZIOAppDefault {
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client
           Client.default,
-          Scope.default
+          Scope.default,
         )
     } yield app
 

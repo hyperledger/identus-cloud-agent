@@ -1,5 +1,5 @@
-import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 import org.scoverage.coveralls.Imports.CoverallsKeys.*
+import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 
 inThisBuild(
   Seq(
@@ -302,6 +302,10 @@ lazy val D_EventNotification = new {
   val baseDependencies: Seq[ModuleID] = zioDependencies
 }
 
+lazy val D_Pollux_AnonCreds = new {
+  val baseDependencies: Seq[ModuleID] = Seq(D.zio, D.zioJson)
+}
+
 lazy val D_PrismAgent = new {
 
   // Added here to make prism-crypto works.
@@ -508,6 +512,11 @@ lazy val protocolPresentProof = project
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
+lazy val vc = project
+  .in(file("mercury/mercury-library/vc"))
+  .settings(name := "mercury-verifiable-credentials")
+  .dependsOn(protocolIssueCredential, protocolPresentProof) //TODO merge those two modules into this one
+
 lazy val protocolTrustPing = project
   .in(file("mercury/mercury-library/protocol-trust-ping"))
   .settings(name := "mercury-protocol-trust-ping")
@@ -554,6 +563,7 @@ lazy val agent = project // maybe merge into models
     protocolLogin,
     protocolIssueCredential,
     protocolPresentProof,
+    vc,
     protocolConnection,
     protocolReportProblem,
     protocolTrustPing,
@@ -664,7 +674,7 @@ lazy val polluxCore = project
   .dependsOn(irisClient)
   .dependsOn(prismAgentWalletAPI)
   .dependsOn(polluxVcJWT)
-  .dependsOn(protocolIssueCredential, protocolPresentProof, resolver, agentDidcommx, eventNotification, polluxAnoncreds)
+  .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds)
 
 lazy val polluxDoobie = project
   .in(file("pollux/lib/sql-doobie"))
@@ -687,20 +697,16 @@ lazy val polluxAnoncreds = project
   .enablePlugins(JavaAppPackaging)
   .settings(
     name := "pollux-anoncreds",
-    Compile / unmanagedJars += baseDirectory.value / "anoncreds-java-1.0-SNAPSHOT.jar",
+    Compile / unmanagedJars += baseDirectory.value / "anoncreds-jvm-1.0-SNAPSHOT.jar",
     Compile / unmanagedResourceDirectories ++= Seq(
       baseDirectory.value / "native-lib" / "NATIVE"
     ),
+    libraryDependencies ++= D_Pollux_AnonCreds.baseDependencies
   )
 
 lazy val polluxAnoncredsTest = project
   .in(file("pollux/lib/anoncredsTest"))
-  .settings(
-    libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.2.15" % Test,
-      ("me.vican.jorge" %% "dijon" % "0.6.0" % Test).cross(CrossVersion.for3Use2_13)
-    ),
-  )
+  .settings(libraryDependencies ++= Seq("org.scalatest" %% "scalatest" % "3.2.15" % Test))
   .dependsOn(polluxAnoncreds % "compile->test")
 
 // #####################
@@ -752,7 +758,9 @@ lazy val prismAgentWalletAPI = project
   .settings(prismAgentConnectCommonSettings)
   .settings(
     name := "prism-agent-wallet-api",
-    libraryDependencies ++= D_PrismAgent.keyManagementDependencies ++ D_PrismAgent.postgresDependencies ++ Seq(D.zioMock)
+    libraryDependencies ++= D_PrismAgent.keyManagementDependencies ++ D_PrismAgent.postgresDependencies ++ Seq(
+      D.zioMock
+    )
   )
   .dependsOn(
     agentDidcommx,
@@ -818,6 +826,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   protocolRouting,
   protocolIssueCredential,
   protocolPresentProof,
+  vc,
   protocolTrustPing,
   resolver,
   agent,
@@ -828,7 +837,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   polluxCore,
   polluxDoobie,
   polluxAnoncreds,
-  // polluxAnoncredsTest, REMOVE THIS FOR NOW
+  polluxAnoncredsTest,
   connectCore,
   connectDoobie,
   prismAgentWalletAPI,

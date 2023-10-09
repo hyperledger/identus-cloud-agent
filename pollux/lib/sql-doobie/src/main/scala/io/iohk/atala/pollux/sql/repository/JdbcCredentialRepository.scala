@@ -9,32 +9,21 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
+import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
 import io.iohk.atala.pollux.core.repository.CredentialRepository
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.utils.BytesOps
 import org.postgresql.util.PSQLException
 import zio.*
+import zio.json.*
 
 import java.time.Instant
 
 class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int) extends CredentialRepository {
-
-  // serializes into hex string
-  private def serializeInclusionProof(proof: MerkleInclusionProof): String = BytesOps.bytesToHex(proof.encode.getBytes)
-
-  // deserializes from the hex string
-  private def deserializeInclusionProof(proof: String): MerkleInclusionProof =
-    MerkleInclusionProof.decode(
-      String(
-        BytesOps.hexToBytes(proof)
-      )
-    )
 
   // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
@@ -44,11 +33,11 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
   given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
   given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
 
+  given credentialFormatGet: Get[CredentialFormat] = Get[String].map(CredentialFormat.valueOf)
+  given credentialFormatPut: Put[CredentialFormat] = Put[String].contramap(_.toString)
+
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
-
-  given publicationStateGet: Get[PublicationState] = Get[String].map(PublicationState.valueOf)
-  given publicationStatePut: Put[PublicationState] = Put[String].contramap(_.toString)
 
   given roleGet: Get[Role] = Get[String].map(Role.valueOf)
   given rolePut: Put[Role] = Put[String].contramap(_.toString)
@@ -59,10 +48,12 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
   given requestCredentialGet: Get[RequestCredential] = Get[String].map(decode[RequestCredential](_).getOrElse(???))
   given requestCredentialPut: Put[RequestCredential] = Put[String].contramap(_.asJson.toString)
 
+  given acRequestMetadataGet: Get[CredentialRequestMetadata] =
+    Get[String].map(_.fromJson[CredentialRequestMetadata].getOrElse(???))
+  given acRequestMetadataPut: Put[CredentialRequestMetadata] = Put[String].contramap(_.toJson)
+
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
-
-  given inclusionProofGet: Get[MerkleInclusionProof] = Get[String].map(deserializeInclusionProof)
 
   given prismDIDGet: Get[CanonicalPrismDID] =
     Get[String].map(s => PrismDID.fromString(s).fold(e => throw RuntimeException(e), _.asCanonical))
@@ -76,15 +67,16 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   updated_at,
         |   thid,
         |   schema_id,
+        |   credential_definition_id,
+        |   credential_format,
         |   role,
         |   subject_id,
         |   validity_period,
         |   automatic_issuance,
-        |   await_confirmation,
         |   protocol_state,
-        |   publication_state,
         |   offer_credential_data,
         |   request_credential_data,
+        |   ac_request_credential_metadata,
         |   issue_credential_data,
         |   issued_credential_raw,
         |   issuing_did,
@@ -98,15 +90,16 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   ${record.updatedAt},
         |   ${record.thid},
         |   ${record.schemaId},
+        |   ${record.credentialDefinitionId},
+        |   ${record.credentialFormat},
         |   ${record.role},
         |   ${record.subjectId},
         |   ${record.validityPeriod},
         |   ${record.automaticIssuance},
-        |   ${record.awaitConfirmation},
         |   ${record.protocolState},
-        |   ${record.publicationState},
         |   ${record.offerCredentialData},
         |   ${record.requestCredentialData},
+        |   ${record.anonCredsRequestMetadata},
         |   ${record.issueCredentialData},
         |   ${record.issuedCredentialRaw},
         |   ${record.issuingDID},
@@ -135,30 +128,31 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
     )
     val baseFragment =
       sql"""
-        | SELECT
-        |   id,
-        |   created_at,
-        |   updated_at,
-        |   thid,
-        |   schema_id,
-        |   role,
-        |   subject_id,
-        |   validity_period,
-        |   automatic_issuance,
-        |   await_confirmation,
-        |   protocol_state,
-        |   publication_state,
-        |   offer_credential_data,
-        |   request_credential_data,
-        |   issue_credential_data,
-        |   issued_credential_raw,
-        |   issuing_did,
-        |   meta_retries,
-        |   meta_next_retry,
-        |   meta_last_failure
-        | FROM public.issue_credential_records
-        | $conditionFragment
-        | ORDER BY created_at
+           | SELECT
+           |   id,
+           |   created_at,
+           |   updated_at,
+           |   thid,
+           |   schema_id,
+           |   credential_definition_id,
+           |   credential_format,
+           |   role,
+           |   subject_id,
+           |   validity_period,
+           |   automatic_issuance,
+           |   protocol_state,
+           |   offer_credential_data,
+           |   request_credential_data,
+           |   ac_request_credential_metadata,
+           |   issue_credential_data,
+           |   issued_credential_raw,
+           |   issuing_did,
+           |   meta_retries,
+           |   meta_next_retry,
+           |   meta_last_failure
+           | FROM public.issue_credential_records
+           | $conditionFragment
+           | ORDER BY created_at
         """.stripMargin
     val withOffsetFragment = offset.fold(baseFragment)(offsetValue => baseFragment ++ fr"OFFSET $offsetValue")
     val withOffsetAndLimitFragment =
@@ -207,15 +201,16 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
             |   updated_at,
             |   thid,
             |   schema_id,
+            |   credential_definition_id,
+            |   credential_format,
             |   role,
             |   subject_id,
             |   validity_period,
             |   automatic_issuance,
-            |   await_confirmation,
             |   protocol_state,
-            |   publication_state,
             |   offer_credential_data,
             |   request_credential_data,
+            |   ac_request_credential_metadata,
             |   issue_credential_data,
             |   issued_credential_raw,
             |   issuing_did,
@@ -244,15 +239,16 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   updated_at,
         |   thid,
         |   schema_id,
+        |   credential_definition_id,
+        |   credential_format,
         |   role,
         |   subject_id,
         |   validity_period,
         |   automatic_issuance,
-        |   await_confirmation,
         |   protocol_state,
-        |   publication_state,
         |   offer_credential_data,
         |   request_credential_data,
+        |   ac_request_credential_metadata,
         |   issue_credential_data,
         |   issued_credential_raw,
         |   issuing_did,
@@ -284,15 +280,16 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   updated_at,
         |   thid,
         |   schema_id,
+        |   credential_definition_id,
+        |   credential_format,
         |   role,
         |   subject_id,
         |   validity_period,
         |   automatic_issuance,
-        |   await_confirmation,
         |   protocol_state,
-        |   publication_state,
         |   offer_credential_data,
         |   request_credential_data,
+        |   ac_request_credential_metadata,
         |   issue_credential_data,
         |   issued_credential_raw,
         |   issuing_did,
@@ -331,54 +328,6 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
       .transactWallet(xa)
   }
 
-  // TODO: refactor to work with issueCredential form mercury
-  override def updateCredentialRecordStateAndProofByCredentialIdBulk(
-      idsStatesAndProofs: Seq[(DidCommID, IssueCredentialRecord.PublicationState, MerkleInclusionProof)]
-  ): RIO[WalletAccessContext, Int] = {
-
-    if (idsStatesAndProofs.isEmpty) ZIO.succeed(0)
-    else
-      val values = idsStatesAndProofs.map { idStateAndProof =>
-        val (id, state, proof) = idStateAndProof
-        s"(${id.toString}, '${state.toString}', '${serializeInclusionProof(proof)}')"
-      }
-
-      val cxnIO = sql"""
-          | UPDATE public.issue_credential_records as icr
-          | SET
-          |   publication_state = idsStatesAndProofs.publication_state,
-          |   merkle_inclusion_proof = idsStatesAndProofs.serializedProof
-          | FROM (values ${values.mkString(",")}) as idsStatesAndProofs(id, publication_state, serializedProof)
-          | WHERE icr.id = idsStatesAndProofs.id
-          |""".stripMargin.update
-
-      cxnIO.run
-        .transactWallet(xa)
-  }
-
-  override def updateCredentialRecordPublicationState(
-      recordId: DidCommID,
-      from: Option[IssueCredentialRecord.PublicationState],
-      to: Option[IssueCredentialRecord.PublicationState]
-  ): RIO[WalletAccessContext, Int] = {
-    val pubStateFragment = from
-      .map(state => fr"publication_state = $state")
-      .getOrElse(fr"publication_state IS NULL")
-
-    val cxnIO = sql"""
-        | UPDATE public.issue_credential_records
-        | SET
-        |   publication_state = $to,
-        |   updated_at = ${Instant.now}
-        | WHERE
-        |   id = $recordId
-        |   AND $pubStateFragment
-        """.stripMargin.update
-
-    cxnIO.run
-      .transactWallet(xa)
-  }
-
   def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
@@ -398,7 +347,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
       .transactWallet(xa)
   }
 
-  override def updateWithRequestCredential(
+  override def updateWithJWTRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
@@ -411,6 +360,28 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
         |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
+        """.stripMargin.update
+
+    cxnIO.run
+      .transactWallet(xa)
+  }
+
+  override def updateWithAnonCredsRequestCredential(
+      recordId: DidCommID,
+      request: RequestCredential,
+      metadata: CredentialRequestMetadata,
+      protocolState: ProtocolState
+  ): RIO[WalletAccessContext, Int] = {
+    val cxnIO =
+      sql"""
+           | UPDATE public.issue_credential_records
+           | SET
+           |   request_credential_data = $request,
+           |   ac_request_credential_metadata = $metadata,
+           |   protocol_state = $protocolState,
+           |   updated_at = ${Instant.now}
+           | WHERE
+           |   id = $recordId
         """.stripMargin.update
 
     cxnIO.run

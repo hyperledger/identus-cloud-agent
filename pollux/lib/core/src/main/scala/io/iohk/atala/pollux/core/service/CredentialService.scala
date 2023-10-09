@@ -8,19 +8,15 @@ import io.iohk.atala.mercury.protocol.issuecredential.{Attribute, IssueCredentia
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
-import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, PresentationPayload, W3cCredentialPayload}
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, ZIO}
 
 import java.nio.charset.StandardCharsets
-import java.time.Instant
+import java.util.UUID
 
 trait CredentialService {
 
-  def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID]
-
-  def createIssueCredentialRecord(
+  def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       thid: DidCommID,
@@ -28,8 +24,18 @@ trait CredentialService {
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
-      awaitConfirmation: Option[Boolean],
-      issuingDID: Option[CanonicalPrismDID]
+      issuingDID: CanonicalPrismDID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+
+  def createAnonCredsIssueCredentialRecord(
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
+      thid: DidCommID,
+      credentialDefinitionGUID: UUID,
+      claims: io.circe.Json,
+      validityPeriod: Option[Double] = None,
+      automaticIssuance: Option[Boolean],
+      credentialDefinitionId: String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   /** Return a list of records as well as a count of all filtered items */
@@ -60,17 +66,15 @@ trait CredentialService {
 
   def acceptCredentialOffer(
       recordId: DidCommID,
-      subjectId: String
+      subjectId: Option[String]
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def createPresentationPayload(
-      recordId: DidCommID,
-      subject: Issuer
-  ): ZIO[WalletAccessContext, CredentialServiceError, PresentationPayload]
+  def generateJWTCredentialRequest(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def generateCredentialRequest(
-      recordId: DidCommID,
-      signedPresentation: JWT
+  def generateAnonCredsCredentialRequest(
+      recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def receiveCredentialRequest(
@@ -81,47 +85,23 @@ trait CredentialService {
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def createCredentialPayloadFromRecord(
-      record: IssueCredentialRecord,
-      issuer: Issuer,
-      issuanceDate: Instant
-  ): ZIO[WalletAccessContext, CredentialServiceError, W3cCredentialPayload]
+  def generateJWTCredential(
+      recordId: DidCommID,
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def publishCredentialBatch(
-      credentials: Seq[W3cCredentialPayload],
-      issuer: Issuer
-  ): IO[CredentialServiceError, PublishedBatchData]
-
-  def markCredentialRecordsAsPublishQueued(
-      credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
-  ): ZIO[WalletAccessContext, CredentialServiceError, Int]
+  def generateAnonCredsCredential(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def receiveCredentialIssue(
-      issue: IssueCredential
+      issueCredential: IssueCredential
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def markOfferSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def markRequestSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialGenerated(
-      recordId: DidCommID,
-      issueCredential: IssueCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
-
   def markCredentialSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
-
-  def markCredentialPublicationPending(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
-
-  def markCredentialPublicationQueued(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
-
-  def markCredentialPublished(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def reportProcessingFailure(
       recordId: DidCommID,
@@ -138,14 +118,14 @@ object CredentialService {
       fields <- ZIO.succeed(claims.asObject.map(_.toMap).getOrElse(Map.empty).toList)
       res <- ZIO.foreach(fields) {
         case (k, v) if v.isString =>
-          ZIO.succeed(Attribute(k, v.asString.get, None))
+          ZIO.succeed(Attribute(name = k, value = v.asString.get))
         case (k, v) =>
           ZIO.succeed {
             val jsonValue = v.noSpaces
             Attribute(
-              k,
-              java.util.Base64.getUrlEncoder.encodeToString(jsonValue.getBytes(StandardCharsets.UTF_8)),
-              Some("application/json")
+              name = k,
+              value = java.util.Base64.getUrlEncoder.encodeToString(jsonValue.getBytes(StandardCharsets.UTF_8)),
+              media_type = Some("application/json"),
             )
           }
       }
@@ -157,7 +137,7 @@ object CredentialService {
   ): IO[CredentialServiceError, JsonObject] = {
     for {
       claims <- ZIO.foldLeft(attributes)(JsonObject()) { case (jsonObject, attr) =>
-        attr.mime_type match
+        attr.media_type match
           case None =>
             ZIO.succeed(jsonObject.add(attr.name, attr.value.asJson))
 
@@ -167,8 +147,8 @@ object CredentialService {
               case Right(value) => ZIO.succeed(jsonObject.add(attr.name, value))
               case Left(error)  => ZIO.fail(UnsupportedVCClaimsValue(error.message))
 
-          case Some(mimeType) =>
-            ZIO.fail(UnsupportedVCClaimsMimeType(mimeType))
+          case Some(media_type) =>
+            ZIO.fail(UnsupportedVCClaimsMediaType(media_type))
       }
     } yield claims
   }

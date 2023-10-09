@@ -62,21 +62,6 @@ object ProposePresentation {
     given Decoder[Body] = deriveDecoder[Body]
   }
 
-  def makePresentProofProposalFromRequest(msg: Message): ProposePresentation = { // TODO change msg: Message to RequestCredential
-    val rp: RequestPresentation = RequestPresentation.readFromMessage(msg)
-
-    ProposePresentation(
-      body = ProposePresentation.Body(
-        goal_code = rp.body.goal_code,
-        comment = rp.body.comment,
-      ),
-      attachments = rp.attachments,
-      thid = rp.thid,
-      from = rp.to,
-      to = rp.from,
-    )
-  }
-
   def readFromMessage(message: Message): ProposePresentation = {
     val body = message.body.asJson.as[ProposePresentation.Body].toOption.get // TODO get
 

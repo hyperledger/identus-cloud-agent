@@ -20,6 +20,7 @@ import io.iohk.atala.pollux.credentialdefinition.http.{
 }
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
+import zio.json.ast.Json
 
 import java.util.UUID
 
@@ -50,6 +51,14 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
         fromDomain(_)
           .withSelf(rc.request.uri.toString)
       )
+  }
+
+  override def getCredentialDefinitionInnerDefinitionByGuid(id: UUID)(implicit
+      rc: RequestContext
+  ): IO[ErrorResponse, Json] = {
+    service
+      .getByGUID(id)
+      .map(fromDomain(_).definition)
   }
 
   override def delete(guid: UUID)(implicit

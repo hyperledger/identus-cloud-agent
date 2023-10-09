@@ -1,10 +1,10 @@
 package io.iohk.atala.pollux.core.repository
 
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
+import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.*
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord.{ProtocolState, PublicationState}
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
@@ -28,25 +28,6 @@ class CredentialRepositoryInMemory(
           } yield ref
         }(ZIO.succeed)
     } yield walletRef
-
-  override def updateCredentialRecordPublicationState(
-      recordId: DidCommID,
-      from: Option[PublicationState],
-      to: Option[PublicationState]
-  ): RIO[WalletAccessContext, Int] = {
-    for {
-      storeRef <- walletStoreRef
-      store <- storeRef.get
-      maybeRecord = store.find((id, record) => id == recordId && record.publicationState == from).map(_._2)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r => r.updated(recordId, record.copy(publicationState = to)))
-          } yield 1
-        )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
-  }
 
   override def createIssueCredentialRecord(record: IssueCredentialRecord): RIO[WalletAccessContext, Int] = {
     for {
@@ -254,7 +235,7 @@ class CredentialRepositoryInMemory(
     } yield count
   }
 
-  override def updateWithRequestCredential(
+  override def updateWithJWTRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
@@ -283,9 +264,36 @@ class CredentialRepositoryInMemory(
     } yield count
   }
 
-  override def updateCredentialRecordStateAndProofByCredentialIdBulk(
-      idsStatesAndProofs: Seq[(DidCommID, PublicationState, MerkleInclusionProof)]
-  ): RIO[WalletAccessContext, Int] = ???
+  override def updateWithAnonCredsRequestCredential(
+      recordId: DidCommID,
+      request: RequestCredential,
+      metadata: CredentialRequestMetadata,
+      protocolState: ProtocolState
+  ): RIO[WalletAccessContext, RuntimeFlags] = {
+    for {
+      storeRef <- walletStoreRef
+      maybeRecord <- getIssueCredentialRecord(recordId)
+      count <- maybeRecord
+        .map(record =>
+          for {
+            _ <- storeRef.update(r =>
+              r.updated(
+                recordId,
+                record.copy(
+                  updatedAt = Some(Instant.now),
+                  requestCredentialData = Some(request),
+                  anonCredsRequestMetadata = Some(metadata),
+                  protocolState = protocolState,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
+                )
+              )
+            )
+          } yield 1
+        )
+        .getOrElse(ZIO.succeed(1))
+    } yield count
+  }
 
   def updateAfterFail(
       recordId: DidCommID,

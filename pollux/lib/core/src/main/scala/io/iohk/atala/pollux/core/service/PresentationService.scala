@@ -23,7 +23,8 @@ trait PresentationService {
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
-      options: Option[io.iohk.atala.pollux.core.model.presentation.Options]
+      options: Option[io.iohk.atala.pollux.core.model.presentation.Options],
+      format: CredentialFormat,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def getPresentationRecords(

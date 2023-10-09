@@ -16,9 +16,10 @@ data class Credential(
     var updatedAt: String = "",
     var validityPeriod: Double = 0.0,
     var claims: LinkedHashMap<String, String> = LinkedHashMap(),
-    var jwtCredential: String = "",
+    var credential: String = "",
     var issuingDID: String = "",
     var connectionId: String = "",
+    var credentialFormat: String = "JWT",
     var metaRetries: Int = 0,
 ): JsonEncoded
 

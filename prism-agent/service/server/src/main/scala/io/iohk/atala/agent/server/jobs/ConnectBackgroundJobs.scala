@@ -19,7 +19,7 @@ import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.metrics.*
 
-object ConnectBackgroundJobs {
+object ConnectBackgroundJobs extends BackgroundJobsHelper {
 
   val didCommExchanges = {
     for {
@@ -184,16 +184,6 @@ object ConnectBackgroundJobs {
       )
       .catchAll(e => ZIO.logErrorCause(s"Connect - Error processing record: ${record.id} ", Cause.fail(e)))
       .catchAllDefect(d => ZIO.logErrorCause(s"Connect - Defect processing record: ${record.id}", Cause.fail(d)))
-  }
-
-  private[this] def buildDIDCommAgent(
-      myDid: DidId
-  ): ZIO[ManagedDIDService & WalletAccessContext, KeyNotFoundError, ZLayer[Any, Nothing, DidAgent]] = {
-    for {
-      managedDidService <- ZIO.service[ManagedDIDService]
-      peerDID <- managedDidService.getPeerDID(myDid)
-      agent = AgentPeerService.makeLayer(peerDID)
-    } yield agent
   }
 
 }

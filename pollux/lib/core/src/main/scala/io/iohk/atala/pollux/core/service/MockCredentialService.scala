@@ -6,16 +6,17 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord, PublishedBatchData}
-import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, PresentationPayload, W3cCredentialPayload}
+import io.iohk.atala.pollux.vc.jwt.{Issuer, W3cCredentialPayload}
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.mock.{Mock, Proxy}
 import zio.{IO, URLayer, ZIO, ZLayer, mock}
 
-import java.time.Instant
+import java.util.UUID
 
 object MockCredentialService extends Mock[CredentialService] {
 
-  object CreateIssueCredentialRecord
+  object CreateJWTIssueCredentialRecord
       extends Effect[
         (
             DidId,
@@ -25,21 +26,37 @@ object MockCredentialService extends Mock[CredentialService] {
             Json,
             Option[Double],
             Option[Boolean],
+            CanonicalPrismDID
+        ),
+        CredentialServiceError,
+        IssueCredentialRecord
+      ]
+
+  object CreateAnonCredsIssueCredentialRecord
+      extends Effect[
+        (
+            DidId,
+            DidId,
+            DidCommID,
+            UUID,
+            Json,
+            Option[Double],
             Option[Boolean],
-            Option[CanonicalPrismDID]
+            String
         ),
         CredentialServiceError,
         IssueCredentialRecord
       ]
 
   object ReceiveCredentialOffer extends Effect[OfferCredential, CredentialServiceError, IssueCredentialRecord]
-  object AcceptCredentialOffer extends Effect[(DidCommID, String), CredentialServiceError, IssueCredentialRecord]
-  object CreatePresentationPayload extends Effect[(DidCommID, Issuer), CredentialServiceError, PresentationPayload]
-  object GenerateCredentialRequest extends Effect[(DidCommID, JWT), CredentialServiceError, IssueCredentialRecord]
+  object AcceptCredentialOffer
+      extends Effect[(DidCommID, Option[String]), CredentialServiceError, IssueCredentialRecord]
+  object GenerateJWTCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
+  object GenerateAnonCredsCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object ReceiveCredentialRequest extends Effect[RequestCredential, CredentialServiceError, IssueCredentialRecord]
   object AcceptCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
-  object CreateCredentialPayloadFromRecord
-      extends Effect[(IssueCredentialRecord, Issuer, Instant), CredentialServiceError, W3cCredentialPayload]
+  object GenerateJWTCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
+  object GenerateAnonCredsCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object PublishCredentialBatch
       extends Effect[(Seq[W3cCredentialPayload], Issuer), CredentialServiceError, PublishedBatchData]
   object MarkCredentialRecordsAsPublishQueued
@@ -47,8 +64,6 @@ object MockCredentialService extends Mock[CredentialService] {
   object ReceiveCredentialIssue extends Effect[IssueCredential, CredentialServiceError, IssueCredentialRecord]
   object MarkOfferSent extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkRequestSent extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
-  object MarkCredentialGenerated
-      extends Effect[(DidCommID, IssueCredential), CredentialServiceError, IssueCredentialRecord]
   object MarkCredentialSent extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkCredentialPublicationPending extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkCredentialPublicationQueued extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
@@ -60,7 +75,7 @@ object MockCredentialService extends Mock[CredentialService] {
       proxy <- ZIO.service[Proxy]
     } yield new CredentialService {
 
-      override def createIssueCredentialRecord(
+      override def createJWTIssueCredentialRecord(
           pairwiseIssuerDID: DidId,
           pairwiseHolderDID: DidId,
           thid: DidCommID,
@@ -68,11 +83,10 @@ object MockCredentialService extends Mock[CredentialService] {
           claims: Json,
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
-          awaitConfirmation: Option[Boolean],
-          issuingDID: Option[CanonicalPrismDID]
+          issuingDID: CanonicalPrismDID
       ): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(
-          CreateIssueCredentialRecord,
+          CreateJWTIssueCredentialRecord,
           pairwiseIssuerDID,
           pairwiseHolderDID,
           thid,
@@ -80,8 +94,29 @@ object MockCredentialService extends Mock[CredentialService] {
           claims,
           validityPeriod,
           automaticIssuance,
-          awaitConfirmation,
           issuingDID
+        )
+
+      override def createAnonCredsIssueCredentialRecord(
+          pairwiseIssuerDID: DidId,
+          pairwiseHolderDID: DidId,
+          thid: DidCommID,
+          credentialDefinitionGUID: UUID,
+          claims: Json,
+          validityPeriod: Option[Double],
+          automaticIssuance: Option[Boolean],
+          credentialDefinitionId: String
+      ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+        proxy(
+          CreateAnonCredsIssueCredentialRecord,
+          pairwiseIssuerDID,
+          pairwiseHolderDID,
+          thid,
+          credentialDefinitionGUID,
+          claims,
+          validityPeriod,
+          automaticIssuance,
+          credentialDefinitionId
         )
 
       override def receiveCredentialOffer(offer: OfferCredential): IO[CredentialServiceError, IssueCredentialRecord] =
@@ -89,21 +124,19 @@ object MockCredentialService extends Mock[CredentialService] {
 
       override def acceptCredentialOffer(
           recordId: DidCommID,
-          subjectId: String
+          subjectId: Option[String]
       ): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(AcceptCredentialOffer, recordId, subjectId)
 
-      override def createPresentationPayload(
-          recordId: DidCommID,
-          subject: Issuer
-      ): IO[CredentialServiceError, PresentationPayload] =
-        proxy(CreatePresentationPayload, recordId, subject)
-
-      override def generateCredentialRequest(
-          recordId: DidCommID,
-          signedPresentation: JWT
+      override def generateJWTCredentialRequest(
+          recordId: DidCommID
       ): IO[CredentialServiceError, IssueCredentialRecord] =
-        proxy(GenerateCredentialRequest, recordId, signedPresentation)
+        proxy(GenerateJWTCredentialRequest, recordId)
+
+      override def generateAnonCredsCredentialRequest(
+          recordId: DidCommID
+      ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+        proxy(GenerateAnonCredsCredentialRequest, recordId)
 
       override def receiveCredentialRequest(
           request: RequestCredential
@@ -113,26 +146,20 @@ object MockCredentialService extends Mock[CredentialService] {
       override def acceptCredentialRequest(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(AcceptCredentialRequest, recordId)
 
-      override def createCredentialPayloadFromRecord(
-          record: IssueCredentialRecord,
-          issuer: Issuer,
-          issuanceDate: Instant
-      ): IO[CredentialServiceError, W3cCredentialPayload] =
-        proxy(CreateCredentialPayloadFromRecord, record, issuer, issuanceDate)
+      override def generateJWTCredential(
+          recordId: DidCommID
+      ): IO[CredentialServiceError, IssueCredentialRecord] =
+        proxy(GenerateJWTCredential, recordId)
 
-      override def publishCredentialBatch(
-          credentials: Seq[W3cCredentialPayload],
-          issuer: Issuer
-      ): IO[CredentialServiceError, PublishedBatchData] =
-        proxy(PublishCredentialBatch, credentials, issuer)
+      override def generateAnonCredsCredential(
+          recordId: DidCommID
+      ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+        proxy(GenerateAnonCredsCredential, recordId)
 
-      override def markCredentialRecordsAsPublishQueued(
-          credentialsAndProofs: Seq[(W3cCredentialPayload, MerkleInclusionProof)]
-      ): IO[CredentialServiceError, Int] =
-        proxy(MarkCredentialRecordsAsPublishQueued, credentialsAndProofs)
-
-      override def receiveCredentialIssue(issue: IssueCredential): IO[CredentialServiceError, IssueCredentialRecord] =
-        proxy(ReceiveCredentialIssue, issue)
+      override def receiveCredentialIssue(
+          issueCredential: IssueCredential
+      ): IO[CredentialServiceError, IssueCredentialRecord] =
+        proxy(ReceiveCredentialIssue, issueCredential)
 
       override def markOfferSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(MarkOfferSent, recordId)
@@ -140,36 +167,14 @@ object MockCredentialService extends Mock[CredentialService] {
       override def markRequestSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(MarkRequestSent, recordId)
 
-      override def markCredentialGenerated(
-          recordId: DidCommID,
-          issueCredential: IssueCredential
-      ): IO[CredentialServiceError, IssueCredentialRecord] =
-        proxy(MarkCredentialGenerated, recordId, issueCredential)
-
       override def markCredentialSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(MarkCredentialSent, recordId)
-
-      override def markCredentialPublicationPending(
-          recordId: DidCommID
-      ): IO[CredentialServiceError, IssueCredentialRecord] =
-        proxy(MarkCredentialPublicationPending, recordId)
-
-      override def markCredentialPublicationQueued(
-          recordId: DidCommID
-      ): IO[CredentialServiceError, IssueCredentialRecord] =
-        proxy(MarkCredentialPublicationQueued, recordId)
-
-      override def markCredentialPublished(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
-        proxy(MarkCredentialPublished, recordId)
 
       override def reportProcessingFailure(
           recordId: DidCommID,
           failReason: Option[String]
       ): IO[CredentialServiceError, Unit] =
         proxy(ReportProcessingFailure, recordId, failReason)
-
-      override def extractIdFromCredential(credential: W3cCredentialPayload): Option[DidCommID] =
-        ???
 
       override def getIssueCredentialRecords(
           ignoreWithZeroRetries: Boolean,

@@ -12,6 +12,7 @@ import zio.{URLayer, ZIO, ZLayer}
 
 import java.time.Instant
 import java.util.UUID
+import io.iohk.atala.pollux.core.model.CredentialFormat
 
 class PresentationServiceNotifier(
     svc: PresentationService,
@@ -26,10 +27,19 @@ class PresentationServiceNotifier(
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
-      options: Option[Options]
+      options: Option[Options],
+      format: CredentialFormat,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(
-      svc.createPresentationRecord(pairwiseVerifierDID, pairwiseProverDID, thid, connectionId, proofTypes, options)
+      svc.createPresentationRecord(
+        pairwiseVerifierDID,
+        pairwiseProverDID,
+        thid,
+        connectionId,
+        proofTypes,
+        options,
+        format: CredentialFormat
+      )
     )
 
   override def markRequestPresentationSent(

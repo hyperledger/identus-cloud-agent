@@ -69,6 +69,14 @@ class JdbcPresentationRepository(
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
 
+  given Get[CredentialFormat] = Get[String].temap(str =>
+    CredentialFormat.fromString(str) match {
+      case None      => Left(s"Fail to parce CredentialFormat from '$str'")
+      case Some(obj) => Right(obj)
+    }
+  )
+  given Put[CredentialFormat] = Put[String].contramap(_.toString)
+
   given roleGet: Get[Role] = Get[String].map(Role.valueOf)
   given rolePut: Put[Role] = Put[String].contramap(_.toString)
 
@@ -97,6 +105,7 @@ class JdbcPresentationRepository(
         |   role,
         |   subject_id,
         |   protocol_state,
+        |   credential_format,
         |   request_presentation_data,
         |   credentials_to_use,
         |   meta_retries,
@@ -113,6 +122,7 @@ class JdbcPresentationRepository(
         |   ${record.role},
         |   ${record.subjectId},
         |   ${record.protocolState},
+        |   ${record.credentialFormat},
         |   ${record.requestPresentationData},
         |   ${record.credentialsToUse.map(_.toList)},
         |   ${record.metaRetries},
@@ -143,6 +153,7 @@ class JdbcPresentationRepository(
         |   role,
         |   subject_id,
         |   protocol_state,
+        |   credential_format,
         |   request_presentation_data,
         |   propose_presentation_data,
         |   presentation_data,
@@ -188,6 +199,7 @@ class JdbcPresentationRepository(
             |   role,
             |   subject_id,
             |   protocol_state,
+            |   credential_format,
             |   request_presentation_data,
             |   propose_presentation_data,
             |   presentation_data,
@@ -219,6 +231,7 @@ class JdbcPresentationRepository(
         |   role,
         |   subject_id,
         |   protocol_state,
+        |   credential_format,
         |   request_presentation_data,
         |   propose_presentation_data,
         |   presentation_data,
@@ -250,6 +263,7 @@ class JdbcPresentationRepository(
         |   role,
         |   subject_id,
         |   protocol_state,
+        |   credential_format,
         |   request_presentation_data,
         |   propose_presentation_data,
         |   presentation_data,

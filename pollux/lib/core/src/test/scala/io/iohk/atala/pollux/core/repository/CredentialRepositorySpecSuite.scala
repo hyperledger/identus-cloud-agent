@@ -23,15 +23,16 @@ object CredentialRepositorySpecSuite {
     updatedAt = None,
     thid = DidCommID(),
     schemaId = None,
+    credentialDefinitionId = None,
+    credentialFormat = CredentialFormat.JWT,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,
     validityPeriod = None,
     automaticIssuance = None,
-    awaitConfirmation = None,
     protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
-    publicationState = None,
     offerCredentialData = None,
     requestCredentialData = None,
+    anonCredsRequestMetadata = None,
     issueCredentialData = None,
     issuedCredentialRaw = None,
     issuingDID = None,
@@ -311,42 +312,6 @@ object CredentialRepositorySpecSuite {
         assertTrue(updatedRecord.get.protocolState == ProtocolState.OfferPending)
       }
     },
-    test("updateCredentialRecordPublicationState updates the record") {
-      for {
-        repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        _ <- repo.createIssueCredentialRecord(aRecord)
-        record <- repo.getIssueCredentialRecord(aRecord.id)
-        count <- repo.updateCredentialRecordPublicationState(
-          aRecord.id,
-          None,
-          Some(PublicationState.PublicationPending)
-        )
-        updatedRecord <- repo.getIssueCredentialRecord(aRecord.id)
-      } yield {
-        assertTrue(count == 1) &&
-        assertTrue(record.get.publicationState.isEmpty) &&
-        assertTrue(updatedRecord.get.publicationState.contains(PublicationState.PublicationPending))
-      }
-    },
-    test("updateCredentialRecordPublicationState doesn't update the record for invalid from state") {
-      for {
-        repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        _ <- repo.createIssueCredentialRecord(aRecord)
-        record <- repo.getIssueCredentialRecord(aRecord.id)
-        count <- repo.updateCredentialRecordPublicationState(
-          aRecord.id,
-          Some(PublicationState.PublicationPending),
-          Some(PublicationState.PublicationQueued)
-        )
-        updatedRecord <- repo.getIssueCredentialRecord(aRecord.id)
-      } yield {
-        assertTrue(count == 0) &&
-        assertTrue(record.get.publicationState.isEmpty) &&
-        assertTrue(updatedRecord.get.publicationState.isEmpty)
-      }
-    },
     test("updateWithRequestCredential updates record") {
       for {
         repo <- ZIO.service[CredentialRepository]
@@ -354,7 +319,7 @@ object CredentialRepositorySpecSuite {
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
         request = requestCredential
-        count <- repo.updateWithRequestCredential(
+        count <- repo.updateWithJWTRequestCredential(
           aRecord.id,
           request,
           ProtocolState.RequestPending

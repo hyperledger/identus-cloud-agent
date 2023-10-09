@@ -34,33 +34,30 @@ object RequestCredential {
   given Encoder[RequestCredential] = deriveEncoder[RequestCredential]
   given Decoder[RequestCredential] = deriveDecoder[RequestCredential]
 
-  def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/request-credential"
+  def `type`: PIURI = "https://didcomm.org/issue-credential/3.0/request-credential"
 
   def build(
       fromDID: DidId,
       toDID: DidId,
       thid: Option[String] = None,
-      credentials: Map[String, Array[Byte]] = Map.empty,
+      credentials: Seq[(IssueCredentialRequestFormat, Array[Byte])] = Seq.empty,
   ): RequestCredential = {
-    val aux = credentials.map { case (formatName, singleCredential) =>
-      val attachment = AttachmentDescriptor.buildBase64Attachment(payload = singleCredential)
-      val credentialFormat: CredentialFormat = CredentialFormat(attachment.id, formatName)
-      (credentialFormat, attachment)
-    }
+    val attachments = credentials.map { case (format, singleCredential) =>
+      AttachmentDescriptor.buildBase64Attachment(payload = singleCredential, format = Some(format.name))
+    }.toSeq
     RequestCredential(
       thid = thid,
       from = fromDID,
       to = toDID,
-      body = Body(formats = aux.keys.toSeq),
-      attachments = aux.values.toSeq
+      body = Body(),
+      attachments = attachments
     )
   }
 
   final case class Body(
       goal_code: Option[String] = None,
       comment: Option[String] = None,
-      formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat]
-  ) extends BodyUtils
+  )
 
   object Body {
     given Encoder[Body] = deriveEncoder[Body]
@@ -74,7 +71,6 @@ object RequestCredential {
       body = RequestCredential.Body(
         goal_code = oc.body.goal_code,
         comment = oc.body.comment,
-        formats = oc.body.formats,
       ),
       attachments = oc.attachments,
       thid = msg.thid.orElse(Some(oc.id)),

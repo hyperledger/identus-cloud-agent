@@ -21,13 +21,13 @@ Go into the folder `uniffi` and generate the file `anoncreds.kt`
 
 Assuming uniffi_bindgen is install. Install with `cargo install uniffi_bindgen --version $(cargo pkgid uniffi | cut -f 2 -d '@')`
 
-(Note you can also the run the script `build-release-linux.sh` in tere)
+(Note you can also the run the script `build-release-linux.sh` in there)
 
 Run the command `~/.cargo/bin/uniffi-bindgen generate src/anoncreds.udl --language kotlin -o ./wrappers/kotlin/anoncreds`
 
-Replace the `anoncreds.kt` file in the `output-frameworks/anoncreds-java` project (`output-frameworks/anoncreds-java/src/main/uniffi/anoncreds/anoncreds.kt`)
+Replace the `anoncreds.kt` file in the `output-frameworks/anoncreds-jvm` project (`output-frameworks/anoncreds-jvm/src/main/uniffi/anoncreds/anoncreds.kt`)
 
-Generate the Jar with `./gradlew jar` in the `output-frameworks/anoncreds-java` project
+Generate the Jar with `./gradlew jar` in the `output-frameworks/anoncreds-jvm` project
 
 ## Build the NATIVE lib 
 
@@ -43,11 +43,11 @@ Go into the folder `uniffi` and build the Native lib with:
 
 Then copy the files
 - from `target/x86_64-unknown-linux-gnu/release/libanoncreds_uniffi.so` to `pollux/lib/anoncreds/native-lib/NATIVE/linux/amd64/libuniffi_anoncreds.so`
-- from `uniffi/output-frameworks/anoncreds-java/build/libs/anoncreds-java-1.0-SNAPSHOT.jar` to `pollux/lib/anoncreds//anoncreds-java-1.0-SNAPSHOT.jar`
+- from `uniffi/output-frameworks/anoncreds-jvm/build/libs/anoncreds-jvm-1.0-SNAPSHOT.jar` to `pollux/lib/anoncreds//anoncreds-jvm-1.0-SNAPSHOT.jar`
 
 ```shell
 rm -f pollux/lib/anoncreds/native-lib/NATIVE/linux/amd64/libuniffi_anoncreds.so
-rm -f pollux/lib/anoncreds//anoncreds-java-1.0-SNAPSHOT.jar
+rm -f pollux/lib/anoncreds//anoncreds-jvm-1.0-SNAPSHOT.jar
 cp ../anoncreds-rs/uniffi/target/x86_64-unknown-linux-gnu/release/libanoncreds_uniffi.so pollux/lib/anoncreds/native-lib/NATIVE/linux/amd64/libuniffi_anoncreds.so
-cp ../anoncreds-rs/uniffi/output-frameworks/anoncreds-java/build/libs/anoncreds-java-1.0-SNAPSHOT.jar pollux/lib/anoncreds//anoncreds-java-1.0-SNAPSHOT.jar
+cp ../anoncreds-rs/uniffi/output-frameworks/anoncreds-jvm/build/libs/anoncreds-jvm-1.0-SNAPSHOT.jar pollux/lib/anoncreds//anoncreds-jvm-1.0-SNAPSHOT.jar
 ```

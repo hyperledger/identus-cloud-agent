@@ -11,6 +11,7 @@ import zio.{IO, URLayer, ZIO, ZLayer, mock}
 
 import java.time.Instant
 import java.util.UUID
+import io.iohk.atala.pollux.core.model.CredentialFormat
 
 object MockPresentationService extends Mock[PresentationService] {
 
@@ -59,7 +60,8 @@ object MockPresentationService extends Mock[PresentationService] {
           thid: DidCommID,
           connectionId: Option[String],
           proofTypes: Seq[ProofType],
-          options: Option[Options]
+          options: Option[Options],
+          format: CredentialFormat,
       ): IO[PresentationError, PresentationRecord] =
         proxy(
           CreatePresentationRecord,

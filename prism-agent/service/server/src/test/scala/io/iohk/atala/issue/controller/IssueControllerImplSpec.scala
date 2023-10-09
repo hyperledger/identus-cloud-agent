@@ -22,14 +22,14 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
   )).provideSomeLayerShared(MockDIDService.empty ++ MockManagedDIDService.empty >>> testEnvironmentLayer)
 
   private val httpErrorResponses = suite("IssueControllerImp http failure cases")(
-    test("provide incorrect subjectId to endpoint") {
+    test("provide incorrect recordId to endpoint") {
       for {
         issueControllerService <- ZIO.service[IssueController]
         authenticator <- ZIO.service[Authenticator]
         backend = httpBackend(issueControllerService, authenticator)
         response: IssueCredentialBadRequestResponse <- basicRequest
           .post(uri"${issueUriBase}/records/12345/accept-offer")
-          .body(AcceptCredentialOfferRequest("subjectId").toJsonPretty)
+          .body(AcceptCredentialOfferRequest(Some("subjectId")).toJsonPretty)
           .response(asJsonAlways[ErrorResponse])
           .send(backend)
 

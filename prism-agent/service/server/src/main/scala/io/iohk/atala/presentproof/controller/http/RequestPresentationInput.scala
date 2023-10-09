@@ -2,7 +2,7 @@ package io.iohk.atala.presentproof.controller.http
 
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.presentproof.controller.http.RequestPresentationInput.annotations
-import sttp.tapir.Schema
+import sttp.tapir.{Schema, Validator}
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
@@ -15,7 +15,10 @@ final case class RequestPresentationInput(
     options: Option[Options] = None,
     @description(annotations.proofs.description)
     @encodedExample(annotations.proofs.example)
-    proofs: Seq[ProofRequestAux]
+    proofs: Seq[ProofRequestAux],
+    @description(annotations.credentialFormat.description)
+    @encodedExample(annotations.credentialFormat.example)
+    credentialFormat: Option[String],
 )
 
 object RequestPresentationInput {
@@ -35,6 +38,18 @@ object RequestPresentationInput {
           description =
             "The type of proofs requested in the context of this proof presentation request (e.g., VC schema, trusted issuers, etc.)",
           example = Seq.empty
+        )
+
+    object credentialFormat
+        extends Annotation[Option[String]](
+          description = "The credential format (default to 'JWT')",
+          example = Some("JWT"),
+          validator = Validator.enumeration(
+            List(
+              Some("JWT"),
+              Some("AnonCreds")
+            )
+          )
         )
   }
 

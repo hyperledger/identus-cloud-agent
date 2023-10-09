@@ -20,12 +20,10 @@ class RequestCredentialSpec extends ZSuite {
 
     val expectedRequestedCredentialJson = parse(s"""{
          |    "id": "051bf917-2cbe-460b-8d12-b1a9609505c2",
-         |    "type": "https://didcomm.org/issue-credential/2.0/request-credential",
+         |    "type": "https://didcomm.org/issue-credential/3.0/request-credential",
          |    "body":
          |    {
-         |        "goal_code": "Request Credential",
-         |        "formats":
-         |        []
+         |        "goal_code": "Request Credential"
          |    },
          |    "attachments":
          |    [
@@ -45,7 +43,6 @@ class RequestCredentialSpec extends ZSuite {
 
     val result = requestCredential.asJson.deepDropNullValues
 
-    println(result.noSpaces)
     assertEquals(result, expectedRequestedCredentialJson)
   }
 }

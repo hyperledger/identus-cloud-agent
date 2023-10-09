@@ -2,18 +2,21 @@ package io.iohk.atala.pollux.core.model.schema
 
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.*
-import io.iohk.atala.pollux.core.model.schema.`type`.AnoncredSchemaType
-import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
-import io.iohk.atala.pollux.core.model.schema.`type`.CredentialSchemaType
+import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
+import io.iohk.atala.pollux.core.model.schema.`type`.{
+  AnoncredSchemaType,
+  CredentialJsonSchemaType,
+  CredentialSchemaType
+}
 import io.iohk.atala.pollux.core.model.schema.validator.JsonSchemaValidatorImpl
 import io.iohk.atala.pollux.core.service.URIDereferencer
 import zio.*
 import zio.json.*
+import zio.json.ast.Json
 import zio.prelude.Validation
 
 import java.net.URI
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 
 type Schema = zio.json.ast.Json
@@ -114,7 +117,7 @@ object CredentialSchema {
   given JsonEncoder[CredentialSchema] = DeriveJsonEncoder.gen[CredentialSchema]
   given JsonDecoder[CredentialSchema] = DeriveJsonDecoder.gen[CredentialSchema]
 
-  def validateClaims(
+  def validateJWTClaims(
       schemaId: String,
       claims: String,
       uriDereferencer: URIDereferencer
@@ -134,6 +137,41 @@ object CredentialSchema {
           .toZIO
       schemaValidator <- JsonSchemaValidatorImpl.from(vcSchema.schema).mapError(SchemaError.apply)
       _ <- schemaValidator.validate(claims).mapError(SchemaError.apply)
+    } yield ()
+  }
+
+  def validateAnonCredsClaims(
+      schemaId: String,
+      claims: String,
+      uriDereferencer: URIDereferencer
+  ): IO[CredentialSchemaError, Unit] = {
+    for {
+      uri <- ZIO.attempt(new URI(schemaId)).mapError(t => URISyntaxError(t.getMessage))
+      content <- uriDereferencer.dereference(uri).mapError(err => UnexpectedError(err.toString))
+      vcSchema <- parseCredentialSchema(content)
+      resolvedSchemaType <- resolveCredentialSchemaType(vcSchema.`type`)
+      _ <-
+        Validation
+          .fromPredicateWith(
+            CredentialSchemaParsingError(
+              s"Only ${CredentialJsonSchemaType.`type`} schema type can be used to verify claims"
+            )
+          )(resolvedSchemaType.`type`)(`type` => `type` == AnoncredSchemaType.`type`)
+          .toZIO
+      validAttrNames <- ZIO
+        .fromEither(vcSchema.schema.as[AnoncredSchemaSerDesV1])
+        .map(_.attrNames)
+        .mapError(err => UnexpectedError(err))
+      jsonClaims <- ZIO.fromEither(claims.fromJson[Json]).mapError(err => UnexpectedError(err))
+      _ <- jsonClaims match
+        case Json.Obj(fields) =>
+          ZIO.foreach(fields) {
+            case (k, _) if !validAttrNames.contains(k) =>
+              ZIO.fail(UnexpectedError(s"Claim name undefined in schema: $k"))
+            case (k, Json.Str(v)) => ZIO.succeed(k -> v)
+            case (k, _)           => ZIO.fail(UnexpectedError(s"Claim value should be a string: $k"))
+          }
+        case _ => ZIO.fail(UnexpectedError("Provided 'claims' is not a JSON object"))
     } yield ()
   }
 

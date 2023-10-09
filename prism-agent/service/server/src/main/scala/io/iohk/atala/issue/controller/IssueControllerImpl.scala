@@ -1,6 +1,7 @@
 package io.iohk.atala.issue.controller
 
 import io.iohk.atala.agent.server.ControllerHelper
+import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.model.PublicationState
 import io.iohk.atala.agent.walletapi.model.PublicationState.{Created, PublicationPending, Published}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
@@ -19,8 +20,9 @@ import io.iohk.atala.issue.controller.http.{
   IssueCredentialRecord,
   IssueCredentialRecordPage
 }
-import io.iohk.atala.pollux.core.model.DidCommID
+import io.iohk.atala.pollux.core.model.CredentialFormat.{AnonCreds, JWT}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
+import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID}
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}
@@ -29,7 +31,8 @@ class IssueControllerImpl(
     credentialService: CredentialService,
     connectionService: ConnectionService,
     didService: DIDService,
-    managedDIDService: ManagedDIDService
+    managedDIDService: ManagedDIDService,
+    appConfig: AppConfig
 ) extends IssueController
     with ControllerHelper {
   override def createCredentialOffer(
@@ -41,23 +44,56 @@ class IssueControllerImpl(
       IssueCredentialRecord
     ] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
-      issuingDID <- extractPrismDIDFromString(request.issuingDID)
-      _ <- validatePrismDID(issuingDID, allowUnpublished = true)
-      jsonClaims <- ZIO
+      jsonClaims <- ZIO // TODO Get read of Circe and use zio-json all the way down
         .fromEither(io.circe.parser.parse(request.claims.toString()))
         .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
-      outcome <- credentialService
-        .createIssueCredentialRecord(
-          pairwiseIssuerDID = didIdPair.myDID,
-          pairwiseHolderDID = didIdPair.theirDid,
-          thid = DidCommID(),
-          maybeSchemaId = request.schemaId,
-          claims = jsonClaims,
-          validityPeriod = request.validityPeriod,
-          automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-          awaitConfirmation = Some(false),
-          issuingDID = Some(issuingDID.asCanonical)
-        )
+      credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+      outcome <-
+        credentialFormat match
+          case JWT =>
+            for {
+              issuingDID <- ZIO
+                .fromOption(request.issuingDID)
+                .flatMap(extractPrismDIDFromString)
+                .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
+              _ <- validatePrismDID(issuingDID, allowUnpublished = true)
+              record <- credentialService
+                .createJWTIssueCredentialRecord(
+                  pairwiseIssuerDID = didIdPair.myDID,
+                  pairwiseHolderDID = didIdPair.theirDid,
+                  thid = DidCommID(),
+                  maybeSchemaId = request.schemaId,
+                  claims = jsonClaims,
+                  validityPeriod = request.validityPeriod,
+                  automaticIssuance = request.automaticIssuance.orElse(Some(true)),
+                  issuingDID = issuingDID.asCanonical
+                )
+            } yield record
+          case AnonCreds =>
+            for {
+              credentialDefinitionGUID <- ZIO
+                .fromOption(request.credentialDefinitionId)
+                .mapError(_ =>
+                  ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
+                )
+              record <- credentialService
+                .createAnonCredsIssueCredentialRecord(
+                  pairwiseIssuerDID = didIdPair.myDID,
+                  pairwiseHolderDID = didIdPair.theirDid,
+                  thid = DidCommID(),
+                  credentialDefinitionGUID = credentialDefinitionGUID,
+                  claims = jsonClaims,
+                  validityPeriod = request.validityPeriod,
+                  automaticIssuance = request.automaticIssuance.orElse(Some(true)), {
+                    val urlSuffix =
+                      s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
+                    val urlPrefix =
+                      if (appConfig.agent.restServiceUrl.endsWith("/")) appConfig.agent.restServiceUrl
+                      else appConfig.agent.restServiceUrl + "/"
+                    s"$urlPrefix$urlSuffix"
+                  }
+                )
+            } yield record
     } yield IssueCredentialRecord.fromDomain(outcome)
     mapIssueErrors(result)
   }
@@ -89,7 +125,7 @@ class IssueControllerImpl(
       pageOf = PaginationUtils.composePageOfUri(uri).toString,
       next = PaginationUtils.composeNextUri(uri, records, pagination, stats).map(_.toString),
       previous = PaginationUtils.composePreviousUri(uri, records, pagination, stats).map(_.toString),
-      contents = (records map IssueCredentialRecord.fromDomain)
+      contents = records map IssueCredentialRecord.fromDomain
     )
     mapIssueErrors(result)
   }
@@ -110,8 +146,9 @@ class IssueControllerImpl(
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
     val result: ZIO[WalletAccessContext, CredentialServiceError | ErrorResponse, IssueCredentialRecord] = for {
-      subjectDID <- extractPrismDIDFromString(request.subjectId)
-      _ <- validatePrismDID(subjectDID, allowUnpublished = true)
+      _ <- request.subjectId match
+        case Some(did) => extractPrismDIDFromString(did).flatMap(validatePrismDID(_, true))
+        case None      => ZIO.succeed(())
       id <- extractDidCommIdFromString(recordId)
       outcome <- credentialService.acceptCredentialOffer(id, request.subjectId)
     } yield IssueCredentialRecord.fromDomain(outcome)
@@ -175,6 +212,7 @@ class IssueControllerImpl(
 }
 
 object IssueControllerImpl {
-  val layer: URLayer[CredentialService & ConnectionService & DIDService & ManagedDIDService, IssueController] =
-    ZLayer.fromFunction(IssueControllerImpl(_, _, _, _))
+  val layer
+      : URLayer[CredentialService & ConnectionService & DIDService & ManagedDIDService & AppConfig, IssueController] =
+    ZLayer.fromFunction(IssueControllerImpl(_, _, _, _, _))
 }
