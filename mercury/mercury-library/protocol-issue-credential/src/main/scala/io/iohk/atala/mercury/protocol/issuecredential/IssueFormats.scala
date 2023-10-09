@@ -67,7 +67,8 @@ Issue Credential Formats:
   */
 enum IssueCredentialProposeFormat(val name: String) {
   case Unsupported(other: String) extends IssueCredentialProposeFormat(other)
-  case JWT extends IssueCredentialProposeFormat("jwt/credential-propose@v1.0")
+  // case JWT extends IssueCredentialProposeFormat("jwt/credential-propose@v1.0") // TODO FOLLOW specs for JWT VC
+  case JWT extends IssueCredentialProposeFormat("prism/jwt") // TODO REMOVE
   case Anoncred extends IssueCredentialProposeFormat("anoncreds/credential-filter@v1.0")
 }
 
@@ -93,7 +94,8 @@ object IssueCredentialProposeFormat {
   */
 enum IssueCredentialOfferFormat(val name: String) {
   case Unsupported(other: String) extends IssueCredentialOfferFormat(other)
-  case JWT extends IssueCredentialOfferFormat("jwt/credential-offer@v1.0")
+  // case JWT extends IssueCredentialOfferFormat("jwt/credential-offer@v1.0") // TODO FOLLOW specs for JWT VC
+  case JWT extends IssueCredentialOfferFormat("prism/jwt") // TODO REMOVE
   case Anoncred extends IssueCredentialOfferFormat("anoncreds/credential-offer@v1.0")
 }
 
@@ -119,7 +121,8 @@ object IssueCredentialOfferFormat {
   */
 enum IssueCredentialRequestFormat(val name: String) {
   case Unsupported(other: String) extends IssueCredentialRequestFormat(other)
-  case JWT extends IssueCredentialRequestFormat("jwt/credential-request@v1.0")
+  // case JWT extends IssueCredentialRequestFormat("jwt/credential-request@v1.0") // TODO FOLLOW specs for JWT VC
+  case JWT extends IssueCredentialRequestFormat("prism/jwt") // TODO REMOVE
   case Anoncred extends IssueCredentialRequestFormat("anoncreds/credential-request@v1.0")
 }
 
@@ -143,7 +146,8 @@ object IssueCredentialRequestFormat {
   */
 enum IssueCredentialIssuedFormat(val name: String) {
   case Unsupported(other: String) extends IssueCredentialIssuedFormat(other)
-  case JWT extends IssueCredentialIssuedFormat("jwt/credential@v1.0")
+  // case JWT extends IssueCredentialIssuedFormat("jwt/credential@v1.0") // TODO FOLLOW specs for JWT VC
+  case JWT extends IssueCredentialIssuedFormat("prism/jwt") // TODO REMOVE
   case Anoncred extends IssueCredentialIssuedFormat("anoncreds/credential@v1.0")
 }
 
