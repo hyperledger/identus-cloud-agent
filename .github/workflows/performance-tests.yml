@@ -38,11 +38,10 @@ jobs:
           username: ${{ secrets.ATALA_GITHUB_ACTOR }}
           password: ${{ secrets.ATALA_GITHUB_TOKEN }}
 
-      - name: Install Compose
-        uses: ndeloof/install-compose-action@v0.0.1
+      - uses: KengoTODA/actions-setup-docker-compose@v1
+        name: Install `docker-compose`
         with:
-          version: v2.12.2
-          legacy: true    # will also install in PATH as `docker-compose`
+          version: '2.14.2'
 
       - name: Build local version of PRISM Agent
         env:
@@ -58,8 +57,12 @@ jobs:
       - name: Start services for issuer
         env:
           PORT: 8080
-          DEFAULT_WALLET_ENABLED: "true"
+          ADMIN_TOKEN: admin
+          DEFAULT_WALLET_ENABLED: true
           DEFAULT_WALLET_AUTH_API_KEY: default
+          API_KEY_AUTO_PROVISIONING: false
+          API_KEY_ENABLED: true
+          DOCKERHOST: "host.docker.internal"
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -70,8 +73,12 @@ jobs:
       - name: Start services for holder
         env:
           PORT: 8090
-          DEFAULT_WALLET_ENABLED: "true"
+          ADMIN_TOKEN: admin
+          DEFAULT_WALLET_ENABLED: true
           DEFAULT_WALLET_AUTH_API_KEY: default
+          API_KEY_AUTO_PROVISIONING: false
+          API_KEY_ENABLED: true
+          DOCKERHOST: "host.docker.internal"
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
