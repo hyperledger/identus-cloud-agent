@@ -1,23 +1,21 @@
-import { Options } from 'k6/options';
-import { Issuer } from '../../actors';
+import { Options } from "k6/options";
+import { Issuer } from "../../actors";
+import merge from "ts-deepmerge";
+import { group } from "k6";
+import { defaultOptions } from "../../scenarios/default";
 
-export let options: Options = {
-    stages: [
-      { duration: '1m', target: 5 },
-    ],
-    thresholds: {
-      http_req_failed: [{
-        threshold: 'rate<=0.05',
-        abortOnFail: true,
-      }],
-      http_req_duration: ['p(95)<=100'],
-      checks: ['rate>=0.99'],
-    },
-  };
+export const localOptions: Options = {
+  thresholds: {
+    "group_duration{group:::Issuer create published DID}": ["avg < 15000"],
+  },
+};
+export let options: Options = merge(localOptions, defaultOptions);
 
 const issuer = new Issuer();
 
 export default () => {
+  group("Issuer create published DID", function () {
     issuer.createUnpublishedDid();
     issuer.publishDid();
+  });
 };

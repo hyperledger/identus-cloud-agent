@@ -34,6 +34,10 @@ export class HttpService {
     };
   }
 
+  public toJson(response: RefinedResponse<ResponseType>): any {
+    return JSON.parse(response.body as string)
+  }
+
   /**
    * Performs an HTTP POST request to the specified endpoint with the provided payload.
    * @param endpoint The API endpoint to post to.
