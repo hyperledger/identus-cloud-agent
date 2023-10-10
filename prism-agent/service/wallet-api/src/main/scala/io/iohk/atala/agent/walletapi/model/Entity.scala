@@ -8,7 +8,6 @@ import java.util.UUID
 
 trait BaseEntity {
   val id: UUID
-  val name: String
 }
 
 case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, updatedAt: Instant) extends BaseEntity {

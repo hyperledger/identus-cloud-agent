@@ -13,7 +13,8 @@ case class DefaultAuthenticator(
     adminApiKeyAuthenticator: AdminApiKeyAuthenticator,
     apiKeyAuthenticator: ApiKeyAuthenticator,
     keycloakAuthenticator: KeycloakAuthenticator
-) extends Authenticator[BaseEntity], Authorizer[BaseEntity] {
+) extends Authenticator[BaseEntity],
+      Authorizer[BaseEntity] {
 
   override def isEnabled = true
 
@@ -24,7 +25,7 @@ case class DefaultAuthenticator(
   }
 
   override def authorize(entity: BaseEntity): IO[AuthenticationError, WalletId] = entity match {
-    case entity: Entity => DefaultEntityAuthenticator.authorize(entity)
+    case entity: Entity           => EntityAuthorizer.authorize(entity)
     case kcEntity: KeycloakEntity => keycloakAuthenticator.authorize(kcEntity)
   }
 

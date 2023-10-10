@@ -2,12 +2,12 @@ package io.iohk.atala.iam.authentication.apikey
 
 import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.iam.authentication.AuthenticationError.*
-import io.iohk.atala.iam.authentication.{AuthenticationError, Authenticator, Credentials, EntityAuthorization}
+import io.iohk.atala.iam.authentication.{AuthenticationError, Authenticator, Credentials, EntityAuthorizer}
 import zio.{IO, ZIO}
 
 import java.util.UUID
 
-trait ApiKeyAuthenticator extends Authenticator[Entity], EntityAuthorization {
+trait ApiKeyAuthenticator extends Authenticator[Entity], EntityAuthorizer {
 
   def authenticate(credentials: Credentials): IO[AuthenticationError, Entity] = {
     if (isEnabled) {

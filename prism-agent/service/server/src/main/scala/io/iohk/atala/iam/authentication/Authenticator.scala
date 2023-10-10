@@ -46,14 +46,14 @@ trait Authorizer[E <: BaseEntity] {
   def authorize(entity: E): IO[AuthenticationError, WalletId]
 }
 
-object EntityAuthorization extends EntityAuthorization
+object EntityAuthorizer extends EntityAuthorizer
 
-trait EntityAuthorization extends Authorizer[Entity] {
+trait EntityAuthorizer extends Authorizer[Entity] {
   override def authorize(entity: Entity): IO[AuthenticationError, WalletId] =
     ZIO.succeed(entity.walletId).map(WalletId.fromUUID)
 }
 
-object DefaultEntityAuthenticator extends Authenticator[Entity], EntityAuthorization {
+object DefaultEntityAuthenticator extends Authenticator[Entity], EntityAuthorizer {
   override def isEnabled: Boolean = true
   override def authenticate(credentials: Credentials): IO[AuthenticationError, Entity] = ZIO.succeed(Entity.Default)
 

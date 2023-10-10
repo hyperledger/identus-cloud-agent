@@ -13,15 +13,15 @@ import io.iohk.atala.agent.walletapi.memory.{
 }
 import io.iohk.atala.agent.walletapi.service.EntityService
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
+import io.iohk.atala.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcGenericSecretStorage, JdbcWalletSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.{DIDSecretStorage, GenericSecretStorage, WalletSecretStorage}
+import io.iohk.atala.agent.walletapi.vault.*
 import io.iohk.atala.agent.walletapi.vault.{
   VaultDIDSecretStorage,
   VaultKVClient,
   VaultKVClientImpl,
   VaultWalletSecretStorage
 }
-import io.iohk.atala.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcGenericSecretStorage, JdbcWalletSecretStorage}
-import io.iohk.atala.agent.walletapi.storage.{DIDSecretStorage, GenericSecretStorage, WalletSecretStorage}
-import io.iohk.atala.agent.walletapi.vault.*
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.admin.AdminApiKeyAuthenticator
@@ -32,6 +32,7 @@ import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticatorImpl
 import io.iohk.atala.iam.authentication.apikey.ApiKeyConfig
 import io.iohk.atala.iam.authentication.apikey.AuthenticationRepository
 import io.iohk.atala.iam.authentication.oidc.KeycloakAuthenticatorImpl
+import io.iohk.atala.iam.authentication.oidc.KeycloakClientImpl
 import io.iohk.atala.iam.authentication.oidc.KeycloakConfig
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
@@ -41,6 +42,7 @@ import io.iohk.atala.shared.db.{ContextAwareTask, DbConfig, TransactorLayer}
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
+import zio.http.Client
 
 object SystemModule {
   val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
@@ -61,11 +63,11 @@ object AppModule {
     ZLayer.fromFunction(PrismDidResolver(_))
 
   val authenticatorLayer: RLayer[
-    AppConfig & WalletManagementService & AuthenticationRepository & EntityService,
+    AppConfig & WalletManagementService & AuthenticationRepository & EntityService & Client,
     DefaultAuthenticator & ApiKeyAuthenticator
   ] =
     ZLayer.makeSome[
-      AppConfig & WalletManagementService & AuthenticationRepository & EntityService,
+      AppConfig & WalletManagementService & AuthenticationRepository & EntityService & Client,
       DefaultAuthenticator & ApiKeyAuthenticator
     ](
       AdminConfig.layer,
@@ -75,6 +77,7 @@ object AppModule {
       AdminApiKeyAuthenticatorImpl.layer,
       ApiKeyAuthenticatorImpl.layer,
       KeycloakAuthenticatorImpl.layer,
+      KeycloakClientImpl.layer
     )
 }
 

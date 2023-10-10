@@ -11,7 +11,7 @@ import zio.*
 import java.util.UUID
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 
-final case class KeycloakEntity(id: UUID, name: String, accessToken: String) extends BaseEntity
+final case class KeycloakEntity(id: UUID, rawToken: String) extends BaseEntity
 
 trait KeycloakAuthenticator extends Authenticator[KeycloakEntity], Authorizer[KeycloakEntity] {
   def authenticate(credentials: Credentials): IO[AuthenticationError, KeycloakEntity] = {

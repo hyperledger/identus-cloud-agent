@@ -4,7 +4,6 @@ import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
 import io.iohk.atala.shared.models.WalletId
-import org.keycloak.authorization.client.AuthzClient
 import org.keycloak.authorization.client.{Configuration => KeycloakAuthzConfig}
 import org.keycloak.representations.idm.authorization.AuthorizationRequest
 import pdi.jwt.JwtCirce
@@ -17,7 +16,7 @@ import scala.jdk.CollectionConverters.*
 import scala.util.Try
 
 class KeycloakAuthenticatorImpl(
-    client: AuthzClient,
+    client: KeycloakClient,
     keycloakConfig: KeycloakConfig,
     walletService: WalletManagementService
 ) extends KeycloakAuthenticator {
@@ -27,19 +26,31 @@ class KeycloakAuthenticatorImpl(
   override def authenticate(token: String): IO[AuthenticationError, KeycloakEntity] = {
     if (isEnabled) {
       for {
-        isRpt <- inferIsRpt(token)
-        rptEffect =
-          if (isRpt) ZIO.succeed(token)
-          else if (keycloakConfig.autoUpgradeToRPT) obtainRpt(token)
-          else ZIO.fail(AuthenticationError.InvalidCredentials(s"AccessToken is not RPT."))
-        rpt <- rptEffect.logError("Fail to obtail RPT for wallet permissions")
-        permittedResources <- introspectRpt(rpt)
-        walletId <- getPermittedWallet(permittedResources)
-      } yield KeycloakEntity(???, ???, token)
+        introspection <- client.introspectToken(token)
+        entityId <- introspection.sub.fold(
+          ZIO.fail(AuthenticationError.UnexpectedError("Subject ID is not found in the accessToken."))
+        )(sub =>
+          ZIO
+            .attempt(UUID.fromString(sub))
+            .mapError(e => AuthenticationError.UnexpectedError(s"Subject ID in accessToken is not a UUID. $e"))
+        )
+      } yield KeycloakEntity(entityId, token)
     } else ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
   }
 
-  override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletId] = ??? // TODO
+  override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletId] = {
+    val token = entity.rawToken
+    for {
+      isRpt <- inferIsRpt(entity.rawToken)
+      rptEffect =
+        if (isRpt) ZIO.succeed(token)
+        else if (keycloakConfig.autoUpgradeToRPT) client.getRpt(token)
+        else ZIO.fail(AuthenticationError.InvalidCredentials(s"AccessToken is not RPT."))
+      rpt <- rptEffect.logError("Fail to obtail RPT for wallet permissions")
+      permittedResources <- client.checkPermissions(rpt)
+      walletId <- getPermittedWallet(permittedResources)
+    } yield walletId
+  }
 
   private def getPermittedWallet(resourceIds: Seq[String]): IO[AuthenticationError, WalletId] = {
     val walletIds = resourceIds.flatMap(id => Try(UUID.fromString(id)).toOption).map(WalletId.fromUUID)
@@ -53,30 +64,6 @@ class KeycloakAuthenticatorImpl(
         case ls =>
           ZIO.fail(AuthenticationError.UnexpectedError("Too many wallet access granted, access is ambiguous."))
       }
-  }
-
-  private def obtainRpt(accessToken: String): IO[AuthenticationError, String] = {
-    ZIO
-      .attemptBlocking {
-        val authResource = client.authorization(accessToken)
-        val request = AuthorizationRequest()
-        authResource.authorize(request)
-      }
-      .logError
-      .mapBoth(
-        e => AuthenticationError.UnexpectedError(e.getMessage()),
-        response => response.getToken()
-      )
-  }
-
-  private def introspectRpt(rpt: String): IO[AuthenticationError, List[String]] = {
-    for {
-      introspection <- ZIO
-        .attemptBlocking(client.protection().introspectRequestingPartyToken(rpt))
-        .logError
-        .mapError(e => AuthenticationError.UnexpectedError(e.getMessage()))
-      permissions = introspection.getPermissions().asScala.toList
-    } yield permissions.map(_.getResourceId())
   }
 
   /** Return true if the token is RPT. Check whether property '.authorization' exists. */
@@ -98,18 +85,6 @@ class KeycloakAuthenticatorImpl(
 }
 
 object KeycloakAuthenticatorImpl {
-  val layer: RLayer[KeycloakConfig & WalletManagementService, KeycloakAuthenticator] = ZLayer.fromZIO {
-    for {
-      walletService <- ZIO.service[WalletManagementService]
-      keycloakConfig <- ZIO.service[KeycloakConfig]
-      config = KeycloakAuthzConfig(
-        keycloakConfig.keycloakUrl.toString(),
-        keycloakConfig.realmName,
-        keycloakConfig.clientId,
-        Map("secret" -> keycloakConfig.clientSecret).asJava,
-        null
-      )
-      client <- ZIO.attempt(AuthzClient.create(config))
-    } yield KeycloakAuthenticatorImpl(client, keycloakConfig, walletService)
-  }
+  val layer: RLayer[KeycloakClient & KeycloakConfig & WalletManagementService, KeycloakAuthenticator] =
+    ZLayer.fromFunction(KeycloakAuthenticatorImpl(_, _, _))
 }

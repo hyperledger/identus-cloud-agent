@@ -1,10 +1,10 @@
 package io.iohk.atala.iam.authentication.admin
 
 import io.iohk.atala.agent.walletapi.model.Entity
-import io.iohk.atala.iam.authentication.{AuthenticationError, Authenticator, Credentials, EntityAuthorization}
+import io.iohk.atala.iam.authentication.{AuthenticationError, Authenticator, Credentials, EntityAuthorizer}
 import zio.IO
 
-trait AdminApiKeyAuthenticator extends Authenticator[Entity], EntityAuthorization {
+trait AdminApiKeyAuthenticator extends Authenticator[Entity], EntityAuthorizer {
 
   def authenticate(credentials: Credentials): IO[AuthenticationError, Entity] = {
     credentials match {
