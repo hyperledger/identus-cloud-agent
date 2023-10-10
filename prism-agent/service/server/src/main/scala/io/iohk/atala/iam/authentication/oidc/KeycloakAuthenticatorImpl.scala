@@ -1,6 +1,5 @@
 package io.iohk.atala.iam.authentication.oidc
 
-import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
@@ -25,7 +24,7 @@ class KeycloakAuthenticatorImpl(
 
   override def isEnabled: Boolean = keycloakConfig.enabled
 
-  override def authenticate(token: String): IO[AuthenticationError, Entity] = {
+  override def authenticate(token: String): IO[AuthenticationError, KeycloakEntity] = {
     if (isEnabled) {
       for {
         isRpt <- inferIsRpt(token)
@@ -36,9 +35,11 @@ class KeycloakAuthenticatorImpl(
         rpt <- rptEffect.logError("Fail to obtail RPT for wallet permissions")
         permittedResources <- introspectRpt(rpt)
         walletId <- getPermittedWallet(permittedResources)
-      } yield Entity.Default.copy(walletId = walletId.toUUID) // TODO: KeycloakEntity?
+      } yield KeycloakEntity(???, ???, token)
     } else ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
   }
+
+  override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletId] = ??? // TODO
 
   private def getPermittedWallet(resourceIds: Seq[String]): IO[AuthenticationError, WalletId] = {
     val walletIds = resourceIds.flatMap(id => Try(UUID.fromString(id)).toOption).map(WalletId.fromUUID)

@@ -1,5 +1,6 @@
 package io.iohk.atala.event.controller
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
@@ -9,7 +10,7 @@ import zio.*
 
 class EventServerEndpoints(
     eventController: EventController,
-    authenticator: Authenticator
+    authenticator: Authenticator[BaseEntity]
 ) {
 
   val createWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =

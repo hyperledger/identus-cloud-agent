@@ -1,5 +1,6 @@
 package io.iohk.atala.iam.wallet.http
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.iam.authentication.Authenticator
@@ -10,7 +11,10 @@ import io.iohk.atala.iam.wallet.http.controller.WalletManagementController
 import sttp.tapir.ztapir.*
 import zio.*
 
-class WalletManagementServerEndpoints(controller: WalletManagementController, authenticator: Authenticator) {
+class WalletManagementServerEndpoints(
+    controller: WalletManagementController,
+    authenticator: Authenticator[BaseEntity]
+) {
 
   private def adminApiSecurityLogic(credentials: AdminApiKeyCredentials): IO[ErrorResponse, Entity] =
     AdminApiKeySecurityLogic.securityLogic(credentials)(authenticator)

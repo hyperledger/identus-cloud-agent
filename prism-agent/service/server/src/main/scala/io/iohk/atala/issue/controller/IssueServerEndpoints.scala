@@ -1,5 +1,6 @@
 package io.iohk.atala.issue.controller
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.iam.authentication.Authenticator
@@ -11,7 +12,7 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
 import zio.*
 
-class IssueServerEndpoints(issueController: IssueController, authenticator: Authenticator) {
+class IssueServerEndpoints(issueController: IssueController, authenticator: Authenticator[BaseEntity]) {
 
   val createCredentialOfferEndpoint: ZServerEndpoint[Any, Any] =
     createCredentialOffer

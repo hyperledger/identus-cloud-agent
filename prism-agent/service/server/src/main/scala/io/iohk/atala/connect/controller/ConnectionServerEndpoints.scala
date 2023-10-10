@@ -1,5 +1,6 @@
 package io.iohk.atala.connect.controller
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.connect.controller.ConnectionEndpoints.*
@@ -13,7 +14,7 @@ import zio.*
 
 import java.util.UUID
 
-class ConnectionServerEndpoints(connectionController: ConnectionController, authenticator: Authenticator) {
+class ConnectionServerEndpoints(connectionController: ConnectionController, authenticator: Authenticator[BaseEntity]) {
 
   private val createConnectionServerEndpoint: ZServerEndpoint[Any, Any] =
     createConnection

@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.credentialdefinition
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
@@ -17,7 +18,7 @@ import java.util.UUID
 
 class CredentialDefinitionRegistryServerEndpoints(
     credentialDefinitionController: CredentialDefinitionController,
-    authenticator: Authenticator
+    authenticator: Authenticator[BaseEntity]
 ) {
   def throwableToInternalServerError(throwable: Throwable) =
     ZIO.fail[ErrorResponse](ErrorResponse.internalServerError(detail = Option(throwable.getMessage)))

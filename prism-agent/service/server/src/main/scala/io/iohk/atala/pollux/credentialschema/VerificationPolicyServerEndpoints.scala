@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.credentialschema
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.Authenticator
@@ -13,7 +14,10 @@ import java.util.UUID
 import sttp.tapir.ztapir.*
 import zio.*
 
-class VerificationPolicyServerEndpoints(controller: VerificationPolicyController, authenticator: Authenticator) {
+class VerificationPolicyServerEndpoints(
+    controller: VerificationPolicyController,
+    authenticator: Authenticator[BaseEntity]
+) {
   def throwableToInternalServerError(throwable: Throwable) =
     ZIO.fail[ErrorResponse](ErrorResponse.internalServerError(detail = Option(throwable.getMessage)))
 

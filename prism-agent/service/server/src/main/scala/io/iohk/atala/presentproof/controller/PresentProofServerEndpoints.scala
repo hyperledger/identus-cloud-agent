@@ -1,5 +1,6 @@
 package io.iohk.atala.presentproof.controller
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.iam.authentication.Authenticator
@@ -20,7 +21,7 @@ import java.util.UUID
 
 class PresentProofServerEndpoints(
     presentProofController: PresentProofController,
-    authenticator: Authenticator
+    authenticator: Authenticator[BaseEntity]
 ) {
   private val requestPresentationEndpoint: ZServerEndpoint[Any, Any] =
     requestPresentation

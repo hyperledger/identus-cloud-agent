@@ -18,8 +18,9 @@ import sttp.tapir.ztapir.*
 import zio.{IO, URIO, ZIO}
 
 import java.util.UUID
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 
-class EntityServerEndpoints(entityController: EntityController, authenticator: Authenticator) {
+class EntityServerEndpoints(entityController: EntityController, authenticator: Authenticator[BaseEntity]) {
 
   private def adminApiSecurityLogic(credentials: AdminApiKeyCredentials): IO[ErrorResponse, Entity] =
     AdminApiKeySecurityLogic.securityLogic(credentials)(authenticator)
