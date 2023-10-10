@@ -6,14 +6,13 @@ import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.config.SecretStorageBackend
 import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.memory.{ DIDSecretStorageInMemory, GenericSecretStorageInMemory, WalletSecretStorageInMemory }
+import io.iohk.atala.agent.walletapi.memory.{
+  DIDSecretStorageInMemory,
+  GenericSecretStorageInMemory,
+  WalletSecretStorageInMemory
+}
 import io.iohk.atala.agent.walletapi.service.EntityService
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
-import io.iohk.atala.agent.walletapi.sql.JdbcGenericSecretStorage
-import io.iohk.atala.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcWalletSecretStorage}
-import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
-import io.iohk.atala.agent.walletapi.storage.{DIDSecretStorage, WalletSecretStorage}
-import io.iohk.atala.agent.walletapi.util.SeedResolver
 import io.iohk.atala.agent.walletapi.vault.{
   VaultDIDSecretStorage,
   VaultKVClient,
@@ -58,7 +57,7 @@ object SystemModule {
 object AppModule {
   val apolloLayer: ULayer[Apollo] = Apollo.prism14Layer
 
-  val didJwtResolverlayer: URLayer[DIDService, JwtDidResolver] =
+  val didJwtResolverLayer: URLayer[DIDService, JwtDidResolver] =
     ZLayer.fromFunction(PrismDidResolver(_))
 
   val authenticatorLayer: RLayer[
