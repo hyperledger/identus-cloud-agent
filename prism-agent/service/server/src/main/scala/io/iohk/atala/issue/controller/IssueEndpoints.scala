@@ -5,6 +5,8 @@ import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
+import io.iohk.atala.iam.authentication.oidc.JwtCredentials
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.bearerAuthHeader
 import io.iohk.atala.issue.controller.http.*
 import sttp.model.StatusCode
 import sttp.tapir.*
@@ -15,7 +17,7 @@ object IssueEndpoints {
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 
   val createCredentialOffer: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, CreateIssueCredentialRecordRequest),
     ErrorResponse,
     IssueCredentialRecord,
@@ -23,6 +25,7 @@ object IssueEndpoints {
   ] =
     endpoint.post
       .securityIn(apiKeyHeader)
+      .securityIn(bearerAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("issue-credentials" / "credential-offers")
       .in(jsonBody[CreateIssueCredentialRecordRequest].description("The credential offer object."))
@@ -35,7 +38,7 @@ object IssueEndpoints {
       .name("createCredentialOffer")
 
   val getCredentialRecords: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, PaginationInput, Option[String]),
     ErrorResponse,
     IssueCredentialRecordPage,
@@ -43,6 +46,7 @@ object IssueEndpoints {
   ] =
     endpoint.get
       .securityIn(apiKeyHeader)
+      .securityIn(bearerAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("issue-credentials" / "records")
       .in(paginationInput)
@@ -55,7 +59,7 @@ object IssueEndpoints {
       .name("getCredentialRecords")
 
   val getCredentialRecord: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, String),
     ErrorResponse,
     IssueCredentialRecord,
@@ -63,6 +67,7 @@ object IssueEndpoints {
   ] =
     endpoint.get
       .securityIn(apiKeyHeader)
+      .securityIn(bearerAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "issue-credentials" / "records" / path[String]("recordId").description(
@@ -77,7 +82,7 @@ object IssueEndpoints {
       .name("getCredentialRecord")
 
   val acceptCredentialOffer: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, String, AcceptCredentialOfferRequest),
     ErrorResponse,
     IssueCredentialRecord,
@@ -85,6 +90,7 @@ object IssueEndpoints {
   ] =
     endpoint.post
       .securityIn(apiKeyHeader)
+      .securityIn(bearerAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "issue-credentials" / "records" / path[String]("recordId").description(
@@ -101,7 +107,7 @@ object IssueEndpoints {
       .name("acceptCredentialOffer")
 
   val issueCredential: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, String),
     ErrorResponse,
     IssueCredentialRecord,
@@ -109,6 +115,7 @@ object IssueEndpoints {
   ] =
     endpoint.post
       .securityIn(apiKeyHeader)
+      .securityIn(bearerAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "issue-credentials" / "records" / path[String]("recordId").description(
