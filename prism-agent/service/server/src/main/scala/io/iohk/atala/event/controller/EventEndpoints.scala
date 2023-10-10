@@ -9,6 +9,8 @@ import io.iohk.atala.event.controller.http.WebhookNotification
 import io.iohk.atala.event.controller.http.WebhookNotificationPage
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
+import io.iohk.atala.iam.authentication.oidc.JwtCredentials
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.bearerAuthHeader
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
@@ -21,10 +23,11 @@ object EventEndpoints {
     .tag("Events")
     .in("events")
     .securityIn(apiKeyHeader)
+    .securityIn(bearerAuthHeader)
     .in(extractFromRequest[RequestContext](RequestContext.apply))
 
   val createWebhookNotification: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, CreateWebhookNotification),
     ErrorResponse,
     WebhookNotification,
@@ -38,7 +41,7 @@ object EventEndpoints {
     .summary("Create wallet webhook notifications")
 
   val listWebhookNotification: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     RequestContext,
     ErrorResponse,
     WebhookNotificationPage,
@@ -51,7 +54,7 @@ object EventEndpoints {
     .summary("List wallet webhook notifications")
 
   val deleteWebhookNotification: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID),
     ErrorResponse,
     Unit,
