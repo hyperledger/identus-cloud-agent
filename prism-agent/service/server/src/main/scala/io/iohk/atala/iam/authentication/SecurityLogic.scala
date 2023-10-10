@@ -14,7 +14,7 @@ object SecurityLogic {
   def walletAccessContext[E <: BaseEntity](credentials: Credentials, others: Credentials*)(
       authenticator: Authenticator[E] & Authorizer[E]
   ): IO[ErrorResponse, WalletAccessContext] = {
-    val creds: List[Credentials] = credentials :: others.toList
+    val creds = credentials :: others.toList
     ZIO
       .validateFirst(creds) { cred =>
         authenticator

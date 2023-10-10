@@ -1,7 +1,6 @@
 package io.iohk.atala.iam.wallet.http
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
-import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
@@ -16,7 +15,7 @@ class WalletManagementServerEndpoints(
     authenticator: Authenticator[BaseEntity]
 ) {
 
-  private def adminApiSecurityLogic(credentials: AdminApiKeyCredentials): IO[ErrorResponse, Entity] =
+  private def adminApiSecurityLogic(credentials: AdminApiKeyCredentials): IO[ErrorResponse, BaseEntity] =
     AdminApiKeySecurityLogic.securityLogic(credentials)(authenticator)
 
   val listWalletServerEndpoint: ZServerEndpoint[Any, Any] =
