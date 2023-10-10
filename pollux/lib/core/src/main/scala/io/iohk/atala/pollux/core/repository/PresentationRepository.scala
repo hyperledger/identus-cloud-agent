@@ -15,6 +15,13 @@ trait PresentationRepository {
       limit: Int,
       states: PresentationRecord.ProtocolState*
   ): RIO[WalletAccessContext, Seq[PresentationRecord]]
+
+  def getPresentationRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: PresentationRecord.ProtocolState*
+  ): Task[Seq[PresentationRecord]]
+
   def getPresentationRecordByThreadId(thid: DidCommID): RIO[WalletAccessContext, Option[PresentationRecord]]
 
   def updatePresentationRecordProtocolState(

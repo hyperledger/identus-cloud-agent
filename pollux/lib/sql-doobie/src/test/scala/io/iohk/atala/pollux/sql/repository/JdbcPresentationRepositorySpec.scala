@@ -20,7 +20,8 @@ object JdbcPresentationRepositorySpec extends ZIOSpecDefault, PostgresTestContai
     Migrations.layer,
     dbConfig,
     pgContainerLayer,
-    contextAwareTransactorLayer
+    contextAwareTransactorLayer,
+    systemTransactorLayer
   )
 
   override def spec =

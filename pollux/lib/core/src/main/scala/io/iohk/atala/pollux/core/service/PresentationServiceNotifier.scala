@@ -8,7 +8,7 @@ import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.shared.models.WalletAccessContext
-import zio.{URLayer, ZIO, ZLayer}
+import zio.{URLayer, ZIO, ZLayer, IO}
 
 import java.time.Instant
 import java.util.UUID
@@ -141,6 +141,13 @@ class PresentationServiceNotifier(
       state: PresentationRecord.ProtocolState*
   ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] =
     svc.getPresentationRecordsByStates(ignoreWithZeroRetries, limit, state: _*)
+
+  override def getPresentationRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      state: PresentationRecord.ProtocolState*
+  ): IO[PresentationError, Seq[PresentationRecord]] =
+    svc.getPresentationRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, state: _*)
 
   override def getPresentationRecord(
       recordId: DidCommID

@@ -21,9 +21,12 @@ import org.postgresql.util.PSQLException
 import zio.*
 import zio.json.*
 
+import doobie.free.connection
 import java.time.Instant
+import zio.interop.catz.*
 
-class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int) extends CredentialRepository {
+class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task], maxRetries: Int)
+    extends CredentialRepository {
 
   // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
@@ -179,14 +182,14 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
     effect.transactWallet(xa)
   }
 
-  override def getIssueCredentialRecordsByStates(
+  private def getRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): RIO[WalletAccessContext, Seq[IssueCredentialRecord]] = {
+  ): ConnectionIO[Seq[IssueCredentialRecord]] = {
     states match
       case Nil =>
-        ZIO.succeed(Nil)
+        connection.pure(Nil)
       case head +: tail =>
         val nel = NonEmptyList.of(head, tail: _*)
         val inClauseFragment = Fragments.in(fr"protocol_state", nel)
@@ -224,11 +227,23 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
             """.stripMargin
           .query[IssueCredentialRecord]
           .to[Seq]
-
         cxnIO
-          .transactWallet(xa)
+  }
+  override def getIssueCredentialRecordsByStates(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: IssueCredentialRecord.ProtocolState*
+  ): RIO[WalletAccessContext, Seq[IssueCredentialRecord]] = {
+    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transactWallet(xa)
   }
 
+  override def getIssueCredentialRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: IssueCredentialRecord.ProtocolState*
+  ): Task[Seq[IssueCredentialRecord]] = {
+    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transact(xb)
+  }
   override def getIssueCredentialRecord(
       recordId: DidCommID
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
@@ -483,6 +498,6 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], maxRetries: Int
 
 object JdbcCredentialRepository {
   val maxRetries = 5 // TODO Move to config
-  val layer: URLayer[Transactor[ContextAwareTask], CredentialRepository] =
-    ZLayer.fromFunction(new JdbcCredentialRepository(_, maxRetries))
+  val layer: URLayer[Transactor[ContextAwareTask] & Transactor[Task], CredentialRepository] =
+    ZLayer.fromFunction(new JdbcCredentialRepository(_, _, maxRetries))
 }

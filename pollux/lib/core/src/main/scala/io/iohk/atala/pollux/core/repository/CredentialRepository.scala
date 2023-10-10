@@ -21,6 +21,12 @@ trait CredentialRepository {
       states: IssueCredentialRecord.ProtocolState*
   ): RIO[WalletAccessContext, Seq[IssueCredentialRecord]]
 
+  def getIssueCredentialRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: IssueCredentialRecord.ProtocolState*
+  ): Task[Seq[IssueCredentialRecord]]
+
   def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean,

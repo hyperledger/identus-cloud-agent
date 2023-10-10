@@ -33,6 +33,7 @@ import io.iohk.atala.system.controller.SystemServerEndpoints
 import zio.*
 import zio.metrics.*
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 
 object PrismAgentApp {
 
@@ -50,68 +51,45 @@ object PrismAgentApp {
   } yield ()
 
   private val issueCredentialDidCommExchangesJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDService &
-      ManagedDIDService & PresentationService & WalletManagementService,
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDNonSecretStorage &
+      DIDService & ManagedDIDService & PresentationService & WalletManagementService,
     Unit
   ] =
     for {
       config <- ZIO.service[AppConfig]
-      _ <- ZIO
-        .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
-        .mapError(_.toThrowable)
-        .flatMap { wallets =>
-          ZIO.foreach(wallets) { wallet =>
-            IssueBackgroundJobs.issueCredentialDidCommExchanges
-              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id))) @@ Metric
-              .gauge("issuance_flow_did_com_exchange_job_ms_gauge")
-              .trackDurationWith(_.toMetricsSeconds)
-          }
-        }
+      _ <- IssueBackgroundJobs.issueCredentialDidCommExchanges
         .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
-        .unit
+        .unit @@ Metric
+        .gauge("issuance_flow_did_com_exchange_job_ms_gauge")
+        .trackDurationWith(_.toMetricsSeconds)
     } yield ()
 
   private val presentProofExchangeJob: RIO[
     AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService &
-      DIDService & ManagedDIDService & WalletManagementService,
+      DIDNonSecretStorage & DIDService & ManagedDIDService & WalletManagementService,
     Unit
   ] =
     for {
       config <- ZIO.service[AppConfig]
-      _ <- ZIO
-        .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
-        .mapError(_.toThrowable)
-        .flatMap { wallets =>
-          ZIO.foreach(wallets) { wallet =>
-            PresentBackgroundJobs.presentProofExchanges
-              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id))) @@ Metric
-              .gauge("present_proof_flow_did_com_exchange_job_ms_gauge")
-              .trackDurationWith(_.toMetricsSeconds)
-          }
-        }
+      _ <- PresentBackgroundJobs.presentProofExchanges
         .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
-        .unit
+        .unit @@ Metric
+        .gauge("present_proof_flow_did_com_exchange_job_ms_gauge")
+        .trackDurationWith(_.toMetricsSeconds)
     } yield ()
 
   private val connectDidCommExchangesJob: RIO[
-    AppConfig & DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & WalletManagementService,
+    AppConfig & DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & DIDNonSecretStorage &
+      WalletManagementService,
     Unit
   ] =
     for {
       config <- ZIO.service[AppConfig]
-      _ <- ZIO
-        .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
-        .mapError(_.toThrowable)
-        .flatMap { wallets =>
-          ZIO.foreach(wallets) { wallet =>
-            ConnectBackgroundJobs.didCommExchanges
-              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id))) @@ Metric
-              .gauge("connection_flow_did_com_exchange_job_ms_gauge")
-              .trackDurationWith(_.toMetricsSeconds)
-          }
-        }
+      _ <- ConnectBackgroundJobs.didCommExchanges
         .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
-        .unit
+        .unit @@ Metric
+        .gauge("connection_flow_did_com_exchange_job_ms_gauge")
+        .trackDurationWith(_.toMetricsSeconds)
     } yield ()
 
   private val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService & WalletManagementService, Unit] =

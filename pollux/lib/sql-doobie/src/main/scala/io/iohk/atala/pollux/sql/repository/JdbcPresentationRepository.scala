@@ -18,12 +18,13 @@ import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.BytesOps
 import zio.*
-
+import doobie.free.connection
 import java.time.Instant
-
+import zio.interop.catz.*
 // TODO: replace with actual implementation
 class JdbcPresentationRepository(
     xa: Transactor[ContextAwareTask],
+    xb: Transactor[Task],
     maxRetries: Int
 ) extends PresentationRepository {
   // serializes into hex string
@@ -173,14 +174,14 @@ class JdbcPresentationRepository(
       .transactWallet(xa)
   }
 
-  override def getPresentationRecordsByStates(
+  private def getRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: PresentationRecord.ProtocolState*
-  ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
+  ): ConnectionIO[Seq[PresentationRecord]] = {
     states match
       case Nil =>
-        ZIO.succeed(Nil)
+        connection.pure(Nil)
       case head +: tail =>
         val nel = NonEmptyList.of(head, tail: _*)
         val inClauseFragment = Fragments.in(fr"protocol_state", nel)
@@ -214,9 +215,21 @@ class JdbcPresentationRepository(
             """.stripMargin
           .query[PresentationRecord]
           .to[Seq]
-
         cxnIO
-          .transactWallet(xa)
+  }
+  override def getPresentationRecordsByStates(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: PresentationRecord.ProtocolState*
+  ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
+    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transactWallet(xa)
+  }
+  override def getPresentationRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: PresentationRecord.ProtocolState*
+  ): Task[Seq[PresentationRecord]] = {
+    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transact(xb)
   }
 
   override def getPresentationRecord(recordId: DidCommID): RIO[WalletAccessContext, Option[PresentationRecord]] = {
@@ -389,6 +402,6 @@ class JdbcPresentationRepository(
 
 object JdbcPresentationRepository {
   val maxRetries = 5 // TODO Move to config
-  val layer: URLayer[Transactor[ContextAwareTask], PresentationRepository] =
-    ZLayer.fromFunction(new JdbcPresentationRepository(_, maxRetries))
+  val layer: URLayer[Transactor[ContextAwareTask] & Transactor[Task], PresentationRepository] =
+    ZLayer.fromFunction(new JdbcPresentationRepository(_, _, maxRetries))
 }

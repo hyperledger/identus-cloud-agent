@@ -25,9 +25,12 @@ import zio.*
 import zio.metrics.*
 import zio.prelude.Validation
 import zio.prelude.ZValidation.*
-
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
+import io.iohk.atala.resolvers.DIDResolver
 import java.time.{Clock, Instant, ZoneId}
-
+import io.iohk.atala.castor.core.service.DIDService
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 object PresentBackgroundJobs extends BackgroundJobsHelper {
 
   val presentProofExchanges = {
@@ -35,7 +38,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       presentationService <- ZIO.service[PresentationService]
       config <- ZIO.service[AppConfig]
       records <- presentationService
-        .getPresentationRecordsByStates(
+        .getPresentationRecordsByStatesForAllWallets(
           ignoreWithZeroRetries = true,
           limit = config.pollux.presentationBgJobRecordsLimit,
           PresentationRecord.ProtocolState.RequestPending,
@@ -90,7 +93,11 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
     } yield jwtIssuer
 
-  private[this] def performPresentProofExchange(record: PresentationRecord) = {
+  private[this] def performPresentProofExchange(record: PresentationRecord): URIO[
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService &
+      DIDNonSecretStorage & DIDService & ManagedDIDService,
+    Unit
+  ] = {
     import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState.*
 
     val VerifierReqPendingToSentSuccess = counterMetric(
@@ -168,23 +175,30 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
             case Some(record) =>
               val verifierReqPendingToSentFlow = for {
                 _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
-                didOps <- ZIO.service[DidOps]
-                didCommAgent <- buildDIDCommAgent(record.from)
-                resp <- MessagingService.send(record.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
-                  .gauge("present_proof_flow_verifier_send_presentation_request_msg_ms_gauge")
-                  .trackDurationWith(_.toMetricsSeconds)
-                service <- ZIO.service[PresentationService]
-                _ <- {
-                  if (resp.status >= 200 && resp.status < 300)
-                    service.markRequestPresentationSent(
-                      id
-                    ) @@ VerifierSendPresentationRequestMsgSuccess @@ CustomMetricsAspect.endRecordingTime(
-                      s"${record.id}_present_proof_flow_verifier_req_pending_to_sent_ms_gauge",
-                      "present_proof_flow_verifier_req_pending_to_sent_ms_gauge"
-                    )
-                  else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ VerifierSendPresentationRequestMsgFailed
-                }
-              } yield ()
+                walletAccessContext <- buildWalletAccessContextLayer(record.from)
+                result <- (for {
+                  didOps <- ZIO.service[DidOps]
+                  didCommAgent <- buildDIDCommAgent(record.from).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                  resp <- MessagingService.send(record.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
+                    .gauge("present_proof_flow_verifier_send_presentation_request_msg_ms_gauge")
+                    .trackDurationWith(_.toMetricsSeconds)
+                  service <- ZIO.service[PresentationService]
+                  _ <- {
+                    if (resp.status >= 200 && resp.status < 300)
+                      service
+                        .markRequestPresentationSent(
+                          id
+                        )
+                        .provideSomeLayer(
+                          ZLayer.succeed(walletAccessContext)
+                        ) @@ VerifierSendPresentationRequestMsgSuccess @@ CustomMetricsAspect.endRecordingTime(
+                        s"${record.id}_present_proof_flow_verifier_req_pending_to_sent_ms_gauge",
+                        "present_proof_flow_verifier_req_pending_to_sent_ms_gauge"
+                      )
+                    else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ VerifierSendPresentationRequestMsgFailed
+                  }
+                } yield ()).mapError(e => (walletAccessContext, handlePresentationErrors(e)))
+              } yield result
 
               verifierReqPendingToSentFlow
                 @@ VerifierReqPendingToSentSuccess.trackSuccess
@@ -225,52 +239,58 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               _
             ) => // Prover
-          val proverPresentationPendingToGeneratedFlow = for {
-            presentationService <- ZIO.service[PresentationService]
-            prover <- createPrismDIDIssuerFromPresentationCredentials(id, credentialsToUse.getOrElse(Nil))
-            presentationPayload <- presentationService.createPresentationPayloadFromRecord(
-              id,
-              prover,
-              Instant.now()
-            )
-            signedJwtPresentation = JwtPresentation.toEncodedJwt(
-              presentationPayload.toW3CPresentationPayload,
-              prover
-            )
-            // signedJwtPresentation = JwtPresentation.toEncodedJwt(w3cPresentationPayload, prover)
-            presentation <- oRequestPresentation match
-              case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
-              case Some(requestPresentation) => { // TODO create build method in mercury for Presentation
-                ZIO.succeed(
-                  Presentation(
-                    body = Presentation.Body(
-                      goal_code = requestPresentation.body.goal_code,
-                      comment = requestPresentation.body.comment
-                    ),
-                    attachments = Seq(
-                      AttachmentDescriptor
-                        .buildBase64Attachment(
-                          payload = signedJwtPresentation.value.getBytes(),
-                          mediaType = Some("prism/jwt")
-                        )
-                    ),
-                    thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
-                    from = requestPresentation.to,
-                    to = requestPresentation.from
+          // signedJwtPresentation = JwtPresentation.toEncodedJwt(w3cPresentationPayload, prover)
+          oRequestPresentation match
+            case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
+            case Some(requestPresentation) => // TODO create build method in mercury for Presentation
+              val proverPresentationPendingToGeneratedFlow = for {
+                walletAccessContext <- buildWalletAccessContextLayer(requestPresentation.to)
+                result <- (for {
+                  presentationService <- ZIO.service[PresentationService]
+                  prover <- createPrismDIDIssuerFromPresentationCredentials(id, credentialsToUse.getOrElse(Nil))
+                    .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                  presentationPayload <- presentationService
+                    .createPresentationPayloadFromRecord(
+                      id,
+                      prover,
+                      Instant.now()
+                    )
+                    .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                  signedJwtPresentation = JwtPresentation.toEncodedJwt(
+                    presentationPayload.toW3CPresentationPayload,
+                    prover
                   )
-                )
-              }
-            _ <- presentationService.markPresentationGenerated(id, presentation)
+                  presentation <- ZIO.succeed(
+                    Presentation(
+                      body = Presentation.Body(
+                        goal_code = requestPresentation.body.goal_code,
+                        comment = requestPresentation.body.comment
+                      ),
+                      attachments = Seq(
+                        AttachmentDescriptor
+                          .buildBase64Attachment(
+                            payload = signedJwtPresentation.value.getBytes(),
+                            mediaType = Some("prism/jwt")
+                          )
+                      ),
+                      thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
+                      from = requestPresentation.to,
+                      to = requestPresentation.from
+                    )
+                  )
+                  _ <- presentationService
+                    .markPresentationGenerated(id, presentation)
+                    .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                } yield ()).mapError(e => (walletAccessContext, handlePresentationErrors(e)))
+              } yield result
 
-          } yield ()
-
-          proverPresentationPendingToGeneratedFlow
-            @@ ProverPresentationPendingToGeneratedSuccess.trackSuccess
-            @@ ProverPresentationPendingToGeneratedFailed.trackError
-            @@ ProverPresentationPendingToGenerated
-            @@ Metric
-              .gauge("present_proof_flow_prover_presentation_pending_to_generated_flow_ms_gauge")
-              .trackDurationWith(_.toMetricsSeconds)
+              proverPresentationPendingToGeneratedFlow
+                @@ ProverPresentationPendingToGeneratedSuccess.trackSuccess
+                @@ ProverPresentationPendingToGeneratedFailed.trackError
+                @@ ProverPresentationPendingToGenerated
+                @@ Metric
+                  .gauge("present_proof_flow_prover_presentation_pending_to_generated_flow_ms_gauge")
+                  .trackDurationWith(_.toMetricsSeconds)
 
         case PresentationRecord(
               id,
@@ -297,23 +317,31 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
             case Some(p) =>
               val ProverPresentationGeneratedToSentFlow = for {
                 _ <- ZIO.log(s"PresentationRecord: PresentationPending (Send Message)")
-                didCommAgent <- buildDIDCommAgent(p.from)
-                resp <- MessagingService
-                  .send(p.makeMessage)
-                  .provideSomeLayer(didCommAgent) @@ Metric
-                  .gauge("present_proof_flow_prover_send_presentation_msg_ms_gauge")
-                  .trackDurationWith(_.toMetricsSeconds)
-                service <- ZIO.service[PresentationService]
-                _ <- {
-                  if (resp.status >= 200 && resp.status < 300)
-                    service.markPresentationSent(id) @@ ProverSendPresentationMsgSuccess @@ CustomMetricsAspect
-                      .endRecordingTime(
-                        s"${record.id}_present_proof_flow_prover_presentation_generated_to_sent_ms_gauge",
-                        "present_proof_flow_prover_presentation_generated_to_sent_ms_gauge"
-                      )
-                  else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ ProverSendPresentationMsgFailed
-                }
-              } yield ()
+                walletAccessContext <- buildWalletAccessContextLayer(p.from)
+                result <- (for {
+                  didCommAgent <- buildDIDCommAgent(p.from).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                  resp <- MessagingService
+                    .send(p.makeMessage)
+                    .provideSomeLayer(didCommAgent) @@ Metric
+                    .gauge("present_proof_flow_prover_send_presentation_msg_ms_gauge")
+                    .trackDurationWith(_.toMetricsSeconds)
+                  service <- ZIO.service[PresentationService]
+                  _ <- {
+                    if (resp.status >= 200 && resp.status < 300)
+                      service
+                        .markPresentationSent(id)
+                        .provideSomeLayer(
+                          ZLayer.succeed(walletAccessContext)
+                        ) @@ ProverSendPresentationMsgSuccess @@ CustomMetricsAspect
+                        .endRecordingTime(
+                          s"${record.id}_present_proof_flow_prover_presentation_generated_to_sent_ms_gauge",
+                          "present_proof_flow_prover_presentation_generated_to_sent_ms_gauge"
+                        )
+                    else ZIO.fail(ErrorResponseReceivedFromPeerAgent(resp)) @@ ProverSendPresentationMsgFailed
+                  }
+                } yield ()).mapError(e => (walletAccessContext, handlePresentationErrors(e)))
+
+              } yield result
 
               ProverPresentationGeneratedToSentFlow
                 @@ ProverPresentationGeneratedToSentSuccess.trackSuccess
@@ -351,82 +379,98 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
             case Some(p) =>
               val verifierPresentationReceivedToProcessed =
                 for {
-                  didResolverService <- ZIO.service[JwtDidResolver]
-                  credentialsValidationResult <- p.attachments.head.data match {
-                    case Base64(data) =>
-                      val base64Decoded = new String(java.util.Base64.getDecoder().decode(data))
-                      val maybePresentationOptions
-                          : Either[PresentationError, Option[io.iohk.atala.pollux.core.model.presentation.Options]] =
-                        mayBeRequestPresentation
-                          .map(
-                            _.attachments.headOption
-                              .map(attachment =>
-                                decode[io.iohk.atala.mercury.model.JsonData](attachment.data.asJson.noSpaces)
-                                  .flatMap(data =>
-                                    io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
-                                      .decodeJson(data.json.asJson)
-                                      .map(_.options)
-                                      .leftMap(err =>
-                                        PresentationDecodingError(
-                                          new Throwable(s"PresentationAttachment decoding error: $err")
+                  walletAccessContext <- buildWalletAccessContextLayer(p.to)
+                  result <- (for {
+                    didResolverService <- ZIO.service[JwtDidResolver]
+                    credentialsValidationResult <- p.attachments.head.data match {
+                      case Base64(data) =>
+                        val base64Decoded = new String(java.util.Base64.getDecoder().decode(data))
+                        val maybePresentationOptions
+                            : Either[PresentationError, Option[io.iohk.atala.pollux.core.model.presentation.Options]] =
+                          mayBeRequestPresentation
+                            .map(
+                              _.attachments.headOption
+                                .map(attachment =>
+                                  decode[io.iohk.atala.mercury.model.JsonData](attachment.data.asJson.noSpaces)
+                                    .flatMap(data =>
+                                      io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
+                                        .decodeJson(data.json.asJson)
+                                        .map(_.options)
+                                        .leftMap(err =>
+                                          PresentationDecodingError(
+                                            new Throwable(s"PresentationAttachment decoding error: $err")
+                                          )
                                         )
-                                      )
-                                  )
-                                  .leftMap(err =>
-                                    PresentationDecodingError(new Throwable(s"JsonData decoding error: $err"))
-                                  )
+                                    )
+                                    .leftMap(err =>
+                                      PresentationDecodingError(new Throwable(s"JsonData decoding error: $err"))
+                                    )
+                                )
+                                .getOrElse(Right(None))
+                            )
+                            .getOrElse(Left(UnexpectedError("RequestPresentation NotFound")))
+                        for {
+                          _ <- ZIO.fromEither(maybePresentationOptions.map {
+                            case Some(options) =>
+                              JwtPresentation.validatePresentation(
+                                JWT(base64Decoded),
+                                options.domain,
+                                options.challenge
                               )
-                              .getOrElse(Right(None))
-                          )
-                          .getOrElse(Left(UnexpectedError("RequestPresentation NotFound")))
-                      for {
-                        _ <- ZIO.fromEither(maybePresentationOptions.map {
-                          case Some(options) =>
-                            JwtPresentation.validatePresentation(JWT(base64Decoded), options.domain, options.challenge)
-                          case _ => Validation.unit
-                        })
-                        verificationConfig <- ZIO.service[AppConfig].map(_.agent.verification)
-                        _ <- ZIO.log(s"VerificationConfig: ${verificationConfig}")
+                            case _ => Validation.unit
+                          })
+                          verificationConfig <- ZIO.service[AppConfig].map(_.agent.verification)
+                          _ <- ZIO.log(s"VerificationConfig: ${verificationConfig}")
 
-                        // https://www.w3.org/TR/vc-data-model/#proofs-signatures-0
-                        // A proof is typically attached to a verifiable presentation for authentication purposes
-                        // and to a verifiable credential as a method of assertion.
-                        result <- JwtPresentation.verify(
-                          JWT(base64Decoded),
-                          verificationConfig.toPresentationVerificationOptions()
-                        )(didResolverService)(clock)
-                      } yield result
+                          // https://www.w3.org/TR/vc-data-model/#proofs-signatures-0
+                          // A proof is typically attached to a verifiable presentation for authentication purposes
+                          // and to a verifiable credential as a method of assertion.
+                          result <- JwtPresentation
+                            .verify(
+                              JWT(base64Decoded),
+                              verificationConfig.toPresentationVerificationOptions()
+                            )(didResolverService)(clock)
+                            .mapError(error => PresentationError.UnexpectedError(error.mkString))
+                        } yield result
 
-                    case any => ZIO.fail(NotImplemented)
-                  }
-                  _ <- ZIO.log(s"CredentialsValidationResult: $credentialsValidationResult")
-                  service <- ZIO.service[PresentationService]
-                  presReceivedToProcessedAspect = CustomMetricsAspect.endRecordingTime(
-                    s"${record.id}_present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge",
-                    "present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge"
-                  )
-                  _ <- credentialsValidationResult match {
-                    case Success(log, value) => service.markPresentationVerified(id) @@ presReceivedToProcessedAspect
-                    case Failure(log, error) => {
-                      for {
-                        _ <- service.markPresentationVerificationFailed(id) @@ presReceivedToProcessedAspect
-                        didCommAgent <- buildDIDCommAgent(p.from)
-                        reportproblem = ReportProblem.build(
-                          fromDID = p.to,
-                          toDID = p.from,
-                          pthid = p.thid.getOrElse(p.id),
-                          code = ProblemCode("e.p.presentation-verification-failed"),
-                          comment = Some(error.mkString)
-                        )
-                        resp <- MessagingService
-                          .send(reportproblem.toMessage)
-                          .provideSomeLayer(didCommAgent)
-                        _ <- ZIO.log(s"CredentialsValidationResult: $error")
-                      } yield ()
+                      case any => ZIO.fail(NotImplemented)
                     }
-                  }
+                    _ <- ZIO.log(s"CredentialsValidationResult: $credentialsValidationResult")
+                    service <- ZIO.service[PresentationService]
+                    presReceivedToProcessedAspect = CustomMetricsAspect.endRecordingTime(
+                      s"${record.id}_present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge",
+                      "present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge"
+                    )
+                    _ <- credentialsValidationResult match {
+                      case Success(log, value) =>
+                        service
+                          .markPresentationVerified(id)
+                          .provideSomeLayer(ZLayer.succeed(walletAccessContext)) @@ presReceivedToProcessedAspect
+                      case Failure(log, error) => {
+                        for {
+                          _ <- service
+                            .markPresentationVerificationFailed(id)
+                            .provideSomeLayer(ZLayer.succeed(walletAccessContext)) @@ presReceivedToProcessedAspect
+                          didCommAgent <- buildDIDCommAgent(p.from).provideSomeLayer(
+                            ZLayer.succeed(walletAccessContext)
+                          )
+                          reportproblem = ReportProblem.build(
+                            fromDID = p.to,
+                            toDID = p.from,
+                            pthid = p.thid.getOrElse(p.id),
+                            code = ProblemCode("e.p.presentation-verification-failed"),
+                            comment = Some(error.mkString)
+                          )
+                          resp <- MessagingService
+                            .send(reportproblem.toMessage)
+                            .provideSomeLayer(didCommAgent)
+                          _ <- ZIO.log(s"CredentialsValidationResult: $error")
+                        } yield ()
+                      }
+                    }
 
-                } yield ()
+                  } yield ()).mapError(e => (walletAccessContext, handlePresentationErrors(e)))
+                } yield result
               verifierPresentationReceivedToProcessed
                 @@ VerifierPresentationReceivedToProcessedSuccess.trackSuccess
                 @@ VerifierPresentationReceivedToProcessedFailed.trackError
@@ -449,22 +493,51 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
     } yield ()
 
     aux
-      .tapError(e =>
-        for {
-          presentationService <- ZIO.service[PresentationService]
-          _ <- presentationService
-            .reportProcessingFailure(record.id, Some(e.toString))
-            .tapError(err =>
-              ZIO.logErrorCause(
-                s"Present Proof - failed to report processing failure: ${record.id}",
-                Cause.fail(err)
-              )
+      .tapError(
+        {
+          case error: (WalletNotFoundError | BackgroundJobError) =>
+            ZIO.logErrorCause(
+              s"Present Proof - Error processing record: ${record.id}",
+              Cause.fail(error)
             )
-        } yield ()
+          case ((walletAccessContext, e)) =>
+            for {
+              presentationService <- ZIO.service[PresentationService]
+              _ <- presentationService
+                .reportProcessingFailure(record.id, Some(e.toString))
+                .provideSomeLayer(
+                  ZLayer.succeed(walletAccessContext)
+                )
+                .tapError(err =>
+                  ZIO.logErrorCause(
+                    s"Present Proof - failed to report processing failure: ${record.id}",
+                    Cause.fail(err)
+                  )
+                )
+            } yield ()
+
+        }
       )
       .catchAll(e => ZIO.logErrorCause(s"Present Proof - Error processing record: ${record.id} ", Cause.fail(e)))
       .catchAllDefect(d => ZIO.logErrorCause(s"Present Proof - Defect processing record: ${record.id}", Cause.fail(d)))
 
   }
+
+  private[this] def handlePresentationErrors: PartialFunction[
+    Throwable | CredentialServiceError | PresentationError | BackgroundJobError,
+    PresentationError | CredentialServiceError | BackgroundJobError
+  ] = {
+    case c: CredentialServiceError => c
+    case p: PresentationError      => p
+    case b: BackgroundJobError     => b
+    case t: Throwable              => PresentationError.UnexpectedError(t.getMessage())
+  }
+
+  val syncDIDPublicationStateFromDlt =
+    for {
+      managedDidService <- ZIO.service[ManagedDIDService]
+      _ <- managedDidService.syncManagedDIDState
+      _ <- managedDidService.syncUnconfirmedUpdateOperations
+    } yield ()
 
 }

@@ -43,6 +43,12 @@ trait PresentationService {
       state: PresentationRecord.ProtocolState*
   ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]]
 
+  def getPresentationRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      state: PresentationRecord.ProtocolState*
+  ): IO[PresentationError, Seq[PresentationRecord]]
+
   def getPresentationRecord(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]]

@@ -207,6 +207,18 @@ private class PresentationServiceImpl(
     } yield records
   }
 
+  override def getPresentationRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: PresentationRecord.ProtocolState*
+  ): IO[PresentationError, Seq[PresentationRecord]] = {
+    for {
+      records <- presentationRepository
+        .getPresentationRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+        .mapError(RepositoryError.apply)
+    } yield records
+  }
+
   override def receiveRequestPresentation(
       connectionId: Option[String],
       request: RequestPresentation
