@@ -28,7 +28,8 @@ trait KeycloakClient {
 
 }
 
-class KeycloakClientImpl(client: AuthzClient, httpClient: Client, clientTokenRef: Ref[String]) extends KeycloakClient {
+class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig: KeycloakConfig)
+    extends KeycloakClient {
 
   private val introspectionUrl = client.getServerConfiguration().getIntrospectionEndpoint()
 
@@ -39,12 +40,13 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, clientTokenRef
   // https://www.keycloak.org/docs/22.0.4/securing_apps/#_token_introspection_endpoint
   override def introspectToken(token: String): IO[AuthenticationError, TokenIntrospection] = {
     for {
-      clientToken <- clientTokenRef.get
       response <- Client
         .request(
           url = introspectionUrl,
           method = Method.POST,
-          headers = baseFormHeaders ++ Headers(Header.Authorization.Bearer(token)),
+          headers = baseFormHeaders ++ Headers(
+            Header.Authorization.Basic(keycloakConfig.clientId, keycloakConfig.clientSecret)
+          ),
           content = Body.fromURLEncodedForm(
             Form(
               FormField.simpleField("token", token)
@@ -64,7 +66,7 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, clientTokenRef
             .logError("Fail to decode keycloak token introspection response")
             .mapError(e => AuthenticationError.UnexpectedError(e))
         } else {
-          ZIO.logError(s"Keycloak token introspection was unsucessful. Status: ${response.status} Response: $body") *>
+          ZIO.logError(s"Keycloak token introspection was unsucessful. Status: ${response.status}. Response: $body") *>
             ZIO.fail(AuthenticationError.UnexpectedError("Token introspection was unsuccessful."))
         }
     } yield result
@@ -107,25 +109,7 @@ object KeycloakClientImpl {
         null
       )
       client <- ZIO.attempt(AuthzClient.create(config))
-      clientTokenRef <- autoRenewToken(client, 60.seconds)
-    } yield KeycloakClientImpl(client, httpClient, clientTokenRef)
-  }
-
-  private def autoRenewToken(client: AuthzClient, expirationBuffer: Duration): Task[Ref[String]] = {
-    for {
-      clientTokenResp <- ZIO.attempt(client.obtainAccessToken())
-      clientTokenTtl = clientTokenResp.getExpiresIn()
-      renewDuraion = clientTokenTtl.seconds.minus(expirationBuffer)
-      clientToken = clientTokenResp.getToken()
-      clientTokenRef <- Ref.make(clientToken)
-      _ <- ZIO
-        .attempt(client.obtainAccessToken().getToken())
-        .retry(Schedule.spaced(5.seconds) && Schedule.recurs(5))
-        .logError("failed to refresh access token")
-        .tap(_ => ZIO.sleep(renewDuraion))
-        .forever
-        .forkDaemon
-    } yield clientTokenRef
+    } yield KeycloakClientImpl(client, httpClient, keycloakConfig)
   }
 
 }

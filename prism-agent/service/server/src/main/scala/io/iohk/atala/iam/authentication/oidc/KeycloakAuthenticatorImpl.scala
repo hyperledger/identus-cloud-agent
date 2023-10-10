@@ -4,15 +4,12 @@ import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
 import io.iohk.atala.shared.models.WalletId
-import org.keycloak.authorization.client.{Configuration => KeycloakAuthzConfig}
-import org.keycloak.representations.idm.authorization.AuthorizationRequest
 import pdi.jwt.JwtCirce
 import pdi.jwt.JwtOptions
 import zio.*
 import zio.json.ast.Json
 
 import java.util.UUID
-import scala.jdk.CollectionConverters.*
 import scala.util.Try
 
 class KeycloakAuthenticatorImpl(
@@ -27,13 +24,17 @@ class KeycloakAuthenticatorImpl(
     if (isEnabled) {
       for {
         introspection <- client.introspectToken(token)
-        entityId <- introspection.sub.fold(
-          ZIO.fail(AuthenticationError.UnexpectedError("Subject ID is not found in the accessToken."))
-        )(sub =>
-          ZIO
-            .attempt(UUID.fromString(sub))
-            .mapError(e => AuthenticationError.UnexpectedError(s"Subject ID in accessToken is not a UUID. $e"))
-        )
+        _ <- ZIO
+          .fail(AuthenticationError.InvalidCredentials("The accessToken is invalid."))
+          .unless(introspection.active)
+        entityId <- ZIO
+          .fromOption(introspection.sub)
+          .mapError(_ => AuthenticationError.UnexpectedError("Subject ID is not found in the accessToken."))
+          .flatMap { id =>
+            ZIO
+              .attempt(UUID.fromString(id))
+              .mapError(e => AuthenticationError.UnexpectedError(s"Subject ID in accessToken is not a UUID. $e"))
+          }
       } yield KeycloakEntity(entityId, token)
     } else ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
   }
@@ -62,7 +63,9 @@ class KeycloakAuthenticatorImpl(
         case Nil =>
           ZIO.fail(AuthenticationError.ResourceNotPermitted("No wallet permissions found."))
         case ls =>
-          ZIO.fail(AuthenticationError.UnexpectedError("Too many wallet access granted, access is ambiguous."))
+          ZIO.fail(
+            AuthenticationError.UnexpectedError("Too many wallet access granted, the wallet access is ambiguous.")
+          )
       }
   }
 
