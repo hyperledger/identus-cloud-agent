@@ -17,66 +17,66 @@ class DIDRegistrarServerEndpoints(
   private val listManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.listManagedDid
       .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
-      .serverLogic { ctx =>
+      .serverLogic { wac =>
         { case (rc, paginationInput) =>
           didRegistrarController
             .listManagedDid(paginationInput)(rc)
-            .provideSomeLayer(ZLayer.succeed(ctx))
+            .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
   private val createManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.createManagedDid
       .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
-      .serverLogic { ctx =>
+      .serverLogic { wac =>
         { case (rc, createManagedDidRequest) =>
           didRegistrarController
             .createManagedDid(createManagedDidRequest)(rc)
-            .provideSomeLayer(ZLayer.succeed(ctx))
+            .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
   private val getManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.getManagedDid
       .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
-      .serverLogic { ctx =>
+      .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
             .getManagedDid(did)(rc)
-            .provideSomeLayer(ZLayer.succeed(ctx))
+            .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
   private val publishManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.publishManagedDid
       .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
-      .serverLogic { ctx =>
+      .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
             .publishManagedDid(did)(rc)
-            .provideSomeLayer(ZLayer.succeed(ctx))
+            .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
   private val updateManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.updateManagedDid
       .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
-      .serverLogic { ctx =>
+      .serverLogic { wac =>
         { case (rc, did, updateRequest) =>
           didRegistrarController
             .updateManagedDid(did, updateRequest)(rc)
-            .provideSomeLayer(ZLayer.succeed(ctx))
+            .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
   private val deactivateManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.deactivateManagedDid
       .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
-      .serverLogic { ctx =>
+      .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
             .deactivateManagedDid(did)(rc)
-            .provideSomeLayer(ZLayer.succeed(ctx))
+            .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
