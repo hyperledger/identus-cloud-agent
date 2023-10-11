@@ -1,10 +1,11 @@
 package io.iohk.atala.issue.controller
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.service.MockDIDService
 import io.iohk.atala.container.util.MigrationAspects.migrate
-import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.AuthenticatorAuthorizer
 import io.iohk.atala.issue.controller.http.AcceptCredentialOfferRequest
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, UriContext, basicRequest}
@@ -25,7 +26,7 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
     test("provide incorrect recordId to endpoint") {
       for {
         issueControllerService <- ZIO.service[IssueController]
-        authenticator <- ZIO.service[Authenticator]
+        authenticator <- ZIO.service[AuthenticatorAuthorizer[BaseEntity]]
         backend = httpBackend(issueControllerService, authenticator)
         response: IssueCredentialBadRequestResponse <- basicRequest
           .post(uri"${issueUriBase}/records/12345/accept-offer")

@@ -2,12 +2,14 @@ package io.iohk.atala.pollux.credentialdefinition
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
+import io.iohk.atala.iam.authentication.AuthenticatorAuthorizer
+import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
 import io.iohk.atala.pollux.core.repository.CredentialDefinitionRepository
 import io.iohk.atala.pollux.core.service.{
   CredentialDefinitionService,
@@ -73,12 +75,12 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
       )
     )
 
-  val authenticatorLayer: TaskLayer[Authenticator] = DefaultEntityAuthenticator.layer
+  val authenticatorLayer: TaskLayer[AuthenticatorAuthorizer[BaseEntity]] = DefaultEntityAuthenticator.layer
 
   lazy val testEnvironmentLayer = ZLayer.makeSome[
     ManagedDIDService,
     CredentialDefinitionController & CredentialDefinitionRepository & CredentialDefinitionService &
-      PostgreSQLContainer & Authenticator & GenericSecretStorage
+      PostgreSQLContainer & AuthenticatorAuthorizer[BaseEntity] & GenericSecretStorage
   ](
     controllerLayer,
     pgContainerLayer,
@@ -92,7 +94,10 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
-  def httpBackend(controller: CredentialDefinitionController, authenticator: Authenticator) = {
+  def httpBackend(
+      controller: CredentialDefinitionController,
+      authenticator: AuthenticatorAuthorizer[BaseEntity]
+  ) = {
     val credentialDefinitionRegistryEndpoints = CredentialDefinitionRegistryServerEndpoints(controller, authenticator)
 
     val backend =
@@ -181,10 +186,12 @@ trait CredentialDefinitionGen {
 
   def generateCredentialDefinitionsN(
       count: Int
-  ): ZIO[CredentialDefinitionController & Authenticator, Throwable, List[CredentialDefinitionInput]] =
+  ): ZIO[CredentialDefinitionController & AuthenticatorAuthorizer[BaseEntity], Throwable, List[
+    CredentialDefinitionInput
+  ]] =
     for {
       controller <- ZIO.service[CredentialDefinitionController]
-      authenticator <- ZIO.service[Authenticator]
+      authenticator <- ZIO.service[AuthenticatorAuthorizer[BaseEntity]]
       backend = httpBackend(controller, authenticator)
       inputs <- Generator.credentialDefinitionInput.runCollectN(count)
       _ <- inputs

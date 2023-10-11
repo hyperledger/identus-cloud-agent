@@ -1,14 +1,12 @@
 package io.iohk.atala.pollux.credentialdefinition
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
-import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.Authorizer
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.SecurityLogic
-import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.pollux.credentialdefinition
 import io.iohk.atala.pollux.credentialdefinition.CredentialDefinitionRegistryEndpoints.*
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController

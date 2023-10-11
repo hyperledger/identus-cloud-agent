@@ -1,15 +1,16 @@
 package io.iohk.atala.pollux.schema
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.migrate
-import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.AuthenticatorAuthorizer
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
-import sttp.client3.ziojson.*
 import sttp.client3.DeserializationException
 import sttp.client3.basicRequest
+import sttp.client3.ziojson.*
 import sttp.model.StatusCode
 import zio.*
 import zio.test.*
@@ -26,7 +27,7 @@ object CredentialSchemaFailureSpec extends ZIOSpecDefault with CredentialSchemaT
     test("create the schema with wrong json body returns BadRequest as json") {
       for {
         controller <- ZIO.service[CredentialSchemaController]
-        authenticator <- ZIO.service[Authenticator]
+        authenticator <- ZIO.service[AuthenticatorAuthorizer[BaseEntity]]
         backend = httpBackend(controller, authenticator)
         response: SchemaBadRequestResponse <- basicRequest
           .post(credentialSchemaUriBase)

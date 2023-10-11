@@ -1,10 +1,11 @@
 package io.iohk.atala.pollux.schema
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
-import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.AuthenticatorAuthorizer
 import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
@@ -65,7 +66,7 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
     val backendZIO =
       for {
         controller <- ZIO.service[CredentialSchemaController]
-        authenticator <- ZIO.service[Authenticator]
+        authenticator <- ZIO.service[AuthenticatorAuthorizer[BaseEntity]]
       } yield httpBackend(controller, authenticator)
 
     def createSchemaResponseZIO = for {

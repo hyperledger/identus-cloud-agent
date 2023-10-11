@@ -46,6 +46,8 @@ trait Authorizer[E <: BaseEntity] {
   def authorize(entity: E): IO[AuthenticationError, WalletId]
 }
 
+trait AuthenticatorAuthorizer[E <: BaseEntity] extends Authenticator[E], Authorizer[E]
+
 object EntityAuthorizer extends EntityAuthorizer
 
 trait EntityAuthorizer extends Authorizer[Entity] {
@@ -53,9 +55,12 @@ trait EntityAuthorizer extends Authorizer[Entity] {
     ZIO.succeed(entity.walletId).map(WalletId.fromUUID)
 }
 
-object DefaultEntityAuthenticator extends Authenticator[Entity], EntityAuthorizer {
+object DefaultEntityAuthenticator extends AuthenticatorAuthorizer[BaseEntity] {
+
   override def isEnabled: Boolean = true
-  override def authenticate(credentials: Credentials): IO[AuthenticationError, Entity] = ZIO.succeed(Entity.Default)
+  override def authenticate(credentials: Credentials): IO[AuthenticationError, BaseEntity] = ZIO.succeed(Entity.Default)
+  override def authorize(entity: BaseEntity): IO[AuthenticationError, WalletId] =
+    EntityAuthorizer.authorize(Entity.Default)
 
   val layer = ZLayer.apply(ZIO.succeed(DefaultEntityAuthenticator))
 }

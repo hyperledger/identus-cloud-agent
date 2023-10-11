@@ -7,7 +7,6 @@ import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.Authorizer
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.SecurityLogic
-import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.pollux.credentialschema.VerificationPolicyEndpoints.*
 import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyController
 import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyInput}
