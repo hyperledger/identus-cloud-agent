@@ -6,6 +6,8 @@ import io.iohk.atala.api.http.codec.OrderCodec.*
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
+import io.iohk.atala.iam.authentication.oidc.JwtCredentials
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.bearerAuthHeader
 import io.iohk.atala.pollux.credentialschema.http.*
 import sttp.model.StatusCode
 import sttp.tapir.*
@@ -16,13 +18,14 @@ import java.util.UUID
 object VerificationPolicyEndpoints {
 
   val createVerificationPolicyEndpoint: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, VerificationPolicyInput),
     ErrorResponse,
     VerificationPolicy,
     Any
   ] = endpoint.post
     .securityIn(apiKeyHeader)
+    .securityIn(bearerAuthHeader)
     .in(extractFromRequest[RequestContext](RequestContext.apply))
     .in("verification" / "policies")
     .in(
@@ -47,7 +50,7 @@ object VerificationPolicyEndpoints {
     .tag("Verification")
 
   val updateVerificationPolicyEndpoint: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID, Int, VerificationPolicyInput),
     ErrorResponse,
     VerificationPolicy,
@@ -55,6 +58,7 @@ object VerificationPolicyEndpoints {
   ] =
     endpoint.put
       .securityIn(apiKeyHeader)
+      .securityIn(bearerAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("verification" / "policies" / path[UUID]("id"))
       .in(
@@ -78,7 +82,7 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val getVerificationPolicyByIdEndpoint: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID),
     ErrorResponse,
     VerificationPolicy,
@@ -86,6 +90,7 @@ object VerificationPolicyEndpoints {
   ] =
     endpoint.get
       .securityIn(apiKeyHeader)
+      .securityIn(bearerAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "verification" / "policies" / path[UUID]("id")
@@ -101,7 +106,7 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val deleteVerificationPolicyByIdEndpoint: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID),
     ErrorResponse,
     Unit,
@@ -109,6 +114,7 @@ object VerificationPolicyEndpoints {
   ] =
     endpoint.delete
       .securityIn(apiKeyHeader)
+      .securityIn(bearerAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "verification" / "policies" / path[UUID]("id")
@@ -128,7 +134,7 @@ object VerificationPolicyEndpoints {
       .tag("Verification")
 
   val lookupVerificationPoliciesByQueryEndpoint: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, VerificationPolicy.Filter, PaginationInput, Option[Order]),
     ErrorResponse,
     VerificationPolicyPage,
@@ -136,6 +142,7 @@ object VerificationPolicyEndpoints {
   ] =
     endpoint.get
       .securityIn(apiKeyHeader)
+      .securityIn(bearerAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "verification" / "policies"
