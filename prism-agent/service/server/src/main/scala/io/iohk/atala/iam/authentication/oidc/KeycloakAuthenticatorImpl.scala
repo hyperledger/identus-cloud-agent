@@ -90,4 +90,14 @@ class KeycloakAuthenticatorImpl(
 object KeycloakAuthenticatorImpl {
   val layer: RLayer[KeycloakClient & KeycloakConfig & WalletManagementService, KeycloakAuthenticator] =
     ZLayer.fromFunction(KeycloakAuthenticatorImpl(_, _, _))
+
+  val disabled: ULayer[KeycloakAuthenticator] =
+    ZLayer.succeed {
+      val notEnabledError = ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
+      new KeycloakAuthenticator {
+        override def isEnabled: Boolean = false
+        override def authenticate(token: String): IO[AuthenticationError, KeycloakEntity] = notEnabledError
+        override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletId] = notEnabledError
+      }
+    }
 }

@@ -43,6 +43,7 @@ import zio.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
 import zio.http.Client
+import io.iohk.atala.iam.authentication.oidc.KeycloakAuthenticator
 
 object SystemModule {
   val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
@@ -62,23 +63,34 @@ object AppModule {
   val didJwtResolverLayer: URLayer[DIDService, JwtDidResolver] =
     ZLayer.fromFunction(PrismDidResolver(_))
 
-  val authenticatorLayer: RLayer[
-    AppConfig & WalletManagementService & AuthenticationRepository & EntityService & Client,
-    DefaultAuthenticator & ApiKeyAuthenticator
+  val builtInAuthenticatorLayer: URLayer[
+    AppConfig & AuthenticationRepository & EntityService & WalletManagementService,
+    ApiKeyAuthenticator & AdminApiKeyAuthenticator
   ] =
     ZLayer.makeSome[
-      AppConfig & WalletManagementService & AuthenticationRepository & EntityService & Client,
-      DefaultAuthenticator & ApiKeyAuthenticator
+      AppConfig & AuthenticationRepository & EntityService & WalletManagementService,
+      ApiKeyAuthenticator & AdminApiKeyAuthenticator
     ](
       AdminConfig.layer,
       ApiKeyConfig.layer,
-      KeycloakConfig.layer,
-      DefaultAuthenticator.layer,
       AdminApiKeyAuthenticatorImpl.layer,
       ApiKeyAuthenticatorImpl.layer,
-      KeycloakAuthenticatorImpl.layer,
-      KeycloakClientImpl.layer
     )
+
+  val keycloakAuthenticatorLayer: RLayer[AppConfig & WalletManagementService & Client, KeycloakAuthenticator] =
+    ZLayer.fromZIO {
+      ZIO
+        .serviceWith[AppConfig](_.agent.authentication.keycloak.enabled)
+        .map { isEnabled =>
+          if (!isEnabled) KeycloakAuthenticatorImpl.disabled
+          else
+            ZLayer.makeSome[AppConfig & WalletManagementService & Client, KeycloakAuthenticator](
+              KeycloakConfig.layer,
+              KeycloakAuthenticatorImpl.layer,
+              KeycloakClientImpl.layer
+            )
+        }
+    }.flatten
 }
 
 object GrpcModule {
