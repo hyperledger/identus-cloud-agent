@@ -21,11 +21,7 @@ Go into the folder `uniffi` and generate the file `anoncreds.kt`
 
 Assuming uniffi_bindgen is install. Install with `cargo install uniffi_bindgen --version $(cargo pkgid uniffi | cut -f 2 -d '@')`
 
-(Note you can also the run the script `build-release-linux.sh` in there)
-
-Run the command `~/.cargo/bin/uniffi-bindgen generate src/anoncreds.udl --language kotlin -o ./wrappers/kotlin/anoncreds`
-
-Replace the `anoncreds.kt` file in the `output-frameworks/anoncreds-jvm` project (`output-frameworks/anoncreds-jvm/src/main/uniffi/anoncreds/anoncreds.kt`)
+Run the script `build-release-linux.sh` in there
 
 Generate the Jar with `./gradlew jar` in the `output-frameworks/anoncreds-jvm` project
 
