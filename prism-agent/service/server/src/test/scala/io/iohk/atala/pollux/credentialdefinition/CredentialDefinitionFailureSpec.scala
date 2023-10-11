@@ -4,7 +4,7 @@ import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.migrate
-import io.iohk.atala.iam.authentication.AuthenticatorAuthorizer
+import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, basicRequest}
@@ -27,7 +27,7 @@ object CredentialDefinitionFailureSpec extends ZIOSpecDefault with CredentialDef
     test("create the credential definition with wrong json body returns BadRequest as json") {
       for {
         credentialDefinitionRegistryService <- ZIO.service[CredentialDefinitionController]
-        authenticator <- ZIO.service[AuthenticatorAuthorizer[BaseEntity]]
+        authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
         backend = httpBackend(credentialDefinitionRegistryService, authenticator)
         response: CredentialDefinitionBadRequestResponse <- basicRequest
           .post(credentialDefinitionUriBase)

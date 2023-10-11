@@ -3,7 +3,7 @@ package io.iohk.atala.pollux.schema
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
-import io.iohk.atala.iam.authentication.AuthenticatorAuthorizer
+import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import io.iohk.atala.pollux.core.model.schema.`type`.{AnoncredSchemaType, CredentialJsonSchemaType}
 import io.iohk.atala.pollux.credentialschema.*
@@ -51,7 +51,7 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
       + wrapSpec(unsupportedSchemaSpec)
       + wrapSpec(wrongSchemaSpec)
 
-  private def wrapSpec(spec: Spec[CredentialSchemaController & AuthenticatorAuthorizer[BaseEntity], Throwable]) = {
+  private def wrapSpec(spec: Spec[CredentialSchemaController & AuthenticatorWithAuthZ[BaseEntity], Throwable]) = {
     (spec
       @@ nondeterministic @@ sequential @@ timed @@ migrateEach(
         schema = "public",
@@ -64,7 +64,7 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
   private val schemaCreateAndGetOperationsSpec = {
     def getSchemaZIO(uuid: UUID) = for {
       controller <- ZIO.service[CredentialSchemaController]
-      authenticator <- ZIO.service[AuthenticatorAuthorizer[BaseEntity]]
+      authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
       backend = httpBackend(controller, authenticator)
       response <- basicRequest
         .get(credentialSchemaUriBase.addPath(uuid.toString))
@@ -131,7 +131,7 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
   private def createResponse[B: JsonDecoder](schemaType: String) = {
     for {
       controller <- ZIO.service[CredentialSchemaController]
-      authenticator <- ZIO.service[AuthenticatorAuthorizer[BaseEntity]]
+      authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
       backend = httpBackend(controller, authenticator)
       response <-
         basicRequest

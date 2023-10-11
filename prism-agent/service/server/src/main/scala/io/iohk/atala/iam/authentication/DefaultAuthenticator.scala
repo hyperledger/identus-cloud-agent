@@ -13,8 +13,7 @@ case class DefaultAuthenticator(
     adminApiKeyAuthenticator: AdminApiKeyAuthenticator,
     apiKeyAuthenticator: ApiKeyAuthenticator,
     keycloakAuthenticator: KeycloakAuthenticator
-) extends Authenticator[BaseEntity],
-      Authorizer[BaseEntity] {
+) extends AuthenticatorWithAuthZ[BaseEntity] {
 
   override def isEnabled = true
 

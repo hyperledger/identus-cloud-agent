@@ -87,7 +87,6 @@ class KeycloakAuthenticatorImpl(
       }
 }
 
-// TODO: do not initialize when isEnable = false
 object KeycloakAuthenticatorImpl {
   val layer: RLayer[KeycloakClient & KeycloakConfig & WalletManagementService, KeycloakAuthenticator] =
     ZLayer.fromFunction(KeycloakAuthenticatorImpl(_, _, _))

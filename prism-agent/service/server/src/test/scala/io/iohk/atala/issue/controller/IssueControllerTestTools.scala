@@ -10,7 +10,7 @@ import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.service.MockDIDService
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
-import io.iohk.atala.iam.authentication.AuthenticatorAuthorizer
+import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.issue.controller.http.{
@@ -117,7 +117,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
-  def httpBackend(controller: IssueController, authenticator: AuthenticatorAuthorizer[BaseEntity]) = {
+  def httpBackend(controller: IssueController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {
     val issueEndpoints = IssueServerEndpoints(controller, authenticator)
 
     val backend =

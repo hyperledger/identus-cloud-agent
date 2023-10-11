@@ -1,15 +1,13 @@
 package io.iohk.atala.pollux.credentialdefinition
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
+import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
-import io.iohk.atala.pollux.core.service.serdes.{
-  PrivateCredentialDefinitionSchemaSerDesV1,
-  ProofKeyCredentialDefinitionSchemaSerDesV1,
-  PublicCredentialDefinitionSerDesV1
-}
+import io.iohk.atala.pollux.core.service.serdes.{ PrivateCredentialDefinitionSchemaSerDesV1, ProofKeyCredentialDefinitionSchemaSerDesV1, PublicCredentialDefinitionSerDesV1 }
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
 import io.iohk.atala.pollux.credentialdefinition.http.{CredentialDefinitionInput, CredentialDefinitionResponse}
 import sttp.client3.basicRequest
@@ -23,8 +21,6 @@ import zio.test.Assertion.*
 import zio.test.TestAspect.*
 
 import java.util.UUID
-import io.iohk.atala.iam.authentication.AuthenticatorAuthorizer
-import io.iohk.atala.agent.walletapi.model.BaseEntity
 
 object CredentialDefinitionBasicSpec extends ZIOSpecDefault with CredentialDefinitionTestTools:
 
@@ -66,7 +62,7 @@ object CredentialDefinitionBasicSpec extends ZIOSpecDefault with CredentialDefin
     val backendZIO =
       for {
         controller <- ZIO.service[CredentialDefinitionController]
-        authenticator <- ZIO.service[AuthenticatorAuthorizer[BaseEntity]]
+        authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
       } yield httpBackend(controller, authenticator)
 
     def createCredentialDefinitionResponseZIO = for {

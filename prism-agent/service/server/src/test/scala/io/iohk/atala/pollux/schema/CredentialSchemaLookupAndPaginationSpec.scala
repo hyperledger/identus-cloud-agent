@@ -3,7 +3,7 @@ package io.iohk.atala.pollux.schema
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.container.util.MigrationAspects.migrate
-import io.iohk.atala.iam.authentication.AuthenticatorAuthorizer
+import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.pollux.credentialschema.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import io.iohk.atala.pollux.credentialschema.http.{
@@ -28,12 +28,12 @@ object CredentialSchemaLookupAndPaginationSpec
 
   def fetchAllPages(
       uri: Uri
-  ): ZIO[CredentialSchemaController & AuthenticatorAuthorizer[BaseEntity], Throwable, List[
+  ): ZIO[CredentialSchemaController & AuthenticatorWithAuthZ[BaseEntity], Throwable, List[
     CredentialSchemaResponsePage
   ]] = {
     for {
       controller <- ZIO.service[CredentialSchemaController]
-      authenticator <- ZIO.service[AuthenticatorAuthorizer[BaseEntity]]
+      authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
       backend = httpBackend(controller, authenticator)
       response: SchemaPageResponse <- basicRequest
         .get(uri)
@@ -76,7 +76,7 @@ object CredentialSchemaLookupAndPaginationSpec
       for {
         _ <- deleteAllCredentialSchemas
         controller <- ZIO.service[CredentialSchemaController]
-        authenticator <- ZIO.service[AuthenticatorAuthorizer[BaseEntity]]
+        authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
         backend = httpBackend(controller, authenticator)
 
         inputs <- Generator.schemaInput.runCollectN(101)

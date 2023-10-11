@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.credentialdefinition
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.container.util.MigrationAspects.migrate
-import io.iohk.atala.iam.authentication.AuthenticatorAuthorizer
+import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
 import io.iohk.atala.pollux.credentialdefinition.http.{CredentialDefinitionResponse, CredentialDefinitionResponsePage}
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
@@ -22,12 +22,12 @@ object CredentialDefinitionLookupAndPaginationSpec
 
   def fetchAllPages(
       uri: Uri
-  ): ZIO[CredentialDefinitionController & AuthenticatorAuthorizer[BaseEntity], Throwable, List[
+  ): ZIO[CredentialDefinitionController & AuthenticatorWithAuthZ[BaseEntity], Throwable, List[
     CredentialDefinitionResponsePage
   ]] = {
     for {
       controller <- ZIO.service[CredentialDefinitionController]
-      authenticator <- ZIO.service[AuthenticatorAuthorizer[BaseEntity]]
+      authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
       backend = httpBackend(controller, authenticator)
       response: CredentialDefinitionResponsePageType <-
         for {
@@ -79,7 +79,7 @@ object CredentialDefinitionLookupAndPaginationSpec
       for {
         _ <- deleteAllCredentialDefinitions
         controller <- ZIO.service[CredentialDefinitionController]
-        authenticator <- ZIO.service[AuthenticatorAuthorizer[BaseEntity]]
+        authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
         backend = httpBackend(controller, authenticator)
 
         inputs <- Generator.credentialDefinitionInput.runCollectN(10)

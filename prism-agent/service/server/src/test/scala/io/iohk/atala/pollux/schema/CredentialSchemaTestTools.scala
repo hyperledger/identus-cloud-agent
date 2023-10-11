@@ -6,7 +6,7 @@ import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import io.iohk.atala.iam.authentication.AuthenticatorAuthorizer
+import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
 import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
@@ -63,13 +63,13 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
       )
     )
 
-  val authenticatorLayer: TaskLayer[AuthenticatorAuthorizer[BaseEntity]] = DefaultEntityAuthenticator.layer
+  val authenticatorLayer: TaskLayer[AuthenticatorWithAuthZ[BaseEntity]] = DefaultEntityAuthenticator.layer
 
   lazy val testEnvironmentLayer =
     ZLayer.makeSome[
       ManagedDIDService,
       CredentialSchemaController & CredentialSchemaRepository & CredentialSchemaService & PostgreSQLContainer &
-        AuthenticatorAuthorizer[BaseEntity]
+        AuthenticatorWithAuthZ[BaseEntity]
     ](
       CredentialSchemaControllerImpl.layer,
       CredentialSchemaServiceImpl.layer,
@@ -87,7 +87,7 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
-  def httpBackend(controller: CredentialSchemaController, authenticator: AuthenticatorAuthorizer[BaseEntity]) = {
+  def httpBackend(controller: CredentialSchemaController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {
     val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, authenticator)
 
     val backend =
@@ -171,10 +171,10 @@ trait CredentialSchemaGen {
 
   def generateSchemasN(
       count: Int
-  ): ZIO[CredentialSchemaController & AuthenticatorAuthorizer[BaseEntity], Throwable, List[CredentialSchemaInput]] =
+  ): ZIO[CredentialSchemaController & AuthenticatorWithAuthZ[BaseEntity], Throwable, List[CredentialSchemaInput]] =
     for {
       controller <- ZIO.service[CredentialSchemaController]
-      authenticator <- ZIO.service[AuthenticatorAuthorizer[BaseEntity]]
+      authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
       backend = httpBackend(controller, authenticator)
       inputs <- Generator.schemaInput.runCollectN(count)
       _ <- inputs
