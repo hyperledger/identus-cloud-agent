@@ -7,7 +7,6 @@ import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.Authorizer
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.SecurityLogic
-import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.presentproof.controller.PresentProofEndpoints.{
   getAllPresentations,
   getPresentation,
@@ -27,7 +26,7 @@ class PresentProofServerEndpoints(
 ) {
   private val requestPresentationEndpoint: ZServerEndpoint[Any, Any] =
     requestPresentation
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (ctx: RequestContext, request: RequestPresentationInput) =>
           presentProofController
@@ -38,7 +37,7 @@ class PresentProofServerEndpoints(
 
   private val getAllPresentationsEndpoint: ZServerEndpoint[Any, Any] =
     getAllPresentations
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (ctx: RequestContext, paginationInput: PaginationInput, thid: Option[String]) =>
           presentProofController
@@ -49,7 +48,7 @@ class PresentProofServerEndpoints(
 
   private val getPresentationEndpoint: ZServerEndpoint[Any, Any] =
     getPresentation
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (ctx: RequestContext, presentationId: UUID) =>
           presentProofController
@@ -60,7 +59,7 @@ class PresentProofServerEndpoints(
 
   private val updatePresentationEndpoint: ZServerEndpoint[Any, Any] =
     updatePresentation
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (ctx: RequestContext, presentationId: UUID, action: RequestPresentationAction) =>
           presentProofController

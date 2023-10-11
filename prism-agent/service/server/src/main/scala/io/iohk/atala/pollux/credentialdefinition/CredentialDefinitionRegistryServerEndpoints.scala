@@ -27,7 +27,7 @@ class CredentialDefinitionRegistryServerEndpoints(
 
   val createCredentialDefinitionServerEndpoint: ZServerEndpoint[Any, Any] =
     createCredentialDefinitionEndpoint
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic {
         case wac => { case (ctx: RequestContext, credentialDefinitionInput: CredentialDefinitionInput) =>
           credentialDefinitionController
@@ -48,7 +48,7 @@ class CredentialDefinitionRegistryServerEndpoints(
 
   val lookupCredentialDefinitionsByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
     lookupCredentialDefinitionsByQueryEndpoint
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic {
         case wac => {
           case (

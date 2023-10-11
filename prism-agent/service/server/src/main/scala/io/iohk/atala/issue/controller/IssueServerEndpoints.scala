@@ -20,7 +20,7 @@ class IssueServerEndpoints(
 
   val createCredentialOfferEndpoint: ZServerEndpoint[Any, Any] =
     createCredentialOffer
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (ctx: RequestContext, request: CreateIssueCredentialRecordRequest) =>
           issueController
@@ -31,7 +31,7 @@ class IssueServerEndpoints(
 
   val getCredentialRecordsEndpoint: ZServerEndpoint[Any, Any] =
     getCredentialRecords
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (ctx: RequestContext, paginationInput: PaginationInput, thid: Option[String]) =>
           issueController
@@ -42,7 +42,7 @@ class IssueServerEndpoints(
 
   val getCredentialRecordEndpoint: ZServerEndpoint[Any, Any] =
     getCredentialRecord
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (ctx: RequestContext, recordId: String) =>
           issueController
@@ -53,7 +53,7 @@ class IssueServerEndpoints(
 
   val acceptCredentialOfferEndpoint: ZServerEndpoint[Any, Any] =
     acceptCredentialOffer
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (ctx: RequestContext, recordId: String, request: AcceptCredentialOfferRequest) =>
           issueController
@@ -64,7 +64,7 @@ class IssueServerEndpoints(
 
   val issueCredentialEndpoint: ZServerEndpoint[Any, Any] =
     issueCredential
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (ctx: RequestContext, recordId: String) =>
           issueController

@@ -16,7 +16,7 @@ class DIDRegistrarServerEndpoints(
 
   private val listManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.listManagedDid
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (rc, paginationInput) =>
           didRegistrarController
@@ -27,7 +27,7 @@ class DIDRegistrarServerEndpoints(
 
   private val createManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.createManagedDid
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (rc, createManagedDidRequest) =>
           didRegistrarController
@@ -38,7 +38,7 @@ class DIDRegistrarServerEndpoints(
 
   private val getManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.getManagedDid
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
@@ -49,7 +49,7 @@ class DIDRegistrarServerEndpoints(
 
   private val publishManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.publishManagedDid
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
@@ -60,7 +60,7 @@ class DIDRegistrarServerEndpoints(
 
   private val updateManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.updateManagedDid
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (rc, did, updateRequest) =>
           didRegistrarController
@@ -71,7 +71,7 @@ class DIDRegistrarServerEndpoints(
 
   private val deactivateManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.deactivateManagedDid
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController

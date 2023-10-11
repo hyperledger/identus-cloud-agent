@@ -27,7 +27,7 @@ class SchemaRegistryServerEndpoints(
 
   val createSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
     createSchemaEndpoint
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic {
         case wac => { case (ctx: RequestContext, schemaInput: CredentialSchemaInput) =>
           credentialSchemaController
@@ -38,7 +38,7 @@ class SchemaRegistryServerEndpoints(
 
   val updateSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
     updateSchemaEndpoint
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic {
         case wac => {
           case (ctx: RequestContext, author: String, id: UUID, schemaInput: CredentialSchemaInput) =>
@@ -56,7 +56,7 @@ class SchemaRegistryServerEndpoints(
 
   val lookupSchemasByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
     lookupSchemasByQueryEndpoint
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic {
         case wac => {
           case (
@@ -77,7 +77,7 @@ class SchemaRegistryServerEndpoints(
 
   val testServerEndpoint: ZServerEndpoint[Any, Any] =
     testEndpoint
-      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic {
         case wac => { case requestContext: RequestContext =>
           ZIO.succeed(requestContext.request.toString + " " + wac.toString)
