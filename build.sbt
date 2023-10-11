@@ -109,6 +109,8 @@ lazy val D = new {
   val circeGeneric: ModuleID = "io.circe" %% "circe-generic" % V.circe
   val circeParser: ModuleID = "io.circe" %% "circe-parser" % V.circe
 
+  val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
+
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.1"
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.3.0"
@@ -272,8 +274,6 @@ lazy val D_Pollux_VC_JWT = new {
     .exclude("io.circe", "circe-generic_2.13")
     .exclude("io.circe", "circe-parser_2.13")
 
-  val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
-
   val zio = "dev.zio" %% "zio" % V.zio
   val zioPrelude = "dev.zio" %% "zio-prelude" % V.zioPreludeVersion
 
@@ -289,7 +289,7 @@ lazy val D_Pollux_VC_JWT = new {
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
   val circeDependencies: Seq[ModuleID] = Seq(D.circeCore, D.circeGeneric, D.circeParser)
   val baseDependencies: Seq[ModuleID] =
-    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ scalaTest
+    circeDependencies ++ zioDependencies :+ D.jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ scalaTest
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
@@ -380,7 +380,7 @@ lazy val D_PrismAgent = new {
   lazy val keyManagementDependencies: Seq[ModuleID] =
     baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop, D.zioMock, vaultDriver)
 
-  lazy val iamDependencies: Seq[ModuleID] = Seq(keycloakAuthz, D_Pollux_VC_JWT.jwtCirce) // TODO: cleanup
+  lazy val iamDependencies: Seq[ModuleID] = Seq(keycloakAuthz, D.jwtCirce)
 
   lazy val serverDependencies: Seq[ModuleID] =
     baseDependencies ++ tapirDependencies ++ postgresDependencies ++ Seq(D.zioMock, D.mockito)
