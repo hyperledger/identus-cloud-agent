@@ -5,7 +5,9 @@ import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.Authorizer
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
+import io.iohk.atala.iam.authentication.SecurityLogic
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
 import io.iohk.atala.pollux.credentialdefinition
 import io.iohk.atala.pollux.credentialdefinition.CredentialDefinitionRegistryEndpoints.*
@@ -18,19 +20,19 @@ import java.util.UUID
 
 class CredentialDefinitionRegistryServerEndpoints(
     credentialDefinitionController: CredentialDefinitionController,
-    authenticator: Authenticator[BaseEntity]
+    authenticator: Authenticator[BaseEntity] & Authorizer[BaseEntity]
 ) {
   def throwableToInternalServerError(throwable: Throwable) =
     ZIO.fail[ErrorResponse](ErrorResponse.internalServerError(detail = Option(throwable.getMessage)))
 
   val createCredentialDefinitionServerEndpoint: ZServerEndpoint[Any, Any] =
     createCredentialDefinitionEndpoint
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
       .serverLogic {
-        case entity: Entity => { case (ctx: RequestContext, credentialDefinitionInput: CredentialDefinitionInput) =>
+        case wac => { case (ctx: RequestContext, credentialDefinitionInput: CredentialDefinitionInput) =>
           credentialDefinitionController
             .createCredentialDefinition(credentialDefinitionInput)(ctx)
-            .provideSomeLayer(entity.wacLayer)
+            .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
@@ -46,9 +48,9 @@ class CredentialDefinitionRegistryServerEndpoints(
 
   val lookupCredentialDefinitionsByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
     lookupCredentialDefinitionsByQueryEndpoint
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.walletAccessContextFrom(_)(authenticator))
       .serverLogic {
-        case entity: Entity => {
+        case wac => {
           case (
                 ctx: RequestContext,
                 filter: FilterInput,
@@ -61,7 +63,7 @@ class CredentialDefinitionRegistryServerEndpoints(
                 paginationInput.toPagination,
                 order
               )(ctx)
-              .provideSomeLayer(entity.wacLayer)
+              .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
