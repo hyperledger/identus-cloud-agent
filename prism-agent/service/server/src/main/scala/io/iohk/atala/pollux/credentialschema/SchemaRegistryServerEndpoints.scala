@@ -40,11 +40,10 @@ class SchemaRegistryServerEndpoints(
     updateSchemaEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
       .serverLogic {
-        case wac => {
-          case (ctx: RequestContext, author: String, id: UUID, schemaInput: CredentialSchemaInput) =>
-            credentialSchemaController
-              .updateSchema(author, id, schemaInput)(ctx)
-              .provideSomeLayer(ZLayer.succeed(wac))
+        case wac => { case (ctx: RequestContext, author: String, id: UUID, schemaInput: CredentialSchemaInput) =>
+          credentialSchemaController
+            .updateSchema(author, id, schemaInput)(ctx)
+            .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 

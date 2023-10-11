@@ -23,9 +23,9 @@ trait KeycloakAuthenticator extends Authenticator[KeycloakEntity], Authorizer[Ke
             ZIO.fail(JwtAuthenticationError.emptyToken)
         case JwtCredentials(None) =>
           ZIO.logInfo(s"Keycloak authentication is enabled, but bearer token is not provided") *>
-            ZIO.fail(InvalidCredentials("bearer token is not provided"))
+            ZIO.fail(InvalidCredentials("Bearer token is not provided"))
         case other =>
-          ZIO.fail(InvalidCredentials("bearer token is not provided"))
+          ZIO.fail(InvalidCredentials("Bearer token is not provided"))
       }
     } else ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
   }

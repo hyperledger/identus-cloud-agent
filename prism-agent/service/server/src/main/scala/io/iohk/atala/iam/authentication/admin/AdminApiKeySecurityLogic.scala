@@ -13,7 +13,9 @@ object AdminApiKeySecurityLogic {
     .mapTo[AdminApiKeyCredentials]
     .description("Admin API Key")
 
-  def securityLogic[E <: BaseEntity](credentials: AdminApiKeyCredentials)(authenticator: Authenticator[E]): IO[ErrorResponse, E] =
+  def securityLogic[E <: BaseEntity](
+      credentials: AdminApiKeyCredentials
+  )(authenticator: Authenticator[E]): IO[ErrorResponse, E] =
     ZIO
       .succeed(authenticator)
       .flatMap(_.authenticate(credentials))

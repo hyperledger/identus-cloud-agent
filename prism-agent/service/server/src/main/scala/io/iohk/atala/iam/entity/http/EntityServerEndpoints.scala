@@ -8,7 +8,12 @@ import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.admin.{AdminApiKeyCredentials, AdminApiKeySecurityLogic}
 import io.iohk.atala.iam.entity.http.EntityEndpoints.*
 import io.iohk.atala.iam.entity.http.controller.EntityController
-import io.iohk.atala.iam.entity.http.model.{ ApiKeyAuthenticationRequest, CreateEntityRequest, UpdateEntityNameRequest, UpdateEntityWalletIdRequest }
+import io.iohk.atala.iam.entity.http.model.{
+  ApiKeyAuthenticationRequest,
+  CreateEntityRequest,
+  UpdateEntityNameRequest,
+  UpdateEntityWalletIdRequest
+}
 import sttp.tapir.ztapir.*
 import zio.{IO, URIO, ZIO}
 

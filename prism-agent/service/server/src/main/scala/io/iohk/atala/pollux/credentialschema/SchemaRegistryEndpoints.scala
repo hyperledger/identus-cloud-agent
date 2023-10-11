@@ -8,10 +8,25 @@ import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.bearerAuthHeader
-import io.iohk.atala.pollux.credentialschema.http.{ CredentialSchemaInput, CredentialSchemaResponse, CredentialSchemaResponsePage, FilterInput }
+import io.iohk.atala.pollux.credentialschema.http.{
+  CredentialSchemaInput,
+  CredentialSchemaResponse,
+  CredentialSchemaResponsePage,
+  FilterInput
+}
 import sttp.model.StatusCode
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{ Endpoint, EndpointInput, PublicEndpoint, endpoint, extractFromRequest, path, query, statusCode, stringToPath }
+import sttp.tapir.{
+  Endpoint,
+  EndpointInput,
+  PublicEndpoint,
+  endpoint,
+  extractFromRequest,
+  path,
+  query,
+  statusCode,
+  stringToPath
+}
 
 import java.util.UUID
 

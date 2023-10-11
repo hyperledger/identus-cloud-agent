@@ -31,7 +31,7 @@ class EventServerEndpoints(
       .serverLogic { wac => rc =>
         eventController
           .listWebhookNotifications(rc)
-            .provideSomeLayer(ZLayer.succeed(wac))
+          .provideSomeLayer(ZLayer.succeed(wac))
       }
 
   val deleteWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
