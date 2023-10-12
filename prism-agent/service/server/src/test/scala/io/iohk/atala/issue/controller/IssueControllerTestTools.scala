@@ -11,11 +11,7 @@ import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
 import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
-import io.iohk.atala.issue.controller.http.{
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecord,
-  IssueCredentialRecordPage
-}
+import io.iohk.atala.issue.controller.http.{CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
 import io.iohk.atala.pollux.anoncreds.LinkSecretWithId
 import io.iohk.atala.pollux.core.model.CredentialFormat
 import io.iohk.atala.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory}
@@ -35,6 +31,8 @@ import zio.config.{ReadError, read}
 import zio.json.ast.Json
 import zio.json.ast.Json.*
 import zio.test.*
+
+import java.util.UUID
 
 trait IssueControllerTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>
@@ -143,7 +141,7 @@ trait IssueGen {
     val gValidityPeriod: Gen[Any, Double] = Gen.double
     val gAutomaticIssuance: Gen[Any, Boolean] = Gen.boolean
     val gIssuingDID: Gen[Any, String] = Gen.alphaNumericStringBounded(5, 20) // TODO Make a DID generator
-    val gConnectionId: Gen[Any, String] = Gen.alphaNumericStringBounded(5, 20)
+    val gConnectionId: Gen[Any, UUID] = Gen.uuid
 
     val claims = Json.Obj(
       "key1" -> Json.Str("value1"),
