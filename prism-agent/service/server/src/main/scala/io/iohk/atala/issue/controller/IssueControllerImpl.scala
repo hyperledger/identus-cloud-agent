@@ -54,8 +54,8 @@ class IssueControllerImpl(
             for {
               issuingDID <- ZIO
                 .fromOption(request.issuingDID)
-                .flatMap(extractPrismDIDFromString)
                 .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
+                .flatMap(extractPrismDIDFromString)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true)
               record <- credentialService
                 .createJWTIssueCredentialRecord(
