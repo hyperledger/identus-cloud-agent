@@ -6,10 +6,12 @@ import sttp.tapir.{Schema, Validator}
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
+import java.util.UUID
+
 final case class RequestPresentationInput(
     @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
-    connectionId: String,
+    connectionId: UUID,
     @description(annotations.options.description)
     @encodedExample(annotations.options.example)
     options: Option[Options] = None,
@@ -24,9 +26,9 @@ final case class RequestPresentationInput(
 object RequestPresentationInput {
   object annotations {
     object connectionId
-        extends Annotation[String](
+        extends Annotation[UUID](
           description = "The unique identifier of an established connection between the verifier and the prover.",
-          example = "bc528dc8-69f1-4c5a-a508-5f8019047900"
+          example = UUID.fromString("bc528dc8-69f1-4c5a-a508-5f8019047900")
         )
     object options
         extends Annotation[Option[Options]](

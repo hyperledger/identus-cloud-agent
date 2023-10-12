@@ -34,12 +34,11 @@ trait ControllerHelper {
   }
 
   protected def getPairwiseDIDs(
-      connectionId: String
+      connectionId: UUID
   ): ZIO[WalletAccessContext & ConnectionService, ConnectionServiceError, DidIdPair] = {
-    val lookupId = UUID.fromString(connectionId)
     for {
       connectionService <- ZIO.service[ConnectionService]
-      maybeConnection <- connectionService.getConnectionRecord(lookupId)
+      maybeConnection <- connectionService.getConnectionRecord(connectionId)
       didIdPair <- maybeConnection match
         case Some(connRecord: ConnectionRecord) =>
           extractDidIdPairFromValidConnection(connRecord) match {
@@ -47,7 +46,7 @@ trait ControllerHelper {
             case None =>
               ZIO.fail(ConnectionServiceError.UnexpectedError("Invalid connection record state for operation"))
           }
-        case _ => ZIO.fail(ConnectionServiceError.RecordIdNotFound(lookupId))
+        case _ => ZIO.fail(ConnectionServiceError.RecordIdNotFound(connectionId))
     } yield didIdPair
   }
 

@@ -35,7 +35,7 @@ class PresentProofControllerImpl(
           pairwiseVerifierDID = didIdPair.myDID,
           pairwiseProverDID = didIdPair.theirDid,
           thid = DidCommID(),
-          connectionId = Some(request.connectionId),
+          connectionId = Some(request.connectionId.toString),
           proofTypes = request.proofs.map { e =>
             ProofType(
               schema = e.schemaId, // TODO rename field to schemaId
