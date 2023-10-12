@@ -93,7 +93,7 @@ services:
       AGENT_DB_USER: postgres
       AGENT_DB_PASSWORD: postgres
       DIDCOMM_SERVICE_URL: http://${DOCKERHOST}:${PORT}/didcomm
-      REST_SERVICE_URL: http://${DOCKERHOST}:${PORT}/didcomm
+      REST_SERVICE_URL: http://${DOCKERHOST}:${PORT}/prism-agent
       PRISM_NODE_HOST: prism-node
       PRISM_NODE_PORT: 50053
       VAULT_ADDR: ${VAULT_ADDR:-http://vault-server:8200}
