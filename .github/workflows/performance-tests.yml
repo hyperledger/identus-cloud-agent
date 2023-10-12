@@ -63,6 +63,7 @@ jobs:
           API_KEY_AUTO_PROVISIONING: false
           API_KEY_ENABLED: true
           DOCKERHOST: "host.docker.internal"
+          PG_PORT: 5432
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -79,10 +80,28 @@ jobs:
           API_KEY_AUTO_PROVISIONING: false
           API_KEY_ENABLED: true
           DOCKERHOST: "host.docker.internal"
+          PG_PORT: 5433
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
           compose-flags: "--env-file ./infrastructure/local/.env -p holder"
+          up-flags: "--wait"
+          down-flags: "--volumes"
+
+      - name: Start services for verifier
+        env:
+          PORT: 8100
+          ADMIN_TOKEN: admin
+          DEFAULT_WALLET_ENABLED: true
+          DEFAULT_WALLET_AUTH_API_KEY: default
+          API_KEY_AUTO_PROVISIONING: false
+          API_KEY_ENABLED: true
+          DOCKERHOST: "host.docker.internal"
+          PG_PORT: 5434
+        uses: isbang/compose-action@v1.4.1
+        with:
+          compose-file: "./infrastructure/shared/docker-compose.yml"
+          compose-flags: "--env-file ./infrastructure/local/.env -p verifier"
           up-flags: "--wait"
           down-flags: "--volumes"
 
