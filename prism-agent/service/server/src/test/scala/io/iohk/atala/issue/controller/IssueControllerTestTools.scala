@@ -36,6 +36,8 @@ import zio.json.ast.Json
 import zio.json.ast.Json.*
 import zio.test.*
 
+import java.util.UUID
+
 trait IssueControllerTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>
 
@@ -143,7 +145,7 @@ trait IssueGen {
     val gValidityPeriod: Gen[Any, Double] = Gen.double
     val gAutomaticIssuance: Gen[Any, Boolean] = Gen.boolean
     val gIssuingDID: Gen[Any, String] = Gen.alphaNumericStringBounded(5, 20) // TODO Make a DID generator
-    val gConnectionId: Gen[Any, String] = Gen.alphaNumericStringBounded(5, 20)
+    val gConnectionId: Gen[Any, UUID] = Gen.uuid
 
     val claims = Json.Obj(
       "key1" -> Json.Str("value1"),

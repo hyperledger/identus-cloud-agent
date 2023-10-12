@@ -38,7 +38,7 @@ object PresentProofEndpoints {
         )
       )
       .out(jsonBody[PresentationStatus])
-      .errorOut(basicFailuresAndForbidden)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
 
   val getAllPresentations: Endpoint[
     ApiKeyCredentials,
