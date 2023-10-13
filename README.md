@@ -61,6 +61,7 @@ The next diagram offers a concise architectural overview, depicting a Cloud Agen
 ### Installation and usage
 
 Enterprise Cloud Agent is distributed as a Docker image to be run in a containerized environment. All versions can be found [here](https://github.com/input-output-hk/atala-prism-building-blocks/pkgs/container/prism-agent).
+TODO fix this link ^
 
 The following sections describe how to run the Enterprise Cloud Agent in different configurations.
 
