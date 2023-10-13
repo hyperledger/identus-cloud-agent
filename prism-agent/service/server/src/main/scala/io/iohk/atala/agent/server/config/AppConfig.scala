@@ -126,7 +126,6 @@ final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
     didCommEndpoint: DidCommEndpointConfig,
     authentication: AuthenticationConfig,
-    restServiceUrl: String,
     database: DatabaseConfig,
     verification: VerificationConfig,
     secretStorage: SecretStorageConfig,
@@ -141,7 +140,7 @@ final case class AgentConfig(
   }
 }
 
-final case class HttpEndpointConfig(http: HttpConfig)
+final case class HttpEndpointConfig(http: HttpConfig, publicEndpointUrl: String)
 
 final case class DidCommEndpointConfig(http: HttpConfig, publicEndpointUrl: String)
 
