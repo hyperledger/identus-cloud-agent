@@ -53,7 +53,7 @@ services:
       prism-node:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://prism-agent:8085/_system/health"]
+      test: ["CMD", "wget", "--timeout=5", "--tries=3", "-O", "/dev/null", "http://prism-agent:8085/_system/health"]
       interval: 30s
       timeout: 10s
       retries: 5
