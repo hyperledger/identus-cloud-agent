@@ -218,7 +218,6 @@ lazy val D_Castor = new {
       D.circeCore,
       D.circeGeneric,
       D.circeParser,
-      prismCrypto,
       prismIdentity,
       scalaUri
     )
@@ -810,12 +809,12 @@ lazy val prismAgentServer = project
     Docker / dockerUsername := Some("input-output-hk"),
     Docker / dockerRepository := Some("ghcr.io"),
     dockerExposedPorts := Seq(8080, 8085, 8090),
-    dockerBaseImage := "openjdk:11",
+    dockerBaseImage := "amazoncorretto:21.0.0-alpine3.18",
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
     buildInfoPackage := "io.iohk.atala.agent.server.buildinfo",
     Compile / packageDoc / publishArtifact := false
   )
-  .enablePlugins(JavaAppPackaging, DockerPlugin)
+  .enablePlugins(JavaAppPackaging, DockerPlugin, AshScriptPlugin)
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(prismAgentWalletAPI % "compile->compile;test->test")
   .dependsOn(
@@ -867,7 +866,6 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   polluxCore,
   polluxDoobie,
   polluxAnoncreds,
-  // polluxAnoncredsTest, REMOVE THIS FOR NOW
   connectCore,
   connectDoobie,
   prismAgentWalletAPI,
