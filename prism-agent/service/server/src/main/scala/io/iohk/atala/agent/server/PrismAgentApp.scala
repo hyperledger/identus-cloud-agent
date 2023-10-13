@@ -3,7 +3,12 @@ package io.iohk.atala.agent.server
 import io.iohk.atala.agent.notification.WebhookPublisher
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
-import io.iohk.atala.agent.server.jobs.{ConnectBackgroundJobs, DIDStateSyncBackgroundJobs, IssueBackgroundJobs, PresentBackgroundJobs}
+import io.iohk.atala.agent.server.jobs.{
+  ConnectBackgroundJobs,
+  DIDStateSyncBackgroundJobs,
+  IssueBackgroundJobs,
+  PresentBackgroundJobs
+}
 import io.iohk.atala.agent.walletapi.model.{Entity, Wallet, WalletSeed}
 import io.iohk.atala.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
