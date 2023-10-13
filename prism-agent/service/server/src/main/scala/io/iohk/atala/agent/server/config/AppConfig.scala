@@ -124,8 +124,8 @@ final case class DefaultWalletConfig(
 
 final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
+    didCommEndpoint: DidCommEndpointConfig,
     authentication: AuthenticationConfig,
-    didCommServiceEndpointUrl: String,
     restServiceUrl: String,
     database: DatabaseConfig,
     verification: VerificationConfig,
@@ -142,6 +142,8 @@ final case class AgentConfig(
 }
 
 final case class HttpEndpointConfig(http: HttpConfig)
+
+final case class DidCommEndpointConfig(http: HttpConfig, publicEndpointUrl: String)
 
 final case class HttpConfig(port: Int)
 

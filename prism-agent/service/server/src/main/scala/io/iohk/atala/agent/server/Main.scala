@@ -105,23 +105,10 @@ object MainApp extends ZIOAppDefault {
       |""".stripMargin)
         .ignore
 
-      didCommServiceUrl <- System.env("DIDCOMM_SERVICE_URL").map {
-        case Some(s) => s
-        case _       => "http://localhost:8090"
-      }
-      _ <- ZIO.logInfo(s"DIDComm Service URL => $didCommServiceUrl")
-
-      didCommServicePort <- System.env("DIDCOMM_SERVICE_PORT").map {
-        case Some(s) if s.toIntOption.isDefined => s.toInt
-        case _                                  => 8090
-      }
-      _ <- ZIO.logInfo(s"DIDComm Service port => $didCommServicePort")
-
       _ <- preMigrations
       _ <- migrations
 
-      app <- PrismAgentApp
-        .run(didCommServicePort)
+      app <- PrismAgentApp.run
         .provide(
           DidCommX.liveLayer,
           // infra
