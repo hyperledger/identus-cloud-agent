@@ -85,11 +85,10 @@ class IssueControllerImpl(
                   claims = jsonClaims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)), {
+                    val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl
                     val urlSuffix =
                       s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
-                    val urlPrefix =
-                      if (appConfig.agent.restServiceUrl.endsWith("/")) appConfig.agent.restServiceUrl
-                      else appConfig.agent.restServiceUrl + "/"
+                    val urlPrefix = if (publicEndpointUrl.endsWith("/")) publicEndpointUrl else publicEndpointUrl + "/"
                     s"$urlPrefix$urlSuffix"
                   }
                 )

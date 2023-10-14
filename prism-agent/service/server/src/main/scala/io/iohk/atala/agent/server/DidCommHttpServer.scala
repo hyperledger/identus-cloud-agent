@@ -23,20 +23,23 @@ import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.http.*
+
 import java.util.UUID
 
 object DidCommHttpServer {
 
-  def run(didCommServicePort: Int) = {
-    val server = {
+  def run = {
+    def server(didCommServicePort: Int) = {
       val config = Server.Config.default.copy(address = new java.net.InetSocketAddress(didCommServicePort))
       ZLayer.succeed(config) >>> Server.live
     }
     for {
+      appConfig <- ZIO.service[AppConfig]
+      didCommServicePort = appConfig.agent.didCommEndpoint.http.port
       _ <- ZIO.logInfo(s"Server Started on port $didCommServicePort")
       _ <- Server
         .serve(didCommServiceEndpoint)
-        .provideSomeLayer(server)
+        .provideSomeLayer(server(didCommServicePort))
         .debug *> ZIO
         .logWarning(s"Server STOP (on port $didCommServicePort)")
         .tapDefect(error => ZIO.logErrorCause("Defect processing incoming DIDComm message", Cause.fail(error)))
