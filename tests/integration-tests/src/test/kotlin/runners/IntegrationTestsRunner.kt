@@ -16,4 +16,4 @@ import org.junit.runner.RunWith
     ]
 )
 @RunWith(CucumberWithSerenity::class)
-class E2eTestsRunner
+class IntegrationTestsRunner
