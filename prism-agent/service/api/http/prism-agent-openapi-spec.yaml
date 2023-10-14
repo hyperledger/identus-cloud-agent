@@ -1,12 +1,12 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Prism Agent
-  version: 1.16.4
+  version: 1.17.0
 paths:
   /credential-definition-registry/definitions:
     get:
       tags:
-      - Credential Definitions Registry
+      - Credential Definition Registry
       summary: Lookup credential definitions by indexed fields
       description: 'Lookup credential definitions by `author`, `name`, `tag` parameters
         and control the pagination by `offset` and `limit` parameters '
@@ -153,6 +153,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CredentialDefinitionResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /credential-definition-registry/definitions/{guid}/definition:
+    get:
+      tags:
+      - Credential Definition Registry
+      summary: Fetch the inner definition field of the credential definition from
+        the registry by `guid`
+      description: Fetch the inner definition fields of the credential definition
+        by the unique identifier
+      operationId: getCredentialDefinitionInnerDefinitionById
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: CredentialDefinition found by `guid`
+          content:
+            application/json:
+              schema: {}
         '400':
           description: Invalid request parameters
           content:
@@ -1427,6 +1467,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -1749,6 +1795,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
           content:
             application/json:
               schema:
@@ -2628,14 +2680,12 @@ components:
           description: The base64-encoded raw invitation.
           example: eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
     AcceptCredentialOfferRequest:
-      required:
-      - subjectId
       type: object
       properties:
         subjectId:
           type: string
-          description: The short-form subject Prism DID to which the verifiable credential
-            should be issued.
+          description: The short-form subject Prism DID to which the JWT verifiable
+            credential will be issued.This parameter is used for JWT credentials only.
           example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
     ActionType:
       type: string
@@ -2661,7 +2711,8 @@ components:
           type: string
           description: The `apikey` of the entity to be updated
           example: dkflks3DflkFmkllnDfde
-          minLength: 1
+          minLength: 16
+          maxLength: 128
     Arr:
       type: object
       properties:
@@ -2683,6 +2734,7 @@ components:
       - state
       - invitation
       - createdAt
+      - metaRetries
       - self
       - kind
       type: object
@@ -2747,6 +2799,12 @@ components:
           description: The date and time the connection record was last updated.
           format: date-time
           example: 2022-03-10T12:00Z
+        metaRetries:
+          type: integer
+          description: The maximum background processing attempts remaining for this
+            record
+          format: int32
+          example: 5
         self:
           type: string
           description: The reference to the connection resource.
@@ -2853,7 +2911,6 @@ components:
     CreateIssueCredentialRecordRequest:
       required:
       - claims
-      - issuingDID
       - connectionId
       type: object
       properties:
@@ -2868,6 +2925,16 @@ components:
           description: The unique identifier of the schema used for this credential
             offer.
           example: https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676
+        credentialDefinitionId:
+          type: string
+          description: The unique identifier of the credential definition used for
+            this credential offer (AnonCreds only)
+          format: uuid
+          example: d9569cec-c81e-4779-aa86-0d5994d82676
+        credentialFormat:
+          type: string
+          description: The format used for this credential offer (default to 'JWT')
+          example: JWT
         claims:
           description: The claims that will be associated with the issued verifiable
             credential.
@@ -2881,13 +2948,16 @@ components:
           example: true
         issuingDID:
           type: string
-          description: The issuer DID of the verifiable credential object.
+          description: The issuer DID of the verifiable credential (JWT credentials
+            only)
           example: did:prism:issuerofverifiablecredentials
         connectionId:
           type: string
           description: The unique identifier of a DIDComm connection that already
             exists between the issuer and the holder, and that will be used to execute
             the issue credential protocol.
+          format: uuid
+          example: d9569cec-c81e-4779-aa86-0d5994d82676
     CreateManagedDIDResponse:
       required:
       - longFormDid
@@ -3654,10 +3724,12 @@ components:
       required:
       - recordId
       - thid
+      - credentialFormat
       - claims
       - createdAt
       - role
       - protocolState
+      - metaRetries
       type: object
       properties:
         recordId:
@@ -3670,6 +3742,13 @@ components:
             belongs to. The value will identical on both sides of the issue flow (issuer
             and holder)
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
+        credentialFormat:
+          type: string
+          description: The format used for this credential offer (default to 'JWT')
+          example: JWT
+          enum:
+          - JWT
+          - AnonCreds
         subjectId:
           type: string
           description: The identifier (e.g DID) of the subject to which the verifiable
@@ -3696,7 +3775,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2023-09-29T12:30:36.502837Z'
+          example: '2023-10-14T17:00:01.188137Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -3729,14 +3808,20 @@ components:
           - ProblemReportPending
           - ProblemReportSent
           - ProblemReportReceived
-        jwtCredential:
+        credential:
           type: string
-          description: The base64-encoded JWT verifiable credential that has been
-            sent by the issuer.
+          description: The base64-encoded verifiable credential, in JWT or AnonCreds
+            format, that has been sent by the issuer.
         issuingDID:
           type: string
           description: Issuer DID of the verifiable credential object.
           example: did:prism:issuerofverifiablecredentials
+        metaRetries:
+          type: integer
+          description: The maximum background processing attempts remaining for this
+            record
+          format: int32
+          example: 5
     IssueCredentialRecordPage:
       required:
       - self
@@ -3886,6 +3971,7 @@ components:
       - thid
       - role
       - status
+      - metaRetries
       type: object
       properties:
         presentationId:
@@ -3943,6 +4029,12 @@ components:
           description: The unique identifier of an established connection between
             the verifier and the prover.
           example: bc528dc8-69f1-4c5a-a508-5f8019047900
+        metaRetries:
+          type: integer
+          description: The maximum background processing attempts remaining for this
+            record
+          format: int32
+          example: 5
     PresentationStatusPage:
       required:
       - self
@@ -4173,6 +4265,7 @@ components:
           type: string
           description: The unique identifier of an established connection between
             the verifier and the prover.
+          format: uuid
           example: bc528dc8-69f1-4c5a-a508-5f8019047900
         options:
           $ref: '#/components/schemas/Options'
@@ -4183,6 +4276,10 @@ components:
           description: The type of proofs requested in the context of this proof presentation
             request (e.g., VC schema, trusted issuers, etc.)
           example: []
+        credentialFormat:
+          type: string
+          description: The credential format (default to 'JWT')
+          example: JWT
     Service:
       required:
       - id
