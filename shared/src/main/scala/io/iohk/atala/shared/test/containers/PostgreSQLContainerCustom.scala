@@ -3,6 +3,7 @@ package io.iohk.atala.shared.test.containers
 import com.dimafeng.testcontainers.{JdbcDatabaseContainer, PostgreSQLContainer}
 import org.testcontainers.utility.DockerImageName
 
+@deprecated("Use the train from sharedTest module")
 class PostgreSQLContainerCustom(
     dockerImageNameOverride: Option[DockerImageName] = None,
     databaseName: Option[String] = None,

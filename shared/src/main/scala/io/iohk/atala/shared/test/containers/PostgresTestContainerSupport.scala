@@ -6,6 +6,7 @@ import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.TransactorLayer
 import zio.*
 
+@deprecated("Use the train from sharedTest module")
 trait PostgresTestContainerSupport {
 
   protected val pgContainerLayer: TaskLayer[PostgreSQLContainer] = PostgresLayer.postgresLayer()

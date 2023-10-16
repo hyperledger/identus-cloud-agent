@@ -4,6 +4,7 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.testcontainers.containers.output.OutputFrame
 import org.testcontainers.utility.DockerImageName
 
+@deprecated("Use the train from sharedTest module")
 object PostgresTestContainer {
   def postgresContainer(
       imageName: Option[String] = Some("postgres:13"),
