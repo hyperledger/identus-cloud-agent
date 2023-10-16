@@ -3,6 +3,7 @@ package io.iohk.atala.shared.test.containers
 import org.testcontainers.containers.output.OutputFrame
 import org.testcontainers.utility.DockerImageName
 
+@deprecated("Use the train from sharedTest module")
 object VaultTestContainer {
   def vaultContainer(
       imageName: String = "hashicorp/vault:1.15.0",

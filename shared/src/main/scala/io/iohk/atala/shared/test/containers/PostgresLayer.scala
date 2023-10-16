@@ -8,6 +8,7 @@ import io.iohk.atala.shared.db.TransactorLayer
 import io.iohk.atala.shared.test.containers.PostgresTestContainer.postgresContainer
 import zio.*
 
+@deprecated("Use the train from sharedTest module")
 object PostgresLayer {
 
   def postgresLayer(

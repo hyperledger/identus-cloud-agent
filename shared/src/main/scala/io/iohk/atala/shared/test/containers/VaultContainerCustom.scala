@@ -5,6 +5,7 @@ import org.testcontainers.vault.{VaultContainer => JavaVaultContainer}
 import org.testcontainers.utility.DockerImageName
 
 /** See PostgreSQLContainerCustom for explanation */
+@deprecated("Use the train from sharedTest module")
 class VaultContainerCustom(
     dockerImageNameOverride: DockerImageName,
     vaultToken: Option[String] = None,
