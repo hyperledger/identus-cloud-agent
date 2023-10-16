@@ -7,7 +7,7 @@ import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
-import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.bearerAuthHeader
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
   CredentialSchemaResponse,
@@ -41,7 +41,7 @@ object SchemaRegistryEndpoints {
   ] =
     endpoint.post
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("schema-registry" / "schemas")
       .in(
@@ -76,7 +76,7 @@ object SchemaRegistryEndpoints {
   ] =
     endpoint.put
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "schema-registry" /
@@ -144,7 +144,7 @@ object SchemaRegistryEndpoints {
   ] =
     endpoint.get
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("schema-registry" / "schemas".description("Lookup schemas by query"))
       .in(credentialSchemaFilterInput)
@@ -168,7 +168,7 @@ object SchemaRegistryEndpoints {
   ] =
     endpoint.get
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(
         "schema-registry" / "test"
           .description("Debug endpoint")

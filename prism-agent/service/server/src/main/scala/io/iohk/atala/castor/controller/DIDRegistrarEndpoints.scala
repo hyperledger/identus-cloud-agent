@@ -15,7 +15,7 @@ import io.iohk.atala.castor.controller.http.{
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
-import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.bearerAuthHeader
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
@@ -27,7 +27,7 @@ object DIDRegistrarEndpoints {
     .in("did-registrar" / "dids")
     .in(extractFromRequest[RequestContext](RequestContext.apply))
     .securityIn(apiKeyHeader)
-    .securityIn(bearerAuthHeader)
+    .securityIn(jwtAuthHeader)
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 

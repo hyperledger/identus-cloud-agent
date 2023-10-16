@@ -12,7 +12,7 @@ import io.iohk.atala.connect.controller.http.{
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
-import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.bearerAuthHeader
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
@@ -32,7 +32,7 @@ object ConnectionEndpoints {
   ] =
     endpoint.post
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("connections")
       .in(
@@ -62,7 +62,7 @@ object ConnectionEndpoints {
       : Endpoint[(ApiKeyCredentials, JwtCredentials), (RequestContext, UUID), ErrorResponse, Connection, Any] =
     endpoint.get
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "connections" / path[UUID]("connectionId").description(
@@ -85,7 +85,7 @@ object ConnectionEndpoints {
   ] =
     endpoint.get
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("connections")
       .in(paginationInput)
@@ -106,7 +106,7 @@ object ConnectionEndpoints {
   ] =
     endpoint.post
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("connection-invitations")
       .in(

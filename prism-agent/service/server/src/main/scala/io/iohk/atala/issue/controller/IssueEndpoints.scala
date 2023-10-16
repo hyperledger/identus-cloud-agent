@@ -6,7 +6,7 @@ import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
-import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.bearerAuthHeader
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import io.iohk.atala.issue.controller.http.*
 import sttp.model.StatusCode
 import sttp.tapir.*
@@ -25,7 +25,7 @@ object IssueEndpoints {
   ] =
     endpoint.post
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("issue-credentials" / "credential-offers")
       .in(jsonBody[CreateIssueCredentialRecordRequest].description("The credential offer object."))
@@ -46,7 +46,7 @@ object IssueEndpoints {
   ] =
     endpoint.get
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("issue-credentials" / "records")
       .in(paginationInput)
@@ -67,7 +67,7 @@ object IssueEndpoints {
   ] =
     endpoint.get
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "issue-credentials" / "records" / path[String]("recordId").description(
@@ -90,7 +90,7 @@ object IssueEndpoints {
   ] =
     endpoint.post
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "issue-credentials" / "records" / path[String]("recordId").description(
@@ -115,7 +115,7 @@ object IssueEndpoints {
   ] =
     endpoint.post
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "issue-credentials" / "records" / path[String]("recordId").description(

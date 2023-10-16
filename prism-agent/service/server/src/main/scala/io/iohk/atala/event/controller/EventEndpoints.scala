@@ -10,7 +10,7 @@ import io.iohk.atala.event.controller.http.WebhookNotificationPage
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
-import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.bearerAuthHeader
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
@@ -23,7 +23,7 @@ object EventEndpoints {
     .tag("Events")
     .in("events")
     .securityIn(apiKeyHeader)
-    .securityIn(bearerAuthHeader)
+    .securityIn(jwtAuthHeader)
     .in(extractFromRequest[RequestContext](RequestContext.apply))
 
   val createWebhookNotification: Endpoint[

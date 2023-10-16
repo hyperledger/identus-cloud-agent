@@ -6,7 +6,7 @@ import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
-import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.bearerAuthHeader
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import io.iohk.atala.presentproof.controller.http.*
 import sttp.model.StatusCode
 import sttp.tapir.*
@@ -31,7 +31,7 @@ object PresentProofEndpoints {
       .summary("As a Verifier, create a new proof presentation request and send it to the Prover.")
       .description("Holder presents proof derived from the verifiable credential to verifier.")
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in("present-proof" / "presentations")
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(jsonBody[RequestPresentationInput].description("The present proof creation request."))
@@ -56,7 +56,7 @@ object PresentProofEndpoints {
       .summary("Gets the list of proof presentation records.")
       .description("list of presentation statuses")
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in("present-proof" / "presentations")
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(paginationInput)
@@ -76,7 +76,7 @@ object PresentProofEndpoints {
       )
       .description("Returns an existing presentation record by id.")
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "present-proof" / "presentations" / path[UUID]("presentationId").description(
@@ -103,7 +103,7 @@ object PresentProofEndpoints {
       )
       .description("Accept or reject presentation of proof request.")
       .securityIn(apiKeyHeader)
-      .securityIn(bearerAuthHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "present-proof" / "presentations" / path[UUID]("presentationId").description(
