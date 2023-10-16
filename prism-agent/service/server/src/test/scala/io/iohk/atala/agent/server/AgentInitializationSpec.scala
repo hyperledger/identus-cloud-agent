@@ -54,12 +54,21 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         _ <- AgentInitialization.run.overrideConfig()
       } yield assertCompletes
     ),
-    test("fail when both apikey and default wallet are disabled")(
+    test("do not fail the default wallet is disabled, but any authentication is enabled") {
+      for {
+        _ <- AgentInitialization.run
+          .overrideConfig(enableDefaultWallet = false, enableApiKey = true, enableKeycloak = false)
+        _ <- AgentInitialization.run
+          .overrideConfig(enableDefaultWallet = false, enableApiKey = false, enableKeycloak = true)
+      } yield assertCompletes
+    },
+    test("fail when the default wallet is disabled and authentication is set to apiKey but disabled")(
       for {
         exit <- AgentInitialization.run
           .overrideConfig(
+            enableDefaultWallet = false,
             enableApiKey = false,
-            enableDefaultWallet = false
+            enableKeycloak = false
           )
           .exit
       } yield assert(exit)(fails(isSubtype[RuntimeException](anything)))
@@ -133,7 +142,8 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         seed: Option[String] = None,
         webhookUrl: Option[URL] = None,
         webhookApiKey: Option[String] = None,
-        enableApiKey: Boolean = true
+        enableApiKey: Boolean = true,
+        enableKeycloak: Boolean = false,
     ): ZIO[R, E, A] = {
       for {
         appConfig <- ZIO.service[AppConfig]
@@ -141,6 +151,7 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         defaultWalletConfig = agentConfig.defaultWallet
         authConfig = agentConfig.authentication
         apiKeyConfig = authConfig.apiKey
+        keycloakConfig = authConfig.keycloak
         // consider using lens
         result <- effect.provideSomeLayer(
           ZLayer.succeed(
@@ -149,6 +160,9 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
                 authentication = authConfig.copy(
                   apiKey = apiKeyConfig.copy(
                     enabled = enableApiKey
+                  ),
+                  keycloak = keycloakConfig.copy(
+                    enabled = enableKeycloak
                   )
                 ),
                 defaultWallet = defaultWalletConfig.copy(

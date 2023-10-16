@@ -148,20 +148,23 @@ services:
       - swagger-ui
 
   keycloak:
-    image: bitnami/keycloak:22.0.3
+    image: quay.io/keycloak/keycloak:22.0.4
     ports:
       - "9980:8080"
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-      KEYCLOAK_DATABASE_VENDOR: dev-mem
-      KEYCLOAK_EXTRA_ARGS: --health-enabled=true
-      KEYCLOAK_EXTRA_ARGS_PREPENDED: --verbose
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://keycloak:8080/health"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+    command: start-dev --health-enabled=true
+
+  keycloak-wait:
+    image: badouralix/curl-jq:ubuntu
+    command:
+      - /bin/bash
+      - -c
+      - until curl http://keycloak:8080/health; do sleep 1; done && echo "Keycloak is ready."
+    depends_on:
+      keycloak:
+        condition: service_started
 
   keycloak-init:
     image: badouralix/curl-jq:ubuntu
@@ -175,8 +178,8 @@ services:
     volumes:
       - ./keycloak/init-script.sh:/workspace/init-script.sh
     depends_on:
-      keycloak:
-        condition: service_healthy
+      keycloak-wait:
+        condition: service_completed_successfully
 
 volumes:
   pg_data_db:

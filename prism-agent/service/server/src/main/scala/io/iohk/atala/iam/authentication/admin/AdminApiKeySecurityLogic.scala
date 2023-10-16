@@ -1,6 +1,6 @@
 package io.iohk.atala.iam.authentication.admin
 
-import io.iohk.atala.agent.walletapi.model.Entity
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.iam.authentication.{AuthenticationError, Authenticator}
 import sttp.tapir.EndpointIO
@@ -13,13 +13,9 @@ object AdminApiKeySecurityLogic {
     .mapTo[AdminApiKeyCredentials]
     .description("Admin API Key")
 
-  def securityLogic(credentials: AdminApiKeyCredentials): ZIO[Authenticator, ErrorResponse, Entity] =
-    ZIO
-      .service[Authenticator]
-      .flatMap(_.authenticate(credentials))
-      .mapError(error => AuthenticationError.toErrorResponse(error))
-
-  def securityLogic(credentials: AdminApiKeyCredentials)(authenticator: Authenticator): IO[ErrorResponse, Entity] =
+  def securityLogic[E <: BaseEntity](
+      credentials: AdminApiKeyCredentials
+  )(authenticator: Authenticator[E]): IO[ErrorResponse, E] =
     ZIO
       .succeed(authenticator)
       .flatMap(_.authenticate(credentials))

@@ -4,12 +4,14 @@ import com.typesafe.config.ConfigFactory
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.service.MockDIDService
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
-import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
+import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
+import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.issue.controller.http.{
   CreateIssueCredentialRecordRequest,
@@ -115,7 +117,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
-  def httpBackend(controller: IssueController, authenticator: Authenticator) = {
+  def httpBackend(controller: IssueController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {
     val issueEndpoints = IssueServerEndpoints(controller, authenticator)
 
     val backend =

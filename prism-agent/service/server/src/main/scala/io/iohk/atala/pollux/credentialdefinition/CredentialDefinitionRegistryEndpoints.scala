@@ -6,6 +6,8 @@ import io.iohk.atala.api.http.codec.OrderCodec.*
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
+import io.iohk.atala.iam.authentication.oidc.JwtCredentials
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import io.iohk.atala.pollux.credentialdefinition.http.{
   CredentialDefinitionInput,
   CredentialDefinitionResponse,
@@ -31,7 +33,7 @@ import java.util.UUID
 object CredentialDefinitionRegistryEndpoints {
 
   val createCredentialDefinitionEndpoint: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, CredentialDefinitionInput),
     ErrorResponse,
     CredentialDefinitionResponse,
@@ -39,6 +41,7 @@ object CredentialDefinitionRegistryEndpoints {
   ] =
     endpoint.post
       .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("credential-definition-registry" / "definitions")
       .in(
@@ -111,7 +114,7 @@ object CredentialDefinitionRegistryEndpoints {
   private val credentialDefinitionFilterInput: EndpointInput[http.FilterInput] = EndpointInput.derived[http.FilterInput]
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
   val lookupCredentialDefinitionsByQueryEndpoint: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (
         RequestContext,
         FilterInput,
@@ -124,6 +127,7 @@ object CredentialDefinitionRegistryEndpoints {
   ] =
     endpoint.get
       .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "credential-definition-registry" / "definitions".description(

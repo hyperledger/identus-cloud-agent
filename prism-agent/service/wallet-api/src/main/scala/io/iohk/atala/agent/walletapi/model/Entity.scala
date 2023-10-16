@@ -6,7 +6,11 @@ import zio.{ULayer, ZLayer}
 import java.time.Instant
 import java.util.UUID
 
-case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, updatedAt: Instant) {
+trait BaseEntity {
+  val id: UUID
+}
+
+case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, updatedAt: Instant) extends BaseEntity {
   def withUpdatedAt(updatedAt: Instant = Instant.now()): Entity = copy(updatedAt = updatedAt)
 }
 

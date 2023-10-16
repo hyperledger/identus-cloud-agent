@@ -14,6 +14,8 @@ import io.iohk.atala.castor.controller.http.{
 }
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
+import io.iohk.atala.iam.authentication.oidc.JwtCredentials
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
@@ -25,11 +27,12 @@ object DIDRegistrarEndpoints {
     .in("did-registrar" / "dids")
     .in(extractFromRequest[RequestContext](RequestContext.apply))
     .securityIn(apiKeyHeader)
+    .securityIn(jwtAuthHeader)
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 
   val listManagedDid: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, PaginationInput),
     ErrorResponse,
     ManagedDIDPage,
@@ -47,7 +50,7 @@ object DIDRegistrarEndpoints {
     )
 
   val createManagedDid: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, CreateManagedDidRequest),
     ErrorResponse,
     CreateManagedDIDResponse,
@@ -67,7 +70,7 @@ object DIDRegistrarEndpoints {
     )
 
   val getManagedDid: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, String),
     ErrorResponse,
     ManagedDID,
@@ -81,7 +84,7 @@ object DIDRegistrarEndpoints {
     .description("Get DID stored in Prism Agent's wallet")
 
   val publishManagedDid: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, String),
     ErrorResponse,
     DIDOperationResponse,
@@ -95,7 +98,7 @@ object DIDRegistrarEndpoints {
     .description("Publish the DID stored in Prism Agent's wallet to the VDR.")
 
   val updateManagedDid: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, String, UpdateManagedDIDRequest),
     ErrorResponse,
     DIDOperationResponse,
@@ -123,7 +126,7 @@ object DIDRegistrarEndpoints {
     )
 
   val deactivateManagedDid: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, String),
     ErrorResponse,
     DIDOperationResponse,

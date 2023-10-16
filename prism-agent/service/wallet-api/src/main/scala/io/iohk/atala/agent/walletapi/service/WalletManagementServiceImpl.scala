@@ -42,6 +42,11 @@ class WalletManagementServiceImpl(
       .getWallet(walletId)
       .mapError(e => e)
 
+  override def getWallets(walletIds: Seq[WalletId]): IO[WalletManagementServiceError, Seq[Wallet]] =
+    nonSecretStorage
+      .getWallets(walletIds)
+      .mapError(e => e)
+
   override def listWallets(
       offset: Option[Int],
       limit: Option[Int]
