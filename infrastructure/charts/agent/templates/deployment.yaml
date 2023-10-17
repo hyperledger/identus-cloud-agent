@@ -154,6 +154,8 @@ spec:
                 optional: false
           - name: DIDCOMM_SERVICE_URL
             value: "https://{{ index .Values.ingress.applicationUrls 0 }}/prism-agent/didcomm"
+          - name: REST_SERVICE_URL
+            value: "https://{{ index .Values.ingress.applicationUrls 0 }}/prism-agent"
           - name: PRISM_NODE_HOST
             value: {{ .Values.vdrManager.host | quote }}
           - name: PRISM_NODE_PORT

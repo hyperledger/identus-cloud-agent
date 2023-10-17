@@ -1,5 +1,4 @@
 import uniffi.anoncreds.*
-import uniffi.anoncreds.CredentialDefinition
 object Uniffy extends App {
   val prover = new Prover()
   val seceret = prover.createLinkSecret();

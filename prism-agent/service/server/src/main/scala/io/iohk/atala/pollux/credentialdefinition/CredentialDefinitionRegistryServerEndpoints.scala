@@ -37,6 +37,11 @@ class CredentialDefinitionRegistryServerEndpoints(
       credentialDefinitionController.getCredentialDefinitionByGuid(guid)(ctx)
     }
 
+  val getCredentialDefinitionInnerDefinitionByIdServerEndpoint: ZServerEndpoint[Any, Any] =
+    getCredentialDefinitionInnerDefinitionByIdEndpoint.zServerLogic { case (ctx: RequestContext, guid: UUID) =>
+      credentialDefinitionController.getCredentialDefinitionInnerDefinitionByGuid(guid)(ctx)
+    }
+
   val lookupCredentialDefinitionsByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
     lookupCredentialDefinitionsByQueryEndpoint
       .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
@@ -62,6 +67,7 @@ class CredentialDefinitionRegistryServerEndpoints(
     List(
       createCredentialDefinitionServerEndpoint,
       getCredentialDefinitionByIdServerEndpoint,
+      getCredentialDefinitionInnerDefinitionByIdServerEndpoint,
       lookupCredentialDefinitionsByQueryServerEndpoint
     )
 }

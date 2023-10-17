@@ -1,19 +1,22 @@
 package io.iohk.atala.pollux.anoncreds
 
-import scala.jdk.CollectionConverters.*
-
 import uniffi.anoncreds.{
-  LinkSecret as UniffiLinkSecret,
-  Schema as UniffiSchema,
+  Nonce,
+  Credential as UniffiCredential,
   CredentialDefinition as UniffiCredentialDefinition,
   CredentialDefinitionPrivate as UniffiCredentialDefinitionPrivate,
   CredentialKeyCorrectnessProof as UniffiCredentialKeyCorrectnessProof,
   CredentialOffer as UniffiCredentialOffer,
   CredentialRequest as UniffiCredentialRequest,
   CredentialRequestMetadata as UniffiCredentialRequestMetadata,
-  Credential as UniffiCredential,
+  LinkSecret as UniffiLinkSecret,
+  Schema as UniffiSchema,
+  Presentation as UniffiPresentation,
+  PresentationRequest as UniffiPresentationRequest,
 }
-import uniffi.anoncreds.Nonce
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+
+import scala.jdk.CollectionConverters.*
 type AttributeNames = Set[String]
 type IssuerId = String
 
@@ -29,13 +32,13 @@ object LinkSecret {
 
   given Conversion[LinkSecret, UniffiLinkSecret] with {
     def apply(linkSecret: LinkSecret): UniffiLinkSecret =
-      UniffiLinkSecret.Companion.newFromJson(linkSecret.data)
+      UniffiLinkSecret.Companion.newFromValue(linkSecret.data)
 
   }
 
   given Conversion[UniffiLinkSecret, LinkSecret] with {
     def apply(uniffiLinkSecret: UniffiLinkSecret): LinkSecret =
-      LinkSecret.apply(uniffiLinkSecret.getJson())
+      LinkSecret.apply(uniffiLinkSecret.getValue())
 
   }
 }
@@ -165,7 +168,14 @@ case class CreateCredentialDefinition(
 )
 // ****************************************************************************
 
-case class CredentialOffer(data: String)
+case class CredentialOffer(data: String) {
+  lazy val schemaId = CredentialOffer
+    .given_Conversion_CredentialOffer_UniffiCredentialOffer(this)
+    .getSchemaId()
+  lazy val credDefId = CredentialOffer
+    .given_Conversion_CredentialOffer_UniffiCredentialOffer(this)
+    .getCredDefId()
+}
 object CredentialOffer {
   given Conversion[CredentialOffer, UniffiCredentialOffer] with {
     def apply(credentialOffer: CredentialOffer): UniffiCredentialOffer =
@@ -222,12 +232,19 @@ object CredentialRequestMetadata {
         linkSecretName = credentialRequestMetadata.getLinkSecretName(),
       )
   }
+
+  given JsonDecoder[CredentialRequestMetadata] = DeriveJsonDecoder.gen[CredentialRequestMetadata]
+  given JsonEncoder[CredentialRequestMetadata] = DeriveJsonEncoder.gen[CredentialRequestMetadata]
 }
 
 // ****************************************************************************
 
 //Credential
-case class Credential(data: String)
+case class Credential(data: String) {
+  lazy val credDefId: String = Credential
+    .given_Conversion_Credential_UniffiCredential(this)
+    .getCredDefId
+}
 object Credential {
   given Conversion[Credential, UniffiCredential] with {
     def apply(credential: Credential): UniffiCredential =
@@ -237,5 +254,35 @@ object Credential {
   given Conversion[UniffiCredential, Credential] with {
     def apply(credential: UniffiCredential): Credential =
       Credential(credential.getJson())
+  }
+}
+
+// ****************************************************************************
+
+case class PresentationRequest(data: String)
+object PresentationRequest {
+  given Conversion[PresentationRequest, UniffiPresentationRequest] with {
+    def apply(presentationRequest: PresentationRequest): UniffiPresentationRequest =
+      UniffiPresentationRequest(presentationRequest.data)
+  }
+
+  given Conversion[UniffiPresentationRequest, PresentationRequest] with {
+    def apply(presentationRequest: UniffiPresentationRequest): PresentationRequest =
+      PresentationRequest(presentationRequest.getJson())
+  }
+}
+
+// ****************************************************************************
+
+case class Presentation(data: String)
+object Presentation {
+  given Conversion[Presentation, UniffiPresentation] with {
+    def apply(presentation: Presentation): UniffiPresentation =
+      UniffiPresentation(presentation.data)
+  }
+
+  given Conversion[UniffiPresentation, Presentation] with {
+    def apply(presentation: UniffiPresentation): Presentation =
+      Presentation(presentation.getJson())
   }
 }

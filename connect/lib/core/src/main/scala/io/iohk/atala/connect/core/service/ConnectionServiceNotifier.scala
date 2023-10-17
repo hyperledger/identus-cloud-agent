@@ -7,7 +7,7 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}
-
+import zio.IO
 import java.time.Duration
 import java.util.UUID
 
@@ -109,6 +109,13 @@ class ConnectionServiceNotifier(
       states: ConnectionRecord.ProtocolState*
   ): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]] =
     svc.getConnectionRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+
+  override def getConnectionRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: ConnectionRecord.ProtocolState*
+  ): IO[ConnectionServiceError, Seq[ConnectionRecord]] =
+    svc.getConnectionRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
 }
 
 object ConnectionServiceNotifier {

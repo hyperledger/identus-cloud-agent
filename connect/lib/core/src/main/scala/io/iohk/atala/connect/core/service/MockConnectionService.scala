@@ -73,6 +73,12 @@ object MockConnectionService extends Mock[ConnectionService] {
           states: ConnectionRecord.ProtocolState*
       ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = ???
 
+      override def getConnectionRecordsByStatesForAllWallets(
+          ignoreWithZeroRetries: Boolean,
+          limit: Int,
+          states: ConnectionRecord.ProtocolState*
+      ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = ???
+
       override def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] = ???
 
       override def getConnectionRecordByThreadId(thid: String): IO[ConnectionServiceError, Option[ConnectionRecord]] =

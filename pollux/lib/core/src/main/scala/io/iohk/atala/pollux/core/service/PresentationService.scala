@@ -23,7 +23,8 @@ trait PresentationService {
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
-      options: Option[io.iohk.atala.pollux.core.model.presentation.Options]
+      options: Option[io.iohk.atala.pollux.core.model.presentation.Options],
+      format: CredentialFormat,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def getPresentationRecords(
@@ -41,6 +42,12 @@ trait PresentationService {
       limit: Int,
       state: PresentationRecord.ProtocolState*
   ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]]
+
+  def getPresentationRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      state: PresentationRecord.ProtocolState*
+  ): IO[PresentationError, Seq[PresentationRecord]]
 
   def getPresentationRecord(
       recordId: DidCommID

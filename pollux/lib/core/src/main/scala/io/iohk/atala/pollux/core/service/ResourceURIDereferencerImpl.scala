@@ -5,7 +5,7 @@ import zio.*
 
 import java.net.URI
 
-class ResourceURIDereferencerImpl extends URIDereferencer {
+class ResourceURIDereferencerImpl(extraResources: Map[String, String]) extends URIDereferencer {
 
   override def dereference(uri: URI): IO[URIDereferencerError, String] = {
     for {
@@ -19,12 +19,19 @@ class ResourceURIDereferencerImpl extends URIDereferencer {
             ZIO.succeed(content)
           else ZIO.fail(ResourceNotFound(uri))
         case _ =>
-          ZIO.fail(ResourceNotFound(uri))
+          extraResources
+            .get(uri.toString)
+            .map(ZIO.succeed(_))
+            .getOrElse(ZIO.fail(ResourceNotFound(uri)))
     } yield body
   }
 
 }
 
 object ResourceURIDereferencerImpl {
-  def layer: ULayer[URIDereferencer] = ZLayer.succeed(ResourceURIDereferencerImpl())
+  def layer: ULayer[ResourceURIDereferencerImpl] =
+    ZLayer.succeed(new ResourceURIDereferencerImpl(Map.empty))
+
+  def layerWithExtraResources: URLayer[Map[String, String], ResourceURIDereferencerImpl] =
+    ZLayer.fromFunction(ResourceURIDereferencerImpl(_))
 }

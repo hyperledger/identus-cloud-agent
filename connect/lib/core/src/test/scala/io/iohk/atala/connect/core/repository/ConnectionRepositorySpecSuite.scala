@@ -19,7 +19,7 @@ object ConnectionRepositorySpecSuite {
 
   private def connectionRecord = ConnectionRecord(
     UUID.randomUUID,
-    Instant.ofEpochSecond(Instant.now.getEpochSecond),
+    Instant.now,
     None,
     UUID.randomUUID().toString,
     None,
@@ -395,6 +395,46 @@ object ConnectionRepositorySpecSuite {
         wallet1Record <- repo.getConnectionRecord(record.id).provide(wac1)
         wallet2Record <- repo.getConnectionRecord(record.id).provide(wac2)
       } yield assertTrue(wallet1Record.isDefined) && assertTrue(wallet2Record.isEmpty)
-    }
+    },
+    test("getConnectionRecordsByStatesForAllWallets returns correct records for all wallets") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      for {
+        repo <- ZIO.service[ConnectionRepository]
+
+        wac1 = ZLayer.succeed(WalletAccessContext(walletId1))
+        wac2 = ZLayer.succeed(WalletAccessContext(walletId2))
+        aRecordWallet1 = connectionRecord
+        bRecordWallet2 = connectionRecord
+        _ <- repo.createConnectionRecord(aRecordWallet1).provide(wac1)
+        _ <- repo.createConnectionRecord(bRecordWallet2).provide(wac2)
+        _ <- repo
+          .updateConnectionProtocolState(
+            aRecordWallet1.id,
+            ProtocolState.InvitationGenerated,
+            ProtocolState.ConnectionRequestReceived,
+            1
+          )
+          .provide(wac1)
+        _ <- repo
+          .updateConnectionProtocolState(
+            bRecordWallet2.id,
+            ProtocolState.InvitationGenerated,
+            ProtocolState.ConnectionResponsePending,
+            1
+          )
+          .provide(wac2)
+        allWalletRecords <- repo.getConnectionRecordsByStatesForAllWallets(
+          ignoreWithZeroRetries = true,
+          limit = 10,
+          ProtocolState.ConnectionRequestReceived,
+          ProtocolState.ConnectionResponsePending
+        )
+      } yield {
+        assertTrue(allWalletRecords.size == 2) &&
+        assertTrue(allWalletRecords.exists(_.id == aRecordWallet1.id)) &&
+        assertTrue(allWalletRecords.exists(_.id == bRecordWallet2.id))
+      }
+    },
   )
 }

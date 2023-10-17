@@ -23,15 +23,16 @@ object CredentialRepositorySpecSuite {
     updatedAt = None,
     thid = DidCommID(),
     schemaId = None,
+    credentialDefinitionId = None,
+    credentialFormat = CredentialFormat.JWT,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,
     validityPeriod = None,
     automaticIssuance = None,
-    awaitConfirmation = None,
     protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
-    publicationState = None,
     offerCredentialData = None,
     requestCredentialData = None,
+    anonCredsRequestMetadata = None,
     issueCredentialData = None,
     issuedCredentialRaw = None,
     issuingDID = None,
@@ -311,42 +312,6 @@ object CredentialRepositorySpecSuite {
         assertTrue(updatedRecord.get.protocolState == ProtocolState.OfferPending)
       }
     },
-    test("updateCredentialRecordPublicationState updates the record") {
-      for {
-        repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        _ <- repo.createIssueCredentialRecord(aRecord)
-        record <- repo.getIssueCredentialRecord(aRecord.id)
-        count <- repo.updateCredentialRecordPublicationState(
-          aRecord.id,
-          None,
-          Some(PublicationState.PublicationPending)
-        )
-        updatedRecord <- repo.getIssueCredentialRecord(aRecord.id)
-      } yield {
-        assertTrue(count == 1) &&
-        assertTrue(record.get.publicationState.isEmpty) &&
-        assertTrue(updatedRecord.get.publicationState.contains(PublicationState.PublicationPending))
-      }
-    },
-    test("updateCredentialRecordPublicationState doesn't update the record for invalid from state") {
-      for {
-        repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        _ <- repo.createIssueCredentialRecord(aRecord)
-        record <- repo.getIssueCredentialRecord(aRecord.id)
-        count <- repo.updateCredentialRecordPublicationState(
-          aRecord.id,
-          Some(PublicationState.PublicationPending),
-          Some(PublicationState.PublicationQueued)
-        )
-        updatedRecord <- repo.getIssueCredentialRecord(aRecord.id)
-      } yield {
-        assertTrue(count == 0) &&
-        assertTrue(record.get.publicationState.isEmpty) &&
-        assertTrue(updatedRecord.get.publicationState.isEmpty)
-      }
-    },
     test("updateWithRequestCredential updates record") {
       for {
         repo <- ZIO.service[CredentialRepository]
@@ -354,7 +319,7 @@ object CredentialRepositorySpecSuite {
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
         request = requestCredential
-        count <- repo.updateWithRequestCredential(
+        count <- repo.updateWithJWTRequestCredential(
           aRecord.id,
           request,
           ProtocolState.RequestPending
@@ -525,6 +490,39 @@ object CredentialRepositorySpecSuite {
         count1 <- repo.createIssueCredentialRecord(record1).provide(wallet1)
         delete1 <- repo.deleteIssueCredentialRecord(record1.id).provide(wallet2)
       } yield assert(count1)(equalTo(1)) && assert(delete1)(isZero)
-    }
+    },
+    test("getIssueCredentialRecordsByStatesForAllWallets should return all the records") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        repo <- ZIO.service[CredentialRepository]
+        record1 = issueCredentialRecord
+        record2 = issueCredentialRecord
+        count1 <- repo.createIssueCredentialRecord(record1).provide(wallet1)
+        count2 <- repo.createIssueCredentialRecord(record2).provide(wallet2)
+        _ <- repo
+          .updateCredentialRecordProtocolState(record1.id, ProtocolState.OfferPending, ProtocolState.OfferSent)
+          .provide(wallet1)
+        _ <- repo
+          .updateCredentialRecordProtocolState(
+            record2.id,
+            ProtocolState.OfferPending,
+            ProtocolState.CredentialGenerated
+          )
+          .provide(wallet2)
+        allRecords <- repo.getIssueCredentialRecordsByStatesForAllWallets(
+          ignoreWithZeroRetries = true,
+          limit = 10,
+          ProtocolState.OfferSent,
+          ProtocolState.CredentialGenerated
+        )
+      } yield assert(count1)(equalTo(1)) &&
+        assert(count2)(equalTo(1)) &&
+        assertTrue(allRecords.size == 2) &&
+        assertTrue(allRecords.exists(_.id == record1.id)) &&
+        assertTrue(allRecords.exists(_.id == record2.id))
+    },
   )
 }

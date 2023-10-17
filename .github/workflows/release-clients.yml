@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: "lts/*"
           registry-url: https://npm.pkg.github.com/
-          scope: "@input-output-hk"
+          scope: "@hyperledger-labs"
 
       - name: Setup Python
         uses: actions/setup-python@v4

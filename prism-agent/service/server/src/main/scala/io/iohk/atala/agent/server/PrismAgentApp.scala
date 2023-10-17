@@ -3,9 +3,15 @@ package io.iohk.atala.agent.server
 import io.iohk.atala.agent.notification.WebhookPublisher
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
-import io.iohk.atala.agent.server.jobs.{BackgroundJobs, ConnectBackgroundJobs}
+import io.iohk.atala.agent.server.jobs.{
+  ConnectBackgroundJobs,
+  DIDStateSyncBackgroundJobs,
+  IssueBackgroundJobs,
+  PresentBackgroundJobs
+}
 import io.iohk.atala.agent.walletapi.model.{Entity, Wallet, WalletSeed}
 import io.iohk.atala.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEndpoints}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionServerEndpoints
@@ -24,89 +30,66 @@ import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.presentproof.controller.PresentProofServerEndpoints
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.models.{HexString, WalletAccessContext, WalletId}
+import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.system.controller.SystemServerEndpoints
 import zio.*
 import zio.metrics.*
-import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 
 object PrismAgentApp {
 
-  def run(didCommServicePort: Int) = for {
+  def run = for {
     _ <- AgentInitialization.run
     _ <- issueCredentialDidCommExchangesJob.debug.fork
     _ <- presentProofExchangeJob.debug.fork
     _ <- connectDidCommExchangesJob.debug.fork
     _ <- syncDIDPublicationStateFromDltJob.fork
     _ <- AgentHttpServer.run.fork
-    fiber <- DidCommHttpServer.run(didCommServicePort).fork
+    fiber <- DidCommHttpServer.run.fork
     _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
     _ <- fiber.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
   } yield ()
 
   private val issueCredentialDidCommExchangesJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDService &
-      ManagedDIDService & PresentationService & WalletManagementService,
+    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDNonSecretStorage &
+      DIDService & ManagedDIDService & PresentationService & WalletManagementService,
     Unit
   ] =
     for {
       config <- ZIO.service[AppConfig]
-      _ <- ZIO
-        .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
-        .mapError(_.toThrowable)
-        .flatMap { wallets =>
-          ZIO.foreach(wallets) { wallet =>
-            BackgroundJobs.issueCredentialDidCommExchanges
-              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id))) @@ Metric
-              .gauge("issuance_flow_did_com_exchange_job_ms_gauge")
-              .trackDurationWith(_.toMetricsSeconds)
-          }
-        }
+      _ <- IssueBackgroundJobs.issueCredentialDidCommExchanges
         .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
-        .unit
+        .unit @@ Metric
+        .gauge("issuance_flow_did_com_exchange_job_ms_gauge")
+        .trackDurationWith(_.toMetricsSeconds)
     } yield ()
 
   private val presentProofExchangeJob: RIO[
     AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService &
-      DIDService & ManagedDIDService & WalletManagementService,
+      DIDNonSecretStorage & DIDService & ManagedDIDService & WalletManagementService,
     Unit
   ] =
     for {
       config <- ZIO.service[AppConfig]
-      _ <- ZIO
-        .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
-        .mapError(_.toThrowable)
-        .flatMap { wallets =>
-          ZIO.foreach(wallets) { wallet =>
-            BackgroundJobs.presentProofExchanges
-              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id))) @@ Metric
-              .gauge("present_proof_flow_did_com_exchange_job_ms_gauge")
-              .trackDurationWith(_.toMetricsSeconds)
-          }
-        }
+      _ <- PresentBackgroundJobs.presentProofExchanges
         .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
-        .unit
+        .unit @@ Metric
+        .gauge("present_proof_flow_did_com_exchange_job_ms_gauge")
+        .trackDurationWith(_.toMetricsSeconds)
     } yield ()
 
   private val connectDidCommExchangesJob: RIO[
-    AppConfig & DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & WalletManagementService,
+    AppConfig & DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & DIDNonSecretStorage &
+      WalletManagementService,
     Unit
   ] =
     for {
       config <- ZIO.service[AppConfig]
-      _ <- ZIO
-        .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
-        .mapError(_.toThrowable)
-        .flatMap { wallets =>
-          ZIO.foreach(wallets) { wallet =>
-            ConnectBackgroundJobs.didCommExchanges
-              .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id))) @@ Metric
-              .gauge("connection_flow_did_com_exchange_job_ms_gauge")
-              .trackDurationWith(_.toMetricsSeconds)
-          }
-        }
+      _ <- ConnectBackgroundJobs.didCommExchanges
         .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
-        .unit
+        .unit @@ Metric
+        .gauge("connection_flow_did_com_exchange_job_ms_gauge")
+        .trackDurationWith(_.toMetricsSeconds)
     } yield ()
 
   private val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService & WalletManagementService, Unit] =
@@ -114,7 +97,7 @@ object PrismAgentApp {
       .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
       .flatMap { wallets =>
         ZIO.foreach(wallets) { wallet =>
-          BackgroundJobs.syncDIDPublicationStateFromDlt
+          DIDStateSyncBackgroundJobs.syncDIDPublicationStateFromDlt
             .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id)))
         }
       }

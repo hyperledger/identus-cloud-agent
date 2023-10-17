@@ -20,30 +20,20 @@ class OfferCredentialSpec extends ZSuite {
 
     val expectedOfferCredentialJson = parse(s"""{
          |    "id": "041bf917-2cbe-460b-8d12-b1a9609505c2",
-         |    "type": "https://didcomm.org/issue-credential/2.0/offer-credential",
-         |    "body":
-         |    {
-         |        "goal_code": "Offer Credential",
-         |        "credential_preview":
-         |        {
-         |            "type": "https://didcomm.org/issue-credential/2.0/credential-preview",
-         |            "attributes":
-         |            [
-         |                {
-         |                    "name": "name",
-         |                    "value": "Joe Blog"
-         |                },
-         |                {
-         |                    "name": "dob",
-         |                    "value": "01/10/1947"
-         |                }
-         |            ]
-         |        },
-         |        "formats":
-         |        []
+         |    "type": "https://didcomm.org/issue-credential/3.0/offer-credential",
+         |    "body": {
+         |      "goal_code": "Offer Credential",
+         |      "credential_preview": {
+         |        "type": "https://didcomm.org/issue-credential/3.0/credential-credential",
+         |        "body": {
+         |          "attributes": [
+         |            { "name": "name", "value": "Joe Blog"},
+         |            { "name": "dob", "value": "01/10/1947"}
+         |          ]
+         |        }
+         |      }
          |    },
-         |    "attachments":
-         |    [
+         |    "attachments": [
          |    $attachmentDescriptorJson
          |    ],
          |    "to" : "did:prism:test123",
@@ -60,7 +50,6 @@ class OfferCredentialSpec extends ZSuite {
 
     val result = offerCredential.asJson.deepDropNullValues
 
-    println(result.noSpaces)
     assertEquals(result, expectedOfferCredentialJson)
   }
 }

@@ -10,7 +10,7 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.ProofType
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
-import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
+import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.presentproof.controller.PresentProofController.toDidCommID
 import io.iohk.atala.presentproof.controller.http.*
@@ -29,12 +29,13 @@ class PresentProofControllerImpl(
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
     val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
+      credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
       record <- presentationService
         .createPresentationRecord(
           pairwiseVerifierDID = didIdPair.myDID,
           pairwiseProverDID = didIdPair.theirDid,
           thid = DidCommID(),
-          connectionId = Some(request.connectionId),
+          connectionId = Some(request.connectionId.toString),
           proofTypes = request.proofs.map { e =>
             ProofType(
               schema = e.schemaId, // TODO rename field to schemaId
@@ -43,6 +44,7 @@ class PresentProofControllerImpl(
             )
           },
           options = request.options.map(x => Options(x.challenge, x.domain)),
+          format = credentialFormat,
         )
     } yield PresentationStatus.fromDomain(record)
 

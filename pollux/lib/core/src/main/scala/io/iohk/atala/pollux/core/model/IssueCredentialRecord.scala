@@ -1,10 +1,19 @@
 package io.iohk.atala.pollux.core.model
 
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
-import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
+import io.iohk.atala.mercury.protocol.issuecredential.{
+  IssueCredential,
+  IssueCredentialIssuedFormat,
+  IssueCredentialOfferFormat,
+  IssueCredentialRequestFormat,
+  OfferCredential,
+  RequestCredential
+}
+import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 
 import java.time.Instant
+import java.util.UUID
 
 final case class IssueCredentialRecord(
     id: DidCommID,
@@ -12,22 +21,43 @@ final case class IssueCredentialRecord(
     updatedAt: Option[Instant],
     thid: DidCommID,
     schemaId: Option[String],
+    credentialDefinitionId: Option[UUID],
+    credentialFormat: CredentialFormat,
     role: Role,
     subjectId: Option[String],
     validityPeriod: Option[Double] = None,
     automaticIssuance: Option[Boolean],
-    awaitConfirmation: Option[Boolean],
     protocolState: ProtocolState,
-    publicationState: Option[PublicationState],
     offerCredentialData: Option[OfferCredential],
     requestCredentialData: Option[RequestCredential],
+    anonCredsRequestMetadata: Option[CredentialRequestMetadata],
     issueCredentialData: Option[IssueCredential],
     issuedCredentialRaw: Option[String],
     issuingDID: Option[CanonicalPrismDID],
     metaRetries: Int,
     metaNextRetry: Option[Instant],
     metaLastFailure: Option[String],
-)
+) {
+  def offerCredentialFormatAndData: Option[(IssueCredentialOfferFormat, OfferCredential)] =
+    offerCredentialData.map { data =>
+      credentialFormat.match
+        case CredentialFormat.JWT       => (IssueCredentialOfferFormat.JWT, data)
+        case CredentialFormat.AnonCreds => (IssueCredentialOfferFormat.Anoncred, data)
+    }
+  def requestCredentialFormatAndData: Option[(IssueCredentialRequestFormat, RequestCredential)] =
+    requestCredentialData.map { data =>
+      credentialFormat.match
+        case CredentialFormat.JWT       => (IssueCredentialRequestFormat.JWT, data)
+        case CredentialFormat.AnonCreds => (IssueCredentialRequestFormat.Anoncred, data)
+    }
+  def issuedCredentialFormatAndData: Option[(IssueCredentialIssuedFormat, IssueCredential)] =
+    issueCredentialData.map { data =>
+      credentialFormat.match
+        case CredentialFormat.JWT       => (IssueCredentialIssuedFormat.JWT, data)
+        case CredentialFormat.AnonCreds => (IssueCredentialIssuedFormat.Anoncred, data)
+    }
+
+}
 final case class ValidIssuedCredentialRecord(
     id: DidCommID,
     issuedCredentialRaw: Option[String],
@@ -73,11 +103,4 @@ object IssueCredentialRecord {
     // Holder has received the credential (In Holder DB)
     case CredentialReceived extends ProtocolState
 
-  enum PublicationState:
-    // The credential requires on-chain publication and should therefore be included in the next Merkle Tree computation/publication
-    case PublicationPending extends PublicationState
-    // The credential publication operation has been successfully sent to Iris and is pending publication
-    case PublicationQueued extends PublicationState
-    // The credential publication has been confirmed by Iris
-    case Published extends PublicationState
 }

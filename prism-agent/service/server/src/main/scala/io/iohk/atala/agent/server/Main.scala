@@ -11,6 +11,7 @@ import io.iohk.atala.agent.walletapi.service.{
   WalletManagementServiceImpl
 }
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository, JdbcWalletNonSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
@@ -104,23 +105,10 @@ object MainApp extends ZIOAppDefault {
       |""".stripMargin)
         .ignore
 
-      didCommServiceUrl <- System.env("DIDCOMM_SERVICE_URL").map {
-        case Some(s) => s
-        case _       => "http://localhost:8090"
-      }
-      _ <- ZIO.logInfo(s"DIDComm Service URL => $didCommServiceUrl")
-
-      didCommServicePort <- System.env("DIDCOMM_SERVICE_PORT").map {
-        case Some(s) if s.toIntOption.isDefined => s.toInt
-        case _                                  => 8090
-      }
-      _ <- ZIO.logInfo(s"DIDComm Service port => $didCommServicePort")
-
       _ <- preMigrations
       _ <- migrations
 
-      app <- PrismAgentApp
-        .run(didCommServicePort)
+      app <- PrismAgentApp.run
         .provide(
           DidCommX.liveLayer,
           // infra
@@ -156,7 +144,7 @@ object MainApp extends ZIOAppDefault {
           ConnectionServiceImpl.layer >>> ConnectionServiceNotifier.layer,
           CredentialSchemaServiceImpl.layer,
           CredentialDefinitionServiceImpl.layer,
-          CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
+          LinkSecretServiceImpl.layer >>> CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
           EntityServiceImpl.layer,
           ManagedDIDServiceWithEventNotificationImpl.layer,
@@ -166,7 +154,6 @@ object MainApp extends ZIOAppDefault {
           // authentication
           AdminApiKeyAuthenticatorImpl.layer >+> ApiKeyAuthenticatorImpl.layer >+> DefaultAuthenticator.layer,
           // grpc
-          GrpcModule.irisStubLayer,
           GrpcModule.prismNodeStubLayer,
           // storage
           RepoModule.agentContextAwareTransactorLayer ++ RepoModule.agentTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
@@ -174,17 +161,17 @@ object MainApp extends ZIOAppDefault {
           RepoModule.allSecretStorageLayer,
           RepoModule.agentTransactorLayer >>> JdbcEntityRepository.layer,
           RepoModule.agentTransactorLayer >>> JdbcAuthenticationRepository.layer,
-          RepoModule.connectContextAwareTransactorLayer >>> JdbcConnectionRepository.layer,
-          RepoModule.polluxContextAwareTransactorLayer >>> JdbcCredentialRepository.layer,
+          RepoModule.connectContextAwareTransactorLayer ++ RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
-          RepoModule.polluxContextAwareTransactorLayer >>> JdbcPresentationRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client
           Client.default,
-          Scope.default
+          Scope.default,
         )
     } yield app
 

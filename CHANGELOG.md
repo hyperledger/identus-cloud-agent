@@ -1,3 +1,23 @@
+# [1.17.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.4...prism-agent-v1.17.0) (2023-10-14)
+
+
+### Bug Fixes
+
+* change repository and name for rest api clients ([#745](https://github.com/hyperledger-labs/open-enterprise-agent/issues/745)) ([0f84e28](https://github.com/hyperledger-labs/open-enterprise-agent/commit/0f84e28c3f2800c1d73353e40620a840fbb6b93a))
+* improve performance for background jobs in multitenancy mode ([#749](https://github.com/hyperledger-labs/open-enterprise-agent/issues/749)) ([17def3f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/17def3f67c1eb687560aee844aba6ff2a0bd4137))
+* **prism-agent:** agent should read DIDComm port from config ([#757](https://github.com/hyperledger-labs/open-enterprise-agent/issues/757)) ([cda908c](https://github.com/hyperledger-labs/open-enterprise-agent/commit/cda908c87cee562e6c044aa405aa82bd510cc74e))
+* **prism-agent:** configure APISIX to return CORS headers from Prism Agent endpoints ([#746](https://github.com/hyperledger-labs/open-enterprise-agent/issues/746)) ([a579aa9](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a579aa95ea5c0c4950cb64b8b9adb1f56bb87eb2))
+* **prism-agent:** fix docker env variables interpolation issue ([#751](https://github.com/hyperledger-labs/open-enterprise-agent/issues/751)) ([110eb2d](https://github.com/hyperledger-labs/open-enterprise-agent/commit/110eb2df9590412b35997152d526c599edb8e7af))
+* **prism-agent:** return relevant errors on offer creation ([#754](https://github.com/hyperledger-labs/open-enterprise-agent/issues/754)) ([d36533f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/d36533fe538812c9e3647bcc2383700173e4b1b7))
+* prohibit tenants to use equal or revoked api keys ([#742](https://github.com/hyperledger-labs/open-enterprise-agent/issues/742)) ([4b10c3a](https://github.com/hyperledger-labs/open-enterprise-agent/commit/4b10c3af931722a683bf55062297c3dfa1e38046))
+* upgrade vault and quill versions ([#739](https://github.com/hyperledger-labs/open-enterprise-agent/issues/739)) ([c140857](https://github.com/hyperledger-labs/open-enterprise-agent/commit/c140857df97d56ab750ec186962e5fe2bb6a6717))
+
+
+### Features
+
+* **prism-agent:** check issuing DID validity when creating a VC offer + return 'metaRetries' ([#740](https://github.com/hyperledger-labs/open-enterprise-agent/issues/740)) ([f2e2fd3](https://github.com/hyperledger-labs/open-enterprise-agent/commit/f2e2fd3d0397422be40b11644f8b84ddd3c6985f))
+* **prism-agent:** implement AnonCreds issuance flow ([#693](https://github.com/hyperledger-labs/open-enterprise-agent/issues/693)) ([9165a6f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/9165a6f8fc0a11bd6c19b0bfd4dd4217ea3194d9))
+
 ## [1.16.4](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.3...prism-agent-v1.16.4) (2023-09-29)
 
 

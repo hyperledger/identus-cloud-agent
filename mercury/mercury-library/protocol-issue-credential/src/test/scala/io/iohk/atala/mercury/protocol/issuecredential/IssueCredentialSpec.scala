@@ -22,22 +22,19 @@ class IssueCredentialSpec extends ZSuite {
         .deepDropNullValues
         .noSpaces
 
-    val expectedProposalJson = parse(s"""{
-                         |    "id": "061bf917-2cbe-460b-8d12-b1a9609505c2",
-                         |    "type": "https://didcomm.org/issue-credential/2.0/issue-credential",
-                         |    "body":
-                         |    {
-                         |        "goal_code": "Issued Credential",
-                         |        "formats":
-                         |        []
-                         |    },
-                         |    "attachments":
-                         |    [
-                         |    $attachmentDescriptorJson
-                         |    ],
-                         |    "to" : "did:prism:test123",
-                         |    "from" : "did:prism:test123"
-                         |}""".stripMargin).getOrElse(Json.Null)
+      // FIXME !!! THIS WILL FAIL!
+    val expectedProposalJson = parse(
+      s"""{
+         |  "id": "061bf917-2cbe-460b-8d12-b1a9609505c2",
+         |  "type": "https://didcomm.org/issue-credential/3.0/issue-credential",
+         |  "body": { "goal_code": "Issued Credential" },
+         |  "attachments": [
+         |    $attachmentDescriptorJson
+         |  ],
+         |  "to" : "did:prism:test123",
+         |  "from" : "did:prism:test123"
+         |}""".stripMargin
+    ).getOrElse(Json.Null)
 
     val issueCredential = IssueCredential(
       id = "061bf917-2cbe-460b-8d12-b1a9609505c2",
@@ -46,11 +43,6 @@ class IssueCredentialSpec extends ZSuite {
       to = DidId("did:prism:test123"),
       from = DidId("did:prism:test123")
     )
-
-    val did = DidId("did:prism:test123")
-    println("************************")
-    println(did.asJson.noSpaces)
-    println("************************")
 
     val result = issueCredential.asJson.deepDropNullValues
     assertEquals(result, expectedProposalJson)

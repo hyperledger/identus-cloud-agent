@@ -8,10 +8,11 @@ import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.shared.models.WalletAccessContext
-import zio.{URLayer, ZIO, ZLayer}
+import zio.{URLayer, ZIO, ZLayer, IO}
 
 import java.time.Instant
 import java.util.UUID
+import io.iohk.atala.pollux.core.model.CredentialFormat
 
 class PresentationServiceNotifier(
     svc: PresentationService,
@@ -26,10 +27,19 @@ class PresentationServiceNotifier(
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
-      options: Option[Options]
+      options: Option[Options],
+      format: CredentialFormat,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(
-      svc.createPresentationRecord(pairwiseVerifierDID, pairwiseProverDID, thid, connectionId, proofTypes, options)
+      svc.createPresentationRecord(
+        pairwiseVerifierDID,
+        pairwiseProverDID,
+        thid,
+        connectionId,
+        proofTypes,
+        options,
+        format: CredentialFormat
+      )
     )
 
   override def markRequestPresentationSent(
@@ -131,6 +141,13 @@ class PresentationServiceNotifier(
       state: PresentationRecord.ProtocolState*
   ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] =
     svc.getPresentationRecordsByStates(ignoreWithZeroRetries, limit, state: _*)
+
+  override def getPresentationRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      state: PresentationRecord.ProtocolState*
+  ): IO[PresentationError, Seq[PresentationRecord]] =
+    svc.getPresentationRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, state: _*)
 
   override def getPresentationRecord(
       recordId: DidCommID

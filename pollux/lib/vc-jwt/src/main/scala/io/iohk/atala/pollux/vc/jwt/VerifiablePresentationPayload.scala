@@ -114,6 +114,32 @@ case class JwtPresentationPayload(
       maybeNonce = maybeNonce
     )
 
+//FIXME THIS WILL NOT WORK like that
+case class AnomcredVp(
+    `@context`: IndexedSeq[String],
+    `type`: IndexedSeq[String],
+    verifiableCredential: IndexedSeq[VerifiableCredentialPayload]
+)
+case class AnomcredPresentationPayload(
+    iss: String,
+    vp: JwtVp,
+    maybeNbf: Option[Instant],
+    aud: IndexedSeq[String],
+    maybeExp: Option[Instant],
+    maybeJti: Option[String],
+    maybeNonce: Option[String]
+) extends PresentationPayload(
+      iss = iss,
+      `@context` = vp.`@context`,
+      `type` = vp.`type`,
+      verifiableCredential = vp.verifiableCredential,
+      maybeNbf = maybeNbf,
+      aud = aud,
+      maybeExp = maybeExp,
+      maybeJti = maybeJti,
+      maybeNonce = maybeNonce
+    )
+
 object PresentationPayload {
 
   object Implicits {

@@ -1,14 +1,12 @@
 package io.iohk.atala.mercury.model
 
+import io.circe.*
+import io.iohk.atala.mercury.model.*
+import org.didcommx.didcomm.message.Attachment.Data
+import org.didcommx.didcomm.message.{MessageBuilder, Attachment as XAttachment}
 import org.didcommx.didcomm.model.*
-import org.didcommx.didcomm.message.MessageBuilder
-import org.didcommx.didcomm.message.Attachment as XAttachment
 
 import scala.jdk.CollectionConverters.*
-import io.iohk.atala.mercury.model.*
-
-import io.circe.*
-import org.didcommx.didcomm.message.Attachment.Data
 import scala.language.implicitConversions
 
 given Conversion[PackEncryptedResult, EncryptedMessage] with {
@@ -106,7 +104,12 @@ given Conversion[AttachmentDescriptor, XAttachment] with {
         case _                     => ??? // FIXME later attachment data of other types
       }
 
-    new XAttachment.Builder(id, data).build()
+    new XAttachment.Builder(id, data)
+      .format(attachment.format match
+        case Some(format) => format
+        case None         => null
+      )
+      .build()
   }
 }
 
@@ -139,6 +142,7 @@ given Conversion[XAttachment, AttachmentDescriptor] with {
       lastmod_time = Option(attachment.getLastModTime()),
       byte_count = Option(attachment.getByteCount()),
       description = Option(attachment.getDescription()),
+      format = Option(attachment.getFormat)
     )
   }
 }

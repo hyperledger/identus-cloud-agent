@@ -18,11 +18,12 @@ import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import org.postgresql.util.PSQLException
 import zio.*
-
+import zio.interop.catz.*
 import java.time.Instant
 import java.util.UUID
+import doobie.free.connection
 
-class JdbcConnectionRepository(xa: Transactor[ContextAwareTask]) extends ConnectionRepository {
+class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task]) extends ConnectionRepository {
 
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
@@ -114,9 +115,25 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask]) extends Connect
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): RIO[WalletAccessContext, Seq[ConnectionRecord]] = {
+    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transactWallet(xa)
+  }
+
+  override def getConnectionRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: ConnectionRecord.ProtocolState*
+  ): Task[Seq[ConnectionRecord]] = {
+    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transact(xb)
+  }
+
+  private def getRecordsByStates(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: ConnectionRecord.ProtocolState*
+  ): ConnectionIO[Seq[ConnectionRecord]] = {
     states match
       case Nil =>
-        ZIO.succeed(Nil)
+        connection.pure(Nil)
       case head +: tail =>
         val nel = NonEmptyList.of(head, tail: _*)
         val inClauseFragment = Fragments.in(fr"protocol_state", nel)
@@ -148,7 +165,6 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask]) extends Connect
           .to[Seq]
 
         cxnIO
-          .transactWallet(xa)
   }
 
   override def getConnectionRecord(recordId: UUID): RIO[WalletAccessContext, Option[ConnectionRecord]] = {
@@ -298,10 +314,8 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask]) extends Connect
         """.stripMargin.update
     cxnIO.run.transactWallet(xa)
   }
-
 }
-
 object JdbcConnectionRepository {
-  val layer: URLayer[Transactor[ContextAwareTask], ConnectionRepository] =
-    ZLayer.fromFunction(new JdbcConnectionRepository(_))
+  val layer: URLayer[Transactor[ContextAwareTask] & Transactor[Task], ConnectionRepository] =
+    ZLayer.fromFunction(new JdbcConnectionRepository(_, _))
 }

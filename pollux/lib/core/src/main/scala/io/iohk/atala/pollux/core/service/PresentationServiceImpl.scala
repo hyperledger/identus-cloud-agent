@@ -21,6 +21,7 @@ import java.rmi.UnexpectedException
 import java.time.Instant
 import java.util as ju
 import java.util.UUID
+import io.iohk.atala.mercury.protocol.presentproof.PresentCredentialRequestFormat
 
 private class PresentationServiceImpl(
     presentationRepository: PresentationRepository,
@@ -79,20 +80,23 @@ private class PresentationServiceImpl(
       issuedValidCredentials <- credentialRepository
         .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
         .mapError(RepositoryError.apply)
-
-      issuedRawCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw.map(IssuedCredentialRaw(_)))
-
+      signedCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw)
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
-          issuedRawCredentials.nonEmpty,
-          issuedRawCredentials,
+          signedCredentials.nonEmpty,
+          signedCredentials,
           PresentationError.IssuedCredentialNotFoundError(
             new Throwable("No matching issued credentials found in prover db")
           )
         )
       )
 
-      presentationPayload <- createPresentationPayloadFromCredential(issuedCredentials, requestPresentation, prover)
+      presentationPayload <- createPresentationPayloadFromCredential(
+        issuedCredentials,
+        record.credentialFormat,
+        requestPresentation,
+        prover
+      )
     } yield presentationPayload
   }
 
@@ -144,7 +148,8 @@ private class PresentationServiceImpl(
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
-      options: Option[io.iohk.atala.pollux.core.model.presentation.Options]
+      options: Option[io.iohk.atala.pollux.core.model.presentation.Options],
+      format: CredentialFormat,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       request <- ZIO.succeed(
@@ -153,7 +158,8 @@ private class PresentationServiceImpl(
           thid,
           pairwiseVerifierDID,
           pairwiseProverDID,
-          options
+          options,
+          format,
         )
       )
       record <- ZIO.succeed(
@@ -167,6 +173,7 @@ private class PresentationServiceImpl(
           role = PresentationRecord.Role.Verifier,
           subjectId = pairwiseProverDID,
           protocolState = PresentationRecord.ProtocolState.RequestPending,
+          credentialFormat = format,
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
@@ -200,11 +207,35 @@ private class PresentationServiceImpl(
     } yield records
   }
 
+  override def getPresentationRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: PresentationRecord.ProtocolState*
+  ): IO[PresentationError, Seq[PresentationRecord]] = {
+    for {
+      records <- presentationRepository
+        .getPresentationRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+        .mapError(RepositoryError.apply)
+    } yield records
+  }
+
   override def receiveRequestPresentation(
       connectionId: Option[String],
       request: RequestPresentation
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
+      format <- request.attachments match {
+        case Seq() => ZIO.fail(PresentationError.MissingCredential)
+        case Seq(head) =>
+          val jsonF = PresentCredentialRequestFormat.JWT.name // stable identifier
+          val anoncredF = PresentCredentialRequestFormat.Anoncred.name // stable identifier
+          head.format match
+            case None                    => ZIO.fail(PresentationError.MissingCredentialFormat)
+            case Some(`jsonF`)           => ZIO.succeed(CredentialFormat.JWT)
+            case Some(`anoncredF`)       => ZIO.succeed(CredentialFormat.AnonCreds)
+            case Some(unsupportedFormat) => ZIO.fail(PresentationError.UnsupportedCredentialFormat(unsupportedFormat))
+        case _ => ZIO.fail(PresentationError.UnexpectedError("Presentation with multi attachments"))
+      }
       record <- ZIO.succeed(
         PresentationRecord(
           id = DidCommID(),
@@ -216,6 +247,7 @@ private class PresentationServiceImpl(
           role = Role.Prover,
           subjectId = request.to,
           protocolState = PresentationRecord.ProtocolState.RequestReceived,
+          credentialFormat = format,
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
@@ -235,19 +267,33 @@ private class PresentationServiceImpl(
     } yield record
   }
 
+  /** All credentials MUST be of the same format */
   private def createPresentationPayloadFromCredential(
-      issuedCredentials: Seq[IssuedCredentialRaw],
+      issuedCredentials: Seq[String],
+      format: CredentialFormat,
       requestPresentation: RequestPresentation,
       prover: Issuer
   ): IO[PresentationError, PresentationPayload] = {
 
-    val verifiableCredentials =
-      issuedCredentials.map { issuedCredential =>
-        decode[io.iohk.atala.mercury.model.Base64](issuedCredential.signedCredential)
-          .flatMap(x => Right(new String(java.util.Base64.getDecoder().decode(x.base64))))
-          .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
-          .left
-          .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
+    val verifiableCredentials: Either[
+      PresentationError.PresentationDecodingError,
+      Seq[JwtVerifiableCredentialPayload | AnoncredVerifiableCredentialPayload]
+    ] =
+      issuedCredentials.map { signedCredential =>
+        format match {
+          case CredentialFormat.JWT =>
+            decode[io.iohk.atala.mercury.model.Base64](signedCredential)
+              .flatMap(x => Right(new String(java.util.Base64.getDecoder().decode(x.base64))))
+              .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
+              .left
+              .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
+          case CredentialFormat.AnonCreds =>
+            decode[io.iohk.atala.mercury.model.Base64](signedCredential)
+              .flatMap(x => Right(new String(java.util.Base64.getDecoder().decode(x.base64))))
+              .flatMap(x => Right(AnoncredVerifiableCredentialPayload(x)))
+              .left
+              .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
+        }
       }.sequence
 
     val maybePresentationOptions
@@ -320,11 +366,15 @@ private class PresentationServiceImpl(
               .map(_.subjectId)}"
         )
       )
-      issuedRawCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw.map(IssuedCredentialRaw(_)))
+      signedCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw)
+      // record.credentialFormat match {
+      //   case PresentationRecord.CredentialFormat.JWT => issuedRawCredentials
+      //   case CredentialFormat.AnonCreds => issuedRawCredentials
+      // }
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
-          issuedRawCredentials.nonEmpty,
-          issuedRawCredentials,
+          signedCredentials.nonEmpty,
+          signedCredentials,
           PresentationError.IssuedCredentialNotFoundError(
             new Throwable(s"No matching issued credentials found in prover db from the given: $credentialsToUse")
           )
@@ -565,7 +615,8 @@ private class PresentationServiceImpl(
       thid: DidCommID,
       pairwiseVerifierDID: DidId,
       pairwiseProverDID: DidId,
-      maybeOptions: Option[io.iohk.atala.pollux.core.model.presentation.Options]
+      maybeOptions: Option[io.iohk.atala.pollux.core.model.presentation.Options],
+      format: CredentialFormat,
   ): RequestPresentation = {
     RequestPresentation(
       body = RequestPresentation.Body(
@@ -575,8 +626,11 @@ private class PresentationServiceImpl(
       attachments = maybeOptions
         .map(options =>
           Seq(
-            AttachmentDescriptor.buildJsonAttachment(payload =
-              io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.build(Some(options))
+            AttachmentDescriptor.buildJsonAttachment(
+              payload = PresentationAttachment.build(Some(options)),
+              format = format match
+                case CredentialFormat.JWT       => Some(PresentCredentialRequestFormat.JWT.name)
+                case CredentialFormat.AnonCreds => Some(PresentCredentialRequestFormat.Anoncred.name)
             )
           )
         )

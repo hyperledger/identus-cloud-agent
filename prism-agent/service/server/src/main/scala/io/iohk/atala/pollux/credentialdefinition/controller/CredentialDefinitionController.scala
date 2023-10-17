@@ -25,6 +25,10 @@ trait CredentialDefinitionController {
       rc: RequestContext
   ): IO[ErrorResponse, CredentialDefinitionResponse]
 
+  def getCredentialDefinitionInnerDefinitionByGuid(id: UUID)(implicit
+      rc: RequestContext
+  ): IO[ErrorResponse, zio.json.ast.Json]
+
   def delete(guid: UUID)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponse]

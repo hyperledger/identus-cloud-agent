@@ -3,20 +3,25 @@ package io.iohk.atala.issue.controller
 import com.typesafe.config.ConfigFactory
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
+import io.iohk.atala.castor.core.service.MockDIDService
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
-import io.iohk.atala.iam.authentication.Authenticator
-import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
+import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.issue.controller.http.{
   CreateIssueCredentialRecordRequest,
   IssueCredentialRecord,
   IssueCredentialRecordPage
 }
-import io.iohk.atala.pollux.core.repository.CredentialRepositoryInMemory
+import io.iohk.atala.pollux.anoncreds.LinkSecretWithId
+import io.iohk.atala.pollux.core.model.CredentialFormat
+import io.iohk.atala.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory}
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.vc.jwt.*
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.{DeserializationException, Response, UriContext}
@@ -30,6 +35,8 @@ import zio.config.{ReadError, read}
 import zio.json.ast.Json
 import zio.json.ast.Json.*
 import zio.test.*
+
+import java.util.UUID
 
 trait IssueControllerTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>
@@ -79,14 +86,25 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
     didResolverLayer >+>
     ResourceURIDereferencerImpl.layer >+>
     CredentialRepositoryInMemory.layer >+>
+    ZLayer.succeed(LinkSecretWithId("Unused Linked Secret ID")) >+>
+    MockDIDService.empty >+>
+    MockManagedDIDService.empty >+>
     CredentialServiceImpl.layer >+>
     ConnectionRepositoryInMemory.layer >+>
     ConnectionServiceImpl.layer >+>
     IssueControllerImpl.layer
 
+  protected val defaultWalletLayer = ZLayer.succeed(WalletAccessContext(WalletId.default))
+
+  protected val credentialDefinitionServiceLayer =
+    CredentialDefinitionRepositoryInMemory.layer ++ ResourceURIDereferencerImpl.layer >>>
+      CredentialDefinitionServiceImpl.layer
+
   val testEnvironmentLayer = zio.test.testEnvironment ++
     pgContainerLayer ++
     contextAwareTransactorLayer ++
+    GenericSecretStorageInMemory.layer >+> LinkSecretServiceImpl.layer ++
+    GenericSecretStorageInMemory.layer >+> credentialDefinitionServiceLayer >+>
     controllerLayer ++
     DefaultEntityAuthenticator.layer
 
@@ -127,7 +145,7 @@ trait IssueGen {
     val gValidityPeriod: Gen[Any, Double] = Gen.double
     val gAutomaticIssuance: Gen[Any, Boolean] = Gen.boolean
     val gIssuingDID: Gen[Any, String] = Gen.alphaNumericStringBounded(5, 20) // TODO Make a DID generator
-    val gConnectionId: Gen[Any, String] = Gen.alphaNumericStringBounded(5, 20)
+    val gConnectionId: Gen[Any, UUID] = Gen.uuid
 
     val claims = Json.Obj(
       "key1" -> Json.Str("value1"),
@@ -144,8 +162,10 @@ trait IssueGen {
       schemaId = None,
       claims = claims,
       automaticIssuance = Some(automaticIssuance),
-      issuingDID = issuingDID,
-      connectionId = connectionId
+      issuingDID = Some(issuingDID),
+      connectionId = connectionId,
+      credentialDefinitionId = None,
+      credentialFormat = Some(CredentialFormat.JWT.toString)
     )
   }
 

@@ -60,7 +60,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
               thid,
               connectionId,
               proofTypes,
-              options
+              options,
+              format = CredentialFormat.JWT,
             )
           } yield {
             assertTrue(record.thid == thid) &&
@@ -199,6 +200,63 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestRejected)
         }
       },
+      test("receiveRequestPresentation with a MissingCredentialFormat") {
+        for {
+          svc <- ZIO.service[PresentationService]
+          connectionId = Some("connectionId")
+          body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
+          presentationAttachmentAsJson = """{
+                "challenge": "1f44d55f-f161-4938-a659-f8026467f126",
+                "domain": "us.gov/DriverLicense",
+                "credential_manifest": {}
+            }"""
+          prover = DidId("did:peer:Prover")
+          verifier = DidId("did:peer:Verifier")
+
+          attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
+            payload = presentationAttachmentAsJson,
+          )
+          requestPresentation = RequestPresentation(
+            body = body,
+            attachments = Seq(attachmentDescriptor),
+            to = prover,
+            from = verifier,
+          )
+          result <- svc.receiveRequestPresentation(connectionId, requestPresentation).exit
+
+        } yield assert(result)(
+          fails(equalTo(MissingCredentialFormat))
+        )
+      },
+      test("receiveRequestPresentation with a UnsupportedCredentialFormat") {
+        for {
+          svc <- ZIO.service[PresentationService]
+          connectionId = Some("connectionId")
+          body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
+          presentationAttachmentAsJson = """{
+                "challenge": "1f44d55f-f161-4938-a659-f8026467f126",
+                "domain": "us.gov/DriverLicense",
+                "credential_manifest": {}
+            }"""
+          prover = DidId("did:peer:Prover")
+          verifier = DidId("did:peer:Verifier")
+
+          attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
+            payload = presentationAttachmentAsJson,
+            format = Some("Some/UnsupportedCredentialFormat")
+          )
+          requestPresentation = RequestPresentation(
+            body = body,
+            attachments = Seq(attachmentDescriptor),
+            to = prover,
+            from = verifier,
+          )
+          result <- svc.receiveRequestPresentation(connectionId, requestPresentation).exit
+
+        } yield assert(result)(
+          fails(equalTo(UnsupportedCredentialFormat(vcFormat = "Some/UnsupportedCredentialFormat")))
+        )
+      },
       test("receiveRequestPresentation updates the RequestPresentation in PresentatinRecord") {
         for {
           svc <- ZIO.service[PresentationService]
@@ -212,7 +270,10 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           prover = DidId("did:peer:Prover")
           verifier = DidId("did:peer:Verifier")
 
-          attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = presentationAttachmentAsJson)
+          attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
+            payload = presentationAttachmentAsJson,
+            format = Some(PresentCredentialProposeFormat.JWT.name)
+          )
           requestPresentation = RequestPresentation(
             body = body,
             attachments = Seq(attachmentDescriptor),
@@ -227,7 +288,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           assertTrue(aRecord.requestPresentationData == Some(requestPresentation))
         }
       },
-      test("acceptRequestPresentation updates the PresentatinRecord") {
+      test("acceptRequestPresentation updates the PresentatinRecord JWT") {
         for {
           repo <- ZIO.service[CredentialRepository]
           aIssueCredentialRecord = issueCredentialRecord
@@ -243,7 +304,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           svc <- ZIO.service[PresentationService]
           connectionId = Some("connectionId")
 
-          aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentation)
+          aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentationJWT)
           credentialsToUse = Seq(aIssueCredentialRecord.id.value)
           updateRecord <- svc.acceptRequestPresentation(aRecord.id, credentialsToUse)
 
@@ -257,7 +318,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         for {
           svc <- ZIO.service[PresentationService]
           connectionId = Some("connectionId")
-          aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentation)
+          aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentationJWT)
           updateRecord <- svc.rejectRequestPresentation(aRecord.id)
 
         } yield {

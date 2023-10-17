@@ -5,16 +5,14 @@ import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.vc.jwt.JWT
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
-import zio.mock.Expectation
+import zio.mock.{Expectation, MockSpecDefault}
 import zio.test.*
 
 import java.time.Instant
 
-object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServiceSpecHelper {
+object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServiceSpecHelper {
 
   private val issueCredentialRecord = IssueCredentialRecord(
     DidCommID(),
@@ -22,8 +20,9 @@ object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServi
     None,
     DidCommID(),
     None,
-    IssueCredentialRecord.Role.Issuer,
     None,
+    CredentialFormat.JWT,
+    IssueCredentialRecord.Role.Issuer,
     None,
     None,
     None,
@@ -40,7 +39,7 @@ object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServi
   )
 
   private val issuerExpectations =
-    MockCredentialService.CreateIssueCredentialRecord(
+    MockCredentialService.CreateJWTIssueCredentialRecord(
       assertion = Assertion.anything,
       result = Expectation.value(issueCredentialRecord)
     ) ++
@@ -56,7 +55,7 @@ object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServi
         assertion = Assertion.anything,
         result = Expectation.value(issueCredentialRecord.copy(protocolState = ProtocolState.CredentialPending))
       ) ++
-      MockCredentialService.MarkCredentialGenerated(
+      MockCredentialService.GenerateJWTCredential(
         assertion = Assertion.anything,
         result = Expectation.value(issueCredentialRecord.copy(protocolState = ProtocolState.CredentialGenerated))
       ) ++
@@ -73,7 +72,7 @@ object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServi
       assertion = Assertion.anything,
       result = Expectation.value(issueCredentialRecord.copy(protocolState = ProtocolState.RequestPending))
     ) ++
-      MockCredentialService.GenerateCredentialRequest(
+      MockCredentialService.GenerateJWTCredentialRequest(
         assertion = Assertion.anything,
         result = Expectation.value(issueCredentialRecord.copy(protocolState = ProtocolState.RequestGenerated))
       ) ++
@@ -93,12 +92,12 @@ object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServi
           svc <- ZIO.service[CredentialService]
           ens <- ZIO.service[EventNotificationService]
 
-          offerCreatedRecord <- svc.createRecord()
+          offerCreatedRecord <- svc.createJWTIssueCredentialRecord()
           issuerRecordId = offerCreatedRecord.id
           _ <- svc.markOfferSent(issuerRecordId)
           _ <- svc.receiveCredentialRequest(requestCredential())
           _ <- svc.acceptCredentialRequest(issuerRecordId)
-          _ <- svc.markCredentialGenerated(issuerRecordId, issueCredential())
+          _ <- svc.generateJWTCredential(issuerRecordId)
           _ <- svc.markCredentialSent(issuerRecordId)
           consumer <- ens.consumer[IssueCredentialRecord]("Issue")
           events <- consumer.poll(50)
@@ -124,8 +123,8 @@ object CredentialServiceNotifierSpec extends ZIOSpecDefault with CredentialServi
           offerReceivedRecord <- svc.receiveCredentialOffer(offerCredential())
           holderRecordId = offerReceivedRecord.id
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
-          _ <- svc.acceptCredentialOffer(holderRecordId, subjectId)
-          _ <- svc.generateCredentialRequest(offerReceivedRecord.id, JWT("Fake JWT"))
+          _ <- svc.acceptCredentialOffer(holderRecordId, Some(subjectId))
+          _ <- svc.generateJWTCredentialRequest(offerReceivedRecord.id)
           _ <- svc.markRequestSent(holderRecordId)
           _ <- svc.receiveCredentialIssue(issueCredential())
           consumer <- ens.consumer[IssueCredentialRecord]("Issue")

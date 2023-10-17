@@ -1,10 +1,9 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
-import io.iohk.atala.mercury.protocol.issuecredential.RequestCredential
+import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
+import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
@@ -21,9 +20,12 @@ trait CredentialRepository {
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): RIO[WalletAccessContext, Seq[IssueCredentialRecord]]
-  def updateCredentialRecordStateAndProofByCredentialIdBulk(
-      idsStatesAndProofs: Seq[(DidCommID, IssueCredentialRecord.PublicationState, MerkleInclusionProof)]
-  ): RIO[WalletAccessContext, Int]
+
+  def getIssueCredentialRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: IssueCredentialRecord.ProtocolState*
+  ): Task[Seq[IssueCredentialRecord]]
 
   def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
@@ -36,21 +38,22 @@ trait CredentialRepository {
       to: IssueCredentialRecord.ProtocolState
   ): RIO[WalletAccessContext, Int]
 
-  def updateCredentialRecordPublicationState(
-      recordId: DidCommID,
-      from: Option[IssueCredentialRecord.PublicationState],
-      to: Option[IssueCredentialRecord.PublicationState]
-  ): RIO[WalletAccessContext, Int]
-
   def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int]
 
-  def updateWithRequestCredential(
+  def updateWithJWTRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
+      protocolState: ProtocolState
+  ): RIO[WalletAccessContext, Int]
+
+  def updateWithAnonCredsRequestCredential(
+      recordId: DidCommID,
+      request: RequestCredential,
+      metadata: CredentialRequestMetadata,
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int]
 

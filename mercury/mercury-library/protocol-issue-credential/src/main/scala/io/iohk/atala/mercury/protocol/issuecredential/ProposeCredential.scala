@@ -39,26 +39,25 @@ final case class ProposeCredential(
 
 object ProposeCredential {
   // TODD will this be version RCF Issue Credential 2.0  as we use didcomm2 message format
-  def `type`: PIURI = "https://didcomm.org/issue-credential/2.0/propose-credential"
+  def `type`: PIURI = "https://didcomm.org/issue-credential/3.0/propose-credential"
 
   def build(
       fromDID: DidId,
       toDID: DidId,
       thid: Option[String] = None,
-      credential_preview: CredentialPreview,
-      credentials: Map[String, Array[Byte]] = Map.empty,
+      goal_code: Option[String] = None,
+      comment: Option[String] = None,
+      credential_preview: Option[CredentialPreview] = None,
+      credentials: Seq[(IssueCredentialProposeFormat, Array[Byte])] = Seq.empty,
   ): ProposeCredential = {
-    val aux = credentials.map { case (formatName, singleCredential) =>
-      val attachment = AttachmentDescriptor.buildBase64Attachment(payload = singleCredential)
-      val credentialFormat: CredentialFormat = CredentialFormat(attachment.id, formatName)
-      (credentialFormat, attachment)
-    }
     ProposeCredential(
       thid = thid,
       from = fromDID,
       to = toDID,
-      body = Body(credential_preview = credential_preview, formats = aux.keys.toSeq),
-      attachments = aux.values.toSeq
+      body = Body(goal_code = goal_code, comment = comment, credential_preview = credential_preview),
+      attachments = credentials.map { case (format, singleCredential) =>
+        AttachmentDescriptor.buildBase64Attachment(payload = singleCredential, format = Some(format.name))
+      }.toSeq
     )
   }
 
@@ -69,14 +68,13 @@ object ProposeCredential {
   /** @param goal_code
     * @param comment
     * @param credential_preview
-    * @param formats
+    *   JSON-LD object that represents the credential data that Issuer is willing to issue.
     */
   final case class Body(
       goal_code: Option[String] = None,
       comment: Option[String] = None,
-      credential_preview: CredentialPreview, // JSON STRinf
-      formats: Seq[CredentialFormat] = Seq.empty[CredentialFormat]
-  ) extends BodyUtils
+      credential_preview: Option[CredentialPreview] = None, // JSON string
+  )
 
   object Body {
     given Encoder[Body] = deriveEncoder[Body]

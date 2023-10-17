@@ -53,6 +53,12 @@ trait ConnectionService {
       states: ConnectionRecord.ProtocolState*
   ): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]]
 
+  def getConnectionRecordsByStatesForAllWallets(
+      ignoreWithZeroRetries: Boolean,
+      limit: Int,
+      states: ConnectionRecord.ProtocolState*
+  ): IO[ConnectionServiceError, Seq[ConnectionRecord]]
+
   def getConnectionRecord(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]]
 
   def getConnectionRecordByThreadId(
@@ -65,5 +71,4 @@ trait ConnectionService {
       recordId: UUID,
       failReason: Option[String]
   ): ZIO[WalletAccessContext, ConnectionServiceError, Unit]
-
 }

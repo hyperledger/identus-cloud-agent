@@ -20,7 +20,8 @@ object JdbcCredentialRepositorySpec extends ZIOSpecDefault, PostgresTestContaine
     Migrations.layer,
     dbConfig,
     pgContainerLayer,
-    contextAwareTransactorLayer
+    contextAwareTransactorLayer,
+    systemTransactorLayer
   )
 
   override def spec =

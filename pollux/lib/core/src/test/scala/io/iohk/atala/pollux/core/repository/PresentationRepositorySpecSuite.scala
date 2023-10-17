@@ -26,6 +26,7 @@ object PresentationRepositorySpecSuite {
     role = PresentationRecord.Role.Verifier,
     subjectId = DidId("did:prism:aaa"),
     protocolState = PresentationRecord.ProtocolState.RequestPending,
+    credentialFormat = CredentialFormat.JWT,
     requestPresentationData = None,
     proposePresentationData = None,
     presentationData = None,
@@ -394,6 +395,43 @@ object PresentationRepositorySpecSuite {
         assert(update1)(isZero) &&
         assert(update2)(isZero) &&
         assert(update3)(isZero)
-    }
+    },
+    test("getPresentationRecordsByStatesForAllWallets  should return all the records") {
+      val walletId1 = WalletId.random
+      val walletId2 = WalletId.random
+      val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
+      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
+      for {
+        repo <- ZIO.service[PresentationRepository]
+        record1 = presentationRecord
+        record2 = presentationRecord
+        count1 <- repo.createPresentationRecord(record1).provide(wallet1)
+        count2 <- repo.createPresentationRecord(record2).provide(wallet2)
+        _ <- repo
+          .updatePresentationRecordProtocolState(
+            record1.id,
+            ProtocolState.RequestPending,
+            ProtocolState.RequestSent
+          )
+          .provide(wallet1)
+        _ <- repo
+          .updatePresentationRecordProtocolState(
+            record2.id,
+            ProtocolState.RequestPending,
+            ProtocolState.PresentationReceived
+          )
+          .provide(wallet2)
+        allRecords <- repo.getPresentationRecordsByStatesForAllWallets(
+          ignoreWithZeroRetries = true,
+          limit = 10,
+          ProtocolState.RequestSent,
+          ProtocolState.PresentationReceived
+        )
+      } yield assert(count1)(equalTo(1)) &&
+        assert(count2)(equalTo(1)) &&
+        assertTrue(allRecords.size == 2) &&
+        assertTrue(allRecords.exists(_.id == record1.id)) &&
+        assertTrue(allRecords.exists(_.id == record2.id))
+    },
   )
 }

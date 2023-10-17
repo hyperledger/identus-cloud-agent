@@ -51,7 +51,7 @@ trait PresentationServiceSpecHelper {
     attachments = Nil
   )
 
-  protected def requestPresentation: RequestPresentation = {
+  protected def requestPresentationJWT: RequestPresentation = {
     val body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
     val presentationAttachmentAsJson =
       """{
@@ -62,7 +62,10 @@ trait PresentationServiceSpecHelper {
     val prover = DidId("did:peer:Prover")
     val verifier = DidId("did:peer:Verifier")
 
-    val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = presentationAttachmentAsJson)
+    val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
+      payload = presentationAttachmentAsJson,
+      format = Some(PresentCredentialRequestFormat.JWT.name)
+    )
     RequestPresentation(
       body = body,
       attachments = Seq(attachmentDescriptor),
@@ -117,15 +120,16 @@ trait PresentationServiceSpecHelper {
     updatedAt = None,
     thid = DidCommID(),
     schemaId = None,
+    credentialDefinitionId = None,
+    credentialFormat = CredentialFormat.JWT,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,
     validityPeriod = None,
     automaticIssuance = None,
-    awaitConfirmation = None,
     protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
-    publicationState = None,
     offerCredentialData = None,
     requestCredentialData = None,
+    anonCredsRequestMetadata = None,
     issueCredentialData = None,
     issuedCredentialRaw = None,
     issuingDID = None,
@@ -150,6 +154,7 @@ trait PresentationServiceSpecHelper {
         connectionId = Some("connectionId"),
         proofTypes = Seq(proofType),
         options = None,
+        format = CredentialFormat.JWT,
       )
     }
 

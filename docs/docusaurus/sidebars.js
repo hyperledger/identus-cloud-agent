@@ -55,6 +55,20 @@ const sidebars = {
     },
     {
       type: 'category',
+      label: 'Credential Definition',
+      link: {
+        type: 'generated-index',
+        title: 'Credential Definition',
+        description: 'Credential Definition Tutorials'
+      },
+      items: [
+        'credentialdefinition/credential-definition',
+        'credentialdefinition/create',
+        'credentialdefinition/delete'
+      ]
+    },
+    {
+      type: 'category',
       label: 'Secret Management',
       link: {
         type: 'generated-index',
