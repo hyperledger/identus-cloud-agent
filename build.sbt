@@ -720,6 +720,7 @@ lazy val polluxDoobie = project
   )
   .dependsOn(polluxCore % "compile->compile;test->test")
   .dependsOn(shared)
+  .dependsOn(sharedTest % Test)
 
 // ########################
 // ### Pollux Anoncreds ###
@@ -769,6 +770,7 @@ lazy val connectDoobie = project
     libraryDependencies ++= D_Connect.sqlDoobieDependencies
   )
   .dependsOn(shared)
+  .dependsOn(sharedTest % Test)
   .dependsOn(connectCore % "compile->compile;test->test")
 
 // ############################
@@ -802,6 +804,7 @@ lazy val prismAgentWalletAPI = project
     castorCore,
     eventNotification
   )
+  .dependsOn(sharedTest % Test)
 
 lazy val prismAgentServer = project
   .in(file("prism-agent/service/server"))
@@ -833,6 +836,7 @@ lazy val prismAgentServer = project
     castorCore,
     eventNotification
   )
+  .dependsOn(sharedTest % Test)
 
 // ############################
 // ####  Release process  #####

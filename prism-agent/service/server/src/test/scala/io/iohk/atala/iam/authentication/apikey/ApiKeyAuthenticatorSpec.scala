@@ -14,7 +14,7 @@ import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.InvalidCredentials
 import io.iohk.atala.shared.models.WalletId
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import zio.Runtime.removeDefaultLoggers
 import zio.test.Assertion.*
 import zio.test.TestAspect.sequential

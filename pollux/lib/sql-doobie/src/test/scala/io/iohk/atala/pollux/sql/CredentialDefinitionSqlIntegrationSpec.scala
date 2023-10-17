@@ -8,7 +8,7 @@ import io.iohk.atala.pollux.sql.model.db.{CredentialDefinition, CredentialDefini
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.MigrationAspects.*
 import zio.*
 import zio.json.ast.Json

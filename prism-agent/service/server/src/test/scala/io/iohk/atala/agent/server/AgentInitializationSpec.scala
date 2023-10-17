@@ -14,7 +14,7 @@ import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticatorImpl
 import io.iohk.atala.iam.authentication.apikey.JdbcAuthenticationRepository
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import zio.*
 import zio.test.*

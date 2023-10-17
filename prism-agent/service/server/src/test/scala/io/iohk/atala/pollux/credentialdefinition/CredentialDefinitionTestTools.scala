@@ -25,7 +25,7 @@ import io.iohk.atala.pollux.credentialdefinition.http.{
 }
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialDefinitionRepository
 import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
