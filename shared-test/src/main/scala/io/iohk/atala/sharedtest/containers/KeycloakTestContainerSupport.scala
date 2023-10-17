@@ -1,4 +1,5 @@
 package io.iohk.atala.sharedtest.containers
+
 import org.keycloak.admin.client.Keycloak
 import org.keycloak.representations.idm.{ClientRepresentation, RealmRepresentation}
 import zio.*

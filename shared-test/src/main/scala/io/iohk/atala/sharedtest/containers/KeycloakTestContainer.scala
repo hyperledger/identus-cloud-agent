@@ -1,6 +1,5 @@
 package io.iohk.atala.sharedtest.containers
 
-import org.testcontainers.containers.output.OutputFrame
 import org.testcontainers.utility.DockerImageName
 
 object KeycloakTestContainer {

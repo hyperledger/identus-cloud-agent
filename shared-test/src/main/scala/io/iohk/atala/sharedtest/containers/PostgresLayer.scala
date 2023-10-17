@@ -5,7 +5,7 @@ import doobie.util.transactor.Transactor
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.DbConfig
 import io.iohk.atala.shared.db.TransactorLayer
-import io.iohk.atala.shared.test.containers.PostgresTestContainer.postgresContainer
+import io.iohk.atala.sharedtest.containers.PostgresTestContainer.postgresContainer
 import zio.*
 
 object PostgresLayer {
