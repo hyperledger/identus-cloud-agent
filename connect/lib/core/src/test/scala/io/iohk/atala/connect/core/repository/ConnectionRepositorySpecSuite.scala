@@ -8,11 +8,9 @@ import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionR
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.test.*
-import zio.test.Assertion.*
 import zio.{Cause, Exit, ZIO, ZLayer}
 
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 object ConnectionRepositorySpecSuite {
@@ -21,7 +19,7 @@ object ConnectionRepositorySpecSuite {
 
   private def connectionRecord = ConnectionRecord(
     UUID.randomUUID,
-    Instant.now.truncatedTo(ChronoUnit.MICROS),
+    Instant.now,
     None,
     UUID.randomUUID().toString,
     None,
@@ -36,9 +34,9 @@ object ConnectionRepositorySpecSuite {
     None,
     None,
     maxRetries,
-    Some(Instant.now.truncatedTo(ChronoUnit.MICROS)),
+    Some(Instant.now),
     None
-  )
+  ).withTruncatedTimestamp()
 
   private def connectionRequest = ConnectionRequest(
     from = DidId("did:prism:aaa"),
