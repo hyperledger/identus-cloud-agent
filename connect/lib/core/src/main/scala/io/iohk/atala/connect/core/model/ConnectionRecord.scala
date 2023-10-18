@@ -5,6 +5,7 @@ import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionR
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 /** @param id
@@ -38,7 +39,13 @@ case class ConnectionRecord(
     metaRetries: Int,
     metaNextRetry: Option[Instant],
     metaLastFailure: Option[String]
-)
+) {
+  def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): ConnectionRecord = copy(
+    createdAt = createdAt.truncatedTo(unit),
+    updatedAt = updatedAt.map(_.truncatedTo(unit)),
+    metaNextRetry = metaNextRetry.map(_.truncatedTo(unit))
+  )
+}
 
 object ConnectionRecord {
   enum Role:

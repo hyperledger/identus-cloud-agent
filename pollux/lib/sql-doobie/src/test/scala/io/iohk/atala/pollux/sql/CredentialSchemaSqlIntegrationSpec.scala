@@ -88,7 +88,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
       authored = authored,
       tags = tags,
       walletId = walletId
-    )
+    ).withTruncatedTimestamp()
 
     private val unique = mutable.Set.empty[String]
     val schemaUnique = for {

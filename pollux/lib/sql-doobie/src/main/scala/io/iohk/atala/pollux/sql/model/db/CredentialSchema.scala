@@ -8,6 +8,7 @@ import io.iohk.atala.pollux.core.model.schema.Schema
 import io.iohk.atala.shared.models.WalletId
 
 import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 case class CredentialSchema(
@@ -24,6 +25,10 @@ case class CredentialSchema(
     walletId: WalletId
 ) {
   lazy val uniqueConstraintKey = author + name + version
+
+  def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): CredentialSchema =
+    copy(authored = authored.truncatedTo(unit))
+
 }
 
 object CredentialSchema {

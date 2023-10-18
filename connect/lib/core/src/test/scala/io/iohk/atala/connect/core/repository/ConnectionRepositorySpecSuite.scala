@@ -36,7 +36,7 @@ object ConnectionRepositorySpecSuite {
     maxRetries,
     Some(Instant.now),
     None
-  )
+  ).withTruncatedTimestamp()
 
   private def connectionRequest = ConnectionRequest(
     from = DidId("did:prism:aaa"),
