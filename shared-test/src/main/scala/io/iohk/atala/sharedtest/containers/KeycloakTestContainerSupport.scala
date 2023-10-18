@@ -15,10 +15,10 @@ trait KeycloakTestContainerSupport {
 
   protected val adminClientZIO = ZIO.service[KeycloakAdminClient]
 
-  protected val realName = "atala-test"
+  protected val realmName = "atala-test"
   protected val realmRepresentation = {
     val rr = new RealmRepresentation()
-    rr.setRealm(realName)
+    rr.setRealm(realmName)
     rr
   }
 
@@ -31,4 +31,20 @@ trait KeycloakTestContainerSupport {
     acr.setSecret(agentClientSecret)
     acr
   }
+
+  protected def initializeClient =
+    for {
+      adminClient <- adminClientZIO
+      _ <- ZIO.attemptBlocking(
+        adminClient
+          .realms()
+          .create(realmRepresentation)
+      )
+      _ <- ZIO.attemptBlocking(
+        adminClient
+          .realm(realmRepresentation.getRealm)
+          .clients()
+          .create(agentClientRepresentation)
+      )
+    } yield ()
 }

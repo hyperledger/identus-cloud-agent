@@ -3,9 +3,10 @@ package io.iohk.atala.sharedtest.containers
 import zio.ZIO
 import zio.test.*
 import zio.test.TestAspect.*
-import scala.jdk.CollectionConverters._
 
+import scala.jdk.CollectionConverters.*
 import scala.util.Try
+
 object KeycloakTestContainerSupportSpec extends ZIOSpecDefault with KeycloakTestContainerSupport {
 
   override def spec = suite("KeycloakTestContainerSupportSpec")(
