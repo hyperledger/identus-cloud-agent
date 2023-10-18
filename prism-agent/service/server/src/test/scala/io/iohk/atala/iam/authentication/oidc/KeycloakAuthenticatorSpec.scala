@@ -15,14 +15,15 @@ import io.iohk.atala.test.container.DBTestUtils
 import org.keycloak.authorization.client.AuthzClient
 import org.keycloak.representations.idm.CredentialRepresentation
 import org.keycloak.representations.idm.UserRepresentation
-import org.keycloak.representations.idm.authorization.PermissionRequest
 import org.keycloak.representations.idm.authorization.ResourceRepresentation
 import zio.*
 import zio.http.Client
 import zio.test.*
+import zio.test.Assertion.*
 
 import java.net.URI
 import scala.jdk.CollectionConverters.*
+import org.keycloak.representations.idm.authorization.UmaPermissionRepresentation
 
 object KeycloakAuthenticatorSpec
     extends ZIOSpecDefault,
@@ -82,19 +83,14 @@ object KeycloakAuthenticatorSpec
   private def createResourcePermission(walletId: WalletId, userId: String) =
     for {
       authzClient <- ZIO.service[AuthzClient]
-      permission = {
-        val permission = PermissionRequest()
-        permission.setResourceId(walletId.toUUID.toString())
-        permission.setClaim("users", userId)
-        permission
+      resourceId = walletId.toUUID.toString()
+      policy = {
+        val policy = UmaPermissionRepresentation()
+        policy.setName(s"${userId} on wallet ${resourceId} permission")
+        policy.setUsers(Set(userId).asJava)
+        policy
       }
-      _ <- ZIO.attemptBlocking(authzClient.protection().permission().create(permission))
-    } yield ()
-
-  // TODO: login and get the JWT token for testing
-  private def userPasswordLogin(userId: String, password: String) =
-    for {
-      authzClient <- ZIO.service[AuthzClient]
+      _ <- ZIO.attemptBlocking(authzClient.protection().policy(resourceId).create(policy))
     } yield ()
 
   override def spec = {
@@ -119,14 +115,18 @@ object KeycloakAuthenticatorSpec
   }
 
   private val authenticateSpec = suite("authenticate")(
-    test("reject when jwt token is valid and permission is granted on a wallet") {
+    test("return permitted wallet") {
       for {
+        client <- ZIO.service[KeycloakClient]
         authenticator <- ZIO.service[KeycloakAuthenticator]
         wallet <- ZIO.serviceWithZIO[WalletManagementService](_.createWallet(Wallet("wallet-1")))
         _ <- createWalletResource(wallet.id)
         _ <- createUser("alice", "1234")
         _ <- createResourcePermission(wallet.id, "alice")
-      } yield assertCompletes
+        token <- client.getAccessToken("alice", "1234").map(_.access_token)
+        entity <- authenticator.authenticate(token)
+        permittedWallet <- authenticator.authorize(entity)
+      } yield assert(wallet.id)(equalTo(permittedWallet))
     }
   )
 

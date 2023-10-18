@@ -17,9 +17,18 @@ object TokenIntrospection {
   given JsonDecoder[TokenIntrospection] = JsonDecoder.derived
 }
 
+final case class TokenResponse(access_token: String, refresh_token: String)
+
+object TokenResponse {
+  given JsonEncoder[TokenResponse] = JsonEncoder.derived
+  given JsonDecoder[TokenResponse] = JsonDecoder.derived
+}
+
 trait KeycloakClient {
 
   def getRpt(accessToken: String): IO[AuthenticationError, String]
+
+  def getAccessToken(username: String, password: String): IO[AuthenticationError, TokenResponse]
 
   def introspectToken(token: String): IO[AuthenticationError, TokenIntrospection]
 
@@ -32,6 +41,7 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
     extends KeycloakClient {
 
   private val introspectionUrl = client.getServerConfiguration().getIntrospectionEndpoint()
+  private val tokenUrl = client.getServerConfiguration().getTokenEndpoint()
 
   private val baseFormHeaders = Headers(Header.ContentType(MediaType.application.`x-www-form-urlencoded`))
 
@@ -64,6 +74,42 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
           ZIO
             .fromEither(body.fromJson[TokenIntrospection])
             .logError("Fail to decode keycloak token introspection response")
+            .mapError(e => AuthenticationError.UnexpectedError(e))
+        } else {
+          ZIO.logError(s"Keycloak token introspection was unsucessful. Status: ${response.status}. Response: $body") *>
+            ZIO.fail(AuthenticationError.UnexpectedError("Token introspection was unsuccessful."))
+        }
+    } yield result
+  }
+
+  override def getAccessToken(username: String, password: String): IO[AuthenticationError, TokenResponse] = {
+    for {
+      response <- Client
+        .request(
+          url = tokenUrl,
+          method = Method.POST,
+          headers = baseFormHeaders,
+          content = Body.fromURLEncodedForm(
+            Form(
+              FormField.simpleField("grant_type", "password"),
+              FormField.simpleField("client_id", keycloakConfig.clientId),
+              FormField.simpleField("client_secret", keycloakConfig.clientSecret),
+              FormField.simpleField("username", username),
+              FormField.simpleField("password", password),
+            )
+          )
+        )
+        .logError("Fail to get the accessToken on keyclaok.")
+        .mapError(e => AuthenticationError.UnexpectedError("Fail to get the accessToken on keyclaok."))
+        .provide(ZLayer.succeed(httpClient))
+      body <- response.body.asString
+        .logError("Fail parse keycloak token response.")
+        .mapError(e => AuthenticationError.UnexpectedError("Fail parse keycloak token response."))
+      result <-
+        if (response.status.code == 200) {
+          ZIO
+            .fromEither(body.fromJson[TokenResponse])
+            .logError("Fail to decode keycloak token response")
             .mapError(e => AuthenticationError.UnexpectedError(e))
         } else {
           ZIO.logError(s"Keycloak token introspection was unsucessful. Status: ${response.status}. Response: $body") *>
