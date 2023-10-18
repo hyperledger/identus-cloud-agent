@@ -7,7 +7,11 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, updatedAt: Instant) {
+trait BaseEntity {
+  val id: UUID
+}
+
+case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, updatedAt: Instant) extends BaseEntity {
   def withUpdatedAt(updatedAt: Instant = Instant.now()): Entity = copy(updatedAt = updatedAt)
   def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): Entity =
     copy(createdAt = createdAt.truncatedTo(unit), updatedAt.truncatedTo(unit))

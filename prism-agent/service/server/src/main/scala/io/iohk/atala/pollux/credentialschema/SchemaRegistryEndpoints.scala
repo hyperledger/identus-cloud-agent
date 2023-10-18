@@ -5,6 +5,9 @@ import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.api.http.codec.OrderCodec.*
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
+import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
+import io.iohk.atala.iam.authentication.oidc.JwtCredentials
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaInput,
   CredentialSchemaResponse,
@@ -24,14 +27,13 @@ import sttp.tapir.{
   statusCode,
   stringToPath
 }
-import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 
 import java.util.UUID
 
 object SchemaRegistryEndpoints {
 
   val createSchemaEndpoint: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, CredentialSchemaInput),
     ErrorResponse,
     CredentialSchemaResponse,
@@ -39,6 +41,7 @@ object SchemaRegistryEndpoints {
   ] =
     endpoint.post
       .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("schema-registry" / "schemas")
       .in(
@@ -65,7 +68,7 @@ object SchemaRegistryEndpoints {
       .tag("Schema Registry")
 
   val updateSchemaEndpoint: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, String, UUID, CredentialSchemaInput),
     ErrorResponse,
     CredentialSchemaResponse,
@@ -73,6 +76,7 @@ object SchemaRegistryEndpoints {
   ] =
     endpoint.put
       .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "schema-registry" /
@@ -127,7 +131,7 @@ object SchemaRegistryEndpoints {
   private val credentialSchemaFilterInput: EndpointInput[FilterInput] = EndpointInput.derived[FilterInput]
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
   val lookupSchemasByQueryEndpoint: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (
         RequestContext,
         FilterInput,
@@ -140,6 +144,7 @@ object SchemaRegistryEndpoints {
   ] =
     endpoint.get
       .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("schema-registry" / "schemas".description("Lookup schemas by query"))
       .in(credentialSchemaFilterInput)
@@ -155,7 +160,7 @@ object SchemaRegistryEndpoints {
       .tag("Schema Registry")
 
   val testEndpoint: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     RequestContext,
     ErrorResponse,
     String,
@@ -163,6 +168,7 @@ object SchemaRegistryEndpoints {
   ] =
     endpoint.get
       .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(
         "schema-registry" / "test"
           .description("Debug endpoint")

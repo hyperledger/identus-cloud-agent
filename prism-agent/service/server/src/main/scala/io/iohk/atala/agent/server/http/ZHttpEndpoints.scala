@@ -1,7 +1,9 @@
 package io.iohk.atala.agent.server.http
 
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic
 import sttp.apispec.SecurityScheme
 import sttp.apispec.openapi.{OpenAPI, Server}
+import sttp.model.headers.AuthenticationScheme
 import sttp.tapir.redoc.RedocUIOptions
 import sttp.tapir.redoc.bundle.RedocInterpreter
 import sttp.tapir.server.ServerEndpoint
@@ -33,14 +35,16 @@ object ZHttpEndpoints {
           .copy(securitySchemes =
             ListMap(
               "apiKeyAuth" -> Right(apiKeySecuritySchema),
-              "adminApiKeyAuth" -> Right(adminApiKeySecuritySchema)
+              "adminApiKeyAuth" -> Right(adminApiKeySecuritySchema),
+              "jwtAuth" -> Right(jwtSecurityScheme)
             )
           )
       )
       .addSecurity(
         ListMap(
           "apiKeyAuth" -> Vector.empty[String],
-          "adminApiKeyAuth" -> Vector.empty[String]
+          "adminApiKeyAuth" -> Vector.empty[String],
+          "jwtAuth" -> Vector.empty[String]
         )
       )
 
@@ -64,6 +68,18 @@ object ZHttpEndpoints {
     name = Some("x-admin-api-key"),
     in = Some("header"),
     scheme = None,
+    bearerFormat = None,
+    flows = None,
+    openIdConnectUrl = None
+  )
+
+  private val jwtSecurityScheme = SecurityScheme(
+    `type` = "http",
+    description =
+      Some("JWT Authentication. The header `Authorization` must be set with the JWT token using `Bearer` scheme"),
+    name = Some("Authorization"),
+    in = Some("header"),
+    scheme = Some(AuthenticationScheme.Bearer.name),
     bearerFormat = None,
     flows = None,
     openIdConnectUrl = None

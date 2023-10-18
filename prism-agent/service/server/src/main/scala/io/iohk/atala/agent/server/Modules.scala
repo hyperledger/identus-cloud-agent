@@ -4,16 +4,36 @@ import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.agent.server.config.SecretStorageBackend
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.memory.{
   DIDSecretStorageInMemory,
   GenericSecretStorageInMemory,
   WalletSecretStorageInMemory
 }
+import io.iohk.atala.agent.walletapi.service.EntityService
+import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcGenericSecretStorage, JdbcWalletSecretStorage}
 import io.iohk.atala.agent.walletapi.storage.{DIDSecretStorage, GenericSecretStorage, WalletSecretStorage}
 import io.iohk.atala.agent.walletapi.vault.*
+import io.iohk.atala.agent.walletapi.vault.{
+  VaultDIDSecretStorage,
+  VaultKVClient,
+  VaultKVClientImpl,
+  VaultWalletSecretStorage
+}
 import io.iohk.atala.castor.core.service.DIDService
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
+import io.iohk.atala.iam.authentication.admin.AdminApiKeyAuthenticator
+import io.iohk.atala.iam.authentication.admin.AdminApiKeyAuthenticatorImpl
+import io.iohk.atala.iam.authentication.admin.AdminConfig
+import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticator
+import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticatorImpl
+import io.iohk.atala.iam.authentication.apikey.ApiKeyConfig
+import io.iohk.atala.iam.authentication.apikey.AuthenticationRepository
+import io.iohk.atala.iam.authentication.oidc.KeycloakAuthenticatorImpl
+import io.iohk.atala.iam.authentication.oidc.KeycloakClientImpl
+import io.iohk.atala.iam.authentication.oidc.KeycloakConfig
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
@@ -22,6 +42,8 @@ import io.iohk.atala.shared.db.{ContextAwareTask, DbConfig, TransactorLayer}
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
+import zio.http.Client
+import io.iohk.atala.iam.authentication.oidc.KeycloakAuthenticator
 
 object SystemModule {
   val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
@@ -38,8 +60,37 @@ object SystemModule {
 object AppModule {
   val apolloLayer: ULayer[Apollo] = Apollo.prism14Layer
 
-  val didJwtResolverlayer: URLayer[DIDService, JwtDidResolver] =
+  val didJwtResolverLayer: URLayer[DIDService, JwtDidResolver] =
     ZLayer.fromFunction(PrismDidResolver(_))
+
+  val builtInAuthenticatorLayer: URLayer[
+    AppConfig & AuthenticationRepository & EntityService & WalletManagementService,
+    ApiKeyAuthenticator & AdminApiKeyAuthenticator
+  ] =
+    ZLayer.makeSome[
+      AppConfig & AuthenticationRepository & EntityService & WalletManagementService,
+      ApiKeyAuthenticator & AdminApiKeyAuthenticator
+    ](
+      AdminConfig.layer,
+      ApiKeyConfig.layer,
+      AdminApiKeyAuthenticatorImpl.layer,
+      ApiKeyAuthenticatorImpl.layer,
+    )
+
+  val keycloakAuthenticatorLayer: RLayer[AppConfig & WalletManagementService & Client, KeycloakAuthenticator] =
+    ZLayer.fromZIO {
+      ZIO
+        .serviceWith[AppConfig](_.agent.authentication.keycloak.enabled)
+        .map { isEnabled =>
+          if (!isEnabled) KeycloakAuthenticatorImpl.disabled
+          else
+            ZLayer.makeSome[AppConfig & WalletManagementService & Client, KeycloakAuthenticator](
+              KeycloakConfig.layer,
+              KeycloakAuthenticatorImpl.layer,
+              KeycloakClientImpl.layer
+            )
+        }
+    }.flatten
 }
 
 object GrpcModule {
@@ -137,7 +188,7 @@ object RepoModule {
         .map(_.agent.secretStorage.backend)
         .tap(backend => ZIO.logInfo(s"Using '$backend' as a secret storage backend"))
         .flatMap {
-          case "vault" =>
+          case SecretStorageBackend.vault =>
             ZIO.succeed(
               ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
                 VaultDIDSecretStorage.layer,
@@ -146,7 +197,7 @@ object RepoModule {
                 vaultClientLayer,
               )
             )
-          case "postgres" =>
+          case SecretStorageBackend.postgres =>
             ZIO.succeed(
               ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
                 JdbcDIDSecretStorage.layer,
@@ -155,7 +206,7 @@ object RepoModule {
                 agentContextAwareTransactorLayer,
               )
             )
-          case "memory" =>
+          case SecretStorageBackend.memory =>
             ZIO.succeed(
               ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
                 DIDSecretStorageInMemory.layer,
@@ -163,11 +214,6 @@ object RepoModule {
                 GenericSecretStorageInMemory.layer
               )
             )
-          case backend =>
-            ZIO
-              .fail(s"Unsupported secret storage backend $backend. Available options are 'postgres', 'vault'")
-              .tapError(msg => ZIO.logError(msg))
-              .mapError(msg => Exception(msg))
         }
         .provide(SystemModule.configLayer)
     }.flatten

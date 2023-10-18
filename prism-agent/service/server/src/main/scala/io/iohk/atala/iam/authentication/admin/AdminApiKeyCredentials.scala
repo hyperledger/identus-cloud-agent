@@ -6,10 +6,6 @@ case class AdminApiKeyAuthenticationError(message: String) extends Authenticatio
 
 object AdminApiKeyAuthenticationError {
   val invalidAdminApiKey = AdminApiKeyAuthenticationError("Invalid Admin API key in header `x-admin-api-key`")
-  val emptyAdminApiKey = AdminApiKeyAuthenticationError("Empty Admin API key header `x-admin-api-key`")
 }
-case class AdminApiKeyCredentials(
-    apiKey: String
-) extends Credentials
 
-case class EmptyAdminApiKeyCredentials() extends Credentials
+case class AdminApiKeyCredentials(apiKey: String) extends Credentials
