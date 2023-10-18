@@ -19,6 +19,7 @@ trait KeycloakTestContainerSupport {
   protected val realmRepresentation = {
     val rr = new RealmRepresentation()
     rr.setRealm(realmName)
+    rr.setEnabled(true)
     rr
   }
 
@@ -26,6 +27,7 @@ trait KeycloakTestContainerSupport {
   protected val agentClientRepresentation: ClientRepresentation = {
     val acr = new ClientRepresentation()
     acr.setClientId("prism-agent")
+    acr.setAuthorizationServicesEnabled(true)
     acr.setDirectAccessGrantsEnabled(true)
     acr.setServiceAccountsEnabled(true)
     acr.setSecret(agentClientSecret)
@@ -40,11 +42,12 @@ trait KeycloakTestContainerSupport {
           .realms()
           .create(realmRepresentation)
       )
-      _ <- ZIO.attemptBlocking(
-        adminClient
-          .realm(realmRepresentation.getRealm)
-          .clients()
-          .create(agentClientRepresentation)
-      )
+      _ <- ZIO
+        .attemptBlocking(
+          adminClient
+            .realm(realmRepresentation.getRealm)
+            .clients()
+            .create(agentClientRepresentation)
+        )
     } yield ()
 }

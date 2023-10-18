@@ -97,9 +97,11 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
 }
 
 object KeycloakClientImpl {
-  val layer: RLayer[KeycloakConfig & Client, KeycloakClient] = ZLayer.fromZIO {
+  val layer: RLayer[KeycloakConfig & Client, KeycloakClient] =
+    authzClientLayer >>> ZLayer.fromFunction(KeycloakClientImpl(_, _, _))
+
+  def authzClientLayer: RLayer[KeycloakConfig, AuthzClient] = ZLayer.fromZIO {
     for {
-      httpClient <- ZIO.service[Client]
       keycloakConfig <- ZIO.service[KeycloakConfig]
       config = KeycloakAuthzConfig(
         keycloakConfig.keycloakUrl.toString(),
@@ -109,7 +111,6 @@ object KeycloakClientImpl {
         null
       )
       client <- ZIO.attempt(AuthzClient.create(config))
-    } yield KeycloakClientImpl(client, httpClient, keycloakConfig)
+    } yield client
   }
-
 }
