@@ -32,7 +32,7 @@ object KeycloakAuthenticatorSpec
       PostgresTestContainerSupport,
       ApolloSpecHelper {
 
-  private val keycloakConfigLayer =
+  private def keycloakConfigLayer(authUpgradeToRPT: Boolean = true) =
     ZLayer.fromZIO {
       ZIO.serviceWith[KeycloakContainerCustom] { container =>
         val host = container.container.getHost()
@@ -44,7 +44,7 @@ object KeycloakAuthenticatorSpec
           realmName = realmName,
           clientId = agentClientRepresentation.getClientId(),
           clientSecret = agentClientSecret,
-          autoUpgradeToRPT = true
+          autoUpgradeToRPT = authUpgradeToRPT
         )
       }
     }
@@ -95,25 +95,44 @@ object KeycloakAuthenticatorSpec
     } yield ()
 
   override def spec = {
-    val s = suite("KeycloakAuthenticatorSepc")(authenticateSpec) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+    val basicSpec = authenticateSpec @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+    val disabledAutoRptSpec = authenticateDisabledAutoRptSpec @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
-    s.provide(
-      KeycloakAuthenticatorImpl.layer,
-      ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer ++ KeycloakClientImpl.authzClientLayer,
-      keycloakConfigLayer,
-      keycloakAdminClientLayer,
-      keycloakContainerLayer,
-      Client.default,
-      WalletManagementServiceImpl.layer,
-      JdbcWalletNonSecretStorage.layer,
-      JdbcWalletSecretStorage.layer,
-      contextAwareTransactorLayer,
-      pgContainerLayer,
-      apolloLayer
+    suite("KeycloakAuthenticatorSepc")(
+      basicSpec
+        .provide(
+          KeycloakAuthenticatorImpl.layer,
+          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer ++ KeycloakClientImpl.authzClientLayer,
+          keycloakConfigLayer(),
+          keycloakAdminClientLayer,
+          keycloakContainerLayer,
+          Client.default,
+          WalletManagementServiceImpl.layer,
+          JdbcWalletNonSecretStorage.layer,
+          JdbcWalletSecretStorage.layer,
+          contextAwareTransactorLayer,
+          pgContainerLayer,
+          apolloLayer
+        ),
+      disabledAutoRptSpec
+        .provide(
+          KeycloakAuthenticatorImpl.layer,
+          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer ++ KeycloakClientImpl.authzClientLayer,
+          keycloakConfigLayer(false),
+          keycloakAdminClientLayer,
+          keycloakContainerLayer,
+          Client.default,
+          WalletManagementServiceImpl.layer,
+          JdbcWalletNonSecretStorage.layer,
+          JdbcWalletSecretStorage.layer,
+          contextAwareTransactorLayer,
+          pgContainerLayer,
+          apolloLayer
+        )
     )
+      .provide(Runtime.removeDefaultLoggers)
   }
 
-  // TODO: add test about upgrading RPT
   private val authenticateSpec = suite("authenticate")(
     test("allow token with a permitted wallet") {
       for {
@@ -127,6 +146,19 @@ object KeycloakAuthenticatorSpec
         entity <- authenticator.authenticate(token)
         permittedWallet <- authenticator.authorize(entity)
       } yield assert(wallet.id)(equalTo(permittedWallet))
+    },
+    test("reject token with a wallet that doesn't exist") {
+      for {
+        client <- ZIO.service[KeycloakClient]
+        authenticator <- ZIO.service[KeycloakAuthenticator]
+        walletId = WalletId.random
+        _ <- createWalletResource(walletId, "wallet-1")
+        _ <- createUser("alice", "1234")
+        _ <- createResourcePermission(walletId, "alice")
+        token <- client.getAccessToken("alice", "1234").map(_.access_token)
+        entity <- authenticator.authenticate(token)
+        exit <- authenticator.authorize(entity).exit
+      } yield assert(exit)(fails(isSubtype[AuthenticationError.ResourceNotPermitted](anything)))
     },
     test("reject token with multiple permitted wallets") {
       for {
@@ -190,6 +222,40 @@ object KeycloakAuthenticatorSpec
         entity <- authenticator.authenticate(token)
         exit <- authenticator.authorize(entity).exit
       } yield assert(exit)(fails(isSubtype[AuthenticationError.ResourceNotPermitted](anything)))
+    }
+  )
+
+  private val authenticateDisabledAutoRptSpec = suite("authenticate with auto-upgrade RPT disabled")(
+    test("reject non-RPT token") {
+      for {
+        client <- ZIO.service[KeycloakClient]
+        authenticator <- ZIO.service[KeycloakAuthenticator]
+        wallet <- ZIO.serviceWithZIO[WalletManagementService](_.createWallet(Wallet("wallet-1")))
+        _ <- createUser("alice", "1234")
+        token <- client.getAccessToken("alice", "1234").map(_.access_token)
+        entity <- authenticator.authenticate(token)
+        exit <- authenticator.authorize(entity).exit
+      } yield assert(exit)(
+        fails(
+          isSubtype[AuthenticationError.InvalidCredentials](
+            hasField("message", _.message, containsString("not RPT"))
+          )
+        )
+      )
+    },
+    test("accecpt RPT token with a permitted wallet") {
+      for {
+        client <- ZIO.service[KeycloakClient]
+        authenticator <- ZIO.service[KeycloakAuthenticator]
+        wallet <- ZIO.serviceWithZIO[WalletManagementService](_.createWallet(Wallet("wallet-1")))
+        _ <- createWalletResource(wallet.id, "wallet-1")
+        _ <- createUser("alice", "1234")
+        _ <- createResourcePermission(wallet.id, "alice")
+        token <- client.getAccessToken("alice", "1234").map(_.access_token)
+        rpt <- client.getRpt(token)
+        entity <- authenticator.authenticate(rpt)
+        permittedWallet <- authenticator.authorize(entity)
+      } yield assert(wallet.id)(equalTo(permittedWallet))
     }
   )
 
