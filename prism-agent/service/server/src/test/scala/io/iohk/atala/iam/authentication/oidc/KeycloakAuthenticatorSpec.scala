@@ -118,7 +118,7 @@ object KeycloakAuthenticatorSpec
         .provide(
           KeycloakAuthenticatorImpl.layer,
           ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer ++ KeycloakClientImpl.authzClientLayer,
-          keycloakConfigLayer(false),
+          keycloakConfigLayer(authUpgradeToRPT = false),
           keycloakAdminClientLayer,
           keycloakContainerLayer,
           Client.default,
