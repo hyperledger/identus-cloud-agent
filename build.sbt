@@ -427,7 +427,6 @@ lazy val shared = (project in file("shared"))
   .enablePlugins(BuildInfoPlugin)
 
 lazy val sharedTest = (project in file("shared-test"))
-  // .configure(publishConfigure)
   .settings(
     organization := "io.iohk.atala",
     organizationName := "Input Output Global",
@@ -832,6 +831,7 @@ lazy val prismAgentServer = project
   .enablePlugins(JavaAppPackaging, DockerPlugin, AshScriptPlugin)
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(prismAgentWalletAPI % "compile->compile;test->test")
+  .dependsOn(sharedTest % "compile->compile;test->test")
   .dependsOn(
     agent,
     polluxCore,

@@ -2,6 +2,7 @@ package io.iohk.atala.agent.server.config
 
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.iam.authentication.AuthenticationConfig
+import io.iohk.atala.iam.authorization.keycloak.admin.KeycloakAdminConfig
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.db.DbConfig
 import zio.config.*
@@ -18,6 +19,7 @@ final case class AppConfig(
     agent: AgentConfig,
     connect: ConnectConfig,
     prismNode: PrismNodeConfig,
+    keycloakAdmin: KeycloakAdminConfig
 ) {
   def validate: Either[String, Unit] =
     for {
