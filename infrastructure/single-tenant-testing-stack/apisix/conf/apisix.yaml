@@ -37,24 +37,48 @@ upstreams:
     nodes:
       "issuer-oea:8085": 1 # tapir
     type: roundrobin
+    timeout:
+      connect: 900
+      send: 900
+      read: 900
   - id: 2
     nodes:
       "issuer-oea:8090": 1 # didcom
     type: roundrobin
+    timeout:
+      connect: 900
+      send: 900
+      read: 900
   - id: 3
     nodes:
       "verifier-oea:8085": 1 # tapir
     type: roundrobin
+    timeout:
+      connect: 900
+      send: 900
+      read: 900
   - id: 4
     nodes:
       "verifier-oea:8090": 1 # didcom
     type: roundrobin
+    timeout:
+      connect: 900
+      send: 900
+      read: 900
   - id: 5
     nodes:
       "holder-oea:8085": 1 # tapir
     type: roundrobin
+    timeout:
+      connect: 900
+      send: 900
+      read: 900
   - id: 6
     nodes:
       "holder-oea:8090": 1 # didcom
     type: roundrobin
+    timeout:
+      connect: 900
+      send: 900
+      read: 900
 #END
