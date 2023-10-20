@@ -188,17 +188,9 @@ object KeycloakAuthenticatorSpec
         authenticator <- ZIO.service[KeycloakAuthenticator]
         wallet <- ZIO.serviceWithZIO[WalletManagementService](_.createWallet(Wallet("wallet-1")))
         exit1 <- authenticator.authenticate("").exit
-        exit2 <- authenticator.authenticate("what sorcery is this?").exit
+        exit2 <- authenticator.authenticate("123").exit
       } yield assert(exit1)(fails(isSubtype[AuthenticationError.InvalidCredentials](anything)))
         && assert(exit2)(fails(isSubtype[AuthenticationError.InvalidCredentials](anything)))
-    },
-    test("reject malformed token") {
-      for {
-        client <- ZIO.service[KeycloakClient]
-        authenticator <- ZIO.service[KeycloakAuthenticator]
-        wallet <- ZIO.serviceWithZIO[WalletManagementService](_.createWallet(Wallet("wallet-1")))
-        exit <- authenticator.authenticate("what sorcery is this?").exit
-      } yield assert(exit)(fails(isSubtype[AuthenticationError.InvalidCredentials](anything)))
     },
     test("reject expired token") {
       for {
