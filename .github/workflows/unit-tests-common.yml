@@ -19,7 +19,7 @@ jobs:
     name: "Build and unit tests for ${{ inputs.component-name }}"
     runs-on: self-hosted
     container:
-      image: ghcr.io/input-output-hk/agent-ci-ubuntu-22-jdk-11:0.1.0
+      image: ghcr.io/hyperledger-labs/ci-debian-jdk-22:0.1.0
       volumes:
         - /nix:/nix
       credentials:
