@@ -34,7 +34,7 @@ object PresentationRepositorySpecSuite {
     metaRetries = maxRetries,
     metaNextRetry = Some(Instant.now()),
     metaLastFailure = None,
-  )
+  ).withTruncatedTimestamp()
 
   private def requestPresentation = RequestPresentation(
     from = DidId("did:prism:aaa"),

@@ -13,6 +13,7 @@ import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 final case class IssueCredentialRecord(
@@ -57,7 +58,14 @@ final case class IssueCredentialRecord(
         case CredentialFormat.AnonCreds => (IssueCredentialIssuedFormat.Anoncred, data)
     }
 
+  def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): IssueCredentialRecord =
+    copy(
+      createdAt = createdAt.truncatedTo(unit),
+      updatedAt = updatedAt.map(_.truncatedTo(unit)),
+      metaNextRetry = metaNextRetry.map(_.truncatedTo(unit)),
+    )
 }
+
 final case class ValidIssuedCredentialRecord(
     id: DidCommID,
     issuedCredentialRaw: Option[String],

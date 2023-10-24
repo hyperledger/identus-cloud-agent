@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM openjdk:22-jdk-slim
 
 RUN apt-get update && \
     apt-get install --no-install-recommends --yes \
@@ -8,10 +8,10 @@ RUN apt-get update && \
     unzip=6.* \
     zip=3.* \
     jq=1.* \
-    python3=3.10.* \
-    python3-pip=22.* \
-    python3-setuptools=59.6.* \
-    python3-wheel=0.37.* \
+    python3=3.11.* \
+    python3-pip=23.* \
+    python3-setuptools=66.* \
+    python3-wheel=0.38.* \
     gnupg=2.2.* \
     default-jre=2:1.* \
     build-essential=12.* && \
@@ -23,3 +23,5 @@ RUN apt-get update && \
     apt-get install --no-install-recommends --yes \
     sbt=1.4.* \
     && rm -rf /var/lib/apt/lists/*
+
+CMD [ "/bin/bash" ]

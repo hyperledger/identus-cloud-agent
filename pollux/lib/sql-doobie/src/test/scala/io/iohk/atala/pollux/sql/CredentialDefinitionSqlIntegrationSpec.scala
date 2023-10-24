@@ -110,7 +110,7 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault with Postgr
       signatureType = signatureType,
       supportRevocation = supportRevocation,
       walletId = walletId
-    )
+    ).withTruncatedTimestamp()
 
     private val unique = mutable.Set.empty[String]
     val credentialDefinitionUnique = for {
