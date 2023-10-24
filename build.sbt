@@ -788,6 +788,7 @@ lazy val prismAgentServer = project
     Docker / dockerUsername := Some("input-output-hk"),
     Docker / dockerRepository := Some("ghcr.io"),
     dockerExposedPorts := Seq(8080, 8085, 8090),
+    // Official docker image for openjdk 21 with curl and bash
     dockerBaseImage := "openjdk:21-jdk",
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
     buildInfoPackage := "io.iohk.atala.agent.server.buildinfo",
