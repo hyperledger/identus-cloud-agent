@@ -788,12 +788,12 @@ lazy val prismAgentServer = project
     Docker / dockerUsername := Some("input-output-hk"),
     Docker / dockerRepository := Some("ghcr.io"),
     dockerExposedPorts := Seq(8080, 8085, 8090),
-    dockerBaseImage := "amazoncorretto:21.0.0-alpine3.18",
+    dockerBaseImage := "openjdk:21-jdk",
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
     buildInfoPackage := "io.iohk.atala.agent.server.buildinfo",
     Compile / packageDoc / publishArtifact := false
   )
-  .enablePlugins(JavaAppPackaging, DockerPlugin, AshScriptPlugin)
+  .enablePlugins(JavaAppPackaging, DockerPlugin)
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(prismAgentWalletAPI % "compile->compile;test->test")
   .dependsOn(
