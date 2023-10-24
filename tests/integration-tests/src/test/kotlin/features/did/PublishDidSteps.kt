@@ -50,8 +50,8 @@ class PublishDidSteps {
         val createDidRequest = CreateManagedDidRequest(
             CreateManagedDidRequestDocumentTemplate(
                 publicKeys = listOf(
-                    ManagedDIDKeyTemplate("auth-1", Purpose.authentication),
-                    ManagedDIDKeyTemplate("assertion-1", Purpose.assertionMethod)
+                    ManagedDIDKeyTemplate("auth-1", Purpose.AUTHENTICATION),
+                    ManagedDIDKeyTemplate("assertion-1", Purpose.ASSERTION_METHOD)
                 ),
                 services = listOf(
                     Service("https://foo.bar.com", listOf("LinkedDomains"), Json("https://foo.bar.com/")),
@@ -119,8 +119,8 @@ class PublishDidSteps {
         val didDocument = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!
 
         actor.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
-            Ensure.that(didDocument.id).isEqualTo(actor.recall<String>("shortFormDid"))
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
+            Ensure.that(didDocument.id).isEqualTo(actor.recall("shortFormDid"))
         )
     }
 

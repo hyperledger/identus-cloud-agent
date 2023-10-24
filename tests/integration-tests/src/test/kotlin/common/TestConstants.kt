@@ -58,9 +58,9 @@ object TestConstants {
     )
     val RANDOM_CONSTAND_UUID = UUID.randomUUID().toString()
     val DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN = Duration.ofSeconds(60L)
-    val PRISM_DID_AUTH_KEY = ManagedDIDKeyTemplate("auth-1", Purpose.authentication)
-    val PRISM_DID_ASSERTION_KEY = ManagedDIDKeyTemplate("assertion-1", Purpose.assertionMethod)
-    val PRISM_DID_UPDATE_NEW_AUTH_KEY = ManagedDIDKeyTemplate("auth-2", Purpose.authentication)
+    val PRISM_DID_AUTH_KEY = ManagedDIDKeyTemplate("auth-1", Purpose.AUTHENTICATION)
+    val PRISM_DID_ASSERTION_KEY = ManagedDIDKeyTemplate("assertion-1", Purpose.ASSERTION_METHOD)
+    val PRISM_DID_UPDATE_NEW_AUTH_KEY = ManagedDIDKeyTemplate("auth-2", Purpose.AUTHENTICATION)
     val PRISM_DID_SERVICE = Service(
         "https://foo.bar.com",
         listOf("LinkedDomains"),

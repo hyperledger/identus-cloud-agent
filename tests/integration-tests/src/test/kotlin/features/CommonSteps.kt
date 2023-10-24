@@ -2,6 +2,7 @@ package features
 
 import com.sksamuel.hoplite.ConfigLoader
 import common.ListenToEvents
+import config.AgentConf
 import config.Config
 import features.connection.ConnectionSteps
 import features.credentials.IssueCredentialsSteps
@@ -27,14 +28,66 @@ import java.util.*
 import kotlin.random.Random
 
 @OptIn(ExperimentalStdlibApi::class)
-@BeforeAll
-fun initializeIssuerVerifierMultitenantAgent() {
-    val eventSteps = EventsSteps()
-    val cast = Cast()
-
+fun createWalletAndEntity(agentConf: AgentConf) {
     val config = ConfigLoader().loadConfigOrThrow<Config>("/tests.conf")
+    val createWalletResponse = RestAssured
+        .given().body(
+            CreateWalletRequest(
+                name = UUID.randomUUID().toString(),
+                seed = Random.nextBytes(64).toHexString(),
+                id = UUID.randomUUID()
+            )
+        )
+        .header(config.global.adminAuthHeader, config.global.adminApiKey)
+        .post("${agentConf.url}/wallets")
+        .thenReturn()
+    Ensure.that(createWalletResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
+    val wallet = createWalletResponse.body.jsonPath().getObject("", WalletDetail::class.java)
+    val tenantResponse = RestAssured
+        .given().body(
+            CreateEntityRequest(
+                name = UUID.randomUUID().toString(),
+                walletId = wallet.id
+            )
+        )
+        .header(config.global.adminAuthHeader, config.global.adminApiKey)
+        .post("${agentConf.url}/iam/entities")
+        .thenReturn()
+    Ensure.that(tenantResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
+    val entity = tenantResponse.body.jsonPath().getObject("", EntityResponse::class.java)
+    val addApiKeyResponse =
+        RestAssured
+            .given().body(
+                ApiKeyAuthenticationRequest(
+                    entityId = entity.id,
+                    apiKey = agentConf.apikey!!
+                )
+            )
+            .header(config.global.adminAuthHeader, config.global.adminApiKey)
+            .post("${agentConf.url}/iam/apikey-authentication")
+            .thenReturn()
+    Ensure.that(addApiKeyResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
+    val registerIssuerWebhookResponse =
+        RestAssured
+            .given().body(
+                CreateWebhookNotification(
+                    url = agentConf.webhookUrl!!.toExternalForm()
+                )
+            )
+            .header(config.global.authHeader, agentConf.apikey)
+            .post("${agentConf.url}/events/webhooks")
+            .thenReturn()
+    Ensure.that(registerIssuerWebhookResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
+}
 
-    cast.actorNamed("Admin", CallAnApi.at(config.admin.url.toExternalForm()))
+@BeforeAll
+fun initAgents() {
+    val cast = Cast()
+    val config = ConfigLoader().loadConfigOrThrow<Config>("/tests.conf")
+    cast.actorNamed(
+        "Admin",
+        CallAnApi.at(config.admin.url.toExternalForm())
+    )
     cast.actorNamed(
         "Acme",
         CallAnApi.at(config.issuer.url.toExternalForm()),
@@ -53,86 +106,13 @@ fun initializeIssuerVerifierMultitenantAgent() {
     OnStage.setTheStage(cast)
 
     // Create issuer wallet and tenant
-    val createIssuerWalletResponse = RestAssured
-        .given().body(
-            CreateWalletRequest(
-                name = "IssuerWallet",
-                seed = Random.nextBytes(64).toHexString(),
-                id = UUID.randomUUID()
-            )
-        )
-        .header(config.global.adminAuthHeader, config.admin.apikey)
-        .post("${config.issuer.url}/wallets")
-        .thenReturn()
-    Ensure.that(createIssuerWalletResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
-    val issuerWallet = createIssuerWalletResponse.body.jsonPath().getObject("", WalletDetail::class.java)
-
-    val issuerTenantResponse = RestAssured
-        .given().body(
-            CreateEntityRequest(
-                name = "Issuer",
-                walletId = issuerWallet.id
-            )
-        )
-        .header(config.global.adminAuthHeader, config.admin.apikey)
-        .post("${config.issuer.url}/iam/entities")
-        .thenReturn()
-    Ensure.that(issuerTenantResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
-    val issuerEntity = issuerTenantResponse.body.jsonPath().getObject("", EntityResponse::class.java)
-
-    val issuerAddApiKeyResponse =
-        RestAssured
-            .given().body(
-                ApiKeyAuthenticationRequest(
-                    entityId = issuerEntity.id,
-                    apiKey = config.issuer.apikey!!
-                )
-            )
-            .header(config.global.adminAuthHeader, config.admin.apikey)
-            .post("${config.issuer.url}/iam/apikey-authentication")
-            .thenReturn()
-    Ensure.that(issuerAddApiKeyResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
-
+    if (config.issuer.multiTenant!!) {
+        createWalletAndEntity(config.issuer)
+    }
     // Create verifier wallet
-    val createVerifierWalletResponse = RestAssured
-        .given().body(
-            CreateWalletRequest(
-                name = "VerifierWallet",
-                seed = Random.nextBytes(64).toHexString(),
-                id = UUID.randomUUID()
-            )
-        )
-        .header(config.global.adminAuthHeader, config.admin.apikey)
-        .post("${config.verifier.url}/wallets")
-        .thenReturn()
-    Ensure.that(createVerifierWalletResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
-    val verifierWallet = createVerifierWalletResponse.body.jsonPath().getObject("", WalletDetail::class.java)
-    // Create verifier tenant
-    val verifierTenantResponse = RestAssured
-        .given().body(
-            CreateEntityRequest(
-                name = "Verifier",
-                walletId = verifierWallet.id
-            )
-        )
-        .header(config.global.adminAuthHeader, config.admin.apikey)
-        .post("${config.verifier.url}/iam/entities")
-        .thenReturn()
-    Ensure.that(verifierTenantResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
-    val verifierEntity = verifierTenantResponse.body.jsonPath().getObject("", EntityResponse::class.java)
-    // Add verifier api key
-    val verifierAddApiKeyResponse =
-        RestAssured
-            .given().body(
-                ApiKeyAuthenticationRequest(
-                    entityId = verifierEntity.id,
-                    apiKey = config.verifier.apikey!!
-                )
-            )
-            .header(config.global.adminAuthHeader, config.admin.apikey)
-            .post("${config.verifier.url}/iam/apikey-authentication")
-            .thenReturn()
-    Ensure.that(verifierAddApiKeyResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
+    if (config.verifier.multiTenant!!) {
+        createWalletAndEntity(config.verifier)
+    }
 
     cast.actors.forEach { actor ->
         when (actor.name) {
@@ -147,30 +127,6 @@ fun initializeIssuerVerifierMultitenantAgent() {
             }
         }
     }
-
-    val registerIssuerWebhookResponse =
-        RestAssured
-            .given().body(
-                CreateWebhookNotification(
-                    url = config.issuer.webhookUrl.toExternalForm()
-                )
-            )
-            .header(config.global.authHeader, config.issuer.apikey)
-            .post("${config.issuer.url}/events/webhooks")
-            .thenReturn()
-    Ensure.that(registerIssuerWebhookResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
-
-    val registerVerifierWebhookResponse =
-        RestAssured
-            .given().body(
-                CreateWebhookNotification(
-                    url = config.verifier.webhookUrl.toExternalForm()
-                )
-            )
-            .header(config.global.authHeader, config.verifier.apikey)
-            .post("${config.verifier.url}/events/webhooks")
-            .thenReturn()
-    Ensure.that(registerVerifierWebhookResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
 }
 
 @AfterAll
@@ -193,7 +149,7 @@ class CommonSteps {
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK)
         )
         val receivedCredential = SerenityRest.lastResponse().get<IssueCredentialRecordPage>().contents!!.findLast { credential ->
-            credential.protocolState == IssueCredentialRecord.ProtocolState.credentialReceived
+            credential.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED
         }
 
         if (receivedCredential != null) {
@@ -221,7 +177,7 @@ class CommonSteps {
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK)
         )
         val inviterConnection = SerenityRest.lastResponse().get<ConnectionsPage>().contents!!.firstOrNull {
-            it.label == "Connection with ${invitee.name}" && it.state == Connection.State.connectionResponseSent
+            it.label == "Connection with ${invitee.name}" && it.state == Connection.State.CONNECTION_RESPONSE_SENT
         }
 
         var inviteeConnection: Connection? = null
@@ -233,7 +189,7 @@ class CommonSteps {
                 Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK)
             )
             inviteeConnection = SerenityRest.lastResponse().get<ConnectionsPage>().contents!!.firstOrNull {
-                it.theirDid == inviterConnection.myDid && it.state == Connection.State.connectionResponseReceived
+                it.theirDid == inviterConnection.myDid && it.state == Connection.State.CONNECTION_RESPONSE_RECEIVED
             }
         }
 

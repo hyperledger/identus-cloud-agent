@@ -1,6 +1,5 @@
 Feature: Present Proof Protocol
 
-@TEST_ATL-3850
 Scenario: Holder presents credential proof to verifier
   Given Faber and Bob have an existing connection
   And Bob has an issued credential from Acme
@@ -9,7 +8,6 @@ Scenario: Holder presents credential proof to verifier
   And Bob makes the presentation of the proof to Faber
   Then Faber has the proof verified
 
-@TEST_ATL-3881
 Scenario: Verifier rejects holder proof
   Given Faber and Bob have an existing connection
   And Bob has an issued credential from Acme
@@ -18,7 +16,6 @@ Scenario: Verifier rejects holder proof
   And Bob rejects the proof
   Then Bob sees the proof is rejected
 
-@TEST_ATL-4968
 Scenario: Holder presents proof to verifier which is the issuer itself
   Given Acme and Bob have an existing connection
   And Bob has an issued credential from Acme

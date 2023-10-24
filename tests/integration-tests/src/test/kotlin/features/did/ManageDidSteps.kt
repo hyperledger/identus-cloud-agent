@@ -6,7 +6,6 @@ import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
-import io.iohk.atala.automation.extensions.toJsonPath
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import io.iohk.atala.prism.models.*
 import net.serenitybdd.rest.SerenityRest
@@ -49,30 +48,6 @@ class ManageDidSteps {
         actor.remember("createdDids", createdDids)
     }
 
-    @When("{actor} tries to create PRISM DID with missing {word}")
-    fun triesToCreateManagedDidWithMissingField(actor: Actor, missingFieldPath: String) {
-        val createDidRequest = createPrismDidRequest()
-        val requestBody = createDidRequest.toJsonPath().delete(missingFieldPath).jsonString()
-        actor.attemptsTo(
-            Post.to("/did-registrar/dids")
-                .with {
-                    it.body(requestBody)
-                }
-        )
-    }
-
-    @When("{actor} tries to create a managed DID with value {word} in {word}")
-    fun trisToCreateManagedDidWithValueInField(actor: Actor, value: String, fieldPath: String) {
-        val createDidRequest = createPrismDidRequest()
-        val requestBody = createDidRequest.toJsonPath().set(fieldPath, value).jsonString()
-        actor.attemptsTo(
-            Post.to("/did-registrar/dids")
-                .with {
-                    it.body(requestBody)
-                }
-        )
-    }
-
     @When("{actor} lists all PRISM DIDs")
     fun iListManagedDids(actor: Actor) {
         actor.attemptsTo(
@@ -89,13 +64,6 @@ class ManageDidSteps {
         )
     }
 
-    @Then("{actor} sees the request has failed with error status {int}")
-    fun seesTheRequestHasFailedWithErrorStatus(actor: Actor, errorStatusCode: Int) {
-        actor.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(errorStatusCode)
-        )
-    }
-
     @Then("{actor} sees the list contains all created DIDs")
     fun seeTheListContainsAllCreatedDids(actor: Actor) {
         val expectedDids = actor.recall<List<String>>("createdDids")
@@ -108,7 +76,7 @@ class ManageDidSteps {
 
     private fun createPrismDidRequest(): CreateManagedDidRequest = CreateManagedDidRequest(
         CreateManagedDidRequestDocumentTemplate(
-            publicKeys = listOf(ManagedDIDKeyTemplate("auth-1", Purpose.authentication)),
+            publicKeys = listOf(ManagedDIDKeyTemplate("auth-1", Purpose.AUTHENTICATION)),
             services = listOf(
                 Service("https://foo.bar.com", listOf("LinkedDomains"), Json("https://foo.bar.com/"))
             )

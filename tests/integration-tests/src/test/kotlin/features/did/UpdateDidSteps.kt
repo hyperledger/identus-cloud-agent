@@ -18,8 +18,8 @@ class UpdateDidSteps {
     @When("{actor} updates PRISM DID by adding new keys")
     fun actorUpdatesPrismDidByAddingNewKeys(actor: Actor) {
         val updatePrismDidAction = UpdateManagedDIDRequestAction(
-            actionType = ActionType.aDDKEY,
-            ManagedDIDKeyTemplate("auth-2", Purpose.authentication)
+            actionType = ActionType.ADD_KEY,
+            ManagedDIDKeyTemplate("auth-2", Purpose.AUTHENTICATION)
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)
     }
@@ -27,7 +27,7 @@ class UpdateDidSteps {
     @When("{actor} updates PRISM DID by removing keys")
     fun actorUpdatesPrismDidByRemovingKeys(actor: Actor) {
         val updatePrismDidAction = UpdateManagedDIDRequestAction(
-            actionType = ActionType.rEMOVEKEY,
+            actionType = ActionType.REMOVE_KEY,
             removeKey = RemoveEntryById("auth-1")
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)
@@ -36,7 +36,7 @@ class UpdateDidSteps {
     @When("{actor} updates PRISM DID with new services")
     fun actorUpdatesPrismDidWithNewServices(actor: Actor) {
         val updatePrismDidAction = UpdateManagedDIDRequestAction(
-            actionType = ActionType.aDDSERVICE,
+            actionType = ActionType.ADD_SERVICE,
             addService = Service(
                 "https://new.service.com",
                 listOf("LinkedDomains"),
@@ -49,7 +49,7 @@ class UpdateDidSteps {
     @When("{actor} updates PRISM DID by removing services")
     fun actorUpdatesPrismDidByRemovingServices(actor: Actor) {
         val updatePrismDidAction = UpdateManagedDIDRequestAction(
-            actionType = ActionType.rEMOVESERVICE,
+            actionType = ActionType.REMOVE_SERVICE,
             removeService = RemoveEntryById("https://new.service.com")
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)
@@ -65,7 +65,7 @@ class UpdateDidSteps {
             )
         )
         val updatePrismDidAction = UpdateManagedDIDRequestAction(
-            actionType = ActionType.uPDATESERVICE,
+            actionType = ActionType.UPDATE_SERVICE,
             updateService = newService
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)

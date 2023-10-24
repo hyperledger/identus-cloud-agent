@@ -1,4 +1,3 @@
-@TEST_ATL-2487
 Feature: Verification Policies
 
 Scenario: Successful verification policy creation

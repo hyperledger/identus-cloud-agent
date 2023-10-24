@@ -21,7 +21,7 @@ class PresentProofSteps {
     @When("{actor} sends a request for proof presentation to {actor}")
     fun faberSendsARequestForProofPresentationToBob(faber: Actor, bob: Actor) {
         val presentationRequest = RequestPresentationInput(
-            connectionId = faber.recall<Connection>("connection-with-${bob.name}").connectionId.toString(),
+            connectionId = faber.recall<Connection>("connection-with-${bob.name}").connectionId,
             options = Options(
                 challenge = "11c91493-01b3-4c4d-ac36-b336bab5bddf",
                 domain = "https://example-verifier.com"
@@ -57,7 +57,7 @@ class PresentProofSteps {
                     it.data.thid == bob.recall<String>("thid")
                 }
                 proofEvent != null &&
-                    proofEvent!!.data.status == PresentationStatus.Status.requestReceived
+                    proofEvent!!.data.status == PresentationStatus.Status.REQUEST_RECEIVED
             },
             "ERROR: Bob did not achieve any presentation request!"
         )
@@ -68,7 +68,7 @@ class PresentProofSteps {
     fun bobMakesThePresentationOfTheProof(bob: Actor, faber: Actor) {
         val requestPresentationAction = RequestPresentationAction(
             proofId = listOf(bob.recall<IssueCredentialRecord>("issuedCredential").recordId),
-            action = RequestPresentationAction.Action.requestMinusAccept
+            action = RequestPresentationAction.Action.REQUEST_MINUS_ACCEPT
         )
 
         bob.attemptsTo(
@@ -86,7 +86,7 @@ class PresentProofSteps {
             Patch.to("/present-proof/presentations/${bob.recall<String>("presentationId")}").with {
                 it.body(
                     RequestPresentationAction(
-                        action = RequestPresentationAction.Action.requestMinusReject
+                        action = RequestPresentationAction.Action.REQUEST_MINUS_REJECT
                     )
                 )
             }
@@ -101,7 +101,7 @@ class PresentProofSteps {
                     it.data.thid == bob.recall<String>("thid")
                 }
                 proofEvent != null &&
-                    proofEvent!!.data.status == PresentationStatus.Status.requestRejected
+                    proofEvent!!.data.status == PresentationStatus.Status.REQUEST_REJECTED
             },
             "ERROR: Faber did not receive presentation from Bob!"
         )
@@ -116,7 +116,7 @@ class PresentProofSteps {
                 }
 
                 proofEvent != null &&
-                    proofEvent!!.data.status == PresentationStatus.Status.presentationVerified
+                    proofEvent!!.data.status == PresentationStatus.Status.PRESENTATION_VERIFIED
             },
             "ERROR: presentation did not achieve PresentationVerified state!"
         )

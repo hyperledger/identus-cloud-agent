@@ -38,8 +38,8 @@ class ConnectionSteps {
         inviter.attemptsTo(
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
             Ensure.that(connection.label!!).isEqualTo(connectionLabel),
-            Ensure.that(connection.state).isEqualTo(Connection.State.invitationGenerated),
-            Ensure.that(connection.role).isEqualTo(Connection.Role.inviter)
+            Ensure.that(connection.state).isEqualTo(Connection.State.INVITATION_GENERATED),
+            Ensure.that(connection.role).isEqualTo(Connection.Role.INVITER)
         )
 
         // Acme remembers connection to send it out of band to Bob
@@ -68,8 +68,8 @@ class ConnectionSteps {
             Ensure.that(inviteeConnection.invitation.id).isEqualTo(inviterConnection.invitation.id),
             Ensure.that(inviteeConnection.invitation.invitationUrl).isEqualTo(inviterConnection.invitation.invitationUrl),
             Ensure.that(inviteeConnection.invitation.type).isEqualTo(inviterConnection.invitation.type),
-            Ensure.that(inviteeConnection.state).isEqualTo(Connection.State.connectionRequestPending),
-            Ensure.that(inviteeConnection.role).isEqualTo(Connection.Role.invitee)
+            Ensure.that(inviteeConnection.state).isEqualTo(Connection.State.CONNECTION_REQUEST_PENDING),
+            Ensure.that(inviteeConnection.role).isEqualTo(Connection.Role.INVITEE)
         )
 
         invitee.remember("connection", inviteeConnection)
@@ -83,9 +83,9 @@ class ConnectionSteps {
                     it.data.thid == inviter.recall<Connection>("connection").thid
                 }
                 lastEvent != null &&
-                    lastEvent.data.state == Connection.State.connectionResponseSent
+                    lastEvent.data.state == Connection.State.CONNECTION_RESPONSE_SENT
             },
-            "Inviter connection didn't reach ${Connection.State.connectionResponseSent} state"
+            "Inviter connection didn't reach ${Connection.State.CONNECTION_RESPONSE_SENT} state"
         )
     }
 
@@ -98,9 +98,9 @@ class ConnectionSteps {
                     it.data.thid == invitee.recall<Connection>("connection").thid
                 }
                 lastEvent != null &&
-                    lastEvent.data.state == Connection.State.connectionResponseReceived
+                    lastEvent.data.state == Connection.State.CONNECTION_RESPONSE_RECEIVED
             },
-            "Invitee connection didn't reach ${Connection.State.connectionResponseReceived} state."
+            "Invitee connection didn't reach ${Connection.State.CONNECTION_RESPONSE_RECEIVED} state."
         )
     }
 
@@ -128,8 +128,8 @@ class ConnectionSteps {
         assertThat(inviter.recall<Connection>("connection-with-${invitee.name}").theirDid)
             .isEqualTo(invitee.recall<Connection>("connection-with-${inviter.name}").myDid)
         assertThat(inviter.recall<Connection>("connection-with-${invitee.name}").state)
-            .isEqualTo(Connection.State.connectionResponseSent)
+            .isEqualTo(Connection.State.CONNECTION_RESPONSE_SENT)
         assertThat(invitee.recall<Connection>("connection-with-${inviter.name}").state)
-            .isEqualTo(Connection.State.connectionResponseReceived)
+            .isEqualTo(Connection.State.CONNECTION_RESPONSE_RECEIVED)
     }
 }

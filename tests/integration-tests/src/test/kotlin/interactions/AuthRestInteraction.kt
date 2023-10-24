@@ -14,7 +14,7 @@ abstract class AuthRestInteraction : RestInteraction() {
     fun <T : Actor?> specWithAuthHeaders(actor: T): RequestSpecification {
         val spec = rest()
         if (actor!!.name.toLowerCasePreservingASCIIRules().contains("admin")) {
-            spec.header(config.global.adminAuthHeader, config.admin.apikey)
+            spec.header(config.global.adminAuthHeader, config.global.adminApiKey)
         } else {
             if (config.global.authRequired) {
                 spec.header(config.global.authHeader, actor.recall("AUTH_KEY"))
