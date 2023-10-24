@@ -23,6 +23,8 @@ services:
     image: ghcr.io/input-output-hk/prism-node:${PRISM_NODE_VERSION}
     environment:
       NODE_PSQL_HOST: db:5432
+      NODE_REFRESH_AND_SUBMIT_PERIOD: 1s
+      NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD: 1s
     depends_on:
       db:
         condition: service_healthy
