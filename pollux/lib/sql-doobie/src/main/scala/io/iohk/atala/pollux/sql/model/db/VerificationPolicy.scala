@@ -75,7 +75,9 @@ object VerificationPolicySql extends DoobieContext.Postgres(SnakeCase) {
   def getVerificationPolicyConstrains(fk_ids: Seq[UUID]) =
     run(
       quote(
-        query[VerificationPolicyConstraint].filter(vpc => liftQuery(fk_ids).contains(vpc.fk_id))
+        query[VerificationPolicyConstraint]
+          .filter(vpc => liftQuery(fk_ids).contains(vpc.fk_id))
+          .sortBy(_.index)(Ord.asc)
       )
     )
 
