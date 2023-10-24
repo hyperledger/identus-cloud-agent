@@ -13,7 +13,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: agent-ci-ubuntu-22-jdk-11
+  IMAGE_NAME: ci-debian-jdk-21
 
 jobs:
   build-and-push-image:
@@ -55,6 +55,6 @@ jobs:
           context: .github/docker
           push: true
           tags: |
-            "ghcr.io/input-output-hk/${{ env.IMAGE_NAME }}:latest"
-            "ghcr.io/input-output-hk/${{ env.IMAGE_NAME }}:main"
+            "ghcr.io/hyperledger-labs/${{ env.IMAGE_NAME }}:latest"
+            "ghcr.io/hyperledger-labs/${{ env.IMAGE_NAME }}:main"
           labels: ${{ steps.meta.outputs.labels }}
