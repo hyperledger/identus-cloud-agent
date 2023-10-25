@@ -150,6 +150,7 @@ class CommonSteps {
         )
         val receivedCredential = SerenityRest.lastResponse().get<IssueCredentialRecordPage>().contents!!.findLast { credential ->
             credential.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED
+                    && credential.credentialFormat == IssueCredentialRecord.CredentialFormat.JWT
         }
 
         if (receivedCredential != null) {
@@ -162,7 +163,8 @@ class CommonSteps {
             publishDidSteps.createsUnpublishedDid(issuer)
             publishDidSteps.hePublishesDidToLedger(issuer)
             issueSteps.acmeOffersACredential(issuer, holder, "short")
-            issueSteps.bobRequestsTheCredential(holder)
+            issueSteps.holderReceivesCredentialOffer(holder)
+            issueSteps.holderAcceptsCredentialOfferForJwt(holder)
             issueSteps.acmeIssuesTheCredential(issuer)
             issueSteps.bobHasTheCredentialIssued(holder)
         }

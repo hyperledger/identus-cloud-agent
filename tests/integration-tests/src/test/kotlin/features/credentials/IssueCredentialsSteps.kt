@@ -7,15 +7,15 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import io.iohk.atala.prism.models.AcceptCredentialOfferRequest
-import io.iohk.atala.prism.models.Connection
-import io.iohk.atala.prism.models.CreateIssueCredentialRecordRequest
-import io.iohk.atala.prism.models.IssueCredentialRecord
+import io.iohk.atala.prism.models.*
+import models.AnoncredsSchema
 import models.CredentialEvent
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
+import net.serenitybdd.screenplay.rest.abilities.CallAnApi
 import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
+import java.util.*
 
 class IssueCredentialsSteps {
 
@@ -38,6 +38,7 @@ class IssueCredentialsSteps {
             issuingDID = did,
             connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId,
             validityPeriod = 3600.0,
+            credentialFormat = "JWT",
             automaticIssuance = false
         )
 
@@ -58,15 +59,105 @@ class IssueCredentialsSteps {
         holder.remember("thid", credentialRecord.thid)
     }
 
-    @When("{actor} receives the credential offer and accepts")
-    fun bobRequestsTheCredential(holder: Actor) {
+    @When("{actor} creates anoncred schema")
+    fun acmeCreatesAnoncredSchema(issuer: Actor) {
+        issuer.attemptsTo(
+            Post.to("/schema-registry/schemas")
+                .with {
+                    it.body(
+                        CredentialSchemaInput(
+                            author = issuer.recall("shortFormDid"),
+                            name = UUID.randomUUID().toString(),
+                            description = "Simple student credentials schema",
+                            type = "AnoncredSchemaV1",
+                            schema = AnoncredsSchema(
+                                name = "StudentCredential",
+                                version = "1.0",
+                                issuerId = issuer.recall("shortFormDid"),
+                                attrNames = listOf("name", "age")
+                            ),
+                            tags = listOf("school", "students"),
+                            version = "1.0.0"
+                        )
+                    )
+                }
+        )
+        issuer.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED)
+        )
+        val schema = SerenityRest.lastResponse().get<CredentialSchemaResponse>()
+        issuer.remember("anoncredsSchema", schema)
+    }
+
+    @When("{actor} creates anoncred credential definition")
+    fun acmeCreatesAnoncredCredentialDefinition(issuer: Actor) {
+        val schemaRegistryUrl = issuer.usingAbilityTo(CallAnApi::class.java).resolve("/schema-registry/schemas")
+            .replace("localhost", "host.docker.internal")
+        issuer.attemptsTo(
+            Post.to("/credential-definition-registry/definitions")
+                .with {
+                    it.body(
+                        CredentialDefinitionInput(
+                            name = "StudentCredential",
+                            version = "1.0.0",
+                            schemaId = "$schemaRegistryUrl/${issuer.recall<CredentialSchemaResponse>("anoncredsSchema").guid}",
+                            description = "Simple student credentials definition",
+                            author = issuer.recall("shortFormDid"),
+                            signatureType = "CL",
+                            tag = "student",
+                            supportRevocation = false,
+                        )
+                    )
+                }
+        )
+        issuer.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED)
+        )
+        val credentialDefinition = SerenityRest.lastResponse().get<CredentialDefinitionResponse>()
+        issuer.remember("anoncredsCredentialDefinition", credentialDefinition)
+    }
+
+    @When("{actor} offers anoncred to {actor}")
+    fun acmeOffersAnoncredToBob(issuer: Actor, holder: Actor) {
+        val credentialOfferRequest = CreateIssueCredentialRecordRequest(
+            credentialDefinitionId = issuer.recall<CredentialDefinitionResponse>("anoncredsCredentialDefinition").guid,
+            claims = linkedMapOf(
+                "name" to "Bob",
+                "age" to "21"
+            ),
+            issuingDID = issuer.recall("shortFormDid"),
+            connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId,
+            validityPeriod = 3600.0,
+            credentialFormat = "AnonCreds",
+            automaticIssuance = false
+        )
+
+        issuer.attemptsTo(
+            Post.to("/issue-credentials/credential-offers")
+                .with {
+                    it.body(credentialOfferRequest)
+                }
+        )
+
+        val credentialRecord = SerenityRest.lastResponse().get<IssueCredentialRecord>()
+
+        issuer.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED)
+        )
+
+        issuer.remember("thid", credentialRecord.thid)
+        holder.remember("thid", credentialRecord.thid)
+    }
+
+    @When("{actor} receives the credential offer")
+    fun holderReceivesCredentialOffer(holder: Actor) {
         wait(
             {
                 credentialEvent = ListenToEvents.`as`(holder).credentialEvents.lastOrNull {
                     it.data.thid == holder.recall<String>("thid")
                 }
                 credentialEvent != null &&
-                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.OFFER_RECEIVED
+                        credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.OFFER_RECEIVED
             },
             "Holder was unable to receive the credential offer from Issuer! " +
                     "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.OFFER_RECEIVED} state."
@@ -74,12 +165,30 @@ class IssueCredentialsSteps {
 
         val recordId = ListenToEvents.`as`(holder).credentialEvents.last().data.recordId
         holder.remember("recordId", recordId)
+    }
 
+    @When("{actor} accepts credential offer for JWT")
+    fun holderAcceptsCredentialOfferForJwt(holder: Actor) {
         holder.attemptsTo(
-            Post.to("/issue-credentials/records/$recordId/accept-offer")
+            Post.to("/issue-credentials/records/${holder.recall<String>("recordId")}/accept-offer")
                 .with {
                     it.body(
                         AcceptCredentialOfferRequest(holder.recall("longFormDid"))
+                    )
+                }
+        )
+        holder.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK)
+        )
+    }
+
+    @When("{actor} accepts credential offer for anoncred")
+    fun holderAcceptsCredentialOfferForAnoncred(holder: Actor) {
+        holder.attemptsTo(
+            Post.to("/issue-credentials/records/${holder.recall<String>("recordId")}/accept-offer")
+                .with {
+                    it.body(
+                        "{}"
                     )
                 }
         )
