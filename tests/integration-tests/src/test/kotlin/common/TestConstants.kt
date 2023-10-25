@@ -1,8 +1,8 @@
 package common
 
 import io.iohk.atala.prism.models.*
-import models.Schema
-import models.SchemaProperty
+import models.JsonSchema
+import models.JsonSchemaProperty
 import java.time.Duration
 import java.util.*
 
@@ -22,16 +22,16 @@ object TestConstants {
     )
     val CREDENTIAL_SCHEMA_TYPE = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
 
-    val SCHEMA_TYPE = "https://json-schema.org/draft/2020-12/schema"
+    val SCHEMA_TYPE_JSON = "https://json-schema.org/draft/2020-12/schema"
 
-    val jsonSchema = Schema(
+    val jsonSchema = JsonSchema(
         id = "https://example.com/student-schema-1.0",
-        schema = SCHEMA_TYPE,
+        schema = SCHEMA_TYPE_JSON,
         description = "Student schema",
         type = "object",
         properties = mutableMapOf(
-            "name" to SchemaProperty(type = "string"),
-            "age" to SchemaProperty(type = "integer")
+            "name" to JsonSchemaProperty(type = "string"),
+            "age" to JsonSchemaProperty(type = "integer")
         )
     )
 

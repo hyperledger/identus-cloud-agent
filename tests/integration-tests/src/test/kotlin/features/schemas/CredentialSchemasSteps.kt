@@ -8,7 +8,7 @@ import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import io.iohk.atala.prism.models.CredentialSchemaResponse
-import models.Schema
+import models.JsonSchema
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus.SC_CREATED
@@ -30,7 +30,7 @@ class CredentialSchemasSteps {
     @Then("{actor} sees new credential schema is available")
     fun newCredentialSchemaIsAvailable(actor: Actor) {
         val credentialSchema = SerenityRest.lastResponse().get<CredentialSchemaResponse>()
-        val schema = SerenityRest.lastResponse().get<Schema>("schema")
+        val jsonSchema = SerenityRest.lastResponse().get<JsonSchema>("schema")
 
         actor.attemptsTo(
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
@@ -44,7 +44,7 @@ class CredentialSchemasSteps {
             Ensure.that(credentialSchema.version).contains(TestConstants.STUDENT_SCHEMA.version),
             Ensure.that(credentialSchema.type).isEqualTo(TestConstants.CREDENTIAL_SCHEMA_TYPE),
             Ensure.that(credentialSchema.tags!!).containsExactlyInAnyOrderElementsFrom(TestConstants.STUDENT_SCHEMA.tags!!),
-            Ensure.that(schema.toString()).isEqualTo(TestConstants.jsonSchema.toString())
+            Ensure.that(jsonSchema.toString()).isEqualTo(TestConstants.jsonSchema.toString())
         )
     }
 
