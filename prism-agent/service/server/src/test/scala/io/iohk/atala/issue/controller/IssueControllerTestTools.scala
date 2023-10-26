@@ -1,7 +1,6 @@
 package io.iohk.atala.issue.controller
 
 import com.typesafe.config.ConfigFactory
-import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.model.BaseEntity
@@ -12,7 +11,6 @@ import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
-import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.issue.controller.http.{
   CreateIssueCredentialRecordRequest,
   IssueCredentialRecord,
@@ -51,10 +49,6 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
     Response[
       Either[DeserializationException[String], IssueCredentialRecordPage]
     ]
-
-  val irisStubLayer = ZLayer.fromZIO(
-    ZIO.succeed(IrisServiceGrpc.stub(ManagedChannelBuilder.forAddress("localhost", 9999).usePlaintext.build))
-  )
   val didResolverLayer = ZLayer.fromZIO(ZIO.succeed(makeResolver(Map.empty)))
 
   val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
@@ -84,7 +78,6 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
 
   private val controllerLayer = contextAwareTransactorLayer >+>
     configLayer >+>
-    irisStubLayer >+>
     didResolverLayer >+>
     ResourceURIDereferencerImpl.layer >+>
     CredentialRepositoryInMemory.layer >+>

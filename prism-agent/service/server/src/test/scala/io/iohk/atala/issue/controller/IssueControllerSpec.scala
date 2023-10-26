@@ -116,12 +116,6 @@ object IssueControllerSpec extends ZIOSpecDefault {
       )
       assert(httpError)(equalTo(errorResponse))
     },
-    test("return internal server error if iris error") {
-      val cse = CredentialServiceError.IrisError(new Throwable("message"))
-      val httpError = IssueController.toHttpError(cse)
-      val errorResponse = ErrorResponse.internalServerError(title = "VDR Error", detail = Some(cse.cause.toString))
-      assert(httpError)(equalTo(errorResponse))
-    }
   )
 
 }

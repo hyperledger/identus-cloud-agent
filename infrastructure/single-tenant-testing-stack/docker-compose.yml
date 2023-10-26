@@ -87,8 +87,6 @@ services:
   issuer-oea:
     image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
     environment:
-      IRIS_HOST: iris
-      IRIS_PORT: 8081
       CASTOR_DB_HOST: issuer-db
       CASTOR_DB_PORT: 5432
       CASTOR_DB_NAME: castor
@@ -152,8 +150,6 @@ services:
   verifier-oea:
     image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
     environment:
-      IRIS_HOST: iris
-      IRIS_PORT: 8081
       CASTOR_DB_HOST: verifier-db
       CASTOR_DB_PORT: 5432
       CASTOR_DB_NAME: castor
@@ -217,8 +213,6 @@ services:
   holder-oea:
     image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
     environment:
-      IRIS_HOST: iris
-      IRIS_PORT: 8081
       CASTOR_DB_HOST: holder-db
       CASTOR_DB_PORT: 5432
       CASTOR_DB_NAME: castor

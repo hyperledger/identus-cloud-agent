@@ -8,7 +8,6 @@ import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionR
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.test.*
-import zio.test.Assertion.*
 import zio.{Cause, Exit, ZIO, ZLayer}
 
 import java.time.Instant
