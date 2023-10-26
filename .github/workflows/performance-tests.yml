@@ -6,9 +6,6 @@ concurrency:
 
 on:
   pull_request:
-    paths:
-      - ".github/workflows/performance-tests.yml"
-      - "tests/performance-tests/**"
   push:
     branches:
       - "main"
@@ -41,11 +38,10 @@ jobs:
           username: ${{ secrets.ATALA_GITHUB_ACTOR }}
           password: ${{ secrets.ATALA_GITHUB_TOKEN }}
 
-      - name: Install Compose
-        uses: ndeloof/install-compose-action@v0.0.1
+      - uses: KengoTODA/actions-setup-docker-compose@v1
+        name: Install `docker-compose`
         with:
-          version: v2.12.2
-          legacy: true    # will also install in PATH as `docker-compose`
+          version: '2.14.2'
 
       - name: Build local version of PRISM Agent
         env:
@@ -61,8 +57,13 @@ jobs:
       - name: Start services for issuer
         env:
           PORT: 8080
-          DEFAULT_WALLET_ENABLED: "true"
+          ADMIN_TOKEN: admin
+          DEFAULT_WALLET_ENABLED: true
           DEFAULT_WALLET_AUTH_API_KEY: default
+          API_KEY_AUTO_PROVISIONING: false
+          API_KEY_ENABLED: true
+          DOCKERHOST: "host.docker.internal"
+          PG_PORT: 5432
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
@@ -73,12 +74,34 @@ jobs:
       - name: Start services for holder
         env:
           PORT: 8090
-          DEFAULT_WALLET_ENABLED: "true"
+          ADMIN_TOKEN: admin
+          DEFAULT_WALLET_ENABLED: true
           DEFAULT_WALLET_AUTH_API_KEY: default
+          API_KEY_AUTO_PROVISIONING: false
+          API_KEY_ENABLED: true
+          DOCKERHOST: "host.docker.internal"
+          PG_PORT: 5433
         uses: isbang/compose-action@v1.4.1
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
           compose-flags: "--env-file ./infrastructure/local/.env -p holder"
+          up-flags: "--wait"
+          down-flags: "--volumes"
+
+      - name: Start services for verifier
+        env:
+          PORT: 8100
+          ADMIN_TOKEN: admin
+          DEFAULT_WALLET_ENABLED: true
+          DEFAULT_WALLET_AUTH_API_KEY: default
+          API_KEY_AUTO_PROVISIONING: false
+          API_KEY_ENABLED: true
+          DOCKERHOST: "host.docker.internal"
+          PG_PORT: 5434
+        uses: isbang/compose-action@v1.4.1
+        with:
+          compose-file: "./infrastructure/shared/docker-compose.yml"
+          compose-flags: "--env-file ./infrastructure/local/.env -p verifier"
           up-flags: "--wait"
           down-flags: "--volumes"
 
@@ -90,23 +113,30 @@ jobs:
           scope: 'input-output-hk'
 
       - name: Install dependencies
-        uses: borales/actions-yarn@v4
+        uses: borales/actions-yarn@v4.2.0
         with:
           cmd: install
           dir: ${{ env.BENCHMARKING_DIR }}
 
       - name: Compile tests to JS
-        uses: borales/actions-yarn@v4
+        uses: borales/actions-yarn@v4.2.0
         with:
           cmd: webpack
           dir: ${{ env.BENCHMARKING_DIR }}
 
-      - name: Connection Flow Smoke Test
+      - name: All Smoke Tests
         env:
           ISSUER_AGENT_API_KEY: default
           HOLDER_AGENT_API_KEY: default
+          VERIFIER_AGENT_API_KEY: default
         run: |
           # Have to use manual download because GitHub action doesnt support localhost execution
           curl https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
           ls -la
-          ./k6 run ${{ env.BENCHMARKING_DIR }}/dist/connection-flow-test.js
+          ./k6 run -e SCENARIO_LABEL=create-prism-did-smoke ${{ env.BENCHMARKING_DIR }}/dist/create-prism-did-test.js
+          ./k6 run -e SCENARIO_LABEL=credential-offer-smoke ${{ env.BENCHMARKING_DIR }}/dist/credential-offer-test.js
+          ./k6 run -e SCENARIO_LABEL=credential-schema-smoke ${{ env.BENCHMARKING_DIR }}/dist/credential-schema-test.js
+          ./k6 run -e SCENARIO_LABEL=did-publishing-smoke ${{ env.BENCHMARKING_DIR }}/dist/did-publishing-test.js
+          ./k6 run -e SCENARIO_LABEL=connection-flow-smoke ${{ env.BENCHMARKING_DIR }}/dist/connection-flow-test.js
+          ./k6 run -e SCENARIO_LABEL=issuance-flow-smoke ${{ env.BENCHMARKING_DIR }}/dist/issuance-flow-test.js
+          ./k6 run -e SCENARIO_LABEL=present-proof-flow-smoke ${{ env.BENCHMARKING_DIR }}/dist/present-proof-flow-test.js

@@ -21,7 +21,6 @@ import java.rmi.UnexpectedException
 import java.time.Instant
 import java.util as ju
 import java.util.UUID
-import io.iohk.atala.mercury.protocol.presentproof.PresentCredentialRequestFormat
 
 private class PresentationServiceImpl(
     presentationRepository: PresentationRepository,
@@ -148,7 +147,7 @@ private class PresentationServiceImpl(
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
-      options: Option[io.iohk.atala.pollux.core.model.presentation.Options],
+      maybeOptions: Option[io.iohk.atala.pollux.core.model.presentation.Options],
       format: CredentialFormat,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
@@ -158,8 +157,13 @@ private class PresentationServiceImpl(
           thid,
           pairwiseVerifierDID,
           pairwiseProverDID,
-          options,
-          format,
+          format match {
+            case CredentialFormat.JWT => maybeOptions.map(options => Seq(toJWTAttachment(options))).getOrElse(Seq.empty)
+            case CredentialFormat.AnonCreds =>
+              maybeOptions
+                .map(options => Seq(toAnoncredAttachment(options)))
+                .getOrElse(Seq.empty) // TODO ATL-5945 Create Actual Anoncred Request
+          }
         )
       )
       record <- ZIO.succeed(
@@ -610,31 +614,34 @@ private class PresentationServiceImpl(
     } yield record
   }
 
+  private[this] def toJWTAttachment(options: Options): AttachmentDescriptor = {
+    AttachmentDescriptor.buildJsonAttachment(
+      payload = PresentationAttachment.build(Some(options)),
+      format = Some(PresentCredentialRequestFormat.JWT.name)
+    )
+  }
+
+  // TODO ATL-5945 Create Actual Anoncred Request
+  private[this] def toAnoncredAttachment(options: Options): AttachmentDescriptor = {
+    AttachmentDescriptor.buildJsonAttachment(
+      payload = PresentationAttachment.build(Some(options)),
+      format = Some(PresentCredentialRequestFormat.Anoncred.name)
+    )
+  }
+
   private[this] def createDidCommRequestPresentation(
       proofTypes: Seq[ProofType],
       thid: DidCommID,
       pairwiseVerifierDID: DidId,
       pairwiseProverDID: DidId,
-      maybeOptions: Option[io.iohk.atala.pollux.core.model.presentation.Options],
-      format: CredentialFormat,
+      attachments: Seq[AttachmentDescriptor]
   ): RequestPresentation = {
     RequestPresentation(
       body = RequestPresentation.Body(
         goal_code = Some("Request Proof Presentation"),
         proof_types = proofTypes
       ),
-      attachments = maybeOptions
-        .map(options =>
-          Seq(
-            AttachmentDescriptor.buildJsonAttachment(
-              payload = PresentationAttachment.build(Some(options)),
-              format = format match
-                case CredentialFormat.JWT       => Some(PresentCredentialRequestFormat.JWT.name)
-                case CredentialFormat.AnonCreds => Some(PresentCredentialRequestFormat.Anoncred.name)
-            )
-          )
-        )
-        .getOrElse(Seq.empty),
+      attachments = attachments,
       from = pairwiseVerifierDID,
       to = pairwiseProverDID,
       thid = Some(thid.toString)
@@ -655,8 +662,6 @@ private class PresentationServiceImpl(
       thid = proposePresentation.thid
     )
   }
-
-  import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
 
   private[this] def updatePresentationRecordProtocolState(
       id: DidCommID,

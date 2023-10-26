@@ -2,7 +2,8 @@ import { sleep } from "k6";
 import { HttpService } from "./HttpService";
 import { ISSUER_AGENT_URL, WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
 import { IssueCredentialRecord, Connection, CredentialSchemaResponse } from "@input-output-hk/prism-typescript-client";
-import {v4 as uuidv4} from 'uuid';
+import { crypto } from "k6/experimental/webcrypto";
+
 
 /**
  * A service class for managing credentials in the application.
@@ -18,8 +19,8 @@ export class CredentialsService extends HttpService {
    */
   createCredentialOffer(issuingDid: string, connection: Connection, schema: CredentialSchemaResponse): IssueCredentialRecord {
     const payload = `{
-        "claims": { 
-          "emailAddress": "${uuidv4()}-@atala.io",
+        "claims": {
+          "emailAddress": "${crypto.randomUUID()}-@atala.io",
           "familyName": "Test",
           "dateOfIssuance": "${new Date()}",
           "drivingLicenseID": "Test",
@@ -31,13 +32,13 @@ export class CredentialsService extends HttpService {
         "automaticIssuance": false
       }`;
     const res = this.post("issue-credentials/credential-offers", payload);
-    return res.json() as unknown as IssueCredentialRecord;
+    return this.toJson(res) as unknown as IssueCredentialRecord;
   }
 
   createCredentialSchema(issuingDid: string): CredentialSchemaResponse {
     const payload = `
     {
-      "name": "${uuidv4()}}",
+      "name": "${crypto.randomUUID()}}",
       "version": "1.0.0",
       "description": "Simple credential schema for the driving licence verifiable credential.",
       "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
@@ -85,7 +86,7 @@ export class CredentialsService extends HttpService {
     }
     `
     const res = this.post("schema-registry/schemas", payload);
-    return res.json() as unknown as CredentialSchemaResponse;
+    return this.toJson(res) as unknown as CredentialSchemaResponse;
   }
 
   /**
@@ -95,7 +96,7 @@ export class CredentialsService extends HttpService {
    */
   getCredentialRecord(record: IssueCredentialRecord): IssueCredentialRecord {
     const res = this.get(`issue-credentials/records/${record.recordId}`);
-    return res.json() as unknown as IssueCredentialRecord;
+    return this.toJson(res) as unknown as IssueCredentialRecord;
   }
 
   /**
@@ -104,7 +105,7 @@ export class CredentialsService extends HttpService {
    */
   getCredentialRecords(thid: string): IssueCredentialRecord[] {
     const res = this.get(`issue-credentials/records?thid=${thid}`);
-    return res.json("contents") as unknown as IssueCredentialRecord[];
+    return this.toJson(res).contents as unknown as IssueCredentialRecord[];
   }
 
   /**
@@ -116,7 +117,7 @@ export class CredentialsService extends HttpService {
   acceptCredentialOffer(record: IssueCredentialRecord, subjectDid: string): IssueCredentialRecord {
     const payload = { subjectId: subjectDid };
     const res = this.post(`issue-credentials/records/${record.recordId}/accept-offer`, payload, 200);
-    return res.json() as unknown as IssueCredentialRecord;
+    return this.toJson(res) as unknown as IssueCredentialRecord;
   }
 
   /**
@@ -126,7 +127,7 @@ export class CredentialsService extends HttpService {
    */
   issueCredential(record: IssueCredentialRecord): IssueCredentialRecord {
     const res = this.post(`issue-credentials/records/${record.recordId}/issue-credential`, null, 200);
-    return res.json() as unknown as IssueCredentialRecord;
+    return this.toJson(res) as unknown as IssueCredentialRecord;
   }
 
   /**
