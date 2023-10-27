@@ -616,20 +616,6 @@ val prismNodeClient = project
     )
   )
 
-// ##############
-// ###  iris ####
-// ##############
-val irisClient = project
-  .in(file("iris/client/scala-client"))
-  .settings(
-    name := "iris-client",
-    libraryDependencies ++= Seq(D.scalaPbGrpc, D.scalaPbRuntime),
-    coverageEnabled := false,
-    // gRPC settings
-    Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
-    Compile / PB.protoSources := Seq(baseDirectory.value / ".." / ".." / "api" / "grpc")
-  )
-
 // #####################
 // #####  castor  ######
 // #####################
@@ -677,7 +663,6 @@ lazy val polluxCore = project
     libraryDependencies ++= D_Pollux.coreDependencies
   )
   .dependsOn(shared)
-  .dependsOn(irisClient)
   .dependsOn(prismAgentWalletAPI)
   .dependsOn(polluxVcJWT)
   .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds)

@@ -60,8 +60,6 @@ object IssueController {
         ErrorResponse.badRequest(title = "Create Request Validation Error", detail = Some(msg))
       case CredentialServiceError.CredentialIdNotDefined(msg) =>
         ErrorResponse.badRequest(title = "Credential ID not defined one request", detail = Some(msg.toString))
-      case CredentialServiceError.IrisError(msg) =>
-        ErrorResponse.internalServerError(title = "VDR Error", detail = Some(msg.toString))
       case CredentialServiceError.CredentialSchemaError(e) =>
         ErrorResponse.badRequest(title = "Credential Schema Error", detail = Some(e.message))
       case CredentialServiceError.UnsupportedVCClaimsValue(error) =>
