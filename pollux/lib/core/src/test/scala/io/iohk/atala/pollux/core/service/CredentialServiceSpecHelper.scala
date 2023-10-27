@@ -1,13 +1,11 @@
 package io.iohk.atala.pollux.core.service
 
 import io.circe.Json
-import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.iris.proto.service.IrisServiceGrpc
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.*
@@ -21,9 +19,6 @@ import java.util.UUID
 
 trait CredentialServiceSpecHelper {
 
-  protected val irisStubLayer = ZLayer.fromZIO(
-    ZIO.succeed(IrisServiceGrpc.stub(ManagedChannelBuilder.forAddress("localhost", 9999).usePlaintext.build))
-  )
   protected val didResolverLayer = ZLayer.fromZIO(ZIO.succeed(makeResolver(Map.empty)))
 
   protected val defaultWalletLayer = ZLayer.succeed(WalletAccessContext(WalletId.default))

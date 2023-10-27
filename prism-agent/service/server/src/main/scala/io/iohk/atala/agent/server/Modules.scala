@@ -34,8 +34,6 @@ import io.iohk.atala.iam.authentication.apikey.AuthenticationRepository
 import io.iohk.atala.iam.authentication.oidc.KeycloakAuthenticatorImpl
 import io.iohk.atala.iam.authentication.oidc.KeycloakClientImpl
 import io.iohk.atala.iam.authentication.oidc.KeycloakConfig
-import io.iohk.atala.iris.proto.service.IrisServiceGrpc
-import io.iohk.atala.iris.proto.service.IrisServiceGrpc.IrisServiceStub
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import io.iohk.atala.shared.db.{ContextAwareTask, DbConfig, TransactorLayer}
@@ -94,21 +92,6 @@ object AppModule {
 }
 
 object GrpcModule {
-  // TODO: once Castor + Pollux has migrated to use Node 2.0 stubs, this should be removed.
-  val irisStubLayer: TaskLayer[IrisServiceStub] = {
-    val stubLayer = ZLayer.fromZIO(
-      ZIO
-        .service[AppConfig]
-        .map(_.iris.service)
-        .flatMap(config =>
-          ZIO.attempt(
-            IrisServiceGrpc.stub(ManagedChannelBuilder.forAddress(config.host, config.port).usePlaintext.build)
-          )
-        )
-    )
-    SystemModule.configLayer >>> stubLayer
-  }
-
   val prismNodeStubLayer: TaskLayer[NodeServiceGrpc.NodeServiceStub] = {
     val stubLayer = ZLayer.fromZIO(
       ZIO

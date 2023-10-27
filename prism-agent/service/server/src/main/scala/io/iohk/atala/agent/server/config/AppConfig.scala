@@ -13,7 +13,6 @@ import scala.util.Try
 
 final case class AppConfig(
     devMode: Boolean,
-    iris: IrisConfig,
     pollux: PolluxConfig,
     agent: AgentConfig,
     connect: ConnectConfig,
@@ -30,8 +29,6 @@ object AppConfig {
 }
 
 final case class VaultConfig(address: String, token: String)
-
-final case class IrisConfig(service: GrpcServiceConfig)
 
 final case class PolluxConfig(
     database: DatabaseConfig,
