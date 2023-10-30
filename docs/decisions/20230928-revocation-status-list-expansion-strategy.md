@@ -1,4 +1,4 @@
-# Double revocation status list in size as number of revocable credentials exceeds minimum size of the status list 
+# JWT credential revocation status list expansion strategy 
 
 - Status: accepted
 - Decider: Benjamin Voiturier, Yurii Shynbuiev, Ezequiel Postan, Shota Jolbordi
@@ -32,6 +32,20 @@ Absolutely, it's crucial to avoid overengineering the solution. This ensures tha
 ## Considered Options
 
 
+Option 1: Increment status list size as we approach its limit:
+
+We'll enhance the status list by simply doubling its size.
+If we opt for the minimum size of 16 KB for the revocation status list, it can manage up to 131,072 revocable credentials before requiring expansion.
+It's important to note that this number represents the potential capacity for revocable credentials to be issued, not necessarily the actual number of credentials that have been revoked.
+Even unrevoked credentials still occupy space.
+
+Option 2: Generate multiple revocation status lists as the previous one reaches its limit
+
+With this approach, we'll generate and store multiple status list credentials.
+It will be crucial to ensure that each credential is linked to a specific status list, allowing us to track where the revocation information is stored.
+If we stick with the smallest recommended status list size, one revocation status list can hold information about 131,072 revocable credentials.
+
+
 ## Decision Outcome
 
 
@@ -43,6 +57,18 @@ Absolutely, it's crucial to avoid overengineering the solution. This ensures tha
 
 ## Pros and Cons of the Options
 
+Option 1 offers the primary advantage of being straightforward to implement.
+Additionally, if we ever need to merge status lists in the future, it would likely be a more seamless process.
+However, it's important to note that Option 2 isn't significantly more challenging to implement, so we shouldn't overly prioritize this consideration.
 
-## Links
+One potential drawback of Option 1 is that the size of the status list could potentially become too large, leading to slower verification due to the increased payload of the verification status list credential.
+However, it's worth noting that the verification status list credential is gZipped.
+This means that consecutive 0s and 1s will be compressed.
+For example, a sequence of 5 zeros (00000) will be stored as 5(0), indicating five consecutive zeros.
+Assuming that most credentials won't be revoked and will have an index of 0 in the status list, the gzipped status list in the status list credential should be very compact.
+This is the most crucial factor to consider in the end.
+
+
+
+
 
