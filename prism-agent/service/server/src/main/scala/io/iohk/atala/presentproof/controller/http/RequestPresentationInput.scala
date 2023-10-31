@@ -1,9 +1,10 @@
 package io.iohk.atala.presentproof.controller.http
 
 import io.iohk.atala.api.http.Annotation
+import io.iohk.atala.pollux.core.service.serdes.*
 import io.iohk.atala.presentproof.controller.http.RequestPresentationInput.annotations
-import sttp.tapir.{Schema, Validator}
 import sttp.tapir.Schema.annotations.{description, encodedExample}
+import sttp.tapir.{Schema, Validator}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID
@@ -18,6 +19,9 @@ final case class RequestPresentationInput(
     @description(annotations.proofs.description)
     @encodedExample(annotations.proofs.example)
     proofs: Seq[ProofRequestAux],
+    @description(annotations.proofs.description) // TODO
+    @encodedExample(annotations.proofs.example) // TODO
+    anoncredPresentationRequest: Option[AnoncredPresentationRequestV1],
     @description(annotations.credentialFormat.description)
     @encodedExample(annotations.credentialFormat.example)
     credentialFormat: Option[String],
@@ -60,6 +64,20 @@ object RequestPresentationInput {
 
   given decoder: JsonDecoder[RequestPresentationInput] =
     DeriveJsonDecoder.gen[RequestPresentationInput]
+
+  import AnoncredPresentationRequestV1.given
+
+  given Schema[AnoncredPresentationRequestV1] = Schema.derived
+
+  given Schema[AnoncredRequestedAttributeV1] = Schema.derived
+
+  given Schema[AnoncredRequestedPredicateV1] = Schema.derived
+
+  given Schema[AnoncredNonRevokedIntervalV1] = Schema.derived
+
+  given Schema[AnoncredAttributeRestrictionV1] = Schema.derived
+
+  given Schema[AnoncredPredicateRestrictionV1] = Schema.derived
 
   given schema: Schema[RequestPresentationInput] = Schema.derived
 }
