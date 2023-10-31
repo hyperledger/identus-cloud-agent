@@ -17,4 +17,6 @@ object PresentationError {
   object MissingCredential extends PresentationError
   object MissingCredentialFormat extends PresentationError
   final case class UnsupportedCredentialFormat(vcFormat: String) extends PresentationError
+
+  final case class MissingAnoncredPresentationRequest(error: String) extends PresentationError
 }

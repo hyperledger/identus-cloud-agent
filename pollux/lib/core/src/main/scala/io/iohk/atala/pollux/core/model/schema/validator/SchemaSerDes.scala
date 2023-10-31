@@ -2,17 +2,19 @@ package io.iohk.atala.pollux.core.model.schema.validator
 
 import com.networknt.schema.JsonSchema
 import io.iohk.atala.pollux.core.model.schema.validator.JsonSchemaError.*
-import zio.IO
-import zio.ZIO
 import zio.json.*
-import zio.json.JsonDecoder
 import zio.json.ast.Json
 import zio.json.ast.Json.*
+import zio.{IO, ZIO}
 
 class SchemaSerDes[S](jsonSchemaSchemaStr: String) {
 
   def initialiseJsonSchema: IO[JsonSchemaError, JsonSchema] =
     JsonSchemaUtils.jsonSchema(jsonSchemaSchemaStr)
+
+  def serialize(instance: S)(using encoder: JsonEncoder[S]): String = {
+    instance.toJson
+  }
 
   def deserialize(
       schema: zio.json.ast.Json
