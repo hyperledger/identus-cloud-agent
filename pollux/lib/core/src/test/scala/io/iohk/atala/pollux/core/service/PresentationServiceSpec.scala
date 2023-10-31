@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.core.service
 
 import io.circe.parser.decode
 import io.circe.syntax.*
-import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
+import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64, DidId}
 import io.iohk.atala.mercury.protocol.issuecredential.IssueCredential
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.core.model.*
@@ -12,14 +12,15 @@ import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
+import io.iohk.atala.pollux.core.service.serdes.AnoncredPresentationRequestV1
 import io.iohk.atala.pollux.vc.jwt.*
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
 import java.time.Instant
-import io.iohk.atala.shared.models.WalletId
-import io.iohk.atala.shared.models.WalletAccessContext
+import java.util.Base64 as JBase64
 
 object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSpecHelper {
 
@@ -28,7 +29,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
 
   private val singleWalletSpec =
     suite("singleWalletSpec")(
-      test("createPresentationRecord creates a valid PresentationRecord") {
+      test("createPresentationRecord creates a valid JWT PresentationRecord") {
         val didGen = for {
           suffix <- Gen.stringN(10)(Gen.alphaNumericChar)
         } yield DidId("did:peer:" + suffix)
@@ -54,14 +55,13 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             svc <- ZIO.service[PresentationService]
             pairwiseVerifierDid = DidId("did:peer:Verifier")
             pairwiseProverDid = DidId("did:peer:Prover")
-            record <- svc.createPresentationRecord(
+            record <- svc.createJwtPresentationRecord(
               pairwiseVerifierDid,
               pairwiseProverDid,
               thid,
               connectionId,
               proofTypes,
-              options,
-              format = CredentialFormat.JWT,
+              options
             )
           } yield {
             assertTrue(record.thid == thid) &&
@@ -100,12 +100,74 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           }
         }
       },
+      test("createPresentationRecord creates a valid Anoncred PresentationRecord") {
+        check(
+          Gen.uuid.map(e => DidCommID(e.toString())),
+          Gen.option(Gen.string),
+          Gen.string,
+          Gen.string,
+          Gen.string
+        ) { (thid, connectionId, name, nonce, version) =>
+          for {
+            svc <- ZIO.service[PresentationService]
+            pairwiseVerifierDid = DidId("did:peer:Verifier")
+            pairwiseProverDid = DidId("did:peer:Prover")
+            anoncredPresentationRequestV1 = AnoncredPresentationRequestV1(
+              Map.empty,
+              Map.empty,
+              name,
+              nonce,
+              version,
+              None
+            )
+            record <-
+              svc.createAnoncredPresentationRecord(
+                pairwiseVerifierDid,
+                pairwiseProverDid,
+                thid,
+                connectionId,
+                anoncredPresentationRequestV1
+              )
+          } yield {
+            assertTrue(record.thid == thid) &&
+            assertTrue(record.updatedAt.isEmpty) &&
+            assertTrue(record.connectionId == connectionId) &&
+            assertTrue(record.role == PresentationRecord.Role.Verifier) &&
+            assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestPending) &&
+            assertTrue(record.requestPresentationData.isDefined) &&
+            assertTrue(record.requestPresentationData.get.to == pairwiseProverDid) &&
+            assertTrue(record.requestPresentationData.get.thid.contains(thid.toString)) &&
+            assertTrue(record.requestPresentationData.get.body.goal_code.contains("Request Proof Presentation")) &&
+            assertTrue(
+              record.requestPresentationData.get.attachments.map(_.media_type) == Seq(Some("application/json"))
+            ) &&
+            assertTrue(
+              record.requestPresentationData.get.attachments.map(_.format) == Seq(
+                Some(PresentCredentialRequestFormat.Anoncred.name)
+              )
+            ) &&
+            assertTrue(
+              record.requestPresentationData.get.attachments.map(_.data) ==
+                Seq(
+                  Base64(
+                    JBase64.getUrlEncoder.encodeToString(
+                      AnoncredPresentationRequestV1.schemaSerDes.serialize(anoncredPresentationRequestV1).getBytes()
+                    )
+                  )
+                )
+            ) &&
+            assertTrue(record.proposePresentationData.isEmpty) &&
+            assertTrue(record.presentationData.isEmpty) &&
+            assertTrue(record.credentialsToUse.isEmpty)
+          }
+        }
+      },
       test("getPresentationRecords returns created PresentationRecord") {
         for {
           svc <- ZIO.service[PresentationService]
           pairwiseProverDid = DidId("did:peer:Prover")
-          record1 <- svc.createRecord()
-          record2 <- svc.createRecord()
+          record1 <- svc.createJwtRecord()
+          record2 <- svc.createJwtRecord()
           records <- svc.getPresentationRecords(false)
         } yield {
           assertTrue(records.size == 2)
@@ -114,7 +176,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("getPresentationRecordsByStates returns the correct records") {
         for {
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createRecord()
+          aRecord <- svc.createJwtRecord()
           records <- svc.getPresentationRecordsByStates(
             ignoreWithZeroRetries = true,
             limit = 10,
@@ -132,16 +194,16 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("getPresentationRecord returns the correct record") {
         for {
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createRecord()
-          bRecord <- svc.createRecord()
+          aRecord <- svc.createJwtRecord()
+          bRecord <- svc.createJwtRecord()
           record <- svc.getPresentationRecord(bRecord.id)
         } yield assertTrue(record.contains(bRecord))
       },
       test("getPresentationRecord returns nothing for an unknown 'recordId'") {
         for {
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createRecord()
-          bRecord <- svc.createRecord()
+          aRecord <- svc.createJwtRecord()
+          bRecord <- svc.createJwtRecord()
           record <- svc.getPresentationRecord(DidCommID())
         } yield assertTrue(record.isEmpty)
       },
@@ -159,7 +221,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             IssueCredentialRecord.ProtocolState.CredentialReceived
           )
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createRecord()
+          aRecord <- svc.createJwtRecord()
           repo <- ZIO.service[PresentationRepository]
           _ <- repo.updatePresentationWithCredentialsToUse(
             aRecord.id,
@@ -176,7 +238,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         for {
           svc <- ZIO.service[PresentationService]
           pairwiseProverDid = DidId("did:peer:Prover")
-          record <- svc.createRecord()
+          record <- svc.createJwtRecord()
           record <- svc.markRequestPresentationSent(record.id)
 
         } yield {
@@ -187,7 +249,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         for {
           svc <- ZIO.service[PresentationService]
           pairwiseProverDid = DidId("did:peer:Prover")
-          record <- svc.createRecord()
+          record <- svc.createJwtRecord()
           repo <- ZIO.service[PresentationRepository]
           _ <- repo.updatePresentationRecordProtocolState(
             record.id,
@@ -331,7 +393,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         for {
           svc <- ZIO.service[PresentationService]
           pairwiseProverDid = DidId("did:peer:Prover")
-          record <- svc.createRecord()
+          record <- svc.createJwtRecord()
           repo <- ZIO.service[PresentationRepository]
           _ <- repo.updatePresentationRecordProtocolState(
             record.id,
@@ -347,7 +409,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("receivePresentation updates the PresentatinRecord") {
         for {
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createRecord()
+          aRecord <- svc.createJwtRecord()
           p = presentation(aRecord.thid.value)
           aRecordReceived <- svc.receivePresentation(p)
 
@@ -359,7 +421,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("acceptPresentation updates the PresentatinRecord") {
         for {
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createRecord()
+          aRecord <- svc.createJwtRecord()
           p = presentation(aRecord.thid.value)
           aRecordReceived <- svc.receivePresentation(p)
           repo <- ZIO.service[PresentationRepository]
@@ -377,7 +439,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("markPresentationRejected updates the PresentatinRecord") {
         for {
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createRecord()
+          aRecord <- svc.createJwtRecord()
           p = presentation(aRecord.thid.value)
           _ <- svc.receivePresentation(p)
           repo <- ZIO.service[PresentationRepository]
@@ -396,7 +458,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("rejectPresentation updates the PresentatinRecord") {
         for {
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createRecord()
+          aRecord <- svc.createJwtRecord()
           p = presentation(aRecord.thid.value)
           aRecordReceived <- svc.receivePresentation(p)
           repo <- ZIO.service[PresentationRepository]
@@ -416,7 +478,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         for {
           svc <- ZIO.service[PresentationService]
           pairwiseProverDid = DidId("did:peer:Prover")
-          record <- svc.createRecord()
+          record <- svc.createJwtRecord()
           p = presentation(record.thid.value)
           repo <- ZIO.service[PresentationRepository]
           _ <- repo.updatePresentationRecordProtocolState(
@@ -433,7 +495,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         for {
           svc <- ZIO.service[PresentationService]
           pairwiseProverDid = DidId("did:peer:Prover")
-          record <- svc.createRecord()
+          record <- svc.createJwtRecord()
           repo <- ZIO.service[PresentationRepository]
           _ <- repo.updatePresentationRecordProtocolState(
             record.id,
@@ -448,7 +510,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("receiveProposePresentation updates the PresentatinRecord") {
         for {
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createRecord()
+          aRecord <- svc.createJwtRecord()
           p = proposePresentation(aRecord.thid.value)
           aRecordReceived <- svc.receiveProposePresentation(p)
         } yield {
@@ -459,7 +521,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("acceptProposePresentation updates the PresentatinRecord") {
         for {
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createRecord()
+          aRecord <- svc.createJwtRecord()
           p = proposePresentation(aRecord.thid.value)
           aRecordReceived <- svc.receiveProposePresentation(p)
           repo <- ZIO.service[PresentationRepository]
@@ -485,8 +547,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
         for {
           svc <- ZIO.service[PresentationService]
-          record1 <- svc.createRecord().provide(wallet1)
-          record2 <- svc.createRecord().provide(wallet2)
+          record1 <- svc.createJwtRecord().provide(wallet1)
+          record2 <- svc.createJwtRecord().provide(wallet2)
           ownRecord1 <- svc.getPresentationRecord(record1.id).provide(wallet1)
           ownRecord2 <- svc.getPresentationRecord(record2.id).provide(wallet2)
           crossRecord1 <- svc.getPresentationRecord(record1.id).provide(wallet2)

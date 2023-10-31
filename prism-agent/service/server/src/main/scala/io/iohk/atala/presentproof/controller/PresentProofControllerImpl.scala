@@ -30,22 +30,41 @@ class PresentProofControllerImpl(
     val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
       credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
-      record <- presentationService
-        .createPresentationRecord(
-          pairwiseVerifierDID = didIdPair.myDID,
-          pairwiseProverDID = didIdPair.theirDid,
-          thid = DidCommID(),
-          connectionId = Some(request.connectionId.toString),
-          proofTypes = request.proofs.map { e =>
-            ProofType(
-              schema = e.schemaId, // TODO rename field to schemaId
-              requiredFields = None,
-              trustIssuers = Some(e.trustIssuers.map(DidId(_)))
-            )
-          },
-          options = request.options.map(x => Options(x.challenge, x.domain)),
-          format = credentialFormat,
-        )
+      record <-
+        credentialFormat match {
+          case CredentialFormat.JWT =>
+            presentationService
+              .createJwtPresentationRecord(
+                pairwiseVerifierDID = didIdPair.myDID,
+                pairwiseProverDID = didIdPair.theirDid,
+                thid = DidCommID(),
+                connectionId = Some(request.connectionId.toString),
+                proofTypes = request.proofs.map { e =>
+                  ProofType(
+                    schema = e.schemaId,
+                    requiredFields = None,
+                    trustIssuers = Some(e.trustIssuers.map(DidId(_)))
+                  )
+                },
+                options = request.options.map(x => Options(x.challenge, x.domain))
+              )
+          case CredentialFormat.AnonCreds =>
+            request.anoncredPresentationRequest match {
+              case Some(presentationRequest) =>
+                presentationService
+                  .createAnoncredPresentationRecord(
+                    pairwiseVerifierDID = didIdPair.myDID,
+                    pairwiseProverDID = didIdPair.theirDid,
+                    thid = DidCommID(),
+                    connectionId = Some(request.connectionId.toString),
+                    presentationRequest = presentationRequest
+                  )
+              case None =>
+                ZIO.fail(
+                  PresentationError.MissingAnoncredPresentationRequest("Anoncred presentation request is missing")
+                )
+            }
+        }
     } yield PresentationStatus.fromDomain(record)
 
     result.mapError {
