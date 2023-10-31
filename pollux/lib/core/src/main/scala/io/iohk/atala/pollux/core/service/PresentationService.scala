@@ -5,6 +5,7 @@ import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.*
+import io.iohk.atala.pollux.core.service.serdes.AnoncredPresentationRequestV1
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
@@ -17,14 +18,21 @@ trait PresentationService {
 
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
 
-  def createPresentationRecord(
+  def createJwtPresentationRecord(
       pairwiseVerifierDID: DidId,
       pairwiseProverDID: DidId,
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       options: Option[io.iohk.atala.pollux.core.model.presentation.Options],
-      format: CredentialFormat,
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
+
+  def createAnoncredPresentationRecord(
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: DidId,
+      thid: DidCommID,
+      connectionId: Option[String],
+      presentationRequest: AnoncredPresentationRequestV1
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def getPresentationRecords(
