@@ -5,13 +5,15 @@ import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.mercury.{AgentPeerService, PeerDID}
 import io.iohk.atala.pollux.core.model.*
-import io.iohk.atala.pollux.core.repository.PresentationRepository
+import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.repository.{
   CredentialRepository,
   CredentialRepositoryInMemory,
+  PresentationRepository,
   PresentationRepositoryInMemory
 }
 import io.iohk.atala.pollux.vc.jwt.*
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import java.security.*
@@ -139,22 +141,21 @@ trait PresentationServiceSpecHelper {
   )
 
   extension (svc: PresentationService)
-    def createRecord(
+    def createJwtRecord(
         pairwiseVerifierDID: DidId = DidId("did:prism:issuer"),
         pairwiseProverDID: DidId = DidId("did:prism:prover-pairwise"),
         thid: DidCommID = DidCommID(),
-        schemaId: String = "schemaId",
-        connectionId: Option[String] = None,
-    ) = {
+        schemaId: _root_.java.lang.String = "schemaId",
+        options: Option[io.iohk.atala.pollux.core.model.presentation.Options] = None
+    ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
       val proofType = ProofType(schemaId, None, None)
-      svc.createPresentationRecord(
+      svc.createJwtPresentationRecord(
         thid = thid,
         pairwiseVerifierDID = pairwiseVerifierDID,
         pairwiseProverDID = pairwiseProverDID,
         connectionId = Some("connectionId"),
         proofTypes = Seq(proofType),
-        options = None,
-        format = CredentialFormat.JWT,
+        options = options
       )
     }
 
