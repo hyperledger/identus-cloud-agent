@@ -86,3 +86,13 @@ vault:
           backend = "kv"
           version = 2
         }
+
+keycloak:
+  url: http://keycloak:80
+  realm: prism-agent-stack
+  bootstrap: true
+  admin:
+    username: atala
+  client:
+    clientId: prism-agent
+    clientSecret: password1234 # fixme

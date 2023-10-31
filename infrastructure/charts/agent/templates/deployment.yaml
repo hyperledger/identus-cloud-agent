@@ -22,6 +22,34 @@ spec:
       - name: wait-postgress-ready
         image: busybox
         command: ['sh', '-c', "until nc -z {{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.{{.Release.Namespace}} 5432; do echo waiting for postgress-operator; sleep 2; done;"]
+      - name: wait-keycloak-ready
+        image: badouralix/curl-jq:ubuntu
+        command: ['/bin/bash', '-c', 'until curl {{ .Values.keycloak.url }}/health; do sleep 2; done && echo "Keycloak is ready."']
+      {{- if .Values.keycloak.bootstrap }}
+      - name: keycloak-bootstrap
+        image: badouralix/curl-jq:ubuntu
+        command: ['/bin/bash', '-c', '/scripts/init.sh']
+        env:
+        - name: KEYCLOAK_BASE_URL
+          value: {{ .Values.keycloak.url }}
+        - name: KEYCLOAK_ADMIN_USER
+          value: {{ .Values.keycloak.admin.username }}
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-admin-secret
+              key: password
+        - name: REALM_NAME
+          value: {{ .Values.keycloak.realm }}
+        - name: PRISM_AGENT_CLIENT_ID
+          value: {{ .Values.keycloak.client.clientId }}
+        - name: PRISM_AGENT_CLIENT_SECRET
+          value: {{ .Values.keycloak.client.clientSecret }}
+        volumeMounts:
+        - name: keycloak-bootstrap-script
+          mountPath: /scripts
+          readOnly: true
+      {{- end }}
       containers:
       - name: prism-agent-server
         image: "{{ .Values.server.image.repository }}/{{ .Values.server.image.tag }}:{{ .Values.server.image.version | default .Chart.AppVersion }}"
@@ -169,3 +197,13 @@ spec:
           - name: {{ $key }}
             value: {{ $value | quote }}
           {{- end }}
+      {{- if .Values.keycloak.bootstrap }}
+      volumes:
+      - name: keycloak-bootstrap-script
+        configMap:
+          name: keycloak-bootstrap-script
+          defaultMode: 0500
+          items:
+          - key: "init.sh"
+            path: "init.sh"
+      {{- end }}
