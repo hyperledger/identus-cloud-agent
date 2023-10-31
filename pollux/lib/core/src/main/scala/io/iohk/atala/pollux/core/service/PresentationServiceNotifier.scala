@@ -6,13 +6,13 @@ import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProofType, Pro
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
+import io.iohk.atala.pollux.core.service.serdes.AnoncredPresentationRequestV1
 import io.iohk.atala.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.shared.models.WalletAccessContext
-import zio.{URLayer, ZIO, ZLayer, IO}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.time.Instant
 import java.util.UUID
-import io.iohk.atala.pollux.core.model.CredentialFormat
 
 class PresentationServiceNotifier(
     svc: PresentationService,
@@ -21,24 +21,39 @@ class PresentationServiceNotifier(
 
   private val presentationUpdatedEvent = "PresentationUpdated"
 
-  override def createPresentationRecord(
+  override def createJwtPresentationRecord(
       pairwiseVerifierDID: DidId,
       pairwiseProverDID: DidId,
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       options: Option[Options],
-      format: CredentialFormat,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(
-      svc.createPresentationRecord(
+      svc.createJwtPresentationRecord(
         pairwiseVerifierDID,
         pairwiseProverDID,
         thid,
         connectionId,
         proofTypes,
-        options,
-        format: CredentialFormat
+        options
+      )
+    )
+
+  def createAnoncredPresentationRecord(
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: DidId,
+      thid: DidCommID,
+      connectionId: Option[String],
+      presentationRequest: AnoncredPresentationRequestV1
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+    notifyOnSuccess(
+      svc.createAnoncredPresentationRecord(
+        pairwiseVerifierDID,
+        pairwiseProverDID,
+        thid,
+        connectionId,
+        presentationRequest
       )
     )
 

@@ -12,6 +12,7 @@ import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
+import io.iohk.atala.pollux.core.service.serdes.AnoncredPresentationRequestV1
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
@@ -141,14 +142,13 @@ private class PresentationServiceImpl(
     markPresentationRejected(recordId)
   }
 
-  override def createPresentationRecord(
+  override def createJwtPresentationRecord(
       pairwiseVerifierDID: DidId,
       pairwiseProverDID: DidId,
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
-      maybeOptions: Option[io.iohk.atala.pollux.core.model.presentation.Options],
-      format: CredentialFormat,
+      maybeOptions: Option[io.iohk.atala.pollux.core.model.presentation.Options]
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       request <- ZIO.succeed(
@@ -157,13 +157,7 @@ private class PresentationServiceImpl(
           thid,
           pairwiseVerifierDID,
           pairwiseProverDID,
-          format match {
-            case CredentialFormat.JWT => maybeOptions.map(options => Seq(toJWTAttachment(options))).getOrElse(Seq.empty)
-            case CredentialFormat.AnonCreds =>
-              maybeOptions
-                .map(options => Seq(toAnoncredAttachment(options)))
-                .getOrElse(Seq.empty) // TODO ATL-5945 Create Actual Anoncred Request
-          }
+          maybeOptions.map(options => Seq(toJWTAttachment(options))).getOrElse(Seq.empty)
         )
       )
       record <- ZIO.succeed(
@@ -177,7 +171,57 @@ private class PresentationServiceImpl(
           role = PresentationRecord.Role.Verifier,
           subjectId = pairwiseProverDID,
           protocolState = PresentationRecord.ProtocolState.RequestPending,
-          credentialFormat = format,
+          credentialFormat = CredentialFormat.JWT,
+          requestPresentationData = Some(request),
+          proposePresentationData = None,
+          presentationData = None,
+          credentialsToUse = None,
+          metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
+          metaLastFailure = None,
+        )
+      )
+      count <- presentationRepository
+        .createPresentationRecord(record)
+        .flatMap {
+          case 1 => ZIO.succeed(())
+          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
+        }
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+        s"${record.id}_present_proof_flow_verifier_req_pending_to_sent_ms_gauge"
+      )
+    } yield record
+  }
+
+  override def createAnoncredPresentationRecord(
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: DidId,
+      thid: DidCommID,
+      connectionId: Option[String],
+      presentationRequest: AnoncredPresentationRequestV1
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
+    for {
+      request <- ZIO.succeed(
+        createDidCommRequestPresentation(
+          Seq.empty,
+          thid,
+          pairwiseVerifierDID,
+          pairwiseProverDID,
+          Seq(toAnoncredAttachment(presentationRequest))
+        )
+      )
+      record <- ZIO.succeed(
+        PresentationRecord(
+          id = DidCommID(),
+          createdAt = Instant.now,
+          updatedAt = None,
+          thid = thid,
+          connectionId = connectionId,
+          schemaId = None, // TODO REMOVE from DB
+          role = PresentationRecord.Role.Verifier,
+          subjectId = pairwiseProverDID,
+          protocolState = PresentationRecord.ProtocolState.RequestPending,
+          credentialFormat = CredentialFormat.AnonCreds,
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
@@ -621,11 +665,13 @@ private class PresentationServiceImpl(
     )
   }
 
-  // TODO ATL-5945 Create Actual Anoncred Request
-  private[this] def toAnoncredAttachment(options: Options): AttachmentDescriptor = {
-    AttachmentDescriptor.buildJsonAttachment(
-      payload = PresentationAttachment.build(Some(options)),
-      format = Some(PresentCredentialRequestFormat.Anoncred.name)
+  private[this] def toAnoncredAttachment(
+      presentationRequest: AnoncredPresentationRequestV1
+  ): AttachmentDescriptor = {
+    AttachmentDescriptor.buildBase64Attachment(
+      mediaType = Some("application/json"),
+      format = Some(PresentCredentialRequestFormat.Anoncred.name),
+      payload = AnoncredPresentationRequestV1.schemaSerDes.serialize(presentationRequest).getBytes()
     )
   }
 

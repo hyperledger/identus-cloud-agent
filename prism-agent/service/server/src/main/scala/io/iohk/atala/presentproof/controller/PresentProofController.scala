@@ -45,6 +45,8 @@ object PresentProofController {
         ErrorResponse.notFound(detail = Some(s"Thread Id not found: $thid"))
       case PresentationError.InvalidFlowStateError(msg) =>
         ErrorResponse.badRequest(title = "InvalidFlowState", detail = Some(msg))
+      case PresentationError.MissingAnoncredPresentationRequest(msg) =>
+        ErrorResponse.badRequest(title = "Missing Anoncred Presentation Request", detail = Some(msg))
       case PresentationError.UnexpectedError(msg) =>
         ErrorResponse.internalServerError(detail = Some(msg))
       case PresentationError.IssuedCredentialNotFoundError(_) =>
