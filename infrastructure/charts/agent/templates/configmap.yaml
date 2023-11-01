@@ -35,7 +35,7 @@ data:
 
       local http_status=$(
         curl --request GET "$KEYCLOAK_BASE_URL/admin/realms/$REALM_NAME/clients/$client_id" \
-          -s -v -w "%{http_code}"  \
+          -s -w "%{http_code}"  \
           -o /dev/null \
           -H "Authorization: Bearer $access_token"
       )
@@ -53,7 +53,7 @@ data:
       local client_secret=$3
 
       curl --request POST "$KEYCLOAK_BASE_URL/admin/realms/$REALM_NAME/clients" \
-        --fail -s -v \
+        --fail -s \
         -H "Authorization: Bearer $access_token" \
         -H "Content-Type: application/json" \
         --data-raw "{
