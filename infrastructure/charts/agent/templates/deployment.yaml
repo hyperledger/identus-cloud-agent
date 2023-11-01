@@ -193,6 +193,18 @@ spec:
                 key: root-token
                 optional: false
           {{- end }}
+          {{- if .Values.server.useKeycloak }}
+          - name: KEYCLOAK_ENABLED
+            value: "true"
+          - name: KEYCLOAK_URL
+            value: {{ .Values.keycloak.url }}
+          - name: KEYCLOAK_REALM
+            value: {{ .Values.keycloak.realm }}
+          - name: KEYCLOAK_CLIENT_ID
+            value: {{ .Values.keycloak.client.clientId }}
+          - name: KEYCLOAK_CLIENT_SECRET
+            value: {{ .Values.keycloak.client.clientSecret }}
+          {{- end }}
           {{- range $key, $value := .Values.server.additionalEnvVariables }}
           - name: {{ $key }}
             value: {{ $value | quote }}
