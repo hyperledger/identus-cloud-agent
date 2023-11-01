@@ -24,7 +24,7 @@ spec:
         command: ['sh', '-c', "until nc -z {{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.{{.Release.Namespace}} 5432; do echo waiting for postgress-operator; sleep 2; done;"]
       - name: wait-keycloak-ready
         image: badouralix/curl-jq:ubuntu
-        command: ['/bin/bash', '-c', 'until curl {{ .Values.keycloak.url }}/health; do sleep 2; done && echo "Keycloak is ready."']
+        command: ['/bin/bash', '-c', 'until curl {{ .Values.keycloak.url }}/health/ready; do sleep 2; done && echo "Keycloak is ready."']
       {{- if .Values.keycloak.bootstrap }}
       - name: keycloak-bootstrap
         image: badouralix/curl-jq:ubuntu
