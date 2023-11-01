@@ -20,10 +20,10 @@ data:
       local response=$(
         curl --request POST "$KEYCLOAK_BASE_URL/realms/master/protocol/openid-connect/token" \
          --fail -s -v \
-         -d "grant_type=password" \
-         -d "client_id=admin-cli" \
-         -d "username=$KEYCLOAK_ADMIN_USER" \
-         -d "password=$KEYCLOAK_ADMIN_PASSWORD"
+         --data-urlencode "grant_type=password" \
+         --data-urlencode "client_id=admin-cli" \
+         --data-urlencode "username=$KEYCLOAK_ADMIN_USER" \
+         --data-urlencode "password=$KEYCLOAK_ADMIN_PASSWORD"
       )
       local access_token=$(echo $response | jq -r '.access_token')
       echo $access_token
