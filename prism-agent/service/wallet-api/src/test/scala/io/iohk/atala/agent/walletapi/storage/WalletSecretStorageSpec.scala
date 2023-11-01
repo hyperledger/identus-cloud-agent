@@ -6,7 +6,7 @@ import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
 import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import io.iohk.atala.test.container.VaultTestContainerSupport
 import zio.*

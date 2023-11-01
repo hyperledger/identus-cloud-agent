@@ -3,6 +3,7 @@ package io.iohk.atala.agent.walletapi.model
 import io.iohk.atala.shared.models.WalletId
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 final case class Wallet(
     id: WalletId,
@@ -11,6 +12,10 @@ final case class Wallet(
     updatedAt: Instant
 ) {
   def withUpdatedAt(updatedAt: Instant): Wallet = copy(updatedAt = updatedAt)
+  def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): Wallet = copy(
+    createdAt = createdAt.truncatedTo(unit),
+    updatedAt = updatedAt.truncatedTo(unit)
+  )
 }
 
 object Wallet {
@@ -21,8 +26,8 @@ object Wallet {
       name = name,
       createdAt = now,
       updatedAt = now,
-    )
+    ).withTruncatedTimestamp()
   }
 
-  def apply(name: String): Wallet = apply(name, WalletId.random)
+  def apply(name: String): Wallet = apply(name, WalletId.random).withTruncatedTimestamp()
 }

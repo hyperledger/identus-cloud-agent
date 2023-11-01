@@ -39,7 +39,7 @@ object CredentialRepositorySpecSuite {
     metaRetries = maxRetries,
     metaNextRetry = Some(Instant.now()),
     metaLastFailure = None,
-  )
+  ).withTruncatedTimestamp()
 
   private def requestCredential = RequestCredential(
     from = DidId("did:prism:aaa"),

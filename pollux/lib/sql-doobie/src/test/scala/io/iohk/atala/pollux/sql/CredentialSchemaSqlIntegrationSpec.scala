@@ -9,7 +9,7 @@ import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.MigrationAspects.*
 import zio.*
 import zio.json.ast.Json
@@ -88,7 +88,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
       authored = authored,
       tags = tags,
       walletId = walletId
-    )
+    ).withTruncatedTimestamp()
 
     private val unique = mutable.Set.empty[String]
     val schemaUnique = for {
