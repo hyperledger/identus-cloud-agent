@@ -19,7 +19,7 @@ data:
     function get_admin_token() {
       local response=$(
         curl --request POST "$KEYCLOAK_BASE_URL/realms/master/protocol/openid-connect/token" \
-         --fail -s \
+         --fail -s -v \
          -d "grant_type=password" \
          -d "client_id=admin-cli" \
          -d "username=$KEYCLOAK_ADMIN_USER" \
@@ -35,7 +35,7 @@ data:
 
       local http_status=$(
         curl --request GET "$KEYCLOAK_BASE_URL/admin/realms/$REALM_NAME/clients/$client_id" \
-          -s -w "%{http_code}"  \
+          -s -v -w "%{http_code}"  \
           -o /dev/null \
           -H "Authorization: Bearer $access_token"
       )
@@ -53,7 +53,7 @@ data:
       local client_secret=$3
 
       curl --request POST "$KEYCLOAK_BASE_URL/admin/realms/$REALM_NAME/clients" \
-        --fail -s \
+        --fail -s -v \
         -H "Authorization: Bearer $access_token" \
         -H "Content-Type: application/json" \
         --data-raw "{
