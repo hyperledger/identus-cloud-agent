@@ -1,0 +1,34 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: keycloak-oidc-route
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    {{ template "labels.common" . }}
+spec:
+  http:
+  - name: keycloak-well-known-rule
+    match:
+      hosts:
+      {{- range .Values.ingress.applicationUrls }}
+        - {{ . }}
+      {{- end }}
+      paths:
+      - /realms/*
+      - /resources/*
+    backends:
+       - serviceName: "{{ .Release.Namespace }}"
+         servicePort: 443
+    plugins:
+    - name: proxy-rewrite
+      enable: true
+      config:
+        regex_uri: ["^/realms/(.*)","/realms/$1"]
+        headers:
+          set:
+            X-Forwarded-Proto: https
+
+    - name:
+    {{ template "cors" . }}
+{{- end }}
