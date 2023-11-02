@@ -18,11 +18,11 @@ database:
 
 keycloak:
   enabled: true
-  image:
-    registry: "ghcr.io"
-    repository: "input-output-hk/atala-prism-keycloak"
-    tag: "test-2"
-    pullSecrets: [ "atala-prism-dev-deployments-github-docker-registry-key" ]
+  # image:
+  #   registry: "ghcr.io"
+  #   repository: "input-output-hk/atala-prism-keycloak"
+  #   tag: "test-2"
+  #   pullSecrets: [ "atala-prism-dev-deployments-github-docker-registry-key" ]
   extraStartupArgs: "--import-realm --features=declarative-user-profile"
   # this section controls the admin username/password for getting on keycloak
   tls:
@@ -45,3 +45,14 @@ keycloak:
     port: "5432"
     user: keycloak-admin
     database: keycloak
+  extraVolumes:
+  - name: prism-agent-realm-import-volume
+    configMap:
+      name: keycloak-realm-import
+      items:
+        - key: prism-agent.json
+          path: prism-agent.json
+  extraVolumeMounts:
+  - name: prism-agent-realm-import-volume
+    mountPath: /opt/bitnami/keycloak/data/import
+    readOnly: true

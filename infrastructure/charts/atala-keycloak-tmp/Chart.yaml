@@ -21,8 +21,8 @@ version: 0.1.0
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "22.0.1"
+appVersion: "17.2.0"
 dependencies:
   - name: keycloak
-    version: "16.0.3" # chart version, not Keycloak version!
+    version: "17.2.0"
     repository: "https://charts.bitnami.com/bitnami"
