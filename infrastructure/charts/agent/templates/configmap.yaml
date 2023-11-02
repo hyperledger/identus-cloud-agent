@@ -73,3 +73,20 @@ data:
       echo "Creating a new $PRISM_AGENT_CLIENT_ID client ..."
       create_client $ADMIN_ACCESS_TOKEN $PRISM_AGENT_CLIENT_ID $PRISM_AGENT_CLIENT_SECRET
     fi
+
+{{- if .Values.keycloak.enabled }}
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prism-agent-realm-import
+data:
+  prism-agent.json: |
+    {
+      "realm": {{ .Values.server.keycloak.realm | quote }},
+      "enabled": true
+    }
+
+{{- end }}

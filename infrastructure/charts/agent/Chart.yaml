@@ -23,3 +23,6 @@ dependencies:
   - name: vault
     version: 0.24.1
     repository: https://helm.releases.hashicorp.com
+  - name: keycloak
+    version: "17.2.0"
+    repository: "https://charts.bitnami.com/bitnami"

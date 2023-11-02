@@ -24,26 +24,26 @@ spec:
         command: ['sh', '-c', "until nc -z {{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.{{.Release.Namespace}} 5432; do echo waiting for postgress-operator; sleep 2; done;"]
       - name: wait-keycloak-ready
         image: badouralix/curl-jq:ubuntu
-        command: ['/bin/bash', '-c', 'until curl {{ .Values.keycloak.url }}/health/ready; do sleep 2; done && echo "Keycloak is ready."']
-      {{- if .Values.keycloak.bootstrap }}
+        command: ['/bin/bash', '-c', 'until curl http://{{ .Release.Name }}-keycloak/health/ready; do sleep 2; done && echo "Keycloak is ready."']
+      {{- if .Values.server.keycloak.bootstrap }}
       - name: keycloak-bootstrap
         image: badouralix/curl-jq:ubuntu
         command: ['/bin/bash', '-c', '/scripts/init.sh']
         env:
         - name: KEYCLOAK_BASE_URL
-          value: {{ .Values.keycloak.url }}
+          value: http://{{ .Release.Name }}-keycloak
         - name: KEYCLOAK_ADMIN_USER
-          value: {{ .Values.keycloak.admin.username }}
+          value: {{ .Values.server.keycloak.admin.username }}
         - name: KEYCLOAK_ADMIN_PASSWORD
           valueFrom:
-            {{- toYaml .Values.keycloak.admin.password | nindent 12 }}
+            {{- toYaml .Values.server.keycloak.admin.password | nindent 12 }}
         - name: REALM_NAME
-          value: {{ .Values.keycloak.realm }}
+          value: {{ .Values.server.keycloak.realm }}
         - name: PRISM_AGENT_CLIENT_ID
-          value: {{ .Values.keycloak.client.clientId }}
+          value: {{ .Values.server.keycloak.client.clientId }}
         - name: PRISM_AGENT_CLIENT_SECRET
           valueFrom:
-            {{- toYaml .Values.keycloak.client.clientSecret | nindent 12 }}
+            {{- toYaml .Values.server.keycloak.client.clientSecret | nindent 12 }}
         volumeMounts:
         - name: keycloak-bootstrap-script
           mountPath: /scripts
@@ -192,23 +192,24 @@ spec:
                 key: root-token
                 optional: false
           {{- end }}
-          {{- if .Values.server.useKeycloak }}
+          {{- if .Values.server.keycloak.enabled }}
           - name: KEYCLOAK_ENABLED
             value: "true"
           - name: KEYCLOAK_URL
-            value: {{ .Values.keycloak.url }}
+            value: http://{{ .Release.Name }}-keycloak
           - name: KEYCLOAK_REALM
-            value: {{ .Values.keycloak.realm }}
+            value: {{ .Values.server.keycloak.realm }}
           - name: KEYCLOAK_CLIENT_ID
-            value: {{ .Values.keycloak.client.clientId }}
+            value: {{ .Values.server.keycloak.client.clientId }}
           - name: KEYCLOAK_CLIENT_SECRET
-            value: {{ .Values.keycloak.client.clientSecret }}
+            valueFrom:
+              {{- toYaml .Values.server.keycloak.client.clientSecret | nindent 14 }}
           {{- end }}
           {{- range $key, $value := .Values.server.additionalEnvVariables }}
           - name: {{ $key }}
             value: {{ $value | quote }}
           {{- end }}
-      {{- if .Values.keycloak.bootstrap }}
+      {{- if .Values.server.keycloak.bootstrap }}
       volumes:
       - name: keycloak-bootstrap-script
         configMap:
