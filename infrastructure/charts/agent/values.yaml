@@ -94,6 +94,13 @@ keycloak:
   bootstrap: true
   admin:
     username: atala
+    password:
+      secretKeyRef:
+        name: keycloak-admin-secret
+        key: password
   client:
     clientId: prism-agent
-    clientSecret: password1234 # fixme
+    clientSecret:
+      secretKeyRef:
+        name: agent-keycloak-client-secret
+        key: secret

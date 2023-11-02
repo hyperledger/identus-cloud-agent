@@ -36,15 +36,14 @@ spec:
           value: {{ .Values.keycloak.admin.username }}
         - name: KEYCLOAK_ADMIN_PASSWORD
           valueFrom:
-            secretKeyRef:
-              name: keycloak-admin-secret
-              key: password
+            {{- toYaml .Values.keycloak.admin.password | nindent 12 }}
         - name: REALM_NAME
           value: {{ .Values.keycloak.realm }}
         - name: PRISM_AGENT_CLIENT_ID
           value: {{ .Values.keycloak.client.clientId }}
         - name: PRISM_AGENT_CLIENT_SECRET
-          value: {{ .Values.keycloak.client.clientSecret }}
+          valueFrom:
+            {{- toYaml .Values.keycloak.client.clientSecret | nindent 12 }}
         volumeMounts:
         - name: keycloak-bootstrap-script
           mountPath: /scripts
