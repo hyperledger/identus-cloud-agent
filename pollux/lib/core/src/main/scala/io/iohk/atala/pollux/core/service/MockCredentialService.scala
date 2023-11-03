@@ -5,7 +5,7 @@ import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord, PublishedBatchData}
+import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, W3cCredentialPayload}
 import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -57,8 +57,6 @@ object MockCredentialService extends Mock[CredentialService] {
   object AcceptCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object GenerateJWTCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object GenerateAnonCredsCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
-  object PublishCredentialBatch
-      extends Effect[(Seq[W3cCredentialPayload], Issuer), CredentialServiceError, PublishedBatchData]
   object MarkCredentialRecordsAsPublishQueued
       extends Effect[Seq[(W3cCredentialPayload, MerkleInclusionProof)], CredentialServiceError, Int]
   object ReceiveCredentialIssue extends Effect[IssueCredential, CredentialServiceError, IssueCredentialRecord]

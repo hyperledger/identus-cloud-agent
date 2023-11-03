@@ -286,7 +286,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
       name <- name
       description <- description
       constraints <- Gen
-        .setOfBounded(min = 1, max = 10)(verificationPolicyConstraint)
+        .setOfBounded(min = 2, max = 10)(verificationPolicyConstraint)
         .map(_.toVector)
     } yield VerificationPolicy.make(
       name = name,

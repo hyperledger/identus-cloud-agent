@@ -11,6 +11,7 @@ import zio.test.*
 import zio.{Cause, Exit, ZIO, ZLayer}
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 object ConnectionRepositorySpecSuite {
@@ -19,7 +20,7 @@ object ConnectionRepositorySpecSuite {
 
   private def connectionRecord = ConnectionRecord(
     UUID.randomUUID,
-    Instant.now,
+    Instant.now.truncatedTo(ChronoUnit.MICROS),
     None,
     UUID.randomUUID().toString,
     None,
@@ -34,7 +35,7 @@ object ConnectionRepositorySpecSuite {
     None,
     None,
     maxRetries,
-    Some(Instant.now),
+    Some(Instant.now.truncatedTo(ChronoUnit.MICROS)),
     None
   ).withTruncatedTimestamp()
 

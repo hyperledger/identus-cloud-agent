@@ -1,3 +1,19 @@
+# [1.18.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.17.0...prism-agent-v1.18.0) (2023-10-24)
+
+
+### Bug Fixes
+
+*  all performance tests run succesfully, add group thresholds ([#750](https://github.com/hyperledger-labs/open-enterprise-agent/issues/750)) ([5204838](https://github.com/hyperledger-labs/open-enterprise-agent/commit/520483836e5b572e8aeeecd28f4bbe7cc668c3d9))
+
+
+### Features
+
+*  presentation API refactor ([#765](https://github.com/hyperledger-labs/open-enterprise-agent/issues/765)) ([045d829](https://github.com/hyperledger-labs/open-enterprise-agent/commit/045d8298f8865baeb13e243ed058e8e440b3f496))
+* add new auth params ([#762](https://github.com/hyperledger-labs/open-enterprise-agent/issues/762)) ([b8bfb86](https://github.com/hyperledger-labs/open-enterprise-agent/commit/b8bfb867061c58fc12987b5405f561e8f10cb718))
+* disable cors by default ([#747](https://github.com/hyperledger-labs/open-enterprise-agent/issues/747)) ([1dd8c8b](https://github.com/hyperledger-labs/open-enterprise-agent/commit/1dd8c8b0e9b0d2593bd1c17a95bf013192a64532))
+* migrate docker image of the agent to Java 21 ([#758](https://github.com/hyperledger-labs/open-enterprise-agent/issues/758)) ([d36dbf0](https://github.com/hyperledger-labs/open-enterprise-agent/commit/d36dbf0dfbf45b64185e5b54aba0444d6e1ada88))
+* **prism-agent:** add keycloak authorization support to endpoints ([#753](https://github.com/hyperledger-labs/open-enterprise-agent/issues/753)) ([3e7534f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/3e7534ff1a75e9ecaa0c2b670c1c158890021f8d))
+
 # [1.17.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.4...prism-agent-v1.17.0) (2023-10-14)
 
 

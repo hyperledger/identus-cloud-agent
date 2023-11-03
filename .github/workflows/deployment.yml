@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       component-tag:
-        description: "Tag of a component to trigger the update, e.g. iris-service-v0.5.0"
+        description: "Tag of a component to trigger the update"
         required: true
       env:
         description: "Environment to trigger update on"

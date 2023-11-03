@@ -1,6 +1,6 @@
 {
   "name": "atala-prism-building-blocks",
-  "version": "1.17.0",
+  "version": "1.18.0",
   "engines": {
     "node": ">=16.13.0"
   },
@@ -36,6 +36,12 @@
         "@semantic-release/exec",
         {
           "prepareCmd": "npm version ${nextRelease.version} --git-tag-version false"
+        }
+      ],
+      [
+        "@semantic-release/exec",
+        {
+          "prepareCmd": "sed -i.bak \"s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${nextRelease.version}/\" ./infrastructure/local/.env && rm -f ./infrastructure/local/.env.bak"
         }
       ],
       [
@@ -104,9 +110,10 @@
             "prism-agent/service/api/http/prism-agent-openapi-spec.yaml",
             "infrastructure/charts/agent/Chart.yaml",
             "infrastructure/charts/index.yaml",
-            "infrastructure/charts/*.tgz"
+            "infrastructure/charts/*.tgz",
+            "infrastructure/local/.env"
           ],
-          "message": "chore(release): cut atala prism ${nextRelease.version} release\n\n${nextRelease.notes}\n\nSigned-off-by: Anton Baliasnikov <anton.baliasnikov@iohk.io>"
+          "message": "chore(release): cut open enterprise agent ${nextRelease.version} release\n\n${nextRelease.notes}\n\nSigned-off-by: Anton Baliasnikov <anton.baliasnikov@iohk.io>"
         }
       ],
       [
@@ -116,7 +123,7 @@
           "notifyOnFail": true,
           "markdownReleaseNotes": true,
           "onSuccessTemplate": {
-            "text": "A new version of Atala PRISM successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/$npm_package_version\n\nRelease notes:\n$release_notes"
+            "text": "A new version of Opent Enterprise Agent successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/$npm_package_version\n\nRelease notes:\n$release_notes"
           }
         }
       ]
