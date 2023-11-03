@@ -2,7 +2,7 @@ package io.iohk.atala.sharedtest.containers
 
 import com.dimafeng.testcontainers.SingleContainer
 import dasniko.testcontainers.keycloak.ExtendableKeycloakContainer
-import KeycloakTestContainer.keycloakContainer
+import io.iohk.atala.sharedtest.containers.KeycloakTestContainer.keycloakContainer
 import org.testcontainers.utility.DockerImageName
 import zio.{TaskLayer, ZIO, ZLayer}
 
@@ -18,10 +18,6 @@ final class KeycloakContainerCustom(
       if (isOnGithubRunner) super.getContainerId.take(12)
       else super.getHost
     }
-//    override def getMappedPort(originalPort: Int): Integer = {
-//      if (isOnGithubRunner) 8300
-//      else super.getMappedPort(originalPort)
-//    }
   }
 
   override val container: ExtendableKeycloakContainer[_] = keycloakContainer

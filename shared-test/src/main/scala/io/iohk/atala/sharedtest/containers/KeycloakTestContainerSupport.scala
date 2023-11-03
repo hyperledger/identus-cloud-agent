@@ -1,7 +1,13 @@
 package io.iohk.atala.sharedtest.containers
 import org.keycloak.admin.client.Keycloak
-import org.keycloak.representations.idm.{ClientRepresentation, RealmRepresentation}
+import org.keycloak.representations.idm.{ClientRepresentation, CredentialRepresentation, RealmRepresentation, UserRepresentation}
 import zio.*
+import zio.ZIO.attemptBlocking
+import zio.test.TestAspect.beforeAll
+import zio.test.TestAspectAtLeastR
+
+import java.util.UUID
+import scala.jdk.CollectionConverters.*
 
 type KeycloakAdminClient = Keycloak
 
@@ -15,6 +21,7 @@ trait KeycloakTestContainerSupport {
   protected val adminClientZIO = ZIO.service[KeycloakAdminClient]
 
   protected val realmName = "atala-test"
+
   protected val realmRepresentation = {
     val rr = new RealmRepresentation()
     rr.setRealm(realmName)
@@ -23,6 +30,7 @@ trait KeycloakTestContainerSupport {
   }
 
   protected val agentClientSecret = "prism-agent-demo-secret"
+
   protected val agentClientRepresentation: ClientRepresentation = {
     val acr = new ClientRepresentation()
     acr.setClientId("prism-agent")
@@ -49,4 +57,45 @@ trait KeycloakTestContainerSupport {
             .create(agentClientRepresentation)
         )
     } yield ()
+
+  def bootstrapKeycloakRealm = adminClientZIO.flatMap(keycloak =>
+    ZIO.attemptBlocking {
+      keycloak.realms().create(realmRepresentation)
+      keycloak.realm(realmName).clients().create(agentClientRepresentation)
+      ()
+    }
+  )
+
+  def bootstrapKeycloakRealmAspect: TestAspectAtLeastR[KeycloakAdminClient] = {
+    val run = for {
+      _ <- ZIO.log("Bootstrapping the Keycloak realm...")
+      _ <- bootstrapKeycloakRealm
+      _ <- ZIO.log("Bootstrap finished")
+    } yield ()
+
+    beforeAll(run.orDie)
+  }
+
+  def createUser(username: String, password: String): ZIO[KeycloakAdminClient, Throwable, UserRepresentation] =
+    val userRepresentation = {
+      val creds = new CredentialRepresentation()
+      creds.setTemporary(false)
+      creds.setValue(password)
+
+      val ur = new UserRepresentation()
+      ur.setId(UUID.nameUUIDFromBytes(username.getBytes).toString)
+      ur.setUsername(username)
+      ur.setEnabled(true)
+      ur.setCredentials(List(creds).asJava)
+      ur
+    }
+
+    for {
+      adminClient <- adminClientZIO
+      users = adminClient.realm(realmName).users()
+      _ <- ZIO.log(s"Creating user ${userRepresentation.getId}")
+      _ <- attemptBlocking(users.create(userRepresentation))
+      createdUser <- attemptBlocking(users.search(username).asScala.head)
+      _ <- ZIO.log(s"Created user ${createdUser.getId}")
+    } yield createdUser
 }
