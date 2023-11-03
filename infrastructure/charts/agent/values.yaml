@@ -28,8 +28,7 @@ server:
     requests:
       cpu: 250m
       memory: 512Mi
-  additionalEnvVariables:
-    SECRET_STORAGE_BACKEND: "postgres" # FIXME
+  additionalEnvVariables: []
   devMode: false
   useVault: true
   keycloak:
