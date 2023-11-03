@@ -147,7 +147,7 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-    command: start-dev --health-enabled=true
+    command: start-dev --hostname-url=http://localhost:9980 --health-enabled=true
 
   keycloak-wait:
     image: badouralix/curl-jq:ubuntu
