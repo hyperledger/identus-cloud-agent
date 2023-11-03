@@ -4,7 +4,12 @@ import io.iohk.atala.agent.walletapi.model.{Wallet, WalletSeed}
 import io.iohk.atala.agent.walletapi.service.{WalletManagementService, WalletManagementServiceError}
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.iam.authentication.AuthenticationError.ResourceNotPermitted
-import io.iohk.atala.iam.authentication.oidc.{KeycloakAuthenticator, KeycloakAuthenticatorImpl, KeycloakClient, KeycloakClientImpl}
+import io.iohk.atala.iam.authentication.oidc.{
+  KeycloakAuthenticator,
+  KeycloakAuthenticatorImpl,
+  KeycloakClient,
+  KeycloakClientImpl
+}
 import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error.WalletNotFoundById
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
@@ -107,7 +112,6 @@ object KeycloakPermissionManagementServiceSpec
     KeycloakAdmin.layer,
     KeycloakPermissionManagementService.layer,
     WalletManagementServiceStub.layer,
-    KeycloakAuthenticatorImpl.layer,
     ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer ++ KeycloakClientImpl.authzClientLayer,
     keycloakConfigLayer()
   ) @@ sequential

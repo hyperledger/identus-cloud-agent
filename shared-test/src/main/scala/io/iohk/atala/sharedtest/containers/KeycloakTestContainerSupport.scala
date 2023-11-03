@@ -1,6 +1,11 @@
 package io.iohk.atala.sharedtest.containers
 import org.keycloak.admin.client.Keycloak
-import org.keycloak.representations.idm.{ClientRepresentation, CredentialRepresentation, RealmRepresentation, UserRepresentation}
+import org.keycloak.representations.idm.{
+  ClientRepresentation,
+  CredentialRepresentation,
+  RealmRepresentation,
+  UserRepresentation
+}
 import zio.*
 import zio.ZIO.attemptBlocking
 import zio.test.TestAspect.beforeAll
