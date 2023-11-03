@@ -18,6 +18,11 @@ final class KeycloakContainerCustom(
       if (isOnGithubRunner) super.getContainerId.take(12)
       else super.getHost
     }
+
+    override def getMappedPort(originalPort: Int): Integer = {
+      if (isOnGithubRunner) 8080
+      else super.getMappedPort(originalPort)
+    }
   }
 
   override val container: ExtendableKeycloakContainer[_] = keycloakContainer
