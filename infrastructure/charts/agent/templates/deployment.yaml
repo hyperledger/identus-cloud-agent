@@ -22,6 +22,7 @@ spec:
       - name: wait-postgress-ready
         image: busybox
         command: ['sh', '-c', "until nc -z {{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.{{.Release.Namespace}} 5432; do echo waiting for postgress-operator; sleep 2; done;"]
+      {{- if .Values.server.keycloak.enabled }}
       - name: wait-keycloak-ready
         image: badouralix/curl-jq:ubuntu
         command: ['/bin/bash', '-c', 'until curl http://{{ .Release.Name }}-keycloak/health/ready; do sleep 2; done && echo "Keycloak is ready."']
@@ -48,6 +49,7 @@ spec:
         - name: keycloak-bootstrap-script
           mountPath: /scripts
           readOnly: true
+      {{- end }}
       {{- end }}
       containers:
       - name: prism-agent-server
