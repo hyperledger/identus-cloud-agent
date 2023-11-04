@@ -47,6 +47,8 @@ object PresentProofController {
         ErrorResponse.badRequest(title = "InvalidFlowState", detail = Some(msg))
       case PresentationError.MissingAnoncredPresentationRequest(msg) =>
         ErrorResponse.badRequest(title = "Missing Anoncred Presentation Request", detail = Some(msg))
+      case PresentationError.InvalidAnoncredPresentationRequest(msg) =>
+        ErrorResponse.badRequest(title = "Invalid Anoncred Presentation Request", detail = Some(msg))
       case PresentationError.UnexpectedError(msg) =>
         ErrorResponse.internalServerError(detail = Some(msg))
       case PresentationError.IssuedCredentialNotFoundError(_) =>
