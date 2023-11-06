@@ -3,7 +3,9 @@ package io.iohk.atala.connect.sql.repository
 import doobie.*
 import doobie.implicits.*
 import doobie.util.transactor.Transactor
+import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.DbConfig
+import io.iohk.atala.shared.db.Implicits.*
 import org.flywaydb.core.Flyway
 import zio.*
 import zio.interop.catz.*
@@ -34,6 +36,23 @@ final case class Migrations(config: DbConfig) {
 object Migrations {
   val layer: URLayer[DbConfig, Migrations] =
     ZLayer.fromFunction(Migrations.apply _)
+
+  /** Fail if the RLS is not enabled from a sample table */
+  def validateRLS: RIO[Transactor[ContextAwareTask], Unit] = {
+    val cxnIO = sql"""
+      | SELECT row_security_active('public.connection_records');
+      """.stripMargin
+      .query[Boolean]
+      .unique
+
+    for {
+      xa <- ZIO.service[Transactor[ContextAwareTask]]
+      isRlsActive <- cxnIO.transactWithoutContext(xa)
+      _ <- ZIO
+        .fail(Exception("The RLS policy is not active for Connect DB application user"))
+        .unless(isRlsActive)
+    } yield ()
+  }
 
   def initDbPrivileges(appUser: String): RIO[Transactor[Task], Unit] = {
     val cxnIO = for {

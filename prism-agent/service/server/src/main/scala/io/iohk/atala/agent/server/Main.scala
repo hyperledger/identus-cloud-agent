@@ -78,6 +78,10 @@ object MainApp extends ZIOAppDefault {
     _ <- ZIO.serviceWithZIO[PolluxMigrations](_.migrate)
     _ <- ZIO.serviceWithZIO[ConnectMigrations](_.migrate)
     _ <- ZIO.serviceWithZIO[AgentMigrations](_.migrate)
+    _ <- ZIO.logInfo("Running post-migration RLS checks for DB application users")
+    _ <- PolluxMigrations.validateRLS.provide(RepoModule.polluxContextAwareTransactorLayer)
+    _ <- ConnectMigrations.validateRLS.provide(RepoModule.connectContextAwareTransactorLayer)
+    _ <- AgentMigrations.validateRLS.provide(RepoModule.agentContextAwareTransactorLayer)
   } yield ()
 
   override def run: ZIO[Any, Throwable, Unit] = {
