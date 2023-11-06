@@ -62,6 +62,7 @@ lazy val V = new {
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
   val testContainersScala = "0.41.0"
+  val testContainersJavaKeycloak = "3.0.0"
 
   val doobie = "1.0.0-RC2"
   val quill = "4.7.3"
@@ -127,6 +128,7 @@ lazy val D = new {
   // TODO we are adding test stuff to the main dependencies
   val testcontainersPostgres: ModuleID = "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala
   val testcontainersVault: ModuleID = "com.dimafeng" %% "testcontainers-scala-vault" % V.testContainersScala
+  val testcontainersKeycloak: ModuleID = "com.github.dasniko" % "testcontainers-keycloak" % V.testContainersJavaKeycloak
 
   val doobiePostgres: ModuleID = "org.tpolecat" %% "doobie-postgres" % V.doobie
   val doobieHikari: ModuleID = "org.tpolecat" %% "doobie-hikari" % V.doobie
@@ -155,11 +157,32 @@ lazy val D_Shared = new {
       D.scalaPbGrpc,
       D.testcontainersPostgres,
       D.testcontainersVault,
+      D.testcontainersKeycloak,
       D.zio,
       // FIXME: split shared DB stuff as subproject?
       D.doobieHikari,
       D.doobiePostgres,
       D.zioCatsInterop
+    )
+}
+
+lazy val D_SharedTest = new {
+  lazy val dependencies: Seq[ModuleID] =
+    Seq(
+      D.typesafeConfig,
+      D.testcontainersPostgres,
+      D.testcontainersVault,
+      D.testcontainersKeycloak,
+      D.zio,
+      D.doobieHikari,
+      D.doobiePostgres,
+      D.zioCatsInterop,
+      D.zioJson,
+      D.zioHttp,
+      D.zioTest,
+      D.zioTestSbt,
+      D.zioTestMagnolia,
+      D.zioMock
     )
 }
 
@@ -401,6 +424,18 @@ lazy val shared = (project in file("shared"))
     crossPaths := false,
     libraryDependencies ++= D_Shared.dependencies
   )
+  .enablePlugins(BuildInfoPlugin)
+
+lazy val sharedTest = (project in file("shared-test"))
+  .settings(
+    organization := "io.iohk.atala",
+    organizationName := "Input Output Global",
+    buildInfoPackage := "io.iohk.atala.sharedtest",
+    name := "sharedtest",
+    crossPaths := false,
+    libraryDependencies ++= D_SharedTest.dependencies
+  )
+  .dependsOn(shared)
   .enablePlugins(BuildInfoPlugin)
 
 // #########################
@@ -676,6 +711,7 @@ lazy val polluxDoobie = project
   )
   .dependsOn(polluxCore % "compile->compile;test->test")
   .dependsOn(shared)
+  .dependsOn(sharedTest % Test)
 
 // ########################
 // ### Pollux Anoncreds ###
@@ -725,6 +761,7 @@ lazy val connectDoobie = project
     libraryDependencies ++= D_Connect.sqlDoobieDependencies
   )
   .dependsOn(shared)
+  .dependsOn(sharedTest % Test)
   .dependsOn(connectCore % "compile->compile;test->test")
 
 // ############################
@@ -760,6 +797,7 @@ lazy val prismAgentWalletAPI = project
     castorCore,
     eventNotification
   )
+  .dependsOn(sharedTest % Test)
 
 lazy val prismAgentServer = project
   .in(file("prism-agent/service/server"))
@@ -792,6 +830,7 @@ lazy val prismAgentServer = project
     castorCore,
     eventNotification
   )
+  .dependsOn(sharedTest % Test)
 
 // ############################
 // ####  Release process  #####
@@ -809,6 +848,7 @@ releaseProcess := Seq[ReleaseStep](
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   shared,
+  sharedTest,
   models,
   protocolConnection,
   protocolCoordinateMediation,

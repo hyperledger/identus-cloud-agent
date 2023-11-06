@@ -8,7 +8,7 @@ import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.Duplica
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import zio.*
 import zio.test.*

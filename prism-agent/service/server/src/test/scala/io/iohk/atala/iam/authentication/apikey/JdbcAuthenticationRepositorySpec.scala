@@ -1,14 +1,14 @@
 package io.iohk.atala.iam.authentication.apikey
 
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
-import zio.test.{TestAspect, ZIOSpecDefault}
-import zio.ZIO
-import zio.test.*
-import zio.test.TestAspect.*
-import zio.test.Assertion.*
 import io.iohk.atala.container.util.MigrationAspects.migrate
 import io.iohk.atala.iam.authentication.apikey.AuthenticationMethodType.ApiKey
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import zio.Runtime.removeDefaultLoggers
+import zio.ZIO
+import zio.test.*
+import zio.test.Assertion.*
+import zio.test.TestAspect.*
+import zio.test.{TestAspect, ZIOSpecDefault}
 
 object JdbcAuthenticationRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
