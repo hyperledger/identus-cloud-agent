@@ -25,7 +25,7 @@ spec:
       {{- if .Values.server.keycloak.enabled }}
       - name: wait-keycloak-ready
         image: badouralix/curl-jq:ubuntu
-        command: ['/bin/bash', '-c', 'until curl http://{{ .Release.Name }}-keycloak/health/ready; do sleep 2; done && echo "Keycloak is ready."']
+        command: ['/bin/bash', '-c', 'until curl http://{{ .Release.Name }}/health/ready; do sleep 2; done && echo "Keycloak is ready."']
       {{- if .Values.server.keycloak.bootstrap }}
       - name: keycloak-bootstrap
         image: badouralix/curl-jq:ubuntu
