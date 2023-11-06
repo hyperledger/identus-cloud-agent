@@ -1,9 +1,9 @@
 package io.iohk.atala.test.container
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import io.iohk.atala.sharedtest.containers.PostgresTestContainer.postgresContainer
 import zio.*
 import zio.ZIO.*
-import io.iohk.atala.shared.test.containers.PostgresTestContainer.postgresContainer
 
 object PostgresLayer {
 

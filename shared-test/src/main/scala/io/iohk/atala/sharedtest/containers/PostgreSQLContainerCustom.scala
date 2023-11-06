@@ -1,4 +1,4 @@
-package io.iohk.atala.shared.test.containers
+package io.iohk.atala.sharedtest.containers
 
 import com.dimafeng.testcontainers.{JdbcDatabaseContainer, PostgreSQLContainer}
 import org.testcontainers.utility.DockerImageName

@@ -1,4 +1,4 @@
-package io.iohk.atala.shared.test.containers
+package io.iohk.atala.sharedtest.containers
 
 import com.dimafeng.testcontainers.{SingleContainer, VaultContainer}
 import org.testcontainers.vault.{VaultContainer => JavaVaultContainer}

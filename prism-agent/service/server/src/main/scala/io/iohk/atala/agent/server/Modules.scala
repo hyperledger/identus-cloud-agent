@@ -23,7 +23,6 @@ import io.iohk.atala.agent.walletapi.vault.{
   VaultWalletSecretStorage
 }
 import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.admin.AdminApiKeyAuthenticator
 import io.iohk.atala.iam.authentication.admin.AdminApiKeyAuthenticatorImpl
 import io.iohk.atala.iam.authentication.admin.AdminConfig

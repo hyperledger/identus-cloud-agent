@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.server.http
 
-import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic
 import sttp.apispec.SecurityScheme
 import sttp.apispec.openapi.{OpenAPI, Server}
 import sttp.model.headers.AuthenticationScheme

@@ -1,8 +1,8 @@
 package io.iohk.atala.test.container
 
 import zio.*
-import io.iohk.atala.shared.test.containers.VaultTestContainer
-import io.iohk.atala.shared.test.containers.VaultContainerCustom
+import io.iohk.atala.sharedtest.containers.VaultTestContainer
+import io.iohk.atala.sharedtest.containers.VaultContainerCustom
 
 object VaultLayer {
 
