@@ -111,7 +111,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
   }
 
   def httpBackend(controller: IssueController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {
-    val issueEndpoints = IssueServerEndpoints(controller, authenticator)
+    val issueEndpoints = IssueServerEndpoints(controller, authenticator, authenticator)
 
     val backend =
       TapirStubInterpreter(

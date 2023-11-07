@@ -16,12 +16,13 @@ import java.util.UUID
 
 class ConnectionServerEndpoints(
     connectionController: ConnectionController,
-    authenticator: Authenticator[BaseEntity] & Authorizer[BaseEntity]
+    authenticator: Authenticator[BaseEntity],
+    authorizer: Authorizer[BaseEntity]
 ) {
 
   private val createConnectionServerEndpoint: ZServerEndpoint[Any, Any] =
     createConnection
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, request: CreateConnectionRequest) =>
           connectionController
@@ -32,7 +33,7 @@ class ConnectionServerEndpoints(
 
   private val getConnectionServerEndpoint: ZServerEndpoint[Any, Any] =
     getConnection
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, connectionId: UUID) =>
           connectionController
@@ -43,7 +44,7 @@ class ConnectionServerEndpoints(
 
   private val getConnectionsServerEndpoint: ZServerEndpoint[Any, Any] =
     getConnections
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, paginationInput: PaginationInput, thid: Option[String]) =>
           connectionController
@@ -54,7 +55,7 @@ class ConnectionServerEndpoints(
 
   private val acceptConnectionInvitationServerEndpoint: ZServerEndpoint[Any, Any] =
     acceptConnectionInvitation
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, request: AcceptConnectionInvitationRequest) =>
           connectionController
@@ -76,7 +77,7 @@ object ConnectionServerEndpoints {
     for {
       authenticator <- ZIO.service[DefaultAuthenticator]
       connectionController <- ZIO.service[ConnectionController]
-      connectionEndpoints = new ConnectionServerEndpoints(connectionController, authenticator)
+      connectionEndpoints = new ConnectionServerEndpoints(connectionController, authenticator, authenticator)
     } yield connectionEndpoints.all
   }
 }

@@ -32,31 +32,32 @@ object SecurityLogic {
       .mapError(AuthenticationError.toErrorResponse)
   }
 
+  def authorize[E <: BaseEntity](entity: E)(authorizer: Authorizer[E]): IO[ErrorResponse, WalletAccessContext] = {
+    authorizer
+      .authorize(entity)
+      .mapBoth(AuthenticationError.toErrorResponse, walletId => WalletAccessContext(walletId))
+  }
+
+  def authorize[E <: BaseEntity](credentials: Credentials, others: Credentials*)(
+      authenticator: Authenticator[E],
+      authorizer: Authorizer[E]
+  ): IO[ErrorResponse, WalletAccessContext] = {
+    authenticate[E](credentials, others: _*)(authenticator)
+      .flatMap {
+        case Left(entity)  => authorize(entity)(EntityAuthorizer)
+        case Right(entity) => authorize(entity)(authorizer)
+      }
+  }
+
   def authenticateWith[E <: BaseEntity](credentials: (ApiKeyCredentials, JwtCredentials))(
       authenticator: Authenticator[E]
   ): IO[ErrorResponse, Either[Entity, E]] =
     authenticate[E](credentials._2, credentials._1)(authenticator)
 
-  def authorize[E <: BaseEntity](credentials: Credentials, others: Credentials*)(
-      authenticator: Authenticator[E] & Authorizer[E],
-  ): IO[ErrorResponse, WalletAccessContext] = {
-    authenticate[E](credentials, others: _*)(authenticator)
-      .flatMap {
-        case Left(entity) =>
-          EntityAuthorizer
-            .authorize(entity)
-            .mapError(AuthenticationError.toErrorResponse)
-        case Right(entity) =>
-          authenticator
-            .authorize(entity)
-            .mapError(AuthenticationError.toErrorResponse)
-      }
-      .map(walletId => WalletAccessContext(walletId))
-  }
-
   def authorizeWith[E <: BaseEntity](credentials: (ApiKeyCredentials, JwtCredentials))(
-      authenticator: Authenticator[E] & Authorizer[E]
+      authenticator: Authenticator[E],
+      authorizer: Authorizer[E]
   ): IO[ErrorResponse, WalletAccessContext] =
-    authorize[E](credentials._2, credentials._1)(authenticator)
+    authorize[E](credentials._2, credentials._1)(authenticator, authorizer)
 
 }

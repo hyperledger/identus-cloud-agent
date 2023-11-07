@@ -100,7 +100,7 @@ class WalletManagementControllerImpl(
   ): IO[ErrorResponse, WalletDetail] = {
     for {
       wallet <- doCreateWallet(request)
-      a <- permissionService.grantWalletToUser(wallet.id, me).mapError[ErrorResponse](e => e)
+      _ <- permissionService.grantWalletToUser(wallet.id, me).mapError[ErrorResponse](e => e)
     } yield wallet
   }
 

@@ -17,7 +17,8 @@ import zio.*
 
 class VerificationPolicyServerEndpoints(
     controller: VerificationPolicyController,
-    authenticator: Authenticator[BaseEntity] & Authorizer[BaseEntity]
+    authenticator: Authenticator[BaseEntity],
+    authorizer: Authorizer[BaseEntity]
 ) {
   def throwableToInternalServerError(throwable: Throwable) =
     ZIO.fail[ErrorResponse](ErrorResponse.internalServerError(detail = Option(throwable.getMessage)))
@@ -25,7 +26,7 @@ class VerificationPolicyServerEndpoints(
   // TODO: make the endpoint typed ZServerEndpoint[SchemaRegistryService, Any]
   val createVerificationPolicyServerEndpoint: ZServerEndpoint[Any, Any] =
     createVerificationPolicyEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, input: VerificationPolicyInput) =>
           controller
@@ -36,7 +37,7 @@ class VerificationPolicyServerEndpoints(
 
   val updateVerificationPolicyServerEndpoint: ZServerEndpoint[Any, Any] = {
     updateVerificationPolicyEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         {
           case (
@@ -54,7 +55,7 @@ class VerificationPolicyServerEndpoints(
 
   val getVerificationPolicyByIdServerEndpoint: ZServerEndpoint[Any, Any] =
     getVerificationPolicyByIdEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, id: UUID) =>
           controller
@@ -65,7 +66,7 @@ class VerificationPolicyServerEndpoints(
 
   val deleteVerificationPolicyByIdServerEndpoint: ZServerEndpoint[Any, Any] =
     deleteVerificationPolicyByIdEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, id: UUID) =>
           controller
@@ -76,7 +77,7 @@ class VerificationPolicyServerEndpoints(
 
   val lookupVerificationPoliciesByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
     lookupVerificationPoliciesByQueryEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         {
           case (
@@ -111,7 +112,7 @@ object VerificationPolicyServerEndpoints {
     for {
       authenticator <- ZIO.service[DefaultAuthenticator]
       controller <- ZIO.service[VerificationPolicyController]
-      endpoints = new VerificationPolicyServerEndpoints(controller, authenticator)
+      endpoints = new VerificationPolicyServerEndpoints(controller, authenticator, authenticator)
     } yield endpoints.all
   }
 }

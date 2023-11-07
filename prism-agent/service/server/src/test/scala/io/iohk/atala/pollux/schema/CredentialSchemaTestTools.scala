@@ -88,7 +88,7 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
   }
 
   def httpBackend(controller: CredentialSchemaController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {
-    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, authenticator)
+    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, authenticator, authenticator)
 
     val backend =
       TapirStubInterpreter(

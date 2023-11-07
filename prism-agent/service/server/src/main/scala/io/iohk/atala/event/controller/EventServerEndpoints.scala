@@ -11,12 +11,13 @@ import io.iohk.atala.iam.authentication.SecurityLogic
 
 class EventServerEndpoints(
     eventController: EventController,
-    authenticator: Authenticator[BaseEntity] & Authorizer[BaseEntity]
+    authenticator: Authenticator[BaseEntity],
+    authorizer: Authorizer[BaseEntity]
 ) {
 
   val createWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
     EventEndpoints.createWebhookNotification
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (rc, createWebhook) =>
           eventController
@@ -27,7 +28,7 @@ class EventServerEndpoints(
 
   val listWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
     EventEndpoints.listWebhookNotification
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac => rc =>
         eventController
           .listWebhookNotifications(rc)
@@ -36,7 +37,7 @@ class EventServerEndpoints(
 
   val deleteWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
     EventEndpoints.deleteWebhookNotification
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (rc, id) =>
           eventController
@@ -58,7 +59,7 @@ object EventServerEndpoints {
     for {
       authenticator <- ZIO.service[DefaultAuthenticator]
       eventController <- ZIO.service[EventController]
-      eventEndpoints = new EventServerEndpoints(eventController, authenticator)
+      eventEndpoints = new EventServerEndpoints(eventController, authenticator, authenticator)
     } yield eventEndpoints.all
   }
 }
