@@ -319,7 +319,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           fails(equalTo(UnsupportedCredentialFormat(vcFormat = "Some/UnsupportedCredentialFormat")))
         )
       },
-      test("receiveRequestPresentation updates the RequestPresentation in PresentatinRecord") {
+      test("receiveRequestPresentation JWT updates the RequestPresentation in PresentationRecord") {
         for {
           svc <- ZIO.service[PresentationService]
           connectionId = Some("connectionId")
@@ -349,6 +349,100 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           assertTrue(aRecord.protocolState == PresentationRecord.ProtocolState.RequestReceived) &&
           assertTrue(aRecord.requestPresentationData == Some(requestPresentation))
         }
+      },
+      test("receiveRequestPresentation Anoncred updates the RequestPresentation in PresentationRecord") {
+        for {
+          svc <- ZIO.service[PresentationService]
+          connectionId = Some("connectionId")
+          body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
+          prover = DidId("did:peer:Prover")
+          verifier = DidId("did:peer:Verifier")
+          anoncredPresentationRequestV1 = AnoncredPresentationRequestV1(
+            Map.empty,
+            Map.empty,
+            "name",
+            "nonce",
+            "version",
+            None
+          )
+          attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(
+            mediaType = Some("application/json"),
+            format = Some(PresentCredentialRequestFormat.Anoncred.name),
+            payload = AnoncredPresentationRequestV1.schemaSerDes.serialize(anoncredPresentationRequestV1).getBytes()
+          )
+          requestPresentation = RequestPresentation(
+            body = body,
+            attachments = Seq(attachmentDescriptor),
+            to = prover,
+            from = verifier,
+          )
+          aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentation)
+
+        } yield {
+          assertTrue(aRecord.connectionId == connectionId) &&
+          assertTrue(aRecord.protocolState == PresentationRecord.ProtocolState.RequestReceived) &&
+          assertTrue(aRecord.requestPresentationData == Some(requestPresentation))
+        }
+      },
+      test("receiveRequestPresentation Anoncred should fail given invalid attachment") {
+        for {
+          svc <- ZIO.service[PresentationService]
+          connectionId = Some("connectionId")
+          body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
+          presentationAttachmentAsJson =
+            """{
+                "challenge": "1f44d55f-f161-4938-a659-f8026467f126",
+                "domain": "us.gov/DriverLicense",
+                "credential_manifest": {}
+            }"""
+          prover = DidId("did:peer:Prover")
+          verifier = DidId("did:peer:Verifier")
+
+          attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
+            payload = presentationAttachmentAsJson,
+            format = Some(PresentCredentialProposeFormat.Anoncred.name)
+          )
+          requestPresentation = RequestPresentation(
+            body = body,
+            attachments = Seq(attachmentDescriptor),
+            to = prover,
+            from = verifier,
+          )
+          result <- svc.receiveRequestPresentation(connectionId, requestPresentation).exit
+
+        } yield assert(result)(
+          fails(equalTo(InvalidAnoncredPresentationRequest("Expecting Base64-encoded data")))
+        )
+      },
+      test("receiveRequestPresentation Anoncred should fail given invalid anoncred format") {
+        for {
+          svc <- ZIO.service[PresentationService]
+          connectionId = Some("connectionId")
+          body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
+          presentationAttachmentAsJson =
+            """{
+                "challenge": "1f44d55f-f161-4938-a659-f8026467f126",
+                "domain": "us.gov/DriverLicense",
+                "credential_manifest": {}
+            }"""
+          prover = DidId("did:peer:Prover")
+          verifier = DidId("did:peer:Verifier")
+          attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(
+            mediaType = Some("application/json"),
+            format = Some(PresentCredentialRequestFormat.Anoncred.name),
+            payload = presentationAttachmentAsJson.getBytes()
+          )
+          requestPresentation = RequestPresentation(
+            body = body,
+            attachments = Seq(attachmentDescriptor),
+            to = prover,
+            from = verifier,
+          )
+          result <- svc.receiveRequestPresentation(connectionId, requestPresentation).exit
+
+        } yield assert(result)(
+          fails(isSubtype[InvalidAnoncredPresentationRequest](anything))
+        )
       },
       test("acceptRequestPresentation updates the PresentatinRecord JWT") {
         for {
