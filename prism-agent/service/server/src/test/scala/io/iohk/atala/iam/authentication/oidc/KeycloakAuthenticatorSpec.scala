@@ -7,6 +7,7 @@ import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.iam.authentication.AuthenticationError
+import io.iohk.atala.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
 import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.sharedtest.containers.KeycloakAdminClient
 import io.iohk.atala.sharedtest.containers.KeycloakContainerCustom
@@ -24,7 +25,6 @@ import zio.test.Assertion.*
 
 import java.net.URI
 import scala.jdk.CollectionConverters.*
-import io.iohk.atala.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
 
 object KeycloakAuthenticatorSpec
     extends ZIOSpecDefault,

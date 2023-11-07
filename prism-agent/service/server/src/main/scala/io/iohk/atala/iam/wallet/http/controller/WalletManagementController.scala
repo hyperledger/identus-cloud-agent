@@ -99,6 +99,10 @@ class WalletManagementControllerImpl(
       rc: RequestContext
   ): IO[ErrorResponse, WalletDetail] = {
     for {
+      _ <- permissionService
+        .listWalletPermissions(me)
+        .mapError[ErrorResponse](e => e)
+        .filterOrFail(_.isEmpty)(ErrorResponse.badRequest(detail = Some("Wallet permission already exists.")))
       wallet <- doCreateWallet(request)
       _ <- permissionService.grantWalletToUser(wallet.id, me).mapError[ErrorResponse](e => e)
     } yield wallet

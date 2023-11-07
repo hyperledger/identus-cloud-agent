@@ -162,7 +162,7 @@ case class KeycloakPermissionManagementService(
       )(ZIO.succeed)
       permittedResources <- keycloakClient
         .checkPermissions(rpt)
-        .logError("Fail to list UMA permissions on keycloak")
+        .logError("Fail to list resource permissions on keycloak")
         .mapError(e => Error.ServiceError(e.message))
       permittedWallet <- getPermittedWallet(permittedResources)
     } yield permittedWallet.map(_.id)
