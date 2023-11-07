@@ -4,6 +4,7 @@ megalinter-reports/
 .vscode
 .bloop
 .bsp
+.jvmops
 .metals
 **/project/metals.sbt
 target
