@@ -25,9 +25,10 @@ trait WalletManagementController {
   def listWallet(paginationInput: PaginationInput)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetailPage]
   def getWallet(walletId: UUID)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail]
   def createWallet(request: CreateWalletRequest)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail]
-  def createMyWallet(request: CreateWalletRequest, me: BaseEntity)(implicit
-      rc: RequestContext
-  ): IO[ErrorResponse, WalletDetail]
+  def createMyWallet(
+      request: CreateWalletRequest
+  )(implicit rc: RequestContext, me: BaseEntity): IO[ErrorResponse, WalletDetail]
+  def listMyWallet()(implicit rc: RequestContext, me: BaseEntity): IO[ErrorResponse, WalletDetailPage]
 }
 
 object WalletManagementController {
@@ -82,6 +83,26 @@ class WalletManagementControllerImpl(
     )
   }
 
+  override def listMyWallet()(implicit rc: RequestContext, me: BaseEntity): IO[ErrorResponse, WalletDetailPage] = {
+    val uri = rc.request.uri
+    for {
+      permittedWallets <- permissionService
+        .listWalletPermissions(me)
+        .mapError[ErrorResponse](e => e)
+      items <- walletService
+        .getWallets(permittedWallets)
+        .mapError[ErrorResponse](e => e)
+      totalCount = items.length
+      stats = CollectionStats(totalCount = totalCount, filteredCount = totalCount)
+    } yield WalletDetailPage(
+      self = uri.toString(),
+      pageOf = PaginationUtils.composePageOfUri(uri).toString,
+      next = None,
+      previous = None,
+      contents = items.map(i => i),
+    )
+  }
+
   override def getWallet(walletId: UUID)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail] = {
     for {
       wallet <- walletService
@@ -95,8 +116,9 @@ class WalletManagementControllerImpl(
       request: CreateWalletRequest
   )(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail] = doCreateWallet(request).map(w => w)
 
-  override def createMyWallet(request: CreateWalletRequest, me: BaseEntity)(implicit
-      rc: RequestContext
+  override def createMyWallet(request: CreateWalletRequest)(implicit
+      rc: RequestContext,
+      me: BaseEntity
   ): IO[ErrorResponse, WalletDetail] = {
     for {
       _ <- permissionService

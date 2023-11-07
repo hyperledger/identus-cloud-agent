@@ -45,14 +45,20 @@ class WalletManagementServerEndpoints(
     WalletManagementEndpoints.createMyWallet
       .zServerSecurityLogic(tenantSecurityLogic)
       .serverLogic { entity =>
-        { case (rc, createWalletRequest) => controller.createMyWallet(createWalletRequest, entity)(rc) }
+        { case (rc, createWalletRequest) => controller.createMyWallet(createWalletRequest)(rc, entity) }
       }
+
+  val listMyWalletServerEndpoint: ZServerEndpoint[Any, Any] =
+    WalletManagementEndpoints.listMyWallet
+      .zServerSecurityLogic(tenantSecurityLogic)
+      .serverLogic { entity => rc => controller.listMyWallet()(rc, entity) }
 
   def all: List[ZServerEndpoint[Any, Any]] = List(
     listWalletServerEndpoint,
     getWalletServerEndpoint,
     createWalletServerEndpoint,
-    createMyWalletServerEndpoint
+    createMyWalletServerEndpoint,
+    listMyWalletServerEndpoint
   )
 
 }

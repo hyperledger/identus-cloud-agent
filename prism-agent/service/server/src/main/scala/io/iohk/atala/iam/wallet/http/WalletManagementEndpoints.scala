@@ -98,10 +98,23 @@ object WalletManagementEndpoints {
     .out(jsonBody[WalletDetail])
     .errorOut(EndpointOutputs.basicFailuresAndForbidden)
     .name("createMyWallet")
-    .summary("Create a new wallet")
+    .summary("Create a new wallet and grant permission to the current user.")
     .description(
       """Create a new wallet with optional to use provided seed.
         |The seed will be used for DID key derivation inside the wallet.""".stripMargin
     )
+
+  val listMyWallet: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    RequestContext,
+    ErrorResponse,
+    WalletDetailPage,
+    Any
+  ] =
+    baseMyWalletEndpoint.get
+      .errorOut(EndpointOutputs.basicFailuresAndForbidden)
+      .out(statusCode(StatusCode.Ok).description("Successfully list all the wallets"))
+      .out(jsonBody[WalletDetailPage])
+      .summary("List all wallets that the current user can access.")
 
 }
