@@ -10,7 +10,7 @@ import zio.*
 
 import java.util.UUID
 
-final case class KeycloakEntity(id: UUID, rawToken: String) extends BaseEntity
+final case class KeycloakEntity(id: UUID, accessToken: String, rpt: Option[String] = None) extends BaseEntity
 
 trait KeycloakAuthenticator extends AuthenticatorWithAuthZ[KeycloakEntity] {
   def authenticate(credentials: Credentials): IO[AuthenticationError, KeycloakEntity] = {

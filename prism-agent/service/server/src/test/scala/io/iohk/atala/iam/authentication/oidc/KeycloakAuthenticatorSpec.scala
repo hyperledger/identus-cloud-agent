@@ -24,6 +24,7 @@ import zio.test.Assertion.*
 
 import java.net.URI
 import scala.jdk.CollectionConverters.*
+import io.iohk.atala.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
 
 object KeycloakAuthenticatorSpec
     extends ZIOSpecDefault,
@@ -88,6 +89,7 @@ object KeycloakAuthenticatorSpec
           keycloakAdminClientLayer,
           keycloakContainerLayer,
           Client.default,
+          KeycloakPermissionManagementService.layer,
           WalletManagementServiceImpl.layer,
           JdbcWalletNonSecretStorage.layer,
           JdbcWalletSecretStorage.layer,
@@ -103,6 +105,7 @@ object KeycloakAuthenticatorSpec
           keycloakAdminClientLayer,
           keycloakContainerLayer,
           Client.default,
+          KeycloakPermissionManagementService.layer,
           WalletManagementServiceImpl.layer,
           JdbcWalletNonSecretStorage.layer,
           JdbcWalletSecretStorage.layer,

@@ -15,6 +15,7 @@ object PermissionManagement {
   trait Service[E <: BaseEntity] {
     def grantWalletToUser(walletId: WalletId, entity: E): IO[Error, Unit]
     def revokeWalletFromUser(walletId: WalletId, entity: E): IO[Error, Unit]
+    def listWalletPermissions(entity: E): IO[Error, Seq[WalletId]]
   }
 
   sealed trait Error(val message: String)

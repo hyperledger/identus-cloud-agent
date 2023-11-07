@@ -78,14 +78,20 @@ object AppModule {
       ApiKeyAuthenticatorImpl.layer,
     )
 
-  val keycloakAuthenticatorLayer: RLayer[AppConfig & WalletManagementService & Client, KeycloakAuthenticator] =
+  val keycloakAuthenticatorLayer: RLayer[
+    AppConfig & WalletManagementService & Client & PermissionManagement.Service[KeycloakEntity],
+    KeycloakAuthenticator
+  ] =
     ZLayer.fromZIO {
       ZIO
         .serviceWith[AppConfig](_.agent.authentication.keycloak.enabled)
         .map { isEnabled =>
           if (!isEnabled) KeycloakAuthenticatorImpl.disabled
           else
-            ZLayer.makeSome[AppConfig & WalletManagementService & Client, KeycloakAuthenticator](
+            ZLayer.makeSome[
+              AppConfig & WalletManagementService & Client & PermissionManagement.Service[KeycloakEntity],
+              KeycloakAuthenticator
+            ](
               KeycloakConfig.layer,
               KeycloakAuthenticatorImpl.layer,
               KeycloakClientImpl.authzClientLayer,
@@ -95,16 +101,17 @@ object AppModule {
     }.flatten
 
   val keycloakPermissionManagementLayer
-      : RLayer[AppConfig & WalletManagementService, PermissionManagement.Service[KeycloakEntity]] = {
+      : RLayer[AppConfig & WalletManagementService & Client, PermissionManagement.Service[KeycloakEntity]] = {
     ZLayer.fromZIO {
       ZIO
         .serviceWith[AppConfig](_.agent.authentication.keycloak.enabled)
         .map { isEnabled =>
           if (!isEnabled) KeycloakPermissionManagementService.disabled
           else
-            ZLayer.makeSome[AppConfig & WalletManagementService, PermissionManagement.Service[KeycloakEntity]](
-              KeycloakConfig.layer,
+            ZLayer.makeSome[AppConfig & WalletManagementService & Client, PermissionManagement.Service[KeycloakEntity]](
               KeycloakClientImpl.authzClientLayer,
+              KeycloakClientImpl.layer,
+              KeycloakConfig.layer,
               KeycloakPermissionManagementService.layer
             )
         }

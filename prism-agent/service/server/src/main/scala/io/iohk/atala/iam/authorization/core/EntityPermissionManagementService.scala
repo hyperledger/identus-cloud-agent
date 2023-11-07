@@ -17,6 +17,10 @@ class EntityPermissionManagementService(entityService: EntityService) extends Pe
   override def revokeWalletFromUser(walletId: WalletId, entity: Entity): IO[Error, Unit] =
     ZIO.fail(Error.ServiceError(s"Revoking wallet permission for an Entity is not yet supported."))
 
+  override def listWalletPermissions(entity: Entity): IO[Error, Seq[WalletId]] = {
+    ZIO.succeed(Seq(WalletId.fromUUID(entity.walletId)))
+  }
+
 }
 
 object EntityPermissionManagementService {

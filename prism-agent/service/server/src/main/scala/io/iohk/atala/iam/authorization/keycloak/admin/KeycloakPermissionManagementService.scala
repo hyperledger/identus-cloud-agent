@@ -1,6 +1,8 @@
 package io.iohk.atala.iam.authorization.keycloak.admin
 
+import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
+import io.iohk.atala.iam.authentication.oidc.KeycloakClient
 import io.iohk.atala.iam.authentication.oidc.KeycloakEntity
 import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error
@@ -10,10 +12,13 @@ import org.keycloak.authorization.client.AuthzClient
 import org.keycloak.representations.idm.authorization.{ResourceRepresentation, UmaPermissionRepresentation}
 import zio.*
 
+import java.util.UUID
 import scala.jdk.CollectionConverters.*
+import scala.util.Try
 
 case class KeycloakPermissionManagementService(
     authzClient: AuthzClient,
+    keycloakClient: KeycloakClient,
     walletManagementService: WalletManagementService
 ) extends PermissionManagement.Service[KeycloakEntity] {
 
@@ -146,14 +151,37 @@ case class KeycloakPermissionManagementService(
       )
     } yield ()
   }
+
+  override def listWalletPermissions(entity: KeycloakEntity): IO[Error, Seq[WalletId]] = {
+    for {
+      rpt <- entity.rpt.fold(
+        keycloakClient
+          .getRpt(entity.accessToken)
+          .logError("Fail to obtail RPT for wallet permissions")
+          .mapError(e => Error.ServiceError(e.message))
+      )(ZIO.succeed)
+      permittedResources <- keycloakClient
+        .checkPermissions(rpt)
+        .logError("Fail to list UMA permissions on keycloak")
+        .mapError(e => Error.ServiceError(e.message))
+      permittedWallet <- getPermittedWallet(permittedResources)
+    } yield permittedWallet.map(_.id)
+  }
+
+  private def getPermittedWallet(resourceIds: Seq[String]): IO[Error, Seq[Wallet]] = {
+    val walletIds = resourceIds.flatMap(id => Try(UUID.fromString(id)).toOption).map(WalletId.fromUUID)
+    walletManagementService
+      .getWallets(walletIds)
+      .mapError(e => Error.UnexpectedError(e.toThrowable))
+  }
 }
 
 object KeycloakPermissionManagementService {
   val layer: URLayer[
-    AuthzClient & WalletManagementService,
+    AuthzClient & KeycloakClient & WalletManagementService,
     PermissionManagement.Service[KeycloakEntity]
   ] =
-    ZLayer.fromFunction(KeycloakPermissionManagementService(_, _))
+    ZLayer.fromFunction(KeycloakPermissionManagementService(_, _, _))
 
   val disabled: ULayer[PermissionManagement.Service[KeycloakEntity]] =
     ZLayer.succeed {
@@ -161,6 +189,7 @@ object KeycloakPermissionManagementService {
       new PermissionManagement.Service[KeycloakEntity] {
         override def grantWalletToUser(walletId: WalletId, entity: KeycloakEntity): IO[Error, Unit] = notEnabledError
         override def revokeWalletFromUser(walletId: WalletId, entity: KeycloakEntity): IO[Error, Unit] = notEnabledError
+        override def listWalletPermissions(entity: KeycloakEntity): IO[Error, Seq[WalletId]] = notEnabledError
       }
     }
 }

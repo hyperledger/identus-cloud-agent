@@ -27,6 +27,13 @@ class DefaultPermissionManagementService(
     }
   }
 
+  override def listWalletPermissions(entity: BaseEntity): IO[Error, Seq[WalletId]] = {
+    entity match {
+      case entity: Entity           => entityPermission.listWalletPermissions(entity)
+      case kcEntity: KeycloakEntity => keycloakPermission.listWalletPermissions(kcEntity)
+    }
+  }
+
 }
 
 object DefaultPermissionManagementService {
