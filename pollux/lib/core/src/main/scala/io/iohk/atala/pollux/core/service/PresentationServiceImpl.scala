@@ -21,7 +21,7 @@ import zio.*
 import java.rmi.UnexpectedException
 import java.time.Instant
 import java.util as ju
-import java.util.UUID
+import java.util.{UUID, Base64 as JBase64}
 
 private class PresentationServiceImpl(
     presentationRepository: PresentationRepository,
@@ -278,9 +278,17 @@ private class PresentationServiceImpl(
           val jsonF = PresentCredentialRequestFormat.JWT.name // stable identifier
           val anoncredF = PresentCredentialRequestFormat.Anoncred.name // stable identifier
           head.format match
-            case None                    => ZIO.fail(PresentationError.MissingCredentialFormat)
-            case Some(`jsonF`)           => ZIO.succeed(CredentialFormat.JWT)
-            case Some(`anoncredF`)       => ZIO.succeed(CredentialFormat.AnonCreds)
+            case None          => ZIO.fail(PresentationError.MissingCredentialFormat)
+            case Some(`jsonF`) => ZIO.succeed(CredentialFormat.JWT)
+            case Some(`anoncredF`) =>
+              head.data match
+                case Base64(data) =>
+                  val decodedData = new String(JBase64.getUrlDecoder.decode(data))
+                  AnoncredPresentationRequestV1.schemaSerDes
+                    .validate(decodedData)
+                    .map(_ => CredentialFormat.AnonCreds)
+                    .mapError(error => InvalidAnoncredPresentationRequest(error.error))
+                case _ => ZIO.fail(InvalidAnoncredPresentationRequest("Expecting Base64-encoded data"))
             case Some(unsupportedFormat) => ZIO.fail(PresentationError.UnsupportedCredentialFormat(unsupportedFormat))
         case _ => ZIO.fail(PresentationError.UnexpectedError("Presentation with multi attachments"))
       }
