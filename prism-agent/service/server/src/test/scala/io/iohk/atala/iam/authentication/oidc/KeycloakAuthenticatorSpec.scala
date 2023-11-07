@@ -83,8 +83,7 @@ object KeycloakAuthenticatorSpec
       basicSpec
         .provide(
           KeycloakAuthenticatorImpl.layer,
-          KeycloakClientImpl.authzClientLayer,
-          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer,
+          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
           keycloakConfigLayer(),
           keycloakAdminClientLayer,
           keycloakContainerLayer,
@@ -99,8 +98,7 @@ object KeycloakAuthenticatorSpec
       disabledAutoRptSpec
         .provide(
           KeycloakAuthenticatorImpl.layer,
-          KeycloakClientImpl.authzClientLayer,
-          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer,
+          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
           keycloakConfigLayer(authUpgradeToRPT = false),
           keycloakAdminClientLayer,
           keycloakContainerLayer,

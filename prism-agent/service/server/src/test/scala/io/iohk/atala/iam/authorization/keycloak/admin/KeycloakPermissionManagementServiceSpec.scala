@@ -33,6 +33,7 @@ object KeycloakPermissionManagementServiceSpec
     successfulCasesSuite,
     failureCasesSuite
   )
+    .provide(Runtime.removeDefaultLoggers)
 
   val successfulCasesSuite = suite("Successful Cases")(
     test("grant wallet access to the user") {
@@ -96,8 +97,7 @@ object KeycloakPermissionManagementServiceSpec
     KeycloakPermissionManagementService.layer,
     WalletManagementServiceStub.layer,
     KeycloakAuthenticatorImpl.layer,
-    KeycloakClientImpl.authzClientLayer,
-    ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer,
+    ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
     keycloakConfigLayer()
   ) @@ sequential
 
@@ -110,10 +110,13 @@ object KeycloakPermissionManagementServiceSpec
       } yield assert(exit)(fails(isSubtype[WalletNotFoundById](anything)))
     }
   ).provide(
+    Client.default,
     keycloakContainerLayer,
+    keycloakAdminConfigLayer,
+    KeycloakAdmin.layer,
     KeycloakPermissionManagementService.layer,
     WalletManagementServiceStub.layer,
-    KeycloakClientImpl.authzClientLayer,
+    ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
     keycloakConfigLayer()
   ) @@ sequential
 }
