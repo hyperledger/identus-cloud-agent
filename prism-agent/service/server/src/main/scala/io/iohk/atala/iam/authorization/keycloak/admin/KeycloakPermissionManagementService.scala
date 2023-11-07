@@ -1,28 +1,27 @@
 package io.iohk.atala.iam.authorization.keycloak.admin
 
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
+import io.iohk.atala.iam.authentication.oidc.KeycloakEntity
 import io.iohk.atala.iam.authorization.core.PermissionManagement
+import io.iohk.atala.iam.authorization.core.PermissionManagement.Error
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error.*
 import io.iohk.atala.shared.models.WalletId
 import org.keycloak.authorization.client.AuthzClient
 import org.keycloak.representations.idm.authorization.{ResourceRepresentation, UmaPermissionRepresentation}
-import zio.ZIO.*
-import zio.ZLayer.*
-import zio.{IO, Task, URLayer, ZIO, ZLayer}
+import zio.*
 
-import java.util.UUID
 import scala.jdk.CollectionConverters.*
 
 case class KeycloakPermissionManagementService(
     authzClient: AuthzClient,
     walletManagementService: WalletManagementService
-) extends PermissionManagement.Service {
+) extends PermissionManagement.Service[KeycloakEntity] {
 
   private def walletResourceName(walletId: WalletId) = s"wallet-${walletId.toUUID.toString}"
 
   private def policyName(userId: String, resourceId: String) = s"user $userId on wallet $resourceId permission"
 
-  override def grantWalletToUser(walletId: WalletId, userId: UUID): IO[PermissionManagement.Error, Unit] = {
+  override def grantWalletToUser(walletId: WalletId, entity: KeycloakEntity): IO[PermissionManagement.Error, Unit] = {
     for {
       walletOpt <- walletManagementService
         .getWallet(walletId)
@@ -43,20 +42,11 @@ case class KeycloakPermissionManagementService(
         .mapError(UnexpectedError.apply)
       _ <- ZIO.log(s"Wallet resource created ${walletResource.toString}")
 
-      permission <- createResourcePermission(walletResource.getId, userId.toString)
+      permission <- createResourcePermission(walletResource.getId, entity.id.toString)
         .mapError(UnexpectedError.apply)
 
       _ <- ZIO.log(s"Permission created with id ${permission.getId} and name ${permission.getName}")
     } yield ()
-  }
-
-  private def permissionDetails(permission: UmaPermissionRepresentation): String = {
-    s"""
-       |id: ${permission.getId}
-       |name: ${permission.getName}
-       |scopes: ${permission.getScopes.asScala.mkString(", ")}
-       |users: ${permission.getUsers.asScala.mkString(", ")}
-       |""".stripMargin
   }
 
   private def createResourcePermission(resourceId: String, userId: String): Task[UmaPermissionRepresentation] = {
@@ -107,7 +97,11 @@ case class KeycloakPermissionManagementService(
     } yield resource
   }
 
-  override def revokeWalletFromUser(walletId: WalletId, userId: UUID): IO[PermissionManagement.Error, Unit] = {
+  override def revokeWalletFromUser(
+      walletId: WalletId,
+      entity: KeycloakEntity
+  ): IO[PermissionManagement.Error, Unit] = {
+    val userId = entity.id
     for {
       walletResourceOpt <- findWalletResource(walletId)
         .logError("Error while finding wallet resource")
@@ -157,7 +151,16 @@ case class KeycloakPermissionManagementService(
 object KeycloakPermissionManagementService {
   val layer: URLayer[
     AuthzClient & WalletManagementService,
-    PermissionManagement.Service
+    PermissionManagement.Service[KeycloakEntity]
   ] =
     ZLayer.fromFunction(KeycloakPermissionManagementService(_, _))
+
+  val disabled: ULayer[PermissionManagement.Service[KeycloakEntity]] =
+    ZLayer.succeed {
+      val notEnabledError = ZIO.fail(PermissionManagement.Error.ServiceError("Keycloak is not enabled"))
+      new PermissionManagement.Service[KeycloakEntity] {
+        override def grantWalletToUser(walletId: WalletId, entity: KeycloakEntity): IO[Error, Unit] = notEnabledError
+        override def revokeWalletFromUser(walletId: WalletId, entity: KeycloakEntity): IO[Error, Unit] = notEnabledError
+      }
+    }
 }

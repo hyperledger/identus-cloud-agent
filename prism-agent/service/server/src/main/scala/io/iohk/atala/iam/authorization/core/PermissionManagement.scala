@@ -1,17 +1,23 @@
 package io.iohk.atala.iam.authorization.core
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
+import io.iohk.atala.agent.walletapi.model.error.EntityServiceError
+import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityAlreadyExists
+import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityNotFound
+import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityStorageError
+import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityWalletNotFound
 import io.iohk.atala.shared.models.WalletId
 import zio.IO
 
 import java.util.UUID
 
 object PermissionManagement {
-  trait Service {
-    def grantWalletToUser(walletId: WalletId, userId: UUID): IO[Error, Unit]
-    def revokeWalletFromUser(walletId: WalletId, userId: UUID): IO[Error, Unit]
+  trait Service[E <: BaseEntity] {
+    def grantWalletToUser(walletId: WalletId, entity: E): IO[Error, Unit]
+    def revokeWalletFromUser(walletId: WalletId, entity: E): IO[Error, Unit]
   }
 
-  trait Error(message: String)
+  sealed trait Error(val message: String)
 
   object Error {
     case class UserNotFoundById(userId: UUID, cause: Option[Throwable] = None)
@@ -30,6 +36,13 @@ object PermissionManagement {
 
     case class UnexpectedError(cause: Throwable) extends Error(cause.getMessage)
 
-    case class ServiceError(message: String) extends Error(message)
+    case class ServiceError(cause: String) extends Error(cause)
+
+    given Conversion[EntityServiceError, Error] = {
+      case e: EntityNotFound       => UserNotFoundById(e.id)
+      case e: EntityAlreadyExists  => UnexpectedError(Exception(s"Entity with id ${e.id} already exists."))
+      case e: EntityStorageError   => UnexpectedError(Exception(s"Entity storage error: ${e.message}"))
+      case e: EntityWalletNotFound => WalletNotFoundById(WalletId.fromUUID(e.walletId))
+    }
   }
 }

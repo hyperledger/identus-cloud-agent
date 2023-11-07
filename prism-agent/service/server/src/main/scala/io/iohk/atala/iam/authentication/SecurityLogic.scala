@@ -32,6 +32,11 @@ object SecurityLogic {
       .mapError(AuthenticationError.toErrorResponse)
   }
 
+  def authenticateWith[E <: BaseEntity](credentials: (ApiKeyCredentials, JwtCredentials))(
+      authenticator: Authenticator[E]
+  ): IO[ErrorResponse, Either[Entity, E]] =
+    authenticate[E](credentials._2, credentials._1)(authenticator)
+
   def authorize[E <: BaseEntity](credentials: Credentials, others: Credentials*)(
       authenticator: Authenticator[E] & Authorizer[E],
   ): IO[ErrorResponse, WalletAccessContext] = {

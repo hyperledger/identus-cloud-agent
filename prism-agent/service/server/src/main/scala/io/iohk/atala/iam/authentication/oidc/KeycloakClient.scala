@@ -143,8 +143,8 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
 }
 
 object KeycloakClientImpl {
-  val layer: RLayer[KeycloakConfig & Client, KeycloakClient] =
-    authzClientLayer >>> ZLayer.fromFunction(KeycloakClientImpl(_, _, _))
+  val layer: RLayer[KeycloakConfig & AuthzClient & Client, KeycloakClient] =
+    ZLayer.fromFunction(KeycloakClientImpl(_, _, _))
 
   def authzClientLayer: RLayer[KeycloakConfig, AuthzClient] = ZLayer.fromZIO {
     for {

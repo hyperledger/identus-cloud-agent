@@ -2,9 +2,9 @@ package io.iohk.atala.iam.authorization.keycloak.admin
 
 import io.iohk.atala.agent.server.config.AppConfig
 import org.keycloak.admin.client.Keycloak
-import zio.{RLayer, Task, TaskLayer, URLayer, ZIO, ZLayer}
+import zio.{RLayer, Task, URLayer, ZIO, ZLayer}
 
-import scala.util.{Failure, Try}
+import scala.util.Try
 
 type KeycloakAdmin = Keycloak
 

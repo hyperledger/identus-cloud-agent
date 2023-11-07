@@ -14,7 +14,6 @@ import io.iohk.atala.sharedtest.containers.KeycloakTestContainerSupport
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import org.keycloak.authorization.client.AuthzClient
-import org.keycloak.representations.idm.CredentialRepresentation
 import org.keycloak.representations.idm.UserRepresentation
 import org.keycloak.representations.idm.authorization.ResourceRepresentation
 import org.keycloak.representations.idm.authorization.UmaPermissionRepresentation
@@ -63,24 +62,6 @@ object KeycloakAuthenticatorSpec
         .attemptBlocking(authzClient.protection().resource().create(resource))
     } yield ()
 
-  private def createUser(userId: String, password: String, enabled: Boolean = true) =
-    for {
-      adminClient <- adminClientZIO
-      user = {
-        val cred = CredentialRepresentation()
-        cred.setTemporary(false)
-        cred.setValue(password)
-
-        val user = UserRepresentation()
-        user.setId(userId)
-        user.setUsername(userId)
-        user.setEnabled(enabled)
-        user.setCredentials(List(cred).asJava)
-        user
-      }
-      _ <- ZIO.attemptBlocking(adminClient.realm(realmName).users().create(user))
-    } yield ()
-
   private def createResourcePermission(walletId: WalletId, userId: String) =
     for {
       authzClient <- ZIO.service[AuthzClient]
@@ -102,7 +83,8 @@ object KeycloakAuthenticatorSpec
       basicSpec
         .provide(
           KeycloakAuthenticatorImpl.layer,
-          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer ++ KeycloakClientImpl.authzClientLayer,
+          KeycloakClientImpl.authzClientLayer,
+          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer,
           keycloakConfigLayer(),
           keycloakAdminClientLayer,
           keycloakContainerLayer,
@@ -117,7 +99,8 @@ object KeycloakAuthenticatorSpec
       disabledAutoRptSpec
         .provide(
           KeycloakAuthenticatorImpl.layer,
-          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer ++ KeycloakClientImpl.authzClientLayer,
+          KeycloakClientImpl.authzClientLayer,
+          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer,
           keycloakConfigLayer(authUpgradeToRPT = false),
           keycloakAdminClientLayer,
           keycloakContainerLayer,
