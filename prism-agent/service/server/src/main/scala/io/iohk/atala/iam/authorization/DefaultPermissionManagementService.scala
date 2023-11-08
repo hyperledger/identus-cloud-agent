@@ -28,7 +28,7 @@ class DefaultPermissionManagementService(
     }
   }
 
-  override def listWalletPermissions(entity: BaseEntity): ZIO[WalletAdministrationContext, Error, Seq[WalletId]] = {
+  def listWalletPermissions(entity: BaseEntity): ZIO[WalletAdministrationContext, Error, Seq[WalletId]] = {
     entity match {
       case entity: Entity           => entityPermission.listWalletPermissions(entity)
       case kcEntity: KeycloakEntity => keycloakPermission.listWalletPermissions(kcEntity)

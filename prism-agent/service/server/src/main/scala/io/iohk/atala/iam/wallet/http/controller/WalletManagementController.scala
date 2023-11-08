@@ -25,6 +25,7 @@ import zio.*
 import java.util.UUID
 import scala.language.implicitConversions
 import io.iohk.atala.agent.walletapi.service.WalletManagementServiceError.TooManyPermittedWallet
+import io.iohk.atala.shared.models.WalletAdministrationContext.Admin
 
 trait WalletManagementController {
   def listWallet(
@@ -123,7 +124,10 @@ class WalletManagementControllerImpl(
       case WalletAdministrationContext.SelfService(_) =>
         for {
           wallet <- doCreateWallet(request)
-          _ <- permissionService.grantWalletToUser(wallet.id, me).mapError[ErrorResponse](e => e)
+          _ <- permissionService
+            .grantWalletToUser(wallet.id, me)
+            .mapError[ErrorResponse](e => e)
+            .provide(ZLayer.succeed(WalletAdministrationContext.Admin())) // First time to use must be admin
         } yield wallet
     }
   }
@@ -131,11 +135,9 @@ class WalletManagementControllerImpl(
   override def createWalletUmaPermission(walletId: UUID, request: CreateWalletUmaPermissionRequest)(implicit
       rc: RequestContext
   ): ZIO[WalletAdministrationContext, ErrorResponse, UmaPermission] = {
-    // TODO: refactor role as ZIO context similar to WalletAccessContext
-    val wid = WalletId.fromUUID(walletId)
     val grantee = KeycloakEntity(request.subject)
     permissionService
-      .grantWalletToUser(wid, grantee)
+      .grantWalletToUser(WalletId.fromUUID(walletId), grantee)
       .mapError[ErrorResponse](e => e)
       .as(UmaPermission())
   }

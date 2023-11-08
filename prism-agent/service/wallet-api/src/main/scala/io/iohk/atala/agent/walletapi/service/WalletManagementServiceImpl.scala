@@ -26,8 +26,9 @@ class WalletManagementServiceImpl(
   ): ZIO[WalletAdministrationContext, WalletManagementServiceError, Wallet] =
     for {
       _ <- ZIO.serviceWithZIO[WalletAdministrationContext] {
-        case WalletAdministrationContext.Admin() => ZIO.unit
-        case WalletAdministrationContext.SelfService(permittedWallets) =>
+        case WalletAdministrationContext.Admin()                                                   => ZIO.unit
+        case WalletAdministrationContext.SelfService(permittedWallets) if permittedWallets.isEmpty => ZIO.unit
+        case WalletAdministrationContext.SelfService(_) =>
           ZIO.fail(WalletManagementServiceError.TooManyPermittedWallet())
       }
       seed <- seed.fold(

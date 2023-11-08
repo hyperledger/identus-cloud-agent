@@ -2,7 +2,6 @@ package io.iohk.atala.iam.authentication
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.Entity
-import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletAdministrationContext
@@ -56,14 +55,12 @@ trait EntityAuthorizer extends Authorizer[Entity] {
   override def authorize(entity: Entity): IO[AuthenticationError, WalletAccessContext] =
     ZIO.succeed(entity.walletId).map(WalletId.fromUUID).map(WalletAccessContext.apply)
 
-  override def authorizeWalletAdmin(entity: Entity): IO[AuthenticationError, WalletAdministrationContext] =
-    entity.role match {
-      case EntityRole.Admin => ZIO.succeed(WalletAdministrationContext.Admin())
-      case EntityRole.Tenant =>
-        ZIO.succeed(
-          WalletAdministrationContext.SelfService(Seq(WalletId.fromUUID(entity.walletId)))
-        )
-    }
+  override def authorizeWalletAdmin(entity: Entity): IO[AuthenticationError, WalletAdministrationContext] = {
+    val ctx =
+      if (entity == Entity.Admin) WalletAdministrationContext.Admin()
+      else WalletAdministrationContext.SelfService(Seq(WalletId.fromUUID(entity.walletId)))
+    ZIO.succeed(ctx)
+  }
 }
 
 trait AuthenticatorWithAuthZ[E <: BaseEntity] extends Authenticator[E], Authorizer[E]

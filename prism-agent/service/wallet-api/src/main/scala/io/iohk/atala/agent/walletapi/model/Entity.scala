@@ -7,13 +7,8 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-enum EntityRole {
-  case Admin, Tenant
-}
-
 trait BaseEntity {
   def id: UUID
-  def role: EntityRole
 }
 
 case class Entity(
@@ -22,7 +17,6 @@ case class Entity(
     walletId: UUID,
     createdAt: Instant,
     updatedAt: Instant,
-    role: EntityRole = EntityRole.Tenant
 ) extends BaseEntity {
   def withUpdatedAt(updatedAt: Instant = Instant.now()): Entity = copy(updatedAt = updatedAt)
   def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): Entity =
@@ -57,7 +51,6 @@ object Entity {
       ZeroWalletId,
       Instant.EPOCH,
       Instant.EPOCH,
-      EntityRole.Admin
     )
 
   extension (entity: Entity) {

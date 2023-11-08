@@ -16,7 +16,7 @@ object WalletId {
 
 final case class WalletAccessContext(walletId: WalletId)
 
-// This should eventually be unified with WalletAccessContext and introduce some scope / role.
+// This might eventually be unified with WalletAccessContext and introduce some scope / role.
 // For now this is only intended for wallet admin related operations.
 sealed trait WalletAdministrationContext
 
