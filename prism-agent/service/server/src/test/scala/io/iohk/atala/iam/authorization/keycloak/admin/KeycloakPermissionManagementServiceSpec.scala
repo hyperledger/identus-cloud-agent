@@ -13,6 +13,7 @@ import io.iohk.atala.iam.authentication.oidc.{
 }
 import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error.WalletNotFoundById
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import io.iohk.atala.sharedtest.containers.{KeycloakContainerCustom, KeycloakTestContainerSupport}
 import zio.*
@@ -57,7 +58,7 @@ object KeycloakPermissionManagementServiceSpec
 
         entity <- authenticator.authenticate(token)
         permittedWallet <- authenticator.authorize(entity)
-      } yield assert(wallet.id)(equalTo(permittedWallet))
+      } yield assert(wallet.id)(equalTo(permittedWallet.walletId))
     },
     test("revoke the wallet access from the user") {
       for {
@@ -98,7 +99,8 @@ object KeycloakPermissionManagementServiceSpec
     WalletManagementServiceStub.layer,
     KeycloakAuthenticatorImpl.layer,
     ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
-    keycloakConfigLayer()
+    keycloakConfigLayer(),
+    ZLayer.succeed(WalletAdministrationContext.Admin())
   ) @@ sequential
 
   val failureCasesSuite = suite("Failure Cases Suite")(
@@ -117,7 +119,8 @@ object KeycloakPermissionManagementServiceSpec
     KeycloakPermissionManagementService.layer,
     WalletManagementServiceStub.layer,
     ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
-    keycloakConfigLayer()
+    keycloakConfigLayer(),
+    ZLayer.succeed(WalletAdministrationContext.Admin())
   ) @@ sequential
 }
 

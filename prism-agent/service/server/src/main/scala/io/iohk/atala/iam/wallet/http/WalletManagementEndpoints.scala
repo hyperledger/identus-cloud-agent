@@ -26,6 +26,8 @@ object WalletManagementEndpoints {
   private val baseEndpoint = endpoint
     .tag("Wallet Management")
     .securityIn(adminApiKeyHeader)
+    .securityIn(apiKeyHeader)
+    .securityIn(jwtAuthHeader)
     .in("wallets")
     .in(extractFromRequest[RequestContext](RequestContext.apply))
 
@@ -39,8 +41,6 @@ object WalletManagementEndpoints {
     Any
   ] =
     baseEndpoint.get
-      .securityIn(apiKeyHeader)
-      .securityIn(jwtAuthHeader)
       .in(paginationInput)
       .errorOut(EndpointOutputs.basicFailuresAndForbidden)
       .out(statusCode(StatusCode.Ok).description("Successfully list all the wallets"))
@@ -48,7 +48,7 @@ object WalletManagementEndpoints {
       .summary("List all wallets")
 
   val getWallet: Endpoint[
-    AdminApiKeyCredentials,
+    (AdminApiKeyCredentials, ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID),
     ErrorResponse,
     WalletDetail,
@@ -68,8 +68,6 @@ object WalletManagementEndpoints {
     WalletDetail,
     Any
   ] = baseEndpoint.post
-    .securityIn(apiKeyHeader)
-    .securityIn(jwtAuthHeader)
     .in(jsonBody[CreateWalletRequest])
     .out(
       statusCode(StatusCode.Created).description("A new wallet has been created")
@@ -91,8 +89,6 @@ object WalletManagementEndpoints {
     Any
   ] =
     baseEndpoint.post
-      .securityIn(apiKeyHeader)
-      .securityIn(jwtAuthHeader)
       .in(path[UUID]("walletId") / "uma-permissions")
       .in(jsonBody[CreateWalletUmaPermissionRequest])
       .out(jsonBody[UmaPermission])
@@ -108,8 +104,6 @@ object WalletManagementEndpoints {
     Any
   ] =
     baseEndpoint.delete
-      .securityIn(apiKeyHeader)
-      .securityIn(jwtAuthHeader)
       .in(path[UUID]("walletId") / "uma-permissions")
       .in(query[UUID]("subject"))
       .out(

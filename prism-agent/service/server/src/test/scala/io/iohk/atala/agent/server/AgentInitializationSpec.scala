@@ -13,6 +13,7 @@ import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticatorImpl
 import io.iohk.atala.iam.authentication.apikey.JdbcAuthenticationRepository
 import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
@@ -44,7 +45,8 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
       contextAwareTransactorLayer,
       systemTransactorLayer,
       apolloLayer,
-      pgContainerLayer
+      pgContainerLayer,
+      ZLayer.succeed(WalletAdministrationContext.Admin())
     ).provide(Runtime.removeDefaultLoggers)
   }
 

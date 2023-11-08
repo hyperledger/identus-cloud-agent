@@ -7,15 +7,16 @@ import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityNotFou
 import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityStorageError
 import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityWalletNotFound
 import io.iohk.atala.shared.models.WalletId
-import zio.IO
+import zio.*
 
 import java.util.UUID
+import io.iohk.atala.shared.models.WalletAdministrationContext
 
 object PermissionManagement {
   trait Service[E <: BaseEntity] {
-    def grantWalletToUser(walletId: WalletId, entity: E): IO[Error, Unit]
-    def revokeWalletFromUser(walletId: WalletId, entity: E): IO[Error, Unit]
-    def listWalletPermissions(entity: E): IO[Error, Seq[WalletId]]
+    def grantWalletToUser(walletId: WalletId, entity: E): ZIO[WalletAdministrationContext, Error, Unit]
+    def revokeWalletFromUser(walletId: WalletId, entity: E): ZIO[WalletAdministrationContext, Error, Unit]
+    def listWalletPermissions(entity: E): ZIO[WalletAdministrationContext, Error, Seq[WalletId]]
   }
 
   sealed trait Error(val message: String)

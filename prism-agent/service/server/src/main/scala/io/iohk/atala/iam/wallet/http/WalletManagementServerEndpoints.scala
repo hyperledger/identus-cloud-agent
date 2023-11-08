@@ -3,60 +3,61 @@ package io.iohk.atala.iam.wallet.http
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.Authorizer
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.SecurityLogic
-import io.iohk.atala.iam.authentication.admin.AdminApiKeyCredentials
-import io.iohk.atala.iam.authentication.admin.AdminApiKeySecurityLogic
-import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
-import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementController
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import sttp.tapir.ztapir.*
 import zio.*
 
 class WalletManagementServerEndpoints(
     controller: WalletManagementController,
-    authenticator: Authenticator[BaseEntity]
+    authenticator: Authenticator[BaseEntity],
+    authorizer: Authorizer[BaseEntity]
 ) {
-
-  private def adminApiSecurityLogic(credentials: AdminApiKeyCredentials): IO[ErrorResponse, BaseEntity] =
-    AdminApiKeySecurityLogic.securityLogic(credentials)(authenticator)
-
-  private def multiRoleSecurityLogic(
-      credentials: (AdminApiKeyCredentials, ApiKeyCredentials, JwtCredentials)
-  ): IO[ErrorResponse, BaseEntity] =
-    SecurityLogic
-      .authenticateWith[BaseEntity](credentials)(authenticator)
-      .map(e => e.fold(identity, identity))
 
   val listWalletServerEndpoint: ZServerEndpoint[Any, Any] =
     WalletManagementEndpoints.listWallet
-      .zServerSecurityLogic(multiRoleSecurityLogic)
-      .serverLogic { entity => { case (rc, paginationInput) => controller.listWallet(paginationInput)(rc, entity) } }
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAdminWith(_)(authenticator, authorizer))
+      .serverLogic {
+        case (_, wac) => { case (rc, paginationInput) =>
+          controller.listWallet(paginationInput)(rc).provide(ZLayer.succeed(wac))
+        }
+      }
 
   val getWalletServerEndpoint: ZServerEndpoint[Any, Any] =
     WalletManagementEndpoints.getWallet
-      .zServerSecurityLogic(adminApiSecurityLogic)
-      .serverLogic { _ => { case (rc, walletId) => controller.getWallet(walletId)(rc) } }
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAdminWith(_)(authenticator, authorizer))
+      .serverLogic {
+        case (_, wac) => { case (rc, walletId) => controller.getWallet(walletId)(rc).provide(ZLayer.succeed(wac)) }
+      }
 
   val createWalletServerEndpoint: ZServerEndpoint[Any, Any] =
     WalletManagementEndpoints.createWallet
-      .zServerSecurityLogic(multiRoleSecurityLogic)
-      .serverLogic { entity =>
-        { case (rc, createWalletRequest) => controller.createWallet(createWalletRequest)(rc, entity) }
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAdminWith(_)(authenticator, authorizer))
+      .serverLogic {
+        case (me, wac) => { case (rc, createWalletRequest) =>
+          controller.createWallet(createWalletRequest, me)(rc).provide(ZLayer.succeed(wac))
+        }
       }
 
   val createWalletUmaPermissionServerEndpoint: ZServerEndpoint[Any, Any] =
     WalletManagementEndpoints.createWalletUmaPermmission
-      .zServerSecurityLogic(multiRoleSecurityLogic)
-      .serverLogic { entity =>
-        { case (rc, walletId, request) => controller.createWalletUmaPermission(walletId, request)(rc, entity) }
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAdminWith(_)(authenticator, authorizer))
+      .serverLogic {
+        case (_, wac) => { case (rc, walletId, request) =>
+          controller.createWalletUmaPermission(walletId, request)(rc).provide(ZLayer.succeed(wac))
+        }
       }
 
   val deleteWalletUmaPermissionServerEndpoint: ZServerEndpoint[Any, Any] =
     WalletManagementEndpoints.deleteWalletUmaPermmission
-      .zServerSecurityLogic(multiRoleSecurityLogic)
-      .serverLogic { entity =>
-        { case (rc, walletId, subject) => controller.deleteWalletUmaPermission(walletId, subject)(rc, entity) }
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAdminWith(_)(authenticator, authorizer))
+      .serverLogic {
+        case (_, wac) => { case (rc, walletId, subject) =>
+          controller.deleteWalletUmaPermission(walletId, subject)(rc).provide(ZLayer.succeed(wac))
+        }
       }
 
   def all: List[ZServerEndpoint[Any, Any]] = List(
@@ -74,7 +75,7 @@ object WalletManagementServerEndpoints {
     for {
       walletManagementController <- ZIO.service[WalletManagementController]
       auth <- ZIO.service[DefaultAuthenticator]
-      walletManagementServerEndpoints = WalletManagementServerEndpoints(walletManagementController, auth)
+      walletManagementServerEndpoints = WalletManagementServerEndpoints(walletManagementController, auth, auth)
     } yield walletManagementServerEndpoints.all
   }
 }

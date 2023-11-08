@@ -5,6 +5,7 @@ import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.iam.authentication.oidc.KeycloakEntity
 import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.WalletId
 import zio.*
 
@@ -13,21 +14,21 @@ class DefaultPermissionManagementService(
     keycloakPermission: PermissionManagement.Service[KeycloakEntity]
 ) extends PermissionManagement.Service[BaseEntity] {
 
-  def grantWalletToUser(walletId: WalletId, entity: BaseEntity): IO[Error, Unit] = {
+  def grantWalletToUser(walletId: WalletId, entity: BaseEntity): ZIO[WalletAdministrationContext, Error, Unit] = {
     entity match {
       case entity: Entity           => entityPermission.grantWalletToUser(walletId, entity)
       case kcEntity: KeycloakEntity => keycloakPermission.grantWalletToUser(walletId, kcEntity)
     }
   }
 
-  def revokeWalletFromUser(walletId: WalletId, entity: BaseEntity): IO[Error, Unit] = {
+  def revokeWalletFromUser(walletId: WalletId, entity: BaseEntity): ZIO[WalletAdministrationContext, Error, Unit] = {
     entity match {
       case entity: Entity           => entityPermission.revokeWalletFromUser(walletId, entity)
       case kcEntity: KeycloakEntity => keycloakPermission.revokeWalletFromUser(walletId, kcEntity)
     }
   }
 
-  override def listWalletPermissions(entity: BaseEntity): IO[Error, Seq[WalletId]] = {
+  override def listWalletPermissions(entity: BaseEntity): ZIO[WalletAdministrationContext, Error, Seq[WalletId]] = {
     entity match {
       case entity: Entity           => entityPermission.listWalletPermissions(entity)
       case kcEntity: KeycloakEntity => keycloakPermission.listWalletPermissions(kcEntity)

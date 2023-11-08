@@ -8,6 +8,7 @@ import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.sharedtest.containers.KeycloakAdminClient
 import io.iohk.atala.sharedtest.containers.KeycloakContainerCustom
@@ -95,7 +96,8 @@ object KeycloakAuthenticatorSpec
           JdbcWalletSecretStorage.layer,
           contextAwareTransactorLayer,
           pgContainerLayer,
-          apolloLayer
+          apolloLayer,
+          ZLayer.succeed(WalletAdministrationContext.Admin())
         ),
       disabledAutoRptSpec
         .provide(
@@ -111,7 +113,8 @@ object KeycloakAuthenticatorSpec
           JdbcWalletSecretStorage.layer,
           contextAwareTransactorLayer,
           pgContainerLayer,
-          apolloLayer
+          apolloLayer,
+          ZLayer.succeed(WalletAdministrationContext.Admin())
         )
     )
       .provide(Runtime.removeDefaultLoggers)
@@ -129,7 +132,7 @@ object KeycloakAuthenticatorSpec
         token <- client.getAccessToken("alice", "1234").map(_.access_token)
         entity <- authenticator.authenticate(token)
         permittedWallet <- authenticator.authorize(entity)
-      } yield assert(wallet.id)(equalTo(permittedWallet))
+      } yield assert(wallet.id)(equalTo(permittedWallet.walletId))
     },
     test("reject token with a wallet that doesn't exist") {
       for {
@@ -231,7 +234,7 @@ object KeycloakAuthenticatorSpec
         rpt <- client.getRpt(token)
         entity <- authenticator.authenticate(rpt)
         permittedWallet <- authenticator.authorize(entity)
-      } yield assert(wallet.id)(equalTo(permittedWallet))
+      } yield assert(wallet.id)(equalTo(permittedWallet.walletId))
     }
   )
 

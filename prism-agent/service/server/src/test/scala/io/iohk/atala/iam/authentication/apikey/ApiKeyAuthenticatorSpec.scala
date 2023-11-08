@@ -13,6 +13,7 @@ import io.iohk.atala.agent.walletapi.sql.{JdbcEntityRepository, JdbcWalletNonSec
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.InvalidCredentials
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import zio.Runtime.removeDefaultLoggers
@@ -36,6 +37,8 @@ object ApiKeyAuthenticatorSpec extends ZIOSpecDefault, PostgresTestContainerSupp
     apiKeyConfigEnabledMultiTenant.copy(autoProvisioning = true)
 
   private def configLayer(config: ApiKeyConfig) = ZLayer.succeed(config)
+
+  private def walletAdminContextLayer = ZLayer.succeed(WalletAdministrationContext.Admin())
 
   def apiKeyAuthenticatorLayer(apiKeyConfig: ApiKeyConfig) =
     ZLayer.makeSome[AuthenticationRepository & EntityService & WalletManagementService, ApiKeyAuthenticator](
@@ -126,7 +129,7 @@ object ApiKeyAuthenticatorSpec extends ZIOSpecDefault, PostgresTestContainerSupp
     ),
     failWhenTheHeaderIsNotProvidedTest,
     failWhenTheHeaderIsAnEmptyStringTest
-  ).provideSomeLayer(apiKeyAuthenticatorLayer(apiKeyConfigEnabledMultiTenant))
+  ).provideSomeLayer(apiKeyAuthenticatorLayer(apiKeyConfigEnabledMultiTenant) ++ walletAdminContextLayer)
 
   val authenticationEnabledMultiTenantSpecWithAutoProvisioning =
     suite("when authentication enabled in the multi-tenant mode with auto-provisioning")(
@@ -162,6 +165,8 @@ object ApiKeyAuthenticatorSpec extends ZIOSpecDefault, PostgresTestContainerSupp
       ),
       failWhenTheHeaderIsNotProvidedTest,
       failWhenTheHeaderIsAnEmptyStringTest
-    ).provideSomeLayer(apiKeyAuthenticatorLayer(apiKeyConfigEnabledMultiTenantWithAutoProvisioning))
+    ).provideSomeLayer(
+      apiKeyAuthenticatorLayer(apiKeyConfigEnabledMultiTenantWithAutoProvisioning) ++ walletAdminContextLayer
+    )
 
 }

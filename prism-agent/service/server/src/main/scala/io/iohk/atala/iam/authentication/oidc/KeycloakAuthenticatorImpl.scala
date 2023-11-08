@@ -3,7 +3,8 @@ package io.iohk.atala.iam.authentication.oidc
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
 import io.iohk.atala.iam.authorization.core.PermissionManagement
-import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import pdi.jwt.JwtCirce
 import pdi.jwt.JwtOptions
 import zio.*
@@ -40,7 +41,36 @@ class KeycloakAuthenticatorImpl(
     } else ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
   }
 
-  override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletId] = {
+  override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] = {
+    for {
+      entityWithRpt <- populateEntityRpt(entity)
+      walletId <- keycloakPermissionService
+        .listWalletPermissions(entityWithRpt)
+        .mapError(e => AuthenticationError.UnexpectedError(e.message))
+        .flatMap {
+          case head +: Nil => ZIO.succeed(head)
+          case Nil =>
+            ZIO.fail(AuthenticationError.ResourceNotPermitted("No wallet permissions found."))
+          case ls =>
+            ZIO.fail(
+              AuthenticationError.UnexpectedError("Too many wallet access granted, the wallet access is ambiguous.")
+            )
+        }
+        .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+    } yield WalletAccessContext(walletId)
+  }
+
+  override def authorizeWalletAdmin(entity: KeycloakEntity): IO[AuthenticationError, WalletAdministrationContext] = {
+    for {
+      entityWithRpt <- populateEntityRpt(entity)
+      wallets <- keycloakPermissionService
+        .listWalletPermissions(entityWithRpt)
+        .mapError(e => AuthenticationError.UnexpectedError(e.message))
+        .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+    } yield WalletAdministrationContext.SelfService(wallets)
+  }
+
+  private def populateEntityRpt(entity: KeycloakEntity): IO[AuthenticationError, KeycloakEntity] = {
     for {
       token <- ZIO
         .fromOption(entity.accessToken)
@@ -54,20 +84,7 @@ class KeycloakAuthenticatorImpl(
             .mapError(e => AuthenticationError.UnexpectedError(e.message))
         else ZIO.fail(AuthenticationError.InvalidCredentials(s"AccessToken is not RPT."))
       rpt <- rptEffect.logError("Fail to obtail RPT for wallet permissions")
-      entityWithRpt = entity.copy(rpt = Some(rpt))
-      walletId <- keycloakPermissionService
-        .listWalletPermissions(entityWithRpt)
-        .mapError(e => AuthenticationError.UnexpectedError(e.message))
-        .flatMap {
-          case head +: Nil => ZIO.succeed(head)
-          case Nil =>
-            ZIO.fail(AuthenticationError.ResourceNotPermitted("No wallet permissions found."))
-          case ls =>
-            ZIO.fail(
-              AuthenticationError.UnexpectedError("Too many wallet access granted, the wallet access is ambiguous.")
-            )
-        }
-    } yield walletId
+    } yield entity.copy(rpt = Some(rpt))
   }
 
   /** Return true if the token is RPT. Check whether property '.authorization' exists. */
@@ -101,7 +118,11 @@ object KeycloakAuthenticatorImpl {
       new KeycloakAuthenticator {
         override def isEnabled: Boolean = false
         override def authenticate(token: String): IO[AuthenticationError, KeycloakEntity] = notEnabledError
-        override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletId] = notEnabledError
+        override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] = notEnabledError
+        override def authorizeWalletAdmin(
+            entity: KeycloakEntity
+        ): IO[AuthenticationError, WalletAdministrationContext] =
+          notEnabledError
       }
     }
 }

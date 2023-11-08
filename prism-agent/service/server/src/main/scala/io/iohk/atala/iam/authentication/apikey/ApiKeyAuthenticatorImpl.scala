@@ -12,6 +12,7 @@ import io.iohk.atala.shared.models.WalletId
 import java.util.UUID
 import scala.util.Try
 import scala.language.implicitConversions
+import io.iohk.atala.shared.models.WalletAdministrationContext
 
 case class ApiKeyAuthenticatorImpl(
     apiKeyConfig: ApiKeyConfig,
@@ -58,6 +59,7 @@ case class ApiKeyAuthenticatorImpl(
       wallet <- walletManagementService
         .createWallet(Wallet("Auto provisioned wallet", WalletId.random))
         .mapError(cause => AuthenticationRepositoryError.UnexpectedError(cause))
+        .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
       entityToCreate = Entity(name = "Auto provisioned entity", walletId = wallet.id.toUUID)
       entity <- entityService
         .create(entityToCreate)

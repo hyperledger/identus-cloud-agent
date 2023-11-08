@@ -29,6 +29,7 @@ import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, Ver
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.presentproof.controller.PresentProofServerEndpoints
 import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.{HexString, WalletAccessContext, WalletId}
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.system.controller.SystemServerEndpoints
@@ -104,6 +105,7 @@ object PrismAgentApp {
       .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
       .repeat(Schedule.spaced(10.seconds))
       .unit
+      .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
 
 }
 
@@ -153,6 +155,7 @@ object AgentInitialization {
     for {
       _ <- validateAppConfig
       _ <- initializeDefaultWallet
+        .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
     } yield ()
 
   private val validateAppConfig =
