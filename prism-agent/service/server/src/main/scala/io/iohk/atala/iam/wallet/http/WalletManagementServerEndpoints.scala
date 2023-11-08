@@ -30,8 +30,8 @@ class WalletManagementServerEndpoints(
 
   val listWalletServerEndpoint: ZServerEndpoint[Any, Any] =
     WalletManagementEndpoints.listWallet
-      .zServerSecurityLogic(adminApiSecurityLogic)
-      .serverLogic { _ => { case (rc, paginationInput) => controller.listWallet(paginationInput)(rc) } }
+      .zServerSecurityLogic(multiRoleSecurityLogic)
+      .serverLogic { entity => { case (rc, paginationInput) => controller.listWallet(paginationInput)(rc, entity) } }
 
   val getWalletServerEndpoint: ZServerEndpoint[Any, Any] =
     WalletManagementEndpoints.getWallet

@@ -30,13 +30,15 @@ object WalletManagementEndpoints {
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 
   val listWallet: Endpoint[
-    AdminApiKeyCredentials,
+    (AdminApiKeyCredentials, ApiKeyCredentials, JwtCredentials),
     (RequestContext, PaginationInput),
     ErrorResponse,
     WalletDetailPage,
     Any
   ] =
     baseEndpoint.get
+      .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(paginationInput)
       .errorOut(EndpointOutputs.basicFailuresAndForbidden)
       .out(statusCode(StatusCode.Ok).description("Successfully list all the wallets"))
