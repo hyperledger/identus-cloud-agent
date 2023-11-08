@@ -71,10 +71,16 @@ case class KeycloakPermissionManagementService(
 
   private def findWalletResource(walletId: WalletId): Task[Option[ResourceRepresentation]] = {
     for {
-      walletResourceOrNull <- ZIO.attemptBlocking(
+      walletResource <- ZIO.attemptBlocking(
         authzClient.protection().resource().findById(walletId.toUUID.toString())
       )
-    } yield Option(walletResourceOrNull)
+      .asSome
+      .catchSome {
+        case e: RuntimeException =>
+          if (e.getMessage().contains("Could not find resource")) ZIO.none
+          else ZIO.fail(e)
+      }
+    } yield walletResource
   }
 
   private def createWalletResource(walletId: WalletId): Task[ResourceRepresentation] = {

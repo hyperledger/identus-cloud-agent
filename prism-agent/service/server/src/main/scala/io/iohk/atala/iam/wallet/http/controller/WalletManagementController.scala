@@ -101,7 +101,7 @@ class WalletManagementControllerImpl(
           _ <- permissionService
             .listWalletPermissions(entity)
             .mapError[ErrorResponse](e => e)
-            .filterOrFail(_.isEmpty)(ErrorResponse.badRequest(detail = Some("Wallet permission already exists.")))
+            .filterOrFail(_.isEmpty)(ErrorResponse.badRequest(detail = Some("The current user already have access to the wallet.")))
           wallet <- doCreateWallet(request)
           _ <- permissionService.grantWalletToUser(wallet.id, entity).mapError[ErrorResponse](e => e)
         } yield wallet
