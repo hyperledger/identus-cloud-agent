@@ -36,14 +36,16 @@ class KeycloakAuthenticatorImpl(
               .attempt(UUID.fromString(id))
               .mapError(e => AuthenticationError.UnexpectedError(s"Subject ID in accessToken is not a UUID. $e"))
           }
-      } yield KeycloakEntity(entityId, token)
+      } yield KeycloakEntity(entityId, accessToken = Some(token))
     } else ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
   }
 
   override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletId] = {
-    val token = entity.accessToken
     for {
-      isRpt <- inferIsRpt(entity.accessToken)
+      token <- ZIO
+        .fromOption(entity.accessToken)
+        .mapError(_ => AuthenticationError.InvalidCredentials("AccessToken is missing."))
+      isRpt <- inferIsRpt(token)
       rptEffect =
         if (isRpt) ZIO.succeed(token)
         else if (keycloakConfig.autoUpgradeToRPT)

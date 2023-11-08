@@ -1,6 +1,7 @@
 package io.iohk.atala.iam.wallet.http.controller
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
+import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
@@ -10,8 +11,11 @@ import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.CollectionStats
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.util.PaginationUtils
+import io.iohk.atala.iam.authentication.oidc.KeycloakEntity
 import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.iam.wallet.http.model.CreateWalletRequest
+import io.iohk.atala.iam.wallet.http.model.CreateWalletUmaPermissionRequest
+import io.iohk.atala.iam.wallet.http.model.UmaPermission
 import io.iohk.atala.iam.wallet.http.model.WalletDetail
 import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
 import io.iohk.atala.shared.models.HexString
@@ -20,7 +24,6 @@ import zio.*
 
 import java.util.UUID
 import scala.language.implicitConversions
-import io.iohk.atala.agent.walletapi.model.EntityRole
 
 trait WalletManagementController {
   def listWallet(
@@ -30,6 +33,14 @@ trait WalletManagementController {
   def createWallet(
       request: CreateWalletRequest
   )(implicit rc: RequestContext, entity: BaseEntity): IO[ErrorResponse, WalletDetail]
+  def createWalletUmaPermission(
+      walletId: UUID,
+      request: CreateWalletUmaPermissionRequest
+  )(implicit rc: RequestContext, entity: BaseEntity): IO[ErrorResponse, UmaPermission]
+  def deleteWalletUmaPermission(
+      walletId: UUID,
+      subject: UUID
+  )(implicit rc: RequestContext, entity: BaseEntity): IO[ErrorResponse, Unit]
 }
 
 object WalletManagementController {
@@ -125,6 +136,80 @@ class WalletManagementControllerImpl(
           wallet <- doCreateWallet(request)
           _ <- permissionService.grantWalletToUser(wallet.id, entity).mapError[ErrorResponse](e => e)
         } yield wallet
+    }
+  }
+
+  override def createWalletUmaPermission(walletId: UUID, request: CreateWalletUmaPermissionRequest)(implicit
+      rc: RequestContext,
+      entity: BaseEntity
+  ): IO[ErrorResponse, UmaPermission] = {
+    // TODO: refactor role as ZIO context similar to WalletAccessContext
+    val wid = WalletId.fromUUID(walletId)
+    entity.role match {
+      case EntityRole.Admin =>
+        val grantee = KeycloakEntity(request.subject)
+        permissionService
+          .grantWalletToUser(wid, grantee)
+          .mapError[ErrorResponse](e => e)
+          .as(UmaPermission())
+      case EntityRole.Tenant =>
+        for {
+          permittedWallet <- permissionService
+            .listWalletPermissions(entity)
+            .mapError[ErrorResponse](e => e)
+          _ <- ZIO
+            .fail(
+              ErrorResponse(
+                status = sttp.model.StatusCode.Forbidden.code,
+                `type` = "authentication_error",
+                title = "",
+                detail = Option("The current user does not have access to the wallet."),
+                instance = ""
+              )
+            )
+            .unless(permittedWallet.contains(wid))
+          grantee = KeycloakEntity(request.subject)
+          _ = permissionService
+            .grantWalletToUser(wid, grantee)
+            .mapError[ErrorResponse](e => e)
+        } yield UmaPermission()
+    }
+  }
+
+  override def deleteWalletUmaPermission(walletId: UUID, subject: UUID)(implicit
+      rc: RequestContext,
+      entity: BaseEntity
+  ): IO[ErrorResponse, Unit] = {
+    // TODO: refactor role as ZIO context similar to WalletAccessContext
+    val wid = WalletId.fromUUID(walletId)
+    entity.role match {
+      case EntityRole.Admin =>
+        val grantee = KeycloakEntity(subject)
+        permissionService
+          .revokeWalletFromUser(wid, grantee)
+          .mapError[ErrorResponse](e => e)
+          .as(UmaPermission())
+      case EntityRole.Tenant =>
+        for {
+          permittedWallet <- permissionService
+            .listWalletPermissions(entity)
+            .mapError[ErrorResponse](e => e)
+          _ <- ZIO
+            .fail(
+              ErrorResponse(
+                status = sttp.model.StatusCode.Forbidden.code,
+                `type` = "authentication_error",
+                title = "",
+                detail = Option("The current user does not have access to the wallet."),
+                instance = ""
+              )
+            )
+            .unless(permittedWallet.contains(wid))
+          grantee = KeycloakEntity(subject)
+          _ = permissionService
+            .revokeWalletFromUser(wid, grantee)
+            .mapError[ErrorResponse](e => e)
+        } yield UmaPermission()
     }
   }
 

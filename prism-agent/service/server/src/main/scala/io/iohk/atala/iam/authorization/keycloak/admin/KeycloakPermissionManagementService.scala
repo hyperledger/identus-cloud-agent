@@ -160,9 +160,12 @@ case class KeycloakPermissionManagementService(
 
   override def listWalletPermissions(entity: KeycloakEntity): IO[Error, Seq[WalletId]] = {
     for {
+      token <- ZIO
+        .fromOption(entity.accessToken)
+        .mapError(_ => Error.ServiceError("AccessToken is missing for listing permissions."))
       rpt <- entity.rpt.fold(
         keycloakClient
-          .getRpt(entity.accessToken)
+          .getRpt(token)
           .logError("Fail to obtail RPT for wallet permissions")
           .mapError(e => Error.ServiceError(e.message))
       )(ZIO.succeed)

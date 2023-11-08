@@ -11,6 +11,8 @@ import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKe
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import io.iohk.atala.iam.wallet.http.model.CreateWalletRequest
+import io.iohk.atala.iam.wallet.http.model.CreateWalletUmaPermissionRequest
+import io.iohk.atala.iam.wallet.http.model.UmaPermission
 import io.iohk.atala.iam.wallet.http.model.WalletDetail
 import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
 import sttp.model.StatusCode
@@ -80,5 +82,42 @@ object WalletManagementEndpoints {
       """Create a new wallet with optional to use provided seed.
         |The seed will be used for DID key derivation inside the wallet.""".stripMargin
     )
+
+  val createWalletUmaPermmission: Endpoint[
+    (AdminApiKeyCredentials, ApiKeyCredentials, JwtCredentials),
+    (RequestContext, UUID, CreateWalletUmaPermissionRequest),
+    ErrorResponse,
+    UmaPermission,
+    Any
+  ] =
+    baseEndpoint.post
+      .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
+      .in(path[UUID]("walletId") / "uma-permissions")
+      .in(jsonBody[CreateWalletUmaPermissionRequest])
+      .out(jsonBody[UmaPermission])
+      .errorOut(EndpointOutputs.basicFailuresAndForbidden)
+      .name("createWalletUmaPermission")
+      .summary("Create a UMA resource permission on an authorization server for the wallet.")
+
+  val deleteWalletUmaPermmission: Endpoint[
+    (AdminApiKeyCredentials, ApiKeyCredentials, JwtCredentials),
+    (RequestContext, UUID, UUID),
+    ErrorResponse,
+    Unit,
+    Any
+  ] =
+    baseEndpoint.delete
+      .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
+      .in(path[UUID]("walletId") / "uma-permissions")
+      .in(query[UUID]("subject"))
+      .out(
+        statusCode(StatusCode.Ok)
+          .description("UMA resource permission is removed from an authorization server.")
+      )
+      .errorOut(EndpointOutputs.basicFailuresAndForbidden)
+      .name("deleteWalletUmaPermission")
+      .summary("Delete a UMA resource permission on an authorization server for the wallet.")
 
 }

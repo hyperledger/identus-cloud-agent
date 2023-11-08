@@ -11,7 +11,8 @@ import zio.*
 
 import java.util.UUID
 
-final case class KeycloakEntity(id: UUID, accessToken: String, rpt: Option[String] = None) extends BaseEntity {
+final case class KeycloakEntity(id: UUID, accessToken: Option[String] = None, rpt: Option[String] = None)
+    extends BaseEntity {
   def role: EntityRole = EntityRole.Tenant // Admin role on keycloak is not yet supported.
 }
 

@@ -48,7 +48,7 @@ object KeycloakPermissionManagementServiceSpec
         username = "user_" + randomId
         password = randomId
         user <- createUser(username = username, password = password)
-        entity = KeycloakEntity(id = UUID.fromString(user.getId), accessToken = "test")
+        entity = KeycloakEntity(id = UUID.fromString(user.getId))
 
         permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
         _ <- permissionService.grantWalletToUser(wallet.id, entity)
@@ -71,7 +71,7 @@ object KeycloakPermissionManagementServiceSpec
         username = "user_" + randomId
         password = randomId
         user <- createUser(username = username, password = password)
-        entity = KeycloakEntity(id = UUID.fromString(user.getId), accessToken = "test")
+        entity = KeycloakEntity(id = UUID.fromString(user.getId))
 
         permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
         _ <- permissionService.grantWalletToUser(wallet.id, entity)
@@ -105,7 +105,7 @@ object KeycloakPermissionManagementServiceSpec
     test("grant wallet access to the user with invalid wallet id") {
       for {
         permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
-        entity = KeycloakEntity(id = UUID.randomUUID(), accessToken = "")
+        entity = KeycloakEntity(id = UUID.randomUUID())
         exit <- permissionService.grantWalletToUser(WalletId.random, entity).exit
       } yield assert(exit)(fails(isSubtype[WalletNotFoundById](anything)))
     }

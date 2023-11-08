@@ -45,10 +45,26 @@ class WalletManagementServerEndpoints(
         { case (rc, createWalletRequest) => controller.createWallet(createWalletRequest)(rc, entity) }
       }
 
+  val createWalletUmaPermissionServerEndpoint: ZServerEndpoint[Any, Any] =
+    WalletManagementEndpoints.createWalletUmaPermmission
+      .zServerSecurityLogic(multiRoleSecurityLogic)
+      .serverLogic { entity =>
+        { case (rc, walletId, request) => controller.createWalletUmaPermission(walletId, request)(rc, entity) }
+      }
+
+  val deleteWalletUmaPermissionServerEndpoint: ZServerEndpoint[Any, Any] =
+    WalletManagementEndpoints.deleteWalletUmaPermmission
+      .zServerSecurityLogic(multiRoleSecurityLogic)
+      .serverLogic { entity =>
+        { case (rc, walletId, subject) => controller.deleteWalletUmaPermission(walletId, subject)(rc, entity) }
+      }
+
   def all: List[ZServerEndpoint[Any, Any]] = List(
     listWalletServerEndpoint,
     getWalletServerEndpoint,
     createWalletServerEndpoint,
+    createWalletUmaPermissionServerEndpoint,
+    deleteWalletUmaPermissionServerEndpoint
   )
 
 }
