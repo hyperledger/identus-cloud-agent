@@ -21,7 +21,9 @@ class WalletManagementServerEndpoints(
   private def adminApiSecurityLogic(credentials: AdminApiKeyCredentials): IO[ErrorResponse, BaseEntity] =
     AdminApiKeySecurityLogic.securityLogic(credentials)(authenticator)
 
-  private def tenantSecurityLogic(credentials: (ApiKeyCredentials, JwtCredentials)): IO[ErrorResponse, BaseEntity] =
+  private def multiRoleSecurityLogic(
+      credentials: (AdminApiKeyCredentials, ApiKeyCredentials, JwtCredentials)
+  ): IO[ErrorResponse, BaseEntity] =
     SecurityLogic
       .authenticateWith[BaseEntity](credentials)(authenticator)
       .map(e => e.fold(identity, identity))
@@ -38,27 +40,15 @@ class WalletManagementServerEndpoints(
 
   val createWalletServerEndpoint: ZServerEndpoint[Any, Any] =
     WalletManagementEndpoints.createWallet
-      .zServerSecurityLogic(adminApiSecurityLogic)
-      .serverLogic { _ => { case (rc, createWalletRequest) => controller.createWallet(createWalletRequest)(rc) } }
-
-  val createMyWalletServerEndpoint: ZServerEndpoint[Any, Any] =
-    WalletManagementEndpoints.createMyWallet
-      .zServerSecurityLogic(tenantSecurityLogic)
+      .zServerSecurityLogic(multiRoleSecurityLogic)
       .serverLogic { entity =>
-        { case (rc, createWalletRequest) => controller.createMyWallet(createWalletRequest)(rc, entity) }
+        { case (rc, createWalletRequest) => controller.createWallet(createWalletRequest)(rc, entity) }
       }
-
-  val listMyWalletServerEndpoint: ZServerEndpoint[Any, Any] =
-    WalletManagementEndpoints.listMyWallet
-      .zServerSecurityLogic(tenantSecurityLogic)
-      .serverLogic { entity => rc => controller.listMyWallet()(rc, entity) }
 
   def all: List[ZServerEndpoint[Any, Any]] = List(
     listWalletServerEndpoint,
     getWalletServerEndpoint,
     createWalletServerEndpoint,
-    createMyWalletServerEndpoint,
-    listMyWalletServerEndpoint
   )
 
 }

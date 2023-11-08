@@ -4,6 +4,7 @@ import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
+import io.iohk.atala.iam.authentication.admin.AdminApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -49,10 +50,10 @@ object SecurityLogic {
       }
   }
 
-  def authenticateWith[E <: BaseEntity](credentials: (ApiKeyCredentials, JwtCredentials))(
+  def authenticateWith[E <: BaseEntity](credentials: (AdminApiKeyCredentials, ApiKeyCredentials, JwtCredentials))(
       authenticator: Authenticator[E]
   ): IO[ErrorResponse, Either[Entity, E]] =
-    authenticate[E](credentials._2, credentials._1)(authenticator)
+    authenticate[E](credentials._3, credentials._2, credentials._1)(authenticator)
 
   def authorizeWith[E <: BaseEntity](credentials: (ApiKeyCredentials, JwtCredentials))(
       authenticator: Authenticator[E],

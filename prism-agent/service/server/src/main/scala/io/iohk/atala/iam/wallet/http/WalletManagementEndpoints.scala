@@ -21,17 +21,10 @@ import java.util.UUID
 
 object WalletManagementEndpoints {
 
-  private val baseWalletEndpoint = endpoint
+  private val baseEndpoint = endpoint
     .tag("Wallet Management")
     .securityIn(adminApiKeyHeader)
     .in("wallets")
-    .in(extractFromRequest[RequestContext](RequestContext.apply))
-
-  private val baseMyWalletEndpoint = endpoint
-    .tag("Wallet Management")
-    .securityIn(apiKeyHeader)
-    .securityIn(jwtAuthHeader)
-    .in("my-wallets")
     .in(extractFromRequest[RequestContext](RequestContext.apply))
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
@@ -43,7 +36,7 @@ object WalletManagementEndpoints {
     WalletDetailPage,
     Any
   ] =
-    baseWalletEndpoint.get
+    baseEndpoint.get
       .in(paginationInput)
       .errorOut(EndpointOutputs.basicFailuresAndForbidden)
       .out(statusCode(StatusCode.Ok).description("Successfully list all the wallets"))
@@ -57,7 +50,7 @@ object WalletManagementEndpoints {
     WalletDetail,
     Any
   ] =
-    baseWalletEndpoint.get
+    baseEndpoint.get
       .in(path[UUID]("walletId"))
       .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
       .out(statusCode(StatusCode.Ok).description("Successfully get the wallet"))
@@ -65,12 +58,14 @@ object WalletManagementEndpoints {
       .summary("Get the wallet by ID")
 
   val createWallet: Endpoint[
-    AdminApiKeyCredentials,
+    (AdminApiKeyCredentials, ApiKeyCredentials, JwtCredentials),
     (RequestContext, CreateWalletRequest),
     ErrorResponse,
     WalletDetail,
     Any
-  ] = baseWalletEndpoint.post
+  ] = baseEndpoint.post
+    .securityIn(apiKeyHeader)
+    .securityIn(jwtAuthHeader)
     .in(jsonBody[CreateWalletRequest])
     .out(
       statusCode(StatusCode.Created).description("A new wallet has been created")
@@ -83,38 +78,5 @@ object WalletManagementEndpoints {
       """Create a new wallet with optional to use provided seed.
         |The seed will be used for DID key derivation inside the wallet.""".stripMargin
     )
-
-  val createMyWallet: Endpoint[
-    (ApiKeyCredentials, JwtCredentials),
-    (RequestContext, CreateWalletRequest),
-    ErrorResponse,
-    WalletDetail,
-    Any
-  ] = baseMyWalletEndpoint.post
-    .in(jsonBody[CreateWalletRequest])
-    .out(
-      statusCode(StatusCode.Created).description("A new wallet has been created")
-    )
-    .out(jsonBody[WalletDetail])
-    .errorOut(EndpointOutputs.basicFailuresAndForbidden)
-    .name("createMyWallet")
-    .summary("Create a new wallet and grant permission to the current user.")
-    .description(
-      """Create a new wallet with optional to use provided seed.
-        |The seed will be used for DID key derivation inside the wallet.""".stripMargin
-    )
-
-  val listMyWallet: Endpoint[
-    (ApiKeyCredentials, JwtCredentials),
-    RequestContext,
-    ErrorResponse,
-    WalletDetailPage,
-    Any
-  ] =
-    baseMyWalletEndpoint.get
-      .errorOut(EndpointOutputs.basicFailuresAndForbidden)
-      .out(statusCode(StatusCode.Ok).description("Successfully list all the wallets"))
-      .out(jsonBody[WalletDetailPage])
-      .summary("List all wallets that the current user can access.")
 
 }

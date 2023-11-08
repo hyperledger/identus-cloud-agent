@@ -20,15 +20,14 @@ import zio.*
 
 import java.util.UUID
 import scala.language.implicitConversions
+import io.iohk.atala.agent.walletapi.model.EntityRole
 
 trait WalletManagementController {
   def listWallet(paginationInput: PaginationInput)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetailPage]
   def getWallet(walletId: UUID)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail]
-  def createWallet(request: CreateWalletRequest)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail]
-  def createMyWallet(
+  def createWallet(
       request: CreateWalletRequest
-  )(implicit rc: RequestContext, me: BaseEntity): IO[ErrorResponse, WalletDetail]
-  def listMyWallet()(implicit rc: RequestContext, me: BaseEntity): IO[ErrorResponse, WalletDetailPage]
+  )(implicit rc: RequestContext, entity: BaseEntity): IO[ErrorResponse, WalletDetail]
 }
 
 object WalletManagementController {
@@ -83,26 +82,6 @@ class WalletManagementControllerImpl(
     )
   }
 
-  override def listMyWallet()(implicit rc: RequestContext, me: BaseEntity): IO[ErrorResponse, WalletDetailPage] = {
-    val uri = rc.request.uri
-    for {
-      permittedWallets <- permissionService
-        .listWalletPermissions(me)
-        .mapError[ErrorResponse](e => e)
-      items <- walletService
-        .getWallets(permittedWallets)
-        .mapError[ErrorResponse](e => e)
-      totalCount = items.length
-      stats = CollectionStats(totalCount = totalCount, filteredCount = totalCount)
-    } yield WalletDetailPage(
-      self = uri.toString(),
-      pageOf = PaginationUtils.composePageOfUri(uri).toString,
-      next = None,
-      previous = None,
-      contents = items.map(i => i),
-    )
-  }
-
   override def getWallet(walletId: UUID)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail] = {
     for {
       wallet <- walletService
@@ -114,27 +93,28 @@ class WalletManagementControllerImpl(
 
   override def createWallet(
       request: CreateWalletRequest
-  )(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail] = doCreateWallet(request).map(w => w)
-
-  override def createMyWallet(request: CreateWalletRequest)(implicit
-      rc: RequestContext,
-      me: BaseEntity
-  ): IO[ErrorResponse, WalletDetail] = {
-    for {
-      _ <- permissionService
-        .listWalletPermissions(me)
-        .mapError[ErrorResponse](e => e)
-        .filterOrFail(_.isEmpty)(ErrorResponse.badRequest(detail = Some("Wallet permission already exists.")))
-      wallet <- doCreateWallet(request)
-      _ <- permissionService.grantWalletToUser(wallet.id, me).mapError[ErrorResponse](e => e)
-    } yield wallet
+  )(implicit rc: RequestContext, entity: BaseEntity): IO[ErrorResponse, WalletDetail] = {
+    entity.role match {
+      case EntityRole.Admin => doCreateWallet(request).map(i => i)
+      case EntityRole.Tenant =>
+        for {
+          _ <- permissionService
+            .listWalletPermissions(entity)
+            .mapError[ErrorResponse](e => e)
+            .filterOrFail(_.isEmpty)(ErrorResponse.badRequest(detail = Some("Wallet permission already exists.")))
+          wallet <- doCreateWallet(request)
+          _ <- permissionService.grantWalletToUser(wallet.id, entity).mapError[ErrorResponse](e => e)
+        } yield wallet
+    }
   }
 
   private def doCreateWallet(request: CreateWalletRequest): IO[ErrorResponse, Wallet] = {
     for {
       providedSeed <- request.seed.fold(ZIO.none)(s => extractWalletSeed(s).asSome)
       walletId = request.id.map(WalletId.fromUUID).getOrElse(WalletId.random)
-      wallet <- walletService.createWallet(Wallet(request.name, walletId), providedSeed).mapError[ErrorResponse](e => e)
+      wallet <- walletService
+        .createWallet(Wallet(request.name, walletId), providedSeed)
+        .mapError[ErrorResponse](identity)
     } yield wallet
   }
 
