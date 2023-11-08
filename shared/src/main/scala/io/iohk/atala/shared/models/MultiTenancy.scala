@@ -18,9 +18,15 @@ final case class WalletAccessContext(walletId: WalletId)
 
 // This might eventually be unified with WalletAccessContext and introduce some scope / role.
 // For now this is only intended for wallet admin related operations.
-sealed trait WalletAdministrationContext
+sealed trait WalletAdministrationContext {
+  def isAuthorized(walletId: WalletId): Boolean
+}
 
 object WalletAdministrationContext {
-  final case class Admin() extends WalletAdministrationContext
-  final case class SelfService(permittedWallets: Seq[WalletId]) extends WalletAdministrationContext
+  final case class Admin() extends WalletAdministrationContext {
+    def isAuthorized(walletId: WalletId): Boolean = true
+  }
+  final case class SelfService(permittedWallets: Seq[WalletId]) extends WalletAdministrationContext {
+    def isAuthorized(walletId: WalletId): Boolean = permittedWallets.contains(walletId)
+  }
 }

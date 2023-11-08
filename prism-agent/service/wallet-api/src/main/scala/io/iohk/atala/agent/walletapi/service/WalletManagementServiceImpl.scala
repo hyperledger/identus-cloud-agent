@@ -51,19 +51,10 @@ class WalletManagementServiceImpl(
       walletId: WalletId
   ): ZIO[WalletAdministrationContext, WalletManagementServiceError, Option[Wallet]] = {
     ZIO
-      .serviceWith[WalletAdministrationContext] {
-        case WalletAdministrationContext.Admin() => Some(walletId)
-        case WalletAdministrationContext.SelfService(permittedWallets) =>
-          if permittedWallets.contains(walletId)
-          then Some(walletId)
-          else None
-      }
+      .serviceWith[WalletAdministrationContext](_.isAuthorized(walletId))
       .flatMap {
-        case Some(walletId) =>
-          nonSecretStorage
-            .getWallet(walletId)
-            .mapError(e => e)
-        case None => ZIO.none
+        case true  => nonSecretStorage.getWallet(walletId).mapError(e => e)
+        case false => ZIO.none
       }
   }
 
@@ -71,15 +62,8 @@ class WalletManagementServiceImpl(
       walletIds: Seq[WalletId]
   ): ZIO[WalletAdministrationContext, WalletManagementServiceError, Seq[Wallet]] = {
     ZIO
-      .serviceWith[WalletAdministrationContext] {
-        case WalletAdministrationContext.Admin()                       => walletIds
-        case WalletAdministrationContext.SelfService(permittedWallets) => walletIds.intersect(permittedWallets)
-      }
-      .flatMap { filteredIds =>
-        nonSecretStorage
-          .getWallets(filteredIds)
-          .mapError(e => e)
-      }
+      .serviceWith[WalletAdministrationContext](ctx => walletIds.filter(ctx.isAuthorized))
+      .flatMap { filteredIds => nonSecretStorage.getWallets(filteredIds).mapError(e => e) }
   }
 
   override def listWallets(

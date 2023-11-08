@@ -11,13 +11,7 @@ trait BaseEntity {
   def id: UUID
 }
 
-case class Entity(
-    id: UUID,
-    name: String,
-    walletId: UUID,
-    createdAt: Instant,
-    updatedAt: Instant,
-) extends BaseEntity {
+case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, updatedAt: Instant) extends BaseEntity {
   def withUpdatedAt(updatedAt: Instant = Instant.now()): Entity = copy(updatedAt = updatedAt)
   def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): Entity =
     copy(createdAt = createdAt.truncatedTo(unit), updatedAt.truncatedTo(unit))
@@ -45,13 +39,7 @@ object Entity {
       Instant.EPOCH
     )
   val Admin =
-    Entity(
-      UUID.fromString("00000000-0000-0000-0000-000000000001"),
-      "admin",
-      ZeroWalletId,
-      Instant.EPOCH,
-      Instant.EPOCH,
-    )
+    Entity(UUID.fromString("00000000-0000-0000-0000-000000000001"), "admin", ZeroWalletId, Instant.EPOCH, Instant.EPOCH)
 
   extension (entity: Entity) {
     def walletAccessContext: WalletAccessContext = WalletAccessContext(WalletId.fromUUID(entity.walletId))

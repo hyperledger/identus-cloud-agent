@@ -6,7 +6,6 @@ import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityAlread
 import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityNotFound
 import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityStorageError
 import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityWalletNotFound
-import io.iohk.atala.agent.walletapi.service.WalletManagementServiceError
 import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.WalletId
 import zio.*
@@ -47,7 +46,5 @@ object PermissionManagement {
       case e: EntityStorageError   => UnexpectedError(Exception(s"Entity storage error: ${e.message}"))
       case e: EntityWalletNotFound => WalletNotFoundById(WalletId.fromUUID(e.walletId))
     }
-
-    given Conversion[WalletManagementServiceError, Error] = { e => UnexpectedError(e.toThrowable) }
   }
 }
