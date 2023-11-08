@@ -14,7 +14,6 @@ import io.iohk.atala.iam.authentication.oidc.KeycloakEntity
 import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.iam.wallet.http.model.CreateWalletRequest
 import io.iohk.atala.iam.wallet.http.model.CreateWalletUmaPermissionRequest
-import io.iohk.atala.iam.wallet.http.model.UmaPermission
 import io.iohk.atala.iam.wallet.http.model.WalletDetail
 import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
 import io.iohk.atala.shared.models.HexString
@@ -41,7 +40,7 @@ trait WalletManagementController {
   def createWalletUmaPermission(
       walletId: UUID,
       request: CreateWalletUmaPermissionRequest
-  )(implicit rc: RequestContext): ZIO[WalletAdministrationContext, ErrorResponse, UmaPermission]
+  )(implicit rc: RequestContext): ZIO[WalletAdministrationContext, ErrorResponse, Unit]
   def deleteWalletUmaPermission(
       walletId: UUID,
       subject: UUID
@@ -134,12 +133,11 @@ class WalletManagementControllerImpl(
 
   override def createWalletUmaPermission(walletId: UUID, request: CreateWalletUmaPermissionRequest)(implicit
       rc: RequestContext
-  ): ZIO[WalletAdministrationContext, ErrorResponse, UmaPermission] = {
+  ): ZIO[WalletAdministrationContext, ErrorResponse, Unit] = {
     val grantee = KeycloakEntity(request.subject)
     permissionService
       .grantWalletToUser(WalletId.fromUUID(walletId), grantee)
       .mapError[ErrorResponse](e => e)
-      .as(UmaPermission())
   }
 
   override def deleteWalletUmaPermission(walletId: UUID, subject: UUID)(implicit
@@ -149,7 +147,6 @@ class WalletManagementControllerImpl(
     permissionService
       .revokeWalletFromUser(WalletId.fromUUID(walletId), grantee)
       .mapError[ErrorResponse](e => e)
-      .as(UmaPermission())
   }
 
   private def doCreateWallet(request: CreateWalletRequest): ZIO[WalletAdministrationContext, ErrorResponse, Wallet] = {

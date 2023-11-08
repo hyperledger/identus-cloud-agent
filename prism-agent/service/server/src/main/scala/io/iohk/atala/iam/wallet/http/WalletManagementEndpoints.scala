@@ -12,7 +12,6 @@ import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import io.iohk.atala.iam.wallet.http.model.CreateWalletRequest
 import io.iohk.atala.iam.wallet.http.model.CreateWalletUmaPermissionRequest
-import io.iohk.atala.iam.wallet.http.model.UmaPermission
 import io.iohk.atala.iam.wallet.http.model.WalletDetail
 import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
 import sttp.model.StatusCode
@@ -85,13 +84,16 @@ object WalletManagementEndpoints {
     (AdminApiKeyCredentials, ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID, CreateWalletUmaPermissionRequest),
     ErrorResponse,
-    UmaPermission,
+    Unit,
     Any
   ] =
     baseEndpoint.post
       .in(path[UUID]("walletId") / "uma-permissions")
       .in(jsonBody[CreateWalletUmaPermissionRequest])
-      .out(jsonBody[UmaPermission])
+      .out(
+        statusCode(StatusCode.Ok)
+          .description("UMA resource permission is created on an authorization server.")
+      )
       .errorOut(EndpointOutputs.basicFailuresAndForbidden)
       .name("createWalletUmaPermission")
       .summary("Create a UMA resource permission on an authorization server for the wallet.")
