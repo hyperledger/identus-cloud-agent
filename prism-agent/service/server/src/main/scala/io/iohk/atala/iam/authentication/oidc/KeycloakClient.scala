@@ -7,6 +7,8 @@ import zio.*
 import zio.http.*
 import zio.json.*
 
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters.*
 
 final case class TokenIntrospection(active: Boolean, sub: Option[String])
@@ -61,7 +63,10 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
           url = introspectionUrl,
           method = Method.POST,
           headers = baseFormHeaders ++ Headers(
-            Header.Authorization.Basic(keycloakConfig.clientId, keycloakConfig.clientSecret)
+            Header.Authorization.Basic(
+              username = URLEncoder.encode(keycloakConfig.clientId, StandardCharsets.UTF_8),
+              password = URLEncoder.encode(keycloakConfig.clientSecret, StandardCharsets.UTF_8)
+            )
           ),
           content = Body.fromURLEncodedForm(
             Form(
