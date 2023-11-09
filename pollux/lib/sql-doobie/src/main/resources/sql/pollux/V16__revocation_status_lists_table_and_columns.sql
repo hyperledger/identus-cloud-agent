@@ -16,7 +16,11 @@ CREATE TABLE public.credential_status_lists
     updated_at   TIMESTAMP WITH TIME ZONE                   NOT NULL default now()
 );
 
-CREATE INDEX credential_status_lists_wallet_id_index ON public.credential_revocation_status_lists (wallet_id);
+CREATE INDEX credential_status_lists_wallet_id_index ON public.credential_status_lists (wallet_id)
+
+ALTER TABLE public.issue_credential_records
+    ALTER COLUMN id TYPE UUID USING id::uuid;
+
 
 CREATE TABLE public.credentials_in_status_list
 (
