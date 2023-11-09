@@ -22,6 +22,8 @@ import io.iohk.atala.event.controller.EventControllerImpl
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.apikey.JdbcAuthenticationRepository
+import io.iohk.atala.iam.authorization.DefaultPermissionManagementService
+import io.iohk.atala.iam.authorization.core.EntityPermissionManagementService
 import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
@@ -155,7 +157,10 @@ object MainApp extends ZIOAppDefault {
           // authentication
           AppModule.builtInAuthenticatorLayer,
           AppModule.keycloakAuthenticatorLayer,
+          AppModule.keycloakPermissionManagementLayer,
           DefaultAuthenticator.layer,
+          DefaultPermissionManagementService.layer,
+          EntityPermissionManagementService.layer,
           // grpc
           GrpcModule.prismNodeStubLayer,
           // storage

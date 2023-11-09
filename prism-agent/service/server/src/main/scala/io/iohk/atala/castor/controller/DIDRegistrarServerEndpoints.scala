@@ -11,12 +11,13 @@ import zio.*
 
 class DIDRegistrarServerEndpoints(
     didRegistrarController: DIDRegistrarController,
-    authenticator: Authenticator[BaseEntity] & Authorizer[BaseEntity]
+    authenticator: Authenticator[BaseEntity],
+    authorizer: Authorizer[BaseEntity]
 ) {
 
   private val listManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.listManagedDid
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (rc, paginationInput) =>
           didRegistrarController
@@ -27,7 +28,7 @@ class DIDRegistrarServerEndpoints(
 
   private val createManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.createManagedDid
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (rc, createManagedDidRequest) =>
           didRegistrarController
@@ -38,7 +39,7 @@ class DIDRegistrarServerEndpoints(
 
   private val getManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.getManagedDid
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
@@ -49,7 +50,7 @@ class DIDRegistrarServerEndpoints(
 
   private val publishManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.publishManagedDid
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
@@ -60,7 +61,7 @@ class DIDRegistrarServerEndpoints(
 
   private val updateManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.updateManagedDid
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (rc, did, updateRequest) =>
           didRegistrarController
@@ -71,7 +72,7 @@ class DIDRegistrarServerEndpoints(
 
   private val deactivateManagedDidServerEndpoint: ZServerEndpoint[Any, Any] =
     DIDRegistrarEndpoints.deactivateManagedDid
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
@@ -96,7 +97,7 @@ object DIDRegistrarServerEndpoints {
     for {
       authenticator <- ZIO.service[DefaultAuthenticator]
       didRegistrarController <- ZIO.service[DIDRegistrarController]
-      didRegistrarEndpoints = new DIDRegistrarServerEndpoints(didRegistrarController, authenticator)
+      didRegistrarEndpoints = new DIDRegistrarServerEndpoints(didRegistrarController, authenticator, authenticator)
     } yield didRegistrarEndpoints.all
   }
 }

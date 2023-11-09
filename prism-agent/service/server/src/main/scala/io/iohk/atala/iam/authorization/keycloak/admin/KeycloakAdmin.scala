@@ -1,10 +1,9 @@
 package io.iohk.atala.iam.authorization.keycloak.admin
 
-import io.iohk.atala.agent.server.config.AppConfig
 import org.keycloak.admin.client.Keycloak
-import zio.{RLayer, Task, TaskLayer, URLayer, ZIO, ZLayer}
+import zio.{RLayer, Task, ZIO, ZLayer}
 
-import scala.util.{Failure, Try}
+import scala.util.Try
 
 type KeycloakAdmin = Keycloak
 
@@ -32,11 +31,6 @@ case class KeycloakAdminConfig(
     scope: Option[String]
 ) {
   def isHttps: Boolean = serverUrl.startsWith("https")
-}
-
-object KeycloakAdminConfig {
-  val layer: URLayer[AppConfig, KeycloakAdminConfig] =
-    ZLayer.fromFunction((appConfig: AppConfig) => appConfig.keycloakAdmin)
 }
 
 object KeycloakAdmin {

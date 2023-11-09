@@ -22,11 +22,12 @@ import java.util.UUID
 
 class PresentProofServerEndpoints(
     presentProofController: PresentProofController,
-    authenticator: Authenticator[BaseEntity] & Authorizer[BaseEntity]
+    authenticator: Authenticator[BaseEntity],
+    authorizer: Authorizer[BaseEntity]
 ) {
   private val requestPresentationEndpoint: ZServerEndpoint[Any, Any] =
     requestPresentation
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, request: RequestPresentationInput) =>
           presentProofController
@@ -37,7 +38,7 @@ class PresentProofServerEndpoints(
 
   private val getAllPresentationsEndpoint: ZServerEndpoint[Any, Any] =
     getAllPresentations
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, paginationInput: PaginationInput, thid: Option[String]) =>
           presentProofController
@@ -48,7 +49,7 @@ class PresentProofServerEndpoints(
 
   private val getPresentationEndpoint: ZServerEndpoint[Any, Any] =
     getPresentation
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, presentationId: UUID) =>
           presentProofController
@@ -59,7 +60,7 @@ class PresentProofServerEndpoints(
 
   private val updatePresentationEndpoint: ZServerEndpoint[Any, Any] =
     updatePresentation
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, presentationId: UUID, action: RequestPresentationAction) =>
           presentProofController
@@ -81,7 +82,7 @@ object PresentProofServerEndpoints {
     for {
       authenticator <- ZIO.service[DefaultAuthenticator]
       presentProofController <- ZIO.service[PresentProofController]
-      presentProofEndpoints = new PresentProofServerEndpoints(presentProofController, authenticator)
+      presentProofEndpoints = new PresentProofServerEndpoints(presentProofController, authenticator, authenticator)
     } yield presentProofEndpoints.all
   }
 }

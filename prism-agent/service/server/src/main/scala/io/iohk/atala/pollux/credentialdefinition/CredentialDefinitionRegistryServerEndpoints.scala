@@ -18,14 +18,15 @@ import java.util.UUID
 
 class CredentialDefinitionRegistryServerEndpoints(
     credentialDefinitionController: CredentialDefinitionController,
-    authenticator: Authenticator[BaseEntity] & Authorizer[BaseEntity]
+    authenticator: Authenticator[BaseEntity],
+    authorizer: Authorizer[BaseEntity]
 ) {
   def throwableToInternalServerError(throwable: Throwable) =
     ZIO.fail[ErrorResponse](ErrorResponse.internalServerError(detail = Option(throwable.getMessage)))
 
   val createCredentialDefinitionServerEndpoint: ZServerEndpoint[Any, Any] =
     createCredentialDefinitionEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic {
         case wac => { case (ctx: RequestContext, credentialDefinitionInput: CredentialDefinitionInput) =>
           credentialDefinitionController
@@ -46,7 +47,7 @@ class CredentialDefinitionRegistryServerEndpoints(
 
   val lookupCredentialDefinitionsByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
     lookupCredentialDefinitionsByQueryEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic {
         case wac => {
           case (
@@ -81,6 +82,7 @@ object CredentialDefinitionRegistryServerEndpoints {
       authenticator <- ZIO.service[DefaultAuthenticator]
       credentialDefinitionRegistryEndpoints = new CredentialDefinitionRegistryServerEndpoints(
         credentialDefinitionRegistryService,
+        authenticator,
         authenticator
       )
     } yield credentialDefinitionRegistryEndpoints.all

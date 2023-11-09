@@ -30,17 +30,21 @@ import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticator
 import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticatorImpl
 import io.iohk.atala.iam.authentication.apikey.ApiKeyConfig
 import io.iohk.atala.iam.authentication.apikey.AuthenticationRepository
+import io.iohk.atala.iam.authentication.oidc.KeycloakAuthenticator
 import io.iohk.atala.iam.authentication.oidc.KeycloakAuthenticatorImpl
 import io.iohk.atala.iam.authentication.oidc.KeycloakClientImpl
 import io.iohk.atala.iam.authentication.oidc.KeycloakConfig
+import io.iohk.atala.iam.authentication.oidc.KeycloakEntity
+import io.iohk.atala.iam.authorization.core.PermissionManagement
+import io.iohk.atala.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import io.iohk.atala.shared.db.{ContextAwareTask, DbConfig, TransactorLayer}
+import org.keycloak.authorization.client.AuthzClient
 import zio.*
 import zio.config.typesafe.TypesafeConfigSource
 import zio.config.{ReadError, read}
 import zio.http.Client
-import io.iohk.atala.iam.authentication.oidc.KeycloakAuthenticator
 
 object SystemModule {
   val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
@@ -74,20 +78,45 @@ object AppModule {
       ApiKeyAuthenticatorImpl.layer,
     )
 
-  val keycloakAuthenticatorLayer: RLayer[AppConfig & WalletManagementService & Client, KeycloakAuthenticator] =
+  val keycloakAuthenticatorLayer: RLayer[
+    AppConfig & WalletManagementService & Client & PermissionManagement.Service[KeycloakEntity],
+    KeycloakAuthenticator
+  ] =
     ZLayer.fromZIO {
       ZIO
         .serviceWith[AppConfig](_.agent.authentication.keycloak.enabled)
         .map { isEnabled =>
           if (!isEnabled) KeycloakAuthenticatorImpl.disabled
           else
-            ZLayer.makeSome[AppConfig & WalletManagementService & Client, KeycloakAuthenticator](
+            ZLayer.makeSome[
+              AppConfig & WalletManagementService & Client & PermissionManagement.Service[KeycloakEntity],
+              KeycloakAuthenticator
+            ](
               KeycloakConfig.layer,
               KeycloakAuthenticatorImpl.layer,
+              KeycloakClientImpl.authzClientLayer,
               KeycloakClientImpl.layer
             )
         }
     }.flatten
+
+  val keycloakPermissionManagementLayer
+      : RLayer[AppConfig & WalletManagementService & Client, PermissionManagement.Service[KeycloakEntity]] = {
+    ZLayer.fromZIO {
+      ZIO
+        .serviceWith[AppConfig](_.agent.authentication.keycloak.enabled)
+        .map { isEnabled =>
+          if (!isEnabled) KeycloakPermissionManagementService.disabled
+          else
+            ZLayer.makeSome[AppConfig & WalletManagementService & Client, PermissionManagement.Service[KeycloakEntity]](
+              KeycloakClientImpl.authzClientLayer,
+              KeycloakClientImpl.layer,
+              KeycloakConfig.layer,
+              KeycloakPermissionManagementService.layer
+            )
+        }
+    }.flatten
+  }
 }
 
 object GrpcModule {

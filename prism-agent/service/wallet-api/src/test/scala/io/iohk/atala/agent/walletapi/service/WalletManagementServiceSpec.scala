@@ -9,6 +9,7 @@ import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.agent.walletapi.vault.VaultWalletSecretStorage
 import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
@@ -37,7 +38,8 @@ object WalletManagementServiceSpec
         JdbcWalletSecretStorage.layer,
         contextAwareTransactorLayer,
         pgContainerLayer,
-        apolloLayer
+        apolloLayer,
+        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
     val suite2 = testSuite("vault as secret storage")
@@ -48,7 +50,8 @@ object WalletManagementServiceSpec
         contextAwareTransactorLayer,
         pgContainerLayer,
         apolloLayer,
-        vaultKvClientLayer
+        vaultKvClientLayer,
+        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
     suite("WalletManagementService")(suite1, suite2)

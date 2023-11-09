@@ -6,7 +6,8 @@ import io.iohk.atala.iam.authentication.admin.{AdminApiKeyAuthenticator, AdminAp
 import io.iohk.atala.iam.authentication.apikey.{ApiKeyAuthenticator, ApiKeyCredentials}
 import io.iohk.atala.iam.authentication.oidc.KeycloakEntity
 import io.iohk.atala.iam.authentication.oidc.{KeycloakAuthenticator, JwtCredentials}
-import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import zio.*
 
 case class DefaultAuthenticator(
@@ -23,10 +24,16 @@ case class DefaultAuthenticator(
     case keycloakCredentials: JwtCredentials            => keycloakAuthenticator(keycloakCredentials)
   }
 
-  override def authorize(entity: BaseEntity): IO[AuthenticationError, WalletId] = entity match {
+  override def authorize(entity: BaseEntity): IO[AuthenticationError, WalletAccessContext] = entity match {
     case entity: Entity           => EntityAuthorizer.authorize(entity)
     case kcEntity: KeycloakEntity => keycloakAuthenticator.authorize(kcEntity)
   }
+
+  override def authorizeWalletAdmin(entity: BaseEntity): IO[AuthenticationError, WalletAdministrationContext] =
+    entity match {
+      case entity: Entity           => EntityAuthorizer.authorizeWalletAdmin(entity)
+      case kcEntity: KeycloakEntity => keycloakAuthenticator.authorizeWalletAdmin(kcEntity)
+    }
 
 }
 

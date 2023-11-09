@@ -4,19 +4,17 @@ import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.iam.authentication.EntityAuthorizer
 import io.iohk.atala.iam.authentication.{AuthenticationError, Credentials}
-import zio.IO
+import zio.*
 
 trait AdminApiKeyAuthenticator extends AuthenticatorWithAuthZ[Entity], EntityAuthorizer {
 
   def authenticate(credentials: Credentials): IO[AuthenticationError, Entity] = {
     credentials match {
-      case AdminApiKeyCredentials(apiKey) => authenticate(apiKey)
+      case AdminApiKeyCredentials(Some(apiKey)) => authenticate(apiKey)
+      case AdminApiKeyCredentials(None) =>
+        ZIO.logInfo(s"AdminApiKey API authentication is enabled, but `x-admin-api-key` token is empty") *>
+          ZIO.fail(AdminApiKeyAuthenticationError.emptyAdminApiKey)
     }
   }
   def authenticate(adminApiKey: String): IO[AuthenticationError, Entity]
-}
-
-object AdminApiKeyAuthenticator {
-  // TODO: probably, we need to add the roles to the entities, for now, it works like this
-  val Admin = Entity(name = "admin")
 }

@@ -1,6 +1,5 @@
 package io.iohk.atala.iam.authentication.oidc
 
-import io.iohk.atala.iam.authentication.AuthenticationError
 import org.keycloak.authorization.client.AuthzClient
 import org.keycloak.authorization.client.{Configuration => KeycloakAuthzConfig}
 import org.keycloak.representations.idm.authorization.AuthorizationRequest
@@ -24,16 +23,24 @@ object TokenResponse {
   given JsonDecoder[TokenResponse] = JsonDecoder.derived
 }
 
+sealed trait KeycloakClientError {
+  def message: String
+}
+
+object KeycloakClientError {
+  case class UnexpectedError(message: String) extends KeycloakClientError
+}
+
 trait KeycloakClient {
 
-  def getRpt(accessToken: String): IO[AuthenticationError, String]
+  def getRpt(accessToken: String): IO[KeycloakClientError, String]
 
-  def getAccessToken(username: String, password: String): IO[AuthenticationError, TokenResponse]
+  def getAccessToken(username: String, password: String): IO[KeycloakClientError, TokenResponse]
 
-  def introspectToken(token: String): IO[AuthenticationError, TokenIntrospection]
+  def introspectToken(token: String): IO[KeycloakClientError, TokenIntrospection]
 
   /** Return list of permitted resources */
-  def checkPermissions(rpt: String): IO[AuthenticationError, List[String]]
+  def checkPermissions(rpt: String): IO[KeycloakClientError, List[String]]
 
 }
 
@@ -46,9 +53,8 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
   private val baseFormHeaders = Headers(Header.ContentType(MediaType.application.`x-www-form-urlencoded`))
 
   // TODO: support offline introspection
-  // TODO: tests
   // https://www.keycloak.org/docs/22.0.4/securing_apps/#_token_introspection_endpoint
-  override def introspectToken(token: String): IO[AuthenticationError, TokenIntrospection] = {
+  override def introspectToken(token: String): IO[KeycloakClientError, TokenIntrospection] = {
     for {
       response <- Client
         .request(
@@ -64,25 +70,25 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
           )
         )
         .logError("Fail to introspect token on keycloak.")
-        .mapError(e => AuthenticationError.UnexpectedError("Fail to introspect the token on keyclaok."))
+        .mapError(e => KeycloakClientError.UnexpectedError("Fail to introspect the token on keycloak."))
         .provide(ZLayer.succeed(httpClient))
       body <- response.body.asString
         .logError("Fail parse keycloak introspection response.")
-        .mapError(e => AuthenticationError.UnexpectedError("Fail parse keycloak introspection response."))
+        .mapError(e => KeycloakClientError.UnexpectedError("Fail parse keycloak introspection response."))
       result <-
         if (response.status.code == 200) {
           ZIO
             .fromEither(body.fromJson[TokenIntrospection])
             .logError("Fail to decode keycloak token introspection response")
-            .mapError(e => AuthenticationError.UnexpectedError(e))
+            .mapError(e => KeycloakClientError.UnexpectedError(e))
         } else {
           ZIO.logError(s"Keycloak token introspection was unsucessful. Status: ${response.status}. Response: $body") *>
-            ZIO.fail(AuthenticationError.UnexpectedError("Token introspection was unsuccessful."))
+            ZIO.fail(KeycloakClientError.UnexpectedError("Token introspection was unsuccessful."))
         }
     } yield result
   }
 
-  override def getAccessToken(username: String, password: String): IO[AuthenticationError, TokenResponse] = {
+  override def getAccessToken(username: String, password: String): IO[KeycloakClientError, TokenResponse] = {
     for {
       response <- Client
         .request(
@@ -100,25 +106,25 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
           )
         )
         .logError("Fail to get the accessToken on keyclaok.")
-        .mapError(e => AuthenticationError.UnexpectedError("Fail to get the accessToken on keyclaok."))
+        .mapError(e => KeycloakClientError.UnexpectedError("Fail to get the accessToken on keyclaok."))
         .provide(ZLayer.succeed(httpClient))
       body <- response.body.asString
         .logError("Fail parse keycloak token response.")
-        .mapError(e => AuthenticationError.UnexpectedError("Fail parse keycloak token response."))
+        .mapError(e => KeycloakClientError.UnexpectedError("Fail parse keycloak token response."))
       result <-
         if (response.status.code == 200) {
           ZIO
             .fromEither(body.fromJson[TokenResponse])
             .logError("Fail to decode keycloak token response")
-            .mapError(e => AuthenticationError.UnexpectedError(e))
+            .mapError(e => KeycloakClientError.UnexpectedError(e))
         } else {
           ZIO.logError(s"Keycloak token introspection was unsucessful. Status: ${response.status}. Response: $body") *>
-            ZIO.fail(AuthenticationError.UnexpectedError("Token introspection was unsuccessful."))
+            ZIO.fail(KeycloakClientError.UnexpectedError("Token introspection was unsuccessful."))
         }
     } yield result
   }
 
-  override def getRpt(accessToken: String): IO[AuthenticationError, String] =
+  override def getRpt(accessToken: String): IO[KeycloakClientError, String] =
     ZIO
       .attemptBlocking {
         val authResource = client.authorization(accessToken)
@@ -127,24 +133,24 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
       }
       .logError
       .mapBoth(
-        e => AuthenticationError.UnexpectedError(e.getMessage()),
+        e => KeycloakClientError.UnexpectedError(e.getMessage()),
         response => response.getToken()
       )
 
-  override def checkPermissions(rpt: String): IO[AuthenticationError, List[String]] =
+  override def checkPermissions(rpt: String): IO[KeycloakClientError, List[String]] =
     for {
       introspection <- ZIO
         .attemptBlocking(client.protection().introspectRequestingPartyToken(rpt))
         .logError
-        .mapError(e => AuthenticationError.UnexpectedError(e.getMessage()))
+        .mapError(e => KeycloakClientError.UnexpectedError(e.getMessage()))
       permissions = introspection.getPermissions().asScala.toList
     } yield permissions.map(_.getResourceId())
 
 }
 
 object KeycloakClientImpl {
-  val layer: RLayer[KeycloakConfig & Client, KeycloakClient] =
-    authzClientLayer >>> ZLayer.fromFunction(KeycloakClientImpl(_, _, _))
+  val layer: RLayer[KeycloakConfig & AuthzClient & Client, KeycloakClient] =
+    ZLayer.fromFunction(KeycloakClientImpl(_, _, _))
 
   def authzClientLayer: RLayer[KeycloakConfig, AuthzClient] = ZLayer.fromZIO {
     for {

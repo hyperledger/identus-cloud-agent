@@ -18,14 +18,15 @@ import java.util.UUID
 
 class SchemaRegistryServerEndpoints(
     credentialSchemaController: CredentialSchemaController,
-    authenticator: Authenticator[BaseEntity] & Authorizer[BaseEntity]
+    authenticator: Authenticator[BaseEntity],
+    authorizer: Authorizer[BaseEntity]
 ) {
   def throwableToInternalServerError(throwable: Throwable) =
     ZIO.fail[ErrorResponse](ErrorResponse.internalServerError(detail = Option(throwable.getMessage)))
 
   val createSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
     createSchemaEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic {
         case wac => { case (ctx: RequestContext, schemaInput: CredentialSchemaInput) =>
           credentialSchemaController
@@ -36,7 +37,7 @@ class SchemaRegistryServerEndpoints(
 
   val updateSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
     updateSchemaEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic {
         case wac => { case (ctx: RequestContext, author: String, id: UUID, schemaInput: CredentialSchemaInput) =>
           credentialSchemaController
@@ -53,7 +54,7 @@ class SchemaRegistryServerEndpoints(
 
   val lookupSchemasByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
     lookupSchemasByQueryEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic {
         case wac => {
           case (
@@ -74,7 +75,7 @@ class SchemaRegistryServerEndpoints(
 
   val testServerEndpoint: ZServerEndpoint[Any, Any] =
     testEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic {
         case wac => { case requestContext: RequestContext =>
           ZIO.succeed(requestContext.request.toString + " " + wac.toString)
@@ -98,6 +99,7 @@ object SchemaRegistryServerEndpoints {
       schemaRegistryService <- ZIO.service[CredentialSchemaController]
       schemaRegistryEndpoints = new SchemaRegistryServerEndpoints(
         schemaRegistryService,
+        authenticator,
         authenticator
       )
     } yield schemaRegistryEndpoints.all

@@ -6,9 +6,11 @@ import sttp.tapir.EndpointInput.AuthType.ApiKey
 import sttp.tapir.ztapir.*
 
 object ApiKeyEndpointSecurityLogic {
-  val apiKeyHeader: Auth[ApiKeyCredentials, ApiKey] = auth.apiKey(
-    header[Option[String]]("apikey")
-      .mapTo[ApiKeyCredentials]
-      .description("API key")
-  )
+  val apiKeyHeader: Auth[ApiKeyCredentials, ApiKey] = auth
+    .apiKey(
+      header[Option[String]]("apikey")
+        .mapTo[ApiKeyCredentials]
+        .description("API key")
+    )
+    .securitySchemeName("apiKeyAuth")
 }

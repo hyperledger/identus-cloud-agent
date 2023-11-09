@@ -8,7 +8,7 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 trait BaseEntity {
-  val id: UUID
+  def id: UUID
 }
 
 case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, updatedAt: Instant) extends BaseEntity {
