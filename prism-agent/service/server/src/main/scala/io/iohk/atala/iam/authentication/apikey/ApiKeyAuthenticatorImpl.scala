@@ -1,13 +1,14 @@
 package io.iohk.atala.iam.authentication.apikey
 
 import io.iohk.atala.agent.walletapi.model.Entity
+import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.service.{EntityService, WalletManagementService}
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.*
 import io.iohk.atala.prism.crypto.Sha256
-import zio.{IO, URLayer, ZIO, ZLayer}
-import io.iohk.atala.agent.walletapi.model.Wallet
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.WalletId
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
 import scala.util.Try
@@ -58,6 +59,7 @@ case class ApiKeyAuthenticatorImpl(
       wallet <- walletManagementService
         .createWallet(Wallet("Auto provisioned wallet", WalletId.random))
         .mapError(cause => AuthenticationRepositoryError.UnexpectedError(cause))
+        .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
       entityToCreate = Entity(name = "Auto provisioned entity", walletId = wallet.id.toUUID)
       entity <- entityService
         .create(entityToCreate)

@@ -23,6 +23,7 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import scala.collection.immutable.ArraySeq
+import io.iohk.atala.shared.models.WalletAdministrationContext
 
 object ManagedDIDServiceSpec
     extends ZIOSpecDefault,
@@ -153,7 +154,8 @@ object ManagedDIDServiceSpec
         serviceLayer,
         pgContainerLayer,
         jdbcSecretStorageLayer,
-        contextAwareTransactorLayer >+> systemTransactorLayer >>> JdbcDIDNonSecretStorage.layer
+        contextAwareTransactorLayer >+> systemTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
+        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
       .provide(Runtime.removeDefaultLoggers)
 
@@ -162,7 +164,8 @@ object ManagedDIDServiceSpec
         serviceLayer,
         pgContainerLayer,
         vaultSecretStorageLayer,
-        contextAwareTransactorLayer >+> systemTransactorLayer >>> JdbcDIDNonSecretStorage.layer
+        contextAwareTransactorLayer >+> systemTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
+        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
       .provide(Runtime.removeDefaultLoggers)
 

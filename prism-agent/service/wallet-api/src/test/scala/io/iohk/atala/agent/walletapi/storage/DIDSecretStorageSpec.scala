@@ -19,6 +19,7 @@ import io.iohk.atala.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+import io.iohk.atala.shared.models.WalletAdministrationContext
 
 object DIDSecretStorageSpec
     extends ZIOSpecDefault,
@@ -44,7 +45,8 @@ object DIDSecretStorageSpec
         systemTransactorLayer,
         contextAwareTransactorLayer,
         pgContainerLayer,
-        walletManagementServiceLayer
+        walletManagementServiceLayer,
+        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
     val vaultTestSuite = commonSpec("VaultDIDSecretStorage")
@@ -56,7 +58,8 @@ object DIDSecretStorageSpec
         contextAwareTransactorLayer,
         pgContainerLayer,
         vaultKvClientLayer,
-        walletManagementServiceLayer
+        walletManagementServiceLayer,
+        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
     val inMemoryTestSuite = commonSpec("InMemoryDIDSecretStorage")
@@ -67,7 +70,8 @@ object DIDSecretStorageSpec
         systemTransactorLayer,
         contextAwareTransactorLayer,
         pgContainerLayer,
-        walletManagementServiceLayer
+        walletManagementServiceLayer,
+        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
     suite("DIDSecretStorage")(jdbcTestSuite, vaultTestSuite, inMemoryTestSuite) @@ TestAspect.sequential

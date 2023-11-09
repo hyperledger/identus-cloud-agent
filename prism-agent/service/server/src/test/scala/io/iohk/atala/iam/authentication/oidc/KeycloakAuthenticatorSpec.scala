@@ -7,6 +7,8 @@ import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.iam.authentication.AuthenticationError
+import io.iohk.atala.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.sharedtest.containers.KeycloakAdminClient
 import io.iohk.atala.sharedtest.containers.KeycloakContainerCustom
@@ -14,7 +16,6 @@ import io.iohk.atala.sharedtest.containers.KeycloakTestContainerSupport
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import org.keycloak.authorization.client.AuthzClient
-import org.keycloak.representations.idm.CredentialRepresentation
 import org.keycloak.representations.idm.UserRepresentation
 import org.keycloak.representations.idm.authorization.ResourceRepresentation
 import org.keycloak.representations.idm.authorization.UmaPermissionRepresentation
@@ -63,24 +64,6 @@ object KeycloakAuthenticatorSpec
         .attemptBlocking(authzClient.protection().resource().create(resource))
     } yield ()
 
-  private def createUser(userId: String, password: String, enabled: Boolean = true) =
-    for {
-      adminClient <- adminClientZIO
-      user = {
-        val cred = CredentialRepresentation()
-        cred.setTemporary(false)
-        cred.setValue(password)
-
-        val user = UserRepresentation()
-        user.setId(userId)
-        user.setUsername(userId)
-        user.setEnabled(enabled)
-        user.setCredentials(List(cred).asJava)
-        user
-      }
-      _ <- ZIO.attemptBlocking(adminClient.realm(realmName).users().create(user))
-    } yield ()
-
   private def createResourcePermission(walletId: WalletId, userId: String) =
     for {
       authzClient <- ZIO.service[AuthzClient]
@@ -102,32 +85,36 @@ object KeycloakAuthenticatorSpec
       basicSpec
         .provide(
           KeycloakAuthenticatorImpl.layer,
-          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer ++ KeycloakClientImpl.authzClientLayer,
+          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
           keycloakConfigLayer(),
           keycloakAdminClientLayer,
           keycloakContainerLayer,
           Client.default,
+          KeycloakPermissionManagementService.layer,
           WalletManagementServiceImpl.layer,
           JdbcWalletNonSecretStorage.layer,
           JdbcWalletSecretStorage.layer,
           contextAwareTransactorLayer,
           pgContainerLayer,
-          apolloLayer
+          apolloLayer,
+          ZLayer.succeed(WalletAdministrationContext.Admin())
         ),
       disabledAutoRptSpec
         .provide(
           KeycloakAuthenticatorImpl.layer,
-          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.layer ++ KeycloakClientImpl.authzClientLayer,
+          ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
           keycloakConfigLayer(authUpgradeToRPT = false),
           keycloakAdminClientLayer,
           keycloakContainerLayer,
           Client.default,
+          KeycloakPermissionManagementService.layer,
           WalletManagementServiceImpl.layer,
           JdbcWalletNonSecretStorage.layer,
           JdbcWalletSecretStorage.layer,
           contextAwareTransactorLayer,
           pgContainerLayer,
-          apolloLayer
+          apolloLayer,
+          ZLayer.succeed(WalletAdministrationContext.Admin())
         )
     )
       .provide(Runtime.removeDefaultLoggers)
@@ -145,7 +132,7 @@ object KeycloakAuthenticatorSpec
         token <- client.getAccessToken("alice", "1234").map(_.access_token)
         entity <- authenticator.authenticate(token)
         permittedWallet <- authenticator.authorize(entity)
-      } yield assert(wallet.id)(equalTo(permittedWallet))
+      } yield assert(wallet.id)(equalTo(permittedWallet.walletId))
     },
     test("reject token with a wallet that doesn't exist") {
       for {
@@ -247,7 +234,7 @@ object KeycloakAuthenticatorSpec
         rpt <- client.getRpt(token)
         entity <- authenticator.authenticate(rpt)
         permittedWallet <- authenticator.authorize(entity)
-      } yield assert(wallet.id)(equalTo(permittedWallet))
+      } yield assert(wallet.id)(equalTo(permittedWallet.walletId))
     }
   )
 

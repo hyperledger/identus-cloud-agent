@@ -98,7 +98,8 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
       controller: CredentialDefinitionController,
       authenticator: AuthenticatorWithAuthZ[BaseEntity]
   ) = {
-    val credentialDefinitionRegistryEndpoints = CredentialDefinitionRegistryServerEndpoints(controller, authenticator)
+    val credentialDefinitionRegistryEndpoints =
+      CredentialDefinitionRegistryServerEndpoints(controller, authenticator, authenticator)
 
     val backend =
       TapirStubInterpreter(

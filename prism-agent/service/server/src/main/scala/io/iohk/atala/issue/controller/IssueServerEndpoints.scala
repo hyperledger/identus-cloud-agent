@@ -15,12 +15,13 @@ import zio.*
 
 class IssueServerEndpoints(
     issueController: IssueController,
-    authenticator: Authenticator[BaseEntity] & Authorizer[BaseEntity]
+    authenticator: Authenticator[BaseEntity],
+    authorizer: Authorizer[BaseEntity]
 ) {
 
   val createCredentialOfferEndpoint: ZServerEndpoint[Any, Any] =
     createCredentialOffer
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, request: CreateIssueCredentialRecordRequest) =>
           issueController
@@ -31,7 +32,7 @@ class IssueServerEndpoints(
 
   val getCredentialRecordsEndpoint: ZServerEndpoint[Any, Any] =
     getCredentialRecords
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, paginationInput: PaginationInput, thid: Option[String]) =>
           issueController
@@ -42,7 +43,7 @@ class IssueServerEndpoints(
 
   val getCredentialRecordEndpoint: ZServerEndpoint[Any, Any] =
     getCredentialRecord
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, recordId: String) =>
           issueController
@@ -53,7 +54,7 @@ class IssueServerEndpoints(
 
   val acceptCredentialOfferEndpoint: ZServerEndpoint[Any, Any] =
     acceptCredentialOffer
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, recordId: String, request: AcceptCredentialOfferRequest) =>
           issueController
@@ -64,7 +65,7 @@ class IssueServerEndpoints(
 
   val issueCredentialEndpoint: ZServerEndpoint[Any, Any] =
     issueCredential
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator))
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, recordId: String) =>
           issueController
@@ -88,7 +89,7 @@ object IssueServerEndpoints {
     for {
       authenticator <- ZIO.service[DefaultAuthenticator]
       issueController <- ZIO.service[IssueController]
-      issueEndpoints = new IssueServerEndpoints(issueController, authenticator)
+      issueEndpoints = new IssueServerEndpoints(issueController, authenticator, authenticator)
     } yield issueEndpoints.all
   }
 }

@@ -80,8 +80,8 @@ create_realm $ADMIN_ACCESS_TOKEN
 echo "Creating a new prism-agent client ..."
 create_client $ADMIN_ACCESS_TOKEN "prism-agent" $PRISM_AGENT_CLIENT_SECRET
 
-echo "Creating a new prism-manage client ..."
-create_client $ADMIN_ACCESS_TOKEN "prism-manage" $PRISM_AGENT_CLIENT_SECRET
-
 echo "Creating a new sample user ..."
 create_user $ADMIN_ACCESS_TOKEN "alice" "1234"
+
+echo "Creating a new sample user ..."
+create_user $ADMIN_ACCESS_TOKEN "bob" "1234"

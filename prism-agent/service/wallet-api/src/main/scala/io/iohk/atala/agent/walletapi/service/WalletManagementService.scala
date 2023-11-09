@@ -10,6 +10,7 @@ import zio.*
 
 import java.util.UUID
 import scala.language.implicitConversions
+import io.iohk.atala.shared.models.WalletAdministrationContext
 
 sealed trait WalletManagementServiceError {
   final def toThrowable: Throwable = this
@@ -21,6 +22,7 @@ object WalletManagementServiceError {
   final case class TooManyWebhookError(limit: Int, actual: Int) extends WalletManagementServiceError
   final case class DuplicatedWalletId(id: WalletId) extends WalletManagementServiceError
   final case class DuplicatedWalletSeed(id: WalletId) extends WalletManagementServiceError
+  final case class TooManyPermittedWallet() extends WalletManagementServiceError
 
   given Conversion[WalletNonSecretStorageError, WalletManagementServiceError] = {
     case WalletNonSecretStorageError.TooManyWebhook(limit, actual) => TooManyWebhookError(limit, actual)
@@ -36,22 +38,27 @@ object WalletManagementServiceError {
       Exception(s"Too many webhook created for a wallet. Limit $limit, Actual $actual.")
     case DuplicatedWalletId(id)   => Exception(s"Duplicated wallet id: $id")
     case DuplicatedWalletSeed(id) => Exception(s"Duplicated wallet seed for wallet id: $id")
+    case TooManyPermittedWallet() =>
+      Exception(s"The operation is not allowed because wallet access already exists for the current user.")
   }
 
 }
 
 trait WalletManagementService {
-  def createWallet(wallet: Wallet, seed: Option[WalletSeed] = None): IO[WalletManagementServiceError, Wallet]
+  def createWallet(
+      wallet: Wallet,
+      seed: Option[WalletSeed] = None
+  ): ZIO[WalletAdministrationContext, WalletManagementServiceError, Wallet]
 
-  def getWallet(walletId: WalletId): IO[WalletManagementServiceError, Option[Wallet]]
+  def getWallet(walletId: WalletId): ZIO[WalletAdministrationContext, WalletManagementServiceError, Option[Wallet]]
 
-  def getWallets(walletIds: Seq[WalletId]): IO[WalletManagementServiceError, Seq[Wallet]]
+  def getWallets(walletIds: Seq[WalletId]): ZIO[WalletAdministrationContext, WalletManagementServiceError, Seq[Wallet]]
 
   /** @return A tuple containing a list of items and a count of total items */
   def listWallets(
       offset: Option[Int] = None,
       limit: Option[Int] = None
-  ): IO[WalletManagementServiceError, (Seq[Wallet], Int)]
+  ): ZIO[WalletAdministrationContext, WalletManagementServiceError, (Seq[Wallet], Int)]
 
   def listWalletNotifications: ZIO[WalletAccessContext, WalletManagementServiceError, Seq[EventNotificationConfig]]
 
