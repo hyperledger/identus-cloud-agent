@@ -53,6 +53,7 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
         .mapError(DIDOperationError.ValidationError.apply)
       operationOutput <- ZIO
         .fromFuture(_ => nodeClient.scheduleOperations(operationRequest))
+        .logError("Error scheduling Node operation")
         .mapBoth(DIDOperationError.DLTProxyError.apply, _.outputs.toList)
         .map {
           case output :: Nil => Right(output)
@@ -81,6 +82,7 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
     for {
       result <- ZIO
         .fromFuture(_ => nodeClient.getOperationInfo(node_api.GetOperationInfoRequest(operationId.toProto)))
+        .logError("Error getting Node operation information")
         .mapError(DIDOperationError.DLTProxyError.apply)
       detail <- ZIO
         .fromEither(result.toDomain)
@@ -98,6 +100,7 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
       }
       result <- ZIO
         .fromFuture(_ => nodeClient.getDidDocument(request))
+        .logError("Error resolving DID document from Node")
         .mapError(DIDResolutionError.DLTProxyError.apply)
       publishedDidData <- ZIO
         .fromOption(result.document)
