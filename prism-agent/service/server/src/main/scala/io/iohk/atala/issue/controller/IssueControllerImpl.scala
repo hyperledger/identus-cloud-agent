@@ -4,11 +4,13 @@ import io.iohk.atala.agent.server.ControllerHelper
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.model.PublicationState
 import io.iohk.atala.agent.walletapi.model.PublicationState.{Created, PublicationPending, Published}
+import io.iohk.atala.agent.walletapi.model.error.GetManagedDIDError
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.model.{CollectionStats, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.api.util.PaginationUtils
 import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.castor.core.model.error.DIDResolutionError
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
@@ -191,20 +193,25 @@ class IssueControllerImpl(
           ZIO.succeed(())
       }
     } yield result
-    result.mapError {
-      case e: ErrorResponse => e
-      case _ =>
-        ErrorResponse.internalServerError(detail = Some(s"Unexpected error while loading the PrismDID: $prismDID"))
-    }
+
+    mapIssueErrors(result)
   }
 
   private def mapIssueErrors[R, T](
-      result: ZIO[R, CredentialServiceError | ConnectionServiceError | ErrorResponse, T]
+      result: ZIO[
+        R,
+        CredentialServiceError | ConnectionServiceError | GetManagedDIDError | DIDResolutionError | ErrorResponse,
+        T
+      ]
   ): ZIO[R, ErrorResponse, T] = {
     result mapError {
       case e: ErrorResponse                  => e
       case connError: ConnectionServiceError => ConnectionController.toHttpError(connError)
       case credError: CredentialServiceError => toHttpError(credError)
+      case resError: DIDResolutionError =>
+        ErrorResponse.internalServerError(detail = Some(s"Unable to resolve PrismDID. ${resError.toString()}"))
+      case getError: GetManagedDIDError =>
+        ErrorResponse.internalServerError(detail = Some(s"Unable to get PrismDID from storage. ${getError.toString()}"))
     }
   }
 
