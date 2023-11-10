@@ -5,7 +5,7 @@ services:
   db:
     image: postgres:13
     environment:
-      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,agent,node_db"
+      POSTGRES_MULTIPLE_DATABASES: "pollux,connect,agent,node_db"
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
@@ -37,7 +37,6 @@ services:
       PRISM_NODE_PORT: 50053
       SECRET_STORAGE_BACKEND: postgres
       DEV_MODE: true
-      CASTOR_DB_HOST: db
       POLLUX_DB_HOST: db
       CONNECT_DB_HOST: db
       AGENT_DB_HOST: db

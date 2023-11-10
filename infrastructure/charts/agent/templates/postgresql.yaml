@@ -11,11 +11,6 @@ spec:
     size: "{{ .Values.database.postgres.databaseSize }}"
   numberOfInstances: {{ .Values.database.postgres.numberOfInstances }}
   users:
-    castor-admin:
-      - superuser
-      - createdb
-    castor-application-user:
-      - login
     pollux-admin:
       - superuser
       - createdb
@@ -32,7 +27,6 @@ spec:
     agent-application-user:
       - login
   databases:
-    castor: castor-admin
     pollux: pollux-admin
     connect: connect-admin
     agent: agent-admin

@@ -1,44 +1,6 @@
-version: '3.8'
+version: "3.8"
 
 services:
-
-  ##########################
-  # Castor Databases
-  ##########################
-  db_castor_issuer:
-    image: postgres:13
-    restart: always
-    environment:
-      POSTGRES_DB: castor_issuer
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - 5432:5432
-    volumes:
-      - pg_data_castor_db_issuer:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "castor_issuer"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  db_castor_holder:
-    image: postgres:13
-    restart: always
-    environment:
-      POSTGRES_DB: castor_holder
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - 5433:5432
-    volumes:
-      - pg_data_castor_db_holder:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "castor_holder" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   ##########################
   # Pollux Databases
   ##########################
@@ -72,7 +34,7 @@ services:
     volumes:
       - pg_data_pollux_db_holder:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "pollux_holder" ]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "pollux_holder"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -93,7 +55,7 @@ services:
     volumes:
       - pg_data_connect_db_issuer:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "connect_issuer" ]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "connect_issuer"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -110,7 +72,7 @@ services:
     volumes:
       - pg_data_connect_db_holder:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "connect_holder" ]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "connect_holder"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -147,7 +109,7 @@ services:
       - db_castor_issuer
       - db_pollux_issuer
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://prism-agent-issuer:8080/dids/xyz" ]
+      test: ["CMD", "curl", "-f", "http://prism-agent-issuer:8080/dids/xyz"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -180,15 +142,13 @@ services:
       - db_castor_holder
       - db_pollux_holder
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://prism-agent-holder:8090/dids/xyz" ]
+      test: ["CMD", "curl", "-f", "http://prism-agent-holder:8090/dids/xyz"]
       interval: 30s
       timeout: 10s
       retries: 5
 
 volumes:
-  pg_data_castor_db_issuer:
   pg_data_pollux_db_issuer:
-  pg_data_castor_db_holder:
   pg_data_pollux_db_holder:
   pg_data_connect_db_issuer:
   pg_data_connect_db_holder:

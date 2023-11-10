@@ -28,7 +28,8 @@ server:
     requests:
       cpu: 250m
       memory: 512Mi
-  additionalEnvVariables: []
+  additionalEnvVariables:
+    SECRET_STORAGE_BACKEND: postgres
   devMode: false
   useVault: true
 

@@ -5,7 +5,7 @@ services:
   issuer-db:
     image: postgres:13
     environment:
-      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,agent"
+      POSTGRES_MULTIPLE_DATABASES: "pollux,connect,agent"
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
@@ -23,7 +23,7 @@ services:
   verifier-db:
     image: postgres:13
     environment:
-      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,agent"
+      POSTGRES_MULTIPLE_DATABASES: "pollux,connect,agent"
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
@@ -41,7 +41,7 @@ services:
   holder-db:
     image: postgres:13
     environment:
-      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,agent"
+      POSTGRES_MULTIPLE_DATABASES: "pollux,connect,agent"
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
@@ -87,11 +87,6 @@ services:
   issuer-oea:
     image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
     environment:
-      CASTOR_DB_HOST: issuer-db
-      CASTOR_DB_PORT: 5432
-      CASTOR_DB_NAME: castor
-      CASTOR_DB_USER: postgres
-      CASTOR_DB_PASSWORD: postgres
       POLLUX_DB_HOST: issuer-db
       POLLUX_DB_PORT: 5432
       POLLUX_DB_NAME: pollux
@@ -150,11 +145,6 @@ services:
   verifier-oea:
     image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
     environment:
-      CASTOR_DB_HOST: verifier-db
-      CASTOR_DB_PORT: 5432
-      CASTOR_DB_NAME: castor
-      CASTOR_DB_USER: postgres
-      CASTOR_DB_PASSWORD: postgres
       POLLUX_DB_HOST: verifier-db
       POLLUX_DB_PORT: 5432
       POLLUX_DB_NAME: pollux
@@ -213,11 +203,6 @@ services:
   holder-oea:
     image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
     environment:
-      CASTOR_DB_HOST: holder-db
-      CASTOR_DB_PORT: 5432
-      CASTOR_DB_NAME: castor
-      CASTOR_DB_USER: postgres
-      CASTOR_DB_PASSWORD: postgres
       POLLUX_DB_HOST: holder-db
       POLLUX_DB_PORT: 5432
       POLLUX_DB_NAME: pollux

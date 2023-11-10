@@ -8,7 +8,7 @@ services:
   db:
     image: postgres:13
     environment:
-      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,agent,node_db"
+      POSTGRES_MULTIPLE_DATABASES: "pollux,connect,agent,node_db"
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
@@ -70,11 +70,6 @@ services:
   prism-agent:
     image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
     environment:
-      CASTOR_DB_HOST: db
-      CASTOR_DB_PORT: 5432
-      CASTOR_DB_NAME: castor
-      CASTOR_DB_USER: postgres
-      CASTOR_DB_PASSWORD: postgres
       POLLUX_DB_HOST: db
       POLLUX_DB_PORT: 5432
       POLLUX_DB_NAME: pollux

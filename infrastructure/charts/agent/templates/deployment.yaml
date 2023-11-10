@@ -44,36 +44,6 @@ spec:
                 name: agent-api-key-salt
                 key: salt
                 optional: false
-          - name: CASTOR_DB_HOST
-            value: "{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.{{.Release.Namespace}}"
-          - name: CASTOR_DB_PORT
-            value: "5432"
-          - name: CASTOR_DB_NAME
-            value: castor
-          - name: CASTOR_DB_USER
-            valueFrom:
-              secretKeyRef:
-                name: castor-admin.{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.credentials.postgresql.acid.zalan.do
-                key: username
-                optional: false
-          - name: CASTOR_DB_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: castor-admin.{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.credentials.postgresql.acid.zalan.do
-                key: password
-                optional: false
-          - name: CASTOR_DB_APP_USER
-            valueFrom:
-              secretKeyRef:
-                name: castor-application-user.{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.credentials.postgresql.acid.zalan.do
-                key: username
-                optional: false
-          - name: CASTOR_DB_APP_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: castor-application-user.{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.credentials.postgresql.acid.zalan.do
-                key: password
-                optional: false
           - name: POLLUX_DB_HOST
             value: "{{ .Values.database.postgres.managingTeam }}-prism-agent-postgres-cluster.{{.Release.Namespace}}"
           - name: POLLUX_DB_PORT
