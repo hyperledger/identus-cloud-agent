@@ -24,8 +24,8 @@ final case class Invitation(
 object Invitation {
 
   final case class Body(
-      goal_code: String,
-      goal: String, // TODO goal can be optional
+      goal_code: Option[String],
+      goal: Option[String],
       accept: Seq[String]
   )
 

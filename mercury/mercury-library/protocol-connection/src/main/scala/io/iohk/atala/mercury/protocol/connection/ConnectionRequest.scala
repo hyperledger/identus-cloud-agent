@@ -32,8 +32,8 @@ object ConnectionRequest {
     ConnectionRequest(
       `type` = ConnectionRequest.`type`,
       body = Body(
-        goal_code = Some(invitation.body.goal_code),
-        goal = Some(invitation.body.goal),
+        goal_code = invitation.body.goal_code,
+        goal = invitation.body.goal,
         accept = Some(invitation.body.accept)
       ),
       thid = None,

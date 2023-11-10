@@ -12,7 +12,8 @@ import java.util.UUID
 
 object MockConnectionService extends Mock[ConnectionService] {
 
-  object CreateConnectionInvitation extends Effect[(Option[String], DidId), ConnectionServiceError, ConnectionRecord]
+  object CreateConnectionInvitation
+      extends Effect[(Option[String], Option[String], Option[String], DidId), ConnectionServiceError, ConnectionRecord]
   object ReceiveConnectionInvitation extends Effect[String, ConnectionServiceError, ConnectionRecord]
   object AcceptConnectionInvitation extends Effect[(UUID, DidId), ConnectionServiceError, ConnectionRecord]
   object MarkConnectionRequestSent extends Effect[UUID, ConnectionServiceError, ConnectionRecord]
@@ -29,9 +30,11 @@ object MockConnectionService extends Mock[ConnectionService] {
     } yield new ConnectionService {
       override def createConnectionInvitation(
           label: Option[String],
+          goalCode: Option[String],
+          goal: Option[String],
           pairwiseDID: DidId
       ): IO[ConnectionServiceError, ConnectionRecord] =
-        proxy(CreateConnectionInvitation, label, pairwiseDID)
+        proxy(CreateConnectionInvitation, label, goalCode, goal, pairwiseDID)
 
       override def receiveConnectionInvitation(invitation: String): IO[ConnectionServiceError, ConnectionRecord] =
         proxy(ReceiveConnectionInvitation, invitation)

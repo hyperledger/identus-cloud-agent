@@ -90,6 +90,8 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
             _,
             _,
             _,
+            _,
+            _,
             Invitee,
             ConnectionRequestPending,
             _,
@@ -132,6 +134,8 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
 
       case ConnectionRecord(
             id,
+            _,
+            _,
             _,
             _,
             _,
