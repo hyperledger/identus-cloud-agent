@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.event.notification.{EventNotificationService, EventNotificationServiceImpl}
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.presentproof.{Presentation, RequestPresentation}
+import io.iohk.atala.mercury.protocol.presentproof.{PresentCredentialRequestFormat, Presentation, RequestPresentation}
 import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import zio.mock.Expectation
@@ -169,7 +169,7 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
           svc <- ZIO.service[PresentationService]
           ens <- ZIO.service[EventNotificationService]
 
-          _ <- svc.receiveRequestPresentation(None, requestPresentationJWT)
+          _ <- svc.receiveRequestPresentation(None, requestPresentation(PresentCredentialRequestFormat.JWT))
           _ <- svc.acceptRequestPresentation(record.id, Seq.empty)
           _ <- svc.markPresentationGenerated(record.id, presentation(record.thid.value))
           _ <- svc.markPresentationSent(record.id)
