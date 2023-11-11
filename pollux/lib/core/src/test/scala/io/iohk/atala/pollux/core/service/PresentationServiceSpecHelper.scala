@@ -53,7 +53,7 @@ trait PresentationServiceSpecHelper {
     attachments = Nil
   )
 
-  protected def requestPresentationJWT: RequestPresentation = {
+  protected def requestPresentation(credentialFormat: PresentCredentialRequestFormat): RequestPresentation = {
     val body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
     val presentationAttachmentAsJson =
       """{
@@ -66,7 +66,7 @@ trait PresentationServiceSpecHelper {
 
     val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
       payload = presentationAttachmentAsJson,
-      format = Some(PresentCredentialRequestFormat.JWT.name)
+      format = Some(credentialFormat.name)
     )
     RequestPresentation(
       body = body,
@@ -116,14 +116,14 @@ trait PresentationServiceSpecHelper {
     )
   }
 
-  protected def issueCredentialRecord = IssueCredentialRecord(
+  protected def issueCredentialRecord(credentialFormat: CredentialFormat) = IssueCredentialRecord(
     id = DidCommID(),
     createdAt = Instant.now,
     updatedAt = None,
     thid = DidCommID(),
     schemaId = None,
     credentialDefinitionId = None,
-    credentialFormat = CredentialFormat.JWT,
+    credentialFormat = credentialFormat,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,
     validityPeriod = None,
