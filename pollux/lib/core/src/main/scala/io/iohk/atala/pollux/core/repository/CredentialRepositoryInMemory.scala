@@ -133,7 +133,7 @@ class CredentialRepositoryInMemory(
       store <- storeRef.get
     } yield store.values
       .filter(rec => recordId.contains(rec.id) && rec.issuedCredentialRaw.isDefined)
-      .map(rec => ValidIssuedCredentialRecord(rec.id, rec.issuedCredentialRaw, rec.subjectId))
+      .map(rec => ValidIssuedCredentialRecord(rec.id, rec.issuedCredentialRaw, rec.credentialFormat, rec.subjectId))
       .toSeq
   }
 
