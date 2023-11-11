@@ -69,6 +69,7 @@ final case class IssueCredentialRecord(
 final case class ValidIssuedCredentialRecord(
     id: DidCommID,
     issuedCredentialRaw: Option[String],
+    credentialFormat: CredentialFormat,
     subjectId: Option[String]
 )
 
