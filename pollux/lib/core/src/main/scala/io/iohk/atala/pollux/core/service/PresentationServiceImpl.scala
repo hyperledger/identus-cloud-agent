@@ -411,23 +411,32 @@ private class PresentationServiceImpl(
 
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
-      issuedValidCredentials <- credentialRepository
+      issuedCredentials <- credentialRepository
         .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
         .mapError(RepositoryError.apply)
       _ <- ZIO.cond(
-        (issuedValidCredentials.map(_.subjectId).toSet.size == 1),
+        (issuedCredentials.map(_.subjectId).toSet.size == 1),
         (),
         PresentationError.HolderBindingError(
-          s"Creating a Verifiable Presentation for credential with different subject DID is not supported, found : ${issuedValidCredentials
+          s"Creating a Verifiable Presentation for credential with different subject DID is not supported, found : ${issuedCredentials
               .map(_.subjectId)}"
         )
       )
-      signedCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw)
-      // record.credentialFormat match {
-      //   case PresentationRecord.CredentialFormat.JWT => issuedRawCredentials
-      //   case CredentialFormat.AnonCreds => issuedRawCredentials
-      // }
-      issuedCredentials <- ZIO.fromEither(
+      validatedCredentials <- ZIO.fromEither(
+        Either.cond(
+          issuedCredentials.forall(issuedValidCredential =>
+            issuedValidCredential.credentialFormat == record.credentialFormat
+          ),
+          issuedCredentials,
+          PresentationError.NotMatchingPresentationCredentialFormat(
+            new IllegalArgumentException(
+              s"No matching issued credentials format: expectedFormat=${record.credentialFormat}"
+            )
+          )
+        )
+      )
+      signedCredentials = validatedCredentials.flatMap(_.issuedCredentialRaw)
+      _ <- ZIO.fromEither(
         Either.cond(
           signedCredentials.nonEmpty,
           signedCredentials,
