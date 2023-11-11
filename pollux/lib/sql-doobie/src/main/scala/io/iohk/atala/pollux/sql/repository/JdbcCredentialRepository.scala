@@ -433,6 +433,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         | SELECT
         |   id,
         |   issued_credential_raw,
+        |   credential_format,
         |   subject_id
         | FROM public.issue_credential_records
         | WHERE
