@@ -12,7 +12,6 @@ import java.time.Duration
 import scala.util.Try
 
 final case class AppConfig(
-    devMode: Boolean,
     pollux: PolluxConfig,
     agent: AgentConfig,
     connect: ConnectConfig,
