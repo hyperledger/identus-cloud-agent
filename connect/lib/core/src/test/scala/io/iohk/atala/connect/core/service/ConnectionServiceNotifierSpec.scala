@@ -24,9 +24,11 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
     None,
     UUID.randomUUID().toString,
     None,
+    None,
+    None,
     ConnectionRecord.Role.Inviter,
     ProtocolState.InvitationGenerated,
-    Invitation(from = DidId("did:peer:INVITER"), Invitation.Body("", "", Nil)),
+    Invitation(from = DidId("did:peer:INVITER"), Invitation.Body(None, None, Nil)),
     None,
     None,
     5,
@@ -71,7 +73,12 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
           cs <- ZIO.service[ConnectionService]
           ens <- ZIO.service[EventNotificationService]
           did = DidId("did:peer:INVITER")
-          connectionRecord <- cs.createConnectionInvitation(Some("test"), did)
+          connectionRecord <- cs.createConnectionInvitation(
+            Some("test"),
+            Some("test-goal-code"),
+            Some("test-goal"),
+            did
+          )
           _ <- cs.receiveConnectionRequest(
             ConnectionRequest(
               from = DidId("did:peer:INVITER"),
@@ -106,6 +113,8 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
           inviterDID = DidId("did:peer:INVITER")
           inviterRecord <- inviterSvc.createConnectionInvitation(
             Some("Test connection invitation"),
+            Some("Test goal code"),
+            Some("Test goal"),
             inviterDID
           )
           inviteeSvc <- ZIO.service[ConnectionService]

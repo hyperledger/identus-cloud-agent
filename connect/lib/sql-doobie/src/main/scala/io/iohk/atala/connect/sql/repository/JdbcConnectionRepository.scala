@@ -59,7 +59,9 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure,
-        |   wallet_id
+        |   wallet_id,
+        |   goal_code,
+        |   goal
         | ) values (
         |   ${record.id},
         |   ${record.createdAt},
@@ -72,7 +74,9 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   ${record.metaRetries},
         |   ${record.metaNextRetry},
         |   ${record.metaLastFailure},
-        |   current_setting('app.current_wallet_id')::UUID
+        |   current_setting('app.current_wallet_id')::UUID,
+        |   ${record.goalCode},
+        |   ${record.goal}
         | )
         """.stripMargin.update
 
@@ -92,6 +96,8 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   updated_at,
         |   thid,
         |   label,
+        |   goal_code,
+        |   goal,
         |   role,
         |   protocol_state,
         |   invitation,
@@ -148,6 +154,8 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   updated_at,
         |   thid,
         |   label,
+        |   goal_code,
+        |   goal,
         |   role,
         |   protocol_state,
         |   invitation,
@@ -175,6 +183,8 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   updated_at,
         |   thid,
         |   label,
+        |   goal_code,
+        |   goal,
         |   role,
         |   protocol_state,
         |   invitation,
@@ -212,6 +222,8 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   updated_at,
         |   thid,
         |   label,
+        |   goal_code,
+        |   goal,
         |   role,
         |   protocol_state,
         |   invitation,

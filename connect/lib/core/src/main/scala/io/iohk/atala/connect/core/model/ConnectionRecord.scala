@@ -13,6 +13,8 @@ import java.util.UUID
   * @param updatedAt
   * @param thid
   * @param label
+  * @param goalCode
+  * @param goal
   * @param role
   * @param protocolState
   * @param invitation
@@ -31,6 +33,8 @@ case class ConnectionRecord(
     updatedAt: Option[Instant],
     thid: String,
     label: Option[String],
+    goalCode: Option[String],
+    goal: Option[String],
     role: Role,
     protocolState: ProtocolState,
     invitation: Invitation,

@@ -24,13 +24,19 @@ object ConnectionRepositorySpecSuite {
     None,
     UUID.randomUUID().toString,
     None,
+    None,
+    None,
     ConnectionRecord.Role.Inviter,
     ConnectionRecord.ProtocolState.InvitationGenerated,
     Invitation(
       id = UUID.randomUUID().toString,
       from = DidId("did:prism:aaa"),
       body = Invitation
-        .Body(goal_code = "io.atalaprism.connect", goal = "Establish a trust connection between two peers", Nil)
+        .Body(
+          goal_code = Some("io.atalaprism.connect"),
+          goal = Some("Establish a trust connection between two peers"),
+          Nil
+        )
     ),
     None,
     None,

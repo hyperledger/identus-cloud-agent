@@ -29,7 +29,7 @@ class ConnectionControllerImpl(
   ): ZIO[WalletAccessContext, ErrorResponse, Connection] = {
     val result = for {
       pairwiseDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
-      connection <- service.createConnectionInvitation(request.label, pairwiseDid.did)
+      connection <- service.createConnectionInvitation(request.label, request.goalCode, request.goal, pairwiseDid.did)
     } yield Connection.fromDomain(connection)
 
     result.mapError(toHttpError)

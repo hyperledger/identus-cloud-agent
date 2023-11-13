@@ -26,7 +26,12 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
         for {
           svc <- ZIO.service[ConnectionService]
           did = DidId("did:peer:INVITER")
-          record <- svc.createConnectionInvitation(Some("Test connection invitation"), did)
+          record <- svc.createConnectionInvitation(
+            Some("Test connection invitation"),
+            Some("Test goal code"),
+            Some("Test goal"),
+            did
+          )
         } yield {
           assertTrue(record.label.contains("Test connection invitation")) &&
           assertTrue(record.protocolState == ProtocolState.InvitationGenerated) &&
@@ -37,7 +42,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
           assertTrue(record.updatedAt.isEmpty) &&
           assertTrue(record.invitation.from == did) &&
           assertTrue(record.invitation.attachments.isEmpty) &&
-          assertTrue(record.invitation.body.goal_code == "io.atalaprism.connect") &&
+          assertTrue(record.invitation.body.goal_code == Some("Test goal code")) &&
+          assertTrue(record.invitation.body.goal == Some("Test goal")) &&
           assertTrue(record.invitation.body.accept.isEmpty)
         }
       }, {
@@ -46,6 +52,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             svc <- ZIO.service[ConnectionService]
             createdRecord <- svc.createConnectionInvitation(
               Some("Test connection invitation"),
+              Some("Test goal code"),
+              Some("Test goal"),
               DidId("did:peer:INVITER")
             )
             foundRecord <- svc.getConnectionRecord(createdRecord.id)
@@ -61,10 +69,14 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             svc <- ZIO.service[ConnectionService]
             createdRecord1 <- svc.createConnectionInvitation(
               Some("Test connection invitation #1"),
+              Some("Test goal code"),
+              Some("Test goal"),
               DidId("did:peer:INVITER")
             )
             createdRecord2 <- svc.createConnectionInvitation(
               Some("Test connection invitation #2"),
+              Some("Test goal code"),
+              Some("Test goal"),
               DidId("did:peer:INVITER")
             )
             records <- svc.getConnectionRecords()
@@ -81,10 +93,14 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             inviteeSvc <- ZIO.service[ConnectionService].provideLayer(connectionServiceLayer)
             inviterRecord <- inviterSvc.createConnectionInvitation(
               Some("Inviter"),
+              Some("Test goal code"),
+              Some("Test goal"),
               DidId("did:peer:INVITER")
             )
             inviteeRecord <- inviteeSvc.createConnectionInvitation(
               Some("Invitee"),
+              Some("Test goal code"),
+              Some("Test goal"),
               DidId("did:peer:INVITEE")
             )
             allInviterRecords <- inviterSvc.getConnectionRecords()
@@ -103,6 +119,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             inviteeSvc <- ZIO.service[ConnectionService].provideLayer(connectionServiceLayer)
             inviterRecord <- inviterSvc.createConnectionInvitation(
               Some("Test connection invitation"),
+              Some("Test goal code"),
+              Some("Test goal"),
               DidId("did:peer:INVITER")
             )
             inviteeRecord <- inviteeSvc.receiveConnectionInvitation(inviterRecord.invitation.toBase64)
@@ -136,6 +154,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             inviteeSvc <- ZIO.service[ConnectionService].provideLayer(connectionServiceLayer)
             inviterRecord <- inviterSvc.createConnectionInvitation(
               Some("Test connection invitation"),
+              Some("Test goal code"),
+              Some("Test goal"),
               DidId("did:peer:INVITER")
             )
             inviteeRecord <- inviteeSvc.receiveConnectionInvitation(inviterRecord.invitation.toBase64)
@@ -159,6 +179,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             inviteeSvc <- ZIO.service[ConnectionService].provideLayer(connectionServiceLayer)
             inviterRecord <- inviterSvc.createConnectionInvitation(
               Some("Test connection invitation"),
+              Some("Test goal code"),
+              Some("Test goal"),
               DidId("did:peer:INVITER")
             )
             inviteeRecord <- inviteeSvc.receiveConnectionInvitation(inviterRecord.invitation.toBase64)
@@ -186,6 +208,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             inviteeSvc <- ZIO.service[ConnectionService].provideLayer(connectionServiceLayer)
             inviterRecord <- inviterSvc.createConnectionInvitation(
               Some("Test connection invitation"),
+              Some("Test goal code"),
+              Some("Test goal"),
               DidId("did:peer:INVITER")
             )
             inviteeRecord <- inviteeSvc.receiveConnectionInvitation(inviterRecord.invitation.toBase64)
@@ -213,6 +237,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             inviteeSvc <- ZIO.service[ConnectionService].provideLayer(connectionServiceLayer)
             inviterRecord <- inviterSvc.createConnectionInvitation(
               Some("Test connection invitation"),
+              Some("Test goal code"),
+              Some("Test goal"),
               DidId("did:peer:INVITER")
             )
             inviteeRecord <- inviteeSvc.receiveConnectionInvitation(inviterRecord.invitation.toBase64)
@@ -246,6 +272,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             inviteeSvc <- ZIO.service[ConnectionService].provideLayer(connectionServiceLayer)
             inviterRecord <- inviterSvc.createConnectionInvitation(
               Some("Test connection invitation"),
+              Some("Test goal code"),
+              Some("Test goal"),
               DidId("did:peer:INVITER")
             )
             inviteeRecord <- inviteeSvc.receiveConnectionInvitation(inviterRecord.invitation.toBase64)
