@@ -4,6 +4,7 @@ import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.service.WalletManagementServiceError.DuplicatedWalletSeed
+import io.iohk.atala.agent.walletapi.service.WalletManagementServiceError.TooManyPermittedWallet
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
@@ -133,6 +134,16 @@ object WalletManagementServiceSpec
         _ <- svc.createWallet(Wallet("wallet-1"), Some(seed))
         exit <- svc.createWallet(Wallet("wallet-2"), Some(seed)).exit
       } yield assert(exit)(fails(isSubtype[DuplicatedWalletSeed](anything)))
+    },
+    test("cannot create new wallet for self-service context if already have permitted wallet") {
+      val walletId = WalletId.random
+      for {
+        svc <- ZIO.service[WalletManagementService]
+        exit <- svc
+          .createWallet(Wallet("wallet-1"))
+          .provide(ZLayer.succeed(WalletAdministrationContext.SelfService(Seq(walletId))))
+          .exit
+      } yield assert(exit)(fails(isSubtype[TooManyPermittedWallet](anything)))
     }
   )
 
