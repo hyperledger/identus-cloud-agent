@@ -24,19 +24,46 @@ import zio.test.Assertion.*
 import zio.test.TestAspect.*
 
 import java.util.UUID
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
+import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
+import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
+import io.iohk.atala.agent.walletapi.sql.JdbcEntityRepository
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
+import io.iohk.atala.test.container.DBTestUtils
 
 object KeycloakPermissionManagementServiceSpec
     extends ZIOSpecDefault
     with KeycloakTestContainerSupport
-    with KeycloakConfigUtils {
+    with KeycloakConfigUtils
+    with PostgresTestContainerSupport
+    with ApolloSpecHelper {
 
-  override def spec = suite("KeycloakPermissionManagementServiceSpec")(
-    successfulCasesSuite,
-    failureCasesSuite
-  )
-    .provide(Runtime.removeDefaultLoggers)
+  override def spec = {
+    val s = suite("KeycloakPermissionManagementServiceSpec")(
+      successfulCasesSuite,
+      failureCasesSuite
+    ) @@ sequential @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
-  val successfulCasesSuite = suite("Successful Cases")(
+    s.provide(
+      Client.default,
+      keycloakContainerLayer,
+      keycloakAdminConfigLayer,
+      KeycloakAdmin.layer,
+      KeycloakPermissionManagementService.layer,
+      KeycloakAuthenticatorImpl.layer,
+      ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
+      keycloakConfigLayer(),
+      WalletManagementServiceImpl.layer,
+      JdbcWalletNonSecretStorage.layer,
+      JdbcWalletSecretStorage.layer,
+      contextAwareTransactorLayer,
+      pgContainerLayer,
+      apolloLayer
+    ).provide(Runtime.removeDefaultLoggers)
+  }
+
+  private val successfulCasesSuite = suite("Successful Cases")(
     test("grant wallet access to the user") {
       for {
         client <- ZIO.service[KeycloakClient]
@@ -90,20 +117,9 @@ object KeycloakPermissionManagementServiceSpec
 
       } yield assert(permittedWallet2)(fails(isSubtype[ResourceNotPermitted](anything)))
     }
-  ).provide(
-    Client.default,
-    keycloakContainerLayer,
-    keycloakAdminConfigLayer,
-    KeycloakAdmin.layer,
-    KeycloakPermissionManagementService.layer,
-    WalletManagementServiceStub.layer,
-    KeycloakAuthenticatorImpl.layer,
-    ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
-    keycloakConfigLayer(),
-    ZLayer.succeed(WalletAdministrationContext.Admin())
-  ) @@ sequential
+  ).provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
 
-  val failureCasesSuite = suite("Failure Cases Suite")(
+  private val failureCasesSuite = suite("Failure Cases Suite")(
     test("grant wallet access to the user with invalid wallet id") {
       for {
         permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
@@ -111,52 +127,5 @@ object KeycloakPermissionManagementServiceSpec
         exit <- permissionService.grantWalletToUser(WalletId.random, entity).exit
       } yield assert(exit)(fails(isSubtype[WalletNotFoundById](anything)))
     }
-  ).provide(
-    Client.default,
-    keycloakContainerLayer,
-    keycloakAdminConfigLayer,
-    KeycloakAdmin.layer,
-    KeycloakPermissionManagementService.layer,
-    WalletManagementServiceStub.layer,
-    ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
-    keycloakConfigLayer(),
-    ZLayer.succeed(WalletAdministrationContext.Admin())
-  ) @@ sequential
-}
-
-class WalletManagementServiceStub extends WalletManagementService {
-  private var wallets: Map[WalletId, Wallet] = Map.empty
-  override def createWallet(wallet: Wallet, seed: Option[WalletSeed]): IO[WalletManagementServiceError, Wallet] = {
-    val wallet = Wallet(name = "test")
-    wallets = wallets + (wallet.id -> wallet)
-    ZIO.succeed(wallet)
-  }
-
-  override def getWallet(walletId: WalletId): IO[WalletManagementServiceError, Option[Wallet]] = {
-    ZIO.succeed(wallets.get(walletId))
-  }
-
-  override def getWallets(walletIds: Seq[WalletId]): IO[WalletManagementServiceError, Seq[Wallet]] = {
-    ZIO.succeed(wallets.filter(w => walletIds.contains(w._1)).values.toSeq)
-  }
-
-  override def listWallets(
-      offset: Option[RuntimeFlags],
-      limit: Option[RuntimeFlags]
-  ): IO[WalletManagementServiceError, (Seq[Wallet], RuntimeFlags)] = ???
-
-  override def listWalletNotifications
-      : ZIO[WalletAccessContext, WalletManagementServiceError, Seq[EventNotificationConfig]] = ???
-
-  override def createWalletNotification(
-      config: EventNotificationConfig
-  ): ZIO[WalletAccessContext, WalletManagementServiceError, EventNotificationConfig] = ???
-
-  override def deleteWalletNotification(
-      id: _root_.java.util.UUID
-  ): ZIO[WalletAccessContext, WalletManagementServiceError, Unit] = ???
-}
-
-object WalletManagementServiceStub {
-  val layer = ZLayer.succeed(new WalletManagementServiceStub)
+  ).provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
 }
