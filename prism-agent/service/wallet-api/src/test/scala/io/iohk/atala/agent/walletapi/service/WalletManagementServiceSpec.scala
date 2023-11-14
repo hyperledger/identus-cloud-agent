@@ -28,8 +28,9 @@ object WalletManagementServiceSpec
   override def spec = {
     def testSuite(name: String) =
       suite(name)(
-        createWalletSpec,
-        getWalletSpec,
+        createWalletSpec.provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin())),
+        getWalletSpec.provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin())),
+        multitenantSpec
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ TestAspect.sequential
 
     val suite1 = testSuite("jdbc as secret storage")
@@ -40,7 +41,6 @@ object WalletManagementServiceSpec
         contextAwareTransactorLayer,
         pgContainerLayer,
         apolloLayer,
-        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
     val suite2 = testSuite("vault as secret storage")
@@ -52,7 +52,6 @@ object WalletManagementServiceSpec
         pgContainerLayer,
         apolloLayer,
         vaultKvClientLayer,
-        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
     suite("WalletManagementService")(suite1, suite2)
@@ -135,7 +134,7 @@ object WalletManagementServiceSpec
         exit <- svc.createWallet(Wallet("wallet-2"), Some(seed)).exit
       } yield assert(exit)(fails(isSubtype[DuplicatedWalletSeed](anything)))
     },
-    test("cannot create new wallet for self-service context if already have permitted wallet") {
+    test("cannot create new wallet for self-service if already have permitted wallet") {
       val walletId = WalletId.random
       for {
         svc <- ZIO.service[WalletManagementService]
@@ -144,6 +143,55 @@ object WalletManagementServiceSpec
           .provide(ZLayer.succeed(WalletAdministrationContext.SelfService(Seq(walletId))))
           .exit
       } yield assert(exit)(fails(isSubtype[TooManyPermittedWallet](anything)))
+    }
+  )
+
+  private def multitenantSpec = suite("multitenant spec")(
+    test("get all wallets for admin") {
+      for {
+        svc <- ZIO.service[WalletManagementService]
+        wallet1 <- svc.createWallet(Wallet("wallet-1")).provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+        wallet2 <- svc.createWallet(Wallet("wallet-2")).provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+        wallet3 <- svc.createWallet(Wallet("wallet-3")).provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+        walletIds = Seq(wallet1, wallet2, wallet3).map(_.id)
+        wallets1 <- svc.getWallets(walletIds).provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+        wallets2 <- svc
+          .listWallets()
+          .map(_._1)
+          .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+      } yield assert(wallets1.map(_.id))(equalTo(walletIds)) &&
+        assert(wallets2.map(_.id))(equalTo(walletIds))
+    },
+    test("get only permitted wallet for self-service") {
+      for {
+        svc <- ZIO.service[WalletManagementService]
+        wallet1 <- svc.createWallet(Wallet("wallet-1")).provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+        wallet2 <- svc.createWallet(Wallet("wallet-2")).provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+        wallet3 <- svc.createWallet(Wallet("wallet-3")).provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+        walletIds = Seq(wallet1, wallet2, wallet3).map(_.id)
+        permittedWalletIds = Seq(wallet1, wallet2).map(_.id)
+        wallets1 <- svc
+          .getWallets(walletIds)
+          .provide(ZLayer.succeed(WalletAdministrationContext.SelfService(permittedWalletIds)))
+        wallets2 <- svc
+          .listWallets()
+          .map(_._1)
+          .provide(ZLayer.succeed(WalletAdministrationContext.SelfService(permittedWalletIds)))
+      } yield assert(wallets1.map(_.id))(equalTo(permittedWalletIds)) &&
+        assert(wallets2.map(_.id))(equalTo(permittedWalletIds))
+    },
+    test("cannot get wallet by self-service that is not permitted") {
+      for {
+        svc <- ZIO.service[WalletManagementService]
+        wallet1 <- svc.createWallet(Wallet("wallet-1")).provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+        wallet2 <- svc.createWallet(Wallet("wallet-2")).provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+        wallet3 <- svc.createWallet(Wallet("wallet-3")).provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+        walletIds = Seq(wallet1, wallet2, wallet3).map(_.id)
+        permittedWalletIds = Seq(wallet1, wallet2).map(_.id)
+        maybeWallet3 <- svc
+          .getWallet(wallet3.id)
+          .provide(ZLayer.succeed(WalletAdministrationContext.SelfService(permittedWalletIds)))
+      } yield assert(maybeWallet3)(isNone)
     }
   )
 

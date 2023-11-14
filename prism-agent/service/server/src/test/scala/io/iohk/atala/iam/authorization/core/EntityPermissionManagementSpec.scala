@@ -82,7 +82,6 @@ object EntityPermissionManagementSpec extends ZIOSpecDefault, PostgresTestContai
         exit <- permissionService
           .revokeWalletFromUser(wallet1.id, entity)
           .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
-          .debug("revokeWallet")
           .exit
       } yield assert(exit)(fails(isSubtype[ServiceError](anything)))
     }
