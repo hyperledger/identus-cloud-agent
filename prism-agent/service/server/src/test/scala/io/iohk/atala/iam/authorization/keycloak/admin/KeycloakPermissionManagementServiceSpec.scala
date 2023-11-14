@@ -1,8 +1,11 @@
 package io.iohk.atala.iam.authorization.keycloak.admin
 
-import io.iohk.atala.agent.walletapi.model.{Wallet, WalletSeed}
+import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
+import io.iohk.atala.agent.walletapi.model.Wallet
+import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
 import io.iohk.atala.agent.walletapi.service.{WalletManagementService, WalletManagementServiceError}
-import io.iohk.atala.event.notification.EventNotificationConfig
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.iam.authentication.AuthenticationError.ResourceNotPermitted
 import io.iohk.atala.iam.authentication.oidc.{
   KeycloakAuthenticator,
@@ -13,9 +16,12 @@ import io.iohk.atala.iam.authentication.oidc.{
 }
 import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error.WalletNotFoundById
+import io.iohk.atala.iam.authorization.core.PermissionManagement.Error.UnexpectedError
 import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.sharedtest.containers.{KeycloakContainerCustom, KeycloakTestContainerSupport}
+import io.iohk.atala.test.container.DBTestUtils
 import zio.*
 import zio.ZIO.*
 import zio.http.Client
@@ -28,15 +34,36 @@ import java.util.UUID
 object KeycloakPermissionManagementServiceSpec
     extends ZIOSpecDefault
     with KeycloakTestContainerSupport
-    with KeycloakConfigUtils {
+    with KeycloakConfigUtils
+    with PostgresTestContainerSupport
+    with ApolloSpecHelper {
 
-  override def spec = suite("KeycloakPermissionManagementServiceSpec")(
-    successfulCasesSuite,
-    failureCasesSuite
-  )
-    .provide(Runtime.removeDefaultLoggers)
+  override def spec = {
+    val s = suite("KeycloakPermissionManagementServiceSpec")(
+      successfulCasesSuite,
+      failureCasesSuite,
+      multitenantSuite
+    ) @@ sequential @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
-  val successfulCasesSuite = suite("Successful Cases")(
+    s.provide(
+      Client.default,
+      keycloakContainerLayer,
+      keycloakAdminConfigLayer,
+      KeycloakAdmin.layer,
+      KeycloakPermissionManagementService.layer,
+      KeycloakAuthenticatorImpl.layer,
+      ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
+      keycloakConfigLayer(),
+      WalletManagementServiceImpl.layer,
+      JdbcWalletNonSecretStorage.layer,
+      JdbcWalletSecretStorage.layer,
+      contextAwareTransactorLayer,
+      pgContainerLayer,
+      apolloLayer
+    ).provide(Runtime.removeDefaultLoggers)
+  }
+
+  private val successfulCasesSuite = suite("Successful Cases")(
     test("grant wallet access to the user") {
       for {
         client <- ZIO.service[KeycloakClient]
@@ -90,73 +117,149 @@ object KeycloakPermissionManagementServiceSpec
 
       } yield assert(permittedWallet2)(fails(isSubtype[ResourceNotPermitted](anything)))
     }
-  ).provide(
-    Client.default,
-    keycloakContainerLayer,
-    keycloakAdminConfigLayer,
-    KeycloakAdmin.layer,
-    KeycloakPermissionManagementService.layer,
-    WalletManagementServiceStub.layer,
-    KeycloakAuthenticatorImpl.layer,
-    ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
-    keycloakConfigLayer(),
-    ZLayer.succeed(WalletAdministrationContext.Admin())
-  ) @@ sequential
+  ).provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
 
-  val failureCasesSuite = suite("Failure Cases Suite")(
+  private val failureCasesSuite = suite("Failure Cases Suite")(
     test("grant wallet access to the user with invalid wallet id") {
       for {
         permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
         entity = KeycloakEntity(id = UUID.randomUUID())
         exit <- permissionService.grantWalletToUser(WalletId.random, entity).exit
       } yield assert(exit)(fails(isSubtype[WalletNotFoundById](anything)))
+    },
+    test("grant wallet access to the user with invalid user id") {
+      for {
+        client <- ZIO.service[KeycloakClient]
+        authenticator <- ZIO.service[KeycloakAuthenticator]
+        walletService <- ZIO.service[WalletManagementService]
+        wallet <- walletService.createWallet(Wallet("test_1"))
+        entity = KeycloakEntity(id = UUID.randomUUID())
+        permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
+        exit <- permissionService.grantWalletToUser(wallet.id, entity).exit
+      } yield assert(exit)(fails(isSubtype[UnexpectedError](anything)))
     }
-  ).provide(
-    Client.default,
-    keycloakContainerLayer,
-    keycloakAdminConfigLayer,
-    KeycloakAdmin.layer,
-    KeycloakPermissionManagementService.layer,
-    WalletManagementServiceStub.layer,
-    ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
-    keycloakConfigLayer(),
-    ZLayer.succeed(WalletAdministrationContext.Admin())
-  ) @@ sequential
-}
+  ).provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
 
-class WalletManagementServiceStub extends WalletManagementService {
-  private var wallets: Map[WalletId, Wallet] = Map.empty
-  override def createWallet(wallet: Wallet, seed: Option[WalletSeed]): IO[WalletManagementServiceError, Wallet] = {
-    val wallet = Wallet(name = "test")
-    wallets = wallets + (wallet.id -> wallet)
-    ZIO.succeed(wallet)
-  }
+  private val multitenantSuite = suite("multi-tenant cases")(
+    test("grant wallet access to the user by self-service") {
+      val walletId = WalletId.random
+      for {
+        client <- ZIO.service[KeycloakClient]
+        authenticator <- ZIO.service[KeycloakAuthenticator]
+        walletService <- ZIO.service[WalletManagementService]
 
-  override def getWallet(walletId: WalletId): IO[WalletManagementServiceError, Option[Wallet]] = {
-    ZIO.succeed(wallets.get(walletId))
-  }
+        wallet <- walletService
+          .createWallet(Wallet("test_1", walletId))
+          .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
 
-  override def getWallets(walletIds: Seq[WalletId]): IO[WalletManagementServiceError, Seq[Wallet]] = {
-    ZIO.succeed(wallets.filter(w => walletIds.contains(w._1)).values.toSeq)
-  }
+        randomId = UUID.randomUUID().toString
+        username = "user_" + randomId
+        password = randomId
+        user <- createUser(username = username, password = password)
+        entity = KeycloakEntity(id = UUID.fromString(user.getId))
 
-  override def listWallets(
-      offset: Option[RuntimeFlags],
-      limit: Option[RuntimeFlags]
-  ): IO[WalletManagementServiceError, (Seq[Wallet], RuntimeFlags)] = ???
+        permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
+        _ <- permissionService
+          .grantWalletToUser(wallet.id, entity)
+          .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.SelfService(Seq(walletId))))
 
-  override def listWalletNotifications
-      : ZIO[WalletAccessContext, WalletManagementServiceError, Seq[EventNotificationConfig]] = ???
+        token <- client.getAccessToken(username, password).map(_.access_token)
 
-  override def createWalletNotification(
-      config: EventNotificationConfig
-  ): ZIO[WalletAccessContext, WalletManagementServiceError, EventNotificationConfig] = ???
+        entity <- authenticator.authenticate(token)
+        permittedWallet <- authenticator.authorize(entity)
+      } yield assert(wallet.id)(equalTo(permittedWallet.walletId))
+    },
+    test("revoke wallet access from the user by self-service") {
+      for {
+        client <- ZIO.service[KeycloakClient]
+        authenticator <- ZIO.service[KeycloakAuthenticator]
+        walletService <- ZIO.service[WalletManagementService]
 
-  override def deleteWalletNotification(
-      id: _root_.java.util.UUID
-  ): ZIO[WalletAccessContext, WalletManagementServiceError, Unit] = ???
-}
+        wallet <- walletService
+          .createWallet(Wallet("test_2"))
+          .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
 
-object WalletManagementServiceStub {
-  val layer = ZLayer.succeed(new WalletManagementServiceStub)
+        randomId = UUID.randomUUID().toString
+        username = "user_" + randomId
+        password = randomId
+        user <- createUser(username = username, password = password)
+        entity = KeycloakEntity(id = UUID.fromString(user.getId))
+
+        permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
+        _ <- permissionService
+          .grantWalletToUser(wallet.id, entity)
+          .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
+
+        token <- client.getAccessToken(username, password).map(_.access_token)
+
+        entity <- authenticator.authenticate(token)
+        permittedWallet <- authenticator.authorize(entity)
+
+        _ <- permissionService
+          .revokeWalletFromUser(wallet.id, entity)
+          .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.SelfService(Seq(wallet.id))))
+
+        token2 <- client.getAccessToken(username, password).map(_.access_token)
+        entity2 <- authenticator.authenticate(token)
+        permittedWallet2 <- authenticator.authorize(entity).exit
+
+      } yield assert(permittedWallet2)(fails(isSubtype[ResourceNotPermitted](anything)))
+    },
+    test("grant wallet access to non-permitted wallet by self-service is not allowed") {
+      val walletId = WalletId.random
+      for {
+        client <- ZIO.service[KeycloakClient]
+        authenticator <- ZIO.service[KeycloakAuthenticator]
+        walletService <- ZIO.service[WalletManagementService]
+
+        wallet <- walletService
+          .createWallet(Wallet("test_1", walletId))
+          .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+
+        randomId = UUID.randomUUID().toString
+        username = "user_" + randomId
+        password = randomId
+        user <- createUser(username = username, password = password)
+        entity = KeycloakEntity(id = UUID.fromString(user.getId))
+
+        permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
+        exit <- permissionService
+          .grantWalletToUser(WalletId.random, entity)
+          .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.SelfService(Seq(walletId))))
+          .exit
+      } yield assert(exit)(fails(isSubtype[WalletNotFoundById](anything)))
+    },
+    test("revoke wallet access from non-permitted wallet by self-service is not allowed") {
+      for {
+        client <- ZIO.service[KeycloakClient]
+        authenticator <- ZIO.service[KeycloakAuthenticator]
+        walletService <- ZIO.service[WalletManagementService]
+
+        wallet <- walletService
+          .createWallet(Wallet("test_2"))
+          .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
+
+        randomId = UUID.randomUUID().toString
+        username = "user_" + randomId
+        password = randomId
+        user <- createUser(username = username, password = password)
+        entity = KeycloakEntity(id = UUID.fromString(user.getId))
+
+        permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
+        _ <- permissionService
+          .grantWalletToUser(wallet.id, entity)
+          .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
+
+        token <- client.getAccessToken(username, password).map(_.access_token)
+
+        entity <- authenticator.authenticate(token)
+        permittedWallet <- authenticator.authorize(entity)
+
+        exit <- permissionService
+          .revokeWalletFromUser(wallet.id, entity)
+          .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.SelfService(Seq(WalletId.random))))
+          .exit
+      } yield assert(exit)(fails(isSubtype[WalletNotFoundById](anything)))
+    }
+  )
 }
