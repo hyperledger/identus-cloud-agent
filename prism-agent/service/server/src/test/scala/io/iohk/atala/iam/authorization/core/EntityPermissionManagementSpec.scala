@@ -89,7 +89,7 @@ object EntityPermissionManagementSpec extends ZIOSpecDefault, PostgresTestContai
   )
 
   private val multitenantSuite = suite("multi-tenant cases")(
-    test("grant wallet acces to the user by self-service") {
+    test("grant wallet access to the user by self-service") {
       val walletId1 = WalletId.random
       val walletId2 = WalletId.random
       for {
