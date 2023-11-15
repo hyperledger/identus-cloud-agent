@@ -56,6 +56,7 @@ lazy val V = new {
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.6"
+  val jackson = "2.14.3"
 
   val tapir = "1.6.4"
 
@@ -126,9 +127,11 @@ lazy val D = new {
     "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
   val scalaPbGrpc: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
 
-  val testcontainersPostgres: ModuleID = "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala % Test
+  val testcontainersPostgres: ModuleID =
+    "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala % Test
   val testcontainersVault: ModuleID = "com.dimafeng" %% "testcontainers-scala-vault" % V.testContainersScala % Test
-  val testcontainersKeycloak: ModuleID = "com.github.dasniko" % "testcontainers-keycloak" % V.testContainersJavaKeycloak % Test
+  val testcontainersKeycloak: ModuleID =
+    "com.github.dasniko" % "testcontainers-keycloak" % V.testContainersJavaKeycloak % Test exclude ("org.keycloak", "keycloak-admin-client")
 
   val doobiePostgres: ModuleID = "org.tpolecat" %% "doobie-postgres" % V.doobie
   val doobieHikari: ModuleID = "org.tpolecat" %% "doobie-hikari" % V.doobie
@@ -164,20 +167,65 @@ lazy val D_Shared = new {
 }
 
 lazy val D_SharedTest = new {
+  // https://github.com/sbt/sbt-license-report/issues/87
+  // https://stackoverflow.com/questions/48771768/sbt-error-importing-resteasy-client
+  //
+  // 'sbt-license' plugin is using ivy to resolve dependencies where other tasks are using coursier.
+  // 'org.jboss.resteasy:resteasy-*' which is the transitive dependencies of 'keycloak-admin-client'
+  // has this issue where 'relativePath' is used in the 'parent' section.
+  // - https://github.com/resteasy/resteasy/blob/6.2.4.Final/resteasy-client-api/pom.xml#L9
+  // - https://www.scala-sbt.org/1.x/docs/Library-Management.html#Known+limitations
+  //
+  // This workaround provides those dependencies explicitly, but it will be a nightmare to maintain.
+  // FIXME: solve this with a long-term solution
+  lazy val keycloakAdminExplicitDependencies: Seq[ModuleID] =
+    Seq[ModuleID](
+      "org.keycloak" % "keycloak-admin-client" % V.keycloak excludeAll (
+        ExclusionRule("org.jboss.resteasy", "resteasy-core"),
+        ExclusionRule("org.jboss.resteasy", "resteasy-multipart-provider"),
+        ExclusionRule("org.jboss.resteasy", "resteasy-jackson2-provider"),
+        ExclusionRule("org.jboss.resteasy", "resteasy-jaxb-provider"),
+      ),
+      "org.jboss.resteasy" % "resteasy-core" % "6.2.4.Final" excludeAll (
+        ExclusionRule("jakarta.servlet", "jakarta.servlet-api"),
+      ),
+      "org.jboss.resteasy" % "resteasy-jackson2-provider" % "6.2.4.Final" excludeAll (
+        ExclusionRule("jakarta.servlet", "jakarta.servlet-api"),
+      ),
+      "org.jboss.logging" % "jboss-logging" % "3.5.0.Final",
+      "commons-codec" % "commons-codec" % "1.15",
+      "jakarta.ws.rs" % "jakarta.ws.rs-api" % "3.1.0",
+      "jakarta.annotation" % "jakarta.annotation-api" % "2.1.1",
+      "jakarta.xml.bind" % "jakarta.xml.bind-api" % "3.0.1",
+      "org.reactivestreams" % "reactive-streams" % "1.0.4",
+      "jakarta.validation" % "jakarta.validation-api" % "3.0.2",
+      "org.jboss" % "jandex" % "2.4.3.Final",
+      "jakarta.activation" % "jakarta.activation-api" % "2.1.2",
+      "org.eclipse.angus" % "angus-activation" % "1.0.0",
+      "com.ibm.async" % "asyncutil" % "0.1.0",
+      "org.apache.httpcomponents" % "httpclient" % "4.5.14",
+      "com.github.java-json-tools" % "json-patch" % "1.13",
+      "com.fasterxml.jackson.core" % "jackson-core" % V.jackson,
+      "com.fasterxml.jackson.core" % "jackson-databind" % V.jackson,
+      "com.fasterxml.jackson.core" % "jackson-annotations" % V.jackson,
+      "com.fasterxml.jackson.jakarta.rs" % "jackson-jakarta-rs-base" % V.jackson,
+      "com.fasterxml.jackson.jakarta.rs" % "jackson-jakarta-rs-json-provider" % V.jackson,
+      "com.fasterxml.jackson.module" % "jackson-module-jakarta-xmlbind-annotations" % V.jackson,
+    ).map(_ % Test)
+
   lazy val dependencies: Seq[ModuleID] =
-    D_Shared.dependencies ++
-      Seq(
-        D.testcontainersPostgres,
-        D.testcontainersVault,
-        D.testcontainersKeycloak,
-        D.zioCatsInterop,
-        D.zioJson,
-        D.zioHttp,
-        D.zioTest,
-        D.zioTestSbt,
-        D.zioTestMagnolia,
-        D.zioMock
-      )
+    D_Shared.dependencies ++ keycloakAdminExplicitDependencies ++ Seq(
+      D.testcontainersPostgres,
+      D.testcontainersVault,
+      D.testcontainersKeycloak,
+      D.zioCatsInterop,
+      D.zioJson,
+      D.zioHttp,
+      D.zioTest,
+      D.zioTestSbt,
+      D.zioTestMagnolia,
+      D.zioMock
+    )
 }
 
 lazy val D_Connect = new {
