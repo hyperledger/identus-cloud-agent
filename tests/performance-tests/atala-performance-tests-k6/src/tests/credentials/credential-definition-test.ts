@@ -22,7 +22,7 @@ export function setup() {
   });
 
   group("Issuer creates credential schema", function () {
-    issuer.createCredentialSchema();
+    issuer.createCredentialSchema("anoncred");
   });
 
   return {
