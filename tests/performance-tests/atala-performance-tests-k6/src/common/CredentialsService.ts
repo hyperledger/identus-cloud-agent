@@ -35,54 +35,42 @@ export class CredentialsService extends HttpService {
     return this.toJson(res) as unknown as IssueCredentialRecord;
   }
 
-  createCredentialSchema(issuingDid: string): CredentialSchemaResponse {
+  createCredentialDefinition(issuingDid: string, schema: CredentialSchemaResponse) {
     const payload = `
     {
       "name": "${crypto.randomUUID()}}",
+      "description": "Birth certificate Anoncred Credential Definition",
+      "version": "1.0.0",
+      "tag": "Licence",
+      "author": "${issuingDid}",
+      "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}",
+      "signatureType": "CL",
+      "supportRevocation": false
+    }
+    `;
+    this.post("credential-definition-registry/definitions", payload);
+  }
+
+  createCredentialSchema(issuingDid: string) {
+    const payload = `
+    {
+      "name": "${crypto.randomUUID()}",
       "version": "1.0.0",
       "description": "Simple credential schema for the driving licence verifiable credential.",
-      "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+      "type": "AnoncredSchemaV1",
       "schema": {
-        "$id": "https://example.com/driving-license-1.0",
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Driving License",
-        "type": "object",
-        "properties": {
-          "emailAddress": {
-            "type": "string",
-            "format": "email"
-          },
-          "givenName": {
-            "type": "string"
-          },
-          "familyName": {
-            "type": "string"
-          },
-          "dateOfIssuance": {
-            "type": "string"
-          },
-          "drivingLicenseID": {
-            "type": "string"
-          },
-          "drivingClass": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "emailAddress",
-          "familyName",
-          "dateOfIssuance",
-          "drivingLicenseID",
-          "drivingClass"
-        ],
-        "additionalProperties": false
+          "name": "${crypto.randomUUID()}",
+          "version": "1.0.0",
+          "attrNames": [
+              "emailAddress",
+              "familyName"
+          ],
+          "issuerId": "${issuingDid}"
       },
+      "author": "${issuingDid}",
       "tags": [
-        "driving",
-        "licence",
-        "id"
-      ],
-      "author": "${issuingDid}"
+          "Licence"
+      ]
     }
     `
     const res = this.post("schema-registry/schemas", payload);
