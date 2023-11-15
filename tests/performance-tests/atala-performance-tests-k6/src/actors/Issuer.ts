@@ -82,7 +82,11 @@ export class Issuer extends Actor {
   createCredentialSchema() {
     this.schema = this.credentialsService.createCredentialSchema(this.did!);
   }
- 
+
+  createCredentialDefinition() {
+    this.credentialsService.createCredentialDefinition(this.did!, this.schema!);
+  }
+
   /**
    * Creates a credential offer for the holder.
    */
