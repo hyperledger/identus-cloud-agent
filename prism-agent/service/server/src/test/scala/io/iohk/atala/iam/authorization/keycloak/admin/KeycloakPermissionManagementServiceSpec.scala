@@ -60,7 +60,7 @@ object KeycloakPermissionManagementServiceSpec
       contextAwareTransactorLayer,
       pgContainerLayer,
       apolloLayer
-    )
+    ).provide(Runtime.removeDefaultLoggers)
   }
 
   private val successfulCasesSuite = suite("Successful Cases")(
