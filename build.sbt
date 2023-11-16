@@ -56,14 +56,13 @@ lazy val V = new {
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.6"
-  val jackson = "2.14.3"
 
   val tapir = "1.6.4"
 
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
   val testContainersScala = "0.41.0"
-  val testContainersJavaKeycloak = "3.0.0"
+  val testContainersJavaKeycloak = "3.0.0" // scala-steward:off
 
   val doobie = "1.0.0-RC2"
   val quill = "4.7.3"
@@ -86,7 +85,7 @@ lazy val V = new {
   val micrometer = "1.11.2"
 
   val nimbusJwt = "10.0.0"
-  val keycloak = "22.0.4"
+  val keycloak = "22.0.4" // scala-steward:off
 }
 
 /** Dependencies */
@@ -187,6 +186,7 @@ lazy val D_SharedTest = new {
         ExclusionRule("org.jboss.resteasy", "resteasy-jackson2-provider"),
         ExclusionRule("org.jboss.resteasy", "resteasy-jaxb-provider"),
       ),
+      // scala-steward:off
       "org.jboss.resteasy" % "resteasy-core" % "6.2.4.Final" excludeAll (
         ExclusionRule("jakarta.servlet", "jakarta.servlet-api"),
       ),
@@ -206,12 +206,13 @@ lazy val D_SharedTest = new {
       "com.ibm.async" % "asyncutil" % "0.1.0",
       "org.apache.httpcomponents" % "httpclient" % "4.5.14",
       "com.github.java-json-tools" % "json-patch" % "1.13",
-      "com.fasterxml.jackson.core" % "jackson-core" % V.jackson,
-      "com.fasterxml.jackson.core" % "jackson-databind" % V.jackson,
-      "com.fasterxml.jackson.core" % "jackson-annotations" % V.jackson,
-      "com.fasterxml.jackson.jakarta.rs" % "jackson-jakarta-rs-base" % V.jackson,
-      "com.fasterxml.jackson.jakarta.rs" % "jackson-jakarta-rs-json-provider" % V.jackson,
-      "com.fasterxml.jackson.module" % "jackson-module-jakarta-xmlbind-annotations" % V.jackson,
+      "com.fasterxml.jackson.core" % "jackson-core" % "2.14.3",
+      "com.fasterxml.jackson.core" % "jackson-databind" % "2.14.3",
+      "com.fasterxml.jackson.core" % "jackson-annotations" % "2.14.3",
+      "com.fasterxml.jackson.jakarta.rs" % "jackson-jakarta-rs-base" % "2.14.3",
+      "com.fasterxml.jackson.jakarta.rs" % "jackson-jakarta-rs-json-provider" % "2.14.3",
+      "com.fasterxml.jackson.module" % "jackson-module-jakarta-xmlbind-annotations" % "2.14.3",
+      // scala-steward:on
     ).map(_ % Test)
 
   lazy val dependencies: Seq[ModuleID] =
