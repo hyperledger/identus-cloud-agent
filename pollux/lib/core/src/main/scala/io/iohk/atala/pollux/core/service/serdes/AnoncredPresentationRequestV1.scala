@@ -37,7 +37,7 @@ case class AnoncredPredicateRestrictionV1(
 case class AnoncredNonRevokedIntervalV1(from: Option[Int], to: Option[Int])
 
 object AnoncredPresentationRequestV1 {
-  val version: String = "PresentationRequestV1"
+  val version: String = "AnoncredPresentationRequestV1"
 
   private val schema: String =
     """
