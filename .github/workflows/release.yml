@@ -31,9 +31,9 @@ jobs:
           ref: ${{ github.event.inputs.release-branch }}
           fetch-depth: 0
       - name: Setup Java and Scala
-        uses: olafurpg/setup-scala@v13
+        uses: olafurpg/setup-scala@v14
         with:
-          java-version: openjdk@1.22
+          java-version: openjdk@1.17
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
