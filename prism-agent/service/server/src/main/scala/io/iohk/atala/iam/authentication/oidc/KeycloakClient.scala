@@ -110,7 +110,8 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
             )
           )
         )
-        .logError("Fail to get the accessToken on keyclaok.")
+        .logError("Fail to get the accessToken on keycloak.")
+        .tapError(_ => ZIO.succeed(keycloakConfig).debug("keycloakConfig"))
         .mapError(e => KeycloakClientError.UnexpectedError("Fail to get the accessToken on keyclaok."))
         .provide(ZLayer.succeed(httpClient))
       body <- response.body.asString
