@@ -4,8 +4,8 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object AnoncredPresentationRequestSchemaSerDesSpec extends ZIOSpecDefault {
-  val json =
+object AnoncredPresentationRequestSpec extends ZIOSpecDefault {
+  val json: String =
     """
       |{
       |  "requested_attributes": {
@@ -45,20 +45,20 @@ object AnoncredPresentationRequestSchemaSerDesSpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("AnoncredPresentationRequestSerDes")(
     test("should validate a correct schema") {
-      assertZIO(AnoncredPresentationRequestSchemaSerDesV1.schemaSerDes.validate(json))(isTrue)
+      assertZIO(AnoncredPresentationRequestV1.schemaSerDes.validate(json))(isTrue)
     },
     test("should deserialize correctly") {
       val expectedPresentationRequest =
-        AnoncredPresentationRequestSchemaSerDesV1(
+        AnoncredPresentationRequestV1(
           requested_attributes = Map(
-            "attribute1" -> AnoncredRequestedAttribute(
+            "attribute1" -> AnoncredRequestedAttributeV1(
               "Attribute 1",
               List(
-                AnoncredAttributeRestriction(
+                AnoncredAttributeRestrictionV1(
                   None,
                   Some("credential_definition_id_of_attribute1"),
                   Some(
-                    AnoncredNonRevokedInterval(
+                    AnoncredNonRevokedIntervalV1(
                       Some(1635734400),
                       Some(1735734400)
                     )
@@ -69,16 +69,16 @@ object AnoncredPresentationRequestSchemaSerDesSpec extends ZIOSpecDefault {
           ),
           requested_predicates = Map(
             "predicate1" ->
-              AnoncredRequestedPredicate(
+              AnoncredRequestedPredicateV1(
                 "Predicate 1",
                 ">=",
                 18,
                 List(
-                  AnoncredPredicateRestriction(
+                  AnoncredPredicateRestrictionV1(
                     Some("schema_id_of_predicate1"),
                     None,
                     Some(
-                      AnoncredNonRevokedInterval(
+                      AnoncredNonRevokedIntervalV1(
                         Some(1635734400),
                         None
                       )
@@ -93,7 +93,7 @@ object AnoncredPresentationRequestSchemaSerDesSpec extends ZIOSpecDefault {
           non_revoked = None
         )
 
-      assertZIO(AnoncredPresentationRequestSchemaSerDesV1.schemaSerDes.deserialize(json))(
+      assertZIO(AnoncredPresentationRequestV1.schemaSerDes.deserialize(json))(
         Assertion.equalTo(expectedPresentationRequest)
       )
     }
