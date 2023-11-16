@@ -33,7 +33,7 @@ jobs:
       - name: Setup Java and Scala
         uses: olafurpg/setup-scala@v13
         with:
-          java-version: openjdk@1.11
+          java-version: openjdk@1.22
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -41,7 +41,7 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
         with:
-          version: '3.12.2' # default is latest (stable)
+          version: "3.12.2" # default is latest (stable)
         id: install
       - name: Setup yq - portable yaml processor
         uses: mikefarah/yq@v4.34.2
