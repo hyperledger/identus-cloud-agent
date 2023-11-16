@@ -177,9 +177,10 @@ lazy val D_SharedTest = new {
   // - https://www.scala-sbt.org/1.x/docs/Library-Management.html#Known+limitations
   //
   // This workaround provides those dependencies explicitly, but it will be a nightmare to maintain.
+  // for version reference: https://github.com/resteasy/resteasy/blob/6.2.4.Final/resteasy-dependencies-bom/pom.xml
   // FIXME: solve this with a long-term solution
   lazy val keycloakAdminExplicitDependencies: Seq[ModuleID] =
-    Seq[ModuleID](
+    Seq(
       "org.keycloak" % "keycloak-admin-client" % V.keycloak excludeAll (
         ExclusionRule("org.jboss.resteasy", "resteasy-core"),
         ExclusionRule("org.jboss.resteasy", "resteasy-multipart-provider"),
