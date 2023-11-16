@@ -29,10 +29,9 @@ server:
       cpu: 250m
       memory: 512Mi
   additionalEnvVariables: []
-  devMode: false
   useVault: true
   keycloak:
-    enabled: true
+    enabled: false
     realm: prism-agent
     bootstrap: true
     admin:
@@ -104,7 +103,7 @@ vault:
         }
 
 keycloak:
-  enabled: true
+  enabled: false
   # --hostname-url should be the frontend url that user will be logging in with keycloak
   extraStartupArgs: "--hostname-url=http://localhost:8080 --import-realm --features=declarative-user-profile"
   tls:

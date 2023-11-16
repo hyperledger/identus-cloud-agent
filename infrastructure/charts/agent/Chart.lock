@@ -5,5 +5,5 @@ dependencies:
 - name: keycloak
   repository: https://charts.bitnami.com/bitnami
   version: 17.2.0
-digest: sha256:e7f6535bdbb0ffda866cd6d4985dc8f1eb9a469264b54165834b2f5ba0b52db9
-generated: "2023-11-02T21:15:33.175780068+07:00"
+digest: sha256:33f82ebad234a60fd00365d1dcc6ed884beeac1c13ee4cbeca08a1478eded850
+generated: "2023-11-16T20:59:38.47688305+07:00"

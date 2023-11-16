@@ -26,3 +26,4 @@ dependencies:
   - name: keycloak
     version: "17.2.0"
     repository: "https://charts.bitnami.com/bitnami"
+    condition: keycloak.enabled
