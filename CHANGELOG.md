@@ -1,3 +1,24 @@
+# [1.19.0-snapshot.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.18.0...prism-agent-v1.19.0-snapshot.1) (2023-11-16)
+
+
+### Bug Fixes
+
+* check for active RLS on db application user ([#775](https://github.com/hyperledger-labs/open-enterprise-agent/issues/775)) ([a792f43](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a792f43eaae0ec2cd30db2ea3308deded7a1a935))
+* explicitly define transitive dependencies of resteasyclient ([99a8aaa](https://github.com/hyperledger-labs/open-enterprise-agent/commit/99a8aaa2ab38d9dcc5621f9e875cab14b050a1ad))
+* make sure test libs dont leak to runnable ([704e49e](https://github.com/hyperledger-labs/open-enterprise-agent/commit/704e49ebe1edd4458d8b73073b4e7dbef21918ae))
+* **pollux:** V16 migration is failing to add FK constraint because of type mismatch ([#782](https://github.com/hyperledger-labs/open-enterprise-agent/issues/782)) ([c87beb0](https://github.com/hyperledger-labs/open-enterprise-agent/commit/c87beb0478d4b3d54709e09597c42c23878d101e))
+* **prism-agent:** more descriptive error response for validateDID in issue flow ([#783](https://github.com/hyperledger-labs/open-enterprise-agent/issues/783)) ([b99a737](https://github.com/hyperledger-labs/open-enterprise-agent/commit/b99a73718a06f4b97d933ba2e3220593f8d4e825))
+* **prism-agent:** perform percent encoding on auth header for token introspection request ([#780](https://github.com/hyperledger-labs/open-enterprise-agent/issues/780)) ([03d43c9](https://github.com/hyperledger-labs/open-enterprise-agent/commit/03d43c98d8ab64e5b47830d95a6356f9d6dd1b82))
+
+
+### Features
+
+* Accept goal and goalCode to create connection invitation  ([#785](https://github.com/hyperledger-labs/open-enterprise-agent/issues/785)) ([71c776b](https://github.com/hyperledger-labs/open-enterprise-agent/commit/71c776baa2caf3ca610508dba805f037fd7d6e29))
+* **docs:** ADR for revocation status list expansion strategy ([#773](https://github.com/hyperledger-labs/open-enterprise-agent/issues/773)) ([7ad6427](https://github.com/hyperledger-labs/open-enterprise-agent/commit/7ad64277acb2bffe12524c4bfb68f687689b5b2e))
+* Keycloak container support with clients and PermissionManagement service ([#755](https://github.com/hyperledger-labs/open-enterprise-agent/issues/755)) ([a1846aa](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a1846aaa84202b55d48ea8556aad8cbbb8260f4d))
+* **pollux:** Add migrations needed for JWT revocation ([#778](https://github.com/hyperledger-labs/open-enterprise-agent/issues/778)) ([471956e](https://github.com/hyperledger-labs/open-enterprise-agent/commit/471956e92893a7237cabca2fb065adb417678d37))
+* **prism-agent:** add multi-tenant wallet self-service capability ([#779](https://github.com/hyperledger-labs/open-enterprise-agent/issues/779)) ([f2e74cd](https://github.com/hyperledger-labs/open-enterprise-agent/commit/f2e74cd1957e7d76f6dccadd02b1ca5b794d02b1))
+
 # [1.18.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.17.0...prism-agent-v1.18.0) (2023-10-24)
 
 
