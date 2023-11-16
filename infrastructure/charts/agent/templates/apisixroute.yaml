@@ -166,5 +166,4 @@ spec:
     {{ template "headers.security" . }}
 
 ---
-
 {{- end }}
