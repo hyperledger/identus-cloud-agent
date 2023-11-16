@@ -23,6 +23,9 @@ jobs:
       GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
       GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      # New JDK version makes 'localhost' lookup on linux return ipv6.
+      # Our test containers are on ipv4. We need to make 'localhost' resolve to ipv4.
+      JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -31,9 +34,9 @@ jobs:
           ref: ${{ github.event.inputs.release-branch }}
           fetch-depth: 0
       - name: Setup Java and Scala
-        uses: olafurpg/setup-scala@v13
+        uses: olafurpg/setup-scala@v14
         with:
-          java-version: openjdk@1.11
+          java-version: openjdk@1.17
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -41,7 +44,7 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
         with:
-          version: '3.12.2' # default is latest (stable)
+          version: "3.12.2" # default is latest (stable)
         id: install
       - name: Setup yq - portable yaml processor
         uses: mikefarah/yq@v4.34.2
