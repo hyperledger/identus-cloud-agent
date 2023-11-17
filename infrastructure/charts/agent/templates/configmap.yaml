@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-bootstrap-script
+data:
+  init.sh: |
+    #!/usr/bin/env bash
+
+    set -e
+    set -u
+
+    KEYCLOAK_BASE_URL=$KEYCLOAK_BASE_URL
+    KEYCLOAK_ADMIN_USER=$KEYCLOAK_ADMIN_USER
+    KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD
+    REALM_NAME=$REALM_NAME
+    PRISM_AGENT_CLIENT_ID=$PRISM_AGENT_CLIENT_ID
+    PRISM_AGENT_CLIENT_SECRET=$PRISM_AGENT_CLIENT_SECRET
+
+    function get_admin_token() {
+      local response=$(
+        curl --request POST "$KEYCLOAK_BASE_URL/realms/master/protocol/openid-connect/token" \
+         --fail -s -v \
+         --data-urlencode "grant_type=password" \
+         --data-urlencode "client_id=admin-cli" \
+         --data-urlencode "username=$KEYCLOAK_ADMIN_USER" \
+         --data-urlencode "password=$KEYCLOAK_ADMIN_PASSWORD"
+      )
+      local access_token=$(echo $response | jq -r '.access_token')
+      echo $access_token
+    }
+
+    function is_client_exists() {
+      local access_token=$1
+      local client_id=$2
+
+      local http_status=$(
+        curl --request GET "$KEYCLOAK_BASE_URL/admin/realms/$REALM_NAME/clients/$client_id" \
+          -s -w "%{http_code}"  \
+          -o /dev/null \
+          -H "Authorization: Bearer $access_token"
+      )
+
+      if [ $http_status == 200 ]; then
+          echo "true"
+      else
+          echo "false"
+      fi
+    }
+
+    function create_client() {
+      local access_token=$1
+      local client_id=$2
+      local client_secret=$3
+
+      curl --request POST "$KEYCLOAK_BASE_URL/admin/realms/$REALM_NAME/clients" \
+        --fail -s \
+        -H "Authorization: Bearer $access_token" \
+        -H "Content-Type: application/json" \
+        --data-raw "{
+         \"id\": \"$client_id\",
+         \"directAccessGrantsEnabled\": true,
+         \"authorizationServicesEnabled\": true,
+         \"serviceAccountsEnabled\": true,
+         \"secret\": \"$client_secret\"
+        }"
+    }
+
+    echo "Getting admin access token ..."
+    ADMIN_ACCESS_TOKEN=$(get_admin_token)
+
+    CLIENT_EXIST=$(is_client_exists $ADMIN_ACCESS_TOKEN $PRISM_AGENT_CLIENT_ID)
+    if [ $CLIENT_EXIST == "false" ]; then
+      echo "Creating a new $PRISM_AGENT_CLIENT_ID client ..."
+      create_client $ADMIN_ACCESS_TOKEN $PRISM_AGENT_CLIENT_ID $PRISM_AGENT_CLIENT_SECRET
+    fi
+
+{{- if .Values.keycloak.enabled }}
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prism-agent-realm-import
+data:
+  prism-agent.json: |
+    {
+      "realm": {{ .Values.server.keycloak.realm | quote }},
+      "enabled": true
+    }
+
+{{- end }}
