@@ -3,7 +3,7 @@ name: Unit tests
 # Cancel previously running workflows if new commit pushed to the branch
 # this will help to push fixes earlier and stop previous workflows
 concurrency:
-  group: ${{ github.head_ref }}${{ github.ref }}-tests
+  group: ${{ github.head_ref }}${{ github.ref }}-unit-tests
   cancel-in-progress: true
 
 on:
