@@ -91,7 +91,9 @@ const sidebars = {
       type: 'category',
       label: 'Multi-Tenancy',
       items: [
-        'multitenancy/tenant-onboarding'
+        'multitenancy/tenant-onboarding',
+        'multitenancy/tenant-onboarding-ext-iam',
+        'multitenancy/tenant-onboarding-self-service',
       ]
     }
   ]
