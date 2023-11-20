@@ -53,7 +53,7 @@ This can be done by listing the wallets using `apikey`.
 curl -X 'GET' \
   'http://localhost:8080/prism-agent/wallets' \
   -H 'accept: application/json' \
-  -H "apikey: my-tenant-token" \
+  -H "apikey: my-tenant-token"
 ```
 
 Make sure to use the correct `apikey` from the pre-requisite.
@@ -128,11 +128,12 @@ This can be done by invoking the `POST /wallets/{walletId}/uma-permissions` endp
 ```bash
 curl -X 'POST' \
   'http://localhost:8080/prism-agent/wallets/99734c87-5c9d-4697-b5fd-dea4e9590ba7/uma-permissions' \
+  -v \
   -H 'accept: */*' \
   -H "apikey: my-tenant-token" \
   -H 'Content-Type: application/json' \
   -d '{
-    "subject": "205e04b7-0158-41b0-89c3-f91c3a09f89b",
+    "subject": "205e04b7-0158-41b0-89c3-f91c3a09f89b"
   }'
 ```
 
@@ -149,7 +150,7 @@ Simply list the wallet using a new `Authorization` header, the listed wallets sh
 curl -X 'GET' \
   'http://localhost:8080/prism-agent/wallets' \
   -H 'accept: application/json' \
-  -H "Authorization: Bearer eyJhbGciOi...7ocDHofUDQ" \
+  -H 'Authorization: Bearer eyJhbGciOi...7ocDHofUDQ'
 ```
 
 Make sure to use the correct `JWT` from step 2.
