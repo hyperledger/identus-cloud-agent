@@ -1,20 +1,20 @@
 # Tenant Onboarding with External IAM
 
 In the [Tenant Onboarding](./tenant-onboarding.md) tutorial, we explored the basic
-IAM functionality provided by the agent out of the box. Although it is usable and straightforward,
+[IAM](/docs/concepts/glossary#iam) functionality provided by the agent out of the box. Although it is usable and straightforward,
 there are  more featureful tools available for handling identity and access management.
-The agent has the capability to seamlessly connect with Keycloak as an external IAM system
+The agent has the capability to seamlessly connect with [Keycloak](/docs/concepts/glossary#keycloak-service) as an external IAM system
 allowing the application built on top to utilize capabilities that comes with Keycloak.
 
-The PRISM Agent leverages standard protocols like OIDC and UMA for authentication and access management.
-The user's identity is established through the ID token, and wallet permissions can be queried using the RPT (requesting party token).
+The PRISM Agent leverages standard protocols like [OIDC](/docs/concepts/glossary#oidc) and [UMA](/docs/concepts/glossary#uma) for authentication and access management.
+The user's identity is established through the ID token, and wallet permissions can be queried using the [RPT (requesting party token)](/docs/concepts/glossary#rpt).
 
 ## Roles
 
 In tenant management with external IAM, there are 2 roles:
 
-1. System administrator
-2. Tenant
+1. [Administrator](/docs/concepts/glossary#administrator)
+2. [Tenant](/docs/concepts/glossary#tenant)
 
 ## Prerequisites
 
@@ -43,7 +43,7 @@ When setting up UMA permissions on the agent, the wallet resource along with the
 are created on Keycloak according to a predefined convention.
 For flexibility in defining custom policy and permission models,
 administrators can manually create these UMA resources (resource, policy, permission) directly on Keycloak
-using a set of UMA endpoints called [Protection API](https://www.keycloak.org/docs/latest/authorization_services/index.html#_service_protection_api).
+using a set of UMA endpoints called [Protection API](/docs/concepts/glossary#protection-api)  (see [Keycloak Protection API](https://www.keycloak.org/docs/latest/authorization_services/index.html#_service_protection_api)).
 However, using Protection API to manage permissions is out of scope for this tutorial.
 
 Once the registration is successful, the tenant can obtain an ID token from Keycloak using any available OIDC flow,
