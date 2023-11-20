@@ -91,7 +91,7 @@ curl -X 'POST' \
 
 Make sure to use the correct username and password.
 Special attention on the `client_id`; this should be the actual `client_id` of the frontend application that logs the user in.
-For this tutorial, it is absolutely OK to use `admin-cli`.
+For this tutorial, it is OK to use `admin-cli.`
 
 Example token response (some fields omitted for readability)
 
