@@ -41,7 +41,6 @@ In sef-service tenant management with external IAM, there is only 1 role:
 This tutorial demonstrate the process of user self-registration on Keycloak.
 Then, the users can log in to Keycloak to obtain a token.
 When the agent uses this token for the wallet creation, the agent recognizes it belongs to a tenant and automatically associates the tenant's permission with the created wallet.
-automatically associate the tenant's permission with the created wallet.
 
 ## Endpoints
 
