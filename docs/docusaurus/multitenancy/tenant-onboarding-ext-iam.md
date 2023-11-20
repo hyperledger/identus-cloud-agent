@@ -1,13 +1,11 @@
 # Tenant Onboarding with External IAM
 
 In the [Tenant Onboarding](./tenant-onboarding.md) tutorial, we explored the basic
-[IAM](/docs/concepts/glossary#iam) functionality provided by the agent out of the box. Although it is usable and straightforward,
-there are  more featureful tools available for handling identity and access management.
-The agent has the capability to seamlessly connect with [Keycloak](/docs/concepts/glossary#keycloak-service) as an external IAM system
-allowing the application built on top to utilize capabilities that comes with Keycloak.
+The agent provides [IAM](/docs/concepts/glossary#iam) functionality out of the box. Although it is usable and straightforward, more featureful tools are available for handling identity and access management.
+The agent can seamlessly connect with [Keycloak](/docs/concepts/glossary#keycloak-service) as an external IAM system, allowing the application built on top to utilize capabilities that come with Keycloak.
 
 The PRISM Agent leverages standard protocols like [OIDC](/docs/concepts/glossary#oidc) and [UMA](/docs/concepts/glossary#uma) for authentication and access management.
-The user's identity is established through the ID token, and wallet permissions can be queried using the [RPT (requesting party token)](/docs/concepts/glossary#rpt).
+The user's identity gets established through the ID token, and wallet permissions are searchable using the [RPT (requesting party token)](/docs/concepts/glossary#rpt).
 
 ## Roles
 
@@ -36,20 +34,20 @@ In tenant management with external IAM, there are 2 roles:
 
 ## Overview
 
-This tutorial illustrates the process of provisioning a wallet resource for the new tenant and subsequently creating a tenant in Keycloak.
-The administrator can then create a UMA permission for the wallet giving access to the tenant.
+This tutorial illustrates the process of provisioning a wallet resource for the new tenant and creating a tenant in Keycloak.
+The administrator can then create a UMA permission for the wallet, giving access to the tenant.
 
-When setting up UMA permissions on the agent, the wallet resource along with the UMA policy and permission
+When setting up UMA permissions on the agent, the wallet resource, along with the UMA policy and permission
 are created on Keycloak according to a predefined convention.
 For flexibility in defining custom policy and permission models,
 administrators can manually create these UMA resources (resource, policy, permission) directly on Keycloak
 using a set of UMA endpoints called [Protection API](/docs/concepts/glossary#protection-api)  (see [Keycloak Protection API](https://www.keycloak.org/docs/latest/authorization_services/index.html#_service_protection_api)).
-However, using Protection API to manage permissions is out of scope for this tutorial.
+However, using Protection API to manage permissions is out of the scope of this tutorial.
 
 Once the registration is successful, the tenant can obtain an ID token from Keycloak using any available OIDC flow,
 such as the direct access grants (username & password). This ID token typically contains user claims such as username and subject ID.
 The tenant can use Keycloak's token endpoint to convert this token to an RPT (requesting party token),
-which is another token containing permissions information.
+another token containing permissions information.
 The tenant can access the multi-tenant agent by providing the RPT in the `Authorization` header.
 
 ## Endpoints
@@ -95,9 +93,9 @@ Response Example:
 
 ### 2. Create a new wallet
 
-The wallet can be created using a `POST /wallets` endpoint.
-This wallet is going to act as a container for the tenant's assets (DIDs, VCs, Connections, etc.).
-The wallet seed may be provided during the wallet creation or omitted to let the Agent generate one randomly.
+Create a wallet using a `POST /wallets` endpoint.
+This wallet will be a container for the tenant's assets (DIDs, VCs, Connections, etc.).
+Provide a wallet seed during the wallet creation or let the Agent generate one
 
 
 ```bash
@@ -126,13 +124,13 @@ Response Example:
 ### 3. User registration on Keycloak
 
 There are multiple ways to complete this step.
-The goal is to ensure the user is registered on Keycloak.
-Keycloak offers great flexibility, allowing users to self-register,
+The goal is to ensure the user has registered on Keycloak.
+Keycloak offers great flexibility, allowing users to self-register, 
 connect to IDP, or be manually created by an administrator.
-For this tutorial, the user will be manually created using Keycloak admin API for simplicity.
+For this tutorial, we will generate the user manually using Keycloak admin API for simplicity.
 
 The first step is to get an admin token from Keycloak using the username and password.
-This token allows the admin to perform operations on Keycloak such as creating a new user.
+This token allows the admin to perform operations on Keycloak, such as creating a new user.
 Running the provided command should return the admin access token.
 
 ```bash
@@ -156,7 +154,7 @@ Example token response (some fields omitted for readability)
 }
 ```
 
-After the admin get the `access_token` from Keycloak, a new user can be created by running this command.
+After obtaining the `access_token` from Keycloak's admin, a new user can be created using this command:
 
 ```bash
 curl -X 'POST' \
@@ -223,9 +221,9 @@ the tenant can log in and utilize the agent by using the token issued by Keycloa
 
 The first step is to authenticate via Keycloak through any applicable authentication method.
 Usually, the tenant will use some frontend application that follows the standard flow for logging in.
-For simplicity, a username and password flow will be used in this tutorial.
+For simplicity, we use a flow for username and password in this tutorial.
 The administrator has already set up the username and password for the tenant.
-The tenant can call Keycloak token endpoint directly with those credentials to get the access token.
+To get the access token, the tenant can call the Keycloak token endpoint directly with those credentials.
 
 Run the command to log in
 
@@ -238,8 +236,8 @@ curl -X 'POST' \
   -d "password=1234"
 ```
 
-Special attention on the `client_id`, this should be the actual `client_id` of the frontend application that log the user in.
-For this tutorial, it is absolutely OK to use `admin-cli`.
+Special attention on the `client_id`; this should be the actual `client_id` of the frontend application that logs the user in.
+For this tutorial, it is OK to use `admin-cli`.
 
 Example token response (some fields omitted for readability)
 
@@ -253,8 +251,8 @@ Example token response (some fields omitted for readability)
 
 ### 2. Request RPT (requesting party token) from access token
 
-After the access token is aquired, the next step is to get the RPT token which holds information about the permissions.
-The RPT can be requested by running this command
+After the access token is acquired, the next step is to get the RPT token, which holds information about the permissions.
+It is possible to request the RPT by running this command:
 
 ```bash
 curl -X POST \
@@ -274,7 +272,7 @@ Example token response (some fields omitted for readability)
 }
 ```
 
-Inspecting the token of the response, there should be a new claim in the JWT payload called `authorization`.
+After inspecting the response token, a new claim named `authorization` should appear in the JWT payload.
 
 Example RPT payload (some fields omitted for readability)
 
@@ -308,13 +306,13 @@ curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/d
 Make sure to replace the token with RPT from previous step.
 
 The result should show 200 status with an empty list.
-This means that the wallet has been created and it does not contain any DIDs.
-Any interactions that the tenant performs should be scoped to only this wallet.
+This means that the wallet has been created and does not contain any DIDs.
+All actions carried out by the tenant must be limited to this specific wallet.
 
 ### A note on RPT
 
 In this tutorial, there is an additional step for the tenant to request the RPT from the access token.
-This aligns with the standard UMA interaction, where the handling of RPT typically occurs on the client side.
-To simplify the experience, the agent has a feature that allows user to bypass this process.
+This process aligns with the standard UMA interaction, where the handling of RPT typically occurs on the client side.
+To simplify the experience, the agent has a feature allowing users to bypass this process.
 By setting the variable `KEYCLOAK_UMA_AUTO_UPGRADE_RPT=true`, tenants can utilize the access token
 obtained in step 1 directly in the `Authorization` header, eliminating the need for additional RPT request step.

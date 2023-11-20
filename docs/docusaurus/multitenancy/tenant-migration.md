@@ -105,10 +105,10 @@ Example token response (some fields omitted for readability)
 
 ### 3. Extract the subject ID from JWT
 
-When creating a UMA permission, it is important to provide the subject ID which the permission will be granted to.
+When creating a UMA permission, it is important to provide the subject ID to grant permission.
 To get the subject ID of the tenant, one can inspect the JWT payload `sub` claim.
 
-Run this command to extract the `sub` claim of the token from pervious step
+Run this command to extract the `sub` claim of the token from previous step.
 
 ```bash
 echo 'eyJhbGciOi...7ocDHofUDQ' | cut --delimiter='.' --fields=2 | base64 --decode | jq -r '.sub'
@@ -122,8 +122,8 @@ Example result
 
 ### 4. Grant the user permission to the wallet
 
-The addition UMA permission can be added to the current wallet giving Keycloak user an access.
-This can be done by invoking the `POST /wallets/{walletId}/uma-permissions` endpoint on the agent.
+UMA permission can be added to the current wallet, giving Keycloak users access.
+To do this, invoke the `POST /wallets/{walletId}/uma-permissions` endpoint on the agent.
 
 ```bash
 curl -X 'POST' \
@@ -139,12 +139,12 @@ curl -X 'POST' \
 
 Make sure to use the correct `subject` for the user and the correct `walletId` from the step earlier.
 
-The response should return status `200 OK` in case of successful permission creation.
+The response should return the status `200 OK` in case of successful permission creation.
 
 ### 5. Perform a simple action to verify access to PRISM Agent
 
-After sucessful UMA permission creation, the user should be able to use `JWT` token for authentitcation to the wallet.
-Simply list the wallet using a new `Authorization` header, the listed wallets should contain the wallet with the same ID in step 1.
+After successful UMA permission creation, the user should be able to use the `JWT` token to authenticate the wallet.
+List the wallet using a new `Authorization` header. The listed wallets should contain the wallet with the same ID in step 1.
 
 ```bash
 curl -X 'GET' \
@@ -173,4 +173,4 @@ Response Example:
 }
 ```
 
-This indicates that the user should be able to perform any wallet interaction with the `JWT` and `apikey` interchangeably.
+This response indicates that the user should be able to perform any wallet interaction with the `JWT` and `apikey` interchangeably.

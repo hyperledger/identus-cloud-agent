@@ -3,27 +3,27 @@
 In the [Tenant Onboarding with External IAM](./tenant-onboarding-ext-iam.md) tutorial,
 we learned how [Keycloak](/docs/concepts/glossary#keycloak-service) helps with user access and how it works together with the agent.
 To set things up, the admin has to provision the required resources.
-However, relying on the admin for onboarding operation can be restrictive for some use cases.
+However, relying on the admin for onboarding operations can be restrictive for some use cases.
 For example, some tenants might want to onboard on a self-service agent instance without admin intervention.
 
 By leveraging Keycloak for a self-service agent instance,
 users can self-register or link to other [Identity Providers (IDPs)](/docs/concepts/glossary#idp) to register an account.
-Once the account is registered, users can use it to set up their own wallet.
-This tutorial will dive into the steps to facilitate this scenario where [administrator](/docs/concepts/glossary#administrator) intervention is not needed.
+Once the account is registered, users can use it to set up their wallets.
+This tutorial will investigate the steps to facilitate this scenario where [administrator](/docs/concepts/glossary#administrator) intervention is unnecessary.
 
 ## Roles
 
-In sef-service tenant management with external IAM, there is only 1 role:
+In self-service tenant management with external IAM, there is only one role:
 
 1. [Tenant](/docs/concepts/glossary#tenant)
 
 ## Prerequisites
 
-1. Keycloak up and running
+1. Keycloak is up and running.
 2. Keycloak is configured as follows
    1. A realm called `my-realm` is created
    2. A client called `prism-agent` under `my-realm` with __authorization__ feature is created. (See [create client instruction](https://www.keycloak.org/docs/latest/authorization_services/index.html#_resource_server_create_client))
-   3. Make sure the `prism-agent` client has __direct access grants__ enabled to simplify login process for this tutorial
+   3. Make sure the `prism-agent` client has __direct access grants__ enabled to simplify the login process for this tutorial.
    4. Make sure to [allow user self-registration](https://www.keycloak.org/docs/latest/server_admin/index.html#con-user-registration_server_administration_guide).
 3. PRISM Agent up and running
 4. PRISM Agent is configured with the following environment variables:
@@ -63,7 +63,7 @@ When the agent uses this token for the wallet creation, the agent recognizes it 
 Start by registering a new account on Keycloak, accessible through its login page.
 Usually, this should be available at `http://localhost:9980/realms/my-realm/account/`.
 
-For detailed instruction on how to register a new user,
+For detailed instructions on how to register a new user,
 please refer to [registering a new user](https://www.keycloak.org/docs/latest/server_admin/index.html#proc-registering-new-user_server_administration_guide) section on the official documentation.
 
 ### 2. Obtain access token from Keycloak
@@ -82,7 +82,7 @@ curl -X 'POST' \
 ```
 
 Make sure to use the correct username and password.
-Special attention on the `client_id`, this should be the actual `client_id` of the frontend application that log the user in.
+Special attention on the `client_id`; this should be the actual `client_id` of the frontend application that logs the user in.
 For this tutorial, it is OK to use `admin-cli`.
 
 Example token response (some fields omitted for readability)
@@ -124,7 +124,7 @@ Response Example:
 
 Create a wallet using a `POST /wallets` endpoint.
 This wallet will be a container for the tenant's assets (DIDs, VCs, Connections, etc.).
-The wallet seed may be provided during the wallet creation or omitted to let the Agent generate one randomly.
+The Agent can provide or randomly generate the wallet seed during wallet creation.
 
 If the user already has the wallet associated, the wallet creation will fail as multiple wallets per tenant are not yet allowed.
 
