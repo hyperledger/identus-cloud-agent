@@ -37,14 +37,13 @@ In tenant management with external IAM, there are 2 roles:
 
 ## Overview
 
-This tutorial illustrates the process of creating a tenant in Keycloak and subsequently
-provisioning a wallet resource for the new tenant by the administrator.
+This tutorial illustrates the process of provisioning a wallet resource for the new tenant and subsequently creating a tenant in Keycloak.
 The administrator can then create a UMA permission for the wallet giving access to the tenant.
 
 When setting up UMA permissions on the agent, the wallet resource along with the UMA policy and permission
 are created on Keycloak according to a predefined convention.
-For greater flexibility in defining custom policy and permission models,
-administrators can also manually create these UMA resources (resource, policy, permission) directly on Keycloak
+For flexibility in defining custom policy and permission models,
+administrators can manually create these UMA resources (resource, policy, permission) directly on Keycloak
 using a set of UMA endpoints called [Protection API](https://www.keycloak.org/docs/latest/authorization_services/index.html#_service_protection_api).
 However, using Protection API to manage permissions is out of scope for this tutorial.
 
