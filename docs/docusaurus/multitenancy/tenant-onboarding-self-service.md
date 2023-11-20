@@ -167,5 +167,4 @@ curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/d
 ```
 
 The result should show 200 status with an empty list.
-This means that the wallet has been created and it does not contain any DIDs.
 The tenant should only perform interactions within the scope of this wallet.
