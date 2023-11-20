@@ -50,7 +50,7 @@ However, using Protection API to manage permissions is out of scope for this tut
 
 Once the registration is successful, the tenant can obtain an ID token from Keycloak using any available OIDC flow,
 such as the direct access grants (username & password). This ID token typically contains user claims such as username and subject ID.
-The tenant can utilize Keycloak's token endpoint to upgrade this token to an RPT (requesting party token),
+The tenant can use Keycloak's token endpoint to convert this token to an RPT (requesting party token),
 which is another token containing permissions on permitted resources.
 The tenant can access the multi-tenant agent by providing the RPT in the authorization header.
 
@@ -133,7 +133,8 @@ Keycloak offers great flexibility, allowing users to self-register,
 connect to IDP, or be manually created by an administrator.
 For this tutorial, the user will be manually created using Keycloak admin API for simplicity.
 
-The first step involves getting an admin token from Keycloak using the Keycloak admin username and password.
+The first step involves getting an admin token from Keycloak using the admin username and password.
+This token allows the admin to perform operations on Keycloak such as creating a new user.
 Running the provided command should return the admin access token.
 
 ```bash
@@ -196,7 +197,7 @@ For in-depth user management, please consult the official Keycloaak administrati
 ### 4. Grant the user permission to the wallet
 
 Once the user and wallet have been successfully created, the permissions can be created giving the user access to the wallet.
-This action is accomplished by invoking the `POST /wallets/{walletId}/uma-permissions` endpoint on the agent.
+This can be done by invoking the `POST /wallets/{walletId}/uma-permissions` endpoint on the agent.
 
 ```bash
 curl -X 'POST' \
@@ -238,8 +239,8 @@ curl -X 'POST' \
   -d "password=1234"
 ```
 
-Note the `client_id` is `admin-cli`. This should be the actual `client_id` of the frontend application that log the user in.
-For this tutorial, it is absolutely OK.
+Special attention on the `client_id`, this should be the actual `client_id` of the frontend application that log the user in.
+For this tutorial, it is absolutely OK to use `admin-cli`.
 
 Example token response (some fields omitted for readability)
 
@@ -274,7 +275,8 @@ Example token response (some fields omitted for readability)
 }
 ```
 
-Inspecting the token of the response using this [JWT debugger](https://jwt.io/), there should be a new claims in the JWT payload called `authorization`.
+Inspecting the token of the response using this [JWT debugger](https://jwt.io/),
+there should be a new claim in the JWT payload called `authorization`.
 
 Example RPT payload (some fields omitted for readability)
 
@@ -285,7 +287,7 @@ Example RPT payload (some fields omitted for readability)
     "permissions": [
       {
         "rsid": "99734c87-5c9d-4697-b5fd-dea4e9590ba7",
-        "rsname": "Resource Name"
+        "rsname": "<WALLET_RESOURCE_NAME>"
       },
       ...
     ]
@@ -311,7 +313,7 @@ Any interactions that the tenant performs should be scoped to only this wallet.
 
 ### A note on RPT
 
-In this tutorial, there is an additional step for the tenant to request the RPT from the access token before granting access to the wallet.
+In this tutorial, there is an additional step for the tenant to request the RPT from the access token.
 This aligns with the standard UMA interaction, where the handling of RPT typically occurs on the client side.
 To streamline the development experience, the agent has a feature that allows developers to bypass this process.
 By setting the variable `KEYCLOAK_UMA_AUTO_UPGRADE_RPT=true`, tenants can utilize the access token
