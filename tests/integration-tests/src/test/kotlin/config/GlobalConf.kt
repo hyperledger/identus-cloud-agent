@@ -3,8 +3,6 @@ package config
 import com.sksamuel.hoplite.ConfigAlias
 
 data class GlobalConf(
-    @ConfigAlias("auth_required") val authRequired: Boolean,
-    @ConfigAlias("auth_header") val authHeader: String,
-    @ConfigAlias("admin_auth_header") val adminAuthHeader: String,
-    @ConfigAlias("admin_apikey") val adminApiKey: String
+    @ConfigAlias("auth_header") val authHeader: String = "apikey",
+    @ConfigAlias("admin_auth_header") val adminAuthHeader: String = "x-admin-api-key",
 )
