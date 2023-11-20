@@ -156,7 +156,7 @@ In this step, the agent creates both wallet resource and UMA permission on Keycl
 ### 5. Perform a simple action to verify access to PRISM Agent
 
 Without further operation, the wallet should be available for the tenant.
-To prove that the tenant can access the wallet,
+To prove that the tenant can access the wallet, list the DIDs using RPT in the `Authorization` header.
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids' \
