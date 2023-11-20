@@ -70,7 +70,7 @@ please refer to [registering a new user](https://www.keycloak.org/docs/latest/se
 
 Once a new account is registered, Keycloak should recognize it, allowing the user to log in and obtain the access token.
 
-Run this command to log in and get the access token
+Run this command to log in and get the access token.
 
 ```bash
 curl -X 'POST' \
