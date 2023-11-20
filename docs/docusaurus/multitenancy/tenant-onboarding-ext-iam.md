@@ -248,7 +248,7 @@ Example token response (some fields omitted for readability)
 }
 ```
 
-### 2. Request RPT (requesting party token) from access token
+### 2. Request [RPT (requesting party token)](/docs/concepts/glossary#rpt) from access token
 
 After the access token is acquired, the next step is to get the RPT token, which holds information about the permissions.
 It is possible to request the RPT by running this command:
