@@ -123,7 +123,7 @@ Response Example:
 ### 4. Create a new wallet
 
 Create a wallet using a `POST /wallets` endpoint.
-This wallet is going to act as a container for the tenant's assets (DIDs, VCs, Connections, etc.).
+This wallet will be a container for the tenant's assets (DIDs, VCs, Connections, etc.).
 The wallet seed may be provided during the wallet creation or omitted to let the Agent generate one randomly.
 
 If the user already have the wallet associated, the wallet creation will fail as multiple wallets per tenant is not yet allowed.
