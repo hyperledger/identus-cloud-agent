@@ -24,7 +24,7 @@ In the migration process from `apikey` to `JWT`, there is only 1 role:
 
 This tutorial outlines the steps to transition from `apikey` to `JWT` authentication.
 Initially, users have wallet access through the `apikey` method.
-To migrate to `JWT` authentication, users can create a new UMA permission for their wallet and grant permission to their own Keycloak account.
+To migrate to `JWT` authentication, users can create a new UMA permission for their wallet and grant permission to their Keycloak account.
 
 ## Endpoints
 
