@@ -104,7 +104,7 @@ Listing wallets on it should return empty results.
 ```bash
 curl -X 'GET' \
   'http://localhost:8080/prism-agent/wallets' \
-  -H "Authorization: Bearer eyJhbGciOi...7ocDHofUDQ" \
+  -H 'Authorization: Bearer eyJhbGciOi...7ocDHofUDQ' \
   -H 'Accept: application/json'
 ```
 
@@ -132,8 +132,8 @@ If the user already have the wallet associated, the wallet creation will fail as
 ```bash
 curl -X 'POST' \
   'http://localhost:8080/prism-agent/wallets' \
-  -H "Authorization: Bearer eyJhbGciOi...7ocDHofUDQ" \
-  -H 'Accept: application/json'
+  -H 'Authorization: Bearer eyJhbGciOi...7ocDHofUDQ' \
+  -H 'Accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
     "seed": "c9994785ce6d548134020f610b76102ca1075d3bb672a75ec8c9a27a7b8607e3b9b384e43b77bb08f8d5159651ae38b98573f7ecc79f2d7e1f1cc371ce60cf8a",
@@ -162,7 +162,7 @@ try listing the DIDs in the wallet using RPT in the `Authorization` header.
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids' \
-  -H "Authorization: Bearer eyJhbGciOi...7ocDHofUDQ" \
+  -H 'Authorization: Bearer eyJhbGciOi...7ocDHofUDQ' \
   -H 'Accept: application/json'
 ```
 

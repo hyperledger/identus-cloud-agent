@@ -301,7 +301,7 @@ try listing the DIDs in the wallet using RPT in the `Authorization` header.
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids' \
-  -H "Authorization: Bearer eyJhbGciOi...e7H6W8RUvA" \
+  -H 'Authorization: Bearer eyJhbGciOi...e7H6W8RUvA' \
   -H 'Accept: application/json'
 ```
 
