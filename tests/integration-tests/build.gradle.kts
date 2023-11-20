@@ -30,11 +30,18 @@ dependencies {
     // Test helpers library
     testImplementation("io.iohk.atala:atala-automation:0.3.2")
     // Hoplite for configuration
+<<<<<<< HEAD
     testImplementation("com.sksamuel.hoplite:hoplite-core:2.7.5")
     testImplementation("com.sksamuel.hoplite:hoplite-hocon:2.7.5")
     // Kotlin compose
     testImplementation("org.testcontainers:testcontainers:1.19.1")
 
+=======
+    implementation("com.sksamuel.hoplite:hoplite-core:2.7.5")
+    implementation("com.sksamuel.hoplite:hoplite-hocon:2.7.5")
+    // Kotlin compose
+    testImplementation("org.testcontainers:testcontainers:1.19.1")
+>>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))
 }
 
 tasks.register<Delete>("cleanTarget") {
