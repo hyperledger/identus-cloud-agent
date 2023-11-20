@@ -63,9 +63,9 @@ The tenant can access the multi-tenant agent by providing the RPT in the `Author
 | `GET /did-registrar/dids`                  | List the DIDs inside the wallet      | Tenant        |
 
 ### Keycloak endpoints
-| Endpoint                                            | Description                   | Role                  |
-|-----------------------------------------------------|-------------------------------|-----------------------|
-| `POST /admin/realms/{realm}/users`                  | Create a new user on Keycloak | Administrator         |
+| Endpoint                                             | Description                   | Role                  |
+|------------------------------------------------------|-------------------------------|-----------------------|
+| `POST /admin/realms/{realm}/users`                   | Create a new user on Keycloak | Administrator         |
 | `POST /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token         | Administrator, Tenant |
 
 ## Administrator interactions

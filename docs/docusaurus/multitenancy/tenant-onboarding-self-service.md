@@ -53,8 +53,8 @@ automatically associate the tenant's permission with the created wallet.
 | `GET /did-registrar/dids` | List the DIDs inside the wallet    | Tenant |
 
 ### Keycloak endpoints
-| Endpoint                                            | Description           | Role   |
-|-----------------------------------------------------|-----------------------|--------|
+| Endpoint                                             | Description           | Role   |
+|------------------------------------------------------|-----------------------|--------|
 | `POST /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token | Tenant |
 
 ## Tenant interactions
