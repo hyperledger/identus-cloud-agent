@@ -44,6 +44,8 @@ dependencies {
     // Hoplite for configuration
     implementation("com.sksamuel.hoplite:hoplite-core:2.7.5")
     implementation("com.sksamuel.hoplite:hoplite-hocon:2.7.5")
+    // Kotlin compose
+    testImplementation("org.testcontainers:testcontainers:1.19.1")
 }
 
 buildscript {

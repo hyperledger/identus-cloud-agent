@@ -1,0 +1,69 @@
+name: Unit tests
+
+# Cancel previously running workflows if new commit pushed to the branch
+# this will help to push fixes earlier and stop previous workflows
+concurrency:
+  group: ${{ github.head_ref }}${{ github.ref }}-unit-tests
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+
+jobs:
+  build-and-unit-tests:
+    name: "Build and unit tests"
+    runs-on: self-hosted
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    container:
+      image: ghcr.io/hyperledger-labs/ci-debian-jdk-22:0.1.0
+      volumes:
+        - /nix:/nix
+      env:
+        TESTCONTAINERS_RYUK_DISABLED: true
+    steps:
+      - name: Git checkout (merge)
+        uses: actions/checkout@v3
+        if: github.event_name != 'pull_request'
+        with:
+          fetch-depth: 0
+
+      - name: Git checkout (PR)
+        uses: actions/checkout@v3
+        if: github.event_name == 'pull_request'
+        with:
+          fetch-depth: 0
+          # see: https://frontside.com/blog/2020-05-26-github-actions-pull_request/#how-does-pull_request-affect-actionscheckout
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Download dependencies
+        run: sbt +update
+
+      - name: Check formatting
+        run: sbt scalafmtCheckAll
+
+      - name: Run unit tests
+        env:
+          HOME: /root
+        run: |
+          sbt -v coverage test coverageAggregate
+
+      - name: Upload coverage to Coveralls
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+        run: sbt coveralls
+
+      - name: Aggregate test reports
+        if: always()
+        uses: ./.github/actions/aggregate-test-reports
+
+      - name: Publish test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          junit_files: "./target/test-reports/**/TEST-*.xml"
+          comment_title: "Unit Test Results"
+          check_name: "Unit Test Results"
