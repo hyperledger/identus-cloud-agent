@@ -41,6 +41,9 @@ dependencies {
     implementation("com.sksamuel.hoplite:hoplite-hocon:2.7.5")
     // Kotlin compose
     testImplementation("org.testcontainers:testcontainers:1.19.1")
+<<<<<<< HEAD
+>>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))
+=======
 >>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))
 }
 

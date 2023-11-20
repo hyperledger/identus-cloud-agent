@@ -4,7 +4,11 @@ version: "3.8"
 services:
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   vault:
+=======
+  vault-server:
+>>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))
 =======
   vault-server:
 >>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))

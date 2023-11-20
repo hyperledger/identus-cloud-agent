@@ -27,7 +27,11 @@ jobs:
     steps:
       - name: Git checkout (merge)
 <<<<<<< HEAD
+<<<<<<< HEAD
         uses: actions/checkout@v4
+=======
+        uses: actions/checkout@v3
+>>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))
 =======
         uses: actions/checkout@v3
 >>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))
@@ -37,7 +41,11 @@ jobs:
 
       - name: Git checkout (PR)
 <<<<<<< HEAD
+<<<<<<< HEAD
         uses: actions/checkout@v4
+=======
+        uses: actions/checkout@v3
+>>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))
 =======
         uses: actions/checkout@v3
 >>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))

@@ -16,5 +16,8 @@ data class Config(
     val verifier: AgentConf,
     val agents: List<AgentInitConf>,
     val services: ServicesConf
+<<<<<<< HEAD
+>>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))
+=======
 >>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))
 )

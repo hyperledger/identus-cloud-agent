@@ -32,6 +32,7 @@ services:
       CONNECT_DB_HOST: postgres
       AGENT_DB_HOST: postgres
 <<<<<<< HEAD
+<<<<<<< HEAD
       VAULT_TOKEN: null
       VAULT_APPROLE_ROLE_ID: null
       VAULT_APPROLE_SECRET_ID: null
@@ -44,6 +45,8 @@ services:
       REST_SERVICE_URL:
       POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL:
 =======
+=======
+>>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))
       VAULT_TOKEN: root
       # Configuration parameters
       AGENT_DIDCOMM_PORT:
@@ -52,6 +55,9 @@ services:
       REST_SERVICE_URL: "http://host.docker.internal:${AGENT_HTTP_PORT}"
       AUTH_HEADER:
       ADMIN_AUTH_HEADER:
+<<<<<<< HEAD
+>>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))
+=======
 >>>>>>> 7fd03ce4 (test: configurable integration tests support (#772))
       API_KEY_ENABLED:
       # Secret storage configuration
