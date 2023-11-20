@@ -155,7 +155,7 @@ In this step, the agent creates both wallet resource and UMA permission on Keycl
 
 ### 5. Perform a simple action to verify access to PRISM Agent
 
-Without further operation, the wallet should be availble for the tenant to use.
+Without further operation, the wallet should be available for the tenant.
 To prove that the tenant can access the wallet,
 
 ```bash
