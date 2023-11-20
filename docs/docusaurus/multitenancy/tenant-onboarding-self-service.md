@@ -83,7 +83,7 @@ curl -X 'POST' \
   -d "password=1234"
 ```
 
-Make sure to use the correct username and password of the user.
+Make sure to use the correct username and password.
 Special attention on the `client_id`, this should be the actual `client_id` of the frontend application that log the user in.
 For this tutorial, it is absolutely OK to use `admin-cli`.
 
@@ -99,6 +99,74 @@ Example token response (some fields omitted for readability)
 
 ### 3. Check the existing wallets
 
+Right after the account is registered, there should be no permission associated to it.
+Listing wallets on it should return empty results.
+
+```bash
+curl -X 'GET' \
+  'http://localhost:8080/prism-agent/wallets' \
+  -H "Authorization: Bearer eyJhbGciOi...7ocDHofUDQ" \
+  -H 'Accept: application/json'
+```
+
+Make sure to use the correct `access_token` in the `Authorization` header from the previous command.
+
+Response Example:
+
+```json
+{
+  "self": "/wallets",
+  "kind": "WalletPage",
+  "pageOf": "/wallets",
+  "contents": []
+}
+```
+
 ### 4. Create a new wallet
 
+The wallet can be created using a `POST /wallets` endpoint.
+This wallet is going to act as a container for the tenant's assets (DIDs, VCs, Connections, etc.).
+The wallet seed may be provided during the wallet creation or omitted to let the Agent generate one randomly.
+
+If the user already have the wallet associated, the wallet creation will fail as multiple wallets per tenant is not yet allowed.
+
+```bash
+curl -X 'POST' \
+  'http://localhost:8080/prism-agent/wallets' \
+  -H "Authorization: Bearer eyJhbGciOi...7ocDHofUDQ" \
+  -H 'Accept: application/json'
+  -H 'Content-Type: application/json' \
+  -d '{
+    "seed": "c9994785ce6d548134020f610b76102ca1075d3bb672a75ec8c9a27a7b8607e3b9b384e43b77bb08f8d5159651ae38b98573f7ecc79f2d7e1f1cc371ce60cf8a",
+    "name": "my-wallet"
+  }'
+```
+
+Response Example:
+
+```json
+{
+  "id": "99734c87-5c9d-4697-b5fd-dea4e9590ba7",
+  "name": "my-wallet",
+  "createdAt": "2023-01-01T00:00:00Z",
+  "updatedAt": "2023-01-01T00:00:00Z"
+}
+```
+
+In this step, the agent create both wallet resource as well as UMA permission on Keycloak assigning the new wallet to the user who created it.
+
 ### 5. Perform a simple action to verify access to PRISM Agent
+
+Without further operation, the wallet should be availble for the tenant to use.
+To prove that the tenant can access the wallet,
+try listing the DIDs in the wallet using RPT in the `Authorization` header.
+
+```bash
+curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids' \
+  -H "Authorization: Bearer eyJhbGciOi...7ocDHofUDQ" \
+  -H 'Accept: application/json'
+```
+
+The result should show 200 status with an empty list.
+This means that the wallet has been created and it does not contain any DIDs.
+Any interactions that the tenant performs should be scoped to only this wallet.

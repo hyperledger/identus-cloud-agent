@@ -2,13 +2,12 @@
 
 In the [Tenant Onboarding](./tenant-onboarding.md) tutorial, we explored the basic
 IAM functionality provided by the agent out of the box. Although it is usable and straightforward,
-there are robust and more powerful tools available for handling identity and access management.
+there are  more featureful tools available for handling identity and access management.
 The agent has the capability to seamlessly connect with Keycloak as an external IAM system
-allowing the application built on top to utilize available OIDC flow on Keycloak.
-The token issued by Keycloak can be used for wallet authorization by the PRISM Agent.
+allowing the application built on top to utilize capabilities that comes with Keycloak.
 
-The PRISM Agent leverages standard protocols like OIDC and UMA for authentication and resource access management.
-The user's identity is established through the ID token, and resource permissions can be queried using the RPT (requesting party token).
+The PRISM Agent leverages standard protocols like OIDC and UMA for authentication and access management.
+The user's identity is established through the ID token, and wallet permissions can be queried using the RPT (requesting party token).
 
 ## Roles
 
@@ -50,8 +49,8 @@ However, using Protection API to manage permissions is out of scope for this tut
 Once the registration is successful, the tenant can obtain an ID token from Keycloak using any available OIDC flow,
 such as the direct access grants (username & password). This ID token typically contains user claims such as username and subject ID.
 The tenant can use Keycloak's token endpoint to convert this token to an RPT (requesting party token),
-which is another token containing permissions on permitted resources.
-The tenant can access the multi-tenant agent by providing the RPT in the authorization header.
+which is another token containing permissions information.
+The tenant can access the multi-tenant agent by providing the RPT in the `Authorization` header.
 
 ## Endpoints
 
@@ -132,7 +131,7 @@ Keycloak offers great flexibility, allowing users to self-register,
 connect to IDP, or be manually created by an administrator.
 For this tutorial, the user will be manually created using Keycloak admin API for simplicity.
 
-The first step involves getting an admin token from Keycloak using the admin username and password.
+The first step is to get an admin token from Keycloak using the username and password.
 This token allows the admin to perform operations on Keycloak such as creating a new user.
 Running the provided command should return the admin access token.
 
@@ -157,7 +156,7 @@ Example token response (some fields omitted for readability)
 }
 ```
 
-After the admin has obtained an `access_token` from Keycloak, a new user can be created by running this command.
+After the admin get the `access_token` from Keycloak, a new user can be created by running this command.
 
 ```bash
 curl -X 'POST' \
@@ -274,8 +273,7 @@ Example token response (some fields omitted for readability)
 }
 ```
 
-Inspecting the token of the response using this [JWT debugger](https://jwt.io/),
-there should be a new claim in the JWT payload called `authorization`.
+Inspecting the token of the response, there should be a new claim in the JWT payload called `authorization`.
 
 Example RPT payload (some fields omitted for readability)
 
@@ -302,8 +300,8 @@ try listing the DIDs in the wallet using RPT in the `Authorization` header.
 
 ```bash
 curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids' \
-  --header "Authorization: Bearer eyJhbGciOi...e7H6W8RUvA" \
-  --header 'Accept: application/json'
+  -H "Authorization: Bearer eyJhbGciOi...e7H6W8RUvA" \
+  -H 'Accept: application/json'
 ```
 
 The result should show 200 status with an empty list.
