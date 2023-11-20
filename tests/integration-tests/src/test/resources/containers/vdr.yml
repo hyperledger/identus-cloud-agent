@@ -1,0 +1,28 @@
+---
+version: "3.8"
+
+services:
+
+  node-db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: "node_db"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "node_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  prism-node:
+    image: ghcr.io/input-output-hk/prism-node:${PRISM_NODE_VERSION}
+    environment:
+      NODE_PSQL_HOST: node-db:5432
+      NODE_REFRESH_AND_SUBMIT_PERIOD: 1s
+      NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD: 1s
+    ports:
+      - "${PRISM_NODE_PORT}:50053"
+    depends_on:
+      node-db:
+        condition: service_healthy
