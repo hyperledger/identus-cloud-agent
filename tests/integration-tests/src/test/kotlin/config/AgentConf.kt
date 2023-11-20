@@ -5,7 +5,7 @@ import java.net.URL
 
 data class AgentConf(
     val url: URL,
+    val apikey: String?,
     @ConfigAlias("webhook_url") val webhookUrl: URL?,
-    var apikey: String?,
-    @ConfigAlias("multi-tenant") val multiTenant: Boolean?,
+    val init: AgentInitConf?,
 )
