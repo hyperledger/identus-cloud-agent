@@ -107,7 +107,7 @@ curl -X 'GET' \
   -H 'Accept: application/json'
 ```
 
-Make sure to use the correct `access_token` in the `Authorization` header from the previous command.
+Use the correct `access_token` in the previous command's Authorization header.
 
 Response Example:
 
