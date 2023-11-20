@@ -2,7 +2,7 @@
 
 PRISM Agent authentication supports multiple authentication methods simultaneously.
 This means the user can seamlessly use any available credentials including `apikey` or `JWT` to access the wallet.
-The agent's UMA permission resource also exposes self-service permission endpoint, allowing users to manage the permissions for their wallets.
+The agent's [UMA](/docs/concepts/glossary#uma) permission resource also exposes self-service permission endpoint, allowing users to manage the permissions for their wallets.
 This facilitates a pattern where users can transition from `apikey` to `JWT` authentication without requiring admin intervention.
 
 ## Roles
