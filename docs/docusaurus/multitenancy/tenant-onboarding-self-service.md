@@ -97,7 +97,7 @@ Example token response (some fields omitted for readability)
 
 ### 3. Check the existing wallets
 
-Right after the account is registered, there should be no permission associated to it.
+Right after the account is registered, no permission should be associated with it.
 Listing wallets on it should return empty results.
 
 ```bash
