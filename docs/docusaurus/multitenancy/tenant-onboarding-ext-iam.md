@@ -200,11 +200,12 @@ This can be done by invoking the `POST /wallets/{walletId}/uma-permissions` endp
 ```bash
 curl -X 'POST' \
   'http://localhost:8080/prism-agent/wallets/99734c87-5c9d-4697-b5fd-dea4e9590ba7/uma-permissions' \
+  -v \
   -H 'accept: */*' \
   -H 'x-admin-api-key: my-admin-token' \
   -H 'Content-Type: application/json' \
   -d '{
-    "subject": "205e04b7-0158-41b0-89c3-f91c3a09f89b",
+    "subject": "205e04b7-0158-41b0-89c3-f91c3a09f89b"
   }'
 ```
 
@@ -295,7 +296,7 @@ Example RPT payload (some fields omitted for readability)
 
 ### 3. Perform a simple action to verify access to PRISM Agent
 
-To prove that the tenant can access the wallet,
+To prove that the tenant can access the wallet using RPT,
 try listing the DIDs in the wallet using RPT in the `Authorization` header.
 
 ```bash
@@ -303,6 +304,8 @@ curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/d
   -H "Authorization: Bearer eyJhbGciOi...e7H6W8RUvA" \
   -H 'Accept: application/json'
 ```
+
+Make sure to replace the token with RPT from previous step.
 
 The result should show 200 status with an empty list.
 This means that the wallet has been created and it does not contain any DIDs.
