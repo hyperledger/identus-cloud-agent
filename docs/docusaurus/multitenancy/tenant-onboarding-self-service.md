@@ -61,7 +61,7 @@ When the agent uses this token for the wallet creation, the agent recognizes it 
 ### 1. Self-register account on Keycloak
 
 Start by registering a new account on Keycloak, accessible through its login page.
-Usually this should be available at `http://localhost:9980/realms/my-realm/account/`.
+Usually, this should be available at `http://localhost:9980/realms/my-realm/account/`.
 
 For detailed instruction on how to register a new user,
 please refer to [registering a new user](https://www.keycloak.org/docs/latest/server_admin/index.html#proc-registering-new-user_server_administration_guide) section on the official documentation.
