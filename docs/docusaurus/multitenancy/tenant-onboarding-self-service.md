@@ -151,7 +151,7 @@ Response Example:
 }
 ```
 
-In this step, the agent create both wallet resource as well as UMA permission on Keycloak assigning the new wallet to the user who created it.
+In this step, the agent creates both wallet resource and UMA permission on Keycloak, assigning the new wallet to the user who created it.
 
 ### 5. Perform a simple action to verify access to PRISM Agent
 
