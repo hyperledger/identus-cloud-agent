@@ -2,12 +2,10 @@ package features
 
 import com.sksamuel.hoplite.ConfigLoader
 import common.ListenToEvents
-import config.AgentConf
-import config.Config
+import config.*
 import features.connection.ConnectionSteps
 import features.credentials.IssueCredentialsSteps
 import features.did.PublishDidSteps
-import features.multitenancy.EventsSteps
 import interactions.Get
 import io.cucumber.java.AfterAll
 import io.cucumber.java.BeforeAll
@@ -23,71 +21,184 @@ import net.serenitybdd.screenplay.actors.Cast
 import net.serenitybdd.screenplay.actors.OnStage
 import net.serenitybdd.screenplay.rest.abilities.CallAnApi
 import org.apache.http.HttpStatus
+import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
+import org.testcontainers.containers.ComposeContainer
+import org.testcontainers.containers.wait.strategy.Wait
+import java.io.File
 import java.util.*
-import kotlin.random.Random
 
-@OptIn(ExperimentalStdlibApi::class)
-fun createWalletAndEntity(agentConf: AgentConf) {
-    val config = ConfigLoader().loadConfigOrThrow<Config>("/tests.conf")
-    val createWalletResponse = RestAssured
-        .given().body(
-            CreateWalletRequest(
-                name = UUID.randomUUID().toString(),
-                seed = Random.nextBytes(64).toHexString(),
-                id = UUID.randomUUID()
-            )
+val environments: MutableList<ComposeContainer> = mutableListOf()
+
+fun initializeVdr(prismNode: PrismNodeConf) {
+    val vdrEnvironment: ComposeContainer = ComposeContainer(
+        File("src/test/resources/containers/vdr.yml")
+    ).withEnv(
+        mapOf(
+            "PRISM_NODE_VERSION" to prismNode.version,
+            "PRISM_NODE_PORT" to prismNode.httpPort.toString()
         )
-        .header(config.global.adminAuthHeader, config.global.adminApiKey)
-        .post("${agentConf.url}/wallets")
-        .thenReturn()
-    Ensure.that(createWalletResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
-    val wallet = createWalletResponse.body.jsonPath().getObject("", WalletDetail::class.java)
-    val tenantResponse = RestAssured
-        .given().body(
-            CreateEntityRequest(
-                name = UUID.randomUUID().toString(),
-                walletId = wallet.id
-            )
+    ).waitingFor(
+        "prism-node", Wait.forLogMessage(".*Server started, listening on.*", 1)
+    )
+    environments.add(vdrEnvironment)
+    vdrEnvironment.start()
+}
+
+fun initializeKeycloak(keycloakConf: KeycloakConf) {
+    val keycloakEnvironment: ComposeContainer = ComposeContainer(
+        File("src/test/resources/containers/keycloak.yml")
+    ).withEnv(
+        mapOf(
+            "KEYCLOAK_HTTP_PORT" to keycloakConf.httpPort.toString(),
         )
-        .header(config.global.adminAuthHeader, config.global.adminApiKey)
-        .post("${agentConf.url}/iam/entities")
-        .thenReturn()
-    Ensure.that(tenantResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
-    val entity = tenantResponse.body.jsonPath().getObject("", EntityResponse::class.java)
-    val addApiKeyResponse =
+    ).waitingFor(
+        "keycloak", Wait.forLogMessage(".*Running the server.*", 1)
+    )
+    environments.add(keycloakEnvironment)
+    keycloakEnvironment.start()
+
+    // Get admin token
+    val getAdminTokenResponse =
+        RestAssured
+            .given().body("grant_type=password&client_id=admin-cli&username=admin&password=admin")
+            .contentType("application/x-www-form-urlencoded")
+            .post("http://localhost:${keycloakConf.httpPort}/realms/master/protocol/openid-connect/token")
+            .thenReturn()
+    getAdminTokenResponse.then().statusCode(SC_OK)
+    val adminToken = getAdminTokenResponse.body.jsonPath().getString("access_token")
+
+    // Create realm
+    val createRealmResponse =
         RestAssured
             .given().body(
-                ApiKeyAuthenticationRequest(
-                    entityId = entity.id,
-                    apiKey = agentConf.apikey!!
+                mapOf(
+                    "realm" to keycloakConf.realm,
+                    "enabled" to true,
+                    "accessTokenLifespan" to 3600000
                 )
             )
-            .header(config.global.adminAuthHeader, config.global.adminApiKey)
-            .post("${agentConf.url}/iam/apikey-authentication")
-            .thenReturn()
-    Ensure.that(addApiKeyResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
-    val registerIssuerWebhookResponse =
+            .header("Authorization", "Bearer $adminToken")
+            .contentType("application/json")
+            .post("http://localhost:${keycloakConf.httpPort}/admin/realms")
+            .then().statusCode(SC_CREATED)
+
+    // Create client
+    val createClientResponse =
+        RestAssured
+            .given().body(
+                mapOf(
+                    "id" to keycloakConf.clientId,
+                    "directAccessGrantsEnabled" to true,
+                    "authorizationServicesEnabled" to true,
+                    "serviceAccountsEnabled" to true,
+                    "secret" to keycloakConf.clientSecret,
+                ))
+            .header("Authorization", "Bearer $adminToken")
+            .contentType("application/json")
+            .post("http://localhost:${keycloakConf.httpPort}/admin/realms/${keycloakConf.realm}/clients")
+            .then().statusCode(SC_CREATED)
+
+    // Create users
+    keycloakConf.users.forEach { keycloakUser ->
+            RestAssured
+                .given().body(
+                    mapOf(
+                        "id" to keycloakUser.username,
+                        "username" to keycloakUser.username,
+                        "firstName" to keycloakUser.username,
+                        "enabled" to true,
+                        "credentials" to listOf(
+                            mapOf(
+                                "value" to keycloakUser.password,
+                                "temporary" to false
+                            )
+                        )
+                    )
+                )
+                .header("Authorization", "Bearer $adminToken")
+                .contentType("application/json")
+                .post("http://localhost:${keycloakConf.httpPort}/admin/realms/${keycloakConf.realm}/users")
+                .then().statusCode(SC_CREATED)
+    }
+}
+
+fun initializeAgent(agentInitConf: AgentInitConf) {
+    val config = ConfigLoader().loadConfigOrThrow<Config>(System.getenv("INTEGRATION_TESTS_CONFIG") ?: "/configs/basic.conf")
+    val agentConfMap: Map<String, String> = mapOf(
+        "OPEN_ENTERPRISE_AGENT_VERSION" to agentInitConf.version,
+        "API_KEY_ENABLED" to agentInitConf.authEnabled.toString(),
+        "AUTH_HEADER" to config.global.authHeader,
+        "ADMIN_AUTH_HEADER" to config.global.adminAuthHeader,
+        "AGENT_DIDCOMM_PORT" to agentInitConf.didcommPort.toString(),
+        "AGENT_HTTP_PORT" to agentInitConf.httpPort.toString(),
+        "PRISM_NODE_PORT" to if (config.services.prismNode != null)
+            config.services.prismNode.httpPort.toString() else "",
+        "SECRET_STORAGE_BACKEND" to agentInitConf.secretStorageBackend,
+        "VAULT_HTTP_PORT" to if (config.services.vault != null && agentInitConf.secretStorageBackend == "vault")
+            config.services.vault.httpPort.toString() else "",
+        "KEYCLOAK_ENABLED" to agentInitConf.keycloakEnabled.toString(),
+        "KEYCLOAK_HTTP_PORT" to if (config.services.keycloak != null && agentInitConf.keycloakEnabled)
+            config.services.keycloak.httpPort.toString() else "",
+        "KEYCLOAK_REALM" to if (config.services.keycloak != null && agentInitConf.keycloakEnabled)
+            config.services.keycloak.realm else "",
+        "KEYCLOAK_CLIENT_ID" to if (config.services.keycloak != null && agentInitConf.keycloakEnabled)
+            config.services.keycloak.clientId else "",
+        "KEYCLOAK_CLIENT_SECRET" to if (config.services.keycloak != null && agentInitConf.keycloakEnabled)
+            config.services.keycloak.clientSecret else "",
+    )
+    val environment: ComposeContainer = ComposeContainer(
+        File("src/test/resources/containers/agent.yml")
+    ).withEnv(agentConfMap).waitingFor("open-enterprise-agent", Wait.forHealthcheck())
+    environments.add(environment)
+    environment.start()
+}
+
+fun initializeWallet(agentConf: AgentConf,  bearerToken: String? = "") {
+    val config = ConfigLoader().loadConfigOrThrow<Config>(System.getenv("INTEGRATION_TESTS_CONFIG") ?: "/configs/basic.conf")
+    val createWalletResponse =
+        RestAssured
+            .given().body(
+                CreateWalletRequest(
+                    name = UUID.randomUUID().toString()
+                )
+            )
+            .header("Authorization", "Bearer $bearerToken")
+            .post("${agentConf.url}/wallets")
+            .then().statusCode(HttpStatus.SC_CREATED)
+}
+
+fun initializeWebhook(agentConf: AgentConf, bearerToken: String? = "") {
+    val config = ConfigLoader().loadConfigOrThrow<Config>(System.getenv("INTEGRATION_TESTS_CONFIG") ?: "/configs/basic.conf")
+    val registerWebhookResponse =
         RestAssured
             .given().body(
                 CreateWebhookNotification(
                     url = agentConf.webhookUrl!!.toExternalForm()
                 )
             )
+            .header("Authorization", "Bearer $bearerToken")
             .header(config.global.authHeader, agentConf.apikey)
             .post("${agentConf.url}/events/webhooks")
+            .then().statusCode(HttpStatus.SC_OK)
+}
+
+fun getKeycloakAuthToken(keycloakConf: KeycloakConf, username: String, password: String): String {
+    val tokenResponse =
+        RestAssured
+            .given().body("grant_type=password&client_id=${keycloakConf.clientId}&client_secret=${keycloakConf.clientSecret}&username=${username}&password=${password}")
+            .contentType("application/x-www-form-urlencoded")
+            .header("Host", "localhost")
+            .post("http://localhost:${keycloakConf.httpPort}/realms/${keycloakConf.realm}/protocol/openid-connect/token")
             .thenReturn()
-    Ensure.that(registerIssuerWebhookResponse.statusCode).isEqualTo(HttpStatus.SC_CREATED)
+    tokenResponse.then().statusCode(HttpStatus.SC_OK)
+    return tokenResponse.body.jsonPath().getString("access_token")
 }
 
 @BeforeAll
 fun initAgents() {
     val cast = Cast()
-    val config = ConfigLoader().loadConfigOrThrow<Config>("/tests.conf")
-    cast.actorNamed(
-        "Admin",
-        CallAnApi.at(config.admin.url.toExternalForm())
-    )
+    val config = ConfigLoader().loadConfigOrThrow<Config>(System.getenv("INTEGRATION_TESTS_CONFIG") ?: "/configs/basic.conf")
     cast.actorNamed(
         "Acme",
         CallAnApi.at(config.issuer.url.toExternalForm()),
@@ -103,27 +214,62 @@ fun initAgents() {
         CallAnApi.at(config.verifier.url.toExternalForm()),
         ListenToEvents.at(config.verifier.webhookUrl!!)
     )
+    cast.actorNamed(
+        "Admin",
+        CallAnApi.at(config.admin.url.toExternalForm())
+    )
     OnStage.setTheStage(cast)
 
-    // Create issuer wallet and tenant
-    if (config.issuer.multiTenant!!) {
-        createWalletAndEntity(config.issuer)
+    if (config.services.keycloak != null) {
+        initializeKeycloak(config.services.keycloak)
     }
-    // Create verifier wallet
-    if (config.verifier.multiTenant!!) {
-        createWalletAndEntity(config.verifier)
+
+    if (config.services.prismNode != null) {
+        initializeVdr(config.services.prismNode)
     }
+    // Initialize the agents
+    config.agents.forEach { agent ->
+        initializeAgent(agent)
+    }
+
+    if (config.services.keycloak != null) {
+        cast.actors.forEach { actor ->
+            actor.remember("KEYCLOAK_BEARER_TOKEN", getKeycloakAuthToken(config.services.keycloak, actor.name, actor.name))
+            when (actor.name) {
+                "Acme" -> {
+                    initializeWallet(config.issuer, cast.actorNamed(actor.name).recall<String>("KEYCLOAK_BEARER_TOKEN"))
+                }
+                "Bob" -> {
+                    initializeWallet(config.holder, cast.actorNamed(actor.name).recall<String>("KEYCLOAK_BEARER_TOKEN"))
+                }
+                "Faber" -> {
+                    initializeWallet(config.verifier, cast.actorNamed(actor.name).recall<String>("KEYCLOAK_BEARER_TOKEN"))
+                }
+            }
+        }
+    }
+
+    initializeWebhook(config.issuer, cast.actorNamed("Acme").recall<String>("KEYCLOAK_BEARER_TOKEN"))
+    initializeWebhook(config.holder, cast.actorNamed("Bob").recall<String>("KEYCLOAK_BEARER_TOKEN"))
+    initializeWebhook(config.verifier, cast.actorNamed("Faber").recall<String>("KEYCLOAK_BEARER_TOKEN"))
 
     cast.actors.forEach { actor ->
         when (actor.name) {
             "Acme" -> {
                 actor.remember("AUTH_KEY", config.issuer.apikey)
+                actor.remember("AUTH_HEADER", config.global.authHeader)
             }
             "Bob" -> {
                 actor.remember("AUTH_KEY", config.holder.apikey)
+                actor.remember("AUTH_HEADER", config.global.authHeader)
             }
             "Faber" -> {
                 actor.remember("AUTH_KEY", config.verifier.apikey)
+                actor.remember("AUTH_HEADER", config.global.authHeader)
+            }
+            "Admin" -> {
+                actor.remember("AUTH_KEY", config.admin.apikey)
+                actor.remember("AUTH_HEADER", config.global.adminAuthHeader)
             }
         }
     }
@@ -132,6 +278,9 @@ fun initAgents() {
 @AfterAll
 fun clearStage() {
     OnStage.drawTheCurtain()
+    environments.forEach { environment ->
+        environment.stop()
+    }
 }
 
 class CommonSteps {

@@ -20,7 +20,7 @@ defaults:
 
 jobs:
   run-integration-tests:
-    name: "Run e2e tests"
+    name: "Run integration tests"
     runs-on: ubuntu-latest
     env:
       REPORTS_DIR: "tests/integration-tests/target/site/serenity"
@@ -50,49 +50,17 @@ jobs:
           legacy: true # will also install in PATH as `docker-compose`
 
       - name: Build local version of PRISM Agent
+        id: build_local_prism_agent
         env:
-          ENV_FILE: "infrastructure/local/.env"
           PRISM_AGENT_PATH: "../.."
+          ENV_FILE: "infrastructure/local/.env"
           GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
           GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
           cd "${PRISM_AGENT_PATH}" || exit 129
           sbt docker:publishLocal
-          PRISM_AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
-          sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
-          cat "${ENV_FILE}"
-
-      - name: Start Cloud Agent for issuer and verifier
-        env:
-          PORT: 8080
-          ADMIN_TOKEN: "admin"
-          DEFAULT_WALLET_ENABLED: "false"
-          API_KEY_AUTO_PROVISIONING: "false"
-          API_KEY_ENABLED: "true"
-          DOCKERHOST: "host.docker.internal"
-        uses: isbang/compose-action@v1.4.1
-        with:
-          compose-file: "./infrastructure/shared/docker-compose-demo.yml"
-          compose-flags: "--env-file ./infrastructure/local/.env -p issuer"
-          up-flags: "--wait"
-          down-flags: "--volumes"
-
-      - name: Start Cloud Agent for holder
-        env:
-          PORT: 8090
-          ADMIN_TOKEN: admin
-          DEFAULT_WALLET_ENABLED: true
-          DEFAULT_WALLET_WEBHOOK_URL: http://host.docker.internal:9956
-          DEFAULT_WALLET_AUTH_API_KEY: default
-          API_KEY_AUTO_PROVISIONING: false
-          API_KEY_ENABLED: true
-          DOCKERHOST: "host.docker.internal"
-        uses: isbang/compose-action@v1.4.1
-        with:
-          compose-file: "./infrastructure/shared/docker-compose-demo.yml"
-          compose-flags: "--env-file ./infrastructure/local/.env -p holder"
-          up-flags: "--wait"
-          down-flags: "--volumes"
+          echo "open_enterprise_agent_version=$(cut -d'=' -f2 version.sbt | tr -d '" ')" >> "${GITHUB_OUTPUT}"
+          echo "prism_node_version=$(grep PRISM_NODE_VERSION infrastructure/local/.env | cut -d'=' -f2 | tr -d ' ')" >> "${GITHUB_OUTPUT}"
 
       - uses: actions/setup-java@v3
         with:
@@ -101,6 +69,8 @@ jobs:
 
       - name: Run integration tests
         env:
+          PRISM_NODE_VERSION: ${{ steps.build_local_prism_agent.outputs.prism_node_version }}
+          OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_prism_agent.outputs.open_enterprise_agent_version }}
           ATALA_GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
           ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         continue-on-error: true
@@ -164,6 +134,6 @@ jobs:
             Failed: ${{ steps.analyze_test_results.outputs.failures }}
             Errors in tests: ${{ steps.analyze_test_results.outputs.errors }}
             Skipped (known bugs): ${{ steps.analyze_test_results.outputs.skipped }}
-          SLACK_TITLE: "Atala PRISM V2 Integration tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
+          SLACK_TITLE: "Open Enterprise Agent Integration Tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
           SLACK_USERNAME: circleci
           SLACK_WEBHOOK: ${{ secrets.E2E_TESTS_SLACK_WEBHOOK }}
