@@ -55,7 +55,7 @@ automatically associate the tenant's permission with the created wallet.
 ### Keycloak endpoints
 | Endpoint                                            | Description           | Role   |
 |-----------------------------------------------------|-----------------------|--------|
-| `GET /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token | Tenant |
+| `POST /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token | Tenant |
 
 ## Tenant interactions
 

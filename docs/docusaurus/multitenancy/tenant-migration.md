@@ -1,6 +1,6 @@
 # Migration from `apikey` to `JWT` authentication
 
-PRISM Agent authentication supports enabling multiple authentication methods simultaneously.
+PRISM Agent authentication supports multiple authentication methods simultaneously.
 This means the user can seamlessly use any available credentials including `apikey` or `JWT` to access the wallet.
 The agent's UMA permission resource also exposes self-service permission endpoint, allowing users to manage the permissions for their wallets.
 This facilitates a pattern where users can transition from `apikey` to `JWT` authentication without requiring admin intervention.
@@ -39,7 +39,7 @@ To migrate to `JWT` authentication, users can create a new UMA permission for th
 ### Keycloak endpoints
 | Endpoint                                            | Description           | Role   |
 |-----------------------------------------------------|-----------------------|--------|
-| `GET /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token | Tenant |
+| `POST /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token | Tenant |
 
 ## Tenant interactions
 

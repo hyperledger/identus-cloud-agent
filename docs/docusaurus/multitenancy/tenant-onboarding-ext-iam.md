@@ -66,7 +66,7 @@ The tenant can access the multi-tenant agent by providing the RPT in the `Author
 | Endpoint                                            | Description                   | Role                  |
 |-----------------------------------------------------|-------------------------------|-----------------------|
 | `POST /admin/realms/{realm}/users`                  | Create a new user on Keycloak | Administrator         |
-| `GET /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token         | Administrator, Tenant |
+| `POST /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token         | Administrator, Tenant |
 
 ## Administrator interactions
 
