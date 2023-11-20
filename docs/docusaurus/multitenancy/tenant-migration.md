@@ -1,0 +1,175 @@
+# Migration from `apikey` to `JWT` authentication
+
+PRISM Agent authentication supports enabling multiple authentication methods simultaneously.
+This means the user can seamlessly use any available credentials including `apikey` or `JWT` to access the wallet.
+The agent's UMA permission resource also exposes self-service permission endpoint, allowing users to manage the permissions for their wallets.
+This facilitates a pattern where users can transition from `apikey` to `JWT` authentication without requiring admin intervention.
+
+## Roles
+
+In the migration process from `apikey` to `JWT`, there is only 1 role:
+
+1. Tenant
+
+## Prerequisites
+
+1. Keycloak up and running
+2. Keycloak is configured the same as in [Tenant Onboarding Self-Service](./tenant-onboarding-self-service.md)
+3. PRISM Agent up and running
+4. PRISM Agent is configured the same as in [Tenant Onboarding Self-Service](./tenant-onboarding-self-service.md)
+5. The user has access to the wallet using `apikey`. (See [Tenant Onboarding](./tenant-onboarding.md))
+6. The user has account registered on Keycloak
+
+## Overview
+
+This tutorial outlines the steps to transition from `apikey` to `JWT` authentication.
+Initially, users have wallet access through the `apikey` method.
+To migrate to `JWT` authentication, users can create a new UMA permission for their wallet and grant permission to their own Keycloak account.
+
+## Endpoints
+
+### Agent endpoints
+| Endpoint                                   | Description                          | Role   |
+|--------------------------------------------|--------------------------------------|--------|
+| `GET /wallets`                             | List the wallets on PRISM Agent      | Tenant |
+| `POST /wallets`                            | Create a new wallet on PRISM Agent   | Tenant |
+| `POST /wallets/{walletId}/uma-permissions` | Create a uma-permission for a wallet | Tenant |
+| `GET /did-registrar/dids`                  | List the DIDs inside the wallet      | Tenant |
+
+### Keycloak endpoints
+| Endpoint                                            | Description           | Role   |
+|-----------------------------------------------------|-----------------------|--------|
+| `GET /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token | Tenant |
+
+## Tenant interactions
+
+### 1. Check the existing wallets using `apikey`
+
+This tutorial assumes the tenant has access to the wallet using `apikey`.
+Before granting more permission to the wallet, the `walletId` must be identified.
+This can be done by listing the wallets using `apikey`.
+
+```bash
+curl -X 'GET' \
+  'http://localhost:8080/prism-agent/wallets' \
+  -H 'accept: application/json' \
+  -H "apikey: my-tenant-token" \
+```
+
+Make sure to use the correct `apikey` from the pre-requisite.
+
+Response Example:
+
+```json
+{
+  "self": "/wallets",
+  "kind": "WalletPage",
+  "pageOf": "/wallets",
+  "contents": [
+    {
+      "id": "99734c87-5c9d-4697-b5fd-dea4e9590ba7",
+      "name": "my-wallet",
+      "createdAt": "2023-01-01T00:00:00Z",
+      "updatedAt": "2023-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+### 2. Get the access token on keycloak
+
+Run this command to log in and get the access token
+
+```bash
+curl -X 'POST' \
+  'http://localhost:9980/realms/my-realm/protocol/openid-connect/token' \
+  -d "grant_type=password" \
+  -d "client_id=admin-cli" \
+  -d "username=alice" \
+  -d "password=1234"
+```
+
+Make sure to use the correct username and password.
+Special attention on the `client_id`, this should be the actual `client_id` of the frontend application that log the user in.
+For this tutorial, it is absolutely OK to use `admin-cli`.
+
+Example token response (some fields omitted for readability)
+
+```json
+{
+    "access_token": "eyJhbGciOi...7ocDHofUDQ",
+    "refresh_token": "eyJhbGciOi...otsEEi4eQA",
+    ...
+}
+```
+
+### 3. Extract the subject ID from JWT
+
+When creating a UMA permission, it is important to provide the subject ID which the permission will be granted to.
+To get the subject ID of the tenant, one can inspect the JWT payload `sub` claim.
+
+Run this command to extract the `sub` claim of the token from pervious step
+
+```bash
+echo 'eyJhbGciOi...7ocDHofUDQ' | cut --delimiter='.' --fields=2 | base64 --decode | jq -r '.sub'
+```
+
+Example result
+
+```log
+4a5c6ac9-12f5-4d1e-b8f2-667525c083fd
+```
+
+### 4. Grant the user permission to the wallet
+
+The addition UMA permission can be added to the current wallet giving Keycloak user an access.
+This can be done by invoking the `POST /wallets/{walletId}/uma-permissions` endpoint on the agent.
+
+```bash
+curl -X 'POST' \
+  'http://localhost:8080/prism-agent/wallets/99734c87-5c9d-4697-b5fd-dea4e9590ba7/uma-permissions' \
+  -H 'accept: */*' \
+  -H "apikey: my-tenant-token" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "subject": "205e04b7-0158-41b0-89c3-f91c3a09f89b",
+  }'
+```
+
+Make sure to use the correct `subject` for the user and the correct `walletId` from the step earlier.
+
+The response should return status `200 OK` in case of successful permission creation.
+
+### 5. Perform a simple action to verify access to PRISM Agent
+
+After sucessful UMA permission creation, the user should be able to use `JWT` token for authentitcation to the wallet.
+Simply list the wallet using a new `Authorization` header, the listed wallets should contain the wallet with the same ID in step 1.
+
+```bash
+curl -X 'GET' \
+  'http://localhost:8080/prism-agent/wallets' \
+  -H 'accept: application/json' \
+  -H "Authorization: Bearer eyJhbGciOi...7ocDHofUDQ" \
+```
+
+Make sure to use the correct `JWT` from step 2.
+
+Response Example:
+
+```json
+{
+  "self": "/wallets",
+  "kind": "WalletPage",
+  "pageOf": "/wallets",
+  "contents": [
+    {
+      "id": "99734c87-5c9d-4697-b5fd-dea4e9590ba7",
+      "name": "my-wallet",
+      "createdAt": "2023-01-01T00:00:00Z",
+      "updatedAt": "2023-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+This indicates that the user should be able to perform any wallet interaction with the `JWT` and `apikey` interchangeably.

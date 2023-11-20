@@ -312,6 +312,6 @@ Any interactions that the tenant performs should be scoped to only this wallet.
 
 In this tutorial, there is an additional step for the tenant to request the RPT from the access token.
 This aligns with the standard UMA interaction, where the handling of RPT typically occurs on the client side.
-To streamline the development experience, the agent has a feature that allows developers to bypass this process.
+To simplify the experience, the agent has a feature that allows user to bypass this process.
 By setting the variable `KEYCLOAK_UMA_AUTO_UPGRADE_RPT=true`, tenants can utilize the access token
 obtained in step 1 directly in the `Authorization` header, eliminating the need for additional RPT request step.

@@ -46,17 +46,16 @@ automatically associate the tenant's permission with the created wallet.
 ## Endpoints
 
 ### Agent endpoints
-| Endpoint                                   | Description                          | Role          |
-|--------------------------------------------|--------------------------------------|---------------|
-| `GET /wallets`                             | List the wallets on PRISM Agent      | Tenant        |
-| `POST /wallets`                            | Create a new wallet on PRISM Agent   | Tenant        |
-| `POST /wallets/{walletId}/uma-permissions` | Create a uma-permission for a wallet | Tenant        |
-| `GET /did-registrar/dids`                  | List the DIDs inside the wallet      | Tenant        |
+| Endpoint                  | Description                        | Role   |
+|---------------------------|------------------------------------|--------|
+| `GET /wallets`            | List the wallets on PRISM Agent    | Tenant |
+| `POST /wallets`           | Create a new wallet on PRISM Agent | Tenant |
+| `GET /did-registrar/dids` | List the DIDs inside the wallet    | Tenant |
 
 ### Keycloak endpoints
-| Endpoint                                            | Description                   | Role                  |
-|-----------------------------------------------------|-------------------------------|-----------------------|
-| `GET /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token         | Administrator, Tenant |
+| Endpoint                                            | Description           | Role   |
+|-----------------------------------------------------|-----------------------|--------|
+| `GET /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token | Tenant |
 
 ## Tenant interactions
 
