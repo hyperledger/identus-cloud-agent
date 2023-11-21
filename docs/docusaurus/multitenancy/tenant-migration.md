@@ -6,7 +6,7 @@ It allows users to transition from `apikey` to `JWT` authentication without admi
 
 ## Roles
 
-In the migration process from `apikey` to `JWT`, there is only 1 role:
+In the migration process from `apikey` to `JWT`, there is only one role:
 
 1. Tenant
 
