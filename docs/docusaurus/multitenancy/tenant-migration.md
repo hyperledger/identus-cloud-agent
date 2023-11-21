@@ -44,7 +44,7 @@ To migrate to `JWT` authentication, users can create a new UMA permission for th
 
 ### 1. Check the existing wallets using `apikey`
 
-This tutorial assumes the tenant has access to the wallet using `apikey`.
+This tutorial assumes the tenant can access the wallet using `apikey`.
 Before granting more permission to the wallet, the `walletId` must be identified.
 To find the wallet, list them using `apikey`.
 
