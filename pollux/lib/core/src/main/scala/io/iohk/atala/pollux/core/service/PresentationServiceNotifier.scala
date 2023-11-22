@@ -3,6 +3,7 @@ package io.iohk.atala.pollux.core.service
 import io.iohk.atala.event.notification.{Event, EventNotificationService}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProofType, ProposePresentation, RequestPresentation}
+import io.iohk.atala.pollux.anoncreds.AnoncredPresentation
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
@@ -143,12 +144,19 @@ class PresentationServiceNotifier(
   ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] =
     svc.getPresentationRecords(ignoreWithZeroRetries)
 
-  override def createPresentationPayloadFromRecord(
+  override def createJwtPresentationPayloadFromRecord(
       record: DidCommID,
       issuer: Issuer,
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, PresentationPayload] =
-    svc.createPresentationPayloadFromRecord(record, issuer, issuanceDate)
+    svc.createJwtPresentationPayloadFromRecord(record, issuer, issuanceDate)
+
+  override def createAnoncredPresentationPayloadFromRecord(
+      record: DidCommID,
+      issuer: Issuer,
+      issuanceDate: Instant
+  ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] =
+    svc.createAnoncredPresentationPayloadFromRecord(record, issuer, issuanceDate)
 
   override def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,

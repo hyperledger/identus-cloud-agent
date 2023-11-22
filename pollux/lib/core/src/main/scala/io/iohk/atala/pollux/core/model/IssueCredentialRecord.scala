@@ -73,6 +73,15 @@ final case class ValidIssuedCredentialRecord(
     subjectId: Option[String]
 )
 
+final case class ValidFullIssuedCredentialRecord(
+    id: DidCommID,
+    issuedCredential: Option[IssueCredential],
+    credentialFormat: CredentialFormat,
+    schemaId: Option[String],
+    credentialDefinitionId: Option[UUID],
+    subjectId: Option[String]
+)
+
 object IssueCredentialRecord {
 
   enum Role:
