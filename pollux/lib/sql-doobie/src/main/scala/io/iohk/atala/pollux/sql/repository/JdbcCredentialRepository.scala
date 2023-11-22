@@ -448,6 +448,37 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
   }
 
+  override def getValidAnoncredIssuedCredentials(
+      recordIds: Seq[DidCommID]
+  ): RIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]] = {
+    val idAsStrings = recordIds.map(_.toString)
+    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail: _*)
+    val inClauseFragment = Fragments.in(fr"id", nel)
+
+    val cxnIO = sql"""
+                     | SELECT
+                     |   id,
+                     |   issue_credential_data,
+                     |   credential_format,
+                     |   schema_id,
+                     |   credential_definition_id,
+                     |   subject_id
+                     | FROM public.issue_credential_records
+                     | WHERE 1=1
+                     |   AND issue_credential_data IS NOT NULL
+                     |   AND schema_id IS NOT NULL
+                     |   AND credential_definition_id IS NOT NULL
+                     |   AND credential_format = 'AnonCreds'
+                     |   AND $inClauseFragment
+        """.stripMargin
+      .query[ValidFullIssuedCredentialRecord]
+      .to[Seq]
+
+    cxnIO
+      .transactWallet(xa)
+
+  }
+
   override def deleteIssueCredentialRecord(recordId: DidCommID): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
       | DELETE
