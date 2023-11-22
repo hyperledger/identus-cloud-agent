@@ -137,6 +137,34 @@ class CredentialRepositoryInMemory(
       .toSeq
   }
 
+  override def getValidAnoncredIssuedCredentials(
+      recordId: Seq[DidCommID]
+  ): RIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]] = {
+    for {
+      storeRef <- walletStoreRef
+      store <- storeRef.get
+    } yield store.values
+      .filter(rec =>
+        recordId.contains(
+          rec.id
+        ) && rec.issueCredentialData.isDefined
+          && rec.schemaId.isDefined
+          && rec.credentialDefinitionId.isDefined
+          && rec.credentialFormat == CredentialFormat.AnonCreds
+      )
+      .map(rec =>
+        ValidFullIssuedCredentialRecord(
+          rec.id,
+          rec.issueCredentialData,
+          rec.credentialFormat,
+          rec.schemaId,
+          rec.credentialDefinitionId,
+          rec.subjectId
+        )
+      )
+      .toSeq
+  }
+
   override def deleteIssueCredentialRecord(recordId: DidCommID): RIO[WalletAccessContext, Int] = {
     for {
       storeRef <- walletStoreRef
