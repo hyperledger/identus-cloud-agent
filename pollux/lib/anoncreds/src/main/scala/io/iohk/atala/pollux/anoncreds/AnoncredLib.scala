@@ -144,7 +144,7 @@ object AnoncredLib {
 
   def createPresentation(
       presentationRequest: PresentationRequest,
-      credentialRequests: Seq[CredentialAndRequestedAttributesPredicates],
+      credentialRequests: Seq[CredentialRequests],
       selfAttested: Map[String, String],
       linkSecret: LinkSecret,
       schemas: Map[SchemaId, SchemaDef],

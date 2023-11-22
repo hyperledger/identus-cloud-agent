@@ -452,21 +452,7 @@ private class PresentationServiceImpl(
       schemaMap <-
         ZIO
           .collectAll(schemaIds.map { schemaId =>
-            for {
-              uri <- ZIO.attempt(new URI(schemaId)).mapError(e => UnexpectedError(e.getMessage))
-              content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
-              vcSchema <- parseCredentialSchema(content).mapError(e => UnexpectedError(e.message))
-              anoncredSchema <- AnoncredSchemaSerDesV1.schemaSerDes
-                .deserialize(vcSchema.schema)
-                .mapError(e => UnexpectedError(e.error))
-              anoncredLibSchema =
-                SchemaDef(
-                  schemaId,
-                  anoncredSchema.version,
-                  anoncredSchema.attrNames,
-                  anoncredSchema.issuerId
-                )
-            } yield (schemaId, anoncredLibSchema)
+            resolveSchema(schemaId)
           })
           .map(_.toMap)
       credentialDefinitionMap <-
@@ -515,7 +501,7 @@ private class PresentationServiceImpl(
               AnoncredLib.createPresentation(
                 PresentationRequest(presentationRequestData),
                 verifiableCredentials.map(verifiableCredential =>
-                  CredentialAndRequestedAttributesPredicates(
+                  CredentialRequests(
                     Credential(verifiableCredential),
                     deserializedPresentationRequestData.requested_attributes.keys.toSeq, // TO FIX
                     deserializedPresentationRequestData.requested_predicates.keys.toSeq // TO FIX
@@ -530,6 +516,24 @@ private class PresentationServiceImpl(
           )
           .mapError((t: Throwable) => AnoncredPresentationCreationError(t))
     } yield presentation
+  }
+
+  private def resolveSchema(schemaId: String): IO[UnexpectedError, (String, SchemaDef)] = {
+    for {
+      uri <- ZIO.attempt(new URI(schemaId)).mapError(e => UnexpectedError(e.getMessage))
+      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
+      vcSchema <- parseCredentialSchema(content).mapError(e => UnexpectedError(e.message))
+      anoncredSchema <- AnoncredSchemaSerDesV1.schemaSerDes
+        .deserialize(vcSchema.schema)
+        .mapError(e => UnexpectedError(e.error))
+      anoncredLibSchema =
+        SchemaDef(
+          schemaId,
+          anoncredSchema.version,
+          anoncredSchema.attrNames,
+          anoncredSchema.issuerId
+        )
+    } yield (schemaId, anoncredLibSchema)
   }
 
   def acceptRequestPresentation(

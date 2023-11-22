@@ -102,7 +102,7 @@ class PoCNewLib extends AnyFlatSpec {
     val presentation = AnoncredLib.createPresentation(
       presentationRequest, // : PresentationRequest,
       Seq(
-        CredentialAndRequestedAttributesPredicates(credential, Seq("sex"), Seq("age"))
+        CredentialRequests(credential, Seq("sex"), Seq("age"))
       ), // credentials: Seq[Credential],
       Map(), // selfAttested: Map[String, String],
       linkSecret.secret, // linkSecret: LinkSecret,

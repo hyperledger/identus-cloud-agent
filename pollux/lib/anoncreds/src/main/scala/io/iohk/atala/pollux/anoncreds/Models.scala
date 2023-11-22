@@ -3,17 +3,17 @@ package io.iohk.atala.pollux.anoncreds
 import uniffi.anoncreds.{
   Nonce,
   Credential as UniffiCredential,
-  CredentialRequests as UniffiCredentialRequests,
   CredentialDefinition as UniffiCredentialDefinition,
   CredentialDefinitionPrivate as UniffiCredentialDefinitionPrivate,
   CredentialKeyCorrectnessProof as UniffiCredentialKeyCorrectnessProof,
   CredentialOffer as UniffiCredentialOffer,
   CredentialRequest as UniffiCredentialRequest,
   CredentialRequestMetadata as UniffiCredentialRequestMetadata,
+  CredentialRequests as UniffiCredentialRequests,
   LinkSecret as UniffiLinkSecret,
-  Schema as UniffiSchema,
   Presentation as UniffiPresentation,
   PresentationRequest as UniffiPresentationRequest,
+  Schema as UniffiSchema
 }
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
@@ -259,17 +259,16 @@ object Credential {
 }
 
 // ****************************************************************************
-case class CredentialAndRequestedAttributesPredicates(
+case class CredentialRequests(
     credential: Credential,
     requestedAttribute: Seq[String],
     requestedPredicate: Seq[String],
 )
 
-object CredentialAndRequestedAttributesPredicates {
-  given Conversion[CredentialAndRequestedAttributesPredicates, UniffiCredentialRequests] with {
-    import uniffi.anoncreds.RequestedAttribute
-    import uniffi.anoncreds.RequestedPredicate
-    def apply(credentialRequests: CredentialAndRequestedAttributesPredicates): UniffiCredentialRequests = {
+object CredentialRequests {
+  given Conversion[CredentialRequests, UniffiCredentialRequests] with {
+    import uniffi.anoncreds.{RequestedAttribute, RequestedPredicate}
+    def apply(credentialRequests: CredentialRequests): UniffiCredentialRequests = {
       val credential = Credential.given_Conversion_Credential_UniffiCredential(credentialRequests.credential)
       val requestedAttributes = credentialRequests.requestedAttribute.map(a => RequestedAttribute(a, true))
       val requestedPredicates = credentialRequests.requestedPredicate.map(p => RequestedPredicate(p))
@@ -277,9 +276,9 @@ object CredentialAndRequestedAttributesPredicates {
     }
   }
 
-  given Conversion[UniffiCredentialRequests, CredentialAndRequestedAttributesPredicates] with {
-    def apply(credentialRequests: UniffiCredentialRequests): CredentialAndRequestedAttributesPredicates = {
-      CredentialAndRequestedAttributesPredicates(
+  given Conversion[UniffiCredentialRequests, CredentialRequests] with {
+    def apply(credentialRequests: UniffiCredentialRequests): CredentialRequests = {
+      CredentialRequests(
         Credential.given_Conversion_UniffiCredential_Credential(credentialRequests.getCredential()),
         credentialRequests
           .getRequestedAttribute()
