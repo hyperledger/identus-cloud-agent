@@ -9,7 +9,11 @@ import io.iohk.atala.agent.server.jobs.BackgroundJobError.{
   InvalidState,
   NotImplemented
 }
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.*
+import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.presentproof.*
@@ -19,18 +23,15 @@ import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
 import io.iohk.atala.pollux.vc.jwt.{JWT, JwtPresentation, DidResolver as JwtDidResolver}
+import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.metrics.*
 import zio.prelude.Validation
 import zio.prelude.ZValidation.*
-import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
-import io.iohk.atala.resolvers.DIDResolver
+
 import java.time.{Clock, Instant, ZoneId}
-import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 object PresentBackgroundJobs extends BackgroundJobsHelper {
 
   val presentProofExchanges = {
@@ -230,7 +231,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               PresentationPending,
-              _,
+              credentialFormat,
               oRequestPresentation,
               _,
               _,
@@ -239,7 +240,6 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               _
             ) => // Prover
-          // signedJwtPresentation = JwtPresentation.toEncodedJwt(w3cPresentationPayload, prover)
           oRequestPresentation match
             case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
             case Some(requestPresentation) => // TODO create build method in mercury for Presentation
@@ -249,35 +249,72 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                   presentationService <- ZIO.service[PresentationService]
                   prover <- createPrismDIDIssuerFromPresentationCredentials(id, credentialsToUse.getOrElse(Nil))
                     .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-                  presentationPayload <- presentationService
-                    .createPresentationPayloadFromRecord(
-                      id,
-                      prover,
-                      Instant.now()
-                    )
-                    .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-                  signedJwtPresentation = JwtPresentation.toEncodedJwt(
-                    presentationPayload.toW3CPresentationPayload,
-                    prover
-                  )
-                  presentation <- ZIO.succeed(
-                    Presentation(
-                      body = Presentation.Body(
-                        goal_code = requestPresentation.body.goal_code,
-                        comment = requestPresentation.body.comment
-                      ),
-                      attachments = Seq(
-                        AttachmentDescriptor
-                          .buildBase64Attachment(
-                            payload = signedJwtPresentation.value.getBytes(),
-                            mediaType = Some("prism/jwt")
+                  presentation <-
+                    credentialFormat match {
+                      case CredentialFormat.JWT =>
+                        for {
+                          presentationPayload <-
+                            presentationService
+                              .createJwtPresentationPayloadFromRecord(
+                                id,
+                                prover,
+                                Instant.now()
+                              )
+                              .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                          signedJwtPresentation = JwtPresentation.toEncodedJwt(
+                            presentationPayload.toW3CPresentationPayload,
+                            prover
                           )
-                      ),
-                      thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
-                      from = requestPresentation.to,
-                      to = requestPresentation.from
-                    )
-                  )
+                          presentation <- ZIO.succeed(
+                            Presentation(
+                              body = Presentation.Body(
+                                goal_code = requestPresentation.body.goal_code,
+                                comment = requestPresentation.body.comment
+                              ),
+                              attachments = Seq(
+                                AttachmentDescriptor
+                                  .buildBase64Attachment(
+                                    payload = signedJwtPresentation.value.getBytes(),
+                                    mediaType = Some("prism/jwt")
+                                  )
+                              ),
+                              thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
+                              from = requestPresentation.to,
+                              to = requestPresentation.from
+                            )
+                          )
+                        } yield presentation
+                      case CredentialFormat.AnonCreds =>
+                        for {
+                          presentationPayload <-
+                            presentationService
+                              .createAnoncredPresentationPayloadFromRecord(
+                                id,
+                                prover,
+                                Instant.now()
+                              )
+                              .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                          presentation <- ZIO.succeed(
+                            Presentation(
+                              body = Presentation.Body(
+                                goal_code = requestPresentation.body.goal_code,
+                                comment = requestPresentation.body.comment
+                              ),
+                              attachments = Seq(
+                                AttachmentDescriptor
+                                  .buildBase64Attachment(
+                                    payload = presentationPayload.data.getBytes(),
+                                    mediaType = Some(PresentCredentialFormat.Anoncred.name),
+                                    format = Some(PresentCredentialFormat.Anoncred.name),
+                                  )
+                              ),
+                              thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
+                              from = requestPresentation.to,
+                              to = requestPresentation.from
+                            )
+                          )
+                        } yield presentation
+                    }
                   _ <- presentationService
                     .markPresentationGenerated(id, presentation)
                     .provideSomeLayer(ZLayer.succeed(walletAccessContext))

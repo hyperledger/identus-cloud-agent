@@ -141,12 +141,12 @@ object AnoncredLib {
 
   def createPresentation(
       presentationRequest: PresentationRequest,
-      credentialRequests: Seq[CredentialAndRequestedAttributesPredicates],
+      credentialRequests: Seq[CredentialRequests],
       selfAttested: Map[String, String],
       linkSecret: LinkSecret,
       schemas: Map[SchemaId, SchemaDef],
       credentialDefinitions: Map[CredentialDefinitionId, CredentialDefinition],
-  ): Either[uniffi.anoncreds_wrapper.AnoncredsException.CreatePresentationException, Presentation] = {
+  ): Either[uniffi.anoncreds_wrapper.AnoncredsException.CreatePresentationException, AnoncredPresentation] = {
     try {
       Right(
         uniffi.anoncreds_wrapper
@@ -181,7 +181,7 @@ object AnoncredLib {
 
   // FIXME its always return false ....
   def verifyPresentation(
-      presentation: Presentation,
+      presentation: AnoncredPresentation,
       presentationRequest: PresentationRequest,
       schemas: Map[SchemaId, SchemaDef],
       credentialDefinitions: Map[CredentialDefinitionId, CredentialDefinition],
