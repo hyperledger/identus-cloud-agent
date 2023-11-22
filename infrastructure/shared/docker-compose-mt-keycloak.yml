@@ -107,6 +107,12 @@ services:
       API_KEY_ENABLED:
       API_KEY_AUTHENTICATE_AS_DEFAULT_USER:
       API_KEY_AUTO_PROVISIONING:
+      KEYCLOAK_ENABLED: true
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: atala-demo
+      KEYCLOAK_CLIENT_ID: prism-agent
+      KEYCLOAK_CLIENT_SECRET: prism-agent-demo-secret
+      KEYCLOAK_UMA_AUTO_UPGRADE_RPT: true
     depends_on:
       db:
         condition: service_healthy
@@ -147,7 +153,7 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-    command: start-dev --health-enabled=true
+    command: start-dev --hostname-url=http://localhost:9980 --health-enabled=true
 
   keycloak-wait:
     image: badouralix/curl-jq:ubuntu

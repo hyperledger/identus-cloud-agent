@@ -32,3 +32,30 @@ spec:
     agent: agent-admin
   postgresql:
     version: "14"
+
+{{- if .Values.keycloak.enabled }}
+---
+
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: "{{ .Values.database.postgres.managingTeam }}-keycloak-postgres-cluster"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{ template "labels.common" . }}
+spec:
+  teamId: "{{ .Values.database.postgres.managingTeam }}"
+  volume:
+    size: "{{ .Values.database.postgres.databaseSize }}"
+  numberOfInstances: {{ .Values.database.postgres.numberOfInstances }}
+  users:
+    keycloak-admin:
+      - superuser
+      - createdb
+    keycloak-user: []
+  databases:
+    keycloak: keycloak-admin
+  postgresql:
+    version: "14"
+
+{{- end }}
