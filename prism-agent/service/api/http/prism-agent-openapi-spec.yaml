@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Prism Agent
-  version: 1.18.0
+  version: 1.19.0
 paths:
   /credential-definition-registry/definitions:
     get:
@@ -1884,12 +1884,6 @@ paths:
       description: 'Get all entities with the pagination by `offset` and `limit` parameters '
       operationId: getAllEntities
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: offset
         in: query
         required: false
@@ -1927,6 +1921,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
     post:
       tags:
       - Identity and Access Management
@@ -1934,13 +1931,6 @@ paths:
       description: Create the new entity record. The entity record is a representation
         of the account in the system.
       operationId: createEntity
-      parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       requestBody:
         description: JSON object required for the entity creation
         content:
@@ -1979,6 +1969,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
   /iam/entities/{id}/name:
     put:
       tags:
@@ -1987,12 +1980,6 @@ paths:
       description: Update the entity record name by `id`
       operationId: updateEntityName
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: id
         in: path
         required: true
@@ -2037,6 +2024,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
   /iam/entities/{id}/walletId:
     put:
       tags:
@@ -2045,12 +2035,6 @@ paths:
       description: Update the entity record `walletId` field by `id`
       operationId: updateEntityWalletId
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: id
         in: path
         required: true
@@ -2095,6 +2079,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
   /iam/entities/{id}:
     get:
       tags:
@@ -2103,12 +2090,6 @@ paths:
       description: Get the entity by the unique identifier
       operationId: getEntityById
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: id
         in: path
         description: Identifier of the entity
@@ -2147,6 +2128,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
     delete:
       tags:
       - Identity and Access Management
@@ -2154,12 +2138,6 @@ paths:
       description: Delete the entity by the unique identifier
       operationId: deleteEntityById
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: id
         in: path
         description: Identifier of the entity
@@ -2194,6 +2172,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
   /iam/apikey-authentication:
     post:
       tags:
@@ -2201,13 +2182,6 @@ paths:
       summary: Register the `apikey` for the entity
       description: Register the `apikey` for the entity.
       operationId: addEntityApiKeyAuthentication
-      parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       requestBody:
         description: JSON object required for the registering the entity and `apikey`
         content:
@@ -2242,19 +2216,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
     delete:
       tags:
       - Identity and Access Management
       summary: Unregister the `apikey` for the entity
       description: Unregister the `apikey` for the entity.
       operationId: deleteEntityApiKeyAuthentication
-      parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       requestBody:
         description: JSON object required for the unregistering the entity and `apikey`
         content:
@@ -2289,6 +2259,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
   /wallets:
     get:
       tags:
@@ -2296,12 +2269,6 @@ paths:
       summary: List all wallets
       operationId: getWallets
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: offset
         in: query
         required: false
@@ -2339,6 +2306,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - adminApiKeyAuth: []
+      - apiKeyAuth: []
+      - jwtAuth: []
     post:
       tags:
       - Wallet Management
@@ -2347,13 +2318,6 @@ paths:
         Create a new wallet with optional to use provided seed.
         The seed will be used for DID key derivation inside the wallet.
       operationId: createWallet
-      parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       requestBody:
         content:
           application/json:
@@ -2385,6 +2349,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - adminApiKeyAuth: []
+      - apiKeyAuth: []
+      - jwtAuth: []
   /wallets/{walletId}:
     get:
       tags:
@@ -2392,12 +2360,6 @@ paths:
       summary: Get the wallet by ID
       operationId: getWalletsWalletid
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: walletId
         in: path
         required: true
@@ -2435,6 +2397,99 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - adminApiKeyAuth: []
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /wallets/{walletId}/uma-permissions:
+    post:
+      tags:
+      - Wallet Management
+      summary: Create a UMA resource permission on an authorization server for the
+        wallet.
+      operationId: createWalletUmaPermission
+      parameters:
+      - name: walletId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWalletUmaPermissionRequest'
+        required: true
+      responses:
+        '200':
+          description: UMA resource permission is created on an authorization server.
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - adminApiKeyAuth: []
+      - apiKeyAuth: []
+      - jwtAuth: []
+    delete:
+      tags:
+      - Wallet Management
+      summary: Delete a UMA resource permission on an authorization server for the
+        wallet.
+      operationId: deleteWalletUmaPermission
+      parameters:
+      - name: walletId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: subject
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: UMA resource permission is removed from an authorization server.
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - adminApiKeyAuth: []
+      - apiKeyAuth: []
+      - jwtAuth: []
   /events/webhooks:
     get:
       tags:
@@ -2644,6 +2699,17 @@ components:
           type: string
           description: A human readable alias for the connection.
           example: Peter
+        goalCode:
+          type: string
+          description: A self-attested code the receiver may want to display to the
+            user or use in automatically deciding what to do with the out-of-band
+            message.
+          example: issue-vc
+        goal:
+          type: string
+          description: A self-attested string that the receiver may want to display
+            to the user about the context-specific goal of the out-of-band message.
+          example: To issue a Peter College Graduate credential
         myDid:
           type: string
           description: The DID representing me as the inviter or invitee in this specific
@@ -2774,6 +2840,17 @@ components:
           type: string
           description: A human readable alias for the connection.
           example: Peter
+        goalCode:
+          type: string
+          description: A self-attested code the receiver may want to display to the
+            user or use in automatically deciding what to do with the out-of-band
+            message.
+          example: issue-vc
+        goal:
+          type: string
+          description: A self-attested string that the receiver may want to display
+            to the user about the context-specific goal of the out-of-band message.
+          example: To issue a Peter College Graduate credential
     CreateEntityRequest:
       required:
       - name
@@ -2898,6 +2975,17 @@ components:
         id:
           type: string
           description: The unique `id` of the wallet. Randomly generated if not specified.
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
+    CreateWalletUmaPermissionRequest:
+      required:
+      - subject
+      type: object
+      properties:
+        subject:
+          type: string
+          description: The subject ID that should be granted the permission to the
+            wallet. This can be found in the `sub` claim of a JWT token.
           format: uuid
           example: 00000000-0000-0000-0000-000000000000
     CreateWebhookNotification:
@@ -3665,7 +3753,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2023-10-24T10:50:45.871298Z'
+          example: '2023-11-21T13:26:15.312922262Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -4478,6 +4566,10 @@ components:
           items:
             $ref: '#/components/schemas/WebhookNotification'
   securitySchemes:
+    adminApiKeyAuth:
+      type: apiKey
+      name: x-admin-api-key
+      in: header
     apiKeyAuth:
       type: apiKey
       name: apikey
