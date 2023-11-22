@@ -20,4 +20,6 @@ object PresentationError {
   final case class UnsupportedCredentialFormat(vcFormat: String) extends PresentationError
   final case class InvalidAnoncredPresentationRequest(error: String) extends PresentationError
   final case class MissingAnoncredPresentationRequest(error: String) extends PresentationError
+
+  final case class AnoncredPresentationCreationError(cause: Throwable) extends PresentationError
 }

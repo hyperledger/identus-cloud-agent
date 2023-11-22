@@ -2,6 +2,7 @@ package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.presentproof.*
+import io.iohk.atala.pollux.anoncreds.AnoncredPresentation
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.*
@@ -39,11 +40,17 @@ trait PresentationService {
       ignoreWithZeroRetries: Boolean
   ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]]
 
-  def createPresentationPayloadFromRecord(
+  def createJwtPresentationPayloadFromRecord(
       record: DidCommID,
       issuer: Issuer,
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, PresentationPayload]
+
+  def createAnoncredPresentationPayloadFromRecord(
+      record: DidCommID,
+      issuer: Issuer,
+      issuanceDate: Instant
+  ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation]
 
   def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,

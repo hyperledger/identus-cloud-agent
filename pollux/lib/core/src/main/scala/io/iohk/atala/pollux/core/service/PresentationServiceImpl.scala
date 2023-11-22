@@ -6,11 +6,15 @@ import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.mercury.model.*
+import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, IssueCredentialIssuedFormat}
 import io.iohk.atala.mercury.protocol.presentproof.*
+import io.iohk.atala.pollux.anoncreds.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.presentation.*
+import io.iohk.atala.pollux.core.model.schema.CredentialSchema.parseCredentialSchema
+import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import io.iohk.atala.pollux.core.service.serdes.AnoncredPresentationRequestV1
 import io.iohk.atala.pollux.vc.jwt.*
@@ -18,12 +22,16 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 
+import java.net.URI
 import java.rmi.UnexpectedException
 import java.time.Instant
 import java.util as ju
 import java.util.{UUID, Base64 as JBase64}
 
 private class PresentationServiceImpl(
+    credentialDefinitionService: CredentialDefinitionService,
+    uriDereferencer: URIDereferencer,
+    linkSecretService: LinkSecretService,
     presentationRepository: PresentationRepository,
     credentialRepository: CredentialRepository,
     maxRetries: Int = 5, // TODO move to config
@@ -58,7 +66,7 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  override def createPresentationPayloadFromRecord(
+  override def createJwtPresentationPayloadFromRecord(
       recordId: DidCommID,
       prover: Issuer,
       issuanceDate: Instant
@@ -91,11 +99,51 @@ private class PresentationServiceImpl(
         )
       )
 
-      presentationPayload <- createPresentationPayloadFromCredential(
+      presentationPayload <- createJwtPresentationPayloadFromCredential(
         issuedCredentials,
-        record.credentialFormat,
         requestPresentation,
         prover
+      )
+    } yield presentationPayload
+  }
+
+  override def createAnoncredPresentationPayloadFromRecord(
+      recordId: DidCommID,
+      prover: Issuer,
+      issuanceDate: Instant
+  ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] = {
+
+    for {
+      maybeRecord <- presentationRepository
+        .getPresentationRecord(recordId)
+        .mapError(RepositoryError.apply)
+      record <- ZIO
+        .fromOption(maybeRecord)
+        .mapError(_ => RecordIdNotFound(recordId))
+      credentialsToUse <- ZIO
+        .fromOption(record.credentialsToUse)
+        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
+      requestPresentation <- ZIO
+        .fromOption(record.requestPresentationData)
+        .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
+      issuedValidCredentials <- credentialRepository
+        .getValidAnoncredIssuedCredentials(credentialsToUse.map(DidCommID(_)))
+        .mapError(RepositoryError.apply)
+      signedCredentials = issuedValidCredentials.flatMap(_.issuedCredential)
+      issuedCredentials <- ZIO.fromEither(
+        Either.cond(
+          signedCredentials.nonEmpty,
+          signedCredentials,
+          PresentationError.IssuedCredentialNotFoundError(
+            new Throwable("No matching issued credentials found in prover db")
+          )
+        )
+      )
+      presentationPayload <- createAnoncredPresentationPayloadFromCredential(
+        issuedCredentials,
+        issuedValidCredentials.flatMap(_.schemaId),
+        issuedValidCredentials.flatMap(_.credentialDefinitionId),
+        requestPresentation,
       )
     } yield presentationPayload
   }
@@ -324,32 +372,22 @@ private class PresentationServiceImpl(
   }
 
   /** All credentials MUST be of the same format */
-  private def createPresentationPayloadFromCredential(
+  private def createJwtPresentationPayloadFromCredential(
       issuedCredentials: Seq[String],
-      format: CredentialFormat,
       requestPresentation: RequestPresentation,
       prover: Issuer
   ): IO[PresentationError, PresentationPayload] = {
 
     val verifiableCredentials: Either[
       PresentationError.PresentationDecodingError,
-      Seq[JwtVerifiableCredentialPayload | AnoncredVerifiableCredentialPayload]
+      Seq[JwtVerifiableCredentialPayload]
     ] =
       issuedCredentials.map { signedCredential =>
-        format match {
-          case CredentialFormat.JWT =>
-            decode[io.iohk.atala.mercury.model.Base64](signedCredential)
-              .flatMap(x => Right(new String(java.util.Base64.getDecoder().decode(x.base64))))
-              .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
-              .left
-              .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
-          case CredentialFormat.AnonCreds =>
-            decode[io.iohk.atala.mercury.model.Base64](signedCredential)
-              .flatMap(x => Right(new String(java.util.Base64.getDecoder().decode(x.base64))))
-              .flatMap(x => Right(AnoncredVerifiableCredentialPayload(x)))
-              .left
-              .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
-        }
+        decode[io.iohk.atala.mercury.model.Base64](signedCredential)
+          .flatMap(x => Right(new String(java.util.Base64.getDecoder.decode(x.base64))))
+          .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
+          .left
+          .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
       }.sequence
 
     val maybePresentationOptions
@@ -401,7 +439,98 @@ private class PresentationServiceImpl(
             }
         )
     } yield presentationPayload
+  }
 
+  private def createAnoncredPresentationPayloadFromCredential(
+      issuedCredentials: Seq[IssueCredential],
+      schemaIds: Seq[String],
+      credentialDefinitionIds: Seq[UUID],
+      requestPresentation: RequestPresentation,
+  ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] = {
+    for {
+      schemaMap <-
+        ZIO
+          .collectAll(schemaIds.map { schemaId =>
+            resolveSchema(schemaId)
+          })
+          .map(_.toMap)
+      credentialDefinitionMap <-
+        ZIO
+          .collectAll(credentialDefinitionIds.map { credentialDefinitionId =>
+            for {
+              credentialDefinition <- credentialDefinitionService
+                .getByGUID(credentialDefinitionId)
+                .mapError(e => UnexpectedError(e.toString))
+            } yield (credentialDefinition.longId, CredentialDefinition(credentialDefinition.definition.toString))
+          })
+          .map(_.toMap)
+
+      verifiableCredentials <-
+        ZIO.collectAll(
+          issuedCredentials
+            .flatMap(_.attachments)
+            .filter(attachment => attachment.format.contains(IssueCredentialIssuedFormat.Anoncred.name))
+            .map(_.data)
+            .map {
+              case Base64(data) => Right(new String(JBase64.getUrlDecoder.decode(data)))
+              case _            => Left(InvalidAnoncredPresentationRequest("Expecting Base64-encoded data"))
+            }
+            .map(ZIO.fromEither(_))
+        )
+      presentationRequestAttachment <- ZIO.fromEither(
+        requestPresentation.attachments.headOption.toRight(InvalidAnoncredPresentationRequest("Missing Presentation"))
+      )
+      presentationRequestData <-
+        presentationRequestAttachment.data match
+          case Base64(data) => ZIO.succeed(new String(JBase64.getUrlDecoder.decode(data)))
+          case _            => ZIO.fail(InvalidAnoncredPresentationRequest("Expecting Base64-encoded data"))
+      deserializedPresentationRequestData <-
+        AnoncredPresentationRequestV1.schemaSerDes
+          .deserialize(presentationRequestData)
+          .mapError(error => InvalidAnoncredPresentationRequest(error.error))
+      linkSecret <-
+        linkSecretService
+          .fetchOrCreate()
+          .map(_.secret)
+          .mapError(t => AnoncredPresentationCreationError(t.cause))
+      presentation <-
+        ZIO
+          .fromEither(
+            AnoncredLib.createPresentation(
+              PresentationRequest(presentationRequestData),
+              verifiableCredentials.map(verifiableCredential =>
+                CredentialRequests(
+                  Credential(verifiableCredential),
+                  deserializedPresentationRequestData.requested_attributes.keys.toSeq, // TO FIX
+                  deserializedPresentationRequestData.requested_predicates.keys.toSeq // TO FIX
+                )
+              ),
+              Map.empty, // TO FIX
+              linkSecret,
+              schemaMap,
+              credentialDefinitionMap
+            )
+          )
+          .mapError((t: Throwable) => AnoncredPresentationCreationError(t))
+    } yield presentation
+  }
+
+  private def resolveSchema(schemaId: String): IO[UnexpectedError, (String, SchemaDef)] = {
+    for {
+      uri <- ZIO.attempt(new URI(schemaId)).mapError(e => UnexpectedError(e.getMessage))
+      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
+      vcSchema <- parseCredentialSchema(content).mapError(e => UnexpectedError(e.message))
+      anoncredSchema <- AnoncredSchemaSerDesV1.schemaSerDes
+        .deserialize(vcSchema.schema)
+        .mapError(e => UnexpectedError(e.error))
+      anoncredLibSchema =
+        SchemaDef(
+          schemaId,
+          anoncredSchema.version,
+          anoncredSchema.attrNames,
+          anoncredSchema.issuerId
+        )
+    } yield (schemaId, anoncredLibSchema)
   }
 
   def acceptRequestPresentation(
@@ -752,6 +881,9 @@ private class PresentationServiceImpl(
 }
 
 object PresentationServiceImpl {
-  val layer: URLayer[PresentationRepository & CredentialRepository, PresentationService] =
-    ZLayer.fromFunction(PresentationServiceImpl(_, _))
+  val layer: URLayer[
+    CredentialDefinitionService & URIDereferencer & LinkSecretService & PresentationRepository & CredentialRepository,
+    PresentationService
+  ] =
+    ZLayer.fromFunction(PresentationServiceImpl(_, _, _, _, _))
 }

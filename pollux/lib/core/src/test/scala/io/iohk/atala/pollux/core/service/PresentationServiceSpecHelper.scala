@@ -1,19 +1,16 @@
 package io.iohk.atala.pollux.core.service
 
 import com.nimbusds.jose.jwk.*
+import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.mercury.{AgentPeerService, PeerDID}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
-import io.iohk.atala.pollux.core.repository.{
-  CredentialRepository,
-  CredentialRepositoryInMemory,
-  PresentationRepository,
-  PresentationRepositoryInMemory
-}
+import io.iohk.atala.pollux.core.repository.*
+import io.iohk.atala.pollux.core.service.serdes.*
 import io.iohk.atala.pollux.vc.jwt.*
-import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.security.*
@@ -22,14 +19,28 @@ import java.util.UUID
 
 trait PresentationServiceSpecHelper {
 
+  protected val defaultWalletLayer = ZLayer.succeed(WalletAccessContext(WalletId.default))
+
   val peerDidAgentLayer =
     AgentPeerService.makeLayer(PeerDID.makePeerDid(serviceEndpoint = Some("http://localhost:9099")))
 
-  val presentationServiceLayer = ZLayer.make[PresentationService & PresentationRepository & CredentialRepository](
+  val genericSecretStorageLayer = GenericSecretStorageInMemory.layer
+  val uriDereferencerLayer = ResourceURIDereferencerImpl.layer
+  val credentialDefLayer =
+    CredentialDefinitionRepositoryInMemory.layer ++ uriDereferencerLayer >>> CredentialDefinitionServiceImpl.layer
+  val linkSecretLayer = genericSecretStorageLayer >+> LinkSecretServiceImpl.layer
+
+  val presentationServiceLayer = ZLayer.make[
+    PresentationService & CredentialDefinitionService & URIDereferencer & LinkSecretService & PresentationRepository &
+      CredentialRepository
+  ](
     PresentationServiceImpl.layer,
+    credentialDefLayer,
+    uriDereferencerLayer,
+    linkSecretLayer,
     PresentationRepositoryInMemory.layer,
     CredentialRepositoryInMemory.layer
-  )
+  ) ++ defaultWalletLayer
 
   def createIssuer(did: DID) = {
     val keyGen = KeyPairGenerator.getInstance("EC")
@@ -159,4 +170,43 @@ trait PresentationServiceSpecHelper {
       )
     }
 
+    def createAnoncredRecord(
+        pairwiseVerifierDID: DidId = DidId("did:prism:issuer"),
+        pairwiseProverDID: DidId = DidId("did:prism:prover-pairwise"),
+        thid: DidCommID = DidCommID()
+    ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
+      val anoncredPresentationRequestV1 = AnoncredPresentationRequestV1(
+        requested_attributes = Map(
+          "sex" -> AnoncredRequestedAttributeV1(
+            name = "sex",
+            restrictions = List(
+              AnoncredAttributeRestrictionV1(
+                schema_id = None,
+                cred_def_id = Some("$CRED_DEF_ID"),
+                non_revoked = None
+              )
+            )
+          )
+        ),
+        requested_predicates = Map(
+          "age" -> AnoncredRequestedPredicateV1(
+            name = "age",
+            p_type = ">=",
+            p_value = 18,
+            restrictions = List.empty
+          )
+        ),
+        name = "proof_req_1",
+        nonce = "1103253414365527824079144",
+        version = "0.1",
+        non_revoked = Some(AnoncredNonRevokedIntervalV1(from = Some(1), to = Some(4)))
+      )
+      svc.createAnoncredPresentationRecord(
+        thid = thid,
+        pairwiseVerifierDID = pairwiseVerifierDID,
+        pairwiseProverDID = pairwiseProverDID,
+        connectionId = Some("connectionId"),
+        anoncredPresentationRequestV1
+      )
+    }
 }
