@@ -74,6 +74,10 @@ trait CredentialRepository {
 
   def getValidIssuedCredentials(recordId: Seq[DidCommID]): RIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]]
 
+  def getValidAnoncredIssuedCredentials(
+      recordIds: Seq[DidCommID]
+  ): RIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]]
+
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]

@@ -1,20 +1,6 @@
 package io.iohk.atala.pollux.anoncreds
 
-import uniffi.anoncreds_wrapper.{
-  Nonce,
-  Credential as UniffiCredential,
-  CredentialRequests as UniffiCredentialRequests,
-  CredentialDefinition as UniffiCredentialDefinition,
-  CredentialDefinitionPrivate as UniffiCredentialDefinitionPrivate,
-  CredentialKeyCorrectnessProof as UniffiCredentialKeyCorrectnessProof,
-  CredentialOffer as UniffiCredentialOffer,
-  CredentialRequest as UniffiCredentialRequest,
-  CredentialRequestMetadata as UniffiCredentialRequestMetadata,
-  LinkSecret as UniffiLinkSecret,
-  Schema as UniffiSchema,
-  Presentation as UniffiPresentation,
-  PresentationRequest as UniffiPresentationRequest,
-}
+import uniffi.anoncreds_wrapper.{Nonce, Credential as UniffiCredential, CredentialDefinition as UniffiCredentialDefinition, CredentialDefinitionPrivate as UniffiCredentialDefinitionPrivate, CredentialKeyCorrectnessProof as UniffiCredentialKeyCorrectnessProof, CredentialOffer as UniffiCredentialOffer, CredentialRequest as UniffiCredentialRequest, CredentialRequestMetadata as UniffiCredentialRequestMetadata, CredentialRequests as UniffiCredentialRequests, LinkSecret as UniffiLinkSecret, Presentation as UniffiPresentation, PresentationRequest as UniffiPresentationRequest, Schema as UniffiSchema}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import scala.jdk.CollectionConverters.*
@@ -259,17 +245,17 @@ object Credential {
 }
 
 // ****************************************************************************
-case class CredentialAndRequestedAttributesPredicates(
+case class CredentialRequests(
     credential: Credential,
     requestedAttribute: Seq[String],
     requestedPredicate: Seq[String],
 )
 
-object CredentialAndRequestedAttributesPredicates {
-  given Conversion[CredentialAndRequestedAttributesPredicates, UniffiCredentialRequests] with {
+object CredentialRequests {
+  given Conversion[CredentialRequests, UniffiCredentialRequests] with {
     import uniffi.anoncreds_wrapper.RequestedAttribute
     import uniffi.anoncreds_wrapper.RequestedPredicate
-    def apply(credentialRequests: CredentialAndRequestedAttributesPredicates): UniffiCredentialRequests = {
+    def apply(credentialRequests: CredentialRequests): UniffiCredentialRequests = {
       val credential = Credential.given_Conversion_Credential_UniffiCredential(credentialRequests.credential)
       val requestedAttributes = credentialRequests.requestedAttribute.map(a => RequestedAttribute(a, true))
       val requestedPredicates = credentialRequests.requestedPredicate.map(p => RequestedPredicate(p))
@@ -277,9 +263,9 @@ object CredentialAndRequestedAttributesPredicates {
     }
   }
 
-  given Conversion[UniffiCredentialRequests, CredentialAndRequestedAttributesPredicates] with {
-    def apply(credentialRequests: UniffiCredentialRequests): CredentialAndRequestedAttributesPredicates = {
-      CredentialAndRequestedAttributesPredicates(
+  given Conversion[UniffiCredentialRequests, CredentialRequests] with {
+    def apply(credentialRequests: UniffiCredentialRequests): CredentialRequests = {
+      CredentialRequests(
         Credential.given_Conversion_UniffiCredential_Credential(credentialRequests.getCredential()),
         credentialRequests
           .getRequestedAttribute()
@@ -316,17 +302,17 @@ object PresentationRequest {
 
 // ****************************************************************************
 
-case class Presentation(data: String)
-object Presentation {
-  given Conversion[Presentation, UniffiPresentation] with {
-    def apply(presentation: Presentation): UniffiPresentation = {
+case class AnoncredPresentation(data: String)
+object AnoncredPresentation {
+  given Conversion[AnoncredPresentation, UniffiPresentation] with {
+    def apply(presentation: AnoncredPresentation): UniffiPresentation = {
       UniffiPresentation(presentation.data)
     }
   }
 
-  given Conversion[UniffiPresentation, Presentation] with {
-    def apply(presentation: UniffiPresentation): Presentation = {
-      Presentation(presentation.getJson())
+  given Conversion[UniffiPresentation, AnoncredPresentation] with {
+    def apply(presentation: UniffiPresentation): AnoncredPresentation = {
+      AnoncredPresentation(presentation.getJson())
     }
   }
 }
