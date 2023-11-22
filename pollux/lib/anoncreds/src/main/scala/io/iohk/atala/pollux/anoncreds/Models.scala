@@ -9,10 +9,11 @@ import uniffi.anoncreds.{
   CredentialOffer as UniffiCredentialOffer,
   CredentialRequest as UniffiCredentialRequest,
   CredentialRequestMetadata as UniffiCredentialRequestMetadata,
+  CredentialRequests as UniffiCredentialRequests,
   LinkSecret as UniffiLinkSecret,
-  Schema as UniffiSchema,
   Presentation as UniffiPresentation,
   PresentationRequest as UniffiPresentationRequest,
+  Schema as UniffiSchema
 }
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
@@ -258,6 +259,46 @@ object Credential {
 }
 
 // ****************************************************************************
+case class CredentialRequests(
+    credential: Credential,
+    requestedAttribute: Seq[String],
+    requestedPredicate: Seq[String],
+)
+
+object CredentialRequests {
+  given Conversion[CredentialRequests, UniffiCredentialRequests] with {
+    import uniffi.anoncreds.{RequestedAttribute, RequestedPredicate}
+    def apply(credentialRequests: CredentialRequests): UniffiCredentialRequests = {
+      val credential = Credential.given_Conversion_Credential_UniffiCredential(credentialRequests.credential)
+      val requestedAttributes = credentialRequests.requestedAttribute.map(a => RequestedAttribute(a, true))
+      val requestedPredicates = credentialRequests.requestedPredicate.map(p => RequestedPredicate(p))
+      UniffiCredentialRequests(credential, requestedAttributes.asJava, requestedPredicates.asJava)
+    }
+  }
+
+  given Conversion[UniffiCredentialRequests, CredentialRequests] with {
+    def apply(credentialRequests: UniffiCredentialRequests): CredentialRequests = {
+      CredentialRequests(
+        Credential.given_Conversion_UniffiCredential_Credential(credentialRequests.getCredential()),
+        credentialRequests
+          .getRequestedAttribute()
+          .asScala
+          .toSeq
+          .filter(e => e.getRevealed())
+          .map(e => e.getReferent()),
+        credentialRequests
+          .getRequestedPredicate()
+          .asScala
+          .toSeq
+          .map(e => e.getReferent())
+      )
+    }
+  }
+}
+
+//UniffiCredentialRequests
+
+// ****************************************************************************
 
 case class PresentationRequest(data: String)
 object PresentationRequest {
@@ -274,15 +315,15 @@ object PresentationRequest {
 
 // ****************************************************************************
 
-case class Presentation(data: String)
-object Presentation {
-  given Conversion[Presentation, UniffiPresentation] with {
-    def apply(presentation: Presentation): UniffiPresentation =
+case class AnoncredPresentation(data: String)
+object AnoncredPresentation {
+  given Conversion[AnoncredPresentation, UniffiPresentation] with {
+    def apply(presentation: AnoncredPresentation): UniffiPresentation =
       UniffiPresentation(presentation.data)
   }
 
-  given Conversion[UniffiPresentation, Presentation] with {
-    def apply(presentation: UniffiPresentation): Presentation =
-      Presentation(presentation.getJson())
+  given Conversion[UniffiPresentation, AnoncredPresentation] with {
+    def apply(presentation: UniffiPresentation): AnoncredPresentation =
+      AnoncredPresentation(presentation.getJson())
   }
 }
