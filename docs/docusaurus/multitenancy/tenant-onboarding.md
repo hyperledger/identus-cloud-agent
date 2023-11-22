@@ -9,8 +9,8 @@ while tenants are users who engage in standard SSI interactions with the PRISM A
 
 In tenant management, there are 2 roles:
 
-1. System administrator
-2. Tenant
+1. [Administrator](/docs/concepts/glossary#administrator)
+2. [Tenant](/docs/concepts/glossary#tenant)
 
 ## Prerequisites
 
