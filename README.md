@@ -34,7 +34,7 @@ As a result, you can concentrate on crafting self-sovereign identity solutions u
 * HTTP events notification
 * Cardano as a distributed ledger
 * Secrets management with Hashicorp vault
-* Multi-tenancy (coming soon)
+* Multi-tenancy
 
 ## Example use cases
 
