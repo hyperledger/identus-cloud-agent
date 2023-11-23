@@ -2,35 +2,35 @@
 Feature: Issue Credentials Protocol
 
 Scenario: Issuing credential with published PRISM DID
-  Given Acme and Bob have an existing connection
-  When Acme creates unpublished DID
+  Given Issuer and Holder have an existing connection
+  When Issuer creates unpublished DID
   And He publishes DID to ledger
-  And Bob creates unpublished DID
-  And Acme offers a credential to Bob with "short" form DID
-  And Bob receives the credential offer
-  And Bob accepts credential offer for JWT
-  And Acme issues the credential
-  Then Bob receives the issued credential
+  And Holder creates unpublished DID
+  And Issuer offers a credential to Holder with "short" form DID
+  And Holder receives the credential offer
+  And Holder accepts credential offer for JWT
+  And Issuer issues the credential
+  Then Holder receives the issued credential
 
 Scenario: Issuing credential with unpublished PRISM DID
-  Given Acme and Bob have an existing connection
-  When Acme creates unpublished DID
-  And Bob creates unpublished DID
-  And Acme offers a credential to Bob with "long" form DID
-  And Bob receives the credential offer
-  And Bob accepts credential offer for JWT
-  And Acme issues the credential
-  Then Bob receives the issued credential
+  Given Issuer and Holder have an existing connection
+  When Issuer creates unpublished DID
+  And Holder creates unpublished DID
+  And Issuer offers a credential to Holder with "long" form DID
+  And Holder receives the credential offer
+  And Holder accepts credential offer for JWT
+  And Issuer issues the credential
+  Then Holder receives the issued credential
 
 Scenario: Issuing anoncred with published PRISM DID
-  Given Acme and Bob have an existing connection
-  When Acme creates unpublished DID
+  Given Issuer and Holder have an existing connection
+  When Issuer creates unpublished DID
   And He publishes DID to ledger
-  And Bob creates unpublished DID
-  And Acme creates anoncred schema
-  And Acme creates anoncred credential definition
-  And Acme offers anoncred to Bob
-  And Bob receives the credential offer
-  And Bob accepts credential offer for anoncred
-  And Acme issues the credential
-  Then Bob receives the issued credential
+  And Holder creates unpublished DID
+  And Issuer creates anoncred schema
+  And Issuer creates anoncred credential definition
+  And Issuer offers anoncred to Holder
+  And Holder receives the credential offer
+  And Holder accepts credential offer for anoncred
+  And Issuer issues the credential
+  Then Holder receives the issued credential

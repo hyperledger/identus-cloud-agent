@@ -7,6 +7,7 @@ import java.time.Duration
 import java.util.*
 
 object TestConstants {
+    val TESTS_CONFIG = System.getenv("TESTS_CONFIG") ?: "/configs/basic.conf"
     val TEST_VERIFICATION_POLICY = VerificationPolicyInput(
         name = "Trusted Issuer and SchemaID",
         description = "Verification Policy with trusted issuer and schemaId",
@@ -21,9 +22,7 @@ object TestConstants {
         )
     )
     val CREDENTIAL_SCHEMA_TYPE = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
-
     val SCHEMA_TYPE_JSON = "https://json-schema.org/draft/2020-12/schema"
-
     val jsonSchema = JsonSchema(
         id = "https://example.com/student-schema-1.0",
         schema = SCHEMA_TYPE_JSON,
@@ -34,7 +33,6 @@ object TestConstants {
             "age" to JsonSchemaProperty(type = "integer")
         )
     )
-
     fun generate_with_name_suffix_and_author(suffix: String, author: String): CredentialSchemaInput {
         return CredentialSchemaInput(
             author = author,
@@ -46,7 +44,6 @@ object TestConstants {
             version = "1.0.0"
         )
     }
-
     val STUDENT_SCHEMA = CredentialSchemaInput(
         author = "did:prism:agent",
         name = UUID.randomUUID().toString(),
@@ -56,25 +53,13 @@ object TestConstants {
         tags = listOf("school", "students"),
         version = "1.0.0"
     )
-    val RANDOM_CONSTAND_UUID = UUID.randomUUID().toString()
     val DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN = Duration.ofSeconds(60L)
     val PRISM_DID_AUTH_KEY = ManagedDIDKeyTemplate("auth-1", Purpose.AUTHENTICATION)
-    val PRISM_DID_ASSERTION_KEY = ManagedDIDKeyTemplate("assertion-1", Purpose.ASSERTION_METHOD)
     val PRISM_DID_UPDATE_NEW_AUTH_KEY = ManagedDIDKeyTemplate("auth-2", Purpose.AUTHENTICATION)
-    val PRISM_DID_SERVICE = Service(
-        "https://foo.bar.com",
-        listOf("LinkedDomains"),
-        Json("https://foo.bar.com/")
-    )
     val PRISM_DID_SERVICE_FOR_UPDATE = Service(
         "https://update.com",
         listOf("LinkedDomains"),
         Json("https://update.com/")
-    )
-    val PRISM_DID_SERVICE_TO_REMOVE = Service(
-        "https://remove.com",
-        listOf("LinkedDomains"),
-        Json("https://remove.com/")
     )
     val PRISM_DID_UPDATE_NEW_SERVICE_URL = "https://bar.foo.com/"
     val PRISM_DID_UPDATE_NEW_SERVICE = Service(

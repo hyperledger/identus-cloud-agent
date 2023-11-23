@@ -3,7 +3,7 @@ version: "3.8"
 
 services:
 
-  vault-server:
+  vault:
     image: hashicorp/vault:1.13.3
     ports:
       - "${VAULT_PORT}:8200"
