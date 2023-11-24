@@ -3,6 +3,7 @@ package io.iohk.atala.pollux.vc.jwt.revocation
 import io.circe.syntax.*
 import io.circe.{Json, JsonObject}
 import io.iohk.atala.pollux.vc.jwt.revocation.BitStringError.EncodingError
+import io.iohk.atala.pollux.vc.jwt.revocation.VCStatusList2021.Purpose.Revocation
 import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, W3CCredential, W3cCredentialPayload}
 import zio.IO
 
@@ -10,11 +11,16 @@ import java.time.Instant
 
 object VCStatusList2021 {
 
+  enum Purpose(val name: String):
+    case Revocation extends Purpose("revocation")
+    case Suspension extends Purpose("suspension")
+
   def generateRevocationVC(
       vcId: String,
       claimsId: String,
       jwtIssuer: Issuer,
-      revocationData: BitString
+      revocationData: BitString,
+      purpose: Purpose = Revocation
   ): IO[EncodingError, JWT] = {
     for {
       encodedBitString <- revocationData.encoded
@@ -22,7 +28,7 @@ object VCStatusList2021 {
       val claims = JsonObject()
         .add("id", claimsId.asJson)
         .add("type", "StatusList2021".asJson)
-        .add("statusPurpose", "revocation".asJson)
+        .add("statusPurpose", purpose.name.asJson)
         .add("encodedList", encodedBitString.asJson)
       val w3Credential = W3cCredentialPayload(
         `@context` = Set(
