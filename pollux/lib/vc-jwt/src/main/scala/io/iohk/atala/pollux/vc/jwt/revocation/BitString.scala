@@ -37,6 +37,11 @@ class BitString private (val bitSet: util.BitSet, val size: Int) {
 }
 
 object BitString {
+  /*
+   The minimum size of the bit string according to the VC Status List 2021 specification.
+   As per the spec "... a minimum revocation bitstring of 131.072, or 16KB uncompressed... is enough to give holders an adequate amount of herd privacy"
+   Cf. https://www.w3.org/TR/vc-status-list/#revocation-bitstring-length
+   */
   val MIN_SL2021_SIZE: Int = 131072
 
   def getInstance(): IO[BitStringError, BitString] = getInstance(MIN_SL2021_SIZE)
