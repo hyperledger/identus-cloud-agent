@@ -32,13 +32,13 @@ services:
       CONNECT_DB_HOST: postgres
       AGENT_DB_HOST: postgres
       VAULT_TOKEN: root
+      AUTH_HEADER: apikey
+      ADMIN_AUTH_HEADER: "x-admin-api-key"
       # Configuration parameters
       AGENT_DIDCOMM_PORT:
       AGENT_HTTP_PORT:
       DIDCOMM_SERVICE_URL: "http://host.docker.internal:${AGENT_DIDCOMM_PORT}"
       REST_SERVICE_URL: "http://host.docker.internal:${AGENT_HTTP_PORT}"
-      AUTH_HEADER:
-      ADMIN_AUTH_HEADER:
       API_KEY_ENABLED:
       # Secret storage configuration
       SECRET_STORAGE_BACKEND:

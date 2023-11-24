@@ -105,7 +105,7 @@ class IssueCredentialsSteps {
                             author = issuer.recall("shortFormDid"),
                             signatureType = "CL",
                             tag = "student",
-                            supportRevocation = false,
+                            supportRevocation = false
                         )
                     )
                 }
@@ -157,10 +157,10 @@ class IssueCredentialsSteps {
                     it.data.thid == holder.recall<String>("thid")
                 }
                 credentialEvent != null &&
-                        credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.OFFER_RECEIVED
+                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.OFFER_RECEIVED
             },
             "Holder was unable to receive the credential offer from Issuer! " +
-                    "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.OFFER_RECEIVED} state."
+                "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.OFFER_RECEIVED} state."
         )
 
         val recordId = ListenToEvents.`as`(holder).credentialEvents.last().data.recordId
