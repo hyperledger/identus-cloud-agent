@@ -22,6 +22,14 @@ class BitString private (val bitSet: util.BitSet, val size: Int) {
   def encoded: IO[EncodingError, String] = {
     for {
       bitSetByteArray <- ZIO.succeed(bitSet.toByteArray)
+      /*
+      This is where the size constructor parameter comes into play (i.e. the initial bitstring size requested by the user).
+      Interestingly, the underlying 'bitSet.toByteArray()' method only returns the byte array that are 'in use', which means the bytes needed to hold the current bits that are set to true.
+      E.g. Calling toByteArray on a BitSet of size 64, where all bits are false, will return an empty array. The same BitSet with the fourth bit set to true will return 1 byte. And so on...
+      So, the paddingByteArray is used to fill the gap between what BitSet returns and what was requested by the user.
+      If the BitString size is 131.072 and no VC is revoked, the final encoding (as per the spec) should account for all bits, and no only those that are revoked.
+      The (x + 7) / 8) is used to calculate the number of bytes needed to store a bit array of size x.
+       */
       paddingByteArray = new Array[Byte](((size + 7) / 8) - bitSetByteArray.length)
       baos = new ByteArrayOutputStream()
       _ <- (for {
