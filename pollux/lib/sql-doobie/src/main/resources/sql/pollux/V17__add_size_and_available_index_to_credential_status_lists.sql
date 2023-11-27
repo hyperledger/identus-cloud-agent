@@ -8,6 +8,6 @@ ALTER TABLE public.credential_status_lists
 ALTER TABLE public.credential_status_lists
     RENAME COLUMN encoded_list TO status_list_jwt_credential;
 
--- Change the data type of the 'encoded_list_credential' column to JSON
+-- Remove the column "proof"
 ALTER TABLE public.credential_status_lists
     DROP COLUMN proof
