@@ -2,12 +2,28 @@ package io.iohk.atala.pollux.vc.jwt.revocation
 
 import io.circe.syntax.*
 import io.circe.{Json, JsonObject}
-import io.iohk.atala.pollux.vc.jwt.revocation.BitStringError.EncodingError
+import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.pollux.vc.jwt.revocation.VCStatusList2021.Purpose.Revocation
-import io.iohk.atala.pollux.vc.jwt.{Issuer, JWT, W3CCredential, W3cCredentialPayload}
-import zio.IO
+import io.iohk.atala.pollux.vc.jwt.revocation.VCStatusList2021Error.{DecodingError, EncodingError}
+import zio.{IO, UIO, ZIO}
 
 import java.time.Instant
+
+class VCStatusList2021 private (val vcPayload: W3cCredentialPayload, jwtIssuer: Issuer) {
+
+  def encoded: UIO[JWT] = ZIO.succeed(W3CCredential.toEncodedJwt(vcPayload, jwtIssuer))
+
+  def getBitString: IO[DecodingError, BitString] = {
+    for {
+      encodedBitString <- ZIO
+        .fromOption(
+          vcPayload.credentialSubject.hcursor.downField("encodedList").as[String].toOption
+        )
+        .mapError(_ => DecodingError("'encodedList' attribute not found in credential subject"))
+      bitString <- BitString.valueOf(encodedBitString).mapError(e => DecodingError(e.message))
+    } yield bitString
+  }
+}
 
 object VCStatusList2021 {
 
@@ -15,18 +31,18 @@ object VCStatusList2021 {
     case Revocation extends Purpose("revocation")
     case Suspension extends Purpose("suspension")
 
-  def generateRevocationVC(
+  def build(
       vcId: String,
-      claimsId: String,
+      slId: String,
       jwtIssuer: Issuer,
       revocationData: BitString,
       purpose: Purpose = Revocation
-  ): IO[EncodingError, JWT] = {
+  ): IO[EncodingError, VCStatusList2021] = {
     for {
-      encodedBitString <- revocationData.encoded
+      encodedBitString <- revocationData.encoded.mapError(e => EncodingError(e.message))
     } yield {
       val claims = JsonObject()
-        .add("id", claimsId.asJson)
+        .add("id", slId.asJson)
         .add("type", "StatusList2021".asJson)
         .add("statusPurpose", purpose.name.asJson)
         .add("encodedList", encodedBitString.asJson)
@@ -47,8 +63,23 @@ object VCStatusList2021 {
         maybeEvidence = None,
         maybeTermsOfUse = None
       )
-      W3CCredential.toEncodedJwt(w3Credential, jwtIssuer)
+      VCStatusList2021(w3Credential, jwtIssuer)
     }
   }
 
+  def decode(encodedJwtVC: JWT, issuer: Issuer): IO[DecodingError, VCStatusList2021] = {
+    for {
+      jwtCredentialPayload <- ZIO
+        .fromTry(JwtCredential.decodeJwt(encodedJwtVC, issuer.publicKey))
+        .mapError(t => DecodingError(t.getMessage))
+    } yield VCStatusList2021(jwtCredentialPayload.toW3CCredentialPayload, issuer)
+  }
+
+}
+
+sealed trait VCStatusList2021Error
+
+object VCStatusList2021Error {
+  final case class EncodingError(msg: String) extends VCStatusList2021Error
+  final case class DecodingError(msg: String) extends VCStatusList2021Error
 }

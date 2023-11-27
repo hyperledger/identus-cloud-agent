@@ -32,7 +32,8 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
       for {
         issuer <- generateIssuer()
         bitString <- BitString.getInstance()
-        encodedJwtVC <- VCStatusList2021.generateRevocationVC(VC_ID, s"$VC_ID#list", issuer, bitString)
+        statusList <- VCStatusList2021.build(VC_ID, s"$VC_ID#list", issuer, bitString)
+        encodedJwtVC <- statusList.encoded
         jwtVCPayload <- ZIO.fromTry(JwtCredential.decodeJwt(encodedJwtVC, issuer.publicKey))
         credentialSubjectKeys <- ZIO.fromOption(jwtVCPayload.credentialSubject.hcursor.keys)
       } yield {
@@ -43,7 +44,9 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
       for {
         issuer <- generateIssuer()
         bitString <- BitString.getInstance()
-        encodedJwtVC <- VCStatusList2021.generateRevocationVC(VC_ID, s"$VC_ID#list", issuer, bitString)
+        statusList <- VCStatusList2021.build(VC_ID, s"$VC_ID#list", issuer, bitString)
+        encodedJwtVC <- statusList.encoded
+        _ <- ZIO.logInfo(s"$encodedJwtVC")
         valid <- ZIO.succeed(JwtCredential.validateEncodedJwt(encodedJwtVC, issuer.publicKey))
       } yield {
         assertTrue(valid)
@@ -54,17 +57,17 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
         issuer <- generateIssuer()
         bitString <- BitString.getInstance()
         _ <- bitString.setRevoked(1234, true)
-        encodedJwtVC <- VCStatusList2021.generateRevocationVC(VC_ID, s"$VC_ID#list", issuer, bitString)
-        jwtVCPayload <- ZIO.fromTry(JwtCredential.decodeJwt(encodedJwtVC, issuer.publicKey))
-        encodedList <- ZIO.fromOption(
-          jwtVCPayload.credentialSubject.hcursor.downField("encodedList").as[String].toOption
-        )
-        decodedBS <- BitString.valueOf(encodedList)
+        statusList <- VCStatusList2021.build(VC_ID, s"$VC_ID#list", issuer, bitString)
+        encodedJwtVC <- statusList.encoded
+        decodedStatusList <- VCStatusList2021.decode(encodedJwtVC, issuer)
+        decodedBS <- decodedStatusList.getBitString
         revokedCount <- decodedBS.revokedCount()
-        isRevoked <- decodedBS.isRevoked(1234)
+        isRevoked1 <- decodedBS.isRevoked(1233)
+        isRevoked2 <- decodedBS.isRevoked(1234)
       } yield {
         assertTrue(revokedCount == 1) &&
-        assertTrue(isRevoked)
+        assertTrue(!isRevoked1) &&
+        assertTrue(isRevoked2)
       }
     }
   )
