@@ -5,11 +5,12 @@ import com.sksamuel.hoplite.ConfigLoader
 import common.ListenToEvents
 import common.TestConstants
 import config.Config
-import interactions.Post
 import io.cucumber.java.AfterAll
 import io.cucumber.java.BeforeAll
 import io.iohk.atala.prism.models.CreateWalletRequest
 import io.iohk.atala.prism.models.CreateWebhookNotification
+import io.restassured.RestAssured
+import io.restassured.builder.RequestSpecBuilder
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.actors.Cast
 import net.serenitybdd.screenplay.actors.OnStage
@@ -43,8 +44,10 @@ fun initActors() {
      * @param actor The actor for which the wallet should be initialized.
      */
     fun initializeWallet(actor: Actor) {
-        Post("")
-            .specWithAuthHeaders(actor)
+        RestAssured
+            .given()
+            .baseUri(actor.usingAbilityTo(CallAnApi::class.java).resolve("/"))
+            .auth().oauth2(actor.recall("BEARER_TOKEN"))
             .body(
                 CreateWalletRequest(
                     name = UUID.randomUUID().toString()
@@ -61,8 +64,16 @@ fun initActors() {
      * @param webhookUrl The url of the webhook.
      */
     fun registerWebhook(actor: Actor, webhookUrl: String) {
-        Post("")
-            .specWithAuthHeaders(actor)
+        val spec = RequestSpecBuilder()
+            .setBaseUri(actor.usingAbilityTo(CallAnApi::class.java).resolve("/"))
+        if (actor.recall<String>("AUTH_KEY") != null) {
+            spec.addHeader(actor.recall("AUTH_HEADER"), actor.recall("AUTH_KEY"))
+        }
+        if (actor.recall<String>("BEARER_TOKEN") != null) {
+            spec.addHeader("Authorization", "Bearer ${actor.recall<String>("BEARER_TOKEN")}")
+        }
+        RestAssured
+            .given().spec(spec.build())
             .body(CreateWebhookNotification(url = webhookUrl))
             .post("/events/webhooks")
             .then().statusCode(HttpStatus.SC_OK)
@@ -86,7 +97,6 @@ fun initActors() {
         }
     }
     config.roles.forEach { role ->
-        println(role.name)
         val actor = cast.actorNamed(role.name)
         if (role.apikey != null) {
             actor.remember("AUTH_KEY", role.apikey)
