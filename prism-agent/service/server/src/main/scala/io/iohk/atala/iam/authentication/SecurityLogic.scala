@@ -68,7 +68,7 @@ object SecurityLogic {
       authenticator: Authenticator[E],
       authorizer: Authorizer[E]
   ): IO[ErrorResponse, (BaseEntity, WalletAdministrationContext)] =
-    authenticate[E](credentials._3, credentials._2, credentials._1)(authenticator)
+    authenticate[E](credentials._1, credentials._3, credentials._2)(authenticator)
       .flatMap {
         case Left(entity)  => authorizeWalletAdmin(entity)(EntityAuthorizer).map(entity -> _)
         case Right(entity) => authorizeWalletAdmin(entity)(authorizer).map(entity -> _)
