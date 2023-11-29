@@ -5,6 +5,7 @@ import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.service.WalletManagementServiceError
+import io.iohk.atala.agent.walletapi.service.WalletManagementServiceError.TooManyPermittedWallet
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.CollectionStats
@@ -18,13 +19,12 @@ import io.iohk.atala.iam.wallet.http.model.WalletDetail
 import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
 import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.shared.models.WalletAdministrationContext
+import io.iohk.atala.shared.models.WalletAdministrationContext.Admin
 import io.iohk.atala.shared.models.WalletId
 import zio.*
 
 import java.util.UUID
 import scala.language.implicitConversions
-import io.iohk.atala.agent.walletapi.service.WalletManagementServiceError.TooManyPermittedWallet
-import io.iohk.atala.shared.models.WalletAdministrationContext.Admin
 
 trait WalletManagementController {
   def listWallet(

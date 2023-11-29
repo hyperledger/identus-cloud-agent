@@ -21,15 +21,17 @@ object SecurityLogic {
       .validateFirst(creds)(authenticator.authenticate)
       .map(Right(_))
       .catchAll { errors =>
-        val isAllMethodsDisabled = errors.forall {
-          case AuthenticationMethodNotEnabled(_) => true
-          case _                                 => false
+        val errorsExcludingMethodNotEnabled = errors.filter {
+          case AuthenticationMethodNotEnabled(_) => false
+          case _                                 => true
         }
 
         // if the alternative authentication method is not configured,
         // apikey authentication is disabled the default user is used
-        if (isAllMethodsDisabled) ZIO.left(Entity.Default)
-        else ZIO.fail(errors.head) // cannot fail, always non-empty
+        errorsExcludingMethodNotEnabled match {
+          case Nil       => ZIO.left(Entity.Default)
+          case head :: _ => ZIO.fail(head)
+        }
       }
       .mapError(AuthenticationError.toErrorResponse)
   }
@@ -68,7 +70,7 @@ object SecurityLogic {
       authenticator: Authenticator[E],
       authorizer: Authorizer[E]
   ): IO[ErrorResponse, (BaseEntity, WalletAdministrationContext)] =
-    authenticate[E](credentials._3, credentials._2, credentials._1)(authenticator)
+    authenticate[E](credentials._1, credentials._3, credentials._2)(authenticator)
       .flatMap {
         case Left(entity)  => authorizeWalletAdmin(entity)(EntityAuthorizer).map(entity -> _)
         case Right(entity) => authorizeWalletAdmin(entity)(authorizer).map(entity -> _)
