@@ -17,7 +17,8 @@ import java.net.URL
 import java.time.OffsetDateTime
 
 open class ListenToEvents(
-    private val url: URL
+    private val url: URL,
+    webhookPort: Int?
 ) : Ability, HasTeardown {
 
     private val server: ApplicationEngine
@@ -30,7 +31,7 @@ open class ListenToEvents(
     var presentationEvents: MutableList<PresentationEvent> = mutableListOf()
     var didEvents: MutableList<DidEvent> = mutableListOf()
 
-    fun route(application: Application) {
+    private fun route(application: Application) {
         application.routing {
             post("/") {
                 val eventString = call.receiveText()
@@ -52,8 +53,8 @@ open class ListenToEvents(
     }
 
     companion object {
-        fun at(url: URL): ListenToEvents {
-            return ListenToEvents(url)
+        fun at(url: URL, webhookPort: Int?): ListenToEvents {
+            return ListenToEvents(url, webhookPort)
         }
 
         fun `as`(actor: Actor): ListenToEvents {
@@ -64,8 +65,8 @@ open class ListenToEvents(
     init {
         server = embeddedServer(
             Netty,
-            port = url.port,
-            host = if (url.host == "host.docker.internal") "0.0.0.0" else url.host,
+            port = webhookPort ?: url.port,
+            host = "0.0.0.0",
             module = { route(this) }
         )
             .start(wait = false)
