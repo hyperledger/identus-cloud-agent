@@ -1,3 +1,10 @@
+## [1.19.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.19.0...prism-agent-v1.19.1) (2023-11-29)
+
+
+### Bug Fixes
+
+* change admin auth priority and improve auth error message ([#800](https://github.com/hyperledger-labs/open-enterprise-agent/issues/800)) ([32d4340](https://github.com/hyperledger-labs/open-enterprise-agent/commit/32d43401a69c339f54380bd8d5dfe2fa383cb8d7))
+
 # [1.19.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.18.0...prism-agent-v1.19.0) (2023-11-21)
 
 
