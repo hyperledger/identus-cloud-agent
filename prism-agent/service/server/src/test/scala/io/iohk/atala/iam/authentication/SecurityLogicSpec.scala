@@ -24,6 +24,20 @@ object SecurityLogicSpec extends ZIOSpecDefault {
     }
   }
 
+  private def errorAuthenticator(errors: Map[Entity, AuthenticationError]): Authenticator[Entity] = {
+    new Authenticator[Entity] {
+      override def isEnabled: Boolean = true
+      override def authenticate(credentials: Credentials): IO[AuthenticationError, Entity] = {
+        credentials match {
+          case ApiKeyCredentials(Some(apiKey)) =>
+            val error = errors.find { case (k, _) => k.id.toString() == apiKey }.map(_._2)
+            ZIO.fail(error.get)
+          case _ => ZIO.fail(AuthenticationError.UnexpectedError("test entity not found"))
+        }
+      }
+    }
+  }
+
   private val disabledAuthenticator: Authenticator[Entity] = {
     new Authenticator[Entity] {
       override def isEnabled: Boolean = false
@@ -63,6 +77,27 @@ object SecurityLogicSpec extends ZIOSpecDefault {
           )(testAuthenticator(entity))
           .exit
       } yield assert(exit)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Forbidden.code))))
+    },
+    test("display first error message that is not MethodNotEnabled error") {
+      val alice = Entity("alice", UUID.randomUUID())
+      val bob = Entity("bob", UUID.randomUUID())
+      for {
+        exit <- SecurityLogic
+          .authenticate(
+            ApiKeyCredentials(Some(alice.id.toString())),
+            ApiKeyCredentials(Some(bob.id.toString())),
+          )(
+            errorAuthenticator(
+              Map(
+                alice -> AuthenticationError.AuthenticationMethodNotEnabled("not enabled"),
+                bob -> AuthenticationError.InvalidCredentials("invalid credentials"),
+              )
+            )
+          )
+          .debug("error")
+          .exit
+      } yield assert(exit)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Forbidden.code)))) &&
+        assert(exit)(fails(hasField("detail", _.detail, isSome(equalTo("invalid credentials")))))
     }
   )
 
