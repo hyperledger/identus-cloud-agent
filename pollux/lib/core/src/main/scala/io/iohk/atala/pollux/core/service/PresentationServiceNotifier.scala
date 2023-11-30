@@ -7,7 +7,7 @@ import io.iohk.atala.pollux.anoncreds.AnoncredPresentation
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
-import io.iohk.atala.pollux.core.service.serdes.AnoncredPresentationRequestV1
+import io.iohk.atala.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
@@ -79,6 +79,13 @@ class PresentationServiceNotifier(
       credentialsToUse: Seq[String]
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(svc.acceptRequestPresentation(recordId, credentialsToUse))
+
+  override def acceptAnoncredRequestPresentation(
+      recordId: DidCommID,
+      credentialsToUse: AnoncredCredentialProofsV1
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = notifyOnSuccess(
+    svc.acceptAnoncredRequestPresentation(recordId, credentialsToUse)
+  )
 
   override def rejectRequestPresentation(
       recordId: DidCommID
@@ -154,9 +161,10 @@ class PresentationServiceNotifier(
   override def createAnoncredPresentationPayloadFromRecord(
       record: DidCommID,
       issuer: Issuer,
+      anoncredCredentialProof: AnoncredCredentialProofsV1,
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] =
-    svc.createAnoncredPresentationPayloadFromRecord(record, issuer, issuanceDate)
+    svc.createAnoncredPresentationPayloadFromRecord(record, issuer, anoncredCredentialProof, issuanceDate)
 
   override def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,

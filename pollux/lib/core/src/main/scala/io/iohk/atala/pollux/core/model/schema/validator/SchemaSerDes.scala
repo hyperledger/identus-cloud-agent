@@ -12,8 +12,12 @@ class SchemaSerDes[S](jsonSchemaSchemaStr: String) {
   def initialiseJsonSchema: IO[JsonSchemaError, JsonSchema] =
     JsonSchemaUtils.jsonSchema(jsonSchemaSchemaStr)
 
-  def serialize(instance: S)(using encoder: JsonEncoder[S]): String = {
+  def serializeToJsonString(instance: S)(using encoder: JsonEncoder[S]): String = {
     instance.toJson
+  }
+
+  def serialize(instance: S)(using encoder: JsonEncoder[S]): Either[String, Json] = {
+    instance.toJsonAST
   }
 
   def deserialize(
