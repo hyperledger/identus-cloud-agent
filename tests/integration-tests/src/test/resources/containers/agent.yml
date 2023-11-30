@@ -37,7 +37,7 @@ services:
       # Configuration parameters
       AGENT_DIDCOMM_PORT:
       AGENT_HTTP_PORT:
-      DIDCOMM_SERVICE_URL: "http://host.docker.internal:${AGENT_DIDCOMM_PORT}"
+      DIDCOMM_SERVICE_URL:
       REST_SERVICE_URL: "http://host.docker.internal:${AGENT_HTTP_PORT}"
       API_KEY_ENABLED:
       # Secret storage configuration

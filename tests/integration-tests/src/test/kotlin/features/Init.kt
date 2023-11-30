@@ -72,11 +72,13 @@ fun initActors() {
         if (actor.recall<String>("BEARER_TOKEN") != null) {
             spec.addHeader("Authorization", "Bearer ${actor.recall<String>("BEARER_TOKEN")}")
         }
-        RestAssured
+        val response = RestAssured
             .given().spec(spec.build())
             .body(CreateWebhookNotification(url = webhookUrl))
             .post("/events/webhooks")
-            .then().statusCode(HttpStatus.SC_OK)
+            .thenReturn()
+        response.then().statusCode(HttpStatus.SC_OK)
+        actor.remember("WEBHOOK_ID", response.body.jsonPath().getString("id"))
     }
 
     val cast = Cast()
@@ -103,13 +105,47 @@ fun initActors() {
             actor.remember("AUTH_HEADER", role.authHeader)
         }
         if (role.webhook != null) {
-            actor.whoCan(ListenToEvents.at(role.webhook.url))
+            actor.whoCan(ListenToEvents.at(role.webhook.url, role.webhook.localPort))
             if (role.webhook.initRequired) {
                 registerWebhook(actor, role.webhook.url.toExternalForm())
             }
         }
     }
     OnStage.setTheStage(cast)
+}
+
+/**
+ * This function destroys all actors and clears the stage.
+ */
+fun destroyActors() {
+    /**
+     * This function deletes a webhook for an actor.
+     *
+     * @param actor The actor for which the webhook should be deleted.
+     */
+    fun deleteWebhook(actor: Actor) {
+        val spec = RequestSpecBuilder()
+            .setBaseUri(actor.usingAbilityTo(CallAnApi::class.java).resolve("/"))
+        if (actor.recall<String>("AUTH_KEY") != null) {
+            spec.addHeader(actor.recall("AUTH_HEADER"), actor.recall("AUTH_KEY"))
+        }
+        if (actor.recall<String>("BEARER_TOKEN") != null) {
+            spec.addHeader("Authorization", "Bearer ${actor.recall<String>("BEARER_TOKEN")}")
+        }
+        RestAssured
+            .given().spec(spec.build())
+            .delete("/events/webhooks/${actor.recall<String>("WEBHOOK_ID")}")
+            .then().statusCode(HttpStatus.SC_OK)
+    }
+
+    // Delete webhooks
+    config.roles.forEach { role ->
+        val actor = OnStage.theActorCalled(role.name)
+        if (role.webhook != null && role.webhook.initRequired) {
+            deleteWebhook(actor)
+        }
+    }
+    OnStage.drawTheCurtain()
 }
 
 @BeforeAll
@@ -120,7 +156,7 @@ fun init() {
 
 @AfterAll
 fun clearStage() {
-    OnStage.drawTheCurtain()
+    destroyActors()
     config.agents?.forEach { agent ->
         agent.stop()
     }
