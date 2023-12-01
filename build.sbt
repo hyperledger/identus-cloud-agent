@@ -405,34 +405,12 @@ lazy val D_PrismAgent = new {
 
 publish / skip := true
 
-// #####################
-// #####  shared  ######
-// #####################
-
-lazy val shared = (project in file("shared"))
-  // .configure(publishConfigure)
-  .settings(
-    organization := "io.iohk.atala",
-    organizationName := "Input Output Global",
-    buildInfoPackage := "io.iohk.atala.shared",
-    name := "shared",
-    crossPaths := false,
-    libraryDependencies ++= D_Shared.dependencies
-  )
-  .enablePlugins(BuildInfoPlugin)
-
-lazy val sharedTest = (project in file("shared-test"))
-  .settings(
-    organization := "io.iohk.atala",
-    organizationName := "Input Output Global",
-    buildInfoPackage := "io.iohk.atala.sharedtest",
-    name := "sharedtest",
-    crossPaths := false,
-    libraryDependencies ++= D_SharedTest.dependencies,
-    // Do not resolve transtive dependency when doing license check
-    // 'sbt-license' plugin is using ivy and unable to resolve 'org.jboss.resteasy:resteasy-*'
-    // Since this subproject is only used in tests, we can skip the license check for the transitive dependencies.
-    updateLicenses := {
+val commonSetttings = Seq(
+  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+  // Needed for Kotlin coroutines that support new memory management mode
+  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
+  updateLicenses := {
+    if (name.value == "sharedtest") {
       val resolveReport = ivyModule.value.withModule(streams.value.log) { (ivy, desc, _) =>
         // https://github.com/sbt/sbt-license-report/blob/5a8cb0b6567789bd8867e709b0cad8bb93aca50f/src/main/scala/sbtlicensereport/license/LicenseReport.scala#L222
         val resolveId = org.apache.ivy.core.resolve.ResolveOptions.getDefaultResolveId(desc)
@@ -444,7 +422,41 @@ lazy val sharedTest = (project in file("shared-test"))
         ivy.resolve(desc, resolveOptions)
       }
       sbtlicensereport.license.LicenseReport(Nil, resolveReport)
-    },
+    } else {
+      updateLicenses.value
+    }
+  }
+)
+
+// #####################
+// #####  shared  ######
+// #####################
+
+lazy val shared = (project in file("shared"))
+  // .configure(publishConfigure)
+  .settings(commonSetttings)
+  .settings(
+    organization := "io.iohk.atala",
+    organizationName := "Input Output Global",
+    buildInfoPackage := "io.iohk.atala.shared",
+    name := "shared",
+    crossPaths := false,
+    libraryDependencies ++= D_Shared.dependencies
+  )
+  .enablePlugins(BuildInfoPlugin)
+
+lazy val sharedTest = (project in file("shared-test"))
+  .settings(commonSetttings)
+  .settings(
+    organization := "io.iohk.atala",
+    organizationName := "Input Output Global",
+    buildInfoPackage := "io.iohk.atala.sharedtest",
+    name := "sharedtest",
+    crossPaths := false,
+    libraryDependencies ++= D_SharedTest.dependencies,
+    // Do not resolve transtive dependency when doing license check
+    // 'sbt-license' plugin is using ivy and unable to resolve 'org.jboss.resteasy:resteasy-*'
+    // Since this subproject is only used in tests, we can skip the license check for the transitive dependencies.
   )
   .dependsOn(shared)
   .enablePlugins(BuildInfoPlugin)
@@ -666,16 +678,9 @@ val prismNodeClient = project
 // #####  castor  ######
 // #####################
 
-val castorCommonSettings = Seq(
-  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
-)
-
-// Project definitions
 lazy val castorCore = project
   .in(file("castor/lib/core"))
-  .settings(castorCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "castor-core",
     libraryDependencies ++= D_Castor.coreDependencies
@@ -686,15 +691,9 @@ lazy val castorCore = project
 // #####  pollux  ######
 // #####################
 
-val polluxCommonSettings = Seq(
-  testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
-)
-
 lazy val polluxVcJWT = project
   .in(file("pollux/lib/vc-jwt"))
-  .settings(polluxCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "pollux-vc-jwt",
     libraryDependencies ++= D_Pollux_VC_JWT.polluxVcJwtDependencies
@@ -703,7 +702,7 @@ lazy val polluxVcJWT = project
 
 lazy val polluxCore = project
   .in(file("pollux/lib/core"))
-  .settings(polluxCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "pollux-core",
     libraryDependencies ++= D_Pollux.coreDependencies
@@ -715,7 +714,7 @@ lazy val polluxCore = project
 
 lazy val polluxDoobie = project
   .in(file("pollux/lib/sql-doobie"))
-  .settings(polluxCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "pollux-sql-doobie",
     libraryDependencies ++= D_Pollux.sqlDoobieDependencies
@@ -730,7 +729,6 @@ lazy val polluxDoobie = project
 
 lazy val polluxAnoncreds = project
   .in(file("pollux/lib/anoncreds"))
-  // .settings(polluxCommonSettings)
   .enablePlugins(BuildInfoPlugin)
   .enablePlugins(JavaAppPackaging)
   .settings(
@@ -751,11 +749,9 @@ lazy val polluxAnoncredsTest = project
 // #####  connect  #####
 // #####################
 
-def connectCommonSettings = polluxCommonSettings
-
 lazy val connectCore = project
   .in(file("connect/lib/core"))
-  .settings(connectCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "connect-core",
     libraryDependencies ++= D_Connect.coreDependencies,
@@ -766,7 +762,7 @@ lazy val connectCore = project
 
 lazy val connectDoobie = project
   .in(file("connect/lib/sql-doobie"))
-  .settings(connectCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "connect-sql-doobie",
     libraryDependencies ++= D_Connect.sqlDoobieDependencies
@@ -790,11 +786,10 @@ lazy val eventNotification = project
 // #####################
 // #### Prism Agent ####
 // #####################
-def prismAgentConnectCommonSettings = polluxCommonSettings
 
 lazy val prismAgentWalletAPI = project
   .in(file("prism-agent/service/wallet-api"))
-  .settings(prismAgentConnectCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "prism-agent-wallet-api",
     libraryDependencies ++=
@@ -812,7 +807,7 @@ lazy val prismAgentWalletAPI = project
 
 lazy val prismAgentServer = project
   .in(file("prism-agent/service/server"))
-  .settings(prismAgentConnectCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "prism-agent",
     fork := true,
