@@ -6,7 +6,7 @@ import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.mercury.model.*
-import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, IssueCredentialIssuedFormat}
+import io.iohk.atala.mercury.protocol.issuecredential.IssueCredentialIssuedFormat
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.anoncreds.*
 import io.iohk.atala.pollux.core.model.*
@@ -16,11 +16,15 @@ import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema.parseCredentialSchema
 import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
-import io.iohk.atala.pollux.core.service.serdes.AnoncredPresentationRequestV1
+import io.iohk.atala.pollux.core.service.serdes.{
+  AnoncredCredentialProofV1,
+  AnoncredCredentialProofsV1,
+  AnoncredPresentationRequestV1
+}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
-import zio.*
+import zio.{ZIO, *}
 
 import java.net.URI
 import java.rmi.UnexpectedException
@@ -110,6 +114,7 @@ private class PresentationServiceImpl(
   override def createAnoncredPresentationPayloadFromRecord(
       recordId: DidCommID,
       prover: Issuer,
+      anoncredCredentialProof: AnoncredCredentialProofsV1,
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] = {
 
@@ -120,20 +125,19 @@ private class PresentationServiceImpl(
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => RecordIdNotFound(recordId))
-      credentialsToUse <- ZIO
-        .fromOption(record.credentialsToUse)
-        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
       requestPresentation <- ZIO
         .fromOption(record.requestPresentationData)
         .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
-      issuedValidCredentials <- credentialRepository
-        .getValidAnoncredIssuedCredentials(credentialsToUse.map(DidCommID(_)))
-        .mapError(RepositoryError.apply)
-      signedCredentials = issuedValidCredentials.flatMap(_.issuedCredential)
+      issuedValidCredentials <-
+        credentialRepository
+          .getValidAnoncredIssuedCredentials(
+            anoncredCredentialProof.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential))
+          )
+          .mapError(RepositoryError.apply)
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
-          signedCredentials.nonEmpty,
-          signedCredentials,
+          issuedValidCredentials.nonEmpty,
+          issuedValidCredentials,
           PresentationError.IssuedCredentialNotFoundError(
             new Throwable("No matching issued credentials found in prover db")
           )
@@ -144,6 +148,7 @@ private class PresentationServiceImpl(
         issuedValidCredentials.flatMap(_.schemaId),
         issuedValidCredentials.flatMap(_.credentialDefinitionId),
         requestPresentation,
+        anoncredCredentialProof.credentialProofs
       )
     } yield presentationPayload
   }
@@ -224,6 +229,8 @@ private class PresentationServiceImpl(
           proposePresentationData = None,
           presentationData = None,
           credentialsToUse = None,
+          anoncredCredentialsToUseJsonSchemaId = None,
+          anoncredCredentialsToUse = None,
           metaRetries = maxRetries,
           metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
@@ -274,6 +281,8 @@ private class PresentationServiceImpl(
           proposePresentationData = None,
           presentationData = None,
           credentialsToUse = None,
+          anoncredCredentialsToUseJsonSchemaId = None,
+          anoncredCredentialsToUse = None,
           metaRetries = maxRetries,
           metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
@@ -356,6 +365,8 @@ private class PresentationServiceImpl(
           proposePresentationData = None,
           presentationData = None,
           credentialsToUse = None,
+          anoncredCredentialsToUseJsonSchemaId = None,
+          anoncredCredentialsToUse = None,
           metaRetries = maxRetries,
           metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
@@ -441,11 +452,18 @@ private class PresentationServiceImpl(
     } yield presentationPayload
   }
 
+  case class AnoncredCredentialProof(
+      credential: String,
+      requestedAttribute: Seq[String],
+      requestedPredicate: Seq[String]
+  )
+
   private def createAnoncredPresentationPayloadFromCredential(
-      issuedCredentials: Seq[IssueCredential],
+      issuedCredentialRecords: Seq[ValidFullIssuedCredentialRecord],
       schemaIds: Seq[String],
       credentialDefinitionIds: Seq[UUID],
       requestPresentation: RequestPresentation,
+      credentialProofs: List[AnoncredCredentialProofV1],
   ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] = {
     for {
       schemaMap <-
@@ -464,18 +482,32 @@ private class PresentationServiceImpl(
             } yield (credentialDefinition.longId, CredentialDefinition(credentialDefinition.definition.toString))
           })
           .map(_.toMap)
-
+      credentialProofsMap = credentialProofs.map(credentialProof => (credentialProof.credential, credentialProof)).toMap
       verifiableCredentials <-
         ZIO.collectAll(
-          issuedCredentials
-            .flatMap(_.attachments)
-            .filter(attachment => attachment.format.contains(IssueCredentialIssuedFormat.Anoncred.name))
-            .map(_.data)
-            .map {
-              case Base64(data) => Right(new String(JBase64.getUrlDecoder.decode(data)))
-              case _            => Left(InvalidAnoncredPresentationRequest("Expecting Base64-encoded data"))
-            }
-            .map(ZIO.fromEither(_))
+          issuedCredentialRecords
+            .flatMap(issuedCredentialRecord => {
+              issuedCredentialRecord.issuedCredential
+                .map(issuedCredential =>
+                  issuedCredential.attachments
+                    .filter(attachment => attachment.format.contains(IssueCredentialIssuedFormat.Anoncred.name))
+                    .map(_.data)
+                    .map {
+                      case Base64(data) =>
+                        Right(
+                          AnoncredCredentialProof(
+                            new String(JBase64.getUrlDecoder.decode(data)),
+                            credentialProofsMap(issuedCredentialRecord.id.value).requestedAttribute,
+                            credentialProofsMap(issuedCredentialRecord.id.value).requestedPredicate
+                          )
+                        )
+                      case _ => Left(InvalidAnoncredPresentationRequest("Expecting Base64-encoded data"))
+                    }
+                    .map(ZIO.fromEither(_))
+                )
+                .toSeq
+                .flatten
+            })
         )
       presentationRequestAttachment <- ZIO.fromEither(
         requestPresentation.attachments.headOption.toRight(InvalidAnoncredPresentationRequest("Missing Presentation"))
@@ -500,9 +532,9 @@ private class PresentationServiceImpl(
               PresentationRequest(presentationRequestData),
               verifiableCredentials.map(verifiableCredential =>
                 CredentialRequests(
-                  Credential(verifiableCredential),
-                  deserializedPresentationRequestData.requested_attributes.keys.toSeq, // TO FIX
-                  deserializedPresentationRequestData.requested_predicates.keys.toSeq // TO FIX
+                  Credential(verifiableCredential.credential),
+                  verifiableCredential.requestedAttribute,
+                  verifiableCredential.requestedPredicate
                 )
               ),
               Map.empty, // TO FIX
@@ -576,6 +608,81 @@ private class PresentationServiceImpl(
       )
       count <- presentationRepository
         .updatePresentationWithCredentialsToUse(recordId, Option(credentialsToUse), ProtocolState.PresentationPending)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+        s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
+      )
+      _ <- count match
+        case 1 => ZIO.succeed(())
+        case n => ZIO.fail(RecordIdNotFound(recordId))
+      record <- presentationRepository
+        .getPresentationRecord(recordId)
+        .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(record.id))
+          case Some(value) => ZIO.succeed(value)
+        }
+    } yield record
+  }
+
+  override def acceptAnoncredRequestPresentation(
+      recordId: DidCommID,
+      credentialsToUse: AnoncredCredentialProofsV1
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
+
+    for {
+      record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
+      issuedCredentials <- credentialRepository
+        .getValidIssuedCredentials(
+          credentialsToUse.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential))
+        )
+        .mapError(RepositoryError.apply)
+      _ <- ZIO.cond(
+        (issuedCredentials.map(_.subjectId).toSet.size == 1),
+        (),
+        PresentationError.HolderBindingError(
+          s"Creating a Verifiable Presentation for credential with different subject DID is not supported, found : ${issuedCredentials
+              .map(_.subjectId)}"
+        )
+      )
+      validatedCredentials <- ZIO.fromEither(
+        Either.cond(
+          issuedCredentials.forall(issuedValidCredential =>
+            issuedValidCredential.credentialFormat == record.credentialFormat
+          ),
+          issuedCredentials,
+          PresentationError.NotMatchingPresentationCredentialFormat(
+            new IllegalArgumentException(
+              s"No matching issued credentials format: expectedFormat=${record.credentialFormat}"
+            )
+          )
+        )
+      )
+      signedCredentials = validatedCredentials.flatMap(_.issuedCredentialRaw)
+      _ <- ZIO.fromEither(
+        Either.cond(
+          signedCredentials.nonEmpty,
+          signedCredentials,
+          PresentationError.IssuedCredentialNotFoundError(
+            new Throwable(s"No matching issued credentials found in prover db from the given: $credentialsToUse")
+          )
+        )
+      )
+      anoncredCredentialProofsV1AsJson <- ZIO
+        .fromEither(
+          AnoncredCredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
+        )
+        .mapError(error =>
+          PresentationError.UnexpectedError(
+            s"Unable to serialize credentialsToUse. credentialsToUse:$credentialsToUse, error:$error"
+          )
+        )
+      count <- presentationRepository
+        .updateAnoncredPresentationWithCredentialsToUse(
+          recordId,
+          Option(AnoncredCredentialProofsV1.version),
+          Option(anoncredCredentialProofsV1AsJson),
+          ProtocolState.PresentationPending
+        )
         .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
         s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
       )
@@ -817,7 +924,7 @@ private class PresentationServiceImpl(
     AttachmentDescriptor.buildBase64Attachment(
       mediaType = Some("application/json"),
       format = Some(PresentCredentialRequestFormat.Anoncred.name),
-      payload = AnoncredPresentationRequestV1.schemaSerDes.serialize(presentationRequest).getBytes()
+      payload = AnoncredPresentationRequestV1.schemaSerDes.serializeToJsonString(presentationRequest).getBytes()
     )
   }
 
