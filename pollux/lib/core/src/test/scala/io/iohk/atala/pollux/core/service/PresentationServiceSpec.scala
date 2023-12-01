@@ -14,7 +14,12 @@ import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition.Input
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
-import io.iohk.atala.pollux.core.service.serdes.{AnoncredPresentationRequestV1, AnoncredPresentationV1}
+import io.iohk.atala.pollux.core.service.serdes.{
+  AnoncredCredentialProofV1,
+  AnoncredCredentialProofsV1,
+  AnoncredPresentationRequestV1,
+  AnoncredPresentationV1
+}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
@@ -153,7 +158,9 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 Seq(
                   Base64(
                     JBase64.getUrlEncoder.encodeToString(
-                      AnoncredPresentationRequestV1.schemaSerDes.serialize(anoncredPresentationRequestV1).getBytes()
+                      AnoncredPresentationRequestV1.schemaSerDes
+                        .serializeToJsonString(anoncredPresentationRequestV1)
+                        .getBytes()
                     )
                   )
                 )
@@ -322,13 +329,32 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           svc <- ZIO.service[PresentationService]
           aRecord <- svc.createAnoncredRecord()
           repo <- ZIO.service[PresentationRepository]
-          _ <- repo.updatePresentationWithCredentialsToUse(
+          credentialsToUse =
+            AnoncredCredentialProofsV1(
+              List(
+                AnoncredCredentialProofV1(
+                  aIssueCredentialRecord.id.value,
+                  Seq("sex"),
+                  Seq("age")
+                )
+              )
+            )
+          credentialsToUseJson <- ZIO.fromEither(
+            AnoncredCredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
+          )
+          _ <- repo.updateAnoncredPresentationWithCredentialsToUse(
             aRecord.id,
-            Some(Seq(aIssueCredentialRecord.id.value)),
+            Some(AnoncredPresentationV1.version),
+            Some(credentialsToUseJson),
             PresentationRecord.ProtocolState.RequestPending
           )
           issuer = createIssuer(DID("did:prism:issuer"))
-          aPresentationPayload <- svc.createAnoncredPresentationPayloadFromRecord(aRecord.id, issuer, Instant.now())
+          aPresentationPayload <- svc.createAnoncredPresentationPayloadFromRecord(
+            aRecord.id,
+            issuer,
+            credentialsToUse,
+            Instant.now()
+          )
           validation <- AnoncredPresentationV1.schemaSerDes.validate(aPresentationPayload.data)
           presentation <- AnoncredPresentationV1.schemaSerDes.deserialize(aPresentationPayload.data)
         } yield {
@@ -472,7 +498,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(
             mediaType = Some("application/json"),
             format = Some(PresentCredentialRequestFormat.Anoncred.name),
-            payload = AnoncredPresentationRequestV1.schemaSerDes.serialize(anoncredPresentationRequestV1).getBytes()
+            payload =
+              AnoncredPresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
           )
           requestPresentation = RequestPresentation(
             body = body,
@@ -603,7 +630,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(
             mediaType = Some("application/json"),
             format = Some(PresentCredentialRequestFormat.Anoncred.name),
-            payload = AnoncredPresentationRequestV1.schemaSerDes.serialize(anoncredPresentationRequestV1).getBytes()
+            payload =
+              AnoncredPresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
           )
           requestPresentation = RequestPresentation(
             body = RequestPresentation.Body(goal_code = Some("Presentation Request")),
@@ -612,13 +640,25 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             from = DidId("did:peer:Verifier"),
           )
           aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentation)
-          credentialsToUse = Seq(aIssueCredentialRecord.id.value)
-          updateRecord <- svc.acceptRequestPresentation(aRecord.id, credentialsToUse)
+          credentialsToUse =
+            AnoncredCredentialProofsV1(
+              List(
+                AnoncredCredentialProofV1(
+                  aIssueCredentialRecord.id.value,
+                  Seq("requestedAttribute"),
+                  Seq("requestedPredicate")
+                )
+              )
+            )
+          anoncredCredentialProofsJson <- ZIO.fromEither(
+            AnoncredCredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
+          )
+          updateRecord <- svc.acceptAnoncredRequestPresentation(aRecord.id, credentialsToUse)
 
         } yield {
           assertTrue(updateRecord.connectionId == connectionId) &&
-          // assertTrue(updateRecord.requestPresentationData == Some(requestPresentation)) && // FIXME: enabling them make the test fail.
-          assertTrue(updateRecord.credentialsToUse.contains(credentialsToUse))
+          assertTrue(updateRecord.anoncredCredentialsToUse.contains(anoncredCredentialProofsJson)) &&
+          assertTrue(updateRecord.anoncredCredentialsToUseJsonSchemaId.contains(AnoncredCredentialProofsV1.version))
         }
       },
       test("acceptRequestPresentation should fail given unmatching format") {
@@ -647,7 +687,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(
             mediaType = Some("application/json"),
             format = Some(PresentCredentialRequestFormat.Anoncred.name),
-            payload = AnoncredPresentationRequestV1.schemaSerDes.serialize(anoncredPresentationRequestV1).getBytes()
+            payload =
+              AnoncredPresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
           )
           requestPresentation = RequestPresentation(
             body = RequestPresentation.Body(goal_code = Some("Presentation Request")),

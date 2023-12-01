@@ -6,7 +6,7 @@ import io.iohk.atala.pollux.anoncreds.AnoncredPresentation
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
-import io.iohk.atala.pollux.core.service.serdes.AnoncredPresentationRequestV1
+import io.iohk.atala.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.mock.{Mock, Proxy}
@@ -44,6 +44,13 @@ object MockPresentationService extends Mock[PresentationService] {
   object MarkPresentationVerificationFailed extends Effect[DidCommID, PresentationError, PresentationRecord]
 
   object AcceptRequestPresentation extends Effect[(DidCommID, Seq[String]), PresentationError, PresentationRecord]
+
+  object AcceptAnoncredRequestPresentation
+      extends Effect[
+        (DidCommID, AnoncredCredentialProofsV1),
+        PresentationError,
+        PresentationRecord
+      ]
 
   object RejectRequestPresentation extends Effect[DidCommID, PresentationError, PresentationRecord]
 
@@ -94,6 +101,12 @@ object MockPresentationService extends Mock[PresentationService] {
           credentialsToUse: Seq[String]
       ): IO[PresentationError, PresentationRecord] =
         proxy(AcceptRequestPresentation, (recordId, credentialsToUse))
+
+      override def acceptAnoncredRequestPresentation(
+          recordId: DidCommID,
+          credentialsToUse: AnoncredCredentialProofsV1
+      ): IO[PresentationError, PresentationRecord] =
+        proxy(AcceptAnoncredRequestPresentation, (recordId, credentialsToUse))
 
       override def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
         proxy(RejectRequestPresentation, recordId)
@@ -152,6 +165,7 @@ object MockPresentationService extends Mock[PresentationService] {
       override def createAnoncredPresentationPayloadFromRecord(
           record: DidCommID,
           issuer: Issuer,
+          anoncredCredentialProof: AnoncredCredentialProofsV1,
           issuanceDate: Instant
       ): IO[PresentationError, AnoncredPresentation] = ???
 

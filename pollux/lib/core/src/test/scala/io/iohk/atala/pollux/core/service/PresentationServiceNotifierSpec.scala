@@ -30,6 +30,8 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
     None,
     None,
     None,
+    None,
+    None,
     5,
     None,
     None
