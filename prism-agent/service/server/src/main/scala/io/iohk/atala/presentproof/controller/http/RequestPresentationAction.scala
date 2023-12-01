@@ -1,6 +1,7 @@
 package io.iohk.atala.presentproof.controller.http
 
 import io.iohk.atala.api.http.Annotation
+import io.iohk.atala.pollux.core.service.serdes.*
 import io.iohk.atala.presentproof.controller.http.RequestPresentationAction.annotations
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import sttp.tapir.{Schema, Validator}
@@ -13,7 +14,22 @@ final case class RequestPresentationAction(
     action: String,
     @description(annotations.proofId.description)
     @encodedExample(annotations.proofId.example)
-    proofId: Option[Seq[String]] = None
+    proofId: Option[Seq[String]] = None,
+    @description(annotations.anoncredProof.description)
+    @encodedExample(annotations.anoncredProof.example)
+    anoncredPresentationRequest: Option[AnoncredCredentialProofsV1],
+)
+
+final case class AnoncredProof(
+    @description(annotations.credential.description)
+    @encodedExample(annotations.credential.example)
+    credential: String,
+    @description(annotations.requestedAttribute.description)
+    @encodedExample(annotations.requestedAttribute.example)
+    requestedAttribute: Seq[String],
+    @description(annotations.requestedPredicate.description)
+    @encodedExample(annotations.requestedPredicate.example)
+    requestedPredicate: Seq[String]
 )
 
 object RequestPresentationAction {
@@ -37,13 +53,53 @@ object RequestPresentationAction {
             "The unique identifier of the issue credential record - and hence VC - to use as the prover accepts the presentation request. Only applicable on the prover side when the action is `request-accept`.",
           example = None
         )
+
+    object anoncredProof
+        extends Annotation[Option[Seq[AnoncredProof]]](
+          description = "A list of proofs from the Anoncred library, each corresponding to a credential.",
+          example = None
+        )
+
+    object credential
+        extends Annotation[String](
+          description =
+            "The unique identifier of the issue credential record - and hence VC - to use as the prover accepts the presentation request. Only applicable on the prover side when the action is `request-accept`.",
+          example = "id"
+        )
+
+    object requestedAttribute
+        extends Annotation[Seq[String]](
+          description = "The unique identifier of attribute that the credential is expected to provide.",
+          example = Seq("Attribute1", "Attribute2")
+        )
+
+    object requestedPredicate
+        extends Annotation[Seq[String]](
+          description = "The unique identifier of Predicate that the credential is expected to answer for.",
+          example = Seq("Predicate1", "Predicate2")
+        )
   }
 
-  given encoder: JsonEncoder[RequestPresentationAction] =
+  given RequestPresentationActionEncoder: JsonEncoder[RequestPresentationAction] =
     DeriveJsonEncoder.gen[RequestPresentationAction]
 
-  given decoder: JsonDecoder[RequestPresentationAction] =
+  given RequestPresentationActionDecoder: JsonDecoder[RequestPresentationAction] =
     DeriveJsonDecoder.gen[RequestPresentationAction]
 
-  given schema: Schema[RequestPresentationAction] = Schema.derived
+  given AnoncredProofEncoder: JsonEncoder[AnoncredProof] =
+    DeriveJsonEncoder.gen[AnoncredProof]
+
+  given AnoncredProofDecoder: JsonDecoder[AnoncredProof] =
+    DeriveJsonDecoder.gen[AnoncredProof]
+
+  given RequestPresentationActionSchema: Schema[RequestPresentationAction] = Schema.derived
+
+  given AnoncredProofSchema: Schema[AnoncredProof] = Schema.derived
+
+  import AnoncredCredentialProofsV1.given
+
+  given Schema[AnoncredCredentialProofsV1] = Schema.derived
+
+  given Schema[AnoncredCredentialProofV1] = Schema.derived
+
 }

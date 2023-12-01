@@ -1,6 +1,20 @@
 package io.iohk.atala.pollux.anoncreds
 
-import uniffi.anoncreds_wrapper.{Nonce, Credential as UniffiCredential, CredentialDefinition as UniffiCredentialDefinition, CredentialDefinitionPrivate as UniffiCredentialDefinitionPrivate, CredentialKeyCorrectnessProof as UniffiCredentialKeyCorrectnessProof, CredentialOffer as UniffiCredentialOffer, CredentialRequest as UniffiCredentialRequest, CredentialRequestMetadata as UniffiCredentialRequestMetadata, CredentialRequests as UniffiCredentialRequests, LinkSecret as UniffiLinkSecret, Presentation as UniffiPresentation, PresentationRequest as UniffiPresentationRequest, Schema as UniffiSchema}
+import uniffi.anoncreds_wrapper.{
+  Nonce,
+  Credential as UniffiCredential,
+  CredentialDefinition as UniffiCredentialDefinition,
+  CredentialDefinitionPrivate as UniffiCredentialDefinitionPrivate,
+  CredentialKeyCorrectnessProof as UniffiCredentialKeyCorrectnessProof,
+  CredentialOffer as UniffiCredentialOffer,
+  CredentialRequest as UniffiCredentialRequest,
+  CredentialRequestMetadata as UniffiCredentialRequestMetadata,
+  CredentialRequests as UniffiCredentialRequests,
+  LinkSecret as UniffiLinkSecret,
+  Presentation as UniffiPresentation,
+  PresentationRequest as UniffiPresentationRequest,
+  Schema as UniffiSchema
+}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import scala.jdk.CollectionConverters.*

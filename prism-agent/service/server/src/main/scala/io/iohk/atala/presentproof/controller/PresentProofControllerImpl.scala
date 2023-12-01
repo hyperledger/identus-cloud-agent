@@ -11,7 +11,7 @@ import io.iohk.atala.mercury.protocol.presentproof.ProofType
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
-import io.iohk.atala.pollux.core.service.PresentationService
+import io.iohk.atala.pollux.core.service.{PresentationService}
 import io.iohk.atala.presentproof.controller.PresentProofController.toDidCommID
 import io.iohk.atala.presentproof.controller.http.*
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -111,10 +111,16 @@ class PresentProofControllerImpl(
       didCommId <- ZIO.succeed(DidCommID(id.toString))
       record <- requestPresentationAction.action match {
         case "request-accept" =>
-          presentationService.acceptRequestPresentation(
-            recordId = didCommId,
-            credentialsToUse = requestPresentationAction.proofId.getOrElse(Seq.empty)
-          )
+          (requestPresentationAction.proofId, requestPresentationAction.anoncredPresentationRequest) match
+            case (Some(proofs), None) =>
+              presentationService.acceptRequestPresentation(recordId = didCommId, credentialsToUse = proofs)
+            case (None, Some(proofs)) =>
+              presentationService.acceptAnoncredRequestPresentation(
+                recordId = didCommId,
+                credentialsToUse = proofs
+              )
+            case _ => presentationService.acceptRequestPresentation(recordId = didCommId, credentialsToUse = Seq())
+
         case "request-reject"      => presentationService.rejectRequestPresentation(didCommId)
         case "presentation-accept" => presentationService.acceptPresentation(didCommId)
         case "presentation-reject" => presentationService.rejectPresentation(didCommId)
