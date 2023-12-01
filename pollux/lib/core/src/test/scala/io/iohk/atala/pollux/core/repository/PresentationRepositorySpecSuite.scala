@@ -4,8 +4,8 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.PresentationRecord.*
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.pollux.core.service.serdes.{AnoncredCredentialProofV1, AnoncredCredentialProofsV1}
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.test.*
 import zio.test.Assertion.*
 import zio.{ZIO, ZLayer}
@@ -31,6 +31,8 @@ object PresentationRepositorySpecSuite {
     proposePresentationData = None,
     presentationData = None,
     credentialsToUse = None,
+    anoncredCredentialsToUseJsonSchemaId = None,
+    anoncredCredentialsToUse = None,
     metaRetries = maxRetries,
     metaNextRetry = Some(Instant.now()),
     metaLastFailure = None,
@@ -193,6 +195,64 @@ object PresentationRepositorySpecSuite {
       } yield {
         assertTrue(records.size == 1) &&
         assertTrue(records.exists(_.credentialsToUse.contains(Seq("credential1", "credential2"))))
+      }
+    },
+    test("updatePresentationWithCredentialsToUse updates the record") {
+      for {
+        repo <- ZIO.service[PresentationRepository]
+        aRecord = presentationRecord
+        bRecord = presentationRecord
+        cRecord = presentationRecord
+        _ <- repo.createPresentationRecord(aRecord)
+        _ <- repo.createPresentationRecord(bRecord)
+        _ <- repo.createPresentationRecord(cRecord)
+        anoncredCredentialProofs = AnoncredCredentialProofsV1(
+          List(AnoncredCredentialProofV1("credential1", Seq("requestedAttribute"), Seq("requestedPredicate")))
+        )
+        anoncredCredentialProofsJson <- ZIO.fromEither(
+          AnoncredCredentialProofsV1.schemaSerDes.serialize(anoncredCredentialProofs)
+        )
+        _ <- repo.updateAnoncredPresentationWithCredentialsToUse(
+          aRecord.id,
+          Some(AnoncredCredentialProofsV1.version),
+          Some(anoncredCredentialProofsJson),
+          ProtocolState.PresentationPending
+        )
+        records <- repo.getPresentationRecord(aRecord.id)
+      } yield {
+        assertTrue(records.size == 1) &&
+        assertTrue(records.exists(_.anoncredCredentialsToUse.contains(anoncredCredentialProofsJson))) &&
+        assertTrue(records.exists(_.anoncredCredentialsToUseJsonSchemaId.contains(AnoncredCredentialProofsV1.version)))
+      }
+    },
+    test("updatePresentationWithCredentialsToUse updates the record") {
+      for {
+        repo <- ZIO.service[PresentationRepository]
+        aRecord = presentationRecord
+        bRecord = presentationRecord
+        cRecord = presentationRecord
+        _ <- repo.createPresentationRecord(aRecord)
+        _ <- repo.createPresentationRecord(bRecord)
+        _ <- repo.createPresentationRecord(cRecord)
+        anoncredCredentialProofs = AnoncredCredentialProofsV1(
+          List(AnoncredCredentialProofV1("credential1", Seq("requestedAttribute"), Seq("requestedPredicate")))
+        )
+        anoncredCredentialProofsJson <- ZIO
+          .fromEither(
+            AnoncredCredentialProofsV1.schemaSerDes.serialize(anoncredCredentialProofs)
+          )
+
+        _ <- repo.updateAnoncredPresentationWithCredentialsToUse(
+          aRecord.id,
+          Some(AnoncredCredentialProofsV1.version),
+          Some(anoncredCredentialProofsJson),
+          ProtocolState.PresentationPending
+        )
+        records <- repo.getPresentationRecord(aRecord.id)
+      } yield {
+        assertTrue(records.size == 1) &&
+        assertTrue(records.exists(_.anoncredCredentialsToUse.contains(anoncredCredentialProofsJson))) &&
+        assertTrue(records.exists(_.anoncredCredentialsToUseJsonSchemaId.contains(AnoncredCredentialProofsV1.version)))
       }
     },
     test("updateCredentialRecordProtocolState updates the record") {

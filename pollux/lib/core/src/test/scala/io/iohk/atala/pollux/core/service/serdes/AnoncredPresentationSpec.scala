@@ -203,7 +203,7 @@ object AnoncredPresentationSpec extends ZIOSpecDefault {
         identifiers = List(identifier)
       )
 
-      assert(AnoncredPresentationV1.schemaSerDes.serialize(anoncredPresentationV1))(Assertion.equalTo(json))
+      assert(AnoncredPresentationV1.schemaSerDes.serializeToJsonString(anoncredPresentationV1))(Assertion.equalTo(json))
 
       assertZIO(AnoncredPresentationV1.schemaSerDes.deserialize(json))(
         Assertion.equalTo(anoncredPresentationV1)
