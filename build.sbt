@@ -130,7 +130,7 @@ lazy val D = new {
     "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala % Test
   val testcontainersVault: ModuleID = "com.dimafeng" %% "testcontainers-scala-vault" % V.testContainersScala % Test
   val testcontainersKeycloak: ModuleID =
-    "com.github.dasniko" % "testcontainers-keycloak" % V.testContainersJavaKeycloak % Test exclude ("org.keycloak", "keycloak-admin-client")
+    "com.github.dasniko" % "testcontainers-keycloak" % V.testContainersJavaKeycloak % Test
 
   val doobiePostgres: ModuleID = "org.tpolecat" %% "doobie-postgres" % V.doobie
   val doobieHikari: ModuleID = "org.tpolecat" %% "doobie-hikari" % V.doobie
@@ -166,57 +166,8 @@ lazy val D_Shared = new {
 }
 
 lazy val D_SharedTest = new {
-  // https://github.com/sbt/sbt-license-report/issues/87
-  // https://stackoverflow.com/questions/48771768/sbt-error-importing-resteasy-client
-  //
-  // 'sbt-license' plugin is using ivy to resolve dependencies where other tasks are using coursier.
-  // 'org.jboss.resteasy:resteasy-*' which is the transitive dependencies of 'keycloak-admin-client'
-  // has this issue where 'relativePath' is used in the 'parent' section.
-  // - https://github.com/resteasy/resteasy/blob/6.2.4.Final/resteasy-client-api/pom.xml#L9
-  // - https://www.scala-sbt.org/1.x/docs/Library-Management.html#Known+limitations
-  //
-  // This workaround provides those dependencies explicitly, but it will be a nightmare to maintain.
-  // for version reference: https://github.com/resteasy/resteasy/blob/6.2.4.Final/resteasy-dependencies-bom/pom.xml
-  // FIXME: solve this with a long-term solution
-  lazy val keycloakAdminExplicitDependencies: Seq[ModuleID] =
-    Seq(
-      "org.keycloak" % "keycloak-admin-client" % V.keycloak excludeAll (
-        ExclusionRule("org.jboss.resteasy", "resteasy-core"),
-        ExclusionRule("org.jboss.resteasy", "resteasy-multipart-provider"),
-        ExclusionRule("org.jboss.resteasy", "resteasy-jackson2-provider"),
-        ExclusionRule("org.jboss.resteasy", "resteasy-jaxb-provider"),
-      ),
-      // scala-steward:off
-      "org.jboss.resteasy" % "resteasy-core" % "6.2.4.Final" excludeAll (
-        ExclusionRule("jakarta.servlet", "jakarta.servlet-api"),
-      ),
-      "org.jboss.resteasy" % "resteasy-jackson2-provider" % "6.2.4.Final" excludeAll (
-        ExclusionRule("jakarta.servlet", "jakarta.servlet-api"),
-      ),
-      "org.jboss.logging" % "jboss-logging" % "3.5.0.Final",
-      "commons-codec" % "commons-codec" % "1.15",
-      "jakarta.ws.rs" % "jakarta.ws.rs-api" % "3.1.0",
-      "jakarta.annotation" % "jakarta.annotation-api" % "2.1.1",
-      "jakarta.xml.bind" % "jakarta.xml.bind-api" % "3.0.1",
-      "org.reactivestreams" % "reactive-streams" % "1.0.4",
-      "jakarta.validation" % "jakarta.validation-api" % "3.0.2",
-      "org.jboss" % "jandex" % "2.4.3.Final",
-      "jakarta.activation" % "jakarta.activation-api" % "2.1.2",
-      "org.eclipse.angus" % "angus-activation" % "1.0.0",
-      "com.ibm.async" % "asyncutil" % "0.1.0",
-      "org.apache.httpcomponents" % "httpclient" % "4.5.14",
-      "com.github.java-json-tools" % "json-patch" % "1.13",
-      "com.fasterxml.jackson.core" % "jackson-core" % "2.14.3",
-      "com.fasterxml.jackson.core" % "jackson-databind" % "2.14.3",
-      "com.fasterxml.jackson.core" % "jackson-annotations" % "2.14.3",
-      "com.fasterxml.jackson.jakarta.rs" % "jackson-jakarta-rs-base" % "2.14.3",
-      "com.fasterxml.jackson.jakarta.rs" % "jackson-jakarta-rs-json-provider" % "2.14.3",
-      "com.fasterxml.jackson.module" % "jackson-module-jakarta-xmlbind-annotations" % "2.14.3",
-      // scala-steward:on
-    ).map(_ % Test)
-
   lazy val dependencies: Seq[ModuleID] =
-    D_Shared.dependencies ++ keycloakAdminExplicitDependencies ++ Seq(
+    D_Shared.dependencies ++ Seq(
       D.testcontainersPostgres,
       D.testcontainersVault,
       D.testcontainersKeycloak,
@@ -477,7 +428,23 @@ lazy val sharedTest = (project in file("shared-test"))
     buildInfoPackage := "io.iohk.atala.sharedtest",
     name := "sharedtest",
     crossPaths := false,
-    libraryDependencies ++= D_SharedTest.dependencies
+    libraryDependencies ++= D_SharedTest.dependencies,
+    // Do not resolve transtive dependency when doing license check
+    // 'sbt-license' plugin is using ivy and unable to resolve 'org.jboss.resteasy:resteasy-*'
+    // Since this subproject is only used in tests, we can skip the license check for the transitive dependencies.
+    updateLicenses := {
+      val resolveReport = ivyModule.value.withModule(streams.value.log) { (ivy, desc, _) =>
+        // https://github.com/sbt/sbt-license-report/blob/5a8cb0b6567789bd8867e709b0cad8bb93aca50f/src/main/scala/sbtlicensereport/license/LicenseReport.scala#L222
+        val resolveId = org.apache.ivy.core.resolve.ResolveOptions.getDefaultResolveId(desc)
+        val resolveOptions = new org.apache.ivy.core.resolve.ResolveOptions
+        resolveOptions.setResolveId(resolveId)
+        resolveOptions.setLog(org.apache.ivy.core.LogOptions.LOG_QUIET)
+        // skip transitive deps
+        resolveOptions.setTransitive(false)
+        ivy.resolve(desc, resolveOptions)
+      }
+      sbtlicensereport.license.LicenseReport(Nil, resolveReport)
+    },
   )
   .dependsOn(shared)
   .enablePlugins(BuildInfoPlugin)
