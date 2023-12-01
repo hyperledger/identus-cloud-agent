@@ -6,7 +6,7 @@ import io.iohk.atala.pollux.anoncreds.AnoncredPresentation
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.*
-import io.iohk.atala.pollux.core.service.serdes.AnoncredPresentationRequestV1
+import io.iohk.atala.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
@@ -16,7 +16,6 @@ import java.util as ju
 import java.util.UUID
 
 trait PresentationService {
-
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
 
   def createJwtPresentationRecord(
@@ -49,6 +48,7 @@ trait PresentationService {
   def createAnoncredPresentationPayloadFromRecord(
       record: DidCommID,
       issuer: Issuer,
+      anoncredCredentialProof: AnoncredCredentialProofsV1,
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation]
 
@@ -80,6 +80,11 @@ trait PresentationService {
   def acceptRequestPresentation(
       recordId: DidCommID,
       credentialsToUse: Seq[String]
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
+
+  def acceptAnoncredRequestPresentation(
+      recordId: DidCommID,
+      credentialsToUse: AnoncredCredentialProofsV1
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def rejectRequestPresentation(recordId: DidCommID): ZIO[WalletAccessContext, PresentationError, PresentationRecord]

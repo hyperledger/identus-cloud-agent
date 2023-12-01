@@ -137,6 +137,7 @@ lazy val D = new {
     "com.github.dasniko" % "testcontainers-keycloak" % V.testContainersJavaKeycloak % Test
 
   val doobiePostgres: ModuleID = "org.tpolecat" %% "doobie-postgres" % V.doobie
+  val doobiePostgresCirce: ModuleID = "org.tpolecat" %% "doobie-postgres-circe" % V.doobie
   val doobieHikari: ModuleID = "org.tpolecat" %% "doobie-hikari" % V.doobie
   val flyway: ModuleID = "org.flywaydb" % "flyway-core" % V.flyway
 
@@ -153,7 +154,7 @@ lazy val D = new {
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
-    Seq(doobiePostgres, doobieHikari, flyway)
+    Seq(doobiePostgres, doobiePostgresCirce, doobieHikari, flyway)
 }
 
 lazy val D_Shared = new {
