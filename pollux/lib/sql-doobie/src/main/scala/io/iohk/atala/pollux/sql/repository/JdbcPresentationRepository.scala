@@ -2,9 +2,12 @@ package io.iohk.atala.pollux.sql.repository
 
 import cats.data.NonEmptyList
 import doobie.*
+import doobie.free.connection
 import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
+import doobie.postgres.circe.json.implicits._
+import io.circe
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
@@ -18,9 +21,11 @@ import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.BytesOps
 import zio.*
-import doobie.free.connection
-import java.time.Instant
 import zio.interop.catz.*
+import zio.json.*
+import zio.json.ast.Json
+import zio.json.ast.Json.*
+import java.time.Instant
 // TODO: replace with actual implementation
 class JdbcPresentationRepository(
     xa: Transactor[ContextAwareTask],
@@ -51,6 +56,31 @@ class JdbcPresentationRepository(
       .transactWallet(xa)
   }
 
+  def updateAnoncredPresentationWithCredentialsToUse(
+      recordId: DidCommID,
+      anoncredCredentialsToUseJsonSchemaId: Option[String],
+      anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
+      protocolState: ProtocolState
+  ): RIO[WalletAccessContext, Int] = {
+    val cxnIO =
+      sql"""
+           | UPDATE public.presentation_records
+           | SET
+           |   anoncred_credentials_to_use_json_schema_id = ${anoncredCredentialsToUseJsonSchemaId},
+           |   anoncred_credentials_to_use = ${anoncredCredentialsToUse},
+           |   protocol_state = $protocolState,
+           |   updated_at = ${Instant.now},
+           |   meta_retries = $maxRetries,
+           |   meta_next_retry = ${Instant.now},
+           |   meta_last_failure = null
+           | WHERE
+           |   id = $recordId
+        """.stripMargin.update
+
+    cxnIO.run
+      .transactWallet(xa)
+  }
+
   // deserializes from the hex string
   private def deserializeInclusionProof(proof: String): MerkleInclusionProof =
     MerkleInclusionProof.decode(
@@ -63,6 +93,20 @@ class JdbcPresentationRepository(
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
   import PresentationRecord.*
+
+  def zioJsonToCirceJson(zioJson: Json): circe.Json = {
+    parse(zioJson.toString).getOrElse(circe.Json.Null)
+  }
+
+  def circeJsonToZioJson(circeJson: circe.Json): Json = {
+    circeJson.noSpaces.fromJson[Json].getOrElse(Json.Null)
+  }
+
+  given jsonGet: Get[AnoncredCredentialProofs] = Get[circe.Json].map { jsonString =>
+    circeJsonToZioJson(jsonString)
+  }
+
+  given jsonPut: Put[AnoncredCredentialProofs] = Put[circe.Json].contramap(zioJsonToCirceJson(_))
 
   given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
   given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
@@ -109,6 +153,8 @@ class JdbcPresentationRepository(
         |   credential_format,
         |   request_presentation_data,
         |   credentials_to_use,
+        |   anoncred_credentials_to_use_json_schema_id,
+        |   anoncred_credentials_to_use,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure,
@@ -126,6 +172,8 @@ class JdbcPresentationRepository(
         |   ${record.credentialFormat},
         |   ${record.requestPresentationData},
         |   ${record.credentialsToUse.map(_.toList)},
+        |   ${record.anoncredCredentialsToUseJsonSchemaId},
+        |   ${record.anoncredCredentialsToUse},
         |   ${record.metaRetries},
         |   ${record.metaNextRetry},
         |   ${record.metaLastFailure},
@@ -159,6 +207,8 @@ class JdbcPresentationRepository(
         |   propose_presentation_data,
         |   presentation_data,
         |   credentials_to_use,
+        |   anoncred_credentials_to_use_json_schema_id,
+        |   anoncred_credentials_to_use,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure
@@ -205,6 +255,8 @@ class JdbcPresentationRepository(
             |   propose_presentation_data,
             |   presentation_data,
             |   credentials_to_use,
+            |   anoncred_credentials_to_use_json_schema_id,
+            |   anoncred_credentials_to_use,
             |   meta_retries,
             |   meta_next_retry,
             |   meta_last_failure
@@ -249,6 +301,8 @@ class JdbcPresentationRepository(
         |   propose_presentation_data,
         |   presentation_data,
         |   credentials_to_use,
+        |   anoncred_credentials_to_use_json_schema_id,
+        |   anoncred_credentials_to_use,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure
@@ -281,6 +335,8 @@ class JdbcPresentationRepository(
         |   propose_presentation_data,
         |   presentation_data,
         |   credentials_to_use,
+        |   anoncred_credentials_to_use_json_schema_id,
+        |   anoncred_credentials_to_use,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure
