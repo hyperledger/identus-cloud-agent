@@ -408,7 +408,30 @@ publish / skip := true
 val commonSetttings = Seq(
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
+  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
+  updateLicenses := {
+    import sbt.librarymanagement.DependencyResolution
+    import sbt.librarymanagement.ivy.IvyDependencyResolution
+    import sbtlicensereport.license
+
+    val ignore = update.value
+    val overrides = licenseOverrides.value.lift
+    val depExclusions = licenseDepExclusions.value.lift
+    val originatingModule = DepModuleInfo(organization.value, name.value, version.value)
+    val resolution = DependencyResolution(
+      new LicenseReportCustomDependencyResolution(IvyDependencyResolution(ivyConfiguration.value))
+    )
+    license.LicenseReport.makeReport(
+      ivyModule.value,
+      resolution,
+      licenseConfigurations.value,
+      licenseSelection.value,
+      overrides,
+      depExclusions,
+      originatingModule,
+      streams.value.log
+    )
+  }
 )
 
 // #####################
@@ -436,10 +459,7 @@ lazy val sharedTest = (project in file("shared-test"))
     buildInfoPackage := "io.iohk.atala.sharedtest",
     name := "sharedtest",
     crossPaths := false,
-    libraryDependencies ++= D_SharedTest.dependencies,
-    // Do not resolve transtive dependency when doing license check
-    // 'sbt-license' plugin is using ivy and unable to resolve 'org.jboss.resteasy:resteasy-*'
-    // Since this subproject is only used in tests, we can skip the license check for the transitive dependencies.
+    libraryDependencies ++= D_SharedTest.dependencies
   )
   .dependsOn(shared)
   .enablePlugins(BuildInfoPlugin)
