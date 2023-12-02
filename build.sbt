@@ -408,24 +408,7 @@ publish / skip := true
 val commonSetttings = Seq(
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
-  updateLicenses := {
-    if (name.value == "sharedtest") {
-      val resolveReport = ivyModule.value.withModule(streams.value.log) { (ivy, desc, _) =>
-        // https://github.com/sbt/sbt-license-report/blob/5a8cb0b6567789bd8867e709b0cad8bb93aca50f/src/main/scala/sbtlicensereport/license/LicenseReport.scala#L222
-        val resolveId = org.apache.ivy.core.resolve.ResolveOptions.getDefaultResolveId(desc)
-        val resolveOptions = new org.apache.ivy.core.resolve.ResolveOptions
-        resolveOptions.setResolveId(resolveId)
-        resolveOptions.setLog(org.apache.ivy.core.LogOptions.LOG_QUIET)
-        // skip transitive deps
-        resolveOptions.setTransitive(false)
-        ivy.resolve(desc, resolveOptions)
-      }
-      sbtlicensereport.license.LicenseReport(Nil, resolveReport)
-    } else {
-      updateLicenses.value
-    }
-  }
+  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
 )
 
 // #####################
