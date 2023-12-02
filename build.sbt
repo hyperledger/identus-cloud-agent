@@ -409,6 +409,8 @@ val commonSetttings = Seq(
   testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
+  // Override 'updateLicenses' for all project to inject custom DependencyResolution.
+  // https://github.com/sbt/sbt-license-report/blob/9675cedb19c794de1119cbcf46a255fc8dcd5d4e/src/main/scala/sbtlicensereport/SbtLicenseReport.scala#L84
   updateLicenses := {
     import sbt.librarymanagement.DependencyResolution
     import sbt.librarymanagement.ivy.IvyDependencyResolution
@@ -418,9 +420,7 @@ val commonSetttings = Seq(
     val overrides = licenseOverrides.value.lift
     val depExclusions = licenseDepExclusions.value.lift
     val originatingModule = DepModuleInfo(organization.value, name.value, version.value)
-    val resolution = DependencyResolution(
-      new LicenseReportCustomDependencyResolution(IvyDependencyResolution(ivyConfiguration.value))
-    )
+    val resolution = DependencyResolution(new LicenseReportCustomDependencyResolution(ivyConfiguration.value, ivyModule.value))
     license.LicenseReport.makeReport(
       ivyModule.value,
       resolution,
