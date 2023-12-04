@@ -406,7 +406,7 @@ lazy val D_PrismAgent = new {
 publish / skip := true
 
 val commonSetttings = Seq(
-  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+  testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
   // Override 'updateLicenses' for all project to inject custom DependencyResolution.

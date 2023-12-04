@@ -3,10 +3,10 @@ import sbt.librarymanagement._
 import sbt.librarymanagement.ivy._
 import sbt.internal.librarymanagement.{IvySbt, IvyRetrieve}
 
-// Since to ivy fails to resolve project dependencies, customized version is used to ignore any failure.
+// Since ivy fails to resolve project dependencies, customized version is used to ignore any failure.
 // This is OK as we only grab license information from the resolution metadata,
 // and the faing dependencies are only used in 'Test' configuration.
-// This should be used until 'sbt-license-report' plugin use coursier to populate license.
+// This should be used until 'sbt-license-report' plugin use coursier to populate licenses.
 //
 // https://github.com/sbt/sbt-license-report/issues/47
 // https://github.com/sbt/sbt-license-report/issues/87
