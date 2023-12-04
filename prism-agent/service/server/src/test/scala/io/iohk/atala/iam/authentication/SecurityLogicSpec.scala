@@ -94,7 +94,6 @@ object SecurityLogicSpec extends ZIOSpecDefault {
               )
             )
           )
-          .debug("error")
           .exit
       } yield assert(exit)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Forbidden.code)))) &&
         assert(exit)(fails(hasField("detail", _.detail, isSome(equalTo("invalid credentials")))))
