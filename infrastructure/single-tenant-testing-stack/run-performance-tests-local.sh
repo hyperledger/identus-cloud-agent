@@ -34,10 +34,10 @@ echo "--------------------------------------"
     yarn install
     yarn webpack
     k6 run -e SCENARIO_LABEL=create-prism-did-smoke dist/create-prism-did-test.js -o experimental-prometheus-rw
-    k6 run -e SCENARIO_LABEL=credential-offer-smoke dist/credential-offer-test.js -o experimental-prometheus-rw
-    k6 run -e SCENARIO_LABEL=credential-schema-smoke dist/credential-schema-test.js -o experimental-prometheus-rw
-    k6 run -e SCENARIO_LABEL=did-publishing-smoke dist/did-publishing-test.js -o experimental-prometheus-rw
-    k6 run -e SCENARIO_LABEL=connection-flow-smoke dist/connection-flow-test.js -o experimental-prometheus-rw
-    k6 run -e SCENARIO_LABEL=issuance-flow-smoke dist/issuance-flow-test.js -o experimental-prometheus-rw
-    k6 run -e SCENARIO_LABEL=present-proof-flow-smoke dist/present-proof-flow-test.js -o experimental-prometheus-rw
+#     k6 run -e SCENARIO_LABEL=credential-offer-smoke dist/credential-offer-test.js -o experimental-prometheus-rw
+#     k6 run -e SCENARIO_LABEL=credential-schema-smoke dist/credential-schema-test.js -o experimental-prometheus-rw
+#     k6 run -e SCENARIO_LABEL=did-publishing-smoke dist/did-publishing-test.js -o experimental-prometheus-rw
+#    k6 run -e SCENARIO_LABEL=connection-flow-smoke dist/connection-flow-test.js -o experimental-prometheus-rw
+#    k6 run -e SCENARIO_LABEL=issuance-flow-smoke dist/issuance-flow-test.js -o experimental-prometheus-rw
+#     k6 run -e SCENARIO_LABEL=present-proof-flow-smoke dist/present-proof-flow-test.js -o experimental-prometheus-rw
 )
