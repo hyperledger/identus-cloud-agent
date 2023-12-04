@@ -130,7 +130,7 @@ lazy val D = new {
     "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala % Test
   val testcontainersVault: ModuleID = "com.dimafeng" %% "testcontainers-scala-vault" % V.testContainersScala % Test
   val testcontainersKeycloak: ModuleID =
-    "com.github.dasniko" % "testcontainers-keycloak" % V.testContainersJavaKeycloak % Test exclude ("org.keycloak", "keycloak-admin-client")
+    "com.github.dasniko" % "testcontainers-keycloak" % V.testContainersJavaKeycloak % Test
 
   val doobiePostgres: ModuleID = "org.tpolecat" %% "doobie-postgres" % V.doobie
   val doobieHikari: ModuleID = "org.tpolecat" %% "doobie-hikari" % V.doobie
@@ -166,57 +166,8 @@ lazy val D_Shared = new {
 }
 
 lazy val D_SharedTest = new {
-  // https://github.com/sbt/sbt-license-report/issues/87
-  // https://stackoverflow.com/questions/48771768/sbt-error-importing-resteasy-client
-  //
-  // 'sbt-license' plugin is using ivy to resolve dependencies where other tasks are using coursier.
-  // 'org.jboss.resteasy:resteasy-*' which is the transitive dependencies of 'keycloak-admin-client'
-  // has this issue where 'relativePath' is used in the 'parent' section.
-  // - https://github.com/resteasy/resteasy/blob/6.2.4.Final/resteasy-client-api/pom.xml#L9
-  // - https://www.scala-sbt.org/1.x/docs/Library-Management.html#Known+limitations
-  //
-  // This workaround provides those dependencies explicitly, but it will be a nightmare to maintain.
-  // for version reference: https://github.com/resteasy/resteasy/blob/6.2.4.Final/resteasy-dependencies-bom/pom.xml
-  // FIXME: solve this with a long-term solution
-  lazy val keycloakAdminExplicitDependencies: Seq[ModuleID] =
-    Seq(
-      "org.keycloak" % "keycloak-admin-client" % V.keycloak excludeAll (
-        ExclusionRule("org.jboss.resteasy", "resteasy-core"),
-        ExclusionRule("org.jboss.resteasy", "resteasy-multipart-provider"),
-        ExclusionRule("org.jboss.resteasy", "resteasy-jackson2-provider"),
-        ExclusionRule("org.jboss.resteasy", "resteasy-jaxb-provider"),
-      ),
-      // scala-steward:off
-      "org.jboss.resteasy" % "resteasy-core" % "6.2.4.Final" excludeAll (
-        ExclusionRule("jakarta.servlet", "jakarta.servlet-api"),
-      ),
-      "org.jboss.resteasy" % "resteasy-jackson2-provider" % "6.2.4.Final" excludeAll (
-        ExclusionRule("jakarta.servlet", "jakarta.servlet-api"),
-      ),
-      "org.jboss.logging" % "jboss-logging" % "3.5.0.Final",
-      "commons-codec" % "commons-codec" % "1.15",
-      "jakarta.ws.rs" % "jakarta.ws.rs-api" % "3.1.0",
-      "jakarta.annotation" % "jakarta.annotation-api" % "2.1.1",
-      "jakarta.xml.bind" % "jakarta.xml.bind-api" % "3.0.1",
-      "org.reactivestreams" % "reactive-streams" % "1.0.4",
-      "jakarta.validation" % "jakarta.validation-api" % "3.0.2",
-      "org.jboss" % "jandex" % "2.4.3.Final",
-      "jakarta.activation" % "jakarta.activation-api" % "2.1.2",
-      "org.eclipse.angus" % "angus-activation" % "1.0.0",
-      "com.ibm.async" % "asyncutil" % "0.1.0",
-      "org.apache.httpcomponents" % "httpclient" % "4.5.14",
-      "com.github.java-json-tools" % "json-patch" % "1.13",
-      "com.fasterxml.jackson.core" % "jackson-core" % "2.14.3",
-      "com.fasterxml.jackson.core" % "jackson-databind" % "2.14.3",
-      "com.fasterxml.jackson.core" % "jackson-annotations" % "2.14.3",
-      "com.fasterxml.jackson.jakarta.rs" % "jackson-jakarta-rs-base" % "2.14.3",
-      "com.fasterxml.jackson.jakarta.rs" % "jackson-jakarta-rs-json-provider" % "2.14.3",
-      "com.fasterxml.jackson.module" % "jackson-module-jakarta-xmlbind-annotations" % "2.14.3",
-      // scala-steward:on
-    ).map(_ % Test)
-
   lazy val dependencies: Seq[ModuleID] =
-    D_Shared.dependencies ++ keycloakAdminExplicitDependencies ++ Seq(
+    D_Shared.dependencies ++ Seq(
       D.testcontainersPostgres,
       D.testcontainersVault,
       D.testcontainersKeycloak,
@@ -454,12 +405,42 @@ lazy val D_PrismAgent = new {
 
 publish / skip := true
 
+val commonSetttings = Seq(
+  testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+  // Needed for Kotlin coroutines that support new memory management mode
+  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
+  // Override 'updateLicenses' for all project to inject custom DependencyResolution.
+  // https://github.com/sbt/sbt-license-report/blob/9675cedb19c794de1119cbcf46a255fc8dcd5d4e/src/main/scala/sbtlicensereport/SbtLicenseReport.scala#L84
+  updateLicenses := {
+    import sbt.librarymanagement.DependencyResolution
+    import sbt.librarymanagement.ivy.IvyDependencyResolution
+    import sbtlicensereport.license
+
+    val ignore = update.value
+    val overrides = licenseOverrides.value.lift
+    val depExclusions = licenseDepExclusions.value.lift
+    val originatingModule = DepModuleInfo(organization.value, name.value, version.value)
+    val resolution = DependencyResolution(new LicenseReportCustomDependencyResolution(ivyConfiguration.value, ivyModule.value))
+    license.LicenseReport.makeReport(
+      ivyModule.value,
+      resolution,
+      licenseConfigurations.value,
+      licenseSelection.value,
+      overrides,
+      depExclusions,
+      originatingModule,
+      streams.value.log
+    )
+  }
+)
+
 // #####################
 // #####  shared  ######
 // #####################
 
 lazy val shared = (project in file("shared"))
   // .configure(publishConfigure)
+  .settings(commonSetttings)
   .settings(
     organization := "io.iohk.atala",
     organizationName := "Input Output Global",
@@ -471,6 +452,7 @@ lazy val shared = (project in file("shared"))
   .enablePlugins(BuildInfoPlugin)
 
 lazy val sharedTest = (project in file("shared-test"))
+  .settings(commonSetttings)
   .settings(
     organization := "io.iohk.atala",
     organizationName := "Input Output Global",
@@ -699,16 +681,9 @@ val prismNodeClient = project
 // #####  castor  ######
 // #####################
 
-val castorCommonSettings = Seq(
-  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
-)
-
-// Project definitions
 lazy val castorCore = project
   .in(file("castor/lib/core"))
-  .settings(castorCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "castor-core",
     libraryDependencies ++= D_Castor.coreDependencies
@@ -719,15 +694,9 @@ lazy val castorCore = project
 // #####  pollux  ######
 // #####################
 
-val polluxCommonSettings = Seq(
-  testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
-)
-
 lazy val polluxVcJWT = project
   .in(file("pollux/lib/vc-jwt"))
-  .settings(polluxCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "pollux-vc-jwt",
     libraryDependencies ++= D_Pollux_VC_JWT.polluxVcJwtDependencies
@@ -736,7 +705,7 @@ lazy val polluxVcJWT = project
 
 lazy val polluxCore = project
   .in(file("pollux/lib/core"))
-  .settings(polluxCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "pollux-core",
     libraryDependencies ++= D_Pollux.coreDependencies
@@ -748,7 +717,7 @@ lazy val polluxCore = project
 
 lazy val polluxDoobie = project
   .in(file("pollux/lib/sql-doobie"))
-  .settings(polluxCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "pollux-sql-doobie",
     libraryDependencies ++= D_Pollux.sqlDoobieDependencies
@@ -763,7 +732,6 @@ lazy val polluxDoobie = project
 
 lazy val polluxAnoncreds = project
   .in(file("pollux/lib/anoncreds"))
-  // .settings(polluxCommonSettings)
   .enablePlugins(BuildInfoPlugin)
   .enablePlugins(JavaAppPackaging)
   .settings(
@@ -784,11 +752,9 @@ lazy val polluxAnoncredsTest = project
 // #####  connect  #####
 // #####################
 
-def connectCommonSettings = polluxCommonSettings
-
 lazy val connectCore = project
   .in(file("connect/lib/core"))
-  .settings(connectCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "connect-core",
     libraryDependencies ++= D_Connect.coreDependencies,
@@ -799,7 +765,7 @@ lazy val connectCore = project
 
 lazy val connectDoobie = project
   .in(file("connect/lib/sql-doobie"))
-  .settings(connectCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "connect-sql-doobie",
     libraryDependencies ++= D_Connect.sqlDoobieDependencies
@@ -823,11 +789,10 @@ lazy val eventNotification = project
 // #####################
 // #### Prism Agent ####
 // #####################
-def prismAgentConnectCommonSettings = polluxCommonSettings
 
 lazy val prismAgentWalletAPI = project
   .in(file("prism-agent/service/wallet-api"))
-  .settings(prismAgentConnectCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "prism-agent-wallet-api",
     libraryDependencies ++=
@@ -845,7 +810,7 @@ lazy val prismAgentWalletAPI = project
 
 lazy val prismAgentServer = project
   .in(file("prism-agent/service/server"))
-  .settings(prismAgentConnectCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "prism-agent",
     fork := true,
