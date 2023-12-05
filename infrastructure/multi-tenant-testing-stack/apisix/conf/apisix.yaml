@@ -1,0 +1,32 @@
+plugins:
+  - name: proxy-rewrite
+
+routes:
+  - uri: /prism-agent/*
+    upstream_id: 1
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/prism-agent/(.*)", "/$1"]
+  - uri: /didcomm*
+    upstream_id: 2
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/issuer/didcomm(.*)", "/$1"]
+upstreams:
+  - id: 1
+    nodes:
+      "oea:8085": 1 # tapir
+    type: roundrobin
+    timeout:
+      connect: 900
+      send: 900
+      read: 900
+  - id: 2
+    nodes:
+      "oea:8090": 1 # didcom
+    type: roundrobin
+    timeout:
+      connect: 900
+      send: 900
+      read: 900
+#END

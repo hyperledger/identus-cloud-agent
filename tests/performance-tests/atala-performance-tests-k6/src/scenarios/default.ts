@@ -10,13 +10,14 @@ export const defaultOptions: Options = {
       executor: "ramping-vus",
       startVUs: 1,
       stages: [
-        { duration: "1m", target: 1000 }, // traffic ramp-up from 1 to 100 users over 5 minutes.
-        { duration: "1m", target: 1000 }, // stay at 100 users for 30 minutes
-        { duration: "1m", target: 0 }, // ramp-down to 0 users
+        { duration: "5m", target: 100 }, // traffic ramp-up from 1 to 100 users over 5 minutes.
+        { duration: "5m", target: 100 }, // stay at 100 users for 30 minutes
+        { duration: "5m", target: 0 }, // ramp-down to 0 users
       ],
       tags: { scenario_label: __ENV.SCENARIO_LABEL || "defaultScenarioLabel" }, // add label for filtering in observability platform
     },
     // smoke: {
+
     //   // a simple test to ensure performance tests work and requests don't fail
     //   executor: "shared-iterations",
     //   vus: 1,
