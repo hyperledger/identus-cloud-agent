@@ -1,6 +1,6 @@
 package features.connection
 
-import common.ListenToEvents
+import abilities.ListenToEvents
 import common.Utils.wait
 import interactions.Get
 import interactions.Post

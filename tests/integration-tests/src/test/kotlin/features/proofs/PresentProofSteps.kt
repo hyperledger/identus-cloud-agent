@@ -1,6 +1,6 @@
 package features.proofs
 
-import common.ListenToEvents
+import abilities.ListenToEvents
 import common.Utils.wait
 import interactions.Patch
 import interactions.Post

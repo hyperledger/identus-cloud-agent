@@ -1,6 +1,6 @@
 package features.credentials
 
-import common.ListenToEvents
+import abilities.ListenToEvents
 import common.Utils.wait
 import interactions.Post
 import io.cucumber.java.en.Then
