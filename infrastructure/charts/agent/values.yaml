@@ -52,6 +52,13 @@ database:
     managingTeam: atala
     databaseSize: 4Gi
     numberOfInstances: 2
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 500m
+        memory: 500Mi
 
 vdrManager:
   host: chart-base-node-service
@@ -134,3 +141,20 @@ keycloak:
   - name: prism-agent-realm-import-volume
     mountPath: /opt/bitnami/keycloak/data/import
     readOnly: true
+
+# It is configured for deployment and postgresql objects of prism-agent
+affinity:
+  nodeAffinity: {}
+#    requiredDuringSchedulingIgnoredDuringExecution:
+#      nodeSelectorTerms:
+#        - matchExpressions:
+#            - key: "performance"
+#              operator: In
+#              values:
+#                - "true"
+
+tolerations: {}
+#  - key: "type"
+#    operator: "Equal"
+#    value: "performance"
+#    effect: "NoSchedule"
