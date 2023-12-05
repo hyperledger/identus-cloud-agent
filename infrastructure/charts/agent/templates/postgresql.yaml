@@ -10,6 +10,12 @@ spec:
   volume:
     size: "{{ .Values.database.postgres.databaseSize }}"
   numberOfInstances: {{ .Values.database.postgres.numberOfInstances }}
+  nodeAffinity:
+    {{- toYaml .Values.affinity.nodeAffinity | nindent 4 }}
+  tolerations:
+    {{- toYaml .Values.tolerations | nindent 4 }}
+  resources:
+    {{- toYaml .Values.database.postgres.resources | nindent 4 }}
   users:
     pollux-admin:
       - superuser
