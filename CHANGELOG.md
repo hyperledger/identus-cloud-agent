@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.19.1...prism-agent-v1.20.0) (2023-12-05)
+
+
+### Features
+
+* add nodeAffinity, tolerations, and resources to k8s deployment ([#804](https://github.com/hyperledger-labs/open-enterprise-agent/issues/804)) ([22407a3](https://github.com/hyperledger-labs/open-enterprise-agent/commit/22407a3103eff73d87ead9a8122f078845c11d95))
+
 ## [1.19.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.19.0...prism-agent-v1.19.1) (2023-11-29)
 
 
