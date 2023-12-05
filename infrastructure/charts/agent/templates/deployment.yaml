@@ -212,9 +212,6 @@ spec:
             value: {{ $value | quote }}
           {{- end }}
       {{- if .Values.server.keycloak.bootstrap }}
-      affinity:
-        {{- toYaml .Values.affinity | nindent 8 }}
-      tolerations: {{- toYaml .Values.tolerations | nindent 8 }}
       volumes:
       - name: keycloak-bootstrap-script
         configMap:
@@ -224,3 +221,6 @@ spec:
           - key: "init.sh"
             path: "init.sh"
       {{- end }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+      tolerations: {{- toYaml .Values.tolerations | nindent 8 }}
