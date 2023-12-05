@@ -19,9 +19,9 @@ import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
 import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
-import io.iohk.atala.pollux.core.repository.CredentialRepository
+import io.iohk.atala.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
 import io.iohk.atala.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer, *}
-import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.prelude.ZValidation
@@ -34,11 +34,11 @@ import scala.language.implicitConversions
 
 object CredentialServiceImpl {
   val layer: URLayer[
-    CredentialRepository & DidResolver & URIDereferencer & GenericSecretStorage & CredentialDefinitionService &
-      LinkSecretService & DIDService & ManagedDIDService,
+    CredentialRepository & CredentialStatusListRepository & DidResolver & URIDereferencer & GenericSecretStorage &
+      CredentialDefinitionService & LinkSecretService & DIDService & ManagedDIDService,
     CredentialService
   ] =
-    ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _, _, _, _, _))
+    ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _, _, _, _, _, _))
 
 //  private val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
   private val VC_JSON_SCHEMA_TYPE = "CredentialSchema2022"
@@ -46,6 +46,7 @@ object CredentialServiceImpl {
 
 private class CredentialServiceImpl(
     credentialRepository: CredentialRepository,
+    credentialStatusListRepository: CredentialStatusListRepository,
     didResolver: DidResolver,
     uriDereferencer: URIDereferencer,
     genericSecretStorage: GenericSecretStorage,
@@ -975,6 +976,8 @@ private class CredentialServiceImpl(
         .mapError(_ =>
           CredentialServiceError.UnexpectedError(s"Issue credential data not found in record: ${recordId.value}")
         )
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      _ <- ZIO.logInfo("wallet id is " + walletId)
       longFormPrismDID <- getLongForm(issuingDID, true).mapError(err => UnexpectedError(err.getMessage))
       jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.AssertionMethod)
       offerCredentialData <- ZIO
@@ -1015,8 +1018,16 @@ private class CredentialServiceImpl(
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
         maybeCredentialSchema =
           record.schemaId.map(id => io.iohk.atala.pollux.vc.jwt.CredentialSchema(id, VC_JSON_SCHEMA_TYPE)),
+        maybeCredentialStatus = Some(
+          CredentialStatus(
+            id = "id",
+            `type` = "StatusList2021Entry",
+            statusPurpose = StatusPurpose.Revocation,
+            statusListIndex = 0,
+            statusListCredential = "abc"
+          )
+        ),
         credentialSubject = claims.add("id", jwtPresentation.iss.asJson).asJson,
-        maybeCredentialStatus = None,
         maybeRefreshService = None,
         maybeEvidence = None,
         maybeTermsOfUse = None
@@ -1031,6 +1042,20 @@ private class CredentialServiceImpl(
       record <- markCredentialGenerated(record, issueCredential)
     } yield record
   }
+
+  //   what needs to happen:
+  //       get the last status list of this wallet that was created
+  //        check its size and last used index
+  //          if last used index is less then size, that is the status list we will use, status list index is last_used_index + 1
+  //          if the last used index is equals to the size create new status list for this wallet, and use that, status list_index is 0
+  //
+
+  private[this] def allocateNewCredentialInStatusListForWallet(walletId: WalletId, recordId: DidCommID) = {
+    for {
+      lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet(walletId)
+    } yield ()
+  }
+
 
   override def generateAnonCredsCredential(
       recordId: DidCommID

@@ -99,7 +99,10 @@ object JwtPresentationVerificationDemo extends ZIOAppDefault {
         maybeCredentialStatus = Some(
           CredentialStatus(
             id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-            `type` = "CredentialStatusList2017"
+            `type` = "StatusList2021Entry",
+            statusPurpose = StatusPurpose.Revocation,
+            statusListIndex = 0,
+            statusListCredential = "https://example.com/credentials/status/3"
           )
         ),
         maybeRefreshService = Some(
@@ -146,7 +149,10 @@ object JwtPresentationVerificationDemo extends ZIOAppDefault {
           maybeCredentialStatus = Some(
             CredentialStatus(
               id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-              `type` = "CredentialStatusList2017"
+              `type` = "StatusList2021Entry",
+              statusPurpose = StatusPurpose.Revocation,
+              statusListIndex = 0,
+              statusListCredential = "https://example.com/credentials/status/3"
             )
           ),
           maybeRefreshService = Some(
