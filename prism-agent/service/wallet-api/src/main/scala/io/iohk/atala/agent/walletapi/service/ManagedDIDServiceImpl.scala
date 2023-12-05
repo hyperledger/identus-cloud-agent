@@ -76,6 +76,18 @@ class ManagedDIDServiceImpl private[walletapi] (
       )
   }
 
+//  ManagedDIDState(
+//    Create(
+//      List(
+//        PublicKey(auth-1,Authentication,ECCompressedKeyData(SECP256K1,Ao9h-uWwhU-7DhPCy7zievhHUwq6l1i1O9NsjryO0Q-3)), // public keys | internal public keys
+//        InternalPublicKey(master0,Master,ECCompressedKeyData(SECP256K1,AgLBEmn4rXl2SPiSLx7H1BwqnQhQDt1YgNomUqYHYFCn))),
+//        List(), // services
+//        Vector() // context
+//      ),
+//    0,
+//    Created()
+//  )
+
   def getManagedDIDState(
       did: CanonicalPrismDID
   ): ZIO[WalletAccessContext, GetManagedDIDError, Option[ManagedDIDState]] =

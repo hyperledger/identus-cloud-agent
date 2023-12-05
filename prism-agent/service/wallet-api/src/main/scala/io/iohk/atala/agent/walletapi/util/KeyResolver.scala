@@ -27,12 +27,14 @@ class KeyResolver(apollo: Apollo, nonSecretStorage: DIDNonSecretStorage, walletS
   private def resolveHdKey(did: PrismDID, keyId: String): RIO[WalletAccessContext, Option[ECKeyPair]] = {
     for {
       maybeSeed <- walletSecretStorage.getWalletSeed
+      _ <- ZIO.logInfo(s"Seed is $maybeSeed")
       maybeKeyPair <- maybeSeed.fold(ZIO.none) { seed =>
         nonSecretStorage
           .getHdKeyPath(did, keyId)
           .flatMap {
-            case None => ZIO.none
+            case None => ZIO.none.debug("Cound not found hd key pair")
             case Some(path) =>
+              println("Found hd key path " + path)
               apollo.ecKeyFactory
                 .deriveKeyPair(EllipticCurve.SECP256K1, seed.toByteArray)(path.derivationPath: _*)
                 .asSome

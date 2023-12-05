@@ -106,7 +106,7 @@ lazy val D = new {
   val zioConfigMagnolia: ModuleID = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
   val zioConfigTypesafe: ModuleID = "dev.zio" %% "zio-config-typesafe" % V.zioConfig
 
-  val circeCore: ModuleID = "io.circe" %% "circe-core" % V.circe
+    val circeCore: ModuleID = "io.circe" %% "circe-core" % V.circe
   val circeGeneric: ModuleID = "io.circe" %% "circe-generic" % V.circe
   val circeParser: ModuleID = "io.circe" %% "circe-parser" % V.circe
 
