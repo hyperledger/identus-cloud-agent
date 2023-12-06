@@ -1,6 +1,6 @@
 package features.did
 
-import common.ListenToEvents
+import abilities.ListenToEvents
 import common.TestConstants
 import common.Utils.wait
 import interactions.Get
