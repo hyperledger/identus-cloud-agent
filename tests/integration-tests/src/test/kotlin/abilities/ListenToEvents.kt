@@ -1,6 +1,7 @@
-package common
+package abilities
 
 import com.google.gson.GsonBuilder
+import common.TestConstants
 import io.iohk.atala.automation.restassured.CustomGsonObjectMapperFactory
 import io.ktor.http.*
 import io.ktor.server.application.*

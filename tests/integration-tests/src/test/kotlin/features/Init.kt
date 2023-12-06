@@ -1,8 +1,8 @@
 package features
 
+import abilities.ListenToEvents
 import com.sksamuel.hoplite.ConfigException
 import com.sksamuel.hoplite.ConfigLoader
-import common.ListenToEvents
 import common.TestConstants
 import config.Config
 import io.cucumber.java.AfterAll
@@ -25,7 +25,7 @@ val config = ConfigLoader().loadConfigOrThrow<Config>(TestConstants.TESTS_CONFIG
  */
 fun initServices() {
     config.services?.keycloak?.start(
-        config.roles.filter { it.name != "Admin" }.map { it.name }
+        config.roles.map { it.name }
     )
     config.services?.prismNode?.start()
     config.services?.vault?.start()
@@ -89,7 +89,7 @@ fun initActors() {
         )
     }
     if (config.services?.keycloak != null) {
-        cast.actors.filter { it.name != "Admin" }.forEach { actor ->
+        cast.actors.forEach { actor ->
             try {
                 actor.remember("BEARER_TOKEN", config.services.keycloak.getKeycloakAuthToken(actor.name, actor.name))
             } catch (e: NullPointerException) {

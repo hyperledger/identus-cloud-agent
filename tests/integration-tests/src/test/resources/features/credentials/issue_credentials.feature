@@ -1,4 +1,4 @@
-@RFC0453 @AIP20
+@RFC0453 @AIP20 @credentials
 Feature: Issue Credentials Protocol
 
 Scenario: Issuing credential with published PRISM DID
