@@ -317,18 +317,19 @@ Here is an example of the agent configuration for SIT environment:
 ### Running the tests locally
 
 The following variables must be set before running the tests:
-* `PRISM_NODE_VERSION`
-* `OPEN_ENTERPRISE_AGENT_VERSION`
+* `TESTS_CONFIG`: path to the configuration file to use, relative to `resources` directory. Default to `/configs/basic.conf`.
+* `PRISM_NODE_VERSION`: version of the PRISM Node docker image to use.
+* `OPEN_ENTERPRISE_AGENT_VERSION`: version of the OEA docker image to use.
 
 ```shell
-PRISM_NODE_VERSION=2.2.1 OPEN_ENTERPRISE_AGENT_VERSION=1.19.1 ./gradlew test
+TESTS_CONFIG=/configs/basic.conf PRISM_NODE_VERSION=2.2.1 OPEN_ENTERPRISE_AGENT_VERSION=1.19.1 ./gradlew test
 ```
 
 > Please note: there is no need to pass environment variables if you're using already running agents.
 
 Additional `-Dcucumber.filter.tags` option can be used to specify the tags to include or exclude scenarios:
 ```shell
-./gradlew test -Dcucumber.filter.tags="@connection and @credentials"
+TESTS_CONFIG=/configs/mt_keycloak.conf ./gradlew test -Dcucumber.filter.tags="@connection and @credentials"
 ```
 
 ### Running scenarios in IntelliJ IDEA
