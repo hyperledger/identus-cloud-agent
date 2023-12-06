@@ -1,3 +1,10 @@
+## [1.20.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.20.0...prism-agent-v1.20.1) (2023-12-06)
+
+
+### Bug Fixes
+
+* tolerations and nodeAffinity for k8s ([#808](https://github.com/hyperledger-labs/open-enterprise-agent/issues/808)) ([7934fa4](https://github.com/hyperledger-labs/open-enterprise-agent/commit/7934fa402ba86af6d8430208f1844fbd6ccda1bd))
+
 # [1.20.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.19.1...prism-agent-v1.20.0) (2023-12-05)
 
 
