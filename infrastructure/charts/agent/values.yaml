@@ -148,13 +148,15 @@ affinity:
 #    requiredDuringSchedulingIgnoredDuringExecution:
 #      nodeSelectorTerms:
 #        - matchExpressions:
-#            - key: "performance"
+#            - key: "type"
 #              operator: In
 #              values:
-#                - "true"
+#                - "performance"
 
-tolerations: {}
+tolerations: []
 #  - key: "type"
 #    operator: "Equal"
 #    value: "performance"
 #    effect: "NoSchedule"
+
+
