@@ -64,9 +64,6 @@ class JdbcPresentationRepository(
 
   import PresentationRecord.*
 
-  given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
-  given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
-
   given protocolStateGet: Get[ProtocolState] = Get[String].map(ProtocolState.valueOf)
   given protocolStatePut: Put[ProtocolState] = Put[String].contramap(_.toString)
 

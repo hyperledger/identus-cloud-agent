@@ -976,8 +976,6 @@ private class CredentialServiceImpl(
         .mapError(_ =>
           CredentialServiceError.UnexpectedError(s"Issue credential data not found in record: ${recordId.value}")
         )
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      _ <- ZIO.logInfo("wallet id is " + walletId)
       longFormPrismDID <- getLongForm(issuingDID, true).mapError(err => UnexpectedError(err.getMessage))
       jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.AssertionMethod)
       offerCredentialData <- ZIO
@@ -1005,6 +1003,8 @@ private class CredentialServiceImpl(
         payload => ZIO.logInfo("JWT Presentation Validation Successful!")
       )
       issuanceDate = Instant.now()
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      credentialStatus <- allocateNewCredentialInStatusListForWallet(walletId, record)
       // TODO: get schema when schema registry is available if schema ID is provided
       w3Credential = W3cCredentialPayload(
         `@context` = Set(
@@ -1018,15 +1018,7 @@ private class CredentialServiceImpl(
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
         maybeCredentialSchema =
           record.schemaId.map(id => io.iohk.atala.pollux.vc.jwt.CredentialSchema(id, VC_JSON_SCHEMA_TYPE)),
-        maybeCredentialStatus = Some(
-          CredentialStatus(
-            id = "id",
-            `type` = "StatusList2021Entry",
-            statusPurpose = StatusPurpose.Revocation,
-            statusListIndex = 0,
-            statusListCredential = "abc"
-          )
-        ),
+        maybeCredentialStatus = Some(credentialStatus),
         credentialSubject = claims.add("id", jwtPresentation.iss.asJson).asJson,
         maybeRefreshService = None,
         maybeEvidence = None,
@@ -1045,17 +1037,54 @@ private class CredentialServiceImpl(
 
   //   what needs to happen:
   //       get the last status list of this wallet that was created
+  //       if statusList does not even exists, create one
   //        check its size and last used index
   //          if last used index is less then size, that is the status list we will use, status list index is last_used_index + 1
   //          if the last used index is equals to the size create new status list for this wallet, and use that, status list_index is 0
+  //            in both cases, after aquring status list to be used,
   //
 
-  private[this] def allocateNewCredentialInStatusListForWallet(walletId: WalletId, recordId: DidCommID) = {
+  private[this] def allocateNewCredentialInStatusListForWallet(
+      walletId: WalletId,
+      record: IssueCredentialRecord
+  ): ZIO[WalletAccessContext, CredentialServiceError, CredentialStatus] = {
     for {
-      lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet(walletId)
-    } yield ()
-  }
+      lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet(walletId).mapError(RepositoryError.apply)
+      issuingDID <- ZIO
+        .fromOption(record.issuingDID)
+        .mapError(_ => UnexpectedError(s"Issuing Id not found in record: ${record.id.value}"))
+      jwtIssuer <- createJwtIssuer(issuingDID, VerificationRelationship.AssertionMethod)
+      currentStatusList <- lastStatusList
+        .fold(credentialStatusListRepository.createNewForTheWallet(walletId, jwtIssuer))(
+          ZIO.succeed(_)
+        )
+        .mapError(RepositoryError.apply)
+      size = currentStatusList.size
+      lastUsedIndex = currentStatusList.lastUsedIndex
+      statusListToBeUsed <-
+        if lastUsedIndex < size then ZIO.succeed(currentStatusList)
+        else credentialStatusListRepository.createNewForTheWallet(walletId, jwtIssuer).mapError(RepositoryError.apply)
 
+      // creates record in credentials_in_status_list table with provided recordId, credentialStatusListId and statusListIndex
+      // after that updates credentialStatusLists table, sets lastUsedIndex = statusListIndex
+      // all of this needs to happen in one postgres transaction
+      _ <- credentialStatusListRepository
+        .allocateSpaceForCredential(
+          issueCredentialRecordId = record.id,
+          credentialStatusListId = statusListToBeUsed.id,
+          statusListIndex = lastUsedIndex + 1
+        )
+        .mapError(RepositoryError.apply)
+
+    } yield CredentialStatus(
+      // TODO: change URL to agent URL
+      id = s"https://example.com/credentials/status/${statusListToBeUsed.id}#${lastUsedIndex + 1}",
+      `type` = "StatusList2021Entry",
+      statusPurpose = StatusPurpose.Revocation,
+      statusListIndex = lastUsedIndex + 1,
+      statusListCredential = s"https://example.com/credentials/status/${statusListToBeUsed.id}"
+    )
+  }
 
   override def generateAnonCredsCredential(
       recordId: DidCommID

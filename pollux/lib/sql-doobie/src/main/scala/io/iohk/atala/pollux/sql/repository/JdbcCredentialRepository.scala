@@ -33,9 +33,6 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
   import IssueCredentialRecord.*
 
-  given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
-  given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
-
   given credentialFormatGet: Get[CredentialFormat] = Get[String].map(CredentialFormat.valueOf)
   given credentialFormatPut: Put[CredentialFormat] = Put[String].contramap(_.toString)
 
@@ -57,10 +54,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
-
-  given prismDIDGet: Get[CanonicalPrismDID] =
-    Get[String].map(s => PrismDID.fromString(s).fold(e => throw RuntimeException(e), _.asCanonical))
-  given prismDIDPut: Put[CanonicalPrismDID] = Put[String].contramap(_.toString)
+  
 
   override def createIssueCredentialRecord(record: IssueCredentialRecord): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
@@ -244,6 +238,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   ): Task[Seq[IssueCredentialRecord]] = {
     getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transact(xb)
   }
+  // TODO remove this comment
   override def getIssueCredentialRecord(
       recordId: DidCommID
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {

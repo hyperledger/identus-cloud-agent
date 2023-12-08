@@ -1,34 +1,120 @@
 package io.iohk.atala.pollux.sql.repository
 
-import cats.data.NonEmptyList
 import doobie.*
-import doobie.free.connection
 import doobie.implicits.*
+import doobie.postgres.*
 import doobie.postgres.implicits.*
-import io.circe.*
-import io.circe.parser.*
-import io.circe.syntax.*
+import io.iohk.atala.pollux.vc.jwt.{Issuer, StatusPurpose}
+import io.iohk.atala.pollux.vc.jwt.revocation.{BitString, BitStringError, VCStatusList2021}
+//import doobie.implicits.legacy.instant.* TODO: might need for Instance Meta
 import io.iohk.atala.castor.core.model.did.*
-import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
-import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.*
-import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError
-import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
-import io.iohk.atala.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
+import io.iohk.atala.pollux.core.repository.CredentialStatusListRepository
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
-import io.iohk.atala.shared.models.WalletAccessContext
-import org.postgresql.util.PSQLException
+import io.iohk.atala.pollux.vc.jwt.revocation.BitStringError.*
 import zio.*
-import zio.interop.catz.*
-import zio.json.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 
 import java.time.Instant
+import java.util.UUID
 
 class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task])
-  extends CredentialStatusListRepository {
-  def getLatestOfTheWallet(walletId: WalletId): RIO[WalletAccessContext, CredentialStatusList] = ???
+    extends CredentialStatusListRepository {
+  def getLatestOfTheWallet(walletId: WalletId): RIO[WalletAccessContext, Option[CredentialStatusList]] = {
+
+    val cxnIO =
+      sql"""
+           | SELECT
+           |   id,
+           |   wallet_id,
+           |   issuer,
+           |   issued,
+           |   purpose,
+           |   status_list_jwt_credential,
+           |   created_at,
+           |   updated_at
+           |  from public.credential_status_lists order by created_at DESC limit 1
+           |"""
+        .query[CredentialStatusList]
+        .option
+
+    cxnIO
+      .transactWallet(xa)
+
+  }
+
+  def createNewForTheWallet(walletId: WalletId, jwtIssuer: Issuer): RIO[WalletAccessContext, CredentialStatusList] = {
+
+    val id = UUID.randomUUID()
+    val issued = Instant.now()
+    val issuerDid = jwtIssuer.did.value
+
+    val encodedJwtCredential = for {
+      bitString <- BitString.getInstance().mapError {
+        case InvalidSize(message)      => new Throwable(message)
+        case EncodingError(message)    => new Throwable(message)
+        case DecodingError(message)    => new Throwable(message)
+        case IndexOutOfBounds(message) => new Throwable(message)
+      }
+      emptyJwtCredential <- VCStatusList2021
+        .build(
+          vcId = s"https://example.com/credentials/status/$id", // TODO: change URL to real one
+          slId = "",
+          revocationData = bitString,
+          jwtIssuer = jwtIssuer
+        )
+        .mapError(x => new Throwable(x.msg))
+
+      encodedJwtCredential <- emptyJwtCredential.encoded
+    } yield encodedJwtCredential
+
+    for {
+      jwtCredential <- encodedJwtCredential
+      query = sql"""
+                   |INSERT INTO public.credential_status_lists (id, wallet_id, issuer, issued, purpose,
+                   |   status_list_jwt_credential, size, last_used_index)
+                   |VALUES ($id, ${walletId.toUUID}, $issuerDid, $issued, ${StatusPurpose.Revocation.str}, ${jwtCredential.value},
+                   |   ${BitString.MIN_SL2021_SIZE}, 0)
+                   |RETURNING id, wallet_id, issuer, issued, purpose, status_list_jwt_credential, created_at, updated_at
+             """.stripMargin.query[CredentialStatusList].unique
+      newStatusList <- query
+        .transactWallet(xa)
+    } yield newStatusList
+
+  }
+
+  def allocateSpaceForCredential(
+      issueCredentialRecordId: DidCommID,
+      credentialStatusListId: UUID,
+      statusListIndex: Int
+  ): RIO[WalletAccessContext, Unit] = {
+
+    val statusListEntryCreationQuery =
+      sql"""
+           | INSERT INTO public.credentials_in_status_list (id, issue_credential_record_id, credential_status_list_id, status_list_index, is_canceled)
+           | VALUES (${UUID.randomUUID()}, $issueCredentialRecordId, $credentialStatusListId, $statusListIndex, false)
+           |""".stripMargin.update.run
+
+    val statusListUpdateQuery =
+      sql"""
+           | UPDATE public.credential_status_lists
+           | SET
+           |   last_used_index = $statusListIndex,
+           |   updated_at = ${Instant.now()}
+           | WHERE
+           |   id = $credentialStatusListId
+           |""".stripMargin.update.run
+
+    val res: ConnectionIO[Unit] = for {
+      _ <- statusListEntryCreationQuery
+      _ <- statusListUpdateQuery
+    } yield ()
+    
+    
+    res.transactWallet(xa)
+
+  }
 
 }
 
