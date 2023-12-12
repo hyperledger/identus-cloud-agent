@@ -142,6 +142,9 @@ keycloak:
     mountPath: /opt/bitnami/keycloak/data/import
     readOnly: true
 
+# Additional environment variables to be added to the server container
+env: {}
+
 # It is configured for deployment and postgresql objects of prism-agent
 affinity:
   nodeAffinity: {}
