@@ -90,11 +90,11 @@ object CreateIssueCredentialRecordRequest {
         )
 
     object claims
-        extends Annotation[Map[String, String]](
+        extends Annotation[zio.json.ast.Json](
           description = "The claims that will be associated with the issued verifiable credential.",
-          example = Map(
-            "firstname" -> "Alice",
-            "lastname" -> "Wonderland"
+          example = zio.json.ast.Json.Obj(
+            "firstname" -> zio.json.ast.Json.Str("Alice"),
+            "lastname" -> zio.json.ast.Json.Str("Wonderland"),
           )
         )
 
