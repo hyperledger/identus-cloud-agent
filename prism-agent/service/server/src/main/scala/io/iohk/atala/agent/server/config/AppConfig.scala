@@ -31,6 +31,7 @@ final case class VaultConfig(address: String, token: String)
 
 final case class PolluxConfig(
     database: DatabaseConfig,
+    statusListRegistry: StatusListRegistryConfig,
     issueBgJobRecordsLimit: Int,
     issueBgJobRecurrenceDelay: Duration,
     issueBgJobProcessingParallelism: Int,
@@ -49,6 +50,10 @@ final case class ConnectConfig(
 final case class PrismNodeConfig(service: GrpcServiceConfig)
 
 final case class GrpcServiceConfig(host: String, port: Int)
+
+final case class StatusListRegistryConfig(
+    publicEndpointUrl: String
+)
 
 final case class DatabaseConfig(
     host: String,

@@ -396,12 +396,14 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
           // Generate the JWT Credential and store it in DB as an attachment to IssueCredentialData
           // Set ProtocolState to CredentialGenerated
           // TODO Move all logic to service
-          // TODO: at this stage we should probably add revocation information
           val issuerPendingToGeneratedFlow = for {
             walletAccessContext <- buildWalletAccessContextLayer(issue.from)
             result <- (for {
               credentialService <- ZIO.service[CredentialService]
-              _ <- credentialService.generateJWTCredential(id).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+              config <- ZIO.service[AppConfig]
+              _ <- credentialService
+                .generateJWTCredential(id, config.pollux.statusListRegistry.publicEndpointUrl)
+                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
             } yield ()).mapError(e => (walletAccessContext, e))
           } yield result
 

@@ -21,7 +21,7 @@ import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
 import io.iohk.atala.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer, *}
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.prelude.ZValidation
@@ -963,7 +963,8 @@ private class CredentialServiceImpl(
   }
 
   override def generateJWTCredential(
-      recordId: DidCommID
+      recordId: DidCommID,
+      statusListRegistryUrl: String,
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
@@ -1002,7 +1003,7 @@ private class CredentialServiceImpl(
         payload => ZIO.logInfo("JWT Presentation Validation Successful!")
       )
       issuanceDate = Instant.now()
-      credentialStatus <- allocateNewCredentialInStatusListForWallet(record)
+      credentialStatus <- allocateNewCredentialInStatusListForWallet(record, statusListRegistryUrl)
       // TODO: get schema when schema registry is available if schema ID is provided
       w3Credential = W3cCredentialPayload(
         `@context` = Set(
@@ -1032,9 +1033,10 @@ private class CredentialServiceImpl(
       record <- markCredentialGenerated(record, issueCredential)
     } yield record
   }
-  
+
   private[this] def allocateNewCredentialInStatusListForWallet(
-      record: IssueCredentialRecord
+      record: IssueCredentialRecord,
+      statusListRegistryUrl: String,
   ): ZIO[WalletAccessContext, CredentialServiceError, CredentialStatus] = {
     // TODO: reactor, use STM to perform all effects atomically
     for {
@@ -1044,7 +1046,7 @@ private class CredentialServiceImpl(
         .mapError(_ => UnexpectedError(s"Issuing Id not found in record: ${record.id.value}"))
       jwtIssuer <- createJwtIssuer(issuingDID, VerificationRelationship.AssertionMethod)
       currentStatusList <- lastStatusList
-        .fold(credentialStatusListRepository.createNewForTheWallet(jwtIssuer))(
+        .fold(credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl))(
           ZIO.succeed(_)
         )
         .mapError(RepositoryError.apply)
@@ -1052,7 +1054,7 @@ private class CredentialServiceImpl(
       lastUsedIndex = currentStatusList.lastUsedIndex
       statusListToBeUsed <-
         if lastUsedIndex < size then ZIO.succeed(currentStatusList)
-        else credentialStatusListRepository.createNewForTheWallet(jwtIssuer).mapError(RepositoryError.apply)
+        else credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl).mapError(RepositoryError.apply)
 
       _ <- credentialStatusListRepository
         .allocateSpaceForCredential(
@@ -1063,12 +1065,11 @@ private class CredentialServiceImpl(
         .mapError(RepositoryError.apply)
 
     } yield CredentialStatus(
-      // TODO: change URL to agent URL
-      id = s"https://example.com/credentials/status/${statusListToBeUsed.id}#${lastUsedIndex + 1}",
+      id = s"$statusListRegistryUrl/credential-status/${statusListToBeUsed.id}#${statusListToBeUsed.lastUsedIndex + 1}",
       `type` = "StatusList2021Entry",
       statusPurpose = StatusPurpose.Revocation,
       statusListIndex = lastUsedIndex + 1,
-      statusListCredential = s"https://example.com/credentials/status/${statusListToBeUsed.id}"
+      statusListCredential = s"$statusListRegistryUrl/credential-status/${statusListToBeUsed.id}"
     )
   }
 

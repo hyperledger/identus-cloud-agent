@@ -46,7 +46,10 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
 
   }
 
-  def createNewForTheWallet(jwtIssuer: Issuer): RIO[WalletAccessContext, CredentialStatusList] = {
+  def createNewForTheWallet(
+      jwtIssuer: Issuer,
+      statusListRegistryUrl: String
+  ): RIO[WalletAccessContext, CredentialStatusList] = {
 
     val id = UUID.randomUUID()
     val issued = Instant.now()
@@ -61,7 +64,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       }
       emptyJwtCredential <- VCStatusList2021
         .build(
-          vcId = s"https://example.com/credentials/status/$id", // TODO: change URL to real one
+          vcId = s"$statusListRegistryUrl/credential-status/$id",
           slId = "",
           revocationData = bitString,
           jwtIssuer = jwtIssuer

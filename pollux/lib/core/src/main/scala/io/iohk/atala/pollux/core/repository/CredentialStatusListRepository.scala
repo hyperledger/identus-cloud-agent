@@ -14,7 +14,10 @@ import java.util.UUID
 trait CredentialStatusListRepository {
   def getLatestOfTheWallet: RIO[WalletAccessContext, Option[CredentialStatusList]]
 
-  def createNewForTheWallet(jwtIssuer: Issuer): RIO[WalletAccessContext, CredentialStatusList]
+  def createNewForTheWallet(
+      jwtIssuer: Issuer,
+      statusListRegistryUrl: String
+  ): RIO[WalletAccessContext, CredentialStatusList]
 
   def allocateSpaceForCredential(
       issueCredentialRecordId: DidCommID,
