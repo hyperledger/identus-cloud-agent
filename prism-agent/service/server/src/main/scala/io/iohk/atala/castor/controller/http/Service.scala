@@ -38,10 +38,10 @@ object Service {
         )
 
     object `type`
-        extends Annotation[ServiceType](
+        extends Annotation[String](
           description =
             "Service type. Can contain multiple possible values as described in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did) under the construction section.",
-          example = ServiceType.Single("LinkedDomains")
+          example = "LinkedDomains"
         )
 
     object serviceEndpoint
