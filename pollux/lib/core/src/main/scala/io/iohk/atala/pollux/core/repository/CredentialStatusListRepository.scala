@@ -12,9 +12,9 @@ import zio.*
 import java.util.UUID
 
 trait CredentialStatusListRepository {
-  def getLatestOfTheWallet(walletId: WalletId): RIO[WalletAccessContext, Option[CredentialStatusList]]
+  def getLatestOfTheWallet: RIO[WalletAccessContext, Option[CredentialStatusList]]
 
-  def createNewForTheWallet(walletId: WalletId,  jwtIssuer: Issuer): RIO[WalletAccessContext, CredentialStatusList]
+  def createNewForTheWallet(jwtIssuer: Issuer): RIO[WalletAccessContext, CredentialStatusList]
 
   def allocateSpaceForCredential(
       issueCredentialRecordId: DidCommID,

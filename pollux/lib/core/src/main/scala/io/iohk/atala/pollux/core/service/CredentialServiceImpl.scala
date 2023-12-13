@@ -259,7 +259,6 @@ private class CredentialServiceImpl(
         case value                                                      => ZIO.fail(UnsupportedCredentialFormat(value))
 
       _ <- validateCredentialOfferAttachment(credentialFormat, attachment)
-
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = DidCommID(),
@@ -1003,8 +1002,7 @@ private class CredentialServiceImpl(
         payload => ZIO.logInfo("JWT Presentation Validation Successful!")
       )
       issuanceDate = Instant.now()
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      credentialStatus <- allocateNewCredentialInStatusListForWallet(walletId, record)
+      credentialStatus <- allocateNewCredentialInStatusListForWallet(record)
       // TODO: get schema when schema registry is available if schema ID is provided
       w3Credential = W3cCredentialPayload(
         `@context` = Set(
@@ -1034,28 +1032,19 @@ private class CredentialServiceImpl(
       record <- markCredentialGenerated(record, issueCredential)
     } yield record
   }
-
-  //   what needs to happen:
-  //       get the last status list of this wallet that was created
-  //       if statusList does not even exists, create one
-  //        check its size and last used index
-  //          if last used index is less then size, that is the status list we will use, status list index is last_used_index + 1
-  //          if the last used index is equals to the size create new status list for this wallet, and use that, status list_index is 0
-  //            in both cases, after aquring status list to be used,
-  //
-
+  
   private[this] def allocateNewCredentialInStatusListForWallet(
-      walletId: WalletId,
       record: IssueCredentialRecord
   ): ZIO[WalletAccessContext, CredentialServiceError, CredentialStatus] = {
+    // TODO: reactor, use STM to perform all effects atomically
     for {
-      lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet(walletId).mapError(RepositoryError.apply)
+      lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet.mapError(RepositoryError.apply)
       issuingDID <- ZIO
         .fromOption(record.issuingDID)
         .mapError(_ => UnexpectedError(s"Issuing Id not found in record: ${record.id.value}"))
       jwtIssuer <- createJwtIssuer(issuingDID, VerificationRelationship.AssertionMethod)
       currentStatusList <- lastStatusList
-        .fold(credentialStatusListRepository.createNewForTheWallet(walletId, jwtIssuer))(
+        .fold(credentialStatusListRepository.createNewForTheWallet(jwtIssuer))(
           ZIO.succeed(_)
         )
         .mapError(RepositoryError.apply)
@@ -1063,16 +1052,13 @@ private class CredentialServiceImpl(
       lastUsedIndex = currentStatusList.lastUsedIndex
       statusListToBeUsed <-
         if lastUsedIndex < size then ZIO.succeed(currentStatusList)
-        else credentialStatusListRepository.createNewForTheWallet(walletId, jwtIssuer).mapError(RepositoryError.apply)
+        else credentialStatusListRepository.createNewForTheWallet(jwtIssuer).mapError(RepositoryError.apply)
 
-      // creates record in credentials_in_status_list table with provided recordId, credentialStatusListId and statusListIndex
-      // after that updates credentialStatusLists table, sets lastUsedIndex = statusListIndex
-      // all of this needs to happen in one postgres transaction
       _ <- credentialStatusListRepository
         .allocateSpaceForCredential(
           issueCredentialRecordId = record.id,
           credentialStatusListId = statusListToBeUsed.id,
-          statusListIndex = lastUsedIndex + 1
+          statusListIndex = statusListToBeUsed.lastUsedIndex + 1
         )
         .mapError(RepositoryError.apply)
 

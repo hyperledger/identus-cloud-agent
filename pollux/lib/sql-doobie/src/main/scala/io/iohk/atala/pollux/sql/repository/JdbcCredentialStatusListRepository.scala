@@ -21,7 +21,7 @@ import java.util.UUID
 
 class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task])
     extends CredentialStatusListRepository {
-  def getLatestOfTheWallet(walletId: WalletId): RIO[WalletAccessContext, Option[CredentialStatusList]] = {
+  def getLatestOfTheWallet: RIO[WalletAccessContext, Option[CredentialStatusList]] = {
 
     val cxnIO =
       sql"""
@@ -32,10 +32,12 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
            |   issued,
            |   purpose,
            |   status_list_jwt_credential,
+           |   size,
+           |   last_used_index,
            |   created_at,
            |   updated_at
-           |  from public.credential_status_lists order by created_at DESC limit 1
-           |"""
+           |  FROM public.credential_status_lists order by created_at DESC limit 1
+           |""".stripMargin
         .query[CredentialStatusList]
         .option
 
@@ -44,7 +46,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
 
   }
 
-  def createNewForTheWallet(walletId: WalletId, jwtIssuer: Issuer): RIO[WalletAccessContext, CredentialStatusList] = {
+  def createNewForTheWallet(jwtIssuer: Issuer): RIO[WalletAccessContext, CredentialStatusList] = {
 
     val id = UUID.randomUUID()
     val issued = Instant.now()
@@ -72,11 +74,27 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
     for {
       jwtCredential <- encodedJwtCredential
       query = sql"""
-                   |INSERT INTO public.credential_status_lists (id, wallet_id, issuer, issued, purpose,
-                   |   status_list_jwt_credential, size, last_used_index)
-                   |VALUES ($id, ${walletId.toUUID}, $issuerDid, $issued, ${StatusPurpose.Revocation.str}, ${jwtCredential.value},
-                   |   ${BitString.MIN_SL2021_SIZE}, 0)
-                   |RETURNING id, wallet_id, issuer, issued, purpose, status_list_jwt_credential, created_at, updated_at
+                   |INSERT INTO public.credential_status_lists (
+                   |  id,
+                   |  issuer,
+                   |  issued,
+                   |  purpose,
+                   |  status_list_jwt_credential,
+                   |  size,
+                   |  last_used_index,
+                   |  wallet_id
+                   | )
+                   |VALUES (
+                   |  $id,
+                   |  $issuerDid,
+                   |  $issued,
+                   |  ${StatusPurpose.Revocation}::public.enum_credential_status_list_purpose,
+                   |  ${jwtCredential.value},
+                   |  ${BitString.MIN_SL2021_SIZE},
+                   |  0,
+                   |  current_setting('app.current_wallet_id')::UUID
+                   | )
+                   |RETURNING id, wallet_id, issuer, issued, purpose, status_list_jwt_credential, size, last_used_index, created_at, updated_at
              """.stripMargin.query[CredentialStatusList].unique
       newStatusList <- query
         .transactWallet(xa)
@@ -92,8 +110,20 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
 
     val statusListEntryCreationQuery =
       sql"""
-           | INSERT INTO public.credentials_in_status_list (id, issue_credential_record_id, credential_status_list_id, status_list_index, is_canceled)
-           | VALUES (${UUID.randomUUID()}, $issueCredentialRecordId, $credentialStatusListId, $statusListIndex, false)
+           | INSERT INTO public.credentials_in_status_list (
+           |   id,
+           |   issue_credential_record_id,
+           |   credential_status_list_id,
+           |   status_list_index,
+           |   is_canceled
+           | )
+           | VALUES (
+           |   ${UUID.randomUUID()},
+           |   $issueCredentialRecordId,
+           |   $credentialStatusListId,
+           |   $statusListIndex,
+           |   false
+           | )
            |""".stripMargin.update.run
 
     val statusListUpdateQuery =
@@ -110,8 +140,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       _ <- statusListEntryCreationQuery
       _ <- statusListUpdateQuery
     } yield ()
-    
-    
+
     res.transactWallet(xa)
 
   }
