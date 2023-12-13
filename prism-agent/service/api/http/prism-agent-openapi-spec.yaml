@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Prism Agent
-  version: 1.20.1
+  version: 1.21.1
 paths:
   /credential-definition-registry/definitions:
     get:
@@ -3753,7 +3753,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2023-12-06T10:40:43.781066302Z'
+          example: '2023-12-12T18:39:22.582404789Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last

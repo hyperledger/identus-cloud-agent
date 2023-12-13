@@ -20,7 +20,7 @@ spec:
        - serviceName: agent-server-tapir-service
          servicePort: 8085
     authentication:
-      enable: true
+      enable: {{ .Values.ingress.auth.enable }}
       type: keyAuth
     plugins:
     - name: proxy-rewrite

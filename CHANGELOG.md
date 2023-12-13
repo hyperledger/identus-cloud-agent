@@ -1,3 +1,17 @@
+## [1.21.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.21.0...prism-agent-v1.21.1) (2023-12-12)
+
+
+### Bug Fixes
+
+* Option to disable apisix key auth ([#813](https://github.com/hyperledger-labs/open-enterprise-agent/issues/813)) ([f163682](https://github.com/hyperledger-labs/open-enterprise-agent/commit/f1636824047c0d03ce0790ede54e3a12d63dd787))
+
+# [1.21.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.20.1...prism-agent-v1.21.0) (2023-12-12)
+
+
+### Features
+
+* env vars support through values file ([#811](https://github.com/hyperledger-labs/open-enterprise-agent/issues/811)) ([2486dde](https://github.com/hyperledger-labs/open-enterprise-agent/commit/2486dde9b0682504a02ad031b3e7498b2fa2ce17))
+
 ## [1.20.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.20.0...prism-agent-v1.20.1) (2023-12-06)
 
 
