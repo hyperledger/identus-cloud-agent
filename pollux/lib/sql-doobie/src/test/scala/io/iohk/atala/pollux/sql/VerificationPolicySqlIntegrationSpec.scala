@@ -15,7 +15,7 @@ import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.MigrationAspects.*
 import zio.*
 import zio.test.*
@@ -286,7 +286,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
       name <- name
       description <- description
       constraints <- Gen
-        .setOfBounded(min = 1, max = 10)(verificationPolicyConstraint)
+        .setOfBounded(min = 2, max = 10)(verificationPolicyConstraint)
         .map(_.toVector)
     } yield VerificationPolicy.make(
       name = name,

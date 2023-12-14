@@ -1,18 +1,25 @@
 package io.iohk.atala.iam.wallet.http.controller
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.service.WalletManagementServiceError
+import io.iohk.atala.agent.walletapi.service.WalletManagementServiceError.TooManyPermittedWallet
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.CollectionStats
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.util.PaginationUtils
+import io.iohk.atala.iam.authentication.oidc.KeycloakEntity
+import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.iam.wallet.http.model.CreateWalletRequest
+import io.iohk.atala.iam.wallet.http.model.CreateWalletUmaPermissionRequest
 import io.iohk.atala.iam.wallet.http.model.WalletDetail
 import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
 import io.iohk.atala.shared.models.HexString
+import io.iohk.atala.shared.models.WalletAdministrationContext
+import io.iohk.atala.shared.models.WalletAdministrationContext.Admin
 import io.iohk.atala.shared.models.WalletId
 import zio.*
 
@@ -20,9 +27,24 @@ import java.util.UUID
 import scala.language.implicitConversions
 
 trait WalletManagementController {
-  def listWallet(paginationInput: PaginationInput)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetailPage]
-  def getWallet(walletId: UUID)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail]
-  def createWallet(request: CreateWalletRequest)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail]
+  def listWallet(
+      paginationInput: PaginationInput
+  )(implicit rc: RequestContext): ZIO[WalletAdministrationContext, ErrorResponse, WalletDetailPage]
+  def getWallet(walletId: UUID)(implicit
+      rc: RequestContext
+  ): ZIO[WalletAdministrationContext, ErrorResponse, WalletDetail]
+  def createWallet(
+      request: CreateWalletRequest,
+      me: BaseEntity
+  )(implicit rc: RequestContext): ZIO[WalletAdministrationContext, ErrorResponse, WalletDetail]
+  def createWalletUmaPermission(
+      walletId: UUID,
+      request: CreateWalletUmaPermissionRequest
+  )(implicit rc: RequestContext): ZIO[WalletAdministrationContext, ErrorResponse, Unit]
+  def deleteWalletUmaPermission(
+      walletId: UUID,
+      subject: UUID
+  )(implicit rc: RequestContext): ZIO[WalletAdministrationContext, ErrorResponse, Unit]
 }
 
 object WalletManagementController {
@@ -36,25 +58,38 @@ object WalletManagementController {
     case WalletManagementServiceError.DuplicatedWalletId(id) =>
       ErrorResponse.badRequest(s"Wallet id $id is not unique.")
     case WalletManagementServiceError.DuplicatedWalletSeed(id) =>
-      // Should we return this error message?
-      // Returning less revealing message also doesn't help for open-source repo.
       ErrorResponse.badRequest(s"Wallet id $id cannot be created. The seed value is not unique.")
+    case TooManyPermittedWallet() =>
+      ErrorResponse.badRequest(
+        s"The operation is not allowed because wallet access already exists for the current user."
+      )
+  }
+
+  given permissionManagementErrorConversion: Conversion[PermissionManagement.Error, ErrorResponse] = {
+    case e: PermissionManagement.Error.PermissionNotFoundById => ErrorResponse.badRequest(detail = Some(e.message))
+    case e: PermissionManagement.Error.ServiceError       => ErrorResponse.internalServerError(detail = Some(e.message))
+    case e: PermissionManagement.Error.UnexpectedError    => ErrorResponse.internalServerError(detail = Some(e.message))
+    case e: PermissionManagement.Error.UserNotFoundById   => ErrorResponse.badRequest(detail = Some(e.message))
+    case e: PermissionManagement.Error.WalletNotFoundById => ErrorResponse.badRequest(detail = Some(e.message))
+    case e: PermissionManagement.Error.WalletNotFoundByUserId     => ErrorResponse.badRequest(detail = Some(e.message))
+    case e: PermissionManagement.Error.WalletResourceNotFoundById => ErrorResponse.badRequest(detail = Some(e.message))
   }
 }
 
 class WalletManagementControllerImpl(
-    service: WalletManagementService
+    walletService: WalletManagementService,
+    permissionService: PermissionManagement.Service[BaseEntity],
 ) extends WalletManagementController {
 
   import WalletManagementController.given
 
   override def listWallet(
       paginationInput: PaginationInput
-  )(implicit rc: RequestContext): IO[ErrorResponse, WalletDetailPage] = {
+  )(implicit rc: RequestContext): ZIO[WalletAdministrationContext, ErrorResponse, WalletDetailPage] = {
     val uri = rc.request.uri
     val pagination = paginationInput.toPagination
     for {
-      pageResult <- service
+      pageResult <- walletService
         .listWallets(offset = paginationInput.offset, limit = paginationInput.limit)
         .mapError[ErrorResponse](e => e)
       (items, totalCount) = pageResult
@@ -68,9 +103,11 @@ class WalletManagementControllerImpl(
     )
   }
 
-  override def getWallet(walletId: UUID)(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail] = {
+  override def getWallet(
+      walletId: UUID
+  )(implicit rc: RequestContext): ZIO[WalletAdministrationContext, ErrorResponse, WalletDetail] = {
     for {
-      wallet <- service
+      wallet <- walletService
         .getWallet(WalletId.fromUUID(walletId))
         .mapError[ErrorResponse](e => e)
         .someOrFail(ErrorResponse.notFound(detail = Some(s"Wallet id $walletId does not exist.")))
@@ -78,12 +115,47 @@ class WalletManagementControllerImpl(
   }
 
   override def createWallet(
-      request: CreateWalletRequest
-  )(implicit rc: RequestContext): IO[ErrorResponse, WalletDetail] = {
+      request: CreateWalletRequest,
+      me: BaseEntity
+  )(implicit rc: RequestContext): ZIO[WalletAdministrationContext, ErrorResponse, WalletDetail] = {
+    ZIO.serviceWithZIO[WalletAdministrationContext] {
+      case WalletAdministrationContext.Admin() => doCreateWallet(request).map(i => i)
+      case WalletAdministrationContext.SelfService(_) =>
+        for {
+          wallet <- doCreateWallet(request)
+          _ <- permissionService
+            .grantWalletToUser(wallet.id, me)
+            .mapError[ErrorResponse](e => e)
+            .provide(ZLayer.succeed(WalletAdministrationContext.Admin())) // First time to use must be admin
+        } yield wallet
+    }
+  }
+
+  override def createWalletUmaPermission(walletId: UUID, request: CreateWalletUmaPermissionRequest)(implicit
+      rc: RequestContext
+  ): ZIO[WalletAdministrationContext, ErrorResponse, Unit] = {
+    val grantee = KeycloakEntity(request.subject)
+    permissionService
+      .grantWalletToUser(WalletId.fromUUID(walletId), grantee)
+      .mapError[ErrorResponse](e => e)
+  }
+
+  override def deleteWalletUmaPermission(walletId: UUID, subject: UUID)(implicit
+      rc: RequestContext
+  ): ZIO[WalletAdministrationContext, ErrorResponse, Unit] = {
+    val grantee = KeycloakEntity(subject)
+    permissionService
+      .revokeWalletFromUser(WalletId.fromUUID(walletId), grantee)
+      .mapError[ErrorResponse](e => e)
+  }
+
+  private def doCreateWallet(request: CreateWalletRequest): ZIO[WalletAdministrationContext, ErrorResponse, Wallet] = {
     for {
       providedSeed <- request.seed.fold(ZIO.none)(s => extractWalletSeed(s).asSome)
       walletId = request.id.map(WalletId.fromUUID).getOrElse(WalletId.random)
-      wallet <- service.createWallet(Wallet(request.name, walletId), providedSeed).mapError[ErrorResponse](e => e)
+      wallet <- walletService
+        .createWallet(Wallet(request.name, walletId), providedSeed)
+        .mapError[ErrorResponse](identity)
     } yield wallet
   }
 
@@ -104,6 +176,6 @@ class WalletManagementControllerImpl(
 }
 
 object WalletManagementControllerImpl {
-  val layer: URLayer[WalletManagementService, WalletManagementController] =
-    ZLayer.fromFunction(WalletManagementControllerImpl(_))
+  val layer: URLayer[WalletManagementService & PermissionManagement.Service[BaseEntity], WalletManagementController] =
+    ZLayer.fromFunction(WalletManagementControllerImpl(_, _))
 }

@@ -11,6 +11,7 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
+import io.iohk.atala.connect.controller.http.Connection.annotations.goalcode
 
 case class Connection(
     @description(annotations.connectionId.description)
@@ -22,6 +23,12 @@ case class Connection(
     @description(annotations.label.description)
     @encodedExample(annotations.label.example)
     label: Option[String] = None,
+    @description(annotations.goalcode.description)
+    @encodedExample(annotations.goalcode.example)
+    goalCode: Option[String] = None,
+    @description(annotations.goal.description)
+    @encodedExample(annotations.goal.example)
+    goal: Option[String] = None,
     @description(annotations.myDid.description)
     @encodedExample(annotations.myDid.example)
     myDid: Option[String] = None,
@@ -66,6 +73,8 @@ object Connection {
       connectionId = domain.id,
       thid = domain.thid,
       label = domain.label,
+      goalCode = domain.goalCode,
+      goal = domain.goal,
       myDid = domain.role match
         case Role.Inviter =>
           domain.connectionResponse.map(_.from).orElse(domain.connectionRequest.map(_.to)).map(_.value)
@@ -110,6 +119,18 @@ object Connection {
           example = "Peter"
         )
 
+    object goalcode
+        extends Annotation[String](
+          description =
+            "A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.",
+          example = "issue-vc"
+        )
+    object goal
+        extends Annotation[String](
+          description =
+            "A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.",
+          example = "To issue a Peter College Graduate credential"
+        )
     object myDid
         extends Annotation[String](
           description = "The DID representing me as the inviter or invitee in this specific connection.",

@@ -7,6 +7,7 @@ import zio.*
 import java.net.URL
 import java.time.Instant
 import java.util.UUID
+import java.time.temporal.ChronoUnit
 
 final case class EventNotificationConfig(
     id: UUID,
@@ -14,7 +15,10 @@ final case class EventNotificationConfig(
     url: URL,
     customHeaders: Map[String, String],
     createdAt: Instant
-)
+) {
+  def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): EventNotificationConfig =
+    copy(createdAt = createdAt.truncatedTo(unit))
+}
 
 object EventNotificationConfig {
   def apply(walletId: WalletId, url: URL, customHeaders: Map[String, String] = Map.empty): EventNotificationConfig =
@@ -24,7 +28,7 @@ object EventNotificationConfig {
       url = url,
       customHeaders = customHeaders,
       createdAt = Instant.now
-    )
+    ).withTruncatedTimestamp()
 
   def applyWallet(url: URL, customHeaders: Map[String, String]): URIO[WalletAccessContext, EventNotificationConfig] =
     ZIO.serviceWith[WalletAccessContext](ctx => apply(ctx.walletId, url, customHeaders))

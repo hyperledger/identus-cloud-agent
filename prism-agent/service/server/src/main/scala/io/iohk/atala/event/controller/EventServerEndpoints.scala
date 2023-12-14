@@ -1,44 +1,48 @@
 package io.iohk.atala.event.controller
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.iam.authentication.Authenticator
-import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
+import io.iohk.atala.iam.authentication.Authorizer
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
 import zio.*
+import io.iohk.atala.iam.authentication.SecurityLogic
 
 class EventServerEndpoints(
     eventController: EventController,
-    authenticator: Authenticator
+    authenticator: Authenticator[BaseEntity],
+    authorizer: Authorizer[BaseEntity]
 ) {
 
   val createWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
     EventEndpoints.createWebhookNotification
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
-      .serverLogic { entity =>
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
         { case (rc, createWebhook) =>
           eventController
             .createWebhookNotification(createWebhook)(rc)
-            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+            .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
   val listWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
     EventEndpoints.listWebhookNotification
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
-      .serverLogic { entity => rc =>
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .serverLogic { wac => rc =>
         eventController
           .listWebhookNotifications(rc)
-          .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+          .provideSomeLayer(ZLayer.succeed(wac))
       }
 
   val deleteWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
     EventEndpoints.deleteWebhookNotification
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
-      .serverLogic { entity =>
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
         { case (rc, id) =>
           eventController
             .deleteWebhookNotification(id)(rc)
-            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+            .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
@@ -51,11 +55,11 @@ class EventServerEndpoints(
 }
 
 object EventServerEndpoints {
-  def all: URIO[EventController & Authenticator, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[EventController & DefaultAuthenticator, List[ZServerEndpoint[Any, Any]]] = {
     for {
-      authenticator <- ZIO.service[Authenticator]
+      authenticator <- ZIO.service[DefaultAuthenticator]
       eventController <- ZIO.service[EventController]
-      eventEndpoints = new EventServerEndpoints(eventController, authenticator)
+      eventEndpoints = new EventServerEndpoints(eventController, authenticator, authenticator)
     } yield eventEndpoints.all
   }
 }

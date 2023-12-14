@@ -5,6 +5,8 @@ import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
+import io.iohk.atala.iam.authentication.oidc.JwtCredentials
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import io.iohk.atala.presentproof.controller.http.*
 import sttp.model.StatusCode
 import sttp.tapir.*
@@ -17,7 +19,7 @@ object PresentProofEndpoints {
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 
   val requestPresentation: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, RequestPresentationInput),
     ErrorResponse,
     PresentationStatus,
@@ -29,6 +31,7 @@ object PresentProofEndpoints {
       .summary("As a Verifier, create a new proof presentation request and send it to the Prover.")
       .description("Holder presents proof derived from the verifiable credential to verifier.")
       .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in("present-proof" / "presentations")
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(jsonBody[RequestPresentationInput].description("The present proof creation request."))
@@ -38,10 +41,10 @@ object PresentProofEndpoints {
         )
       )
       .out(jsonBody[PresentationStatus])
-      .errorOut(basicFailuresAndForbidden)
+      .errorOut(basicFailureAndNotFoundAndForbidden)
 
   val getAllPresentations: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, PaginationInput, Option[String]),
     ErrorResponse,
     PresentationStatusPage,
@@ -53,6 +56,7 @@ object PresentProofEndpoints {
       .summary("Gets the list of proof presentation records.")
       .description("list of presentation statuses")
       .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in("present-proof" / "presentations")
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(paginationInput)
@@ -61,7 +65,8 @@ object PresentProofEndpoints {
       .out(jsonBody[PresentationStatusPage])
       .errorOut(basicFailuresAndForbidden)
 
-  val getPresentation: Endpoint[ApiKeyCredentials, (RequestContext, UUID), ErrorResponse, PresentationStatus, Any] =
+  val getPresentation
+      : Endpoint[(ApiKeyCredentials, JwtCredentials), (RequestContext, UUID), ErrorResponse, PresentationStatus, Any] =
     endpoint.get
       .tag("Present Proof")
       .name("getPresentation")
@@ -71,6 +76,7 @@ object PresentProofEndpoints {
       )
       .description("Returns an existing presentation record by id.")
       .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "present-proof" / "presentations" / path[UUID]("presentationId").description(
@@ -82,7 +88,7 @@ object PresentProofEndpoints {
       .errorOut(basicFailureAndNotFoundAndForbidden)
 
   val updatePresentation: Endpoint[
-    ApiKeyCredentials,
+    (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID, RequestPresentationAction),
     ErrorResponse,
     PresentationStatus,
@@ -97,6 +103,7 @@ object PresentProofEndpoints {
       )
       .description("Accept or reject presentation of proof request.")
       .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "present-proof" / "presentations" / path[UUID]("presentationId").description(

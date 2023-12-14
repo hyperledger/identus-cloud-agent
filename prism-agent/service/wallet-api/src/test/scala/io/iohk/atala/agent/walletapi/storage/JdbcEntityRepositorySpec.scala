@@ -7,12 +7,8 @@ import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.{
 }
 import io.iohk.atala.agent.walletapi.model.{Entity, Wallet}
 import io.iohk.atala.agent.walletapi.sql.{EntityRepository, JdbcEntityRepository, JdbcWalletNonSecretStorage}
-import io.iohk.atala.agent.walletapi.storage.JdbcWalletNonSecretStorageSpec.{
-  contextAwareTransactorLayer,
-  pgContainerLayer
-}
 import io.iohk.atala.shared.models.WalletId
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import zio.*
 import zio.test.*

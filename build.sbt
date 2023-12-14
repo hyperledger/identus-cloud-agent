@@ -62,6 +62,7 @@ lazy val V = new {
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
   val testContainersScala = "0.41.0"
+  val testContainersJavaKeycloak = "3.0.0" // scala-steward:off
 
   val doobie = "1.0.0-RC2"
   val quill = "4.7.3"
@@ -82,6 +83,9 @@ lazy val V = new {
 
   val vaultDriver = "6.1.0"
   val micrometer = "1.11.2"
+
+  val nimbusJwt = "10.0.0"
+  val keycloak = "22.0.4" // scala-steward:off
 }
 
 /** Dependencies */
@@ -106,21 +110,27 @@ lazy val D = new {
   val circeGeneric: ModuleID = "io.circe" %% "circe-generic" % V.circe
   val circeParser: ModuleID = "io.circe" %% "circe-parser" % V.circe
 
+  val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
+
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.1"
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.3.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
+
   // Customized version of numbus jose jwt
   // from https://github.com/goncalo-frade-iohk/Nimbus-JWT_Fork/commit/8a6665c25979e771afae29ce8c965c8b0312fefb
-  val jwk: ModuleID = "io.iohk.atala" % "nimbus-jose-jwt" % "10.0.0"
+  val nimbusJwt: ModuleID = "io.iohk.atala" % "nimbus-jose-jwt" % V.nimbusJwt
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
   val scalaPbRuntime: ModuleID =
     "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
   val scalaPbGrpc: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
-  // TODO we are adding test stuff to the main dependencies
-  val testcontainersPostgres: ModuleID = "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala
-  val testcontainersVault: ModuleID = "com.dimafeng" %% "testcontainers-scala-vault" % V.testContainersScala
+
+  val testcontainersPostgres: ModuleID =
+    "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala % Test
+  val testcontainersVault: ModuleID = "com.dimafeng" %% "testcontainers-scala-vault" % V.testContainersScala % Test
+  val testcontainersKeycloak: ModuleID =
+    "com.github.dasniko" % "testcontainers-keycloak" % V.testContainersJavaKeycloak % Test
 
   val doobiePostgres: ModuleID = "org.tpolecat" %% "doobie-postgres" % V.doobie
   val doobieHikari: ModuleID = "org.tpolecat" %% "doobie-hikari" % V.doobie
@@ -147,13 +157,27 @@ lazy val D_Shared = new {
     Seq(
       D.typesafeConfig,
       D.scalaPbGrpc,
-      D.testcontainersPostgres,
-      D.testcontainersVault,
       D.zio,
       // FIXME: split shared DB stuff as subproject?
       D.doobieHikari,
       D.doobiePostgres,
       D.zioCatsInterop
+    )
+}
+
+lazy val D_SharedTest = new {
+  lazy val dependencies: Seq[ModuleID] =
+    D_Shared.dependencies ++ Seq(
+      D.testcontainersPostgres,
+      D.testcontainersVault,
+      D.testcontainersKeycloak,
+      D.zioCatsInterop,
+      D.zioJson,
+      D.zioHttp,
+      D.zioTest,
+      D.zioTestSbt,
+      D.zioTestMagnolia,
+      D.zioMock
     )
 }
 
@@ -195,7 +219,6 @@ lazy val D_Castor = new {
       D.circeCore,
       D.circeGeneric,
       D.circeParser,
-      prismCrypto,
       prismIdentity,
       scalaUri
     )
@@ -268,8 +291,6 @@ lazy val D_Pollux_VC_JWT = new {
     .exclude("io.circe", "circe-generic_2.13")
     .exclude("io.circe", "circe-parser_2.13")
 
-  val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
-
   val zio = "dev.zio" %% "zio" % V.zio
   val zioPrelude = "dev.zio" %% "zio-prelude" % V.zioPreludeVersion
 
@@ -285,7 +306,7 @@ lazy val D_Pollux_VC_JWT = new {
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
   val circeDependencies: Seq[ModuleID] = Seq(D.circeCore, D.circeGeneric, D.circeParser)
   val baseDependencies: Seq[ModuleID] =
-    circeDependencies ++ zioDependencies :+ jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.jwk :+ scalaTest
+    circeDependencies ++ zioDependencies :+ D.jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ scalaTest
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
@@ -337,6 +358,7 @@ lazy val D_PrismAgent = new {
   val flyway = "org.flywaydb" % "flyway-core" % V.flyway
 
   val vaultDriver = "io.github.jopenlibs" % "vault-java-driver" % V.vaultDriver
+  val keycloakAuthz = "org.keycloak" % "keycloak-authz-client" % V.keycloak
 
   // Dependency Modules
   val baseDependencies: Seq[ModuleID] = Seq(
@@ -375,11 +397,42 @@ lazy val D_PrismAgent = new {
   lazy val keyManagementDependencies: Seq[ModuleID] =
     baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop, D.zioMock, vaultDriver)
 
+  lazy val iamDependencies: Seq[ModuleID] = Seq(keycloakAuthz, D.jwtCirce)
+
   lazy val serverDependencies: Seq[ModuleID] =
     baseDependencies ++ tapirDependencies ++ postgresDependencies ++ Seq(D.zioMock, D.mockito)
 }
 
 publish / skip := true
+
+val commonSetttings = Seq(
+  testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+  // Needed for Kotlin coroutines that support new memory management mode
+  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
+  // Override 'updateLicenses' for all project to inject custom DependencyResolution.
+  // https://github.com/sbt/sbt-license-report/blob/9675cedb19c794de1119cbcf46a255fc8dcd5d4e/src/main/scala/sbtlicensereport/SbtLicenseReport.scala#L84
+  updateLicenses := {
+    import sbt.librarymanagement.DependencyResolution
+    import sbt.librarymanagement.ivy.IvyDependencyResolution
+    import sbtlicensereport.license
+
+    val ignore = update.value
+    val overrides = licenseOverrides.value.lift
+    val depExclusions = licenseDepExclusions.value.lift
+    val originatingModule = DepModuleInfo(organization.value, name.value, version.value)
+    val resolution = DependencyResolution(new LicenseReportCustomDependencyResolution(ivyConfiguration.value, ivyModule.value))
+    license.LicenseReport.makeReport(
+      ivyModule.value,
+      resolution,
+      licenseConfigurations.value,
+      licenseSelection.value,
+      overrides,
+      depExclusions,
+      originatingModule,
+      streams.value.log
+    )
+  }
+)
 
 // #####################
 // #####  shared  ######
@@ -387,6 +440,7 @@ publish / skip := true
 
 lazy val shared = (project in file("shared"))
   // .configure(publishConfigure)
+  .settings(commonSetttings)
   .settings(
     organization := "io.iohk.atala",
     organizationName := "Input Output Global",
@@ -395,6 +449,19 @@ lazy val shared = (project in file("shared"))
     crossPaths := false,
     libraryDependencies ++= D_Shared.dependencies
   )
+  .enablePlugins(BuildInfoPlugin)
+
+lazy val sharedTest = (project in file("shared-test"))
+  .settings(commonSetttings)
+  .settings(
+    organization := "io.iohk.atala",
+    organizationName := "Input Output Global",
+    buildInfoPackage := "io.iohk.atala.sharedtest",
+    name := "sharedtest",
+    crossPaths := false,
+    libraryDependencies ++= D_SharedTest.dependencies
+  )
+  .dependsOn(shared)
   .enablePlugins(BuildInfoPlugin)
 
 // #########################
@@ -417,7 +484,7 @@ lazy val models = project
     ), // TODO try to remove this from this module
     // libraryDependencies += D.didScala
   )
-  .settings(libraryDependencies += D.jwk) //FIXME just for the DidAgent
+  .settings(libraryDependencies += D.nimbusJwt) //FIXME just for the DidAgent
 
 /* TODO move code from agentDidcommx to here
 models implementation for didcommx () */
@@ -539,7 +606,7 @@ lazy val resolver = project // maybe merge into models
       D.peerDidcommx,
       D.munit,
       D.munitZio,
-      D.jwk,
+      D.nimbusJwt,
     ),
     testFrameworks += new TestFramework("munit.Framework")
   )
@@ -610,34 +677,13 @@ val prismNodeClient = project
     )
   )
 
-// ##############
-// ###  iris ####
-// ##############
-val irisClient = project
-  .in(file("iris/client/scala-client"))
-  .settings(
-    name := "iris-client",
-    libraryDependencies ++= Seq(D.scalaPbGrpc, D.scalaPbRuntime),
-    coverageEnabled := false,
-    // gRPC settings
-    Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
-    Compile / PB.protoSources := Seq(baseDirectory.value / ".." / ".." / "api" / "grpc")
-  )
-
 // #####################
 // #####  castor  ######
 // #####################
 
-val castorCommonSettings = Seq(
-  testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
-)
-
-// Project definitions
 lazy val castorCore = project
   .in(file("castor/lib/core"))
-  .settings(castorCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "castor-core",
     libraryDependencies ++= D_Castor.coreDependencies
@@ -648,15 +694,9 @@ lazy val castorCore = project
 // #####  pollux  ######
 // #####################
 
-val polluxCommonSettings = Seq(
-  testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-  // Needed for Kotlin coroutines that support new memory management mode
-  resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven"
-)
-
 lazy val polluxVcJWT = project
   .in(file("pollux/lib/vc-jwt"))
-  .settings(polluxCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "pollux-vc-jwt",
     libraryDependencies ++= D_Pollux_VC_JWT.polluxVcJwtDependencies
@@ -665,26 +705,26 @@ lazy val polluxVcJWT = project
 
 lazy val polluxCore = project
   .in(file("pollux/lib/core"))
-  .settings(polluxCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "pollux-core",
     libraryDependencies ++= D_Pollux.coreDependencies
   )
   .dependsOn(shared)
-  .dependsOn(irisClient)
   .dependsOn(prismAgentWalletAPI)
   .dependsOn(polluxVcJWT)
   .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds)
 
 lazy val polluxDoobie = project
   .in(file("pollux/lib/sql-doobie"))
-  .settings(polluxCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "pollux-sql-doobie",
     libraryDependencies ++= D_Pollux.sqlDoobieDependencies
   )
   .dependsOn(polluxCore % "compile->compile;test->test")
   .dependsOn(shared)
+  .dependsOn(sharedTest % "test->test")
 
 // ########################
 // ### Pollux Anoncreds ###
@@ -692,7 +732,6 @@ lazy val polluxDoobie = project
 
 lazy val polluxAnoncreds = project
   .in(file("pollux/lib/anoncreds"))
-  // .settings(polluxCommonSettings)
   .enablePlugins(BuildInfoPlugin)
   .enablePlugins(JavaAppPackaging)
   .settings(
@@ -713,11 +752,9 @@ lazy val polluxAnoncredsTest = project
 // #####  connect  #####
 // #####################
 
-def connectCommonSettings = polluxCommonSettings
-
 lazy val connectCore = project
   .in(file("connect/lib/core"))
-  .settings(connectCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "connect-core",
     libraryDependencies ++= D_Connect.coreDependencies,
@@ -728,12 +765,13 @@ lazy val connectCore = project
 
 lazy val connectDoobie = project
   .in(file("connect/lib/sql-doobie"))
-  .settings(connectCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "connect-sql-doobie",
     libraryDependencies ++= D_Connect.sqlDoobieDependencies
   )
   .dependsOn(shared)
+  .dependsOn(sharedTest % "test->test")
   .dependsOn(connectCore % "compile->compile;test->test")
 
 // ############################
@@ -751,26 +789,28 @@ lazy val eventNotification = project
 // #####################
 // #### Prism Agent ####
 // #####################
-def prismAgentConnectCommonSettings = polluxCommonSettings
 
 lazy val prismAgentWalletAPI = project
   .in(file("prism-agent/service/wallet-api"))
-  .settings(prismAgentConnectCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "prism-agent-wallet-api",
-    libraryDependencies ++= D_PrismAgent.keyManagementDependencies ++ D_PrismAgent.postgresDependencies ++ Seq(
-      D.zioMock
-    )
+    libraryDependencies ++=
+      D_PrismAgent.keyManagementDependencies ++
+        D_PrismAgent.iamDependencies ++
+        D_PrismAgent.postgresDependencies ++
+        Seq(D.zioMock)
   )
   .dependsOn(
     agentDidcommx,
     castorCore,
     eventNotification
   )
+  .dependsOn(sharedTest % "test->test")
 
 lazy val prismAgentServer = project
   .in(file("prism-agent/service/server"))
-  .settings(prismAgentConnectCommonSettings)
+  .settings(commonSetttings)
   .settings(
     name := "prism-agent",
     fork := true,
@@ -780,7 +820,8 @@ lazy val prismAgentServer = project
     Docker / dockerUsername := Some("input-output-hk"),
     Docker / dockerRepository := Some("ghcr.io"),
     dockerExposedPorts := Seq(8080, 8085, 8090),
-    dockerBaseImage := "openjdk:11",
+    // Official docker image for openjdk 21 with curl and bash
+    dockerBaseImage := "openjdk:21-jdk",
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
     buildInfoPackage := "io.iohk.atala.agent.server.buildinfo",
     Compile / packageDoc / publishArtifact := false
@@ -798,6 +839,7 @@ lazy val prismAgentServer = project
     castorCore,
     eventNotification
   )
+  .dependsOn(sharedTest % "test->test")
 
 // ############################
 // ####  Release process  #####
@@ -815,6 +857,7 @@ releaseProcess := Seq[ReleaseStep](
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   shared,
+  sharedTest,
   models,
   protocolConnection,
   protocolCoordinateMediation,

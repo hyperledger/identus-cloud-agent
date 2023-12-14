@@ -1,23 +1,17 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Prism Agent
-  version: 1.16.4
+  version: 1.22.0
 paths:
   /credential-definition-registry/definitions:
     get:
       tags:
-      - Credential Definitions Registry
+      - Credential Definition Registry
       summary: Lookup credential definitions by indexed fields
       description: 'Lookup credential definitions by `author`, `name`, `tag` parameters
         and control the pagination by `offset` and `limit` parameters '
       operationId: lookupCredentialDefinitionsByQuery
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: author
         in: query
         required: false
@@ -78,6 +72,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
     post:
       tags:
       - Credential Definition Registry
@@ -86,13 +83,6 @@ paths:
         JSON Schema on behalf of Cloud Agent. The credential definition will be signed
         by the keys of Cloud Agent and issued by the DID that corresponds to it.
       operationId: createCredentialDefinition
-      parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       requestBody:
         description: JSON object required for the credential definition creation
         content:
@@ -131,6 +121,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /credential-definition-registry/definitions/{guid}:
     get:
       tags:
@@ -171,6 +164,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /credential-definition-registry/definitions/{guid}/definition:
+    get:
+      tags:
+      - Credential Definition Registry
+      summary: Fetch the inner definition field of the credential definition from
+        the registry by `guid`
+      description: Fetch the inner definition fields of the credential definition
+        by the unique identifier
+      operationId: getCredentialDefinitionInnerDefinitionById
+      parameters:
+      - name: guid
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: CredentialDefinition found by `guid`
+          content:
+            application/json:
+              schema: {}
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /schema-registry/schemas:
     get:
       tags:
@@ -180,12 +213,6 @@ paths:
         the pagination by `offset` and `limit` parameters '
       operationId: lookupSchemasByQuery
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: author
         in: query
         required: false
@@ -252,6 +279,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
     post:
       tags:
       - Schema Registry
@@ -260,13 +290,6 @@ paths:
         JSON Schema on behalf of Cloud Agent. The credential schema will be signed
         by the keys of Cloud Agent and issued by the DID that corresponds to it.
       operationId: createSchema
-      parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       requestBody:
         description: JSON object required for the credential schema creation
         content:
@@ -305,6 +328,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /schema-registry/{author}/{id}:
     put:
       tags:
@@ -316,12 +342,6 @@ paths:
         to it.
       operationId: updateSchema
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: author
         in: path
         description: DID of the identity which authored the credential schema. A piece
@@ -375,6 +395,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /schema-registry/schemas/{guid}:
     get:
       tags:
@@ -422,13 +445,6 @@ paths:
       summary: Trace the request input from the point of view of the server
       description: Trace the request input from the point of view of the server
       operationId: test
-      parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       responses:
         '200':
           description: ''
@@ -454,6 +470,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /verification/policies:
     get:
       tags:
@@ -463,12 +482,6 @@ paths:
         by `offset` and `limit` parameters
       operationId: lookupVerificationPoliciesByQuery
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: name
         in: query
         required: false
@@ -516,19 +529,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
     post:
       tags:
       - Verification
       summary: Create the new verification policy
       description: Create the new verification policy
       operationId: createVerificationPolicy
-      parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       requestBody:
         description: Create verification policy object
         content:
@@ -561,6 +570,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /verification/policies/{id}:
     get:
       tags:
@@ -569,12 +581,6 @@ paths:
       description: Get the verification policy by id
       operationId: getVerificationPolicyById
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: id
         in: path
         description: Get the verification policy by id
@@ -613,6 +619,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
     put:
       tags:
       - Verification
@@ -620,12 +629,6 @@ paths:
       description: Update the verification policy entry
       operationId: updateVerificationPolicy
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: id
         in: path
         required: true
@@ -677,6 +680,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
     delete:
       tags:
       - Verification
@@ -684,12 +690,6 @@ paths:
       description: Delete the verification policy by id
       operationId: deleteVerificationPolicyById
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: id
         in: path
         description: Delete the verification policy by id
@@ -724,6 +724,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /connections:
     get:
       tags:
@@ -732,12 +735,6 @@ paths:
       description: Get the list of connection records paginated
       operationId: getConnections
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: offset
         in: query
         required: false
@@ -781,6 +778,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
     post:
       tags:
       - Connections Management
@@ -791,13 +791,6 @@ paths:
         It returns a new connection record in `InvitationGenerated` state.
         The request body may contain a `label` that can be used as a human readable alias for the connection, for example `{'label': "Bob"}`
       operationId: createConnection
-      parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       requestBody:
         description: JSON object required for the connection creation
         content:
@@ -831,6 +824,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /connections/{connectionId}:
     get:
       tags:
@@ -839,12 +835,6 @@ paths:
       description: Gets an existing connection record by its unique identifier
       operationId: getConnection
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: connectionId
         in: path
         description: The unique identifier of the connection record.
@@ -883,6 +873,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /connection-invitations:
     post:
       tags:
@@ -894,13 +887,6 @@ paths:
         and submits a Connection Request to the inviter.
         It returns a connection object in `ConnectionRequestPending` state, until the Connection Request is eventually sent to the inviter by the prism-agent's background process. The connection object state will then automatically move to `ConnectionRequestSent`.
       operationId: acceptConnectionInvitation
-      parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       requestBody:
         description: The request used by an invitee to accept a connection invitation
           received from an inviter, using out-of-band mechanism.
@@ -934,6 +920,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /dids/{didRef}:
     get:
       tags:
@@ -1046,12 +1035,6 @@ paths:
         If the `limit` parameter is not set, it defaults to 100 items per page.
       operationId: getDid-registrarDids
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: offset
         in: query
         required: false
@@ -1089,6 +1072,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
     post:
       tags:
       - DID Registrar
@@ -1097,13 +1083,6 @@ paths:
         Create unpublished DID and store it inside Prism Agent's wallet. The private keys of the DID is
         managed by Prism Agent. The DID can later be published to the VDR using publications endpoint.
       operationId: postDid-registrarDids
-      parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       requestBody:
         content:
           application/json:
@@ -1147,6 +1126,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /did-registrar/dids/{didRef}:
     get:
       tags:
@@ -1155,12 +1137,6 @@ paths:
       description: Get DID stored in Prism Agent's wallet
       operationId: getDid-registrarDidsDidref
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: didRef
         in: path
         description: Prism DID according to [the Prism DID method syntax](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#prism-did-method-syntax)
@@ -1199,6 +1175,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /did-registrar/dids/{didRef}/publications:
     post:
       tags:
@@ -1207,12 +1186,6 @@ paths:
       description: Publish the DID stored in Prism Agent's wallet to the VDR.
       operationId: postDid-registrarDidsDidrefPublications
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: didRef
         in: path
         description: Prism DID according to [the Prism DID method syntax](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#prism-did-method-syntax)
@@ -1251,6 +1224,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /did-registrar/dids/{didRef}/updates:
     post:
       tags:
@@ -1264,12 +1240,6 @@ paths:
         some operations being rejected as only one operation is allowed to be appended to the last confirmed operation.
       operationId: postDid-registrarDidsDidrefUpdates
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: didRef
         in: path
         description: Prism DID according to [the Prism DID method syntax](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#prism-did-method-syntax)
@@ -1326,6 +1296,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /did-registrar/dids/{didRef}/deactivations:
     post:
       tags:
@@ -1336,12 +1309,6 @@ paths:
         to the VDR.
       operationId: postDid-registrarDidsDidrefDeactivations
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: didRef
         in: path
         description: Prism DID according to [the Prism DID method syntax](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#prism-did-method-syntax)
@@ -1386,6 +1353,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /issue-credentials/credential-offers:
     post:
       tags:
@@ -1394,13 +1364,6 @@ paths:
         a holder.
       description: Creates a new credential offer in the database
       operationId: createCredentialOffer
-      parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       requestBody:
         description: The credential offer object.
         content:
@@ -1427,12 +1390,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /issue-credentials/records:
     get:
       tags:
@@ -1441,12 +1413,6 @@ paths:
       description: Get the list of issue credential records paginated
       operationId: getCredentialRecords
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: offset
         in: query
         required: false
@@ -1490,6 +1456,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /issue-credentials/records/{recordId}:
     get:
       tags:
@@ -1498,12 +1467,6 @@ paths:
       description: Gets issue credential records by record id
       operationId: getCredentialRecord
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: recordId
         in: path
         description: The unique identifier of the issue credential record.
@@ -1541,6 +1504,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /issue-credentials/records/{recordId}/accept-offer:
     post:
       tags:
@@ -1550,12 +1516,6 @@ paths:
         back a credential request.
       operationId: acceptCredentialOffer
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: recordId
         in: path
         description: The unique identifier of the issue credential record.
@@ -1600,6 +1560,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /issue-credentials/records/{recordId}/issue-credential:
     post:
       tags:
@@ -1611,12 +1574,6 @@ paths:
         by credential id.
       operationId: issueCredential
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: recordId
         in: path
         description: The unique identifier of the issue credential record.
@@ -1655,6 +1612,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /present-proof/presentations:
     get:
       tags:
@@ -1663,12 +1623,6 @@ paths:
       description: list of presentation statuses
       operationId: getAllPresentation
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: offset
         in: query
         required: false
@@ -1711,6 +1665,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
     post:
       tags:
       - Present Proof
@@ -1719,13 +1676,6 @@ paths:
       description: Holder presents proof derived from the verifiable credential to
         verifier.
       operationId: requestPresentation
-      parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       requestBody:
         description: The present proof creation request.
         content:
@@ -1753,12 +1703,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /present-proof/presentations/{presentationId}:
     get:
       tags:
@@ -1768,12 +1727,6 @@ paths:
       description: Returns an existing presentation record by id.
       operationId: getPresentation
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: presentationId
         in: path
         description: The unique identifier of the presentation record.
@@ -1812,6 +1765,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
     patch:
       tags:
       - Present Proof
@@ -1820,12 +1776,6 @@ paths:
       description: Accept or reject presentation of proof request.
       operationId: updatePresentation
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: presentationId
         in: path
         description: The unique identifier of the presentation record.
@@ -1871,6 +1821,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /_system/health:
     get:
       tags:
@@ -1931,12 +1884,6 @@ paths:
       description: 'Get all entities with the pagination by `offset` and `limit` parameters '
       operationId: getAllEntities
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: offset
         in: query
         required: false
@@ -1974,6 +1921,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
     post:
       tags:
       - Identity and Access Management
@@ -1981,13 +1931,6 @@ paths:
       description: Create the new entity record. The entity record is a representation
         of the account in the system.
       operationId: createEntity
-      parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       requestBody:
         description: JSON object required for the entity creation
         content:
@@ -2026,6 +1969,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
   /iam/entities/{id}/name:
     put:
       tags:
@@ -2034,12 +1980,6 @@ paths:
       description: Update the entity record name by `id`
       operationId: updateEntityName
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: id
         in: path
         required: true
@@ -2084,6 +2024,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
   /iam/entities/{id}/walletId:
     put:
       tags:
@@ -2092,12 +2035,6 @@ paths:
       description: Update the entity record `walletId` field by `id`
       operationId: updateEntityWalletId
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: id
         in: path
         required: true
@@ -2142,6 +2079,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
   /iam/entities/{id}:
     get:
       tags:
@@ -2150,12 +2090,6 @@ paths:
       description: Get the entity by the unique identifier
       operationId: getEntityById
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: id
         in: path
         description: Identifier of the entity
@@ -2194,6 +2128,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
     delete:
       tags:
       - Identity and Access Management
@@ -2201,12 +2138,6 @@ paths:
       description: Delete the entity by the unique identifier
       operationId: deleteEntityById
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: id
         in: path
         description: Identifier of the entity
@@ -2241,6 +2172,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
   /iam/apikey-authentication:
     post:
       tags:
@@ -2248,13 +2182,6 @@ paths:
       summary: Register the `apikey` for the entity
       description: Register the `apikey` for the entity.
       operationId: addEntityApiKeyAuthentication
-      parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       requestBody:
         description: JSON object required for the registering the entity and `apikey`
         content:
@@ -2289,19 +2216,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
     delete:
       tags:
       - Identity and Access Management
       summary: Unregister the `apikey` for the entity
       description: Unregister the `apikey` for the entity.
       operationId: deleteEntityApiKeyAuthentication
-      parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       requestBody:
         description: JSON object required for the unregistering the entity and `apikey`
         content:
@@ -2336,6 +2259,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - adminApiKeyAuth: []
   /wallets:
     get:
       tags:
@@ -2343,12 +2269,6 @@ paths:
       summary: List all wallets
       operationId: getWallets
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: offset
         in: query
         required: false
@@ -2386,6 +2306,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - adminApiKeyAuth: []
+      - apiKeyAuth: []
+      - jwtAuth: []
     post:
       tags:
       - Wallet Management
@@ -2394,13 +2318,6 @@ paths:
         Create a new wallet with optional to use provided seed.
         The seed will be used for DID key derivation inside the wallet.
       operationId: createWallet
-      parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       requestBody:
         content:
           application/json:
@@ -2432,6 +2349,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - adminApiKeyAuth: []
+      - apiKeyAuth: []
+      - jwtAuth: []
   /wallets/{walletId}:
     get:
       tags:
@@ -2439,12 +2360,6 @@ paths:
       summary: Get the wallet by ID
       operationId: getWalletsWalletid
       parameters:
-      - name: x-admin-api-key
-        in: header
-        description: Admin API Key
-        required: true
-        schema:
-          type: string
       - name: walletId
         in: path
         required: true
@@ -2482,19 +2397,105 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - adminApiKeyAuth: []
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /wallets/{walletId}/uma-permissions:
+    post:
+      tags:
+      - Wallet Management
+      summary: Create a UMA resource permission on an authorization server for the
+        wallet.
+      operationId: createWalletUmaPermission
+      parameters:
+      - name: walletId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWalletUmaPermissionRequest'
+        required: true
+      responses:
+        '200':
+          description: UMA resource permission is created on an authorization server.
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - adminApiKeyAuth: []
+      - apiKeyAuth: []
+      - jwtAuth: []
+    delete:
+      tags:
+      - Wallet Management
+      summary: Delete a UMA resource permission on an authorization server for the
+        wallet.
+      operationId: deleteWalletUmaPermission
+      parameters:
+      - name: walletId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: subject
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: UMA resource permission is removed from an authorization server.
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - adminApiKeyAuth: []
+      - apiKeyAuth: []
+      - jwtAuth: []
   /events/webhooks:
     get:
       tags:
       - Events
       summary: List wallet webhook notifications
       operationId: getEventsWebhooks
-      parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       responses:
         '200':
           description: List wallet webhook notifications
@@ -2520,18 +2521,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
     post:
       tags:
       - Events
       summary: Create wallet webhook notifications
       operationId: postEventsWebhooks
-      parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       requestBody:
         content:
           application/json:
@@ -2569,6 +2566,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
   /events/webhooks/{id}:
     delete:
       tags:
@@ -2576,12 +2576,6 @@ paths:
       summary: Delete the wallet webhook notification by `id`
       operationId: deleteEventsWebhooksId
       parameters:
-      - name: apikey
-        in: header
-        description: API key
-        required: false
-        schema:
-          type: string
       - name: id
         in: path
         description: ID of the webhook notification to delete.
@@ -2616,6 +2610,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
 components:
   schemas:
     AcceptConnectionInvitationRequest:
@@ -2628,14 +2625,12 @@ components:
           description: The base64-encoded raw invitation.
           example: eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
     AcceptCredentialOfferRequest:
-      required:
-      - subjectId
       type: object
       properties:
         subjectId:
           type: string
-          description: The short-form subject Prism DID to which the verifiable credential
-            should be issued.
+          description: The short-form subject Prism DID to which the JWT verifiable
+            credential will be issued.This parameter is used for JWT credentials only.
           example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
     ActionType:
       type: string
@@ -2661,7 +2656,8 @@ components:
           type: string
           description: The `apikey` of the entity to be updated
           example: dkflks3DflkFmkllnDfde
-          minLength: 1
+          minLength: 16
+          maxLength: 128
     Arr:
       type: object
       properties:
@@ -2683,6 +2679,7 @@ components:
       - state
       - invitation
       - createdAt
+      - metaRetries
       - self
       - kind
       type: object
@@ -2702,6 +2699,17 @@ components:
           type: string
           description: A human readable alias for the connection.
           example: Peter
+        goalCode:
+          type: string
+          description: A self-attested code the receiver may want to display to the
+            user or use in automatically deciding what to do with the out-of-band
+            message.
+          example: issue-vc
+        goal:
+          type: string
+          description: A self-attested string that the receiver may want to display
+            to the user about the context-specific goal of the out-of-band message.
+          example: To issue a Peter College Graduate credential
         myDid:
           type: string
           description: The DID representing me as the inviter or invitee in this specific
@@ -2747,6 +2755,12 @@ components:
           description: The date and time the connection record was last updated.
           format: date-time
           example: 2022-03-10T12:00Z
+        metaRetries:
+          type: integer
+          description: The maximum background processing attempts remaining for this
+            record
+          format: int32
+          example: 5
         self:
           type: string
           description: The reference to the connection resource.
@@ -2826,6 +2840,17 @@ components:
           type: string
           description: A human readable alias for the connection.
           example: Peter
+        goalCode:
+          type: string
+          description: A self-attested code the receiver may want to display to the
+            user or use in automatically deciding what to do with the out-of-band
+            message.
+          example: issue-vc
+        goal:
+          type: string
+          description: A self-attested string that the receiver may want to display
+            to the user about the context-specific goal of the out-of-band message.
+          example: To issue a Peter College Graduate credential
     CreateEntityRequest:
       required:
       - name
@@ -2853,7 +2878,6 @@ components:
     CreateIssueCredentialRecordRequest:
       required:
       - claims
-      - issuingDID
       - connectionId
       type: object
       properties:
@@ -2868,10 +2892,22 @@ components:
           description: The unique identifier of the schema used for this credential
             offer.
           example: https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676
+        credentialDefinitionId:
+          type: string
+          description: The unique identifier of the credential definition used for
+            this credential offer (AnonCreds only)
+          format: uuid
+          example: d9569cec-c81e-4779-aa86-0d5994d82676
+        credentialFormat:
+          type: string
+          description: The format used for this credential offer (default to 'JWT')
+          example: JWT
         claims:
           description: The claims that will be associated with the issued verifiable
             credential.
-          example: (firstname,Alice)
+          example:
+            firstname: Alice
+            lastname: Wonderland
         automaticIssuance:
           type: boolean
           description: Specifies whether or not the credential should be automatically
@@ -2881,13 +2917,16 @@ components:
           example: true
         issuingDID:
           type: string
-          description: The issuer DID of the verifiable credential object.
+          description: The issuer DID of the verifiable credential (JWT credentials
+            only)
           example: did:prism:issuerofverifiablecredentials
         connectionId:
           type: string
           description: The unique identifier of a DIDComm connection that already
             exists between the issuer and the holder, and that will be used to execute
             the issue credential protocol.
+          format: uuid
+          example: d9569cec-c81e-4779-aa86-0d5994d82676
     CreateManagedDIDResponse:
       required:
       - longFormDid
@@ -2938,6 +2977,17 @@ components:
         id:
           type: string
           description: The unique `id` of the wallet. Randomly generated if not specified.
+          format: uuid
+          example: 00000000-0000-0000-0000-000000000000
+    CreateWalletUmaPermissionRequest:
+      required:
+      - subject
+      type: object
+      properties:
+        subject:
+          type: string
+          description: The subject ID that should be granted the permission to the
+            wallet. This can be found in the `sub` claim of a JWT token.
           format: uuid
           example: 00000000-0000-0000-0000-000000000000
     CreateWebhookNotification:
@@ -3654,10 +3704,12 @@ components:
       required:
       - recordId
       - thid
+      - credentialFormat
       - claims
       - createdAt
       - role
       - protocolState
+      - metaRetries
       type: object
       properties:
         recordId:
@@ -3670,6 +3722,13 @@ components:
             belongs to. The value will identical on both sides of the issue flow (issuer
             and holder)
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
+        credentialFormat:
+          type: string
+          description: The format used for this credential offer (default to 'JWT')
+          example: JWT
+          enum:
+          - JWT
+          - AnonCreds
         subjectId:
           type: string
           description: The identifier (e.g DID) of the subject to which the verifiable
@@ -3696,7 +3755,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2023-09-29T12:30:36.502837Z'
+          example: '2023-12-14T09:00:54.460995113Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -3729,14 +3788,20 @@ components:
           - ProblemReportPending
           - ProblemReportSent
           - ProblemReportReceived
-        jwtCredential:
+        credential:
           type: string
-          description: The base64-encoded JWT verifiable credential that has been
-            sent by the issuer.
+          description: The base64-encoded verifiable credential, in JWT or AnonCreds
+            format, that has been sent by the issuer.
         issuingDID:
           type: string
           description: Issuer DID of the verifiable credential object.
           example: did:prism:issuerofverifiablecredentials
+        metaRetries:
+          type: integer
+          description: The maximum background processing attempts remaining for this
+            record
+          format: int32
+          example: 5
     IssueCredentialRecordPage:
       required:
       - self
@@ -3886,6 +3951,7 @@ components:
       - thid
       - role
       - status
+      - metaRetries
       type: object
       properties:
         presentationId:
@@ -3943,6 +4009,12 @@ components:
           description: The unique identifier of an established connection between
             the verifier and the prover.
           example: bc528dc8-69f1-4c5a-a508-5f8019047900
+        metaRetries:
+          type: integer
+          description: The maximum background processing attempts remaining for this
+            record
+          format: int32
+          example: 5
     PresentationStatusPage:
       required:
       - self
@@ -4173,6 +4245,7 @@ components:
           type: string
           description: The unique identifier of an established connection between
             the verifier and the prover.
+          format: uuid
           example: bc528dc8-69f1-4c5a-a508-5f8019047900
         options:
           $ref: '#/components/schemas/Options'
@@ -4183,6 +4256,10 @@ components:
           description: The type of proofs requested in the context of this proof presentation
             request (e.g., VC schema, trusted issuers, etc.)
           example: []
+        credentialFormat:
+          type: string
+          description: The credential format (default to 'JWT')
+          example: JWT
     Service:
       required:
       - id
@@ -4201,7 +4278,7 @@ components:
           description: Service type. Can contain multiple possible values as described
             in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did)
             under the construction section.
-          example: Single(LinkedDomains)
+          example: LinkedDomains
           oneOf:
           - type: array
             items:
@@ -4490,3 +4567,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WebhookNotification'
+  securitySchemes:
+    adminApiKeyAuth:
+      type: apiKey
+      name: x-admin-api-key
+      in: header
+    apiKeyAuth:
+      type: apiKey
+      name: apikey
+      in: header
+    jwtAuth:
+      type: http
+      scheme: bearer

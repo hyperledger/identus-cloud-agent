@@ -11,6 +11,7 @@ import zio.test.*
 import zio.{Cause, Exit, ZIO, ZLayer}
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 object ConnectionRepositorySpecSuite {
@@ -19,9 +20,11 @@ object ConnectionRepositorySpecSuite {
 
   private def connectionRecord = ConnectionRecord(
     UUID.randomUUID,
-    Instant.now,
+    Instant.now.truncatedTo(ChronoUnit.MICROS),
     None,
     UUID.randomUUID().toString,
+    None,
+    None,
     None,
     ConnectionRecord.Role.Inviter,
     ConnectionRecord.ProtocolState.InvitationGenerated,
@@ -29,14 +32,18 @@ object ConnectionRepositorySpecSuite {
       id = UUID.randomUUID().toString,
       from = DidId("did:prism:aaa"),
       body = Invitation
-        .Body(goal_code = "io.atalaprism.connect", goal = "Establish a trust connection between two peers", Nil)
+        .Body(
+          goal_code = Some("io.atalaprism.connect"),
+          goal = Some("Establish a trust connection between two peers"),
+          Nil
+        )
     ),
     None,
     None,
     maxRetries,
-    Some(Instant.now),
+    Some(Instant.now.truncatedTo(ChronoUnit.MICROS)),
     None
-  )
+  ).withTruncatedTimestamp()
 
   private def connectionRequest = ConnectionRequest(
     from = DidId("did:prism:aaa"),

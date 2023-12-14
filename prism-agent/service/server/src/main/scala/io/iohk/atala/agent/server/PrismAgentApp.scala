@@ -4,13 +4,14 @@ import io.iohk.atala.agent.notification.WebhookPublisher
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
 import io.iohk.atala.agent.server.jobs.{
-  IssueBackgroundJobs,
   ConnectBackgroundJobs,
   DIDStateSyncBackgroundJobs,
+  IssueBackgroundJobs,
   PresentBackgroundJobs
 }
 import io.iohk.atala.agent.walletapi.model.{Entity, Wallet, WalletSeed}
 import io.iohk.atala.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEndpoints}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionServerEndpoints
@@ -28,23 +29,23 @@ import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, Ver
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.presentproof.controller.PresentProofServerEndpoints
 import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.{HexString, WalletAccessContext, WalletId}
+import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.system.controller.SystemServerEndpoints
 import zio.*
 import zio.metrics.*
-import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
-import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 
 object PrismAgentApp {
 
-  def run(didCommServicePort: Int) = for {
+  def run = for {
     _ <- AgentInitialization.run
     _ <- issueCredentialDidCommExchangesJob.debug.fork
     _ <- presentProofExchangeJob.debug.fork
     _ <- connectDidCommExchangesJob.debug.fork
     _ <- syncDIDPublicationStateFromDltJob.fork
     _ <- AgentHttpServer.run.fork
-    fiber <- DidCommHttpServer.run(didCommServicePort).fork
+    fiber <- DidCommHttpServer.run.fork
     _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
     _ <- fiber.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
@@ -104,6 +105,7 @@ object PrismAgentApp {
       .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
       .repeat(Schedule.spaced(10.seconds))
       .unit
+      .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
 
 }
 
@@ -153,6 +155,7 @@ object AgentInitialization {
     for {
       _ <- validateAppConfig
       _ <- initializeDefaultWallet
+        .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
     } yield ()
 
   private val validateAppConfig =

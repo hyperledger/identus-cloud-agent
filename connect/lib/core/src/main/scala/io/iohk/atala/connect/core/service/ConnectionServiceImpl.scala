@@ -25,10 +25,12 @@ private class ConnectionServiceImpl(
 
   override def createConnectionInvitation(
       label: Option[String],
+      goalCode: Option[String],
+      goal: Option[String],
       pairwiseDID: DidId
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     for {
-      invitation <- ZIO.succeed(ConnectionInvitation.makeConnectionInvitation(pairwiseDID))
+      invitation <- ZIO.succeed(ConnectionInvitation.makeConnectionInvitation(pairwiseDID, goalCode, goal))
       record <- ZIO.succeed(
         ConnectionRecord(
           id = UUID.fromString(invitation.id),
@@ -36,6 +38,8 @@ private class ConnectionServiceImpl(
           updatedAt = None,
           thid = invitation.id,
           label = label,
+          goalCode = goalCode,
+          goal = goal,
           role = ConnectionRecord.Role.Inviter,
           protocolState = ConnectionRecord.ProtocolState.InvitationGenerated,
           invitation = invitation,
@@ -129,6 +133,8 @@ private class ConnectionServiceImpl(
           // TODO: According to the standard, we should rather use 'pthid' and not 'thid'
           thid = invitation.id,
           label = None,
+          goalCode = invitation.body.goal_code,
+          goal = invitation.body.goal,
           role = ConnectionRecord.Role.Invitee,
           protocolState = ConnectionRecord.ProtocolState.InvitationReceived,
           invitation = invitation,

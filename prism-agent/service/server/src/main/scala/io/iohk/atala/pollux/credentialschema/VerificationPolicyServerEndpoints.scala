@@ -1,9 +1,12 @@
 package io.iohk.atala.pollux.credentialschema
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.Authenticator
-import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic
+import io.iohk.atala.iam.authentication.Authorizer
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
+import io.iohk.atala.iam.authentication.SecurityLogic
 import io.iohk.atala.pollux.credentialschema.VerificationPolicyEndpoints.*
 import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyController
 import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyInput}
@@ -12,26 +15,30 @@ import java.util.UUID
 import sttp.tapir.ztapir.*
 import zio.*
 
-class VerificationPolicyServerEndpoints(controller: VerificationPolicyController, authenticator: Authenticator) {
+class VerificationPolicyServerEndpoints(
+    controller: VerificationPolicyController,
+    authenticator: Authenticator[BaseEntity],
+    authorizer: Authorizer[BaseEntity]
+) {
   def throwableToInternalServerError(throwable: Throwable) =
     ZIO.fail[ErrorResponse](ErrorResponse.internalServerError(detail = Option(throwable.getMessage)))
 
   // TODO: make the endpoint typed ZServerEndpoint[SchemaRegistryService, Any]
   val createVerificationPolicyServerEndpoint: ZServerEndpoint[Any, Any] =
     createVerificationPolicyEndpoint
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
-      .serverLogic { entity =>
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
         { case (ctx: RequestContext, input: VerificationPolicyInput) =>
           controller
             .createVerificationPolicy(ctx, input)
-            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+            .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
   val updateVerificationPolicyServerEndpoint: ZServerEndpoint[Any, Any] = {
     updateVerificationPolicyEndpoint
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
-      .serverLogic { entity =>
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
         {
           case (
                 ctx: RequestContext,
@@ -41,37 +48,37 @@ class VerificationPolicyServerEndpoints(controller: VerificationPolicyController
               ) =>
             controller
               .updateVerificationPolicyById(ctx, id, nonce, update)
-              .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+              .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
   }
 
   val getVerificationPolicyByIdServerEndpoint: ZServerEndpoint[Any, Any] =
     getVerificationPolicyByIdEndpoint
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
-      .serverLogic { entity =>
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
         { case (ctx: RequestContext, id: UUID) =>
           controller
             .getVerificationPolicyById(ctx, id)
-            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+            .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
   val deleteVerificationPolicyByIdServerEndpoint: ZServerEndpoint[Any, Any] =
     deleteVerificationPolicyByIdEndpoint
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
-      .serverLogic { entity =>
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
         { case (ctx: RequestContext, id: UUID) =>
           controller
             .deleteVerificationPolicyById(ctx, id)
-            .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+            .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
   val lookupVerificationPoliciesByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
     lookupVerificationPoliciesByQueryEndpoint
-      .zServerSecurityLogic(ApiKeyEndpointSecurityLogic.securityLogic(_)(authenticator))
-      .serverLogic { entity =>
+      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
         {
           case (
                 ctx: RequestContext,
@@ -86,7 +93,7 @@ class VerificationPolicyServerEndpoints(controller: VerificationPolicyController
                 paginationInput.toPagination,
                 order
               )
-              .provideSomeLayer(ZLayer.succeed(entity.walletAccessContext))
+              .provideSomeLayer(ZLayer.succeed(wac))
         }
       }
 
@@ -101,11 +108,11 @@ class VerificationPolicyServerEndpoints(controller: VerificationPolicyController
 }
 
 object VerificationPolicyServerEndpoints {
-  def all: URIO[VerificationPolicyController & Authenticator, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[VerificationPolicyController & DefaultAuthenticator, List[ZServerEndpoint[Any, Any]]] = {
     for {
-      authenticator <- ZIO.service[Authenticator]
+      authenticator <- ZIO.service[DefaultAuthenticator]
       controller <- ZIO.service[VerificationPolicyController]
-      endpoints = new VerificationPolicyServerEndpoints(controller, authenticator)
+      endpoints = new VerificationPolicyServerEndpoints(controller, authenticator, authenticator)
     } yield endpoints.all
   }
 }

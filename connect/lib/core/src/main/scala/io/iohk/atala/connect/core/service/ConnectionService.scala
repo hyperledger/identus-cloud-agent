@@ -14,6 +14,8 @@ trait ConnectionService {
 
   def createConnectionInvitation(
       label: Option[String],
+      goalCode: Option[String],
+      goal: Option[String],
       pairwiseDID: DidId
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
 

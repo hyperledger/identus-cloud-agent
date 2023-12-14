@@ -1,16 +1,16 @@
 package io.iohk.atala.issue.controller
 
 import com.typesafe.config.ConfigFactory
-import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.service.MockDIDService
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
-import io.iohk.atala.iam.authentication.{Authenticator, DefaultEntityAuthenticator}
-import io.iohk.atala.iris.proto.service.IrisServiceGrpc
+import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
+import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
 import io.iohk.atala.issue.controller.http.{
   CreateIssueCredentialRecordRequest,
   IssueCredentialRecord,
@@ -22,7 +22,7 @@ import io.iohk.atala.pollux.core.repository.{CredentialDefinitionRepositoryInMem
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.{DeserializationException, Response, UriContext}
 import sttp.monad.MonadError
@@ -36,6 +36,8 @@ import zio.json.ast.Json
 import zio.json.ast.Json.*
 import zio.test.*
 
+import java.util.UUID
+
 trait IssueControllerTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>
 
@@ -47,10 +49,6 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
     Response[
       Either[DeserializationException[String], IssueCredentialRecordPage]
     ]
-
-  val irisStubLayer = ZLayer.fromZIO(
-    ZIO.succeed(IrisServiceGrpc.stub(ManagedChannelBuilder.forAddress("localhost", 9999).usePlaintext.build))
-  )
   val didResolverLayer = ZLayer.fromZIO(ZIO.succeed(makeResolver(Map.empty)))
 
   val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
@@ -80,7 +78,6 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
 
   private val controllerLayer = contextAwareTransactorLayer >+>
     configLayer >+>
-    irisStubLayer >+>
     didResolverLayer >+>
     ResourceURIDereferencerImpl.layer >+>
     CredentialRepositoryInMemory.layer >+>
@@ -113,8 +110,8 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
       .defaultHandlers(ErrorResponse.failureResponseHandler)
   }
 
-  def httpBackend(controller: IssueController, authenticator: Authenticator) = {
-    val issueEndpoints = IssueServerEndpoints(controller, authenticator)
+  def httpBackend(controller: IssueController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {
+    val issueEndpoints = IssueServerEndpoints(controller, authenticator, authenticator)
 
     val backend =
       TapirStubInterpreter(
@@ -143,7 +140,7 @@ trait IssueGen {
     val gValidityPeriod: Gen[Any, Double] = Gen.double
     val gAutomaticIssuance: Gen[Any, Boolean] = Gen.boolean
     val gIssuingDID: Gen[Any, String] = Gen.alphaNumericStringBounded(5, 20) // TODO Make a DID generator
-    val gConnectionId: Gen[Any, String] = Gen.alphaNumericStringBounded(5, 20)
+    val gConnectionId: Gen[Any, UUID] = Gen.uuid
 
     val claims = Json.Obj(
       "key1" -> Json.Str("value1"),

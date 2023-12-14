@@ -1,3 +1,5 @@
+/*global __ENV*/
+
 import { Connection, ConnectionInvitation, ConnectionStateEnum } from "@input-output-hk/prism-typescript-client";
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
 import { HttpService } from "./HttpService";
@@ -26,7 +28,7 @@ export class ConnectionService extends HttpService {
    */
   getConnection(connectionId: string): Connection {
     const res = this.get(`connections/${connectionId}`);
-    const connection = res.json() as unknown as Connection;
+    const connection = this.toJson(res) as unknown as Connection;
     return connection;
   }
 
@@ -36,7 +38,7 @@ export class ConnectionService extends HttpService {
    */
   createConnection(): Connection {
     const payload = { label: "test" };
-    const connection = this.post("connections", payload).json() as unknown as Connection;
+    const connection = this.toJson(this.post("connections", payload)) as unknown as Connection;
     return connection;
   }
 
@@ -48,7 +50,7 @@ export class ConnectionService extends HttpService {
   acceptConnectionInvitation(invitation: ConnectionInvitation): Connection {
     const payload = { invitation: this.invitationFromUrl(invitation.invitationUrl) };
     const res = this.post("connection-invitations", payload, 200);
-    return res.json() as unknown as Connection;
+    return this.toJson(res) as unknown as Connection;
   }
 
   /**
@@ -66,7 +68,7 @@ export class ConnectionService extends HttpService {
       sleep(WAITING_LOOP_PAUSE_INTERVAL);
       iterations++;
     } while (state !== requiredState && iterations < WAITING_LOOP_MAX_ITERATIONS);
-    if (state != requiredState) {
+    if (state !== requiredState) {
       throw new Error(`Connection state is ${state}, required ${requiredState}`);
     }
   }

@@ -3,7 +3,7 @@ package io.iohk.atala.test.container
 import zio.*
 import io.iohk.atala.agent.walletapi.vault.VaultKVClient
 import io.iohk.atala.agent.walletapi.vault.VaultKVClientImpl
-import io.iohk.atala.shared.test.containers.VaultContainerCustom
+import io.iohk.atala.sharedtest.containers.VaultContainerCustom
 
 trait VaultTestContainerSupport {
 

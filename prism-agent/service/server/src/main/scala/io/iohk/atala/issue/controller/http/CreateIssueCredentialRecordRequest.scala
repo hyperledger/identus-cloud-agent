@@ -50,7 +50,7 @@ final case class CreateIssueCredentialRecordRequest(
     issuingDID: Option[String],
     @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
-    connectionId: String
+    connectionId: UUID
 )
 
 object CreateIssueCredentialRecordRequest {
@@ -90,11 +90,11 @@ object CreateIssueCredentialRecordRequest {
         )
 
     object claims
-        extends Annotation[Map[String, String]](
+        extends Annotation[zio.json.ast.Json](
           description = "The claims that will be associated with the issued verifiable credential.",
-          example = Map(
-            "firstname" -> "Alice",
-            "lastname" -> "Wonderland"
+          example = zio.json.ast.Json.Obj(
+            "firstname" -> zio.json.ast.Json.Str("Alice"),
+            "lastname" -> zio.json.ast.Json.Str("Wonderland"),
           )
         )
 
@@ -112,10 +112,10 @@ object CreateIssueCredentialRecordRequest {
         )
 
     object connectionId
-        extends Annotation[String](
+        extends Annotation[UUID](
           description =
             "The unique identifier of a DIDComm connection that already exists between the issuer and the holder, and that will be used to execute the issue credential protocol.",
-          example = "null"
+          example = UUID.fromString("d9569cec-c81e-4779-aa86-0d5994d82676")
         )
 
   }

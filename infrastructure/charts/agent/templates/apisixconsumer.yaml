@@ -1,6 +1,6 @@
 {{- if .Values.ingress.enabled }}
 {{- $root := . -}}
-{{- range $consumer := .Values.ingress.consumers }}
+{{- range $consumer := .Values.ingress.auth.consumers }}
 apiVersion: apisix.apache.org/v2
 kind: ApisixConsumer
 metadata:
@@ -18,7 +18,7 @@ spec:
 {{- end }}
 
 {{- $root := . -}}
-{{- range $consumer := .Values.ingress.externalConsumers }}
+{{- range $consumer := .Values.ingress.auth.externalConsumers }}
 apiVersion: apisix.apache.org/v2
 kind: ApisixConsumer
 metadata:
@@ -30,6 +30,6 @@ spec:
   authParameter:
     keyAuth:
       secretRef:
-        name: "{{ $root.Values.ingress.externalConsumerKeyPrefix }}-{{ $consumer | lower }}"
+        name: "{{ $root.Values.ingress.auth.externalConsumerKeyPrefix }}-{{ $consumer | lower }}"
 ---
 {{- end }}

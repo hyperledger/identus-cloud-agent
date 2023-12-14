@@ -20,6 +20,7 @@ import zio.*
 import java.net.URL
 import java.time.Instant
 import java.util.UUID
+import cats.data.NonEmptyList
 
 class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletNonSecretStorage {
 
@@ -66,6 +67,31 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
       .transactWithoutContext(xa)
       .map(_.map(_.toDomain))
       .mapError(WalletNonSecretStorageError.UnexpectedError.apply)
+  }
+
+  override def getWallets(walletIds: Seq[WalletId]): IO[WalletNonSecretStorageError, Seq[Wallet]] = {
+    walletIds match
+      case Nil => ZIO.succeed(Nil)
+      case head +: tail =>
+        val nel = NonEmptyList.of(head, tail: _*)
+        val conditionFragment = Fragments.in(fr"wallet_id", nel)
+        val cxnIO =
+          sql"""
+            | SELECT
+            |   wallet_id,
+            |   name,
+            |   created_at,
+            |   updated_at
+            | FROM public.wallet
+            | WHERE $conditionFragment
+            """.stripMargin
+            .query[WalletRow]
+            .to[List]
+
+        cxnIO
+          .transactWithoutContext(xa)
+          .map(_.map(_.toDomain))
+          .mapError(WalletNonSecretStorageError.UnexpectedError.apply)
   }
 
   override def listWallet(

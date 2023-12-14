@@ -2,8 +2,162 @@ apiVersion: v1
 entries:
   prism-agent:
     - apiVersion: v2
+      appVersion: 1.22.0
+      created: "2023-12-14T09:18:59.09919555Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: be3d146eba5e099d7f2e7cf9338a4a6cb238f19cb3f458864fe88778505bd403
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.22.0.tgz
+      version: 1.22.0
+    - apiVersion: v2
+      appVersion: 1.21.1
+      created: "2023-12-14T09:18:59.088704762Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: d97c1d2dc3f9dadb8642271b89ff2c2fb52f01e00c8aa5ca712ee1ccb77622d0
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.21.1.tgz
+      version: 1.21.1
+    - apiVersion: v2
+      appVersion: 1.21.0
+      created: "2023-12-14T09:18:59.079531473Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: 12de363c93d6155ae492710ca6a365b5a4b429d40b0691f289528b7ac08119b2
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.21.0.tgz
+      version: 1.21.0
+    - apiVersion: v2
+      appVersion: 1.20.1
+      created: "2023-12-14T09:18:59.069677382Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: 7890f9939ae1a0a143915d36ec3c401384195ccbeabee03fb921837b75aefb76
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.20.1.tgz
+      version: 1.20.1
+    - apiVersion: v2
+      appVersion: 1.20.0
+      created: "2023-12-14T09:18:59.059765935Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: 004a72bf116850fa79017d94880684a9aac798a11825ce5b88ac4b34ed0dc862
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.20.0.tgz
+      version: 1.20.0
+    - apiVersion: v2
+      appVersion: 1.19.1
+      created: "2023-12-14T09:18:59.049873796Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: 077292fe1e1388a9d5db10b0e28869c2754928defa25f5a59dd12431bd058ba7
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.19.1.tgz
+      version: 1.19.1
+    - apiVersion: v2
+      appVersion: 1.19.0
+      created: "2023-12-14T09:18:59.039667899Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: faa036cfc70e35ca0ada898e4c0281f70a06d8855f55e37f24f9b529895b4a64
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.19.0.tgz
+      version: 1.19.0
+    - apiVersion: v2
+      appVersion: 1.18.0
+      created: "2023-12-14T09:18:59.028935531Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+      description: A Helm chart for deploying prism-agent
+      digest: 5a803d916bc19c824aec9d39efb0206ff9a2a3b1932b276acaaf97c580f62387
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.18.0.tgz
+      version: 1.18.0
+    - apiVersion: v2
+      appVersion: 1.17.0
+      created: "2023-12-14T09:18:59.024027823Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+      description: A Helm chart for deploying prism-agent
+      digest: a53050003aedfd0a7d78014dfe9e819c6e2a1db442eeaac6971cff354cf0d3d4
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.17.0.tgz
+      version: 1.17.0
+    - apiVersion: v2
       appVersion: 1.16.4
-      created: "2023-09-29T12:46:29.206210511Z"
+      created: "2023-12-14T09:18:59.018927623Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -17,7 +171,7 @@ entries:
       version: 1.16.4
     - apiVersion: v2
       appVersion: 1.16.3
-      created: "2023-09-29T12:46:29.201123089Z"
+      created: "2023-12-14T09:18:59.01600541Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -31,7 +185,7 @@ entries:
       version: 1.16.3
     - apiVersion: v2
       appVersion: 1.16.2
-      created: "2023-09-29T12:46:29.196926371Z"
+      created: "2023-12-14T09:18:59.013019307Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -43,4 +197,4 @@ entries:
       urls:
         - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.16.2.tgz
       version: 1.16.2
-generated: "2023-09-29T12:46:29.190669044Z"
+generated: "2023-12-14T09:18:59.007616677Z"

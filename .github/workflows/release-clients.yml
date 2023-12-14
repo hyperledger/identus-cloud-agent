@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: "lts/*"
           registry-url: https://npm.pkg.github.com/
-          scope: "@input-output-hk"
+          scope: "@hyperledger-labs"
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -40,6 +40,9 @@ jobs:
           registry: ghcr.io
           username: ${{ secrets.ATALA_GITHUB_ACTOR }}
           password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+
+      - name: Setup yq - portable yaml processor
+        uses: mikefarah/yq@v4.34.2
 
       - name: Install generator dependencies
         working-directory: prism-agent/client/generator

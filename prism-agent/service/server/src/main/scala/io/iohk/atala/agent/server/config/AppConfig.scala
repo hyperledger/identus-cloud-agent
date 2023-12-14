@@ -9,10 +9,9 @@ import zio.config.magnolia.Descriptor
 
 import java.net.URL
 import java.time.Duration
+import scala.util.Try
 
 final case class AppConfig(
-    devMode: Boolean,
-    iris: IrisConfig,
     pollux: PolluxConfig,
     agent: AgentConfig,
     connect: ConnectConfig,
@@ -29,8 +28,6 @@ object AppConfig {
 }
 
 final case class VaultConfig(address: String, token: String)
-
-final case class IrisConfig(service: GrpcServiceConfig)
 
 final case class PolluxConfig(
     database: DatabaseConfig,
@@ -124,9 +121,8 @@ final case class DefaultWalletConfig(
 
 final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
+    didCommEndpoint: DidCommEndpointConfig,
     authentication: AuthenticationConfig,
-    didCommServiceEndpointUrl: String,
-    restServiceUrl: String,
     database: DatabaseConfig,
     verification: VerificationConfig,
     secretStorage: SecretStorageConfig,
@@ -134,18 +130,38 @@ final case class AgentConfig(
     defaultWallet: DefaultWalletConfig
 ) {
   def validate: Either[String, Unit] = {
-    if (!defaultWallet.enabled && !authentication.apiKey.enabled)
-      Left("The default wallet cannot be disabled if the apikey authentication is disabled.")
+    if (!defaultWallet.enabled && !authentication.isEnabledAny)
+      Left(
+        "The default wallet must be enabled if all the authentication methods are disabled. Default wallet is required for the single-tenant mode."
+      )
     else
       Right(())
   }
 }
 
-final case class HttpEndpointConfig(http: HttpConfig)
+final case class HttpEndpointConfig(http: HttpConfig, publicEndpointUrl: String)
+
+final case class DidCommEndpointConfig(http: HttpConfig, publicEndpointUrl: String)
 
 final case class HttpConfig(port: Int)
 
 final case class SecretStorageConfig(
-    backend: String,
+    backend: SecretStorageBackend,
     vault: Option[VaultConfig],
 )
+
+enum SecretStorageBackend {
+  case vault, postgres, memory
+}
+
+object SecretStorageBackend {
+  given Descriptor[SecretStorageBackend] =
+    Descriptor.from(
+      Descriptor[String].transformOrFailLeft { s =>
+        Try(SecretStorageBackend.valueOf(s)).toOption
+          .toRight(
+            s"Invalid configuration value '$s'. Possible values: ${SecretStorageBackend.values.mkString("[", ", ", "]")}"
+          )
+      }(_.toString())
+    )
+}

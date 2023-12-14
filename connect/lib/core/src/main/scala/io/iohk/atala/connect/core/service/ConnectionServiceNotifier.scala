@@ -20,9 +20,11 @@ class ConnectionServiceNotifier(
 
   override def createConnectionInvitation(
       label: Option[String],
+      goalCode: Option[String],
+      goal: Option[String],
       pairwiseDID: DidId
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
-    notifyOnSuccess(svc.createConnectionInvitation(label, pairwiseDID))
+    notifyOnSuccess(svc.createConnectionInvitation(label, goalCode, goal, pairwiseDID))
 
   override def receiveConnectionInvitation(
       invitation: String

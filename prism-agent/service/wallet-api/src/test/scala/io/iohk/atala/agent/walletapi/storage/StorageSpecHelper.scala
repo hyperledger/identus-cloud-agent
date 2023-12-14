@@ -15,6 +15,7 @@ import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import zio.*
 import zio.test.*
 
@@ -81,6 +82,7 @@ trait StorageSpecHelper extends ApolloSpecHelper {
             .map(wallet => WalletAccessContext(wallet.id))
             .mapError(_.toThrowable)
             .orDie
+            .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
         )
       )
     }

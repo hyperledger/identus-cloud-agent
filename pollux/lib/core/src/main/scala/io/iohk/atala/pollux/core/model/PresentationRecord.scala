@@ -4,7 +4,9 @@ import io.iohk.atala.mercury.protocol.presentproof.ProposePresentation
 import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
 import io.iohk.atala.mercury.protocol.presentproof.Presentation
 import io.iohk.atala.mercury.model.DidId
+
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 final case class PresentationRecord(
     id: DidCommID,
@@ -24,7 +26,14 @@ final case class PresentationRecord(
     metaRetries: Int,
     metaNextRetry: Option[Instant],
     metaLastFailure: Option[String],
-)
+) {
+  def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): PresentationRecord =
+    copy(
+      createdAt = createdAt.truncatedTo(unit),
+      updatedAt = updatedAt.map(_.truncatedTo(unit)),
+      metaNextRetry = metaNextRetry.map(_.truncatedTo(unit)),
+    )
+}
 
 object PresentationRecord {
 

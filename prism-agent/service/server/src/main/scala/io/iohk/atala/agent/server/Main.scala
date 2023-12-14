@@ -21,8 +21,9 @@ import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migration
 import io.iohk.atala.event.controller.EventControllerImpl
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
-import io.iohk.atala.iam.authentication.admin.{AdminApiKeyAuthenticatorImpl, AdminConfig}
-import io.iohk.atala.iam.authentication.apikey.{ApiKeyAuthenticatorImpl, ApiKeyConfig, JdbcAuthenticationRepository}
+import io.iohk.atala.iam.authentication.apikey.JdbcAuthenticationRepository
+import io.iohk.atala.iam.authorization.DefaultPermissionManagementService
+import io.iohk.atala.iam.authorization.core.EntityPermissionManagementService
 import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
@@ -79,6 +80,10 @@ object MainApp extends ZIOAppDefault {
     _ <- ZIO.serviceWithZIO[PolluxMigrations](_.migrate)
     _ <- ZIO.serviceWithZIO[ConnectMigrations](_.migrate)
     _ <- ZIO.serviceWithZIO[AgentMigrations](_.migrate)
+    _ <- ZIO.logInfo("Running post-migration RLS checks for DB application users")
+    _ <- PolluxMigrations.validateRLS.provide(RepoModule.polluxContextAwareTransactorLayer)
+    _ <- ConnectMigrations.validateRLS.provide(RepoModule.connectContextAwareTransactorLayer)
+    _ <- AgentMigrations.validateRLS.provide(RepoModule.agentContextAwareTransactorLayer)
   } yield ()
 
   override def run: ZIO[Any, Throwable, Unit] = {
@@ -105,29 +110,14 @@ object MainApp extends ZIOAppDefault {
       |""".stripMargin)
         .ignore
 
-      didCommServiceUrl <- System.env("DIDCOMM_SERVICE_URL").map {
-        case Some(s) => s
-        case _       => "http://localhost:8090"
-      }
-      _ <- ZIO.logInfo(s"DIDComm Service URL => $didCommServiceUrl")
-
-      didCommServicePort <- System.env("DIDCOMM_SERVICE_PORT").map {
-        case Some(s) if s.toIntOption.isDefined => s.toInt
-        case _                                  => 8090
-      }
-      _ <- ZIO.logInfo(s"DIDComm Service port => $didCommServicePort")
-
       _ <- preMigrations
       _ <- migrations
 
-      app <- PrismAgentApp
-        .run(didCommServicePort)
+      app <- PrismAgentApp.run
         .provide(
           DidCommX.liveLayer,
           // infra
           SystemModule.configLayer,
-          AdminConfig.layer,
-          ApiKeyConfig.layer,
           ZioHttpClient.layer,
           // observability
           DefaultJvmMetrics.live.unit,
@@ -149,7 +139,7 @@ object MainApp extends ZIOAppDefault {
           EventControllerImpl.layer,
           // domain
           AppModule.apolloLayer,
-          AppModule.didJwtResolverlayer,
+          AppModule.didJwtResolverLayer,
           DIDOperationValidator.layer(),
           DIDResolver.layer,
           HttpURIDereferencerImpl.layer,
@@ -165,7 +155,12 @@ object MainApp extends ZIOAppDefault {
           VerificationPolicyServiceImpl.layer,
           WalletManagementServiceImpl.layer,
           // authentication
-          AdminApiKeyAuthenticatorImpl.layer >+> ApiKeyAuthenticatorImpl.layer >+> DefaultAuthenticator.layer,
+          AppModule.builtInAuthenticatorLayer,
+          AppModule.keycloakAuthenticatorLayer,
+          AppModule.keycloakPermissionManagementLayer,
+          DefaultAuthenticator.layer,
+          DefaultPermissionManagementService.layer,
+          EntityPermissionManagementService.layer,
           // grpc
           GrpcModule.prismNodeStubLayer,
           // storage

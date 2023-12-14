@@ -1,3 +1,107 @@
+# [1.22.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.21.1...prism-agent-v1.22.0) (2023-12-14)
+
+
+### Bug Fixes
+
+* correct OAS examples ([#810](https://github.com/hyperledger-labs/open-enterprise-agent/issues/810)) ([a0720dc](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a0720dcbaf10370dcacc1b5102df13929b40dfdb))
+
+
+### Features
+
+* Consumer restricition parametarization  ([#814](https://github.com/hyperledger-labs/open-enterprise-agent/issues/814)) ([e039576](https://github.com/hyperledger-labs/open-enterprise-agent/commit/e039576fc0e285b80b2966c032ed91b9a8f26f60))
+
+## [1.21.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.21.0...prism-agent-v1.21.1) (2023-12-12)
+
+
+### Bug Fixes
+
+* Option to disable apisix key auth ([#813](https://github.com/hyperledger-labs/open-enterprise-agent/issues/813)) ([f163682](https://github.com/hyperledger-labs/open-enterprise-agent/commit/f1636824047c0d03ce0790ede54e3a12d63dd787))
+
+# [1.21.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.20.1...prism-agent-v1.21.0) (2023-12-12)
+
+
+### Features
+
+* env vars support through values file ([#811](https://github.com/hyperledger-labs/open-enterprise-agent/issues/811)) ([2486dde](https://github.com/hyperledger-labs/open-enterprise-agent/commit/2486dde9b0682504a02ad031b3e7498b2fa2ce17))
+
+## [1.20.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.20.0...prism-agent-v1.20.1) (2023-12-06)
+
+
+### Bug Fixes
+
+* tolerations and nodeAffinity for k8s ([#808](https://github.com/hyperledger-labs/open-enterprise-agent/issues/808)) ([7934fa4](https://github.com/hyperledger-labs/open-enterprise-agent/commit/7934fa402ba86af6d8430208f1844fbd6ccda1bd))
+
+# [1.20.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.19.1...prism-agent-v1.20.0) (2023-12-05)
+
+
+### Features
+
+* add nodeAffinity, tolerations, and resources to k8s deployment ([#804](https://github.com/hyperledger-labs/open-enterprise-agent/issues/804)) ([22407a3](https://github.com/hyperledger-labs/open-enterprise-agent/commit/22407a3103eff73d87ead9a8122f078845c11d95))
+
+## [1.19.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.19.0...prism-agent-v1.19.1) (2023-11-29)
+
+
+### Bug Fixes
+
+* change admin auth priority and improve auth error message ([#800](https://github.com/hyperledger-labs/open-enterprise-agent/issues/800)) ([32d4340](https://github.com/hyperledger-labs/open-enterprise-agent/commit/32d43401a69c339f54380bd8d5dfe2fa383cb8d7))
+
+# [1.19.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.18.0...prism-agent-v1.19.0) (2023-11-21)
+
+
+### Bug Fixes
+
+* check for active RLS on db application user ([#775](https://github.com/hyperledger-labs/open-enterprise-agent/issues/775)) ([a792f43](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a792f43eaae0ec2cd30db2ea3308deded7a1a935))
+* enable keycloak with pre-configured agent in helm chart ([#791](https://github.com/hyperledger-labs/open-enterprise-agent/issues/791)) ([9a6e512](https://github.com/hyperledger-labs/open-enterprise-agent/commit/9a6e5123e07462db66017439e8e434315af7c0f4))
+* explicitly define transitive dependencies that were unresolvable ([#790](https://github.com/hyperledger-labs/open-enterprise-agent/issues/790)) ([0647829](https://github.com/hyperledger-labs/open-enterprise-agent/commit/0647829af813913aebd0dd3d703db7e363d44369))
+* **pollux:** V16 migration is failing to add FK constraint because of type mismatch ([#782](https://github.com/hyperledger-labs/open-enterprise-agent/issues/782)) ([c87beb0](https://github.com/hyperledger-labs/open-enterprise-agent/commit/c87beb0478d4b3d54709e09597c42c23878d101e))
+* **prism-agent:** more descriptive error response for validateDID in issue flow ([#783](https://github.com/hyperledger-labs/open-enterprise-agent/issues/783)) ([b99a737](https://github.com/hyperledger-labs/open-enterprise-agent/commit/b99a73718a06f4b97d933ba2e3220593f8d4e825))
+* **prism-agent:** perform percent encoding on auth header for token introspection request ([#780](https://github.com/hyperledger-labs/open-enterprise-agent/issues/780)) ([03d43c9](https://github.com/hyperledger-labs/open-enterprise-agent/commit/03d43c98d8ab64e5b47830d95a6356f9d6dd1b82))
+
+
+### Features
+
+* Accept goal and goalCode to create connection invitation  ([#785](https://github.com/hyperledger-labs/open-enterprise-agent/issues/785)) ([71c776b](https://github.com/hyperledger-labs/open-enterprise-agent/commit/71c776baa2caf3ca610508dba805f037fd7d6e29))
+* **docs:** ADR for revocation status list expansion strategy ([#773](https://github.com/hyperledger-labs/open-enterprise-agent/issues/773)) ([7ad6427](https://github.com/hyperledger-labs/open-enterprise-agent/commit/7ad64277acb2bffe12524c4bfb68f687689b5b2e))
+* Keycloak container support with clients and PermissionManagement service ([#755](https://github.com/hyperledger-labs/open-enterprise-agent/issues/755)) ([a1846aa](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a1846aaa84202b55d48ea8556aad8cbbb8260f4d))
+* **pollux:** Add migrations needed for JWT revocation ([#778](https://github.com/hyperledger-labs/open-enterprise-agent/issues/778)) ([471956e](https://github.com/hyperledger-labs/open-enterprise-agent/commit/471956e92893a7237cabca2fb065adb417678d37))
+* **prism-agent:** add multi-tenant wallet self-service capability ([#779](https://github.com/hyperledger-labs/open-enterprise-agent/issues/779)) ([f2e74cd](https://github.com/hyperledger-labs/open-enterprise-agent/commit/f2e74cd1957e7d76f6dccadd02b1ca5b794d02b1))
+
+# [1.18.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.17.0...prism-agent-v1.18.0) (2023-10-24)
+
+
+### Bug Fixes
+
+*  all performance tests run succesfully, add group thresholds ([#750](https://github.com/hyperledger-labs/open-enterprise-agent/issues/750)) ([5204838](https://github.com/hyperledger-labs/open-enterprise-agent/commit/520483836e5b572e8aeeecd28f4bbe7cc668c3d9))
+
+
+### Features
+
+*  presentation API refactor ([#765](https://github.com/hyperledger-labs/open-enterprise-agent/issues/765)) ([045d829](https://github.com/hyperledger-labs/open-enterprise-agent/commit/045d8298f8865baeb13e243ed058e8e440b3f496))
+* add new auth params ([#762](https://github.com/hyperledger-labs/open-enterprise-agent/issues/762)) ([b8bfb86](https://github.com/hyperledger-labs/open-enterprise-agent/commit/b8bfb867061c58fc12987b5405f561e8f10cb718))
+* disable cors by default ([#747](https://github.com/hyperledger-labs/open-enterprise-agent/issues/747)) ([1dd8c8b](https://github.com/hyperledger-labs/open-enterprise-agent/commit/1dd8c8b0e9b0d2593bd1c17a95bf013192a64532))
+* migrate docker image of the agent to Java 21 ([#758](https://github.com/hyperledger-labs/open-enterprise-agent/issues/758)) ([d36dbf0](https://github.com/hyperledger-labs/open-enterprise-agent/commit/d36dbf0dfbf45b64185e5b54aba0444d6e1ada88))
+* **prism-agent:** add keycloak authorization support to endpoints ([#753](https://github.com/hyperledger-labs/open-enterprise-agent/issues/753)) ([3e7534f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/3e7534ff1a75e9ecaa0c2b670c1c158890021f8d))
+
+# [1.17.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.4...prism-agent-v1.17.0) (2023-10-14)
+
+
+### Bug Fixes
+
+* change repository and name for rest api clients ([#745](https://github.com/hyperledger-labs/open-enterprise-agent/issues/745)) ([0f84e28](https://github.com/hyperledger-labs/open-enterprise-agent/commit/0f84e28c3f2800c1d73353e40620a840fbb6b93a))
+* improve performance for background jobs in multitenancy mode ([#749](https://github.com/hyperledger-labs/open-enterprise-agent/issues/749)) ([17def3f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/17def3f67c1eb687560aee844aba6ff2a0bd4137))
+* **prism-agent:** agent should read DIDComm port from config ([#757](https://github.com/hyperledger-labs/open-enterprise-agent/issues/757)) ([cda908c](https://github.com/hyperledger-labs/open-enterprise-agent/commit/cda908c87cee562e6c044aa405aa82bd510cc74e))
+* **prism-agent:** configure APISIX to return CORS headers from Prism Agent endpoints ([#746](https://github.com/hyperledger-labs/open-enterprise-agent/issues/746)) ([a579aa9](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a579aa95ea5c0c4950cb64b8b9adb1f56bb87eb2))
+* **prism-agent:** fix docker env variables interpolation issue ([#751](https://github.com/hyperledger-labs/open-enterprise-agent/issues/751)) ([110eb2d](https://github.com/hyperledger-labs/open-enterprise-agent/commit/110eb2df9590412b35997152d526c599edb8e7af))
+* **prism-agent:** return relevant errors on offer creation ([#754](https://github.com/hyperledger-labs/open-enterprise-agent/issues/754)) ([d36533f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/d36533fe538812c9e3647bcc2383700173e4b1b7))
+* prohibit tenants to use equal or revoked api keys ([#742](https://github.com/hyperledger-labs/open-enterprise-agent/issues/742)) ([4b10c3a](https://github.com/hyperledger-labs/open-enterprise-agent/commit/4b10c3af931722a683bf55062297c3dfa1e38046))
+* upgrade vault and quill versions ([#739](https://github.com/hyperledger-labs/open-enterprise-agent/issues/739)) ([c140857](https://github.com/hyperledger-labs/open-enterprise-agent/commit/c140857df97d56ab750ec186962e5fe2bb6a6717))
+
+
+### Features
+
+* **prism-agent:** check issuing DID validity when creating a VC offer + return 'metaRetries' ([#740](https://github.com/hyperledger-labs/open-enterprise-agent/issues/740)) ([f2e2fd3](https://github.com/hyperledger-labs/open-enterprise-agent/commit/f2e2fd3d0397422be40b11644f8b84ddd3c6985f))
+* **prism-agent:** implement AnonCreds issuance flow ([#693](https://github.com/hyperledger-labs/open-enterprise-agent/issues/693)) ([9165a6f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/9165a6f8fc0a11bd6c19b0bfd4dd4217ea3194d9))
+
 ## [1.16.4](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.3...prism-agent-v1.16.4) (2023-09-29)
 
 

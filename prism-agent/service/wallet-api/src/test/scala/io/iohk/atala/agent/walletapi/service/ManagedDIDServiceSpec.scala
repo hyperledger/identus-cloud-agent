@@ -10,20 +10,20 @@ import io.iohk.atala.agent.walletapi.model.error.{
 }
 import io.iohk.atala.agent.walletapi.sql.*
 import io.iohk.atala.agent.walletapi.storage.*
-import io.iohk.atala.agent.walletapi.storage.JdbcEntityRepositorySpec.pgContainerLayer
 import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultWalletSecretStorage}
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
 import scala.collection.immutable.ArraySeq
+import io.iohk.atala.shared.models.WalletAdministrationContext
 
 object ManagedDIDServiceSpec
     extends ZIOSpecDefault,
@@ -154,7 +154,8 @@ object ManagedDIDServiceSpec
         serviceLayer,
         pgContainerLayer,
         jdbcSecretStorageLayer,
-        contextAwareTransactorLayer >+> systemTransactorLayer >>> JdbcDIDNonSecretStorage.layer
+        contextAwareTransactorLayer >+> systemTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
+        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
       .provide(Runtime.removeDefaultLoggers)
 
@@ -163,7 +164,8 @@ object ManagedDIDServiceSpec
         serviceLayer,
         pgContainerLayer,
         vaultSecretStorageLayer,
-        contextAwareTransactorLayer >+> systemTransactorLayer >>> JdbcDIDNonSecretStorage.layer
+        contextAwareTransactorLayer >+> systemTransactorLayer >>> JdbcDIDNonSecretStorage.layer,
+        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
       .provide(Runtime.removeDefaultLoggers)
 

@@ -1,7 +1,8 @@
 package io.iohk.atala.pollux.vc.jwt
 
-import com.nimbusds.jose.jwk.{Curve, ECKey}
+import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator
+import com.nimbusds.jose.jwk.{Curve, ECKey}
 import io.circe.*
 import io.circe.syntax.*
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
@@ -10,9 +11,12 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
+import java.security.Security
 import java.time.Instant
 
 object JWTVerificationTest extends ZIOSpecDefault {
+
+  Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
 
   case class IssuerWithKey(issuer: Issuer, key: ECKey)
 
@@ -252,6 +256,6 @@ object JWTVerificationTest extends ZIOSpecDefault {
         validation <- JwtCredential.validateEncodedJWT(jwtCredential)(resolver)
       } yield assert(validation.fold(_ => false, _ => true))(equalTo(false))
     }
-  ).when(!sys.props.get("os.name").contains("Mac OS X")) // Mac OS X throws `Curve not supported: secp256k1`
+  )
 
 }

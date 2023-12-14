@@ -1,0 +1,66 @@
+---
+version: "3.8"
+
+services:
+
+  # Mandatory PostgreSQL database for the Open Enterprise Agent
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: "castor,pollux,connect,agent"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+      - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "agent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Secret storage - hashicorp
+
+  # Open Enterprise Agent
+  open-enterprise-agent:
+    image: ghcr.io/input-output-hk/prism-agent:${OPEN_ENTERPRISE_AGENT_VERSION}
+    environment:
+      PRISM_NODE_HOST: host.docker.internal
+      PRISM_NODE_PORT:
+      CASTOR_DB_HOST: postgres
+      POLLUX_DB_HOST: postgres
+      CONNECT_DB_HOST: postgres
+      AGENT_DB_HOST: postgres
+      VAULT_TOKEN: root
+      AUTH_HEADER: apikey
+      ADMIN_AUTH_HEADER: "x-admin-api-key"
+      # Configuration parameters
+      AGENT_DIDCOMM_PORT:
+      AGENT_HTTP_PORT:
+      DIDCOMM_SERVICE_URL:
+      REST_SERVICE_URL: "http://host.docker.internal:${AGENT_HTTP_PORT}"
+      API_KEY_ENABLED:
+      # Secret storage configuration
+      SECRET_STORAGE_BACKEND:
+      VAULT_ADDR: "http://host.docker.internal:${VAULT_HTTP_PORT}"
+      # Keycloak configuration
+      KEYCLOAK_ENABLED:
+      KEYCLOAK_URL: "http://host.docker.internal:${KEYCLOAK_HTTP_PORT}"
+      KEYCLOAK_REALM:
+      KEYCLOAK_CLIENT_ID:
+      KEYCLOAK_CLIENT_SECRET:
+      KEYCLOAK_UMA_AUTO_UPGRADE_RPT: true # no configurable at the moment
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${AGENT_DIDCOMM_PORT}:${AGENT_DIDCOMM_PORT}"
+      - "${AGENT_HTTP_PORT}:${AGENT_HTTP_PORT}"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://open-enterprise-agent:${AGENT_HTTP_PORT}/_system/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Extra hosts for Linux networking
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

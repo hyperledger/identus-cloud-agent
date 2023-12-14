@@ -299,20 +299,6 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           invalidArgumentContainsString("operation must contain at least 1 master key")
         )
       },
-      test("reject CreateOperation when service URL is not normalized") {
-        val op = createPrismDIDOperation(services =
-          Seq(
-            Service(
-              id = "service-0",
-              `type` = ServiceType.Single("LinkedDomains"),
-              serviceEndpoint = "http://example.com/login/../login"
-            )
-          )
-        )
-        assert(DIDOperationValidator(Config.default).validate(op))(
-          invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
-        )
-      } @@ TestAspect.ignore,
       test("accept CreateOperation when publicKeys is empty because master key always exist") {
         val op = createPrismDIDOperation(publicKeys = Nil)
         assert(DIDOperationValidator(Config.default).validate(op))(isRight)
@@ -583,30 +569,6 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           invalidArgumentContainsString("operation must contain at least 1 update action")
         )
       },
-      test("reject UpdateOperation when action AddService serviceEndpoint is not normalized") {
-        val op = updatePrismDIDOperation(
-          Seq(
-            UpdateDIDAction.AddService(
-              Service(
-                "service-1",
-                ServiceType.Single("LinkedDomains"),
-                "http://example.com/login/../login"
-              )
-            )
-          )
-        )
-        assert(DIDOperationValidator(Config.default).validate(op))(
-          invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
-        )
-      } @@ TestAspect.ignore,
-      test("reject updateOperation when action UpdateService serviceEndpoint is not normalized") {
-        val op = updatePrismDIDOperation(
-          Seq(UpdateDIDAction.UpdateService("service-1", None, Some("http://example.com/login/../login")))
-        )
-        assert(DIDOperationValidator(Config.default).validate(op))(
-          invalidArgumentContainsString("serviceEndpoint URIs must be normalized")
-        )
-      } @@ TestAspect.ignore,
       test("reject UpdateOperation when action UpdateService have both type and serviceEndpoint empty") {
         val op = updatePrismDIDOperation(Seq(UpdateDIDAction.UpdateService("service-1", None, None)))
         assert(DIDOperationValidator(Config.default).validate(op))(

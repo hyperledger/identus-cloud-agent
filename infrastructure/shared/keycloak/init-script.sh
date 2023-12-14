@@ -35,19 +35,39 @@ function create_realm() {
 		}"
 }
 
-function create_prism_agent_client() {
+function create_client() {
 	local access_token=$1
+	local client_id=$2
+	local client_secret=$3
 
 	curl --request POST "$KEYCLOAK_BASE_URL/admin/realms/$REALM_NAME/clients" \
 		--fail -s \
 		-H "Authorization: Bearer $access_token" \
 		-H "Content-Type: application/json" \
 		--data-raw "{
-			\"id\": \"prism-agent\",
+			\"id\": \"$client_id\",
 			\"directAccessGrantsEnabled\": true,
 			\"authorizationServicesEnabled\": true,
 			\"serviceAccountsEnabled\": true,
-			\"secret\": \"$PRISM_AGENT_CLIENT_SECRET\"
+			\"secret\": \"$client_secret\"
+		}"
+}
+
+function create_user() {
+	local access_token=$1
+	local username=$2
+	local password=$3
+
+	curl --request POST "$KEYCLOAK_BASE_URL/admin/realms/$REALM_NAME/users" \
+		--fail -s \
+		-H "Authorization: Bearer $access_token" \
+		-H "Content-Type: application/json" \
+		--data-raw "{
+			\"id\": \"$username\",
+			\"username\": \"$username\",
+			\"firstName\": \"$username\",
+			\"enabled\": true,
+			\"credentials\": [{\"value\": $password, \"temporary\": false}]
 		}"
 }
 
@@ -58,4 +78,10 @@ echo "Creating a new test realm ..."
 create_realm $ADMIN_ACCESS_TOKEN
 
 echo "Creating a new prism-agent client ..."
-create_prism_agent_client $ADMIN_ACCESS_TOKEN
+create_client $ADMIN_ACCESS_TOKEN "prism-agent" $PRISM_AGENT_CLIENT_SECRET
+
+echo "Creating a new sample user ..."
+create_user $ADMIN_ACCESS_TOKEN "alice" "1234"
+
+echo "Creating a new sample user ..."
+create_user $ADMIN_ACCESS_TOKEN "bob" "1234"

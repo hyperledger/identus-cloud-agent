@@ -6,8 +6,6 @@ connect:
   - connect/**/*
 pollux:
   - pollux/**/*
-iris:
-  - iris/**/*
 prism-agent:
   - prism-agent/**/*
 prism-node:

@@ -7,7 +7,8 @@ import io.iohk.atala.agent.walletapi.service.{WalletManagementService, WalletMan
 import io.iohk.atala.agent.walletapi.sql.{JdbcGenericSecretStorage, JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
 import io.iohk.atala.agent.walletapi.vault.{VaultGenericSecretStorage, VaultWalletSecretStorage}
 import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.shared.models.WalletAdministrationContext
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
 import zio.json.ast.Json
@@ -16,7 +17,6 @@ import zio.test.Assertion.*
 
 import java.util.UUID
 import scala.util.Try
-
 object GenericSecretStorageSpec
     extends ZIOSpecDefault,
       StorageSpecHelper,
@@ -49,7 +49,8 @@ object GenericSecretStorageSpec
         JdbcGenericSecretStorage.layer,
         contextAwareTransactorLayer,
         pgContainerLayer,
-        walletManagementServiceLayer
+        walletManagementServiceLayer,
+        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
     val vaultTestSuite = commonSpec("VaultGenericSecretStorage")
@@ -58,7 +59,8 @@ object GenericSecretStorageSpec
         VaultGenericSecretStorage.layer,
         pgContainerLayer,
         vaultKvClientLayer,
-        walletManagementServiceLayer
+        walletManagementServiceLayer,
+        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
     val inMemoryTestSuite = commonSpec("InMemoryGenericSecretStorage")
@@ -67,7 +69,8 @@ object GenericSecretStorageSpec
         GenericSecretStorageInMemory.layer,
         contextAwareTransactorLayer,
         pgContainerLayer,
-        walletManagementServiceLayer
+        walletManagementServiceLayer,
+        ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
     suite("GenericSecretStorage")(jdbcTestSuite, vaultTestSuite, inMemoryTestSuite) @@ TestAspect.sequential

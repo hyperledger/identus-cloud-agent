@@ -3,7 +3,7 @@ package io.iohk.atala.connect.sql.repository
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.connect.core.repository.{ConnectionRepository, ConnectionRepositorySpecSuite}
 import io.iohk.atala.shared.db.DbConfig
-import io.iohk.atala.shared.test.containers.PostgresTestContainerSupport
+import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import zio.*
 import zio.test.*
 

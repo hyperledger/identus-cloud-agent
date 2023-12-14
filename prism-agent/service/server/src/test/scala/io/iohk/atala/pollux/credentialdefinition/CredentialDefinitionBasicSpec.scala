@@ -1,10 +1,11 @@
 package io.iohk.atala.pollux.credentialdefinition
 
+import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
-import io.iohk.atala.iam.authentication.Authenticator
+import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
 import io.iohk.atala.pollux.core.service.serdes.{
   PrivateCredentialDefinitionSchemaSerDesV1,
@@ -65,7 +66,7 @@ object CredentialDefinitionBasicSpec extends ZIOSpecDefault with CredentialDefin
     val backendZIO =
       for {
         controller <- ZIO.service[CredentialDefinitionController]
-        authenticator <- ZIO.service[Authenticator]
+        authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
       } yield httpBackend(controller, authenticator)
 
     def createCredentialDefinitionResponseZIO = for {

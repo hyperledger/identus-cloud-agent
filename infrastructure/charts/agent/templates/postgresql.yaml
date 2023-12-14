@@ -10,12 +10,13 @@ spec:
   volume:
     size: "{{ .Values.database.postgres.databaseSize }}"
   numberOfInstances: {{ .Values.database.postgres.numberOfInstances }}
+  nodeAffinity:
+    {{- toYaml .Values.affinity.nodeAffinity | nindent 4 }}
+  tolerations:
+    {{- toYaml .Values.tolerations | nindent 4 }}
+  resources:
+    {{- toYaml .Values.database.postgres.resources | nindent 4 }}
   users:
-    castor-admin:
-      - superuser
-      - createdb
-    castor-application-user:
-      - login
     pollux-admin:
       - superuser
       - createdb
@@ -32,9 +33,35 @@ spec:
     agent-application-user:
       - login
   databases:
-    castor: castor-admin
     pollux: pollux-admin
     connect: connect-admin
     agent: agent-admin
   postgresql:
     version: "14"
+
+{{- if .Values.keycloak.enabled }}
+---
+
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: "{{ .Values.database.postgres.managingTeam }}-keycloak-postgres-cluster"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{ template "labels.common" . }}
+spec:
+  teamId: "{{ .Values.database.postgres.managingTeam }}"
+  volume:
+    size: "{{ .Values.database.postgres.databaseSize }}"
+  numberOfInstances: {{ .Values.database.postgres.numberOfInstances }}
+  users:
+    keycloak-admin:
+      - superuser
+      - createdb
+    keycloak-user: []
+  databases:
+    keycloak: keycloak-admin
+  postgresql:
+    version: "14"
+
+{{- end }}

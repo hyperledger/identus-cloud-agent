@@ -28,8 +28,8 @@ class ConnectionControllerImpl(
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, Connection] = {
     val result = for {
-      pairwiseDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommServiceEndpointUrl)
-      connection <- service.createConnectionInvitation(request.label, pairwiseDid.did)
+      pairwiseDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
+      connection <- service.createConnectionInvitation(request.label, request.goalCode, request.goal, pairwiseDid.did)
     } yield Connection.fromDomain(connection)
 
     result.mapError(toHttpError)
@@ -66,7 +66,7 @@ class ConnectionControllerImpl(
   )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, Connection] = {
     val result = for {
       record <- service.receiveConnectionInvitation(request.invitation)
-      pairwiseDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommServiceEndpointUrl)
+      pairwiseDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
       connection <- service.acceptConnectionInvitation(record.id, pairwiseDid.did)
     } yield Connection.fromDomain(connection)
 
