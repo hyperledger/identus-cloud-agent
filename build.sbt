@@ -57,6 +57,8 @@ lazy val V = new {
   val zioMock = "1.0.0-RC11"
   val mockito = "3.2.16.0"
 
+  val zioProfiler = "0.2.1"
+
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.6"
 
@@ -89,6 +91,7 @@ lazy val V = new {
 
   val nimbusJwt = "10.0.0"
   val keycloak = "22.0.4" // scala-steward:off
+
 }
 
 /** Dependencies */
@@ -104,6 +107,9 @@ lazy val D = new {
   val tapirPrometheusMetrics: ModuleID = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % V.tapir
   val micrometer: ModuleID = "io.micrometer" % "micrometer-registry-prometheus" % V.micrometer
   val micrometerPrometheusRegistry = "io.micrometer" % "micrometer-core" % V.micrometer
+
+  val zioProfiller = "dev.zio" %% "zio-profiling" % V.zioProfiler
+  val zioProfilerCompilerPlugin = compilerPlugin("dev.zio" %% "zio-profiling-tagging-plugin" % V.zioProfiler)
 
   val zioConfig: ModuleID = "dev.zio" %% "zio-config" % V.zioConfig
   val zioConfigMagnolia: ModuleID = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
@@ -372,6 +378,8 @@ lazy val D_PrismAgent = new {
     D.zioConfig,
     D.zioConfigMagnolia,
     D.zioConfigTypesafe,
+    D.zioProfiller,
+    D.zioProfilerCompilerPlugin,
     D.zioJson,
     logback,
     D.zioHttp,
