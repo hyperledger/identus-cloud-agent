@@ -54,7 +54,6 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
-  
 
   override def createIssueCredentialRecord(record: IssueCredentialRecord): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""

@@ -1038,7 +1038,6 @@ private class CredentialServiceImpl(
       record: IssueCredentialRecord,
       statusListRegistryUrl: String,
   ): ZIO[WalletAccessContext, CredentialServiceError, CredentialStatus] = {
-    // TODO: reactor, use STM to perform all effects atomically
     for {
       lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet.mapError(RepositoryError.apply)
       issuingDID <- ZIO
@@ -1054,7 +1053,10 @@ private class CredentialServiceImpl(
       lastUsedIndex = currentStatusList.lastUsedIndex
       statusListToBeUsed <-
         if lastUsedIndex < size then ZIO.succeed(currentStatusList)
-        else credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl).mapError(RepositoryError.apply)
+        else
+          credentialStatusListRepository
+            .createNewForTheWallet(jwtIssuer, statusListRegistryUrl)
+            .mapError(RepositoryError.apply)
 
       _ <- credentialStatusListRepository
         .allocateSpaceForCredential(
