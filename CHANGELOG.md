@@ -1,3 +1,15 @@
+# [1.22.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.21.1...prism-agent-v1.22.0) (2023-12-14)
+
+
+### Bug Fixes
+
+* correct OAS examples ([#810](https://github.com/hyperledger-labs/open-enterprise-agent/issues/810)) ([a0720dc](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a0720dcbaf10370dcacc1b5102df13929b40dfdb))
+
+
+### Features
+
+* Consumer restricition parametarization  ([#814](https://github.com/hyperledger-labs/open-enterprise-agent/issues/814)) ([e039576](https://github.com/hyperledger-labs/open-enterprise-agent/commit/e039576fc0e285b80b2966c032ed91b9a8f26f60))
+
 ## [1.21.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.21.0...prism-agent-v1.21.1) (2023-12-12)
 
 
