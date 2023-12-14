@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Prism Agent
-  version: 1.20.0
+  version: 1.22.0
 paths:
   /credential-definition-registry/definitions:
     get:
@@ -2905,7 +2905,9 @@ components:
         claims:
           description: The claims that will be associated with the issued verifiable
             credential.
-          example: (firstname,Alice)
+          example:
+            firstname: Alice
+            lastname: Wonderland
         automaticIssuance:
           type: boolean
           description: Specifies whether or not the credential should be automatically
@@ -3753,7 +3755,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2023-12-05T09:24:29.655936055Z'
+          example: '2023-12-14T09:00:54.460995113Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -4276,7 +4278,7 @@ components:
           description: Service type. Can contain multiple possible values as described
             in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did)
             under the construction section.
-          example: Single(LinkedDomains)
+          example: LinkedDomains
           oneOf:
           - type: array
             items:

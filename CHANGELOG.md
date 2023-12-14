@@ -1,3 +1,36 @@
+# [1.22.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.21.1...prism-agent-v1.22.0) (2023-12-14)
+
+
+### Bug Fixes
+
+* correct OAS examples ([#810](https://github.com/hyperledger-labs/open-enterprise-agent/issues/810)) ([a0720dc](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a0720dcbaf10370dcacc1b5102df13929b40dfdb))
+
+
+### Features
+
+* Consumer restricition parametarization  ([#814](https://github.com/hyperledger-labs/open-enterprise-agent/issues/814)) ([e039576](https://github.com/hyperledger-labs/open-enterprise-agent/commit/e039576fc0e285b80b2966c032ed91b9a8f26f60))
+
+## [1.21.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.21.0...prism-agent-v1.21.1) (2023-12-12)
+
+
+### Bug Fixes
+
+* Option to disable apisix key auth ([#813](https://github.com/hyperledger-labs/open-enterprise-agent/issues/813)) ([f163682](https://github.com/hyperledger-labs/open-enterprise-agent/commit/f1636824047c0d03ce0790ede54e3a12d63dd787))
+
+# [1.21.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.20.1...prism-agent-v1.21.0) (2023-12-12)
+
+
+### Features
+
+* env vars support through values file ([#811](https://github.com/hyperledger-labs/open-enterprise-agent/issues/811)) ([2486dde](https://github.com/hyperledger-labs/open-enterprise-agent/commit/2486dde9b0682504a02ad031b3e7498b2fa2ce17))
+
+## [1.20.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.20.0...prism-agent-v1.20.1) (2023-12-06)
+
+
+### Bug Fixes
+
+* tolerations and nodeAffinity for k8s ([#808](https://github.com/hyperledger-labs/open-enterprise-agent/issues/808)) ([7934fa4](https://github.com/hyperledger-labs/open-enterprise-agent/commit/7934fa402ba86af6d8430208f1844fbd6ccda1bd))
+
 # [1.20.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.19.1...prism-agent-v1.20.0) (2023-12-05)
 
 
