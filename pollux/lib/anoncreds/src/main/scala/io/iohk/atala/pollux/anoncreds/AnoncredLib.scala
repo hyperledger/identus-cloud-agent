@@ -140,7 +140,7 @@ object AnoncredLib {
   // [info] Caused by: Predicate is not satisfied
 
   def createPresentation(
-      presentationRequest: PresentationRequest,
+      presentationRequest: AnoncredPresentationRequest,
       credentialRequests: Seq[CredentialRequests],
       selfAttested: Map[String, String],
       linkSecret: LinkSecret,
@@ -182,7 +182,7 @@ object AnoncredLib {
   // FIXME its always return false ....
   def verifyPresentation(
       presentation: AnoncredPresentation,
-      presentationRequest: PresentationRequest,
+      presentationRequest: AnoncredPresentationRequest,
       schemas: Map[SchemaId, SchemaDef],
       credentialDefinitions: Map[CredentialDefinitionId, CredentialDefinition],
   ): Boolean = {

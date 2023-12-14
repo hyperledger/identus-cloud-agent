@@ -89,7 +89,7 @@ class PoCNewLib extends AnyFlatSpec {
     // ##############
 
     // TODO READ about PresentationRequest https://hyperledger.github.io/anoncreds-spec/#create-presentation-request
-    val presentationRequest = PresentationRequest(
+    val presentationRequest = AnoncredPresentationRequest(
       s"""{
         "nonce": "1103253414365527824079144",
         "name":"proof_req_1",

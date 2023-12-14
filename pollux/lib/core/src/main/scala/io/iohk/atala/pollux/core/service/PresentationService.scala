@@ -49,8 +49,16 @@ trait PresentationService {
       record: DidCommID,
       issuer: Issuer,
       anoncredCredentialProof: AnoncredCredentialProofsV1,
-      issuanceDate: Instant
+      issuanceDate: Instant,
   ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation]
+
+  def createAnoncredPresentation(
+      requestPresentation: RequestPresentation,
+      recordId: DidCommID,
+      prover: Issuer,
+      anoncredCredentialProof: AnoncredCredentialProofsV1,
+      issuanceDate: Instant
+  ): ZIO[WalletAccessContext, PresentationError, Presentation]
 
   def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,
@@ -123,6 +131,12 @@ trait PresentationService {
   def markPresentationAccepted(recordId: DidCommID): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def markPresentationVerificationFailed(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
+
+  def verifyAnoncredPresentation(
+      presentation: Presentation,
+      requestPresentation: RequestPresentation,
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 

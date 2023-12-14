@@ -301,16 +301,16 @@ object CredentialRequests {
 
 // ****************************************************************************
 
-case class PresentationRequest(data: String)
-object PresentationRequest {
-  given Conversion[PresentationRequest, UniffiPresentationRequest] with {
-    def apply(presentationRequest: PresentationRequest): UniffiPresentationRequest =
+case class AnoncredPresentationRequest(data: String)
+object AnoncredPresentationRequest {
+  given Conversion[AnoncredPresentationRequest, UniffiPresentationRequest] with {
+    def apply(presentationRequest: AnoncredPresentationRequest): UniffiPresentationRequest =
       UniffiPresentationRequest(presentationRequest.data)
   }
 
-  given Conversion[UniffiPresentationRequest, PresentationRequest] with {
-    def apply(presentationRequest: UniffiPresentationRequest): PresentationRequest =
-      PresentationRequest(presentationRequest.getJson())
+  given Conversion[UniffiPresentationRequest, AnoncredPresentationRequest] with {
+    def apply(presentationRequest: UniffiPresentationRequest): AnoncredPresentationRequest =
+      AnoncredPresentationRequest(presentationRequest.getJson())
   }
 }
 
