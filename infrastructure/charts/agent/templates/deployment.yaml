@@ -198,10 +198,6 @@ spec:
                 key: root-token
                 optional: false
           {{- end }}
-          {{- range $key, $value := .Values.env }}
-          - name: {{ $key }}
-            value: {{ $value | quote }}
-          {{- end }}
           {{- if .Values.server.keycloak.enabled }}
           - name: KEYCLOAK_ENABLED
             value: "true"
