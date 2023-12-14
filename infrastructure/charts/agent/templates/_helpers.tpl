@@ -10,13 +10,13 @@
 {{- end -}}
 {{- define "consumer-restriction" }}
     - name: consumer-restriction
-      enable: true
+      enable: {{ .Values.ingress.auth.consumer_restriction }}
       config:
         whitelist:
-        {{- range .Values.ingress.consumers }}
+        {{- range .Values.ingress.auth.consumers }}
           -  {{ regexReplaceAll "-" $.Release.Name "_" }}_{{ regexReplaceAll "-" . "_" | lower }}
         {{- end }}
-        {{- range .Values.ingress.externalConsumers }}
+        {{- range .Values.ingress.auth.externalConsumers }}
           -  {{ regexReplaceAll "-" $.Release.Name "_" }}_{{ regexReplaceAll "-" . "_" | lower }}
         {{- end }}
 {{- end -}}
