@@ -21,6 +21,8 @@ import java.util.UUID
 
 object ConnectionEndpoints {
 
+  val TAG: String = "Connections Management"
+
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 
   val createConnection: Endpoint[
@@ -56,7 +58,7 @@ object ConnectionEndpoints {
          |It returns a new connection record in `InvitationGenerated` state.
          |The request body may contain a `label` that can be used as a human readable alias for the connection, for example `{'label': "Bob"}`
          |""".stripMargin)
-      .tag("Connections Management")
+      .tag(TAG)
 
   val getConnection
       : Endpoint[(ApiKeyCredentials, JwtCredentials), (RequestContext, UUID), ErrorResponse, Connection, Any] =
@@ -74,7 +76,7 @@ object ConnectionEndpoints {
       .name("getConnection")
       .summary("Gets an existing connection record by its unique identifier.")
       .description("Gets an existing connection record by its unique identifier")
-      .tag("Connections Management")
+      .tag(TAG)
 
   val getConnections: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
@@ -95,7 +97,7 @@ object ConnectionEndpoints {
       .name("getConnections")
       .summary("Gets the list of connection records.")
       .description("Get the list of connection records paginated")
-      .tag("Connections Management")
+      .tag(TAG)
 
   val acceptConnectionInvitation: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
@@ -130,6 +132,6 @@ object ConnectionEndpoints {
           |and submits a Connection Request to the inviter.
           |It returns a connection object in `ConnectionRequestPending` state, until the Connection Request is eventually sent to the inviter by the prism-agent's background process. The connection object state will then automatically move to `ConnectionRequestSent`.
           |""".stripMargin)
-      .tag("Connections Management")
+      .tag(TAG)
 
 }
