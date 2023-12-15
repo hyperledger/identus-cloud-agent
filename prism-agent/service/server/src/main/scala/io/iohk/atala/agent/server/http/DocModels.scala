@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.server.http
 
+import sttp.apispec.openapi.*
 import sttp.apispec.{SecurityScheme, Tag}
-import sttp.apispec.openapi.{OpenAPI, Server}
 import sttp.model.headers.AuthenticationScheme
 
 import scala.collection.immutable.ListMap
@@ -45,6 +45,31 @@ object DocModels {
 
   val customiseDocsModel: OpenAPI => OpenAPI = { oapi =>
     oapi
+      .info(
+        Info(
+          title = "Open Enterprise Agent API Reference",
+          version = "1.0", // Will be replaced dynamically by 'Tapir2StaticOAS'
+          summary = Some("Info - Summary"),
+          description = Some("Info - Description"),
+          termsOfService = Some("Info - Terms Of Service"),
+          contact = Some(
+            Contact(
+              name = Some("Contact - Name"),
+              email = Some("Contact - Email"),
+              url = Some("Contact - URL"),
+              extensions = ListMap.empty
+            )
+          ),
+          license = Some(
+            License(
+              name = "License - Name",
+              url = Some("License - URL"),
+              extensions = ListMap.empty
+            )
+          ),
+          extensions = ListMap.empty
+        )
+      )
       .servers(
         List(
           Server(url = "http://localhost:8085", description = Some("Local Prism Agent")),

@@ -30,9 +30,8 @@ object Tapir2StaticOAS extends ZIOAppDefault {
       allEndpoints <- AgentHttpServer.agentRESTServiceEndpoints
     } yield {
       import sttp.apispec.openapi.circe.yaml.*
-      val yaml = DocModels
-        .customiseDocsModel(OpenAPIDocsInterpreter().toOpenAPI(allEndpoints.map(_.endpoint), "Prism Agent", args(1)))
-        .toYaml
+      val model = DocModels.customiseDocsModel(OpenAPIDocsInterpreter().toOpenAPI(allEndpoints.map(_.endpoint), "", ""))
+      val yaml = model.info(model.info.copy(version = args(1))).toYaml
       val path = Path.of(args.head)
       Using(Files.newBufferedWriter(path, StandardCharsets.UTF_8)) { writer => writer.write(yaml) }
     }
