@@ -39,9 +39,6 @@ final case class CreateIssueCredentialRecordRequest(
     @description(annotations.credentialFormat.description)
     @encodedExample(annotations.credentialFormat.example)
     credentialFormat: Option[String],
-    @description(annotations.isRevocable.description)
-    @encodedExample(annotations.isRevocable.example)
-    isRevocable: Option[Boolean],
     @description(annotations.claims.description)
     @encodedExample(annotations.claims.example)
     claims: zio.json.ast.Json,
@@ -66,17 +63,6 @@ object CreateIssueCredentialRecordRequest {
           example = 3600
         )
 
-    object isRevocable
-        extends Annotation[Option[Boolean]](
-          description = "Specifies if the credential is revocable or not",
-          example = Some(true),
-          validator = Validator.enumeration(
-            List(
-              Some(true),
-              Some(false)
-            )
-          )
-        )
     object schemaId
         extends Annotation[Option[String]](
           description = "The unique identifier of the schema used for this credential offer.",

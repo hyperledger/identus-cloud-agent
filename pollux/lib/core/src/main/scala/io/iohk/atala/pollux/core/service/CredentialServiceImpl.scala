@@ -1051,6 +1051,7 @@ private class CredentialServiceImpl(
         .mapError(RepositoryError.apply)
       size = currentStatusList.size
       lastUsedIndex = currentStatusList.lastUsedIndex
+      // TODO: concurrency issue
       statusListToBeUsed <-
         if lastUsedIndex < size then ZIO.succeed(currentStatusList)
         else
