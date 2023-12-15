@@ -519,7 +519,10 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           // Issuer accepts request
           requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(issuerRecordId)
           // Issuer generates credential
-          credentialGenerateRecord <- issuerSvc.generateJWTCredential(issuerRecordId, "https://test-status-list.registry")
+          credentialGenerateRecord <- issuerSvc.generateJWTCredential(
+            issuerRecordId,
+            "https://test-status-list.registry"
+          )
           // Issuer sends credential
           _ <- issuerSvc.markCredentialSent(issuerRecordId)
           msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.asJson.as[Message])

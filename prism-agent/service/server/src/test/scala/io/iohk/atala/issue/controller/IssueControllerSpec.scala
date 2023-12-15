@@ -94,7 +94,6 @@ object IssueControllerSpec extends ZIOSpecDefault {
           "email" -> Json.fromString("email")
         ),
         maybeCredentialStatus = Some(
-
           CredentialStatus(
             id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
             `type` = "StatusList2021Entry",
