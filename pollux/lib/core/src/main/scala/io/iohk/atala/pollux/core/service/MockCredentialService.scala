@@ -55,7 +55,7 @@ object MockCredentialService extends Mock[CredentialService] {
   object GenerateAnonCredsCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object ReceiveCredentialRequest extends Effect[RequestCredential, CredentialServiceError, IssueCredentialRecord]
   object AcceptCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
-  object GenerateJWTCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
+  object GenerateJWTCredential extends Effect[(DidCommID, String), CredentialServiceError, IssueCredentialRecord]
   object GenerateAnonCredsCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkCredentialRecordsAsPublishQueued
       extends Effect[Seq[(W3cCredentialPayload, MerkleInclusionProof)], CredentialServiceError, Int]
@@ -145,9 +145,10 @@ object MockCredentialService extends Mock[CredentialService] {
         proxy(AcceptCredentialRequest, recordId)
 
       override def generateJWTCredential(
-          recordId: DidCommID
+          recordId: DidCommID,
+          statusListRegistryUrl: String,
       ): IO[CredentialServiceError, IssueCredentialRecord] =
-        proxy(GenerateJWTCredential, recordId)
+        proxy(GenerateJWTCredential, recordId, statusListRegistryUrl)
 
       override def generateAnonCredsCredential(
           recordId: DidCommID

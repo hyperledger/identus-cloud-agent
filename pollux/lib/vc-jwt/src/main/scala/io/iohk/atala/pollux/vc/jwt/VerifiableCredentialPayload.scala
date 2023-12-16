@@ -4,7 +4,7 @@ import io.circe
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
-import io.circe.{Decoder, Encoder, HCursor, Json}
+import io.circe.{CursorOp, Decoder, DecodingFailure, Encoder, HCursor, Json}
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
 import pdi.jwt.*
@@ -36,9 +36,17 @@ case class JwtVerifiableCredentialPayload(jwt: JWT) extends VerifiableCredential
 
 case class AnoncredVerifiableCredentialPayload(json: String) extends VerifiableCredentialPayload //FIXME json type
 
+enum StatusPurpose(val str: String) {
+  case Revocation extends StatusPurpose("Revocation")
+  case Suspension extends StatusPurpose("Suspension")
+}
+
 case class CredentialStatus(
     id: String,
-    `type`: String
+    `type`: String,
+    statusPurpose: StatusPurpose,
+    statusListIndex: Int,
+    statusListCredential: String
 )
 
 case class RefreshService(
@@ -250,10 +258,10 @@ case class JwtCredentialPayload(
 case class W3cCredentialPayload(
     override val `@context`: Set[String],
     override val `type`: Set[String],
-    val maybeId: Option[String],
-    val issuer: DID,
-    val issuanceDate: Instant,
-    val maybeExpirationDate: Option[Instant],
+    maybeId: Option[String],
+    issuer: DID,
+    issuanceDate: Instant,
+    maybeExpirationDate: Option[Instant],
     override val maybeCredentialSchema: Option[CredentialSchema],
     override val credentialSubject: Json,
     override val maybeCredentialStatus: Option[CredentialStatus],
@@ -294,12 +302,17 @@ object CredentialPayload {
             ("type", credentialSchema.`type`.asJson)
           )
 
+    implicit val credentialStatusPurposeEncoder: Encoder[StatusPurpose] = (a: StatusPurpose) => a.toString.asJson
+
     implicit val credentialStatusEncoder: Encoder[CredentialStatus] =
       (credentialStatus: CredentialStatus) =>
         Json
           .obj(
             ("id", credentialStatus.id.asJson),
-            ("type", credentialStatus.`type`.asJson)
+            ("type", credentialStatus.`type`.asJson),
+            ("statusPurpose", credentialStatus.statusPurpose.asJson),
+            ("statusListIndex", credentialStatus.statusListIndex.asJson),
+            ("statusListCredential", credentialStatus.statusListCredential.asJson)
           )
 
     implicit val w3cCredentialPayloadEncoder: Encoder[W3cCredentialPayload] =
@@ -385,13 +398,29 @@ object CredentialPayload {
           CredentialSchema(id = id, `type` = `type`)
         }
 
+    implicit val credentialStatusPurposeDecoder: Decoder[StatusPurpose] = (c: HCursor) =>
+      Decoder.decodeString(c).flatMap { str =>
+        Try(StatusPurpose.valueOf(str)).toEither.leftMap { _ =>
+          DecodingFailure(s"no enum value matched for $str", List(CursorOp.Field(str)))
+        }
+      }
+
     implicit val credentialStatusDecoder: Decoder[CredentialStatus] =
       (c: HCursor) =>
         for {
           id <- c.downField("id").as[String]
           `type` <- c.downField("type").as[String]
+          statusPurpose <- c.downField("statusPurpose").as[StatusPurpose]
+          statusListIndex <- c.downField("statusListIndex").as[Int]
+          statusListCredential <- c.downField("statusListCredential").as[String]
         } yield {
-          CredentialStatus(id = id, `type` = `type`)
+          CredentialStatus(
+            id = id,
+            `type` = `type`,
+            statusPurpose = statusPurpose,
+            statusListIndex = statusListIndex,
+            statusListCredential = statusListCredential
+          )
         }
 
     implicit val w3cCredentialPayloadDecoder: Decoder[W3cCredentialPayload] =
