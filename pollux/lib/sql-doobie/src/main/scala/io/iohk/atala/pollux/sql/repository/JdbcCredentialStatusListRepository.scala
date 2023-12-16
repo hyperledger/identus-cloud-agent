@@ -6,7 +6,6 @@ import doobie.postgres.*
 import doobie.postgres.implicits.*
 import io.iohk.atala.pollux.vc.jwt.{Issuer, StatusPurpose}
 import io.iohk.atala.pollux.vc.jwt.revocation.{BitString, BitStringError, VCStatusList2021}
-//import doobie.implicits.legacy.instant.* TODO: might need for Instance Meta
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.repository.CredentialStatusListRepository

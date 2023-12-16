@@ -237,7 +237,6 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   ): Task[Seq[IssueCredentialRecord]] = {
     getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transact(xb)
   }
-  // TODO remove this comment
   override def getIssueCredentialRecord(
       recordId: DidCommID
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
