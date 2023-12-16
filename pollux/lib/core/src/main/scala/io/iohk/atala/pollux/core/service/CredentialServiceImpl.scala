@@ -1003,7 +1003,7 @@ private class CredentialServiceImpl(
         payload => ZIO.logInfo("JWT Presentation Validation Successful!")
       )
       issuanceDate = Instant.now()
-      credentialStatus <- allocateNewCredentialInStatusListForWallet(record, statusListRegistryUrl)
+      credentialStatus <- allocateNewCredentialInStatusListForWallet(record, statusListRegistryUrl, jwtIssuer)
       // TODO: get schema when schema registry is available if schema ID is provided
       w3Credential = W3cCredentialPayload(
         `@context` = Set(
@@ -1037,13 +1037,10 @@ private class CredentialServiceImpl(
   private[this] def allocateNewCredentialInStatusListForWallet(
       record: IssueCredentialRecord,
       statusListRegistryUrl: String,
+      jwtIssuer: JwtIssuer
   ): ZIO[WalletAccessContext, CredentialServiceError, CredentialStatus] = {
     for {
       lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet.mapError(RepositoryError.apply)
-      issuingDID <- ZIO
-        .fromOption(record.issuingDID)
-        .mapError(_ => UnexpectedError(s"Issuing Id not found in record: ${record.id.value}"))
-      jwtIssuer <- createJwtIssuer(issuingDID, VerificationRelationship.AssertionMethod)
       currentStatusList <- lastStatusList
         .fold(credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl))(
           ZIO.succeed(_)
