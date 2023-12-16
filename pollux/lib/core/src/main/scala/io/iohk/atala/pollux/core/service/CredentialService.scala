@@ -93,6 +93,7 @@ trait CredentialService {
 
   def generateJWTCredential(
       recordId: DidCommID,
+      statusListRegistryUrl: String,
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def generateAnonCredsCredential(

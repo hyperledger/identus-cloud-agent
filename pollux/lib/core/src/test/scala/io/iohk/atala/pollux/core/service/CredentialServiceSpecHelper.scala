@@ -10,7 +10,11 @@ import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.presentation.{ClaimFormat, Ldp, Options, PresentationDefinition}
-import io.iohk.atala.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory}
+import io.iohk.atala.pollux.core.repository.{
+  CredentialDefinitionRepositoryInMemory,
+  CredentialRepositoryInMemory,
+  CredentialStatusListRepositoryInMemory
+}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
@@ -31,6 +35,7 @@ trait CredentialServiceSpecHelper {
       : URLayer[DIDService & ManagedDIDService & URIDereferencer, CredentialService & CredentialDefinitionService] =
     ZLayer.makeSome[DIDService & ManagedDIDService & URIDereferencer, CredentialService & CredentialDefinitionService](
       CredentialRepositoryInMemory.layer,
+      CredentialStatusListRepositoryInMemory.layer,
       ZLayer.fromFunction(PrismDidResolver(_)),
       credentialDefinitionServiceLayer,
       GenericSecretStorageInMemory.layer,

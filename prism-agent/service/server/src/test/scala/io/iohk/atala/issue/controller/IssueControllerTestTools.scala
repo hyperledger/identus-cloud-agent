@@ -18,7 +18,11 @@ import io.iohk.atala.issue.controller.http.{
 }
 import io.iohk.atala.pollux.anoncreds.LinkSecretWithId
 import io.iohk.atala.pollux.core.model.CredentialFormat
-import io.iohk.atala.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory}
+import io.iohk.atala.pollux.core.repository.{
+  CredentialDefinitionRepositoryInMemory,
+  CredentialRepositoryInMemory,
+  CredentialStatusListRepositoryInMemory
+}
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
@@ -35,7 +39,6 @@ import zio.config.{ReadError, read}
 import zio.json.ast.Json
 import zio.json.ast.Json.*
 import zio.test.*
-
 import java.util.UUID
 
 trait IssueControllerTestTools extends PostgresTestContainerSupport {
@@ -81,6 +84,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
     didResolverLayer >+>
     ResourceURIDereferencerImpl.layer >+>
     CredentialRepositoryInMemory.layer >+>
+    CredentialStatusListRepositoryInMemory.layer >+>
     ZLayer.succeed(LinkSecretWithId("Unused Linked Secret ID")) >+>
     MockDIDService.empty >+>
     MockManagedDIDService.empty >+>
