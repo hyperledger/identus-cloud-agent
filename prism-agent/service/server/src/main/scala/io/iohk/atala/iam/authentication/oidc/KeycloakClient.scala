@@ -60,23 +60,26 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
     for {
       response <- Client
         .request(
-          url = introspectionUrl,
-          method = Method.POST,
-          headers = baseFormHeaders ++ Headers(
-            Header.Authorization.Basic(
-              username = URLEncoder.encode(keycloakConfig.clientId, StandardCharsets.UTF_8),
-              password = URLEncoder.encode(keycloakConfig.clientSecret, StandardCharsets.UTF_8)
-            )
-          ),
-          content = Body.fromURLEncodedForm(
-            Form(
-              FormField.simpleField("token", token)
+          Request(
+            url = URL(Path(introspectionUrl)),
+            method = Method.POST,
+            headers = baseFormHeaders ++ Headers(
+              Header.Authorization.Basic(
+                username = URLEncoder.encode(keycloakConfig.clientId, StandardCharsets.UTF_8),
+                password = URLEncoder.encode(keycloakConfig.clientSecret, StandardCharsets.UTF_8)
+              )
+            ),
+            body = Body.fromURLEncodedForm(
+              Form(
+                FormField.simpleField("token", token)
+              )
             )
           )
+
         )
         .logError("Fail to introspect token on keycloak.")
         .mapError(e => KeycloakClientError.UnexpectedError("Fail to introspect the token on keycloak."))
-        .provide(ZLayer.succeed(httpClient))
+        .provide(ZLayer.succeed(httpClient) ++ Scope.default)
       body <- response.body.asString
         .logError("Fail parse keycloak introspection response.")
         .mapError(e => KeycloakClientError.UnexpectedError("Fail parse keycloak introspection response."))
@@ -97,22 +100,23 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
     for {
       response <- Client
         .request(
-          url = tokenUrl,
-          method = Method.POST,
-          headers = baseFormHeaders,
-          content = Body.fromURLEncodedForm(
-            Form(
-              FormField.simpleField("grant_type", "password"),
-              FormField.simpleField("client_id", keycloakConfig.clientId),
-              FormField.simpleField("client_secret", keycloakConfig.clientSecret),
-              FormField.simpleField("username", username),
-              FormField.simpleField("password", password),
-            )
-          )
+          Request(
+            url = URL(Path(tokenUrl)),
+            method = Method.POST,
+            headers = baseFormHeaders,
+            body = Body.fromURLEncodedForm(
+              Form(
+                FormField.simpleField("grant_type", "password"),
+                FormField.simpleField("client_id", keycloakConfig.clientId),
+                FormField.simpleField("client_secret", keycloakConfig.clientSecret),
+                FormField.simpleField("username", username),
+                FormField.simpleField("password", password),
+              )
+            ))
         )
         .logError("Fail to get the accessToken on keycloak.")
         .mapError(e => KeycloakClientError.UnexpectedError("Fail to get the accessToken on keycloak."))
-        .provide(ZLayer.succeed(httpClient))
+        .provide(ZLayer.succeed(httpClient) ++ Scope.default)
       body <- response.body.asString
         .logError("Fail parse keycloak token response.")
         .mapError(e => KeycloakClientError.UnexpectedError("Fail parse keycloak token response."))

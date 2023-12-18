@@ -48,29 +48,50 @@ object DidCommHttpServer {
 
   private def didCommServiceEndpoint: HttpApp[
     DidOps & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
-      DIDResolver & DIDNonSecretStorage & AppConfig,
-    Nothing
-  ] = Http.collectZIO[Request] {
-    case req @ Method.POST -> Root
-        if req.rawHeader("content-type").fold(false) { _.equalsIgnoreCase(MediaTypes.contentTypeEncrypted) } =>
-      val result = for {
-        data <- req.body.asString.mapError(e => RequestBodyParsingError(e.getMessage))
-        _ <- webServerProgram(data)
-      } yield Response.ok
-
+      DIDResolver & DIDNonSecretStorage & AppConfig
+  ] =
+    val rootRoute = Method.POST / "" -> handler { (req: Request) =>
+      val result = req.body.asString
+        .mapError(e => RequestBodyParsingError(e.getMessage))
+        .flatMap { data =>
+          webServerProgram(data)
+        }
+        .map(str => Response.text("test"))
       result
         .tapError(error => ZIO.logErrorCause("Error processing incoming DIDComm message", Cause.fail(error)))
         .catchAll {
-          case _: RequestBodyParsingError    => ZIO.succeed(Response.status(Status.BadRequest))
+          case _: RequestBodyParsingError => ZIO.succeed(Response.status(Status.BadRequest))
           case _: DIDCommMessageParsingError => ZIO.succeed(Response.status(Status.BadRequest))
-          case _: ParseResponse              => ZIO.succeed(Response.status(Status.BadRequest))
-          case _: DIDSecretStorageError      => ZIO.succeed(Response.status(Status.UnprocessableEntity))
-          case _: ConnectionServiceError     => ZIO.succeed(Response.status(Status.UnprocessableEntity))
-          case _: CredentialServiceError     => ZIO.succeed(Response.status(Status.UnprocessableEntity))
-          case _: PresentationError          => ZIO.succeed(Response.status(Status.UnprocessableEntity))
+          case _: ParseResponse => ZIO.succeed(Response.status(Status.BadRequest))
+          case _: DIDSecretStorageError => ZIO.succeed(Response.status(Status.UnprocessableEntity))
+          case _: ConnectionServiceError => ZIO.succeed(Response.status(Status.UnprocessableEntity))
+          case _: CredentialServiceError => ZIO.succeed(Response.status(Status.UnprocessableEntity))
+          case _: PresentationError => ZIO.succeed(Response.status(Status.UnprocessableEntity))
         }
+    }
 
-  }
+//    HttpApp.collectZIO[Request] {
+//    case req @ Method.POST -> Root
+//        if req.rawHeader("content-type").fold(false) { _.equalsIgnoreCase(MediaTypes.contentTypeEncrypted) } =>
+//      val result = for {
+//        data <- req.body.asString.mapError(e => RequestBodyParsingError(e.getMessage))
+//        _ <- webServerProgram(data)
+//      } yield Response.ok
+//
+//      result
+//        .tapError(error => ZIO.logErrorCause("Error processing incoming DIDComm message", Cause.fail(error)))
+//        .catchAll {
+//          case _: RequestBodyParsingError    => ZIO.succeed(Response.status(Status.BadRequest))
+//          case _: DIDCommMessageParsingError => ZIO.succeed(Response.status(Status.BadRequest))
+//          case _: ParseResponse              => ZIO.succeed(Response.status(Status.BadRequest))
+//          case _: DIDSecretStorageError      => ZIO.succeed(Response.status(Status.UnprocessableEntity))
+//          case _: ConnectionServiceError     => ZIO.succeed(Response.status(Status.UnprocessableEntity))
+//          case _: CredentialServiceError     => ZIO.succeed(Response.status(Status.UnprocessableEntity))
+//          case _: PresentationError          => ZIO.succeed(Response.status(Status.UnprocessableEntity))
+//        }
+
+      Routes(rootRoute).toHttpApp
+  
 
   private[this] def extractFirstRecipientDid(jsonMessage: String): IO[ParsingFailure | DecodingFailure, String] = {
     val doc = parse(jsonMessage).getOrElse(Json.Null)

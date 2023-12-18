@@ -11,7 +11,7 @@ class ZioHttpClient extends HttpClient {
 
   override def get(url: String): Task[HttpResponse] =
     zio.http.Client
-      .request(url)
+      .request(Request(url = URL(Path(url))))
       .provideSomeLayer(zio.http.Client.default)
       .provideSomeLayer(zio.Scope.default)
       .flatMap { response =>
@@ -29,12 +29,14 @@ class ZioHttpClient extends HttpClient {
   def postDIDComm(url: String, data: String): Task[HttpResponse] =
     zio.http.Client
       .request(
-        url = url, // TODO make ERROR type
-        method = Method.POST,
-        headers = Headers("content-type" -> "application/didcomm-encrypted+json"),
-        // headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-        content = Body.fromChunk(Chunk.fromArray(data.getBytes)),
-        // ssl = ClientSSLOptions.DefaultSSL,
+        Request(
+          url = URL(Path(url)), // TODO make ERROR type
+          method = Method.POST,
+          headers = Headers("content-type" -> "application/didcomm-encrypted+json"),
+          // headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
+          body = Body.fromChunk(Chunk.fromArray(data.getBytes)),
+          // ssl = ClientSSLOptions.DefaultSSL,
+        )
       )
       .provideSomeLayer(zio.http.Client.default)
       .provideSomeLayer(zio.Scope.default)

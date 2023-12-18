@@ -51,15 +51,13 @@ lazy val V = new {
   val zioConfig = "3.0.7"
   val zioLogging = "2.0.1"
   val zioJson = "0.3.0"
-  val zioHttp = "3.0.0-RC2"
+  val zioHttp = "3.0.0-RC3"
   val zioCatsInterop = "3.3.0"
   val zioMetricsConnector = "2.1.0"
   val zioMock = "1.0.0-RC11"
   val mockito = "3.2.16.0"
 
-  val zioProfiler = "0.2.1"
-
-  // https://mvnrepository.com/artifact/io.circe/circe-core
+    // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.6"
 
   val tapir = "1.6.4"
@@ -378,8 +376,6 @@ lazy val D_PrismAgent = new {
     D.zioConfig,
     D.zioConfigMagnolia,
     D.zioConfigTypesafe,
-    D.zioProfiller,
-    D.zioProfilerCompilerPlugin,
     D.zioJson,
     logback,
     D.zioHttp,

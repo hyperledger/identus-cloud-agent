@@ -4,12 +4,7 @@ import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.ZioHttpClient
 import io.iohk.atala.agent.server.sql.Migrations as AgentMigrations
-import io.iohk.atala.agent.walletapi.service.{
-  EntityServiceImpl,
-  ManagedDIDService,
-  ManagedDIDServiceWithEventNotificationImpl,
-  WalletManagementServiceImpl
-}
+import io.iohk.atala.agent.walletapi.service.{EntityServiceImpl, ManagedDIDService, ManagedDIDServiceWithEventNotificationImpl, WalletManagementServiceImpl}
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository, JdbcWalletNonSecretStorage}
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
@@ -30,19 +25,8 @@ import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
-import io.iohk.atala.pollux.credentialschema.controller.{
-  CredentialSchemaController,
-  CredentialSchemaControllerImpl,
-  VerificationPolicyControllerImpl
-}
-import io.iohk.atala.pollux.sql.repository.{
-  JdbcCredentialDefinitionRepository,
-  JdbcCredentialRepository,
-  JdbcCredentialSchemaRepository,
-  JdbcPresentationRepository,
-  JdbcVerificationPolicyRepository,
-  Migrations as PolluxMigrations
-}
+import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl, VerificationPolicyControllerImpl}
+import io.iohk.atala.pollux.sql.repository.{JdbcCredentialDefinitionRepository, JdbcCredentialRepository, JdbcCredentialSchemaRepository, JdbcPresentationRepository, JdbcVerificationPolicyRepository, Migrations as PolluxMigrations}
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
@@ -54,11 +38,23 @@ import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.security.Security
-import scala.language.implicitConversions
+//import java.util.concurrent.Executors
+//import scala.concurrent.ExecutionContext
+//import scala.language.implicitConversions
 
 object MainApp extends ZIOAppDefault {
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
+
+//  // Create a custom executor
+//  val customExecutor = Executor.fromExecutionContext(ExecutionContext.fromExecutor(
+//    new java.util.concurrent.ForkJoinPool(100)
+//  )) {
+//    ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(100))
+//  }
+
+//  // Create a custom runtime using the executor
+//  val customRuntime = Runtime.default.withExecutor(customExecutor)
 
   // FIXME: remove this when db app user have correct privileges provisioned by k8s operator.
   // This should be executed before migration to have correct privilege for new objects.

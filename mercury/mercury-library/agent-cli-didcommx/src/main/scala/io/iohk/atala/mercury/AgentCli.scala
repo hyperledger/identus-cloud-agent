@@ -249,31 +249,48 @@ object AgentCli extends ZIOAppDefault {
     } yield ()
   }
 
-  private def webServer: App[DidOps & DidAgent & DIDResolver & HttpClient] = {
+  private def webServer: HttpApp[DidOps & DidAgent & DIDResolver & HttpClient] = {
     val header = "content-type" -> MediaTypes.contentTypeEncrypted
     val (expectedKey, expectedValue) = header
 
-    Http
-      .collectZIO[Request] {
-        case req @ Method.POST -> Root
-            if req.rawHeader(expectedKey).fold(false) { _.equalsIgnoreCase(expectedValue) } =>
-          val res = req.body.asString
-            .catchNonFatalOrDie(ex => ZIO.fail(ParseResponse(ex)))
-            .flatMap { data =>
-              webServerProgram(data).catchAll { ex =>
-                ZIO.fail(mercuryErrorAsThrowable(ex))
-              }
-            }
-            .map(str => Response.text(str))
-
-          res
-        case Method.GET -> Root / "test" => ZIO.succeed(Response.text("Test ok!"))
-        case req =>
-          ZIO.logWarning(s"Received a not DID Comm v2 message: ${req}") *>
-            ZIO.succeed(Response.text(s"The request must be a POST to root with the Header $header"))
+    val rootRoute = Method.POST / "" -> handler { (req: Request) =>
+      req.body.asString
+      .catchNonFatalOrDie(ex => ZIO.fail(ParseResponse(ex)))
+      .flatMap { data =>
+        webServerProgram(data).catchAll { ex =>
+          ZIO.fail(mercuryErrorAsThrowable(ex))
+        }
       }
-      .mapError(throwable => Response.fromHttpError(HttpError.InternalServerError(cause = Some(throwable))))
+      .map(str => Response.text(str))
+//        Response.text("test")
+    }
+
+    val testRoute = Method.GET / "test" -> handler(Response.text("Test ok!"))
+
+    Routes(rootRoute, testRoute).toHttpApp
   }
+
+    //    Http
+//      .collectZIO[Request] {
+//        case req @ Method.POST -> Root
+//            if req.rawHeader(expectedKey).fold(false) { _.equalsIgnoreCase(expectedValue) } =>
+//          val res = req.body.asString
+//            .catchNonFatalOrDie(ex => ZIO.fail(ParseResponse(ex)))
+//            .flatMap { data =>
+//              webServerProgram(data).catchAll { ex =>
+//                ZIO.fail(mercuryErrorAsThrowable(ex))
+//              }
+//            }
+//            .map(str => Response.text(str))
+//
+//          res
+//        case Method.GET -> Root / "test" => ZIO.succeed(Response.text("Test ok!"))
+//        case req =>
+//          ZIO.logWarning(s"Received a not DID Comm v2 message: ${req}") *>
+//            ZIO.succeed(Response.text(s"The request must be a POST to root with the Header $header"))
+//      }
+//      .mapError(throwable => Response.fromHttpError(HttpError.InternalServerError(cause = Some(throwable))))
+//  }
 
   def startEndpoint: ZIO[DidOps & DidAgent & DIDResolver & HttpClient, IOException, Unit] = for {
     _ <- Console.printLine("Setup an endpoint")

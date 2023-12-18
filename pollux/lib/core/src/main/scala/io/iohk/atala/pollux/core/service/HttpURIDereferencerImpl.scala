@@ -9,23 +9,23 @@ import java.net.URI
 class HttpURIDereferencerImpl(client: Client) extends URIDereferencer {
 
   override def dereference(uri: URI): IO[URIDereferencerError, String] = {
-    val result: ZIO[Client, URIDereferencerError, String] = for {
-      response <- Client.request(uri.toString).mapError(t => ConnectionError(t.getMessage))
+    val result = for {
+      response <- Client.request(Request(url = URL(path = Path(uri.toString)))).mapError(t => ConnectionError(t.getMessage))
       body <- response.status match {
         case Status.Ok =>
           response.body.asString.mapError(t => UnexpectedError(t.getMessage))
         case Status.NotFound if !response.status.isError => ZIO.fail(ResourceNotFound(uri))
-        case _ if response.status.isError =>
-          val err = response match {
-            case Response.GetError(error) => Some(error)
-            case _                        => None
-          }
-          ZIO.fail(UnexpectedError(s"HTTP response error: $err"))
+//        case _ if response.status.isError =>
+//          val err = response match {
+//            case Response.GetError(error) => Some(error)
+//            case _                        => None
+//          }
+//          ZIO.fail(UnexpectedError(s"HTTP response error: $err"))
         case _ =>
           ZIO.fail(UnexpectedError("Unknown error"))
       }
     } yield body
-    result.provide(ZLayer.succeed(client))
+    result.provide(ZLayer.succeed(client) ++ Scope.default)
   }
 
 }

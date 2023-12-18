@@ -35,11 +35,12 @@ import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.system.controller.SystemServerEndpoints
 import zio.*
 import zio.metrics.*
-import zio.profiling.sampling._
+import java.util.concurrent.Executors
+import scala.concurrent.ExecutionContext
 
 object PrismAgentApp {
 
-  def run = (for {
+  def run = for {
     _ <- AgentInitialization.run
     _ <- issueCredentialDidCommExchangesJob.debug.fork
     _ <- presentProofExchangeJob.debug.fork
@@ -50,7 +51,7 @@ object PrismAgentApp {
     _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
     _ <- fiber.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
-  } yield ()).profile
+  } yield ()
 
   private val issueCredentialDidCommExchangesJob: RIO[
     AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDNonSecretStorage &
