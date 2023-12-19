@@ -14,26 +14,24 @@ import zio.json.ast.Json
 
 import java.util.UUID
 
-opaque type AccessToken = (String, JwtClaim)
+final class AccessToken private (token: String, claims: JwtClaim) {
+  override def toString(): String = token
+
+  def isRpt: Either[String, Boolean] =
+    Json.decoder
+      .decodeJson(claims.content)
+      .flatMap(_.asObject.toRight("JWT payload must be a JSON object"))
+      .map(_.contains("authorization"))
+}
 
 object AccessToken {
   def fromString(token: String): Either[String, AccessToken] =
     JwtCirce
       .decode(token, JwtOptions(false, false, false))
-      .map(token -> _)
+      .map(claims => AccessToken(token, claims))
       .toEither
       .left
       .map(e => s"JWT token cannot be decoded. ${e.getMessage()}")
-
-  extension (token: AccessToken) {
-    def toString: String = token._1
-
-    def isRpt: Either[String, Boolean] =
-      Json.decoder
-        .decodeJson(token._2.content)
-        .flatMap(_.asObject.toRight("JWT payload must be a JSON object"))
-        .map(_.contains("authorization"))
-  }
 }
 
 final case class KeycloakEntity(id: UUID, accessToken: Option[AccessToken] = None, rpt: Option[AccessToken] = None)
