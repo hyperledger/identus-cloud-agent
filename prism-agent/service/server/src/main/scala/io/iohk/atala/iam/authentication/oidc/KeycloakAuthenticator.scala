@@ -11,6 +11,7 @@ import pdi.jwt.JwtClaim
 import pdi.jwt.JwtOptions
 import zio.*
 import zio.json.ast.Json
+import zio.json.ast.JsonCursor
 
 import java.util.UUID
 
@@ -22,6 +23,18 @@ final class AccessToken private (token: String, claims: JwtClaim) {
       .decodeJson(claims.content)
       .flatMap(_.asObject.toRight("JWT payload must be a JSON object"))
       .map(_.contains("authorization"))
+
+  def containsAdminRole: Either[String, Boolean] =
+    Json.decoder
+      .decodeJson(claims.content)
+      .flatMap { json =>
+        for {
+          resourceAccess <- json.get(JsonCursor.field("resource_access"))
+          client <- resourceAccess.get(JsonCursor.field("prism-agent"))
+          roles <- client.get(JsonCursor.field("roles"))
+          isAdmin <- roles.asArray.toRight("roles claim is not a JSON array.").map(_.contains(Json.Str("agent-admin")))
+        } yield isAdmin
+      }
 }
 
 object AccessToken {

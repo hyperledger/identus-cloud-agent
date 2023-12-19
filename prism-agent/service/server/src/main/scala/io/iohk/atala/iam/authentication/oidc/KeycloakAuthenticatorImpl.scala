@@ -61,13 +61,17 @@ class KeycloakAuthenticatorImpl(
   }
 
   override def authorizeWalletAdmin(entity: KeycloakEntity): IO[AuthenticationError, WalletAdministrationContext] = {
-    for {
+    val containsAdminRole = entity.accessToken.flatMap(_.containsAdminRole.toOption).getOrElse(false)
+    val tenantContext = for {
       entityWithRpt <- populateEntityRpt(entity)
       wallets <- keycloakPermissionService
         .listWalletPermissions(entityWithRpt)
         .mapError(e => AuthenticationError.UnexpectedError(e.message))
         .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
     } yield WalletAdministrationContext.SelfService(wallets)
+
+    if (containsAdminRole) ZIO.succeed(WalletAdministrationContext.Admin())
+    else tenantContext
   }
 
   private def populateEntityRpt(entity: KeycloakEntity): IO[AuthenticationError, KeycloakEntity] = {
