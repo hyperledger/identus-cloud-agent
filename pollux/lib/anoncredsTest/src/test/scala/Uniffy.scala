@@ -1,4 +1,4 @@
-import uniffi.anoncreds.*
+import anoncreds_wrapper.*
 object Uniffy extends App {
   val prover = new Prover()
   val seceret = prover.createLinkSecret();

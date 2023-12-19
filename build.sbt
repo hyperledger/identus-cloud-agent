@@ -1,6 +1,8 @@
 import org.scoverage.coveralls.Imports.CoverallsKeys.*
 import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 
+externalResolvers += "ScalaLibrary packages" at "https://maven.pkg.github.com/input-output-hk/anoncreds-rs" // use plugin"sbt-github-packages"
+
 inThisBuild(
   Seq(
     organization := "io.iohk.atala",
@@ -10,7 +12,8 @@ inThisBuild(
     releaseUseGlobalVersion := false,
     versionScheme := Some("semver-spec"),
     githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks"
+    githubRepository := "atala-prism-building-blocks",
+    resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
   )
 )
 
@@ -420,7 +423,8 @@ val commonSetttings = Seq(
     val overrides = licenseOverrides.value.lift
     val depExclusions = licenseDepExclusions.value.lift
     val originatingModule = DepModuleInfo(organization.value, name.value, version.value)
-    val resolution = DependencyResolution(new LicenseReportCustomDependencyResolution(ivyConfiguration.value, ivyModule.value))
+    val resolution =
+      DependencyResolution(new LicenseReportCustomDependencyResolution(ivyConfiguration.value, ivyModule.value))
     license.LicenseReport.makeReport(
       ivyModule.value,
       resolution,
@@ -736,10 +740,11 @@ lazy val polluxAnoncreds = project
   .enablePlugins(JavaAppPackaging)
   .settings(
     name := "pollux-anoncreds",
-    Compile / unmanagedJars += baseDirectory.value / "anoncreds-jvm-1.0-SNAPSHOT.jar",
-    Compile / unmanagedResourceDirectories ++= Seq(
-      baseDirectory.value / "native-lib" / "NATIVE"
-    ),
+    // Compile / unmanagedJars += baseDirectory.value / "anoncreds-jvm-1.0-SNAPSHOT.jar",
+    // Compile / unmanagedResourceDirectories ++= Seq(
+    //   baseDirectory.value / "native-lib" / "NATIVE"
+    // ),
+    libraryDependencies += "io.iohk.atala.prism.anoncredskmp" % "anoncreds-kmp-jvm" % "0.3.5-M2",
     libraryDependencies ++= D_Pollux_AnonCreds.baseDependencies
   )
 
