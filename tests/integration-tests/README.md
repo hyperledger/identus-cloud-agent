@@ -228,6 +228,7 @@ To configure the roles, you need to specify the following options:
 * `webhook`: [MANDATORY] the webhook object to use for this role. If not specified, the default webhook URL will be used.
 * `url`: [MANDATORY] the REST API URL of the agent to use for this role.
 * `apikey`: [OPTIONAL] the API key to use for this role. If not specified, the default API key will be used. API key authentication can also be disabled.
+* `token`: [OPTIONAL] the JWT token to use for this role. To be used only for pre-configured remote instances of the agents with Keycloak authentication enabled.
 * `authHeader`: [OPTIONAL] the authentication header to use for this role. If not specified, the default authentication header will be used.
 
 `webhook` is a special object that contains the following options:
@@ -286,6 +287,64 @@ To work with remote agents, you need to specify the following options:
 2. Remote `apikey` of the agent (if configured)
 3. Webhook configuration with the remote `url` (to be registered on the agent side) and `local_port` that will be opened locally. You have to use `ngrok` or similar tool to open the local port to the world and get the remote URL.
 
+When we would like to test local agent VS remote agents, we need to open the local ports to the world.
+We need to open 3 things:
+1. REST service URL should be available to fetch credential definitions and credential schemas
+2. DIDComm service URL should be available to send and receive DIDComm messages
+3. Webhook URL should be available to receive webhook messages
+
+Here is an example ngrok configuration to open 3 ports:
+```yaml
+version: "2"
+authtoken: ...
+
+tunnels:
+  rest_service7080:
+    proto: http
+    addr: 7080
+  didcomm_service7070:
+    proto: http
+    addr: 7070
+  webhook9999:
+    proto: http
+    addr: 9999
+```
+
+Then, run `ngrok` as follows:
+```shell
+ngrok start --all
+```
+
+And you should see something like this:
+```text
+Session Status                online                                                                                                                            
+Account                       antonbaliasnikov@gmail.com (Plan: Free)                                                                                           
+Update                        update available (version 3.5.0, Ctrl-U to update)                                                                                
+Version                       3.4.0                                                                                                                             
+Region                        Europe (eu)                                                                                                                       
+Latency                       -                                                                                                                                 
+Web Interface                 http://127.0.0.1:4040                                                                                                             
+Forwarding                    https://5c0b-2001-818-dce2-c000-9c53-d0a3-15f2-ca59.ngrok-free.app -> http://localhost:7080                                       
+Forwarding                    https://6908-2001-818-dce2-c000-9c53-d0a3-15f2-ca59.ngrok-free.app -> http://localhost:7070                                       
+Forwarding                    https://90e7-2001-818-dce2-c000-9c53-d0a3-15f2-ca59.ngrok-free.app -> http://localhost:9999
+```
+
+After that, you could configure your local agent as follows to provide the required URLs:
+```yaml
+    {
+        version = "${OPEN_ENTERPRISE_AGENT_VERSION}"
+        http_port = 7080
+        didcomm_port = 7070
+        didcomm_service_url = "https://6908-2001-818-dce2-c000-9c53-d0a3-15f2-ca59.ngrok-free.app"
+        rest_service_url = "https://5c0b-2001-818-dce2-c000-9c53-d0a3-15f2-ca59.ngrok-free.app"
+        auth_enabled = true
+        prism_node = ${services.prism_node}
+    }
+```
+
+**Make sure `http_port` and `didcomm_port` are the same as in the `ngrok` configuration!**
+
+Next, you are able to configure your roles to use remote agents.
 Here is an example of the agent configuration for SIT environment:
 ```yaml
     {
@@ -293,9 +352,24 @@ Here is an example of the agent configuration for SIT environment:
         url = "https://sit-prism-agent-issuer.atalaprism.io/prism-agent"
         apikey = "SIT_ENVIRONMENT_API_KEY_FOR_ISSUER"
         webhook = {
-            url = "https://b655-2001-818-dce2-c000-d992-94ce-ad1-d722.ngrok-free.app"
+            url = "https://90e7-2001-818-dce2-c000-9c53-d0a3-15f2-ca59.ngrok-free.app"
             init_required = true
             local_port = 9999
+        }
+    }
+```
+
+There is also an option to use JWT token instead of API key for authentication if the remote agent is configured to use Keycloak authentication.
+Here is an example of the agent configuration for sandbox environment:
+```yaml
+    {
+        name = "Issuer"
+        url = "https://sandbox-issuer.atalaprism.io/prism-agent"
+        token = "SANDBOX_ENVIRONMENT_BEARER_TOKEN_FOR_ISSUER"
+        webhook = {
+            url = "https://5868-2001-818-dce2-c000-9c53-d0a3-15f2-ca59.ngrok-free.app"
+            local_port = 9999
+            init_required = true
         }
     }
 ```
