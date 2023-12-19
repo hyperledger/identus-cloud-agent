@@ -1,7 +1,7 @@
 import org.scoverage.coveralls.Imports.CoverallsKeys.*
 import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 
-externalResolvers += "ScalaLibrary packages" at "https://maven.pkg.github.com/input-output-hk/anoncreds-rs" // use plugin"sbt-github-packages"
+// externalResolvers += "ScalaLibrary packages" at "https://maven.pkg.github.com/input-output-hk/anoncreds-rs" // use plugin"sbt-github-packages"
 
 inThisBuild(
   Seq(
