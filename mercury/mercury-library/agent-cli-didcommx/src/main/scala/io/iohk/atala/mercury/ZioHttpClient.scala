@@ -30,7 +30,7 @@ class ZioHttpClient extends HttpClient {
     zio.http.Client
       .request(
         Request(
-          url = URL(Path(url)), // TODO make ERROR type
+          url = URL.decode(url).getOrElse(URL(path = Path(url))), // TODO make ERROR type
           method = Method.POST,
           headers = Headers("content-type" -> "application/didcomm-encrypted+json"),
           // headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),

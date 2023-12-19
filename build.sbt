@@ -106,9 +106,6 @@ lazy val D = new {
   val micrometer: ModuleID = "io.micrometer" % "micrometer-registry-prometheus" % V.micrometer
   val micrometerPrometheusRegistry = "io.micrometer" % "micrometer-core" % V.micrometer
 
-  val zioProfiller = "dev.zio" %% "zio-profiling" % V.zioProfiler
-  val zioProfilerCompilerPlugin = compilerPlugin("dev.zio" %% "zio-profiling-tagging-plugin" % V.zioProfiler)
-
   val zioConfig: ModuleID = "dev.zio" %% "zio-config" % V.zioConfig
   val zioConfigMagnolia: ModuleID = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
   val zioConfigTypesafe: ModuleID = "dev.zio" %% "zio-config-typesafe" % V.zioConfig

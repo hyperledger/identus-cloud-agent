@@ -56,7 +56,7 @@ object DidCommHttpServer {
         .flatMap { data =>
           webServerProgram(data)
         }
-        .map(str => Response.text("test"))
+        .map(_ => Response.ok)
       result
         .tapError(error => ZIO.logErrorCause("Error processing incoming DIDComm message", Cause.fail(error)))
         .catchAll {
