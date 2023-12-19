@@ -27,28 +27,32 @@ class ZioHttpClient extends HttpClient {
       }
 
   def postDIDComm(url: String, data: String): Task[HttpResponse] =
-    zio.http.Client
-      .request(
-        Request(
-          url = URL.decode(url).getOrElse(URL(path = Path(url))), // TODO make ERROR type
-          method = Method.POST,
-          headers = Headers("content-type" -> "application/didcomm-encrypted+json"),
-          // headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
-          body = Body.fromChunk(Chunk.fromArray(data.getBytes)),
-          // ssl = ClientSSLOptions.DefaultSSL,
-        )
-      )
-      .provideSomeLayer(zio.http.Client.default)
-      .provideSomeLayer(zio.Scope.default)
-      .flatMap { response =>
-        response.headers.toSeq.map(e => e)
-        response.body.asString
-          .map(body =>
-            HttpResponse(
-              response.status.code,
-              response.headers.map(h => Header(h.headerName, h.renderedValue)).toSeq,
-              body
-            )
+    for {
+      url <- ZIO.succeed(URL.decode(url).getOrElse(URL(path = Path(url))))
+      _ <- ZIO.logInfo(s"URL => $url")
+      response <- zio.http.Client
+        .request(
+          Request(
+            url = url, // TODO make ERROR type
+            method = Method.POST,
+            headers = Headers("content-type" -> "application/didcomm-encrypted+json"),
+            // headers = Headers("content-type" -> MediaTypes.contentTypeEncrypted),
+            body = Body.fromChunk(Chunk.fromArray(data.getBytes)),
+            // ssl = ClientSSLOptions.DefaultSSL,
           )
-      }
+        )
+        .provideSomeLayer(zio.http.Client.default)
+        .provideSomeLayer(zio.Scope.default)
+        .flatMap { response =>
+          response.headers.toSeq.map(e => e)
+          response.body.asString
+            .map(body =>
+              HttpResponse(
+                response.status.code,
+                response.headers.map(h => Header(h.headerName, h.renderedValue)).toSeq,
+                body
+              )
+            )
+        }
+    } yield response
 }
