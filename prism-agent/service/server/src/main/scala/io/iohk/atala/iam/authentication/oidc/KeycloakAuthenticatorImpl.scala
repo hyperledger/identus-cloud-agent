@@ -5,10 +5,7 @@ import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethod
 import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletAdministrationContext
-import pdi.jwt.JwtCirce
-import pdi.jwt.JwtOptions
 import zio.*
-import zio.json.ast.Json
 
 import java.util.UUID
 
@@ -23,8 +20,11 @@ class KeycloakAuthenticatorImpl(
   override def authenticate(token: String): IO[AuthenticationError, KeycloakEntity] = {
     if (isEnabled) {
       for {
+        accessToken <- ZIO
+          .fromEither(AccessToken.fromString(token))
+          .mapError(AuthenticationError.InvalidCredentials.apply)
         introspection <- client
-          .introspectToken(token)
+          .introspectToken(accessToken)
           .mapError(e => AuthenticationError.UnexpectedError(e.message))
         _ <- ZIO
           .fail(AuthenticationError.InvalidCredentials("The accessToken is invalid."))
@@ -37,7 +37,7 @@ class KeycloakAuthenticatorImpl(
               .attempt(UUID.fromString(id))
               .mapError(e => AuthenticationError.UnexpectedError(s"Subject ID in accessToken is not a UUID. $e"))
           }
-      } yield KeycloakEntity(entityId, accessToken = Some(token))
+      } yield KeycloakEntity(entityId, accessToken = Some(accessToken))
     } else ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
   }
 
@@ -75,7 +75,9 @@ class KeycloakAuthenticatorImpl(
       token <- ZIO
         .fromOption(entity.accessToken)
         .mapError(_ => AuthenticationError.InvalidCredentials("AccessToken is missing."))
-      isRpt <- inferIsRpt(token)
+      isRpt <- ZIO
+        .fromEither(token.isRpt)
+        .mapError(AuthenticationError.InvalidCredentials.apply)
       rptEffect =
         if (isRpt) ZIO.succeed(token)
         else if (keycloakConfig.autoUpgradeToRPT)
@@ -86,23 +88,6 @@ class KeycloakAuthenticatorImpl(
       rpt <- rptEffect.logError("Fail to obtail RPT for wallet permissions")
     } yield entity.copy(rpt = Some(rpt))
   }
-
-  /** Return true if the token is RPT. Check whether property '.authorization' exists. */
-  private def inferIsRpt(token: String): IO[AuthenticationError, Boolean] =
-    ZIO
-      .fromTry(JwtCirce.decode(token, JwtOptions(false, false, false)))
-      .mapError(e => AuthenticationError.InvalidCredentials(s"JWT token cannot be decoded. ${e.getMessage()}"))
-      .flatMap { claims =>
-        ZIO
-          .fromEither(Json.decoder.decodeJson(claims.content))
-          .mapError(s => AuthenticationError.InvalidCredentials(s"Unable to decode JWT payload to JSON. $s"))
-      }
-      .flatMap { json =>
-        ZIO
-          .fromOption(json.asObject)
-          .mapError(_ => AuthenticationError.InvalidCredentials(s"JWT payload must be a JSON object"))
-          .map(obj => obj.contains("authorization"))
-      }
 }
 
 object KeycloakAuthenticatorImpl {

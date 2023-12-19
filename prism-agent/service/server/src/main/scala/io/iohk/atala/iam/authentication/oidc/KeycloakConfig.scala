@@ -10,7 +10,8 @@ final case class KeycloakConfig(
     realmName: String,
     clientId: String,
     clientSecret: String,
-    autoUpgradeToRPT: Boolean
+    autoUpgradeToRPT: Boolean,
+    rolesClaimPath: String,
 )
 
 object KeycloakConfig {
