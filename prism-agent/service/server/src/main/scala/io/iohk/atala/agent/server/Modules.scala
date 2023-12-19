@@ -127,7 +127,7 @@ object GrpcModule {
         .map(_.prismNode.service)
         .flatMap(config =>
           ZIO.attempt(
-            NodeServiceGrpc.stub(ManagedChannelBuilder.forAddress(config.host, config.port).usePlaintext.build)
+            NodeServiceGrpc.stub(ManagedChannelBuilder.forAddress(config.host, config.port).build)
           )
         )
     )
