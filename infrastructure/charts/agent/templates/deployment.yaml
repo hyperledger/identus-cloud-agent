@@ -55,6 +55,18 @@ spec:
       - name: prism-agent-server
         image: "{{ .Values.server.image.repository }}/{{ .Values.server.image.tag }}:{{ .Values.server.image.version | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: /_system/health
+            port: 8085
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /_system/health
+            port: 8085
+          initialDelaySeconds: 5
+          periodSeconds: 5
         resources:
             {{- toYaml .Values.server.resources | nindent 12 }}
         ports:
