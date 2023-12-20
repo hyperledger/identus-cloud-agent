@@ -1,36 +1,37 @@
 package io.iohk.atala.mercury
 
-import zio._
+import io.iohk.atala.mercury.*
+import zio.*
 import zio.http.{Header as _, *}
-import io.iohk.atala.mercury._
 object ZioHttpClient {
-  val layer = ZLayer.succeed(new ZioHttpClient())
+  val layer: URLayer[Client, ZioHttpClient] = ZLayer.fromFunction(new ZioHttpClient(_))
 }
 
-class ZioHttpClient extends HttpClient {
+class ZioHttpClient(client: zio.http.Client) extends HttpClient {
 
   override def get(url: String): Task[HttpResponse] =
-    zio.http.Client
-      .request(Request(url = URL(Path(url))))
-      .provideSomeLayer(zio.http.Client.default)
-      .provideSomeLayer(zio.Scope.default)
-      .flatMap { response =>
-        response.headers.toSeq.map(e => e)
-        response.body.asString
-          .map(body =>
-            HttpResponse(
-              response.status.code,
-              response.headers.map(h => Header(h.headerName, h.renderedValue)).toSeq,
-              body
+    for {
+      url <- ZIO.fromEither(URL.decode(url)).orDie
+      response <- client
+        .request(Request(url = url))
+        .provideSomeLayer(zio.Scope.default)
+        .flatMap { response =>
+          response.headers.toSeq.map(e => e)
+          response.body.asString
+            .map(body =>
+              HttpResponse(
+                response.status.code,
+                response.headers.map(h => Header(h.headerName, h.renderedValue)).toSeq,
+                body
+              )
             )
-          )
-      }
+        }
+    } yield response
 
   def postDIDComm(url: String, data: String): Task[HttpResponse] =
     for {
-      url <- ZIO.succeed(URL.decode(url).getOrElse(URL(path = Path(url))))
-      _ <- ZIO.logInfo(s"URL => $url")
-      response <- zio.http.Client
+      url <- ZIO.fromEither(URL.decode(url)).orDie
+      response <- client
         .request(
           Request(
             url = url, // TODO make ERROR type
@@ -41,7 +42,6 @@ class ZioHttpClient extends HttpClient {
             // ssl = ClientSSLOptions.DefaultSSL,
           )
         )
-        .provideSomeLayer(zio.http.Client.default)
         .provideSomeLayer(zio.Scope.default)
         .flatMap { response =>
           response.headers.toSeq.map(e => e)

@@ -1,13 +1,13 @@
 package io.iohk.atala
 
-import zio._
-import io.iohk.atala.mercury._
+import io.iohk.atala.mercury.*
+import zio.*
 
 @main def AgentClientGetInvitation() = {
   val app =
     InvitationPrograms
       .getInvitationProgram("http://localhost:8000/oob_url")
-      .provide(ZioHttpClient.layer)
+      .provide(ZioHttpClient.layer, zio.http.Client.default)
 
   Unsafe.unsafe { implicit u => Runtime.default.unsafe.run(app).getOrThrowFiberFailure() }
 
