@@ -68,6 +68,8 @@ database:
     managingTeam: atala
     databaseSize: 4Gi
     numberOfInstances: 2
+    sharedBuffers: 125MB
+    maxConnections: 40
     resources:
       requests:
         cpu: 100m
