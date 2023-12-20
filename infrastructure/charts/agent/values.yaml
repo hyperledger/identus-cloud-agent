@@ -68,15 +68,13 @@ database:
     managingTeam: atala
     databaseSize: 4Gi
     numberOfInstances: 2
-    sharedBuffers: 125MB
-    maxConnections: 40
     resources:
       requests:
-        cpu: 10m
-        memory: 100Mi
+        cpu: 100m
+        memory: 256Mi
       limits:
-        cpu: 500m
-        memory: 500Mi
+        cpu: 700m
+        memory: 1024Mi
 
 vdrManager:
   host: chart-base-node-service
