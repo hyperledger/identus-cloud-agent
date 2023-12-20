@@ -38,6 +38,9 @@ spec:
     agent: agent-admin
   postgresql:
     version: "14"
+    parameters: # Expert section
+      shared_buffers: {{ .Values.database.postgres.sharedBuffers | quote }}
+      max_connections: {{ .Values.database.postgres.maxConnections | quote }}
 
 {{- if .Values.keycloak.enabled }}
 ---

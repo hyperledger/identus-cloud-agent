@@ -31,6 +31,18 @@ server:
     requests:
       cpu: 250m
       memory: 512Mi
+  livenessProbe:
+    httpGet:
+      path: /_system/health
+      port: 8085
+    failureThreshold: 1
+    periodSeconds: 10
+  startupProbe:
+    httpGet:
+      path: /_system/health
+      port: 8085
+    failureThreshold: 30
+    periodSeconds: 10
   # Additional environment variables to be added to the server container
   additionalEnvVariables: {}
   useVault: true
@@ -56,6 +68,8 @@ database:
     managingTeam: atala
     databaseSize: 4Gi
     numberOfInstances: 2
+    sharedBuffers: 125MB
+    maxConnections: 40
     resources:
       requests:
         cpu: 10m

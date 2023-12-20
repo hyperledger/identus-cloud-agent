@@ -55,8 +55,12 @@ spec:
       - name: prism-agent-server
         image: "{{ .Values.server.image.repository }}/{{ .Values.server.image.tag }}:{{ .Values.server.image.version | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+        livenessProbe:
+          {{- toYaml .Values.server.livenessProbe | nindent 10 }}
+        startupProbe:
+          {{- toYaml .Values.server.startupProbe | nindent 10 }}
         resources:
-            {{- toYaml .Values.server.resources | nindent 12 }}
+          {{- toYaml .Values.server.resources | nindent 10 }}
         ports:
         - containerPort: 8085
         - containerPort: 8090
