@@ -128,7 +128,7 @@ object GrpcModule {
         .flatMap(config =>
           if (config.usePlainText) {
             ZIO.attempt(
-              NodeServiceGrpc.stub(ManagedChannelBuilder.forAddress(config.host, config.port).usePlaintext().build)
+              NodeServiceGrpc.stub(ManagedChannelBuilder.forAddress(config.host, config.port).usePlaintext.build)
             )
           } else {
             ZIO.attempt(
