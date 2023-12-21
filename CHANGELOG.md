@@ -1,3 +1,10 @@
+# [1.24.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.23.0...prism-agent-v1.24.0) (2023-12-21)
+
+
+### Features
+
+* add configuration for gRPC usePlainText (enable TLS for gRPC) ([#823](https://github.com/hyperledger-labs/open-enterprise-agent/issues/823)) ([b871bb5](https://github.com/hyperledger-labs/open-enterprise-agent/commit/b871bb5e8eeeb71b3f22c38609ae8f1ff424016c))
+
 # [1.23.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.22.0...prism-agent-v1.23.0) (2023-12-20)
 
 
