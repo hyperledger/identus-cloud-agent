@@ -14,6 +14,8 @@ import java.util.UUID
 trait CredentialStatusListRepository {
   def getLatestOfTheWallet: RIO[WalletAccessContext, Option[CredentialStatusList]]
 
+  def findById(id: UUID): Task[Option[CredentialStatusList]]
+
   def createNewForTheWallet(
       jwtIssuer: Issuer,
       statusListRegistryUrl: String
