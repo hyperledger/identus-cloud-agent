@@ -50,6 +50,12 @@ class CredentialStatusListRepositoryInMemory(
       }(ZIO.succeed)
     } yield statusListIdRef
 
+  def findById(id: UUID): Task[Option[CredentialStatusList]] = for {
+    refs <- walletToStatusListRefs.get
+    stores <- ZIO.foreach(refs.values.toList)(_.get)
+    found = stores.flatMap(_.values).find(_.id == id)
+  } yield found
+
   def getLatestOfTheWallet: RIO[WalletAccessContext, Option[CredentialStatusList]] = for {
     storageRef <- walletToStatusListStorageRefs
     storage <- storageRef.get
