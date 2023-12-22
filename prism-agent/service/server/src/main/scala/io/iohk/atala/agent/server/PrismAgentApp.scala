@@ -16,6 +16,7 @@ import io.iohk.atala.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEn
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionServerEndpoints
 import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.credentialstatus.controller.CredentialStatusServiceEndpoints
 import io.iohk.atala.event.controller.EventServerEndpoints
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticator
@@ -116,6 +117,7 @@ object AgentHttpServer {
     allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
     allConnectionEndpoints <- ConnectionServerEndpoints.all
     allIssueEndpoints <- IssueServerEndpoints.all
+    allStatusListEndpoints <- CredentialStatusServiceEndpoints.all
     allDIDEndpoints <- DIDServerEndpoints.all
     allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
     allPresentProofEndpoints <- PresentProofServerEndpoints.all
@@ -130,6 +132,7 @@ object AgentHttpServer {
     allDIDEndpoints ++
     allDIDRegistrarEndpoints ++
     allIssueEndpoints ++
+    allStatusListEndpoints ++
     allPresentProofEndpoints ++
     allSystemEndpoints ++
     allEntityEndpoints ++
