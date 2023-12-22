@@ -13,6 +13,7 @@ import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.pollux.vc.jwt.revocation.BitStringError.*
 import zio.*
+import zio.interop.catz.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 
 import java.time.Instant
@@ -20,6 +21,30 @@ import java.util.UUID
 
 class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task])
     extends CredentialStatusListRepository {
+
+  def findById(id: UUID): Task[Option[CredentialStatusList]] = {
+    val cxnIO =
+      sql"""
+           | SELECT
+           |   id,
+           |   wallet_id,
+           |   issuer,
+           |   issued,
+           |   purpose,
+           |   status_list_jwt_credential,
+           |   size,
+           |   last_used_index,
+           |   created_at,
+           |   updated_at
+           |  FROM public.credential_status_lists where id = $id
+           |""".stripMargin
+        .query[CredentialStatusList]
+        .option
+
+    cxnIO.transact(xb)
+
+  }
+
   def getLatestOfTheWallet: RIO[WalletAccessContext, Option[CredentialStatusList]] = {
 
     val cxnIO =

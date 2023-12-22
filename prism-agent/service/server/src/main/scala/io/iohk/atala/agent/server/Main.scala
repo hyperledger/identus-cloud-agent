@@ -18,6 +18,7 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
 import io.iohk.atala.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
 import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
+import io.iohk.atala.credentialstatus.controller.CredentialStatusControllerImpl
 import io.iohk.atala.event.controller.EventControllerImpl
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
@@ -133,6 +134,7 @@ object MainApp extends ZIOAppDefault {
           DIDControllerImpl.layer,
           DIDRegistrarControllerImpl.layer,
           IssueControllerImpl.layer,
+          CredentialStatusControllerImpl.layer,
           PresentProofControllerImpl.layer,
           VerificationPolicyControllerImpl.layer,
           EntityControllerImpl.layer,
@@ -148,6 +150,7 @@ object MainApp extends ZIOAppDefault {
           ConnectionServiceImpl.layer >>> ConnectionServiceNotifier.layer,
           CredentialSchemaServiceImpl.layer,
           CredentialDefinitionServiceImpl.layer,
+          CredentialStatusListServiceImpl.layer,
           LinkSecretServiceImpl.layer >>> CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
           EntityServiceImpl.layer,
