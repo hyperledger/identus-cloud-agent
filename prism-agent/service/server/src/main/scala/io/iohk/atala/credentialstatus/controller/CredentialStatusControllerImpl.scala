@@ -15,18 +15,6 @@ class CredentialStatusControllerImpl(
       rc: RequestContext
   ): IO[ErrorResponse, CredentialStatusList] = {
 
-    //    val res = CredentialStatusList(
-    //      id = UUID.randomUUID(),
-    //      issuer = "abc",
-    //      issued = OffsetDateTime.now(),
-    //      purpose = StatusPurpose.Revocation,
-    //      statusListJwtCredential = "abc",
-    //      size = 1234,
-    //      lastUsedIndex = 5
-    //    )
-    //
-    //    ZIO.succeed(res)
-
     credentialStatusListService
       .findById(id)
       .map(CredentialStatusList.fromDomain)
