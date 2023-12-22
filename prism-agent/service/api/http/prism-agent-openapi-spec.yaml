@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Prism Agent
-  version: 1.22.0
+  version: 1.24.0
 paths:
   /credential-definition-registry/definitions:
     get:
@@ -3743,7 +3743,9 @@ components:
         claims:
           description: The claims that will be associated with the issued verifiable
             credential.
-          example: (firstname,Alice)
+          example:
+            firstname: Alice
+            lastname: Wonderland
         automaticIssuance:
           type: boolean
           description: Specifies whether or not the credential should be automatically
@@ -3755,7 +3757,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2023-12-14T09:00:54.460995113Z'
+          example: '2023-12-21T10:46:39.901591685Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last

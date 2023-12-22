@@ -104,6 +104,9 @@ fun initActors() {
             actor.remember("AUTH_KEY", role.apikey)
             actor.remember("AUTH_HEADER", role.authHeader)
         }
+        if (role.token != null) {
+            actor.remember("BEARER_TOKEN", role.token)
+        }
         if (role.webhook != null) {
             actor.whoCan(ListenToEvents.at(role.webhook.url, role.webhook.localPort))
             if (role.webhook.initRequired) {
