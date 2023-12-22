@@ -16,11 +16,11 @@ class PoCNewLib extends AnyFlatSpec {
     import scala.language.implicitConversions
 
     val ls1 = LinkSecret("65965334953670062552662719679603258895632947953618378932199361160021795698890")
-    val ls1p = ls1: uniffi.anoncreds.LinkSecret
+    val ls1p = ls1: uniffi.anoncreds_wrapper.LinkSecret
     assert(ls1p.getValue() == "65965334953670062552662719679603258895632947953618378932199361160021795698890")
 
     val ls0 = LinkSecret()
-    val ls0p = ls0: uniffi.anoncreds.LinkSecret
+    val ls0p = ls0: uniffi.anoncreds_wrapper.LinkSecret
     val ls0_ = ls0p: LinkSecret
     assert(ls0.data == ls0_.data)
   }
@@ -58,7 +58,8 @@ class PoCNewLib extends AnyFlatSpec {
     // ##############
     println("*** holder " + ("*" * 100))
 
-    val linkSecret = LinkSecretWithId("ID_of_some_secret_1")
+    val ls1 = LinkSecret("65965334953670062552662719679603258895632947953618378932199361160021795698890")
+    val linkSecret = LinkSecretWithId("ID_of_some_secret_1", ls1)
 
     val credentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition.cd, credentialOffer)
     println("*" * 100)
@@ -75,7 +76,13 @@ class PoCNewLib extends AnyFlatSpec {
       )
     )
 
-    println(credential)
+    val processedCredential = AnoncredLib.processCredential(
+      credential = credential,
+      metadata = credentialRequest.metadata,
+      linkSecret = linkSecret,
+      credentialDefinition = credentialDefinition.cd
+    )
+    println(processedCredential)
 
     // ##############
     // ### PROVER ###
@@ -88,29 +95,34 @@ class PoCNewLib extends AnyFlatSpec {
         "name":"proof_req_1",
         "version":"0.1",
         "requested_attributes": {
-            "sex":{"name":"sex"}
+            "sex":{"name":"sex", "restrictions":{"attr::sex::value":"M","cred_def_id":"$CRED_DEF_ID"}}
+        },
+        "requested_predicates":{
+          "age":{"name":"age", "p_type":">=", "p_value":18}
         }
        }""".stripMargin
 
         // {"name":"proof_req_1","nonce":"1103253414365527824079144","requested_attributes":{"attr1_referent":{"name":"name","restrictions":{"attr::name::value":"Alex","cred_def_id":"creddef:government"}},"attr2_referent":{"name":"role","restrictions":{"cred_def_id":"creddef:employee"}},"attr3_referent":{"name":"name","restrictions":{"cred_def_id":"creddef:employee"}},"attr4_referent":{"name":"height","restrictions":{"attr::height::value":"175","cred_def_id":"creddef:government"}}},"requested_predicates":{"predicate1_referent":{"name":"age","p_type":">=","p_value":18,"restrictions":{"attr::height::value":"175","attr::name::value":"Alex","cred_def_id":"creddef:government"}}},"version":"0.1"}
     )
 
+    println("*** PROVER " + ("*" * 100) + " presentation")
     val presentation = AnoncredLib.createPresentation(
       presentationRequest, // : PresentationRequest,
-      Seq(credential), // credentials: Seq[Credential],
-      Map("sex" -> "M"), // selfAttested: Map[String, String],
+      Seq(
+        CredentialAndRequestedAttributesPredicates(processedCredential, Seq("sex"), Seq("age"))
+      ), // credentials: Seq[Credential],
+      Map(), // selfAttested: Map[String, String],
       linkSecret.secret, // linkSecret: LinkSecret,
       Map(credentialOffer.schemaId -> schema), // schemas: Map[SchemaId, SchemaDef],
       Map(
         credentialOffer.credDefId -> credentialDefinition.cd
       ), // credentialDefinitions: Map[CredentialDefinitionId, CredentialDefinition],
     )
-
-    println("*** PROVER " + ("*" * 100) + " presentation")
     println(presentation)
 
+    println("*** PROVER " + ("*" * 100) + " verifyPresentation")
     val verifyPresentation = AnoncredLib.verifyPresentation(
-      presentation, // : Presentation,
+      presentation.getOrElse(???), // : Presentation,
       presentationRequest, // : PresentationRequest,
       Map(credentialOffer.schemaId -> schema), // schemas: Map[SchemaId, SchemaDef],
       Map(
@@ -118,7 +130,6 @@ class PoCNewLib extends AnyFlatSpec {
       ), // credentialDefinitions: Map[CredentialDefinitionId, CredentialDefinition],
     )
 
-    println("*** PROVER " + ("*" * 100) + " verifyPresentation")
     println(verifyPresentation)
 
   }

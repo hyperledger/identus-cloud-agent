@@ -31,6 +31,18 @@ server:
     requests:
       cpu: 250m
       memory: 512Mi
+  livenessProbe:
+    httpGet:
+      path: /_system/health
+      port: 8085
+    failureThreshold: 1
+    periodSeconds: 10
+  startupProbe:
+    httpGet:
+      path: /_system/health
+      port: 8085
+    failureThreshold: 30
+    periodSeconds: 10
   # Additional environment variables to be added to the server container
   additionalEnvVariables: {}
   useVault: true
@@ -58,11 +70,11 @@ database:
     numberOfInstances: 2
     resources:
       requests:
-        cpu: 10m
-        memory: 100Mi
+        cpu: 100m
+        memory: 256Mi
       limits:
-        cpu: 500m
-        memory: 500Mi
+        cpu: 700m
+        memory: 1024Mi
 
 vdrManager:
   host: chart-base-node-service
