@@ -49,7 +49,7 @@ trait PresentationService {
       record: DidCommID,
       issuer: Issuer,
       anoncredCredentialProof: AnoncredCredentialProofsV1,
-      issuanceDate: Instant,
+      issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation]
 
   def createAnoncredPresentation(

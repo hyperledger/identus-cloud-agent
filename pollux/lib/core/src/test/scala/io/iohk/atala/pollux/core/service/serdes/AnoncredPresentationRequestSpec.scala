@@ -13,13 +13,13 @@ object AnoncredPresentationRequestSpec extends ZIOSpecDefault {
       |      "name": "Attribute 1",
       |      "restrictions": [
       |        {
-      |          "cred_def_id": "credential_definition_id_of_attribute1",
-      |          "non_revoked": {
-      |            "from": 1635734400,
-      |            "to": 1735734400
-      |          }
+      |          "cred_def_id": "credential_definition_id_of_attribute1"
       |        }
-      |      ]
+      |      ],
+      |      "non_revoked": {
+      |         "from": 1635734400,
+      |         "to": 1735734400
+      |       }
       |    }
       |  },
       |  "requested_predicates": {
@@ -29,12 +29,12 @@ object AnoncredPresentationRequestSpec extends ZIOSpecDefault {
       |      "p_value": 18,
       |      "restrictions": [
       |        {
-      |          "schema_id": "schema_id_of_predicate1",
-      |          "non_revoked": {
-      |            "from": 1635734400
-      |          }
+      |          "schema_id": "schema_id_of_predicate1"
       |        }
-      |      ]
+      |      ],
+      |      "non_revoked": {
+      |        "from": 1635734400
+      |       }
       |    }
       |  },
       |  "name": "Example Presentation Request",
@@ -54,15 +54,14 @@ object AnoncredPresentationRequestSpec extends ZIOSpecDefault {
             "attribute1" -> AnoncredRequestedAttributeV1(
               "Attribute 1",
               List(
-                AnoncredAttributeRestrictionV1(
-                  None,
-                  Some("credential_definition_id_of_attribute1"),
-                  Some(
-                    AnoncredNonRevokedIntervalV1(
-                      Some(1635734400),
-                      Some(1735734400)
-                    )
-                  )
+                Map(
+                  "cred_def_id" -> "credential_definition_id_of_attribute1"
+                )
+              ),
+              Some(
+                AnoncredNonRevokedIntervalV1(
+                  Some(1635734400),
+                  Some(1735734400)
                 )
               )
             )
@@ -74,15 +73,14 @@ object AnoncredPresentationRequestSpec extends ZIOSpecDefault {
                 ">=",
                 18,
                 List(
-                  AnoncredPredicateRestrictionV1(
-                    Some("schema_id_of_predicate1"),
-                    None,
-                    Some(
-                      AnoncredNonRevokedIntervalV1(
-                        Some(1635734400),
-                        None
-                      )
-                    )
+                  Map(
+                    "schema_id" -> "schema_id_of_predicate1"
+                  )
+                ),
+                Some(
+                  AnoncredNonRevokedIntervalV1(
+                    Some(1635734400),
+                    None
                   )
                 )
               )

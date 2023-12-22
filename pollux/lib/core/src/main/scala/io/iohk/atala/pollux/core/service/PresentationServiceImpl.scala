@@ -517,7 +517,10 @@ private class PresentationServiceImpl(
               credentialDefinition <- credentialDefinitionService
                 .getByGUID(credentialDefinitionId)
                 .mapError(e => UnexpectedError(e.toString))
-            } yield (credentialDefinition.longId, CredentialDefinition(credentialDefinition.definition.toString))
+            } yield (
+              credentialDefinition.longId,
+              AnoncredCredentialDefinition(credentialDefinition.definition.toString)
+            )
           })
           .map(_.toMap)
       credentialProofsMap = credentialProofs.map(credentialProof => (credentialProof.credential, credentialProof)).toMap
@@ -563,18 +566,20 @@ private class PresentationServiceImpl(
           .fetchOrCreate()
           .map(_.secret)
           .mapError(t => AnoncredPresentationCreationError(t.cause))
+      credentialRequest =
+        verifiableCredentials.map(verifiableCredential =>
+          AnoncredCredentialRequests(
+            AnoncredCredential(verifiableCredential.credential),
+            verifiableCredential.requestedAttribute,
+            verifiableCredential.requestedPredicate
+          )
+        )
       presentation <-
         ZIO
           .fromEither(
             AnoncredLib.createPresentation(
               AnoncredPresentationRequest(presentationRequestData),
-              verifiableCredentials.map(verifiableCredential =>
-                CredentialRequests(
-                  Credential(verifiableCredential.credential),
-                  verifiableCredential.requestedAttribute,
-                  verifiableCredential.requestedPredicate
-                )
-              ),
+              credentialRequest,
               Map.empty, // TO FIX
               linkSecret,
               schemaMap,
@@ -585,7 +590,7 @@ private class PresentationServiceImpl(
     } yield presentation
   }
 
-  private def resolveSchema(schemaId: String): IO[UnexpectedError, (String, SchemaDef)] = {
+  private def resolveSchema(schemaId: String): IO[UnexpectedError, (String, AnoncredSchemaDef)] = {
     for {
       uri <- ZIO.attempt(new URI(schemaId)).mapError(e => UnexpectedError(e.getMessage))
       content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
@@ -594,7 +599,7 @@ private class PresentationServiceImpl(
         .deserialize(vcSchema.schema)
         .mapError(e => UnexpectedError(e.error))
       anoncredLibSchema =
-        SchemaDef(
+        AnoncredSchemaDef(
           schemaId,
           anoncredSchema.version,
           anoncredSchema.attrNames,
@@ -962,7 +967,10 @@ private class PresentationServiceImpl(
               credentialDefinition <- credentialDefinitionService
                 .getByGUID(credentialDefinitionId)
                 .mapError(e => UnexpectedError(e.toString))
-            } yield (credentialDefinition.longId, CredentialDefinition(credentialDefinition.definition.toString))
+            } yield (
+              credentialDefinition.longId,
+              AnoncredCredentialDefinition(credentialDefinition.definition.toString)
+            )
           })
           .map(_.toMap)
       serialisedPresentation <- presentation.attachments.head.data match {
