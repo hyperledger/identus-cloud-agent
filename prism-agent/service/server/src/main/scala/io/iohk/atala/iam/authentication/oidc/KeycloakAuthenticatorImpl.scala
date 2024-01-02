@@ -61,7 +61,10 @@ class KeycloakAuthenticatorImpl(
   }
 
   override def authorizeWalletAdmin(entity: KeycloakEntity): IO[AuthenticationError, WalletAdministrationContext] = {
-    val containsAdminRole = entity.accessToken.flatMap(_.containsAdminRole.toOption).getOrElse(false)
+    val roleClaimPath = keycloakConfig.rolesClaimPath.split('.').toList
+    val containsAdminRole = entity.accessToken
+      .flatMap(_.containsAdminRole(roleClaimPath).toOption)
+      .getOrElse(false)
     val tenantContext = for {
       entityWithRpt <- populateEntityRpt(entity)
       wallets <- keycloakPermissionService

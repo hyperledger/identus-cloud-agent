@@ -25,18 +25,18 @@ final class AccessToken private (token: String, claims: JwtClaim) {
       .flatMap(_.asObject.toRight("JWT payload must be a JSON object"))
       .map(_.contains("authorization"))
 
-  def containsAdminRole: Either[String, Boolean] =
-    clientRoles.map(_.contains("agent-admin"))
+  def containsAdminRole(path: Seq[String]): Either[String, Boolean] =
+    clientRoles(path).map(_.contains("agent-admin"))
 
-  def clientRoles: Either[String, Seq[String]] =
+  def clientRoles(path: Seq[String]): Either[String, Seq[String]] =
     Json.decoder
       .decodeJson(claims.content)
       .flatMap { json =>
         for {
-          resourceAccess <- json.get(JsonCursor.field("resource_access"))
-          client <- resourceAccess.get(JsonCursor.field("prism-agent"))
-          roleJson <- client.get(JsonCursor.field("roles"))
-          roles <- roleJson.asArray
+          rolesJson <- path.foldLeft[Either[String, Json]](Right(json)) { case (json, pathSegment) =>
+            json.flatMap(_.get(JsonCursor.field(pathSegment)))
+          }
+          roles <- rolesJson.asArray
             .toRight("roles claim is not a JSON array of strings.")
             .map(_.flatMap(_.asString))
         } yield roles
