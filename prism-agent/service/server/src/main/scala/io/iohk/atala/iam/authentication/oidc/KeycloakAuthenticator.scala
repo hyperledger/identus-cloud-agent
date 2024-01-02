@@ -6,6 +6,7 @@ import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethod
 import io.iohk.atala.iam.authentication.AuthenticationError.InvalidCredentials
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.iam.authentication.Credentials
+import io.iohk.atala.shared.utils.Traverse.*
 import pdi.jwt.JwtCirce
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtOptions
@@ -25,16 +26,22 @@ final class AccessToken private (token: String, claims: JwtClaim) {
       .map(_.contains("authorization"))
 
   def containsAdminRole: Either[String, Boolean] =
+    clientRoles.map(_.contains("agent-admin"))
+
+  def clientRoles: Either[String, Seq[String]] =
     Json.decoder
       .decodeJson(claims.content)
       .flatMap { json =>
         for {
           resourceAccess <- json.get(JsonCursor.field("resource_access"))
           client <- resourceAccess.get(JsonCursor.field("prism-agent"))
-          roles <- client.get(JsonCursor.field("roles"))
-          isAdmin <- roles.asArray.toRight("roles claim is not a JSON array.").map(_.contains(Json.Str("agent-admin")))
-        } yield isAdmin
+          roleJson <- client.get(JsonCursor.field("roles"))
+          roles <- roleJson.asArray
+            .toRight("roles claim is not a JSON array of strings.")
+            .map(_.flatMap(_.asString))
+        } yield roles
       }
+
 }
 
 object AccessToken {
