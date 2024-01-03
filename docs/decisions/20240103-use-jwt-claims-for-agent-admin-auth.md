@@ -1,11 +1,11 @@
 # Use JWT claims for agent admin access control
 
 - Status: accepted
-- Deciders: Pat Losoponkul, Yurii Shynbuiev, David Poltorak
+- Deciders: Pat Losoponkul, Yurii Shynbuiev, David Poltorak, Shailesh Patil
 - Date: 2024-01-03
 - Tags: multitenancy, authorisation, authentication
 
-Technical Story: [Allow agent admin role to be authenticated by keycloak JWT | https://input-output.atlassian.net/browse/ATL-6074]
+Technical Story: [Allow agent admin role to be authenticated by Keycloak JWT | https://input-output.atlassian.net/browse/ATL-6074]
 
 ## Context and Problem Statement
 
@@ -24,7 +24,7 @@ Integrating an auth model to distinguish between admins and tenants presents a n
 
 - Where and how to define the role of admin and tenant?
 - What boundary the admin role should be scoped to?
-- How to support different deployment topologies? (e.g. multi-agent in shared realm, but not share the admin users)
+- How to support different deployment topologies? (e.g. multi-agent in a shared realm, but not share the admin users)
 - How does it interact with the resource scope in the UMA model?
 
 ## Decision Drivers
@@ -41,7 +41,7 @@ Integrating an auth model to distinguish between admins and tenants presents a n
 
     In this option, the `ClientRole` is configured at the client level,
     and the user is mapped to the `ClientRole` using a role mapper.
-    The role claim will be available in the JWT token at `resource_acces.<client_id>.roles`.
+    The role claim will be available in the JWT token at `resource_access.<client_id>.roles`.
 
 2. Use `RealmRole` for defining roles in Keycloak
 
@@ -103,10 +103,10 @@ Example JWT payload containing `ClientRole`. (Some claims are omitted for readab
   }
 }
 ```
-The claim is available at `resource_access`.<client_id>.roles` by default.
+The claim is available at `resource_access.<client_id>.roles` by default.
 This is only a convention, not the standard.
 The path to the claim should be configurable by the agent to avoid vendor lock.
-The agent checks the token to see if it contains the role `agent-admin,
+The agent checks the token to see if it contains the role `agent-admin`,
 then allows the admin-related operations to be performed.
 
 After introducing the role claim, there will be two distinct access control concepts.
@@ -116,13 +116,13 @@ After introducing the role claim, there will be two distinct access control conc
      For instance, Alice can update a DID but not deactivate a DID on wallet#1.
 
   2. Agent role, which manages agent-level permissions.
-    For example, Alice is an admin for agent #1 and can onboard new tenants,
-    but this authority doesn't extend to agent #2.
+     For example, Alice is an admin for agent #1 and can onboard new tenants,
+     but this authority doesn't extend to agent #2.
 
 ### Positive Consequences
 
-- Naturally align the boundary of the admin role per agent instance
-- Minimal configuration to include the claims
+- Naturally align the boundary of the agent-level role per agent instance
+- Ready to use abstraction, minimal configuration to use and include the claim
 - Token can be reused across clients, enabling SSO use case
 - Keep the wallet access and agent-level role separated
 
