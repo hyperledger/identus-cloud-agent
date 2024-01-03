@@ -10,7 +10,12 @@ import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.*
-import io.iohk.atala.pollux.anoncreds.{AnoncredLib, AnoncredCreateCredentialDefinition, AnoncredCredentialOffer}
+import io.iohk.atala.pollux.anoncreds.{
+  AnoncredCreateCredentialDefinition,
+  AnoncredCredential,
+  AnoncredCredentialOffer,
+  AnoncredLib
+}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.CredentialFormat.AnonCreds
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
@@ -600,34 +605,48 @@ private class CredentialServiceImpl(
   override def receiveCredentialIssue(
       issueCredential: IssueCredential
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
-    // TODO We can get rid of this 'raw' representation stored in DB, because it is not used.
-    val rawIssuedCredential = issueCredential.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???")
     for {
       // TODO Move this type of generic/reusable code to a helper trait
-      attachmentFormatAndData <- ZIO.succeed {
-        import IssueCredentialIssuedFormat.{Anoncred, JWT}
-        issueCredential.attachments
-          .collectFirst {
-            case AttachmentDescriptor(_, _, Base64(v), Some(JWT.name), _, _, _, _)      => (JWT, v)
-            case AttachmentDescriptor(_, _, Base64(v), Some(Anoncred.name), _, _, _, _) => (Anoncred, v)
-          }
-          .map { case (f, v) => (f, java.util.Base64.getUrlDecoder.decode(v)) }
-      }
       record <- getRecordFromThreadIdWithState(
         issueCredential.thid.map(DidCommID(_)),
         ignoreWithZeroRetries = true,
         ProtocolState.RequestPending,
         ProtocolState.RequestSent
       )
-      _ <- attachmentFormatAndData match
-        case Some(IssueCredentialIssuedFormat.JWT, _)       => ZIO.succeed(())
-        case Some(IssueCredentialIssuedFormat.Anoncred, ba) => processAnonCredsCredential(record, ba)
-        case _ => ZIO.fail(UnexpectedError("No AnonCreds or JWT credential attachment found"))
+      processedAttachments <- {
+        import IssueCredentialIssuedFormat.Anoncred
+        ZIO.collectAll(
+          issueCredential.attachments
+            .map {
+              case AttachmentDescriptor(
+                    id,
+                    media_type,
+                    Base64(v),
+                    Some(Anoncred.name),
+                    _,
+                    _,
+                    _,
+                    _
+                  ) =>
+                processAnonCredsCredential(record, java.util.Base64.getUrlDecoder.decode(v))
+                  .map(processedCredential =>
+                    AttachmentDescriptor.buildBase64Attachment(
+                      id = id,
+                      mediaType = media_type,
+                      format = Some(IssueCredentialIssuedFormat.Anoncred.name),
+                      payload = processedCredential
+                    )
+                  )
+              case attachment => ZIO.succeed(attachment)
+            }
+        )
+      }
+      processedIssuedCredential = issueCredential.copy(attachments = processedAttachments)
       _ <- credentialRepository
         .updateWithIssuedRawCredential(
           record.id,
-          issueCredential,
-          rawIssuedCredential,
+          processedIssuedCredential,
+          processedIssuedCredential.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???"),
           ProtocolState.CredentialReceived
         )
         .flatMap {
@@ -642,7 +661,10 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  private[this] def processAnonCredsCredential(record: IssueCredentialRecord, credentialBytes: Array[Byte]) = {
+  private[this] def processAnonCredsCredential(
+      record: IssueCredentialRecord,
+      credentialBytes: Array[Byte]
+  ): ZIO[WalletAccessContext, CredentialServiceError, Array[Byte]] = {
     for {
       credential <- ZIO.succeed(anoncreds.AnoncredCredential(new String(credentialBytes)))
       credDefContent <- uriDereferencer
@@ -655,7 +677,7 @@ private class CredentialServiceImpl(
       linkSecret <- linkSecretService
         .fetchOrCreate()
         .mapError(e => CredentialServiceError.LinkSecretError.apply(e.cause))
-      _ <- ZIO
+      credential <- ZIO
         .attempt(
           AnoncredLib.processCredential(
             anoncreds.AnoncredCredential(new String(credentialBytes)),
@@ -665,7 +687,7 @@ private class CredentialServiceImpl(
           )
         )
         .mapError(error => UnexpectedError(s"AnonCreds credential processing error: ${error.getMessage}"))
-    } yield ()
+    } yield credential.data.getBytes()
   }
 
   override def markOfferSent(
@@ -1110,13 +1132,14 @@ private class CredentialServiceImpl(
         .fromOption(maybeCredentialDefinitionSecret)
         .mapError(_ => CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinition.guid))
       cdp = anoncreds.AnoncredCredentialDefinitionPrivate(credentialDefinitionSecret.json.toString)
-      credential = AnoncredLib.createCredential(
-        cd,
-        cdp,
-        credentialOffer,
-        credentialRequest,
-        attrValues
-      )
+      credential =
+        AnoncredLib.createCredential(
+          cd,
+          cdp,
+          credentialOffer,
+          credentialRequest,
+          attrValues
+        )
     } yield credential
   }
 

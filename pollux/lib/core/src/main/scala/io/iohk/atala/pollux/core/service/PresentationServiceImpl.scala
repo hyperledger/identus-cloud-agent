@@ -975,7 +975,7 @@ private class PresentationServiceImpl(
       }
       isValid <-
         ZIO
-          .fromEither(
+          .fromTry(
             Try(
               AnoncredLib.verifyPresentation(
                 serializedPresentation,
@@ -983,7 +983,7 @@ private class PresentationServiceImpl(
                 schemaMap,
                 credentialDefinitionMap
               )
-            ).toEither
+            )
           )
           .mapError((t: Throwable) => AnoncredPresentationVerificationError(t))
           .flatMapError(e =>
