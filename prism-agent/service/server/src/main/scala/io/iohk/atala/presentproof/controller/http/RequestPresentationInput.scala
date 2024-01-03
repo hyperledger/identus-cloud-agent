@@ -75,9 +75,5 @@ object RequestPresentationInput {
 
   given Schema[AnoncredNonRevokedIntervalV1] = Schema.derived
 
-  given Schema[AnoncredAttributeRestrictionV1] = Schema.derived
-
-  given Schema[AnoncredPredicateRestrictionV1] = Schema.derived
-
   given schema: Schema[RequestPresentationInput] = Schema.derived
 }

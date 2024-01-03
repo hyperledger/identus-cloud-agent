@@ -171,6 +171,7 @@ trait PresentationServiceSpecHelper {
     }
 
     def createAnoncredRecord(
+        credentialDefinitionId: String = "$CRED_DEF_ID",
         pairwiseVerifierDID: DidId = DidId("did:prism:issuer"),
         pairwiseProverDID: DidId = DidId("did:prism:prover-pairwise"),
         thid: DidCommID = DidCommID()
@@ -180,12 +181,12 @@ trait PresentationServiceSpecHelper {
           "sex" -> AnoncredRequestedAttributeV1(
             name = "sex",
             restrictions = List(
-              AnoncredAttributeRestrictionV1(
-                schema_id = None,
-                cred_def_id = Some("$CRED_DEF_ID"),
-                non_revoked = None
+              Map(
+                ("attr::sex::value" -> "M"),
+                ("cred_def_id" -> credentialDefinitionId)
               )
-            )
+            ),
+            non_revoked = None
           )
         ),
         requested_predicates = Map(
@@ -193,13 +194,14 @@ trait PresentationServiceSpecHelper {
             name = "age",
             p_type = ">=",
             p_value = 18,
-            restrictions = List.empty
+            restrictions = List.empty,
+            non_revoked = None
           )
         ),
         name = "proof_req_1",
         nonce = "1103253414365527824079144",
         version = "0.1",
-        non_revoked = Some(AnoncredNonRevokedIntervalV1(from = Some(1), to = Some(4)))
+        non_revoked = None
       )
       svc.createAnoncredPresentationRecord(
         thid = thid,
