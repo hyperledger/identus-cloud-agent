@@ -13,13 +13,15 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.presentation.*
+import io.iohk.atala.pollux.core.model.schema.CredentialDefinition
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema.parseCredentialSchema
 import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import io.iohk.atala.pollux.core.service.serdes.{
   AnoncredCredentialProofV1,
   AnoncredCredentialProofsV1,
-  AnoncredPresentationRequestV1
+  AnoncredPresentationRequestV1,
+  AnoncredPresentationV1
 }
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -931,53 +933,43 @@ private class PresentationServiceImpl(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
-      maybeRecord <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
-      credentialsToUseJson <- ZIO
-        .fromOption(record.anoncredCredentialsToUse)
-        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
-      anoncredCredentialProofs <-
-        AnoncredCredentialProofsV1.schemaSerDes
-          .deserialize(credentialsToUseJson)
+      serializedPresentation <- presentation.attachments.head.data match {
+        case Base64(data) => ZIO.succeed(AnoncredPresentation(new String(JBase64.getUrlDecoder.decode(data))))
+        case _            => ZIO.fail(InvalidAnoncredPresentation("Expecting Base64-encoded data"))
+      }
+      deserializedPresentation <-
+        AnoncredPresentationV1.schemaSerDes
+          .deserialize(serializedPresentation.data)
           .mapError(error => PresentationError.UnexpectedError(error.error))
-      requestPresentation <- ZIO
-        .fromOption(record.requestPresentationData)
-        .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
-      issuedValidCredentials <- credentialRepository
-        .getValidAnoncredIssuedCredentials(
-          anoncredCredentialProofs.credentialProofs.map(_.credential).map(DidCommID(_))
-        )
-        .mapError(RepositoryError.apply)
-      schemaIds = issuedValidCredentials.flatMap(_.schemaId)
+      schemaIds = deserializedPresentation.identifiers.map(_.schema_id)
       schemaMap <-
         ZIO
           .collectAll(schemaIds.map { schemaId =>
             resolveSchema(schemaId)
           })
           .map(_.toMap)
-      credentialDefinitionIds = issuedValidCredentials.flatMap(_.credentialDefinitionId)
+      credentialDefinitionIds = deserializedPresentation.identifiers.map(_.cred_def_id)
       credentialDefinitionMap <-
         ZIO
           .collectAll(credentialDefinitionIds.map { credentialDefinitionId =>
             for {
-              credentialDefinition <- credentialDefinitionService
-                .getByGUID(credentialDefinitionId)
-                .mapError(e => UnexpectedError(e.toString))
+              guid <-
+                ZIO
+                  .fromOption(CredentialDefinition.extractGUID(credentialDefinitionId))
+                  .mapError(_ =>
+                    InvalidAnoncredPresentation(s"CredentialDefinitionId format invalid ${credentialDefinitionId}")
+                  )
+              credentialDefinition <-
+                credentialDefinitionService
+                  .getByGUID(guid)
+                  .mapError(e => UnexpectedError(e.toString))
             } yield (
               credentialDefinition.longId,
               AnoncredCredentialDefinition(credentialDefinition.definition.toString)
             )
           })
           .map(_.toMap)
-      serialisedPresentation <- presentation.attachments.head.data match {
-        case Base64(data) => ZIO.succeed(AnoncredPresentation(new String(JBase64.getUrlDecoder.decode(data))))
-        case _            => ZIO.fail(InvalidAnoncredPresentation("Expecting Base64-encoded data"))
-      }
-      serialisedPresentationRequest <- requestPresentation.attachments.head.data match {
+      serializedPresentationRequest <- requestPresentation.attachments.head.data match {
         case Base64(data) => ZIO.succeed(AnoncredPresentationRequest(new String(JBase64.getUrlDecoder.decode(data))))
         case _            => ZIO.fail(InvalidAnoncredPresentationRequest("Expecting Base64-encoded data"))
       }
@@ -986,8 +978,8 @@ private class PresentationServiceImpl(
           .fromEither(
             Try(
               AnoncredLib.verifyPresentation(
-                serialisedPresentation,
-                serialisedPresentationRequest,
+                serializedPresentation,
+                serializedPresentationRequest,
                 schemaMap,
                 credentialDefinitionMap
               )

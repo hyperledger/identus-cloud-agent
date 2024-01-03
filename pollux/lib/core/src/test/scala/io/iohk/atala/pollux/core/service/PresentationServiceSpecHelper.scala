@@ -171,47 +171,7 @@ trait PresentationServiceSpecHelper {
     }
 
     def createAnoncredRecord(
-        pairwiseVerifierDID: DidId = DidId("did:prism:issuer"),
-        pairwiseProverDID: DidId = DidId("did:prism:prover-pairwise"),
-        thid: DidCommID = DidCommID()
-    ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
-      val anoncredPresentationRequestV1 = AnoncredPresentationRequestV1(
-        requested_attributes = Map(
-          "sex" -> AnoncredRequestedAttributeV1(
-            name = "sex",
-            restrictions = List(
-              Map(
-                ("cred_def_id" -> "$CRED_DEF_ID")
-              )
-            ),
-            non_revoked = None
-          )
-        ),
-        requested_predicates = Map(
-          "age" -> AnoncredRequestedPredicateV1(
-            name = "age",
-            p_type = ">=",
-            p_value = 18,
-            restrictions = List.empty,
-            non_revoked = None
-          )
-        ),
-        name = "proof_req_1",
-        nonce = "1103253414365527824079144",
-        version = "0.1",
-        non_revoked = Some(AnoncredNonRevokedIntervalV1(from = Some(1), to = Some(4)))
-      )
-      svc.createAnoncredPresentationRecord(
-        thid = thid,
-        pairwiseVerifierDID = pairwiseVerifierDID,
-        pairwiseProverDID = pairwiseProverDID,
-        connectionId = Some("connectionId"),
-        anoncredPresentationRequestV1
-      )
-    }
-
-    def createAnoncredRecordNoRestriction(
-        credentialDefinitionId: String,
+        credentialDefinitionId: String = "$CRED_DEF_ID",
         pairwiseVerifierDID: DidId = DidId("did:prism:issuer"),
         pairwiseProverDID: DidId = DidId("did:prism:prover-pairwise"),
         thid: DidCommID = DidCommID()

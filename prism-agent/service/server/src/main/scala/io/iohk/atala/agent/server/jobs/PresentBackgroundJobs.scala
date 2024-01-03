@@ -197,7 +197,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
             case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
             case Some(record) =>
               val verifierReqPendingToSentFlow = for {
-                _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
+                _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Message)")
                 walletAccessContext <- buildWalletAccessContextLayer(record.from)
                 result <- (for {
                   didOps <- ZIO.service[DidOps]
