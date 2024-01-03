@@ -149,3 +149,7 @@ After introducing the role claim, there will be two distinct access control conc
 - Bad, because the agent itself is not a resource but a resource server. While it could work, it is unnatural to maintain.
 - Bad, because the wallet resource is mixed with the agent resource
 - Bad, because the wallet access scope is mixed with the agent access scope
+
+## Links
+
+- [Keycloak ClientRole](https://www.keycloak.org/docs/latest/server_admin/#con-client-roles_server_administration_guide)
