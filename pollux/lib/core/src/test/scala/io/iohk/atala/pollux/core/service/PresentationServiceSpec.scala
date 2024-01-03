@@ -2,10 +2,11 @@ package io.iohk.atala.pollux.core.service
 
 import io.circe.parser.decode
 import io.circe.syntax.*
+import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64, DidId}
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, IssueCredentialIssuedFormat}
 import io.iohk.atala.mercury.protocol.presentproof.*
-import io.iohk.atala.pollux.anoncreds.AnoncredLib
+import io.iohk.atala.pollux.anoncreds.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 import io.iohk.atala.pollux.core.model.PresentationRecord.*
@@ -13,6 +14,7 @@ import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition.Input
+import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import io.iohk.atala.pollux.core.service.serdes.{
   AnoncredCredentialProofV1,
@@ -27,12 +29,14 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import java.time.{Instant, OffsetDateTime}
-import java.util.Base64 as JBase64
+import java.util.{UUID, Base64 as JBase64}
 
 object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSpecHelper {
 
   override def spec =
-    suite("PresentationService")(singleWalletSpec, multiWalletSpec).provide(presentationServiceLayer)
+    suite("PresentationService")(singleWalletSpec, multiWalletSpec).provide(
+      presentationServiceLayer ++ genericSecretStorageLayer
+    )
 
   private val singleWalletSpec =
     suite("singleWalletSpec")(
@@ -358,10 +362,146 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           validation <- AnoncredPresentationV1.schemaSerDes.validate(aPresentationPayload.data)
           presentation <- AnoncredPresentationV1.schemaSerDes.deserialize(aPresentationPayload.data)
         } yield {
-          assertTrue(validation)
+          assert(validation)(isUnit)
           assert(
             presentation.proof.proofs.headOption.flatMap(_.primary_proof.eq_proof.revealed_attrs.headOption.map(_._1))
           )(isSome(equalTo("sex")))
+        }
+      },
+      test("verify anoncred presentation") {
+        for {
+          credentialDefinitionService <- ZIO.service[CredentialDefinitionService]
+          issuerId = "did:prism:issuer"
+          holderID = "did:prism:holder"
+          schemaId = "resource:///anoncred-presentation-schema-example.json"
+          credentialDefinitionDb <- credentialDefinitionService.create(
+            Input(
+              name = "Credential Definition Name",
+              description = "Credential Definition Description",
+              version = "1.2",
+              signatureType = "CL",
+              tag = "tag",
+              author = issuerId,
+              authored = Some(OffsetDateTime.parse("2022-03-10T12:00:00Z")),
+              schemaId = schemaId,
+              supportRevocation = false
+            )
+          )
+          credentialDefinitionDb <- credentialDefinitionService
+            .getByGUID(credentialDefinitionDb.guid)
+          repo <- ZIO.service[CredentialRepository]
+          linkSecretService <- ZIO.service[LinkSecretService]
+          linkSecret <- linkSecretService.fetchOrCreate()
+          cenericSecretStorage <- ZIO.service[GenericSecretStorage]
+          maybeCredentialDefintionPrivate <-
+            cenericSecretStorage
+              .get[UUID, CredentialDefinitionSecret](credentialDefinitionDb.guid)
+          credentialDefinition = AnoncredCreateCredentialDefinition(
+            AnoncredCredentialDefinition(credentialDefinitionDb.definition.toString()),
+            AnoncredCredentialDefinitionPrivate(maybeCredentialDefintionPrivate.get.json.toString()),
+            AnoncredCredentialKeyCorrectnessProof(credentialDefinitionDb.keyCorrectnessProof.toString())
+          )
+          credentialOffer = AnoncredLib.createOffer(credentialDefinition, credentialDefinitionDb.longId)
+          credentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition.cd, credentialOffer)
+          processedCredential =
+            AnoncredLib.processCredential(
+              AnoncredLib
+                .createCredential(
+                  credentialDefinition.cd,
+                  credentialDefinition.cdPrivate,
+                  credentialOffer,
+                  credentialRequest.request,
+                  Seq(
+                    ("name", "Miguel"),
+                    ("sex", "M"),
+                    ("age", "31"),
+                  )
+                ),
+              credentialRequest.metadata,
+              linkSecret,
+              credentialDefinition.cd
+            )
+          issueCredential =
+            IssueCredential(
+              from = DidId(issuerId),
+              to = DidId(holderID),
+              body = IssueCredential.Body(),
+              attachments = Seq(
+                AttachmentDescriptor.buildBase64Attachment(
+                  mediaType = Some("application/json"),
+                  format = Some(IssueCredentialIssuedFormat.Anoncred.name),
+                  payload = processedCredential.data.getBytes()
+                )
+              )
+            )
+          aIssueCredentialRecord =
+            IssueCredentialRecord(
+              id = DidCommID(),
+              createdAt = Instant.now,
+              updatedAt = None,
+              thid = DidCommID(),
+              schemaId = Some(schemaId),
+              credentialDefinitionId = Some(credentialDefinitionDb.guid),
+              credentialFormat = CredentialFormat.AnonCreds,
+              role = IssueCredentialRecord.Role.Issuer,
+              subjectId = None,
+              validityPeriod = None,
+              automaticIssuance = None,
+              protocolState = IssueCredentialRecord.ProtocolState.CredentialReceived,
+              offerCredentialData = None,
+              requestCredentialData = None,
+              anonCredsRequestMetadata = None,
+              issueCredentialData = Some(issueCredential),
+              issuedCredentialRaw =
+                Some(issueCredential.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???")),
+              issuingDID = None,
+              metaRetries = 5,
+              metaNextRetry = Some(Instant.now()),
+              metaLastFailure = None,
+            )
+          _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
+          svc <- ZIO.service[PresentationService]
+          aRecord <- svc.createAnoncredRecord(
+            credentialDefinitionId = credentialDefinitionDb.longId
+          )
+          repo <- ZIO.service[PresentationRepository]
+          credentialsToUse =
+            AnoncredCredentialProofsV1(
+              List(
+                AnoncredCredentialProofV1(
+                  aIssueCredentialRecord.id.value,
+                  Seq("sex"),
+                  Seq("age")
+                )
+              )
+            )
+          credentialsToUseJson <- ZIO.fromEither(
+            AnoncredCredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
+          )
+          _ <-
+            repo.updateAnoncredPresentationWithCredentialsToUse(
+              aRecord.id,
+              Some(AnoncredPresentationV1.version),
+              Some(credentialsToUseJson),
+              PresentationRecord.ProtocolState.RequestPending
+            )
+          issuer = createIssuer(DID("did:prism:issuer"))
+          presentation <- svc.createAnoncredPresentation(
+            aRecord.requestPresentationData.get,
+            aRecord.id,
+            issuer,
+            credentialsToUse,
+            Instant.now()
+          )
+          _ <- svc.receivePresentation(presentation)
+          validateRecord <-
+            svc.verifyAnoncredPresentation(
+              presentation,
+              aRecord.requestPresentationData.get,
+              aRecord.id
+            )
+        } yield {
+          assert(validateRecord.protocolState)(equalTo(PresentationRecord.ProtocolState.PresentationVerified))
         }
       },
       test("markRequestPresentationSent returns updated PresentationRecord") {

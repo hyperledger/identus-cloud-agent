@@ -15,13 +15,13 @@ class PoCNewLib extends AnyFlatSpec {
   "LinkSecret" should "be able to parse back to the anoncreds lib" in {
     import scala.language.implicitConversions
 
-    val ls1 = LinkSecret("65965334953670062552662719679603258895632947953618378932199361160021795698890")
+    val ls1 = AnoncredLinkSecret("65965334953670062552662719679603258895632947953618378932199361160021795698890")
     val ls1p = ls1: uniffi.anoncreds_wrapper.LinkSecret
     assert(ls1p.getValue() == "65965334953670062552662719679603258895632947953618378932199361160021795698890")
 
-    val ls0 = LinkSecret()
+    val ls0 = AnoncredLinkSecret()
     val ls0p = ls0: uniffi.anoncreds_wrapper.LinkSecret
-    val ls0_ = ls0p: LinkSecret
+    val ls0_ = ls0p: AnoncredLinkSecret
     assert(ls0.data == ls0_.data)
   }
 
@@ -58,8 +58,8 @@ class PoCNewLib extends AnyFlatSpec {
     // ##############
     println("*** holder " + ("*" * 100))
 
-    val ls1 = LinkSecret("65965334953670062552662719679603258895632947953618378932199361160021795698890")
-    val linkSecret = LinkSecretWithId("ID_of_some_secret_1", ls1)
+    val ls1 = AnoncredLinkSecret("65965334953670062552662719679603258895632947953618378932199361160021795698890")
+    val linkSecret = AnoncredLinkSecretWithId("ID_of_some_secret_1", ls1)
 
     val credentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition.cd, credentialOffer)
     println("*" * 100)
@@ -89,7 +89,7 @@ class PoCNewLib extends AnyFlatSpec {
     // ##############
 
     // TODO READ about PresentationRequest https://hyperledger.github.io/anoncreds-spec/#create-presentation-request
-    val presentationRequest = PresentationRequest(
+    val presentationRequest = AnoncredPresentationRequest(
       s"""{
         "nonce": "1103253414365527824079144",
         "name":"proof_req_1",
@@ -109,7 +109,7 @@ class PoCNewLib extends AnyFlatSpec {
     val presentation = AnoncredLib.createPresentation(
       presentationRequest, // : PresentationRequest,
       Seq(
-        CredentialRequests(processedCredential, Seq("sex"), Seq("age"))
+        AnoncredCredentialRequests(processedCredential, Seq("sex"), Seq("age"))
       ), // credentials: Seq[Credential],
       Map(), // selfAttested: Map[String, String],
       linkSecret.secret, // linkSecret: LinkSecret,
