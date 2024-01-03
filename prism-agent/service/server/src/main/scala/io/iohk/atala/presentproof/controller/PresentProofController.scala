@@ -49,8 +49,12 @@ object PresentProofController {
         ErrorResponse.badRequest(title = "Missing Anoncred Presentation Request", detail = Some(msg))
       case PresentationError.AnoncredPresentationCreationError(cause) =>
         ErrorResponse.badRequest(title = "Error Creating Anoncred Presentation", detail = Some(cause.toString))
+      case PresentationError.AnoncredPresentationVerificationError(cause) =>
+        ErrorResponse.badRequest(title = "Error Verifying Prensetation", detail = Some(cause.toString))
       case PresentationError.InvalidAnoncredPresentationRequest(msg) =>
         ErrorResponse.badRequest(title = "Invalid Anoncred Presentation Request", detail = Some(msg))
+      case PresentationError.InvalidAnoncredPresentation(msg) =>
+        ErrorResponse.badRequest(title = "Invalid Anoncred Presentation", detail = Some(msg))
       case PresentationError.NotMatchingPresentationCredentialFormat(cause) =>
         ErrorResponse.badRequest(
           title = "Presentation and Credential Format Not Matching",

@@ -10,7 +10,7 @@
   "description": "Simple credential schema for the driving licence verifiable credential.",
   "type": "AnoncredSchemaV1",
   "schema": {
-      "name": "schema:uri2",
+      "name": "resource:///anoncred-presentation-schema-example.json",
       "version": "1.0",
       "attrNames": [
         "name",

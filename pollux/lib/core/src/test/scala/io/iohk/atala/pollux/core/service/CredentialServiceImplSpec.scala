@@ -9,7 +9,7 @@ import io.iohk.atala.castor.core.service.MockDIDService
 import io.iohk.atala.mercury.model
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
-import io.iohk.atala.pollux.anoncreds.Credential
+import io.iohk.atala.pollux.anoncreds.AnoncredCredential
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
@@ -602,7 +602,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           assertTrue(record.issueCredentialData.get.attachments.head.data match
             case model.Base64(value) =>
               val ba = new String(Base64.getUrlDecoder.decode(value))
-              Credential(ba).credDefId == credDefId
+              AnoncredCredential(ba).credDefId == credDefId
             case _ => false
           )
         }
