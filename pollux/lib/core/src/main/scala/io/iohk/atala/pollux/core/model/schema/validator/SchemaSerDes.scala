@@ -48,12 +48,12 @@ class SchemaSerDes[S](jsonSchemaSchemaStr: String) {
     } yield json
   }
 
-  def validate(jsonString: String): IO[JsonSchemaError, Boolean] = {
+  def validate(jsonString: String): IO[JsonSchemaError, Unit] = {
     for {
       jsonSchemaSchema <- JsonSchemaUtils.jsonSchema(jsonSchemaSchemaStr)
       schemaValidator = JsonSchemaValidatorImpl(jsonSchemaSchema)
-      _ <- schemaValidator.validate(jsonString)
-    } yield true
+      result <- schemaValidator.validate(jsonString)
+    } yield result
   }
 
 }

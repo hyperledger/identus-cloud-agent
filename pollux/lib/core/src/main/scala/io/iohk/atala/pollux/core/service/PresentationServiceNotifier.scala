@@ -118,6 +118,15 @@ class PresentationServiceNotifier(
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(svc.markPresentationVerificationFailed(recordId))
 
+  override def verifyAnoncredPresentation(
+      presentation: Presentation,
+      requestPresentation: RequestPresentation,
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+    notifyOnSuccess(
+      svc.verifyAnoncredPresentation(presentation, requestPresentation, recordId)
+    )
+
   override def acceptPresentation(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
@@ -165,6 +174,15 @@ class PresentationServiceNotifier(
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] =
     svc.createAnoncredPresentationPayloadFromRecord(record, issuer, anoncredCredentialProof, issuanceDate)
+
+  override def createAnoncredPresentation(
+      requestPresentation: RequestPresentation,
+      recordId: DidCommID,
+      prover: Issuer,
+      anoncredCredentialProof: AnoncredCredentialProofsV1,
+      issuanceDate: Instant
+  ): ZIO[WalletAccessContext, PresentationError, Presentation] =
+    svc.createAnoncredPresentation(requestPresentation, recordId, prover, anoncredCredentialProof, issuanceDate)
 
   override def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,
