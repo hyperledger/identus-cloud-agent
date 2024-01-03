@@ -104,7 +104,7 @@ object AnoncredPresentationSpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("AnoncredPresentationRequestSerDes")(
     test("should validate a correct schema") {
-      assertZIO(AnoncredPresentationV1.schemaSerDes.validate(json))(isTrue)
+      assertZIO(AnoncredPresentationV1.schemaSerDes.validate(json))(isUnit)
     },
     test("should deserialize correctly") {
       val predicate = AnoncredPredicateV1(

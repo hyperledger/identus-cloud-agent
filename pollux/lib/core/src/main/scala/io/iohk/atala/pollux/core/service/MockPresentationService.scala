@@ -43,6 +43,8 @@ object MockPresentationService extends Mock[PresentationService] {
 
   object MarkPresentationVerificationFailed extends Effect[DidCommID, PresentationError, PresentationRecord]
 
+  object VerifyAnoncredPresentation extends Effect[DidCommID, PresentationError, PresentationRecord]
+
   object AcceptRequestPresentation extends Effect[(DidCommID, Seq[String]), PresentationError, PresentationRecord]
 
   object AcceptAnoncredRequestPresentation
@@ -138,6 +140,13 @@ object MockPresentationService extends Mock[PresentationService] {
       override def markPresentationVerificationFailed(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
         proxy(MarkPresentationVerificationFailed, recordId)
 
+      override def verifyAnoncredPresentation(
+          presentation: Presentation,
+          requestPresentation: RequestPresentation,
+          recordId: DidCommID
+      ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+        proxy(VerifyAnoncredPresentation, recordId)
+
       override def receiveRequestPresentation(
           connectionId: Option[String],
           request: RequestPresentation
@@ -168,6 +177,14 @@ object MockPresentationService extends Mock[PresentationService] {
           anoncredCredentialProof: AnoncredCredentialProofsV1,
           issuanceDate: Instant
       ): IO[PresentationError, AnoncredPresentation] = ???
+
+      override def createAnoncredPresentation(
+          requestPresentation: RequestPresentation,
+          recordId: DidCommID,
+          prover: Issuer,
+          anoncredCredentialProof: AnoncredCredentialProofsV1,
+          issuanceDate: Instant
+      ): ZIO[WalletAccessContext, PresentationError, Presentation] = ???
 
       override def getPresentationRecordsByStates(
           ignoreWithZeroRetries: Boolean,

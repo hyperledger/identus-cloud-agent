@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.agent.walletapi.storage
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
-import io.iohk.atala.pollux.anoncreds.{AnoncredLib, SchemaDef}
+import io.iohk.atala.pollux.anoncreds.{AnoncredLib, AnoncredSchemaDef}
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.URISyntaxError
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition.{Filter, FilteredEntries}
@@ -39,7 +39,7 @@ class CredentialDefinitionServiceImpl(
       vcSchema <- parseCredentialSchema(content)
       anoncredSchema <- AnoncredSchemaSerDesV1.schemaSerDes.deserialize(vcSchema.schema)
       anoncredLibSchema =
-        SchemaDef(
+        AnoncredSchemaDef(
           in.schemaId,
           anoncredSchema.version,
           anoncredSchema.attrNames,
