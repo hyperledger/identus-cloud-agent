@@ -1,8 +1,8 @@
 package io.iohk.atala.pollux.core.service.serdes
 
 import zio.*
-import zio.test.Assertion.*
 import zio.test.*
+import zio.test.Assertion.*
 
 object PublicCredentialDefinitionSchemaSerDesSpec extends ZIOSpecDefault {
   val json: String =
@@ -46,7 +46,7 @@ object PublicCredentialDefinitionSchemaSerDesSpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("PublicCredentialDefinitionSerDes")(
     test("should validate a correct schema") {
-      assertZIO(PublicCredentialDefinitionSerDesV1.schemaSerDes.validate(json))(isTrue)
+      assertZIO(PublicCredentialDefinitionSerDesV1.schemaSerDes.validate(json))(isUnit)
     },
     test("should deserialise") {
       val primary = PublicCredentialPrimaryPublicKeyV1(

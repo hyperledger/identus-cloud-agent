@@ -34,8 +34,6 @@ case class W3cVerifiableCredentialPayload(payload: W3cCredentialPayload, proof: 
 
 case class JwtVerifiableCredentialPayload(jwt: JWT) extends VerifiableCredentialPayload
 
-case class AnoncredVerifiableCredentialPayload(json: String) extends VerifiableCredentialPayload //FIXME json type
-
 case class CredentialStatus(
     id: String,
     `type`: String
