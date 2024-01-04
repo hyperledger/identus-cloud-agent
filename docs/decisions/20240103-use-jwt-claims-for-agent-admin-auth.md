@@ -14,10 +14,8 @@ Employing a static API key for administrative operations poses a security challe
 A standardized centralized permission management system for administrative operations should be integrated,
 to ensure the solution is security-compliant, yet remains extensible and decoupled.
 
-The existing tenant authentication and authorization model relies on UMA (user-managed access)
-which defines resources, policies, and permissions.
-Tenants gain access to resources based on defined permissions, effectively controlling resource access.
-In addition to wallet usage, the agent also handles wallet management,
+The existing tenant authorization model relies on UMA (user-managed access) to protect the wallet.
+In addition to the wallet usage, the agent also handles wallet management,
 a functionality utilized by both tenants and administrators.
 While administrators don't directly use the wallet, they oversee its management.
 Integrating an auth model to distinguish between admins and tenants presents a new challenge.
@@ -26,7 +24,7 @@ Integrating an auth model to distinguish between admins and tenants presents a n
 - What should be the authorization model for the admin role?
 - What boundary the admin role should be scoped to?
 - How to support different deployment topologies?
-- How does it interact with the resource scope in the UMA model?
+- How does it interact with the wallet UMA model?
 
 ## Decision Drivers
 
@@ -54,22 +52,9 @@ Integrating an auth model to distinguish between admins and tenants presents a n
     In this option, the role is defined as a user attribute.
     Then the user attribute will be included in a token using a token mapper at any pre-configured path.
 
-4. Reuse UMA model and define the agent as a resource with the resource scope as a role
-
-    In this option, the agent is defined as another UMA resource and the user role is defined by the agent resource scope.
-
 ## Decision Outcome
 
 Option 1: Use `ClientRole` for defining roles in keycloak.
-
-This option limits the admin role of the agent to the client level,
-aligning the admin scope with the client, as admin access naturally belongs to an agent instance.
-It enables fine-grained role per agent instance, allowing multiple agent instances to a shared realm.
-
-In this configuration, a `ClientRole` called `agent-admin` must be created for each client.
-Users can be mapped to the `ClientRole` using groups, attributes, or other metadata according to the use case.
-The role is automatically included in the JWT claim by default, and they are segregated per client.
-This enables multiple agent instances to reuse the same token while having their own set of roles defined.
 
 Example JWT payload containing `ClientRole`. (Some claims are omitted for readability)
 
@@ -104,11 +89,8 @@ Example JWT payload containing `ClientRole`. (Some claims are omitted for readab
 }
 ```
 The claim is available at `resource_access.<client_id>.roles` by default.
-This is only a convention, not the standard.
-The path to the claim *should be configurable* by the agent to avoid vendor lock
+The path to the claim should be configurable by the agent to avoid vendor lock
 and remain agnostic to the IAM configuration.
-The agent checks the token to see if it contains the role `agent-admin`,
-then allows the admin-related operations to be performed.
 
 After introducing the role claim, there will be two distinct access control concepts.
 
@@ -120,19 +102,15 @@ After introducing the role claim, there will be two distinct access control conc
      For example, Alice is an admin for agent #1 and can onboard new tenants,
      but this authority doesn't extend to agent #2.
 
-     One important aspect of the agent's role is that it should be wholly segregated.
-     The agent *must* ensure the admin does not access the wallet as a tenant even if wallet permission is granted.
-
 __Proposed agent role authorization model__
 
 Role is a plain text that defines what level of access a user has on a system.
 For the agent, it needs to support 2 roles:
 
-1. __Admin__: `agent-admin`
-2. __Tenant__: `agent-tenant` or implicitly inferred if another role is not specified
-
-This convention allows `RealmRole` to be used when deployed with another component.
-If more granularity is required, `ClientRole` can always be utilized to isolate the role namespace.
+1. __Admin__: `agent-admin`. Admin can never access a tenant wallet.
+   Agent auth layer must ignore any UMA permission to the wallet.
+2. __Tenant__: `agent-tenant` or implicitly inferred if another role is not specified.
+   Tenant must have UMA permission defined to access the wallet.
 
 ### Positive Consequences
 
@@ -158,13 +136,6 @@ If more granularity is required, `ClientRole` can always be utilized to isolate 
 
 - Bad, because role abstraction is already provided by Keycloak. Engineering effort is spent to reinvent the same concept
 - Bad, because it requires more effort to configure the attribute value and map it down to the token
-
-### Option 4: Reuse UMA model and define the agent as a resource with the resource scope as a role
-
-- Good, because UMA resource access is already supported by the agent
-- Bad, because the agent itself is not a resource but a resource server. While it could work, it is unnatural to maintain.
-- Bad, because the wallet resource is mixed with the agent resource
-- Bad, because the wallet access scope is mixed with the agent access scope
 
 ## Links
 
