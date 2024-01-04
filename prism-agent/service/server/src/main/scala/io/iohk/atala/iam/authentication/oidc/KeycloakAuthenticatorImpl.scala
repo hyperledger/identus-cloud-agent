@@ -15,6 +15,8 @@ class KeycloakAuthenticatorImpl(
     keycloakPermissionService: PermissionManagement.Service[KeycloakEntity],
 ) extends KeycloakAuthenticator {
 
+  private val roleClaimPath = keycloakConfig.rolesClaimPath.split('.').toSeq
+
   override def isEnabled: Boolean = keycloakConfig.enabled
 
   override def authenticate(token: String): IO[AuthenticationError, KeycloakEntity] = {
@@ -61,11 +63,7 @@ class KeycloakAuthenticatorImpl(
   }
 
   override def authorizeWalletAdmin(entity: KeycloakEntity): IO[AuthenticationError, WalletAdministrationContext] = {
-    val roleClaimPath = keycloakConfig.rolesClaimPath.split('.').toList
-    val containsAdminRole = entity.accessToken
-      .flatMap(_.containsAdminRole(roleClaimPath).toOption)
-      .getOrElse(false)
-    val tenantContext = for {
+    val tenantCtx = for {
       entityWithRpt <- populateEntityRpt(entity)
       wallets <- keycloakPermissionService
         .listWalletPermissions(entityWithRpt)
@@ -73,8 +71,15 @@ class KeycloakAuthenticatorImpl(
         .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
     } yield WalletAdministrationContext.SelfService(wallets)
 
-    if (containsAdminRole) ZIO.succeed(WalletAdministrationContext.Admin())
-    else tenantContext
+    for {
+     role <- ZIO.fromOption(entity.accessToken)
+        .mapError(_ => AuthenticationError.InvalidCredentials("AccessToken is missing."))
+        .map(accessToken => accessToken.role(roleClaimPath))
+        .map(e => e.left.map(AuthenticationError.InvalidCredentials(_)))
+        .absolve
+    } yield ???
+
+    ???
   }
 
   private def populateEntityRpt(entity: KeycloakEntity): IO[AuthenticationError, KeycloakEntity] = {

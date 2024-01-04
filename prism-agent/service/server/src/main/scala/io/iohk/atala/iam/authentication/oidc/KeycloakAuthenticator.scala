@@ -16,7 +16,23 @@ import zio.json.ast.JsonCursor
 
 import java.util.UUID
 
+enum JwtRole(val value: String) {
+  case Admin extends JwtRole("agent-admin")
+  case Tenant extends JwtRole("agent-tenant")
+}
+
+object JwtRole {
+  def fromString(s: String): Option[JwtRole] = {
+    s match {
+      case JwtRole.Admin.value  => Some(JwtRole.Admin)
+      case JwtRole.Tenant.value => Some(JwtRole.Tenant)
+      case _                    => None
+    }
+  }
+}
+
 final class AccessToken private (token: String, claims: JwtClaim) {
+
   override def toString(): String = token
 
   def isRpt: Either[String, Boolean] =
@@ -25,20 +41,30 @@ final class AccessToken private (token: String, claims: JwtClaim) {
       .flatMap(_.asObject.toRight("JWT payload must be a JSON object"))
       .map(_.contains("authorization"))
 
-  def containsAdminRole(path: Seq[String]): Either[String, Boolean] =
-    clientRoles(path).map(_.contains("agent-admin"))
+  def role(claimPath: Seq[String]): Either[String, JwtRole] = {
+    for {
+      uniqueRoles <- extractRoles(claimPath).map(_.distinct)
+      r <- uniqueRoles.toList match {
+        case Nil => Right(JwtRole.Tenant)
+        case r :: Nil => Right(r)
+        case _ => Left(s"Multiple roles is not supported yet.")
+      }
+    } yield r
+  }
 
-  def clientRoles(path: Seq[String]): Either[String, Seq[String]] =
+  /** Return a list of roles that is meaningful to the agent */
+  private def extractRoles(claimPath: Seq[String]): Either[String, Seq[JwtRole]] =
     Json.decoder
       .decodeJson(claims.content)
       .flatMap { json =>
         for {
-          rolesJson <- path.foldLeft[Either[String, Json]](Right(json)) { case (json, pathSegment) =>
+          rolesJson <- claimPath.foldLeft[Either[String, Json]](Right(json)) { case (json, pathSegment) =>
             json.flatMap(_.get(JsonCursor.field(pathSegment)))
           }
           roles <- rolesJson.asArray
-            .toRight("roles claim is not a JSON array of strings.")
+            .toRight("Roles claim is not a JSON array of strings.")
             .map(_.flatMap(_.asString))
+            .map(_.flatMap(JwtRole.fromString))
         } yield roles
       }
 
