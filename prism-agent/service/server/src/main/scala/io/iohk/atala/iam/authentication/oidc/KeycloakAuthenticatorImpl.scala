@@ -75,7 +75,6 @@ class KeycloakAuthenticatorImpl(
         .fromOption(entity.accessToken)
         .mapError(_ => AuthenticationError.InvalidCredentials("AccessToken is missing."))
         .map(_.role(roleClaimPath).left.map(AuthenticationError.InvalidCredentials(_)))
-        .debug("role")
         .absolve
       ctx <- role match {
         case JwtRole.Admin  => ZIO.succeed(WalletAdministrationContext.Admin())

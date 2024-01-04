@@ -83,10 +83,10 @@ trait KeycloakAuthenticator extends AuthenticatorWithAuthZ[KeycloakEntity] {
       credentials match {
         case JwtCredentials(Some(token)) if token.nonEmpty => authenticate(token)
         case JwtCredentials(Some(_)) =>
-          ZIO.logInfo(s"Keycloak authentication is enabled, but bearer token is empty") *>
+          ZIO.logDebug(s"Keycloak authentication is enabled, but bearer token is empty") *>
             ZIO.fail(JwtAuthenticationError.emptyToken)
         case JwtCredentials(None) =>
-          ZIO.logInfo(s"Keycloak authentication is enabled, but bearer token is not provided") *>
+          ZIO.logDebug(s"Keycloak authentication is enabled, but bearer token is not provided") *>
             ZIO.fail(InvalidCredentials("Bearer token is not provided"))
         case other =>
           ZIO.fail(InvalidCredentials("Bearer token is not provided"))
