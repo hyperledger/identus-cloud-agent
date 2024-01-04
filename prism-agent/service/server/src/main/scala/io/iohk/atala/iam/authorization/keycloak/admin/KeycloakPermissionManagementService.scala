@@ -166,12 +166,15 @@ case class KeycloakPermissionManagementService(
       token <- ZIO
         .fromOption(entity.accessToken)
         .mapError(_ => Error.ServiceError("AccessToken is missing for listing permissions."))
-      rpt <- entity.rpt.fold(
-        keycloakClient
-          .getRpt(token)
-          .logError("Fail to obtail RPT for wallet permissions")
-          .mapError(e => Error.ServiceError(e.message))
-      )(ZIO.succeed)
+      tokenIsRpt <- ZIO.fromEither(token.isRpt).mapError(Error.ServiceError(_))
+      rpt <-
+        if (tokenIsRpt) ZIO.succeed(token)
+        else {
+          keycloakClient
+            .getRpt(token)
+            .logError("Fail to obtail RPT for wallet permissions")
+            .mapError(e => Error.ServiceError(e.message))
+        }
       permittedResources <- keycloakClient
         .checkPermissions(rpt)
         .logError("Fail to list resource permissions on keycloak")

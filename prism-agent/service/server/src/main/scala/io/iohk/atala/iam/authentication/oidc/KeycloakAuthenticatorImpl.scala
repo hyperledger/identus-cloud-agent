@@ -45,9 +45,8 @@ class KeycloakAuthenticatorImpl(
 
   override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] = {
     for {
-      entityWithRpt <- populateEntityRpt(entity)
       walletId <- keycloakPermissionService
-        .listWalletPermissions(entityWithRpt)
+        .listWalletPermissions(entity)
         .mapError(e => AuthenticationError.UnexpectedError(e.message))
         .flatMap {
           case head +: Nil => ZIO.succeed(head)
@@ -63,42 +62,26 @@ class KeycloakAuthenticatorImpl(
   }
 
   override def authorizeWalletAdmin(entity: KeycloakEntity): IO[AuthenticationError, WalletAdministrationContext] = {
-    val tenantCtx = for {
-      entityWithRpt <- populateEntityRpt(entity)
-      wallets <- keycloakPermissionService
-        .listWalletPermissions(entityWithRpt)
-        .mapError(e => AuthenticationError.UnexpectedError(e.message))
-        .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
-    } yield WalletAdministrationContext.SelfService(wallets)
+    val selfServiceCtx = keycloakPermissionService
+      .listWalletPermissions(entity)
+      .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+      .mapBoth(
+        e => AuthenticationError.UnexpectedError(e.message),
+        wallets => WalletAdministrationContext.SelfService(wallets)
+      )
 
     for {
-     role <- ZIO.fromOption(entity.accessToken)
-        .mapError(_ => AuthenticationError.InvalidCredentials("AccessToken is missing."))
-        .map(accessToken => accessToken.role(roleClaimPath))
-        .map(e => e.left.map(AuthenticationError.InvalidCredentials(_)))
-        .absolve
-    } yield ???
-
-    ???
-  }
-
-  private def populateEntityRpt(entity: KeycloakEntity): IO[AuthenticationError, KeycloakEntity] = {
-    for {
-      token <- ZIO
+      role <- ZIO
         .fromOption(entity.accessToken)
         .mapError(_ => AuthenticationError.InvalidCredentials("AccessToken is missing."))
-      isRpt <- ZIO
-        .fromEither(token.isRpt)
-        .mapError(AuthenticationError.InvalidCredentials.apply)
-      rptEffect =
-        if (isRpt) ZIO.succeed(token)
-        else if (keycloakConfig.autoUpgradeToRPT)
-          client
-            .getRpt(token)
-            .mapError(e => AuthenticationError.UnexpectedError(e.message))
-        else ZIO.fail(AuthenticationError.InvalidCredentials(s"AccessToken is not RPT."))
-      rpt <- rptEffect.logError("Fail to obtail RPT for wallet permissions")
-    } yield entity.copy(rpt = Some(rpt))
+        .map(_.role(roleClaimPath).left.map(AuthenticationError.InvalidCredentials(_)))
+        .debug("role")
+        .absolve
+      ctx <- role match {
+        case JwtRole.Admin  => ZIO.succeed(WalletAdministrationContext.Admin())
+        case JwtRole.Tenant => selfServiceCtx
+      }
+    } yield ctx
   }
 }
 

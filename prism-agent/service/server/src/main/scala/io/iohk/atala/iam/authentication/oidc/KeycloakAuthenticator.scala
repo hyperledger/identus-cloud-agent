@@ -12,23 +12,17 @@ import pdi.jwt.JwtClaim
 import pdi.jwt.JwtOptions
 import zio.*
 import zio.json.ast.Json
-import zio.json.ast.JsonCursor
 
 import java.util.UUID
 
-enum JwtRole(val value: String) {
+enum JwtRole(val name: String) {
   case Admin extends JwtRole("agent-admin")
   case Tenant extends JwtRole("agent-tenant")
 }
 
 object JwtRole {
-  def fromString(s: String): Option[JwtRole] = {
-    s match {
-      case JwtRole.Admin.value  => Some(JwtRole.Admin)
-      case JwtRole.Tenant.value => Some(JwtRole.Tenant)
-      case _                    => None
-    }
-  }
+  private val lookup = JwtRole.values.map(i => i.name -> i).toMap
+  def parseString(s: String): Option[JwtRole] = lookup.get(s)
 }
 
 final class AccessToken private (token: String, claims: JwtClaim) {
@@ -43,31 +37,32 @@ final class AccessToken private (token: String, claims: JwtClaim) {
 
   def role(claimPath: Seq[String]): Either[String, JwtRole] = {
     for {
-      uniqueRoles <- extractRoles(claimPath).map(_.distinct)
+      uniqueRoles <- extractRoles(claimPath).map(_.getOrElse(Nil).distinct)
       r <- uniqueRoles.toList match {
-        case Nil => Right(JwtRole.Tenant)
+        case Nil      => Right(JwtRole.Tenant)
         case r :: Nil => Right(r)
-        case _ => Left(s"Multiple roles is not supported yet.")
+        case _        => Left(s"Multiple roles is not supported yet.")
       }
     } yield r
   }
 
   /** Return a list of roles that is meaningful to the agent */
-  private def extractRoles(claimPath: Seq[String]): Either[String, Seq[JwtRole]] =
+  private def extractRoles(claimPath: Seq[String]): Either[String, Option[Seq[JwtRole]]] =
     Json.decoder
       .decodeJson(claims.content)
       .flatMap { json =>
-        for {
-          rolesJson <- claimPath.foldLeft[Either[String, Json]](Right(json)) { case (json, pathSegment) =>
-            json.flatMap(_.get(JsonCursor.field(pathSegment)))
-          }
-          roles <- rolesJson.asArray
-            .toRight("Roles claim is not a JSON array of strings.")
-            .map(_.flatMap(_.asString))
-            .map(_.flatMap(JwtRole.fromString))
-        } yield roles
+        val rolesJson = claimPath.foldLeft[Option[Json]](Some(json)) { case (acc, pathSegment) =>
+          acc.flatMap(_.asObject).flatMap(_.get(pathSegment))
+        }
+        rolesJson match {
+          case Some(json) =>
+            json.asArray
+              .toRight("Roles claim is not a JSON array of strings.")
+              .map(_.flatMap(_.asString).flatMap(JwtRole.parseString))
+              .map(Some(_))
+          case None => Right(None)
+        }
       }
-
 }
 
 object AccessToken {
@@ -80,8 +75,7 @@ object AccessToken {
       .map(e => s"JWT token cannot be decoded. ${e.getMessage()}")
 }
 
-final case class KeycloakEntity(id: UUID, accessToken: Option[AccessToken] = None, rpt: Option[AccessToken] = None)
-    extends BaseEntity
+final case class KeycloakEntity(id: UUID, accessToken: Option[AccessToken] = None) extends BaseEntity
 
 trait KeycloakAuthenticator extends AuthenticatorWithAuthZ[KeycloakEntity] {
   def authenticate(credentials: Credentials): IO[AuthenticationError, KeycloakEntity] = {
