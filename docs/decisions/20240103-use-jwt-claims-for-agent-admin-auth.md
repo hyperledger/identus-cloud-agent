@@ -9,10 +9,10 @@ Technical Story: [Allow agent admin role to be authenticated by Keycloak JWT | h
 
 ## Context and Problem Statement
 
-External IAM authentication and authorization are currently limited to tenants using the wallets.
 Administrators currently rely on a static API key configured in the agent.
-Enhancing the security of admin access requires extending support for admin authentication through an external IAM.
-This introduces a concept of role to the authentication and authorization process.
+Employing a static API key for administrative operations poses a security challenge for the entire system.
+A standardized centralized permission management system for administrative operations should be integrated,
+to ensure the solution is security-compliant, yet remains extensible and decoupled.
 
 The existing tenant authentication and authorization model relies on UMA (user-managed access)
 which defines resources, policies, and permissions.
@@ -23,15 +23,15 @@ While administrators don't directly use the wallet, they oversee its management.
 Integrating an auth model to distinguish between admins and tenants presents a new challenge.
 
 - Where and how to define the role of admin and tenant?
+- What should be the authorization model for the admin role?
 - What boundary the admin role should be scoped to?
-- How to support different deployment topologies? (e.g. multi-agent in a shared realm, but not share the admin users)
+- How to support different deployment topologies?
 - How does it interact with the resource scope in the UMA model?
 
 ## Decision Drivers
 
 - Must not prevent us from using other IAM systems
 - Must not prevent us from supporting fine-grained tenant wallet access in the future
-- Must allow SSO configuration
 - Should not mix admin access with tenant access
 - Should be easy to setup, configure and maintain
 
@@ -105,7 +105,8 @@ Example JWT payload containing `ClientRole`. (Some claims are omitted for readab
 ```
 The claim is available at `resource_access.<client_id>.roles` by default.
 This is only a convention, not the standard.
-The path to the claim should be configurable by the agent to avoid vendor lock.
+The path to the claim *should be configurable* by the agent to avoid vendor lock
+and remain agnostic to the IAM configuration.
 The agent checks the token to see if it contains the role `agent-admin`,
 then allows the admin-related operations to be performed.
 
@@ -118,6 +119,20 @@ After introducing the role claim, there will be two distinct access control conc
   2. Agent role, which manages agent-level permissions.
      For example, Alice is an admin for agent #1 and can onboard new tenants,
      but this authority doesn't extend to agent #2.
+
+     One important aspect of the agent's role is that it should be wholly segregated.
+     The agent *must* ensure the admin does not access the wallet as a tenant even if wallet permission is granted.
+
+__Proposed agent role authorization model__
+
+Role is a plain text that defines what level of access a user has on a system.
+For the agent, it needs to support 2 roles:
+
+1. __Admin__: `agent-admin`
+2. __Tenant__: `agent-tenant` or implicitly inferred if another role is not specified
+
+This convention allows `RealmRole` to be used when deployed with another component.
+If more granularity is required, `ClientRole` can always be utilized to isolate the role namespace.
 
 ### Positive Consequences
 
@@ -135,9 +150,10 @@ After introducing the role claim, there will be two distinct access control conc
 
 ### Option 2: Use `RealmRole` for defining roles in Keycloak
 
-- Good, because minimal effort is required to define role and include it in the JWT
-- Bad, because roles are at realm level, making it hard to support some topology
+- Good, because minimal effort is required to define the role and include it in the JWT
+- Bad, because roles are at the realm level, making it hard to support some topology
 
+*Note: This option is equally applicable as Option 1, depending on the required topology.*
 ### Option 3: Use custom user attribute for defining roles in Keycloak
 
 - Bad, because role abstraction is already provided by Keycloak. Engineering effort is spent to reinvent the same concept
