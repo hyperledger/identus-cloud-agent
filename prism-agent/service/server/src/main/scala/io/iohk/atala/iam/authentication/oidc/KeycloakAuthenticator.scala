@@ -14,6 +14,7 @@ import zio.*
 import zio.json.ast.Json
 
 import java.util.UUID
+import io.iohk.atala.agent.walletapi.model.EntityRole
 
 enum JwtRole(val name: String) {
   case Admin extends JwtRole("agent-admin")
@@ -35,6 +36,7 @@ final class AccessToken private (token: String, claims: JwtClaim) {
       .flatMap(_.asObject.toRight("JWT payload must be a JSON object"))
       .map(_.contains("authorization"))
 
+  // TODO: move to KeycloakEntity?
   def role(claimPath: Seq[String]): Either[String, JwtRole] = {
     for {
       uniqueRoles <- extractRoles(claimPath).map(_.getOrElse(Nil).distinct)
@@ -75,7 +77,9 @@ object AccessToken {
       .map(e => s"JWT token cannot be decoded. ${e.getMessage()}")
 }
 
-final case class KeycloakEntity(id: UUID, accessToken: Option[AccessToken] = None) extends BaseEntity
+final case class KeycloakEntity(id: UUID, accessToken: Option[AccessToken] = None) extends BaseEntity {
+  override def role: Task[EntityRole] = ???
+}
 
 trait KeycloakAuthenticator extends AuthenticatorWithAuthZ[KeycloakEntity] {
   def authenticate(credentials: Credentials): IO[AuthenticationError, KeycloakEntity] = {

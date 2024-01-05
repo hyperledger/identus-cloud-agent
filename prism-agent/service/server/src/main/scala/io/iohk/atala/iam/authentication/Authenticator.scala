@@ -51,6 +51,7 @@ trait Authorizer[E <: BaseEntity] {
 
 object EntityAuthorizer extends EntityAuthorizer
 
+// TODO: do not allow to authorize if is admin
 trait EntityAuthorizer extends Authorizer[Entity] {
   override def authorize(entity: Entity): IO[AuthenticationError, WalletAccessContext] =
     ZIO.succeed(entity.walletId).map(WalletId.fromUUID).map(WalletAccessContext.apply)

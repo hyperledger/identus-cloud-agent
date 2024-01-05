@@ -45,6 +45,16 @@ class KeycloakAuthenticatorImpl(
 
   override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] = {
     for {
+      role <- ZIO
+        .fromOption(entity.accessToken)
+        .mapError(_ => AuthenticationError.InvalidCredentials("AccessToken is missing."))
+        .map(_.role(roleClaimPath).left.map(AuthenticationError.InvalidCredentials(_)))
+        .absolve
+      _ <- ZIO.cond(
+        role == JwtRole.Tenant,
+        (),
+        AuthenticationError.ResourceNotPermitted(s"Only '${JwtRole.Tenant.name}' role is allow to access the wallet")
+      )
       walletId <- keycloakPermissionService
         .listWalletPermissions(entity)
         .mapError(e => AuthenticationError.UnexpectedError(e.message))
