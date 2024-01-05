@@ -2,6 +2,7 @@ import { Options } from "k6/options";
 import { connectionFlow } from "../common";
 import { defaultOptions } from "../../scenarios/default";
 import merge from "ts-deepmerge";
+
 export const localOptions: Options = {
   thresholds: {
     "group_duration{group:::Issuer initiates connection with Holder}": [
