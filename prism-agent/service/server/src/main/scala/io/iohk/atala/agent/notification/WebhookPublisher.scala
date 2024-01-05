@@ -96,10 +96,11 @@ class WebhookPublisher(
   ): ZIO[Client, UnexpectedError, Unit] = {
     val result = for {
       _ <- ZIO.logDebug(s"Sending event: $event to HTTP webhook URL: $url.")
+      url <- ZIO.fromEither(URL.decode(url)).orDie
       response <- Client
         .request(
           Request(
-            url = URL(path = Path(url)),
+            url = url,
             method = Method.POST,
             headers = baseHeaders ++ headers,
             body = Body.fromString(event.toJson)
