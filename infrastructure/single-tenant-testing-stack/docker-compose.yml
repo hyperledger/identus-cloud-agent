@@ -15,7 +15,7 @@ services:
     ports:
       - 5432:5432
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "castor"]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "agent"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,7 +33,7 @@ services:
     ports:
       - 5433:5432
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "castor"]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "agent"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -51,7 +51,7 @@ services:
     ports:
       - 5434:5432
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "castor"]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "agent"]
       interval: 10s
       timeout: 5s
       retries: 5
