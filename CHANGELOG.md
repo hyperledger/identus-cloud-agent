@@ -1,3 +1,26 @@
+# [1.24.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.23.0...prism-agent-v1.24.0) (2023-12-21)
+
+
+### Features
+
+* add configuration for gRPC usePlainText (enable TLS for gRPC) ([#823](https://github.com/hyperledger-labs/open-enterprise-agent/issues/823)) ([b871bb5](https://github.com/hyperledger-labs/open-enterprise-agent/commit/b871bb5e8eeeb71b3f22c38609ae8f1ff424016c))
+
+# [1.23.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.22.0...prism-agent-v1.23.0) (2023-12-20)
+
+
+### Bug Fixes
+
+* Change resource defaults for postgres ([#827](https://github.com/hyperledger-labs/open-enterprise-agent/issues/827)) ([87809c4](https://github.com/hyperledger-labs/open-enterprise-agent/commit/87809c4b4d6a3baf0afa37a2cf7ddf6c41a80eb6))
+* correct OAS example ([#816](https://github.com/hyperledger-labs/open-enterprise-agent/issues/816)) ([b1384b3](https://github.com/hyperledger-labs/open-enterprise-agent/commit/b1384b38524060f3cfa6df39afaddcce26a5514e))
+* Swithing to startupProbe from Readiness ([#821](https://github.com/hyperledger-labs/open-enterprise-agent/issues/821)) ([22a78ec](https://github.com/hyperledger-labs/open-enterprise-agent/commit/22a78ec09ccc84b5d5c03e8f07ff3a14c654cf2b))
+
+
+### Features
+
+* complete the integration with anoncred and fixes ([#820](https://github.com/hyperledger-labs/open-enterprise-agent/issues/820)) ([15ff710](https://github.com/hyperledger-labs/open-enterprise-agent/commit/15ff710c4a68c5f282e07b23098e362825fdb3b9))
+* Liveness, and readiness probes ([#817](https://github.com/hyperledger-labs/open-enterprise-agent/issues/817)) ([6e18666](https://github.com/hyperledger-labs/open-enterprise-agent/commit/6e18666f51cca2d0f151b070c59049bcf005a450))
+* Tune postgresql - helm chart ([#822](https://github.com/hyperledger-labs/open-enterprise-agent/issues/822)) ([5fcd9fb](https://github.com/hyperledger-labs/open-enterprise-agent/commit/5fcd9fb6301a5c7b1296d60e4b6fa3385ffe6727))
+
 # [1.22.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.21.1...prism-agent-v1.22.0) (2023-12-14)
 
 
