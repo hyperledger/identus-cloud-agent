@@ -27,6 +27,8 @@ object AuthenticationError {
 
   case class ResourceNotPermitted(message: String) extends AuthenticationError
 
+  case class InvalidRole(message: String) extends AuthenticationError
+
   def toErrorResponse(error: AuthenticationError): ErrorResponse =
     ErrorResponse(
       status = sttp.model.StatusCode.Forbidden.code,
@@ -55,7 +57,7 @@ trait Authorizer[E <: BaseEntity] {
         AuthenticationError.UnexpectedError(s"Unable to retrieve entity role for entity id ${entity.id}. $msg")
       )
       .filterOrFail(_ != EntityRole.Admin)(
-        AuthenticationError.ResourceNotPermitted("Admin role is not allowed to access the tenant's wallet.")
+        AuthenticationError.InvalidRole("Admin role is not allowed to access the tenant's wallet.")
       )
       .flatMap(_ => authorizeWalletAccessImpl(entity))
 

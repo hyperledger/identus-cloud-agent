@@ -21,7 +21,7 @@ class IssueServerEndpoints(
 
   val createCredentialOfferEndpoint: ZServerEndpoint[Any, Any] =
     createCredentialOffer
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, request: CreateIssueCredentialRecordRequest) =>
           issueController
@@ -32,7 +32,7 @@ class IssueServerEndpoints(
 
   val getCredentialRecordsEndpoint: ZServerEndpoint[Any, Any] =
     getCredentialRecords
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, paginationInput: PaginationInput, thid: Option[String]) =>
           issueController
@@ -43,7 +43,7 @@ class IssueServerEndpoints(
 
   val getCredentialRecordEndpoint: ZServerEndpoint[Any, Any] =
     getCredentialRecord
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, recordId: String) =>
           issueController
@@ -54,7 +54,7 @@ class IssueServerEndpoints(
 
   val acceptCredentialOfferEndpoint: ZServerEndpoint[Any, Any] =
     acceptCredentialOffer
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, recordId: String, request: AcceptCredentialOfferRequest) =>
           issueController
@@ -65,7 +65,7 @@ class IssueServerEndpoints(
 
   val issueCredentialEndpoint: ZServerEndpoint[Any, Any] =
     issueCredential
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, recordId: String) =>
           issueController

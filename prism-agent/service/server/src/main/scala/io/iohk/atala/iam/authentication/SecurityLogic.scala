@@ -2,6 +2,7 @@ package io.iohk.atala.iam.authentication
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.Entity
+import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
 import io.iohk.atala.iam.authentication.admin.AdminApiKeyCredentials
@@ -36,26 +37,28 @@ object SecurityLogic {
       .mapError(AuthenticationError.toErrorResponse)
   }
 
-  def authorize[E <: BaseEntity](entity: E)(authorizer: Authorizer[E]): IO[ErrorResponse, WalletAccessContext] =
+  def authorizeWalletAccess[E <: BaseEntity](
+      entity: E
+  )(authorizer: Authorizer[E]): IO[ErrorResponse, WalletAccessContext] =
     authorizer
       .authorizeWalletAccess(entity)
       .mapError(AuthenticationError.toErrorResponse)
 
-  def authorize[E <: BaseEntity](credentials: Credentials, others: Credentials*)(
+  def authorizeWalletAccess[E <: BaseEntity](credentials: Credentials, others: Credentials*)(
       authenticator: Authenticator[E],
       authorizer: Authorizer[E]
   ): IO[ErrorResponse, WalletAccessContext] =
     authenticate[E](credentials, others: _*)(authenticator)
       .flatMap {
-        case Left(entity)  => authorize(entity)(EntityAuthorizer)
-        case Right(entity) => authorize(entity)(authorizer)
+        case Left(entity)  => authorizeWalletAccess(entity)(EntityAuthorizer)
+        case Right(entity) => authorizeWalletAccess(entity)(authorizer)
       }
 
-  def authorizeWith[E <: BaseEntity](credentials: (ApiKeyCredentials, JwtCredentials))(
+  def authorizeWalletAccessWith[E <: BaseEntity](credentials: (ApiKeyCredentials, JwtCredentials))(
       authenticator: Authenticator[E],
       authorizer: Authorizer[E]
   ): IO[ErrorResponse, WalletAccessContext] =
-    authorize[E](credentials._2, credentials._1)(authenticator, authorizer)
+    authorizeWalletAccess[E](credentials._2, credentials._1)(authenticator, authorizer)
 
   def authorizeWalletAdmin[E <: BaseEntity](
       entity: E
@@ -75,4 +78,27 @@ object SecurityLogic {
         case Left(entity)  => authorizeWalletAdmin(entity)(EntityAuthorizer).map(entity -> _)
         case Right(entity) => authorizeWalletAdmin(entity)(authorizer).map(entity -> _)
       }
+
+  def authorizeRoleWith[E <: BaseEntity](credentials: AdminApiKeyCredentials)(
+      authenticator: Authenticator[E],
+  )(permittedRole: EntityRole): IO[ErrorResponse, BaseEntity] = {
+    authenticate[E](credentials)(authenticator)
+      .flatMap { ee =>
+        val entity = ee.fold(identity, identity)
+        for {
+          role <-
+            ZIO
+              .fromEither(entity.role)
+              .mapError(msg =>
+                AuthenticationError.UnexpectedError(s"Unable to retrieve entity role for entity id ${entity.id}. $msg")
+              )
+              .mapError(AuthenticationError.toErrorResponse)
+          _ <- ZIO
+            .fail(AuthenticationError.InvalidRole(s"Role $role is not permitted. Expected role $permittedRole."))
+            .when(role != permittedRole)
+            .mapError(AuthenticationError.toErrorResponse)
+        } yield entity
+      }
+  }
+
 }

@@ -1,11 +1,13 @@
 package io.iohk.atala.iam.entity.http
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
+import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
-import io.iohk.atala.iam.authentication.admin.{AdminApiKeyCredentials, AdminApiKeySecurityLogic}
+import io.iohk.atala.iam.authentication.SecurityLogic
+import io.iohk.atala.iam.authentication.admin.{AdminApiKeyCredentials}
 import io.iohk.atala.iam.entity.http.EntityEndpoints.*
 import io.iohk.atala.iam.entity.http.controller.EntityController
 import io.iohk.atala.iam.entity.http.model.{
@@ -22,7 +24,7 @@ import java.util.UUID
 class EntityServerEndpoints(entityController: EntityController, authenticator: Authenticator[BaseEntity]) {
 
   private def adminApiSecurityLogic(credentials: AdminApiKeyCredentials): IO[ErrorResponse, BaseEntity] =
-    AdminApiKeySecurityLogic.securityLogic(credentials)(authenticator)
+    SecurityLogic.authorizeRoleWith(credentials)(authenticator)(EntityRole.Admin)
 
   val createEntityServerEndpoint: ZServerEndpoint[Any, Any] = createEntityEndpoint
     .zServerSecurityLogic(adminApiSecurityLogic)
