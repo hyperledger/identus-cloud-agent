@@ -38,7 +38,7 @@ object SecurityLogic {
 
   def authorize[E <: BaseEntity](entity: E)(authorizer: Authorizer[E]): IO[ErrorResponse, WalletAccessContext] =
     authorizer
-      .authorize(entity)
+      .authorizeWalletAccess(entity)
       .mapError(AuthenticationError.toErrorResponse)
 
   def authorize[E <: BaseEntity](credentials: Credentials, others: Credentials*)(

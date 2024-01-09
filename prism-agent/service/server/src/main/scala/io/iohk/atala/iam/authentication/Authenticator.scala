@@ -45,7 +45,7 @@ trait Authenticator[E <: BaseEntity] {
 }
 
 trait Authorizer[E <: BaseEntity] {
-  def authorize(entity: E): IO[AuthenticationError, WalletAccessContext]
+  def authorizeWalletAccess(entity: E): IO[AuthenticationError, WalletAccessContext]
   def authorizeWalletAdmin(entity: E): IO[AuthenticationError, WalletAdministrationContext]
 }
 
@@ -53,7 +53,7 @@ object EntityAuthorizer extends EntityAuthorizer
 
 // TODO: do not allow to authorize if is admin
 trait EntityAuthorizer extends Authorizer[Entity] {
-  override def authorize(entity: Entity): IO[AuthenticationError, WalletAccessContext] =
+  override def authorizeWalletAccess(entity: Entity): IO[AuthenticationError, WalletAccessContext] =
     ZIO.succeed(entity.walletId).map(WalletId.fromUUID).map(WalletAccessContext.apply)
 
   override def authorizeWalletAdmin(entity: Entity): IO[AuthenticationError, WalletAdministrationContext] = {
@@ -70,8 +70,8 @@ object DefaultEntityAuthenticator extends AuthenticatorWithAuthZ[BaseEntity] {
 
   override def isEnabled: Boolean = true
   override def authenticate(credentials: Credentials): IO[AuthenticationError, BaseEntity] = ZIO.succeed(Entity.Default)
-  override def authorize(entity: BaseEntity): IO[AuthenticationError, WalletAccessContext] =
-    EntityAuthorizer.authorize(Entity.Default)
+  override def authorizeWalletAccess(entity: BaseEntity): IO[AuthenticationError, WalletAccessContext] =
+    EntityAuthorizer.authorizeWalletAccess(Entity.Default)
   override def authorizeWalletAdmin(entity: BaseEntity): IO[AuthenticationError, WalletAdministrationContext] =
     EntityAuthorizer.authorizeWalletAdmin(Entity.Default)
 

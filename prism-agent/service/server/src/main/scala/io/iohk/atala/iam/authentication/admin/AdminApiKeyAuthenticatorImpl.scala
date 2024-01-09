@@ -10,7 +10,7 @@ case class AdminApiKeyAuthenticatorImpl(adminConfig: AdminConfig) extends AdminA
   def authenticate(adminApiKey: String): IO[AuthenticationError, Entity] = {
     if (adminApiKey == adminConfig.token) {
       ZIO.logDebug(s"Admin API key authentication successful") *>
-        ZIO.succeed(Admin)
+        ZIO.succeed(Entity.Admin)
     } else ZIO.fail(AdminApiKeyAuthenticationError.invalidAdminApiKey)
   }
 }

@@ -44,18 +44,13 @@ class KeycloakAuthenticatorImpl(
     } else ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
   }
 
-  override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] = {
+  override def authorizeWalletAccess(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] = {
     for {
       role <- ZIO
         .fromOption(entity.accessToken)
         .mapError(_ => AuthenticationError.InvalidCredentials("AccessToken is missing."))
         .map(_.role(roleClaimPath).left.map(AuthenticationError.InvalidCredentials(_)))
         .absolve
-      _ <- ZIO.cond(
-        role == EntityRole.Tenant,
-        (),
-        AuthenticationError.ResourceNotPermitted(s"Only '${EntityRole.Tenant}' role is allow to access the wallet")
-      )
       walletId <- keycloakPermissionService
         .listWalletPermissions(entity)
         .mapError(e => AuthenticationError.UnexpectedError(e.message))
@@ -108,7 +103,8 @@ object KeycloakAuthenticatorImpl {
       new KeycloakAuthenticator {
         override def isEnabled: Boolean = false
         override def authenticate(token: String): IO[AuthenticationError, KeycloakEntity] = notEnabledError
-        override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] = notEnabledError
+        override def authorizeWalletAccess(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] =
+          notEnabledError
         override def authorizeWalletAdmin(
             entity: KeycloakEntity
         ): IO[AuthenticationError, WalletAdministrationContext] =
