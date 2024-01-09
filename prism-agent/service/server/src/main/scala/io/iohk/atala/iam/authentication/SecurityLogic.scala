@@ -79,10 +79,10 @@ object SecurityLogic {
         case Right(entity) => authorizeWalletAdmin(entity)(authorizer).map(entity -> _)
       }
 
-  def authorizeRoleWith[E <: BaseEntity](credentials: AdminApiKeyCredentials)(
+  def authorizeRoleWith[E <: BaseEntity](credentials: (AdminApiKeyCredentials, JwtCredentials))(
       authenticator: Authenticator[E],
   )(permittedRole: EntityRole): IO[ErrorResponse, BaseEntity] = {
-    authenticate[E](credentials)(authenticator)
+    authenticate[E](credentials._1, credentials._2)(authenticator)
       .flatMap { ee =>
         val entity = ee.fold(identity, identity)
         for {
@@ -94,7 +94,7 @@ object SecurityLogic {
               )
               .mapError(AuthenticationError.toErrorResponse)
           _ <- ZIO
-            .fail(AuthenticationError.InvalidRole(s"Role $role is not permitted. Expected role $permittedRole."))
+            .fail(AuthenticationError.InvalidRole(s"$role role is not permitted. Expected $permittedRole role."))
             .when(role != permittedRole)
             .mapError(AuthenticationError.toErrorResponse)
         } yield entity
