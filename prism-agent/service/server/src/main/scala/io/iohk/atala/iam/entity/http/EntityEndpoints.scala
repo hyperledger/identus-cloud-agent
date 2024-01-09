@@ -208,7 +208,7 @@ object EntityEndpoints {
     Any
   ] = endpoint.post
     .securityIn(adminApiKeyHeader)
-      .securityIn(jwtAuthHeader)
+    .securityIn(jwtAuthHeader)
     .in(extractFromRequest[RequestContext](RequestContext.apply))
     .in("iam" / "apikey-authentication")
     .in(
