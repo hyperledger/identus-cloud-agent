@@ -2,6 +2,7 @@ package io.iohk.atala.iam.authentication
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.Entity
+import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletAdministrationContext
@@ -45,15 +46,26 @@ trait Authenticator[E <: BaseEntity] {
 }
 
 trait Authorizer[E <: BaseEntity] {
-  def authorizeWalletAccess(entity: E): IO[AuthenticationError, WalletAccessContext]
+  protected def authorizeWalletAccessImpl(entity: E): IO[AuthenticationError, WalletAccessContext]
+
+  final def authorizeWalletAccess(entity: E): IO[AuthenticationError, WalletAccessContext] =
+    ZIO
+      .fromEither(entity.role)
+      .mapError(msg =>
+        AuthenticationError.UnexpectedError(s"Unable to retrieve entity role for entity id ${entity.id}. $msg")
+      )
+      .filterOrFail(_ != EntityRole.Admin)(
+        AuthenticationError.ResourceNotPermitted("Admin role is not allowed to access the tenant's wallet.")
+      )
+      .flatMap(_ => authorizeWalletAccessImpl(entity))
+
   def authorizeWalletAdmin(entity: E): IO[AuthenticationError, WalletAdministrationContext]
 }
 
 object EntityAuthorizer extends EntityAuthorizer
 
-// TODO: do not allow to authorize if is admin
 trait EntityAuthorizer extends Authorizer[Entity] {
-  override def authorizeWalletAccess(entity: Entity): IO[AuthenticationError, WalletAccessContext] =
+  override def authorizeWalletAccessImpl(entity: Entity): IO[AuthenticationError, WalletAccessContext] =
     ZIO.succeed(entity.walletId).map(WalletId.fromUUID).map(WalletAccessContext.apply)
 
   override def authorizeWalletAdmin(entity: Entity): IO[AuthenticationError, WalletAdministrationContext] = {
@@ -70,8 +82,8 @@ object DefaultEntityAuthenticator extends AuthenticatorWithAuthZ[BaseEntity] {
 
   override def isEnabled: Boolean = true
   override def authenticate(credentials: Credentials): IO[AuthenticationError, BaseEntity] = ZIO.succeed(Entity.Default)
-  override def authorizeWalletAccess(entity: BaseEntity): IO[AuthenticationError, WalletAccessContext] =
-    EntityAuthorizer.authorizeWalletAccess(Entity.Default)
+  override def authorizeWalletAccessImpl(entity: BaseEntity): IO[AuthenticationError, WalletAccessContext] =
+    EntityAuthorizer.authorizeWalletAccessImpl(Entity.Default)
   override def authorizeWalletAdmin(entity: BaseEntity): IO[AuthenticationError, WalletAdministrationContext] =
     EntityAuthorizer.authorizeWalletAdmin(Entity.Default)
 

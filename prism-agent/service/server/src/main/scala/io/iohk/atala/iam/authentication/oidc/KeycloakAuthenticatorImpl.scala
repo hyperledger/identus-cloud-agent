@@ -44,7 +44,7 @@ class KeycloakAuthenticatorImpl(
     } else ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
   }
 
-  override def authorizeWalletAccess(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] = {
+  override def authorizeWalletAccessImpl(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] = {
     for {
       role <- ZIO
         .fromOption(entity.accessToken)
@@ -103,7 +103,7 @@ object KeycloakAuthenticatorImpl {
       new KeycloakAuthenticator {
         override def isEnabled: Boolean = false
         override def authenticate(token: String): IO[AuthenticationError, KeycloakEntity] = notEnabledError
-        override def authorizeWalletAccess(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] =
+        override def authorizeWalletAccessImpl(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] =
           notEnabledError
         override def authorizeWalletAdmin(
             entity: KeycloakEntity

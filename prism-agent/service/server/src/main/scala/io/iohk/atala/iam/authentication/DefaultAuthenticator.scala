@@ -24,10 +24,11 @@ case class DefaultAuthenticator(
     case keycloakCredentials: JwtCredentials            => keycloakAuthenticator(keycloakCredentials)
   }
 
-  override def authorizeWalletAccess(entity: BaseEntity): IO[AuthenticationError, WalletAccessContext] = entity match {
-    case entity: Entity           => EntityAuthorizer.authorizeWalletAccess(entity)
-    case kcEntity: KeycloakEntity => keycloakAuthenticator.authorizeWalletAccess(kcEntity)
-  }
+  override def authorizeWalletAccessImpl(entity: BaseEntity): IO[AuthenticationError, WalletAccessContext] =
+    entity match {
+      case entity: Entity           => EntityAuthorizer.authorizeWalletAccess(entity)
+      case kcEntity: KeycloakEntity => keycloakAuthenticator.authorizeWalletAccess(kcEntity)
+    }
 
   override def authorizeWalletAdmin(entity: BaseEntity): IO[AuthenticationError, WalletAdministrationContext] =
     entity match {
