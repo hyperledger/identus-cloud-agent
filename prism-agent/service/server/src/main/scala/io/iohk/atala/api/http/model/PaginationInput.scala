@@ -1,17 +1,16 @@
 package io.iohk.atala.api.http.model
 
-import sttp.tapir.EndpointIO.annotations.query
+import sttp.tapir.EndpointIO.annotations.{description, query}
 import sttp.tapir.Schema.annotations.validateEach
-import sttp.tapir.Validator
-import sttp.tapir.Schema
-
-import io.iohk.atala.api.http.Annotation
+import sttp.tapir.{Schema, Validator}
 case class PaginationInput(
     @query
     @validateEach(Validator.positiveOrZero[Int])
+    @description("The number of items to skip before returning results. Default is 0 if not specified.")
     offset: Option[Int] = None,
     @query
     @validateEach(Validator.positive[Int])
+    @description("The maximum number of items to return. Defaults to 100 if not specified.")
     limit: Option[Int] = None
 ) {
   def toPagination = Pagination.apply(this)
@@ -23,21 +22,6 @@ case class Pagination(offset: Int, limit: Int) {
 }
 
 object Pagination {
-
-  object annotations {
-    object offset
-        extends Annotation[Int](
-          description = "The number of items to skip before returning results. Default is 0 if not specified",
-          example = 0
-        )
-
-    object limit
-        extends Annotation[Int](
-          description = "The maximum number of items to return. Defaults to 100 if not specified.",
-          example = 100
-        )
-  }
-
   def apply(in: PaginationInput): Pagination =
     Pagination(in.offset.getOrElse(0), in.limit.getOrElse(100))
 }
