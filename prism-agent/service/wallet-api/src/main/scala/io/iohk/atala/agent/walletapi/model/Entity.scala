@@ -8,12 +8,13 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 enum EntityRole {
-  case Admin, Tenant
+  case Admin extends EntityRole
+  case Tenant extends EntityRole
 }
 
 trait BaseEntity {
   def id: UUID
-  def role: Task[EntityRole]
+  def role: Either[String, EntityRole]
 }
 
 case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, updatedAt: Instant) extends BaseEntity {
@@ -21,9 +22,9 @@ case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, up
   def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): Entity =
     copy(createdAt = createdAt.truncatedTo(unit), updatedAt.truncatedTo(unit))
 
-  def role: Task[EntityRole] =
-    if (this == Entity.Admin) ZIO.succeed(EntityRole.Admin)
-    else ZIO.succeed(EntityRole.Tenant)
+  def role: Either[String, EntityRole] =
+    if (this == Entity.Admin) Right(EntityRole.Admin)
+    else Right(EntityRole.Tenant)
 }
 
 object Entity {

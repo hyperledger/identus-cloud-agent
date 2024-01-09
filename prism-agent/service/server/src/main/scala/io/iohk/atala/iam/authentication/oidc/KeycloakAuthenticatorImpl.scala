@@ -1,5 +1,6 @@
 package io.iohk.atala.iam.authentication.oidc
 
+import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
 import io.iohk.atala.iam.authorization.core.PermissionManagement
@@ -39,7 +40,7 @@ class KeycloakAuthenticatorImpl(
               .attempt(UUID.fromString(id))
               .mapError(e => AuthenticationError.UnexpectedError(s"Subject ID in accessToken is not a UUID. $e"))
           }
-      } yield KeycloakEntity(entityId, accessToken = Some(accessToken))
+      } yield KeycloakEntity(entityId, accessToken = Some(accessToken), roleClaimPath = roleClaimPath)
     } else ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
   }
 
@@ -51,9 +52,9 @@ class KeycloakAuthenticatorImpl(
         .map(_.role(roleClaimPath).left.map(AuthenticationError.InvalidCredentials(_)))
         .absolve
       _ <- ZIO.cond(
-        role == JwtRole.Tenant,
+        role == EntityRole.Tenant,
         (),
-        AuthenticationError.ResourceNotPermitted(s"Only '${JwtRole.Tenant.name}' role is allow to access the wallet")
+        AuthenticationError.ResourceNotPermitted(s"Only '${EntityRole.Tenant}' role is allow to access the wallet")
       )
       walletId <- keycloakPermissionService
         .listWalletPermissions(entity)
@@ -87,8 +88,8 @@ class KeycloakAuthenticatorImpl(
         .map(_.role(roleClaimPath).left.map(AuthenticationError.InvalidCredentials(_)))
         .absolve
       ctx <- role match {
-        case JwtRole.Admin  => ZIO.succeed(WalletAdministrationContext.Admin())
-        case JwtRole.Tenant => selfServiceCtx
+        case EntityRole.Admin  => ZIO.succeed(WalletAdministrationContext.Admin())
+        case EntityRole.Tenant => selfServiceCtx
       }
     } yield ctx
   }
