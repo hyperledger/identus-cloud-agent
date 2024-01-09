@@ -1,6 +1,7 @@
 package io.iohk.atala.agent.server.http
 
 import io.iohk.atala.connect.controller.ConnectionEndpoints
+import io.iohk.atala.pollux.credentialschema.VerificationPolicyEndpoints
 import sttp.apispec.openapi.*
 import sttp.apispec.{SecurityScheme, Tag}
 import sttp.model.headers.AuthenticationScheme
@@ -50,9 +51,21 @@ object DocModels {
         Info(
           title = "Open Enterprise Agent API Reference",
           version = "1.0", // Will be replaced dynamically by 'Tapir2StaticOAS'
-          summary = Some("Info - Summary"),
-          description = Some("Info - Description"),
-          termsOfService = Some("Info - Terms Of Service"),
+          summary = Some("""
+              |This API provides interfaces for managing decentralized identities and secure communications in a self-sovereign identity framework.
+              |It enables seamless interaction with various decentralized identity protocols and services using the [Open Enterprise Agent](https://github.com/hyperledger-labs/open-enterprise-agent)
+              |""".stripMargin),
+          description = Some("""
+              |The Open Enterprise Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
+              |It supports DID (Decentralized Identifiers) management, verifiable credential exchange, and secure messaging based on DIDComm standards.
+              |The API is designed to be interoperable with various blockchain and DLT (Distributed Ledger Technology) platforms, ensuring wide compatibility and flexibility.
+              |Key features include connection management, credential issuance and verification, and secure, privacy-preserving communication between entities.
+              |Additional information and the full list of capabilities can be found in the [Open Enterprise Agent documentation](https://docs.atalaprism.io/docs/category/prism-cloud-agent)
+              |""".stripMargin),
+          termsOfService = Some("""
+              |Users of the Open Enterprise Agent API must adhere to the terms and conditions outlined in [Link to Terms of Service](/).
+              |This includes compliance with relevant data protection regulations, responsible usage policies, and adherence to the principles of decentralized identity management.
+              |""".stripMargin),
           contact = Some(
             Contact(
               name = Some("Contact - Name"),
@@ -63,8 +76,8 @@ object DocModels {
           ),
           license = Some(
             License(
-              name = "License - Name",
-              url = Some("License - URL"),
+              name = "Apache 2.0",
+              url = Some("https://www.apache.org/licenses/LICENSE-2.0"),
               extensions = ListMap.empty
             )
           ),
@@ -101,23 +114,8 @@ object DocModels {
       )
       .tags(
         List(
-          Tag(
-            ConnectionEndpoints.TAG,
-            Some(
-              s"""
-                 |The '${ConnectionEndpoints.TAG}' endpoints facilitate the initiation of connection flows between the current agent and peer agents, regardless of whether they reside in cloud or edge environments.
-                 |<br>
-                 |This implementation adheres to the DIDComm Messaging v2.0 - [Out of Band Messages](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) specification [section 9.5.4](https://identity.foundation/didcomm-messaging/spec/v2.0/#invitation) - to generate invitations.
-                 |The <b>from</b> field of the out-of-band invitation message contains a freshly generated Peer DID that complies with the [did:peer:2](https://identity.foundation/peer-did-method-spec/#generating-a-didpeer2) specification.
-                 |This Peer DID includes the 'uri' location of the DIDComm messaging service, essential for the invitee's subsequent execution of the connection flow.
-                 |<br>
-                 |Upon accepting an invitation, the invitee sends a connection request to the inviter's DIDComm messaging service endpoint.
-                 |The connection request's 'type' attribute must be specified as "https://atalaprism.io/mercury/connections/1.0/request".
-                 |The inviter agent responds with a connection response message, indicated by a 'type' attribute of "https://atalaprism.io/mercury/connections/1.0/response".
-                 |Both request and response types are proprietary to the Open Enterprise Agent ecosystem.
-                 |""".stripMargin
-            )
-          )
+          ConnectionEndpoints.tag,
+          VerificationPolicyEndpoints.tag
         )
       )
 
