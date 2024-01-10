@@ -3,6 +3,7 @@ package io.iohk.atala.api.http.model
 import sttp.tapir.EndpointIO.annotations.{description, query}
 import sttp.tapir.Schema.annotations.validateEach
 import sttp.tapir.{Schema, Validator}
+
 case class PaginationInput(
     @query
     @validateEach(Validator.positiveOrZero[Int])

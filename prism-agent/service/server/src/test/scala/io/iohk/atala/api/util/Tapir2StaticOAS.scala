@@ -32,6 +32,7 @@ object Tapir2StaticOAS extends ZIOAppDefault {
   @main override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = {
     val effect = for {
       args <- getArgs
+      _ <- ZIO.when(args.length != 2)(ZIO.fail("Usage: Tapir2StaticOAS <output file> <server url>"))
       allEndpoints <- AgentHttpServer.agentRESTServiceEndpoints
     } yield {
       import sttp.apispec.openapi.circe.yaml.*

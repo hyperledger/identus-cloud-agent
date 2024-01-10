@@ -13,6 +13,7 @@ import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
+import sttp.apispec.Tag
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
@@ -21,7 +22,22 @@ import java.util.UUID
 
 object ConnectionEndpoints {
 
-  val TAG: String = "Connections Management"
+  private val tagName = "Connections Management"
+  private val tagDescription =
+    s"""
+       |The '$tagName' endpoints facilitate the initiation of connection flows between the current agent and peer agents, regardless of whether they reside in cloud or edge environments.
+       |<br>
+       |This implementation adheres to the DIDComm Messaging v2.0 - [Out of Band Messages](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) specification [section 9.5.4](https://identity.foundation/didcomm-messaging/spec/v2.0/#invitation) - to generate invitations.
+       |The <b>from</b> field of the out-of-band invitation message contains a freshly generated Peer DID that complies with the [did:peer:2](https://identity.foundation/peer-did-method-spec/#generating-a-didpeer2) specification.
+       |This Peer DID includes the 'uri' location of the DIDComm messaging service, essential for the invitee's subsequent execution of the connection flow.
+       |<br>
+       |Upon accepting an invitation, the invitee sends a connection request to the inviter's DIDComm messaging service endpoint.
+       |The connection request's 'type' attribute must be specified as "https://atalaprism.io/mercury/connections/1.0/request".
+       |The inviter agent responds with a connection response message, indicated by a 'type' attribute of "https://atalaprism.io/mercury/connections/1.0/response".
+       |Both request and response types are proprietary to the Open Enterprise Agent ecosystem.
+       |""".stripMargin
+
+  val tag = Tag(tagName, Some(tagDescription))
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 
@@ -61,7 +77,7 @@ object ConnectionEndpoints {
          |In the agent database, the created connection record has an initial state set to `InvitationGenerated`.
          |The request body may contain a `label` that can be used as a human readable alias for the connection, for example `{'label': "Connection with Bob"}`
          |""".stripMargin)
-      .tag(TAG)
+      .tag(tagName)
 
   val getConnection
       : Endpoint[(ApiKeyCredentials, JwtCredentials), (RequestContext, UUID), ErrorResponse, Connection, Any] =
@@ -85,7 +101,7 @@ object ConnectionEndpoints {
           |The API returns a comprehensive collection of connection flow records within the system, regardless of their state.
           |The returned connection item includes essential metadata such as connection ID, thread ID, state, role, participant information, and other relevant details.
           |""".stripMargin)
-      .tag(TAG)
+      .tag(tagName)
 
   val getConnections: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
@@ -117,7 +133,7 @@ object ConnectionEndpoints {
           |Each connection item includes essential metadata such as connection ID, thread ID, state, role, participant information, and other relevant details.
           |Pagination support is available, allowing for efficient handling of large datasets.
           |""".stripMargin)
-      .tag(TAG)
+      .tag(tagName)
 
   val acceptConnectionInvitation: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
@@ -154,6 +170,6 @@ object ConnectionEndpoints {
           |The created record will contain a newly generated pairwise Peer DID used for that connection.
           |A connection request will then be sent to the peer agent to actually establish the connection, moving the record state to `ConnectionRequestSent`, and waiting the connection response from the peer agent.
           |""".stripMargin)
-      .tag(TAG)
+      .tag(tagName)
 
 }
