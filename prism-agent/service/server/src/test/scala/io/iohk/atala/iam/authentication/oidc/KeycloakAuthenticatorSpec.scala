@@ -1,6 +1,7 @@
 package io.iohk.atala.iam.authentication.oidc
 
 import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
+import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
@@ -16,6 +17,7 @@ import io.iohk.atala.sharedtest.containers.KeycloakTestContainerSupport
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import org.keycloak.authorization.client.AuthzClient
+import org.keycloak.representations.idm.RoleRepresentation
 import org.keycloak.representations.idm.UserRepresentation
 import org.keycloak.representations.idm.authorization.ResourceRepresentation
 import org.keycloak.representations.idm.authorization.UmaPermissionRepresentation
@@ -78,9 +80,43 @@ object KeycloakAuthenticatorSpec
       _ <- ZIO.attemptBlocking(authzClient.protection().policy(resourceId).create(policy))
     } yield ()
 
+  // TODO: move to keycloak support shared trait
+  private def grantAdminRole(userId: String) =
+    for {
+      adminClient <- adminClientZIO
+      realmResource <- ZIO.attemptBlocking(adminClient.realm(realmName))
+      clientRepr <- ZIO.attemptBlocking(
+        realmResource.clients().findByClientId(agentClientRepresentation.getClientId()).get(0)
+      )
+      clientResource <- ZIO.attemptBlocking(realmResource.clients().get(clientRepr.getId()))
+      userRepr <- ZIO.attemptBlocking(realmResource.users().searchByUsername(userId, true).get(0))
+      _ <- ZIO.attemptBlocking(
+        clientResource
+          .roles()
+          .create(RoleRepresentation("agent-admin", "", false))
+      )
+      roleRepr <- ZIO.attemptBlocking(
+        clientResource
+          .roles()
+          .list()
+          .asScala
+          .find(_.getName() == "agent-admin")
+          .get
+      )
+      _ <- ZIO.attemptBlocking(
+        realmResource
+          .users()
+          .get(userRepr.getId())
+          .roles()
+          .clientLevel(clientRepr.getId())
+          .add(List(roleRepr).asJava)
+      )
+    } yield ()
+
   override def spec = {
-    val basicSpec = authenticateSpec @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
-    val disabledAutoRptSpec = authenticateDisabledAutoRptSpec @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+    val basicSpec = authorizeWalletAccessSpec @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+    val disabledAutoRptSpec =
+      authorizedWalletAccessDisabledAutoRptSpec @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
     suite("KeycloakAuthenticatorSepc")(
       basicSpec
@@ -121,7 +157,7 @@ object KeycloakAuthenticatorSpec
       .provide(Runtime.removeDefaultLoggers) @@ TestAspect.sequential
   }
 
-  private val authenticateSpec = suite("authenticate")(
+  private val authorizeWalletAccessSpec = suite("authenticate")(
     test("allow token with a permitted wallet") {
       for {
         client <- ZIO.service[KeycloakClient]
@@ -132,8 +168,9 @@ object KeycloakAuthenticatorSpec
         _ <- createResourcePermission(wallet.id, "alice")
         token <- client.getAccessToken("alice", "1234").map(_.access_token)
         entity <- authenticator.authenticate(token)
+        role <- ZIO.fromEither(entity.role)
         permittedWallet <- authenticator.authorizeWalletAccess(entity)
-      } yield assert(wallet.id)(equalTo(permittedWallet.walletId))
+      } yield assert(wallet.id)(equalTo(permittedWallet.walletId)) && assert(role)(equalTo(EntityRole.Tenant))
     },
     test("reject token with a wallet that doesn't exist") {
       for {
@@ -202,10 +239,27 @@ object KeycloakAuthenticatorSpec
         entity <- authenticator.authenticate(token)
         exit <- authenticator.authorizeWalletAccess(entity).exit
       } yield assert(exit)(fails(isSubtype[AuthenticationError.ResourceNotPermitted](anything)))
-    }
+    },
+    test("admin role is not authorized for wallet access") {
+      for {
+        client <- ZIO.service[KeycloakClient]
+        authenticator <- ZIO.service[KeycloakAuthenticator]
+        wallet <- ZIO.serviceWithZIO[WalletManagementService](_.createWallet(Wallet("wallet-1")))
+        _ <- createWalletResource(wallet.id, "wallet-1")
+        _ <- createUser("alice", "1234")
+        _ <- createResourcePermission(wallet.id, "alice")
+        _ <- grantAdminRole("alice")
+        token <- client.getAccessToken("alice", "1234").map(_.access_token)
+        entity <- authenticator.authenticate(token)
+        role <- ZIO.fromEither(entity.role)
+        exit <- authenticator.authorizeWalletAccess(entity).exit
+      } yield assert(exit)(fails(isSubtype[AuthenticationError.InvalidRole](anything))) && assert(role)(
+        equalTo(EntityRole.Admin)
+      )
+    } @@ TestAspect.tag("dev")
   )
 
-  private val authenticateDisabledAutoRptSpec = suite("authenticate with auto-upgrade RPT disabled")(
+  private val authorizedWalletAccessDisabledAutoRptSpec = suite("authenticate with auto-upgrade RPT disabled")(
     test("reject non-RPT token") {
       for {
         client <- ZIO.service[KeycloakClient]
