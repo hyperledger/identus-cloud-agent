@@ -36,6 +36,8 @@ object PermissionManagement {
           s"Permission not found by userId: $userId, walletId: ${walletId.toUUID}, walletResourceId: $walletResourceId"
         )
 
+    case class PermissionNotAvailable(userId: UUID, cause: String) extends Error(cause)
+
     case class UnexpectedError(cause: Throwable) extends Error(cause.getMessage)
 
     case class ServiceError(cause: String) extends Error(cause)

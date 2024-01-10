@@ -118,7 +118,7 @@ object KeycloakAuthenticatorSpec
           ZLayer.succeed(WalletAdministrationContext.Admin())
         )
     )
-      .provide(Runtime.removeDefaultLoggers)
+      .provide(Runtime.removeDefaultLoggers) @@ TestAspect.sequential
   }
 
   private val authenticateSpec = suite("authenticate")(

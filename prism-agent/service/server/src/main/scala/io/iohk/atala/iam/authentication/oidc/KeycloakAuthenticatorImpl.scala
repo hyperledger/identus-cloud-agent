@@ -4,6 +4,7 @@ import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
 import io.iohk.atala.iam.authorization.core.PermissionManagement
+import io.iohk.atala.iam.authorization.core.PermissionManagement.Error.PermissionNotAvailable
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletAdministrationContext
 import zio.*
@@ -53,7 +54,10 @@ class KeycloakAuthenticatorImpl(
         .absolve
       walletId <- keycloakPermissionService
         .listWalletPermissions(entity)
-        .mapError(e => AuthenticationError.UnexpectedError(e.message))
+        .mapError {
+          case PermissionNotAvailable(_, msg) => AuthenticationError.InvalidCredentials(msg)
+          case e                              => AuthenticationError.UnexpectedError(e.message)
+        }
         .flatMap {
           case head +: Nil => ZIO.succeed(head)
           case Nil =>

@@ -35,6 +35,8 @@ object KeycloakClientError {
 
 trait KeycloakClient {
 
+  val keycloakConfig: KeycloakConfig
+
   def getRpt(accessToken: AccessToken): IO[KeycloakClientError, AccessToken]
 
   def getAccessToken(username: String, password: String): IO[KeycloakClientError, TokenResponse]
@@ -46,7 +48,7 @@ trait KeycloakClient {
 
 }
 
-class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig: KeycloakConfig)
+class KeycloakClientImpl(client: AuthzClient, httpClient: Client, override val keycloakConfig: KeycloakConfig)
     extends KeycloakClient {
 
   private val introspectionUrl = client.getServerConfiguration().getIntrospectionEndpoint()
