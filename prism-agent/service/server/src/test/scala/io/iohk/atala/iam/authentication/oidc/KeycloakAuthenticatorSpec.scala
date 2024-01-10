@@ -45,7 +45,8 @@ object KeycloakAuthenticatorSpec
           realmName = realmName,
           clientId = agentClientRepresentation.getClientId(),
           clientSecret = agentClientSecret,
-          autoUpgradeToRPT = authUpgradeToRPT
+          autoUpgradeToRPT = authUpgradeToRPT,
+          rolesClaimPath = "resource_access.prism-agent.roles"
         )
       }
     }
@@ -131,7 +132,7 @@ object KeycloakAuthenticatorSpec
         _ <- createResourcePermission(wallet.id, "alice")
         token <- client.getAccessToken("alice", "1234").map(_.access_token)
         entity <- authenticator.authenticate(token)
-        permittedWallet <- authenticator.authorize(entity)
+        permittedWallet <- authenticator.authorizeWalletAccess(entity)
       } yield assert(wallet.id)(equalTo(permittedWallet.walletId))
     },
     test("reject token with a wallet that doesn't exist") {
@@ -144,7 +145,7 @@ object KeycloakAuthenticatorSpec
         _ <- createResourcePermission(walletId, "alice")
         token <- client.getAccessToken("alice", "1234").map(_.access_token)
         entity <- authenticator.authenticate(token)
-        exit <- authenticator.authorize(entity).exit
+        exit <- authenticator.authorizeWalletAccess(entity).exit
       } yield assert(exit)(fails(isSubtype[AuthenticationError.ResourceNotPermitted](anything)))
     },
     test("reject token with multiple permitted wallets") {
@@ -160,7 +161,7 @@ object KeycloakAuthenticatorSpec
         _ <- createResourcePermission(wallet2.id, "alice")
         token <- client.getAccessToken("alice", "1234").map(_.access_token)
         entity <- authenticator.authenticate(token)
-        exit <- authenticator.authorize(entity).exit
+        exit <- authenticator.authorizeWalletAccess(entity).exit
       } yield assert(exit)(
         fails(
           isSubtype[AuthenticationError.UnexpectedError](
@@ -199,7 +200,7 @@ object KeycloakAuthenticatorSpec
         _ <- createUser("alice", "1234")
         token <- client.getAccessToken("alice", "1234").map(_.access_token)
         entity <- authenticator.authenticate(token)
-        exit <- authenticator.authorize(entity).exit
+        exit <- authenticator.authorizeWalletAccess(entity).exit
       } yield assert(exit)(fails(isSubtype[AuthenticationError.ResourceNotPermitted](anything)))
     }
   )
@@ -213,7 +214,7 @@ object KeycloakAuthenticatorSpec
         _ <- createUser("alice", "1234")
         token <- client.getAccessToken("alice", "1234").map(_.access_token)
         entity <- authenticator.authenticate(token)
-        exit <- authenticator.authorize(entity).exit
+        exit <- authenticator.authorizeWalletAccess(entity).exit
       } yield assert(exit)(
         fails(
           isSubtype[AuthenticationError.InvalidCredentials](
@@ -230,10 +231,10 @@ object KeycloakAuthenticatorSpec
         _ <- createWalletResource(wallet.id, "wallet-1")
         _ <- createUser("alice", "1234")
         _ <- createResourcePermission(wallet.id, "alice")
-        token <- client.getAccessToken("alice", "1234").map(_.access_token)
+        token <- client.getAccessToken("alice", "1234").map(_.access_token).map(AccessToken.fromString).absolve
         rpt <- client.getRpt(token)
-        entity <- authenticator.authenticate(rpt)
-        permittedWallet <- authenticator.authorize(entity)
+        entity <- authenticator.authenticate(rpt.toString())
+        permittedWallet <- authenticator.authorizeWalletAccess(entity)
       } yield assert(wallet.id)(equalTo(permittedWallet.walletId))
     }
   )
