@@ -7,8 +7,12 @@ import io.iohk.atala.pollux.core.model.CredentialSchemaAndTrustedIssuersConstrai
 import io.iohk.atala.pollux.core.model.error.VerificationPolicyError
 import io.iohk.atala.pollux.core.model.error.VerificationPolicyError.*
 import io.iohk.atala.pollux.core.service.VerificationPolicyService
-import io.iohk.atala.pollux.credentialschema.http.VerificationPolicy.*
-import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
+import io.iohk.atala.pollux.credentialschema.http.VerificationPolicyResponse.*
+import io.iohk.atala.pollux.credentialschema.http.{
+  VerificationPolicyResponse,
+  VerificationPolicyInput,
+  VerificationPolicyResponsePage
+}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.ZIO.*
@@ -32,7 +36,7 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
   override def createVerificationPolicy(
       ctx: RequestContext,
       in: VerificationPolicyInput
-  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicy] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyResponse] = {
     val constraints = in.constraints
       .map(c =>
         CredentialSchemaAndTrustedIssuersConstraint(
@@ -56,7 +60,7 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
   override def getVerificationPolicyById(
       ctx: RequestContext,
       id: UUID
-  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicy] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyResponse] = {
     service.get(id).flatMap {
       case Some(vp) => succeed(vp.toSchema().withUri(ctx.request.uri))
       case None     => fail(NotFoundError(id))
@@ -68,7 +72,7 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
       id: UUID,
       nonce: Int,
       update: VerificationPolicyInput
-  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicy] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyResponse] = {
     val updatedZIO = for {
       constraints <- zio.ZIO.succeed(
         update.constraints.toVector // TODO: refactor to Seq
@@ -111,10 +115,10 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
 
   override def lookupVerificationPolicies(
       ctx: RequestContext,
-      filter: VerificationPolicy.Filter,
+      filter: VerificationPolicyResponse.Filter,
       pagination: Pagination,
       order: Option[Order]
-  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyPage] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyResponsePage] = {
     for {
       filteredDomainRecords <- service
         .lookup(filter.name, Some(pagination.offset), Some(pagination.limit))
