@@ -9,7 +9,7 @@ import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.SecurityLogic
 import io.iohk.atala.pollux.credentialschema.VerificationPolicyEndpoints.*
 import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyController
-import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyInput}
+import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicyResponse, VerificationPolicyInput}
 import io.iohk.atala.shared.models.WalletAccessContext
 import java.util.UUID
 import sttp.tapir.ztapir.*
@@ -82,7 +82,7 @@ class VerificationPolicyServerEndpoints(
         {
           case (
                 ctx: RequestContext,
-                filter: VerificationPolicy.Filter,
+                filter: VerificationPolicyResponse.Filter,
                 paginationInput: PaginationInput,
                 order: Option[Order]
               ) =>

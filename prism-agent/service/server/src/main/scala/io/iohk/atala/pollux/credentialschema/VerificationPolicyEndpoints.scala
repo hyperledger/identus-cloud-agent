@@ -9,6 +9,7 @@ import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKe
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import io.iohk.atala.pollux.credentialschema.http.*
+import sttp.apispec.Tag
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
@@ -17,11 +18,23 @@ import java.util.UUID
 
 object VerificationPolicyEndpoints {
 
+  private val tagName = "Verification"
+  private val tagDescription = """
+    |<p>The `Verification` endpoints enable the management and querying of verification policies,
+    |which are applied to W3C Verifiable Credentials in JWT format.</p>
+    |<p>Users can retrieve and paginate existing policies or create new ones.
+    |These policies determine the verification criteria, allowing users to specify constraints such as `schemaId` and `trustedIssuers` in the current implementation.</p>
+    |<p>The constraints are defined using the `schemaId` and a sequence of `trustedIssuers`.
+    |This functionality ensures the system's integrity and adherence to specific verification requirements.</p>
+    |<p>Endpoints are secured by `apiKeyAuth` or `jwtAuth` authentication</p>""".stripMargin
+
+  val tag = Tag(tagName, Some(tagDescription))
+
   val createVerificationPolicyEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, VerificationPolicyInput),
     ErrorResponse,
-    VerificationPolicy,
+    VerificationPolicyResponse,
     Any
   ] = endpoint.post
     .securityIn(apiKeyHeader)
@@ -39,7 +52,7 @@ object VerificationPolicyEndpoints {
       )
     )
     .out(
-      jsonBody[VerificationPolicy].description(
+      jsonBody[VerificationPolicyResponse].description(
         "Created verification policy entity"
       )
     )
@@ -47,13 +60,13 @@ object VerificationPolicyEndpoints {
     .name("createVerificationPolicy")
     .summary("Create the new verification policy")
     .description("Create the new verification policy")
-    .tag("Verification")
+    .tag(tagName)
 
   val updateVerificationPolicyEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID, Int, VerificationPolicyInput),
     ErrorResponse,
-    VerificationPolicy,
+    VerificationPolicyResponse,
     Any
   ] =
     endpoint.put
@@ -72,20 +85,20 @@ object VerificationPolicyEndpoints {
         )
       )
       .out(statusCode(StatusCode.Ok))
-      .out(jsonBody[VerificationPolicy])
+      .out(jsonBody[VerificationPolicyResponse])
       .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("updateVerificationPolicy")
       .summary("Update the verification policy object by id")
       .description(
         "Update the verification policy entry"
       )
-      .tag("Verification")
+      .tag(tagName)
 
   val getVerificationPolicyByIdEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID),
     ErrorResponse,
-    VerificationPolicy,
+    VerificationPolicyResponse,
     Any
   ] =
     endpoint.get
@@ -96,14 +109,14 @@ object VerificationPolicyEndpoints {
         "verification" / "policies" / path[UUID]("id")
           .description("Get the verification policy by id")
       )
-      .out(jsonBody[VerificationPolicy])
+      .out(jsonBody[VerificationPolicyResponse])
       .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("getVerificationPolicyById")
       .summary("Fetch the verification policy by id")
       .description(
         "Get the verification policy by id"
       )
-      .tag("Verification")
+      .tag(tagName)
 
   val deleteVerificationPolicyByIdEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
@@ -131,13 +144,13 @@ object VerificationPolicyEndpoints {
       .description(
         "Delete the verification policy by id"
       )
-      .tag("Verification")
+      .tag(tagName)
 
   val lookupVerificationPoliciesByQueryEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
-    (RequestContext, VerificationPolicy.Filter, PaginationInput, Option[Order]),
+    (RequestContext, VerificationPolicyResponse.Filter, PaginationInput, Option[Order]),
     ErrorResponse,
-    VerificationPolicyPage,
+    VerificationPolicyResponsePage,
     Any
   ] =
     endpoint.get
@@ -148,19 +161,23 @@ object VerificationPolicyEndpoints {
         "verification" / "policies"
           .description("Lookup verification policy by query")
       )
-      .in(query[Option[String]]("name").mapTo[VerificationPolicy.Filter])
+      .in(
+        query[Option[String]]("name")
+          .description(VerificationPolicyResponse.annotations.name.description)
+          .mapTo[VerificationPolicyResponse.Filter]
+      )
       .in(
         query[Option[Int]]("offset")
           .and(query[Option[Int]]("limit"))
           .mapTo[PaginationInput]
       )
       .in(query[Option[Order]]("order"))
-      .out(jsonBody[VerificationPolicyPage])
+      .out(jsonBody[VerificationPolicyResponsePage])
       .errorOut(basicFailuresAndForbidden)
       .name("lookupVerificationPoliciesByQuery")
       .summary("Lookup verification policies by query")
       .description(
         "Lookup verification policies by `name`, and control the pagination by `offset` and `limit` parameters"
       )
-      .tag("Verification")
+      .tag(tagName)
 }

@@ -2,7 +2,11 @@ package io.iohk.atala.pollux.credentialschema.controller
 
 import io.iohk.atala.api.http.model.{Order, Pagination}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
-import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicy, VerificationPolicyInput, VerificationPolicyPage}
+import io.iohk.atala.pollux.credentialschema.http.{
+  VerificationPolicyResponse,
+  VerificationPolicyInput,
+  VerificationPolicyResponsePage
+}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
@@ -12,19 +16,19 @@ trait VerificationPolicyController {
   def createVerificationPolicy(
       ctx: RequestContext,
       in: VerificationPolicyInput
-  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicy]
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyResponse]
 
   def getVerificationPolicyById(
       ctx: RequestContext,
       id: UUID
-  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicy]
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyResponse]
 
   def updateVerificationPolicyById(
       ctx: RequestContext,
       id: UUID,
       nonce: Int,
       update: VerificationPolicyInput
-  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicy]
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyResponse]
 
   def deleteVerificationPolicyById(
       ctx: RequestContext,
@@ -33,8 +37,8 @@ trait VerificationPolicyController {
 
   def lookupVerificationPolicies(
       ctx: RequestContext,
-      filter: VerificationPolicy.Filter,
+      filter: VerificationPolicyResponse.Filter,
       pagination: Pagination,
       order: Option[Order]
-  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyPage]
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyResponsePage]
 }
