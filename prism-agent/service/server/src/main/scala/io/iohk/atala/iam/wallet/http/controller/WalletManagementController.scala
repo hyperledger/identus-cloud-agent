@@ -73,6 +73,7 @@ object WalletManagementController {
     case e: PermissionManagement.Error.WalletNotFoundById => ErrorResponse.badRequest(detail = Some(e.message))
     case e: PermissionManagement.Error.WalletNotFoundByUserId     => ErrorResponse.badRequest(detail = Some(e.message))
     case e: PermissionManagement.Error.WalletResourceNotFoundById => ErrorResponse.badRequest(detail = Some(e.message))
+    case e: PermissionManagement.Error.PermissionNotAvailable     => ErrorResponse.badRequest(detail = Some(e.message))
   }
 }
 

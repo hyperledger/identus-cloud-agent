@@ -12,6 +12,7 @@
 
     <logger name="io.getquill" level="OFF"/>
     <logger name="com.zaxxer.hikari" level="OFF"/>
+    <logger name="org.jboss.resteasy.client" level="OFF"/>
 
     <!--
     INFO level is too noisy because of flyway migration log when running "sbt test".
