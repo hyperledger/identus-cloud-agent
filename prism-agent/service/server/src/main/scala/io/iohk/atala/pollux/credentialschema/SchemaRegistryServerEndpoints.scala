@@ -1,12 +1,9 @@
 package io.iohk.atala.pollux.credentialschema
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
+import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
-import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
-import io.iohk.atala.iam.authentication.Authenticator
-import io.iohk.atala.iam.authentication.Authorizer
-import io.iohk.atala.iam.authentication.DefaultAuthenticator
-import io.iohk.atala.iam.authentication.SecurityLogic
+import io.iohk.atala.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryEndpoints.*
 import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
 import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, FilterInput}
@@ -21,14 +18,11 @@ class SchemaRegistryServerEndpoints(
     authenticator: Authenticator[BaseEntity],
     authorizer: Authorizer[BaseEntity]
 ) {
-  def throwableToInternalServerError(throwable: Throwable) =
-    ZIO.fail[ErrorResponse](ErrorResponse.internalServerError(detail = Option(throwable.getMessage)))
-
   val createSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
     createSchemaEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
-      .serverLogic {
-        case wac => { case (ctx: RequestContext, schemaInput: CredentialSchemaInput) =>
+      .serverLogic { wac =>
+        { case (ctx: RequestContext, schemaInput: CredentialSchemaInput) =>
           credentialSchemaController
             .createSchema(schemaInput)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
@@ -38,8 +32,8 @@ class SchemaRegistryServerEndpoints(
   val updateSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
     updateSchemaEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
-      .serverLogic {
-        case wac => { case (ctx: RequestContext, author: String, id: UUID, schemaInput: CredentialSchemaInput) =>
+      .serverLogic { wac =>
+        { case (ctx: RequestContext, author: String, id: UUID, schemaInput: CredentialSchemaInput) =>
           credentialSchemaController
             .updateSchema(author, id, schemaInput)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
@@ -52,11 +46,17 @@ class SchemaRegistryServerEndpoints(
         credentialSchemaController.getSchemaByGuid(guid)(ctx)
       }
 
+  val getRawSchemaByIdServerEndpoint: ZServerEndpoint[Any, Any] =
+    getRawSchemaByIdEndpoint
+      .zServerLogic { case (ctx: RequestContext, guid: UUID) =>
+        credentialSchemaController.getSchemaJsonByGuid(guid)(ctx)
+      }
+
   val lookupSchemasByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
     lookupSchemasByQueryEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
-      .serverLogic {
-        case wac => {
+      .serverLogic { wac =>
+        {
           case (
                 ctx: RequestContext,
                 filter: FilterInput,
@@ -78,6 +78,7 @@ class SchemaRegistryServerEndpoints(
       createSchemaServerEndpoint,
       updateSchemaServerEndpoint,
       getSchemaByIdServerEndpoint,
+      getRawSchemaByIdServerEndpoint,
       lookupSchemasByQueryServerEndpoint
     )
 }

@@ -11,10 +11,11 @@ import io.iohk.atala.pollux.credentialschema.http.{
   FilterInput
 }
 import zio.*
-import scala.language.implicitConversions
 
+import scala.language.implicitConversions
 import java.util.UUID
 import io.iohk.atala.shared.models.WalletAccessContext
+import zio.json.ast.Json
 
 trait CredentialSchemaController {
   def createSchema(in: CredentialSchemaInput)(implicit
@@ -28,6 +29,10 @@ trait CredentialSchemaController {
   def getSchemaByGuid(id: UUID)(implicit
       rc: RequestContext
   ): IO[ErrorResponse, CredentialSchemaResponse]
+
+  def getSchemaJsonByGuid(id: UUID)(implicit
+      rc: RequestContext
+  ): IO[ErrorResponse, Json]
 
   def delete(guid: UUID)(implicit
       rc: RequestContext
