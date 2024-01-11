@@ -1,6 +1,7 @@
 package io.iohk.atala.iam.authentication
 
 import io.iohk.atala.agent.walletapi.model.Entity
+import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.iam.authentication.AuthenticationError.InvalidCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import zio.*
@@ -77,6 +78,38 @@ object SecurityLogicSpec extends ZIOSpecDefault {
           )(testAuthenticator(entity))
           .exit
       } yield assert(exit)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Forbidden.code))))
+    },
+    test("authorizeRole accept if the role is matched") {
+      val tenantentity = Entity("alice", UUID.randomUUID())
+      val adminEntity = Entity.Admin
+      for {
+        entity1 <- SecurityLogic
+          .authorizeRole(ApiKeyCredentials(Some(tenantentity.id.toString())))(testAuthenticator(tenantentity))(
+            EntityRole.Tenant
+          )
+        entity2 <- SecurityLogic
+          .authorizeRole(ApiKeyCredentials(Some(adminEntity.id.toString())))(testAuthenticator(adminEntity))(
+            EntityRole.Admin
+          )
+      } yield assert(entity1.role)(isRight(equalTo(EntityRole.Tenant))) &&
+        assert(entity2.role)(isRight(equalTo(EntityRole.Admin)))
+    },
+    test("authorizeRole reject if the role is not matched") {
+      val tenantentity = Entity("alice", UUID.randomUUID())
+      val adminEntity = Entity.Admin
+      for {
+        exit1 <- SecurityLogic
+          .authorizeRole(ApiKeyCredentials(Some(tenantentity.id.toString())))(testAuthenticator(tenantentity))(
+            EntityRole.Admin
+          )
+          .exit
+        exit2 <- SecurityLogic
+          .authorizeRole(ApiKeyCredentials(Some(adminEntity.id.toString())))(testAuthenticator(tenantentity))(
+            EntityRole.Tenant
+          )
+          .exit
+      } yield assert(exit1)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Forbidden.code)))) &&
+        assert(exit2)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Forbidden.code))))
     },
     test("display first error message that is not MethodNotEnabled error") {
       val alice = Entity("alice", UUID.randomUUID())

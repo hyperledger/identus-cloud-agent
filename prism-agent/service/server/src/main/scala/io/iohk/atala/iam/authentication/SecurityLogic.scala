@@ -79,10 +79,10 @@ object SecurityLogic {
         case Right(entity) => authorizeWalletAdmin(entity)(authorizer).map(entity -> _)
       }
 
-  def authorizeRoleWith[E <: BaseEntity](credentials: (AdminApiKeyCredentials, JwtCredentials))(
+  def authorizeRole[E <: BaseEntity](credentials: Credentials, others: Credentials*)(
       authenticator: Authenticator[E],
   )(permittedRole: EntityRole): IO[ErrorResponse, BaseEntity] = {
-    authenticate[E](credentials._1, credentials._2)(authenticator)
+    authenticate[E](credentials, others: _*)(authenticator)
       .flatMap { ee =>
         val entity = ee.fold(identity, identity)
         for {
@@ -100,5 +100,10 @@ object SecurityLogic {
         } yield entity
       }
   }
+
+  def authorizeRoleWith[E <: BaseEntity](credentials: (AdminApiKeyCredentials, JwtCredentials))(
+      authenticator: Authenticator[E],
+  )(permittedRole: EntityRole): IO[ErrorResponse, BaseEntity] =
+    authorizeRole(credentials._1, credentials._2)(authenticator)(permittedRole)
 
 }
