@@ -145,7 +145,7 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, override val k
       )
       .flatMap(token =>
         ZIO
-          .fromEither(AccessToken.fromString(token))
+          .fromEither(AccessToken.fromString(token, keycloakConfig.rolesClaimPathSegments))
           .mapError(_ => KeycloakClientError.UnexpectedError("The token response was not a valid token."))
       )
 

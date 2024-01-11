@@ -5,16 +5,15 @@ import org.keycloak.representations.idm.{
   ClientRepresentation,
   CredentialRepresentation,
   RealmRepresentation,
+  RoleRepresentation,
   UserRepresentation
 }
 import zio.*
-import zio.ZIO.attemptBlocking
 import zio.test.TestAspect.beforeAll
 import zio.test.TestAspectAtLeastR
 
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
-import org.keycloak.representations.idm.RoleRepresentation
 
 type KeycloakAdminClient = Keycloak
 
@@ -101,8 +100,8 @@ trait KeycloakTestContainerSupport {
       adminClient <- adminClientZIO
       users = adminClient.realm(realmName).users()
       _ <- ZIO.log(s"Creating user ${userRepresentation.getId}")
-      _ <- attemptBlocking(users.create(userRepresentation))
-      createdUser <- attemptBlocking(users.search(username).asScala.head)
+      _ <- ZIO.attemptBlocking(users.create(userRepresentation))
+      createdUser <- ZIO.attemptBlocking(users.search(username).asScala.head)
       _ <- ZIO.log(s"Created user ${createdUser.getId}")
     } yield createdUser
 

@@ -82,31 +82,27 @@ object SecurityLogicSpec extends ZIOSpecDefault {
     test("authorizeRole accept if the role is matched") {
       val tenantentity = Entity("alice", UUID.randomUUID())
       val adminEntity = Entity.Admin
+      val tenantAuth = testAuthenticator(tenantentity)
+      val adminAuth = testAuthenticator(adminEntity)
       for {
         entity1 <- SecurityLogic
-          .authorizeRole(ApiKeyCredentials(Some(tenantentity.id.toString())))(testAuthenticator(tenantentity))(
-            EntityRole.Tenant
-          )
+          .authorizeRole(ApiKeyCredentials(Some(tenantentity.id.toString())))(tenantAuth)(EntityRole.Tenant)
         entity2 <- SecurityLogic
-          .authorizeRole(ApiKeyCredentials(Some(adminEntity.id.toString())))(testAuthenticator(adminEntity))(
-            EntityRole.Admin
-          )
+          .authorizeRole(ApiKeyCredentials(Some(adminEntity.id.toString())))(adminAuth)(EntityRole.Admin)
       } yield assert(entity1.role)(isRight(equalTo(EntityRole.Tenant))) &&
         assert(entity2.role)(isRight(equalTo(EntityRole.Admin)))
     },
     test("authorizeRole reject if the role is not matched") {
       val tenantentity = Entity("alice", UUID.randomUUID())
       val adminEntity = Entity.Admin
+      val tenantAuth = testAuthenticator(tenantentity)
+      val adminAuth = testAuthenticator(adminEntity)
       for {
         exit1 <- SecurityLogic
-          .authorizeRole(ApiKeyCredentials(Some(tenantentity.id.toString())))(testAuthenticator(tenantentity))(
-            EntityRole.Admin
-          )
+          .authorizeRole(ApiKeyCredentials(Some(tenantentity.id.toString())))(adminAuth)(EntityRole.Admin)
           .exit
         exit2 <- SecurityLogic
-          .authorizeRole(ApiKeyCredentials(Some(adminEntity.id.toString())))(testAuthenticator(tenantentity))(
-            EntityRole.Tenant
-          )
+          .authorizeRole(ApiKeyCredentials(Some(adminEntity.id.toString())))(tenantAuth)(EntityRole.Tenant)
           .exit
       } yield assert(exit1)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Forbidden.code)))) &&
         assert(exit2)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Forbidden.code))))

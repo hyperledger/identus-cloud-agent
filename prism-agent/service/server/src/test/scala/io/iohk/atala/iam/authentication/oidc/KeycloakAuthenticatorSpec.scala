@@ -262,9 +262,8 @@ object KeycloakAuthenticatorSpec
         entity <- authenticator.authenticate(token)
         role <- ZIO.fromEither(entity.role)
         exit <- authenticator.authorizeWalletAccess(entity).exit
-      } yield assert(exit)(fails(isSubtype[AuthenticationError.InvalidRole](anything))) && assert(role)(
-        equalTo(EntityRole.Admin)
-      )
+      } yield assert(exit)(fails(isSubtype[AuthenticationError.InvalidRole](anything))) &&
+        assert(role)(equalTo(EntityRole.Admin))
     }
   )
 
@@ -294,7 +293,7 @@ object KeycloakAuthenticatorSpec
         _ <- createWalletResource(wallet.id, "wallet-1")
         _ <- createUser("alice", "1234")
         _ <- createResourcePermission(wallet.id, "alice")
-        token <- client.getAccessToken("alice", "1234").map(_.access_token).map(AccessToken.fromString).absolve
+        token <- client.getAccessToken("alice", "1234").map(_.access_token).map(AccessToken.fromString(_, Nil)).absolve
         rpt <- client.getRpt(token)
         entity <- authenticator.authenticate(rpt.toString())
         permittedWallet <- authenticator.authorizeWalletAccess(entity)

@@ -1,6 +1,7 @@
 package io.iohk.atala.iam.authentication.oidc
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
+import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
 import io.iohk.atala.iam.authentication.AuthenticationError.InvalidCredentials
@@ -14,9 +15,8 @@ import zio.*
 import zio.json.ast.Json
 
 import java.util.UUID
-import io.iohk.atala.agent.walletapi.model.EntityRole
 
-final class AccessToken private (token: String, claims: JwtClaim) {
+final class AccessToken private (token: String, claims: JwtClaim, rolesClaimPath: Seq[String]) {
 
   override def toString(): String = token
 
@@ -26,32 +26,30 @@ final class AccessToken private (token: String, claims: JwtClaim) {
       .flatMap(_.asObject.toRight("JWT payload must be a JSON object"))
       .map(_.contains("authorization"))
 
-  def role(claimPath: Seq[String]): Either[String, EntityRole] = {
-    for {
-      uniqueRoles <- extractRoles(claimPath).map(_.getOrElse(Nil).distinct)
-      r <- uniqueRoles.toList match {
+  def role: Either[String, EntityRole] =
+    extractRoles
+      .map(_.fold(Nil)(_.distinct).toList)
+      .flatMap {
         case Nil      => Right(EntityRole.Tenant)
         case r :: Nil => Right(r)
         case _        => Left(s"Multiple roles is not supported yet.")
       }
-    } yield r
-  }
 
   /** Return a list of roles that is meaningful to the agent */
-  private def extractRoles(claimPath: Seq[String]): Either[String, Option[Seq[EntityRole]]] =
+  private def extractRoles: Either[String, Option[Seq[EntityRole]]] =
     Json.decoder
       .decodeJson(claims.content)
       .flatMap { json =>
-        val rolesJson = claimPath.foldLeft[Option[Json]](Some(json)) { case (acc, pathSegment) =>
+        val rolesJson = rolesClaimPath.foldLeft(Option(json)) { case (acc, pathSegment) =>
           acc.flatMap(_.asObject).flatMap(_.get(pathSegment))
         }
         rolesJson match {
+          case None => Right(None)
           case Some(json) =>
             json.asArray
               .toRight("Roles claim is not a JSON array of strings.")
               .map(_.flatMap(_.asString).flatMap(parseRole))
               .map(Some(_))
-          case None => Right(None)
         }
       }
 
@@ -65,20 +63,19 @@ final class AccessToken private (token: String, claims: JwtClaim) {
 }
 
 object AccessToken {
-  def fromString(token: String): Either[String, AccessToken] =
+  def fromString(token: String, rolesClaimPath: Seq[String]): Either[String, AccessToken] =
     JwtCirce
       .decode(token, JwtOptions(false, false, false))
-      .map(claims => AccessToken(token, claims))
+      .map(claims => AccessToken(token, claims, rolesClaimPath))
       .toEither
       .left
       .map(e => s"JWT token cannot be decoded. ${e.getMessage()}")
 }
 
-final case class KeycloakEntity(id: UUID, accessToken: Option[AccessToken] = None, roleClaimPath: Seq[String] = Nil)
-    extends BaseEntity {
+final case class KeycloakEntity(id: UUID, accessToken: Option[AccessToken] = None) extends BaseEntity {
   override def role: Either[String, EntityRole] = accessToken
     .toRight("Cannot extract role from KeycloakEntity without accessToken")
-    .flatMap(_.role(roleClaimPath))
+    .flatMap(_.role)
 }
 
 trait KeycloakAuthenticator extends AuthenticatorWithAuthZ[KeycloakEntity] {

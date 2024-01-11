@@ -17,15 +17,13 @@ class KeycloakAuthenticatorImpl(
     keycloakPermissionService: PermissionManagement.Service[KeycloakEntity],
 ) extends KeycloakAuthenticator {
 
-  private val roleClaimPath = keycloakConfig.rolesClaimPath.split('.').toSeq
-
   override def isEnabled: Boolean = keycloakConfig.enabled
 
   override def authenticate(token: String): IO[AuthenticationError, KeycloakEntity] = {
     if (isEnabled) {
       for {
         accessToken <- ZIO
-          .fromEither(AccessToken.fromString(token))
+          .fromEither(AccessToken.fromString(token, keycloakConfig.rolesClaimPathSegments))
           .mapError(AuthenticationError.InvalidCredentials.apply)
         introspection <- client
           .introspectToken(accessToken)
@@ -41,17 +39,12 @@ class KeycloakAuthenticatorImpl(
               .attempt(UUID.fromString(id))
               .mapError(e => AuthenticationError.UnexpectedError(s"Subject ID in accessToken is not a UUID. $e"))
           }
-      } yield KeycloakEntity(entityId, accessToken = Some(accessToken), roleClaimPath = roleClaimPath)
+      } yield KeycloakEntity(entityId, accessToken = Some(accessToken))
     } else ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
   }
 
   override def authorizeWalletAccessImpl(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] = {
     for {
-      role <- ZIO
-        .fromOption(entity.accessToken)
-        .mapError(_ => AuthenticationError.InvalidCredentials("AccessToken is missing."))
-        .map(_.role(roleClaimPath).left.map(AuthenticationError.InvalidCredentials(_)))
-        .absolve
       walletId <- keycloakPermissionService
         .listWalletPermissions(entity)
         .mapError {
@@ -84,7 +77,7 @@ class KeycloakAuthenticatorImpl(
       role <- ZIO
         .fromOption(entity.accessToken)
         .mapError(_ => AuthenticationError.InvalidCredentials("AccessToken is missing."))
-        .map(_.role(roleClaimPath).left.map(AuthenticationError.InvalidCredentials(_)))
+        .map(_.role.left.map(AuthenticationError.InvalidCredentials(_)))
         .absolve
       ctx <- role match {
         case EntityRole.Admin  => ZIO.succeed(WalletAdministrationContext.Admin())
