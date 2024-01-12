@@ -84,7 +84,7 @@ object KeycloakPermissionManagementServiceSpec
         token <- client.getAccessToken(username, password).map(_.access_token)
 
         entity <- authenticator.authenticate(token)
-        permittedWallet <- authenticator.authorize(entity)
+        permittedWallet <- authenticator.authorizeWalletAccess(entity)
       } yield assert(wallet.id)(equalTo(permittedWallet.walletId))
     },
     test("revoke the wallet access from the user") {
@@ -107,13 +107,13 @@ object KeycloakPermissionManagementServiceSpec
         token <- client.getAccessToken(username, password).map(_.access_token)
 
         entity <- authenticator.authenticate(token)
-        permittedWallet <- authenticator.authorize(entity)
+        permittedWallet <- authenticator.authorizeWalletAccess(entity)
 
         _ <- permissionService.revokeWalletFromUser(wallet.id, entity)
 
         token2 <- client.getAccessToken(username, password).map(_.access_token)
         entity2 <- authenticator.authenticate(token)
-        permittedWallet2 <- authenticator.authorize(entity).exit
+        permittedWallet2 <- authenticator.authorizeWalletAccess(entity).exit
 
       } yield assert(permittedWallet2)(fails(isSubtype[ResourceNotPermitted](anything)))
     }
@@ -166,7 +166,7 @@ object KeycloakPermissionManagementServiceSpec
         token <- client.getAccessToken(username, password).map(_.access_token)
 
         entity <- authenticator.authenticate(token)
-        permittedWallet <- authenticator.authorize(entity)
+        permittedWallet <- authenticator.authorizeWalletAccess(entity)
       } yield assert(wallet.id)(equalTo(permittedWallet.walletId))
     },
     test("revoke wallet access from the user by self-service") {
@@ -193,7 +193,7 @@ object KeycloakPermissionManagementServiceSpec
         token <- client.getAccessToken(username, password).map(_.access_token)
 
         entity <- authenticator.authenticate(token)
-        permittedWallet <- authenticator.authorize(entity)
+        permittedWallet <- authenticator.authorizeWalletAccess(entity)
 
         _ <- permissionService
           .revokeWalletFromUser(wallet.id, entity)
@@ -201,7 +201,7 @@ object KeycloakPermissionManagementServiceSpec
 
         token2 <- client.getAccessToken(username, password).map(_.access_token)
         entity2 <- authenticator.authenticate(token)
-        permittedWallet2 <- authenticator.authorize(entity).exit
+        permittedWallet2 <- authenticator.authorizeWalletAccess(entity).exit
 
       } yield assert(permittedWallet2)(fails(isSubtype[ResourceNotPermitted](anything)))
     },
@@ -253,7 +253,7 @@ object KeycloakPermissionManagementServiceSpec
         token <- client.getAccessToken(username, password).map(_.access_token)
 
         entity <- authenticator.authenticate(token)
-        permittedWallet <- authenticator.authorize(entity)
+        permittedWallet <- authenticator.authorizeWalletAccess(entity)
 
         exit <- permissionService
           .revokeWalletFromUser(wallet.id, entity)

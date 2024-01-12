@@ -39,7 +39,8 @@ trait KeycloakConfigUtils {
           realmName = realmName,
           clientId = agentClientRepresentation.getClientId(),
           clientSecret = agentClientSecret,
-          autoUpgradeToRPT = authUpgradeToRPT
+          autoUpgradeToRPT = authUpgradeToRPT,
+          rolesClaimPath = "resource_access.prism-agent.roles"
         )
       }
     }
