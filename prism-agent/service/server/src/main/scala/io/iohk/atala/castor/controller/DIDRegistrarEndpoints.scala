@@ -16,14 +16,27 @@ import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
+import sttp.apispec.Tag
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
 
 object DIDRegistrarEndpoints {
 
+  private val tagName = "DID Registrar"
+  private val tagDescription =
+    s"""
+       |The __${tagName}__ endpoints facilitate the management of [PRISM DIDs](https://github.com/input-output-hk/prism-did-method-spec) hosted in the cloud agent.
+       |
+       |The agent securely manages and stores DIDs along with their keys in its secret storage.
+       |These endpionts allow users to create, read, update, deactivate and publish, without direct exposure to the key material.
+       |These DIDs can be utilized for various operations during issuance and verification processes.
+       |""".stripMargin
+
+  val tag = Tag(tagName, Some(tagDescription))
+
   private val baseEndpoint = endpoint
-    .tag("DID Registrar")
+    .tag(tagName)
     .in("did-registrar" / "dids")
     .in(extractFromRequest[RequestContext](RequestContext.apply))
     .securityIn(apiKeyHeader)
@@ -40,13 +53,12 @@ object DIDRegistrarEndpoints {
   ] = baseEndpoint.get
     .in(paginationInput)
     .errorOut(EndpointOutputs.basicFailuresAndForbidden)
-    .out(statusCode(StatusCode.Ok).description("List Prism Agent managed DIDs"))
+    .out(statusCode(StatusCode.Ok).description("List the agent managed DIDs in the wallet"))
     .out(jsonBody[ManagedDIDPage])
-    .summary("List all DIDs stored in Prism Agent's wallet")
+    .summary("List all DIDs stored in the agent's wallet")
     .description(
-      """List all DIDs stored in Prism Agent's wallet.
-        |Return a paginated items ordered by created timestamp.
-        |If the `limit` parameter is not set, it defaults to 100 items per page.""".stripMargin
+      """List all DIDs stored in the agent's wallet.
+        |Return a paginated items ordered by created timestamp.""".stripMargin
     )
 
   val createManagedDid: Endpoint[
@@ -61,12 +73,14 @@ object DIDRegistrarEndpoints {
       EndpointOutputs
         .basicFailuresWith(FailureVariant.unprocessableEntity, FailureVariant.notFound, FailureVariant.forbidden)
     )
-    .out(statusCode(StatusCode.Created).description("Created unpublished DID."))
+    .out(statusCode(StatusCode.Created).description("Created an unpublished PRISM DID"))
     .out(jsonBody[CreateManagedDIDResponse])
-    .summary("Create unpublished DID and store it in Prism Agent's wallet")
+    .summary("Create an unpublished PRISM DID and store it in the agent's wallet")
     .description(
-      """Create unpublished DID and store it inside Prism Agent's wallet. The private keys of the DID is
-        |managed by Prism Agent. The DID can later be published to the VDR using publications endpoint.""".stripMargin
+      """Create an unpublished PRISM DID and store it in the agent's wallet.
+        |The public/private keys of the DID will be derived according to the `didDocumentTemplate` and managed by the agent.
+        |The DID can later be published to the VDR using the `publications` endpoint.
+        |After the DID is created, it has the `CREATED` status.""".stripMargin
     )
 
   val getManagedDid: Endpoint[
@@ -78,10 +92,10 @@ object DIDRegistrarEndpoints {
   ] = baseEndpoint.get
     .in(DIDInput.didRefPathSegment)
     .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
-    .out(statusCode(StatusCode.Ok).description("Get Prism Agent managed DID"))
+    .out(statusCode(StatusCode.Ok).description("Get a DID in the agent's wallet"))
     .out(jsonBody[ManagedDID])
-    .summary("Get DID stored in Prism Agent's wallet")
-    .description("Get DID stored in Prism Agent's wallet")
+    .summary("Get a specific DID stored in the agent's wallet")
+    .description("Get a specific DID stored in the agent's wallet")
 
   val publishManagedDid: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
@@ -92,10 +106,18 @@ object DIDRegistrarEndpoints {
   ] = baseEndpoint.post
     .in(DIDInput.didRefPathSegment / "publications")
     .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
-    .out(statusCode(StatusCode.Accepted).description("Publishing DID to the VDR."))
+    .out(statusCode(StatusCode.Accepted).description("Publishing DID to the VDR initiated"))
     .out(jsonBody[DIDOperationResponse])
-    .summary("Publish the DID stored in Prism Agent's wallet to the VDR")
-    .description("Publish the DID stored in Prism Agent's wallet to the VDR.")
+    .summary("Publish the DID stored in the agent's wallet to the VDR")
+    .description(
+      """Initiate the publication of the DID stored in the agent's wallet to the VDR.
+        |The publishing process is asynchronous.
+        |Attempting to publish the same DID while the previous publication is ongoing will not initiate another publication.
+        |After the submission of the DID publication, its status is changed to `PUBLICATION_PENDING`.
+        |Upon confirmation after a predefined number of blocks, the status is changed to `PUBLISHED`.
+        |In case of a failed DID publication, the status is reverted to `CREATED`.
+        |""".stripMargin
+    )
 
   val updateManagedDid: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
@@ -117,12 +139,13 @@ object DIDRegistrarEndpoints {
     )
     .out(statusCode(StatusCode.Accepted).description("DID update operation accepted"))
     .out(jsonBody[DIDOperationResponse])
-    .summary("Update DID in Prism Agent's wallet and post update operation to the VDR")
+    .summary("Update DID in the agent's wallet and post update operation to the VDR")
     .description(
-      """Update DID in Prism Agent's wallet and post update operation to the VDR.
+      """Update DID in the agent's wallet and post the update operation to the VDR.
+        |Only the DID with status `PUBLISHED` can be updated.
         |This endpoint updates the DID document from the last confirmed operation.
-        |Submitting multiple update operations without waiting for confirmation will result in
-        |some operations being rejected as only one operation is allowed to be appended to the last confirmed operation.""".stripMargin
+        |The update operation is asynchornous operation and the agent will reject
+        |a new update request if the previous operation is not yet comfirmed.""".stripMargin
     )
 
   val deactivateManagedDid: Endpoint[
@@ -139,7 +162,12 @@ object DIDRegistrarEndpoints {
     )
     .out(statusCode(StatusCode.Accepted).description("DID deactivation operation accepted"))
     .out(jsonBody[DIDOperationResponse])
-    .summary("Deactivate DID in Prism Agent's wallet and post deactivate operation to the VDR")
-    .description("Deactivate DID in Prism Agent's wallet and post deactivate operation to the VDR.")
+    .summary("Deactivate DID in the agent's wallet and post deactivate operation to the VDR")
+    .description(
+      """Deactivate DID in the agent's wallet and post deactivate operation to the VDR.
+        |Only the DID with status `PUBLISHED` can be deactivated.
+        |The deactivate operation is asynchornous operation and the agent will reject
+        |a new deactivate request if the previous operation is not yet comfirmed.""".stripMargin
+    )
 
 }
