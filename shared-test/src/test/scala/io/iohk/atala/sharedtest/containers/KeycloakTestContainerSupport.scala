@@ -5,10 +5,10 @@ import org.keycloak.representations.idm.{
   ClientRepresentation,
   CredentialRepresentation,
   RealmRepresentation,
+  RoleRepresentation,
   UserRepresentation
 }
 import zio.*
-import zio.ZIO.attemptBlocking
 import zio.test.TestAspect.beforeAll
 import zio.test.TestAspectAtLeastR
 
@@ -82,7 +82,7 @@ trait KeycloakTestContainerSupport {
     beforeAll(run.orDie)
   }
 
-  def createUser(username: String, password: String): ZIO[KeycloakAdminClient, Throwable, UserRepresentation] =
+  def createUser(username: String, password: String): RIO[KeycloakAdminClient, UserRepresentation] =
     val userRepresentation = {
       val creds = new CredentialRepresentation()
       creds.setTemporary(false)
@@ -100,8 +100,50 @@ trait KeycloakTestContainerSupport {
       adminClient <- adminClientZIO
       users = adminClient.realm(realmName).users()
       _ <- ZIO.log(s"Creating user ${userRepresentation.getId}")
-      _ <- attemptBlocking(users.create(userRepresentation))
-      createdUser <- attemptBlocking(users.search(username).asScala.head)
+      _ <- ZIO.attemptBlocking(users.create(userRepresentation))
+      createdUser <- ZIO.attemptBlocking(users.search(username).asScala.head)
       _ <- ZIO.log(s"Created user ${createdUser.getId}")
     } yield createdUser
+
+  def createClientRole(roleName: String): RIO[KeycloakAdminClient, Unit] =
+    for {
+      adminClient <- adminClientZIO
+      realmResource <- ZIO.attemptBlocking(adminClient.realm(realmName))
+      clientRepr <- ZIO.attemptBlocking(
+        realmResource.clients().findByClientId(agentClientRepresentation.getClientId()).get(0)
+      )
+      clientResource <- ZIO.attemptBlocking(realmResource.clients().get(clientRepr.getId()))
+      _ <- ZIO.attemptBlocking(
+        clientResource
+          .roles()
+          .create(RoleRepresentation(roleName, "", false))
+      )
+    } yield ()
+
+  def grantClientRole(username: String, roleName: String): RIO[KeycloakAdminClient, Unit] =
+    for {
+      adminClient <- adminClientZIO
+      realmResource <- ZIO.attemptBlocking(adminClient.realm(realmName))
+      clientRepr <- ZIO.attemptBlocking(
+        realmResource.clients().findByClientId(agentClientRepresentation.getClientId()).get(0)
+      )
+      clientResource <- ZIO.attemptBlocking(realmResource.clients().get(clientRepr.getId()))
+      userRepr <- ZIO.attemptBlocking(realmResource.users().searchByUsername(username, true).get(0))
+      roleRepr <- ZIO.attemptBlocking(
+        clientResource
+          .roles()
+          .list()
+          .asScala
+          .find(_.getName() == roleName)
+          .get
+      )
+      _ <- ZIO.attemptBlocking(
+        realmResource
+          .users()
+          .get(userRepr.getId())
+          .roles()
+          .clientLevel(clientRepr.getId())
+          .add(List(roleRepr).asJava)
+      )
+    } yield ()
 }

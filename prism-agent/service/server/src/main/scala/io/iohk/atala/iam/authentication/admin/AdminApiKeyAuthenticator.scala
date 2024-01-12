@@ -12,7 +12,7 @@ trait AdminApiKeyAuthenticator extends AuthenticatorWithAuthZ[Entity], EntityAut
     credentials match {
       case AdminApiKeyCredentials(Some(apiKey)) => authenticate(apiKey)
       case AdminApiKeyCredentials(None) =>
-        ZIO.logInfo(s"AdminApiKey API authentication is enabled, but `x-admin-api-key` token is empty") *>
+        ZIO.logDebug(s"AdminApiKey API authentication is enabled, but `x-admin-api-key` token is empty") *>
           ZIO.fail(AdminApiKeyAuthenticationError.emptyAdminApiKey)
     }
   }

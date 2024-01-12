@@ -18,10 +18,10 @@ trait ApiKeyAuthenticator extends AuthenticatorWithAuthZ[Entity], EntityAuthoriz
           apiKey match {
             case Some(value) if value.nonEmpty => authenticate(value)
             case Some(value) =>
-              ZIO.logInfo(s"ApiKey API authentication is enabled, but `apikey` token is empty") *>
+              ZIO.logDebug(s"ApiKey API authentication is enabled, but `apikey` token is empty") *>
                 ZIO.fail(ApiKeyAuthenticationError.emptyApiKey)
             case None =>
-              ZIO.logInfo(s"ApiKey API authentication is enabled, but `apikey` token is not provided") *>
+              ZIO.logDebug(s"ApiKey API authentication is enabled, but `apikey` token is not provided") *>
                 ZIO.fail(InvalidCredentials("ApiKey key is not provided"))
           }
         case other =>
