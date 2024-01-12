@@ -75,7 +75,7 @@ Example JWT payload containing `ClientRole`. (Some claims are omitted for readab
   "resource_access": {
     "prism-agent": {
       "roles": [
-        "agent-admin"
+        "admin"
       ]
     },
     "account": {
@@ -107,9 +107,9 @@ __Proposed agent role authorization model__
 Role is a plain text that defines what level of access a user has on a system.
 For the agent, it needs to support 2 roles:
 
-1. __Admin__: `agent-admin`. Admin can never access a tenant wallet.
+1. __Admin__: `admin`. Admin can never access a tenant wallet.
    Agent auth layer must ignore any UMA permission to the wallet.
-2. __Tenant__: `agent-tenant` or implicitly inferred if another role is not specified.
+2. __Tenant__: `tenant` or implicitly inferred if another role is not specified.
    Tenant must have UMA permission defined to access the wallet.
 
 ### Positive Consequences

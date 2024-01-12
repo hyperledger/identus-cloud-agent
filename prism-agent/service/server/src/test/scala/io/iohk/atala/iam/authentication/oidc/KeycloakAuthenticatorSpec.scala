@@ -1,6 +1,7 @@
 package io.iohk.atala.iam.authentication.oidc
 
 import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
+import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
@@ -16,7 +17,6 @@ import io.iohk.atala.sharedtest.containers.KeycloakTestContainerSupport
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import org.keycloak.authorization.client.AuthzClient
-import org.keycloak.representations.idm.UserRepresentation
 import org.keycloak.representations.idm.authorization.ResourceRepresentation
 import org.keycloak.representations.idm.authorization.UmaPermissionRepresentation
 import zio.*
@@ -45,7 +45,8 @@ object KeycloakAuthenticatorSpec
           realmName = realmName,
           clientId = agentClientRepresentation.getClientId(),
           clientSecret = agentClientSecret,
-          autoUpgradeToRPT = authUpgradeToRPT
+          autoUpgradeToRPT = authUpgradeToRPT,
+          rolesClaimPath = "resource_access.prism-agent.roles"
         )
       }
     }
@@ -78,8 +79,10 @@ object KeycloakAuthenticatorSpec
     } yield ()
 
   override def spec = {
-    val basicSpec = authenticateSpec @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
-    val disabledAutoRptSpec = authenticateDisabledAutoRptSpec @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+    val basicSpec =
+      (authenticateSpec + authorizeWalletAccessSpec) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
+    val disabledAutoRptSpec =
+      authorizedWalletAccessDisabledAutoRptSpec @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
     suite("KeycloakAuthenticatorSepc")(
       basicSpec
@@ -117,10 +120,53 @@ object KeycloakAuthenticatorSpec
           ZLayer.succeed(WalletAdministrationContext.Admin())
         )
     )
-      .provide(Runtime.removeDefaultLoggers)
+      .provide(Runtime.removeDefaultLoggers) @@ TestAspect.sequential
   }
 
   private val authenticateSpec = suite("authenticate")(
+    test("authenticate entity with tenant role if not specified") {
+      for {
+        client <- ZIO.service[KeycloakClient]
+        authenticator <- ZIO.service[KeycloakAuthenticator]
+        _ <- createUser("alice", "1234")
+        token <- client.getAccessToken("alice", "1234").map(_.access_token)
+        entity <- authenticator.authenticate(token)
+        role <- ZIO.fromEither(entity.role)
+      } yield assert(role)(equalTo(EntityRole.Tenant))
+    },
+    test("authenticate entity with specified role") {
+      for {
+        client <- ZIO.service[KeycloakClient]
+        authenticator <- ZIO.service[KeycloakAuthenticator]
+        _ <- createUser("alice", "1234")
+        _ <- createUser("bob", "1234")
+        _ <- createClientRole("admin")
+        _ <- createClientRole("tenant")
+        _ <- grantClientRole("alice", "admin")
+        _ <- grantClientRole("bob", "tenant")
+        aliceToken <- client.getAccessToken("alice", "1234").map(_.access_token)
+        bobToken <- client.getAccessToken("bob", "1234").map(_.access_token)
+        aliceEntity <- authenticator.authenticate(aliceToken)
+        bobEntity <- authenticator.authenticate(bobToken)
+      } yield assert(aliceEntity.role)(isRight(equalTo(EntityRole.Admin))) &&
+        assert(bobEntity.role)(isRight(equalTo(EntityRole.Tenant)))
+    },
+    test("authenticate entity with multiple role not support") {
+      for {
+        client <- ZIO.service[KeycloakClient]
+        authenticator <- ZIO.service[KeycloakAuthenticator]
+        _ <- createUser("alice", "1234")
+        _ <- createClientRole("admin")
+        _ <- createClientRole("tenant")
+        _ <- grantClientRole("alice", "admin")
+        _ <- grantClientRole("alice", "tenant")
+        token <- client.getAccessToken("alice", "1234").map(_.access_token)
+        entity <- authenticator.authenticate(token)
+      } yield assert(entity.role)(isLeft(anything))
+    }
+  )
+
+  private val authorizeWalletAccessSpec = suite("authorizeWalletAccess")(
     test("allow token with a permitted wallet") {
       for {
         client <- ZIO.service[KeycloakClient]
@@ -131,7 +177,7 @@ object KeycloakAuthenticatorSpec
         _ <- createResourcePermission(wallet.id, "alice")
         token <- client.getAccessToken("alice", "1234").map(_.access_token)
         entity <- authenticator.authenticate(token)
-        permittedWallet <- authenticator.authorize(entity)
+        permittedWallet <- authenticator.authorizeWalletAccess(entity)
       } yield assert(wallet.id)(equalTo(permittedWallet.walletId))
     },
     test("reject token with a wallet that doesn't exist") {
@@ -144,7 +190,7 @@ object KeycloakAuthenticatorSpec
         _ <- createResourcePermission(walletId, "alice")
         token <- client.getAccessToken("alice", "1234").map(_.access_token)
         entity <- authenticator.authenticate(token)
-        exit <- authenticator.authorize(entity).exit
+        exit <- authenticator.authorizeWalletAccess(entity).exit
       } yield assert(exit)(fails(isSubtype[AuthenticationError.ResourceNotPermitted](anything)))
     },
     test("reject token with multiple permitted wallets") {
@@ -160,7 +206,7 @@ object KeycloakAuthenticatorSpec
         _ <- createResourcePermission(wallet2.id, "alice")
         token <- client.getAccessToken("alice", "1234").map(_.access_token)
         entity <- authenticator.authenticate(token)
-        exit <- authenticator.authorize(entity).exit
+        exit <- authenticator.authorizeWalletAccess(entity).exit
       } yield assert(exit)(
         fails(
           isSubtype[AuthenticationError.UnexpectedError](
@@ -199,12 +245,29 @@ object KeycloakAuthenticatorSpec
         _ <- createUser("alice", "1234")
         token <- client.getAccessToken("alice", "1234").map(_.access_token)
         entity <- authenticator.authenticate(token)
-        exit <- authenticator.authorize(entity).exit
+        exit <- authenticator.authorizeWalletAccess(entity).exit
       } yield assert(exit)(fails(isSubtype[AuthenticationError.ResourceNotPermitted](anything)))
+    },
+    test("admin role is not authorized for wallet access") {
+      for {
+        client <- ZIO.service[KeycloakClient]
+        authenticator <- ZIO.service[KeycloakAuthenticator]
+        wallet <- ZIO.serviceWithZIO[WalletManagementService](_.createWallet(Wallet("wallet-1")))
+        _ <- createWalletResource(wallet.id, "wallet-1")
+        _ <- createUser("alice", "1234")
+        _ <- createResourcePermission(wallet.id, "alice")
+        _ <- createClientRole("admin")
+        _ <- grantClientRole("alice", "admin")
+        token <- client.getAccessToken("alice", "1234").map(_.access_token)
+        entity <- authenticator.authenticate(token)
+        role <- ZIO.fromEither(entity.role)
+        exit <- authenticator.authorizeWalletAccess(entity).exit
+      } yield assert(exit)(fails(isSubtype[AuthenticationError.InvalidRole](anything))) &&
+        assert(role)(equalTo(EntityRole.Admin))
     }
   )
 
-  private val authenticateDisabledAutoRptSpec = suite("authenticate with auto-upgrade RPT disabled")(
+  private val authorizedWalletAccessDisabledAutoRptSpec = suite("authorizeWalletAccess with auto-upgrade RPT disabled")(
     test("reject non-RPT token") {
       for {
         client <- ZIO.service[KeycloakClient]
@@ -213,7 +276,7 @@ object KeycloakAuthenticatorSpec
         _ <- createUser("alice", "1234")
         token <- client.getAccessToken("alice", "1234").map(_.access_token)
         entity <- authenticator.authenticate(token)
-        exit <- authenticator.authorize(entity).exit
+        exit <- authenticator.authorizeWalletAccess(entity).exit
       } yield assert(exit)(
         fails(
           isSubtype[AuthenticationError.InvalidCredentials](
@@ -230,10 +293,10 @@ object KeycloakAuthenticatorSpec
         _ <- createWalletResource(wallet.id, "wallet-1")
         _ <- createUser("alice", "1234")
         _ <- createResourcePermission(wallet.id, "alice")
-        token <- client.getAccessToken("alice", "1234").map(_.access_token)
+        token <- client.getAccessToken("alice", "1234").map(_.access_token).map(AccessToken.fromString(_, Nil)).absolve
         rpt <- client.getRpt(token)
-        entity <- authenticator.authenticate(rpt)
-        permittedWallet <- authenticator.authorize(entity)
+        entity <- authenticator.authenticate(rpt.toString())
+        permittedWallet <- authenticator.authorizeWalletAccess(entity)
       } yield assert(wallet.id)(equalTo(permittedWallet.walletId))
     }
   )

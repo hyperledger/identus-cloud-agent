@@ -3,7 +3,7 @@ package io.iohk.atala.api.util
 import io.iohk.atala.agent.server.AgentHttpServer
 import io.iohk.atala.agent.server.http.DocModels
 import io.iohk.atala.castor.controller.{DIDController, DIDRegistrarController}
-import io.iohk.atala.connect.controller.{ConnectionController, ConnectionEndpoints}
+import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.event.controller.EventController
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.entity.http.controller.EntityController
@@ -14,7 +14,6 @@ import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaControl
 import io.iohk.atala.presentproof.controller.PresentProofController
 import io.iohk.atala.system.controller.SystemController
 import org.scalatestplus.mockito.MockitoSugar.*
-import sttp.apispec.Tag
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 

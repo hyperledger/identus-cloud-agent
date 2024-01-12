@@ -5,6 +5,8 @@ import io.iohk.atala.api.http.EndpointOutputs.*
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.iam.authentication.admin.AdminApiKeyCredentials
 import io.iohk.atala.iam.authentication.admin.AdminApiKeySecurityLogic.adminApiKeyHeader
+import io.iohk.atala.iam.authentication.oidc.JwtCredentials
+import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import io.iohk.atala.iam.entity.http.model.*
 import sttp.model.StatusCode
 import sttp.tapir.json.zio.jsonBody
@@ -15,7 +17,7 @@ import java.util.UUID
 object EntityEndpoints {
 
   val createEntityEndpoint: Endpoint[
-    AdminApiKeyCredentials,
+    (AdminApiKeyCredentials, JwtCredentials),
     (RequestContext, CreateEntityRequest),
     ErrorResponse,
     EntityResponse,
@@ -23,6 +25,7 @@ object EntityEndpoints {
   ] =
     endpoint.post
       .securityIn(adminApiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("iam" / "entities")
       .in(
@@ -48,7 +51,7 @@ object EntityEndpoints {
       .tag("Identity and Access Management")
 
   val updateEntityNameEndpoint: Endpoint[
-    AdminApiKeyCredentials,
+    (AdminApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID, UpdateEntityNameRequest),
     ErrorResponse,
     EntityResponse,
@@ -56,6 +59,7 @@ object EntityEndpoints {
   ] =
     endpoint.put
       .securityIn(adminApiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "iam" / "entities" / path[UUID]("id") / "name" // .description(EntityResponse.annotations.id.description)
@@ -83,7 +87,7 @@ object EntityEndpoints {
       .tag("Identity and Access Management")
 
   val updateEntityWalletIdEndpoint: Endpoint[
-    AdminApiKeyCredentials,
+    (AdminApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID, UpdateEntityWalletIdRequest),
     ErrorResponse,
     EntityResponse,
@@ -91,6 +95,7 @@ object EntityEndpoints {
   ] =
     endpoint.put
       .securityIn(adminApiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "iam" / "entities" / path[UUID]("id") / "walletId"
@@ -118,7 +123,7 @@ object EntityEndpoints {
       .tag("Identity and Access Management")
 
   val getEntityByIdEndpoint: Endpoint[
-    AdminApiKeyCredentials,
+    (AdminApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID),
     ErrorResponse,
     EntityResponse,
@@ -126,6 +131,7 @@ object EntityEndpoints {
   ] =
     endpoint.get
       .securityIn(adminApiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "iam" / "entities" / path[UUID]("id").description(
@@ -143,7 +149,7 @@ object EntityEndpoints {
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
   val getEntitiesEndpoint: Endpoint[
-    AdminApiKeyCredentials,
+    (AdminApiKeyCredentials, JwtCredentials),
     (
         RequestContext,
         PaginationInput
@@ -154,6 +160,7 @@ object EntityEndpoints {
   ] =
     endpoint.get
       .securityIn(adminApiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in("iam" / "entities".description("Get all entities"))
       .in(paginationInput)
@@ -167,7 +174,7 @@ object EntityEndpoints {
       .tag("Identity and Access Management")
 
   val deleteEntityByIdEndpoint: Endpoint[
-    AdminApiKeyCredentials,
+    (AdminApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID),
     ErrorResponse,
     Unit,
@@ -175,6 +182,7 @@ object EntityEndpoints {
   ] =
     endpoint.delete
       .securityIn(adminApiKeyHeader)
+      .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
         "iam" / "entities" / path[UUID]("id").description(
@@ -193,13 +201,14 @@ object EntityEndpoints {
       .tag("Identity and Access Management")
 
   val addEntityApiKeyAuthenticationEndpoint: Endpoint[
-    AdminApiKeyCredentials,
+    (AdminApiKeyCredentials, JwtCredentials),
     (RequestContext, ApiKeyAuthenticationRequest),
     ErrorResponse,
     Unit,
     Any
   ] = endpoint.post
     .securityIn(adminApiKeyHeader)
+    .securityIn(jwtAuthHeader)
     .in(extractFromRequest[RequestContext](RequestContext.apply))
     .in("iam" / "apikey-authentication")
     .in(
@@ -223,13 +232,14 @@ object EntityEndpoints {
     .tag("Identity and Access Management")
 
   val deleteEntityApiKeyAuthenticationEndpoint: Endpoint[
-    AdminApiKeyCredentials,
+    (AdminApiKeyCredentials, JwtCredentials),
     (RequestContext, ApiKeyAuthenticationRequest),
     ErrorResponse,
     Unit,
     Any
   ] = endpoint.delete
     .securityIn(adminApiKeyHeader)
+    .securityIn(jwtAuthHeader)
     .in(extractFromRequest[RequestContext](RequestContext.apply))
     .in("iam" / "apikey-authentication")
     .in(

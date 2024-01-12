@@ -10,8 +10,11 @@ final case class KeycloakConfig(
     realmName: String,
     clientId: String,
     clientSecret: String,
-    autoUpgradeToRPT: Boolean
-)
+    autoUpgradeToRPT: Boolean,
+    rolesClaimPath: String,
+) {
+  val rolesClaimPathSegments: Seq[String] = rolesClaimPath.split('.').toSeq
+}
 
 object KeycloakConfig {
   val layer: URLayer[AppConfig, KeycloakConfig] =
