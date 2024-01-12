@@ -55,9 +55,9 @@ final class AccessToken private (token: String, claims: JwtClaim, rolesClaimPath
 
   private def parseRole(s: String): Option[EntityRole] = {
     s match {
-      case "agent-admin"  => Some(EntityRole.Admin)
-      case "agent-tenant" => Some(EntityRole.Tenant)
-      case _              => None
+      case "admin"  => Some(EntityRole.Admin)
+      case "tenant" => Some(EntityRole.Tenant)
+      case _        => None
     }
   }
 }
