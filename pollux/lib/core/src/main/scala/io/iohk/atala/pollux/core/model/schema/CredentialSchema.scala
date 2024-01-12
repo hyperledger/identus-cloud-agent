@@ -125,10 +125,19 @@ object CredentialSchema {
     for {
       uri <- ZIO.attempt(new URI(schemaId)).mapError(t => URISyntaxError(t.getMessage))
       content <- uriDereferencer.dereference(uri).mapError(err => UnexpectedError(err.toString))
-      jsonSchema <- ZIO
+      json <- ZIO
         .fromEither(content.fromJson[Json])
-        .mapError(error => CredentialSchemaError.CredentialSchemaParsingError(s"Json Schema parsing error: $error"))
-      schemaValidator <- JsonSchemaValidatorImpl.from(jsonSchema).mapError(SchemaError.apply)
+        .mapError(error =>
+          CredentialSchemaError.CredentialSchemaParsingError(s"Failed to parse resolved schema content as Json: $error")
+        )
+      schemaValidator <- JsonSchemaValidatorImpl
+        .from(json)
+        .orElse(
+          ZIO
+            .fromEither(json.as[CredentialSchema])
+            .mapError(error => CredentialSchemaParsingError(s"Failed to parse schema content as Json or OEA: $error"))
+            .flatMap(cs => JsonSchemaValidatorImpl.from(cs.schema).mapError(SchemaError.apply))
+        )
       _ <- schemaValidator.validate(claims).mapError(SchemaError.apply)
     } yield ()
   }
