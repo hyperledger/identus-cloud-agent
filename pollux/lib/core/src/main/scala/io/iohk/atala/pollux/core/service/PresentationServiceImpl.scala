@@ -8,14 +8,19 @@ import io.circe.syntax.*
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.CredentialSchemaParsingError
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.presentation.*
+import io.iohk.atala.pollux.core.model.schema.CredentialDefinition
+import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
+import zio.{ZIO, *}
+import zio.json.*
 
 import java.rmi.UnexpectedException
 import java.time.Instant
