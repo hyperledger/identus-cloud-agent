@@ -10,11 +10,11 @@ import io.iohk.atala.mercury.protocol.issuecredential.IssueCredentialIssuedForma
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.anoncreds.*
 import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.CredentialSchemaParsingError
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition
-import io.iohk.atala.pollux.core.model.schema.CredentialSchema.parseCredentialSchema
 import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import io.iohk.atala.pollux.core.service.serdes.{
@@ -27,6 +27,7 @@ import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.{ZIO, *}
+import zio.json.*
 
 import java.net.URI
 import java.rmi.UnexpectedException
@@ -596,10 +597,9 @@ private class PresentationServiceImpl(
     for {
       uri <- ZIO.attempt(new URI(schemaId)).mapError(e => UnexpectedError(e.getMessage))
       content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
-      vcSchema <- parseCredentialSchema(content).mapError(e => UnexpectedError(e.message))
-      anoncredSchema <- AnoncredSchemaSerDesV1.schemaSerDes
-        .deserialize(vcSchema.schema)
-        .mapError(e => UnexpectedError(e.error))
+      anoncredSchema <- ZIO
+        .fromEither(content.fromJson[AnoncredSchemaSerDesV1])
+        .mapError(error => UnexpectedError(s"AnonCreds Schema parsing error: $error"))
       anoncredLibSchema =
         AnoncredSchemaDef(
           schemaId,
