@@ -29,7 +29,7 @@ object DIDRegistrarEndpoints {
        |The __${tagName}__ endpoints facilitate the management of [PRISM DIDs](https://github.com/input-output-hk/prism-did-method-spec) hosted in the cloud agent.
        |
        |The agent securely manages and stores DIDs along with their keys in its secret storage.
-       |These endpionts allow users to create, read, update, deactivate and publish, without direct exposure to the key material.
+       |These endpoints allow users to create, read, update, deactivate, and publish without direct exposure to the key material.
        |These DIDs can be utilized for various operations during issuance and verification processes.
        |""".stripMargin
 
