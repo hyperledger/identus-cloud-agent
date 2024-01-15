@@ -73,22 +73,12 @@ class SchemaRegistryServerEndpoints(
         }
       }
 
-  val testServerEndpoint: ZServerEndpoint[Any, Any] =
-    testEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
-      .serverLogic {
-        case wac => { case requestContext: RequestContext =>
-          ZIO.succeed(requestContext.request.toString + " " + wac.toString)
-        }
-      }
-
   val all: List[ZServerEndpoint[Any, Any]] =
     List(
       createSchemaServerEndpoint,
       updateSchemaServerEndpoint,
       getSchemaByIdServerEndpoint,
-      lookupSchemasByQueryServerEndpoint,
-      testServerEndpoint
+      lookupSchemasByQueryServerEndpoint
     )
 }
 
