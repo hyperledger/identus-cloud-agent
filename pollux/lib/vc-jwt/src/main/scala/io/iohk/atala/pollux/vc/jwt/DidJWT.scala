@@ -23,23 +23,56 @@ object JWT {
 
 trait Signer {
   def encode(claim: Json): JWT
+
+  def signRaw(data: Array[Byte]): Array[Byte]
+
+  val signatureSuiteName: String
+
 }
 
-class ES256Signer(privateKey: PrivateKey) extends Signer {
+trait ES256SByteArraySigner {
+
+  private val provider = BouncyCastleProviderSingleton.getInstance
+
+  def sign(privateKey: PrivateKey, data: Array[Byte]): Array[Byte] = {
+
+    val signer = Signature.getInstance("SHA256withECDSA", provider)
+    signer.initSign(privateKey)
+    signer.update(data)
+    signer.sign()
+  }
+
+  val signatureSuiteName: String = JwtAlgorithm.ES256.name
+
+}
+
+class ES256Signer(privateKey: PrivateKey) extends Signer with ES256SByteArraySigner {
   val algorithm: JwtECDSAAlgorithm = JwtAlgorithm.ES256
+  private val provider = BouncyCastleProviderSingleton.getInstance
+  Security.addProvider(provider)
 
   override def encode(claim: Json): JWT = JWT(JwtCirce.encode(claim, privateKey, algorithm))
+
+  override def signRaw(data: Array[Byte]): Array[Byte] = {
+    sign(privateKey, data)
+  }
+
 }
 
 // works with java 7, 8, 11 & bouncycastle provider
 // https://connect2id.com/products/nimbus-jose-jwt/jca-algorithm-support#alg-support-table
-class ES256KSigner(privateKey: PrivateKey) extends Signer {
+class ES256KSigner(privateKey: PrivateKey) extends Signer with ES256SByteArraySigner {
   lazy val signer: ECDSASigner = {
     val ecdsaSigner = ECDSASigner(privateKey, Curve.SECP256K1)
     val bouncyCastleProvider = BouncyCastleProviderSingleton.getInstance
     ecdsaSigner.getJCAContext.setProvider(bouncyCastleProvider)
     ecdsaSigner
   }
+
+  override def signRaw(data: Array[Byte]): Array[Byte] = {
+    sign(privateKey, data)
+  }
+
   override def encode(claim: Json): JWT = {
     val claimSet = JWTClaimsSet.parse(claim.noSpaces)
     val signedJwt = SignedJWT(

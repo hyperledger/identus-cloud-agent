@@ -28,6 +28,17 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
   }
 
   override def spec = suite("VCStatusList2021")(
+    test("tmp") {
+
+      for {
+        issuer <- generateIssuer()
+        bitString <- BitString.getInstance()
+        statusList <- VCStatusList2021.build(VC_ID, s"$VC_ID#list", issuer, bitString)
+        _ <- statusList.toJsonWithEmbeddedProof
+      } yield {
+        assertTrue(true)
+      }
+    },
     test("Generate VC contains required fields in 'credentialSubject'") {
       for {
         issuer <- generateIssuer()

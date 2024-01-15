@@ -13,6 +13,12 @@ class VCStatusList2021 private (val vcPayload: W3cCredentialPayload, jwtIssuer: 
 
   def encoded: UIO[JWT] = ZIO.succeed(W3CCredential.toEncodedJwt(vcPayload, jwtIssuer))
 
+  def toJsonWithEmbeddedProof: UIO[Json] = ZIO.succeed(W3CCredential.toJsonWithEmbeddedProof(vcPayload, jwtIssuer))
+
+  // add a function that will return encoded credential with embedded proof
+  // and possibly use that to store a json credential with embded proof in db instead of jwt
+
+
   def getBitString: IO[DecodingError, BitString] = {
     for {
       encodedBitString <- ZIO

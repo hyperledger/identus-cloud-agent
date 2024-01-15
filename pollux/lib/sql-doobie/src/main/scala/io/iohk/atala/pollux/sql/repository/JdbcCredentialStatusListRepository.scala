@@ -95,7 +95,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
         )
         .mapError(x => new Throwable(x.msg))
 
-      encodedJwtCredential <- emptyJwtCredential.encoded
+      encodedJwtCredential <- emptyJwtCredential.encoded // TODO, get embeded proof json and store it in db insteand of JWT
     } yield encodedJwtCredential
 
     for {

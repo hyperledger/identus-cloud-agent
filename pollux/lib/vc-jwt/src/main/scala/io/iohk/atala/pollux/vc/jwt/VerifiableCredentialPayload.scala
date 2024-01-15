@@ -759,6 +759,18 @@ object W3CCredential {
   def toEncodedJwt(payload: W3cCredentialPayload, issuer: Issuer): JWT =
     JwtCredential.encodeJwt(payload.toJwtCredentialPayload, issuer)
 
+  def toJsonWithEmbeddedProof(payload: W3cCredentialPayload, issuer: Issuer): Json = {
+
+    val jsonCred = payload.asJson
+    // canonicalaize json credential:
+    // sort keys
+    //
+    println(jsonCred)
+
+
+    ???
+  }
+
   def validateW3C(
       payload: W3cVerifiableCredentialPayload,
       proofPurpose: Option[VerificationRelationship] = None
