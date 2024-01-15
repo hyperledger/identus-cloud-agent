@@ -1,5 +1,6 @@
 package io.iohk.atala.agent.server.http
 
+import io.iohk.atala.castor.controller.DIDRegistrarEndpoints
 import io.iohk.atala.connect.controller.ConnectionEndpoints
 import io.iohk.atala.pollux.credentialschema.{SchemaRegistryEndpoints, VerificationPolicyEndpoints}
 import sttp.apispec.openapi.*
@@ -116,7 +117,8 @@ object DocModels {
         List(
           ConnectionEndpoints.tag,
           VerificationPolicyEndpoints.tag,
-          SchemaRegistryEndpoints.tag
+          SchemaRegistryEndpoints.tag,
+          DIDRegistrarEndpoints.tag
         )
       )
 
