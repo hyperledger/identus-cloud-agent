@@ -22,7 +22,7 @@ class ConnectionServerEndpoints(
 
   private val createConnectionServerEndpoint: ZServerEndpoint[Any, Any] =
     createConnection
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, request: CreateConnectionRequest) =>
           connectionController
@@ -33,7 +33,7 @@ class ConnectionServerEndpoints(
 
   private val getConnectionServerEndpoint: ZServerEndpoint[Any, Any] =
     getConnection
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, connectionId: UUID) =>
           connectionController
@@ -44,7 +44,7 @@ class ConnectionServerEndpoints(
 
   private val getConnectionsServerEndpoint: ZServerEndpoint[Any, Any] =
     getConnections
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, paginationInput: PaginationInput, thid: Option[String]) =>
           connectionController
@@ -55,7 +55,7 @@ class ConnectionServerEndpoints(
 
   private val acceptConnectionInvitationServerEndpoint: ZServerEndpoint[Any, Any] =
     acceptConnectionInvitation
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, request: AcceptConnectionInvitationRequest) =>
           connectionController

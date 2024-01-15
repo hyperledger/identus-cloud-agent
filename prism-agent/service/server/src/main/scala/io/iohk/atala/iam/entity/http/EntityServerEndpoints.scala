@@ -1,11 +1,14 @@
 package io.iohk.atala.iam.entity.http
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
+import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
-import io.iohk.atala.iam.authentication.admin.{AdminApiKeyCredentials, AdminApiKeySecurityLogic}
+import io.iohk.atala.iam.authentication.SecurityLogic
+import io.iohk.atala.iam.authentication.admin.{AdminApiKeyCredentials}
+import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.iam.entity.http.EntityEndpoints.*
 import io.iohk.atala.iam.entity.http.controller.EntityController
 import io.iohk.atala.iam.entity.http.model.{
@@ -21,11 +24,13 @@ import java.util.UUID
 
 class EntityServerEndpoints(entityController: EntityController, authenticator: Authenticator[BaseEntity]) {
 
-  private def adminApiSecurityLogic(credentials: AdminApiKeyCredentials): IO[ErrorResponse, BaseEntity] =
-    AdminApiKeySecurityLogic.securityLogic(credentials)(authenticator)
+  private def adminRoleSecurityLogic(
+      credentials: (AdminApiKeyCredentials, JwtCredentials)
+  ): IO[ErrorResponse, BaseEntity] =
+    SecurityLogic.authorizeRoleWith(credentials)(authenticator)(EntityRole.Admin)
 
   val createEntityServerEndpoint: ZServerEndpoint[Any, Any] = createEntityEndpoint
-    .zServerSecurityLogic(adminApiSecurityLogic)
+    .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, request: CreateEntityRequest) =>
         entityController.createEntity(request)(rc)
@@ -33,16 +38,15 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
     }
 
   val updateEntityNameServerEndpoint: ZServerEndpoint[Any, Any] = updateEntityNameEndpoint
-    .zServerSecurityLogic(adminApiSecurityLogic)
+    .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, id: UUID, request: UpdateEntityNameRequest) =>
         entityController.updateEntityName(id, request.name)(rc)
       }
-
     }
 
   val updateEntityWalletIdServerEndpoint: ZServerEndpoint[Any, Any] = updateEntityWalletIdEndpoint
-    .zServerSecurityLogic(adminApiSecurityLogic)
+    .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, id: UUID, request: UpdateEntityWalletIdRequest) =>
         entityController.updateEntityWalletId(id, request.walletId)(rc)
@@ -50,7 +54,7 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
     }
 
   val getEntityByIdServerEndpoint: ZServerEndpoint[Any, Any] = getEntityByIdEndpoint
-    .zServerSecurityLogic(adminApiSecurityLogic)
+    .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, id: UUID) =>
         entityController.getEntity(id)(rc)
@@ -58,7 +62,7 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
     }
 
   val getEntitiesServerEndpoint: ZServerEndpoint[Any, Any] = getEntitiesEndpoint
-    .zServerSecurityLogic(adminApiSecurityLogic)
+    .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, paginationIn: PaginationInput) =>
         entityController.getEntities(paginationIn)(rc)
@@ -66,7 +70,7 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
     }
 
   val deleteEntityByIdServerEndpoint: ZServerEndpoint[Any, Any] = deleteEntityByIdEndpoint
-    .zServerSecurityLogic(adminApiSecurityLogic)
+    .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, id: UUID) =>
         entityController.deleteEntity(id)(rc)
@@ -74,7 +78,7 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
     }
 
   val addEntityApiKeyAuthenticationServerEndpoint: ZServerEndpoint[Any, Any] = addEntityApiKeyAuthenticationEndpoint
-    .zServerSecurityLogic(adminApiSecurityLogic)
+    .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, request: ApiKeyAuthenticationRequest) =>
         entityController.addApiKeyAuth(request.entityId, request.apiKey)(rc)
@@ -83,7 +87,7 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
 
   val deleteEntityApiKeyAuthenticationServerEndpoint: ZServerEndpoint[Any, Any] =
     deleteEntityApiKeyAuthenticationEndpoint
-      .zServerSecurityLogic(adminApiSecurityLogic)
+      .zServerSecurityLogic(adminRoleSecurityLogic)
       .serverLogic {
         case entity => { case (rc: RequestContext, request: ApiKeyAuthenticationRequest) =>
           entityController.deleteApiKeyAuth(request.entityId, request.apiKey)(rc)
