@@ -125,17 +125,19 @@ object CredentialSchema {
     for {
       uri <- ZIO.attempt(new URI(schemaId)).mapError(t => URISyntaxError(t.getMessage))
       content <- uriDereferencer.dereference(uri).mapError(err => UnexpectedError(err.toString))
-      vcSchema <- parseCredentialSchema(content)
-      resolvedSchemaType <- resolveCredentialSchemaType(vcSchema.`type`)
-      _ <-
-        Validation
-          .fromPredicateWith(
-            CredentialSchemaParsingError(
-              s"Only ${CredentialJsonSchemaType.`type`} schema type can be used to verify claims"
-            )
-          )(resolvedSchemaType.`type`)(`type` => `type` == CredentialJsonSchemaType.`type`)
-          .toZIO
-      schemaValidator <- JsonSchemaValidatorImpl.from(vcSchema.schema).mapError(SchemaError.apply)
+      json <- ZIO
+        .fromEither(content.fromJson[Json])
+        .mapError(error =>
+          CredentialSchemaError.CredentialSchemaParsingError(s"Failed to parse resolved schema content as Json: $error")
+        )
+      schemaValidator <- JsonSchemaValidatorImpl
+        .from(json)
+        .orElse(
+          ZIO
+            .fromEither(json.as[CredentialSchema])
+            .mapError(error => CredentialSchemaParsingError(s"Failed to parse schema content as Json or OEA: $error"))
+            .flatMap(cs => JsonSchemaValidatorImpl.from(cs.schema).mapError(SchemaError.apply))
+        )
       _ <- schemaValidator.validate(claims).mapError(SchemaError.apply)
     } yield ()
   }
@@ -148,20 +150,10 @@ object CredentialSchema {
     for {
       uri <- ZIO.attempt(new URI(schemaId)).mapError(t => URISyntaxError(t.getMessage))
       content <- uriDereferencer.dereference(uri).mapError(err => UnexpectedError(err.toString))
-      vcSchema <- parseCredentialSchema(content)
-      resolvedSchemaType <- resolveCredentialSchemaType(vcSchema.`type`)
-      _ <-
-        Validation
-          .fromPredicateWith(
-            CredentialSchemaParsingError(
-              s"Only ${CredentialJsonSchemaType.`type`} schema type can be used to verify claims"
-            )
-          )(resolvedSchemaType.`type`)(`type` => `type` == AnoncredSchemaType.`type`)
-          .toZIO
       validAttrNames <- ZIO
-        .fromEither(vcSchema.schema.as[AnoncredSchemaSerDesV1])
+        .fromEither(content.fromJson[AnoncredSchemaSerDesV1])
+        .mapError(error => CredentialSchemaParsingError(s"AnonCreds Schema parsing error: $error"))
         .map(_.attrNames)
-        .mapError(err => UnexpectedError(err))
       jsonClaims <- ZIO.fromEither(claims.fromJson[Json]).mapError(err => UnexpectedError(err))
       _ <- jsonClaims match
         case Json.Obj(fields) =>
@@ -193,8 +185,4 @@ object CredentialSchema {
     } yield ()
   }
 
-  def parseCredentialSchema(vcSchemaString: String): IO[CredentialSchemaError, CredentialSchema] =
-    ZIO
-      .fromEither(vcSchemaString.fromJson[CredentialSchema])
-      .mapError(error => CredentialSchemaParsingError(s"VC Schema parsing error: $error"))
 }
