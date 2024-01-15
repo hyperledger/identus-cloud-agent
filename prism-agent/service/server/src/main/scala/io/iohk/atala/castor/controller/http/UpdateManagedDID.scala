@@ -88,7 +88,7 @@ object UpdateManagedDIDRequestAction {
         case ActionType.PATCH_CONTEXT =>
           action.patchContext
             .toRight("patchContext property is missing from action type PATCH_CONTEXT")
-            .map(i => PatchContext(i.contexts))
+            .map(i => PatchContext(i.contexts.map(_.value)))
       }
     }
   }
@@ -157,7 +157,7 @@ object UpdateManagedDIDServiceAction {
   }
 }
 
-final case class PatchContextAction(contexts: Seq[String])
+final case class PatchContextAction(contexts: Seq[Context])
 
 object PatchContextAction {
   given JsonEncoder[PatchContextAction] = DeriveJsonEncoder.gen[PatchContextAction]
