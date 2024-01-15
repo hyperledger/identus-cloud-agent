@@ -649,14 +649,6 @@ lazy val agentDidcommx = project
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(agent) //modelsDidcommx
 
-/** Demos agents and services implementation with didcommx */
-lazy val agentCliDidcommx = project
-  .in(file("mercury/mercury-library/agent-cli-didcommx"))
-  .settings(name := "mercury-agent-cli-didcommx")
-  .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
-  .settings(libraryDependencies += D.zioHttp)
-  .dependsOn(agentDidcommx)
-
 // ///** TODO Demos agents and services implementation with did-scala */
 // lazy val agentDidScala =
 //   project
@@ -880,7 +872,6 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   resolver,
   agent,
   agentDidcommx,
-  agentCliDidcommx,
   castorCore,
   polluxVcJWT,
   polluxCore,
