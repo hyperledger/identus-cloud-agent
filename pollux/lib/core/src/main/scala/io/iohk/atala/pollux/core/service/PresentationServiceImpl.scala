@@ -17,7 +17,12 @@ import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition
 import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
-import io.iohk.atala.pollux.core.service.serdes.{AnoncredCredentialProofV1, AnoncredCredentialProofsV1, AnoncredPresentationRequestV1, AnoncredPresentationV1}
+import io.iohk.atala.pollux.core.service.serdes.{
+  AnoncredCredentialProofV1,
+  AnoncredCredentialProofsV1,
+  AnoncredPresentationRequestV1,
+  AnoncredPresentationV1
+}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
