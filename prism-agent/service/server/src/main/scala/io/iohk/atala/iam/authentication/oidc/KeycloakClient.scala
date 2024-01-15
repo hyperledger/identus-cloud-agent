@@ -1,7 +1,6 @@
 package io.iohk.atala.iam.authentication.oidc
 
-import org.keycloak.authorization.client.AuthzClient
-import org.keycloak.authorization.client.{Configuration => KeycloakAuthzConfig}
+import org.keycloak.authorization.client.{AuthzClient, Configuration as KeycloakAuthzConfig}
 import org.keycloak.representations.idm.authorization.AuthorizationRequest
 import zio.*
 import zio.http.*
@@ -57,11 +56,12 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
   // TODO: support offline introspection
   // https://www.keycloak.org/docs/22.0.4/securing_apps/#_token_introspection_endpoint
   override def introspectToken(token: String): IO[KeycloakClientError, TokenIntrospection] = {
-    for {
-      response <- Client
+    (for {
+      url <- ZIO.fromEither(URL.decode(introspectionUrl)).orDie
+      response <- httpClient
         .request(
           Request(
-            url = URL(Path(introspectionUrl)),
+            url = url,
             method = Method.POST,
             headers = baseFormHeaders ++ Headers(
               Header.Authorization.Basic(
@@ -75,11 +75,9 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
               )
             )
           )
-
         )
         .logError("Fail to introspect token on keycloak.")
         .mapError(e => KeycloakClientError.UnexpectedError("Fail to introspect the token on keycloak."))
-        .provide(ZLayer.succeed(httpClient) ++ Scope.default)
       body <- response.body.asString
         .logError("Fail parse keycloak introspection response.")
         .mapError(e => KeycloakClientError.UnexpectedError("Fail parse keycloak introspection response."))
@@ -93,15 +91,16 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
           ZIO.logError(s"Keycloak token introspection was unsucessful. Status: ${response.status}. Response: $body") *>
             ZIO.fail(KeycloakClientError.UnexpectedError("Token introspection was unsuccessful."))
         }
-    } yield result
+    } yield result).provide(Scope.default)
   }
 
   override def getAccessToken(username: String, password: String): IO[KeycloakClientError, TokenResponse] = {
-    for {
-      response <- Client
+    (for {
+      url <- ZIO.fromEither(URL.decode(tokenUrl)).orDie
+      response <- httpClient
         .request(
           Request(
-            url = URL(Path(tokenUrl)),
+            url = url,
             method = Method.POST,
             headers = baseFormHeaders,
             body = Body.fromURLEncodedForm(
@@ -112,11 +111,11 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
                 FormField.simpleField("username", username),
                 FormField.simpleField("password", password),
               )
-            ))
+            )
+          )
         )
         .logError("Fail to get the accessToken on keycloak.")
         .mapError(e => KeycloakClientError.UnexpectedError("Fail to get the accessToken on keycloak."))
-        .provide(ZLayer.succeed(httpClient) ++ Scope.default)
       body <- response.body.asString
         .logError("Fail parse keycloak token response.")
         .mapError(e => KeycloakClientError.UnexpectedError("Fail parse keycloak token response."))
@@ -130,7 +129,7 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
           ZIO.logError(s"Keycloak token introspection was unsucessful. Status: ${response.status}. Response: $body") *>
             ZIO.fail(KeycloakClientError.UnexpectedError("Token introspection was unsuccessful."))
         }
-    } yield result
+    } yield result).provide(Scope.default)
   }
 
   override def getRpt(accessToken: String): IO[KeycloakClientError, String] =
