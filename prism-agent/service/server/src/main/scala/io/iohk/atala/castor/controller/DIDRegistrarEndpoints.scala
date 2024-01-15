@@ -30,7 +30,7 @@ object DIDRegistrarEndpoints {
        |
        |Implentation of [DID management](https://docs.atalaprism.io/docs/atala-prism/prism-cloud-agent/did-management/) in the cloud agent.
        |The agent securely manages and stores DIDs along with their keys in its secret storage.
-       |These endpionts allow users to create, read, update, deactivate and publish, without direct exposure to the key material.
+       |These endpoints allow users to create, read, update, deactivate, and publish without direct exposure to the key material.
        |These DIDs can be utilized for various operations during issuance and verification processes.
        |
        |More examples and tutorials can be found in this [documentation](https://docs.atalaprism.io/tutorials/category/dids/).
