@@ -39,6 +39,18 @@ Once authorized as an admin, the user gains the ability to manage the wallet;
 however, the actual utilization of the wallet remains restricted.
 Despite any UMA permissions configured for the user, the agent strictly maintains a clear segregation of roles between administrator and tenant.
 
+## Endpoints
+
+### Agent endpoints
+| Endpoint                                   | Description                          | Role          |
+|--------------------------------------------|--------------------------------------|---------------|
+| `GET /wallets`                             | List the wallets on PRISM Agent      | Administrator |
+
+### Keycloak endpoints
+| Endpoint                                             | Description                   | Role         |
+|------------------------------------------------------|-------------------------------|--------------|
+| `POST /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token         | Administrator|
+
 ## Keycloak Administrator interactions
 
 ### 1. Configure Keycloak role on the client
@@ -60,6 +72,7 @@ Choose __Role Mapping__ tab and click __Assign Role__.
 Choose __Filter by clients__ in the dropdown menu. Then choose the `admin` role.
 
 A detailed explanation how to create a role mapping can be found in the [Keycloak official documentation](https://www.keycloak.org/docs/latest/server_admin/#proc-assigning-role-mappings_server_administration_guide).
+If a user does not exist, a new user can be created by following this [Keycloak official guide](https://www.keycloak.org/docs/latest/server_admin/#proc-creating-user_server_administration_guide).
 
 After this step, the user should have the `admin` role assigned and after they log in, the `roles` claim should appear in the JWT payload.
 
