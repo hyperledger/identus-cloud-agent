@@ -25,9 +25,7 @@ val config = ConfigLoader().loadConfigOrThrow<Config>(TestConstants.TESTS_CONFIG
  * This function starts all services and actors before all tests.
  */
 fun initServices() {
-    config.services?.keycloak?.start(
-        config.roles.map { it.name },
-    )
+    config.services?.keycloak?.start(config.roles)
     config.services?.prismNode?.start()
     config.services?.vault?.start()
     config.agents?.forEach { agent ->
