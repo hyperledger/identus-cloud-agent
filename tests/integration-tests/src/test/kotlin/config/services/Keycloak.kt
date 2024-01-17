@@ -42,7 +42,8 @@ data class Keycloak(
     fun getKeycloakAuthToken(username: String, password: String): String {
         val tokenResponse =
             RestAssured
-                .given().body("grant_type=password&client_id=$clientId&client_secret=$clientSecret&username=$username&password=$password")
+                .given()
+                .body("grant_type=password&client_id=$clientId&client_secret=$clientSecret&username=$username&password=$password")
                 .contentType("application/x-www-form-urlencoded")
                 .header("Host", "localhost")
                 .post("http://localhost:$httpPort/realms/$realm/protocol/openid-connect/token")
@@ -141,11 +142,10 @@ data class Keycloak(
     }
 
     private fun grantRoleToUser(userId: String, role: AgentRole) {
-        val clientRoleResponse =
-            RestAssured.given().spec(requestBuilder)
-                .param("search", role.roleName)
-                .get("/admin/realms/$realm/clients/$clientId/roles")
-                .thenReturn()
+        val clientRoleResponse = RestAssured.given().spec(requestBuilder)
+            .param("search", role.roleName)
+            .get("/admin/realms/$realm/clients/$clientId/roles")
+            .thenReturn()
         clientRoleResponse.then().statusCode(HttpStatus.SC_OK)
         val clientRoleId = clientRoleResponse.body.jsonPath().getString("[0].id")
 
