@@ -229,7 +229,8 @@ To configure the roles, you need to specify the following options:
 * `url`: [MANDATORY] the REST API URL of the agent to use for this role.
 * `apikey`: [OPTIONAL] the API key to use for this role. If not specified, the default API key will be used. API key authentication can also be disabled.
 * `token`: [OPTIONAL] the JWT token to use for this role. To be used only for pre-configured remote instances of the agents with Keycloak authentication enabled.
-* `authHeader`: [OPTIONAL] the authentication header to use for this role. If not specified, the default authentication header will be used.
+* `auth_header`: [OPTIONAL] the authentication header to use for this role. If not specified, the default authentication header will be used.
+* `agent_role`: [OPTIONAL] the role that is assigned to the user and appears in the JWT. Possible values: `Admin` and `Tenant`.
 
 `webhook` is a special object that contains the following options:
 * `url`: [MANDATORY] the webhook URL to use for this role.
