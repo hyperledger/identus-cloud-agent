@@ -1,29 +1,26 @@
 # Castor:
 /castor/ @patlo-iog @yshyn-iohk
 
-# Mercury:
-/mercury/ @FabioPinheiro @mineme0110
-
 # Connect:
-/connect/ @FabioPinheiro @mineme0110
+/connect/ @bvoiturier @FabioPinheiro @mineme0110
 
 # Pollux:
 /pollux/ @patlo-iog @CryptoKnightIOG @mineme0110
 
 # PRISM Agent:
-/prism-agent/ @bvoiturier @yshyn-iohk
+/prism-agent/ @bvoiturier @yshyn-iohk @patlo-iog
 
 # CI pipelines:
-/.github/ @antonbaliasnikov
+/.github/ @mineme0110
 
 # PRISM Node:
 /prism-node/ @shotexa
 
 # Shared:
-/shared/ @patlo-iog @FabioPinheiro @mineme0110 @yshyn-iohk
+/shared/ @patlo-iog @FabioPinheiro @mineme0110 @yshyn-iohk @bvoiturier @shotexa @CryptoKnightIOG
 
 # E2E tests:
-/tests/ @antonbaliasnikov
+/tests/ @amagyar-iohk @yshyn-iohk @patlo-iog @mineme0110
 
 # Docs:
-/docs/ @antonbaliasnikov @davidpoltorak-io @yshyn-iohk @BS-IO 
+/docs/ @davidpoltorak-io @yshyn-iohk @BS-IO 
