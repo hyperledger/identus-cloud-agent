@@ -62,25 +62,20 @@ fun initActors() {
      * @param actor The actor for which the webhook should be registered.
      * @param webhookUrl The url of the webhook.
      */
-    fun registerWebhook(
-        actor: Actor,
-        webhookUrl: String,
-    ) {
-        val spec =
-            RequestSpecBuilder()
-                .setBaseUri(actor.usingAbilityTo(CallAnApi::class.java).resolve("/"))
+    fun registerWebhook(actor: Actor, webhookUrl: String) {
+        val spec = RequestSpecBuilder()
+            .setBaseUri(actor.usingAbilityTo(CallAnApi::class.java).resolve("/"))
         if (actor.recall<String>("AUTH_KEY") != null) {
             spec.addHeader(actor.recall("AUTH_HEADER"), actor.recall("AUTH_KEY"))
         }
         if (actor.recall<String>("BEARER_TOKEN") != null) {
             spec.addHeader("Authorization", "Bearer ${actor.recall<String>("BEARER_TOKEN")}")
         }
-        val response =
-            RestAssured
-                .given().spec(spec.build())
-                .body(CreateWebhookNotification(url = webhookUrl))
-                .post("/events/webhooks")
-                .thenReturn()
+        val response = RestAssured
+            .given().spec(spec.build())
+            .body(CreateWebhookNotification(url = webhookUrl))
+            .post("/events/webhooks")
+            .thenReturn()
         response.then().statusCode(HttpStatus.SC_OK)
         actor.remember("WEBHOOK_ID", response.body.jsonPath().getString("id"))
     }
@@ -134,9 +129,8 @@ fun destroyActors() {
      * @param actor The actor for which the webhook should be deleted.
      */
     fun deleteWebhook(actor: Actor) {
-        val spec =
-            RequestSpecBuilder()
-                .setBaseUri(actor.usingAbilityTo(CallAnApi::class.java).resolve("/"))
+        val spec = RequestSpecBuilder()
+            .setBaseUri(actor.usingAbilityTo(CallAnApi::class.java).resolve("/"))
         if (actor.recall<String>("AUTH_KEY") != null) {
             spec.addHeader(actor.recall("AUTH_HEADER"), actor.recall("AUTH_KEY"))
         }
