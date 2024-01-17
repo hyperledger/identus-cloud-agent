@@ -4,6 +4,7 @@ import abilities.ListenToEvents
 import com.sksamuel.hoplite.ConfigException
 import com.sksamuel.hoplite.ConfigLoader
 import common.TestConstants
+import config.AgentRole
 import config.Config
 import io.cucumber.java.AfterAll
 import io.cucumber.java.BeforeAll
@@ -25,7 +26,7 @@ val config = ConfigLoader().loadConfigOrThrow<Config>(TestConstants.TESTS_CONFIG
  */
 fun initServices() {
     config.services?.keycloak?.start(
-        config.roles.map { it.name }
+        config.roles.map { it.name },
     )
     config.services?.prismNode?.start()
     config.services?.vault?.start()
@@ -50,8 +51,8 @@ fun initActors() {
             .auth().oauth2(actor.recall("BEARER_TOKEN"))
             .body(
                 CreateWalletRequest(
-                    name = UUID.randomUUID().toString()
-                )
+                    name = UUID.randomUUID().toString(),
+                ),
             )
             .post("/wallets")
             .then().statusCode(HttpStatus.SC_CREATED)
@@ -63,20 +64,25 @@ fun initActors() {
      * @param actor The actor for which the webhook should be registered.
      * @param webhookUrl The url of the webhook.
      */
-    fun registerWebhook(actor: Actor, webhookUrl: String) {
-        val spec = RequestSpecBuilder()
-            .setBaseUri(actor.usingAbilityTo(CallAnApi::class.java).resolve("/"))
+    fun registerWebhook(
+        actor: Actor,
+        webhookUrl: String,
+    ) {
+        val spec =
+            RequestSpecBuilder()
+                .setBaseUri(actor.usingAbilityTo(CallAnApi::class.java).resolve("/"))
         if (actor.recall<String>("AUTH_KEY") != null) {
             spec.addHeader(actor.recall("AUTH_HEADER"), actor.recall("AUTH_KEY"))
         }
         if (actor.recall<String>("BEARER_TOKEN") != null) {
             spec.addHeader("Authorization", "Bearer ${actor.recall<String>("BEARER_TOKEN")}")
         }
-        val response = RestAssured
-            .given().spec(spec.build())
-            .body(CreateWebhookNotification(url = webhookUrl))
-            .post("/events/webhooks")
-            .thenReturn()
+        val response =
+            RestAssured
+                .given().spec(spec.build())
+                .body(CreateWebhookNotification(url = webhookUrl))
+                .post("/events/webhooks")
+                .thenReturn()
         response.then().statusCode(HttpStatus.SC_OK)
         actor.remember("WEBHOOK_ID", response.body.jsonPath().getString("id"))
     }
@@ -85,17 +91,20 @@ fun initActors() {
     config.roles.forEach { role ->
         cast.actorNamed(
             role.name,
-            CallAnApi.at(role.url.toExternalForm())
+            CallAnApi.at(role.url.toExternalForm()),
         )
     }
     if (config.services?.keycloak != null) {
-        cast.actors.forEach { actor ->
+        config.roles.forEach { role ->
+            val actor = cast.actorNamed(role.name)
             try {
                 actor.remember("BEARER_TOKEN", config.services.keycloak.getKeycloakAuthToken(actor.name, actor.name))
             } catch (e: NullPointerException) {
                 throw ConfigException("Keycloak is configured, but no token found for user ${actor.name}!")
             }
-            initializeWallet(actor)
+            if (role.agentRole != AgentRole.Admin) {
+                initializeWallet(actor)
+            }
         }
     }
     config.roles.forEach { role ->
@@ -127,8 +136,9 @@ fun destroyActors() {
      * @param actor The actor for which the webhook should be deleted.
      */
     fun deleteWebhook(actor: Actor) {
-        val spec = RequestSpecBuilder()
-            .setBaseUri(actor.usingAbilityTo(CallAnApi::class.java).resolve("/"))
+        val spec =
+            RequestSpecBuilder()
+                .setBaseUri(actor.usingAbilityTo(CallAnApi::class.java).resolve("/"))
         if (actor.recall<String>("AUTH_KEY") != null) {
             spec.addHeader(actor.recall("AUTH_HEADER"), actor.recall("AUTH_KEY"))
         }
