@@ -6,7 +6,7 @@ import { describe } from "../../k6chaijs.js";
 
 export const localOptions: Options = {
   thresholds: {
-    "group_duration{group:::Issuer create published DID}": ["avg < 30000"],
+    "group_duration{group:::Issuer create published DID}": ["avg < 5000"],
   },
 };
 export let options: Options = merge(localOptions, defaultOptions);

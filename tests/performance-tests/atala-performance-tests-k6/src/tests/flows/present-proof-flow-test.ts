@@ -7,13 +7,13 @@ import { describe } from "../../k6chaijs.js";
 
 export const localOptions: Options = {
   thresholds: {
-    "group_duration{group:::Holder connects with Issuer}": ["avg < 30000"],
+    "group_duration{group:::Holder connects with Issuer}": ["avg < 5000"],
     "group_duration{group:::Issuer creates credential offer for Holder}": [
-      "avg < 120000",
+      "avg < 5000",
     ],
-    "group_duration{group:::Holder connects with Verifier}": ["avg < 30000"],
+    "group_duration{group:::Holder connects with Verifier}": ["avg < 5000"],
     "group_duration{group:::Verifier requests proof from Holder}": [
-      "avg < 30000",
+      "avg < 5000",
     ],
   },
 };

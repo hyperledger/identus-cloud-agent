@@ -6,7 +6,7 @@ import { describe } from "../../k6chaijs.js";
 
 export const localOptions: Options = {
   thresholds: {
-    'group_duration{group:::Issuer creates credential schema}': ['avg < 30000']
+    'group_duration{group:::Issuer creates credential schema}': ['avg < 5000']
   }
 }
 export let options: Options = merge(localOptions, defaultOptions)
