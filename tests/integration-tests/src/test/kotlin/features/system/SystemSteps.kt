@@ -28,4 +28,25 @@ class SystemSteps {
             Ensure.that(healthResponse.version).isNotBlank()
         )
     }
+
+    @When("{actor} Issuer makes a request to the metrics endpoint")
+    fun actorRequestsMetricEndpoint(actor: Actor) {
+        actor.attemptsTo(
+            Get.resource("/_system/metrics")
+        )
+        actor.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK)
+        )
+    }
+
+    @Then("{actor} Issuer sees that the metrics contain background job stats")
+    fun actorSeesMetrics(actor: Actor) {
+        val metricsResponse = SerenityRest.lastResponse().get<String>()
+        actor.attemptsTo(
+            Ensure.that(metricsResponse).contains("present_proof_flow_did_com_exchange_job_ms_gauge"),
+            Ensure.that(metricsResponse).contains("connection_flow_did_com_exchange_job_ms_gauge"),
+            Ensure.that(metricsResponse).contains("issuance_flow_did_com_exchange_job_ms_gauge")
+        )
+    }
+
 }
