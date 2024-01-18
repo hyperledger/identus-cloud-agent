@@ -64,7 +64,7 @@ Choose __Role__ tab in the client menu and create a new role called `admin`
 ### 2. Assign the `admin` role to the user
 
 Once the role gets created, the admin user should be assigned this role.
-To keep the tutorial simple, the role will be directly assigned to the user without managing any group or other metadata.
+For simplicity, we will assign the role to the user without managing any group or other metadata.
 
 Navigate to __Users__ menu on the sidebar in the admin UI.
 Click on the user that should have the `admin` role.
