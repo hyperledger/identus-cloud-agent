@@ -1,8 +1,8 @@
 /**
  * Maximum number of iterations for the waiting loop.
- * If not provided, the default value is 40.
+ * If not provided, the default value is 100.
  */
-export const WAITING_LOOP_MAX_ITERATIONS = Number(__ENV.MY_USER_AGENT) || 500;
+export const WAITING_LOOP_MAX_ITERATIONS = Number(__ENV.MY_USER_AGENT) || 100;
 
 /**
  * Pause interval in seconds for each iteration of the waiting loop.
