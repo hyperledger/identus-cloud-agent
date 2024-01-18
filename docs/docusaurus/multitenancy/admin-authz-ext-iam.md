@@ -32,7 +32,7 @@ The same person may also represent these roles.
 ## Overview
 
 This tutorial will guide you through the steps to configure roles in Keycloak and
-subsequently demonstrate the authorization process as an administrator within the agent,
+demonstrate the authorization process as an administrator within the agent,
 enabling you to perform various administrative tasks.
 
 Once authorized as an admin, the user gains the ability to manage the wallet;
