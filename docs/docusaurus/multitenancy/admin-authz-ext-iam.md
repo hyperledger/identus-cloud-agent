@@ -71,7 +71,7 @@ Click on the user that should have the `admin` role.
 Choose __Role Mapping__ tab and click __Assign Role__.
 Choose __Filter by clients__ in the dropdown menu. Then choose the `admin` role.
 
-A detailed explanation how to create a role mapping can be found in the [Keycloak official documentation](https://www.keycloak.org/docs/latest/server_admin/#proc-assigning-role-mappings_server_administration_guide).
+Fore more info on role mapping see the [Keycloak official documentation](https://www.keycloak.org/docs/latest/server_admin/#proc-assigning-role-mappings_server_administration_guide).
 If a user does not exist, a new user can be created by following this [Keycloak official guide](https://www.keycloak.org/docs/latest/server_admin/#proc-creating-user_server_administration_guide).
 
 After this step, the user should have the `admin` role assigned, and after they log in, the `roles` claim should appear in the JWT payload.
