@@ -6,7 +6,7 @@ allowing users to be authorized under different roles and granting access to par
 
 ## Roles
 
-For the Agent admin authorization, we need to distinguish the administrator of each component
+For the Agent admin authorization, we need to distinguish the administrator of each component:
 
 1. [Agent Administrator](/docs/concepts/glossary#administrator)
 2. Keycloak Administrator
