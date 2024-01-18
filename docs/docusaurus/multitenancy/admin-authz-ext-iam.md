@@ -80,7 +80,7 @@ After this step, the user should have the `admin` role assigned, and after they 
 
 ### 1. Obtain an access token from Keycloak
 
-The admin user can now login by any configured authorization flow in Keycloak.
+The admin user can log in using any configured authorization flow in Keycloak.
 In this example, the __direct access grant__ is used to login.
 
 Run the command to log in as admin.
