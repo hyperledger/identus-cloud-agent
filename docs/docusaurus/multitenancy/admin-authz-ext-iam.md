@@ -2,7 +2,7 @@
 
 In the past tutorials, the administrator utilized a static API key for authentication and authorization.
 The Agent also features a more sophisticated role-based authorization mechanism using external IAM,
-allowing users to be authorized under different roles and granting access to different parts of the Agent.
+allowing users to be authorized under different roles and granting access to parts of the Agent.
 
 ## Roles
 
