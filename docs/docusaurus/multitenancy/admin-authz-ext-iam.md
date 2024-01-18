@@ -15,7 +15,7 @@ The same person may also represent these roles.
 
 ## Prerequisites
 
-1. Keycloak up and running
+1. Keycloak is up and running
 2. Keycloak is configured as follows
    1. A realm called `my-realm` is created
    2. A client called `prism-agent` under `my-realm` with __authorization__ feature is created. (See [create client instruction](https://www.keycloak.org/docs/latest/authorization_services/index.html#_resource_server_create_client))
