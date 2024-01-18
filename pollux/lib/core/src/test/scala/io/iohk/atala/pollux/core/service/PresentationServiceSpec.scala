@@ -253,6 +253,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           issuerId = "did:prism:issuer"
           holderID = "did:prism:holder"
           schemaId = "resource:///anoncred-presentation-schema-example.json"
+          credentialDefinitionId = "resource:///anoncred-presentation-credential-definition-example.json"
           credentialDefinitionDb <- svc.create(
             Input(
               name = "Credential Definition Name",
@@ -310,8 +311,9 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
               createdAt = Instant.now,
               updatedAt = None,
               thid = DidCommID(),
-              schemaId = Some(schemaId),
+              schemaUri = Some(schemaId),
               credentialDefinitionId = Some(credentialDefinitionDb.guid),
+              credentialDefinitionUri = Some(credentialDefinitionId),
               credentialFormat = CredentialFormat.AnonCreds,
               role = IssueCredentialRecord.Role.Issuer,
               subjectId = None,
@@ -374,6 +376,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           issuerId = "did:prism:issuer"
           holderID = "did:prism:holder"
           schemaId = "resource:///anoncred-presentation-schema-example.json"
+          credentialDefinitionId = "resource:///anoncred-presentation-credential-definition-example.json"
           credentialDefinitionDb <- credentialDefinitionService.create(
             Input(
               name = "Credential Definition Name",
@@ -440,8 +443,9 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
               createdAt = Instant.now,
               updatedAt = None,
               thid = DidCommID(),
-              schemaId = Some(schemaId),
+              schemaUri = Some(schemaId),
               credentialDefinitionId = Some(credentialDefinitionDb.guid),
+              credentialDefinitionUri = Some(credentialDefinitionId),
               credentialFormat = CredentialFormat.AnonCreds,
               role = IssueCredentialRecord.Role.Issuer,
               subjectId = None,

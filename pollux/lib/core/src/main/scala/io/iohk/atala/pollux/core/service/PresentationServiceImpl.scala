@@ -10,7 +10,6 @@ import io.iohk.atala.mercury.protocol.issuecredential.IssueCredentialIssuedForma
 import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.anoncreds.*
 import io.iohk.atala.pollux.core.model.*
-import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.CredentialSchemaParsingError
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.presentation.*
@@ -26,8 +25,8 @@ import io.iohk.atala.pollux.core.service.serdes.{
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
-import zio.{ZIO, *}
 import zio.json.*
+import zio.{ZIO, *}
 
 import java.net.URI
 import java.rmi.UnexpectedException

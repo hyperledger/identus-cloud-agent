@@ -100,10 +100,10 @@ object MockCredentialService extends Mock[CredentialService] {
           pairwiseHolderDID: DidId,
           thid: DidCommID,
           credentialDefinitionGUID: UUID,
+          credentialDefinitionId: String,
           claims: Json,
           validityPeriod: Option[Double],
-          automaticIssuance: Option[Boolean],
-          credentialDefinitionId: String
+          automaticIssuance: Option[Boolean]
       ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
         proxy(
           CreateAnonCredsIssueCredentialRecord,
