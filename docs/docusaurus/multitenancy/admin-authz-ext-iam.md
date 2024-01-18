@@ -138,5 +138,5 @@ curl --location --request GET 'http://localhost:8080/prism-agent/wallets' \
 ```
 
 The response should return a list of all wallets on the Agent with HTTP status 200.
-Trying to perform prohibitied tenant interactions such as listing the DIDs in the wallet will result in an authorization error.
+Trying to perform prohibited tenant interactions, such as listing the DIDs in the wallet, will result in an authorization error.
 
