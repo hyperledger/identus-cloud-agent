@@ -11,7 +11,7 @@ For the Agent admin authorization, we need to distinguish the administrator of e
 1. [Agent Administrator](/docs/concepts/glossary#administrator)
 2. Keycloak Administrator
 
-These roles may also be represented by the same person.
+The same person may also represent these roles.
 
 ## Prerequisites
 
