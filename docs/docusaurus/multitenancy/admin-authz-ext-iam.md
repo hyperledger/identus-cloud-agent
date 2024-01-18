@@ -37,7 +37,7 @@ enabling you to perform various administrative tasks.
 
 Once authorized as an admin, the user gains the ability to manage the wallet;
 however, the actual utilization of the wallet remains restricted.
-Despite any UMA permissions configured for the user, the agent strictly maintains a clear segregation of roles between administrator and tenant.
+Despite UMA permissions configured for the user, the agent strictly maintains a clear segregation of roles between administrator and tenant.
 
 ## Endpoints
 
