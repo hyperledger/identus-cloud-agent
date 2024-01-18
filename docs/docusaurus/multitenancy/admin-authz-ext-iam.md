@@ -83,7 +83,7 @@ After this step, the user should have the `admin` role assigned, and after they 
 The admin user can now login by any configured authorization flow in Keycloak.
 In this example, the __direct access grant__ is used to login.
 
-Run the command to log in as admin
+Run the command to log in as admin.
 
 ```bash
 curl -X 'POST' \
