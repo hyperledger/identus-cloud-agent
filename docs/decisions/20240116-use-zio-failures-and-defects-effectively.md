@@ -1,5 +1,10 @@
 # Use ZIO Failures and Defects Effectively
 
+- Status: draft
+- Deciders: Fabio Pinheiro, Shailesh Patil, Pat Losoponkul, Yurii Shynbuiev, David Poltorak, Benjamin Voiturier
+- Date: 2024-01-16
+- Tags: error-handling, zio
+
 ## Context and Problem Statement
 
 ZIO is a powerful and purely functional library for building scalable and resilient applications in Scala. However,
