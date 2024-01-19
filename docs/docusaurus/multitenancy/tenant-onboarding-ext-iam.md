@@ -1,8 +1,8 @@
 # Tenant Onboarding with External IAM
 
-In the [Tenant Onboarding](./tenant-onboarding.md) tutorial, we explored the basic
-The agent provides [IAM](/docs/concepts/glossary#iam) functionality out of the box. Although it is usable and straightforward, more featureful tools are available for handling identity and access management.
-The agent can seamlessly connect with [Keycloak](/docs/concepts/glossary#keycloak-service) as an external IAM system, allowing the application built on top to utilize capabilities that come with Keycloak.
+In the [Tenant Onboarding](./tenant-onboarding.md) tutorial, we explored the basic [IAM](/docs/concepts/glossary#iam) functionality out of the box.
+Although it is usable and straightforward, more featureful tools are available for handling identity and access management.
+The agent can seamlessly connect with [Keycloak](/docs/concepts/glossary#keycloak-service) as an external IAM system, allowing the application built on top to utilize the capabilities that come with Keycloak.
 
 The PRISM Agent leverages standard protocols like [OIDC](/docs/concepts/glossary#oidc) and [UMA](/docs/concepts/glossary#uma) for authentication and access management.
 The user's identity gets established through the ID token, and wallet permissions are searchable using the [RPT (requesting party token)](/docs/concepts/glossary#rpt).
@@ -20,7 +20,7 @@ In tenant management with external IAM, there are 2 roles:
 2. Keycloak is configured as follows
    1. A realm called `my-realm` is created
    2. A client called `prism-agent` under `my-realm` with __authorization__ feature is created. (See [create client instruction](https://www.keycloak.org/docs/latest/authorization_services/index.html#_resource_server_create_client))
-   3. Make sure the `prism-agent` client has __direct access grants__ enabled to simplify login process for this tutorial
+   3. Make sure the `prism-agent` client has __direct access grants__ enabled to simplify the login process for this tutorial
 3. PRISM Agent up and running
 4. PRISM Agent is configured with the following environment variables:
    1. `ADMIN_TOKEN=my-admin-token`
