@@ -87,11 +87,17 @@ object MainApp extends ZIOAppDefault {
   private val zioHttpClientLayer = {
     import zio.http.netty.NettyConfig
     import zio.http.{ConnectionPoolConfig, DnsResolver, ZClient}
-    (ZLayer.succeed(
-      ZClient.Config.default.copy(
-        connectionPool = ConnectionPoolConfig.Disabled,
-        idleTimeout = Some(2.seconds),
-        connectionTimeout = Some(2.seconds),
+    (ZLayer.fromZIO(
+      for {
+        appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
+      } yield ZClient.Config.default.copy(
+        connectionPool = {
+          val cpSize = appConfig.agent.httpClient.connectionPoolSize
+          if (cpSize > 0) ConnectionPoolConfig.Fixed(cpSize)
+          else ConnectionPoolConfig.Disabled
+        },
+        idleTimeout = Some(appConfig.agent.httpClient.idleTimeout),
+        connectionTimeout = Some(appConfig.agent.httpClient.connectionTimeout),
       )
     ) ++
       ZLayer.succeed(NettyConfig.default) ++
