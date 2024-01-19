@@ -55,7 +55,7 @@ object ConnectionEndpoints {
       .in("connections")
       .in(
         jsonBody[CreateConnectionRequest].description(
-          "JSON object required for the connection creation"
+          "JSON object required for the connection creation."
         )
       )
       .out(
@@ -66,7 +66,13 @@ object ConnectionEndpoints {
       )
       .out(jsonBody[Connection])
       .description("The newly created connection record.")
-      .errorOut(basicFailuresAndForbidden)
+      .errorOut(
+        oneOf(
+          FailureVariant.forbidden,
+          FailureVariant.badRequest,
+          FailureVariant.internalServerError
+        )
+      )
       .name("createConnection")
       .summary("Create a new connection invitation that can be delivered out-of-band to a peer agent.")
       .description("""
@@ -91,7 +97,14 @@ object ConnectionEndpoints {
         )
       )
       .out(jsonBody[Connection].description("The specific connection flow record."))
-      .errorOut(basicFailureAndNotFoundAndForbidden)
+      .errorOut(
+        oneOf(
+          FailureVariant.notFound,
+          FailureVariant.badRequest,
+          FailureVariant.forbidden,
+          FailureVariant.internalServerError
+        )
+      )
       .name("getConnection")
       .summary(
         "Retrieves a specific connection flow record from the agent's database based on its unique `connectionId`."
@@ -124,7 +137,13 @@ object ConnectionEndpoints {
       .out(
         jsonBody[ConnectionsPage].description("The list of connection flow records available from the agent's database")
       )
-      .errorOut(basicFailuresAndForbidden)
+      .errorOut(
+        oneOf(
+          FailureVariant.forbidden,
+          FailureVariant.badRequest,
+          FailureVariant.internalServerError
+        )
+      )
       .name("getConnections")
       .summary("Retrieves the list of connection flow records available from the agent's database.")
       .description("""
@@ -160,7 +179,13 @@ object ConnectionEndpoints {
       )
       .out(jsonBody[Connection])
       .description("The newly connection record.")
-      .errorOut(basicFailuresAndForbidden)
+      .errorOut(
+        oneOf(
+          FailureVariant.forbidden,
+          FailureVariant.badRequest,
+          FailureVariant.internalServerError
+        )
+      )
       .name("acceptConnectionInvitation")
       .summary("Accept a new connection invitation received out-of-band from another peer agent.")
       .description("""
