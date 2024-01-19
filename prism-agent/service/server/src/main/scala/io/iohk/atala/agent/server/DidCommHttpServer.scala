@@ -2,7 +2,11 @@ package io.iohk.atala.agent.server
 
 import io.circe.*
 import io.circe.parser.*
-import io.iohk.atala.agent.server.DidCommHttpServerError.{DIDCommMessageParsingError, RequestBodyParsingError}
+import io.iohk.atala.agent.server.DidCommHttpServerError.{
+  DIDCommMessageParsingError,
+  InvalidContentTypeError,
+  RequestBodyParsingError
+}
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
@@ -46,21 +50,33 @@ object DidCommHttpServer {
     } yield ()
   }
 
+  private def validateContentType(req: Request) = {
+    import zio.http.Header.ContentType
+    for {
+      contentType <- ZIO
+        .fromOption(req.rawHeader(ContentType.name))
+        .mapError(_ => InvalidContentTypeError(s"The '${ContentType.name}' header is required"))
+      _ <-
+        if (contentType.equalsIgnoreCase(MediaTypes.contentTypeEncrypted)) ZIO.unit
+        else ZIO.fail(InvalidContentTypeError(s"Unsupported '${ContentType.name}' header value: $contentType"))
+    } yield contentType
+  }
+
   private def didCommServiceEndpoint: HttpApp[
     DidOps & CredentialService & PresentationService & ConnectionService & ManagedDIDService & HttpClient &
       DIDResolver & DIDNonSecretStorage & AppConfig
   ] =
     val rootRoute = Method.POST / "" -> handler { (req: Request) =>
-      val result = req.body.asString
-        .mapError(e => RequestBodyParsingError(e.getMessage))
-        .flatMap { data =>
-          webServerProgram(data)
-        }
-        .map(_ => Response.ok)
+      val result = for {
+        _ <- validateContentType(req)
+        body <- req.body.asString.mapError(e => RequestBodyParsingError(e.getMessage))
+        _ <- webServerProgram(body)
+      } yield Response.ok
       result
         .tapError(error => ZIO.logErrorCause("Error processing incoming DIDComm message", Cause.fail(error)))
         .catchAll {
           case _: RequestBodyParsingError    => ZIO.succeed(Response.status(Status.BadRequest))
+          case _: InvalidContentTypeError    => ZIO.succeed(Response.status(Status.BadRequest))
           case _: DIDCommMessageParsingError => ZIO.succeed(Response.status(Status.BadRequest))
           case _: ParseResponse              => ZIO.succeed(Response.status(Status.BadRequest))
           case _: DIDSecretStorageError      => ZIO.succeed(Response.status(Status.UnprocessableEntity))
@@ -69,27 +85,6 @@ object DidCommHttpServer {
           case _: PresentationError          => ZIO.succeed(Response.status(Status.UnprocessableEntity))
         }
     }
-
-//    HttpApp.collectZIO[Request] {
-//    case req @ Method.POST -> Root
-//        if req.rawHeader("content-type").fold(false) { _.equalsIgnoreCase(MediaTypes.contentTypeEncrypted) } =>
-//      val result = for {
-//        data <- req.body.asString.mapError(e => RequestBodyParsingError(e.getMessage))
-//        _ <- webServerProgram(data)
-//      } yield Response.ok
-//
-//      result
-//        .tapError(error => ZIO.logErrorCause("Error processing incoming DIDComm message", Cause.fail(error)))
-//        .catchAll {
-//          case _: RequestBodyParsingError    => ZIO.succeed(Response.status(Status.BadRequest))
-//          case _: DIDCommMessageParsingError => ZIO.succeed(Response.status(Status.BadRequest))
-//          case _: ParseResponse              => ZIO.succeed(Response.status(Status.BadRequest))
-//          case _: DIDSecretStorageError      => ZIO.succeed(Response.status(Status.UnprocessableEntity))
-//          case _: ConnectionServiceError     => ZIO.succeed(Response.status(Status.UnprocessableEntity))
-//          case _: CredentialServiceError     => ZIO.succeed(Response.status(Status.UnprocessableEntity))
-//          case _: PresentationError          => ZIO.succeed(Response.status(Status.UnprocessableEntity))
-//        }
-
     Routes(rootRoute).toHttpApp
 
   private[this] def extractFirstRecipientDid(jsonMessage: String): IO[ParsingFailure | DecodingFailure, String] = {
