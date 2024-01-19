@@ -13,20 +13,13 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.presentation.*
-import io.iohk.atala.pollux.core.model.schema.CredentialDefinition
 import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
-import io.iohk.atala.pollux.core.service.serdes.{
-  AnoncredCredentialProofV1,
-  AnoncredCredentialProofsV1,
-  AnoncredPresentationRequestV1,
-  AnoncredPresentationV1
-}
+import io.iohk.atala.pollux.core.service.serdes.*
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
-import zio.json.*
-import zio.{ZIO, *}
+import zio.*
 
 import java.net.URI
 import java.rmi.UnexpectedException
@@ -148,8 +141,8 @@ private class PresentationServiceImpl(
       )
       presentationPayload <- createAnoncredPresentationPayloadFromCredential(
         issuedCredentials,
-        issuedValidCredentials.flatMap(_.schemaId),
-        issuedValidCredentials.flatMap(_.credentialDefinitionId),
+        issuedValidCredentials.flatMap(_.schemaUri),
+        issuedValidCredentials.flatMap(_.credentialDefinitionUri),
         requestPresentation,
         anoncredCredentialProof.credentialProofs
       )
@@ -501,7 +494,7 @@ private class PresentationServiceImpl(
   private def createAnoncredPresentationPayloadFromCredential(
       issuedCredentialRecords: Seq[ValidFullIssuedCredentialRecord],
       schemaIds: Seq[String],
-      credentialDefinitionIds: Seq[UUID],
+      credentialDefinitionIds: Seq[String],
       requestPresentation: RequestPresentation,
       credentialProofs: List[AnoncredCredentialProofV1],
   ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] = {
@@ -515,14 +508,7 @@ private class PresentationServiceImpl(
       credentialDefinitionMap <-
         ZIO
           .collectAll(credentialDefinitionIds.map { credentialDefinitionId =>
-            for {
-              credentialDefinition <- credentialDefinitionService
-                .getByGUID(credentialDefinitionId)
-                .mapError(e => UnexpectedError(e.toString))
-            } yield (
-              credentialDefinition.longId,
-              AnoncredCredentialDefinition(credentialDefinition.definition.toString)
-            )
+            resolveCredentialDefinition(credentialDefinitionId)
           })
           .map(_.toMap)
       credentialProofsMap = credentialProofs.map(credentialProof => (credentialProof.credential, credentialProof)).toMap
@@ -596,9 +582,10 @@ private class PresentationServiceImpl(
     for {
       uri <- ZIO.attempt(new URI(schemaId)).mapError(e => UnexpectedError(e.getMessage))
       content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
-      anoncredSchema <- ZIO
-        .fromEither(content.fromJson[AnoncredSchemaSerDesV1])
-        .mapError(error => UnexpectedError(s"AnonCreds Schema parsing error: $error"))
+      anoncredSchema <-
+        AnoncredSchemaSerDesV1.schemaSerDes
+          .deserialize(content)
+          .mapError(error => UnexpectedError(s"AnonCreds Schema parsing error: $error"))
       anoncredLibSchema =
         AnoncredSchemaDef(
           schemaId,
@@ -607,6 +594,20 @@ private class PresentationServiceImpl(
           anoncredSchema.issuerId
         )
     } yield (schemaId, anoncredLibSchema)
+  }
+
+  private def resolveCredentialDefinition(
+      credentialId: String
+  ): IO[UnexpectedError, (String, AnoncredCredentialDefinition)] = {
+    for {
+      uri <- ZIO.attempt(new URI(credentialId)).mapError(e => UnexpectedError(e.getMessage))
+      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
+      _ <-
+        PublicCredentialDefinitionSerDesV1.schemaSerDes
+          .validate(content)
+          .mapError(error => UnexpectedError(s"AnonCreds Schema parsing error: $error"))
+      anoncredCredentialDefinition = AnoncredCredentialDefinition(content)
+    } yield (credentialId, anoncredCredentialDefinition)
   }
 
   def acceptRequestPresentation(
@@ -951,21 +952,7 @@ private class PresentationServiceImpl(
       credentialDefinitionMap <-
         ZIO
           .collectAll(credentialDefinitionIds.map { credentialDefinitionId =>
-            for {
-              guid <-
-                ZIO
-                  .fromOption(CredentialDefinition.extractGUID(credentialDefinitionId))
-                  .mapError(_ =>
-                    InvalidAnoncredPresentation(s"CredentialDefinitionId format invalid ${credentialDefinitionId}")
-                  )
-              credentialDefinition <-
-                credentialDefinitionService
-                  .getByGUID(guid)
-                  .mapError(e => UnexpectedError(e.toString))
-            } yield (
-              credentialDefinition.longId,
-              AnoncredCredentialDefinition(credentialDefinition.definition.toString)
-            )
+            resolveCredentialDefinition(credentialDefinitionId)
           })
           .map(_.toMap)
       serializedPresentationRequest <- requestPresentation.attachments.head.data match {

@@ -158,7 +158,7 @@ class CredentialRepositoryInMemory(
           rec.issueCredentialData,
           rec.credentialFormat,
           rec.schemaUri,
-          rec.credentialDefinitionId,
+          rec.credentialDefinitionUri,
           rec.subjectId
         )
       )

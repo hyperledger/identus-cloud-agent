@@ -467,14 +467,12 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
                      |   issue_credential_data,
                      |   credential_format,
                      |   schema_uri,
-                     |   credential_definition_id,
                      |   credential_definition_uri,
                      |   subject_id
                      | FROM public.issue_credential_records
                      | WHERE 1=1
                      |   AND issue_credential_data IS NOT NULL
                      |   AND schema_uri IS NOT NULL
-                     |   AND credential_definition_id IS NOT NULL
                      |   AND credential_definition_uri IS NOT NULL
                      |   AND credential_format = 'AnonCreds'
                      |   AND $inClauseFragment

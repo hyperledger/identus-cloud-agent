@@ -78,8 +78,8 @@ final case class ValidFullIssuedCredentialRecord(
     id: DidCommID,
     issuedCredential: Option[IssueCredential],
     credentialFormat: CredentialFormat,
-    schemaId: Option[String],
-    credentialDefinitionId: Option[UUID],
+    schemaUri: Option[String],
+    credentialDefinitionUri: Option[String],
     subjectId: Option[String]
 )
 
