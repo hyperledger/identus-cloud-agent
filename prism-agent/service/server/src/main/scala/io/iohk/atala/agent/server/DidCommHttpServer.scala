@@ -60,13 +60,13 @@ object DidCommHttpServer {
       result
         .tapError(error => ZIO.logErrorCause("Error processing incoming DIDComm message", Cause.fail(error)))
         .catchAll {
-          case _: RequestBodyParsingError => ZIO.succeed(Response.status(Status.BadRequest))
+          case _: RequestBodyParsingError    => ZIO.succeed(Response.status(Status.BadRequest))
           case _: DIDCommMessageParsingError => ZIO.succeed(Response.status(Status.BadRequest))
-          case _: ParseResponse => ZIO.succeed(Response.status(Status.BadRequest))
-          case _: DIDSecretStorageError => ZIO.succeed(Response.status(Status.UnprocessableEntity))
-          case _: ConnectionServiceError => ZIO.succeed(Response.status(Status.UnprocessableEntity))
-          case _: CredentialServiceError => ZIO.succeed(Response.status(Status.UnprocessableEntity))
-          case _: PresentationError => ZIO.succeed(Response.status(Status.UnprocessableEntity))
+          case _: ParseResponse              => ZIO.succeed(Response.status(Status.BadRequest))
+          case _: DIDSecretStorageError      => ZIO.succeed(Response.status(Status.UnprocessableEntity))
+          case _: ConnectionServiceError     => ZIO.succeed(Response.status(Status.UnprocessableEntity))
+          case _: CredentialServiceError     => ZIO.succeed(Response.status(Status.UnprocessableEntity))
+          case _: PresentationError          => ZIO.succeed(Response.status(Status.UnprocessableEntity))
         }
     }
 
@@ -90,8 +90,7 @@ object DidCommHttpServer {
 //          case _: PresentationError          => ZIO.succeed(Response.status(Status.UnprocessableEntity))
 //        }
 
-      Routes(rootRoute).toHttpApp
-  
+    Routes(rootRoute).toHttpApp
 
   private[this] def extractFirstRecipientDid(jsonMessage: String): IO[ParsingFailure | DecodingFailure, String] = {
     val doc = parse(jsonMessage).getOrElse(Json.Null)
