@@ -13,11 +13,10 @@ object ZioHttpClient {
 class ZioHttpClient(client: zio.http.Client) extends HttpClient {
 
   override def get(url: String): Task[HttpResponse] =
-    for {
+    val program = for {
       url <- ZIO.fromEither(URL.decode(url)).orDie
       response <- client
         .request(Request(url = url))
-        .provideSomeLayer(zio.Scope.default)
         .flatMap { response =>
           response.headers.toSeq.map(e => e)
           response.body.asString
@@ -30,9 +29,10 @@ class ZioHttpClient(client: zio.http.Client) extends HttpClient {
             )
         }
     } yield response
+    program.provideSomeLayer(zio.Scope.default)
 
   def postDIDComm(url: String, data: String): Task[HttpResponse] =
-    for {
+    val program = for {
       url <- ZIO.fromEither(URL.decode(url)).orDie
       response <- client
         .request(
@@ -43,7 +43,6 @@ class ZioHttpClient(client: zio.http.Client) extends HttpClient {
             body = Body.fromChunk(Chunk.fromArray(data.getBytes))
           )
         )
-        .provideSomeLayer(zio.Scope.default)
         .flatMap { response =>
           response.headers.toSeq.map(e => e)
           response.body.asString
@@ -56,4 +55,5 @@ class ZioHttpClient(client: zio.http.Client) extends HttpClient {
             )
         }
     } yield response
+    program.provideSomeLayer(zio.Scope.default)
 }

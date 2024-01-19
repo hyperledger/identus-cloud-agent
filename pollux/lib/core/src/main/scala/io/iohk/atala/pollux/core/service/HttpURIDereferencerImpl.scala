@@ -11,12 +11,11 @@ import java.nio.charset.StandardCharsets
 class HttpURIDereferencerImpl(client: Client) extends URIDereferencer {
 
   override def dereference(uri: URI): IO[URIDereferencerError, String] = {
-    for {
+    val program = for {
       url <- ZIO.fromOption(URL.fromURI(uri)).mapError(_ => ConnectionError(s"Invalid URI: $uri"))
       response <- client
         .request(Request(url = url))
         .mapError(t => ConnectionError(t.getMessage))
-        .provideSomeLayer(zio.Scope.default)
       body <- response.status match {
         case Status.Ok =>
           response.body.asString.mapError(t => UnexpectedError(t.getMessage))
@@ -33,6 +32,7 @@ class HttpURIDereferencerImpl(client: Client) extends URIDereferencer {
           ZIO.fail(UnexpectedError(s"Unexpected response status: $status"))
       }
     } yield body
+    program.provideSomeLayer(zio.Scope.default)
   }
 
 }
