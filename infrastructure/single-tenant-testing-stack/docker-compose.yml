@@ -141,15 +141,16 @@ services:
       retries: 5
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    command: [
-      -Dcom.sun.management.jmxremote,
-      -Dcom.sun.management.jmxremote.port=9095,
-      -Dcom.sun.management.jmxremote.rmi.port=9095,
-      -Dcom.sun.management.jmxremote.ssl=false,
-      -Dcom.sun.management.jmxremote.local.only=true,
-      -Dcom.sun.management.jmxremote.authenticate=false,
-      -Djava.rmi.server.hostname=127.0.0.1
-    ]
+    command:
+      [
+        -Dcom.sun.management.jmxremote,
+        -Dcom.sun.management.jmxremote.port=9095,
+        -Dcom.sun.management.jmxremote.rmi.port=9095,
+        -Dcom.sun.management.jmxremote.ssl=false,
+        -Dcom.sun.management.jmxremote.local.only=true,
+        -Dcom.sun.management.jmxremote.authenticate=false,
+        -Djava.rmi.server.hostname=127.0.0.1,
+      ]
     ports:
       - 9095:9095
 
@@ -221,7 +222,7 @@ services:
   holder-oea-postgres-exporter:
     image: quay.io/prometheuscommunity/postgres-exporter
     ports:
-    - "9996:9187"
+      - "9996:9187"
     environment:
       - DATA_SOURCE_NAME=postgresql://postgres:postgres@issuer-db:5432/postgres?sslmode=disable
 
@@ -282,15 +283,16 @@ services:
       retries: 5
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    command: [
-      -Dcom.sun.management.jmxremote,
-      -Dcom.sun.management.jmxremote.port=9096,
-      -Dcom.sun.management.jmxremote.rmi.port=9096,
-      -Dcom.sun.management.jmxremote.ssl=false,
-      -Dcom.sun.management.jmxremote.local.only=true,
-      -Dcom.sun.management.jmxremote.authenticate=false,
-      -Djava.rmi.server.hostname=127.0.0.1
-    ]
+    command:
+      [
+        -Dcom.sun.management.jmxremote,
+        -Dcom.sun.management.jmxremote.port=9096,
+        -Dcom.sun.management.jmxremote.rmi.port=9096,
+        -Dcom.sun.management.jmxremote.ssl=false,
+        -Dcom.sun.management.jmxremote.local.only=true,
+        -Dcom.sun.management.jmxremote.authenticate=false,
+        -Djava.rmi.server.hostname=127.0.0.1,
+      ]
     ports:
       - 9096:9096
 
