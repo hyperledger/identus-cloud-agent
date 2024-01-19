@@ -29,7 +29,6 @@ import java.util.{UUID, Base64 as JBase64}
 import scala.util.Try
 
 private class PresentationServiceImpl(
-    credentialDefinitionService: CredentialDefinitionService,
     uriDereferencer: URIDereferencer,
     linkSecretService: LinkSecretService,
     presentationRepository: PresentationRepository,
@@ -1091,8 +1090,8 @@ private class PresentationServiceImpl(
 
 object PresentationServiceImpl {
   val layer: URLayer[
-    CredentialDefinitionService & URIDereferencer & LinkSecretService & PresentationRepository & CredentialRepository,
+    URIDereferencer & LinkSecretService & PresentationRepository & CredentialRepository,
     PresentationService
   ] =
-    ZLayer.fromFunction(PresentationServiceImpl(_, _, _, _, _))
+    ZLayer.fromFunction(PresentationServiceImpl(_, _, _, _))
 }
