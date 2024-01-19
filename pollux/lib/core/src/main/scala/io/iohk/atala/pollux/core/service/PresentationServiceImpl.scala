@@ -501,14 +501,14 @@ private class PresentationServiceImpl(
     for {
       schemaMap <-
         ZIO
-          .collectAll(schemaIds.map { schemaId =>
-            resolveSchema(schemaId)
+          .collectAll(schemaIds.map { schemaUri =>
+            resolveSchema(schemaUri)
           })
           .map(_.toMap)
       credentialDefinitionMap <-
         ZIO
-          .collectAll(credentialDefinitionIds.map { credentialDefinitionId =>
-            resolveCredentialDefinition(credentialDefinitionId)
+          .collectAll(credentialDefinitionIds.map { credentialDefinitionUri =>
+            resolveCredentialDefinition(credentialDefinitionUri)
           })
           .map(_.toMap)
       credentialProofsMap = credentialProofs.map(credentialProof => (credentialProof.credential, credentialProof)).toMap
@@ -578,9 +578,9 @@ private class PresentationServiceImpl(
     } yield presentation
   }
 
-  private def resolveSchema(schemaId: String): IO[UnexpectedError, (String, AnoncredSchemaDef)] = {
+  private def resolveSchema(schemaUri: String): IO[UnexpectedError, (String, AnoncredSchemaDef)] = {
     for {
-      uri <- ZIO.attempt(new URI(schemaId)).mapError(e => UnexpectedError(e.getMessage))
+      uri <- ZIO.attempt(new URI(schemaUri)).mapError(e => UnexpectedError(e.getMessage))
       content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
       anoncredSchema <-
         AnoncredSchemaSerDesV1.schemaSerDes
@@ -588,26 +588,26 @@ private class PresentationServiceImpl(
           .mapError(error => UnexpectedError(s"AnonCreds Schema parsing error: $error"))
       anoncredLibSchema =
         AnoncredSchemaDef(
-          schemaId,
+          schemaUri,
           anoncredSchema.version,
           anoncredSchema.attrNames,
           anoncredSchema.issuerId
         )
-    } yield (schemaId, anoncredLibSchema)
+    } yield (schemaUri, anoncredLibSchema)
   }
 
   private def resolveCredentialDefinition(
-      credentialId: String
+      credentialDefinitionUri: String
   ): IO[UnexpectedError, (String, AnoncredCredentialDefinition)] = {
     for {
-      uri <- ZIO.attempt(new URI(credentialId)).mapError(e => UnexpectedError(e.getMessage))
+      uri <- ZIO.attempt(new URI(credentialDefinitionUri)).mapError(e => UnexpectedError(e.getMessage))
       content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
       _ <-
         PublicCredentialDefinitionSerDesV1.schemaSerDes
           .validate(content)
           .mapError(error => UnexpectedError(s"AnonCreds Schema parsing error: $error"))
       anoncredCredentialDefinition = AnoncredCredentialDefinition(content)
-    } yield (credentialId, anoncredCredentialDefinition)
+    } yield (credentialDefinitionUri, anoncredCredentialDefinition)
   }
 
   def acceptRequestPresentation(
