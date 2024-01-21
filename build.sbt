@@ -82,7 +82,7 @@ lazy val V = new {
 
   val bouncyCastle = "1.70"
 
-  val jsonSchemaValidator = "1.0.86"
+  val jsonSchemaValidator = "1.0.88"
 
   val vaultDriver = "6.1.0"
   val micrometer = "1.11.2"
