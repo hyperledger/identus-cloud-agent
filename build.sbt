@@ -117,7 +117,7 @@ lazy val D = new {
 
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.2"
-  val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.3.0"
+  val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.4.1"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
 
   // Customized version of numbus jose jwt
