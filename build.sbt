@@ -84,7 +84,7 @@ lazy val V = new {
 
   val jsonSchemaValidator = "1.0.88"
 
-  val vaultDriver = "6.1.0"
+  val vaultDriver = "6.2.0"
   val micrometer = "1.11.2"
 
   val nimbusJwt = "10.0.0"
