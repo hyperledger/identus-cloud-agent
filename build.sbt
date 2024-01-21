@@ -62,7 +62,7 @@ lazy val V = new {
 
   val tapir = "1.9.6"
 
-  val typesafeConfig = "1.4.2"
+  val typesafeConfig = "1.4.3"
   val protobuf = "3.1.9"
   val testContainersScala = "0.41.0"
   val testContainersJavaKeycloak = "3.0.0" // scala-steward:off
