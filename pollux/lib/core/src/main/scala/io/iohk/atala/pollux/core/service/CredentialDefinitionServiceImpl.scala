@@ -4,7 +4,7 @@ import io.iohk.atala.agent.walletapi.storage
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.pollux.anoncreds.{AnoncredLib, AnoncredSchemaDef}
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
-import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.URISyntaxError
+import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.{SchemaError, URISyntaxError}
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition.{Filter, FilteredEntries}
 import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
@@ -84,12 +84,10 @@ class CredentialDefinitionServiceImpl(
         )
     } yield createdCredentialDefinition
   }.mapError {
-    case e: CredentialDefinitionCreationError => e
-    case j: JsonSchemaError                   => UnexpectedError(j.error)
-    case s: URISyntaxError                    => UnexpectedError(s.message)
-    case u: URIDereferencerError              => UnexpectedError(u.error)
-    case e: CredentialSchemaError             => CredentialDefinitionValidationError(e)
+    case u: URIDereferencerError              => CredentialDefinitionValidationError(URISyntaxError(u.error))
+    case j: JsonSchemaError                   => CredentialDefinitionValidationError(SchemaError(j))
     case t: Throwable                         => RepositoryError(t)
+    case e: CredentialDefinitionCreationError => e
   }
 
   override def delete(guid: UUID): Result[CredentialDefinition] =
