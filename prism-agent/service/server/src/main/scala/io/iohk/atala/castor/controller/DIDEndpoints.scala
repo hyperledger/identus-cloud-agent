@@ -3,10 +3,23 @@ package io.iohk.atala.castor.controller
 import io.iohk.atala.api.http.codec.DIDCodec.emptyDidJsonLD
 import io.iohk.atala.api.http.codec.DIDCodec.{didJsonLD, didResolutionJsonLD}
 import io.iohk.atala.castor.controller.http.{DIDResolutionResult, DIDInput}
+import sttp.apispec.Tag
 import sttp.model.StatusCode
 import sttp.tapir.*
 
 object DIDEndpoints {
+
+  private val tagName = "DID"
+  private val tagDescription =
+    s"""
+       |The __${tagName}__ endpoints expose publicly available DID operations.
+       |
+       |The key distinction from the __DID Registrar__ endpoints is that it directly exposes the DID resources interfacing with the [VDR](https://www.w3.org/TR/did-core/#dfn-verifiable-data-registry).
+       |It is independent of the key management and the exposed operations are not part of the tenancy within the agent.
+       |It serves as a proxy for interacting with the VDR, facilitating actions like resolving DIDs.
+       |""".stripMargin
+
+  val tag = Tag(tagName, Some(tagDescription))
 
   private def matchStatus(sc: StatusCode): PartialFunction[Any, Boolean] = { case result: DIDResolutionResult =>
     val maybeError = result.didResolutionMetadata.error
@@ -86,11 +99,13 @@ object DIDEndpoints {
     .out(resolutionEndpointOutput)
     .name("getDID")
     .summary("Resolve Prism DID to a W3C representation")
-    .description("""Resolve Prism DID to a W3C DID document representation.
-      |The response can be the [DID resolution result](https://w3c-ccg.github.io/did-resolution/#did-resolution-result)
-      |or [DID document representation](https://www.w3.org/TR/did-core/#representations) depending on the `Accept` request header.
-      |The response is implemented according to [resolver HTTP binding](https://w3c-ccg.github.io/did-resolution/#bindings-https) in the DID resolution spec.
-      |""".stripMargin)
-    .tag("DID")
+    .description(
+      """Resolve Prism DID to a W3C DID document representation.
+        |The response can be the [DID resolution result](https://w3c-ccg.github.io/did-resolution/#did-resolution-result)
+        |or [DID document representation](https://www.w3.org/TR/did-core/#representations) depending on the `Accept` request header.
+        |The response is implemented according to [resolver HTTP binding](https://w3c-ccg.github.io/did-resolution/#bindings-https) in the DID resolution spec.
+        |""".stripMargin
+    )
+    .tag(tagName)
 
 }
