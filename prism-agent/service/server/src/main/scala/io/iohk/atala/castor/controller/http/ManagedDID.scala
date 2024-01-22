@@ -127,11 +127,14 @@ object CreateManagedDidRequestDocumentTemplate {
 class Context(val value: String) extends AnyVal
 
 object Context {
+  given Conversion[Context, String] = _.value
+  given Conversion[String, Context] = Context(_)
+
   given encoder: JsonEncoder[Context] = JsonEncoder[String].contramap(_.value)
   given decoder: JsonDecoder[Context] = JsonDecoder[String].map(Context(_))
   given schema: Schema[Context] = Schema
     .string[Context]
-    .description("A context that should appear in the DID document")
+    .description("The JSON-LD context describing the JSON document")
     .encodedExample("https://didcomm.org/messaging/contexts/v2")
 }
 
