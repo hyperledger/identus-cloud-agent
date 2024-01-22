@@ -5,11 +5,20 @@ import com.nimbusds.jose.crypto.ECDSASigner
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import io.circe
 import io.circe.*
+import io.circe.syntax.*
+import zio.*
 import pdi.jwt.algorithms.JwtECDSAAlgorithm
 import pdi.jwt.{JwtAlgorithm, JwtCirce}
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+
 import java.security.*
+import io.iohk.atala.shared.utils.Json as JsonUtils
+import io.iohk.atala.shared.utils.Base64Utils as Base64Utils
+
+import scodec.bits.*
+
+import java.time.*
 
 opaque type JWT = String
 
@@ -24,44 +33,26 @@ object JWT {
 trait Signer {
   def encode(claim: Json): JWT
 
-  def signRaw(data: Array[Byte]): Array[Byte]
-
-  val signatureSuiteName: String
+  def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof]
 
 }
 
-trait ES256SByteArraySigner {
-
-  private val provider = BouncyCastleProviderSingleton.getInstance
-
-  def sign(privateKey: PrivateKey, data: Array[Byte]): Array[Byte] = {
-
-    val signer = Signature.getInstance("SHA256withECDSA", provider)
-    signer.initSign(privateKey)
-    signer.update(data)
-    signer.sign()
-  }
-
-  val signatureSuiteName: String = JwtAlgorithm.ES256.name
-
-}
-
-class ES256Signer(privateKey: PrivateKey) extends Signer with ES256SByteArraySigner {
+class ES256Signer(privateKey: PrivateKey) extends Signer with EddsaJcs2022ProofGenerator {
   val algorithm: JwtECDSAAlgorithm = JwtAlgorithm.ES256
   private val provider = BouncyCastleProviderSingleton.getInstance
   Security.addProvider(provider)
 
   override def encode(claim: Json): JWT = JWT(JwtCirce.encode(claim, privateKey, algorithm))
 
-  override def signRaw(data: Array[Byte]): Array[Byte] = {
-    sign(privateKey, data)
+  override def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof] = {
+    generateProof(payload, privateKey, pk)
   }
 
 }
 
 // works with java 7, 8, 11 & bouncycastle provider
 // https://connect2id.com/products/nimbus-jose-jwt/jca-algorithm-support#alg-support-table
-class ES256KSigner(privateKey: PrivateKey) extends Signer with ES256SByteArraySigner {
+class ES256KSigner(privateKey: PrivateKey) extends Signer with EddsaJcs2022ProofGenerator {
   lazy val signer: ECDSASigner = {
     val ecdsaSigner = ECDSASigner(privateKey, Curve.SECP256K1)
     val bouncyCastleProvider = BouncyCastleProviderSingleton.getInstance
@@ -69,8 +60,8 @@ class ES256KSigner(privateKey: PrivateKey) extends Signer with ES256SByteArraySi
     ecdsaSigner
   }
 
-  override def signRaw(data: Array[Byte]): Array[Byte] = {
-    sign(privateKey, data)
+  override def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof] = {
+    generateProof(payload, privateKey, pk)
   }
 
   override def encode(claim: Json): JWT = {

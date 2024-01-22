@@ -5,18 +5,15 @@ import io.circe.{Json, JsonObject}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.pollux.vc.jwt.revocation.VCStatusList2021.Purpose.Revocation
 import io.iohk.atala.pollux.vc.jwt.revocation.VCStatusList2021Error.{DecodingError, EncodingError}
-import zio.{IO, UIO, ZIO}
+import zio.*
 
 import java.time.Instant
 
 class VCStatusList2021 private (val vcPayload: W3cCredentialPayload, jwtIssuer: Issuer) {
 
   def encoded: UIO[JWT] = ZIO.succeed(W3CCredential.toEncodedJwt(vcPayload, jwtIssuer))
-
-  def toJsonWithEmbeddedProof: UIO[Json] = ZIO.succeed(W3CCredential.toJsonWithEmbeddedProof(vcPayload, jwtIssuer))
-
-  // add a function that will return encoded credential with embedded proof
-  // and possibly use that to store a json credential with embded proof in db instead of jwt
+ 
+  def toJsonWithEmbeddedProof: Task[Json] = W3CCredential.toJsonWithEmbeddedProof(vcPayload, jwtIssuer)
 
 
   def getBitString: IO[DecodingError, BitString] = {

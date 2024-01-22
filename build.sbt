@@ -114,6 +114,8 @@ lazy val D = new {
   val circeParser: ModuleID = "io.circe" %% "circe-parser" % V.circe
 
   val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
+  val jsonCanonicalization: ModuleID = "io.github.erdtman" % "java-json-canonicalization" % "1.1"
+  val scodecBits: ModuleID = "org.scodec" %% "scodec-bits" % "1.1.38"
 
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.1"
@@ -164,7 +166,9 @@ lazy val D_Shared = new {
       // FIXME: split shared DB stuff as subproject?
       D.doobieHikari,
       D.doobiePostgres,
-      D.zioCatsInterop
+      D.zioCatsInterop,
+      D.jsonCanonicalization,
+      D.scodecBits
     )
 }
 

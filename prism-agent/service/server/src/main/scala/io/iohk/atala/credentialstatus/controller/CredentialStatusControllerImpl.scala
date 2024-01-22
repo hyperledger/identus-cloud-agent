@@ -15,12 +15,7 @@ class CredentialStatusControllerImpl(
   def getStatusListJwtCredentialById(id: UUID)(implicit
       rc: RequestContext
   ): IO[ErrorResponse, CredentialStatusList] = {
-
-    val tmpRes = for {
-      jwt <- credentialStatusListService.findById(id).map(_.statusListJwtCredential).map(JWT.apply)
-      _ <- jwt.toEmbeddedProofForm
-    } yield ()
-
+    
 
     credentialStatusListService
       .findById(id)

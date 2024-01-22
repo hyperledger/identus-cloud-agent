@@ -14,6 +14,7 @@ import java.security.PublicKey
 import java.time.temporal.TemporalAmount
 import java.time.{Clock, Instant}
 import scala.util.Try
+import io.iohk.atala.shared.utils.Json as JsonUtils
 
 opaque type DID = String
 object DID {
@@ -28,7 +29,7 @@ case class Issuer(did: DID, signer: Signer, publicKey: PublicKey)
 
 sealed trait VerifiableCredentialPayload
 
-case class W3cVerifiableCredentialPayload(payload: W3cCredentialPayload, proof: Proof)
+case class W3cVerifiableCredentialPayload(payload: W3cCredentialPayload, proof: JwtProof)
     extends Verifiable(proof),
       VerifiableCredentialPayload
 
@@ -281,7 +282,7 @@ object CredentialPayload {
   object Implicits {
 
     import InstantDecoderEncoder.*
-    import Proof.Implicits.*
+    import JwtProof.Implicits.*
 
     implicit val didEncoder: Encoder[DID] =
       (did: DID) => did.value.asJson
@@ -522,7 +523,7 @@ object CredentialPayload {
       (c: HCursor) =>
         for {
           payload <- c.as[W3cCredentialPayload]
-          proof <- c.downField("proof").as[Proof]
+          proof <- c.downField("proof").as[JwtProof]
         } yield {
           W3cVerifiableCredentialPayload(
             payload = payload,
@@ -749,7 +750,7 @@ object W3CCredential {
   def encodeW3C(payload: W3cCredentialPayload, issuer: Issuer): W3cVerifiableCredentialPayload = {
     W3cVerifiableCredentialPayload(
       payload = payload,
-      proof = Proof(
+      proof = JwtProof(
         `type` = "JwtProof2020",
         jwt = issuer.signer.encode(payload.asJson)
       )
@@ -759,16 +760,16 @@ object W3CCredential {
   def toEncodedJwt(payload: W3cCredentialPayload, issuer: Issuer): JWT =
     JwtCredential.encodeJwt(payload.toJwtCredentialPayload, issuer)
 
-  def toJsonWithEmbeddedProof(payload: W3cCredentialPayload, issuer: Issuer): Json = {
-
+  def toJsonWithEmbeddedProof(payload: W3cCredentialPayload, issuer: Issuer): Task[Json] = {
     val jsonCred = payload.asJson
-    // canonicalaize json credential:
-    // sort keys
-    //
-    println(jsonCred)
 
+    for {
+      proof <- issuer.signer.generateProofForJson(jsonCred, issuer.publicKey)
+      jsonProof <- proof match
+        case a: EddsaJcs2022Proof => ZIO.succeed(a.asJson.dropNullValues)
+      verifiableCredentialWithProof = jsonCred.deepMerge(Map("proof" -> jsonProof).asJson)
+    } yield verifiableCredentialWithProof
 
-    ???
   }
 
   def validateW3C(

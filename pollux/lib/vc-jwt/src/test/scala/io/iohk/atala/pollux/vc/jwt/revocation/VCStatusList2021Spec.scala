@@ -34,7 +34,8 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
         issuer <- generateIssuer()
         bitString <- BitString.getInstance()
         statusList <- VCStatusList2021.build(VC_ID, s"$VC_ID#list", issuer, bitString)
-        _ <- statusList.toJsonWithEmbeddedProof
+        json <- statusList.toJsonWithEmbeddedProof
+        _ <- ZIO.logInfo(s"${json.spaces2}")
       } yield {
         assertTrue(true)
       }
