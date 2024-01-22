@@ -96,7 +96,6 @@ https://github.com/hyperledger/aries-rfcs/tree/main/features/0160-connection-pro
 - **C2** - OOB is tampered / decoding error 
 - **C3** - Database connection or related issue
 - **C4** - Max retries (Cascading Problems): Connection state cannot be moved after max retries
-- **C4** - Max retries (Cascading Problems): Connection state cannot be moved after max retries
 - **C5** - See G3
 
 
