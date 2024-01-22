@@ -93,7 +93,7 @@ object AnoncredPresentationSpec extends ZIOSpecDefault {
       |  "identifiers": [
       |    {
       |      "schema_id": "resource:///anoncred-presentation-schema-example.json",
-      |      "cred_def_id": "did:prism:issuer/b2c8ccb8-191a-4233-9b34-3e3111a4adaf?version=1.2",
+      |      "cred_def_id": "resource:///anoncred-presentation-credential-definition-example.json",
       |      "rev_reg_id": null,
       |      "timestamp": null
       |    }
@@ -189,7 +189,7 @@ object AnoncredPresentationSpec extends ZIOSpecDefault {
 
       val identifier = AnoncredIdentifierV1(
         schema_id = "resource:///anoncred-presentation-schema-example.json",
-        cred_def_id = "did:prism:issuer/b2c8ccb8-191a-4233-9b34-3e3111a4adaf?version=1.2",
+        cred_def_id = "resource:///anoncred-presentation-credential-definition-example.json",
         rev_reg_id = None,
         timestamp = None
       )

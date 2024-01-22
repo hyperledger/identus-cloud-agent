@@ -130,8 +130,9 @@ private class CredentialServiceImpl(
           createdAt = Instant.now,
           updatedAt = None,
           thid = thid,
-          schemaId = maybeSchemaId,
+          schemaUri = maybeSchemaId,
           credentialDefinitionId = None,
+          credentialDefinitionUri = None,
           credentialFormat = CredentialFormat.JWT,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,
@@ -165,10 +166,10 @@ private class CredentialServiceImpl(
       pairwiseHolderDID: DidId,
       thid: DidCommID,
       credentialDefinitionGUID: UUID,
+      credentialDefinitionId: String,
       claims: Json,
       validityPeriod: Option[Double],
-      automaticIssuance: Option[Boolean],
-      credentialDefinitionId: String
+      automaticIssuance: Option[Boolean]
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       credentialDefinition <- credentialDefinitionService
@@ -181,11 +182,11 @@ private class CredentialServiceImpl(
       offer <- createAnonCredsDidCommOfferCredential(
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
-        schemaId = credentialDefinition.schemaId,
+        schemaUri = credentialDefinition.schemaId,
         credentialDefinitionGUID = credentialDefinitionGUID,
+        credentialDefinitionId = credentialDefinitionId,
         claims = attributes,
         thid = thid,
-        credentialDefinitionId
       )
       record <- ZIO.succeed(
         IssueCredentialRecord(
@@ -193,8 +194,9 @@ private class CredentialServiceImpl(
           createdAt = Instant.now,
           updatedAt = None,
           thid = thid,
-          schemaId = Some(credentialDefinition.schemaId),
+          schemaUri = Some(credentialDefinition.schemaId),
           credentialDefinitionId = Some(credentialDefinitionGUID),
+          credentialDefinitionUri = Some(credentialDefinitionId),
           credentialFormat = CredentialFormat.AnonCreds,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,
@@ -270,8 +272,9 @@ private class CredentialServiceImpl(
           createdAt = Instant.now,
           updatedAt = None,
           thid = DidCommID(offer.thid.getOrElse(offer.id)),
-          schemaId = None,
+          schemaUri = None,
           credentialDefinitionId = None,
+          credentialDefinitionUri = None,
           credentialFormat = credentialFormat,
           role = Role.Holder,
           subjectId = None,
@@ -843,14 +846,14 @@ private class CredentialServiceImpl(
   private[this] def createAnonCredsDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
-      schemaId: String,
+      schemaUri: String,
       credentialDefinitionGUID: UUID,
+      credentialDefinitionId: String,
       claims: Seq[Attribute],
-      thid: DidCommID,
-      credentialDefinitionId: String
+      thid: DidCommID
   ) = {
     for {
-      credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = Some(schemaId), attributes = claims))
+      credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = Some(schemaUri), attributes = claims))
       body = OfferCredential.Body(
         goal_code = Some("Offer Credential"),
         credential_preview = credentialPreview,
@@ -1036,7 +1039,7 @@ private class CredentialServiceImpl(
         issuanceDate = issuanceDate,
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
         maybeCredentialSchema =
-          record.schemaId.map(id => io.iohk.atala.pollux.vc.jwt.CredentialSchema(id, VC_JSON_SCHEMA_TYPE)),
+          record.schemaUri.map(id => io.iohk.atala.pollux.vc.jwt.CredentialSchema(id, VC_JSON_SCHEMA_TYPE)),
         credentialSubject = claims.add("id", jwtPresentation.iss.asJson).asJson,
         maybeCredentialStatus = None,
         maybeRefreshService = None,
