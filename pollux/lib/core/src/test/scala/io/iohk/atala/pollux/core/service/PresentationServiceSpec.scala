@@ -28,6 +28,8 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path, Paths}
 import java.time.{Instant, OffsetDateTime}
 import java.util.{UUID, Base64 as JBase64}
 
@@ -276,7 +278,9 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           linkSecretService <- ZIO.service[LinkSecretService]
           linkSecret <- linkSecretService.fetchOrCreate()
           credentialDefinition = AnoncredLib.createCredDefinition(issuerId, schema, "tag", supportRevocation = false)
-          credentialOffer = AnoncredLib.createOffer(credentialDefinition, credentialDefinitionDb.longId)
+          file = createTempJsonFile(credentialDefinition.cd.data, "anoncred-presentation-credential-definition-example")
+          credentialDefinitionId = "resource:///" + file.getFileName
+          credentialOffer = AnoncredLib.createOffer(credentialDefinition, credentialDefinitionId)
           credentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition.cd, credentialOffer)
           credential =
             AnoncredLib
@@ -310,8 +314,9 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
               createdAt = Instant.now,
               updatedAt = None,
               thid = DidCommID(),
-              schemaId = Some(schemaId),
+              schemaUri = Some(schemaId),
               credentialDefinitionId = Some(credentialDefinitionDb.guid),
+              credentialDefinitionUri = Some(credentialDefinitionId),
               credentialFormat = CredentialFormat.AnonCreds,
               role = IssueCredentialRecord.Role.Issuer,
               subjectId = None,
@@ -331,7 +336,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             )
           _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createAnoncredRecord()
+          aRecord <- svc.createAnoncredRecord(credentialDefinitionId = credentialDefinitionId)
           repo <- ZIO.service[PresentationRepository]
           credentialsToUse =
             AnoncredCredentialProofsV1(
@@ -392,16 +397,18 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           repo <- ZIO.service[CredentialRepository]
           linkSecretService <- ZIO.service[LinkSecretService]
           linkSecret <- linkSecretService.fetchOrCreate()
-          cenericSecretStorage <- ZIO.service[GenericSecretStorage]
+          genericSecretStorage <- ZIO.service[GenericSecretStorage]
           maybeCredentialDefintionPrivate <-
-            cenericSecretStorage
+            genericSecretStorage
               .get[UUID, CredentialDefinitionSecret](credentialDefinitionDb.guid)
           credentialDefinition = AnoncredCreateCredentialDefinition(
             AnoncredCredentialDefinition(credentialDefinitionDb.definition.toString()),
             AnoncredCredentialDefinitionPrivate(maybeCredentialDefintionPrivate.get.json.toString()),
             AnoncredCredentialKeyCorrectnessProof(credentialDefinitionDb.keyCorrectnessProof.toString())
           )
-          credentialOffer = AnoncredLib.createOffer(credentialDefinition, credentialDefinitionDb.longId)
+          file = createTempJsonFile(credentialDefinition.cd.data, "anoncred-presentation-credential-definition-example")
+          credentialDefinitionId = "resource:///" + file.getFileName
+          credentialOffer = AnoncredLib.createOffer(credentialDefinition, credentialDefinitionId)
           credentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition.cd, credentialOffer)
           processedCredential =
             AnoncredLib.processCredential(
@@ -440,8 +447,9 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
               createdAt = Instant.now,
               updatedAt = None,
               thid = DidCommID(),
-              schemaId = Some(schemaId),
+              schemaUri = Some(schemaId),
               credentialDefinitionId = Some(credentialDefinitionDb.guid),
+              credentialDefinitionUri = Some(credentialDefinitionId),
               credentialFormat = CredentialFormat.AnonCreds,
               role = IssueCredentialRecord.Role.Issuer,
               subjectId = None,
@@ -462,7 +470,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
           svc <- ZIO.service[PresentationService]
           aRecord <- svc.createAnoncredRecord(
-            credentialDefinitionId = credentialDefinitionDb.longId
+            credentialDefinitionId = credentialDefinitionId
           )
           repo <- ZIO.service[PresentationRepository]
           credentialsToUse =
@@ -1030,5 +1038,17 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           assert(crossRecord2)(isNone)
       }
     )
+
+  def createTempJsonFile(jsonContent: String, fileName: String): Path = {
+    val resourceURI = this.getClass.getResource("/").toURI
+    val resourcePath = Paths.get(resourceURI)
+
+    val filePath = resourcePath.resolve(fileName + ".json")
+
+    Files.write(filePath, jsonContent.getBytes(StandardCharsets.UTF_8))
+
+    filePath.toFile.deleteOnExit()
+    filePath
+  }
 
 }

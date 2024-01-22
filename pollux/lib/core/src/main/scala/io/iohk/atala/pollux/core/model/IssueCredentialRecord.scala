@@ -21,8 +21,9 @@ final case class IssueCredentialRecord(
     createdAt: Instant,
     updatedAt: Option[Instant],
     thid: DidCommID,
-    schemaId: Option[String],
+    schemaUri: Option[String],
     credentialDefinitionId: Option[UUID],
+    credentialDefinitionUri: Option[String],
     credentialFormat: CredentialFormat,
     role: Role,
     subjectId: Option[String],
@@ -77,8 +78,8 @@ final case class ValidFullIssuedCredentialRecord(
     id: DidCommID,
     issuedCredential: Option[IssueCredential],
     credentialFormat: CredentialFormat,
-    schemaId: Option[String],
-    credentialDefinitionId: Option[UUID],
+    schemaUri: Option[String],
+    credentialDefinitionUri: Option[String],
     subjectId: Option[String]
 )
 

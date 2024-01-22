@@ -148,7 +148,7 @@ class CredentialRepositoryInMemory(
         recordId.contains(
           rec.id
         ) && rec.issueCredentialData.isDefined
-          && rec.schemaId.isDefined
+          && rec.schemaUri.isDefined
           && rec.credentialDefinitionId.isDefined
           && rec.credentialFormat == CredentialFormat.AnonCreds
       )
@@ -157,8 +157,8 @@ class CredentialRepositoryInMemory(
           rec.id,
           rec.issueCredentialData,
           rec.credentialFormat,
-          rec.schemaId,
-          rec.credentialDefinitionId,
+          rec.schemaUri,
+          rec.credentialDefinitionUri,
           rec.subjectId
         )
       )

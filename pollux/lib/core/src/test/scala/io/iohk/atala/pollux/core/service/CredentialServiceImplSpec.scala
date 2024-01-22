@@ -82,7 +82,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
-            assertTrue(record.schemaId.isEmpty) &&
+            assertTrue(record.schemaUri.isEmpty) &&
             assertTrue(record.validityPeriod == validityPeriod) &&
             assertTrue(record.automaticIssuance == automaticIssuance) &&
             assertTrue(record.role == Role.Issuer) &&
@@ -158,7 +158,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
             assertTrue(
-              record.schemaId.contains("resource:///vc-schema-example.json")
+              record.schemaUri.contains("resource:///vc-schema-example.json")
             ) &&
             assertTrue(record.validityPeriod == validityPeriod) &&
             assertTrue(record.automaticIssuance == automaticIssuance) &&
@@ -290,7 +290,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
         } yield {
           assertTrue(holderRecord.thid.toString == offer.thid.get) &&
           assertTrue(holderRecord.updatedAt.isEmpty) &&
-          assertTrue(holderRecord.schemaId.isEmpty) &&
+          assertTrue(holderRecord.schemaUri.isEmpty) &&
           assertTrue(holderRecord.validityPeriod.isEmpty) &&
           assertTrue(holderRecord.automaticIssuance.isEmpty) &&
           assertTrue(holderRecord.role == Role.Holder) &&
