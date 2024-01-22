@@ -69,8 +69,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   created_at,
         |   updated_at,
         |   thid,
-        |   schema_id,
+        |   schema_uri,
         |   credential_definition_id,
+        |   credential_definition_uri,
         |   credential_format,
         |   role,
         |   subject_id,
@@ -92,8 +93,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   ${record.createdAt},
         |   ${record.updatedAt},
         |   ${record.thid},
-        |   ${record.schemaId},
+        |   ${record.schemaUri},
         |   ${record.credentialDefinitionId},
+        |   ${record.credentialDefinitionUri},
         |   ${record.credentialFormat},
         |   ${record.role},
         |   ${record.subjectId},
@@ -136,8 +138,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
            |   created_at,
            |   updated_at,
            |   thid,
-           |   schema_id,
+           |   schema_uri,
            |   credential_definition_id,
+           |   credential_definition_uri,
            |   credential_format,
            |   role,
            |   subject_id,
@@ -203,8 +206,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
             |   created_at,
             |   updated_at,
             |   thid,
-            |   schema_id,
+            |   schema_uri,
             |   credential_definition_id,
+            |   credential_definition_uri,
             |   credential_format,
             |   role,
             |   subject_id,
@@ -253,8 +257,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   created_at,
         |   updated_at,
         |   thid,
-        |   schema_id,
+        |   schema_uri,
         |   credential_definition_id,
+        |   credential_definition_uri,
         |   credential_format,
         |   role,
         |   subject_id,
@@ -294,8 +299,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   created_at,
         |   updated_at,
         |   thid,
-        |   schema_id,
+        |   schema_uri,
         |   credential_definition_id,
+        |   credential_definition_uri,
         |   credential_format,
         |   role,
         |   subject_id,
@@ -460,14 +466,14 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
                      |   id,
                      |   issue_credential_data,
                      |   credential_format,
-                     |   schema_id,
-                     |   credential_definition_id,
+                     |   schema_uri,
+                     |   credential_definition_uri,
                      |   subject_id
                      | FROM public.issue_credential_records
                      | WHERE 1=1
                      |   AND issue_credential_data IS NOT NULL
-                     |   AND schema_id IS NOT NULL
-                     |   AND credential_definition_id IS NOT NULL
+                     |   AND schema_uri IS NOT NULL
+                     |   AND credential_definition_uri IS NOT NULL
                      |   AND credential_format = 'AnonCreds'
                      |   AND $inClauseFragment
         """.stripMargin
