@@ -95,6 +95,7 @@ const sidebars = {
         'multitenancy/tenant-onboarding-ext-iam',
         'multitenancy/tenant-onboarding-self-service',
         'multitenancy/tenant-migration',
+        'multitenancy/admin-authz-ext-iam',
       ]
     }
   ]

@@ -1,7 +1,9 @@
 package io.iohk.atala.agent.server.http
 
+import io.iohk.atala.castor.controller.{DIDEndpoints, DIDRegistrarEndpoints}
 import io.iohk.atala.connect.controller.ConnectionEndpoints
-import io.iohk.atala.pollux.credentialschema.VerificationPolicyEndpoints
+import io.iohk.atala.iam.wallet.http.WalletManagementEndpoints
+import io.iohk.atala.pollux.credentialschema.{SchemaRegistryEndpoints, VerificationPolicyEndpoints}
 import sttp.apispec.openapi.*
 import sttp.apispec.{SecurityScheme, Tag}
 import sttp.model.headers.AuthenticationScheme
@@ -115,7 +117,11 @@ object DocModels {
       .tags(
         List(
           ConnectionEndpoints.tag,
-          VerificationPolicyEndpoints.tag
+          VerificationPolicyEndpoints.tag,
+          SchemaRegistryEndpoints.tag,
+          DIDEndpoints.tag,
+          DIDRegistrarEndpoints.tag,
+          WalletManagementEndpoints.tag
         )
       )
 

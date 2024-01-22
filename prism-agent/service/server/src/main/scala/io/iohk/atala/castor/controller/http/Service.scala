@@ -13,7 +13,7 @@ import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
-@description("A service expressed in the DID document. https://www.w3.org/TR/did-core/#services")
+@description("A service that should appear in the DID document. https://www.w3.org/TR/did-core/#services")
 final case class Service(
     @description(annotations.id.description)
     @encodedExample(annotations.id.example)
@@ -47,7 +47,7 @@ object Service {
     object serviceEndpoint
         extends Annotation[Json](
           description =
-            "The service endpoint. Can contain multiple possible values as described in the [Create DID operation]",
+            "The service endpoint. Can contain multiple possible values as described in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did)",
           example = Json.fromString("https://example.com")
         )
   }

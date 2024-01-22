@@ -1,14 +1,13 @@
 package io.iohk.atala.iam.authentication.oidc
 
+import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
 import io.iohk.atala.iam.authorization.core.PermissionManagement
+import io.iohk.atala.iam.authorization.core.PermissionManagement.Error.PermissionNotAvailable
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletAdministrationContext
-import pdi.jwt.JwtCirce
-import pdi.jwt.JwtOptions
 import zio.*
-import zio.json.ast.Json
 
 import java.util.UUID
 
@@ -23,8 +22,11 @@ class KeycloakAuthenticatorImpl(
   override def authenticate(token: String): IO[AuthenticationError, KeycloakEntity] = {
     if (isEnabled) {
       for {
+        accessToken <- ZIO
+          .fromEither(AccessToken.fromString(token, keycloakConfig.rolesClaimPathSegments))
+          .mapError(AuthenticationError.InvalidCredentials.apply)
         introspection <- client
-          .introspectToken(token)
+          .introspectToken(accessToken)
           .mapError(e => AuthenticationError.UnexpectedError(e.message))
         _ <- ZIO
           .fail(AuthenticationError.InvalidCredentials("The accessToken is invalid."))
@@ -37,16 +39,18 @@ class KeycloakAuthenticatorImpl(
               .attempt(UUID.fromString(id))
               .mapError(e => AuthenticationError.UnexpectedError(s"Subject ID in accessToken is not a UUID. $e"))
           }
-      } yield KeycloakEntity(entityId, accessToken = Some(token))
+      } yield KeycloakEntity(entityId, accessToken = Some(accessToken))
     } else ZIO.fail(AuthenticationMethodNotEnabled("Keycloak authentication is not enabled"))
   }
 
-  override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] = {
+  override def authorizeWalletAccessLogic(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] = {
     for {
-      entityWithRpt <- populateEntityRpt(entity)
       walletId <- keycloakPermissionService
-        .listWalletPermissions(entityWithRpt)
-        .mapError(e => AuthenticationError.UnexpectedError(e.message))
+        .listWalletPermissions(entity)
+        .mapError {
+          case PermissionNotAvailable(_, msg) => AuthenticationError.InvalidCredentials(msg)
+          case e                              => AuthenticationError.UnexpectedError(e.message)
+        }
         .flatMap {
           case head +: Nil => ZIO.succeed(head)
           case Nil =>
@@ -61,48 +65,26 @@ class KeycloakAuthenticatorImpl(
   }
 
   override def authorizeWalletAdmin(entity: KeycloakEntity): IO[AuthenticationError, WalletAdministrationContext] = {
-    for {
-      entityWithRpt <- populateEntityRpt(entity)
-      wallets <- keycloakPermissionService
-        .listWalletPermissions(entityWithRpt)
-        .mapError(e => AuthenticationError.UnexpectedError(e.message))
-        .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
-    } yield WalletAdministrationContext.SelfService(wallets)
-  }
+    val selfServiceCtx = keycloakPermissionService
+      .listWalletPermissions(entity)
+      .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+      .mapBoth(
+        e => AuthenticationError.UnexpectedError(e.message),
+        wallets => WalletAdministrationContext.SelfService(wallets)
+      )
 
-  private def populateEntityRpt(entity: KeycloakEntity): IO[AuthenticationError, KeycloakEntity] = {
     for {
-      token <- ZIO
+      role <- ZIO
         .fromOption(entity.accessToken)
         .mapError(_ => AuthenticationError.InvalidCredentials("AccessToken is missing."))
-      isRpt <- inferIsRpt(token)
-      rptEffect =
-        if (isRpt) ZIO.succeed(token)
-        else if (keycloakConfig.autoUpgradeToRPT)
-          client
-            .getRpt(token)
-            .mapError(e => AuthenticationError.UnexpectedError(e.message))
-        else ZIO.fail(AuthenticationError.InvalidCredentials(s"AccessToken is not RPT."))
-      rpt <- rptEffect.logError("Fail to obtail RPT for wallet permissions")
-    } yield entity.copy(rpt = Some(rpt))
+        .map(_.role.left.map(AuthenticationError.InvalidCredentials(_)))
+        .absolve
+      ctx <- role match {
+        case EntityRole.Admin  => ZIO.succeed(WalletAdministrationContext.Admin())
+        case EntityRole.Tenant => selfServiceCtx
+      }
+    } yield ctx
   }
-
-  /** Return true if the token is RPT. Check whether property '.authorization' exists. */
-  private def inferIsRpt(token: String): IO[AuthenticationError, Boolean] =
-    ZIO
-      .fromTry(JwtCirce.decode(token, JwtOptions(false, false, false)))
-      .mapError(e => AuthenticationError.InvalidCredentials(s"JWT token cannot be decoded. ${e.getMessage()}"))
-      .flatMap { claims =>
-        ZIO
-          .fromEither(Json.decoder.decodeJson(claims.content))
-          .mapError(s => AuthenticationError.InvalidCredentials(s"Unable to decode JWT payload to JSON. $s"))
-      }
-      .flatMap { json =>
-        ZIO
-          .fromOption(json.asObject)
-          .mapError(_ => AuthenticationError.InvalidCredentials(s"JWT payload must be a JSON object"))
-          .map(obj => obj.contains("authorization"))
-      }
 }
 
 object KeycloakAuthenticatorImpl {
@@ -118,7 +100,8 @@ object KeycloakAuthenticatorImpl {
       new KeycloakAuthenticator {
         override def isEnabled: Boolean = false
         override def authenticate(token: String): IO[AuthenticationError, KeycloakEntity] = notEnabledError
-        override def authorize(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] = notEnabledError
+        override def authorizeWalletAccessLogic(entity: KeycloakEntity): IO[AuthenticationError, WalletAccessContext] =
+          notEnabledError
         override def authorizeWalletAdmin(
             entity: KeycloakEntity
         ): IO[AuthenticationError, WalletAdministrationContext] =

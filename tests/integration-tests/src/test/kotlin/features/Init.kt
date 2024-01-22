@@ -4,6 +4,7 @@ import abilities.ListenToEvents
 import com.sksamuel.hoplite.ConfigException
 import com.sksamuel.hoplite.ConfigLoader
 import common.TestConstants
+import config.AgentRole
 import config.Config
 import io.cucumber.java.AfterAll
 import io.cucumber.java.BeforeAll
@@ -24,9 +25,7 @@ val config = ConfigLoader().loadConfigOrThrow<Config>(TestConstants.TESTS_CONFIG
  * This function starts all services and actors before all tests.
  */
 fun initServices() {
-    config.services?.keycloak?.start(
-        config.roles.map { it.name }
-    )
+    config.services?.keycloak?.start(config.roles)
     config.services?.prismNode?.start()
     config.services?.vault?.start()
     config.agents?.forEach { agent ->
@@ -50,8 +49,8 @@ fun initActors() {
             .auth().oauth2(actor.recall("BEARER_TOKEN"))
             .body(
                 CreateWalletRequest(
-                    name = UUID.randomUUID().toString()
-                )
+                    name = UUID.randomUUID().toString(),
+                ),
             )
             .post("/wallets")
             .then().statusCode(HttpStatus.SC_CREATED)
@@ -85,17 +84,20 @@ fun initActors() {
     config.roles.forEach { role ->
         cast.actorNamed(
             role.name,
-            CallAnApi.at(role.url.toExternalForm())
+            CallAnApi.at(role.url.toExternalForm()),
         )
     }
     if (config.services?.keycloak != null) {
-        cast.actors.forEach { actor ->
+        config.roles.forEach { role ->
+            val actor = cast.actorNamed(role.name)
             try {
                 actor.remember("BEARER_TOKEN", config.services.keycloak.getKeycloakAuthToken(actor.name, actor.name))
             } catch (e: NullPointerException) {
                 throw ConfigException("Keycloak is configured, but no token found for user ${actor.name}!")
             }
-            initializeWallet(actor)
+            if (role.agentRole != AgentRole.Admin) {
+                initializeWallet(actor)
+            }
         }
     }
     config.roles.forEach { role ->

@@ -26,7 +26,7 @@ class VerificationPolicyServerEndpoints(
   // TODO: make the endpoint typed ZServerEndpoint[SchemaRegistryService, Any]
   val createVerificationPolicyServerEndpoint: ZServerEndpoint[Any, Any] =
     createVerificationPolicyEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, input: VerificationPolicyInput) =>
           controller
@@ -37,7 +37,7 @@ class VerificationPolicyServerEndpoints(
 
   val updateVerificationPolicyServerEndpoint: ZServerEndpoint[Any, Any] = {
     updateVerificationPolicyEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         {
           case (
@@ -55,7 +55,7 @@ class VerificationPolicyServerEndpoints(
 
   val getVerificationPolicyByIdServerEndpoint: ZServerEndpoint[Any, Any] =
     getVerificationPolicyByIdEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, id: UUID) =>
           controller
@@ -66,7 +66,7 @@ class VerificationPolicyServerEndpoints(
 
   val deleteVerificationPolicyByIdServerEndpoint: ZServerEndpoint[Any, Any] =
     deleteVerificationPolicyByIdEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, id: UUID) =>
           controller
@@ -77,7 +77,7 @@ class VerificationPolicyServerEndpoints(
 
   val lookupVerificationPoliciesByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
     lookupVerificationPoliciesByQueryEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         {
           case (
