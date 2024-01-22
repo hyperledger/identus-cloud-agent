@@ -8,5 +8,6 @@ data class Role(
     val apikey: String?,
     val token: String?,
     val authHeader: String = "apikey",
-    val webhook: Webhook?
+    val webhook: Webhook?,
+    val agentRole: AgentRole?,
 )
