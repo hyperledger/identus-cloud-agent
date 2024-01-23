@@ -12,6 +12,4 @@ Report security bugs in third-party modules to the person or team maintaining th
 
 ## Security Notification Process
 
-Security notifications will be sent through Discord
-
-# Security Policy
+Security notifications will be sent to the dedicated `open-enterprise-agent` channel in the Hyper Ledger discord server (https://discordapp.com/channels/905194001349627914/1156985986174165032)
