@@ -87,7 +87,7 @@ object EddsaJcs2022Proof {
           ("nonce", proof.nonce.asJson),
           ("cryptoSuite", proof.cryptoSuite.asJson),
         )
-  
+
   given proofDecoder: Decoder[EddsaJcs2022Proof] =
     (c: HCursor) =>
       for {

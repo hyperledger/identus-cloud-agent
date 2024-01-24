@@ -16,7 +16,7 @@ object MultiBaseString {
     def fromValue(value: Char): Option[Header] = value match {
       case 'u' => Some(Header.Base64Url)
       case 'z' => Some(Header.Base58Btc)
-      case _ => None
+      case _   => None
     }
   }
 
@@ -28,8 +28,7 @@ object MultiBaseString {
       val header = MultiBaseString.Header.fromValue(str.head)
       header match {
         case Some(value) => Right(MultiBaseString(value, str.tail))
-        case None => Left(DecodingFailure(s"no enum value matched for $str", List(CursorOp.Field(str))))
+        case None        => Left(DecodingFailure(s"no enum value matched for $str", List(CursorOp.Field(str))))
       }
     }
 }
-
