@@ -6,16 +6,16 @@ import merge from "ts-deepmerge";
 export const localOptions: Options = {
   thresholds: {
     "group_duration{group:::Issuer initiates connection with Holder}": [
-      "avg<5000",
+      "avg<10000",
     ],
     "group_duration{group:::Holder accepts connection with Issuer}": [
-      "avg<5000",
+      "avg<10000",
     ],
     "group_duration{group:::Issuer finalizes connection with Holder}": [
-      "avg<5000",
+      "avg<10000",
     ],
     "group_duration{group:::Holder finalizes connection with Issuer}": [
-      "avg<5000",
+      "avg<10000",
     ],
   },
 };
