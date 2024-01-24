@@ -29,7 +29,7 @@ class SystemSteps {
         )
     }
 
-    @When("{actor} Issuer makes a request to the metrics endpoint")
+    @When("{actor} makes a request to the metrics endpoint")
     fun actorRequestsMetricEndpoint(actor: Actor) {
         actor.attemptsTo(
             Get.resource("/_system/metrics")
@@ -39,13 +39,13 @@ class SystemSteps {
         )
     }
 
-    @Then("{actor} Issuer sees that the metrics contain background job stats")
+    @Then("{actor} sees that the metrics contain background job stats")
     fun actorSeesMetrics(actor: Actor) {
-        val metricsResponse = SerenityRest.lastResponse().get<String>()
+        val metricsResponse = SerenityRest.lastResponse()
         actor.attemptsTo(
-            Ensure.that(metricsResponse).contains("present_proof_flow_did_com_exchange_job_ms_gauge"),
-            Ensure.that(metricsResponse).contains("connection_flow_did_com_exchange_job_ms_gauge"),
-            Ensure.that(metricsResponse).contains("issuance_flow_did_com_exchange_job_ms_gauge")
+            Ensure.that(metricsResponse.body.asString()).contains("present_proof_flow_did_com_exchange_job_ms_gauge"),
+            Ensure.that(metricsResponse.body.asString()).contains("connection_flow_did_com_exchange_job_ms_gauge"),
+            Ensure.that(metricsResponse.body.asString()).contains("issuance_flow_did_com_exchange_job_ms_gauge")
         )
     }
 
