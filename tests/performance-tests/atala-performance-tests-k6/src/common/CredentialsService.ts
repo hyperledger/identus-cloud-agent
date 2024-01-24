@@ -4,7 +4,6 @@ import {ISSUER_AGENT_URL, WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERV
 import { IssueCredentialRecord, Connection, CredentialSchemaResponse } from "@input-output-hk/prism-typescript-client";
 import { crypto } from "k6/experimental/webcrypto";
 
-
 /**
  * A service class for managing credentials in the application.
  * Extends the HttpService class.
@@ -22,6 +21,7 @@ export class CredentialsService extends HttpService {
         "claims": {
           "emailAddress": "${crypto.randomUUID()}-@atala.io",
           "familyName": "Test",
+          "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}",
           "dateOfIssuance": "${new Date()}",
           "drivingLicenseID": "Test",
           "drivingClass": 1
