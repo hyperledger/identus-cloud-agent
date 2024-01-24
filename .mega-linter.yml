@@ -49,3 +49,4 @@ SQL_SQL_LINT_ARGUMENTS: -d postgres --ignore-errors=postgres-invalid-alter-optio
 YAML_YAMLLINT_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*"
 YAML_PRETTIER_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*"
 YAML_V8R_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*"
+JAVASCRIPT_STANDARD_FILTER_REGEX_EXCLUDE: "tests/performance-tests/atala-performance-tests-k6/src/k6chaijs.js"
