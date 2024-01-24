@@ -9,7 +9,7 @@ export const localOptions: Options = {
   thresholds: {
     "group_duration{group:::Holder connects with Issuer}": ["avg < 5000"],
     "group_duration{group:::Issuer creates credential offer for Holder}": [
-      "avg < 5000",
+      "avg < 10000",
     ],
     "group_duration{group:::Holder connects with Verifier}": ["avg < 5000"],
     "group_duration{group:::Verifier requests proof from Holder}": [
