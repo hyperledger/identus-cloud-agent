@@ -5,8 +5,7 @@ import scala.util.Try
 
 object Json {
 
-  /**
-    * Canonicalizes a JSON string to JCS format according to RFC 8785
+  /** Canonicalizes a JSON string to JCS format according to RFC 8785
     *
     * @param jsonStr
     *   JSON string to canonicalize

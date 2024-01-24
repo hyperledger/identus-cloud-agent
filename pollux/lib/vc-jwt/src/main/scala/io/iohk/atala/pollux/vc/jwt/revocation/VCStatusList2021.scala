@@ -12,9 +12,8 @@ import java.time.Instant
 class VCStatusList2021 private (val vcPayload: W3cCredentialPayload, jwtIssuer: Issuer) {
 
   def encoded: UIO[JWT] = ZIO.succeed(W3CCredential.toEncodedJwt(vcPayload, jwtIssuer))
- 
-  def toJsonWithEmbeddedProof: Task[Json] = W3CCredential.toJsonWithEmbeddedProof(vcPayload, jwtIssuer)
 
+  def toJsonWithEmbeddedProof: Task[Json] = W3CCredential.toJsonWithEmbeddedProof(vcPayload, jwtIssuer)
 
   def getBitString: IO[DecodingError, BitString] = {
     for {
@@ -31,8 +30,8 @@ class VCStatusList2021 private (val vcPayload: W3cCredentialPayload, jwtIssuer: 
 object VCStatusList2021 {
 
   enum Purpose(val name: String):
-    case Revocation extends Purpose("revocation")
-    case Suspension extends Purpose("suspension")
+    case Revocation extends Purpose("Revocation")
+    case Suspension extends Purpose("Suspension")
 
   def build(
       vcId: String,

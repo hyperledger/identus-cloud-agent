@@ -31,7 +31,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
            |   issuer,
            |   issued,
            |   purpose,
-           |   status_list_jwt_credential,
+           |   status_list_credential,
            |   size,
            |   last_used_index,
            |   created_at,
@@ -55,7 +55,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
            |   issuer,
            |   issued,
            |   purpose,
-           |   status_list_jwt_credential,
+           |   status_list_credential,
            |   size,
            |   last_used_index,
            |   created_at,
@@ -79,14 +79,14 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
     val issued = Instant.now()
     val issuerDid = jwtIssuer.did.value
 
-    val encodedJwtCredential = for {
+    val credentialWithEmbeddedProof = for {
       bitString <- BitString.getInstance().mapError {
         case InvalidSize(message)      => new Throwable(message)
         case EncodingError(message)    => new Throwable(message)
         case DecodingError(message)    => new Throwable(message)
         case IndexOutOfBounds(message) => new Throwable(message)
       }
-      emptyJwtCredential <- VCStatusList2021
+      emptyStatusListCredential <- VCStatusList2021
         .build(
           vcId = s"$statusListRegistryUrl/credential-status/$id",
           slId = "",
@@ -95,18 +95,18 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
         )
         .mapError(x => new Throwable(x.msg))
 
-      encodedJwtCredential <- emptyJwtCredential.encoded // TODO, get embeded proof json and store it in db insteand of JWT
-    } yield encodedJwtCredential
+      credentialWithEmbeddedProof <- emptyStatusListCredential.toJsonWithEmbeddedProof
+    } yield credentialWithEmbeddedProof.spaces2
 
     for {
-      jwtCredential <- encodedJwtCredential
+      credentialStr <- credentialWithEmbeddedProof
       query = sql"""
                    |INSERT INTO public.credential_status_lists (
                    |  id,
                    |  issuer,
                    |  issued,
                    |  purpose,
-                   |  status_list_jwt_credential,
+                   |  status_list_credential,
                    |  size,
                    |  last_used_index,
                    |  wallet_id
@@ -116,12 +116,12 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
                    |  $issuerDid,
                    |  $issued,
                    |  ${StatusPurpose.Revocation}::public.enum_credential_status_list_purpose,
-                   |  ${jwtCredential.value},
+                   |  $credentialStr::JSON,
                    |  ${BitString.MIN_SL2021_SIZE},
                    |  0,
                    |  current_setting('app.current_wallet_id')::UUID
                    | )
-                   |RETURNING id, wallet_id, issuer, issued, purpose, status_list_jwt_credential, size, last_used_index, created_at, updated_at
+                   |RETURNING id, wallet_id, issuer, issued, purpose, status_list_credential, size, last_used_index, created_at, updated_at
              """.stripMargin.query[CredentialStatusList].unique
       newStatusList <- query
         .transactWallet(xa)
