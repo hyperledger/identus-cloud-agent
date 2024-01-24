@@ -6,7 +6,6 @@ import {
   CreateManagedDIDResponse,
   DIDDocument,
   DidOperationSubmission,
-  IssueCredentialRecord,
   ManagedDID
 } from "@input-output-hk/prism-typescript-client";
 import {fail, sleep} from "k6";

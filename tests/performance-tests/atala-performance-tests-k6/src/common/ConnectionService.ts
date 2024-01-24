@@ -4,7 +4,6 @@ import { Connection, ConnectionInvitation, ConnectionStateEnum } from "@input-ou
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
 import { HttpService, statusChangeTimeouts } from "./HttpService";
 import { sleep, fail } from "k6";
-import {RefinedResponse, ResponseType} from "k6/http";
 
 /**
  * A service class for managing connections in the application.
@@ -72,7 +71,7 @@ export class ConnectionService extends HttpService {
     } while (state !== requiredState && iterations < WAITING_LOOP_MAX_ITERATIONS);
     if (state !== requiredState) {
       statusChangeTimeouts.add(1)
-      fail("Connection state is ${state}, required ${requiredState}");
+      fail(`Connection state is ${state}, required ${requiredState}`);
     }
   }
 
