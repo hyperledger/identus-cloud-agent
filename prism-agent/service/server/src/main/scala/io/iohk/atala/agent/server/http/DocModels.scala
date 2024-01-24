@@ -5,6 +5,7 @@ import io.iohk.atala.connect.controller.ConnectionEndpoints
 import io.iohk.atala.iam.wallet.http.WalletManagementEndpoints
 import io.iohk.atala.pollux.credentialdefinition.CredentialDefinitionRegistryEndpoints
 import io.iohk.atala.pollux.credentialschema.{SchemaRegistryEndpoints, VerificationPolicyEndpoints}
+import io.iohk.atala.system.controller.SystemEndpoints
 import sttp.apispec.openapi.*
 import sttp.apispec.{SecurityScheme, Tag}
 import sttp.model.headers.AuthenticationScheme
@@ -123,7 +124,8 @@ object DocModels {
           CredentialDefinitionRegistryEndpoints.tag,
           DIDEndpoints.tag,
           DIDRegistrarEndpoints.tag,
-          WalletManagementEndpoints.tag
+          WalletManagementEndpoints.tag,
+          SystemEndpoints.tag
         )
       )
 
