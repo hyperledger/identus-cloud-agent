@@ -17,6 +17,7 @@ import java.time.Instant
 object JWTVerificationTest extends ZIOSpecDefault {
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
+//  Security.addProvider(BouncyCastleProviderSingleton.getInstance())
 
   case class IssuerWithKey(issuer: Issuer, key: ECKey)
 

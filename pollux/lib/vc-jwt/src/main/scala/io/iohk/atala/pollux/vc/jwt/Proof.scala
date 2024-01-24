@@ -26,8 +26,6 @@ sealed trait Proof {
 
 trait EddsaJcs2022ProofGenerator {
   private val provider = BouncyCastleProviderSingleton.getInstance
-  Security.addProvider(provider)
-
   def generateProof(payload: Json, sk: PrivateKey, pk: PublicKey): Task[EddsaJcs2022Proof] = {
     for {
       canonicalizedJsonString <- ZIO.fromEither(JsonUtils.canonicalizeToJcs(payload.spaces2))
