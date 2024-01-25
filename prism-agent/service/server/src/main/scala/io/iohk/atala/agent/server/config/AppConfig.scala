@@ -127,6 +127,7 @@ final case class DefaultWalletConfig(
 final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
     didCommEndpoint: DidCommEndpointConfig,
+    httpClient: HttpClientConfig,
     authentication: AuthenticationConfig,
     database: DatabaseConfig,
     verification: VerificationConfig,
@@ -149,6 +150,8 @@ final case class HttpEndpointConfig(http: HttpConfig, publicEndpointUrl: String)
 final case class DidCommEndpointConfig(http: HttpConfig, publicEndpointUrl: String)
 
 final case class HttpConfig(port: Int)
+
+final case class HttpClientConfig(connectionPoolSize: Int, idleTimeout: Duration, connectionTimeout: Duration)
 
 final case class SecretStorageConfig(
     backend: SecretStorageBackend,
