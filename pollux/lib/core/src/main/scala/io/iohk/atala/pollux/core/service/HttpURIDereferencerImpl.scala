@@ -24,8 +24,8 @@ class HttpURIDereferencerImpl(client: Client) extends URIDereferencer {
         case status if status.isError =>
           response.body.asStream
             .take(1024) // Only take the first 1024 bytes from the response body (if any).
-            .runFold(Array.empty[Byte])(_ :+ _)
-            .map(new String(_, StandardCharsets.UTF_8))
+            .runCollect
+            .map(c => new String(c.toArray, StandardCharsets.UTF_8))
             .orDie
             .flatMap(errorMessage => ZIO.fail(UnexpectedError(s"HTTP response error: $status - $errorMessage")))
         case status =>
