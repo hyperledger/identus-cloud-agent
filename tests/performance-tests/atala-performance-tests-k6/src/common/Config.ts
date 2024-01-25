@@ -22,7 +22,7 @@ export const ISSUER_AGENT_URL = __ENV.ISSUER_AGENT_URL || "http://localhost:8080
  * API key for the Issuer agent.
  * If not provided, the default value is an empty string.
  */
-export const ISSUER_AGENT_API_KEY = __ENV.ISSUER_AGENT_API_KEY || "default";
+export const ISSUER_AGENT_API_KEY = __ENV.ISSUER_AGENT_API_KEY || "";
 
 /**
  * URL for the Holder agent.
@@ -34,7 +34,7 @@ export const HOLDER_AGENT_URL = __ENV.HOLDER_AGENT_URL || "http://localhost:8090
  * API key for the Holder agent.
  * If not provided, the default value is an empty string.
  */
-export const HOLDER_AGENT_API_KEY = __ENV.HOLDER_AGENT_API_KEY || "default";
+export const HOLDER_AGENT_API_KEY = __ENV.HOLDER_AGENT_API_KEY || "";
 
 /**
  * URL for the Verifier agent.
@@ -46,4 +46,4 @@ export const VERIFIER_AGENT_URL = __ENV.VERIFIER_AGENT_URL || "http://localhost:
  * API key for the Verifier agent.
  * If not provided, the default value is an empty string.
  */
-export const VERIFIER_AGENT_API_KEY = __ENV.VERIFIER_AGENT_API_KEY || "default";
+export const VERIFIER_AGENT_API_KEY = __ENV.VERIFIER_AGENT_API_KEY || "";
