@@ -92,22 +92,22 @@ Apache | [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.
 Apache | [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0) | [io.iohk.atala # prism-crypto-jvm # 1.4.1](https://github.com/input-output-hk/atala-prism-sdk.git) | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0) | [io.iohk.atala # prism-identity-jvm # 1.4.1](https://github.com/input-output-hk/atala-prism-sdk.git) | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0) | [io.iohk.atala # prism-protos-jvm # 1.4.1](https://github.com/input-output-hk/atala-prism-sdk.git) | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-buffer # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-codec # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-codec-http # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-codec-socks # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-common # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-handler # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-handler-proxy # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-resolver # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-transport # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-transport-classes-epoll # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-transport-classes-kqueue # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-transport-native-epoll # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-transport-native-kqueue # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-transport-native-unix-common # 4.1.93.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty.incubator # netty-incubator-transport-classes-io_uring # 0.0.20.Final | <notextile></notextile>
-Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty.incubator # netty-incubator-transport-native-io_uring # 0.0.20.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-buffer # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-codec # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-codec-http # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-codec-socks # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-common # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-handler # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-handler-proxy # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-resolver # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-transport # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-transport-classes-epoll # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-transport-classes-kqueue # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-transport-native-epoll # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-transport-native-kqueue # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty # netty-transport-native-unix-common # 4.1.101.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty.incubator # netty-incubator-transport-classes-io_uring # 0.0.24.Final | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) | io.netty.incubator # netty-incubator-transport-native-io_uring # 0.0.24.Final | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | net.bytebuddy # byte-buddy # 1.12.19 | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | net.bytebuddy # byte-buddy-agent # 1.12.19 | <notextile></notextile>
 Apache | [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.apache.httpcomponents # httpclient # 4.5.14](http://hc.apache.org/httpcomponents-client-ga) | <notextile></notextile>
@@ -144,13 +144,13 @@ Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # z
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-config-typesafe_3 # 3.0.7](https://zio.dev/zio-config/) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-config_3 # 3.0.7](https://zio.dev/zio-config/) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-constraintless_3 # 0.3.2](https://zio.dev/zio-flow/) | <notextile></notextile>
-Apache | [Apache-2.0](https://github.com/zio/zio-http/blob/master/LICENSE) | [dev.zio # zio-http_3 # 3.0.0-RC2](https://github.com/zio/zio-http) | <notextile></notextile>
+Apache | [Apache-2.0](https://github.com/zio/zio-http/blob/master/LICENSE) | [dev.zio # zio-http_3 # 3.0.0-RC4](https://github.com/zio/zio-http) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-internal-macros_3 # 2.0.18](https://zio.dev) | <notextile></notextile>
+Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-internal-macros_3 # 2.0.19](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-interop-cats_3 # 23.0.0.8](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-interop-cats_3 # 3.3.0](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-interop-tracer_3 # 23.0.0.8](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-json_3 # 0.3.0](https://zio.github.io/zio-json/) | <notextile></notextile>
-Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-json_3 # 0.5.0](https://zio.dev/zio-json/) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-json_3 # 0.6.2](https://zio.dev/zio-json/) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-logging_3 # 2.0.1](https://zio.github.io/zio-logging/) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-managed_3 # 2.0.0](https://zio.dev) | <notextile></notextile>
@@ -159,24 +159,27 @@ Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # z
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-metrics-connectors_3 # 2.1.0](https://zio.dev/zio-metrics-connectors/) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-mock_3 # 1.0.0-RC11](https://zio.dev/zio-mock/) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-prelude-macros_3 # 1.0.0-RC16](https://zio.github.io/zio-prelude/) | <notextile></notextile>
-Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-prelude-macros_3 # 1.0.0-RC18](https://zio.dev/zio-prelude/) | <notextile></notextile>
+Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-prelude-macros_3 # 1.0.0-RC21](https://zio.dev/zio-prelude/) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-prelude_3 # 1.0.0-RC16](https://zio.github.io/zio-prelude/) | <notextile></notextile>
-Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-prelude_3 # 1.0.0-RC18](https://zio.dev/zio-prelude/) | <notextile></notextile>
-Apache | [Apache-2.0](https://zio.dev/zio-schema/blob/v0.4.11/LICENSE) | [dev.zio # zio-schema-derivation_3 # 0.4.11](https://zio.dev/zio-schema) | <notextile></notextile>
-Apache | [Apache-2.0](https://zio.dev/zio-schema/blob/v0.4.11/LICENSE) | [dev.zio # zio-schema-json_3 # 0.4.11](https://zio.dev/zio-schema) | <notextile></notextile>
-Apache | [Apache-2.0](https://zio.dev/zio-schema/blob/v0.4.11/LICENSE) | [dev.zio # zio-schema-macros_3 # 0.4.11](https://zio.dev/zio-schema) | <notextile></notextile>
-Apache | [Apache-2.0](https://zio.dev/zio-schema/blob/v0.4.11/LICENSE) | [dev.zio # zio-schema_3 # 0.4.11](https://zio.dev/zio-schema) | <notextile></notextile>
+Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-prelude_3 # 1.0.0-RC21](https://zio.dev/zio-prelude/) | <notextile></notextile>
+Apache | [Apache-2.0](https://zio.dev/zio-schema/blob/v0.4.16/LICENSE) | [dev.zio # zio-schema-derivation_3 # 0.4.16](https://zio.dev/zio-schema) | <notextile></notextile>
+Apache | [Apache-2.0](https://zio.dev/zio-schema/blob/v0.4.16/LICENSE) | [dev.zio # zio-schema-json_3 # 0.4.16](https://zio.dev/zio-schema) | <notextile></notextile>
+Apache | [Apache-2.0](https://zio.dev/zio-schema/blob/v0.4.16/LICENSE) | [dev.zio # zio-schema-macros_3 # 0.4.16](https://zio.dev/zio-schema) | <notextile></notextile>
+Apache | [Apache-2.0](https://zio.dev/zio-schema/blob/v0.4.16/LICENSE) | [dev.zio # zio-schema-protobuf_3 # 0.4.16](https://zio.dev/zio-schema) | <notextile></notextile>
+Apache | [Apache-2.0](https://zio.dev/zio-schema/blob/v0.4.16/LICENSE) | [dev.zio # zio-schema_3 # 0.4.16](https://zio.dev/zio-schema) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-stacktracer_3 # 2.0.18](https://zio.dev) | <notextile></notextile>
+Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-stacktracer_3 # 2.0.19](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-streams_3 # 2.0.0](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-streams_3 # 2.0.12](https://zio.dev) | <notextile></notextile>
-Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-streams_3 # 2.0.13](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-streams_3 # 2.0.18](https://zio.dev) | <notextile></notextile>
+Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-streams_3 # 2.0.19](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-streams_3 # 2.0.2](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-test-magnolia_3 # 2.0.18](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-test-sbt_3 # 2.0.18](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-test_3 # 2.0.12](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio-test_3 # 2.0.18](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio_3 # 2.0.18](https://zio.dev) | <notextile></notextile>
+Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [dev.zio # zio_3 # 2.0.19](https://zio.dev) | <notextile></notextile>
 Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [io.circe # circe-core_3 # 0.14.6](https://github.com/circe/circe) | <notextile></notextile>
 Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [io.circe # circe-generic_3 # 0.14.6](https://github.com/circe/circe) | <notextile></notextile>
 Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [io.circe # circe-jawn_3 # 0.14.6](https://github.com/circe/circe) | <notextile></notextile>
@@ -264,7 +267,6 @@ Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licens
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | com.google.guava # failureaccess # 1.0.1 | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | com.google.guava # listenablefuture # 9999.0-empty-to-avoid-conflict-with-guava | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.google.j2objc # j2objc-annotations # 1.3](https://github.com/google/j2objc/) | <notextile></notextile>
-Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | com.google.zxing # core # 3.5.0 | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | com.twitter # hpack # 1.0.2 | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.zaxxer # HikariCP # 4.0.3](https://github.com/brettwooldridge/HikariCP) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | io.github.java-diff-utils # java-diff-utils # 4.12 | <notextile></notextile>
@@ -428,32 +430,32 @@ MIT | [The MIT License (MIT)](https://opensource.org/licenses/MIT) | [com.dimafe
 MIT | [The MIT License (MIT)](https://opensource.org/licenses/MIT) | [com.dimafeng # testcontainers-scala-vault_3 # 0.41.0](https://github.com/testcontainers/testcontainers-scala) | <notextile></notextile>
 Public Domain | [Public Domain, per Creative Commons CC0](http://creativecommons.org/publicdomain/zero/1.0/) | [org.hdrhistogram # HdrHistogram # 2.1.12](http://hdrhistogram.github.io/HdrHistogram/) | <notextile></notextile>
 Public Domain | [Public Domain, per Creative Commons CC0](http://creativecommons.org/publicdomain/zero/1.0/) | [org.latencyutils # LatencyUtils # 2.0.3](http://latencyutils.github.io/LatencyUtils/) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # castor-core_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # connect-core_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # connect-sql-doobie_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # event-notification_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-agent-core_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-agent-didcommx_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-data-models_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-protocol-connection_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-protocol-coordinate-mediation_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-protocol-invitation_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-protocol-issue-credential_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-protocol-mailbox_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-protocol-outofband-login_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-protocol-present-proof_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-protocol-report-problem_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-protocol-routing-2-0_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-protocol-trust-ping_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-resolver_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # mercury-verifiable-credentials_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # pollux-anoncreds_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # pollux-core_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # pollux-sql-doobie_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # pollux-vc-jwt_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # prism-agent-wallet-api_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # prism-node-client_3 # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # shared # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
-none specified | []() | [io.iohk.atala # sharedtest # 1.23.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # castor-core_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # connect-core_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # connect-sql-doobie_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # event-notification_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-agent-core_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-agent-didcommx_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-data-models_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-protocol-connection_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-protocol-coordinate-mediation_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-protocol-invitation_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-protocol-issue-credential_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-protocol-mailbox_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-protocol-outofband-login_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-protocol-present-proof_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-protocol-report-problem_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-protocol-routing-2-0_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-protocol-trust-ping_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-resolver_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # mercury-verifiable-credentials_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # pollux-anoncreds_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # pollux-core_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # pollux-sql-doobie_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # pollux-vc-jwt_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # prism-agent-wallet-api_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # prism-node-client_3 # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # shared # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
+none specified | []() | [io.iohk.atala # sharedtest # 1.24.0-SNAPSHOT](https://github.com/input-output-hk/atala-prism-building-blocks) | <notextile></notextile>
 none specified | []() | [net.jcip # jcip-annotations # 1.0](http://jcip.net/) | <notextile></notextile>
 
