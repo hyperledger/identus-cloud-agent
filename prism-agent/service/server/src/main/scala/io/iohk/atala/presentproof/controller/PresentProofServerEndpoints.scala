@@ -27,7 +27,7 @@ class PresentProofServerEndpoints(
 ) {
   private val requestPresentationEndpoint: ZServerEndpoint[Any, Any] =
     requestPresentation
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, request: RequestPresentationInput) =>
           presentProofController
@@ -38,7 +38,7 @@ class PresentProofServerEndpoints(
 
   private val getAllPresentationsEndpoint: ZServerEndpoint[Any, Any] =
     getAllPresentations
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, paginationInput: PaginationInput, thid: Option[String]) =>
           presentProofController
@@ -49,7 +49,7 @@ class PresentProofServerEndpoints(
 
   private val getPresentationEndpoint: ZServerEndpoint[Any, Any] =
     getPresentation
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, presentationId: UUID) =>
           presentProofController
@@ -60,7 +60,7 @@ class PresentProofServerEndpoints(
 
   private val updatePresentationEndpoint: ZServerEndpoint[Any, Any] =
     updatePresentation
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, presentationId: UUID, action: RequestPresentationAction) =>
           presentProofController

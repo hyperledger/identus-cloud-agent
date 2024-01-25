@@ -26,7 +26,7 @@ class SchemaRegistryServerEndpoints(
 
   val createSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
     createSchemaEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic {
         case wac => { case (ctx: RequestContext, schemaInput: CredentialSchemaInput) =>
           credentialSchemaController
@@ -37,7 +37,7 @@ class SchemaRegistryServerEndpoints(
 
   val updateSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
     updateSchemaEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic {
         case wac => { case (ctx: RequestContext, author: String, id: UUID, schemaInput: CredentialSchemaInput) =>
           credentialSchemaController
@@ -54,7 +54,7 @@ class SchemaRegistryServerEndpoints(
 
   val lookupSchemasByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
     lookupSchemasByQueryEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic {
         case wac => {
           case (
@@ -73,22 +73,12 @@ class SchemaRegistryServerEndpoints(
         }
       }
 
-  val testServerEndpoint: ZServerEndpoint[Any, Any] =
-    testEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
-      .serverLogic {
-        case wac => { case requestContext: RequestContext =>
-          ZIO.succeed(requestContext.request.toString + " " + wac.toString)
-        }
-      }
-
   val all: List[ZServerEndpoint[Any, Any]] =
     List(
       createSchemaServerEndpoint,
       updateSchemaServerEndpoint,
       getSchemaByIdServerEndpoint,
-      lookupSchemasByQueryServerEndpoint,
-      testServerEndpoint
+      lookupSchemasByQueryServerEndpoint
     )
 }
 

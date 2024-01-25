@@ -35,18 +35,20 @@ object KeycloakClientError {
 
 trait KeycloakClient {
 
-  def getRpt(accessToken: String): IO[KeycloakClientError, String]
+  val keycloakConfig: KeycloakConfig
+
+  def getRpt(accessToken: AccessToken): IO[KeycloakClientError, AccessToken]
 
   def getAccessToken(username: String, password: String): IO[KeycloakClientError, TokenResponse]
 
-  def introspectToken(token: String): IO[KeycloakClientError, TokenIntrospection]
+  def introspectToken(token: AccessToken): IO[KeycloakClientError, TokenIntrospection]
 
   /** Return list of permitted resources */
-  def checkPermissions(rpt: String): IO[KeycloakClientError, List[String]]
+  def checkPermissions(rpt: AccessToken): IO[KeycloakClientError, List[String]]
 
 }
 
-class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig: KeycloakConfig)
+class KeycloakClientImpl(client: AuthzClient, httpClient: Client, override val keycloakConfig: KeycloakConfig)
     extends KeycloakClient {
 
   private val introspectionUrl = client.getServerConfiguration().getIntrospectionEndpoint()
@@ -56,7 +58,7 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
 
   // TODO: support offline introspection
   // https://www.keycloak.org/docs/22.0.4/securing_apps/#_token_introspection_endpoint
-  override def introspectToken(token: String): IO[KeycloakClientError, TokenIntrospection] = {
+  override def introspectToken(token: AccessToken): IO[KeycloakClientError, TokenIntrospection] = {
     for {
       response <- Client
         .request(
@@ -70,7 +72,7 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
           ),
           content = Body.fromURLEncodedForm(
             Form(
-              FormField.simpleField("token", token)
+              FormField.simpleField("token", token.toString)
             )
           )
         )
@@ -129,10 +131,10 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
     } yield result
   }
 
-  override def getRpt(accessToken: String): IO[KeycloakClientError, String] =
+  override def getRpt(accessToken: AccessToken): IO[KeycloakClientError, AccessToken] =
     ZIO
       .attemptBlocking {
-        val authResource = client.authorization(accessToken)
+        val authResource = client.authorization(accessToken.toString)
         val request = AuthorizationRequest()
         authResource.authorize(request)
       }
@@ -141,11 +143,16 @@ class KeycloakClientImpl(client: AuthzClient, httpClient: Client, keycloakConfig
         e => KeycloakClientError.UnexpectedError(e.getMessage()),
         response => response.getToken()
       )
+      .flatMap(token =>
+        ZIO
+          .fromEither(AccessToken.fromString(token, keycloakConfig.rolesClaimPathSegments))
+          .mapError(_ => KeycloakClientError.UnexpectedError("The token response was not a valid token."))
+      )
 
-  override def checkPermissions(rpt: String): IO[KeycloakClientError, List[String]] =
+  override def checkPermissions(rpt: AccessToken): IO[KeycloakClientError, List[String]] =
     for {
       introspection <- ZIO
-        .attemptBlocking(client.protection().introspectRequestingPartyToken(rpt))
+        .attemptBlocking(client.protection().introspectRequestingPartyToken(rpt.toString))
         .logError
         .mapError(e => KeycloakClientError.UnexpectedError(e.getMessage()))
       permissions = introspection.getPermissions().asScala.toList

@@ -1,20 +1,30 @@
 package io.iohk.atala.agent.walletapi.model
 
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
-import zio.{ULayer, ZLayer}
+import zio.*
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
+enum EntityRole {
+  case Admin extends EntityRole
+  case Tenant extends EntityRole
+}
+
 trait BaseEntity {
   def id: UUID
+  def role: Either[String, EntityRole]
 }
 
 case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, updatedAt: Instant) extends BaseEntity {
   def withUpdatedAt(updatedAt: Instant = Instant.now()): Entity = copy(updatedAt = updatedAt)
   def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): Entity =
     copy(createdAt = createdAt.truncatedTo(unit), updatedAt.truncatedTo(unit))
+
+  def role: Either[String, EntityRole] =
+    if (this == Entity.Admin) Right(EntityRole.Admin)
+    else Right(EntityRole.Tenant)
 }
 
 object Entity {

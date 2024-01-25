@@ -12,6 +12,7 @@ interface ServiceBase {
     fun start() {
         env.start()
     }
+
     fun stop() {
         if (!keepRunning) {
             env.stop()

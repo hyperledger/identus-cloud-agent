@@ -1,6 +1,8 @@
 package config.services
 
 import com.sksamuel.hoplite.ConfigAlias
+import config.AgentRole
+import config.Role
 import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder
 import io.restassured.specification.RequestSpecification
@@ -21,24 +23,27 @@ data class Keycloak(
     private val keycloakEnvConfig: Map<String, String> = mapOf(
         "KEYCLOAK_HTTP_PORT" to httpPort.toString()
     )
+    private val keycloakClientRoles: List<String> = AgentRole.values().map { it.roleName }
     override val env: ComposeContainer =
         ComposeContainer(File(keycloakComposeFile)).withEnv(keycloakEnvConfig)
             .waitingFor("keycloak", Wait.forLogMessage(".*Running the server.*", 1))
     private val keycloakBaseUrl = "http://localhost:$httpPort/"
     private var requestBuilder: RequestSpecification? = null
 
-    fun start(users: List<String>) {
+    fun start(users: List<Role>) {
         super.start()
         initRequestBuilder()
         createRealm()
         createClient()
+        createClientRoles()
         createUsers(users)
     }
 
     fun getKeycloakAuthToken(username: String, password: String): String {
         val tokenResponse =
             RestAssured
-                .given().body("grant_type=password&client_id=$clientId&client_secret=$clientSecret&username=$username&password=$password")
+                .given()
+                .body("grant_type=password&client_id=$clientId&client_secret=$clientSecret&username=$username&password=$password")
                 .contentType("application/x-www-form-urlencoded")
                 .header("Host", "localhost")
                 .post("http://localhost:$httpPort/realms/$realm/protocol/openid-connect/token")
@@ -94,9 +99,23 @@ data class Keycloak(
             .then().statusCode(HttpStatus.SC_CREATED)
     }
 
-    private fun createUsers(users: List<String>) {
-        users.forEach { keycloakUser ->
+    private fun createClientRoles() {
+        keycloakClientRoles.forEach { roleName ->
             RestAssured.given().spec(requestBuilder)
+                .body(
+                    mapOf(
+                        "name" to roleName
+                    )
+                )
+                .post("/admin/realms/$realm/clients/$clientId/roles")
+                .then().statusCode(HttpStatus.SC_CREATED)
+        }
+    }
+
+    private fun createUsers(users: List<Role>) {
+        users.forEach { role ->
+            val keycloakUser = role.name
+            val createUserResponse = RestAssured.given().spec(requestBuilder)
                 .body(
                     mapOf(
                         "id" to keycloakUser,
@@ -112,7 +131,34 @@ data class Keycloak(
                     )
                 )
                 .post("/admin/realms/$realm/users")
-                .then().statusCode(HttpStatus.SC_CREATED)
+                .thenReturn()
+            createUserResponse.then().statusCode(HttpStatus.SC_CREATED)
+            val userId = createUserResponse.getHeader("Location").split('/').last()
+
+            role.agentRole?.let {
+                grantRoleToUser(userId, it)
+            }
         }
+    }
+
+    private fun grantRoleToUser(userId: String, role: AgentRole) {
+        val clientRoleResponse = RestAssured.given().spec(requestBuilder)
+            .param("search", role.roleName)
+            .get("/admin/realms/$realm/clients/$clientId/roles")
+            .thenReturn()
+        clientRoleResponse.then().statusCode(HttpStatus.SC_OK)
+        val clientRoleId = clientRoleResponse.body.jsonPath().getString("[0].id")
+
+        RestAssured.given().spec(requestBuilder)
+            .body(
+                listOf(
+                    mapOf(
+                        "name" to role.roleName,
+                        "id" to clientRoleId
+                    )
+                )
+            )
+            .post("/admin/realms/$realm/users/$userId/role-mappings/clients/$clientId")
+            .then().statusCode(HttpStatus.SC_NO_CONTENT)
     }
 }

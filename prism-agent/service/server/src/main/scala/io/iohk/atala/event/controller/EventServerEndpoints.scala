@@ -17,7 +17,7 @@ class EventServerEndpoints(
 
   val createWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
     EventEndpoints.createWebhookNotification
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (rc, createWebhook) =>
           eventController
@@ -28,7 +28,7 @@ class EventServerEndpoints(
 
   val listWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
     EventEndpoints.listWebhookNotification
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac => rc =>
         eventController
           .listWebhookNotifications(rc)
@@ -37,7 +37,7 @@ class EventServerEndpoints(
 
   val deleteWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
     EventEndpoints.deleteWebhookNotification
-      .zServerSecurityLogic(SecurityLogic.authorizeWith(_)(authenticator, authorizer))
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (rc, id) =>
           eventController
