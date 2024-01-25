@@ -408,7 +408,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
             @@ IssuerPendingToGeneratedFailed.trackError
             @@ IssuerPendingToGeneratedAll
             @@ Metric
-              .gauge("issuance_flow_issuer_cred_received_to_pending_flow_ms_gauge")
+              .gauge("issuance_flow_issuer_cred_pending_to_generated_flow_ms_gauge")
               .trackDurationWith(_.toMetricsSeconds)
 
         case IssueCredentialRecord(

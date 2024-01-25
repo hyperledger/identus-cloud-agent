@@ -1,9 +1,14 @@
 /*global __ENV*/
 
-import { HttpService } from "./HttpService";
+import { HttpService, statusChangeTimeouts } from "./HttpService";
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
-import { CreateManagedDIDResponse, DIDDocument, DidOperationSubmission, ManagedDID } from "@input-output-hk/prism-typescript-client";
-import {sleep} from "k6";
+import {
+  CreateManagedDIDResponse,
+  DIDDocument,
+  DidOperationSubmission,
+  ManagedDID
+} from "@input-output-hk/prism-typescript-client";
+import {fail, sleep} from "k6";
 
 
 /**
@@ -19,7 +24,11 @@ export class DidService extends HttpService {
    */
   getDid(did: string): ManagedDID {
     const res = this.get(`did-registrar/dids/${did}`);
-    return this.toJson(res) as unknown as ManagedDID;
+    try {
+      return this.toJson(res) as unknown as ManagedDID;
+    } catch {
+      fail("Failed to parse JSON as ManagedDID")
+    }
   }
 
   /**
@@ -29,7 +38,11 @@ export class DidService extends HttpService {
    */
   resolveDid(did: string): DIDDocument {
     const res = this.get(`dids/${did}`);
-    return this.toJson(res) as unknown as DIDDocument;
+    try {
+      return this.toJson(res) as unknown as DIDDocument;
+    } catch {
+      fail("Failed to parse JSON as DIDDocument")
+    }
   }
 
   /**
@@ -39,7 +52,11 @@ export class DidService extends HttpService {
    */
   publishDid(did: string): DidOperationSubmission {
     const res = this.post(`did-registrar/dids/${did}/publications`, null, 202);
-    return this.toJson(res).scheduledOperation as unknown as DidOperationSubmission;
+    try {
+      return this.toJson(res).scheduledOperation as unknown as DidOperationSubmission;
+    } catch {
+      fail("Failed to parse JSON as DidOperationSubmission")
+    }
   }
 
   /**
@@ -49,7 +66,11 @@ export class DidService extends HttpService {
    */
   createUnpublishedDid(documentTemplate: string): CreateManagedDIDResponse {
     const res = this.post("did-registrar/dids", documentTemplate);
-    return this.toJson(res) as unknown as CreateManagedDIDResponse;
+    try {
+      return this.toJson(res) as unknown as CreateManagedDIDResponse;
+    } catch {
+      fail("Failed to parse JSON as CreateManagedDIDResponse")
+    }
   }
 
   /**
@@ -67,6 +88,10 @@ export class DidService extends HttpService {
       sleep(WAITING_LOOP_PAUSE_INTERVAL);
       iterations++;
     } while (didState !== state && iterations < WAITING_LOOP_MAX_ITERATIONS);
+    if (didState !== state) {
+      statusChangeTimeouts.add(1)
+      fail(`DID is not ${state} after the waiting loop`);
+    }
   }
 
 }

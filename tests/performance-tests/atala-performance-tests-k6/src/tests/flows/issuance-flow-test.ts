@@ -1,21 +1,22 @@
-import { group } from "k6";
 import { Options } from "k6/options";
 import { issuer, holder } from "../common";
 import { CredentialSchemaResponse } from "@input-output-hk/prism-typescript-client";
 import { defaultOptions } from "../../scenarios/default";
 import merge from "ts-deepmerge";
+import { describe } from "../../k6chaijs.js";
+
 
 export const localOptions: Options = {
   thresholds: {
-    "group_duration{group:::Issuer connects with Holder}": ["avg < 30000"],
+    "group_duration{group:::Issuer connects with Holder}": ["avg < 10000"],
     "group_duration{group:::Issuer creates credential offer for Holder}": [
-      "avg < 60000",
+      "avg < 10000",
     ],
     "group_duration{group:::Issuer issues credential to Holder}": [
-      "avg < 60000",
+      "avg < 10000",
     ],
     "group_duration{group:::Holder receives credential from Issuer}": [
-      "avg < 30000",
+      "avg < 10000",
     ],
   },
 };
@@ -23,16 +24,16 @@ export let options: Options = merge(localOptions, defaultOptions);
 
 // This is setup code. It runs once at the beginning of the test, regardless of the number of VUs.
 export function setup() {
-  group("Issuer publishes DID", function () {
+  describe("Issuer publishes DID", function () {
     issuer.createUnpublishedDid();
     issuer.publishDid();
   });
 
-  group("Issuer creates credential schema", function () {
+  describe("Issuer creates credential schema", function () {
     issuer.createCredentialSchema();
   });
 
-  group("Holder creates unpublished DID", function () {
+  describe("Holder creates unpublished DID", function () {
     holder.createUnpublishedDid();
   });
 
@@ -53,32 +54,32 @@ export default (data: {
   issuer.schema = data.issuerSchema;
   holder.did = data.holderDid;
 
-  group("Issuer connects with Holder", function () {
+  describe("Issuer connects with Holder", function () {
     issuer.createHolderConnection();
     holder.acceptIssuerConnection(issuer.connectionWithHolder!.invitation);
     issuer.finalizeConnectionWithHolder();
     holder.finalizeConnectionWithIssuer();
-  });
+  }) &&
 
-  group("Issuer creates credential offer for Holder", function () {
+  describe("Issuer creates credential offer for Holder", function () {
     issuer.createCredentialOffer();
     issuer.waitForCredentialOfferToBeSent();
-  });
+  }) &&
 
-  group(
+  describe(
     "Holder achieves and accepts credential offer from Issuer",
     function () {
       holder.waitAndAcceptCredentialOffer(issuer.credential!.thid);
     }
-  );
+  ) &&
 
-  group("Issuer issues credential to Holder", function () {
+  describe("Issuer issues credential to Holder", function () {
     issuer.receiveCredentialRequest();
     issuer.issueCredential();
     issuer.waitForCredentialToBeSent();
-  });
+  }) &&
 
-  group("Holder receives credential from Issuer", function () {
+  describe("Holder receives credential from Issuer", function () {
     holder.receiveCredential();
   });
 };

@@ -10,8 +10,7 @@ import scala.language.implicitConversions
 
 @description("A W3C compliant Prism DID document representation.")
 final case class DIDDocument(
-    @description(annotations.`@context`.description)
-    `@context`: Seq[String],
+    `@context`: Seq[Context],
     @description(annotations.id.description)
     @encodedExample(annotations.id.example)
     id: String,
@@ -30,12 +29,6 @@ final case class DIDDocument(
 object DIDDocument {
 
   object annotations {
-    object `@context`
-        extends Annotation[Seq[String]](
-          description = "The JSON-LD context for the DID resolution result.",
-          example = Seq("https://www.w3.org/ns/did/v1")
-        )
-
     object id
         extends Annotation[String](
           description = """[DID subject](https://www.w3.org/TR/did-core/#did-subject).
@@ -56,7 +49,7 @@ object DIDDocument {
 
   given Conversion[w3c.DIDDocumentRepr, DIDDocument] = (didDocument: w3c.DIDDocumentRepr) => {
     DIDDocument(
-      `@context` = didDocument.context,
+      `@context` = didDocument.context.map(Context(_)),
       id = didDocument.id,
       controller = Some(didDocument.controller),
       verificationMethod = Some(didDocument.verificationMethod.map(i => i)),
