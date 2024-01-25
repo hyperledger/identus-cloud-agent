@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 import { fail, sleep } from "k6";
 import { HttpService, statusChangeTimeouts } from "./HttpService";
 import { ISSUER_AGENT_URL, WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
+=======
+import {fail, sleep} from "k6";
+import { HttpService, statusChangeTimeouts } from "./HttpService";
+import {ISSUER_AGENT_URL, WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL} from "./Config";
+>>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))
 import { IssueCredentialRecord, Connection, CredentialSchemaResponse } from "@input-output-hk/prism-typescript-client";
 import { crypto } from "k6/experimental/webcrypto";
 
@@ -21,7 +27,11 @@ export class CredentialsService extends HttpService {
         "claims": {
           "emailAddress": "${crypto.randomUUID()}-@atala.io",
           "familyName": "Test",
+<<<<<<< HEAD
           "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}/schema",
+=======
+          "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}",
+>>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))
           "dateOfIssuance": "${new Date()}",
           "drivingLicenseID": "Test",
           "drivingClass": 1

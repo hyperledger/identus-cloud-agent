@@ -3,6 +3,11 @@ package io.iohk.atala.agent.server.http
 import io.iohk.atala.mercury.*
 import zio.*
 import zio.http.{Header as _, *}
+<<<<<<< HEAD
+=======
+
+import java.time.Instant
+>>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))
 
 object ZioHttpClient {
   val layer: URLayer[Client, ZioHttpClient] = ZLayer.fromFunction(new ZioHttpClient(_))

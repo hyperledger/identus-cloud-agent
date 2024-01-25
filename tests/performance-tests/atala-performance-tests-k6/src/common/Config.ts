@@ -4,7 +4,11 @@
  * Maximum number of iterations for the waiting loop.
  * If not provided, the default value is 100.
  */
+<<<<<<< HEAD
 export const WAITING_LOOP_MAX_ITERATIONS = Number(__ENV.MY_USER_AGENT) || 1000;
+=======
+export const WAITING_LOOP_MAX_ITERATIONS = Number(__ENV.MY_USER_AGENT) || 100;
+>>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))
 
 /**
  * Pause interval in seconds for each iteration of the waiting loop.

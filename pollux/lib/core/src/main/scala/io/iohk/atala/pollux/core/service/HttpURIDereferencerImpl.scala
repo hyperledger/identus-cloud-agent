@@ -3,6 +3,10 @@ package io.iohk.atala.pollux.core.service
 import io.iohk.atala.pollux.core.service.URIDereferencerError.{ConnectionError, ResourceNotFound, UnexpectedError}
 import zio.*
 import zio.http.*
+<<<<<<< HEAD
+=======
+import zio.stream.ZSink
+>>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))
 
 import java.net.URI
 import java.nio.charset.StandardCharsets
