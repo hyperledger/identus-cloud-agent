@@ -36,6 +36,8 @@ import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.system.controller.SystemServerEndpoints
 import zio.*
 import zio.metrics.*
+import java.util.concurrent.Executors
+import scala.concurrent.ExecutionContext
 
 object PrismAgentApp {
 
@@ -59,11 +61,11 @@ object PrismAgentApp {
   ] =
     for {
       config <- ZIO.service[AppConfig]
-      _ <- IssueBackgroundJobs.issueCredentialDidCommExchanges
-        .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
-        .unit @@ Metric
+      _ <- (IssueBackgroundJobs.issueCredentialDidCommExchanges @@ Metric
         .gauge("issuance_flow_did_com_exchange_job_ms_gauge")
-        .trackDurationWith(_.toMetricsSeconds)
+        .trackDurationWith(_.toMetricsSeconds))
+        .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
+        .unit
     } yield ()
 
   private val presentProofExchangeJob: RIO[
@@ -73,11 +75,11 @@ object PrismAgentApp {
   ] =
     for {
       config <- ZIO.service[AppConfig]
-      _ <- PresentBackgroundJobs.presentProofExchanges
-        .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
-        .unit @@ Metric
+      _ <- (PresentBackgroundJobs.presentProofExchanges @@ Metric
         .gauge("present_proof_flow_did_com_exchange_job_ms_gauge")
-        .trackDurationWith(_.toMetricsSeconds)
+        .trackDurationWith(_.toMetricsSeconds))
+        .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
+        .unit
     } yield ()
 
   private val connectDidCommExchangesJob: RIO[
@@ -87,11 +89,11 @@ object PrismAgentApp {
   ] =
     for {
       config <- ZIO.service[AppConfig]
-      _ <- ConnectBackgroundJobs.didCommExchanges
-        .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
-        .unit @@ Metric
+      _ <- (ConnectBackgroundJobs.didCommExchanges @@ Metric
         .gauge("connection_flow_did_com_exchange_job_ms_gauge")
-        .trackDurationWith(_.toMetricsSeconds)
+        .trackDurationWith(_.toMetricsSeconds))
+        .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
+        .unit
     } yield ()
 
   private val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService & WalletManagementService, Unit] =

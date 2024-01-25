@@ -1,13 +1,13 @@
-import { group } from 'k6';
 import { Options } from 'k6/options';
 import { Issuer, Holder } from '../../actors';
 import { Connection, CredentialSchemaResponse } from '@input-output-hk/prism-typescript-client';
 import { defaultOptions } from "../../scenarios/default";
 import merge from "ts-deepmerge";
+import { describe } from "../../k6chaijs.js";
 
 export const localOptions: Options = {
   thresholds: {
-    'group_duration{group:::Issuer creates credential offer}': ['avg < 30000']
+    'group_duration{group:::Issuer creates credential offer}': ['avg < 5000']
   }
 }
 export let options: Options = merge(localOptions, defaultOptions)
@@ -15,23 +15,23 @@ export const issuer = new Issuer();
 export const holder = new Holder();
 
 export function setup() {
-  group('Issuer publishes DID', function () {
+  describe('Issuer publishes DID', function () {
     issuer.createUnpublishedDid();
     issuer.publishDid();
   });
 
-  group('Holder creates unpublished DID', function () {
+  describe('Holder creates unpublished DID', function () {
     holder.createUnpublishedDid();
   });
 
-  group('Issuer connects with Holder', function () {
+  describe('Issuer connects with Holder', function () {
     issuer.createHolderConnection();
     holder.acceptIssuerConnection(issuer.connectionWithHolder!.invitation);
     issuer.finalizeConnectionWithHolder();
     holder.finalizeConnectionWithIssuer();
   });
 
-  group("Issuer creates credential schema", function () {
+  describe("Issuer creates credential schema", function () {
     issuer.createCredentialSchema();
   });
 
@@ -53,8 +53,7 @@ export default (data: { issuerDid: string; holderDid: string; issuerSchema: Cred
   issuer.connectionWithHolder = data.connectionWithHolder;
   holder.connectionWithIssuer = data.connectionWithIssuer;
 
-
-  group('Issuer creates credential offer', function () {
+  describe('Issuer creates credential offer', function () {
     issuer.createCredentialOffer();
   });
 };
