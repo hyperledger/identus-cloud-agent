@@ -4,6 +4,10 @@ import io.iohk.atala.pollux.core.service.URIDereferencerError.{ConnectionError, 
 import zio.*
 import zio.http.*
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+import zio.stream.ZSink
+>>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))
 =======
 import zio.stream.ZSink
 >>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))

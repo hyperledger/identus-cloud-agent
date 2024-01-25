@@ -214,7 +214,11 @@ object MainApp extends ZIOAppDefault {
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client
 <<<<<<< HEAD
+<<<<<<< HEAD
           SystemModule.zioHttpClientLayer,
+=======
+          zioHttpClientLayer,
+>>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))
 =======
           zioHttpClientLayer,
 >>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))

@@ -34,7 +34,11 @@ $ k6 run dist/connection-flow-test.js
 ```
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Debugging Tests
+=======
+## Debugging Tests
+>>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))
 =======
 ## Debugging Tests
 >>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))

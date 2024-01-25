@@ -1,7 +1,13 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { fail, sleep } from "k6";
 import { HttpService, statusChangeTimeouts } from "./HttpService";
 import { ISSUER_AGENT_URL, WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
+=======
+import {fail, sleep} from "k6";
+import { HttpService, statusChangeTimeouts } from "./HttpService";
+import {ISSUER_AGENT_URL, WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL} from "./Config";
+>>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))
 =======
 import {fail, sleep} from "k6";
 import { HttpService, statusChangeTimeouts } from "./HttpService";
@@ -28,7 +34,11 @@ export class CredentialsService extends HttpService {
           "emailAddress": "${crypto.randomUUID()}-@atala.io",
           "familyName": "Test",
 <<<<<<< HEAD
+<<<<<<< HEAD
           "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}/schema",
+=======
+          "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}",
+>>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))
 =======
           "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}",
 >>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))

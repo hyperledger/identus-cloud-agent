@@ -4,6 +4,11 @@ import io.iohk.atala.mercury.*
 import zio.*
 import zio.http.{Header as _, *}
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+import java.time.Instant
+>>>>>>> 7aa9b4c2 (feat: upgrade ZIO http client to improve performance (#850))
 =======
 
 import java.time.Instant
