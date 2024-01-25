@@ -113,7 +113,7 @@ class WebhookPublisher(
         else {
           ZIO.fail(
             UnexpectedError(
-              s"Failed - Unsuccessful webhook response: [status: ${response.status}]" //TODO Restore error message in this unexpected error reporting
+              s"Failed - Unsuccessful webhook response: [status: ${response.status}]" // TODO Restore error message in this unexpected error reporting
             )
           )
         }
