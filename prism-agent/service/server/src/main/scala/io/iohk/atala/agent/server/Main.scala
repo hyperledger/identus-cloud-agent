@@ -48,13 +48,11 @@ import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import zio.*
-import zio.http.Client
 import zio.metrics.connectors.micrometer
 import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.security.Security
-import scala.language.implicitConversions
 
 object MainApp extends ZIOAppDefault {
 
@@ -62,7 +60,7 @@ object MainApp extends ZIOAppDefault {
 
   // FIXME: remove this when db app user have correct privileges provisioned by k8s operator.
   // This should be executed before migration to have correct privilege for new objects.
-  val preMigrations = for {
+  private val preMigrations = for {
     _ <- ZIO.logInfo("running pre-migration steps.")
     appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
     _ <- PolluxMigrations
@@ -76,7 +74,7 @@ object MainApp extends ZIOAppDefault {
       .provide(RepoModule.agentTransactorLayer)
   } yield ()
 
-  val migrations = for {
+  private val migrations = for {
     _ <- ZIO.serviceWithZIO[PolluxMigrations](_.migrate)
     _ <- ZIO.serviceWithZIO[ConnectMigrations](_.migrate)
     _ <- ZIO.serviceWithZIO[AgentMigrations](_.migrate)
@@ -85,6 +83,26 @@ object MainApp extends ZIOAppDefault {
     _ <- ConnectMigrations.validateRLS.provide(RepoModule.connectContextAwareTransactorLayer)
     _ <- AgentMigrations.validateRLS.provide(RepoModule.agentContextAwareTransactorLayer)
   } yield ()
+
+  private val zioHttpClientLayer = {
+    import zio.http.netty.NettyConfig
+    import zio.http.{ConnectionPoolConfig, DnsResolver, ZClient}
+    (ZLayer.fromZIO(
+      for {
+        appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
+      } yield ZClient.Config.default.copy(
+        connectionPool = {
+          val cpSize = appConfig.agent.httpClient.connectionPoolSize
+          if (cpSize > 0) ConnectionPoolConfig.Fixed(cpSize)
+          else ConnectionPoolConfig.Disabled
+        },
+        idleTimeout = Some(appConfig.agent.httpClient.idleTimeout),
+        connectionTimeout = Some(appConfig.agent.httpClient.connectionTimeout),
+      )
+    ) ++
+      ZLayer.succeed(NettyConfig.default) ++
+      DnsResolver.default) >>> ZClient.live
+  }
 
   override def run: ZIO[Any, Throwable, Unit] = {
 
@@ -178,7 +196,7 @@ object MainApp extends ZIOAppDefault {
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client
-          Client.default,
+          zioHttpClientLayer,
           Scope.default,
         )
     } yield app

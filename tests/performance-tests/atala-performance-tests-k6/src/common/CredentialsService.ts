@@ -1,9 +1,8 @@
-import { sleep } from "k6";
-import { HttpService } from "./HttpService";
-import { ISSUER_AGENT_URL, WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
+import {fail, sleep} from "k6";
+import { HttpService, statusChangeTimeouts } from "./HttpService";
+import {ISSUER_AGENT_URL, WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL} from "./Config";
 import { IssueCredentialRecord, Connection, CredentialSchemaResponse } from "@input-output-hk/prism-typescript-client";
 import { crypto } from "k6/experimental/webcrypto";
-
 
 /**
  * A service class for managing credentials in the application.
@@ -22,17 +21,21 @@ export class CredentialsService extends HttpService {
         "claims": {
           "emailAddress": "${crypto.randomUUID()}-@atala.io",
           "familyName": "Test",
+          "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}",
           "dateOfIssuance": "${new Date()}",
           "drivingLicenseID": "Test",
           "drivingClass": 1
         },
-        "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}",
         "issuingDID": "${issuingDid}",
         "connectionId": "${connection.connectionId}",
         "automaticIssuance": false
       }`;
     const res = this.post("issue-credentials/credential-offers", payload);
-    return this.toJson(res) as unknown as IssueCredentialRecord;
+    try {
+      return this.toJson(res) as unknown as IssueCredentialRecord;
+    } catch {
+      fail("Failed to parse JSON as IssueCredentialRecord")
+    }
   }
 
   createCredentialSchema(issuingDid: string): CredentialSchemaResponse {
@@ -86,7 +89,11 @@ export class CredentialsService extends HttpService {
     }
     `
     const res = this.post("schema-registry/schemas", payload);
-    return this.toJson(res) as unknown as CredentialSchemaResponse;
+    try {
+      return this.toJson(res) as unknown as CredentialSchemaResponse;
+    } catch {
+      fail("Failed to parse JSON as CredentialSchemaResponse")
+    }
   }
 
   /**
@@ -96,7 +103,11 @@ export class CredentialsService extends HttpService {
    */
   getCredentialRecord(record: IssueCredentialRecord): IssueCredentialRecord {
     const res = this.get(`issue-credentials/records/${record.recordId}`);
-    return this.toJson(res) as unknown as IssueCredentialRecord;
+    try {
+      return this.toJson(res) as unknown as IssueCredentialRecord;
+    } catch {
+      fail("Failed to parse JSON as IssueCredentialRecord")
+    }
   }
 
   /**
@@ -117,7 +128,11 @@ export class CredentialsService extends HttpService {
   acceptCredentialOffer(record: IssueCredentialRecord, subjectDid: string): IssueCredentialRecord {
     const payload = { subjectId: subjectDid };
     const res = this.post(`issue-credentials/records/${record.recordId}/accept-offer`, payload, 200);
-    return this.toJson(res) as unknown as IssueCredentialRecord;
+    try {
+      return this.toJson(res) as unknown as IssueCredentialRecord;
+    } catch {
+      fail("Failed to parse JSON as IssueCredentialRecord")
+    }
   }
 
   /**
@@ -127,7 +142,11 @@ export class CredentialsService extends HttpService {
    */
   issueCredential(record: IssueCredentialRecord): IssueCredentialRecord {
     const res = this.post(`issue-credentials/records/${record.recordId}/issue-credential`, null, 200);
-    return this.toJson(res) as unknown as IssueCredentialRecord;
+    try {
+      return this.toJson(res) as unknown as IssueCredentialRecord;
+    } catch {
+      fail("Failed to parse JSON as IssueCredentialRecord")
+    }
   }
 
   /**
@@ -149,7 +168,8 @@ export class CredentialsService extends HttpService {
       sleep(WAITING_LOOP_PAUSE_INTERVAL);
       iterations++;
     } while (iterations < WAITING_LOOP_MAX_ITERATIONS);
-    throw new Error(`Record with thid=${thid} not achieved during the waiting loop`);
+    statusChangeTimeouts.add(1)
+    fail(`Record not found in Offer Received for thid during the waiting loop`);
   }
 
   /**
@@ -168,7 +188,8 @@ export class CredentialsService extends HttpService {
       iterations++;
     } while (currentState !== state && iterations < WAITING_LOOP_MAX_ITERATIONS);
     if (currentState !== state) {
-      throw new Error(`Credential is not ${state} after the waiting loop`);
+      statusChangeTimeouts.add(1)
+      fail(`Credential is not ${state} after the waiting loop`);
     }
   }
 
