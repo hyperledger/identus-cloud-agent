@@ -144,7 +144,7 @@ _Implementation tips:_
 
 - **Use a sealed trait or abstract class** to represent the hierarchy of ZIO Failures, allowing for a well-defined set
   of error possibilities.
-- **Ensure the sealed trait extends Throwable** to enable usage of the **ZIO#orDie** and **ZIO#refineOrDie** methods,
+- **Evaluate the solution during the implementation phase to make the sealed trait extends Throwable** to enable usage of the **ZIO#orDie** and **ZIO#refineOrDie** methods,
   allowing the caller to convert ZIO failures to defects conveniently.
 - **Define specific error cases within the companion object** of the sealed trait. This practice prevents potential
   conflicts when importing errors with common names (e.g. RecordNotFoundError), allowing users to prefix them with the
