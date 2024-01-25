@@ -111,14 +111,9 @@ class WebhookPublisher(
       resp <-
         if response.status.isSuccess then ZIO.unit
         else {
-//          val err = response match {
-//            case Response.GetError(error) => Some(error)
-//            case _                        => None
-//          }
           ZIO.fail(
             UnexpectedError(
-              s"Failed"
-//              s"Unsuccessful webhook response: [status: ${response.status} [error: ${err.getOrElse("none")}]"
+              s"Failed - Unsuccessful webhook response: [status: ${response.status}]" //TODO Restore error message in this unexpected error reporting
             )
           )
         }

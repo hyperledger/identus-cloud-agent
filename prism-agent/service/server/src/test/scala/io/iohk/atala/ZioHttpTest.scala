@@ -22,19 +22,6 @@ object ZioHttpTest extends ZIOAppDefault {
           headers = Headers("content-type" -> "application/didcomm-encrypted+json")
         )
       )
-//      .provideSomeLayer {
-//        implicit val trace: Trace = Trace.empty
-//        (ZLayer.succeed(
-//          Config.default.copy(
-//            connectionPool = ConnectionPoolConfig.Fixed(10),
-//            idleTimeout = Some(1.seconds),
-//            connectionTimeout = Some(1.seconds),
-//          )
-//        ) ++
-//          ZLayer.succeed(NettyConfig.default) ++
-//          DnsResolver.default) >>> zio.http.Client.live
-//      }
-//      .provideSomeLayer(zio.Scope.default)
       .flatMap { response =>
         response.body.asString
       }
@@ -70,5 +57,4 @@ object ZioHttpTest extends ZIOAppDefault {
         ZLayer.succeed(NettyConfig.default) ++
         DnsResolver.default) >>> zio.http.Client.live
     }
-  // .provideSomeLayer(zio.Scope.default)
 }
