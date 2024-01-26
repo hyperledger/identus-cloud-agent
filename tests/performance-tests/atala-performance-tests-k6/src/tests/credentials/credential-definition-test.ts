@@ -1,9 +1,9 @@
-import { group } from "k6";
 import { Options } from "k6/options";
 import { Issuer } from "../../actors";
 import { defaultOptions } from "../../scenarios/default";
 import merge from "ts-deepmerge";
 import { CredentialSchemaResponse } from "@input-output-hk/prism-typescript-client";
+import { describe } from "../../k6chaijs.js";
 
 export const localOptions: Options = {
   // Important to have this threshold to have a special line for this group in the report
@@ -16,12 +16,12 @@ export let options: Options = merge(localOptions, defaultOptions)
 export const issuer = new Issuer();
 
 export function setup() {
-  group("Issuer publishes DID", function () {
+  describe("Issuer publishes DID", function () {
     issuer.createUnpublishedDid();
     issuer.publishDid();
   });
 
-  group("Issuer creates credential schema", function () {
+  describe("Issuer creates credential schema", function () {
     issuer.createCredentialSchema("anoncred");
   });
 
@@ -35,7 +35,7 @@ export default (data: { issuerDid: string, schema: CredentialSchemaResponse }) =
   issuer.did = data.issuerDid;
   issuer.schema = data.schema;
 
-  group("Issuer creates credential definition", function () {
+  describe("Issuer creates credential definition", function () {
     issuer.createCredentialDefinition();
   });
 };
