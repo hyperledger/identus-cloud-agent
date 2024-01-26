@@ -169,7 +169,11 @@ export class CredentialsService extends HttpService {
   acceptCredentialOffer(record: IssueCredentialRecord, subjectDid: string): IssueCredentialRecord {
     const payload = { subjectId: subjectDid };
     const res = this.post(`issue-credentials/records/${record.recordId}/accept-offer`, payload, 200);
-    return this.toJson(res) as unknown as IssueCredentialRecord;
+    try {
+      return this.toJson(res) as unknown as IssueCredentialRecord;
+    } catch {
+      fail("Failed to parse JSON as IssueCredentialRecord")
+    }
   }
 
   /**
