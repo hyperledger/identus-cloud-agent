@@ -19,14 +19,16 @@ import java.util.UUID
 object VerificationPolicyEndpoints {
 
   private val tagName = "Verification"
-  private val tagDescription = """
-    |<p>The `Verification` endpoints enable the management and querying of verification policies,
-    |which are applied to W3C Verifiable Credentials in JWT format.</p>
-    |<p>Users can retrieve and paginate existing policies or create new ones.
-    |These policies determine the verification criteria, allowing users to specify constraints such as `schemaId` and `trustedIssuers` in the current implementation.</p>
-    |<p>The constraints are defined using the `schemaId` and a sequence of `trustedIssuers`.
-    |This functionality ensures the system's integrity and adherence to specific verification requirements.</p>
-    |<p>Endpoints are secured by `apiKeyAuth` or `jwtAuth` authentication</p>""".stripMargin
+  private val tagDescription = s"""
+    |The __${tagName}__ endpoints enable the management and lookup of verification policies,which are applied to W3C Verifiable Credentials in JWT format.
+    |
+    |Users can retrieve and paginate existing policies or create new ones.
+    |These policies determine the verification criteria, allowing users to specify constraints such as `schemaId` and `trustedIssuers` in the current implementation.
+    |
+    |The constraints are defined using the `schemaId` and a sequence of `trustedIssuers`.
+    |This functionality ensures the system's integrity and adherence to specific verification requirements.
+    |
+    |Endpoints are secured by __apiKeyAuth__ or __jwtAuth__ authentication.""".stripMargin
 
   val tag = Tag(tagName, Some(tagDescription))
 
