@@ -19,10 +19,11 @@ For DIDComm, the aspect of interoperability is especially critical in the contex
 In DIDComm, an agent developed by one team is required to be adept at interpreting errors reported by an agent from a completely different team,
 presenting a unique challenge in this area.
 
-In Agent Currently  we have 3 flows Connection Issuance and Verification.
-Communication between 2 agents Agent A <-> Agent B happens in the background job in async
-Error occurred in the background job over didcomm Agent A is logged in Agent A logs
-But the Agent B is not aware of anything 
+As of the time of writing, the cloud agent supports 3 DIDComm flows: `Connection`, `Issuance` and `Verification.`
+Each cloud agent operates a background thread that facilitates interactions between two agents.
+For each flow, the agent tracks a protocol state, and depending on this state, it triggers a DIDComm(V2) message to communicate with the other agent.
+The communication between two agents, Agent A and Agent B, occurs asynchronously in the background job.
+If an error occurs in this background job over DIDComm in Agent A, it is recorded in Agent A's logs. However, Agent B remains uninformed about any such errors.
 
 ## Decision Drivers <!-- optional -->
 
@@ -46,7 +47,7 @@ https://github.com/decentralized-identity/didcomm-messaging/blob/main/extensions
   Custom Behavior table
   This table defines the expected behavior of the Agent in different scenarios not covered by the specifications.
 
- | Agent            | Behaviour                      | Comments            |
+ | Agent            | Behaviour                      | Action            |
  |------------------|--------------------------------|---------------------|
  | Scenario G1	     | Send a problem report          | e.p.msg.unsupported |
  | Scenario G2      | Send a problem report          | e.p.msg.unsupported | 
@@ -147,20 +148,21 @@ https://github.com/decentralized-identity/waci-didcomm/blob/main/present_proof/p
 - **V10** - Database connection or related issue
 
 ## Decision Outcome
-In Agent, when an issue arises, we undertake the following steps:
 
-Log the error with X-Request-ID and thid .
+In the event of an issue in a cloud agent, the following actions are taken:
 
-Dispatch a problem report as detailed in the table mentioned above
+1. The error is logged, including the X-Request-ID and the thread ID (thid).
 
-[Implement the Problem Reporting](https://didcomm.org/report-problem/2.0/)
+2. A problem report is generated and sent out as outlined in the previously mentioned table
 
+3. [Implement the Problem Reporting](https://didcomm.org/report-problem/2.0/)
 
 ### Out of the Scope
-In Agent, when an issue arises Storing the problem report sent in database with X-Request-ID
 
-[Replying to Warnings](https://identity.foundation/didcomm-messaging/spec/#replying-to-warnings) 
+1. The problem report generated is not stored in the database along with the associated X-Request-ID.
 
-[ACKs](https://identity.foundation/didcomm-messaging/spec/#acks) 
+2. [Replying to Warnings](https://identity.foundation/didcomm-messaging/spec/#replying-to-warnings) 
+
+3. [ACKs](https://identity.foundation/didcomm-messaging/spec/#acks) 
 
 
