@@ -30,18 +30,14 @@ If an error occurs in this background job over DIDComm in Agent A, it is recorde
 What are our needs? Let’s try to sum up the required capabilities based on 
 [Report Problem 2.0](https://identity.foundation/didcomm-messaging/spec/#problem-reports), we need:
 
-* Find out all the possible scenarios on various levels for the 3 flows Connection Issuance and Verification
 
-When processing any step of any protocol, if something is wrong, the Agent tries to:
-Update the record to a documented error state
-Log the error in the service logs
-Send the problem report message when appropriate following return route
-https://github.com/decentralized-identity/didcomm-messaging/blob/main/extensions/return_route/main.md
+The cloud agent is designed to perform three distinct roles: `Issuer`, `Holder`, and `Verifier`. Within these roles, 
+it operates across three protocol flows, namely `Connection`, `Issuance`, and `Verification`.
 
-| Agent Flows           | Protocols                                                                                          |
-|-----------------------|----------------------------------------------------------------------------------------------------|
-| Connection            | https://github.com/hyperledger/aries-rfcs/tree/main/features/0160-connection-protocol              |
-| Issuance              | https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential                  |
+| Agent(Protocol) Flows       | Protocols                                                                                          |
+|-----------------------------|----------------------------------------------------------------------------------------------------|
+| Connection                  | https://github.com/hyperledger/aries-rfcs/tree/main/features/0160-connection-protocol              |
+| Issuance                    | https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential                  |
 | Verification(Present proof) | https://github.com/decentralized-identity/waci-didcomm/blob/main/present_proof/present-proof-v3.md |
 
   Custom Behavior table
@@ -153,8 +149,9 @@ In the event of an issue in a cloud agent, the following actions are taken:
 
 1. The error is logged, including the X-Request-ID and the thread ID (thid).
 
-2. A problem report is generated and sent out as outlined in the previously mentioned table
-
+2. A problem report message is generated and sent out as outlined in the previously mentioned table
+  This message is sent in accordance with the return route defined here: 
+   [Return Route Extension for DIDComm Messaging](https://github.com/decentralized-identity/didcomm-messaging/blob/main/extensions/return_route/main.md).
 3. [Implement the Problem Reporting](https://didcomm.org/report-problem/2.0/)
 
 ### Out of the Scope
