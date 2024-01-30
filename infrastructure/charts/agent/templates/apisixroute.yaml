@@ -32,6 +32,11 @@ spec:
       config:
         block_rules: ["_system/metrics"]
         rejected_message: "access to metrics resource is not allowed from an external location"
+    - name: request-id
+      enable: true
+      config:
+        header_name: "X-Request-ID"
+        include_in_response: true
     {{ template "cors" . }}
     {{ template "consumer-restriction" . }}
     {{ template "headers.requestId" . }}
@@ -64,6 +69,11 @@ spec:
       enable: true
       config:
         regex_uri: ["^/prism-agent/didcomm(.*)", "/$1"]
+    - name: request-id
+      enable: true
+      config:
+        header_name: "X-Request-ID"
+        include_in_response: true
     {{ template "cors" . }}
     {{ template "headers.requestId" . }}
     {{ template "headers.security" . }}
@@ -97,6 +107,11 @@ spec:
       enable: true
       config:
         regex_uri: ["^/prism-agent/schema-registry/schemas/(.*)", "/schema-registry/schemas/$1"]
+    - name: request-id
+      enable: true
+      config:
+        header_name: "X-Request-ID"
+        include_in_response: true
     {{ template "cors" . }}
     {{ template "headers.requestId" . }}
     {{ template "headers.security" . }}
@@ -130,6 +145,11 @@ spec:
       enable: true
       config:
         regex_uri: ["^/prism-agent/credential-definition-registry/definitions/(.*)", "/credential-definition-registry/definitions/$1"]
+    - name: request-id
+      enable: true
+      config:
+        header_name: "X-Request-ID"
+        include_in_response: true
     {{ template "cors" . }}
     {{ template "headers.requestId" . }}
     {{ template "headers.security" . }}
@@ -161,6 +181,11 @@ spec:
       enable: true
       config:
         regex_uri: ["^/prism-agent/docs/(.*)","/docs/$1"]
+    - name: request-id
+      enable: true
+      config:
+        header_name: "X-Request-ID"
+        include_in_response: true
     {{ template "cors" . }}
     {{ template "headers.requestId" . }}
     {{ template "headers.security" . }}

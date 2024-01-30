@@ -7,7 +7,14 @@
 
   <appender name="STDOUT" class="ConsoleAppender">
     <encoder class="PatternLayoutEncoder">
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+      <!-- with out logback -->
+      <!-- [info] timestamp=2024-01-30T16:02:30.329637Z level=INFO thread=#zio-fiber-845 message="Trace IssueServerEndpoints.getCredentialRecordsEndpoint" location=io.iohk.atala.issue.controller.IssueServerEndpoints.getCredentialRecordsEndpoint file=IssueServerEndpoints.scala line=43 traceId=123456789 -->
+     
+      <!-- <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level [%kvp] %logger{36} - %msg%n</pattern> -->
+      <!-- [info] 16:17:23.978 [ZScheduler-Worker-4] INFO  [] i.i.a.i.c.IssueServerEndpoints - zio-fiber-851 Trace IssueServerEndpoints.getCredentialRecordsEndpoint -->
+
+      <pattern>%d{yyyy-MM-dd_HH:mm:ss.SSS} %highlight(%-5level) %cyan(%logger{5}@L%line:[%-4.30thread]) {%mdc} - %msg%xException%n</pattern>
+      <!-- [info] 2024-01-30_16:18:50.975 INFO  i.i.a.i.c.IssueServerEndpoints@L169:[ZScheduler-Worker-8] {traceId=123456789} - zio-fiber-845 Trace IssueServerEndpoints.getCredentialRecordsEndpoint -->
     </encoder>
   </appender>
 

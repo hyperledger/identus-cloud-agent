@@ -35,8 +35,6 @@ import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.system.controller.SystemServerEndpoints
 import zio.*
 import zio.metrics.*
-import java.util.concurrent.Executors
-import scala.concurrent.ExecutionContext
 
 object PrismAgentApp {
 

@@ -51,10 +51,22 @@ import zio.*
 import zio.metrics.connectors.micrometer
 import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics
+import zio.logging.*
+import zio.logging.LogFormat.*
+import zio.logging.backend.SLF4J
 
 import java.security.Security
 
 object MainApp extends ZIOAppDefault {
+
+  val colorFormat: LogFormat =
+    fiberId.color(LogColor.YELLOW) |-|
+      line.highlight |-|
+      allAnnotations |-|
+      cause.highlight
+
+  override val bootstrap: ZLayer[ZIOAppArgs, Any, Any] =
+    Runtime.removeDefaultLoggers >>> SLF4J.slf4j(colorFormat)
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
 
