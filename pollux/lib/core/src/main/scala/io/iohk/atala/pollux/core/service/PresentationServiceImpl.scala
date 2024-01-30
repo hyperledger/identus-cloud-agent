@@ -235,49 +235,15 @@ private class PresentationServiceImpl(
       proofTypes: Seq[ProofType],
       maybeOptions: Option[io.iohk.atala.pollux.core.model.presentation.Options]
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
-    for {
-      request <- ZIO.succeed(
-        createDidCommRequestPresentation(
-          proofTypes,
-          thid,
-          pairwiseVerifierDID,
-          pairwiseProverDID,
-          maybeOptions.map(options => Seq(toJWTAttachment(options))).getOrElse(Seq.empty)
-        )
-      )
-      record <- ZIO.succeed(
-        PresentationRecord(
-          id = DidCommID(),
-          createdAt = Instant.now,
-          updatedAt = None,
-          thid = thid,
-          connectionId = connectionId,
-          schemaId = None, // TODO REMOVE from DB
-          role = PresentationRecord.Role.Verifier,
-          subjectId = pairwiseProverDID,
-          protocolState = PresentationRecord.ProtocolState.RequestPending,
-          credentialFormat = CredentialFormat.JWT,
-          requestPresentationData = Some(request),
-          proposePresentationData = None,
-          presentationData = None,
-          credentialsToUse = None,
-          anoncredCredentialsToUseJsonSchemaId = None,
-          anoncredCredentialsToUse = None,
-          metaRetries = maxRetries,
-          metaNextRetry = Some(Instant.now()),
-          metaLastFailure = None,
-        )
-      )
-      count <- presentationRepository
-        .createPresentationRecord(record)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
-        s"${record.id}_present_proof_flow_verifier_req_pending_to_sent_ms_gauge"
-      )
-    } yield record
+    createPresentationRecord(
+      pairwiseVerifierDID,
+      pairwiseProverDID,
+      thid,
+      connectionId,
+      CredentialFormat.JWT,
+      proofTypes,
+      maybeOptions.map(options => Seq(toJWTAttachment(options))).getOrElse(Seq.empty)
+    )
   }
 
   override def createAnoncredPresentationRecord(
@@ -287,14 +253,34 @@ private class PresentationServiceImpl(
       connectionId: Option[String],
       presentationRequest: AnoncredPresentationRequestV1
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
+    createPresentationRecord(
+      pairwiseVerifierDID,
+      pairwiseProverDID,
+      thid,
+      connectionId,
+      CredentialFormat.AnonCreds,
+      Seq.empty,
+      Seq(toAnoncredAttachment(presentationRequest))
+    )
+  }
+
+  private def createPresentationRecord(
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: DidId,
+      thid: DidCommID,
+      connectionId: Option[String],
+      format: CredentialFormat,
+      proofTypes: Seq[ProofType],
+      attachments: Seq[AttachmentDescriptor]
+  ) = {
     for {
       request <- ZIO.succeed(
         createDidCommRequestPresentation(
-          Seq.empty,
+          proofTypes,
           thid,
           pairwiseVerifierDID,
           pairwiseProverDID,
-          Seq(toAnoncredAttachment(presentationRequest))
+          attachments
         )
       )
       record <- ZIO.succeed(
@@ -308,7 +294,7 @@ private class PresentationServiceImpl(
           role = PresentationRecord.Role.Verifier,
           subjectId = pairwiseProverDID,
           protocolState = PresentationRecord.ProtocolState.RequestPending,
-          credentialFormat = CredentialFormat.AnonCreds,
+          credentialFormat = format,
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
