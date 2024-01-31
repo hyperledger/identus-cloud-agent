@@ -7,11 +7,11 @@ import io.iohk.atala.credentialstatus.controller.http.StatusListCredential.annot
 import sttp.tapir.Schema
 import zio.json.*
 import io.iohk.atala.pollux.core.model.CredentialStatusList
+import io.iohk.atala.pollux.core.model.error.CredentialStatusListServiceError
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import zio.json.ast.Json
-
-import java.time.{OffsetDateTime, ZoneOffset, Instant}
-import java.util.UUID
+import zio.*
+import java.time.Instant
 
 case class StatusListCredential(
     @description(annotations.`@context`.description)
@@ -50,18 +50,15 @@ case class CredentialSubject(
 
 object StatusListCredential {
 
-  def fromCredentialStatusListEntry(domain: CredentialStatusList): StatusListCredential = {
-    // parse this via zio json lib into type StatusListCredential
-    println(domain.statusListCredential)
+  def fromCredentialStatusListEntry(
+      domain: CredentialStatusList
+  ): IO[CredentialStatusListServiceError, StatusListCredential] = {
 
-    val res =
-      s"""{"proof":{"type":"DataIntegrityProof","proofPurpose":"assertionMethod","verificationMethod":"data:application/json;base64,eyJAY29udGV4dCI6WyJodHRwczovL3czaWQub3JnL3NlY3VyaXR5L211bHRpa2V5L3YxIl0sInR5cGUiOiJNdWx0aWtleSIsInB1YmxpY0tleU11bHRpYmFzZSI6InVNRmt3RXdZSEtvWkl6ajBDQVFZSUtvWkl6ajBEQVFjRFFnQUVRUENjM1M0X0xHVXRIM25DRjZ2dUw3ekdEMS13UmVrMHRHbnB0UnZUakhIMUdvTnk1UFBIZ0FmNTZlSzNOd3B0LWNGcmhrT2pRQk1rcFRKOHNaS1pCZz09In0=","created":"2024-01-22T22:40:34.560891Z","proofValue":"zAN1rKq8npnByRqPRxhjHEkivhN8AhA8V6MqDJga1zcCUEvPDUoqJB5Rj6ZJHTCnBZ98VXTEVd1rprX2wvP1MAaTEi7Pm241qm","cryptoSuite":"eddsa-jcs-2022"},"@context":["https://www.w3.org/2018/credentials/v1","https://w3id.org/vc/status-list/2021/v1"],"type":["VerifiableCredential","StatusList2021Credential"],"id":"https://example.com/credentials/status/3","issuer":"did:issuer:MDP8AsFhHzhwUvGNuYkX7T","issuanceDate":1705963233,"credentialSubject":{"id":"https://example.com/credentials/status/3#list","type":"StatusList2021","statusPurpose":"Revocation","encodedList":"H4sIAAAAAAAA_-3BMQEAAADCoPVPbQwfoAAAAAAAAAAAAAAAAAAAAIC3AYbSVKsAQAAA"}}"""
-        .fromJson[StatusListCredential]
+    val res = ZIO
+      .fromEither(domain.statusListCredential.fromJson[StatusListCredential])
+      .mapError(err => CredentialStatusListServiceError.JsonCredentialParsingError(new Throwable(err)))
 
-    res match {
-      case Left(err)    => throw new Exception(err)
-      case Right(value) => value
-    }
+    res
   }
 
   object annotations {
@@ -168,7 +165,6 @@ object StatusListCredential {
 
   given statusPurposeSchema: Schema[StatusPurpose] = Schema.derived
 
-//  given eddsaJcs2022ProofSchema: Schema[EddsaJcs2022Proof] = Schema.derived
   given statusListCredentialSchema: Schema[StatusListCredential] = Schema.derived
 
 }

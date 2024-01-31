@@ -20,6 +20,8 @@ object CredentialStatusController {
     error match
       case CredentialStatusListServiceError.RepositoryError(cause) =>
         ErrorResponse.internalServerError(title = "RepositoryError", detail = Some(cause.toString))
+      case CredentialStatusListServiceError.JsonCredentialParsingError(cause) =>
+        ErrorResponse.internalServerError(title = "JsonCredentialParsingError", detail = Some(cause.toString))
       case CredentialStatusListServiceError.RecordIdNotFound(recordId) =>
         ErrorResponse.notFound(detail = Some(s"Credential status list could not be found by id: $recordId"))
 
