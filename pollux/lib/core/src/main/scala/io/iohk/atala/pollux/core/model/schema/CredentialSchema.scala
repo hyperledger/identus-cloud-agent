@@ -13,7 +13,6 @@ import io.iohk.atala.pollux.core.service.URIDereferencer
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
-import zio.prelude.Validation
 
 import java.net.URI
 import java.time.{OffsetDateTime, ZoneOffset}
