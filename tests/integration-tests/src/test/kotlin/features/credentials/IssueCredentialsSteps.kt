@@ -100,7 +100,7 @@ class IssueCredentialsSteps {
                         CredentialDefinitionInput(
                             name = "StudentCredential",
                             version = "1.0.0",
-                            schemaId = "$schemaRegistryUrl/${issuer.recall<CredentialSchemaResponse>("anoncredsSchema").guid}",
+                            schemaId = "$schemaRegistryUrl/${issuer.recall<CredentialSchemaResponse>("anoncredsSchema").guid}/schema",
                             description = "Simple student credentials definition",
                             author = issuer.recall("shortFormDid"),
                             signatureType = "CL",

@@ -99,6 +99,8 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
         .thenRunLogic()
         .whenServerEndpoint(schemaRegistryEndpoints.getSchemaByIdServerEndpoint)
         .thenRunLogic()
+        .whenServerEndpoint(schemaRegistryEndpoints.getRawSchemaByIdServerEndpoint)
+        .thenRunLogic()
         .whenServerEndpoint(
           schemaRegistryEndpoints.lookupSchemasByQueryServerEndpoint
         )
