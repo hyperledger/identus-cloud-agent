@@ -41,7 +41,10 @@ object ConnectionsPage {
   object annotations {
     object contents
         extends Annotation[Seq[Connection]](
-          description = "Array of resources (Connection)\nA sequence of Connection resources representing the list of connections that the paginated response contains.",
+          description = """
+          |Array of resources (Connection)
+          |A sequence of Connection resources representing the list of connections that the paginated response contains.
+          """.stripMargin,
           example = Seq.empty
         )
 
