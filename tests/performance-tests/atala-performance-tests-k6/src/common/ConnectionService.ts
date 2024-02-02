@@ -2,24 +2,14 @@
 
 import { Connection, ConnectionInvitation, ConnectionStateEnum } from "@input-output-hk/prism-typescript-client";
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
-import { HttpService } from "./HttpService";
-import { sleep } from "k6";
+import { HttpService, statusChangeTimeouts } from "./HttpService";
+import { sleep, fail } from "k6";
 
 /**
  * A service class for managing connections in the application.
  * Extends the HttpService class.
  */
 export class ConnectionService extends HttpService {
-  
-  /**
-   * Retrieves all connections.
-   * @returns {Connection[]} An array of connections.
-   */
-  getConnections(): Connection[] {
-    const res = this.get("connections");
-    const connections = res.json("contents") as unknown as Connection[];
-    return connections;
-  }
 
   /**
    * Retrieves a specific connection by ID.
@@ -28,8 +18,11 @@ export class ConnectionService extends HttpService {
    */
   getConnection(connectionId: string): Connection {
     const res = this.get(`connections/${connectionId}`);
-    const connection = this.toJson(res) as unknown as Connection;
-    return connection;
+    try {
+      return this.toJson(res) as unknown as Connection;
+    } catch {
+      fail("Failed to parse JSON as connection")
+    }
   }
 
   /**
@@ -38,8 +31,12 @@ export class ConnectionService extends HttpService {
    */
   createConnection(): Connection {
     const payload = { label: "test" };
-    const connection = this.toJson(this.post("connections", payload)) as unknown as Connection;
-    return connection;
+    const res = this.post("connections", payload)
+    try {
+      return this.toJson(res) as unknown as Connection;
+    } catch {
+      fail("Failed to parse JSON as connection")
+    }
   }
 
   /**
@@ -50,7 +47,11 @@ export class ConnectionService extends HttpService {
   acceptConnectionInvitation(invitation: ConnectionInvitation): Connection {
     const payload = { invitation: this.invitationFromUrl(invitation.invitationUrl) };
     const res = this.post("connection-invitations", payload, 200);
-    return this.toJson(res) as unknown as Connection;
+    try {
+      return this.toJson(res) as unknown as Connection;
+    } catch {
+      fail("Failed to parse JSON as connection")
+    }
   }
 
   /**
@@ -69,7 +70,8 @@ export class ConnectionService extends HttpService {
       iterations++;
     } while (state !== requiredState && iterations < WAITING_LOOP_MAX_ITERATIONS);
     if (state !== requiredState) {
-      throw new Error(`Connection state is ${state}, required ${requiredState}`);
+      statusChangeTimeouts.add(1)
+      fail(`Connection state is ${state}, required ${requiredState}`);
     }
   }
 

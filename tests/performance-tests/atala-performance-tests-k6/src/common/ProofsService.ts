@@ -1,6 +1,6 @@
-import { HttpService } from "./HttpService";
-import { sleep } from "k6";
-import { Connection, PresentationStatus } from "@input-output-hk/prism-typescript-client";
+import { HttpService, statusChangeTimeouts } from "./HttpService";
+import {fail, sleep} from "k6";
+import {Connection, PresentationStatus} from "@input-output-hk/prism-typescript-client";
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
 import vu from "k6/execution";
 
@@ -34,7 +34,11 @@ export class ProofsService extends HttpService {
           ]
       }`
     const res = this.post("present-proof/presentations", payload);
-    return this.toJson(res).presentationId as string;
+    try {
+      return this.toJson(res).presentationId as string;
+    } catch {
+      fail("Failed to parse JSON as presentationId string")
+    }
   }
 
   /**
@@ -51,7 +55,11 @@ export class ProofsService extends HttpService {
         ]
       }`
     const res = this.patch(`present-proof/presentations/${presentation.presentationId}`, payload);
-    return this.toJson(res).presentationId  as string;
+    try {
+      return this.toJson(res).presentationId as string;
+    } catch {
+      fail("Failed to parse JSON as presentationId string")
+    }
   }
 
   /**
@@ -61,7 +69,11 @@ export class ProofsService extends HttpService {
    */
   getPresentation(presentationId: string): PresentationStatus {
     const res = this.get(`present-proof/presentations/${presentationId}`);
-    return this.toJson(res) as unknown as PresentationStatus;
+    try {
+      return this.toJson(res) as unknown as PresentationStatus;
+    } catch {
+      fail("Failed to parse JSON as PresentationStatus")
+    }
   }
 
   /**
@@ -70,7 +82,11 @@ export class ProofsService extends HttpService {
    */
   getPresentations(thid: string): PresentationStatus[] {
     const res = this.get(`present-proof/presentations?thid=${thid}`);
-    return this.toJson(res).contents as unknown as PresentationStatus[];
+    try {
+      return this.toJson(res).contents as unknown as PresentationStatus[];
+    } catch {
+      fail("Failed to parse JSON as PresentationStatus[]")
+    }
   }
 
   /**
@@ -91,7 +107,8 @@ export class ProofsService extends HttpService {
       sleep(WAITING_LOOP_PAUSE_INTERVAL);
       iterations++;
     } while (iterations < WAITING_LOOP_MAX_ITERATIONS);
-    throw new Error(`Presentation with offerId=${vu.vu.idInTest} not achieved during the waiting loop`);
+    statusChangeTimeouts.add(1)
+    fail(`Presentation with offerId not achieved during the waiting loop`);
   }
 
   /**
@@ -109,7 +126,8 @@ export class ProofsService extends HttpService {
       iterations++;
     } while (state !== requiredState && iterations < WAITING_LOOP_MAX_ITERATIONS);
     if (state !== requiredState) {
-      throw new Error(`Presentation state is ${state}, required ${requiredState}`);
+      statusChangeTimeouts.add(1)
+      fail(`Presentation state is ${state}, required ${requiredState}`);
     }
   }
 
