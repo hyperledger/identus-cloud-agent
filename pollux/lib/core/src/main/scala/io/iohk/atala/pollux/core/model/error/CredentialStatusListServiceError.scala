@@ -10,4 +10,5 @@ sealed trait CredentialStatusListServiceError
 object CredentialStatusListServiceError {
   final case class RepositoryError(cause: Throwable) extends CredentialStatusListServiceError
   final case class RecordIdNotFound(id: UUID) extends CredentialStatusListServiceError
+  final case class JsonCredentialParsingError(cause: Throwable) extends CredentialStatusListServiceError
 }

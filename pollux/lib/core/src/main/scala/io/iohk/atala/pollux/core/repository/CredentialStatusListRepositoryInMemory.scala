@@ -75,7 +75,7 @@ class CredentialStatusListRepositoryInMemory(
     val issuerDid = jwtIssuer.did.value
     val canonical = PrismDID.fromString(issuerDid).fold(e => throw RuntimeException(e), _.asCanonical)
 
-    val encodedJwtCredential = for {
+    val embeddedProofCredential = for {
       bitString <- BitString.getInstance().mapError {
         case InvalidSize(message)      => new Throwable(message)
         case EncodingError(message)    => new Throwable(message)
@@ -91,11 +91,11 @@ class CredentialStatusListRepositoryInMemory(
         )
         .mapError(x => new Throwable(x.msg))
 
-      encodedJwtCredential <- emptyJwtCredential.encoded
-    } yield encodedJwtCredential
+      credentialWithEmbeddedProof <- emptyJwtCredential.toJsonWithEmbeddedProof
+    } yield credentialWithEmbeddedProof.spaces2
 
     for {
-      credential <- encodedJwtCredential
+      credential <- embeddedProofCredential
       storageRef <- walletToStatusListStorageRefs
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       newCredentialStatusList = CredentialStatusList(
@@ -104,7 +104,7 @@ class CredentialStatusListRepositoryInMemory(
         issuer = canonical,
         issued = issued,
         purpose = StatusPurpose.Revocation,
-        statusListJwtCredential = credential.value,
+        statusListCredential = credential,
         size = BitString.MIN_SL2021_SIZE,
         lastUsedIndex = 0,
         createdAt = Instant.now(),

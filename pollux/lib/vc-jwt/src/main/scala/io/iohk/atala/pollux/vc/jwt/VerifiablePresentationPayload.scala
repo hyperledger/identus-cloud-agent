@@ -18,7 +18,7 @@ sealed trait VerifiablePresentationPayload
 
 case class Prover(did: DID, signer: Signer, publicKey: PublicKey)
 
-case class W3cVerifiablePresentationPayload(payload: W3cPresentationPayload, proof: Proof)
+case class W3cVerifiablePresentationPayload(payload: W3cPresentationPayload, proof: JwtProof)
     extends Verifiable(proof),
       VerifiablePresentationPayload
 
@@ -146,7 +146,7 @@ object PresentationPayload {
 
     import CredentialPayload.Implicits.*
     import InstantDecoderEncoder.*
-    import Proof.Implicits.*
+    import JwtProof.Implicits.*
 
     implicit val w3cPresentationPayloadEncoder: Encoder[W3cPresentationPayload] =
       (w3cPresentationPayload: W3cPresentationPayload) =>
@@ -285,7 +285,7 @@ object PresentationPayload {
       (c: HCursor) =>
         for {
           payload <- c.as[W3cPresentationPayload]
-          proof <- c.downField("proof").as[Proof]
+          proof <- c.downField("proof").as[JwtProof]
         } yield {
           W3cVerifiablePresentationPayload(
             payload = payload,
@@ -319,7 +319,7 @@ object JwtPresentation {
   def toEncodeW3C(payload: W3cPresentationPayload, issuer: Issuer): W3cVerifiablePresentationPayload = {
     W3cVerifiablePresentationPayload(
       payload = payload,
-      proof = Proof(
+      proof = JwtProof(
         `type` = "JwtProof2020",
         jwt = issuer.signer.encode(payload.asJson)
       )
