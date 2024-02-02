@@ -17,10 +17,11 @@ import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaResponsePage,
   FilterInput
 }
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
+import zio.json.ast.Json
 
 import java.util.UUID
-import io.iohk.atala.shared.models.WalletAccessContext
 
 class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDIDService: ManagedDIDService)
     extends CredentialSchemaController {
@@ -62,6 +63,16 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
       .map(
         fromDomain(_)
           .withSelf(rc.request.uri.toString)
+      )
+  }
+
+  override def getSchemaJsonByGuid(guid: UUID)(implicit
+      rc: RequestContext
+  ): IO[ErrorResponse, Json] = {
+    service
+      .getByGUID(guid)
+      .map(
+        _.schema
       )
   }
 

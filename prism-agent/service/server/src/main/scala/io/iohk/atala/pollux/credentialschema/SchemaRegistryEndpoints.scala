@@ -17,6 +17,7 @@ import io.iohk.atala.pollux.credentialschema.http.{
 import sttp.apispec.{ExternalDocumentation, Tag}
 import sttp.model.StatusCode
 import sttp.tapir.json.zio.jsonBody
+import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.{
   Endpoint,
   EndpointInput,
@@ -28,6 +29,7 @@ import sttp.tapir.{
   statusCode,
   stringToPath
 }
+import zio.json.ast.Json
 
 import java.util.UUID
 
@@ -160,6 +162,26 @@ object SchemaRegistryEndpoints {
         "Fetch the credential schema by the unique identifier"
       )
       .tag(tagName)
+
+  val getRawSchemaByIdEndpoint: PublicEndpoint[
+    (RequestContext, UUID),
+    ErrorResponse,
+    Json, // changed to generic Json type
+    Any
+  ] =
+    endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in(
+        "schema-registry" / "schemas" / path[UUID]("guid") / "schema".description(
+          "Globally unique identifier of the credential schema record"
+        )
+      )
+      .out(jsonBody[Json].description("Raw JSON response of the CredentialSchema")) // changed to Json
+      .errorOut(basicFailuresAndNotFound)
+      .name("getRawSchemaById")
+      .summary("Fetch the schema from the registry by `guid`")
+      .description("Fetch the credential schema by the unique identifier")
+      .tag("Schema Registry")
 
   private val credentialSchemaFilterInput: EndpointInput[FilterInput] = EndpointInput.derived[FilterInput]
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
