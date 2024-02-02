@@ -28,6 +28,17 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
   }
 
   override def spec = suite("VCStatusList2021")(
+    // TODO: add test to verify the proof is valid
+    test("Should generate status list vs as JSON with embedded proof") {
+      for {
+        issuer <- generateIssuer()
+        bitString <- BitString.getInstance()
+        statusList <- VCStatusList2021.build(VC_ID, s"$VC_ID#list", issuer, bitString)
+        json <- statusList.toJsonWithEmbeddedProof
+      } yield {
+        assertTrue(json.hcursor.downField("proof").focus.isDefined)
+      }
+    },
     test("Generate VC contains required fields in 'credentialSubject'") {
       for {
         issuer <- generateIssuer()

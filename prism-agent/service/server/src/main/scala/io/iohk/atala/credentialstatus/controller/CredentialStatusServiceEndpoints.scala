@@ -2,7 +2,7 @@ package io.iohk.atala.credentialstatus.controller
 
 import io.iohk.atala.iam.authentication.{Authenticator, Authorizer}
 import io.iohk.atala.agent.walletapi.model.BaseEntity
-import io.iohk.atala.api.http.RequestContext
+import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.Authorizer
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
@@ -11,6 +11,7 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
 import zio.*
 import io.iohk.atala.credentialstatus.controller.CredentialStatusEndpoints.*
+import sttp.model.StatusCode
 
 import java.util.UUID
 
@@ -20,10 +21,18 @@ class CredentialStatusServiceEndpoints(
     authorizer: Authorizer[BaseEntity] // Will need for revocation endpoint
 ) {
 
+  private def obfuscateInternalServerError(e: ErrorResponse): ErrorResponse =
+    if e.status == StatusCode.InternalServerError.code then e.copy(detail = Some("Something went wrong"))
+    else e
+
   private val getCredentialStatusListById: ZServerEndpoint[Any, Any] =
     getCredentialStatusListEndpoint
-      .zServerLogic { case (ctx: RequestContext, guid: UUID) =>
-        credentialStatusController.getStatusListJwtCredentialById(guid)(ctx)
+      .zServerLogic { case (ctx: RequestContext, id: UUID) =>
+        credentialStatusController
+          .getStatusListCredentialById(id)(ctx)
+          .logError
+          .mapError(obfuscateInternalServerError)
+
       }
 
   val all: List[ZServerEndpoint[Any, Any]] = List(

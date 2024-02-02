@@ -5,13 +5,15 @@ import io.circe.{Json, JsonObject}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.pollux.vc.jwt.revocation.VCStatusList2021.Purpose.Revocation
 import io.iohk.atala.pollux.vc.jwt.revocation.VCStatusList2021Error.{DecodingError, EncodingError}
-import zio.{IO, UIO, ZIO}
+import zio.*
 
 import java.time.Instant
 
 class VCStatusList2021 private (val vcPayload: W3cCredentialPayload, jwtIssuer: Issuer) {
 
   def encoded: UIO[JWT] = ZIO.succeed(W3CCredential.toEncodedJwt(vcPayload, jwtIssuer))
+
+  def toJsonWithEmbeddedProof: Task[Json] = W3CCredential.toJsonWithEmbeddedProof(vcPayload, jwtIssuer)
 
   def getBitString: IO[DecodingError, BitString] = {
     for {
@@ -28,8 +30,8 @@ class VCStatusList2021 private (val vcPayload: W3cCredentialPayload, jwtIssuer: 
 object VCStatusList2021 {
 
   enum Purpose(val name: String):
-    case Revocation extends Purpose("revocation")
-    case Suspension extends Purpose("suspension")
+    case Revocation extends Purpose("Revocation")
+    case Suspension extends Purpose("Suspension")
 
   def build(
       vcId: String,

@@ -88,7 +88,7 @@ import java.time.Instant
   val w3cVerifiableCredentialPayload =
     W3cVerifiableCredentialPayload(
       payload = w3cCredentialPayload,
-      proof = Proof(
+      proof = JwtProof(
         `type` = "JwtProof2020",
         jwt = w3cIssuerSignedCredential
       )

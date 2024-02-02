@@ -2,7 +2,7 @@ package io.iohk.atala.credentialstatus.controller
 
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.api.http.EndpointOutputs.*
-import io.iohk.atala.credentialstatus.controller.http.CredentialStatusList
+import io.iohk.atala.credentialstatus.controller.http.StatusListCredential
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
 import java.util.UUID
@@ -12,7 +12,7 @@ object CredentialStatusEndpoints {
   val getCredentialStatusListEndpoint: PublicEndpoint[
     (RequestContext, UUID),
     ErrorResponse,
-    CredentialStatusList,
+    StatusListCredential,
     Any
   ] =
     endpoint.get
@@ -22,7 +22,7 @@ object CredentialStatusEndpoints {
           "Globally unique identifier of the credential status list"
         )
       )
-      .out(jsonBody[CredentialStatusList].description("Credential status list found by ID"))
+      .out(jsonBody[StatusListCredential].description("Status List credential with embedded proof found by ID"))
       .errorOut(basicFailuresAndNotFound)
       .name("getCredentialStatusListEndpoint")
       .summary("Fetch credential status list by its ID")
