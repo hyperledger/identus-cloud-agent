@@ -16,6 +16,8 @@ import io.iohk.atala.pollux.core.model.presentation.*
 import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import io.iohk.atala.pollux.core.service.serdes.*
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.{CredentialProofV1, CredentialProofsV1, PresentationRequestV1, PresentationV1}
+import io.iohk.atala.pollux.core.service.serdes.credentialdefinition.PublicV1
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
@@ -107,10 +109,10 @@ private class PresentationServiceImpl(
   }
 
   override def createAnoncredPresentationPayloadFromRecord(
-      recordId: DidCommID,
-      prover: Issuer,
-      anoncredCredentialProof: AnoncredCredentialProofsV1,
-      issuanceDate: Instant
+                                                            recordId: DidCommID,
+                                                            prover: Issuer,
+                                                            anoncredCredentialProof: CredentialProofsV1,
+                                                            issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] = {
 
     for {
@@ -149,11 +151,11 @@ private class PresentationServiceImpl(
   }
 
   def createAnoncredPresentation(
-      requestPresentation: RequestPresentation,
-      recordId: DidCommID,
-      prover: Issuer,
-      anoncredCredentialProof: AnoncredCredentialProofsV1,
-      issuanceDate: Instant
+                                  requestPresentation: RequestPresentation,
+                                  recordId: DidCommID,
+                                  prover: Issuer,
+                                  anoncredCredentialProof: CredentialProofsV1,
+                                  issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, Presentation] = {
     for {
       presentationPayload <-
@@ -251,7 +253,7 @@ private class PresentationServiceImpl(
       pairwiseProverDID: DidId,
       thid: DidCommID,
       connectionId: Option[String],
-      presentationRequest: AnoncredPresentationRequestV1
+      presentationRequest: PresentationRequestV1
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     createPresentationRecord(
       pairwiseVerifierDID,
@@ -359,7 +361,7 @@ private class PresentationServiceImpl(
               head.data match
                 case Base64(data) =>
                   val decodedData = new String(JBase64.getUrlDecoder.decode(data))
-                  AnoncredPresentationRequestV1.schemaSerDes
+                  PresentationRequestV1.schemaSerDes
                     .validate(decodedData)
                     .map(_ => CredentialFormat.AnonCreds)
                     .mapError(error => InvalidAnoncredPresentationRequest(error.error))
@@ -477,11 +479,11 @@ private class PresentationServiceImpl(
   )
 
   private def createAnoncredPresentationPayloadFromCredential(
-      issuedCredentialRecords: Seq[ValidFullIssuedCredentialRecord],
-      schemaIds: Seq[String],
-      credentialDefinitionIds: Seq[String],
-      requestPresentation: RequestPresentation,
-      credentialProofs: List[AnoncredCredentialProofV1],
+                                                               issuedCredentialRecords: Seq[ValidFullIssuedCredentialRecord],
+                                                               schemaIds: Seq[String],
+                                                               credentialDefinitionIds: Seq[String],
+                                                               requestPresentation: RequestPresentation,
+                                                               credentialProofs: List[CredentialProofV1],
   ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] = {
     for {
       schemaMap <-
@@ -531,7 +533,7 @@ private class PresentationServiceImpl(
           case Base64(data) => ZIO.succeed(new String(JBase64.getUrlDecoder.decode(data)))
           case _            => ZIO.fail(InvalidAnoncredPresentationRequest("Expecting Base64-encoded data"))
       _ <-
-        AnoncredPresentationRequestV1.schemaSerDes
+        PresentationRequestV1.schemaSerDes
           .deserialize(presentationRequestData)
           .mapError(error => InvalidAnoncredPresentationRequest(error.error))
       linkSecret <-
@@ -588,7 +590,7 @@ private class PresentationServiceImpl(
       uri <- ZIO.attempt(new URI(credentialDefinitionUri)).mapError(e => UnexpectedError(e.getMessage))
       content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
       _ <-
-        PublicCredentialDefinitionSerDesV1.schemaSerDes
+        PublicV1.schemaSerDes
           .validate(content)
           .mapError(error => UnexpectedError(s"AnonCreds Schema parsing error: $error"))
       anoncredCredentialDefinition = AnoncredCredentialDefinition(content)
@@ -636,7 +638,7 @@ private class PresentationServiceImpl(
 
   override def acceptAnoncredRequestPresentation(
       recordId: DidCommID,
-      credentialsToUse: AnoncredCredentialProofsV1
+      credentialsToUse: CredentialProofsV1
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
 
     for {
@@ -653,7 +655,7 @@ private class PresentationServiceImpl(
       )
       anoncredCredentialProofsV1AsJson <- ZIO
         .fromEither(
-          AnoncredCredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
+          CredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
         )
         .mapError(error =>
           PresentationError.UnexpectedError(
@@ -663,7 +665,7 @@ private class PresentationServiceImpl(
       count <- presentationRepository
         .updateAnoncredPresentationWithCredentialsToUse(
           recordId,
-          Option(AnoncredCredentialProofsV1.version),
+          Option(CredentialProofsV1.version),
           Option(anoncredCredentialProofsV1AsJson),
           ProtocolState.PresentationPending
         )
@@ -908,7 +910,7 @@ private class PresentationServiceImpl(
         case _            => ZIO.fail(InvalidAnoncredPresentation("Expecting Base64-encoded data"))
       }
       deserializedPresentation <-
-        AnoncredPresentationV1.schemaSerDes
+        PresentationV1.schemaSerDes
           .deserialize(serializedPresentation.data)
           .mapError(error => PresentationError.UnexpectedError(error.error))
       schemaIds = deserializedPresentation.identifiers.map(_.schema_id)
@@ -991,12 +993,12 @@ private class PresentationServiceImpl(
   }
 
   private[this] def toAnoncredAttachment(
-      presentationRequest: AnoncredPresentationRequestV1
+      presentationRequest: PresentationRequestV1
   ): AttachmentDescriptor = {
     AttachmentDescriptor.buildBase64Attachment(
       mediaType = Some("application/json"),
       format = Some(PresentCredentialRequestFormat.Anoncred.name),
-      payload = AnoncredPresentationRequestV1.schemaSerDes.serializeToJsonString(presentationRequest).getBytes()
+      payload = PresentationRequestV1.schemaSerDes.serializeToJsonString(presentationRequest).getBytes()
     )
   }
 

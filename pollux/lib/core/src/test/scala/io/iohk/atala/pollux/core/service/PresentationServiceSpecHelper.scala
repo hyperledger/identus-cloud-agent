@@ -9,6 +9,7 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.repository.*
 import io.iohk.atala.pollux.core.service.serdes.*
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.{PresentationRequestV1, RequestedAttributeV1, RequestedPredicateV1}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
@@ -177,9 +178,9 @@ trait PresentationServiceSpecHelper {
         pairwiseProverDID: DidId = DidId("did:prism:prover-pairwise"),
         thid: DidCommID = DidCommID()
     ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
-      val anoncredPresentationRequestV1 = AnoncredPresentationRequestV1(
+      val anoncredPresentationRequestV1 = PresentationRequestV1(
         requested_attributes = Map(
-          "sex" -> AnoncredRequestedAttributeV1(
+          "sex" -> RequestedAttributeV1(
             name = "sex",
             restrictions = List(
               Map(
@@ -191,7 +192,7 @@ trait PresentationServiceSpecHelper {
           )
         ),
         requested_predicates = Map(
-          "age" -> AnoncredRequestedPredicateV1(
+          "age" -> RequestedPredicateV1(
             name = "age",
             p_type = ">=",
             p_value = 18,

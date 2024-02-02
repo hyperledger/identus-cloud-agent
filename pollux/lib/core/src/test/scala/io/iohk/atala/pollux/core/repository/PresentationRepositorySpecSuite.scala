@@ -4,7 +4,7 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.PresentationRecord.*
-import io.iohk.atala.pollux.core.service.serdes.{AnoncredCredentialProofV1, AnoncredCredentialProofsV1}
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.{CredentialProofV1, CredentialProofsV1}
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.test.*
 import zio.test.Assertion.*
@@ -206,15 +206,15 @@ object PresentationRepositorySpecSuite {
         _ <- repo.createPresentationRecord(aRecord)
         _ <- repo.createPresentationRecord(bRecord)
         _ <- repo.createPresentationRecord(cRecord)
-        anoncredCredentialProofs = AnoncredCredentialProofsV1(
-          List(AnoncredCredentialProofV1("credential1", Seq("requestedAttribute"), Seq("requestedPredicate")))
+        anoncredCredentialProofs = CredentialProofsV1(
+          List(CredentialProofV1("credential1", Seq("requestedAttribute"), Seq("requestedPredicate")))
         )
         anoncredCredentialProofsJson <- ZIO.fromEither(
-          AnoncredCredentialProofsV1.schemaSerDes.serialize(anoncredCredentialProofs)
+          CredentialProofsV1.schemaSerDes.serialize(anoncredCredentialProofs)
         )
         _ <- repo.updateAnoncredPresentationWithCredentialsToUse(
           aRecord.id,
-          Some(AnoncredCredentialProofsV1.version),
+          Some(CredentialProofsV1.version),
           Some(anoncredCredentialProofsJson),
           ProtocolState.PresentationPending
         )
@@ -222,7 +222,7 @@ object PresentationRepositorySpecSuite {
       } yield {
         assertTrue(records.size == 1) &&
         assertTrue(records.exists(_.anoncredCredentialsToUse.contains(anoncredCredentialProofsJson))) &&
-        assertTrue(records.exists(_.anoncredCredentialsToUseJsonSchemaId.contains(AnoncredCredentialProofsV1.version)))
+        assertTrue(records.exists(_.anoncredCredentialsToUseJsonSchemaId.contains(CredentialProofsV1.version)))
       }
     },
     test("updateCredentialRecordProtocolState updates the record") {

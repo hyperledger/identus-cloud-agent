@@ -16,12 +16,7 @@ import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition.Input
 import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
-import io.iohk.atala.pollux.core.service.serdes.{
-  AnoncredCredentialProofV1,
-  AnoncredCredentialProofsV1,
-  AnoncredPresentationRequestV1,
-  AnoncredPresentationV1
-}
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.{CredentialProofV1, CredentialProofsV1, PresentationRequestV1, PresentationV1}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
@@ -125,7 +120,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             svc <- ZIO.service[PresentationService]
             pairwiseVerifierDid = DidId("did:peer:Verifier")
             pairwiseProverDid = DidId("did:peer:Prover")
-            anoncredPresentationRequestV1 = AnoncredPresentationRequestV1(
+            anoncredPresentationRequestV1 = PresentationRequestV1(
               Map.empty,
               Map.empty,
               name,
@@ -164,7 +159,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 Seq(
                   Base64(
                     JBase64.getUrlEncoder.encodeToString(
-                      AnoncredPresentationRequestV1.schemaSerDes
+                      PresentationRequestV1.schemaSerDes
                         .serializeToJsonString(anoncredPresentationRequestV1)
                         .getBytes()
                     )
@@ -256,8 +251,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             case Base64(data) => ZIO.succeed(AnoncredPresentation(new String(JBase64.getUrlDecoder.decode(data))))
             case _            => ZIO.fail(InvalidAnoncredPresentation("Expecting Base64-encoded data"))
           }
-          validation <- AnoncredPresentationV1.schemaSerDes.validate(serializedPresentation.data)
-          presentation <- AnoncredPresentationV1.schemaSerDes.deserialize(serializedPresentation.data)
+          validation <- PresentationV1.schemaSerDes.validate(serializedPresentation.data)
+          presentation <- PresentationV1.schemaSerDes.deserialize(serializedPresentation.data)
         } yield {
           assert(validation)(isUnit)
           assert(
@@ -396,7 +391,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         }
       },
       test("receiveRequestPresentation Anoncred updates the RequestPresentation in PresentationRecord") {
-        val anoncredPresentationRequestV1 = AnoncredPresentationRequestV1(
+        val anoncredPresentationRequestV1 = PresentationRequestV1(
           Map.empty,
           Map.empty,
           "name",
@@ -408,7 +403,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           mediaType = Some("application/json"),
           format = Some(PresentCredentialRequestFormat.Anoncred.name),
           payload =
-            AnoncredPresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
+            PresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
         )
         val connectionId = Some("connectionId")
         for {
@@ -504,7 +499,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           )
           svc <- ZIO.service[PresentationService]
           connectionId = Some("connectionId")
-          anoncredPresentationRequestV1 = AnoncredPresentationRequestV1(
+          anoncredPresentationRequestV1 = PresentationRequestV1(
             Map.empty,
             Map.empty,
             "name",
@@ -516,7 +511,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             mediaType = Some("application/json"),
             format = Some(PresentCredentialRequestFormat.Anoncred.name),
             payload =
-              AnoncredPresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
+              PresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
           )
           requestPresentation = RequestPresentation(
             body = RequestPresentation.Body(goal_code = Some("Presentation Request")),
@@ -526,9 +521,9 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           )
           aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentation)
           credentialsToUse =
-            AnoncredCredentialProofsV1(
+            CredentialProofsV1(
               List(
-                AnoncredCredentialProofV1(
+                CredentialProofV1(
                   aIssueCredentialRecord.id.value,
                   Seq("requestedAttribute"),
                   Seq("requestedPredicate")
@@ -536,14 +531,14 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
               )
             )
           anoncredCredentialProofsJson <- ZIO.fromEither(
-            AnoncredCredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
+            CredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
           )
           updateRecord <- svc.acceptAnoncredRequestPresentation(aRecord.id, credentialsToUse)
 
         } yield {
           assertTrue(updateRecord.connectionId == connectionId) &&
           assertTrue(updateRecord.anoncredCredentialsToUse.contains(anoncredCredentialProofsJson)) &&
-          assertTrue(updateRecord.anoncredCredentialsToUseJsonSchemaId.contains(AnoncredCredentialProofsV1.version))
+          assertTrue(updateRecord.anoncredCredentialsToUseJsonSchemaId.contains(CredentialProofsV1.version))
         }
       },
       test("acceptRequestPresentation should fail given unmatching format") {
@@ -561,7 +556,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           )
           svc <- ZIO.service[PresentationService]
           connectionId = Some("connectionId")
-          anoncredPresentationRequestV1 = AnoncredPresentationRequestV1(
+          anoncredPresentationRequestV1 = PresentationRequestV1(
             Map.empty,
             Map.empty,
             "name",
@@ -573,7 +568,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             mediaType = Some("application/json"),
             format = Some(PresentCredentialRequestFormat.Anoncred.name),
             payload =
-              AnoncredPresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
+              PresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
           )
           requestPresentation = RequestPresentation(
             body = RequestPresentation.Body(goal_code = Some("Presentation Request")),
@@ -869,9 +864,9 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       )
       repo <- ZIO.service[PresentationRepository]
       credentialsToUse =
-        AnoncredCredentialProofsV1(
+        CredentialProofsV1(
           List(
-            AnoncredCredentialProofV1(
+            CredentialProofV1(
               aIssueCredentialRecord.id.value,
               Seq("sex"),
               Seq("age")
@@ -879,12 +874,12 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           )
         )
       credentialsToUseJson <- ZIO.fromEither(
-        AnoncredCredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
+        CredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
       )
       _ <-
         repo.updateAnoncredPresentationWithCredentialsToUse(
           aRecord.id,
-          Some(AnoncredPresentationV1.version),
+          Some(PresentationV1.version),
           Some(credentialsToUseJson),
           PresentationRecord.ProtocolState.RequestPending
         )

@@ -1,12 +1,12 @@
-package io.iohk.atala.pollux.core.service.serdes
+package io.iohk.atala.pollux.core.service.serdes.credentialdefinition
 
 import io.iohk.atala.pollux.core.model.schema.validator.SchemaSerDes
 import zio.*
 import zio.json.*
 
-case class PublicCredentialPrimaryPublicKeyV1(n: String, s: String, r: Map[String, String], rctxt: String, z: String)
+case class PublicPrimaryPublicKeyV1(n: String, s: String, r: Map[String, String], rctxt: String, z: String)
 
-case class PublicCredentialRevocationKeyV1(
+case class PublicRevocationKeyV1(
     g: String,
     g_dash: String,
     h: String,
@@ -21,18 +21,18 @@ case class PublicCredentialRevocationKeyV1(
 )
 
 case class PublicCredentialValueV1(
-    primary: PublicCredentialPrimaryPublicKeyV1,
-    revocation: Option[PublicCredentialRevocationKeyV1]
+    primary: PublicPrimaryPublicKeyV1,
+    revocation: Option[PublicRevocationKeyV1]
 )
 
-case class PublicCredentialDefinitionSerDesV1(
+case class PublicV1(
     schemaId: String,
     `type`: String,
     tag: String,
     value: PublicCredentialValueV1
 )
 
-object PublicCredentialDefinitionSerDesV1 {
+object PublicV1 {
   val version: String = "PublicCredentialDefinitionV1"
 
   private val schema: String =
@@ -154,22 +154,22 @@ object PublicCredentialDefinitionSerDesV1 {
       |
       |""".stripMargin
 
-  val schemaSerDes: SchemaSerDes[PublicCredentialDefinitionSerDesV1] = SchemaSerDes(schema)
+  val schemaSerDes: SchemaSerDes[PublicV1] = SchemaSerDes(schema)
 
-  given JsonDecoder[PublicCredentialPrimaryPublicKeyV1] = DeriveJsonDecoder.gen[PublicCredentialPrimaryPublicKeyV1]
+  given JsonDecoder[PublicPrimaryPublicKeyV1] = DeriveJsonDecoder.gen[PublicPrimaryPublicKeyV1]
 
-  given JsonDecoder[PublicCredentialRevocationKeyV1] = DeriveJsonDecoder.gen[PublicCredentialRevocationKeyV1]
+  given JsonDecoder[PublicRevocationKeyV1] = DeriveJsonDecoder.gen[PublicRevocationKeyV1]
 
   given JsonDecoder[PublicCredentialValueV1] = DeriveJsonDecoder.gen[PublicCredentialValueV1]
 
-  given JsonDecoder[PublicCredentialDefinitionSerDesV1] = DeriveJsonDecoder.gen[PublicCredentialDefinitionSerDesV1]
+  given JsonDecoder[PublicV1] = DeriveJsonDecoder.gen[PublicV1]
 
-  given JsonEncoder[PublicCredentialPrimaryPublicKeyV1] = DeriveJsonEncoder.gen[PublicCredentialPrimaryPublicKeyV1]
+  given JsonEncoder[PublicPrimaryPublicKeyV1] = DeriveJsonEncoder.gen[PublicPrimaryPublicKeyV1]
 
-  given JsonEncoder[PublicCredentialRevocationKeyV1] = DeriveJsonEncoder.gen[PublicCredentialRevocationKeyV1]
+  given JsonEncoder[PublicRevocationKeyV1] = DeriveJsonEncoder.gen[PublicRevocationKeyV1]
 
   given JsonEncoder[PublicCredentialValueV1] = DeriveJsonEncoder.gen[PublicCredentialValueV1]
 
-  given JsonEncoder[PublicCredentialDefinitionSerDesV1] = DeriveJsonEncoder.gen[PublicCredentialDefinitionSerDesV1]
+  given JsonEncoder[PublicV1] = DeriveJsonEncoder.gen[PublicV1]
 
 }

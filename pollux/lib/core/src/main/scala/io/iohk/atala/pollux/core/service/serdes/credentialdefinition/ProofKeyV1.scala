@@ -1,12 +1,13 @@
-package io.iohk.atala.pollux.core.service.serdes
+package io.iohk.atala.pollux.core.service.serdes.credentialdefinition
 
 import io.iohk.atala.pollux.core.model.schema.validator.SchemaSerDes
+import io.iohk.atala.pollux.core.service.serdes.credentialdefinition.ProofKeyV1
 import zio.*
 import zio.json.*
 
-case class ProofKeyCredentialDefinitionSchemaSerDesV1(c: String, xz_cap: String, xr_cap: List[List[String]])
+case class ProofKeyV1(c: String, xz_cap: String, xr_cap: List[List[String]])
 
-object ProofKeyCredentialDefinitionSchemaSerDesV1 {
+object ProofKeyV1 {
   val version: String = "ProofKeyCredentialDefinitionV1"
   private val schema: String =
     """
@@ -39,11 +40,11 @@ object ProofKeyCredentialDefinitionSchemaSerDesV1 {
       |
       |""".stripMargin
 
-  val schemaSerDes: SchemaSerDes[ProofKeyCredentialDefinitionSchemaSerDesV1] = SchemaSerDes(schema)
+  val schemaSerDes: SchemaSerDes[ProofKeyV1] = SchemaSerDes(schema)
 
-  given JsonDecoder[ProofKeyCredentialDefinitionSchemaSerDesV1] =
-    DeriveJsonDecoder.gen[ProofKeyCredentialDefinitionSchemaSerDesV1]
+  given JsonDecoder[ProofKeyV1] =
+    DeriveJsonDecoder.gen[ProofKeyV1]
 
-  given JsonEncoder[ProofKeyCredentialDefinitionSchemaSerDesV1] =
-    DeriveJsonEncoder.gen[ProofKeyCredentialDefinitionSchemaSerDesV1]
+  given JsonEncoder[ProofKeyV1] =
+    DeriveJsonEncoder.gen[ProofKeyV1]
 }

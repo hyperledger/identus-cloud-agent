@@ -6,7 +6,7 @@ import io.iohk.atala.pollux.anoncreds.AnoncredPresentation
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
-import io.iohk.atala.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.{CredentialProofsV1, PresentationRequestV1}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.mock.{Mock, Proxy}
@@ -26,7 +26,7 @@ object MockPresentationService extends Mock[PresentationService] {
 
   object CreateAnoncredPresentationRecord
       extends Effect[
-        (DidId, DidId, DidCommID, Option[String], AnoncredPresentationRequestV1),
+        (DidId, DidId, DidCommID, Option[String], PresentationRequestV1),
         PresentationError,
         PresentationRecord
       ]
@@ -49,7 +49,7 @@ object MockPresentationService extends Mock[PresentationService] {
 
   object AcceptAnoncredRequestPresentation
       extends Effect[
-        (DidCommID, AnoncredCredentialProofsV1),
+        (DidCommID, CredentialProofsV1),
         PresentationError,
         PresentationRecord
       ]
@@ -90,7 +90,7 @@ object MockPresentationService extends Mock[PresentationService] {
           pairwiseProverDID: DidId,
           thid: DidCommID,
           connectionId: Option[String],
-          presentationRequest: AnoncredPresentationRequestV1
+          presentationRequest: PresentationRequestV1
       ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
         proxy(
           CreateAnoncredPresentationRecord,
@@ -106,7 +106,7 @@ object MockPresentationService extends Mock[PresentationService] {
 
       override def acceptAnoncredRequestPresentation(
           recordId: DidCommID,
-          credentialsToUse: AnoncredCredentialProofsV1
+          credentialsToUse: CredentialProofsV1
       ): IO[PresentationError, PresentationRecord] =
         proxy(AcceptAnoncredRequestPresentation, (recordId, credentialsToUse))
 
@@ -172,18 +172,18 @@ object MockPresentationService extends Mock[PresentationService] {
       ): IO[PresentationError, PresentationPayload] = ???
 
       override def createAnoncredPresentationPayloadFromRecord(
-          record: DidCommID,
-          issuer: Issuer,
-          anoncredCredentialProof: AnoncredCredentialProofsV1,
-          issuanceDate: Instant
+                                                                record: DidCommID,
+                                                                issuer: Issuer,
+                                                                anoncredCredentialProof: CredentialProofsV1,
+                                                                issuanceDate: Instant
       ): IO[PresentationError, AnoncredPresentation] = ???
 
       override def createAnoncredPresentation(
-          requestPresentation: RequestPresentation,
-          recordId: DidCommID,
-          prover: Issuer,
-          anoncredCredentialProof: AnoncredCredentialProofsV1,
-          issuanceDate: Instant
+                                               requestPresentation: RequestPresentation,
+                                               recordId: DidCommID,
+                                               prover: Issuer,
+                                               anoncredCredentialProof: CredentialProofsV1,
+                                               issuanceDate: Instant
       ): ZIO[WalletAccessContext, PresentationError, Presentation] = ???
 
       override def getPresentationRecordsByStates(

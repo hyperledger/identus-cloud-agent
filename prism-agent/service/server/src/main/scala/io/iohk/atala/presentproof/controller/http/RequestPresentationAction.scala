@@ -2,22 +2,23 @@ package io.iohk.atala.presentproof.controller.http
 
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.pollux.core.service.serdes.*
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.{CredentialProofV1, CredentialProofsV1}
 import io.iohk.atala.presentproof.controller.http.RequestPresentationAction.annotations
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import sttp.tapir.{Schema, Validator}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 final case class RequestPresentationAction(
-    @description(annotations.action.description)
+                                            @description(annotations.action.description)
     @encodedExample(annotations.action.example)
     @validate(annotations.action.validator)
     action: String,
-    @description(annotations.proofId.description)
+                                            @description(annotations.proofId.description)
     @encodedExample(annotations.proofId.example)
     proofId: Option[Seq[String]] = None,
-    @description(annotations.anoncredProof.description)
+                                            @description(annotations.anoncredProof.description)
     @encodedExample(annotations.anoncredProof.example)
-    anoncredPresentationRequest: Option[AnoncredCredentialProofsV1],
+    anoncredPresentationRequest: Option[CredentialProofsV1],
 )
 
 final case class AnoncredProof(
@@ -96,10 +97,10 @@ object RequestPresentationAction {
 
   given AnoncredProofSchema: Schema[AnoncredProof] = Schema.derived
 
-  import AnoncredCredentialProofsV1.given
+  import io.iohk.atala.pollux.core.service.serdes.anoncreds.CredentialProofsV1.given
 
-  given Schema[AnoncredCredentialProofsV1] = Schema.derived
+  given Schema[CredentialProofsV1] = Schema.derived
 
-  given Schema[AnoncredCredentialProofV1] = Schema.derived
+  given Schema[CredentialProofV1] = Schema.derived
 
 }

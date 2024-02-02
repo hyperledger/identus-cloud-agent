@@ -6,11 +6,7 @@ import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
-import io.iohk.atala.pollux.core.service.serdes.{
-  PrivateCredentialDefinitionSchemaSerDesV1,
-  ProofKeyCredentialDefinitionSchemaSerDesV1,
-  PublicCredentialDefinitionSerDesV1
-}
+import io.iohk.atala.pollux.core.service.serdes.credentialdefinition.{PrivateV1, ProofKeyV1, PublicV1}
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
 import io.iohk.atala.pollux.credentialdefinition.http.{CredentialDefinitionInput, CredentialDefinitionResponse}
 import sttp.client3.basicRequest
@@ -108,11 +104,11 @@ object CredentialDefinitionBasicSpec extends ZIOSpecDefault with CredentialDefin
           getCredentialDefinitionResponse <- getCredentialDefinitionResponseZIO(credentialDefinition.guid)
           fetchedCredentialDefinition <- fromEither(getCredentialDefinitionResponse.body)
           credentialDefinitionIsFetched = assert(fetchedCredentialDefinition)(equalTo(credentialDefinition))
-          maybeValidPublicDefinition <- PublicCredentialDefinitionSerDesV1.schemaSerDes.validate(
+          maybeValidPublicDefinition <- PublicV1.schemaSerDes.validate(
             fetchedCredentialDefinition.definition.toString()
           )
           assertValidPublicDefinition = assert(maybeValidPublicDefinition)(Assertion.isUnit)
-          maybeValidKeyCorrectnessProof <- ProofKeyCredentialDefinitionSchemaSerDesV1.schemaSerDes.validate(
+          maybeValidKeyCorrectnessProof <- ProofKeyV1.schemaSerDes.validate(
             fetchedCredentialDefinition.keyCorrectnessProof.toString()
           )
           assertValidKeyCorrectnessProof = assert(maybeValidKeyCorrectnessProof)(Assertion.isUnit)
@@ -122,7 +118,7 @@ object CredentialDefinitionBasicSpec extends ZIOSpecDefault with CredentialDefin
             .provideSomeLayer(Entity.Default.wacLayer)
           maybeValidPrivateDefinitionZIO = maybeDidSecret match {
             case Some(didSecret) =>
-              PrivateCredentialDefinitionSchemaSerDesV1.schemaSerDes.validate(didSecret.json.toString())
+              PrivateV1.schemaSerDes.validate(didSecret.json.toString())
             case None => ZIO.unit
           }
           maybeValidPrivateDefinition <- maybeValidPrivateDefinitionZIO

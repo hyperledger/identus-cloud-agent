@@ -21,7 +21,7 @@ import io.iohk.atala.mercury.protocol.reportproblem.v2.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
-import io.iohk.atala.pollux.core.service.serdes.AnoncredCredentialProofsV1
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.CredentialProofsV1
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
 import io.iohk.atala.pollux.vc.jwt.{JWT, JwtPresentation, DidResolver as JwtDidResolver}
 import io.iohk.atala.resolvers.DIDResolver
@@ -370,7 +370,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                 result <- (for {
                   presentationService <- ZIO.service[PresentationService]
                   anoncredCredentialProofs <-
-                    AnoncredCredentialProofsV1.schemaSerDes
+                    CredentialProofsV1.schemaSerDes
                       .deserialize(credentialsToUseJson)
                       .mapError(error => PresentationError.UnexpectedError(error.error))
                   prover <- createPrismDIDIssuerFromPresentationCredentials(

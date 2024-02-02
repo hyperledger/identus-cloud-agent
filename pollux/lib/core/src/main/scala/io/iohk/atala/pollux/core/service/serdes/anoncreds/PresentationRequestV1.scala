@@ -1,36 +1,36 @@
-package io.iohk.atala.pollux.core.service.serdes
+package io.iohk.atala.pollux.core.service.serdes.anoncreds
 
 import io.iohk.atala.pollux.core.model.schema.validator.SchemaSerDes
 import zio.*
 import zio.json.*
 
-case class AnoncredPresentationRequestV1(
-    requested_attributes: Map[String, AnoncredRequestedAttributeV1],
-    requested_predicates: Map[String, AnoncredRequestedPredicateV1],
+case class PresentationRequestV1(
+    requested_attributes: Map[String, RequestedAttributeV1],
+    requested_predicates: Map[String, RequestedPredicateV1],
     name: String,
     nonce: String,
     version: String,
-    non_revoked: Option[AnoncredNonRevokedIntervalV1]
+    non_revoked: Option[NonRevokedIntervalV1]
 )
 
-case class AnoncredRequestedAttributeV1(
+case class RequestedAttributeV1(
     name: String,
     restrictions: List[Map[String, String]],
-    non_revoked: Option[AnoncredNonRevokedIntervalV1]
+    non_revoked: Option[NonRevokedIntervalV1]
 )
 
-case class AnoncredRequestedPredicateV1(
+case class RequestedPredicateV1(
     name: String,
     p_type: String,
     p_value: Int,
     restrictions: List[Map[String, String]],
-    non_revoked: Option[AnoncredNonRevokedIntervalV1]
+    non_revoked: Option[NonRevokedIntervalV1]
 )
 
-case class AnoncredNonRevokedIntervalV1(from: Option[Int], to: Option[Int])
+case class NonRevokedIntervalV1(from: Option[Int], to: Option[Int])
 
-object AnoncredPresentationRequestV1 {
-  val version: String = "AnoncredPresentationRequestV1"
+object PresentationRequestV1 {
+  val version: String = "PresentationRequestV1"
 
   private val schema: String =
     """
@@ -102,30 +102,30 @@ object AnoncredPresentationRequestV1 {
       |
       |""".stripMargin
 
-  val schemaSerDes: SchemaSerDes[AnoncredPresentationRequestV1] = SchemaSerDes(schema)
+  val schemaSerDes: SchemaSerDes[PresentationRequestV1] = SchemaSerDes(schema)
 
-  given JsonDecoder[AnoncredRequestedAttributeV1] =
-    DeriveJsonDecoder.gen[AnoncredRequestedAttributeV1]
+  given JsonDecoder[RequestedAttributeV1] =
+    DeriveJsonDecoder.gen[RequestedAttributeV1]
 
-  given JsonEncoder[AnoncredRequestedAttributeV1] =
-    DeriveJsonEncoder.gen[AnoncredRequestedAttributeV1]
+  given JsonEncoder[RequestedAttributeV1] =
+    DeriveJsonEncoder.gen[RequestedAttributeV1]
 
-  given JsonDecoder[AnoncredRequestedPredicateV1] =
-    DeriveJsonDecoder.gen[AnoncredRequestedPredicateV1]
+  given JsonDecoder[RequestedPredicateV1] =
+    DeriveJsonDecoder.gen[RequestedPredicateV1]
 
-  given JsonEncoder[AnoncredRequestedPredicateV1] =
-    DeriveJsonEncoder.gen[AnoncredRequestedPredicateV1]
+  given JsonEncoder[RequestedPredicateV1] =
+    DeriveJsonEncoder.gen[RequestedPredicateV1]
 
-  given JsonEncoder[AnoncredNonRevokedIntervalV1] =
-    DeriveJsonEncoder.gen[AnoncredNonRevokedIntervalV1]
+  given JsonEncoder[NonRevokedIntervalV1] =
+    DeriveJsonEncoder.gen[NonRevokedIntervalV1]
 
-  given JsonDecoder[AnoncredNonRevokedIntervalV1] =
-    DeriveJsonDecoder.gen[AnoncredNonRevokedIntervalV1]
+  given JsonDecoder[NonRevokedIntervalV1] =
+    DeriveJsonDecoder.gen[NonRevokedIntervalV1]
 
-  given JsonDecoder[AnoncredPresentationRequestV1] =
-    DeriveJsonDecoder.gen[AnoncredPresentationRequestV1]
+  given JsonDecoder[PresentationRequestV1] =
+    DeriveJsonDecoder.gen[PresentationRequestV1]
 
-  given JsonEncoder[AnoncredPresentationRequestV1] =
-    DeriveJsonEncoder.gen[AnoncredPresentationRequestV1]
+  given JsonEncoder[PresentationRequestV1] =
+    DeriveJsonEncoder.gen[PresentationRequestV1]
 
 }

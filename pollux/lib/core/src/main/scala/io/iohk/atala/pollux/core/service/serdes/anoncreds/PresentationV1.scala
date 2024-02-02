@@ -1,23 +1,24 @@
-package io.iohk.atala.pollux.core.service.serdes
+package io.iohk.atala.pollux.core.service.serdes.anoncreds
 
 import io.iohk.atala.pollux.core.model.schema.validator.SchemaSerDes
+import io.iohk.atala.pollux.core.service.serdes.*
 import zio.*
 import zio.json.*
 
-case class AnoncredAdditionalPropertiesTypeStringV1(value: String)
+case class AdditionalPropertiesTypeStringV1(value: String)
 
-case class AnoncredRevealedAttrV1(sub_proof_index: Int, raw: String, encoded: String)
+case class RevealedAttrV1(sub_proof_index: Int, raw: String, encoded: String)
 
-case class AnoncredRequestedProofV1(
-    revealed_attrs: Map[String, AnoncredRevealedAttrV1],
+case class RequestedProofV1(
+    revealed_attrs: Map[String, RevealedAttrV1],
     self_attested_attrs: Map[String, String],
     unrevealed_attrs: Map[String, String],
-    predicates: Map[String, AnoncredSubProofIndexV1]
+    predicates: Map[String, SubProofIndexV1]
 )
 
-case class AnoncredSubProofIndexV1(sub_proof_index: Int)
+case class SubProofIndexV1(sub_proof_index: Int)
 
-case class AnoncredIdentifierV1(
+case class IdentifierV1(
     schema_id: String,
     cred_def_id: String,
     rev_reg_id: Option[String],
@@ -25,7 +26,7 @@ case class AnoncredIdentifierV1(
 )
 
 // Adjusted classes for proofs
-case class AnoncredEqProofV1(
+case class EqProofV1(
     revealed_attrs: Map[String, String],
     a_prime: String,
     e: String,
@@ -34,26 +35,26 @@ case class AnoncredEqProofV1(
     m2: String
 )
 
-case class AnoncredPredicateV1(attr_name: String, p_type: String, value: Int)
+case class PredicateV1(attr_name: String, p_type: String, value: Int)
 
-case class AnoncredGeProofV1(
+case class GeProofV1(
     u: Map[String, String],
     r: Map[String, String],
     mj: String,
     alpha: String,
     t: Map[String, String],
-    predicate: AnoncredPredicateV1
+    predicate: PredicateV1
 )
 
-case class AnoncredPrimaryProofV1(eq_proof: AnoncredEqProofV1, ge_proofs: List[AnoncredGeProofV1])
+case class PrimaryProofV1(eq_proof: EqProofV1, ge_proofs: List[GeProofV1])
 
-case class AnoncredSubProofV1(primary_proof: AnoncredPrimaryProofV1, non_revoc_proof: Option[AnoncredNonRevocProofV1])
+case class SubProofV1(primary_proof: PrimaryProofV1, non_revoc_proof: Option[NonRevocProofV1])
 
-case class AnoncredProofV1(proofs: List[AnoncredSubProofV1], aggregated_proof: AnoncredAggregatedProofV1)
+case class ProofV1(proofs: List[SubProofV1], aggregated_proof: AggregatedProofV1)
 
-case class AnoncredAggregatedProofV1(c_hash: String, c_list: List[List[Int]])
+case class AggregatedProofV1(c_hash: String, c_list: List[List[Int]])
 
-case class AnoncredNonRevocProofXListV1(
+case class NonRevocProofXListV1(
     rho: String,
     r: String,
     r_prime: String,
@@ -70,18 +71,18 @@ case class AnoncredNonRevocProofXListV1(
     c: String
 )
 
-case class AnoncredNonRevocProofCListV1(e: String, d: String, a: String, g: String, w: String, s: String, u: String)
+case class NonRevocProofCListV1(e: String, d: String, a: String, g: String, w: String, s: String, u: String)
 
-case class AnoncredNonRevocProofV1(x_list: AnoncredNonRevocProofXListV1, c_list: AnoncredNonRevocProofCListV1)
+case class NonRevocProofV1(x_list: NonRevocProofXListV1, c_list: NonRevocProofCListV1)
 
-case class AnoncredPresentationV1(
-    proof: AnoncredProofV1,
-    requested_proof: AnoncredRequestedProofV1,
-    identifiers: List[AnoncredIdentifierV1]
+case class PresentationV1(
+    proof: ProofV1,
+    requested_proof: RequestedProofV1,
+    identifiers: List[IdentifierV1]
 )
 
-object AnoncredPresentationV1 {
-  val version: String = "AnoncredPresentationV1"
+object PresentationV1 {
+  val version: String = "PresentationV1"
 
   private val schema: String =
     """
@@ -441,72 +442,72 @@ object AnoncredPresentationV1 {
       |}
       |""".stripMargin
 
-  val schemaSerDes: SchemaSerDes[AnoncredPresentationV1] = SchemaSerDes(schema)
+  val schemaSerDes: SchemaSerDes[PresentationV1] = SchemaSerDes(schema)
 
-  given JsonDecoder[AnoncredAdditionalPropertiesTypeStringV1] =
-    DeriveJsonDecoder.gen[AnoncredAdditionalPropertiesTypeStringV1]
+  given JsonDecoder[AdditionalPropertiesTypeStringV1] =
+    DeriveJsonDecoder.gen[AdditionalPropertiesTypeStringV1]
 
-  given JsonEncoder[AnoncredAdditionalPropertiesTypeStringV1] =
-    DeriveJsonEncoder.gen[AnoncredAdditionalPropertiesTypeStringV1]
+  given JsonEncoder[AdditionalPropertiesTypeStringV1] =
+    DeriveJsonEncoder.gen[AdditionalPropertiesTypeStringV1]
 
-  given JsonDecoder[AnoncredEqProofV1] = DeriveJsonDecoder.gen[AnoncredEqProofV1]
+  given JsonDecoder[EqProofV1] = DeriveJsonDecoder.gen[EqProofV1]
 
-  given JsonEncoder[AnoncredEqProofV1] = DeriveJsonEncoder.gen[AnoncredEqProofV1]
+  given JsonEncoder[EqProofV1] = DeriveJsonEncoder.gen[EqProofV1]
 
-  given JsonDecoder[AnoncredPredicateV1] = DeriveJsonDecoder.gen[AnoncredPredicateV1]
+  given JsonDecoder[PredicateV1] = DeriveJsonDecoder.gen[PredicateV1]
 
-  given JsonEncoder[AnoncredPredicateV1] = DeriveJsonEncoder.gen[AnoncredPredicateV1]
+  given JsonEncoder[PredicateV1] = DeriveJsonEncoder.gen[PredicateV1]
 
-  given JsonDecoder[AnoncredGeProofV1] = DeriveJsonDecoder.gen[AnoncredGeProofV1]
+  given JsonDecoder[GeProofV1] = DeriveJsonDecoder.gen[GeProofV1]
 
-  given JsonEncoder[AnoncredGeProofV1] = DeriveJsonEncoder.gen[AnoncredGeProofV1]
+  given JsonEncoder[GeProofV1] = DeriveJsonEncoder.gen[GeProofV1]
 
-  given JsonDecoder[AnoncredNonRevocProofXListV1] = DeriveJsonDecoder.gen[AnoncredNonRevocProofXListV1]
+  given JsonDecoder[NonRevocProofXListV1] = DeriveJsonDecoder.gen[NonRevocProofXListV1]
 
-  given JsonEncoder[AnoncredNonRevocProofXListV1] = DeriveJsonEncoder.gen[AnoncredNonRevocProofXListV1]
+  given JsonEncoder[NonRevocProofXListV1] = DeriveJsonEncoder.gen[NonRevocProofXListV1]
 
-  given JsonDecoder[AnoncredNonRevocProofCListV1] = DeriveJsonDecoder.gen[AnoncredNonRevocProofCListV1]
+  given JsonDecoder[NonRevocProofCListV1] = DeriveJsonDecoder.gen[NonRevocProofCListV1]
 
-  given JsonEncoder[AnoncredNonRevocProofCListV1] = DeriveJsonEncoder.gen[AnoncredNonRevocProofCListV1]
+  given JsonEncoder[NonRevocProofCListV1] = DeriveJsonEncoder.gen[NonRevocProofCListV1]
 
-  given JsonDecoder[AnoncredNonRevocProofV1] = DeriveJsonDecoder.gen[AnoncredNonRevocProofV1]
+  given JsonDecoder[NonRevocProofV1] = DeriveJsonDecoder.gen[NonRevocProofV1]
 
-  given JsonEncoder[AnoncredNonRevocProofV1] = DeriveJsonEncoder.gen[AnoncredNonRevocProofV1]
+  given JsonEncoder[NonRevocProofV1] = DeriveJsonEncoder.gen[NonRevocProofV1]
 
-  given JsonDecoder[AnoncredPrimaryProofV1] = DeriveJsonDecoder.gen[AnoncredPrimaryProofV1]
+  given JsonDecoder[PrimaryProofV1] = DeriveJsonDecoder.gen[PrimaryProofV1]
 
-  given JsonEncoder[AnoncredPrimaryProofV1] = DeriveJsonEncoder.gen[AnoncredPrimaryProofV1]
+  given JsonEncoder[PrimaryProofV1] = DeriveJsonEncoder.gen[PrimaryProofV1]
 
-  given JsonDecoder[AnoncredAggregatedProofV1] = DeriveJsonDecoder.gen[AnoncredAggregatedProofV1]
+  given JsonDecoder[AggregatedProofV1] = DeriveJsonDecoder.gen[AggregatedProofV1]
 
-  given JsonEncoder[AnoncredAggregatedProofV1] = DeriveJsonEncoder.gen[AnoncredAggregatedProofV1]
+  given JsonEncoder[AggregatedProofV1] = DeriveJsonEncoder.gen[AggregatedProofV1]
 
-  given JsonDecoder[AnoncredSubProofV1] = DeriveJsonDecoder.gen[AnoncredSubProofV1]
+  given JsonDecoder[SubProofV1] = DeriveJsonDecoder.gen[SubProofV1]
 
-  given JsonEncoder[AnoncredSubProofV1] = DeriveJsonEncoder.gen[AnoncredSubProofV1]
+  given JsonEncoder[SubProofV1] = DeriveJsonEncoder.gen[SubProofV1]
 
-  given JsonDecoder[AnoncredProofV1] = DeriveJsonDecoder.gen[AnoncredProofV1]
+  given JsonDecoder[ProofV1] = DeriveJsonDecoder.gen[ProofV1]
 
-  given JsonEncoder[AnoncredProofV1] = DeriveJsonEncoder.gen[AnoncredProofV1]
+  given JsonEncoder[ProofV1] = DeriveJsonEncoder.gen[ProofV1]
 
-  given JsonDecoder[AnoncredRevealedAttrV1] = DeriveJsonDecoder.gen[AnoncredRevealedAttrV1]
+  given JsonDecoder[RevealedAttrV1] = DeriveJsonDecoder.gen[RevealedAttrV1]
 
-  given JsonEncoder[AnoncredRevealedAttrV1] = DeriveJsonEncoder.gen[AnoncredRevealedAttrV1]
+  given JsonEncoder[RevealedAttrV1] = DeriveJsonEncoder.gen[RevealedAttrV1]
 
-  given JsonDecoder[AnoncredSubProofIndexV1] = DeriveJsonDecoder.gen[AnoncredSubProofIndexV1]
+  given JsonDecoder[SubProofIndexV1] = DeriveJsonDecoder.gen[SubProofIndexV1]
 
-  given JsonEncoder[AnoncredSubProofIndexV1] = DeriveJsonEncoder.gen[AnoncredSubProofIndexV1]
+  given JsonEncoder[SubProofIndexV1] = DeriveJsonEncoder.gen[SubProofIndexV1]
 
-  given JsonDecoder[AnoncredRequestedProofV1] = DeriveJsonDecoder.gen[AnoncredRequestedProofV1]
+  given JsonDecoder[RequestedProofV1] = DeriveJsonDecoder.gen[RequestedProofV1]
 
-  given JsonEncoder[AnoncredRequestedProofV1] = DeriveJsonEncoder.gen[AnoncredRequestedProofV1]
+  given JsonEncoder[RequestedProofV1] = DeriveJsonEncoder.gen[RequestedProofV1]
 
-  given JsonDecoder[AnoncredIdentifierV1] = DeriveJsonDecoder.gen[AnoncredIdentifierV1]
+  given JsonDecoder[IdentifierV1] = DeriveJsonDecoder.gen[IdentifierV1]
 
-  given JsonEncoder[AnoncredIdentifierV1] = DeriveJsonEncoder.gen[AnoncredIdentifierV1]
+  given JsonEncoder[IdentifierV1] = DeriveJsonEncoder.gen[IdentifierV1]
 
-  given JsonDecoder[AnoncredPresentationV1] = DeriveJsonDecoder.gen[AnoncredPresentationV1]
+  given JsonDecoder[PresentationV1] = DeriveJsonDecoder.gen[PresentationV1]
 
-  given JsonEncoder[AnoncredPresentationV1] = DeriveJsonEncoder.gen[AnoncredPresentationV1]
+  given JsonEncoder[PresentationV1] = DeriveJsonEncoder.gen[PresentationV1]
 
 }

@@ -1,18 +1,18 @@
-package io.iohk.atala.pollux.core.service.serdes
+package io.iohk.atala.pollux.core.service.serdes.anoncreds
 
 import io.iohk.atala.pollux.core.model.schema.validator.SchemaSerDes
 import zio.*
 import zio.json.*
 
-case class AnoncredCredentialProofV1(
+case class CredentialProofV1(
     credential: String,
     requestedAttribute: Seq[String],
     requestedPredicate: Seq[String]
 )
 
-case class AnoncredCredentialProofsV1(credentialProofs: List[AnoncredCredentialProofV1])
+case class CredentialProofsV1(credentialProofs: List[CredentialProofV1])
 
-object AnoncredCredentialProofsV1 {
+object CredentialProofsV1 {
   val version: String = "AnoncredCredentialProofsV1"
   private val schema: String =
     """
@@ -49,17 +49,17 @@ object AnoncredCredentialProofsV1 {
       |}
       |""".stripMargin
 
-  val schemaSerDes: SchemaSerDes[AnoncredCredentialProofsV1] = SchemaSerDes(schema)
+  val schemaSerDes: SchemaSerDes[CredentialProofsV1] = SchemaSerDes(schema)
 
-  given JsonDecoder[AnoncredCredentialProofV1] =
-    DeriveJsonDecoder.gen[AnoncredCredentialProofV1]
+  given JsonDecoder[CredentialProofV1] =
+    DeriveJsonDecoder.gen[CredentialProofV1]
 
-  given JsonEncoder[AnoncredCredentialProofV1] =
-    DeriveJsonEncoder.gen[AnoncredCredentialProofV1]
+  given JsonEncoder[CredentialProofV1] =
+    DeriveJsonEncoder.gen[CredentialProofV1]
 
-  given JsonDecoder[AnoncredCredentialProofsV1] =
-    DeriveJsonDecoder.gen[AnoncredCredentialProofsV1]
+  given JsonDecoder[CredentialProofsV1] =
+    DeriveJsonDecoder.gen[CredentialProofsV1]
 
-  given JsonEncoder[AnoncredCredentialProofsV1] =
-    DeriveJsonEncoder.gen[AnoncredCredentialProofsV1]
+  given JsonEncoder[CredentialProofsV1] =
+    DeriveJsonEncoder.gen[CredentialProofsV1]
 }

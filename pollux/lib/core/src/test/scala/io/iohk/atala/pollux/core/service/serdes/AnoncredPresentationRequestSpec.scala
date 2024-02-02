@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.core.service.serdes
 
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.{NonRevokedIntervalV1, PresentationRequestV1, RequestedAttributeV1, RequestedPredicateV1}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -45,13 +46,13 @@ object AnoncredPresentationRequestSpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("AnoncredPresentationRequestSerDes")(
     test("should validate a correct schema") {
-      assertZIO(AnoncredPresentationRequestV1.schemaSerDes.validate(json))(isUnit)
+      assertZIO(PresentationRequestV1.schemaSerDes.validate(json))(isUnit)
     },
     test("should deserialize correctly") {
       val expectedPresentationRequest =
-        AnoncredPresentationRequestV1(
+        PresentationRequestV1(
           requested_attributes = Map(
-            "attribute1" -> AnoncredRequestedAttributeV1(
+            "attribute1" -> RequestedAttributeV1(
               "Attribute 1",
               List(
                 Map(
@@ -59,7 +60,7 @@ object AnoncredPresentationRequestSpec extends ZIOSpecDefault {
                 )
               ),
               Some(
-                AnoncredNonRevokedIntervalV1(
+                NonRevokedIntervalV1(
                   Some(1635734400),
                   Some(1735734400)
                 )
@@ -68,7 +69,7 @@ object AnoncredPresentationRequestSpec extends ZIOSpecDefault {
           ),
           requested_predicates = Map(
             "predicate1" ->
-              AnoncredRequestedPredicateV1(
+              RequestedPredicateV1(
                 "Predicate 1",
                 ">=",
                 18,
@@ -78,7 +79,7 @@ object AnoncredPresentationRequestSpec extends ZIOSpecDefault {
                   )
                 ),
                 Some(
-                  AnoncredNonRevokedIntervalV1(
+                  NonRevokedIntervalV1(
                     Some(1635734400),
                     None
                   )
@@ -91,7 +92,7 @@ object AnoncredPresentationRequestSpec extends ZIOSpecDefault {
           non_revoked = None
         )
 
-      assertZIO(AnoncredPresentationRequestV1.schemaSerDes.deserialize(json))(
+      assertZIO(PresentationRequestV1.schemaSerDes.deserialize(json))(
         Assertion.equalTo(expectedPresentationRequest)
       )
     }

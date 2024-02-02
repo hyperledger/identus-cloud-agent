@@ -13,11 +13,7 @@ import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
 import io.iohk.atala.pollux.core.repository.CredentialDefinitionRepository
 import io.iohk.atala.pollux.core.repository.Repository.SearchQuery
 import io.iohk.atala.pollux.core.service.CredentialDefinitionService.Error.*
-import io.iohk.atala.pollux.core.service.serdes.{
-  PrivateCredentialDefinitionSchemaSerDesV1,
-  ProofKeyCredentialDefinitionSchemaSerDesV1,
-  PublicCredentialDefinitionSerDesV1
-}
+import io.iohk.atala.pollux.core.service.serdes.credentialdefinition.{PrivateV1, ProofKeyV1, PublicV1}
 import zio.ZIO.getOrFailWith
 import zio.{IO, URLayer, ZIO, ZLayer}
 
@@ -57,23 +53,23 @@ class CredentialDefinitionServiceImpl(
           )
           .mapError((t: Throwable) => CredentialDefinitionCreationError(t.getMessage))
       publicCredentialDefinitionJson <-
-        PublicCredentialDefinitionSerDesV1.schemaSerDes.deserializeAsJson(
+        PublicV1.schemaSerDes.deserializeAsJson(
           anoncredLibCredentialDefinition.cd.data
         )
       privateCredentialDefinitionJson <-
-        PrivateCredentialDefinitionSchemaSerDesV1.schemaSerDes.deserializeAsJson(
+        PrivateV1.schemaSerDes.deserializeAsJson(
           anoncredLibCredentialDefinition.cdPrivate.data
         )
       proofKeyCredentialDefinitionJson <-
-        ProofKeyCredentialDefinitionSchemaSerDesV1.schemaSerDes.deserializeAsJson(
+        ProofKeyV1.schemaSerDes.deserializeAsJson(
           anoncredLibCredentialDefinition.proofKey.data
         )
       cd <-
         CredentialDefinition.make(
           in,
-          PublicCredentialDefinitionSerDesV1.version,
+          PublicV1.version,
           publicCredentialDefinitionJson,
-          ProofKeyCredentialDefinitionSchemaSerDesV1.version,
+          ProofKeyV1.version,
           proofKeyCredentialDefinitionJson
         )
       createdCredentialDefinition <- credentialDefinitionRepository.create(cd)

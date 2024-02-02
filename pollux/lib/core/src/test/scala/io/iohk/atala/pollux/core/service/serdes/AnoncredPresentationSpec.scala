@@ -1,6 +1,7 @@
 package io.iohk.atala.pollux.core.service.serdes
 
-import io.iohk.atala.pollux.core.service.serdes.AnoncredPresentationV1.*
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.{AggregatedProofV1, EqProofV1, GeProofV1, IdentifierV1, PredicateV1, PresentationV1, PrimaryProofV1, ProofV1, RequestedProofV1, RevealedAttrV1, SubProofIndexV1, SubProofV1}
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.PresentationV1.*
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -104,16 +105,16 @@ object AnoncredPresentationSpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("AnoncredPresentationRequestSerDes")(
     test("should validate a correct schema") {
-      assertZIO(AnoncredPresentationV1.schemaSerDes.validate(json))(isUnit)
+      assertZIO(PresentationV1.schemaSerDes.validate(json))(isUnit)
     },
     test("should deserialize correctly") {
-      val predicate = AnoncredPredicateV1(
+      val predicate = PredicateV1(
         attr_name = "age",
         p_type = "GE",
         value = 18
       )
 
-      val geProof = AnoncredGeProofV1(
+      val geProof = GeProofV1(
         u = Map(
           "1" -> "1135835...",
           "0" -> "5209733...",
@@ -139,7 +140,7 @@ object AnoncredPresentationSpec extends ZIOSpecDefault {
         predicate = predicate
       )
 
-      val eqProof = AnoncredEqProofV1(
+      val eqProof = EqProofV1(
         revealed_attrs = Map("sex" -> "4046863..."),
         a_prime = "2329247...",
         e = "1666946...",
@@ -152,17 +153,17 @@ object AnoncredPresentationSpec extends ZIOSpecDefault {
         m2 = "5852217..."
       )
 
-      val primaryProof = AnoncredPrimaryProofV1(
+      val primaryProof = PrimaryProofV1(
         eq_proof = eqProof,
         ge_proofs = List(geProof)
       )
 
-      val subProof = AnoncredSubProofV1(
+      val subProof = SubProofV1(
         primary_proof = primaryProof,
         non_revoc_proof = None
       )
 
-      val aggregatedProof = AnoncredAggregatedProofV1(
+      val aggregatedProof = AggregatedProofV1(
         c_hash = "3880251...",
         c_list = List(
           List(184, 131, 15),
@@ -174,28 +175,28 @@ object AnoncredPresentationSpec extends ZIOSpecDefault {
         )
       )
 
-      val revealedAttr = AnoncredRevealedAttrV1(
+      val revealedAttr = RevealedAttrV1(
         sub_proof_index = 0,
         raw = "M",
         encoded = "4046863..."
       )
 
-      val requestedProof = AnoncredRequestedProofV1(
+      val requestedProof = RequestedProofV1(
         revealed_attrs = Map("sex" -> revealedAttr),
         self_attested_attrs = Map.empty,
         unrevealed_attrs = Map.empty,
-        predicates = Map("age" -> AnoncredSubProofIndexV1(0))
+        predicates = Map("age" -> SubProofIndexV1(0))
       )
 
-      val identifier = AnoncredIdentifierV1(
+      val identifier = IdentifierV1(
         schema_id = "resource:///anoncred-presentation-schema-example.json",
         cred_def_id = "resource:///anoncred-presentation-credential-definition-example.json",
         rev_reg_id = None,
         timestamp = None
       )
 
-      val anoncredPresentationV1 = AnoncredPresentationV1(
-        proof = AnoncredProofV1(
+      val anoncredPresentationV1 = PresentationV1(
+        proof = ProofV1(
           proofs = List(subProof),
           aggregated_proof = aggregatedProof
         ),
@@ -203,9 +204,9 @@ object AnoncredPresentationSpec extends ZIOSpecDefault {
         identifiers = List(identifier)
       )
 
-      assert(AnoncredPresentationV1.schemaSerDes.serializeToJsonString(anoncredPresentationV1))(Assertion.equalTo(json))
+      assert(PresentationV1.schemaSerDes.serializeToJsonString(anoncredPresentationV1))(Assertion.equalTo(json))
 
-      assertZIO(AnoncredPresentationV1.schemaSerDes.deserialize(json))(
+      assertZIO(PresentationV1.schemaSerDes.deserialize(json))(
         Assertion.equalTo(anoncredPresentationV1)
       )
     }
