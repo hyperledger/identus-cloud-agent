@@ -57,6 +57,12 @@ class SchemaRegistryServerEndpoints(
         credentialSchemaController.getSchemaJsonByGuid(guid)(ctx)
       }
 
+  val getRawSchemaByIdServerEndpoint: ZServerEndpoint[Any, Any] =
+    getRawSchemaByIdEndpoint
+      .zServerLogic { case (ctx: RequestContext, guid: UUID) =>
+        credentialSchemaController.getSchemaJsonByGuid(guid)(ctx)
+      }
+
   val lookupSchemasByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
     lookupSchemasByQueryEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
