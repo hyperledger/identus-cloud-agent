@@ -15,4 +15,9 @@ object Base64Utils {
   def decodeURL(string: String): Array[Byte] = {
     Base64.getUrlDecoder.decode(string)
   }
+
+  def createDataUrl(data: Array[Byte], mimeType: String): String = {
+    val encodedData = encodeURL(data)
+    s"data:$mimeType;base64,$encodedData"
+  }
 }

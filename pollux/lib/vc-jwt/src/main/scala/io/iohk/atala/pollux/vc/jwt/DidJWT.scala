@@ -5,11 +5,20 @@ import com.nimbusds.jose.crypto.ECDSASigner
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import io.circe
 import io.circe.*
+import io.circe.syntax.*
+import zio.*
 import pdi.jwt.algorithms.JwtECDSAAlgorithm
 import pdi.jwt.{JwtAlgorithm, JwtCirce}
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+
 import java.security.*
+import io.iohk.atala.shared.utils.Json as JsonUtils
+import io.iohk.atala.shared.utils.Base64Utils as Base64Utils
+
+import scodec.bits.*
+
+import java.time.*
 
 opaque type JWT = String
 
@@ -23,23 +32,38 @@ object JWT {
 
 trait Signer {
   def encode(claim: Json): JWT
+
+  def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof]
+
 }
 
-class ES256Signer(privateKey: PrivateKey) extends Signer {
+class ES256Signer(privateKey: PrivateKey) extends Signer with EddsaJcs2022ProofGenerator {
   val algorithm: JwtECDSAAlgorithm = JwtAlgorithm.ES256
+  private val provider = BouncyCastleProviderSingleton.getInstance
+  Security.addProvider(provider)
 
   override def encode(claim: Json): JWT = JWT(JwtCirce.encode(claim, privateKey, algorithm))
+
+  override def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof] = {
+    generateProof(payload, privateKey, pk)
+  }
+
 }
 
 // works with java 7, 8, 11 & bouncycastle provider
 // https://connect2id.com/products/nimbus-jose-jwt/jca-algorithm-support#alg-support-table
-class ES256KSigner(privateKey: PrivateKey) extends Signer {
+class ES256KSigner(privateKey: PrivateKey) extends Signer with EddsaJcs2022ProofGenerator {
   lazy val signer: ECDSASigner = {
     val ecdsaSigner = ECDSASigner(privateKey, Curve.SECP256K1)
     val bouncyCastleProvider = BouncyCastleProviderSingleton.getInstance
     ecdsaSigner.getJCAContext.setProvider(bouncyCastleProvider)
     ecdsaSigner
   }
+
+  override def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof] = {
+    generateProof(payload, privateKey, pk)
+  }
+
   override def encode(claim: Json): JWT = {
     val claimSet = JWTClaimsSet.parse(claim.noSpaces)
     val signedJwt = SignedJWT(

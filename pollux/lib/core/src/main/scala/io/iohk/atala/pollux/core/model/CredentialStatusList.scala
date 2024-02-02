@@ -12,7 +12,7 @@ final case class CredentialStatusList(
     issuer: CanonicalPrismDID,
     issued: Instant,
     purpose: StatusPurpose,
-    statusListJwtCredential: String,
+    statusListCredential: String,
     size: Int,
     lastUsedIndex: Int,
     createdAt: Instant,
