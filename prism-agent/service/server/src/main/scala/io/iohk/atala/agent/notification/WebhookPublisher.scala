@@ -18,7 +18,8 @@ import zio.json.*
 class WebhookPublisher(
     appConfig: AppConfig,
     notificationService: EventNotificationService,
-    walletService: WalletManagementService
+    walletService: WalletManagementService,
+    client: Client
 ) {
 
   private val config = appConfig.agent.webhookPublisher
@@ -93,37 +94,35 @@ class WebhookPublisher(
   private[this] def notifyWebhook[A](event: Event[A], url: String, headers: Headers)(implicit
       encoder: JsonEncoder[A]
   ): ZIO[Client, UnexpectedError, Unit] = {
-    for {
+    val result = for {
       _ <- ZIO.logDebug(s"Sending event: $event to HTTP webhook URL: $url.")
+      url <- ZIO.fromEither(URL.decode(url)).orDie
       response <- Client
         .request(
-          url = url,
-          method = Method.POST,
-          headers = baseHeaders ++ headers,
-          content = Body.fromString(event.toJson)
+          Request(
+            url = url,
+            method = Method.POST,
+            headers = baseHeaders ++ headers,
+            body = Body.fromString(event.toJson)
+          )
         )
         .timeoutFail(new RuntimeException("Client request timed out"))(5.seconds)
         .mapError(t => UnexpectedError(s"Webhook request error: $t"))
-
       resp <-
         if response.status.isSuccess then ZIO.unit
         else {
-          val err = response match {
-            case Response.GetError(error) => Some(error)
-            case _                        => None
-          }
           ZIO.fail(
             UnexpectedError(
-              s"Unsuccessful webhook response: [status: ${response.status} [error: ${err.getOrElse("none")}]"
+              s"Failed - Unsuccessful webhook response: [status: ${response.status}]" // TODO Restore error message in this unexpected error reporting
             )
           )
-
         }
     } yield resp
+    result.provide(ZLayer.succeed(client) ++ Scope.default)
   }
 }
 
 object WebhookPublisher {
-  val layer: URLayer[AppConfig & EventNotificationService & WalletManagementService, WebhookPublisher] =
-    ZLayer.fromFunction(WebhookPublisher(_, _, _))
+  val layer: URLayer[AppConfig & EventNotificationService & WalletManagementService & Client, WebhookPublisher] =
+    ZLayer.fromFunction(WebhookPublisher(_, _, _, _))
 }

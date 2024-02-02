@@ -15,7 +15,7 @@ services:
     ports:
       - 5432:5432
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "castor"]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "agent"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,7 +33,7 @@ services:
     ports:
       - 5433:5432
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "castor"]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "agent"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -51,7 +51,7 @@ services:
     ports:
       - 5434:5432
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "castor"]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "agent"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -121,14 +121,14 @@ services:
       API_KEY_AUTHENTICATE_AS_DEFAULT_USER:
       API_KEY_AUTO_PROVISIONING:
       ISSUE_BG_JOB_RECORDS_LIMIT: 25
-      ISSUE_BG_JOB_RECURRENCE_DELAY: 2 seconds
-      ISSUE_BG_JOB_PROCESSING_PARALLELISM: 5
+      ISSUE_BG_JOB_RECURRENCE_DELAY: 100 milliseconds
+      ISSUE_BG_JOB_PROCESSING_PARALLELISM: 20
       PRESENTATION_BG_JOB_RECORDS_LIMIT: 25
-      PRESENTATION_BG_JOB_RECURRENCE_DELAY: 2 seconds
-      PRESENTATION_BG_JOB_PROCESSING_PARALLELISM: 5
+      PRESENTATION_BG_JOB_RECURRENCE_DELAY: 100 milliseconds
+      PRESENTATION_BG_JOB_PROCESSING_PARALLELISM: 20
       CONNECT_BG_JOB_RECORDS_LIMIT: 25
-      CONNECT_BG_JOB_RECURRENCE_DELAY: 2 seconds
-      CONNECT_BG_JOB_PROCESSING_PARALLELISM: 5
+      CONNECT_BG_JOB_RECURRENCE_DELAY: 100 milliseconds
+      CONNECT_BG_JOB_PROCESSING_PARALLELISM: 20
     depends_on:
       issuer-db:
         condition: service_healthy
@@ -141,6 +141,18 @@ services:
       retries: 5
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    command:
+      [
+        -Dcom.sun.management.jmxremote,
+        -Dcom.sun.management.jmxremote.port=9095,
+        -Dcom.sun.management.jmxremote.rmi.port=9095,
+        -Dcom.sun.management.jmxremote.ssl=false,
+        -Dcom.sun.management.jmxremote.local.only=true,
+        -Dcom.sun.management.jmxremote.authenticate=false,
+        -Djava.rmi.server.hostname=127.0.0.1,
+      ]
+    ports:
+      - 9095:9095
 
   verifier-oea:
     image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
@@ -179,14 +191,14 @@ services:
       API_KEY_AUTHENTICATE_AS_DEFAULT_USER:
       API_KEY_AUTO_PROVISIONING:
       ISSUE_BG_JOB_RECORDS_LIMIT: 25
-      ISSUE_BG_JOB_RECURRENCE_DELAY: 2 seconds
-      ISSUE_BG_JOB_PROCESSING_PARALLELISM: 5
+      ISSUE_BG_JOB_RECURRENCE_DELAY: 100 milliseconds
+      ISSUE_BG_JOB_PROCESSING_PARALLELISM: 20
       PRESENTATION_BG_JOB_RECORDS_LIMIT: 25
-      PRESENTATION_BG_JOB_RECURRENCE_DELAY: 2 seconds
-      PRESENTATION_BG_JOB_PROCESSING_PARALLELISM: 5
+      PRESENTATION_BG_JOB_RECURRENCE_DELAY: 100 milliseconds
+      PRESENTATION_BG_JOB_PROCESSING_PARALLELISM: 20
       CONNECT_BG_JOB_RECORDS_LIMIT: 25
-      CONNECT_BG_JOB_RECURRENCE_DELAY: 2 seconds
-      CONNECT_BG_JOB_PROCESSING_PARALLELISM: 5
+      CONNECT_BG_JOB_RECURRENCE_DELAY: 100 milliseconds
+      CONNECT_BG_JOB_PROCESSING_PARALLELISM: 20
     depends_on:
       verifier-db:
         condition: service_healthy
@@ -199,6 +211,20 @@ services:
       retries: 5
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  issuer-oea-postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter
+    ports:
+      - "9995:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://postgres:postgres@holder-db:5432/postgres?sslmode=disable
+
+  holder-oea-postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter
+    ports:
+      - "9996:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://postgres:postgres@issuer-db:5432/postgres?sslmode=disable
 
   holder-oea:
     image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
@@ -232,14 +258,14 @@ services:
       # GLOBAL_WEBHOOK_API_KEY:
       # WEBHOOK_PARALLELISM:
       ISSUE_BG_JOB_RECORDS_LIMIT: 25
-      ISSUE_BG_JOB_RECURRENCE_DELAY: 2 seconds
-      ISSUE_BG_JOB_PROCESSING_PARALLELISM: 5
+      ISSUE_BG_JOB_RECURRENCE_DELAY: 100 milliseconds
+      ISSUE_BG_JOB_PROCESSING_PARALLELISM: 20
       PRESENTATION_BG_JOB_RECORDS_LIMIT: 25
-      PRESENTATION_BG_JOB_RECURRENCE_DELAY: 2 seconds
-      PRESENTATION_BG_JOB_PROCESSING_PARALLELISM: 5
+      PRESENTATION_BG_JOB_RECURRENCE_DELAY: 100 milliseconds
+      PRESENTATION_BG_JOB_PROCESSING_PARALLELISM: 20
       CONNECT_BG_JOB_RECORDS_LIMIT: 25
-      CONNECT_BG_JOB_RECURRENCE_DELAY: 2 seconds
-      CONNECT_BG_JOB_PROCESSING_PARALLELISM: 5
+      CONNECT_BG_JOB_RECURRENCE_DELAY: 100 milliseconds
+      CONNECT_BG_JOB_PROCESSING_PARALLELISM: 20
       ADMIN_TOKEN:
       API_KEY_SALT:
       API_KEY_ENABLED:
@@ -257,6 +283,18 @@ services:
       retries: 5
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    command:
+      [
+        -Dcom.sun.management.jmxremote,
+        -Dcom.sun.management.jmxremote.port=9096,
+        -Dcom.sun.management.jmxremote.rmi.port=9096,
+        -Dcom.sun.management.jmxremote.ssl=false,
+        -Dcom.sun.management.jmxremote.local.only=true,
+        -Dcom.sun.management.jmxremote.authenticate=false,
+        -Djava.rmi.server.hostname=127.0.0.1,
+      ]
+    ports:
+      - 9096:9096
 
   apisix:
     image: apache/apisix:2.15.0-alpine
@@ -276,8 +314,3 @@ volumes:
   holder_pg_data_db:
   node_pg_data_db:
   pgadmin:
-# Temporary commit network setting due to e2e CI bug
-# to be enabled later after debugging
-#networks:
-#  default:
-#    name: ${NETWORK}

@@ -51,13 +51,13 @@ lazy val V = new {
   val zioConfig = "3.0.7"
   val zioLogging = "2.0.1"
   val zioJson = "0.3.0"
-  val zioHttp = "3.0.0-RC2"
+  val zioHttp = "3.0.0-RC4"
   val zioCatsInterop = "3.3.0"
   val zioMetricsConnector = "2.1.0"
   val zioMock = "1.0.0-RC11"
   val mockito = "3.2.16.0"
 
-  // https://mvnrepository.com/artifact/io.circe/circe-core
+    // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.6"
 
   val tapir = "1.6.4"
@@ -89,6 +89,7 @@ lazy val V = new {
 
   val nimbusJwt = "10.0.0"
   val keycloak = "22.0.4" // scala-steward:off
+
 }
 
 /** Dependencies */
@@ -652,14 +653,6 @@ lazy val agentDidcommx = project
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(agent) //modelsDidcommx
 
-/** Demos agents and services implementation with didcommx */
-lazy val agentCliDidcommx = project
-  .in(file("mercury/mercury-library/agent-cli-didcommx"))
-  .settings(name := "mercury-agent-cli-didcommx")
-  .settings(libraryDependencies += "com.google.zxing" % "core" % "3.5.0")
-  .settings(libraryDependencies += D.zioHttp)
-  .dependsOn(agentDidcommx)
-
 // ///** TODO Demos agents and services implementation with did-scala */
 // lazy val agentDidScala =
 //   project
@@ -883,7 +876,6 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   resolver,
   agent,
   agentDidcommx,
-  agentCliDidcommx,
   castorCore,
   polluxVcJWT,
   polluxCore,

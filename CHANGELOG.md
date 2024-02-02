@@ -1,3 +1,11 @@
+# [1.25.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.24.0...prism-agent-v1.25.0) (2024-01-25)
+
+
+### Features
+
+* **prism-agent:** add JWT auth support for agent-admin role ([#840](https://github.com/hyperledger-labs/open-enterprise-agent/issues/840)) ([3ccd56e](https://github.com/hyperledger-labs/open-enterprise-agent/commit/3ccd56efadbbb3ea70e7ca63e9eb89564a83c02f))
+* upgrade ZIO http client to improve performance ([#850](https://github.com/hyperledger-labs/open-enterprise-agent/issues/850)) ([7aa9b4c](https://github.com/hyperledger-labs/open-enterprise-agent/commit/7aa9b4c27f92b169c72a68cd4bb8f4afb63943d4))
+
 # [1.24.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.23.0...prism-agent-v1.24.0) (2023-12-21)
 
 

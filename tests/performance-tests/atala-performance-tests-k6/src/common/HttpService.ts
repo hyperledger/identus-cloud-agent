@@ -2,10 +2,12 @@
 import http from 'k6/http';
 import { check } from 'k6';
 import { RefinedResponse, ResponseType, RequestBody } from 'k6/http';
+import { Counter } from 'k6/metrics';
 
+export let statusChangeTimeouts = new Counter('status_change_timeouts');
 /**
  * HttpService provides convenience methods for making HTTP requests using the k6 library.
- * 
+ *
  * - reduces boilerplate code
  * - adds basic HTTP status code checks
  * - adds API key header
@@ -117,4 +119,7 @@ export class HttpService {
     });
     return res;
   }
+
+
+
 }
