@@ -30,22 +30,26 @@ object AgentPeerService {
 
     val keyIdAgreement = PeerDIDUtils.createMultibaseEncnumbasis(keyAgreement).drop(1)
     val keyIdAuthentication = PeerDIDUtils.createMultibaseEncnumbasis(keyAuthentication).drop(1)
+    val keyIdAgreementIndex = agent.id.value.indexOf(keyIdAgreement)
+    val keyIdAuthenticationIndex = agent.id.value.indexOf(keyIdAuthentication)
+    val (keyAgreementId, keyAuthenticationId) =
+      if keyIdAgreementIndex < keyIdAuthenticationIndex then (1, 2) else (2, 1)
 
     val secretKeyAgreement = new Secret(
-      s"${agent.id.value}#$keyIdAgreement",
+      s"${agent.id.value}#key-$keyAgreementId",
       VerificationMethodType.JSON_WEB_KEY_2020,
       new VerificationMaterial(VerificationMaterialFormat.JWK, agent.jwkForKeyAgreement.head.toJSONString)
     )
     val secretKeyAuthentication = new Secret(
-      s"${agent.id.value}#$keyIdAuthentication",
+      s"${agent.id.value}#key-$keyAuthenticationId",
       VerificationMethodType.JSON_WEB_KEY_2020,
       new VerificationMaterial(VerificationMaterialFormat.JWK, agent.jwkForKeyAuthentication.head.toJSONString)
     )
 
     new SecretResolverInMemory(
       Map(
-        s"${agent.id.value}#$keyIdAgreement" -> secretKeyAgreement,
-        s"${agent.id.value}#$keyIdAuthentication" -> secretKeyAuthentication,
+        s"${agent.id.value}#key-$keyAgreementId" -> secretKeyAgreement,
+        s"${agent.id.value}#key-$keyAuthenticationId" -> secretKeyAuthentication,
       ).asJava
     )
   }
