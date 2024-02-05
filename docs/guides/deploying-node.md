@@ -102,7 +102,7 @@ Most up to date instructions on how to run the Cardano wallet backend and DB-syn
 * [Cardano wallet backend](https://github.com/cardano-foundation/cardano-wallet)
 * [DB-sync](https://github.com/IntersectMBO/cardano-db-sync)
 
-Once you have these services up and running, specify their respective URLs in the environment variables of the Node, specifically:
+Once you have these services up and running, specify their respective URLs in the environment variables of the Node:
 
 * Cardano wallet backend
     - `NODE_CARDANO_WALLET_API_HOST` for wallet server host
