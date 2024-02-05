@@ -29,7 +29,7 @@ The database used by the Node to store processed data, namely DID documents and 
 
 #### Cardano wallet backend
 
-An interface enables the node to submit transactions to the Cardano node.
+An interface enables the Node to submit transactions to the Cardano node.
 
 #### DB sync.
 
