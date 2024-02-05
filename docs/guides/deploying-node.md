@@ -119,7 +119,7 @@ When running the Node with Cardano ledger, you must specify which network to use
 Apart from that, you must also provide the Wallet ID and its spending password as environment variables as well:
 
 * `NODE_CARDANO_WALLET_ID` - The wallet ID must be provided in hex-encoded format, and the wallet must belong to the network you are running the node on, which can be either testnet or mainnet     
-* `NODE_CARDANO_WALLET_PASSPHRAS` - Spending password or aforementioned wallet.
+* `NODE_CARDANO_WALLET_PASSPHRAS` - Spending password or wallet above
 
 The Node utilizes Cardano as a decentralized open database, and its implementation has some similarities to the DIF Sidetree Protocol. In short, the node stores all relevant information in a Cardano transaction metadata and sends 1 ADA (minimum allowed amount) to another address, which you must provide via the `NODE_CARDANO_PAYMENT_ADDRESS` environment variable. This esentially stores arbitrary information on the blockchain. In most cases, you don't need to specify a particular address for sending transactions, as long as the transaction is recorded. In this case, you should set `NODE_CARDANO_PAYMENT_ADDRESS` to the same address you are sending transactions from, which is `NODE_CARDANO_WALLET_ID`. In this configuration, you are not spending any ADA other than the transaction fee for every transaction. If your wallet does not have enough ADA to cover the transaction fee (plus 1 ADA to send to yourself), the transaction won't be recorded, and your operation, which includes any DID-related action, won't be submitted.
 
