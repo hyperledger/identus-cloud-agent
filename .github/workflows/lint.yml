@@ -35,6 +35,7 @@ jobs:
         uses: megalinter/megalinter@v7.1.0
       - name: Archive production artifacts
         if: success() || failure()
+        # TODO: migrate to v4 according to https://github.com/actions/upload-artifact/blob/main/docs/MIGRATION.md
         uses: actions/upload-artifact@v3
         with:
           name: Mega-Linter reports
