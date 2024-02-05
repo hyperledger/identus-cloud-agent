@@ -54,7 +54,7 @@ private class PresentationServiceImpl(
       )
       _ <- count match
         case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
+        case _ => ZIO.fail(RecordIdNotFound(recordId))
       record <- presentationRepository
         .getPresentationRecord(recordId)
         .mapError(RepositoryError.apply)
@@ -235,49 +235,15 @@ private class PresentationServiceImpl(
       proofTypes: Seq[ProofType],
       maybeOptions: Option[io.iohk.atala.pollux.core.model.presentation.Options]
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
-    for {
-      request <- ZIO.succeed(
-        createDidCommRequestPresentation(
-          proofTypes,
-          thid,
-          pairwiseVerifierDID,
-          pairwiseProverDID,
-          maybeOptions.map(options => Seq(toJWTAttachment(options))).getOrElse(Seq.empty)
-        )
-      )
-      record <- ZIO.succeed(
-        PresentationRecord(
-          id = DidCommID(),
-          createdAt = Instant.now,
-          updatedAt = None,
-          thid = thid,
-          connectionId = connectionId,
-          schemaId = None, // TODO REMOVE from DB
-          role = PresentationRecord.Role.Verifier,
-          subjectId = pairwiseProverDID,
-          protocolState = PresentationRecord.ProtocolState.RequestPending,
-          credentialFormat = CredentialFormat.JWT,
-          requestPresentationData = Some(request),
-          proposePresentationData = None,
-          presentationData = None,
-          credentialsToUse = None,
-          anoncredCredentialsToUseJsonSchemaId = None,
-          anoncredCredentialsToUse = None,
-          metaRetries = maxRetries,
-          metaNextRetry = Some(Instant.now()),
-          metaLastFailure = None,
-        )
-      )
-      count <- presentationRepository
-        .createPresentationRecord(record)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
-        s"${record.id}_present_proof_flow_verifier_req_pending_to_sent_ms_gauge"
-      )
-    } yield record
+    createPresentationRecord(
+      pairwiseVerifierDID,
+      pairwiseProverDID,
+      thid,
+      connectionId,
+      CredentialFormat.JWT,
+      proofTypes,
+      maybeOptions.map(options => Seq(toJWTAttachment(options))).getOrElse(Seq.empty)
+    )
   }
 
   override def createAnoncredPresentationRecord(
@@ -287,14 +253,34 @@ private class PresentationServiceImpl(
       connectionId: Option[String],
       presentationRequest: AnoncredPresentationRequestV1
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
+    createPresentationRecord(
+      pairwiseVerifierDID,
+      pairwiseProverDID,
+      thid,
+      connectionId,
+      CredentialFormat.AnonCreds,
+      Seq.empty,
+      Seq(toAnoncredAttachment(presentationRequest))
+    )
+  }
+
+  private def createPresentationRecord(
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: DidId,
+      thid: DidCommID,
+      connectionId: Option[String],
+      format: CredentialFormat,
+      proofTypes: Seq[ProofType],
+      attachments: Seq[AttachmentDescriptor]
+  ) = {
     for {
       request <- ZIO.succeed(
         createDidCommRequestPresentation(
-          Seq.empty,
+          proofTypes,
           thid,
           pairwiseVerifierDID,
           pairwiseProverDID,
-          Seq(toAnoncredAttachment(presentationRequest))
+          attachments
         )
       )
       record <- ZIO.succeed(
@@ -308,7 +294,7 @@ private class PresentationServiceImpl(
           role = PresentationRecord.Role.Verifier,
           subjectId = pairwiseProverDID,
           protocolState = PresentationRecord.ProtocolState.RequestPending,
-          credentialFormat = CredentialFormat.AnonCreds,
+          credentialFormat = format,
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
@@ -320,7 +306,7 @@ private class PresentationServiceImpl(
           metaLastFailure = None,
         )
       )
-      count <- presentationRepository
+      _ <- presentationRepository
         .createPresentationRecord(record)
         .flatMap {
           case 1 => ZIO.succeed(())
@@ -404,7 +390,7 @@ private class PresentationServiceImpl(
           metaLastFailure = None,
         )
       )
-      count <- presentationRepository
+      _ <- presentationRepository
         .createPresentationRecord(record)
         .flatMap {
           case 1 => ZIO.succeed(())
@@ -484,7 +470,7 @@ private class PresentationServiceImpl(
     } yield presentationPayload
   }
 
-  case class AnoncredCredentialProof(
+  private case class AnoncredCredentialProof(
       credential: String,
       requestedAttribute: Seq[String],
       requestedPredicate: Seq[String]
@@ -544,7 +530,7 @@ private class PresentationServiceImpl(
         presentationRequestAttachment.data match
           case Base64(data) => ZIO.succeed(new String(JBase64.getUrlDecoder.decode(data)))
           case _            => ZIO.fail(InvalidAnoncredPresentationRequest("Expecting Base64-encoded data"))
-      deserializedPresentationRequestData <-
+      _ <-
         AnoncredPresentationRequestV1.schemaSerDes
           .deserialize(presentationRequestData)
           .mapError(error => InvalidAnoncredPresentationRequest(error.error))
@@ -619,50 +605,30 @@ private class PresentationServiceImpl(
       issuedCredentials <- credentialRepository
         .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
         .mapError(RepositoryError.apply)
-      _ <- ZIO.cond(
-        (issuedCredentials.map(_.subjectId).toSet.size == 1),
-        (),
-        PresentationError.HolderBindingError(
-          s"Creating a Verifiable Presentation for credential with different subject DID is not supported, found : ${issuedCredentials
-              .map(_.subjectId)}"
-        )
-      )
-      validatedCredentials <- ZIO.fromEither(
-        Either.cond(
-          issuedCredentials.forall(issuedValidCredential =>
-            issuedValidCredential.credentialFormat == record.credentialFormat
-          ),
-          issuedCredentials,
-          PresentationError.NotMatchingPresentationCredentialFormat(
-            new IllegalArgumentException(
-              s"No matching issued credentials format: expectedFormat=${record.credentialFormat}"
-            )
-          )
-        )
-      )
-      signedCredentials = validatedCredentials.flatMap(_.issuedCredentialRaw)
-      _ <- ZIO.fromEither(
-        Either.cond(
-          signedCredentials.nonEmpty,
-          signedCredentials,
-          PresentationError.IssuedCredentialNotFoundError(
-            new Throwable(s"No matching issued credentials found in prover db from the given: $credentialsToUse")
-          )
-        )
+      _ <- validateCredentials(
+        s"No matching issued credentials found in prover db from the given: $credentialsToUse",
+        record,
+        issuedCredentials
       )
       count <- presentationRepository
         .updatePresentationWithCredentialsToUse(recordId, Option(credentialsToUse), ProtocolState.PresentationPending)
         .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
         s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
       )
+      record <- fetchPresentationRecord(recordId, count)
+    } yield record
+  }
+
+  private def fetchPresentationRecord(recordId: DidCommID, count: RuntimeFlags) = {
+    for {
       _ <- count match
         case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
+        case _ => ZIO.fail(RecordIdNotFound(recordId))
       record <- presentationRepository
         .getPresentationRecord(recordId)
         .mapError(RepositoryError.apply)
         .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(record.id))
+          case None        => ZIO.fail(RecordIdNotFound(recordId))
           case Some(value) => ZIO.succeed(value)
         }
     } yield record
@@ -680,36 +646,10 @@ private class PresentationServiceImpl(
           credentialsToUse.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential))
         )
         .mapError(RepositoryError.apply)
-      _ <- ZIO.cond(
-        (issuedCredentials.map(_.subjectId).toSet.size == 1),
-        (),
-        PresentationError.HolderBindingError(
-          s"Creating a Verifiable Presentation for credential with different subject DID is not supported, found : ${issuedCredentials
-              .map(_.subjectId)}"
-        )
-      )
-      validatedCredentials <- ZIO.fromEither(
-        Either.cond(
-          issuedCredentials.forall(issuedValidCredential =>
-            issuedValidCredential.credentialFormat == record.credentialFormat
-          ),
-          issuedCredentials,
-          PresentationError.NotMatchingPresentationCredentialFormat(
-            new IllegalArgumentException(
-              s"No matching issued credentials format: expectedFormat=${record.credentialFormat}"
-            )
-          )
-        )
-      )
-      signedCredentials = validatedCredentials.flatMap(_.issuedCredentialRaw)
-      _ <- ZIO.fromEither(
-        Either.cond(
-          signedCredentials.nonEmpty,
-          signedCredentials,
-          PresentationError.IssuedCredentialNotFoundError(
-            new Throwable(s"No matching issued credentials found in prover db from the given: $credentialsToUse")
-          )
-        )
+      _ <- validateCredentials(
+        s"No matching issued credentials found in prover db from the given: $credentialsToUse",
+        record,
+        issuedCredentials
       )
       anoncredCredentialProofsV1AsJson <- ZIO
         .fromEither(
@@ -730,17 +670,48 @@ private class PresentationServiceImpl(
         .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
         s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
       )
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
-      record <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(record.id))
-          case Some(value) => ZIO.succeed(value)
-        }
+      record <- fetchPresentationRecord(recordId, count)
     } yield record
+  }
+
+  private def validateCredentials(
+      errorMessage: String,
+      record: PresentationRecord,
+      issuedCredentials: Seq[ValidIssuedCredentialRecord]
+  ) = {
+    for {
+      _ <- ZIO.cond(
+        issuedCredentials.map(_.subjectId).toSet.size == 1,
+        (),
+        PresentationError.HolderBindingError(
+          s"Creating a Verifiable Presentation for credential with different subject DID is not supported, found : ${issuedCredentials
+              .map(_.subjectId)}"
+        )
+      )
+      validatedCredentials <- ZIO.fromEither(
+        Either.cond(
+          issuedCredentials.forall(issuedValidCredential =>
+            issuedValidCredential.credentialFormat == record.credentialFormat
+          ),
+          issuedCredentials,
+          PresentationError.NotMatchingPresentationCredentialFormat(
+            new IllegalArgumentException(
+              s"No matching issued credentials format: expectedFormat=${record.credentialFormat}"
+            )
+          )
+        )
+      )
+      signedCredentials = validatedCredentials.flatMap(_.issuedCredentialRaw)
+      _ <- ZIO.fromEither(
+        Either.cond(
+          signedCredentials.nonEmpty,
+          signedCredentials,
+          PresentationError.IssuedCredentialNotFoundError(
+            new Throwable(errorMessage)
+          )
+        )
+      )
+    } yield ()
   }
 
   override def acceptPresentation(
@@ -804,7 +775,7 @@ private class PresentationServiceImpl(
         .mapError(RepositoryError.apply)
       _ <- count match
         case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
+        case _ => ZIO.fail(RecordIdNotFound(recordId))
       record <- presentationRepository
         .getPresentationRecord(record.id)
         .mapError(RepositoryError.apply)
@@ -1076,13 +1047,7 @@ private class PresentationServiceImpl(
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
         }
         .mapError(RepositoryError.apply)
-      record <- presentationRepository
-        .getPresentationRecord(id)
-        .mapError(RepositoryError.apply)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(id))
-          case Some(value) => ZIO.succeed(value)
-        }
+      record <- fetchPresentationRecord(id, 1)
     } yield record
   }
 
