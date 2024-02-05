@@ -10,7 +10,7 @@ The Open Enterprise Agent communicates with the Node, with all operations conduc
 
 # Node components
 
-The Node consists of 4 separate executables:
+The Node consists of four separate executables:
 
 1. Node gRPC server
 2. Node PosgresQL database
