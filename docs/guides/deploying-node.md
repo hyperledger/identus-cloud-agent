@@ -15,7 +15,7 @@ The Node consists of 4 separate executables:
 1. Node gRPC server
 2. Node PosgresQL database
 3. Cardano wallet backend
-4. DB sync.
+4. DB sync
 
 #### Node gRPC server
 
