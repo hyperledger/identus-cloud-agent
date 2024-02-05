@@ -97,7 +97,7 @@ docker pull ghcr.io/input-output-hk/prism-node:2.2.1
 
 By default, Node will run with an `in-memory` ledger, ideal for development purposes. To run it on Cardano, you must set the `NODE_LEDGER` environment variable to `cardano`. If you do this, Node will utilize the Cardano wallet backend and DB-sync to query for blocks and submit transactions. It is crucial to have the Cardano wallet backend and DB-sync running before running the Node with `NODE_LEDGER` set to `cardano`.
 
-Most up to date instructions on how to run the Cardano wallet backend and DB-sync are available in their respective repositories:
+Most up-to-date instructions on how to run the Cardano wallet backend and DB-sync are available in their respective repositories:
 
 * [Cardano wallet backend](https://github.com/cardano-foundation/cardano-wallet)
 * [DB-sync](https://github.com/IntersectMBO/cardano-db-sync)
