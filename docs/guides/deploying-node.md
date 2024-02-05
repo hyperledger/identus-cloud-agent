@@ -133,7 +133,7 @@ When running the Node, you must specify the host, database name, username, and p
 * `NODE_PSQL_PASSWORD` - password
 
 
-To summarize, the Node gRPC server has three dependencies: Node DB, Cardano wallet, and DB-sync. You need to run these three services before starting the node. 
+The Node gRPC server has three dependencies: Node DB, Cardano wallet, and DB-sync. You need to run these three services before starting the Node.
 
 Node DB is a simple PostgreSQL database. 
 
