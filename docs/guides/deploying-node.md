@@ -89,7 +89,7 @@ graph TB
 
 #### Running node
 
-Node docker image is available on Github, you can access like this:
+Node docker image is available on GitHub, accessible here:
 
 ```bash
 docker pull ghcr.io/input-output-hk/prism-node:2.2.1
