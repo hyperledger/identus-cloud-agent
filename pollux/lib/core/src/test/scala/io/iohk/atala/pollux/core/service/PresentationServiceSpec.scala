@@ -35,7 +35,7 @@ import java.util.{UUID, Base64 as JBase64}
 
 object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSpecHelper {
 
-  override def spec =
+  override def spec: Spec[Any, Any] =
     suite("PresentationService")(singleWalletSpec, multiWalletSpec).provide(
       presentationServiceLayer ++ genericSecretStorageLayer
     )
@@ -59,7 +59,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         } yield Options(challenge, domain)
 
         check(
-          Gen.uuid.map(e => DidCommID(e.toString())),
+          Gen.uuid.map(e => DidCommID(e.toString)),
           Gen.option(Gen.string),
           Gen.listOfBounded(1, 5)(proofTypeGen),
           Gen.option(optionsGen)
@@ -88,7 +88,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             assertTrue(record.requestPresentationData.get.body.goal_code.contains("Request Proof Presentation")) &&
             assertTrue(record.requestPresentationData.get.body.proof_types == proofTypes) &&
             assertTrue(
-              if (record.requestPresentationData.get.attachments.length != 0) {
+              if (record.requestPresentationData.get.attachments.nonEmpty) {
                 val maybePresentationOptions =
                   record.requestPresentationData.get.attachments.headOption
                     .map(attachment =>
@@ -115,7 +115,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       },
       test("createPresentationRecord creates a valid Anoncred PresentationRecord") {
         check(
-          Gen.uuid.map(e => DidCommID(e.toString())),
+          Gen.uuid.map(e => DidCommID(e.toString)),
           Gen.option(Gen.string),
           Gen.string,
           Gen.string,
@@ -180,9 +180,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("getPresentationRecords returns created PresentationRecord") {
         for {
           svc <- ZIO.service[PresentationService]
-          pairwiseProverDid = DidId("did:peer:Prover")
-          record1 <- svc.createJwtRecord()
-          record2 <- svc.createJwtRecord()
+          _ <- svc.createJwtRecord()
+          _ <- svc.createJwtRecord()
           records <- svc.getPresentationRecords(false)
         } yield {
           assertTrue(records.size == 2)
@@ -209,7 +208,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("getPresentationRecord returns the correct record") {
         for {
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createJwtRecord()
+          _ <- svc.createJwtRecord()
           bRecord <- svc.createJwtRecord()
           record <- svc.getPresentationRecord(bRecord.id)
         } yield assertTrue(record.contains(bRecord))
@@ -217,8 +216,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("getPresentationRecord returns nothing for an unknown 'recordId'") {
         for {
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createJwtRecord()
-          bRecord <- svc.createJwtRecord()
+          _ <- svc.createJwtRecord()
+          _ <- svc.createJwtRecord()
           record <- svc.getPresentationRecord(DidCommID())
         } yield assertTrue(record.isEmpty)
       },
@@ -251,121 +250,14 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       },
       test("createAnoncredPresentationPayloadFromRecord returns Anoncred presentation payload") {
         for {
-          svc <- ZIO.service[CredentialDefinitionService]
-          issuerId = "did:prism:issuer"
-          holderID = "did:prism:holder"
-          schemaId = "resource:///anoncred-presentation-schema-example.json"
-          credentialDefinitionDb <- svc.create(
-            Input(
-              name = "Credential Definition Name",
-              description = "Credential Definition Description",
-              version = "1.2",
-              signatureType = "CL",
-              tag = "tag",
-              author = issuerId,
-              authored = Some(OffsetDateTime.parse("2022-03-10T12:00:00Z")),
-              schemaId = schemaId,
-              supportRevocation = false
-            )
-          )
-          repo <- ZIO.service[CredentialRepository]
-          schema = AnoncredLib.createSchema(
-            schemaId,
-            "0.1.0",
-            Set("name", "sex", "age"),
-            issuerId
-          )
-          linkSecretService <- ZIO.service[LinkSecretService]
-          linkSecret <- linkSecretService.fetchOrCreate()
-          credentialDefinition = AnoncredLib.createCredDefinition(issuerId, schema, "tag", supportRevocation = false)
-          file = createTempJsonFile(credentialDefinition.cd.data, "anoncred-presentation-credential-definition-example")
-          credentialDefinitionId = "resource:///" + file.getFileName
-          credentialOffer = AnoncredLib.createOffer(credentialDefinition, credentialDefinitionId)
-          credentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition.cd, credentialOffer)
-          credential =
-            AnoncredLib
-              .createCredential(
-                credentialDefinition.cd,
-                credentialDefinition.cdPrivate,
-                credentialOffer,
-                credentialRequest.request,
-                Seq(
-                  ("name", "Miguel"),
-                  ("sex", "M"),
-                  ("age", "31"),
-                )
-              )
-              .data
-          issueCredential = IssueCredential(
-            from = DidId(issuerId),
-            to = DidId(holderID),
-            body = IssueCredential.Body(),
-            attachments = Seq(
-              AttachmentDescriptor.buildBase64Attachment(
-                mediaType = Some("application/json"),
-                format = Some(IssueCredentialIssuedFormat.Anoncred.name),
-                payload = credential.getBytes()
-              )
-            )
-          )
-          aIssueCredentialRecord =
-            IssueCredentialRecord(
-              id = DidCommID(),
-              createdAt = Instant.now,
-              updatedAt = None,
-              thid = DidCommID(),
-              schemaUri = Some(schemaId),
-              credentialDefinitionId = Some(credentialDefinitionDb.guid),
-              credentialDefinitionUri = Some(credentialDefinitionId),
-              credentialFormat = CredentialFormat.AnonCreds,
-              role = IssueCredentialRecord.Role.Issuer,
-              subjectId = None,
-              validityPeriod = None,
-              automaticIssuance = None,
-              protocolState = IssueCredentialRecord.ProtocolState.CredentialReceived,
-              offerCredentialData = None,
-              requestCredentialData = None,
-              anonCredsRequestMetadata = None,
-              issueCredentialData = Some(issueCredential),
-              issuedCredentialRaw =
-                Some(issueCredential.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???")),
-              issuingDID = None,
-              metaRetries = 5,
-              metaNextRetry = Some(Instant.now()),
-              metaLastFailure = None,
-            )
-          _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
-          svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createAnoncredRecord(credentialDefinitionId = credentialDefinitionId)
-          repo <- ZIO.service[PresentationRepository]
-          credentialsToUse =
-            AnoncredCredentialProofsV1(
-              List(
-                AnoncredCredentialProofV1(
-                  aIssueCredentialRecord.id.value,
-                  Seq("sex"),
-                  Seq("age")
-                )
-              )
-            )
-          credentialsToUseJson <- ZIO.fromEither(
-            AnoncredCredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
-          )
-          _ <- repo.updateAnoncredPresentationWithCredentialsToUse(
-            aRecord.id,
-            Some(AnoncredPresentationV1.version),
-            Some(credentialsToUseJson),
-            PresentationRecord.ProtocolState.RequestPending
-          )
-          issuer = createIssuer(DID("did:prism:issuer"))
-          aPresentationPayload <- svc.createAnoncredPresentationPayloadFromRecord(
-            aRecord.id,
-            issuer,
-            credentialsToUse,
-            Instant.now()
-          )
-          validation <- AnoncredPresentationV1.schemaSerDes.validate(aPresentationPayload.data)
-          presentation <- AnoncredPresentationV1.schemaSerDes.deserialize(aPresentationPayload.data)
+          presentationWithRecord <- createAnoncredPresentation
+          (presentation, _) = presentationWithRecord
+          serializedPresentation <- presentation.attachments.head.data match {
+            case Base64(data) => ZIO.succeed(AnoncredPresentation(new String(JBase64.getUrlDecoder.decode(data))))
+            case _            => ZIO.fail(InvalidAnoncredPresentation("Expecting Base64-encoded data"))
+          }
+          validation <- AnoncredPresentationV1.schemaSerDes.validate(serializedPresentation.data)
+          presentation <- AnoncredPresentationV1.schemaSerDes.deserialize(serializedPresentation.data)
         } yield {
           assert(validation)(isUnit)
           assert(
@@ -375,132 +267,9 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       },
       test("verify anoncred presentation") {
         for {
-          credentialDefinitionService <- ZIO.service[CredentialDefinitionService]
-          issuerId = "did:prism:issuer"
-          holderID = "did:prism:holder"
-          schemaId = "resource:///anoncred-presentation-schema-example.json"
-          credentialDefinitionDb <- credentialDefinitionService.create(
-            Input(
-              name = "Credential Definition Name",
-              description = "Credential Definition Description",
-              version = "1.2",
-              signatureType = "CL",
-              tag = "tag",
-              author = issuerId,
-              authored = Some(OffsetDateTime.parse("2022-03-10T12:00:00Z")),
-              schemaId = schemaId,
-              supportRevocation = false
-            )
-          )
-          credentialDefinitionDb <- credentialDefinitionService
-            .getByGUID(credentialDefinitionDb.guid)
-          repo <- ZIO.service[CredentialRepository]
-          linkSecretService <- ZIO.service[LinkSecretService]
-          linkSecret <- linkSecretService.fetchOrCreate()
-          genericSecretStorage <- ZIO.service[GenericSecretStorage]
-          maybeCredentialDefintionPrivate <-
-            genericSecretStorage
-              .get[UUID, CredentialDefinitionSecret](credentialDefinitionDb.guid)
-          credentialDefinition = AnoncredCreateCredentialDefinition(
-            AnoncredCredentialDefinition(credentialDefinitionDb.definition.toString()),
-            AnoncredCredentialDefinitionPrivate(maybeCredentialDefintionPrivate.get.json.toString()),
-            AnoncredCredentialKeyCorrectnessProof(credentialDefinitionDb.keyCorrectnessProof.toString())
-          )
-          file = createTempJsonFile(credentialDefinition.cd.data, "anoncred-presentation-credential-definition-example")
-          credentialDefinitionId = "resource:///" + file.getFileName
-          credentialOffer = AnoncredLib.createOffer(credentialDefinition, credentialDefinitionId)
-          credentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition.cd, credentialOffer)
-          processedCredential =
-            AnoncredLib.processCredential(
-              AnoncredLib
-                .createCredential(
-                  credentialDefinition.cd,
-                  credentialDefinition.cdPrivate,
-                  credentialOffer,
-                  credentialRequest.request,
-                  Seq(
-                    ("name", "Miguel"),
-                    ("sex", "M"),
-                    ("age", "31"),
-                  )
-                ),
-              credentialRequest.metadata,
-              linkSecret,
-              credentialDefinition.cd
-            )
-          issueCredential =
-            IssueCredential(
-              from = DidId(issuerId),
-              to = DidId(holderID),
-              body = IssueCredential.Body(),
-              attachments = Seq(
-                AttachmentDescriptor.buildBase64Attachment(
-                  mediaType = Some("application/json"),
-                  format = Some(IssueCredentialIssuedFormat.Anoncred.name),
-                  payload = processedCredential.data.getBytes()
-                )
-              )
-            )
-          aIssueCredentialRecord =
-            IssueCredentialRecord(
-              id = DidCommID(),
-              createdAt = Instant.now,
-              updatedAt = None,
-              thid = DidCommID(),
-              schemaUri = Some(schemaId),
-              credentialDefinitionId = Some(credentialDefinitionDb.guid),
-              credentialDefinitionUri = Some(credentialDefinitionId),
-              credentialFormat = CredentialFormat.AnonCreds,
-              role = IssueCredentialRecord.Role.Issuer,
-              subjectId = None,
-              validityPeriod = None,
-              automaticIssuance = None,
-              protocolState = IssueCredentialRecord.ProtocolState.CredentialReceived,
-              offerCredentialData = None,
-              requestCredentialData = None,
-              anonCredsRequestMetadata = None,
-              issueCredentialData = Some(issueCredential),
-              issuedCredentialRaw =
-                Some(issueCredential.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???")),
-              issuingDID = None,
-              metaRetries = 5,
-              metaNextRetry = Some(Instant.now()),
-              metaLastFailure = None,
-            )
-          _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
+          presentationWithRecord <- createAnoncredPresentation
+          (presentation, aRecord) = presentationWithRecord
           svc <- ZIO.service[PresentationService]
-          aRecord <- svc.createAnoncredRecord(
-            credentialDefinitionId = credentialDefinitionId
-          )
-          repo <- ZIO.service[PresentationRepository]
-          credentialsToUse =
-            AnoncredCredentialProofsV1(
-              List(
-                AnoncredCredentialProofV1(
-                  aIssueCredentialRecord.id.value,
-                  Seq("sex"),
-                  Seq("age")
-                )
-              )
-            )
-          credentialsToUseJson <- ZIO.fromEither(
-            AnoncredCredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
-          )
-          _ <-
-            repo.updateAnoncredPresentationWithCredentialsToUse(
-              aRecord.id,
-              Some(AnoncredPresentationV1.version),
-              Some(credentialsToUseJson),
-              PresentationRecord.ProtocolState.RequestPending
-            )
-          issuer = createIssuer(DID("did:prism:issuer"))
-          presentation <- svc.createAnoncredPresentation(
-            aRecord.requestPresentationData.get,
-            aRecord.id,
-            issuer,
-            credentialsToUse,
-            Instant.now()
-          )
           _ <- svc.receivePresentation(presentation)
           validateRecord <-
             svc.verifyAnoncredPresentation(
@@ -515,7 +284,6 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("markRequestPresentationSent returns updated PresentationRecord") {
         for {
           svc <- ZIO.service[PresentationService]
-          pairwiseProverDid = DidId("did:peer:Prover")
           record <- svc.createJwtRecord()
           record <- svc.markRequestPresentationSent(record.id)
 
@@ -526,7 +294,6 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("markRequestPresentationRejected returns updated PresentationRecord") {
         for {
           svc <- ZIO.service[PresentationService]
-          pairwiseProverDid = DidId("did:peer:Prover")
           record <- svc.createJwtRecord()
           repo <- ZIO.service[PresentationRepository]
           _ <- repo.updatePresentationRecordProtocolState(
@@ -625,101 +392,71 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         } yield {
           assertTrue(aRecord.connectionId == connectionId) &&
           assertTrue(aRecord.protocolState == PresentationRecord.ProtocolState.RequestReceived) &&
-          assertTrue(aRecord.requestPresentationData == Some(requestPresentation))
+          assertTrue(aRecord.requestPresentationData.contains(requestPresentation))
         }
       },
       test("receiveRequestPresentation Anoncred updates the RequestPresentation in PresentationRecord") {
+        val anoncredPresentationRequestV1 = AnoncredPresentationRequestV1(
+          Map.empty,
+          Map.empty,
+          "name",
+          "nonce",
+          "version",
+          None
+        )
+        val attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(
+          mediaType = Some("application/json"),
+          format = Some(PresentCredentialRequestFormat.Anoncred.name),
+          payload =
+            AnoncredPresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
+        )
+        val connectionId = Some("connectionId")
         for {
           svc <- ZIO.service[PresentationService]
-          connectionId = Some("connectionId")
-          body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
-          prover = DidId("did:peer:Prover")
-          verifier = DidId("did:peer:Verifier")
-          anoncredPresentationRequestV1 = AnoncredPresentationRequestV1(
-            Map.empty,
-            Map.empty,
-            "name",
-            "nonce",
-            "version",
-            None
-          )
-          attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(
-            mediaType = Some("application/json"),
-            format = Some(PresentCredentialRequestFormat.Anoncred.name),
-            payload =
-              AnoncredPresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
-          )
-          requestPresentation = RequestPresentation(
-            body = body,
-            attachments = Seq(attachmentDescriptor),
-            to = prover,
-            from = verifier,
-          )
+          requestPresentationWithRecord <- receiveRequestPresentationTest(attachmentDescriptor)
+          (_, requestPresentation) = requestPresentationWithRecord
           aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentation)
 
         } yield {
           assertTrue(aRecord.connectionId == connectionId) &&
           assertTrue(aRecord.protocolState == PresentationRecord.ProtocolState.RequestReceived) &&
-          assertTrue(aRecord.requestPresentationData == Some(requestPresentation))
+          assertTrue(aRecord.requestPresentationData.contains(requestPresentation))
         }
       },
       test("receiveRequestPresentation Anoncred should fail given invalid attachment") {
+
+        val presentationAttachmentAsJson =
+          """{
+              "challenge": "1f44d55f-f161-4938-a659-f8026467f126",
+              "domain": "us.gov/DriverLicense",
+              "credential_manifest": {}
+          }"""
+
+        val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
+          payload = presentationAttachmentAsJson,
+          format = Some(PresentCredentialProposeFormat.Anoncred.name)
+        )
         for {
-          svc <- ZIO.service[PresentationService]
-          connectionId = Some("connectionId")
-          body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
-          presentationAttachmentAsJson =
-            """{
-                "challenge": "1f44d55f-f161-4938-a659-f8026467f126",
-                "domain": "us.gov/DriverLicense",
-                "credential_manifest": {}
-            }"""
-          prover = DidId("did:peer:Prover")
-          verifier = DidId("did:peer:Verifier")
-
-          attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
-            payload = presentationAttachmentAsJson,
-            format = Some(PresentCredentialProposeFormat.Anoncred.name)
-          )
-          requestPresentation = RequestPresentation(
-            body = body,
-            attachments = Seq(attachmentDescriptor),
-            to = prover,
-            from = verifier,
-          )
-          result <- svc.receiveRequestPresentation(connectionId, requestPresentation).exit
-
-        } yield assert(result)(
-          fails(equalTo(InvalidAnoncredPresentationRequest("Expecting Base64-encoded data")))
+          requestPresentation <- receiveRequestPresentationTest(attachmentDescriptor).exit
+        } yield assert(requestPresentation)(
+          fails(isSubtype[InvalidAnoncredPresentationRequest](anything))
         )
       },
       test("receiveRequestPresentation Anoncred should fail given invalid anoncred format") {
+        val presentationAttachmentAsJson =
+          """{
+              "challenge": "1f44d55f-f161-4938-a659-f8026467f126",
+              "domain": "us.gov/DriverLicense",
+              "credential_manifest": {}
+          }"""
+        val attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(
+          mediaType = Some("application/json"),
+          format = Some(PresentCredentialRequestFormat.Anoncred.name),
+          payload = presentationAttachmentAsJson.getBytes()
+        )
         for {
-          svc <- ZIO.service[PresentationService]
-          connectionId = Some("connectionId")
-          body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
-          presentationAttachmentAsJson =
-            """{
-                "challenge": "1f44d55f-f161-4938-a659-f8026467f126",
-                "domain": "us.gov/DriverLicense",
-                "credential_manifest": {}
-            }"""
-          prover = DidId("did:peer:Prover")
-          verifier = DidId("did:peer:Verifier")
-          attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(
-            mediaType = Some("application/json"),
-            format = Some(PresentCredentialRequestFormat.Anoncred.name),
-            payload = presentationAttachmentAsJson.getBytes()
-          )
-          requestPresentation = RequestPresentation(
-            body = body,
-            attachments = Seq(attachmentDescriptor),
-            to = prover,
-            from = verifier,
-          )
-          result <- svc.receiveRequestPresentation(connectionId, requestPresentation).exit
-
-        } yield assert(result)(
+          requestPresentation <- receiveRequestPresentationTest(attachmentDescriptor).exit
+        } yield assert(requestPresentation)(
           fails(isSubtype[InvalidAnoncredPresentationRequest](anything))
         )
       },
@@ -871,7 +608,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("markPresentationSent returns updated PresentationRecord") {
         for {
           svc <- ZIO.service[PresentationService]
-          pairwiseProverDid = DidId("did:peer:Prover")
+          _ = DidId("did:peer:Prover")
           record <- svc.createJwtRecord()
           repo <- ZIO.service[PresentationRepository]
           _ <- repo.updatePresentationRecordProtocolState(
@@ -894,7 +631,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
 
         } yield {
           assertTrue(aRecordReceived.id == aRecord.id) &&
-          assertTrue(aRecordReceived.presentationData == Some(p))
+          assertTrue(aRecordReceived.presentationData.contains(p))
         }
       },
       test("acceptPresentation updates the PresentationRecord") {
@@ -909,10 +646,10 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             PresentationRecord.ProtocolState.PresentationReceived,
             PresentationRecord.ProtocolState.PresentationVerified
           )
-          aRecordAccept <- svc.acceptPresentation(aRecord.id)
+          _ <- svc.acceptPresentation(aRecord.id)
         } yield {
           assertTrue(aRecordReceived.id == aRecord.id) &&
-          assertTrue(aRecordReceived.presentationData == Some(p))
+          assertTrue(aRecordReceived.presentationData.contains(p))
         }
       },
       test("markPresentationRejected updates the PresentationRecord") {
@@ -930,7 +667,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           aRecordReject <- svc.markPresentationRejected(aRecord.id)
         } yield {
           assertTrue(aRecordReject.id == aRecord.id) &&
-          assertTrue(aRecordReject.presentationData == Some(p)) &&
+          assertTrue(aRecordReject.presentationData.contains(p)) &&
           assertTrue(aRecordReject.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
         }
       },
@@ -939,7 +676,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           svc <- ZIO.service[PresentationService]
           aRecord <- svc.createJwtRecord()
           p = presentation(aRecord.thid.value)
-          aRecordReceived <- svc.receivePresentation(p)
+          _ <- svc.receivePresentation(p)
           repo <- ZIO.service[PresentationRepository]
           _ <- repo.updatePresentationRecordProtocolState(
             aRecord.id,
@@ -949,14 +686,13 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           aRecordReject <- svc.rejectPresentation(aRecord.id)
         } yield {
           assertTrue(aRecordReject.id == aRecord.id) &&
-          assertTrue(aRecordReject.presentationData == Some(p)) &&
+          assertTrue(aRecordReject.presentationData.contains(p)) &&
           assertTrue(aRecordReject.protocolState == PresentationRecord.ProtocolState.PresentationRejected)
         }
       },
       test("markPresentationGenerated returns updated PresentationRecord") {
         for {
           svc <- ZIO.service[PresentationService]
-          pairwiseProverDid = DidId("did:peer:Prover")
           record <- svc.createJwtRecord()
           p = presentation(record.thid.value)
           repo <- ZIO.service[PresentationRepository]
@@ -973,7 +709,6 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("markProposePresentationSent returns updated PresentationRecord") {
         for {
           svc <- ZIO.service[PresentationService]
-          pairwiseProverDid = DidId("did:peer:Prover")
           record <- svc.createJwtRecord()
           repo <- ZIO.service[PresentationRepository]
           _ <- repo.updatePresentationRecordProtocolState(
@@ -994,7 +729,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           aRecordReceived <- svc.receiveProposePresentation(p)
         } yield {
           assertTrue(aRecordReceived.id == aRecord.id) &&
-          assertTrue(aRecordReceived.proposePresentationData == Some(p))
+          assertTrue(aRecordReceived.proposePresentationData.contains(p))
         }
       },
       test("acceptProposePresentation updates the PresentationRecord") {
@@ -1009,13 +744,160 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             PresentationRecord.ProtocolState.ProposalPending,
             PresentationRecord.ProtocolState.ProposalReceived
           )
-          aRecordAccept <- svc.acceptProposePresentation(aRecord.id)
+          _ <- svc.acceptProposePresentation(aRecord.id)
         } yield {
           assertTrue(aRecordReceived.id == aRecord.id) &&
-          assertTrue(aRecordReceived.proposePresentationData == Some(p))
+          assertTrue(aRecordReceived.proposePresentationData.contains(p))
         }
       },
     ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
+
+  private def receiveRequestPresentationTest(attachment: AttachmentDescriptor) = {
+    for {
+      svc <- ZIO.service[PresentationService]
+      connectionId = Some("connectionId")
+      body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
+      prover = DidId("did:peer:Prover")
+      verifier = DidId("did:peer:Verifier")
+      attachmentDescriptor = attachment
+      requestPresentation = RequestPresentation(
+        body = body,
+        attachments = Seq(attachmentDescriptor),
+        to = prover,
+        from = verifier,
+      )
+      requestPresentationRecord <- svc.receiveRequestPresentation(connectionId, requestPresentation)
+    } yield (requestPresentationRecord, requestPresentation)
+  }
+
+  private def createAnoncredPresentation = {
+    for {
+      credentialDefinitionService <- ZIO.service[CredentialDefinitionService]
+      issuerId = "did:prism:issuer"
+      holderID = "did:prism:holder"
+      schemaId = "resource:///anoncred-presentation-schema-example.json"
+      credentialDefinitionDb <- credentialDefinitionService.create(
+        Input(
+          name = "Credential Definition Name",
+          description = "Credential Definition Description",
+          version = "1.2",
+          signatureType = "CL",
+          tag = "tag",
+          author = issuerId,
+          authored = Some(OffsetDateTime.parse("2022-03-10T12:00:00Z")),
+          schemaId = schemaId,
+          supportRevocation = false
+        )
+      )
+      repo <- ZIO.service[CredentialRepository]
+      linkSecretService <- ZIO.service[LinkSecretService]
+      linkSecret <- linkSecretService.fetchOrCreate()
+      genericSecretStorage <- ZIO.service[GenericSecretStorage]
+      maybeCredentialDefintionPrivate <-
+        genericSecretStorage
+          .get[UUID, CredentialDefinitionSecret](credentialDefinitionDb.guid)
+      credentialDefinition = AnoncredCreateCredentialDefinition(
+        AnoncredCredentialDefinition(credentialDefinitionDb.definition.toString()),
+        AnoncredCredentialDefinitionPrivate(maybeCredentialDefintionPrivate.get.json.toString()),
+        AnoncredCredentialKeyCorrectnessProof(credentialDefinitionDb.keyCorrectnessProof.toString())
+      )
+      file = createTempJsonFile(credentialDefinition.cd.data, "anoncred-presentation-credential-definition-example")
+      credentialDefinitionId = "resource:///" + file.getFileName
+      credentialOffer = AnoncredLib.createOffer(credentialDefinition, credentialDefinitionId)
+      credentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition.cd, credentialOffer)
+      processedCredential =
+        AnoncredLib.processCredential(
+          AnoncredLib
+            .createCredential(
+              credentialDefinition.cd,
+              credentialDefinition.cdPrivate,
+              credentialOffer,
+              credentialRequest.request,
+              Seq(
+                ("name", "Miguel"),
+                ("sex", "M"),
+                ("age", "31"),
+              )
+            ),
+          credentialRequest.metadata,
+          linkSecret,
+          credentialDefinition.cd
+        )
+      issueCredential =
+        IssueCredential(
+          from = DidId(issuerId),
+          to = DidId(holderID),
+          body = IssueCredential.Body(),
+          attachments = Seq(
+            AttachmentDescriptor.buildBase64Attachment(
+              mediaType = Some("application/json"),
+              format = Some(IssueCredentialIssuedFormat.Anoncred.name),
+              payload = processedCredential.data.getBytes()
+            )
+          )
+        )
+      aIssueCredentialRecord =
+        IssueCredentialRecord(
+          id = DidCommID(),
+          createdAt = Instant.now,
+          updatedAt = None,
+          thid = DidCommID(),
+          schemaUri = Some(schemaId),
+          credentialDefinitionId = Some(credentialDefinitionDb.guid),
+          credentialDefinitionUri = Some(credentialDefinitionId),
+          credentialFormat = CredentialFormat.AnonCreds,
+          role = IssueCredentialRecord.Role.Issuer,
+          subjectId = None,
+          validityPeriod = None,
+          automaticIssuance = None,
+          protocolState = IssueCredentialRecord.ProtocolState.CredentialReceived,
+          offerCredentialData = None,
+          requestCredentialData = None,
+          anonCredsRequestMetadata = None,
+          issueCredentialData = Some(issueCredential),
+          issuedCredentialRaw =
+            Some(issueCredential.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???")),
+          issuingDID = None,
+          metaRetries = 5,
+          metaNextRetry = Some(Instant.now()),
+          metaLastFailure = None,
+        )
+      _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
+      svc <- ZIO.service[PresentationService]
+      aRecord <- svc.createAnoncredRecord(
+        credentialDefinitionId = credentialDefinitionId
+      )
+      repo <- ZIO.service[PresentationRepository]
+      credentialsToUse =
+        AnoncredCredentialProofsV1(
+          List(
+            AnoncredCredentialProofV1(
+              aIssueCredentialRecord.id.value,
+              Seq("sex"),
+              Seq("age")
+            )
+          )
+        )
+      credentialsToUseJson <- ZIO.fromEither(
+        AnoncredCredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
+      )
+      _ <-
+        repo.updateAnoncredPresentationWithCredentialsToUse(
+          aRecord.id,
+          Some(AnoncredPresentationV1.version),
+          Some(credentialsToUseJson),
+          PresentationRecord.ProtocolState.RequestPending
+        )
+      issuer = createIssuer(DID("did:prism:issuer"))
+      presentation <- svc.createAnoncredPresentation(
+        aRecord.requestPresentationData.get,
+        aRecord.id,
+        issuer,
+        credentialsToUse,
+        Instant.now()
+      )
+    } yield (presentation, aRecord)
+  }
 
   private val multiWalletSpec =
     suite("multi-wallet spec")(
