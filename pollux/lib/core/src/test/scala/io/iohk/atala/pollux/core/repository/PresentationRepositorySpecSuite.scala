@@ -225,36 +225,6 @@ object PresentationRepositorySpecSuite {
         assertTrue(records.exists(_.anoncredCredentialsToUseJsonSchemaId.contains(AnoncredCredentialProofsV1.version)))
       }
     },
-    test("updatePresentationWithCredentialsToUse updates the record") {
-      for {
-        repo <- ZIO.service[PresentationRepository]
-        aRecord = presentationRecord
-        bRecord = presentationRecord
-        cRecord = presentationRecord
-        _ <- repo.createPresentationRecord(aRecord)
-        _ <- repo.createPresentationRecord(bRecord)
-        _ <- repo.createPresentationRecord(cRecord)
-        anoncredCredentialProofs = AnoncredCredentialProofsV1(
-          List(AnoncredCredentialProofV1("credential1", Seq("requestedAttribute"), Seq("requestedPredicate")))
-        )
-        anoncredCredentialProofsJson <- ZIO
-          .fromEither(
-            AnoncredCredentialProofsV1.schemaSerDes.serialize(anoncredCredentialProofs)
-          )
-
-        _ <- repo.updateAnoncredPresentationWithCredentialsToUse(
-          aRecord.id,
-          Some(AnoncredCredentialProofsV1.version),
-          Some(anoncredCredentialProofsJson),
-          ProtocolState.PresentationPending
-        )
-        records <- repo.getPresentationRecord(aRecord.id)
-      } yield {
-        assertTrue(records.size == 1) &&
-        assertTrue(records.exists(_.anoncredCredentialsToUse.contains(anoncredCredentialProofsJson))) &&
-        assertTrue(records.exists(_.anoncredCredentialsToUseJsonSchemaId.contains(AnoncredCredentialProofsV1.version)))
-      }
-    },
     test("updateCredentialRecordProtocolState updates the record") {
       for {
         repo <- ZIO.service[PresentationRepository]
