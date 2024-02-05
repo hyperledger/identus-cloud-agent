@@ -125,7 +125,7 @@ The Node utilizes Cardano as a decentralized open database, and its implementati
 
 The last component is the database that the Node uses internally to index Open Enterprise Agent (OAE) related Cardano transactions and maintain the state of DID documents. It is a simple PostgreSQL version 13 database, and you can use the Docker image `postgres:13` to run it.
 
-When running the node, you must specify the host, database name, username, and password of this database via environment variables.
+When running the Node, you must specify the host, database name, username, and password of this database via environment variables.
 
 * `NODE_PSQL_HOST` - host with a port, in a format `host:port`
 * `NODE_PSQL_DATABASE` - databse name
