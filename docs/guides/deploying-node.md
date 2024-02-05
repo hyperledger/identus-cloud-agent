@@ -128,7 +128,7 @@ The last component is the database that the Node uses internally to index Open E
 When running the Node, you must specify the host, database name, username, and password of this database via environment variables.
 
 * `NODE_PSQL_HOST` - host with a port, in a format `host:port`
-* `NODE_PSQL_DATABASE` - databse name
+* `NODE_PSQL_DATABASE` - database name
 * `NODE_PSQL_USERNAME` - username
 * `NODE_PSQL_PASSWORD` - password
 
