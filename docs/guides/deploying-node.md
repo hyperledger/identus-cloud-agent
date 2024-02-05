@@ -1,0 +1,132 @@
+# Overview
+
+Node is a level 2 proxy on top of the Cardano blockchain, that is responsible for publishing, resolving, updating, and deactivating DIDs. The node exposes a gRPC API through which all the aforementioned operations are performed. However, this documentation will not cover the gRPC API itself. Open Enterprise Agent communicates with the Node, with all operations being conducted through it. The following documentation will provide a high-level overview of how the node functions and explain its usage, including the environment variables it requires and how to deploy it to both the Cardano mainnet and testnet.
+
+# Node components
+
+The Node consists of 4 separate runnables:
+
+1. Node gRPC server
+2. Node PosgresQL database
+3. Cardano wallet backend
+4. DB sync.
+
+#### Node gRPC server
+
+This is a main service that is responsible for submitting transactions to the Cardano network with a configurable frequency, retrieving blocks, and processing the data for storage in a database
+
+
+#### Node PosgresQL database
+
+The database used by the Node to store processed data, namely DID documents and their respective states.
+
+
+#### Cardano wallet backend
+
+An interface enables the node to submit transactions to the Cardano node.
+
+#### DB sync.
+
+An indexed version of the entire Cardano blockchain is utilized by the node to access and parse minted blocks
+
+
+```mermaid
+graph TB
+    GRPC["Node gRPC Server"]
+    DB["Node PostgreSQL Database"]
+    CWB["Cardano Wallet Backend"]
+    DBS["DB Sync"]
+    CN["Cardano node"]
+    
+    GRPC -->|"Submits transactions via"| CWB
+    GRPC -->|"Processes data for storage"| DB
+    DBS --> |"Indexes the whole blockchain"| CN
+    CWB -->|"Submits trasactions"| CN
+    GRPC --> |"retrieves blocks and their transactions"| DBS
+
+```
+
+### Node enviroment variables
+
+
+| Environment Variable                    | Description                                                                           | Default Value   |  Data Type                       |
+|-----------------------------------------|---------------------------------------------------------------------------------------|-----------------|----------------------------------|
+| NODE_PSQL_HOST                          | Host and port of Node PosgresQL database                                              | localhost:5432  | String                           |
+| NODE_PSQL_DATABASE                      | Name of the database to connect to                                                    | node_db         | String                           | 
+| NODE_PSQL_USERNAME                      | Username for database authentication                                                  | postgres        | String                           |
+| NODE_PSQL_PASSWORD                      | Password for database authentication                                                  | postgres        | String                           |  
+| NODE_PSQL_AWAIT_CONNECTION_THREADS      | Maximum amount of database connections                                                | 8               | Int                              |
+| NODE_LEDGER                             | Ledger which will be used for txs and blocks                                          | in-memory       | Enum(in-memory, cardano)         |
+| NODE_REFRESH_AND_SUBMIT_PERIOD          | Time period between refreshing transaction statuses and submitting pending operations | 20s             | String                           |
+| NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD   | Time period between making scheduled operations ready for submissions                 | 15s             | String                           |
+| NODE_WALLET_MAX_TPS                     | Maximum number of transactions cardano-wallet can work with                           | 10              | Int                              |
+| NODE_DID_PUBLIC_KEYS_LIMIT              | Maximum number of public keys Node API can create/update/get per request to a DID     | 50              | Int                              |
+| NODE_DID_SERVICES_LIMIT                 | Maximum number of services Node API can create/update/get per request to a DID        | 50              | Int                              |
+| NODE_SERVICE_ENDPOINT_CHAR_LIMIT        | Maximum number of characters every DID service endpoint can have                      | 300             | Int                              |
+| NODE_SERVICE_TYPE_CHAR_LIMIT            | Maximum number of characters every DID type can have                                  | 100             | Int                              |
+| NODE_CONTEXT_STRING_CHAR_LIMIT          | Maximum number of characters every context string of a DID can have                   | 100             | Int                              |
+| NODE_ID_CHAR_LIMIT                      | Maximum number of characters id field of pk and service can have                      | 50              | Int                              |
+| NODE_CARDANO_NETWORK                    | Cardano network node should operate on                                                | testnet         | Enum(testnet, mainnet)           |
+| NODE_CARDANO_WALLET_ID                  | ID (hex encoded) of the wallet to use for payments                                    |                 | String                           |
+| NODE_CARDANO_WALLET_PASSPHRASE          | Spending passphrase of NODE_CARDANO_WALLET_ID                                         |                 | String                           | 
+| NODE_CARDANO_PAYMENT_ADDRESS            | Address (hex encoded) to make payments to, can be NODE_CARDANO_WALLET_ID itself       |                 | String                           |
+| NODE_CARDANO_WALLET_API_HOST            | Cardano wallet backend API host                                                       | localhost       | String                           |
+| NODE_CARDANO_WALLET_API_PORT            | Cardano wallet backend API port                                                       | 8090            | Int                              |
+| NODE_CARDANO_WALLET_ROUTING_HEADER_NAME | Cardano wallet backend routing header name                                            |                 | String                           |
+| NODE_CARDANO_PRISM_GENESIS_BLOCK        | Index of the first block from which node should start syncing from                    | 1868381         | Int                              |
+| NODE_CARDANO_CONFIRMATION_BLOCKS        | Number of blocks to wait before transaction is considered to be confirmed             | 112             | Int                              |
+| NODE_CARDANO_DB_SYNC_HOST               | Db sync database host and port                                                        | localhost:5433  | String                           |
+| NODE_CARDANO_DB_SYNC_DATABASE           | databse name in DB sync PosgresQL database                                            | cexplorer       | String                           |
+| NODE_CARDANO_DB_SYNC_USERNAME           | Username for db sync database authentication                                          | postgres        | String                           |
+| NODE_CARDANO_DB_SYNC_PASSWORD           | Password for db sync database authentication                                          | password        | String                           |
+
+
+#### Running node
+
+Node docker image is available on [Github](https://github.com/input-output-hk/atala-prism/pkgs/container/prism-node), use the latest version.
+
+By default, Node will run with an `in-memory` ledger, which is ideal for development purposes. To run it on Cardano, you must set the `NODE_LEDGER` environment variable to `cardano`. If you do this, Node will start utilizing the Cardano wallet backend and DB-sync to query for blocks and submit transactions. It is important to have the Cardano wallet backend and DB-sync up and running before running the node with `NODE_LEDGER` set to `cardano`.
+
+Most up to date instructions on how to run the Cardano wallet backend and DB-sync are available in their respective repositories:
+
+* [Cardano wallet backend](https://github.com/cardano-foundation/cardano-wallet)
+* [DB-sync](https://github.com/IntersectMBO/cardano-db-sync)
+
+Once you have these services up and running, specify their respective URLs in the environment variables of the Node, specifically:
+
+* Cardano wallet backend
+    - `NODE_CARDANO_WALLET_API_HOST` for wallet server host
+    - `NODE_CARDANO_WALLET_API_PORT` for wallet server port
+    - `NODE_CARDANO_WALLET_ROUTING_HEADER_NAME` for wallet routing header name
+* DB-sync
+    - `NODE_CARDANO_DB_SYNC_HOST` for DB-sync host and port in a format `host:port`
+    - `NODE_CARDANO_DB_SYNC_DATABASE` the databse name in DB-sync postgres database
+    - `NODE_CARDANO_DB_SYNC_USERNAME` DB-sync Database username 
+    - `NODE_CARDANO_DB_SYNC_PASSWORD` DB-sync Database password
+
+When running the node with Cardano ledger, you must specify which network to use, either `mainnet` or `testnet`, using the `NODE_CARDANO_NETWORK` environment variable. While this environment variable is essential for the correct operation of the node, it does not define the actual network that will be used. As mentioned earlier, the interface that communicates with the Cardano node and, subsequently, the network is DB-sync and Cardano wallet backend. Therefore, when configuring those services, you must specify the network to be used in their respective configurations. It is technically possible to run DB-sync on testnet, Cardano wallet backend on mainnet, and specify either one via `NODE_CARDANO_NETWORK`. Currently, the Node won't report any errors, but this configuration would be incorrect, and it won't work properly. You are responsible for syncing these three components. If you intend to use the testnet, set `NODE_CARDANO_NETWORK` to `testnet`, but also run Cardano wallet backend connected to the testnet and start DB-sync to sync from the node that is also running on the testnet as well. Same goes with mainnet.
+
+Apart from that, you must also provide the Wallet ID and its spending password as environment variables as well:
+
+* `NODE_CARDANO_WALLET_ID` - The wallet ID must be provided in hex-encoded format, and the wallet must belong to the network you are running the node on, which can be either testnet or mainnet     
+* `NODE_CARDANO_WALLET_PASSPHRAS` - Spending password or aforementioned wallet.
+
+The Node utilizes Cardano as a decentralized open database, and its implementation has some similarities to the DIF Sidetree Protocol. In short, the node stores all relevant information in a Cardano transaction metadata and sends 1 ADA (minimum allowed amount) to another address, which you must provide via the `NODE_CARDANO_PAYMENT_ADDRESS` environment variable. This esentially stores arbitrary information on the blockchain. In most cases, you don't need to specify a particular address for sending transactions, as long as the transaction is recorded. In this case, you should set `NODE_CARDANO_PAYMENT_ADDRESS` to the same address you are sending transactions from, which is `NODE_CARDANO_WALLET_ID`. In this configuration, you are not spending any ADA other than the transaction fee for every transaction. If your wallet does not have enough ADA to cover the transaction fee (plus 1 ADA to send to yourself), the transaction won't be recorded, and your operation, which includes any DID-related action, won't be submitted.
+
+The last component is the database that the node uses internally to index Open Enterprise Agent (OAE) related Cardano transactions and maintain the state of DID documents. It is a simple PostgreSQL version 13 database, and you can use the Docker image `postgres:13` to run it.
+
+When running the node, you must specify the host, database name, username, and password of this database via environment variables.
+
+* `NODE_PSQL_HOST` - host with a port, in a format `host:port`
+* `NODE_PSQL_DATABASE` - databse name
+* `NODE_PSQL_USERNAME` - username
+* `NODE_PSQL_PASSWORD` - password
+
+
+To summarize, the Node gRPC server has three dependencies: Node DB, Cardano wallet, and DB-sync. You need to run these three services before starting the node. 
+
+Node DB is a simple PostgreSQL database. 
+
+Cardano wallet is an application that communicates with the Cardano network; it functions as a server that you can start and connect to either the mainnet or testnet. You must provide its host and port as environment variables to the Node runnable.
+
+DB-sync is an application responsible for syncing the Cardano blockchain with a PostgreSQL database. You should use it to sync with either the mainnet or testnet and must provide the database host with port, database name, and credentials as environment variables to the Node runnable as well.
