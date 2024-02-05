@@ -19,7 +19,7 @@ The Node consists of four separate executables:
 
 #### Node gRPC server
 
-This is a main service that is responsible for submitting transactions to the Cardano network with a configurable frequency, retrieving blocks, and processing the data for storage in a database
+The Node gRPC is a service responsible for submitting transactions to the Cardano network with a configurable frequency, retrieving blocks, and processing the data for storage in a database.
 
 
 #### Node PosgresQL database
