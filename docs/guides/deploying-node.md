@@ -33,7 +33,7 @@ An interface enables the Node to submit transactions to the Cardano node.
 
 #### DB sync.
 
-An indexed version of the entire Cardano blockchain is utilized by the node to access and parse minted blocks
+The Node uses an indexed version of the Cardano blockchain to access and parse minted blocks.
 
 
 ```mermaid
