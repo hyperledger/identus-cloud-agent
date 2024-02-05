@@ -137,6 +137,6 @@ The Node gRPC server has three dependencies: Node DB, Cardano wallet, and DB-syn
 
 Node DB is a simple PostgreSQL database. 
 
-Cardano wallet is an application that communicates with the Cardano network; it functions as a server that you can start and connect to either the mainnet or testnet. You must provide its host and port as environment variables to the Node runnable.
+Cardano wallet is an application that communicates with the Cardano network; it functions as a server that you can start and connect to either the mainnet or testnet. You must provide the Node runnable's host and port as environment variables.
 
 DB-sync is an application responsible for syncing the Cardano blockchain with a PostgreSQL database. You should use it to sync with either the mainnet or testnet and must provide the database host with port, database name, and credentials as environment variables to the Node runnable as well.
