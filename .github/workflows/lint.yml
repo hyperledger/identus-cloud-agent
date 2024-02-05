@@ -36,9 +36,10 @@ jobs:
       - name: Archive production artifacts
         if: success() || failure()
         # TODO: migrate to v4 according to https://github.com/actions/upload-artifact/blob/main/docs/MIGRATION.md
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Mega-Linter reports
           path: |
             megalinter-reports
             mega-linter.log
+          overwrite: true
