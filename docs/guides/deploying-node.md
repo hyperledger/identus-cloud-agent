@@ -1,6 +1,12 @@
 # Overview
 
-Node is a level 2 proxy on top of the Cardano blockchain, that is responsible for publishing, resolving, updating, and deactivating DIDs. The node exposes a gRPC API through which all the aforementioned operations are performed. However, this documentation will not cover the gRPC API itself. Open Enterprise Agent communicates with the Node, with all operations being conducted through it. The following documentation will provide a high-level overview of how the node functions and explain its usage, including the environment variables it requires and how to deploy it to both the Cardano mainnet and testnet.
+The Node is a level 2 proxy on top of the Cardano blockchain responsible for publishing, resolving, updating, and deactivating DIDs. It exposes a gRPC API to perform all the operations above. 
+
+:::note
+This documentation will not describe the gRPC API itself.
+:::
+
+The Open Enterprise Agent communicates with the Node, with all operations conducted through it. The following documentation will provide a high-level overview of how the Node functions and explain its usage, including the environment variables required and how to deploy it to the Cardano mainnet and testnet.
 
 # Node components
 
