@@ -14,6 +14,7 @@ inThisBuild(
     githubOwner := "input-output-hk",
     githubRepository := "atala-prism-building-blocks",
     resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
+    resolvers += "jitpack" at "https://jitpack.io",
   )
 )
 
@@ -57,7 +58,7 @@ lazy val V = new {
   val zioMock = "1.0.0-RC11"
   val mockito = "3.2.16.0"
 
-    // https://mvnrepository.com/artifact/io.circe/circe-core
+  // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.6"
 
   val tapir = "1.6.4"
@@ -118,7 +119,7 @@ lazy val D = new {
 
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.1"
-  val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.3.0"
+  val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.5.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
 
   // Customized version of numbus jose jwt
@@ -413,6 +414,7 @@ val commonSetttings = Seq(
   testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
+  resolvers += "jitpack" at "https://jitpack.io",
   // Override 'updateLicenses' for all project to inject custom DependencyResolution.
   // https://github.com/sbt/sbt-license-report/blob/9675cedb19c794de1119cbcf46a255fc8dcd5d4e/src/main/scala/sbtlicensereport/SbtLicenseReport.scala#L84
   updateLicenses := {
