@@ -44,7 +44,6 @@ case class Connection(
     @validate(annotations.state.validator)
     state: String,
     @description(annotations.invitation.description)
-    // @encodedExample(annotations.invitation.example) // FIXME: tapir incorrectly render this example
     invitation: ConnectionInvitation,
     @description(annotations.createdAt.description)
     @encodedExample(annotations.createdAt.example)
@@ -129,7 +128,7 @@ object Connection {
         extends Annotation[String](
           description =
             "A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.",
-          example = "To issue a Peter College Graduate credential"
+          example = "To issue a Faber College Graduate credential"
         )
     object myDid
         extends Annotation[String](

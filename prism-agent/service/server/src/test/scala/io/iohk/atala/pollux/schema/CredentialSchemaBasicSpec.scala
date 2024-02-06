@@ -77,11 +77,22 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
         .response(asJsonAlways[CredentialSchemaResponse])
         .send(backend)
     } yield response
+
     def getSchemaZIO(uuid: UUID) = for {
       backend <- backendZIO
       response <- basicRequest
         .get(credentialSchemaUriBase.addPath(uuid.toString))
         .response(asJsonAlways[CredentialSchemaResponse])
+        .send(backend)
+
+      fetchedSchema <- fromEither(response.body)
+    } yield fetchedSchema
+
+    def getRawSchemaZIO(uuid: UUID) = for {
+      backend <- backendZIO
+      response <- basicRequest
+        .get(credentialSchemaUriBase.addPath(uuid.toString).addPath("schema"))
+        .response(asJson)
         .send(backend)
 
       fetchedSchema <- fromEither(response.body)
@@ -108,9 +119,12 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
 
           fetchedSchema <- getSchemaZIO(credentialSchema.guid)
 
-          credentialSchemaIsFetched = assert(fetchedSchema)(equalTo(credentialSchema))
+          fetchedRawSchema <- getRawSchemaZIO(credentialSchema.guid)
 
-        } yield statusCodeIs201 && credentialSchemaIsCreated && credentialSchemaIsFetched
+          credentialSchemaIsFetched = assert(fetchedSchema)(equalTo(credentialSchema))
+          rawCredentialSchemaIsFetched = assert(fetchedRawSchema)(equalTo(credentialSchema.schema))
+
+        } yield statusCodeIs201 && credentialSchemaIsCreated && credentialSchemaIsFetched && rawCredentialSchemaIsFetched
       },
       test("get the schema by the wrong id") {
         for {
