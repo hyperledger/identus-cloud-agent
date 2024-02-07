@@ -35,7 +35,7 @@ all data is encrypted and it also offers additional security-related capabilitie
 By default, the agent uses this backend but the option is configurable.
 To utilize this backend, set the `SECRET_STORAGE_BACKEND` variable to `vault`.
 The agent expects to read and write secrets to the path `/secret/*`,
-so ensure the necessary permissions are provisioned.
+to ensure the provisioned permissions.
 
 Example Vault policy
 
