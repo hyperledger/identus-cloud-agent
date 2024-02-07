@@ -15,7 +15,7 @@ PRISM agent uses the following environment variables for secret management.
 | Name                     | Description                                                     | Default                 |
 |--------------------------|-----------------------------------------------------------------|-------------------------|
 | `SECRET_STORAGE_BACKEND` | The storage backend that will be used for the secret storage    | `vault`                 |
-| `VAULT_ADDR`             | The address which PRISM agent can reach the Vault               | `http://localhost:8200` |
+| `VAULT_ADDR`             | The address which PRISM Agent can reach the Vault               | `http://localhost:8200` |
 | `VAULT_TOKEN`            | The token for accessing HashiCorp Vault                         | -                       |
 | `VAULT_APPROLE_ROLE_ID`  | The `role_id` for HashiCorp Vault authentication with AppRole   | -                       |
 | `VAULT_APPROLE_SECRET_ID`| The `secret_id` for HashiCorp Vault authentication with AppRole | -                       |
