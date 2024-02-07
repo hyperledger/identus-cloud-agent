@@ -10,7 +10,7 @@ final case class AuthenticationConfig(
     keycloak: KeycloakConfig
 ) {
 
-  /** Return true if at least 1 authentication method is enabled (exlcuding admin auth method) */
+  /** Return true if at least 1 authentication method is enabled (excluding admin auth method) */
   def isEnabledAny: Boolean = apiKey.enabled || keycloak.enabled
 
 }

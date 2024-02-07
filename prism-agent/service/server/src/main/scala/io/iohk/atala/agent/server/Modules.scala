@@ -5,6 +5,8 @@ import doobie.util.transactor.Transactor
 import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.config.SecretStorageBackend
+import io.iohk.atala.agent.server.config.ValidatedVaultConfig
+import io.iohk.atala.agent.server.config.VaultConfig
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.memory.{
   DIDSecretStorageInMemory,
@@ -55,6 +57,26 @@ object SystemModule {
         )
       )
     )
+  }
+
+  val zioHttpClientLayer = {
+    import zio.http.netty.NettyConfig
+    import zio.http.{ConnectionPoolConfig, DnsResolver, ZClient}
+    (ZLayer.fromZIO(
+      for {
+        appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
+      } yield ZClient.Config.default.copy(
+        connectionPool = {
+          val cpSize = appConfig.agent.httpClient.connectionPoolSize
+          if (cpSize > 0) ConnectionPoolConfig.Fixed(cpSize)
+          else ConnectionPoolConfig.Disabled
+        },
+        idleTimeout = Some(appConfig.agent.httpClient.idleTimeout),
+        connectionTimeout = Some(appConfig.agent.httpClient.connectionTimeout),
+      )
+    ) ++
+      ZLayer.succeed(NettyConfig.default) ++
+      DnsResolver.default) >>> ZClient.live
   }
 }
 
@@ -183,19 +205,28 @@ object RepoModule {
     agentDbConfigLayer(appUser = false) >>> TransactorLayer.task
 
   val vaultClientLayer: TaskLayer[VaultKVClient] = {
-    val vaultClientConfig = ZLayer {
+    val vaultClient = ZLayer {
       for {
         config <- ZIO
           .service[AppConfig]
           .map(_.agent.secretStorage.vault)
           .someOrFailException
-          .tapError(_ => ZIO.logError("Vault config is not found"))
+          .logError("Vault config is not found")
         _ <- ZIO.logInfo("Vault client config loaded. Address: " + config.address)
-        vaultKVClient <- VaultKVClientImpl.fromAddressAndToken(config.address, config.token)
+        vaultKVClient <- ZIO
+          .fromEither(config.validate)
+          .mapError(Exception(_))
+          .flatMap {
+            case ValidatedVaultConfig.TokenAuth(address, token) =>
+              ZIO.logInfo("Using Vault token authentication") *> VaultKVClientImpl.fromToken(address, token)
+            case ValidatedVaultConfig.AppRoleAuth(address, roleId, secretId) =>
+              ZIO.logInfo("Using Vault AppRole authentication") *>
+                VaultKVClientImpl.fromAppRole(address, roleId, secretId)
+          }
       } yield vaultKVClient
     }
 
-    SystemModule.configLayer >>> vaultClientConfig
+    SystemModule.configLayer >>> vaultClient
   }
 
   val allSecretStorageLayer: TaskLayer[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage] = {
