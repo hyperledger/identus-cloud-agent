@@ -51,7 +51,7 @@ To authenticate using the token, set the environment variable `VAULT_TOKEN`.
 The agent prefers token authentication if provided with multiple authentication methods.
 
 Another method is [AppRole authentication](https://developer.hashicorp.com/vault/docs/auth/approle) which is suitable for automatic workflows.
-To use AppRole authentication, simply set the environment variable `VAULT_APPROLE_ROLE_ID` and `VAULT_APPROLE_SECRET_ID`.
+To use AppRole authentication, set the environment variable `VAULT_APPROLE_ROLE_ID` and `VAULT_APPROLE_SECRET_ID`.
 
 __Postgres__
 
