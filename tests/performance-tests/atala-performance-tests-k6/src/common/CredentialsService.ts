@@ -46,7 +46,7 @@ export class CredentialsService extends HttpService {
       "version": "1.0.0",
       "tag": "Licence",
       "author": "${issuingDid}",
-      "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}",
+      "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}/schema",
       "signatureType": "CL",
       "supportRevocation": false
     }
