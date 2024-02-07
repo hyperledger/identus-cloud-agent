@@ -47,7 +47,7 @@ path "secret/*" {
 
 HashiCorp Vault provides multiple authentication methods.
 One of the simplest methods is [token authentication](https://developer.hashicorp.com/vault/docs/auth/token).
-To authenticate using the token, simply set the environment variable `VAULT_TOKEN`.
+To authenticate using the token, set the environment variable `VAULT_TOKEN`.
 The agent prefers token authentication if multiple authentication methods are provided.
 
 Another method is [AppRole authentication](https://developer.hashicorp.com/vault/docs/auth/approle) which is suitable for automatic workflows.
