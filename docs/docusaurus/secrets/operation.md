@@ -10,21 +10,16 @@ allow the software to generate one automatically. However, in a production envir
 it is crucial for the system operators to explicitly supply the seed to the agent.
 This ensures full control over the DID key material and guarantees secure management of user identities.
 
-The PRISM agent includes a development mode that conveniently bypasses certain checks during development or integration.
-By default, the agent does not start in the development mode.
-This behavior can be modified using the `DEV_MODE` environment variable, which accepts the value `true` or `false`.
-
-__Note that it is important to set `DEV_MODE=false` for the production instance.__
-
 PRISM agent uses the following environment variables for secret management.
 
-| Name                    | Description                                                  | Default                 |
-|-------------------------|--------------------------------------------------------------|-------------------------|
-| `DEV_MODE`              | Whether PRISM agent should start in development mode         | `false`                 |
-| `SECRET_STORAGE_BACKEND`| The storage backend that will be used for the secret storage | `vault`                 |
-| `VAULT_TOKEN`           | The token for accessing HashiCorp Vault                      | `root`                  |
-| `VAULT_ADDR`            | The address which PRISM agent can reach the Vault            | `http://localhost:8200` |
-| `DEFAULT_WALLET_SEED`   | The seed used for DID key management for the default wallet  | -                       |
+| Name                     | Description                                                     | Default                 |
+|--------------------------|-----------------------------------------------------------------|-------------------------|
+| `SECRET_STORAGE_BACKEND` | The storage backend that will be used for the secret storage    | `vault`                 |
+| `VAULT_ADDR`             | The address which PRISM agent can reach the Vault               | `http://localhost:8200` |
+| `VAULT_TOKEN`            | The token for accessing HashiCorp Vault                         | -                       |
+| `VAULT_APPROLE_ROLE_ID`  | The `role_id` for HashiCorp Vault authentication with AppRole   | -                       |
+| `VAULT_APPROLE_SECRET_ID`| The `secret_id` for HashiCorp Vault authentication with AppRole | -                       |
+| `DEFAULT_WALLET_SEED`    | The seed used for DID key management for the default wallet     | -                       |
 
 ## Storage backend configuration
 
@@ -32,14 +27,31 @@ Secret storage supports various backends like the Vault service or Postgres data
 By default, the backend chosen for secret storage is Vault, which is suitable for production environments.
 There are multiple supported backend implementations, each catering to specific use cases.
 
-__HachiCorp Vault__
+__HashiCorp Vault__
 
 When operating in a production environment, the agent has the option to utilize Vault
 as a secure secret storage backend. This choice is deemed suitable for production because
 all data is encrypted and it also offers additional security-related capabilities.
 By default, the agent uses this backend but the option is configurable.
-To utilize this backend, set the `SECRET_STORAGE_BACKEND` variable to `vault` and
-provide the `VAULT_TOKEN` and `VAULT_ADDR` environment variables.
+To utilize this backend, set the `SECRET_STORAGE_BACKEND` variable to `vault`.
+The agent is expected to read and write secrets to the path `/secret/*`,
+so ensure the necessary permissions are provisioned.
+
+Example Vault policy
+
+```
+path "secret/*" {
+    capabilities = ["create", "read", "update", "patch", "delete", "list"]
+}
+```
+
+HashiCorp Vault provides multiple authentication methods.
+One of the simplest methods is [token authentication](https://developer.hashicorp.com/vault/docs/auth/token).
+To authenticate using the token, simply set the environment variable `VAULT_TOKEN`.
+The agent prefers token authentication if multiple authentication methods are provided.
+
+Another method is [AppRole authentication](https://developer.hashicorp.com/vault/docs/auth/approle) which is suitable for automatic workflows.
+To use AppRole authentication, simply set the environment variable `VAULT_APPROLE_ROLE_ID` and `VAULT_APPROLE_SECRET_ID`.
 
 __Postgres__
 
