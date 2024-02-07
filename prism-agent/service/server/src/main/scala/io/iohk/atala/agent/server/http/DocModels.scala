@@ -51,14 +51,12 @@ object DocModels {
 
   val customiseDocsModel: OpenAPI => OpenAPI = { oapi =>
     oapi
+      .openapi("3.0.3")
       .info(
         Info(
           title = "Open Enterprise Agent API Reference",
           version = "1.0", // Will be replaced dynamically by 'Tapir2StaticOAS'
-          summary = Some("""
-              |This API provides interfaces for managing decentralized identities and secure communications in a self-sovereign identity framework.
-              |It enables seamless interaction with various decentralized identity protocols and services using the [Open Enterprise Agent](https://github.com/hyperledger-labs/open-enterprise-agent)
-              |""".stripMargin),
+          summary = None,
           description = Some("""
               |The Open Enterprise Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
               |It supports DID (Decentralized Identifiers) management, verifiable credential exchange, and secure messaging based on DIDComm standards.
@@ -72,9 +70,9 @@ object DocModels {
               |""".stripMargin),
           contact = Some(
             Contact(
-              name = Some("Contact - Name"),
-              email = Some("Contact - Email"),
-              url = Some("Contact - URL"),
+              name = Some("Fayyaadh Adams"),
+              email = Some("fayyaadh.adams@iohk.io"),
+              url = Some("https://atalaprism.io/#contact"),
               extensions = ListMap.empty
             )
           ),
