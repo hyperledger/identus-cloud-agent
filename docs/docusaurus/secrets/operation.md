@@ -34,7 +34,7 @@ as a secure secret storage backend. This choice is deemed suitable for productio
 all data is encrypted and it also offers additional security-related capabilities.
 By default, the agent uses this backend but the option is configurable.
 To utilize this backend, set the `SECRET_STORAGE_BACKEND` variable to `vault`.
-The agent is expected to read and write secrets to the path `/secret/*`,
+The agent expects to read and write secrets to the path `/secret/*`,
 so ensure the necessary permissions are provisioned.
 
 Example Vault policy
