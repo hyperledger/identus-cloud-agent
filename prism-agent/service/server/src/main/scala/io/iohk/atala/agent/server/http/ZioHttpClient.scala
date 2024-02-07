@@ -4,8 +4,6 @@ import io.iohk.atala.mercury.*
 import zio.*
 import zio.http.{Header as _, *}
 
-import java.time.Instant
-
 object ZioHttpClient {
   val layer: URLayer[Client, ZioHttpClient] = ZLayer.fromFunction(new ZioHttpClient(_))
 }
