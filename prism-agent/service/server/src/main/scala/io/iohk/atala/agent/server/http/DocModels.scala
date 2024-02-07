@@ -68,14 +68,7 @@ object DocModels {
               |Users of the Open Enterprise Agent API must adhere to the terms and conditions outlined in [Link to Terms of Service](/).
               |This includes compliance with relevant data protection regulations, responsible usage policies, and adherence to the principles of decentralized identity management.
               |""".stripMargin),
-          contact = Some(
-            Contact(
-              name = Some("Fayyaadh Adams"),
-              email = Some("fayyaadh.adams@iohk.io"),
-              url = Some("https://atalaprism.io/#contact"),
-              extensions = ListMap.empty
-            )
-          ),
+          contact = None,
           license = Some(
             License(
               name = "Apache 2.0",
