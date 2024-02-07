@@ -16,7 +16,7 @@ trait VaultTestContainerSupport {
       val address = container.container.getHttpHostAddress()
       ZLayer.fromZIO(
         VaultKVClientImpl
-          .fromAddressAndToken(address, TEST_TOKEN)
+          .fromToken(address, TEST_TOKEN)
       )
     }.flatten
 

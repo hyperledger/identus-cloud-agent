@@ -1,6 +1,7 @@
 package io.iohk.atala.agent.server
 
 import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.agent.server.config.VaultConfig
 import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.service.EntityServiceImpl
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
@@ -23,6 +24,7 @@ import zio.test.Assertion.*
 import zio.test.ZIOSpecDefault
 
 import java.net.URL
+import io.iohk.atala.agent.server.config.SecretStorageBackend
 
 object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupport, ApolloSpecHelper {
 
@@ -146,37 +148,30 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         webhookApiKey: Option[String] = None,
         enableApiKey: Boolean = true,
         enableKeycloak: Boolean = false,
+        secretStorageBackend: SecretStorageBackend = SecretStorageBackend.memory,
+        vaultConfig: Option[VaultConfig] = None
     ): ZIO[R, E, A] = {
+      import monocle.syntax.all.*
       for {
-        appConfig <- ZIO.service[AppConfig]
-        agentConfig = appConfig.agent
-        defaultWalletConfig = agentConfig.defaultWallet
-        authConfig = agentConfig.authentication
-        apiKeyConfig = authConfig.apiKey
-        keycloakConfig = authConfig.keycloak
-        // consider using lens
-        result <- effect.provideSomeLayer(
-          ZLayer.succeed(
-            appConfig.copy(
-              agent = agentConfig.copy(
-                authentication = authConfig.copy(
-                  apiKey = apiKeyConfig.copy(
-                    enabled = enableApiKey
-                  ),
-                  keycloak = keycloakConfig.copy(
-                    enabled = enableKeycloak
-                  )
-                ),
-                defaultWallet = defaultWalletConfig.copy(
-                  enabled = enableDefaultWallet,
-                  seed = seed,
-                  webhookUrl = webhookUrl,
-                  webhookApiKey = webhookApiKey
-                )
-              )
-            )
-          )
+        appConfig <- ZIO.serviceWith[AppConfig](
+          _.focus(_.agent.authentication.apiKey.enabled)
+            .replace(enableApiKey)
+            .focus(_.agent.authentication.keycloak.enabled)
+            .replace(enableKeycloak)
+            .focus(_.agent.secretStorage.backend)
+            .replace(secretStorageBackend)
+            .focus(_.agent.secretStorage.vault)
+            .replace(vaultConfig)
+            .focus(_.agent.defaultWallet.enabled)
+            .replace(enableDefaultWallet)
+            .focus(_.agent.defaultWallet.seed)
+            .replace(seed)
+            .focus(_.agent.defaultWallet.webhookUrl)
+            .replace(webhookUrl)
+            .focus(_.agent.defaultWallet.webhookApiKey)
+            .replace(webhookApiKey)
         )
+        result <- effect.provideSomeLayer(ZLayer.succeed(appConfig))
       } yield result
     }
   }
