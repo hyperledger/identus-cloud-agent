@@ -148,8 +148,6 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         webhookApiKey: Option[String] = None,
         enableApiKey: Boolean = true,
         enableKeycloak: Boolean = false,
-        secretStorageBackend: SecretStorageBackend = SecretStorageBackend.memory,
-        vaultConfig: Option[VaultConfig] = None
     ): ZIO[R, E, A] = {
       import monocle.syntax.all.*
       for {
@@ -159,9 +157,7 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
             .focus(_.agent.authentication.keycloak.enabled)
             .replace(enableKeycloak)
             .focus(_.agent.secretStorage.backend)
-            .replace(secretStorageBackend)
-            .focus(_.agent.secretStorage.vault)
-            .replace(vaultConfig)
+            .replace(SecretStorageBackend.postgres)
             .focus(_.agent.defaultWallet.enabled)
             .replace(enableDefaultWallet)
             .focus(_.agent.defaultWallet.seed)
