@@ -1,3 +1,15 @@
+# [1.27.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.26.0...prism-agent-v1.27.0) (2024-02-08)
+
+
+### Bug Fixes
+
+* remove hard code did:example:* ([#882](https://github.com/hyperledger-labs/open-enterprise-agent/issues/882)) ([321faf5](https://github.com/hyperledger-labs/open-enterprise-agent/commit/321faf5791b05f0c24dd6ed96f155aa65d06477d))
+
+
+### Features
+
+* support vault AppRole authentication ([#884](https://github.com/hyperledger-labs/open-enterprise-agent/issues/884)) ([441f878](https://github.com/hyperledger-labs/open-enterprise-agent/commit/441f878f0b573f350ffed14de0df164e1e260122))
+
 # [1.26.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.25.0...prism-agent-v1.26.0) (2024-02-06)
 
 

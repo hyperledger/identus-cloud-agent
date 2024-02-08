@@ -1,11 +1,7 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
   title: Open Enterprise Agent API Reference
-  version: 1.26.0
-  summary: |2
-
-    This API provides interfaces for managing decentralized identities and secure communications in a self-sovereign identity framework.
-    It enables seamless interaction with various decentralized identity protocols and services using the [Open Enterprise Agent](https://github.com/hyperledger-labs/open-enterprise-agent)
+  version: 1.27.0
   description: |2
 
     The Open Enterprise Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
@@ -17,10 +13,6 @@ info:
 
     Users of the Open Enterprise Agent API must adhere to the terms and conditions outlined in [Link to Terms of Service](/).
     This includes compliance with relevant data protection regulations, responsible usage policies, and adherence to the principles of decentralized identity management.
-  contact:
-    name: Contact - Name
-    email: Contact - Email
-    url: Contact - URL
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0
@@ -3989,7 +3981,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2024-02-06T17:17:15.602283997Z'
+          example: '2024-02-08T08:15:44.191922818Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last

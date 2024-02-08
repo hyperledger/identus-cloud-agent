@@ -2,8 +2,26 @@ apiVersion: v1
 entries:
   prism-agent:
     - apiVersion: v2
+      appVersion: 1.27.0
+      created: "2024-02-08T08:36:22.026206998Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: 6476368c0c1537c5c84b4d2072d50ac522a1d6db791eb67fcd1fdeba86138d84
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.27.0.tgz
+      version: 1.27.0
+    - apiVersion: v2
       appVersion: 1.26.0
-      created: "2024-02-06T17:37:42.463709972Z"
+      created: "2024-02-08T08:36:22.016456164Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -21,7 +39,7 @@ entries:
       version: 1.26.0
     - apiVersion: v2
       appVersion: 1.25.0
-      created: "2024-02-06T17:37:42.453435405Z"
+      created: "2024-02-08T08:36:22.005994077Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -39,7 +57,7 @@ entries:
       version: 1.25.0
     - apiVersion: v2
       appVersion: 1.24.0
-      created: "2024-02-06T17:37:42.444200011Z"
+      created: "2024-02-08T08:36:21.995888477Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -57,7 +75,7 @@ entries:
       version: 1.24.0
     - apiVersion: v2
       appVersion: 1.23.0
-      created: "2024-02-06T17:37:42.43342009Z"
+      created: "2024-02-08T08:36:21.986162039Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -75,7 +93,7 @@ entries:
       version: 1.23.0
     - apiVersion: v2
       appVersion: 1.22.0
-      created: "2024-02-06T17:37:42.422649911Z"
+      created: "2024-02-08T08:36:21.975435711Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -93,7 +111,7 @@ entries:
       version: 1.22.0
     - apiVersion: v2
       appVersion: 1.21.1
-      created: "2024-02-06T17:37:42.413039604Z"
+      created: "2024-02-08T08:36:21.965765838Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -111,7 +129,7 @@ entries:
       version: 1.21.1
     - apiVersion: v2
       appVersion: 1.21.0
-      created: "2024-02-06T17:37:42.402602736Z"
+      created: "2024-02-08T08:36:21.954738205Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -129,7 +147,7 @@ entries:
       version: 1.21.0
     - apiVersion: v2
       appVersion: 1.20.1
-      created: "2024-02-06T17:37:42.392079833Z"
+      created: "2024-02-08T08:36:21.944857175Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -147,7 +165,7 @@ entries:
       version: 1.20.1
     - apiVersion: v2
       appVersion: 1.20.0
-      created: "2024-02-06T17:37:42.382459361Z"
+      created: "2024-02-08T08:36:21.935077217Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -165,7 +183,7 @@ entries:
       version: 1.20.0
     - apiVersion: v2
       appVersion: 1.19.1
-      created: "2024-02-06T17:37:42.372169391Z"
+      created: "2024-02-08T08:36:21.924416412Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -183,7 +201,7 @@ entries:
       version: 1.19.1
     - apiVersion: v2
       appVersion: 1.19.0
-      created: "2024-02-06T17:37:42.362827256Z"
+      created: "2024-02-08T08:36:21.914129188Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -201,7 +219,7 @@ entries:
       version: 1.19.0
     - apiVersion: v2
       appVersion: 1.18.0
-      created: "2024-02-06T17:37:42.351899496Z"
+      created: "2024-02-08T08:36:21.903676643Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -215,7 +233,7 @@ entries:
       version: 1.18.0
     - apiVersion: v2
       appVersion: 1.17.0
-      created: "2024-02-06T17:37:42.349077633Z"
+      created: "2024-02-08T08:36:21.900687051Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -229,7 +247,7 @@ entries:
       version: 1.17.0
     - apiVersion: v2
       appVersion: 1.16.4
-      created: "2024-02-06T17:37:42.346249568Z"
+      created: "2024-02-08T08:36:21.897842079Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -243,7 +261,7 @@ entries:
       version: 1.16.4
     - apiVersion: v2
       appVersion: 1.16.3
-      created: "2024-02-06T17:37:42.342752475Z"
+      created: "2024-02-08T08:36:21.894411239Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -257,7 +275,7 @@ entries:
       version: 1.16.3
     - apiVersion: v2
       appVersion: 1.16.2
-      created: "2024-02-06T17:37:42.339903771Z"
+      created: "2024-02-08T08:36:21.891592105Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -269,4 +287,4 @@ entries:
       urls:
         - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.16.2.tgz
       version: 1.16.2
-generated: "2024-02-06T17:37:42.336724016Z"
+generated: "2024-02-08T08:36:21.88849363Z"
