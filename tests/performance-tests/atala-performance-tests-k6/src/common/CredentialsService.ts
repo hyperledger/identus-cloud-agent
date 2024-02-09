@@ -21,7 +21,7 @@ export class CredentialsService extends HttpService {
         "claims": {
           "emailAddress": "${crypto.randomUUID()}-@atala.io",
           "familyName": "Test",
-          "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}",
+          "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}/schema",
           "dateOfIssuance": "${new Date()}",
           "drivingLicenseID": "Test",
           "drivingClass": 1
