@@ -25,7 +25,7 @@ object ConnectionEndpoints {
   private val tagName = "Connections Management"
   private val tagDescription =
     s"""
-       |The '$tagName' endpoints facilitate the initiation of connection flows between the current agent and peer agents, regardless of whether they reside in cloud or edge environments.
+       |The '$tagName' endpoints facilitate the initiation of connection flows between the current Agent and peer Agents, regardless of whether they reside in Cloud Agent or edge environments.
        |<br>
        |This implementation adheres to the DIDComm Messaging v2.0 - [Out of Band Messages](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) specification [section 9.5.4](https://identity.foundation/didcomm-messaging/spec/v2.0/#invitation) - to generate invitations.
        |The <b>from</b> field of the out-of-band invitation message contains a freshly generated Peer DID that complies with the [did:peer:2](https://identity.foundation/peer-did-method-spec/#generating-a-didpeer2) specification.
@@ -55,7 +55,7 @@ object ConnectionEndpoints {
       .in("connections")
       .in(
         jsonBody[CreateConnectionRequest].description(
-          "JSON object required for the connection creation"
+          "JSON object required for the connection creation."
         )
       )
       .out(
@@ -66,15 +66,21 @@ object ConnectionEndpoints {
       )
       .out(jsonBody[Connection])
       .description("The newly created connection record.")
-      .errorOut(basicFailuresAndForbidden)
+      .errorOut(
+        oneOf(
+          FailureVariant.forbidden,
+          FailureVariant.badRequest,
+          FailureVariant.internalServerError
+        )
+      )
       .name("createConnection")
-      .summary("Create a new connection invitation that can be delivered out-of-band to a peer agent.")
+      .summary("Create a new connection invitation that can be delivered out-of-band to a peer Agent.")
       .description("""
-         |Create a new connection invitation that can be delivered out-of-band to a peer agent, regardless of whether it resides in cloud or edge environment.
+         |Create a new connection invitation that can be delivered out-of-band to a peer Agent, regardless of whether it resides in Cloud Agent or edge environment.
          |The generated invitation adheres to the DIDComm Messaging v2.0 - [Out of Band Messages](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) specification [section 9.5.4](https://identity.foundation/didcomm-messaging/spec/v2.0/#invitation).
          |The <b>from</b> field of the out-of-band invitation message contains a freshly generated Peer DID that complies with the [did:peer:2](https://identity.foundation/peer-did-method-spec/#generating-a-didpeer2) specification.
          |This Peer DID includes the 'uri' location of the DIDComm messaging service, essential for the invitee's subsequent execution of the connection flow.
-         |In the agent database, the created connection record has an initial state set to `InvitationGenerated`.
+         |In the Agent database, the created connection record has an initial state set to `InvitationGenerated`.
          |The request body may contain a `label` that can be used as a human readable alias for the connection, for example `{'label': "Connection with Bob"}`
          |""".stripMargin)
       .tag(tagName)
@@ -91,13 +97,20 @@ object ConnectionEndpoints {
         )
       )
       .out(jsonBody[Connection].description("The specific connection flow record."))
-      .errorOut(basicFailureAndNotFoundAndForbidden)
+      .errorOut(
+        oneOf(
+          FailureVariant.notFound,
+          FailureVariant.badRequest,
+          FailureVariant.forbidden,
+          FailureVariant.internalServerError
+        )
+      )
       .name("getConnection")
       .summary(
-        "Retrieves a specific connection flow record from the agent's database based on its unique `connectionId`."
+        "Retrieves a specific connection flow record from the Agent's database based on its unique `connectionId`."
       )
       .description("""
-          |Retrieve a specific connection flow record from the agent's database based in its unique `connectionId`.
+          |Retrieve a specific connection flow record from the Agent's database based in its unique `connectionId`.
           |The API returns a comprehensive collection of connection flow records within the system, regardless of their state.
           |The returned connection item includes essential metadata such as connection ID, thread ID, state, role, participant information, and other relevant details.
           |""".stripMargin)
@@ -122,13 +135,19 @@ object ConnectionEndpoints {
         )
       )
       .out(
-        jsonBody[ConnectionsPage].description("The list of connection flow records available from the agent's database")
+        jsonBody[ConnectionsPage].description("The list of connection flow records available from the Agent's database")
       )
-      .errorOut(basicFailuresAndForbidden)
+      .errorOut(
+        oneOf(
+          FailureVariant.forbidden,
+          FailureVariant.badRequest,
+          FailureVariant.internalServerError
+        )
+      )
       .name("getConnections")
-      .summary("Retrieves the list of connection flow records available from the agent's database.")
+      .summary("Retrieves the list of connection flow records available from the Agent's database.")
       .description("""
-          |Retrieve of a list containing connections available from the agent's database.
+          |Retrieve of a list containing connections available from the Agent's database.
           |The API returns a comprehensive collection of connection flow records within the system, regardless of their state.
           |Each connection item includes essential metadata such as connection ID, thread ID, state, role, participant information, and other relevant details.
           |Pagination support is available, allowing for efficient handling of large datasets.
@@ -160,15 +179,21 @@ object ConnectionEndpoints {
       )
       .out(jsonBody[Connection])
       .description("The newly connection record.")
-      .errorOut(basicFailuresAndForbidden)
+      .errorOut(
+        oneOf(
+          FailureVariant.forbidden,
+          FailureVariant.badRequest,
+          FailureVariant.internalServerError
+        )
+      )
       .name("acceptConnectionInvitation")
-      .summary("Accept a new connection invitation received out-of-band from another peer agent.")
+      .summary("Accept a new connection invitation received out-of-band from another peer Agent.")
       .description("""
-          |Accept an new connection invitation received out-of-band from another peer agent.
+          |Accept an new connection invitation received out-of-band from another peer Agent.
           |The invitation must be compliant with the DIDComm Messaging v2.0 - [Out of Band Messages](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) specification [section 9.5.4](https://identity.foundation/didcomm-messaging/spec/v2.0/#invitation).
-          |A new connection record with state `ConnectionRequestPending` will be created in the agent database and later processed by a background job to send a connection request to the peer agent.
+          |A new connection record with state `ConnectionRequestPending` will be created in the agent database and later processed by a background job to send a connection request to the peer Agent.
           |The created record will contain a newly generated pairwise Peer DID used for that connection.
-          |A connection request will then be sent to the peer agent to actually establish the connection, moving the record state to `ConnectionRequestSent`, and waiting the connection response from the peer agent.
+          |A connection request will then be sent to the peer Agent to actually establish the connection, moving the record state to `ConnectionRequestSent`, and waiting the connection response from the peer Agent.
           |""".stripMargin)
       .tag(tagName)
 

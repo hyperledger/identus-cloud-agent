@@ -96,26 +96,6 @@ object MainApp extends ZIOAppDefault {
     _ <- AgentMigrations.validateRLS.provide(RepoModule.agentContextAwareTransactorLayer)
   } yield ()
 
-  private val zioHttpClientLayer = {
-    import zio.http.netty.NettyConfig
-    import zio.http.{ConnectionPoolConfig, DnsResolver, ZClient}
-    (ZLayer.fromZIO(
-      for {
-        appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
-      } yield ZClient.Config.default.copy(
-        connectionPool = {
-          val cpSize = appConfig.agent.httpClient.connectionPoolSize
-          if (cpSize > 0) ConnectionPoolConfig.Fixed(cpSize)
-          else ConnectionPoolConfig.Disabled
-        },
-        idleTimeout = Some(appConfig.agent.httpClient.idleTimeout),
-        connectionTimeout = Some(appConfig.agent.httpClient.connectionTimeout),
-      )
-    ) ++
-      ZLayer.succeed(NettyConfig.default) ++
-      DnsResolver.default) >>> ZClient.live
-  }
-
   override def run: ZIO[Any, Throwable, Unit] = {
 
     val app = for {
@@ -208,7 +188,7 @@ object MainApp extends ZIOAppDefault {
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client
-          zioHttpClientLayer,
+          SystemModule.zioHttpClientLayer,
           Scope.default,
         )
     } yield app

@@ -14,6 +14,7 @@ inThisBuild(
     githubOwner := "input-output-hk",
     githubRepository := "atala-prism-building-blocks",
     resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
+    resolvers += "jitpack" at "https://jitpack.io",
   )
 )
 
@@ -56,6 +57,7 @@ lazy val V = new {
   val zioMetricsConnector = "2.1.0"
   val zioMock = "1.0.0-RC11"
   val mockito = "3.2.16.0"
+  val monocle =  "3.1.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.6"
@@ -84,7 +86,7 @@ lazy val V = new {
 
   val jsonSchemaValidator = "1.0.86"
 
-  val vaultDriver = "6.1.0"
+  val vaultDriver = "6.2.0"
   val micrometer = "1.11.2"
 
   val nimbusJwt = "10.0.0"
@@ -118,7 +120,7 @@ lazy val D = new {
 
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.1"
-  val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.3.0"
+  val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.5.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
 
   // Customized version of numbus jose jwt
@@ -150,6 +152,8 @@ lazy val D = new {
   val zioTestMagnolia: ModuleID = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
   val zioMock: ModuleID = "dev.zio" %% "zio-mock" % V.zioMock
   val mockito: ModuleID = "org.scalatestplus" %% "mockito-4-11" % V.mockito % Test
+  val monocle: ModuleID =  "dev.optics" %% "monocle-core"  % V.monocle % Test
+  val monocleMacro: ModuleID = "dev.optics" %% "monocle-macro" % V.monocle % Test
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
@@ -404,7 +408,7 @@ lazy val D_PrismAgent = new {
   lazy val iamDependencies: Seq[ModuleID] = Seq(keycloakAuthz, D.jwtCirce)
 
   lazy val serverDependencies: Seq[ModuleID] =
-    baseDependencies ++ tapirDependencies ++ postgresDependencies ++ Seq(D.zioMock, D.mockito)
+    baseDependencies ++ tapirDependencies ++ postgresDependencies ++ Seq(D.zioMock, D.mockito, D.monocle, D.monocleMacro)
 }
 
 publish / skip := true
@@ -413,6 +417,7 @@ val commonSetttings = Seq(
   testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
+  resolvers += "jitpack" at "https://jitpack.io",
   // Override 'updateLicenses' for all project to inject custom DependencyResolution.
   // https://github.com/sbt/sbt-license-report/blob/9675cedb19c794de1119cbcf46a255fc8dcd5d4e/src/main/scala/sbtlicensereport/SbtLicenseReport.scala#L84
   updateLicenses := {

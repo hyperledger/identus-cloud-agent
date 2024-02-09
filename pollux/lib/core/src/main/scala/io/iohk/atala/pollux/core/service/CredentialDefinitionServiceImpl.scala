@@ -5,11 +5,10 @@ import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.pollux.anoncreds.{AnoncredLib, SchemaDef}
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError
 import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.URISyntaxError
+import io.iohk.atala.pollux.core.model.schema.CredentialDefinition
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition.{Filter, FilteredEntries}
-import io.iohk.atala.pollux.core.model.schema.CredentialSchema.parseCredentialSchema
 import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import io.iohk.atala.pollux.core.model.schema.validator.JsonSchemaError
-import io.iohk.atala.pollux.core.model.schema.{CredentialDefinition, CredentialSchema}
 import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
 import io.iohk.atala.pollux.core.repository.CredentialDefinitionRepository
 import io.iohk.atala.pollux.core.repository.Repository.SearchQuery
@@ -36,8 +35,7 @@ class CredentialDefinitionServiceImpl(
     for {
       uri <- ZIO.attempt(new URI(in.schemaId))
       content <- uriDereferencer.dereference(uri)
-      vcSchema <- parseCredentialSchema(content)
-      anoncredSchema <- AnoncredSchemaSerDesV1.schemaSerDes.deserialize(vcSchema.schema)
+      anoncredSchema <- AnoncredSchemaSerDesV1.schemaSerDes.deserialize(content)
       anoncredLibSchema =
         SchemaDef(
           in.schemaId,

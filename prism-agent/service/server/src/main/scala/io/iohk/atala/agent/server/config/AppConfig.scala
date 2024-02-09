@@ -27,7 +27,31 @@ object AppConfig {
   val descriptor: ConfigDescriptor[AppConfig] = Descriptor[AppConfig]
 }
 
-final case class VaultConfig(address: String, token: String)
+final case class VaultConfig(
+    address: String,
+    token: Option[String],
+    appRoleRoleId: Option[String],
+    appRoleSecretId: Option[String]
+) {
+  def validate: Either[String, ValidatedVaultConfig] =
+    val tokenConfig = token.map(ValidatedVaultConfig.TokenAuth(address, _))
+    val appRoleConfig =
+      for {
+        roleId <- appRoleRoleId
+        secretId <- appRoleSecretId
+      } yield ValidatedVaultConfig.AppRoleAuth(address, roleId, secretId)
+
+    tokenConfig
+      .orElse(appRoleConfig)
+      .toRight("Vault configuration is invalid. Vault token or AppRole authentication must be provided.")
+}
+
+sealed trait ValidatedVaultConfig
+
+object ValidatedVaultConfig {
+  final case class TokenAuth(address: String, token: String) extends ValidatedVaultConfig
+  final case class AppRoleAuth(address: String, roleId: String, secretId: String) extends ValidatedVaultConfig
+}
 
 final case class PolluxConfig(
     database: DatabaseConfig,
@@ -130,14 +154,16 @@ final case class AgentConfig(
     webhookPublisher: WebhookPublisherConfig,
     defaultWallet: DefaultWalletConfig
 ) {
-  def validate: Either[String, Unit] = {
-    if (!defaultWallet.enabled && !authentication.isEnabledAny)
-      Left(
+  def validate: Either[String, Unit] =
+    for {
+      _ <- Either.cond(
+        defaultWallet.enabled || authentication.isEnabledAny,
+        (),
         "The default wallet must be enabled if all the authentication methods are disabled. Default wallet is required for the single-tenant mode."
       )
-    else
-      Right(())
-  }
+      _ <- secretStorage.validate
+    } yield ()
+
 }
 
 final case class HttpEndpointConfig(http: HttpConfig, publicEndpointUrl: String)
@@ -151,7 +177,17 @@ final case class HttpClientConfig(connectionPoolSize: Int, idleTimeout: Duration
 final case class SecretStorageConfig(
     backend: SecretStorageBackend,
     vault: Option[VaultConfig],
-)
+) {
+  def validate: Either[String, Unit] =
+    backend match {
+      case SecretStorageBackend.vault =>
+        vault
+          .toRight("SecretStorage backend is set to 'vault', but vault config is not provided.")
+          .flatMap(_.validate)
+          .map(_ => ())
+      case _ => Right(())
+    }
+}
 
 enum SecretStorageBackend {
   case vault, postgres, memory

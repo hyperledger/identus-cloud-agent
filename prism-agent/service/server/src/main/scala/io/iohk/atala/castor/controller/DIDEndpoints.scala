@@ -16,7 +16,7 @@ object DIDEndpoints {
        |The __${tagName}__ endpoints expose publicly available DID operations.
        |
        |The key distinction from the __DID Registrar__ endpoints is that it directly exposes the DID resources interfacing with the [VDR](https://www.w3.org/TR/did-core/#dfn-verifiable-data-registry).
-       |It is independent of the key management and the exposed operations are not part of the tenancy within the agent.
+       |It is independent of the key management and the exposed operations are not part of the tenancy within the Agent.
        |It serves as a proxy for interacting with the VDR, facilitating actions like resolving DIDs.
        |""".stripMargin
 
