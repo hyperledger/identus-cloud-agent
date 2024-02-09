@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.credentialschema
 
+import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
@@ -32,6 +33,7 @@ class SchemaRegistryServerEndpoints(
           credentialSchemaController
             .createSchema(schemaInput)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -43,13 +45,16 @@ class SchemaRegistryServerEndpoints(
           credentialSchemaController
             .updateSchema(author, id, schemaInput)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
   val getSchemaByIdServerEndpoint: ZServerEndpoint[Any, Any] =
     getSchemaByIdEndpoint
       .zServerLogic { case (ctx: RequestContext, guid: UUID) =>
-        credentialSchemaController.getSchemaByGuid(guid)(ctx)
+        credentialSchemaController
+          .getSchemaByGuid(guid)(ctx)
+          .logTrace(ctx)
       }
 
   val lookupSchemasByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
@@ -70,6 +75,7 @@ class SchemaRegistryServerEndpoints(
                 order
               )(ctx)
               .provideSomeLayer(ZLayer.succeed(wac))
+              .logTrace(ctx)
         }
       }
 

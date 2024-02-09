@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.credentialschema
 
+import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
@@ -32,6 +33,7 @@ class VerificationPolicyServerEndpoints(
           controller
             .createVerificationPolicy(ctx, input)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -49,6 +51,7 @@ class VerificationPolicyServerEndpoints(
             controller
               .updateVerificationPolicyById(ctx, id, nonce, update)
               .provideSomeLayer(ZLayer.succeed(wac))
+              .logTrace(ctx)
         }
       }
   }
@@ -61,6 +64,7 @@ class VerificationPolicyServerEndpoints(
           controller
             .getVerificationPolicyById(ctx, id)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -72,6 +76,7 @@ class VerificationPolicyServerEndpoints(
           controller
             .deleteVerificationPolicyById(ctx, id)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -94,6 +99,7 @@ class VerificationPolicyServerEndpoints(
                 order
               )
               .provideSomeLayer(ZLayer.succeed(wac))
+              .logTrace(ctx)
         }
       }
 
