@@ -41,66 +41,66 @@ We use the Simple Logging Facade for Java (SLF4J) API to call the logging backen
 ## APIs with logging
 
 - Credential Definition Registry
-  - GET - https://docs.atalaprism.io/credential-definition-registry/definitions
-  - POST - https://docs.atalaprism.io/credential-definition-registry/definitions
-  - GET - https://docs.atalaprism.io/credential-definition-registry/definitions/{guid}
-  - GET - https://docs.atalaprism.io/credential-definition-registry/definitions/{guid}/definition
+  - GET - /credential-definition-registry/definitions
+  - POST - /credential-definition-registry/definitions
+  - GET - /credential-definition-registry/definitions/{guid}
+  - GET - /credential-definition-registry/definitions/{guid}/definition
 - Schema Registry
-  - GET - https://docs.atalaprism.io/schema-registry/schemas
-  - PPOST - https://docs.atalaprism.io/schema-registry/schemas
-  - PUT - https://docs.atalaprism.io/schema-registry/{author}/{id}
-  - GET - https://docs.atalaprism.io/schema-registry/schemas/{guid}
-  - ??? TODO ??? GET - https://docs.atalaprism.io/schema-registry/test (this endpoint is in the list but I can't find the code for it)
+  - GET - /schema-registry/schemas
+  - PPOST - /schema-registry/schemas
+  - PUT - /schema-registry/{author}/{id}
+  - GET - /schema-registry/schemas/{guid}
+  - ??? TODO ??? GET - /schema-registry/test (this endpoint is in the list but I can't find the code for it)
 - Verification
-  - GET - https://docs.atalaprism.io/verification/policies
-  - POST - https://docs.atalaprism.io/verification/policies
-  - GET - https://docs.atalaprism.io/verification/policies/{id}
-  - PUT - https://docs.atalaprism.io/verification/policies/{id}
-  - DEL - https://docs.atalaprism.io/verification/policies/{id}
+  - GET - /verification/policies
+  - POST - /verification/policies
+  - GET - /verification/policies/{id}
+  - PUT - /verification/policies/{id}
+  - DEL - /verification/policies/{id}
 - Connections Management
-  - GET - https://docs.atalaprism.io/connections
-  - POST - https://docs.atalaprism.io/connections
-  - GET - https://docs.atalaprism.io/connections/{connectionId}
-  - POST -  https://docs.atalaprism.io/connection-invitations
+  - GET - /connections
+  - POST - /connections
+  - GET - /connections/{connectionId}
+  - POST -  /connection-invitations
 - DID
-  - https://docs.atalaprism.io/dids/{didRef}
+  - /dids/{didRef}
 - DID Registrar
-  - GET - https://docs.atalaprism.io/did-registrar/dids
-  - POST - https://docs.atalaprism.io/did-registrar/dids
-  - GET - https://docs.atalaprism.io/did-registrar/dids/{didRef}
-  - POST - https://docs.atalaprism.io/did-registrar/dids/{didRef}/publications
-  - POST - https://docs.atalaprism.io/did-registrar/dids/{didRef}/updates
-  - POST - https://docs.atalaprism.io/did-registrar/dids/{didRef}/deactivations
+  - GET - /did-registrar/dids
+  - POST - /did-registrar/dids
+  - GET - /did-registrar/dids/{didRef}
+  - POST - /did-registrar/dids/{didRef}/publications
+  - POST - /did-registrar/dids/{didRef}/updates
+  - POST - /did-registrar/dids/{didRef}/deactivations
 - Issue Credentials Protocol
-  - POST - https://docs.atalaprism.io/issue-credentials/credential-offers
-  - GET - https://docs.atalaprism.io/issue-credentials/records
-  - GET - https://docs.atalaprism.io/issue-credentials/records/{recordId}
-  - POST - https://docs.atalaprism.io/issue-credentials/records/{recordId}/accept-offer
-  - POST - https://docs.atalaprism.io/issue-credentials/records/{recordId}/issue-credential
+  - POST - /issue-credentials/credential-offers
+  - GET - /issue-credentials/records
+  - GET - /issue-credentials/records/{recordId}
+  - POST - /issue-credentials/records/{recordId}/accept-offer
+  - POST - /issue-credentials/records/{recordId}/issue-credential
 - Present Proof
-  - GET - https://docs.atalaprism.io/present-proof/presentations
-  - POST - https://docs.atalaprism.io/present-proof/presentations
-  - GET - https://docs.atalaprism.io/present-proof/presentations/{presentationId}
-  - PATH - https://docs.atalaprism.io/present-proof/presentations/{presentationId}
+  - GET - /present-proof/presentations
+  - POST - /present-proof/presentations
+  - GET - /present-proof/presentations/{presentationId}
+  - PATH - /present-proof/presentations/{presentationId}
 - System
-  - GET - https://docs.atalaprism.io/_system/health
-  - GET - https://docs.atalaprism.io/_system/metrics
+  - GET - /_system/health
+  - GET - /_system/metrics
 - Identity and Access Management
-  - GET - https://docs.atalaprism.io/iam/entities
-  - POST - https://docs.atalaprism.io/iam/entities
-  - PUT - https://docs.atalaprism.io/iam/entities/{id}/name
-  - PUT - https://docs.atalaprism.io/iam/entities/{id}/walletId
-  - GET - https://docs.atalaprism.io/iam/entities/{id}
-  - DEL - https://docs.atalaprism.io/iam/entities/{id}
-  - POST - https://docs.atalaprism.io/iam/apikey-authentication
-  - DEL - https://docs.atalaprism.io/iam/apikey-authentication
+  - GET - /iam/entities
+  - POST - /iam/entities
+  - PUT - /iam/entities/{id}/name
+  - PUT - /iam/entities/{id}/walletId
+  - GET - /iam/entities/{id}
+  - DEL - /iam/entities/{id}
+  - POST - /iam/apikey-authentication
+  - DEL - /iam/apikey-authentication
 - Wallet Management
-  - GET - https://docs.atalaprism.io/wallets
-  - POST - https://docs.atalaprism.io/wallets
-  - GET - https://docs.atalaprism.io/wallets/{walletId}
-  - POST - https://docs.atalaprism.io/wallets/{walletId}/uma-permissions
-  - DEL - https://docs.atalaprism.io/wallets/{walletId}/uma-permissions
+  - GET - /wallets
+  - POST - /wallets
+  - GET - /wallets/{walletId}
+  - POST - /wallets/{walletId}/uma-permissions
+  - DEL - /wallets/{walletId}/uma-permissions
 - Events
-  - GET - https://docs.atalaprism.io/events/webhooks
-  - POST - https://docs.atalaprism.io/events/webhooks
-  - DEL - https://docs.atalaprism.io/events/webhooks/{id}
+  - GET - /events/webhooks
+  - POST - /events/webhooks
+  - DEL - /events/webhooks/{id}
