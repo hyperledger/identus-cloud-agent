@@ -1,5 +1,6 @@
-package io.iohk.atala.pollux.anoncreds
+package io.iohk.atala.pollux.anoncreds.lib
 
+import io.iohk.atala.pollux.anoncreds.*
 import uniffi.anoncreds_wrapper.{
   Nonce,
   Credential as UniffiCredential,
@@ -21,42 +22,45 @@ import scala.jdk.CollectionConverters.*
 type AttributeNames = Set[String]
 type IssuerId = String
 
-case class AnoncredLinkSecretWithId(id: String, secret: AnoncredLinkSecret) { def data = secret.data }
-object AnoncredLinkSecretWithId {
-  def apply(id: String): AnoncredLinkSecretWithId = AnoncredLinkSecretWithId(id, AnoncredLinkSecret())
+case class LinkSecretWithId(id: String, secret: LinkSecret) {
+  def data: String = secret.data
+}
+object LinkSecretWithId {
+  def apply(id: String): LinkSecretWithId = LinkSecretWithId(id, LinkSecret())
 }
 
-case class AnoncredLinkSecret(data: String)
-object AnoncredLinkSecret {
+case class LinkSecret(data: String)
 
-  def apply(): AnoncredLinkSecret =
-    AnoncredLinkSecret.given_Conversion_UniffiLinkSecret_AnoncredLinkSecret(UniffiLinkSecret())
+object LinkSecret {
 
-  given Conversion[AnoncredLinkSecret, UniffiLinkSecret] with {
-    def apply(linkSecret: AnoncredLinkSecret): UniffiLinkSecret =
+  def apply(): LinkSecret =
+    LinkSecret.given_Conversion_UniffiLinkSecret_LinkSecret(UniffiLinkSecret())
+
+  given Conversion[LinkSecret, UniffiLinkSecret] with {
+    def apply(linkSecret: LinkSecret): UniffiLinkSecret =
       UniffiLinkSecret.Companion.newFromValue(linkSecret.data)
 
   }
 
-  given Conversion[UniffiLinkSecret, AnoncredLinkSecret] with {
-    def apply(uniffiLinkSecret: UniffiLinkSecret): AnoncredLinkSecret =
-      AnoncredLinkSecret.apply(uniffiLinkSecret.getValue())
+  given Conversion[UniffiLinkSecret, LinkSecret] with {
+    def apply(uniffiLinkSecret: UniffiLinkSecret): LinkSecret =
+      LinkSecret.apply(uniffiLinkSecret.getValue)
 
   }
 }
 
 //FIXME use same names as in https://hyperledger.github.io/anoncreds-spec/#term:schemas
-case class AnoncredSchemaDef(
+case class SchemaDef(
     name: String, // SCHEMA_ID
     version: String, // SCHEMA_Version
     attributes: AttributeNames,
     issuer_id: IssuerId, // ISSUER_DID
 )
 
-object AnoncredSchemaDef {
+object SchemaDef {
 
-  given Conversion[AnoncredSchemaDef, UniffiSchema] with {
-    def apply(schemaDef: AnoncredSchemaDef): UniffiSchema =
+  given Conversion[SchemaDef, UniffiSchema] with {
+    def apply(schemaDef: SchemaDef): UniffiSchema =
       UniffiSchema.apply(
         schemaDef.name,
         schemaDef.version,
@@ -66,13 +70,13 @@ object AnoncredSchemaDef {
 
   }
 
-  given Conversion[UniffiSchema, AnoncredSchemaDef] with {
-    def apply(schema: UniffiSchema): AnoncredSchemaDef =
-      AnoncredSchemaDef.apply(
-        name = schema.getName(),
-        version = schema.getVersion(),
-        attributes = schema.getAttrNames().asScala.toSet,
-        issuer_id = schema.getIssuerId(),
+  given Conversion[UniffiSchema, SchemaDef] with {
+    def apply(schema: UniffiSchema): SchemaDef =
+      SchemaDef.apply(
+        name = schema.getName,
+        version = schema.getVersion,
+        attributes = schema.getAttrNames.asScala.toSet,
+        issuer_id = schema.getIssuerId,
       )
 
   }
@@ -107,20 +111,21 @@ object AnoncredSchemaDef {
 //     value: String,
 //     issuerId: String,
 // )
-case class AnoncredCredentialDefinition(data: String) { // TODO
-  def schemaId = AnoncredCredentialDefinition
-    .given_Conversion_AnoncredCredentialDefinition_UniffiCredentialDefinition(this)
-    .getSchemaId()
+case class CredentialDefinition(data: String) { // TODO
+  def schemaId: String = CredentialDefinition
+    .given_Conversion_CredentialDefinition_UniffiCredentialDefinition(this)
+    .getSchemaId
 }
-object AnoncredCredentialDefinition {
-  given Conversion[AnoncredCredentialDefinition, UniffiCredentialDefinition] with {
-    def apply(credentialDefinition: AnoncredCredentialDefinition): UniffiCredentialDefinition =
+
+object CredentialDefinition {
+  given Conversion[CredentialDefinition, UniffiCredentialDefinition] with {
+    def apply(credentialDefinition: CredentialDefinition): UniffiCredentialDefinition =
       UniffiCredentialDefinition(credentialDefinition.data)
   }
 
-  given Conversion[UniffiCredentialDefinition, AnoncredCredentialDefinition] with {
-    def apply(credentialDefinition: UniffiCredentialDefinition): AnoncredCredentialDefinition =
-      AnoncredCredentialDefinition(credentialDefinition.getJson())
+  given Conversion[UniffiCredentialDefinition, CredentialDefinition] with {
+    def apply(credentialDefinition: UniffiCredentialDefinition): CredentialDefinition =
+      CredentialDefinition(credentialDefinition.getJson)
   }
 }
 
@@ -135,94 +140,99 @@ object AnoncredCredentialDefinition {
 //     "r_key": null
 //   }
 // }
-case class AnoncredCredentialDefinitionPrivate(data: String)
-object AnoncredCredentialDefinitionPrivate {
-  given Conversion[AnoncredCredentialDefinitionPrivate, UniffiCredentialDefinitionPrivate] with {
-    def apply(credentialDefinitionPrivate: AnoncredCredentialDefinitionPrivate): UniffiCredentialDefinitionPrivate =
+case class CredentialDefinitionPrivate(data: String)
+
+object CredentialDefinitionPrivate {
+  given Conversion[CredentialDefinitionPrivate, UniffiCredentialDefinitionPrivate] with {
+    def apply(credentialDefinitionPrivate: CredentialDefinitionPrivate): UniffiCredentialDefinitionPrivate =
       UniffiCredentialDefinitionPrivate(credentialDefinitionPrivate.data)
   }
 
-  given Conversion[UniffiCredentialDefinitionPrivate, AnoncredCredentialDefinitionPrivate] with {
-    def apply(credentialDefinitionPrivate: UniffiCredentialDefinitionPrivate): AnoncredCredentialDefinitionPrivate =
-      AnoncredCredentialDefinitionPrivate(credentialDefinitionPrivate.getJson())
+  given Conversion[UniffiCredentialDefinitionPrivate, CredentialDefinitionPrivate] with {
+    def apply(credentialDefinitionPrivate: UniffiCredentialDefinitionPrivate): CredentialDefinitionPrivate =
+      CredentialDefinitionPrivate(credentialDefinitionPrivate.getJson)
   }
 }
 
 // ****************************************************************************
 
-case class AnoncredCredentialKeyCorrectnessProof(data: String)
-object AnoncredCredentialKeyCorrectnessProof {
-  given Conversion[AnoncredCredentialKeyCorrectnessProof, UniffiCredentialKeyCorrectnessProof] with {
+case class CredentialKeyCorrectnessProof(data: String)
+
+object CredentialKeyCorrectnessProof {
+  given Conversion[CredentialKeyCorrectnessProof, UniffiCredentialKeyCorrectnessProof] with {
     def apply(
-        credentialKeyCorrectnessProof: AnoncredCredentialKeyCorrectnessProof
+        credentialKeyCorrectnessProof: CredentialKeyCorrectnessProof
     ): UniffiCredentialKeyCorrectnessProof =
       UniffiCredentialKeyCorrectnessProof(credentialKeyCorrectnessProof.data)
   }
 
-  given Conversion[UniffiCredentialKeyCorrectnessProof, AnoncredCredentialKeyCorrectnessProof] with {
+  given Conversion[UniffiCredentialKeyCorrectnessProof, CredentialKeyCorrectnessProof] with {
     def apply(
         credentialKeyCorrectnessProof: UniffiCredentialKeyCorrectnessProof
-    ): AnoncredCredentialKeyCorrectnessProof =
-      AnoncredCredentialKeyCorrectnessProof(credentialKeyCorrectnessProof.getJson())
+    ): CredentialKeyCorrectnessProof =
+      CredentialKeyCorrectnessProof(credentialKeyCorrectnessProof.getJson)
   }
 }
 
-case class AnoncredCreateCredentialDefinition(
-    cd: AnoncredCredentialDefinition,
-    cdPrivate: AnoncredCredentialDefinitionPrivate,
-    proofKey: AnoncredCredentialKeyCorrectnessProof,
+case class CreateCredentialDefinition(
+    cd: CredentialDefinition,
+    cdPrivate: CredentialDefinitionPrivate,
+    proofKey: CredentialKeyCorrectnessProof,
 )
 // ****************************************************************************
 
-case class AnoncredCredentialOffer(data: String) {
-  lazy val schemaId = AnoncredCredentialOffer
-    .given_Conversion_AnoncredCredentialOffer_UniffiCredentialOffer(this)
-    .getSchemaId()
-  lazy val credDefId = AnoncredCredentialOffer
-    .given_Conversion_AnoncredCredentialOffer_UniffiCredentialOffer(this)
-    .getCredDefId()
+case class CredentialOffer(data: String) {
+  lazy val schemaId: String = CredentialOffer
+    .given_Conversion_CredentialOffer_UniffiCredentialOffer(this)
+    .getSchemaId
+  lazy val credDefId: String = CredentialOffer
+    .given_Conversion_CredentialOffer_UniffiCredentialOffer(this)
+    .getCredDefId
 }
-object AnoncredCredentialOffer {
-  given Conversion[AnoncredCredentialOffer, UniffiCredentialOffer] with {
-    def apply(credentialOffer: AnoncredCredentialOffer): UniffiCredentialOffer =
+
+object CredentialOffer {
+  given Conversion[CredentialOffer, UniffiCredentialOffer] with {
+    def apply(credentialOffer: CredentialOffer): UniffiCredentialOffer =
       UniffiCredentialOffer(credentialOffer.data)
   }
 
-  given Conversion[UniffiCredentialOffer, AnoncredCredentialOffer] with {
-    def apply(credentialOffer: UniffiCredentialOffer): AnoncredCredentialOffer =
-      AnoncredCredentialOffer(credentialOffer.getJson())
+  given Conversion[UniffiCredentialOffer, CredentialOffer] with {
+    def apply(credentialOffer: UniffiCredentialOffer): CredentialOffer =
+      CredentialOffer(credentialOffer.getJson)
   }
 }
 
 // ****************************************************************************
 
 case class AnoncredCreateCrendentialRequest(
-    request: AnoncredCredentialRequest,
-    metadata: AnoncredCredentialRequestMetadata
+    request: CredentialRequest,
+    metadata: CredentialRequestMetadata
 )
 
-case class AnoncredCredentialRequest(data: String)
-object AnoncredCredentialRequest {
+case class CredentialRequest(data: String)
 
-  given Conversion[AnoncredCredentialRequest, UniffiCredentialRequest] with {
-    def apply(credentialRequest: AnoncredCredentialRequest): UniffiCredentialRequest =
+object CredentialRequest {
+
+  given Conversion[CredentialRequest, UniffiCredentialRequest] with {
+    def apply(credentialRequest: CredentialRequest): UniffiCredentialRequest =
       UniffiCredentialRequest(credentialRequest.data)
   }
 
-  given Conversion[UniffiCredentialRequest, AnoncredCredentialRequest] with {
-    def apply(credentialRequest: UniffiCredentialRequest): AnoncredCredentialRequest =
-      AnoncredCredentialRequest(credentialRequest.getJson())
+  given Conversion[UniffiCredentialRequest, CredentialRequest] with {
+    def apply(credentialRequest: UniffiCredentialRequest): CredentialRequest =
+      CredentialRequest(credentialRequest.getJson)
   }
 }
 
-case class AnoncredCredentialRequestMetadata(
+case class CredentialRequestMetadata(
     linkSecretBlinding: String,
     nonce: String,
     linkSecretName: String,
 )
-object AnoncredCredentialRequestMetadata {
-  given Conversion[AnoncredCredentialRequestMetadata, UniffiCredentialRequestMetadata] with {
-    def apply(credentialRequestMetadata: AnoncredCredentialRequestMetadata): UniffiCredentialRequestMetadata =
+
+object CredentialRequestMetadata {
+  given Conversion[CredentialRequestMetadata, UniffiCredentialRequestMetadata] with {
+    def apply(credentialRequestMetadata: CredentialRequestMetadata): UniffiCredentialRequestMetadata =
       UniffiCredentialRequestMetadata(
         /*link_secret_blinding_data*/ credentialRequestMetadata.linkSecretBlinding,
         /*nonce*/ Nonce.Companion.newFromValue(credentialRequestMetadata.nonce),
@@ -230,74 +240,71 @@ object AnoncredCredentialRequestMetadata {
       )
   }
 
-  given Conversion[UniffiCredentialRequestMetadata, AnoncredCredentialRequestMetadata] with {
-    def apply(credentialRequestMetadata: UniffiCredentialRequestMetadata): AnoncredCredentialRequestMetadata =
-      AnoncredCredentialRequestMetadata(
-        linkSecretBlinding = credentialRequestMetadata.getLinkSecretBlindingData(),
-        nonce = credentialRequestMetadata.getNonce().getValue(),
-        linkSecretName = credentialRequestMetadata.getLinkSecretName(),
+  given Conversion[UniffiCredentialRequestMetadata, CredentialRequestMetadata] with {
+    def apply(credentialRequestMetadata: UniffiCredentialRequestMetadata): CredentialRequestMetadata =
+      CredentialRequestMetadata(
+        linkSecretBlinding = credentialRequestMetadata.getLinkSecretBlindingData,
+        nonce = credentialRequestMetadata.getNonce.getValue,
+        linkSecretName = credentialRequestMetadata.getLinkSecretName,
       )
   }
 
-  given JsonDecoder[AnoncredCredentialRequestMetadata] = DeriveJsonDecoder.gen[AnoncredCredentialRequestMetadata]
-  given JsonEncoder[AnoncredCredentialRequestMetadata] = DeriveJsonEncoder.gen[AnoncredCredentialRequestMetadata]
+  given JsonDecoder[CredentialRequestMetadata] = DeriveJsonDecoder.gen[CredentialRequestMetadata]
+
+  given JsonEncoder[CredentialRequestMetadata] = DeriveJsonEncoder.gen[CredentialRequestMetadata]
 }
 
 // ****************************************************************************
 
 //Credential
-case class AnoncredCredential(data: String) {
-  lazy val credDefId: String = AnoncredCredential
-    .given_Conversion_AnoncredCredential_UniffiCredential(this)
+case class Credential(data: String) {
+  lazy val credDefId: String = Credential
+    .given_Conversion_Credential_UniffiCredential(this)
     .getCredDefId
 }
-object AnoncredCredential {
-  given Conversion[AnoncredCredential, UniffiCredential] with {
-    def apply(credential: AnoncredCredential): UniffiCredential =
+
+object Credential {
+  given Conversion[Credential, UniffiCredential] with {
+    def apply(credential: Credential): UniffiCredential =
       UniffiCredential(credential.data)
   }
 
-  given Conversion[UniffiCredential, AnoncredCredential] with {
-    def apply(credential: UniffiCredential): AnoncredCredential =
-      AnoncredCredential(credential.getJson())
+  given Conversion[UniffiCredential, Credential] with {
+    def apply(credential: UniffiCredential): Credential =
+      Credential(credential.getJson)
   }
 }
 
 // ****************************************************************************
-case class AnoncredCredentialRequests(
-    credential: AnoncredCredential,
+case class CredentialRequests(
+    credential: Credential,
     requestedAttribute: Seq[String],
     requestedPredicate: Seq[String],
 )
 
-object AnoncredCredentialRequests {
-  given Conversion[AnoncredCredentialRequests, UniffiCredentialRequests] with {
-    import uniffi.anoncreds_wrapper.RequestedAttribute
-    import uniffi.anoncreds_wrapper.RequestedPredicate
-    def apply(credentialRequests: AnoncredCredentialRequests): UniffiCredentialRequests = {
+object CredentialRequests {
+  given Conversion[CredentialRequests, UniffiCredentialRequests] with {
+
+    import uniffi.anoncreds_wrapper.{RequestedAttribute, RequestedPredicate}
+
+    def apply(credentialRequests: CredentialRequests): UniffiCredentialRequests = {
       val credential =
-        AnoncredCredential.given_Conversion_AnoncredCredential_UniffiCredential(credentialRequests.credential)
+        Credential.given_Conversion_Credential_UniffiCredential(credentialRequests.credential)
       val requestedAttributes = credentialRequests.requestedAttribute.map(a => RequestedAttribute(a, true))
       val requestedPredicates = credentialRequests.requestedPredicate.map(p => RequestedPredicate(p))
       UniffiCredentialRequests(credential, requestedAttributes.asJava, requestedPredicates.asJava)
     }
   }
 
-  given Conversion[UniffiCredentialRequests, AnoncredCredentialRequests] with {
-    def apply(credentialRequests: UniffiCredentialRequests): AnoncredCredentialRequests = {
-      AnoncredCredentialRequests(
-        AnoncredCredential.given_Conversion_UniffiCredential_AnoncredCredential(credentialRequests.getCredential()),
-        credentialRequests
-          .getRequestedAttribute()
-          .asScala
-          .toSeq
-          .filter(e => e.getRevealed())
-          .map(e => e.getReferent()),
-        credentialRequests
-          .getRequestedPredicate()
-          .asScala
-          .toSeq
-          .map(e => e.getReferent())
+  given Conversion[UniffiCredentialRequests, CredentialRequests] with {
+    def apply(credentialRequests: UniffiCredentialRequests): CredentialRequests = {
+      CredentialRequests(
+        Credential.given_Conversion_UniffiCredential_Credential(credentialRequests.getCredential),
+        credentialRequests.getRequestedAttribute.asScala.toSeq
+          .filter(e => e.getRevealed)
+          .map(e => e.getReferent),
+        credentialRequests.getRequestedPredicate.asScala.toSeq
+          .map(e => e.getReferent)
       )
     }
   }
@@ -307,32 +314,33 @@ object AnoncredCredentialRequests {
 
 // ****************************************************************************
 
-case class AnoncredPresentationRequest(data: String)
-object AnoncredPresentationRequest {
-  given Conversion[AnoncredPresentationRequest, UniffiPresentationRequest] with {
-    def apply(presentationRequest: AnoncredPresentationRequest): UniffiPresentationRequest =
+case class PresentationRequest(data: String)
+
+object PresentationRequest {
+  given Conversion[PresentationRequest, UniffiPresentationRequest] with {
+    def apply(presentationRequest: PresentationRequest): UniffiPresentationRequest =
       UniffiPresentationRequest(presentationRequest.data)
   }
 
-  given Conversion[UniffiPresentationRequest, AnoncredPresentationRequest] with {
-    def apply(presentationRequest: UniffiPresentationRequest): AnoncredPresentationRequest =
-      AnoncredPresentationRequest(presentationRequest.getJson())
+  given Conversion[UniffiPresentationRequest, PresentationRequest] with {
+    def apply(presentationRequest: UniffiPresentationRequest): PresentationRequest =
+      PresentationRequest(presentationRequest.getJson)
   }
 }
 
 // ****************************************************************************
 
-case class AnoncredPresentation(data: String)
-object AnoncredPresentation {
-  given Conversion[AnoncredPresentation, UniffiPresentation] with {
-    def apply(presentation: AnoncredPresentation): UniffiPresentation = {
+case class Presentation(data: String)
+object Presentation {
+  given Conversion[Presentation, UniffiPresentation] with {
+    def apply(presentation: Presentation): UniffiPresentation = {
       UniffiPresentation(presentation.data)
     }
   }
 
-  given Conversion[UniffiPresentation, AnoncredPresentation] with {
-    def apply(presentation: UniffiPresentation): AnoncredPresentation = {
-      AnoncredPresentation(presentation.getJson())
+  given Conversion[UniffiPresentation, Presentation] with {
+    def apply(presentation: UniffiPresentation): Presentation = {
+      Presentation(presentation.getJson)
     }
   }
 }

@@ -9,14 +9,14 @@ import sttp.tapir.{Schema, Validator}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 final case class RequestPresentationAction(
-                                            @description(annotations.action.description)
+    @description(annotations.action.description)
     @encodedExample(annotations.action.example)
     @validate(annotations.action.validator)
     action: String,
-                                            @description(annotations.proofId.description)
+    @description(annotations.proofId.description)
     @encodedExample(annotations.proofId.example)
     proofId: Option[Seq[String]] = None,
-                                            @description(annotations.anoncredProof.description)
+    @description(annotations.anoncredProof.description)
     @encodedExample(annotations.anoncredProof.example)
     anoncredPresentationRequest: Option[CredentialProofsV1],
 )

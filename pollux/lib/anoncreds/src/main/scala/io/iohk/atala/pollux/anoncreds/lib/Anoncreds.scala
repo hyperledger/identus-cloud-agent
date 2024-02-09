@@ -1,4 +1,6 @@
-package io.iohk.atala.pollux.anoncreds
+package io.iohk.atala.pollux.anoncreds.lib
+
+import io.iohk.atala.pollux.anoncreds.lib.*
 
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
@@ -6,7 +8,7 @@ import scala.language.implicitConversions
 /** @see
   *   https://hyperledger.github.io/anoncreds-spec/
   */
-object AnoncredLib {
+object Anoncreds {
 
   val SCHEMA_ID = "mock:uri2"
   val CRED_DEF_ID = "mock:uri2"
@@ -18,16 +20,16 @@ object AnoncredLib {
       version: String, // SCHEMA_Version
       attr_names: AttributeNames,
       issuer_id: IssuerId, // ISSUER_DID
-  ): AnoncredSchemaDef = uniffi.anoncreds_wrapper.Schema.apply(name, version, attr_names.toSeq.asJava, issuer_id)
+  ): SchemaDef = uniffi.anoncreds_wrapper.Schema.apply(name, version, attr_names.toSeq.asJava, issuer_id)
 
   // issuer
   def createCredDefinition(
       issuer_id: String,
-      schema: AnoncredSchemaDef,
+      schema: SchemaDef,
       tag: String,
       supportRevocation: Boolean,
       signature_type: uniffi.anoncreds_wrapper.SignatureType.CL.type = uniffi.anoncreds_wrapper.SignatureType.CL
-  ): AnoncredCreateCredentialDefinition = {
+  ): CreateCredentialDefinition = {
     val credentialDefinition: uniffi.anoncreds_wrapper.IssuerCreateCredentialDefinitionReturn =
       uniffi.anoncreds_wrapper
         .Issuer()
@@ -40,7 +42,7 @@ object AnoncredLib {
           uniffi.anoncreds_wrapper.CredentialDefinitionConfig(supportRevocation)
         )
 
-    AnoncredCreateCredentialDefinition(
+    CreateCredentialDefinition(
       credentialDefinition.getCredentialDefinition(),
       credentialDefinition.getCredentialDefinitionPrivate(),
       credentialDefinition.getCredentialKeyCorrectnessProof()
@@ -49,9 +51,9 @@ object AnoncredLib {
 
   // issuer
   def createOffer(
-      credentialDefinition: AnoncredCreateCredentialDefinition,
+      credentialDefinition: CreateCredentialDefinition,
       credentialDefinitionId: String
-  ): AnoncredCredentialOffer =
+  ): CredentialOffer =
     uniffi.anoncreds_wrapper
       .Issuer()
       .createCredentialOffer(
@@ -62,12 +64,12 @@ object AnoncredLib {
 
   // holder
   def createCredentialRequest(
-      linkSecret: AnoncredLinkSecretWithId,
-      credentialDefinition: AnoncredCredentialDefinition,
-      credentialOffer: AnoncredCredentialOffer,
+      linkSecret: LinkSecretWithId,
+      credentialDefinition: CredentialDefinition,
+      credentialOffer: CredentialOffer,
       entropy: String = {
         val tmp = scala.util.Random()
-        tmp.setSeed(java.security.SecureRandom.getInstanceStrong().nextLong())
+        tmp.setSeed(java.security.SecureRandom.getInstanceStrong.nextLong)
         tmp.nextString(80)
       }
   ): AnoncredCreateCrendentialRequest = {
@@ -88,11 +90,11 @@ object AnoncredLib {
 
   // holder
   def processCredential(
-      credential: AnoncredCredential,
-      metadata: AnoncredCredentialRequestMetadata,
-      linkSecret: AnoncredLinkSecretWithId,
-      credentialDefinition: AnoncredCredentialDefinition,
-  ): AnoncredCredential = {
+      credential: Credential,
+      metadata: CredentialRequestMetadata,
+      linkSecret: LinkSecretWithId,
+      credentialDefinition: CredentialDefinition,
+  ): Credential = {
     uniffi.anoncreds_wrapper
       .Prover()
       .processCredential(
@@ -106,16 +108,16 @@ object AnoncredLib {
 
   // issuer
   def createCredential(
-      credentialDefinition: AnoncredCredentialDefinition,
-      credentialDefinitionPrivate: AnoncredCredentialDefinitionPrivate,
-      credentialOffer: AnoncredCredentialOffer,
-      credentialRequest: AnoncredCredentialRequest,
+      credentialDefinition: CredentialDefinition,
+      credentialDefinitionPrivate: CredentialDefinitionPrivate,
+      credentialOffer: CredentialOffer,
+      credentialRequest: CredentialRequest,
       attributeValues: Seq[(String, String)]
       //  java.util.List[AttributeValues] : java.util.List[AttributeValues]
       //  revocationRegistryId : String
       //  revocationStatusList : RevocationStatusList
       //  credentialRevocationConfig : CredentialRevocationConfig
-  ): AnoncredCredential = {
+  ): Credential = {
     uniffi.anoncreds_wrapper
       .Issuer()
       .createCredential(
@@ -132,21 +134,21 @@ object AnoncredLib {
       )
   }
 
-  type SchemaId = String
-  type CredentialDefinitionId = String
+  private type SchemaId = String
+  private type CredentialDefinitionId = String
 
   // TODO FIX
   // [info] uniffi.anoncreds.AnoncredsException$CreatePresentationException: Create Presentation: Error: Error: Invalid structure
   // [info] Caused by: Predicate is not satisfied
 
   def createPresentation(
-      presentationRequest: AnoncredPresentationRequest,
-      credentialRequests: Seq[AnoncredCredentialRequests],
+      presentationRequest: PresentationRequest,
+      credentialRequests: Seq[CredentialRequests],
       selfAttested: Map[String, String],
-      linkSecret: AnoncredLinkSecret,
-      schemas: Map[SchemaId, AnoncredSchemaDef],
-      credentialDefinitions: Map[CredentialDefinitionId, AnoncredCredentialDefinition],
-  ): Either[uniffi.anoncreds_wrapper.AnoncredsException.CreatePresentationException, AnoncredPresentation] = {
+      linkSecret: LinkSecret,
+      schemas: Map[SchemaId, SchemaDef],
+      credentialDefinitions: Map[CredentialDefinitionId, CredentialDefinition],
+  ): Either[uniffi.anoncreds_wrapper.AnoncredsException.CreatePresentationException, Presentation] = {
     try {
       Right(
         uniffi.anoncreds_wrapper
@@ -181,10 +183,10 @@ object AnoncredLib {
 
   // FIXME its always return false ....
   def verifyPresentation(
-      presentation: AnoncredPresentation,
-      presentationRequest: AnoncredPresentationRequest,
-      schemas: Map[SchemaId, AnoncredSchemaDef],
-      credentialDefinitions: Map[CredentialDefinitionId, AnoncredCredentialDefinition],
+      presentation: Presentation,
+      presentationRequest: PresentationRequest,
+      schemas: Map[SchemaId, SchemaDef],
+      credentialDefinitions: Map[CredentialDefinitionId, CredentialDefinition],
   ): Boolean = {
     uniffi.anoncreds_wrapper
       .Verifier()

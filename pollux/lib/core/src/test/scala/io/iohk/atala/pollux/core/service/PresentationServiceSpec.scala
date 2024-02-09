@@ -16,7 +16,12 @@ import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.schema.CredentialDefinition.Input
 import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, PresentationRepository}
-import io.iohk.atala.pollux.core.service.serdes.anoncreds.{CredentialProofV1, CredentialProofsV1, PresentationRequestV1, PresentationV1}
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.{
+  CredentialProofV1,
+  CredentialProofsV1,
+  PresentationRequestV1,
+  PresentationV1
+}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
@@ -248,7 +253,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           presentationWithRecord <- createAnoncredPresentation
           (presentation, _) = presentationWithRecord
           serializedPresentation <- presentation.attachments.head.data match {
-            case Base64(data) => ZIO.succeed(AnoncredPresentation(new String(JBase64.getUrlDecoder.decode(data))))
+            case Base64(data) => ZIO.succeed(lib.Presentation(new String(JBase64.getUrlDecoder.decode(data))))
             case _            => ZIO.fail(InvalidAnoncredPresentation("Expecting Base64-encoded data"))
           }
           validation <- PresentationV1.schemaSerDes.validate(serializedPresentation.data)
@@ -402,8 +407,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         val attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(
           mediaType = Some("application/json"),
           format = Some(PresentCredentialRequestFormat.Anoncred.name),
-          payload =
-            PresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
+          payload = PresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
         )
         val connectionId = Some("connectionId")
         for {
@@ -510,8 +514,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(
             mediaType = Some("application/json"),
             format = Some(PresentCredentialRequestFormat.Anoncred.name),
-            payload =
-              PresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
+            payload = PresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
           )
           requestPresentation = RequestPresentation(
             body = RequestPresentation.Body(goal_code = Some("Presentation Request")),
@@ -567,8 +570,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           attachmentDescriptor = AttachmentDescriptor.buildBase64Attachment(
             mediaType = Some("application/json"),
             format = Some(PresentCredentialRequestFormat.Anoncred.name),
-            payload =
-              PresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
+            payload = PresentationRequestV1.schemaSerDes.serializeToJsonString(anoncredPresentationRequestV1).getBytes()
           )
           requestPresentation = RequestPresentation(
             body = RequestPresentation.Body(goal_code = Some("Presentation Request")),
@@ -791,18 +793,18 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       maybeCredentialDefintionPrivate <-
         genericSecretStorage
           .get[UUID, CredentialDefinitionSecret](credentialDefinitionDb.guid)
-      credentialDefinition = AnoncredCreateCredentialDefinition(
-        AnoncredCredentialDefinition(credentialDefinitionDb.definition.toString()),
-        AnoncredCredentialDefinitionPrivate(maybeCredentialDefintionPrivate.get.json.toString()),
-        AnoncredCredentialKeyCorrectnessProof(credentialDefinitionDb.keyCorrectnessProof.toString())
+      credentialDefinition = lib.CreateCredentialDefinition(
+        lib.CredentialDefinition(credentialDefinitionDb.definition.toString()),
+        lib.CredentialDefinitionPrivate(maybeCredentialDefintionPrivate.get.json.toString()),
+        lib.CredentialKeyCorrectnessProof(credentialDefinitionDb.keyCorrectnessProof.toString())
       )
       file = createTempJsonFile(credentialDefinition.cd.data, "anoncred-presentation-credential-definition-example")
       credentialDefinitionId = "resource:///" + file.getFileName
-      credentialOffer = AnoncredLib.createOffer(credentialDefinition, credentialDefinitionId)
-      credentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition.cd, credentialOffer)
+      credentialOffer = lib.Anoncreds.createOffer(credentialDefinition, credentialDefinitionId)
+      credentialRequest = lib.Anoncreds.createCredentialRequest(linkSecret, credentialDefinition.cd, credentialOffer)
       processedCredential =
-        AnoncredLib.processCredential(
-          AnoncredLib
+        lib.Anoncreds.processCredential(
+          lib.Anoncreds
             .createCredential(
               credentialDefinition.cd,
               credentialDefinition.cdPrivate,

@@ -2,7 +2,12 @@ package io.iohk.atala.presentproof.controller.http
 
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.pollux.core.service.serdes.*
-import io.iohk.atala.pollux.core.service.serdes.anoncreds.{NonRevokedIntervalV1, PresentationRequestV1, RequestedAttributeV1, RequestedPredicateV1}
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.{
+  NonRevokedIntervalV1,
+  PresentationRequestV1,
+  RequestedAttributeV1,
+  RequestedPredicateV1
+}
 import io.iohk.atala.presentproof.controller.http.RequestPresentationInput.annotations
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import sttp.tapir.{Schema, Validator}
@@ -11,19 +16,19 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import java.util.UUID
 
 final case class RequestPresentationInput(
-                                           @description(annotations.connectionId.description)
+    @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
     connectionId: UUID,
-                                           @description(annotations.options.description)
+    @description(annotations.options.description)
     @encodedExample(annotations.options.example)
     options: Option[Options] = None,
-                                           @description(annotations.proofs.description)
+    @description(annotations.proofs.description)
     @encodedExample(annotations.proofs.example)
     proofs: Seq[ProofRequestAux],
-                                           @description(annotations.proofs.description) // TODO
+    @description(annotations.proofs.description) // TODO
     @encodedExample(annotations.proofs.example) // TODO
     anoncredPresentationRequest: Option[PresentationRequestV1],
-                                           @description(annotations.credentialFormat.description)
+    @description(annotations.credentialFormat.description)
     @encodedExample(annotations.credentialFormat.example)
     credentialFormat: Option[String],
 )

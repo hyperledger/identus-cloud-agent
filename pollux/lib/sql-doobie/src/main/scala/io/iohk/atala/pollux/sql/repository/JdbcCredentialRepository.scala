@@ -9,7 +9,6 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
-import io.iohk.atala.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
@@ -22,6 +21,7 @@ import zio.*
 import zio.json.*
 
 import doobie.free.connection
+import io.iohk.atala.pollux.anoncreds.*
 import java.time.Instant
 import zio.interop.catz.*
 
@@ -51,9 +51,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given requestCredentialGet: Get[RequestCredential] = Get[String].map(decode[RequestCredential](_).getOrElse(???))
   given requestCredentialPut: Put[RequestCredential] = Put[String].contramap(_.asJson.toString)
 
-  given acRequestMetadataGet: Get[AnoncredCredentialRequestMetadata] =
-    Get[String].map(_.fromJson[AnoncredCredentialRequestMetadata].getOrElse(???))
-  given acRequestMetadataPut: Put[AnoncredCredentialRequestMetadata] = Put[String].contramap(_.toJson)
+  given acRequestMetadataGet: Get[lib.CredentialRequestMetadata] =
+    Get[String].map(_.fromJson[lib.CredentialRequestMetadata].getOrElse(???))
+  given acRequestMetadataPut: Put[lib.CredentialRequestMetadata] = Put[String].contramap(_.toJson)
 
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
@@ -390,7 +390,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   override def updateWithAnonCredsRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
-      metadata: AnoncredCredentialRequestMetadata,
+      metadata: lib.CredentialRequestMetadata,
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int] = {
     val cxnIO =

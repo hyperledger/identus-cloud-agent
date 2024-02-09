@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.agent.walletapi.storage.{GenericSecret, GenericSecretStorage}
-import io.iohk.atala.pollux.anoncreds.{AnoncredLinkSecret, AnoncredLinkSecretWithId}
+import io.iohk.atala.pollux.anoncreds.*
 import io.iohk.atala.pollux.core.model.error.LinkSecretError
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
@@ -15,18 +15,18 @@ class LinkSecretServiceImpl(genericSecretStorage: GenericSecretStorage) extends 
 
   type Result[T] = ZIO[WalletAccessContext, LinkSecretError, T]
 
-  override def fetchOrCreate(): Result[AnoncredLinkSecretWithId] = {
+  override def fetchOrCreate(): Result[lib.LinkSecretWithId] = {
     genericSecretStorage
-      .get[String, AnoncredLinkSecret](LinkSecretServiceImpl.defaultLinkSecretId)
+      .get[String, lib.LinkSecret](LinkSecretServiceImpl.defaultLinkSecretId)
       .flatMap {
         case Some(secret) => ZIO.succeed(secret)
         case None =>
-          val linkSecret = AnoncredLinkSecret()
+          val linkSecret = lib.LinkSecret()
           genericSecretStorage
-            .set[String, AnoncredLinkSecret](LinkSecretServiceImpl.defaultLinkSecretId, linkSecret)
+            .set[String, lib.LinkSecret](LinkSecretServiceImpl.defaultLinkSecretId, linkSecret)
             .as(linkSecret)
       }
-      .map(linkSecret => AnoncredLinkSecretWithId(LinkSecretServiceImpl.defaultLinkSecretId, linkSecret))
+      .map(linkSecret => lib.LinkSecretWithId(LinkSecretServiceImpl.defaultLinkSecretId, linkSecret))
       .mapError(LinkSecretError.apply)
   }
 }
@@ -40,13 +40,13 @@ object LinkSecretServiceImpl {
   ] =
     ZLayer.fromFunction(LinkSecretServiceImpl(_))
 
-  given GenericSecret[String, AnoncredLinkSecret] = new {
+  given GenericSecret[String, lib.LinkSecret] = new {
     override def keyPath(id: String): String = s"link-secret/${id.toString}"
 
-    override def encodeValue(secret: AnoncredLinkSecret): Json = Json.Str(secret.data)
+    override def encodeValue(secret: lib.LinkSecret): Json = Json.Str(secret.data)
 
-    override def decodeValue(json: Json): Try[AnoncredLinkSecret] = json match {
-      case Json.Str(data) => Try(AnoncredLinkSecret(data))
+    override def decodeValue(json: Json): Try[lib.LinkSecret] = json match {
+      case Json.Str(data) => Try(lib.LinkSecret(data))
       case _              => scala.util.Failure(new Exception("Invalid JSON format for LinkSecret"))
     }
   }

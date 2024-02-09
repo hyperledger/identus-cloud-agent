@@ -1,6 +1,11 @@
 package io.iohk.atala.pollux.core.service.serdes
 
-import io.iohk.atala.pollux.core.service.serdes.anoncreds.{NonRevokedIntervalV1, PresentationRequestV1, RequestedAttributeV1, RequestedPredicateV1}
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.{
+  NonRevokedIntervalV1,
+  PresentationRequestV1,
+  RequestedAttributeV1,
+  RequestedPredicateV1
+}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

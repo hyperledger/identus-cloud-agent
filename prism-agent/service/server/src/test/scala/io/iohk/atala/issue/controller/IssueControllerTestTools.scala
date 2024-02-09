@@ -9,14 +9,13 @@ import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.service.MockDIDService
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
-import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
-import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
+import io.iohk.atala.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
 import io.iohk.atala.issue.controller.http.{
   CreateIssueCredentialRecordRequest,
   IssueCredentialRecord,
   IssueCredentialRecordPage
 }
-import io.iohk.atala.pollux.anoncreds.AnoncredLinkSecretWithId
+import io.iohk.atala.pollux.anoncreds.*
 import io.iohk.atala.pollux.core.model.CredentialFormat
 import io.iohk.atala.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory}
 import io.iohk.atala.pollux.core.service.*
@@ -81,7 +80,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
     didResolverLayer >+>
     ResourceURIDereferencerImpl.layer >+>
     CredentialRepositoryInMemory.layer >+>
-    ZLayer.succeed(AnoncredLinkSecretWithId("Unused Linked Secret ID")) >+>
+    ZLayer.succeed(lib.LinkSecretWithId("Unused Linked Secret ID")) >+>
     MockDIDService.empty >+>
     MockManagedDIDService.empty >+>
     CredentialServiceImpl.layer >+>

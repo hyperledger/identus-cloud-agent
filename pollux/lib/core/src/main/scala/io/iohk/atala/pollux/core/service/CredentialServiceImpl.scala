@@ -10,12 +10,7 @@ import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.*
-import io.iohk.atala.pollux.anoncreds.{
-  AnoncredCreateCredentialDefinition,
-  AnoncredCredential,
-  AnoncredCredentialOffer,
-  AnoncredLib
-}
+import io.iohk.atala.pollux.anoncreds.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.CredentialFormat.AnonCreds
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
@@ -326,7 +321,7 @@ private class CredentialServiceImpl(
           case Base64(value) =>
             for {
               _ <- ZIO
-                .attempt(AnoncredCredentialOffer(value))
+                .attempt(lib.CredentialOffer(value))
                 .mapError(e =>
                   CredentialServiceError.UnexpectedError(
                     s"Unexpected error parsing credential offer attachment: ${e.toString}"
@@ -544,16 +539,20 @@ private class CredentialServiceImpl(
             }
         )
         .mapError(_ => InvalidFlowStateError(s"No AnonCreds offer attachment found"))
-      credentialOffer = anoncreds.AnoncredCredentialOffer(attachmentData)
+      credentialOffer = lib.CredentialOffer(attachmentData)
       _ <- ZIO.logInfo(s"Cred def ID => ${credentialOffer.getCredDefId}")
       credDefContent <- uriDereferencer
         .dereference(new URI(credentialOffer.getCredDefId))
         .mapError(err => UnexpectedError(err.toString))
-      credentialDefinition = anoncreds.AnoncredCredentialDefinition(credDefContent)
+      credentialDefinition = lib.CredentialDefinition(credDefContent)
       linkSecret <- linkSecretService
         .fetchOrCreate()
         .mapError(e => CredentialServiceError.LinkSecretError.apply(e.cause))
-      createCredentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition, credentialOffer)
+      createCredentialRequest = lib.Anoncreds.createCredentialRequest(
+        linkSecret,
+        credentialDefinition,
+        credentialOffer
+      )
     } yield createCredentialRequest
   }
 
@@ -669,11 +668,11 @@ private class CredentialServiceImpl(
       credentialBytes: Array[Byte]
   ): ZIO[WalletAccessContext, CredentialServiceError, Array[Byte]] = {
     for {
-      credential <- ZIO.succeed(anoncreds.AnoncredCredential(new String(credentialBytes)))
+      credential <- ZIO.succeed(lib.Credential(new String(credentialBytes)))
       credDefContent <- uriDereferencer
         .dereference(new URI(credential.getCredDefId))
         .mapError(err => UnexpectedError(err.toString))
-      credentialDefinition = anoncreds.AnoncredCredentialDefinition(credDefContent)
+      credentialDefinition = lib.CredentialDefinition(credDefContent)
       metadata <- ZIO
         .fromOption(record.anonCredsRequestMetadata)
         .mapError(_ => CredentialServiceError.UnexpectedError(s"No request metadata Id found un record: ${record.id}"))
@@ -682,8 +681,8 @@ private class CredentialServiceImpl(
         .mapError(e => CredentialServiceError.LinkSecretError.apply(e.cause))
       credential <- ZIO
         .attempt(
-          AnoncredLib.processCredential(
-            anoncreds.AnoncredCredential(new String(credentialBytes)),
+          lib.Anoncreds.processCredential(
+            lib.Credential(new String(credentialBytes)),
             metadata,
             linkSecret,
             credentialDefinition
@@ -881,17 +880,17 @@ private class CredentialServiceImpl(
       credentialDefinition <- credentialDefinitionService
         .getByGUID(credentialDefinitionGUID)
         .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
-      cd = anoncreds.AnoncredCredentialDefinition(credentialDefinition.definition.toString)
-      kcp = anoncreds.AnoncredCredentialKeyCorrectnessProof(credentialDefinition.keyCorrectnessProof.toString)
+      cd = lib.CredentialDefinition(credentialDefinition.definition.toString)
+      kcp = lib.CredentialKeyCorrectnessProof(credentialDefinition.keyCorrectnessProof.toString)
       maybeCredentialDefinitionSecret <- genericSecretStorage
         .get[UUID, CredentialDefinitionSecret](credentialDefinition.guid)
         .orDie
       credentialDefinitionSecret <- ZIO
         .fromOption(maybeCredentialDefinitionSecret)
         .mapError(_ => CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinition.guid))
-      cdp = anoncreds.AnoncredCredentialDefinitionPrivate(credentialDefinitionSecret.json.toString)
-      createCredentialDefinition = AnoncredCreateCredentialDefinition(cd, cdp, kcp)
-      offer = AnoncredLib.createOffer(createCredentialDefinition, credentialDefinitionId)
+      cdp = lib.CredentialDefinitionPrivate(credentialDefinitionSecret.json.toString)
+      createCredentialDefinition = lib.CreateCredentialDefinition(cd, cdp, kcp)
+      offer = lib.Anoncreds.createOffer(createCredentialDefinition, credentialDefinitionId)
     } yield offer
 
   private[this] def createDidCommRequestCredential(
@@ -1094,7 +1093,7 @@ private class CredentialServiceImpl(
       credentialDefinition <- credentialDefinitionService
         .getByGUID(credentialDefinitionId)
         .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
-      cd = anoncreds.AnoncredCredentialDefinition(credentialDefinition.definition.toString)
+      cd = lib.CredentialDefinition(credentialDefinition.definition.toString)
       offerCredential <- ZIO
         .fromOption(record.offerCredentialData)
         .mapError(_ => InvalidFlowStateError(s"No offer found for this record: ${record.id}"))
@@ -1109,7 +1108,7 @@ private class CredentialServiceImpl(
             }
         )
         .mapError(_ => InvalidFlowStateError(s"No AnonCreds offer attachment found"))
-      credentialOffer = anoncreds.AnoncredCredentialOffer(offerCredentialAttachmentData)
+      credentialOffer = lib.CredentialOffer(offerCredentialAttachmentData)
       requestCredential <- ZIO
         .fromOption(record.requestCredentialData)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: ${record.id}"))
@@ -1124,7 +1123,7 @@ private class CredentialServiceImpl(
             }
         )
         .mapError(_ => InvalidFlowStateError(s"No AnonCreds request attachment found"))
-      credentialRequest = anoncreds.AnoncredCredentialRequest(requestCredentialAttachmentData)
+      credentialRequest = lib.CredentialRequest(requestCredentialAttachmentData)
       attrValues = offerCredential.body.credential_preview.body.attributes.map { attr =>
         (attr.name, attr.value)
       }
@@ -1134,9 +1133,9 @@ private class CredentialServiceImpl(
       credentialDefinitionSecret <- ZIO
         .fromOption(maybeCredentialDefinitionSecret)
         .mapError(_ => CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinition.guid))
-      cdp = anoncreds.AnoncredCredentialDefinitionPrivate(credentialDefinitionSecret.json.toString)
+      cdp = lib.CredentialDefinitionPrivate(credentialDefinitionSecret.json.toString)
       credential =
-        AnoncredLib.createCredential(
+        lib.Anoncreds.createCredential(
           cd,
           cdp,
           credentialOffer,

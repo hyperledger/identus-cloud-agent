@@ -1,6 +1,19 @@
 package io.iohk.atala.pollux.core.service.serdes
 
-import io.iohk.atala.pollux.core.service.serdes.anoncreds.{AggregatedProofV1, EqProofV1, GeProofV1, IdentifierV1, PredicateV1, PresentationV1, PrimaryProofV1, ProofV1, RequestedProofV1, RevealedAttrV1, SubProofIndexV1, SubProofV1}
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.{
+  AggregatedProofV1,
+  EqProofV1,
+  GeProofV1,
+  IdentifierV1,
+  PredicateV1,
+  PresentationV1,
+  PrimaryProofV1,
+  ProofV1,
+  RequestedProofV1,
+  RevealedAttrV1,
+  SubProofIndexV1,
+  SubProofV1
+}
 import io.iohk.atala.pollux.core.service.serdes.anoncreds.PresentationV1.*
 import zio.*
 import zio.test.*

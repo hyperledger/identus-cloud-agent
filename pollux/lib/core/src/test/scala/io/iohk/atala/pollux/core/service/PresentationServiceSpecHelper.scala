@@ -9,7 +9,11 @@ import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.repository.*
 import io.iohk.atala.pollux.core.service.serdes.*
-import io.iohk.atala.pollux.core.service.serdes.anoncreds.{PresentationRequestV1, RequestedAttributeV1, RequestedPredicateV1}
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.{
+  PresentationRequestV1,
+  RequestedAttributeV1,
+  RequestedPredicateV1
+}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*

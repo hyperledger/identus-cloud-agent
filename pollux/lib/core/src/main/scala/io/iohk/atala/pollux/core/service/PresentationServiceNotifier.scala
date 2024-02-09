@@ -3,7 +3,7 @@ package io.iohk.atala.pollux.core.service
 import io.iohk.atala.event.notification.{Event, EventNotificationService}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProofType, ProposePresentation, RequestPresentation}
-import io.iohk.atala.pollux.anoncreds.AnoncredPresentation
+import io.iohk.atala.pollux.anoncreds.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
@@ -168,19 +168,19 @@ class PresentationServiceNotifier(
     svc.createJwtPresentationPayloadFromRecord(record, issuer, issuanceDate)
 
   override def createAnoncredPresentationPayloadFromRecord(
-                                                            record: DidCommID,
-                                                            issuer: Issuer,
-                                                            anoncredCredentialProof: CredentialProofsV1,
-                                                            issuanceDate: Instant
-  ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] =
+      record: DidCommID,
+      issuer: Issuer,
+      anoncredCredentialProof: CredentialProofsV1,
+      issuanceDate: Instant
+  ): ZIO[WalletAccessContext, PresentationError, lib.Presentation] =
     svc.createAnoncredPresentationPayloadFromRecord(record, issuer, anoncredCredentialProof, issuanceDate)
 
   override def createAnoncredPresentation(
-                                           requestPresentation: RequestPresentation,
-                                           recordId: DidCommID,
-                                           prover: Issuer,
-                                           anoncredCredentialProof: CredentialProofsV1,
-                                           issuanceDate: Instant
+      requestPresentation: RequestPresentation,
+      recordId: DidCommID,
+      prover: Issuer,
+      anoncredCredentialProof: CredentialProofsV1,
+      issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, Presentation] =
     svc.createAnoncredPresentation(requestPresentation, recordId, prover, anoncredCredentialProof, issuanceDate)
 

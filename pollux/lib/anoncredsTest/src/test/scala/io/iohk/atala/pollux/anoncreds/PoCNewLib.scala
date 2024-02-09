@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.anoncreds
 
+import io.iohk.atala.pollux.anoncreds.lib.*
 import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.jdk.CollectionConverters.*
@@ -15,13 +16,13 @@ class PoCNewLib extends AnyFlatSpec {
   "LinkSecret" should "be able to parse back to the anoncreds lib" in {
     import scala.language.implicitConversions
 
-    val ls1 = AnoncredLinkSecret("65965334953670062552662719679603258895632947953618378932199361160021795698890")
+    val ls1 = LinkSecret("65965334953670062552662719679603258895632947953618378932199361160021795698890")
     val ls1p = ls1: uniffi.anoncreds_wrapper.LinkSecret
     assert(ls1p.getValue() == "65965334953670062552662719679603258895632947953618378932199361160021795698890")
 
-    val ls0 = AnoncredLinkSecret()
+    val ls0 = LinkSecret()
     val ls0p = ls0: uniffi.anoncreds_wrapper.LinkSecret
-    val ls0_ = ls0p: AnoncredLinkSecret
+    val ls0_ = ls0p: LinkSecret
     assert(ls0.data == ls0_.data)
   }
 
@@ -37,7 +38,7 @@ class PoCNewLib extends AnyFlatSpec {
     // ##############
     println("*** issuer " + ("*" * 100))
     // ############################################################################################
-    val schema = AnoncredLib.createSchema(
+    val schema = Anoncreds.createSchema(
       SCHEMA_ID,
       "0.1.0",
       Set("name", "sex", "age"),
@@ -45,10 +46,10 @@ class PoCNewLib extends AnyFlatSpec {
     )
 
     // ############################################################################################
-    val credentialDefinition = AnoncredLib.createCredDefinition(ISSUER_DID, schema, "tag", supportRevocation = false)
+    val credentialDefinition = Anoncreds.createCredDefinition(ISSUER_DID, schema, "tag", supportRevocation = false)
 
     // // ############################################################################################
-    val credentialOffer = AnoncredLib.createOffer(credentialDefinition, CRED_DEF_ID)
+    val credentialOffer = Anoncreds.createOffer(credentialDefinition, CRED_DEF_ID)
 
     println("credentialOffer.schemaId: " + credentialOffer.schemaId)
     println("credentialOffer.credDefId: " + credentialOffer.credDefId)
@@ -58,13 +59,13 @@ class PoCNewLib extends AnyFlatSpec {
     // ##############
     println("*** holder " + ("*" * 100))
 
-    val ls1 = AnoncredLinkSecret("65965334953670062552662719679603258895632947953618378932199361160021795698890")
-    val linkSecret = AnoncredLinkSecretWithId("ID_of_some_secret_1", ls1)
+    val ls1 = LinkSecret("65965334953670062552662719679603258895632947953618378932199361160021795698890")
+    val linkSecret = LinkSecretWithId("ID_of_some_secret_1", ls1)
 
-    val credentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition.cd, credentialOffer)
+    val credentialRequest = Anoncreds.createCredentialRequest(linkSecret, credentialDefinition.cd, credentialOffer)
     println("*" * 100)
 
-    val credential = AnoncredLib.createCredential(
+    val credential = Anoncreds.createCredential(
       credentialDefinition.cd,
       credentialDefinition.cdPrivate,
       credentialOffer,
@@ -76,7 +77,7 @@ class PoCNewLib extends AnyFlatSpec {
       )
     )
 
-    val processedCredential = AnoncredLib.processCredential(
+    val processedCredential = Anoncreds.processCredential(
       credential = credential,
       metadata = credentialRequest.metadata,
       linkSecret = linkSecret,
@@ -89,7 +90,7 @@ class PoCNewLib extends AnyFlatSpec {
     // ##############
 
     // TODO READ about PresentationRequest https://hyperledger.github.io/anoncreds-spec/#create-presentation-request
-    val presentationRequest = AnoncredPresentationRequest(
+    val presentationRequest = PresentationRequest(
       s"""{
         "nonce": "1103253414365527824079144",
         "name":"proof_req_1",
@@ -106,10 +107,10 @@ class PoCNewLib extends AnyFlatSpec {
     )
 
     println("*** PROVER " + ("*" * 100) + " presentation")
-    val presentation = AnoncredLib.createPresentation(
+    val presentation = Anoncreds.createPresentation(
       presentationRequest, // : PresentationRequest,
       Seq(
-        AnoncredCredentialRequests(processedCredential, Seq("sex"), Seq("age"))
+        CredentialRequests(processedCredential, Seq("sex"), Seq("age"))
       ), // credentials: Seq[Credential],
       Map(), // selfAttested: Map[String, String],
       linkSecret.secret, // linkSecret: LinkSecret,
@@ -121,7 +122,7 @@ class PoCNewLib extends AnyFlatSpec {
     println(presentation)
 
     println("*** PROVER " + ("*" * 100) + " verifyPresentation")
-    val verifyPresentation = AnoncredLib.verifyPresentation(
+    val verifyPresentation = Anoncreds.verifyPresentation(
       presentation.getOrElse(???), // : Presentation,
       presentationRequest, // : PresentationRequest,
       Map(credentialOffer.schemaId -> schema), // schemas: Map[SchemaId, SchemaDef],
