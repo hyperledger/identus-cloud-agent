@@ -79,10 +79,14 @@ export class Issuer extends Actor {
     this.didService.waitForDidState(this.longFormDid!, "PUBLISHED");
   }
 
-  createCredentialSchema() {
-    this.schema = this.credentialsService.createCredentialSchema(this.did!);
+  createCredentialSchema(schemaType: string = "json") {
+    this.schema = this.credentialsService.createCredentialSchema(this.did!, schemaType);
   }
- 
+
+  createCredentialDefinition() {
+    this.credentialsService.createCredentialDefinition(this.did!, this.schema!);
+  }
+
   /**
    * Creates a credential offer for the holder.
    */
