@@ -138,6 +138,7 @@ jobs:
           ls -la
           ./k6 run -e SCENARIO_LABEL=create-prism-did-smoke ${{ env.BENCHMARKING_DIR }}/dist/create-prism-did-test.js
           ./k6 run -e SCENARIO_LABEL=credential-offer-smoke ${{ env.BENCHMARKING_DIR }}/dist/credential-offer-test.js
+          ./k6 run -e SCENARIO_LABEL=credential-definition-smoke ${{ env.BENCHMARKING_DIR }}/dist/credential-definition-test.js
           ./k6 run -e SCENARIO_LABEL=credential-schema-smoke ${{ env.BENCHMARKING_DIR }}/dist/credential-schema-test.js
           ./k6 run -e SCENARIO_LABEL=did-publishing-smoke ${{ env.BENCHMARKING_DIR }}/dist/did-publishing-test.js
           ./k6 run -e SCENARIO_LABEL=connection-flow-smoke ${{ env.BENCHMARKING_DIR }}/dist/connection-flow-test.js
