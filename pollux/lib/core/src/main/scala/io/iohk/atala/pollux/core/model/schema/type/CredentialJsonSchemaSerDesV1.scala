@@ -89,6 +89,13 @@ object CredentialJsonSchemaSerDesV1 {
       |            "pattern": {
       |              "type": "string",
       |              "format": "regex"
+      |            },
+      |            "enum": {
+      |              "type": "array",
+      |              "items": {
+      |                "type": "string",
+      |                "minItems": 1
+      |              }
       |            }
       |          },
       |          "required": ["type"],
@@ -112,6 +119,13 @@ object CredentialJsonSchemaSerDesV1 {
       |            },
       |            "exclusiveMaximum": {
       |              "type": "integer"
+      |            },
+      |            "enum": {
+      |              "type": "array",
+      |              "items": {
+      |                "type": "integer",
+      |                "minItems": 1
+      |              }
       |            }
       |          },
       |          "required": ["type"],
@@ -135,6 +149,13 @@ object CredentialJsonSchemaSerDesV1 {
       |            },
       |            "exclusiveMaximum": {
       |              "type": "number"
+      |            },
+      |            "enum": {
+      |              "type": "array",
+      |              "items": {
+      |                "type": "number",
+      |                "minItems": 1
+      |              }
       |            }
       |          },
       |          "required": ["type"],
