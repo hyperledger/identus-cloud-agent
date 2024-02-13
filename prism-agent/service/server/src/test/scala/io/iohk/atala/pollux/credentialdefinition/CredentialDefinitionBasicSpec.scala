@@ -6,7 +6,7 @@ import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
-import io.iohk.atala.pollux.core.service.serdes.credentialdefinition.{PrivateV1, ProofKeyV1, PublicV1}
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.credentialdefinition.{PrivateV1, ProofKeyV1, PublicV1}
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
 import io.iohk.atala.pollux.credentialdefinition.http.{CredentialDefinitionInput, CredentialDefinitionResponse}
 import sttp.client3.basicRequest

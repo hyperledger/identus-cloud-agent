@@ -13,7 +13,7 @@ import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
 import io.iohk.atala.pollux.core.repository.CredentialDefinitionRepository
 import io.iohk.atala.pollux.core.repository.Repository.SearchQuery
 import io.iohk.atala.pollux.core.service.CredentialDefinitionService.Error.*
-import io.iohk.atala.pollux.core.service.serdes.credentialdefinition.{PrivateV1, ProofKeyV1, PublicV1}
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.credentialdefinition.{PrivateV1, ProofKeyV1, PublicV1}
 import zio.ZIO.getOrFailWith
 import zio.{IO, URLayer, ZIO, ZLayer}
 

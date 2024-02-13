@@ -1,11 +1,6 @@
 package io.iohk.atala.pollux.core.service.serdes
 
-import io.iohk.atala.pollux.core.service.serdes.credentialdefinition.{
-  PublicV1,
-  PublicPrimaryPublicKeyV1,
-  PublicRevocationKeyV1,
-  PublicCredentialValueV1
-}
+import io.iohk.atala.pollux.core.service.serdes.anoncreds.credentialdefinition.{PublicCredentialValueV1, PublicPrimaryPublicKeyV1, PublicRevocationKeyV1, PublicV1}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

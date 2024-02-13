@@ -1,7 +1,6 @@
-package io.iohk.atala.pollux.core.service.serdes.credentialdefinition
+package io.iohk.atala.pollux.core.service.serdes.anoncreds.credentialdefinition
 
 import io.iohk.atala.pollux.core.model.schema.validator.SchemaSerDes
-import io.iohk.atala.pollux.core.service.serdes.credentialdefinition.ProofKeyV1
 import zio.*
 import zio.json.*
 
