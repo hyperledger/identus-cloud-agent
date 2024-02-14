@@ -10,7 +10,7 @@ case class CredentialJsonSchemaSerDesV1(
     $id: Option[String],
     description: Option[String],
     properties: Json,
-    required: Set[String],
+    required: Option[Set[String]],
     additionalProperties: Option[Boolean]
 )
 
