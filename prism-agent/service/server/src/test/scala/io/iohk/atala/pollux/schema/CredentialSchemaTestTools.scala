@@ -146,7 +146,9 @@ trait CredentialSchemaGen {
         |    "description": "Driving License",
         |    "type": "object",
         |    "properties": {
-        |        "name" : "Alice"
+        |        "name" : {
+        |          "type": "string"
+        |        }
         |    },
         |    "required": [
         |        "name"

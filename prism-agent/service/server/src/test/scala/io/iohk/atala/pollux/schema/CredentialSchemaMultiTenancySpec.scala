@@ -30,7 +30,9 @@ object CredentialSchemaMultiTenancySpec extends ZIOSpecDefault with CredentialSc
       |    "description": "Driving License",
       |    "type": "object",
       |    "properties": {
-      |        "name" : "String"
+      |        "name" : {
+      |          "type": "string"
+      |        }
       |    },
       |    "required": [
       |        "name"
