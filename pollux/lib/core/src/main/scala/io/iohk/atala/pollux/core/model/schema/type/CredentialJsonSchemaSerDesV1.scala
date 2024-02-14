@@ -44,7 +44,7 @@ object CredentialJsonSchemaSerDesV1 {
       |      "type": "object",
       |      "patternProperties": {
       |        ".*": {
-      |          "$ref": "#/$defs/oneOf"
+      |          "$ref": "#/$defs/oneOfDef"
       |        }
       |      }
       |    },
@@ -65,7 +65,7 @@ object CredentialJsonSchemaSerDesV1 {
       |  "required": ["$schema","type","properties"],
       |  "additionalProperties": false,
       |  "$defs": {
-      |    "oneOf": {
+      |    "oneOfDef": {
       |      "oneOf": [
       |        {
       |          "type": "object",
@@ -180,7 +180,7 @@ object CredentialJsonSchemaSerDesV1 {
       |              "enum": ["array"]
       |            },
       |            "items": {
-      |              "$ref": "#/$defs/oneOf"
+      |              "$ref": "#/$defs/oneOfDef"
       |            },
       |            "minItems": {
       |              "type": "integer"
@@ -206,7 +206,7 @@ object CredentialJsonSchemaSerDesV1 {
       |              "type": "object",
       |              "patternProperties": {
       |                ".*": {
-      |                  "$ref": "#/$defs/oneOf"
+      |                  "$ref": "#/$defs/oneOfDef"
       |                }
       |              }
       |            },
