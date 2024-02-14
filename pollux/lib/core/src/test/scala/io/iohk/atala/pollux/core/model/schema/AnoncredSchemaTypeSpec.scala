@@ -143,7 +143,7 @@ object AnoncredSchemaTypeSpec extends ZIOSpecDefault {
       val schema: Json = jsonSchema.fromJson[Json].getOrElse(Json.Null)
       assertZIO(AnoncredSchemaType.validate(schema).exit)(
         failsWithErrors(
-          Seq("$.attrNames: there must be a minimum of 1 items in the array")
+          Seq("$.attrNames: expected at least 1 items but found 0")
         )
       )
     },
@@ -161,7 +161,7 @@ object AnoncredSchemaTypeSpec extends ZIOSpecDefault {
       val schema: Json = jsonSchema.fromJson[Json].getOrElse(Json.Null)
       assertZIO(AnoncredSchemaType.validate(schema).exit)(
         failsWithErrors(
-          Seq("$.attrNames: there must be a maximum of 125 items in the array")
+          Seq("$.attrNames: must have a maximum of 125 items in the array")
         )
       )
     }
