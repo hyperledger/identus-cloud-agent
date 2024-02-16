@@ -175,7 +175,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
             case Some(record) =>
               val verifierReqPendingToSentFlow = for {
                 _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
-                walletAccessContext <- buildWalletAccessContextLayer(record.from)
+                walletAccessContext <- buildWalletAccessContextLayer(record.from.getOrElse(???))
                 result <- (for {
                   didOps <- ZIO.service[DidOps]
                   didCommAgent <- buildDIDCommAgent(record.from).provideSomeLayer(ZLayer.succeed(walletAccessContext))
@@ -245,7 +245,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
             case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
             case Some(requestPresentation) => // TODO create build method in mercury for Presentation
               val proverPresentationPendingToGeneratedFlow = for {
-                walletAccessContext <- buildWalletAccessContextLayer(requestPresentation.to)
+                walletAccessContext <- buildWalletAccessContextLayer(requestPresentation.to.getOrElse(???))
                 result <- (for {
                   presentationService <- ZIO.service[PresentationService]
                   prover <- createPrismDIDIssuerFromPresentationCredentials(id, credentialsToUse.getOrElse(Nil))

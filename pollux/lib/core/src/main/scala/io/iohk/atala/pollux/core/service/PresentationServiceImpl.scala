@@ -18,7 +18,6 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.Base64Utils
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
-import zio.http.Status.NotImplemented
 
 import java.rmi.UnexpectedException
 import java.time.Instant
@@ -158,8 +157,8 @@ private class PresentationServiceImpl(
         createDidCommRequestPresentation(
           proofTypes,
           thid,
-          pairwiseVerifierDID,
-          pairwiseProverDID,
+          Some(pairwiseVerifierDID),
+          Some(pairwiseProverDID),
           format match {
             case CredentialFormat.JWT => maybeOptions.map(options => Seq(toJWTAttachment(options))).getOrElse(Seq.empty)
             case CredentialFormat.AnonCreds =>
@@ -218,8 +217,8 @@ private class PresentationServiceImpl(
         createDidCommRequestPresentation(
           proofTypes,
           invitationId,
-          pairwiseVerifierDID,
-          pairwiseVerifierDID, // TODO Fix not require in
+          Some(pairwiseVerifierDID),
+          None, // TODO Fix not require in
           format match {
             case CredentialFormat.JWT => maybeOptions.map(options => Seq(toJWTAttachment(options))).getOrElse(Seq.empty)
             case CredentialFormat.AnonCreds =>
@@ -288,7 +287,7 @@ private class PresentationServiceImpl(
                 .flatMap { data =>
                   RequestPresentation.given_Decoder_RequestPresentation
                     .decodeJson(data.json.asJson)
-                    .map(r => r.copy(to = pairwiseProverDID))
+                    .map(r => r.copy(to = Some(pairwiseProverDID)))
                     .leftMap(err =>
                       PresentationDecodingError(
                         new Throwable(s"RequestPresentation As Attachment decoding error: $err")
@@ -357,7 +356,7 @@ private class PresentationServiceImpl(
           connectionId = connectionId,
           schemaId = None,
           role = Role.Prover,
-          subjectId = request.to,
+          subjectId = request.to.getOrElse(???),
           protocolState = PresentationRecord.ProtocolState.RequestReceived,
           credentialFormat = format,
           invitation = None,
@@ -741,8 +740,8 @@ private class PresentationServiceImpl(
   private[this] def createDidCommRequestPresentation(
       proofTypes: Seq[ProofType],
       thid: DidCommID,
-      pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseVerifierDID: Option[DidId],
+      pairwiseProverDID: Option[DidId],
       attachments: Seq[AttachmentDescriptor]
   ): RequestPresentation = {
     RequestPresentation(
@@ -766,8 +765,8 @@ private class PresentationServiceImpl(
     RequestPresentation(
       body = body,
       attachments = proposePresentation.attachments,
-      from = proposePresentation.to,
-      to = proposePresentation.from,
+      from = Some(proposePresentation.to),
+      to = Some(proposePresentation.from),
       thid = proposePresentation.thid
     )
   }
