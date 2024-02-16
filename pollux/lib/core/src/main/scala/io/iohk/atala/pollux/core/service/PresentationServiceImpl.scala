@@ -356,7 +356,7 @@ private class PresentationServiceImpl(
           connectionId = connectionId,
           schemaId = None,
           role = Role.Prover,
-          subjectId = request.to.getOrElse(???),
+          subjectId = request.to.getOrElse(throw new java.lang.RuntimeException("FIXME")), // FIXME
           protocolState = PresentationRecord.ProtocolState.RequestReceived,
           credentialFormat = format,
           invitation = None,

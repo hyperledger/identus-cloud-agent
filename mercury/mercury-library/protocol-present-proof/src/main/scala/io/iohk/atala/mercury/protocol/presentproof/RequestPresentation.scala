@@ -68,7 +68,7 @@ object RequestPresentation {
         assert(msg.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
         msg.to.headOption
       },
-      to = msg.from, // TODO get
+      to = msg.from,
     )
   }
 

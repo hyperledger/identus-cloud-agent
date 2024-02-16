@@ -175,10 +175,14 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
             case Some(record) =>
               val verifierReqPendingToSentFlow = for {
                 _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Massage)")
-                walletAccessContext <- buildWalletAccessContextLayer(record.from.getOrElse(???))
+                walletAccessContext <- buildWalletAccessContextLayer(
+                  record.from.getOrElse(throw new RuntimeException("FIXME"))
+                ) // FIXME
                 result <- (for {
                   didOps <- ZIO.service[DidOps]
-                  didCommAgent <- buildDIDCommAgent(record.from).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                  didCommAgent <- buildDIDCommAgent(record.from.get).provideSomeLayer(
+                    ZLayer.succeed(walletAccessContext)
+                  )
                   resp <- MessagingService.send(record.makeMessage).provideSomeLayer(didCommAgent) @@ Metric
                     .gauge("present_proof_flow_verifier_send_presentation_request_msg_ms_gauge")
                     .trackDurationWith(_.toMetricsSeconds)
@@ -245,7 +249,9 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
             case None => ZIO.fail(InvalidState("PresentationRecord 'RequestPending' with no Record"))
             case Some(requestPresentation) => // TODO create build method in mercury for Presentation
               val proverPresentationPendingToGeneratedFlow = for {
-                walletAccessContext <- buildWalletAccessContextLayer(requestPresentation.to.getOrElse(???))
+                walletAccessContext <- buildWalletAccessContextLayer(
+                  requestPresentation.to.getOrElse(throw new RuntimeException("FIXME"))
+                ) // FIXME
                 result <- (for {
                   presentationService <- ZIO.service[PresentationService]
                   prover <- createPrismDIDIssuerFromPresentationCredentials(id, credentialsToUse.getOrElse(Nil))
@@ -275,8 +281,8 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                           )
                       ),
                       thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
-                      from = requestPresentation.to,
-                      to = requestPresentation.from
+                      from = requestPresentation.to.get, // FIXME
+                      to = requestPresentation.from.get // FIXME
                     )
                   )
                   _ <- presentationService
