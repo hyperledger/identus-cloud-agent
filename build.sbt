@@ -587,7 +587,7 @@ lazy val protocolPresentProof = project
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
-  .dependsOn(models)
+  .dependsOn(models, protocolInvitation)
 
 lazy val vc = project
   .in(file("mercury/mercury-library/vc"))
