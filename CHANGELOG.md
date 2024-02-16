@@ -1,3 +1,27 @@
+# [1.27.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.26.0...prism-agent-v1.27.0) (2024-02-08)
+
+
+### Bug Fixes
+
+* remove hard code did:example:* ([#882](https://github.com/hyperledger-labs/open-enterprise-agent/issues/882)) ([321faf5](https://github.com/hyperledger-labs/open-enterprise-agent/commit/321faf5791b05f0c24dd6ed96f155aa65d06477d))
+
+
+### Features
+
+* support vault AppRole authentication ([#884](https://github.com/hyperledger-labs/open-enterprise-agent/issues/884)) ([441f878](https://github.com/hyperledger-labs/open-enterprise-agent/commit/441f878f0b573f350ffed14de0df164e1e260122))
+
+# [1.26.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.25.0...prism-agent-v1.26.0) (2024-02-06)
+
+
+### Bug Fixes
+
+* **prism-agent:**  update didcomm peerdid library to support latest spec ([#877](https://github.com/hyperledger-labs/open-enterprise-agent/issues/877)) ([0c42a62](https://github.com/hyperledger-labs/open-enterprise-agent/commit/0c42a622143e35c439ae83cc3bb746515ce7401b))
+
+
+### Features
+
+* interoperable schema changes ([#870](https://github.com/hyperledger-labs/open-enterprise-agent/issues/870)) ([de49a93](https://github.com/hyperledger-labs/open-enterprise-agent/commit/de49a9328524b32d714301f2b7961d5cd85b23c3))
+
 # [1.25.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.24.0...prism-agent-v1.25.0) (2024-01-25)
 
 

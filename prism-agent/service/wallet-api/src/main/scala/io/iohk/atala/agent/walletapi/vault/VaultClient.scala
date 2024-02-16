@@ -1,21 +1,24 @@
 package io.iohk.atala.agent.walletapi.vault
 
 import io.github.jopenlibs.vault.Vault
+import io.github.jopenlibs.vault.VaultConfig
 import io.github.jopenlibs.vault.response.LogicalResponse
+import zio.*
+
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters.*
-import zio.*
-import io.github.jopenlibs.vault.VaultConfig
 
 trait VaultKVClient {
   def get[T: KVCodec](path: String): Task[Option[T]]
   def set[T: KVCodec](path: String, data: T): Task[Unit]
 }
 
-class VaultKVClientImpl(vault: Vault) extends VaultKVClient {
+class VaultKVClientImpl(vaultRef: Ref[Vault]) extends VaultKVClient {
+  import VaultKVClientImpl.*
 
   override def get[T: KVCodec](path: String): Task[Option[T]] = {
     for {
+      vault <- vaultRef.get
       maybeData <- ZIO
         .attemptBlocking(
           vault
@@ -31,6 +34,7 @@ class VaultKVClientImpl(vault: Vault) extends VaultKVClient {
   override def set[T: KVCodec](path: String, data: T): Task[Unit] = {
     val kv = summon[KVCodec[T]].encode(data)
     for {
+      vault <- vaultRef.get
       _ <- ZIO
         .attemptBlocking {
           vault
@@ -40,6 +44,70 @@ class VaultKVClientImpl(vault: Vault) extends VaultKVClient {
         .handleVaultError("Error writing a secret to Vault.")
     } yield ()
   }
+
+}
+
+object VaultKVClientImpl {
+
+  private final case class TokenRefreshState(leaseDuration: Duration)
+
+  def fromToken(address: String, token: String): Task[VaultKVClient] =
+    for {
+      vault <- createVaultInstance(address, Some(token))
+      vaultRef <- Ref.make(vault)
+    } yield VaultKVClientImpl(vaultRef)
+
+  def fromAppRole(address: String, roleId: String, secretId: String): Task[VaultKVClient] =
+    for {
+      vault <- createVaultInstance(address)
+      vaultRef <- vaultTokenRefreshLogic(vault, address, roleId, secretId)
+    } yield VaultKVClientImpl(vaultRef)
+
+  private def vaultTokenRefreshLogic(
+      authVault: Vault,
+      address: String,
+      roleId: String,
+      secretId: String,
+      tokenRefreshBuffer: Duration = 15.seconds,
+      retrySchedule: Schedule[Any, Any, Any] = Schedule.spaced(5.second) && Schedule.recurs(10)
+  ): Task[Ref[Vault]] = {
+    val getToken = ZIO
+      .attempt {
+        val authResponse = authVault.auth().loginByAppRole(roleId, secretId)
+        val ttlSecond = authResponse.getAuthLeaseDuration()
+        val token = authResponse.getAuthClientToken()
+        (token, ttlSecond)
+      }
+      .retry(retrySchedule)
+
+    for {
+      tokenWithTtl <- getToken
+      (token, ttlSecond) = tokenWithTtl
+      vaultWithToken <- createVaultInstance(address, Some(token))
+      vaultRef <- Ref.make(vaultWithToken)
+      _ <- ZIO
+        .iterate(TokenRefreshState(ttlSecond.seconds))(_ => true) { state =>
+          val durationUntilRefresh = state.leaseDuration.minus(tokenRefreshBuffer).max(1.second)
+          for {
+            _ <- ZIO.sleep(durationUntilRefresh)
+            tokenWithTtl <- getToken
+            (token, ttlSecond) = tokenWithTtl
+            vaultWithToken <- createVaultInstance(address, Some(token))
+            _ <- vaultRef.set(vaultWithToken)
+          } yield state.copy(leaseDuration = ttlSecond.seconds)
+        }
+        .fork
+    } yield vaultRef
+  }
+
+  private def createVaultInstance(address: String, token: Option[String] = None): Task[Vault] =
+    ZIO.attempt {
+      val config = VaultConfig()
+        .engineVersion(2)
+        .address(address)
+      token.foreach(config.token)
+      Vault.create(config.build())
+    }
 
   extension [R](resp: RIO[R, LogicalResponse]) {
 
@@ -78,17 +146,5 @@ class VaultKVClientImpl(vault: Vault) extends VaultKVClient {
         }
     }
   }
-}
 
-object VaultKVClientImpl {
-  def fromAddressAndToken(address: String, token: String): Task[VaultKVClient] =
-    ZIO.attempt {
-      val config = VaultConfig()
-        .engineVersion(2)
-        .address(address)
-        .token(token)
-        .build()
-      val vault = Vault.create(config)
-      VaultKVClientImpl(vault)
-    }
 }

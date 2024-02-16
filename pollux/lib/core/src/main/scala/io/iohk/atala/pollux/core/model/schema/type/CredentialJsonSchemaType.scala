@@ -13,6 +13,7 @@ object CredentialJsonSchemaType extends CredentialSchemaType {
 
   override def validate(schema: Schema): IO[JsonSchemaError, Unit] =
     for {
+      credentialJsonSchema <- CredentialJsonSchemaSerDesV1.schemaSerDes.deserialize(schema.toJson)
       _ <- JsonSchemaValidatorImpl.from(schema)
     } yield ()
 }

@@ -1,10 +1,10 @@
-## Prerequisites
+# Prerequisites
 
 - [k6](https://k6.io/docs/getting-started/installation)
 - [NodeJS](https://nodejs.org/en/download/)
 - [Yarn](https://yarnpkg.com/getting-started/install) (optional)
 
-## Installation
+# Installation
 
 **Install dependencies**
 
@@ -14,7 +14,7 @@ Clone the generated repository on your local machine, move to the project root f
 $ yarn install
 ```
 
-## Running the test
+# Running the test
 
 To run a test written in TypeScript, we first have to transpile the TypeScript code into JavaScript and bundle the project
 
@@ -30,7 +30,7 @@ Once that is done, we can run our script the same way we usually do, for instanc
 $ k6 run dist/connection-flow-test.js
 ```
 
-## Debugging Tests
+# Debugging Tests
 
 k6 can be configured to log the HTTP request and responses that it makes during test execution. This is useful to debug errors that happen in tests when logs or k6 output does not contain the reason for a failure.
 

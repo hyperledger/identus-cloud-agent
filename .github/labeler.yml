@@ -1,26 +1,49 @@
+---
 castor:
-  - castor/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - castor/**/*
 mercury:
-  - mercury/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - mercury/**/*
 connect:
-  - connect/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - connect/**/*
 pollux:
-  - pollux/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - pollux/**/*
 prism-agent:
-  - prism-agent/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - prism-agent/**/*
 prism-node:
-  - prism-node/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - prism-node/**/*
 shared:
-  - shared/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - shared/**/*
 infra:
-  - infrastructure/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - infrastructure/**/*
 build:
-  - project/**/*
-  - build.sbt
-  - version.sbt
-  - package*.json
+  - changed-files:
+      - any-glob-to-any-file:
+          - project/**/*
+          - build.sbt
+          - version.sbt
+          - package*.json
 ci:
-  - .github/**/*
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**/*
 docs:
-  - docs/**/*
-  - README.md
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**/*
+          - README.md

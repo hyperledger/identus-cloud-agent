@@ -6,6 +6,6 @@ jobs:
   triage:
     runs-on: self-hosted
     steps:
-      - uses: actions/labeler@v4
+      - uses: actions/labeler@v5
         with:
           repo-token: "${{ secrets.ATALA_GITHUB_TOKEN }}"

@@ -99,6 +99,8 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
         .thenRunLogic()
         .whenServerEndpoint(schemaRegistryEndpoints.getSchemaByIdServerEndpoint)
         .thenRunLogic()
+        .whenServerEndpoint(schemaRegistryEndpoints.getRawSchemaByIdServerEndpoint)
+        .thenRunLogic()
         .whenServerEndpoint(
           schemaRegistryEndpoints.lookupSchemasByQueryServerEndpoint
         )
@@ -144,7 +146,9 @@ trait CredentialSchemaGen {
         |    "description": "Driving License",
         |    "type": "object",
         |    "properties": {
-        |        "name" : "Alice"
+        |        "name" : {
+        |          "type": "string"
+        |        }
         |    },
         |    "required": [
         |        "name"

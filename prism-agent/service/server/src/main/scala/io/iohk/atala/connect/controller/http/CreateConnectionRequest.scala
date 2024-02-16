@@ -36,7 +36,7 @@ object CreateConnectionRequest {
         extends Annotation[String](
           description =
             "A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.",
-          example = "To issue a Peter College Graduate credential"
+          example = "To issue a Faber College Graduate credential"
         )
   }
 
