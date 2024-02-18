@@ -121,6 +121,7 @@ curl -X 'GET' 'http://localhost:8090/prism-agent/present-proof/presentations' \
 
 The Holder/Prover can then accept a specific request, generate the proof, and send it to the Verifier PRISM Agent by making a `PATCH` request to the [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) endpoint:
 
+#### JWT
 ```bash
 curl -X 'PATCH' 'http://localhost:8090/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
   -H 'Content-Type: application/json' \
@@ -135,6 +136,33 @@ The Holder/Prover will have to provide the following information:
 1. `presentationId`: The unique identifier of the presentation record to accept.
 2. `proofId`: The unique identifier of the verifiable credential record to use as proof. 
 
+#### Anoncreds
+```bash
+curl -X 'PATCH' 'http://localhost:8090/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
+  -H 'Content-Type: application/json' \
+  -H "apikey: $API_KEY" \
+  -d '{
+        "action": "request-accept",
+        "anoncredPresentationRequest":{
+          "credentialProofs":[
+             {
+                "credential":"3e849b98-f0fd-4cb4-ae96-9ea527a76267",
+                "requestedAttribute":[
+                   "age"
+                ],
+                "requestedPredicate":[
+                   "age"
+                ]
+              }
+          ]
+        }
+      }'
+```
+
+The Holder/Prover will have to provide the following information:
+1. `presentationId`: The unique identifier of the presentation record to accept.
+2. `anoncredPresentationRequest`: A list of credential unique identifier with the attribute and predicate the credential is answering for.
+   
 The record state is updated to `PresentationPending` and processed by the Holder/Prover PRISM Agent. The agent will automatically generate the proof presentation, change the state to `PresentationGenerated`, and will eventually send it to the Verifier Agent, and change the state to `PresentationSent`.
 
 ```mermaid
@@ -152,4 +180,7 @@ stateDiagram-v2
 
 The following diagram shows the end-to-end flow for a verifier to request and verify a proof presentation from a Holder/prover. 
 
+### JWT Present Proof Flow Diagram
 ![](present-proof-flow.png)
+### Anoncreds Present Proof Flow Diagram
+![](anoncreds-present-proof-flow.png)
