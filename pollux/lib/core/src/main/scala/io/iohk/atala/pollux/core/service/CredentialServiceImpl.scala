@@ -1048,22 +1048,25 @@ private class CredentialServiceImpl(
         .mapError(RepositoryError.apply)
       size = currentStatusList.size
       lastUsedIndex = currentStatusList.lastUsedIndex
-      // TODO: concurrency issue
-      statusListToBeUsed <-
-        if lastUsedIndex < size then ZIO.succeed(currentStatusList)
-        else
-          credentialStatusListRepository
-            .createNewForTheWallet(jwtIssuer, statusListRegistryUrl)
+      sem <- Semaphore.make(permits = 1)
+      statusListToBeUsed <- sem.withPermit {
+        for {
+          statusListToBeUsed <-
+            if lastUsedIndex < size then ZIO.succeed(currentStatusList)
+            else
+              credentialStatusListRepository
+                .createNewForTheWallet(jwtIssuer, statusListRegistryUrl)
+                .mapError(RepositoryError.apply)
+
+          _ <- credentialStatusListRepository
+            .allocateSpaceForCredential(
+              issueCredentialRecordId = record.id,
+              credentialStatusListId = statusListToBeUsed.id,
+              statusListIndex = statusListToBeUsed.lastUsedIndex + 1
+            )
             .mapError(RepositoryError.apply)
-
-      _ <- credentialStatusListRepository
-        .allocateSpaceForCredential(
-          issueCredentialRecordId = record.id,
-          credentialStatusListId = statusListToBeUsed.id,
-          statusListIndex = statusListToBeUsed.lastUsedIndex + 1
-        )
-        .mapError(RepositoryError.apply)
-
+        } yield  statusListToBeUsed
+      }
     } yield CredentialStatus(
       id = s"$statusListRegistryUrl/credential-status/${statusListToBeUsed.id}#${statusListToBeUsed.lastUsedIndex + 1}",
       `type` = "StatusList2021Entry",
