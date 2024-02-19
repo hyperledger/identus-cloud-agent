@@ -1,5 +1,6 @@
 package io.iohk.atala.iam.entity.http
 
+import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.api.http.model.PaginationInput
@@ -33,7 +34,9 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
     .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, request: CreateEntityRequest) =>
-        entityController.createEntity(request)(rc)
+        entityController
+          .createEntity(request)(rc)
+          .logTrace(rc)
       }
     }
 
@@ -41,7 +44,9 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
     .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, id: UUID, request: UpdateEntityNameRequest) =>
-        entityController.updateEntityName(id, request.name)(rc)
+        entityController
+          .updateEntityName(id, request.name)(rc)
+          .logTrace(rc)
       }
     }
 
@@ -49,7 +54,9 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
     .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, id: UUID, request: UpdateEntityWalletIdRequest) =>
-        entityController.updateEntityWalletId(id, request.walletId)(rc)
+        entityController
+          .updateEntityWalletId(id, request.walletId)(rc)
+          .logTrace(rc)
       }
     }
 
@@ -57,7 +64,9 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
     .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, id: UUID) =>
-        entityController.getEntity(id)(rc)
+        entityController
+          .getEntity(id)(rc)
+          .logTrace(rc)
       }
     }
 
@@ -65,7 +74,9 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
     .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, paginationIn: PaginationInput) =>
-        entityController.getEntities(paginationIn)(rc)
+        entityController
+          .getEntities(paginationIn)(rc)
+          .logTrace(rc)
       }
     }
 
@@ -73,7 +84,9 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
     .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, id: UUID) =>
-        entityController.deleteEntity(id)(rc)
+        entityController
+          .deleteEntity(id)(rc)
+          .logTrace(rc)
       }
     }
 
@@ -81,7 +94,9 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
     .zServerSecurityLogic(adminRoleSecurityLogic)
     .serverLogic {
       case entity => { case (rc: RequestContext, request: ApiKeyAuthenticationRequest) =>
-        entityController.addApiKeyAuth(request.entityId, request.apiKey)(rc)
+        entityController
+          .addApiKeyAuth(request.entityId, request.apiKey)(rc)
+          .logTrace(rc)
       }
     }
 
@@ -90,7 +105,9 @@ class EntityServerEndpoints(entityController: EntityController, authenticator: A
       .zServerSecurityLogic(adminRoleSecurityLogic)
       .serverLogic {
         case entity => { case (rc: RequestContext, request: ApiKeyAuthenticationRequest) =>
-          entityController.deleteApiKeyAuth(request.entityId, request.apiKey)(rc)
+          entityController
+            .deleteApiKeyAuth(request.entityId, request.apiKey)(rc)
+            .logTrace(rc)
         }
       }
 

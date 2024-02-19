@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.credentialdefinition
 
+import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
@@ -32,17 +33,22 @@ class CredentialDefinitionRegistryServerEndpoints(
           credentialDefinitionController
             .createCredentialDefinition(credentialDefinitionInput)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
   val getCredentialDefinitionByIdServerEndpoint: ZServerEndpoint[Any, Any] =
     getCredentialDefinitionByIdEndpoint.zServerLogic { case (ctx: RequestContext, guid: UUID) =>
-      credentialDefinitionController.getCredentialDefinitionByGuid(guid)(ctx)
+      credentialDefinitionController
+        .getCredentialDefinitionByGuid(guid)(ctx)
+        .logTrace(ctx)
     }
 
   val getCredentialDefinitionInnerDefinitionByIdServerEndpoint: ZServerEndpoint[Any, Any] =
     getCredentialDefinitionInnerDefinitionByIdEndpoint.zServerLogic { case (ctx: RequestContext, guid: UUID) =>
-      credentialDefinitionController.getCredentialDefinitionInnerDefinitionByGuid(guid)(ctx)
+      credentialDefinitionController
+        .getCredentialDefinitionInnerDefinitionByGuid(guid)(ctx)
+        .logTrace(ctx)
     }
 
   val lookupCredentialDefinitionsByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
@@ -63,6 +69,7 @@ class CredentialDefinitionRegistryServerEndpoints(
                 order
               )(ctx)
               .provideSomeLayer(ZLayer.succeed(wac))
+              .logTrace(ctx)
         }
       }
 
