@@ -5,7 +5,7 @@ Summarize the changes you're submitting in a few sentences, including Jira ticke
 It creates traceability on the matter tackled by the PR. It will also help the reviewer understand the PR, linking to related issues, bug reports, or discussions for context.
 
 ### Alternatives Considered (optional): 
-Link to existing ADR, if any. If relevant, describe other approaches explored and the selected approach. Documenting why the methods were not selected will create a knowledge base for future reference, helping prevent others from revisiting less optimal ideas.
+Link to existing ADR (Architecture Decision Record), if any. If relevant, describe other approaches explored and the selected approach. Documenting why the methods were not selected will create a knowledge base for future reference, helping prevent others from revisiting less optimal ideas.
 
 ### Checklist: 
 - [ ] My PR follows the contribution guidelines of this project
