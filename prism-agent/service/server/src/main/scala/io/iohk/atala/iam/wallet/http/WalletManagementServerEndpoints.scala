@@ -1,5 +1,6 @@
 package io.iohk.atala.iam.wallet.http
 
+import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.iam.authentication.Authenticator
@@ -22,7 +23,10 @@ class WalletManagementServerEndpoints(
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAdminWith(_)(authenticator, authorizer))
       .serverLogic {
         case (_, wac) => { case (rc, paginationInput) =>
-          controller.listWallet(paginationInput)(rc).provide(ZLayer.succeed(wac))
+          controller
+            .listWallet(paginationInput)(rc)
+            .provide(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 
@@ -30,7 +34,13 @@ class WalletManagementServerEndpoints(
     WalletManagementEndpoints.getWallet
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAdminWith(_)(authenticator, authorizer))
       .serverLogic {
-        case (_, wac) => { case (rc, walletId) => controller.getWallet(walletId)(rc).provide(ZLayer.succeed(wac)) }
+        case (_, wac) => { case (rc, walletId) =>
+          controller
+            .getWallet(walletId)(rc)
+            .provide(ZLayer.succeed(wac))
+            .logTrace(rc)
+        }
+
       }
 
   val createWalletServerEndpoint: ZServerEndpoint[Any, Any] =
@@ -38,7 +48,10 @@ class WalletManagementServerEndpoints(
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAdminWith(_)(authenticator, authorizer))
       .serverLogic {
         case (me, wac) => { case (rc, createWalletRequest) =>
-          controller.createWallet(createWalletRequest, me)(rc).provide(ZLayer.succeed(wac))
+          controller
+            .createWallet(createWalletRequest, me)(rc)
+            .provide(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 
@@ -47,7 +60,10 @@ class WalletManagementServerEndpoints(
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAdminWith(_)(authenticator, authorizer))
       .serverLogic {
         case (_, wac) => { case (rc, walletId, request) =>
-          controller.createWalletUmaPermission(walletId, request)(rc).provide(ZLayer.succeed(wac))
+          controller
+            .createWalletUmaPermission(walletId, request)(rc)
+            .provide(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 
@@ -56,7 +72,10 @@ class WalletManagementServerEndpoints(
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAdminWith(_)(authenticator, authorizer))
       .serverLogic {
         case (_, wac) => { case (rc, walletId, subject) =>
-          controller.deleteWalletUmaPermission(walletId, subject)(rc).provide(ZLayer.succeed(wac))
+          controller
+            .deleteWalletUmaPermission(walletId, subject)(rc)
+            .provide(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 

@@ -1,5 +1,6 @@
 package io.iohk.atala.presentproof.controller
 
+import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.PaginationInput
@@ -33,6 +34,7 @@ class PresentProofServerEndpoints(
           presentProofController
             .requestPresentation(request)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -44,6 +46,7 @@ class PresentProofServerEndpoints(
           presentProofController
             .getPresentations(paginationInput, thid)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -55,6 +58,7 @@ class PresentProofServerEndpoints(
           presentProofController
             .getPresentation(presentationId)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -66,6 +70,7 @@ class PresentProofServerEndpoints(
           presentProofController
             .updatePresentation(presentationId, action)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
