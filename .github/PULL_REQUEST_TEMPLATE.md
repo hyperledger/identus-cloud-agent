@@ -2,7 +2,7 @@
 Summarize the changes you're submitting in a few sentences, including Jira ticket ATL-xxxx if applicable.
 
 ### Context: 
-It creates traceability on the matter tackled by the PR. It will also help the reviewer understand what the PR is about ---- linking to related issues, bug reports, or discussions for context.
+It creates traceability on the matter tackled by the PR. It will also help the reviewer understand the PR, linking to related issues, bug reports, or discussions for context.
 
 ### Alternatives Considered (optional): 
 Link to existing ADR if any. If relevant, describe other approaches explored and why this approach was chosen. Documenting why certain paths were not taken creates a knowledge base for future reference, helping prevent others from revisiting less optimal ideas.
