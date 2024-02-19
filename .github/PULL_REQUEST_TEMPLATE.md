@@ -9,7 +9,7 @@ Link to existing ADR (Architecture Decision Record), if any. If relevant, descri
 
 ### Checklist: 
 - [ ] My PR follows the contribution guidelines of this project
-- [ ] My PR is free of third-party dependencies that don't comply with HL-Allowlist
+- [ ] My PR is free of third-party dependencies that don't comply with the [Allowlist](https://toc.hyperledger.org/governing-documents/allowed-third-party-license-policy.html#approved-licenses-for-allowlist)
 - [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] I have made corresponding changes to the documentation
 - [ ] I have added tests that prove my fix is effective or that my feature works
