@@ -4,6 +4,8 @@ import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.credentialstatus.controller.http.StatusListCredential
 import io.iohk.atala.pollux.core.service.CredentialStatusListService
 import zio.*
+import io.iohk.atala.pollux.core.model.DidCommID
+import io.iohk.atala.shared.models.WalletAccessContext
 
 import java.util.UUID
 
@@ -19,6 +21,14 @@ class CredentialStatusControllerImpl(
       .flatMap(StatusListCredential.fromCredentialStatusListEntry)
       .mapError(CredentialStatusController.toHttpError)
 
+  }
+
+  def revokeCredentialById(id: DidCommID)(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, Unit] = {
+    credentialStatusListService
+      .revokeByIssueCredentialRecordId(id)
+      .mapError(CredentialStatusController.toHttpError)
   }
 
 }

@@ -5,6 +5,8 @@ import io.iohk.atala.pollux.core.repository.CredentialStatusListRepository
 import zio.*
 import io.iohk.atala.pollux.core.model.error.CredentialStatusListServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialStatusListServiceError.*
+import io.iohk.atala.pollux.core.model.DidCommID
+import io.iohk.atala.shared.models.WalletAccessContext
 
 import java.util.UUID
 
@@ -20,6 +22,16 @@ class CredentialStatusListServiceImpl(
           maybeStatusList
         )
     } yield statuslist
+
+  def revokeByIssueCredentialRecordId(
+      id: DidCommID
+  ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit] = {
+    for {
+      revoked <- credentialStatusListRepository.revokeByIssueCredentialRecordId(id).mapError(RepositoryError.apply)
+      _ <- if (revoked) ZIO.unit else ZIO.fail(IssueCredentialRecordNotFound(id))
+    } yield ()
+
+  }
 
 }
 

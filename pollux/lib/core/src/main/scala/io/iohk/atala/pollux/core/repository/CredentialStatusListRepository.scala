@@ -27,4 +27,8 @@ trait CredentialStatusListRepository {
       statusListIndex: Int
   ): RIO[WalletAccessContext, Unit]
 
+  def revokeByIssueCredentialRecordId(
+      issueCredentialRecordId: DidCommID
+  ): RIO[WalletAccessContext, Boolean]
+
 }
