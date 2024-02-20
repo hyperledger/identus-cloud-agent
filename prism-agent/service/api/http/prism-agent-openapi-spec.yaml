@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Open Enterprise Agent API Reference
-  version: 1.27.0
+  version: 1.28.0
   description: |2
 
     The Open Enterprise Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
@@ -20,7 +20,7 @@ tags:
 - name: Connections Management
   description: |2
 
-    The 'Connections Management' endpoints facilitate the initiation of connection flows between the current agent and peer agents, regardless of whether they reside in cloud or edge environments.
+    The 'Connections Management' endpoints facilitate the initiation of connection flows between the current Agent and peer Agents, regardless of whether they reside in Cloud Agent or edge environments.
     <br>
     This implementation adheres to the DIDComm Messaging v2.0 - [Out of Band Messages](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) specification [section 9.5.4](https://identity.foundation/didcomm-messaging/spec/v2.0/#invitation) - to generate invitations.
     The <b>from</b> field of the out-of-band invitation message contains a freshly generated Peer DID that complies with the [did:peer:2](https://identity.foundation/peer-did-method-spec/#generating-a-didpeer2) specification.
@@ -87,7 +87,7 @@ tags:
     The __DID__ endpoints expose publicly available DID operations.
 
     The key distinction from the __DID Registrar__ endpoints is that it directly exposes the DID resources interfacing with the [VDR](https://www.w3.org/TR/did-core/#dfn-verifiable-data-registry).
-    It is independent of the key management and the exposed operations are not part of the tenancy within the agent.
+    It is independent of the key management and the exposed operations are not part of the tenancy within the Agent.
     It serves as a proxy for interacting with the VDR, facilitating actions like resolving DIDs.
 - name: DID Registrar
   description: |2
@@ -873,11 +873,11 @@ paths:
     get:
       tags:
       - Connections Management
-      summary: Retrieves the list of connection flow records available from the agent's
+      summary: Retrieves the list of connection flow records available from the Agent's
         database.
       description: |2
 
-        Retrieve of a list containing connections available from the agent's database.
+        Retrieve of a list containing connections available from the Agent's database.
         The API returns a comprehensive collection of connection flow records within the system, regardless of their state.
         Each connection item includes essential metadata such as connection ID, thread ID, state, role, participant information, and other relevant details.
         Pagination support is available, allowing for efficient handling of large datasets.
@@ -908,7 +908,7 @@ paths:
           type: string
       responses:
         '200':
-          description: The list of connection flow records available from the agent's
+          description: The list of connection flow records available from the Agent's
             database
           content:
             application/json:
@@ -939,14 +939,14 @@ paths:
       tags:
       - Connections Management
       summary: Create a new connection invitation that can be delivered out-of-band
-        to a peer agent.
+        to a peer Agent.
       description: |2
 
-        Create a new connection invitation that can be delivered out-of-band to a peer agent, regardless of whether it resides in cloud or edge environment.
+        Create a new connection invitation that can be delivered out-of-band to a peer Agent, regardless of whether it resides in Cloud Agent or edge environment.
         The generated invitation adheres to the DIDComm Messaging v2.0 - [Out of Band Messages](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) specification [section 9.5.4](https://identity.foundation/didcomm-messaging/spec/v2.0/#invitation).
         The <b>from</b> field of the out-of-band invitation message contains a freshly generated Peer DID that complies with the [did:peer:2](https://identity.foundation/peer-did-method-spec/#generating-a-didpeer2) specification.
         This Peer DID includes the 'uri' location of the DIDComm messaging service, essential for the invitee's subsequent execution of the connection flow.
-        In the agent database, the created connection record has an initial state set to `InvitationGenerated`.
+        In the Agent database, the created connection record has an initial state set to `InvitationGenerated`.
         The request body may contain a `label` that can be used as a human readable alias for the connection, for example `{'label': "Connection with Bob"}`
       operationId: createConnection
       requestBody:
@@ -989,11 +989,11 @@ paths:
     get:
       tags:
       - Connections Management
-      summary: Retrieves a specific connection flow record from the agent's database
+      summary: Retrieves a specific connection flow record from the Agent's database
         based on its unique `connectionId`.
       description: |2
 
-        Retrieve a specific connection flow record from the agent's database based in its unique `connectionId`.
+        Retrieve a specific connection flow record from the Agent's database based in its unique `connectionId`.
         The API returns a comprehensive collection of connection flow records within the system, regardless of their state.
         The returned connection item includes essential metadata such as connection ID, thread ID, state, role, participant information, and other relevant details.
       operationId: getConnection
@@ -1044,14 +1044,14 @@ paths:
       tags:
       - Connections Management
       summary: Accept a new connection invitation received out-of-band from another
-        peer agent.
+        peer Agent.
       description: |2
 
-        Accept an new connection invitation received out-of-band from another peer agent.
+        Accept an new connection invitation received out-of-band from another peer Agent.
         The invitation must be compliant with the DIDComm Messaging v2.0 - [Out of Band Messages](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) specification [section 9.5.4](https://identity.foundation/didcomm-messaging/spec/v2.0/#invitation).
-        A new connection record with state `ConnectionRequestPending` will be created in the agent database and later processed by a background job to send a connection request to the peer agent.
+        A new connection record with state `ConnectionRequestPending` will be created in the agent database and later processed by a background job to send a connection request to the peer Agent.
         The created record will contain a newly generated pairwise Peer DID used for that connection.
-        A connection request will then be sent to the peer agent to actually establish the connection, moving the record state to `ConnectionRequestSent`, and waiting the connection response from the peer agent.
+        A connection request will then be sent to the peer Agent to actually establish the connection, moving the record state to `ConnectionRequestSent`, and waiting the connection response from the peer Agent.
       operationId: acceptConnectionInvitation
       requestBody:
         description: The request used by an invitee to accept a connection invitation
@@ -1119,17 +1119,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/DIDDocument'
         '400':
-          description: ''
+          description: Invalid value
           content:
-            application/ld+json; profile=https://w3id.org/did-resolution:
-              schema:
-                $ref: '#/components/schemas/DIDResolutionResult'
-            application/did+ld+json:
+            text/plain:
               schema:
                 type: string
-                description: Empty representation
-                format: binary
-                example: ''
         '404':
           description: ''
           content:
@@ -1140,7 +1134,6 @@ paths:
               schema:
                 type: string
                 description: Empty representation
-                format: binary
                 example: ''
         '406':
           description: ''
@@ -1152,7 +1145,6 @@ paths:
               schema:
                 type: string
                 description: Empty representation
-                format: binary
                 example: ''
         '410':
           description: ''
@@ -1164,7 +1156,6 @@ paths:
               schema:
                 type: string
                 description: Empty representation
-                format: binary
                 example: ''
         '500':
           description: ''
@@ -1176,7 +1167,6 @@ paths:
               schema:
                 type: string
                 description: Empty representation
-                format: binary
                 example: ''
         '501':
           description: ''
@@ -1188,7 +1178,6 @@ paths:
               schema:
                 type: string
                 description: Empty representation
-                format: binary
                 example: ''
   /did-registrar/dids:
     get:
@@ -3981,7 +3970,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2024-02-08T08:15:44.191922818Z'
+          example: '2024-02-20T15:20:56.701907131Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
