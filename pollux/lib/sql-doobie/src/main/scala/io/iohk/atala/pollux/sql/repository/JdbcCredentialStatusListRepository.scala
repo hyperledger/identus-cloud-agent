@@ -176,7 +176,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       issueCredentialRecordId: DidCommID
   ): RIO[WalletAccessContext, Boolean] = {
 
-     for {
+    for {
       walletId <- ZIO.service[WalletAccessContext].map(_.walletId)
       updateQuery =
         sql"""

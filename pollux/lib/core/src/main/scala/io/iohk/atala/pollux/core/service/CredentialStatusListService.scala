@@ -10,6 +10,6 @@ import java.util.UUID
 
 trait CredentialStatusListService {
   def findById(id: UUID): IO[CredentialStatusListServiceError, CredentialStatusList]
-  
+
   def revokeByIssueCredentialRecordId(id: DidCommID): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit]
 }
