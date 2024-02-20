@@ -147,7 +147,29 @@ class CredentialStatusListRepositoryInMemory(
 
   def revokeByIssueCredentialRecordId(
       issueCredentialRecordId: DidCommID
-  ): RIO[WalletAccessContext, Boolean] = { ??? }
+  ): RIO[WalletAccessContext, Boolean] = {
+    var isUpdated = false
+    for {
+      statusListsRefs <- walletToStatusListStorageRefs
+      statusLists <- statusListsRefs.get
+      credInStatusListsRefs <- ZIO
+        .collectAll(statusLists.keys.map(k => statusListToCredInStatusListStorageRefs(k)))
+        .map(_.toVector)
+      _ = credInStatusListsRefs.foreach(ref =>
+        ref.update { credInStatusListsMap =>
+          val maybeFound = credInStatusListsMap.find(_._2.issueCredentialRecordId == issueCredentialRecordId)
+          maybeFound.fold(credInStatusListsMap) { case (id, value) =>
+            if (!value.isCanceled) {
+              credInStatusListsMap.updated(id, value.copy(isCanceled = true, updatedAt = Some(Instant.now())))
+              isUpdated = true
+              credInStatusListsMap
+            } else credInStatusListsMap
+          }
+
+        }
+      )
+    } yield isUpdated
+  }
 
 }
 
