@@ -145,6 +145,10 @@ class CredentialStatusListRepositoryInMemory(
 
   }
 
+  def revokeByIssueCredentialRecordId(
+      issueCredentialRecordId: DidCommID
+  ): RIO[WalletAccessContext, Boolean] = { ??? }
+
 }
 
 object CredentialStatusListRepositoryInMemory {

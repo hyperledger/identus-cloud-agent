@@ -12,13 +12,14 @@ import sttp.tapir.ztapir.*
 import zio.*
 import io.iohk.atala.credentialstatus.controller.CredentialStatusEndpoints.*
 import sttp.model.StatusCode
+import io.iohk.atala.pollux.core.model.DidCommID
 
 import java.util.UUID
 
 class CredentialStatusServiceEndpoints(
     credentialStatusController: CredentialStatusController,
-    authenticator: Authenticator[BaseEntity], // Will need for revocation endpoint
-    authorizer: Authorizer[BaseEntity] // Will need for revocation endpoint
+    authenticator: Authenticator[BaseEntity],
+    authorizer: Authorizer[BaseEntity]
 ) {
 
   private def obfuscateInternalServerError(e: ErrorResponse): ErrorResponse =
@@ -35,8 +36,24 @@ class CredentialStatusServiceEndpoints(
 
       }
 
+  private val revokeCredentialById: ZServerEndpoint[Any, Any] = {
+    revokeCredentialByIdEndpoint
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
+        { case (ctx: RequestContext, id: DidCommID) =>
+          credentialStatusController
+            .revokeCredentialById(id)(ctx)
+            .logError
+            .mapError(obfuscateInternalServerError)
+            .provideSomeLayer(ZLayer.succeed(wac))
+        }
+
+      }
+  }
+
   val all: List[ZServerEndpoint[Any, Any]] = List(
-    getCredentialStatusListById
+    getCredentialStatusListById,
+    revokeCredentialById
   )
 }
 

@@ -172,6 +172,29 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
 
   }
 
+  def revokeByIssueCredentialRecordId(
+      issueCredentialRecordId: DidCommID
+  ): RIO[WalletAccessContext, Boolean] = {
+
+     for {
+      walletId <- ZIO.service[WalletAccessContext].map(_.walletId)
+      updateQuery =
+        sql"""
+             | UPDATE public.credentials_in_status_list AS cisl
+             | SET is_canceled = true
+             | FROM public.credential_status_lists AS csl
+             | WHERE cisl.credential_status_list_id = csl.id
+             | AND csl.wallet_id = ${walletId.toUUID}
+             | AND cisl.issue_credential_record_id = $issueCredentialRecordId
+             | AND cisl.is_canceled = false;
+             |""".stripMargin.update.run
+
+      revoked <- updateQuery.transactWallet(xa).map(_ > 0)
+
+    } yield revoked
+
+  }
+
 }
 
 object JdbcCredentialStatusListRepository {
