@@ -30,6 +30,8 @@ object CredentialStatusController {
       case CredentialStatusListServiceError.RecordIdNotFound(recordId) =>
         ErrorResponse.notFound(detail = Some(s"Credential status list could not be found by id: $recordId"))
       case CredentialStatusListServiceError.IssueCredentialRecordNotFound(issueCredentialRecordId: DidCommID) =>
-        ErrorResponse.notFound(detail = Some(s"Credential with id $issueCredentialRecordId is either already revoked or does not exist"))
+        ErrorResponse.notFound(detail =
+          Some(s"Credential with id $issueCredentialRecordId is either already revoked or does not exist")
+        )
 
 }
