@@ -37,10 +37,36 @@ object CredentialServiceImpl {
     CredentialRepository & CredentialStatusListRepository & DidResolver & URIDereferencer & GenericSecretStorage &
       CredentialDefinitionService & LinkSecretService & DIDService & ManagedDIDService,
     CredentialService
-  ] =
-    ZLayer.fromFunction(CredentialServiceImpl(_, _, _, _, _, _, _, _, _))
+  ] = {
+    ZLayer.fromZIO {
+      for {
+        credentialRepo <- ZIO.service[CredentialRepository]
+        credentialStatusListRepo <- ZIO.service[CredentialStatusListRepository]
+        didResolver <- ZIO.service[DidResolver]
+        uriDereferencer <- ZIO.service[URIDereferencer]
+        genericSecretStorage <- ZIO.service[GenericSecretStorage]
+        credDefenitionService <- ZIO.service[CredentialDefinitionService]
+        linkSecretService <- ZIO.service[LinkSecretService]
+        didService <- ZIO.service[DIDService]
+        manageDidService <- ZIO.service[ManagedDIDService]
+        issueCredentialSem <- Semaphore.make(1)
+      } yield CredentialServiceImpl(
+        credentialRepo,
+        credentialStatusListRepo,
+        didResolver,
+        uriDereferencer,
+        genericSecretStorage,
+        credDefenitionService,
+        linkSecretService,
+        didService,
+        manageDidService,
+        5,
+        issueCredentialSem
+      )
+    }
+  }
 
-//  private val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
+  //  private val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"
   private val VC_JSON_SCHEMA_TYPE = "CredentialSchema2022"
 }
 
@@ -54,7 +80,8 @@ private class CredentialServiceImpl(
     linkSecretService: LinkSecretService,
     didService: DIDService,
     managedDIDService: ManagedDIDService,
-    maxRetries: Int = 5 // TODO move to config
+    maxRetries: Int = 5, // TODO move to config
+    issueCredentialSem: Semaphore
 ) extends CredentialService {
 
   import CredentialServiceImpl.*
@@ -1048,8 +1075,7 @@ private class CredentialServiceImpl(
         .mapError(RepositoryError.apply)
       size = currentStatusList.size
       lastUsedIndex = currentStatusList.lastUsedIndex
-      sem <- Semaphore.make(permits = 1)
-      statusListToBeUsed <- sem.withPermit {
+      statusListToBeUsed <- issueCredentialSem.withPermit {
         for {
           statusListToBeUsed <-
             if lastUsedIndex < size then ZIO.succeed(currentStatusList)
@@ -1065,7 +1091,7 @@ private class CredentialServiceImpl(
               statusListIndex = statusListToBeUsed.lastUsedIndex + 1
             )
             .mapError(RepositoryError.apply)
-        } yield  statusListToBeUsed
+        } yield statusListToBeUsed
       }
     } yield CredentialStatus(
       id = s"$statusListRegistryUrl/credential-status/${statusListToBeUsed.id}#${statusListToBeUsed.lastUsedIndex + 1}",
