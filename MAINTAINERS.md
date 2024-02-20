@@ -15,18 +15,17 @@ Maintainers are assigned the following scopes in this repository:
 
 | Name | GitHub ID | Scope | LFID | Discord ID | Email | Company Affiliation |
 |----- | --------- | ----- | ---- | ---------- | ----- | ------------------- |
-| Anton Baliasnikov | antonbaliasnikov | Maintainer | | | antonbaliasnikov@gmail.com  | |
 | Björn Sandmann | bsandmann | Maintainer | | bjoernsandmann   | sandmann@codedata.solutions | Blocktrust |
 | David Poltorak | davidpoltorak-io | Maintainer | | davidpoltorak_io | david.poltorak@iohk.io | IOHK |
 | Pat Losoponkul | patlo-iog | Maintainer | | pat_pat | pat.losoponkul@iohk.io | IOHK |
-| Yurii Shynbuiev | yshyn-iohk | Maintainer | | yuriishynbuiev | david.poltorak@iohk.io | IOHK |
+| Yurii Shynbuiev | yshyn-iohk | Maintainer | | yuriishynbuiev | yurii.shynbuiev@iohk.io | IOHK |
 
 
 ## Emeritus Maintainers
 
 | Name | GitHub ID | Scope | LFID | Discord ID | Email | Company Affiliation |
 |----- | --------- | ----- | ---- | ---------- | ----- | ------------------- |
-|      |           |       |      |            |       |                     |
+| Anton Baliasnikov | antonbaliasnikov | Maintainer | | | antonbaliasnikov@gmail.com  | |
 
 ## The Duties of a Maintainer
 
