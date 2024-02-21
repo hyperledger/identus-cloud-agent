@@ -1,3 +1,42 @@
+# [1.28.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.27.0...prism-agent-v1.28.0) (2024-02-20)
+
+
+### Bug Fixes
+
+* **prism-agent:** increase http timeout communication channel closing… ([#901](https://github.com/hyperledger-labs/open-enterprise-agent/issues/901)) ([8d3f29d](https://github.com/hyperledger-labs/open-enterprise-agent/commit/8d3f29ddd830fe102d4bf25a0af8734730c80151))
+* re-enable logging with SLF4J and add traceId ([#869](https://github.com/hyperledger-labs/open-enterprise-agent/issues/869)) ([8f6af25](https://github.com/hyperledger-labs/open-enterprise-agent/commit/8f6af25a8eafd27d5017096da64f89188354a2ca))
+* remove oas schema format for empty repsonse body ([#902](https://github.com/hyperledger-labs/open-enterprise-agent/issues/902)) ([5f2bb08](https://github.com/hyperledger-labs/open-enterprise-agent/commit/5f2bb0872a156c9223ab56efbd47e812967ff582))
+
+
+### Features
+
+* add credential def performance test ([#865](https://github.com/hyperledger-labs/open-enterprise-agent/issues/865)) ([95064d6](https://github.com/hyperledger-labs/open-enterprise-agent/commit/95064d617dda7d45916fbdddf20a544eea4acf4a))
+* **pollux:** add Json VC schema meta validation ([#892](https://github.com/hyperledger-labs/open-enterprise-agent/issues/892)) ([19c42b1](https://github.com/hyperledger-labs/open-enterprise-agent/commit/19c42b10188d1e0242bdceb1f89b6410dcc05353))
+
+# [1.27.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.26.0...prism-agent-v1.27.0) (2024-02-08)
+
+
+### Bug Fixes
+
+* remove hard code did:example:* ([#882](https://github.com/hyperledger-labs/open-enterprise-agent/issues/882)) ([321faf5](https://github.com/hyperledger-labs/open-enterprise-agent/commit/321faf5791b05f0c24dd6ed96f155aa65d06477d))
+
+
+### Features
+
+* support vault AppRole authentication ([#884](https://github.com/hyperledger-labs/open-enterprise-agent/issues/884)) ([441f878](https://github.com/hyperledger-labs/open-enterprise-agent/commit/441f878f0b573f350ffed14de0df164e1e260122))
+
+# [1.26.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.25.0...prism-agent-v1.26.0) (2024-02-06)
+
+
+### Bug Fixes
+
+* **prism-agent:**  update didcomm peerdid library to support latest spec ([#877](https://github.com/hyperledger-labs/open-enterprise-agent/issues/877)) ([0c42a62](https://github.com/hyperledger-labs/open-enterprise-agent/commit/0c42a622143e35c439ae83cc3bb746515ce7401b))
+
+
+### Features
+
+* interoperable schema changes ([#870](https://github.com/hyperledger-labs/open-enterprise-agent/issues/870)) ([de49a93](https://github.com/hyperledger-labs/open-enterprise-agent/commit/de49a9328524b32d714301f2b7961d5cd85b23c3))
+
 # [1.25.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.24.0...prism-agent-v1.25.0) (2024-01-25)
 
 

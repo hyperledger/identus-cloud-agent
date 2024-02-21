@@ -1,8 +1,5 @@
 package io.iohk.atala.resolvers
 
-import io.iohk.atala.resolvers.AliceDidDoc.didDocAlice
-import io.iohk.atala.resolvers.BobDidDoc.didDocBob
-import io.iohk.atala.resolvers.MediatorDidDoc.didDocMediator
 import org.didcommx.didcomm.diddoc._
 
 import java.util.Optional
@@ -30,20 +27,11 @@ object UniversalDidResolver extends DIDDocResolver with DIDResolver {
       case Some(value) => ZIO.succeed(value)
     }
 
-  val diddocs = Map(
-    "did:example:alice" -> didDocAlice,
-    "did:example:mediator" -> didDocMediator,
-    "did:example:bob" -> didDocBob
-  ).asJava
-
   override def resolve(did: String): Optional[DIDDoc] = {
     val regex = "(did:peer:.+)".r
     did match {
-      case regex(peer) =>
-        // val peerDidResolver = PeerDidResolverImpl()
-        // val didDocJson = peerDidResolver.resolveDidAsJson(peer)
-        Some(PeerDidResolver.getDIDDoc(peer)).toJava
-      case anydid: String => new DIDDocResolverInMemory(diddocs).resolve(anydid)
+      case regex(peer)    => Some(PeerDidResolver.getDIDDoc(peer)).toJava
+      case anydid: String => None.toJava // new DIDDocResolverInMemory(diddocs.asJava).resolve(anydid)
     }
   }
 

@@ -58,6 +58,33 @@ The next diagram offers a concise architectural overview, depicting a Cloud Agen
 ![Enterprise Cloud Agent architecture](docs/images/cloud-agent-architecture-dark.png#gh-dark-mode-only)
 ![Enterprise Cloud Agent architecture](docs/images/cloud-agent-architecture-light.png#gh-light-mode-only)
 
+### Running the Cloud Agent locally on MacOS or Linux
+#### Prerequisites
+
+- Java (OpenJDK 21)
+- SBT (latest version)
+- Git (for cloning the repository)
+- Docker (for running the PostgreSQL database, Hashicorp Vault, APISIX, and PRISM Node)
+- [GITHUB_TOKEN](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) environment  variable (required for SBT plugins and access to the GitHub packages)
+
+#### Login to GitHub packages
+
+To login to GitHub packages, you need to create a personal access token and set it as an environment variable together with your GitHub username. Here is an example of how you can do this:
+
+```bash
+export GITHUB_TOKEN=your-personal-access-token
+export GITHUB_USER=your-github-username
+docker login ghcr.io -u $GITHUB_USER -p $GITHUB_TOKEN
+```
+
+#### Compile, Test, create the docker image of the Cloud Agent
+
+To compile, test and publish local the image of the Cloud Agent, you can use the following commands:
+
+```bash
+sbt clean compile test docker:publishLocal
+```
+
 ### Installation and usage
 
 Enterprise Cloud Agent is distributed as a Docker image to be run in a containerized environment. All versions can be found [here](https://github.com/orgs/input-output-hk/packages/container/package/prism-agent).
@@ -103,7 +130,7 @@ The `PORT` variable is used to specify the port number for the Cloud Agent to li
 In real life, you will need to start at least two Cloud Agent instances with different roles. For example, you can start one instance with the `issuer` role and another one with the `holder` role. The `issuer` instance will be used to issue verifiable credentials (VCs) and the `holder` instance will be used to hold VCs. Here is an example of how you can do this:
   
 ```bash
-PORT=8080 PRISM_AGENT_VERSION=1.19.1 PRISM_NODE_VERSION=2.2.1 \
+PORT=8080 PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION} PRISM_NODE_VERSION=2.2.1 \
   docker compose \
     -p "issuer" \
     -f ./infrastructure/shared/docker-compose-demo.yml \
@@ -111,7 +138,7 @@ PORT=8080 PRISM_AGENT_VERSION=1.19.1 PRISM_NODE_VERSION=2.2.1 \
 ```
 
 ```bash
-PORT=8090 PRISM_AGENT_VERSION=1.19.1 PRISM_NODE_VERSION=2.2.1 \
+PORT=8090 PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION} PRISM_NODE_VERSION=2.2.1 \
   docker compose \
     -p "holder" \
     -f ./infrastructure/shared/docker-compose-demo.yml \

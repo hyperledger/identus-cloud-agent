@@ -2,6 +2,7 @@ package io.iohk.atala.castor.controller
 
 import io.iohk.atala.api.http.codec.DIDCodec.emptyDidJsonLD
 import io.iohk.atala.api.http.codec.DIDCodec.{didJsonLD, didResolutionJsonLD}
+import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.castor.controller.http.{DIDResolutionResult, DIDInput}
 import sttp.apispec.Tag
 import sttp.model.StatusCode
@@ -15,7 +16,7 @@ object DIDEndpoints {
        |The __${tagName}__ endpoints expose publicly available DID operations.
        |
        |The key distinction from the __DID Registrar__ endpoints is that it directly exposes the DID resources interfacing with the [VDR](https://www.w3.org/TR/did-core/#dfn-verifiable-data-registry).
-       |It is independent of the key management and the exposed operations are not part of the tenancy within the agent.
+       |It is independent of the key management and the exposed operations are not part of the tenancy within the Agent.
        |It serves as a proxy for interacting with the VDR, facilitating actions like resolving DIDs.
        |""".stripMargin
 
@@ -90,11 +91,12 @@ object DIDEndpoints {
 
   // MUST conform to https://w3c-ccg.github.io/did-resolution/#bindings-https
   val getDID: PublicEndpoint[
-    String,
+    (RequestContext, String),
     Nothing,
     DIDResolutionResult,
     Any
   ] = infallibleEndpoint.get
+    .in(extractFromRequest[RequestContext](RequestContext.apply))
     .in("dids" / DIDInput.didRefPathSegment)
     .out(resolutionEndpointOutput)
     .name("getDID")

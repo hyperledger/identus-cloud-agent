@@ -9,7 +9,7 @@ data class JsonSchema(
     @SerializedName("\$schema")
     var schema: String = "",
 
-    @SerializedName("\$description")
+    @SerializedName("description")
     var description: String = "",
 
     @SerializedName("type")

@@ -1,6 +1,6 @@
-import {fail, sleep} from "k6";
+import { fail, sleep } from "k6";
 import { HttpService, statusChangeTimeouts } from "./HttpService";
-import {ISSUER_AGENT_URL, WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL} from "./Config";
+import { ISSUER_AGENT_URL, WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
 import { IssueCredentialRecord, Connection, CredentialSchemaResponse } from "@input-output-hk/prism-typescript-client";
 import { crypto } from "k6/experimental/webcrypto";
 
@@ -21,7 +21,7 @@ export class CredentialsService extends HttpService {
         "claims": {
           "emailAddress": "${crypto.randomUUID()}-@atala.io",
           "familyName": "Test",
-          "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}",
+          "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}/schema",
           "dateOfIssuance": "${new Date()}",
           "drivingLicenseID": "Test",
           "drivingClass": 1
@@ -38,56 +38,97 @@ export class CredentialsService extends HttpService {
     }
   }
 
-  createCredentialSchema(issuingDid: string): CredentialSchemaResponse {
+  createCredentialDefinition(issuingDid: string, schema: CredentialSchemaResponse) {
     const payload = `
     {
       "name": "${crypto.randomUUID()}}",
+      "description": "Birth certificate Anoncred Credential Definition",
       "version": "1.0.0",
-      "description": "Simple credential schema for the driving licence verifiable credential.",
-      "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
-      "schema": {
-        "$id": "https://example.com/driving-license-1.0",
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Driving License",
-        "type": "object",
-        "properties": {
-          "emailAddress": {
-            "type": "string",
-            "format": "email"
-          },
-          "givenName": {
-            "type": "string"
-          },
-          "familyName": {
-            "type": "string"
-          },
-          "dateOfIssuance": {
-            "type": "string"
-          },
-          "drivingLicenseID": {
-            "type": "string"
-          },
-          "drivingClass": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "emailAddress",
-          "familyName",
-          "dateOfIssuance",
-          "drivingLicenseID",
-          "drivingClass"
-        ],
-        "additionalProperties": false
-      },
-      "tags": [
-        "driving",
-        "licence",
-        "id"
-      ],
-      "author": "${issuingDid}"
+      "tag": "Licence",
+      "author": "${issuingDid}",
+      "schemaId": "${ISSUER_AGENT_URL.replace("localhost", "host.docker.internal")}/schema-registry/schemas/${schema.guid}/schema",
+      "signatureType": "CL",
+      "supportRevocation": false
     }
-    `
+    `;
+    this.post("credential-definition-registry/definitions", payload);
+  }
+
+  createCredentialSchema(issuingDid: string, schemaType: string = "json") {
+    const payload = (function () {
+      switch (schemaType) {
+        case "json":
+          return `{
+                      "name": "${crypto.randomUUID()}}",
+                      "version": "1.0.0",
+                      "description": "Simple credential schema for the driving licence verifiable credential.",
+                      "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+                      "schema": {
+                        "$id": "https://example.com/driving-license-1.0",
+                        "$schema": "https://json-schema.org/draft/2020-12/schema",
+                        "description": "Driving License",
+                        "type": "object",
+                        "properties": {
+                          "emailAddress": {
+                            "type": "string",
+                            "format": "email"
+                          },
+                          "givenName": {
+                            "type": "string"
+                          },
+                          "familyName": {
+                            "type": "string"
+                          },
+                          "dateOfIssuance": {
+                            "type": "string"
+                          },
+                          "drivingLicenseID": {
+                            "type": "string"
+                          },
+                          "drivingClass": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "emailAddress",
+                          "familyName",
+                          "dateOfIssuance",
+                          "drivingLicenseID",
+                          "drivingClass"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "tags": [
+                        "driving",
+                        "licence",
+                        "id"
+                      ],
+                      "author": "${issuingDid}"
+                  }`;
+        case "anoncred":
+          return `{
+                      "name": "${crypto.randomUUID()}",
+                      "version": "1.0.0",
+                      "description": "Simple credential schema for the driving licence verifiable credential.",
+                      "type": "AnoncredSchemaV1",
+                      "schema": {
+                          "name": "${crypto.randomUUID()}",
+                          "version": "1.0.0",
+                          "attrNames": [
+                              "emailAddress",
+                              "familyName"
+                          ],
+                          "issuerId": "${issuingDid}"
+                      },
+                      "author": "${issuingDid}",
+                      "tags": [
+                          "Licence"
+                      ]
+                  }`;
+        default:
+          throw new Error(`Schema type ${schemaType} is not supported`);
+      }
+    })();
     const res = this.post("schema-registry/schemas", payload);
     try {
       return this.toJson(res) as unknown as CredentialSchemaResponse;
