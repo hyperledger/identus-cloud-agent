@@ -6,7 +6,6 @@ import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.config.SecretStorageBackend
 import io.iohk.atala.agent.server.config.ValidatedVaultConfig
-import io.iohk.atala.agent.server.config.VaultConfig
 import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.memory.{
   DIDSecretStorageInMemory,
