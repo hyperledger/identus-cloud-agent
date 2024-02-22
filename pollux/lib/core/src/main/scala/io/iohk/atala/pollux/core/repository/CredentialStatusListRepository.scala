@@ -31,4 +31,6 @@ trait CredentialStatusListRepository {
       issueCredentialRecordId: DidCommID
   ): RIO[WalletAccessContext, Boolean]
 
+  def getCredentialStatusListsWithCreds: RIO[WalletAccessContext, List[CredentialStatusListWithCreds]]
+
 }

@@ -7,7 +7,8 @@ import io.iohk.atala.agent.server.jobs.{
   ConnectBackgroundJobs,
   DIDStateSyncBackgroundJobs,
   IssueBackgroundJobs,
-  PresentBackgroundJobs
+  PresentBackgroundJobs,
+  StatusListJobs
 }
 import io.iohk.atala.agent.walletapi.model.{Entity, Wallet, WalletSeed}
 import io.iohk.atala.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
@@ -24,7 +25,7 @@ import io.iohk.atala.iam.entity.http.EntityServerEndpoints
 import io.iohk.atala.iam.wallet.http.WalletManagementServerEndpoints
 import io.iohk.atala.issue.controller.IssueServerEndpoints
 import io.iohk.atala.mercury.{DidOps, HttpClient}
-import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
+import io.iohk.atala.pollux.core.service.{CredentialService, CredentialStatusListService, PresentationService}
 import io.iohk.atala.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
@@ -44,7 +45,8 @@ object PrismAgentApp {
     _ <- issueCredentialDidCommExchangesJob.debug.fork
     _ <- presentProofExchangeJob.debug.fork
     _ <- connectDidCommExchangesJob.debug.fork
-    _ <- syncDIDPublicationStateFromDltJob.fork
+    _ <- syncDIDPublicationStateFromDltJob.debug.fork
+    _ <- syncRevocationStatusListsJob.debug.fork
     _ <- AgentHttpServer.run.fork
     fiber <- DidCommHttpServer.run.fork
     _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
@@ -93,6 +95,25 @@ object PrismAgentApp {
         .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
         .unit
     } yield ()
+
+  private val syncRevocationStatusListsJob
+      : RIO[CredentialStatusListService & WalletManagementService, Unit] = {
+
+    val res = ZIO
+      .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
+      .flatMap { wallets =>
+        ZIO.foreachPar(wallets) { wallet =>
+          val context = WalletAccessContext(wallet.id)
+          StatusListJobs.syncRevocationStatuses.provideSomeLayer(ZLayer.succeed(context))
+        }.withParallelism(5) // Todo Provide from config
+      }
+      .catchAll(e => ZIO.logError(s"error while syncing credential revocation statuses: $e"))
+      .repeat(Schedule.spaced(2.second)) // Todo Provide from config
+      .unit
+      .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
+
+    res
+  }
 
   private val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService & WalletManagementService, Unit] =
     ZIO

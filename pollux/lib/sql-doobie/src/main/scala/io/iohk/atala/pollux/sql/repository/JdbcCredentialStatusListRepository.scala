@@ -195,6 +195,62 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
 
   }
 
+  def getCredentialStatusListsWithCreds: RIO[WalletAccessContext, List[CredentialStatusListWithCreds]] = {
+
+//    WHERE csl.wallet_id = current_setting('app.current_wallet_id') :: UUID
+
+    val cxnIO =
+      sql"""
+           | SELECT
+           |   csl.id as credential_status_list_id,
+           |   csl.issuer,
+           |   csl.issued,
+           |   csl.purpose,
+           |   csl.status_list_credential,
+           |   csl.size,
+           |   csl.last_used_index,
+           |   cisl.id as credential_in_status_list_id,
+           |   cisl.issue_credential_record_id,
+           |   cisl.credential_status_list_id,
+           |   cisl.status_list_index,
+           |   cisl.is_canceled
+           |  FROM public.credential_status_lists csl
+           |  LEFT JOIN public.credentials_in_status_list cisl ON csl.id = cisl.credential_status_list_id
+           |""".stripMargin
+        .query[CredentialStatusListWithCred]
+        .to[List]
+
+    val credentialStatusListsWithCredZio = cxnIO
+      .transactWallet(xa)
+
+    for {
+      credentialStatusListsWithCred <- credentialStatusListsWithCredZio
+    } yield {
+      credentialStatusListsWithCred
+        .groupBy(_.credentialInStatusListId)
+        .map { case (id, items) =>
+          CredentialStatusListWithCreds(
+            id,
+            items.head.issuer,
+            items.head.issued,
+            items.head.purpose,
+            items.head.statusListCredential,
+            items.head.size,
+            items.head.lastUsedIndex,
+            items.map { item =>
+              CredInStatusList(
+                item.credentialInStatusListId,
+                item.issueCredentialRecordId,
+                item.statusListIndex,
+                item.isCanceled
+              )
+            }
+          )
+        }
+        .toList
+    }
+  }
+
 }
 
 object JdbcCredentialStatusListRepository {
