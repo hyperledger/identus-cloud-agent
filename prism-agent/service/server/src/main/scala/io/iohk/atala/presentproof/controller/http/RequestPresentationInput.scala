@@ -19,8 +19,8 @@ final case class RequestPresentationInput(
     @description(annotations.proofs.description)
     @encodedExample(annotations.proofs.example)
     proofs: Seq[ProofRequestAux],
-    @description(annotations.proofs.description) // TODO
-    @encodedExample(annotations.proofs.example) // TODO
+    @description(annotations.anoncredPresentationRequest.description)
+    @encodedExample(annotations.anoncredPresentationRequest.example)
     anoncredPresentationRequest: Option[AnoncredPresentationRequestV1],
     @description(annotations.credentialFormat.description)
     @encodedExample(annotations.credentialFormat.example)
@@ -44,6 +44,54 @@ object RequestPresentationInput {
           description =
             "The type of proofs requested in the context of this proof presentation request (e.g., VC schema, trusted issuers, etc.)",
           example = Seq.empty
+        )
+
+    object anoncredPresentationRequest
+        extends Annotation[Option[AnoncredPresentationRequestV1]](
+          description = "Anoncred Presentation Request",
+          example = Some(
+            AnoncredPresentationRequestV1(
+              requested_attributes = Map(
+                "attribute1" -> AnoncredRequestedAttributeV1(
+                  "Attribute 1",
+                  List(
+                    Map(
+                      "cred_def_id" -> "credential_definition_id_of_attribute1"
+                    )
+                  ),
+                  Some(
+                    AnoncredNonRevokedIntervalV1(
+                      Some(1635734400),
+                      Some(1735734400)
+                    )
+                  )
+                )
+              ),
+              requested_predicates = Map(
+                "predicate1" ->
+                  AnoncredRequestedPredicateV1(
+                    "Predicate 1",
+                    ">=",
+                    18,
+                    List(
+                      Map(
+                        "schema_id" -> "schema_id_of_predicate1"
+                      )
+                    ),
+                    Some(
+                      AnoncredNonRevokedIntervalV1(
+                        Some(1635734400),
+                        None
+                      )
+                    )
+                  )
+              ),
+              name = "Example Presentation Request",
+              nonce = "1234567890",
+              version = "1.0",
+              non_revoked = None
+            )
+          )
         )
 
     object credentialFormat
