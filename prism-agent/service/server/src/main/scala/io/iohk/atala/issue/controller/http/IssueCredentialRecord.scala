@@ -199,7 +199,7 @@ object IssueCredentialRecord {
     object protocolState
         extends Annotation[String](
           description = "The current state of the issue credential protocol execution.",
-          example = "OfferPending",
+          example = "CredentialSent",
           validator = Validator.enumeration(
             List(
               "OfferPending",

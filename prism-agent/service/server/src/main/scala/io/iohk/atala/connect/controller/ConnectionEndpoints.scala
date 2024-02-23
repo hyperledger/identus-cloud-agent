@@ -25,7 +25,7 @@ object ConnectionEndpoints {
   private val tagName = "Connections Management"
   private val tagDescription =
     s"""
-       |The '$tagName' endpoints facilitate the initiation of connection flows between the current Agent and peer Agents, regardless of whether they reside in Cloud Agent or edge environments.
+       |The __${tagName}__ endpoints facilitate the initiation of connection flows between the current Agent and peer Agents, regardless of whether they reside in Cloud Agent or edge environments.
        |<br>
        |This implementation adheres to the DIDComm Messaging v2.0 - [Out of Band Messages](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) specification [section 9.5.4](https://identity.foundation/didcomm-messaging/spec/v2.0/#invitation) - to generate invitations.
        |The <b>from</b> field of the out-of-band invitation message contains a freshly generated Peer DID that complies with the [did:peer:2](https://identity.foundation/peer-did-method-spec/#generating-a-didpeer2) specification.
@@ -111,8 +111,7 @@ object ConnectionEndpoints {
       )
       .description("""
           |Retrieve a specific connection flow record from the Agent's database based in its unique `connectionId`.
-          |The API returns a comprehensive collection of connection flow records within the system, regardless of their state.
-          |The returned connection item includes essential metadata such as connection ID, thread ID, state, role, participant information, and other relevant details.
+          |The returned item includes essential metadata such as connection ID, thread ID, state, role, participant information, and other relevant details.
           |""".stripMargin)
       .tag(tagName)
 
