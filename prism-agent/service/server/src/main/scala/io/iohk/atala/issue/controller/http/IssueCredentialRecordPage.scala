@@ -20,12 +20,15 @@ import io.iohk.atala.api.http.Annotation
   *   for example: ''null''
   */
 final case class IssueCredentialRecordPage(
+    @description(annotations.contents.description)
+    @encodedExample(annotations.contents.example)
+    contents: Seq[IssueCredentialRecord],
+    @description(annotations.kind.description)
+    @encodedExample(annotations.kind.example)
+    kind: String,
     @description(annotations.self.description)
     @encodedExample(annotations.self.example)
     self: String,
-    @description(annotations.self.description)
-    @encodedExample(annotations.self.example)
-    kind: String,
     @description(annotations.pageOf.description)
     @encodedExample(annotations.pageOf.example)
     pageOf: String,
@@ -34,55 +37,60 @@ final case class IssueCredentialRecordPage(
     next: Option[String] = None,
     @description(annotations.previous.description)
     @encodedExample(annotations.previous.example)
-    previous: Option[String] = None,
-    @description(annotations.contents.description)
-    @encodedExample(annotations.contents.example)
-    contents: Seq[IssueCredentialRecord] // TODO Tech Debt ticket - deduplicate page response schema
+    previous: Option[String] = None
 )
 
 object IssueCredentialRecordPage {
+
+  val Example = IssueCredentialRecordPage(
+    contents = annotations.contents.example,
+    kind = annotations.kind.example,
+    self = annotations.self.example,
+    pageOf = annotations.pageOf.example,
+    next = Some(annotations.next.example),
+    previous = Some(annotations.previous.example)
+  )
 
   object annotations {
 
     object contents
         extends Annotation[Seq[IssueCredentialRecord]](
-          description =
-            "A sequence of IssueCredentialRecord objects representing the list of credential records that the API response contains",
+          description = """
+          |An sequence of IssueCredentialRecord resources representing the list of credential records that the paginated response contains.
+          |""".stripMargin,
           example = Seq.empty
         )
 
     object kind
         extends Annotation[String](
-          description =
-            "A string field indicating the type of the API response. In this case, it will always be set to `Collection`",
+          description = "A string that identifies the type of resource being returned in the response.",
           example = "Collection"
         )
 
     object self
         extends Annotation[String](
-          description = "A string field containing the URL of the current API endpoint",
-          example =
-            "/prism-agent/schema-registry/schemas?skip=10&limit=10" // TODO Tech Debt - make these generic / specific to issue
+          description = "The URL that uniquely identifies the resource being returned in the response.",
+          example = "/prism-agent/issue-credentials/records?offset=10&limit=10"
         )
 
     object pageOf
         extends Annotation[String](
-          description = "A string field indicating the type of resource that the contents field contains",
-          example = "/prism-agent/schema-registry/schemas"
+          description = "A string field indicating the type of resource that the contents field contains.",
+          example = "/prism-agent/issue-credentials/records"
         )
 
     object next
         extends Annotation[String](
-          description = "An optional string field containing the URL of the next page of results. " +
-            "If the API response does not contain any more pages, this field should be set to None.",
-          example = "/prism-agent/schema-registry/schemas?skip=20&limit=10"
+          description =
+            "An optional string field containing the URL of the next page of results. If the API response does not contain any more pages, this field should be set to None.",
+          example = "/prism-agent/issue-credentials/records?offset=20&limit=10"
         )
 
     object previous
         extends Annotation[String](
-          description = "An optional string field containing the URL of the previous page of results. " +
-            "If the API response is the first page of results, this field should be set to None.",
-          example = "/prism-agent/schema-registry/schemas?skip=0&limit=10"
+          description =
+            "An optional string field containing the URL of the previous page of results. If the API response is the first page of results, this field should be set to None.",
+          example = "/prism-agent/issue-credentials/records?offset=0&limit=10"
         )
   }
 
