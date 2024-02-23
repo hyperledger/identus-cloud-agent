@@ -50,7 +50,7 @@ lazy val V = new {
   // https://mvnrepository.com/artifact/dev.zio/zio
   val zio = "2.0.18"
   val zioConfig = "3.0.7"
-  val zioLogging = "2.0.1"
+  val zioLogging = "2.1.16"
   val zioJson = "0.3.0"
   val zioHttp = "3.0.0-RC4"
   val zioCatsInterop = "3.3.0"
@@ -629,7 +629,7 @@ lazy val resolver = project // maybe merge into models
 lazy val agent = project // maybe merge into models
   .in(file("mercury/mercury-library/agent"))
   .settings(name := "mercury-agent-core")
-  .settings(libraryDependencies ++= Seq(D.zioLog)) // , D.zioSLF4J))
+  .settings(libraryDependencies ++= Seq(D.zioLog, D.zioSLF4J))
   .dependsOn(
     models,
     resolver,
