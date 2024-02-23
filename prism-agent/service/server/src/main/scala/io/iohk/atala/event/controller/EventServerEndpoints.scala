@@ -1,5 +1,6 @@
 package io.iohk.atala.event.controller
 
+import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.Authorizer
@@ -23,6 +24,7 @@ class EventServerEndpoints(
           eventController
             .createWebhookNotification(createWebhook)(rc)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 
@@ -33,6 +35,7 @@ class EventServerEndpoints(
         eventController
           .listWebhookNotifications(rc)
           .provideSomeLayer(ZLayer.succeed(wac))
+          .logTrace(rc)
       }
 
   val deleteWebhookNotificationServerEndpoint: ZServerEndpoint[Any, Any] =
@@ -43,6 +46,7 @@ class EventServerEndpoints(
           eventController
             .deleteWebhookNotification(id)(rc)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 

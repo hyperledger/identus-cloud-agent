@@ -18,9 +18,9 @@ object DIDCodec {
 
   def emptyDidJsonLD: Codec[String, DIDResolutionResult, DIDJsonLD] =
     didJsonLD.schema(_ =>
-      Schema.schemaForByteArray
+      Schema.schemaForString
         .description("Empty representation")
-        .encodedExample(Array.emptyByteArray)
+        .encodedExample("")
         .as
     )
 

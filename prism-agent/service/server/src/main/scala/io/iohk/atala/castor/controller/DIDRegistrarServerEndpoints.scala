@@ -1,5 +1,6 @@
 package io.iohk.atala.castor.controller
 
+import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.Authorizer
@@ -23,6 +24,7 @@ class DIDRegistrarServerEndpoints(
           didRegistrarController
             .listManagedDid(paginationInput)(rc)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 
@@ -34,6 +36,7 @@ class DIDRegistrarServerEndpoints(
           didRegistrarController
             .createManagedDid(createManagedDidRequest)(rc)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 
@@ -45,6 +48,7 @@ class DIDRegistrarServerEndpoints(
           didRegistrarController
             .getManagedDid(did)(rc)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 
@@ -56,6 +60,7 @@ class DIDRegistrarServerEndpoints(
           didRegistrarController
             .publishManagedDid(did)(rc)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 
@@ -67,6 +72,7 @@ class DIDRegistrarServerEndpoints(
           didRegistrarController
             .updateManagedDid(did, updateRequest)(rc)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 
@@ -78,6 +84,7 @@ class DIDRegistrarServerEndpoints(
           didRegistrarController
             .deactivateManagedDid(did)(rc)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 
