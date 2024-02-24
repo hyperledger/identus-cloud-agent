@@ -35,6 +35,7 @@ echo "--------------------------------------"
     yarn webpack
     k6 run -e SCENARIO_LABEL=st-create-prism-did-smoke dist/create-prism-did-test.js -o experimental-prometheus-rw
     k6 run -e SCENARIO_LABEL=st-credential-offer-smoke dist/credential-offer-test.js -o experimental-prometheus-rw
+    k6 run -e SCENARIO_LABEL=st-credential-definition-smoke dist/credential-definition-test.js -o experimental-prometheus-rw
     k6 run -e SCENARIO_LABEL=st-credential-schema-smoke dist/credential-schema-test.js -o experimental-prometheus-rw
     k6 run -e SCENARIO_LABEL=st-did-publishing-smoke dist/did-publishing-test.js -o experimental-prometheus-rw
     k6 run -e SCENARIO_LABEL=st-connection-flow-smoke dist/connection-flow-test.js -o experimental-prometheus-rw

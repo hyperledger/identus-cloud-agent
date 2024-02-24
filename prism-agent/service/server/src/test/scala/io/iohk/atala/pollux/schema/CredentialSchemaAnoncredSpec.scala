@@ -121,7 +121,7 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
           response <- createResponse[ErrorResponse](CredentialJsonSchemaType.`type`)
         } yield assert(response.body)(
           isRight(
-            hasField("detail", _.detail, isSome(equalTo("'$schema' tag is not present")))
+            hasField("detail", _.detail, isSome(containsString("required property '$schema' not found;")))
           )
         )
       }

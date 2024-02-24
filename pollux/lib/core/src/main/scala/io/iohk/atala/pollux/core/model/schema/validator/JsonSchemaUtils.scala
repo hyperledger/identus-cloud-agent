@@ -28,7 +28,7 @@ object JsonSchemaUtils {
         else ZIO.unit
       mapper <- ZIO.attempt(new ObjectMapper()).mapError(t => UnexpectedError(t.getMessage))
       factory <- ZIO
-        .attempt(JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(specVersion)).objectMapper(mapper).build)
+        .attempt(JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(specVersion)).jsonMapper(mapper).build)
         .mapError(t => UnexpectedError(t.getMessage))
       jsonSchema <- ZIO.attempt(factory.getSchema(jsonSchemaNode)).mapError(t => UnexpectedError(t.getMessage))
     } yield jsonSchema

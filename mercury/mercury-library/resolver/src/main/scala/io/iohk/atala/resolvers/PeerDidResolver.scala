@@ -43,10 +43,13 @@ object PeerDidResolver {
         _.map { item =>
           val id = item.hcursor.downField("id").as[String].getOrElse(???)
           // val typ = item.hcursor.downField("type").as[String].getOrElse(???)
-          val serviceEndpoint = item.hcursor.downField("serviceEndpoint").as[String].getOrElse(???)
-          val routingKeys: Seq[String] = item.hcursor.downField("routingKeys").as[List[String]].getOrElse(Seq.empty)
-          val accept: Seq[String] = item.hcursor.downField("accept").as[List[String]].getOrElse(Seq.empty)
-          new DIDCommService(id, serviceEndpoint, routingKeys.asJava, accept.asJava)
+          val serviceEndpointJson = item.hcursor.downField("serviceEndpoint")
+          // val serviceEndpoint = item.hcursor.downField("serviceEndpoint").as[String].getOrElse(???)
+          val uri = serviceEndpointJson.downField("uri").as[String].getOrElse(???)
+          val routingKeys: Seq[String] =
+            serviceEndpointJson.downField("routingKeys").as[List[String]].getOrElse(Seq.empty)
+          val accept: Seq[String] = serviceEndpointJson.downField("accept").as[List[String]].getOrElse(Seq.empty)
+          new DIDCommService(id, uri, routingKeys.asJava, accept.asJava)
         }
       }
       .getOrElse(List.empty)

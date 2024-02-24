@@ -54,21 +54,27 @@ object PeerDID {
     *   routingKeys are OPTIONAL. An ordered array of strings referencing keys to be used when preparing the message for
     *   transmission as specified in Sender Process to Enable Forwarding, above.
     */
+
+  case class ServiceEndpoint(uri: String, r: Seq[String] = Seq.empty, a: Seq[String] = Seq("didcomm/v2"))
+  object ServiceEndpoint {
+    implicit val encoder: Encoder[ServiceEndpoint] = deriveEncoder[ServiceEndpoint]
+    implicit val decoder: Decoder[ServiceEndpoint] = deriveDecoder[ServiceEndpoint]
+    def apply(endpoint: String) = new ServiceEndpoint(uri = endpoint)
+  }
+
   case class Service(
       t: String = "dm",
-      s: String,
-      r: Seq[String] = Seq.empty,
-      a: Seq[String] = Seq("didcomm/v2")
+      s: ServiceEndpoint
   ) {
     def `type` = t
     def serviceEndpoint = s
-    def routingKeys = r
-    def accept = a
+    def routingKeys = s.r
+    def accept = s.a
   }
   object Service {
     implicit val encoder: Encoder[Service] = deriveEncoder[Service]
     implicit val decoder: Decoder[Service] = deriveDecoder[Service]
-    def apply(endpoint: String) = new Service(s = endpoint)
+    def apply(endpoint: String) = new Service(s = ServiceEndpoint(endpoint))
   }
 
   def makeNewJwkKeyX25519: OctetKeyPair = new OctetKeyPairGenerator(Curve.X25519).generate()

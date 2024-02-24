@@ -51,10 +51,22 @@ import zio.*
 import zio.metrics.connectors.micrometer
 import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics
+import zio.logging.*
+import zio.logging.LogFormat.*
+import zio.logging.backend.SLF4J
 
 import java.security.Security
 
 object MainApp extends ZIOAppDefault {
+
+  val colorFormat: LogFormat =
+    fiberId.color(LogColor.YELLOW) |-|
+      line.highlight |-|
+      allAnnotations |-|
+      cause.highlight
+
+  override val bootstrap: ZLayer[ZIOAppArgs, Any, Any] =
+    Runtime.removeDefaultLoggers >>> SLF4J.slf4j(colorFormat)
 
   Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
 
@@ -83,26 +95,6 @@ object MainApp extends ZIOAppDefault {
     _ <- ConnectMigrations.validateRLS.provide(RepoModule.connectContextAwareTransactorLayer)
     _ <- AgentMigrations.validateRLS.provide(RepoModule.agentContextAwareTransactorLayer)
   } yield ()
-
-  private val zioHttpClientLayer = {
-    import zio.http.netty.NettyConfig
-    import zio.http.{ConnectionPoolConfig, DnsResolver, ZClient}
-    (ZLayer.fromZIO(
-      for {
-        appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
-      } yield ZClient.Config.default.copy(
-        connectionPool = {
-          val cpSize = appConfig.agent.httpClient.connectionPoolSize
-          if (cpSize > 0) ConnectionPoolConfig.Fixed(cpSize)
-          else ConnectionPoolConfig.Disabled
-        },
-        idleTimeout = Some(appConfig.agent.httpClient.idleTimeout),
-        connectionTimeout = Some(appConfig.agent.httpClient.connectionTimeout),
-      )
-    ) ++
-      ZLayer.succeed(NettyConfig.default) ++
-      DnsResolver.default) >>> ZClient.live
-  }
 
   override def run: ZIO[Any, Throwable, Unit] = {
 
@@ -196,7 +188,7 @@ object MainApp extends ZIOAppDefault {
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client
-          zioHttpClientLayer,
+          SystemModule.zioHttpClientLayer,
           Scope.default,
         )
     } yield app

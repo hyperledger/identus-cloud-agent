@@ -1,5 +1,6 @@
 package io.iohk.atala.issue.controller
 
+import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.PaginationInput
@@ -27,6 +28,7 @@ class IssueServerEndpoints(
           issueController
             .createCredentialOffer(request)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -38,6 +40,7 @@ class IssueServerEndpoints(
           issueController
             .getCredentialRecords(paginationInput, thid)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -49,6 +52,7 @@ class IssueServerEndpoints(
           issueController
             .getCredentialRecord(recordId)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -60,6 +64,7 @@ class IssueServerEndpoints(
           issueController
             .acceptCredentialOffer(recordId, request)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -71,6 +76,7 @@ class IssueServerEndpoints(
           issueController
             .issueCredential(recordId)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
