@@ -97,22 +97,10 @@ object PrismAgentApp {
     } yield ()
 
   private val syncRevocationStatusListsJob
-      : RIO[CredentialStatusListService & WalletManagementService, Unit] = {
-
-    val res = ZIO
-      .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
-      .flatMap { wallets =>
-        ZIO.foreachPar(wallets) { wallet =>
-          val context = WalletAccessContext(wallet.id)
-          StatusListJobs.syncRevocationStatuses.provideSomeLayer(ZLayer.succeed(context))
-        }.withParallelism(5) // Todo Provide from config
-      }
-      .catchAll(e => ZIO.logError(s"error while syncing credential revocation statuses: $e"))
-      .repeat(Schedule.spaced(2.second)) // Todo Provide from config
-      .unit
-      .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
-
-    res
+      : ZIO[CredentialStatusListService & DIDService & ManagedDIDService, Throwable, Unit] = {
+    for {
+      _ <- StatusListJobs.syncRevocationStatuses.repeat(Schedule.spaced(2.second)) // TODO make it configurable
+    } yield ()
   }
 
   private val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService & WalletManagementService, Unit] =

@@ -171,7 +171,13 @@ class CredentialStatusListRepositoryInMemory(
     } yield isUpdated
   }
 
-  def getCredentialStatusListsWithCreds: RIO[WalletAccessContext, List[CredentialStatusListWithCreds]] = ??? //TODO impl in memory solution
+  def getCredentialStatusListsWithCreds: Task[List[CredentialStatusListWithCreds]] =
+    ??? // TODO impl in memory solution
+
+  def updateStatusListCredential(
+      credentialStatusListId: UUID,
+      statusListCredential: String
+  ): RIO[WalletAccessContext, Unit] = ??? // TODO impl in memory solution
 
 }
 

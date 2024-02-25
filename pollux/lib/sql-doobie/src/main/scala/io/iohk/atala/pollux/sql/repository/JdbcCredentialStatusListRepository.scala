@@ -195,10 +195,9 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
 
   }
 
-  def getCredentialStatusListsWithCreds: RIO[WalletAccessContext, List[CredentialStatusListWithCreds]] = {
+  def getCredentialStatusListsWithCreds: Task[List[CredentialStatusListWithCreds]] = {
 
-//    WHERE csl.wallet_id = current_setting('app.current_wallet_id') :: UUID
-
+    // Might need to add wallet Id in the select query, because I'm selecting all of them
     val cxnIO =
       sql"""
            | SELECT
@@ -206,12 +205,12 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
            |   csl.issuer,
            |   csl.issued,
            |   csl.purpose,
+           |   csl.wallet_id,
            |   csl.status_list_credential,
            |   csl.size,
            |   csl.last_used_index,
            |   cisl.id as credential_in_status_list_id,
            |   cisl.issue_credential_record_id,
-           |   cisl.credential_status_list_id,
            |   cisl.status_list_index,
            |   cisl.is_canceled
            |  FROM public.credential_status_lists csl
@@ -221,7 +220,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
         .to[List]
 
     val credentialStatusListsWithCredZio = cxnIO
-      .transactWallet(xa)
+      .transact(xb)
 
     for {
       credentialStatusListsWithCred <- credentialStatusListsWithCredZio
@@ -231,6 +230,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
         .map { case (id, items) =>
           CredentialStatusListWithCreds(
             id,
+            items.head.walletId,
             items.head.issuer,
             items.head.issued,
             items.head.purpose,
@@ -249,6 +249,25 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
         }
         .toList
     }
+  }
+
+  def updateStatusListCredential(
+      credentialStatusListId: UUID,
+      statusListCredential: String
+  ): RIO[WalletAccessContext, Unit] = {
+
+    val updateQuery =
+      sql"""
+           | UPDATE public.credential_status_lists
+           | SET
+           |   status_list_credential = $statusListCredential::JSON,
+           |   updated_at = ${Instant.now()}
+           | WHERE
+           |   id = $credentialStatusListId
+           |""".stripMargin.update.run
+
+    updateQuery.transactWallet(xa).unit
+
   }
 
 }

@@ -31,6 +31,7 @@ case class CredentialStatusListWithCred(
     issuer: CanonicalPrismDID,
     issued: Instant,
     purpose: StatusPurpose,
+    walletId: WalletId,
     statusListCredential: String,
     size: Int,
     lastUsedIndex: Int,
@@ -42,6 +43,7 @@ case class CredentialStatusListWithCred(
 
 case class CredentialStatusListWithCreds(
     id: UUID,
+    walletId: WalletId,
     issuer: CanonicalPrismDID,
     issued: Instant,
     purpose: StatusPurpose,

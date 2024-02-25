@@ -12,6 +12,10 @@ trait CredentialStatusListService {
 
   def revokeByIssueCredentialRecordId(id: DidCommID): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit]
 
-  def getCredentialsAndItsStatuses
-      : ZIO[WalletAccessContext, CredentialStatusListServiceError, Seq[CredentialStatusListWithCreds]]
+  def getCredentialsAndItsStatuses: IO[CredentialStatusListServiceError, Seq[CredentialStatusListWithCreds]]
+
+  def updateStatusListCredential(
+      id: UUID,
+      statusListCredential: String
+  ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit]
 }

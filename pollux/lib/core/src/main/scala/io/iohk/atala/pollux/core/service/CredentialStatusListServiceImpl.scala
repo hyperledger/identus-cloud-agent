@@ -33,9 +33,17 @@ class CredentialStatusListServiceImpl(
   }
 
   def getCredentialsAndItsStatuses
-      : ZIO[WalletAccessContext, CredentialStatusListServiceError, Seq[CredentialStatusListWithCreds]] = {
-
+      : IO[CredentialStatusListServiceError, Seq[CredentialStatusListWithCreds]] = {
     credentialStatusListRepository.getCredentialStatusListsWithCreds.mapError(RepositoryError.apply)
+  }
+
+  def updateStatusListCredential(
+      id: UUID,
+      statusListCredential: String
+  ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit] = {
+    credentialStatusListRepository
+      .updateStatusListCredential(id, statusListCredential)
+      .mapError(RepositoryError.apply)
   }
 
 }
