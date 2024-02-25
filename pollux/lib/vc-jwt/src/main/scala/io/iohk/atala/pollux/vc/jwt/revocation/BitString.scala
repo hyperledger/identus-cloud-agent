@@ -9,7 +9,7 @@ import java.util.Base64
 import java.util.zip.{GZIPInputStream, GZIPOutputStream}
 
 class BitString private (val bitSet: util.BitSet, val size: Int) {
-  def setRevoked(index: Int, value: Boolean): IO[IndexOutOfBounds, Unit] =
+  def setRevokedInPlace(index: Int, value: Boolean): IO[IndexOutOfBounds, Unit] =
     if (index >= size) ZIO.fail(IndexOutOfBounds(s"bitIndex >= $size: $index"))
     else ZIO.attempt(bitSet.set(index, value)).mapError(t => IndexOutOfBounds(t.getMessage))
 

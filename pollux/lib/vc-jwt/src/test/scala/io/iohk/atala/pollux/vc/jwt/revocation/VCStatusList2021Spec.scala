@@ -29,7 +29,7 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
 
   override def spec = suite("VCStatusList2021")(
     // TODO: add test to verify the proof is valid
-    test("Should generate status list vs as JSON with embedded proof") {
+    test("Should generate status list VC as JSON with embedded proof") {
       for {
         issuer <- generateIssuer()
         bitString <- BitString.getInstance()
@@ -67,7 +67,7 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
       for {
         issuer <- generateIssuer()
         bitString <- BitString.getInstance()
-        _ <- bitString.setRevoked(1234, true)
+        _ <- bitString.setRevokedInPlace(1234, true)
         statusList <- VCStatusList2021.build(VC_ID, s"$VC_ID#list", issuer, bitString)
         encodedJwtVC <- statusList.encoded
         decodedStatusList <- VCStatusList2021.decode(encodedJwtVC, issuer)
