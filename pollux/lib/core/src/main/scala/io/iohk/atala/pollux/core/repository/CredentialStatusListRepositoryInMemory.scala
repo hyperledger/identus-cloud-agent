@@ -36,6 +36,18 @@ class CredentialStatusListRepositoryInMemory(
         }(ZIO.succeed)
     } yield walletRef
 
+  private def allStatusListsStorageRefs: Task[Ref[Map[UUID, CredentialStatusList]]] =
+    for {
+      refs <- walletToStatusListRefs.get
+      allRefs = refs.values.toList
+      allRefsMap <- ZIO
+        .collectAll(allRefs.map(_.get))
+        .map(_.foldLeft(Map.empty[UUID, CredentialStatusList]) { (acc, value) =>
+          acc ++ value
+        })
+      ref <- Ref.make(allRefsMap)
+    } yield ref
+
   private def statusListToCredInStatusListStorageRefs(
       statusListId: UUID
   ): Task[Ref[Map[UUID, CredentialInStatusList]]] =
@@ -169,6 +181,55 @@ class CredentialStatusListRepositoryInMemory(
         }
       )
     } yield isUpdated
+  }
+
+  def getCredentialStatusListsWithCreds: Task[List[CredentialStatusListWithCreds]] = {
+    for {
+      statusListsRefs <- allStatusListsStorageRefs
+      statusLists <- statusListsRefs.get
+      statusListWithCredEffects = statusLists.map { (id, statusList) =>
+        val credsinStatusListEffect = statusListToCredInStatusListStorageRefs(id).flatMap(_.get.map(_.values.toList))
+        credsinStatusListEffect.map { credsInStatusList =>
+          CredentialStatusListWithCreds(
+            id = id,
+            walletId = statusList.walletId,
+            issuer = statusList.issuer,
+            issued = statusList.issued,
+            purpose = statusList.purpose,
+            statusListCredential = statusList.statusListCredential,
+            size = statusList.size,
+            lastUsedIndex = statusList.lastUsedIndex,
+            credentials = credsInStatusList.map { cred =>
+              CredInStatusList(
+                id = cred.id,
+                issueCredentialRecordId = cred.issueCredentialRecordId,
+                statusListIndex = cred.statusListIndex,
+                isCanceled = cred.isCanceled,
+              )
+            }
+          )
+        }
+
+      }.toList
+      res <- ZIO.collectAll(statusListWithCredEffects)
+    } yield res
+  }
+
+  def updateStatusListCredential(
+      credentialStatusListId: UUID,
+      statusListCredential: String
+  ): RIO[WalletAccessContext, Unit] = {
+    for {
+      statusListsRefs <- walletToStatusListStorageRefs
+      _ <- statusListsRefs.update { statusLists =>
+        statusLists.updatedWith(credentialStatusListId) { maybeCredentialStatusList =>
+          maybeCredentialStatusList.map { credentialStatusList =>
+            credentialStatusList.copy(statusListCredential = statusListCredential, updatedAt = Some(Instant.now()))
+          }
+        }
+      }
+    } yield ()
+
   }
 
 }
