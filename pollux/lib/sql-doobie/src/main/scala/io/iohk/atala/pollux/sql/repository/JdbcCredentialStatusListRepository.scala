@@ -226,7 +226,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       credentialStatusListsWithCred <- credentialStatusListsWithCredZio
     } yield {
       credentialStatusListsWithCred
-        .groupBy(_.credentialInStatusListId)
+        .groupBy(_.credentialStatusListId)
         .map { case (id, items) =>
           CredentialStatusListWithCreds(
             id,
