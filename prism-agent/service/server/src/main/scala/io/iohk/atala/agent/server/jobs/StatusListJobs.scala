@@ -1,5 +1,6 @@
 package io.iohk.atala.agent.server.jobs
 
+import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.service.DIDService
@@ -12,7 +13,8 @@ import zio.*
 
 object StatusListJobs extends BackgroundJobsHelper {
 
-  val syncRevocationStatuses: ZIO[CredentialStatusListService & DIDService & ManagedDIDService, Throwable, Unit] =
+  val syncRevocationStatuses
+      : ZIO[CredentialStatusListService & DIDService & ManagedDIDService & AppConfig, Throwable, Unit] =
     for {
       credentialStatusListService <- ZIO.service[CredentialStatusListService]
       credentialStatusListsWithCreds <- credentialStatusListService.getCredentialsAndItsStatuses
@@ -33,8 +35,7 @@ object StatusListJobs extends BackgroundJobsHelper {
           bitString <- vcStatusListCred.getBitString.mapError(x => new Throwable(x.msg))
           encodedBeforeTmp <- bitString.encoded.mapError(x => new Throwable(x.message))
           updateBitStringEffects = statusListWithCreds.credentials.map { cred =>
-            if cred.isCanceled then
-              bitString.setRevokedInPlace(cred.statusListIndex, true)
+            if cred.isCanceled then bitString.setRevokedInPlace(cred.statusListIndex, true)
             else ZIO.unit
           }
           _ <- ZIO
@@ -55,8 +56,9 @@ object StatusListJobs extends BackgroundJobsHelper {
         effect.provideSomeLayer(ZLayer.succeed(walletAccessContext))
 
       }
-      _ <- ZIO.logInfo("Syncing revocation statuses")
-      _ <- ZIO.collectAll(updatedVcStatusListsCredsEffects) // TODO add parallelism
-      _ <- ZIO.logInfo("Done syncing revocation statuses")
+      config <- ZIO.service[AppConfig]
+      _ <- ZIO
+        .collectAll(updatedVcStatusListsCredsEffects)
+        .withParallelism(config.pollux.syncRevocationStatusesBgJobProcessingParallelism)
     } yield ()
 }

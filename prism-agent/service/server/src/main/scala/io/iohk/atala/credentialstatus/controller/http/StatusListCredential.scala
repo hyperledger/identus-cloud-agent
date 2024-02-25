@@ -60,7 +60,7 @@ object StatusListCredential {
 
     res
   }
-  
+
   object annotations {
     object `@context`
         extends Annotation[Set[String]](

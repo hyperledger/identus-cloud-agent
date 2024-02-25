@@ -19,8 +19,12 @@ class VCStatusList2021 private (val vcPayload: W3cCredentialPayload, jwtIssuer: 
 
     val res = for {
       vcId <- ZIO.fromOption(vcPayload.maybeId).mapError(_ => DecodingError("VC id not found"))
-      slId <- ZIO.fromEither(vcPayload.credentialSubject.hcursor.downField("id").as[String]).mapError(x => DecodingError(x.message))
-      purpose <- ZIO.fromEither(vcPayload.credentialSubject.hcursor.downField("statusPurpose").as[StatusPurpose]).mapError(x => DecodingError(x.message))
+      slId <- ZIO
+        .fromEither(vcPayload.credentialSubject.hcursor.downField("id").as[String])
+        .mapError(x => DecodingError(x.message))
+      purpose <- ZIO
+        .fromEither(vcPayload.credentialSubject.hcursor.downField("statusPurpose").as[StatusPurpose])
+        .mapError(x => DecodingError(x.message))
     } yield VCStatusList2021.build(vcId, slId, jwtIssuer, bitString, purpose)
 
     res.flatten

@@ -62,6 +62,8 @@ final case class PolluxConfig(
     presentationBgJobRecordsLimit: Int,
     presentationBgJobRecurrenceDelay: Duration,
     presentationBgJobProcessingParallelism: Int,
+    syncRevocationStatusesBgJobRecurrenceDelay: Duration,
+    syncRevocationStatusesBgJobProcessingParallelism: Int,
 )
 final case class ConnectConfig(
     database: DatabaseConfig,
