@@ -32,8 +32,7 @@ class CredentialStatusListServiceImpl(
 
   }
 
-  def getCredentialsAndItsStatuses
-      : IO[CredentialStatusListServiceError, Seq[CredentialStatusListWithCreds]] = {
+  def getCredentialsAndItsStatuses: IO[CredentialStatusListServiceError, Seq[CredentialStatusListWithCreds]] = {
     credentialStatusListRepository.getCredentialStatusListsWithCreds.mapError(RepositoryError.apply)
   }
 
