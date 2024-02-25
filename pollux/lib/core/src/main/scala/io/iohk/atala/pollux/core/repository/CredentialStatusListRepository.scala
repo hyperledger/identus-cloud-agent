@@ -31,4 +31,10 @@ trait CredentialStatusListRepository {
       issueCredentialRecordId: DidCommID
   ): RIO[WalletAccessContext, Boolean]
 
+  def getCredentialStatusListsWithCreds: Task[List[CredentialStatusListWithCreds]]
+
+  def updateStatusListCredential(
+      credentialStatusListId: UUID,
+      statusListCredential: String
+  ): RIO[WalletAccessContext, Unit]
 }

@@ -1,11 +1,10 @@
 package io.iohk.atala.pollux.core.service
 
-import io.iohk.atala.pollux.core.model.CredentialStatusList
+import io.iohk.atala.pollux.core.model.{CredentialStatusList, CredentialStatusListWithCreds, DidCommID}
 import io.iohk.atala.pollux.core.repository.CredentialStatusListRepository
 import zio.*
 import io.iohk.atala.pollux.core.model.error.CredentialStatusListServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialStatusListServiceError.*
-import io.iohk.atala.pollux.core.model.DidCommID
 import io.iohk.atala.shared.models.WalletAccessContext
 
 import java.util.UUID
@@ -31,6 +30,19 @@ class CredentialStatusListServiceImpl(
       _ <- if (revoked) ZIO.unit else ZIO.fail(IssueCredentialRecordNotFound(id))
     } yield ()
 
+  }
+
+  def getCredentialsAndItsStatuses: IO[CredentialStatusListServiceError, Seq[CredentialStatusListWithCreds]] = {
+    credentialStatusListRepository.getCredentialStatusListsWithCreds.mapError(RepositoryError.apply)
+  }
+
+  def updateStatusListCredential(
+      id: UUID,
+      statusListCredential: String
+  ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit] = {
+    credentialStatusListRepository
+      .updateStatusListCredential(id, statusListCredential)
+      .mapError(RepositoryError.apply)
   }
 
 }

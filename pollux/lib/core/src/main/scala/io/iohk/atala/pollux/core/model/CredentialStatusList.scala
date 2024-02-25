@@ -17,4 +17,38 @@ final case class CredentialStatusList(
     lastUsedIndex: Int,
     createdAt: Instant,
     updatedAt: Option[Instant]
-) {}
+)
+
+case class CredInStatusList(
+    id: UUID,
+    issueCredentialRecordId: DidCommID,
+    statusListIndex: Int,
+    isCanceled: Boolean,
+)
+
+case class CredentialStatusListWithCred(
+    credentialStatusListId: UUID,
+    issuer: CanonicalPrismDID,
+    issued: Instant,
+    purpose: StatusPurpose,
+    walletId: WalletId,
+    statusListCredential: String,
+    size: Int,
+    lastUsedIndex: Int,
+    credentialInStatusListId: UUID,
+    issueCredentialRecordId: DidCommID,
+    statusListIndex: Int,
+    isCanceled: Boolean,
+)
+
+case class CredentialStatusListWithCreds(
+    id: UUID,
+    walletId: WalletId,
+    issuer: CanonicalPrismDID,
+    issued: Instant,
+    purpose: StatusPurpose,
+    statusListCredential: String,
+    size: Int,
+    lastUsedIndex: Int,
+    credentials: Seq[CredInStatusList]
+)

@@ -37,8 +37,8 @@ object BitStringSpec extends ZIOSpecDefault {
     test("A bit string with custom size and revoked items is correctly encoded") {
       for {
         initialBS <- BitString.getInstance(800)
-        _ <- initialBS.setRevoked(753, true)
-        _ <- initialBS.setRevoked(45, true)
+        _ <- initialBS.setRevokedInPlace(753, true)
+        _ <- initialBS.setRevokedInPlace(45, true)
         encodedBS <- initialBS.encoded
         decodedBS <- BitString.valueOf(encodedBS)
         decodedRevokedCount <- decodedBS.revokedCount()
@@ -60,21 +60,21 @@ object BitStringSpec extends ZIOSpecDefault {
     test("The first index is 0 and last index at 'size - 1'") {
       for {
         bitString <- BitString.getInstance(24)
-        _ <- bitString.setRevoked(0, true)
-        _ <- bitString.setRevoked(bitString.size - 1, true)
-        result <- bitString.setRevoked(bitString.size, true).exit
+        _ <- bitString.setRevokedInPlace(0, true)
+        _ <- bitString.setRevokedInPlace(bitString.size - 1, true)
+        result <- bitString.setRevokedInPlace(bitString.size, true).exit
       } yield assert(result)(failsWithA[IndexOutOfBounds])
     },
     test("Revoking with a negative index fails") {
       for {
         bitString <- BitString.getInstance(8)
-        result <- bitString.setRevoked(-1, true).exit
+        result <- bitString.setRevokedInPlace(-1, true).exit
       } yield assert(result)(failsWithA[IndexOutOfBounds])
     },
     test("Revoking with an index above the range fails") {
       for {
         bitString <- BitString.getInstance(8)
-        result <- bitString.setRevoked(20, false).exit
+        result <- bitString.setRevokedInPlace(20, false).exit
       } yield assert(result)(failsWithA[IndexOutOfBounds])
     },
     test("Getting revocation state with a negative index fails") {
