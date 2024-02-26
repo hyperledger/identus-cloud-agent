@@ -26,11 +26,9 @@ object ConnectionEndpoints {
   private val tagDescription =
     s"""
        |The __${tagName}__ endpoints facilitate the initiation of connection flows between the current Agent and peer Agents, regardless of whether they reside in Cloud Agent or edge environments.
-       |<br>
        |This implementation adheres to the DIDComm Messaging v2.0 - [Out of Band Messages](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) specification [section 9.5.4](https://identity.foundation/didcomm-messaging/spec/v2.0/#invitation) - to generate invitations.
        |The <b>from</b> field of the out-of-band invitation message contains a freshly generated Peer DID that complies with the [did:peer:2](https://identity.foundation/peer-did-method-spec/#generating-a-didpeer2) specification.
        |This Peer DID includes the 'uri' location of the DIDComm messaging service, essential for the invitee's subsequent execution of the connection flow.
-       |<br>
        |Upon accepting an invitation, the invitee sends a connection request to the inviter's DIDComm messaging service endpoint.
        |The connection request's 'type' attribute must be specified as "https://atalaprism.io/mercury/connections/1.0/request".
        |The inviter agent responds with a connection response message, indicated by a 'type' attribute of "https://atalaprism.io/mercury/connections/1.0/response".

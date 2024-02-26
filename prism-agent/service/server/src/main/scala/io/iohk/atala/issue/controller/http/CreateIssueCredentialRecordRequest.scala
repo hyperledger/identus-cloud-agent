@@ -129,8 +129,7 @@ object CreateIssueCredentialRecordRequest {
 
     object connectionId
         extends Annotation[UUID](
-          description =
-            """
+          description = """
             |The unique identifier of a DIDComm connection that already exists between the this issuer agent and the holder cloud or edeg agent.
             |It should be the identifier of a connection that exists in the issuer agent's database.
             |This connection will be used to execute the issue credential protocol.
