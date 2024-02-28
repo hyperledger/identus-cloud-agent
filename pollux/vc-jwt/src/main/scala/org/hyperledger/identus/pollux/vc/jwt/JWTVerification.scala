@@ -9,6 +9,7 @@ import com.nimbusds.jwt.SignedJWT
 import io.circe
 import io.circe.generic.auto.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
 import org.hyperledger.identus.shared.crypto.Ed25519PublicKey
 import pdi.jwt.*
 import zio.*
@@ -85,6 +86,17 @@ object JWTVerification {
     loadDidDocument
   }
 
+  def validateIssuerFromKeyId(
+      extractedDID: Validation[String, String]
+  )(didResolver: DidResolver): IO[String, Validation[String, DIDDocument]] = {
+    val loadDidDocument =
+      ValidationUtils
+        .foreach(extractedDID.map(validIssuerDid => resolve(validIssuerDid)(didResolver)))(identity)
+        .map(b => b.flatten)
+
+    loadDidDocument
+  }
+
   def validateEncodedJwt[T](jwt: JWT, proofPurpose: Option[VerificationRelationship] = None)(
       didResolver: DidResolver
   )(decoder: String => Validation[String, T])(issuerDidExtractor: T => String): IO[String, Validation[String, Unit]] = {
@@ -107,6 +119,61 @@ object JWTVerification {
       } yield claim
 
     val loadDidDocument = validateIssuerFromClaim(claim)(didResolver)(decoder)(issuerDidExtractor)
+
+    loadDidDocument
+      .map(validatedDidDocument => {
+        for {
+          results <- Validation.validateWith(validatedDidDocument, extractAlgorithm)((didDocument, algorithm) =>
+            (didDocument, algorithm)
+          )
+          (didDocument, algorithm) = results
+          verificationMethods <- extractVerificationMethods(didDocument, algorithm, proofPurpose)
+          validatedJwt <- validateEncodedJwt(jwt, verificationMethods)
+        } yield validatedJwt
+      })
+  }
+
+  def keyIdDIDExtractor(jwt: JWT): Validation[String, String] = {
+    for {
+      header <- Validation
+        .fromTry(
+          JwtCirce
+            .decodeAll(jwt.value, JwtOptions(false, false, false))
+            .map(_._1)
+        )
+        .mapError(_.getMessage)
+      keyId <- Validation.fromOptionWith("Key ID not found in JWT header")(header.keyId)
+      isValidPrismDID <- Validation.fromEither(PrismDID.fromString(keyId)) // TODO: we don't support other DIDs yet
+    } yield keyId
+  }
+
+  def validateEncodedJwtWithKeyId(
+      jwt: JWT,
+      proofPurpose: Option[VerificationRelationship] = None,
+      didResolver: DidResolver,
+      didExtractor: JWT => Validation[String, String] = keyIdDIDExtractor
+  ): IO[String, Validation[String, Unit]] = {
+    val decodedJWT = Validation
+      .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
+      .mapError(_.getMessage)
+
+    val extractAlgorithm: Validation[String, JwtAlgorithm] =
+      for {
+        decodedJwtTask <- decodedJWT
+        (header, _, _) = decodedJwtTask
+        algorithm <- Validation
+          .fromOptionWith("An algorithm must be specified in the header")(JwtCirce.parseHeader(header).algorithm)
+      } yield algorithm
+
+    val claim: Validation[String, String] =
+      for {
+        decodedJwtTask <- decodedJWT
+        (_, claim, _) = decodedJwtTask
+      } yield claim
+
+    val extractedDID = didExtractor(jwt)
+
+    val loadDidDocument = validateIssuerFromKeyId(extractedDID)(didResolver)
 
     loadDidDocument
       .map(validatedDidDocument => {

@@ -19,6 +19,7 @@ import org.hyperledger.identus.iam.entity.http.EntityServerEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementServerEndpoints
 import org.hyperledger.identus.issue.controller.IssueServerEndpoints
 import org.hyperledger.identus.mercury.{DidOps, HttpClient}
+import org.hyperledger.identus.oid4vci.CredentialIssuerServerEndpoints
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
 import org.hyperledger.identus.pollux.credentialschema.{
@@ -135,6 +136,7 @@ object AgentHttpServer {
     allEntityEndpoints <- EntityServerEndpoints.all
     allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
     allEventEndpoints <- EventServerEndpoints.all
+    allOIDCEndpoints <- CredentialIssuerServerEndpoints.all
   } yield allCredentialDefinitionRegistryEndpoints ++
     allSchemaRegistryEndpoints ++
     allVerificationPolicyEndpoints ++
@@ -148,7 +150,8 @@ object AgentHttpServer {
     allSystemEndpoints ++
     allEntityEndpoints ++
     allWalletManagementEndpoints ++
-    allEventEndpoints
+    allEventEndpoints ++
+    allOIDCEndpoints
   def run =
     for {
       allEndpoints <- agentRESTServiceEndpoints

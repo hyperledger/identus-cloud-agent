@@ -72,7 +72,7 @@ object CredentialServiceImpl {
   private val VC_JSON_SCHEMA_TYPE = "CredentialSchema2022"
 }
 
-private class CredentialServiceImpl(
+class CredentialServiceImpl(
     credentialRepository: CredentialRepository,
     credentialStatusListRepository: CredentialStatusListRepository,
     didResolver: DidResolver,
@@ -503,7 +503,7 @@ private class CredentialServiceImpl(
     } yield keyId
   }
 
-  private def getJwtIssuer(
+  override def getJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
   ): URIO[WalletAccessContext, JwtIssuer] = {

@@ -29,12 +29,17 @@ import org.hyperledger.identus.event.controller.EventControllerImpl
 import org.hyperledger.identus.event.notification.EventNotificationServiceImpl
 import org.hyperledger.identus.iam.authentication.apikey.JdbcAuthenticationRepository
 import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
+import org.hyperledger.identus.iam.authentication.{DefaultAuthenticator, Oid4vciAuthenticatorFactory}
+import org.hyperledger.identus.iam.authentication.apikey.JdbcAuthenticationRepository
 import org.hyperledger.identus.iam.authorization.core.EntityPermissionManagementService
 import org.hyperledger.identus.iam.authorization.DefaultPermissionManagementService
 import org.hyperledger.identus.iam.entity.http.controller.{EntityController, EntityControllerImpl}
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementControllerImpl
 import org.hyperledger.identus.issue.controller.IssueControllerImpl
 import org.hyperledger.identus.mercury.*
+import org.hyperledger.identus.oid4vci.controller.CredentialIssuerControllerImpl
+import org.hyperledger.identus.oid4vci.service.OIDCCredentialIssuerServiceImpl
+import org.hyperledger.identus.oid4vci.storage.InMemoryIssuanceSessionService
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.core.service.verification.VcVerificationServiceImpl
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
@@ -48,6 +53,7 @@ import org.hyperledger.identus.pollux.sql.repository.{
   JdbcCredentialRepository,
   JdbcCredentialSchemaRepository,
   JdbcCredentialStatusListRepository,
+  JdbcOID4VCIIssuerMetadataRepository,
   JdbcPresentationRepository,
   JdbcVerificationPolicyRepository,
   Migrations as PolluxMigrations
@@ -191,6 +197,7 @@ object MainApp extends ZIOAppDefault {
           DefaultAuthenticator.layer,
           DefaultPermissionManagementService.layer,
           EntityPermissionManagementService.layer,
+          Oid4vciAuthenticatorFactory.layer,
           // grpc
           GrpcModule.prismNodeStubLayer,
           // storage
@@ -205,7 +212,13 @@ object MainApp extends ZIOAppDefault {
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcOID4VCIIssuerMetadataRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
+          // oidc
+          CredentialIssuerControllerImpl.layer,
+          InMemoryIssuanceSessionService.layer,
+          OID4VCIIssuerMetadataServiceImpl.layer,
+          OIDCCredentialIssuerServiceImpl.layer,
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client

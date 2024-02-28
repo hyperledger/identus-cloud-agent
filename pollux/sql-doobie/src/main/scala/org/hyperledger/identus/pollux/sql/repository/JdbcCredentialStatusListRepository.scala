@@ -12,6 +12,7 @@ import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, BitStringErr
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.*
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.db.Implicits.{*, given}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.interop.catz.*
