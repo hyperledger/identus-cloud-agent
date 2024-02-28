@@ -1,0 +1,10 @@
+{
+  "name": "resource:///anoncred-presentation-schema-example.json",
+  "version": "1.0",
+  "attrNames": [
+    "name",
+    "sex",
+    "age"
+  ],
+  "issuerId": "did:prism:issuer"
+}

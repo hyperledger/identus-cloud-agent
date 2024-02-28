@@ -1,11 +1,10 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.mercury.protocol.presentproof._
+import io.iohk.atala.mercury.protocol.presentproof.*
+import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
-import io.iohk.atala.pollux.core.model._
-import io.iohk.atala.pollux.core.model.error.PresentationError._
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import io.iohk.atala.pollux.core.model.error.PresentationError.*
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.time.Instant
@@ -102,6 +101,37 @@ class PresentationRepositoryInMemory(
                 record.copy(
                   updatedAt = Some(Instant.now),
                   credentialsToUse = credentialsToUse.map(_.toList),
+                  protocolState = protocolState,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
+                )
+              )
+            )
+          } yield 1
+        )
+        .getOrElse(ZIO.succeed(0))
+    } yield count
+  }
+
+  def updateAnoncredPresentationWithCredentialsToUse(
+      recordId: DidCommID,
+      anoncredCredentialsToUseJsonSchemaId: Option[String],
+      anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
+      protocolState: ProtocolState
+  ): RIO[WalletAccessContext, Int] = {
+    for {
+      storeRef <- walletStoreRef
+      maybeRecord <- getPresentationRecord(recordId)
+      count <- maybeRecord
+        .map(record =>
+          for {
+            _ <- storeRef.update(r =>
+              r.updated(
+                recordId,
+                record.copy(
+                  updatedAt = Some(Instant.now),
+                  anoncredCredentialsToUseJsonSchemaId = anoncredCredentialsToUseJsonSchemaId,
+                  anoncredCredentialsToUse = anoncredCredentialsToUse,
                   protocolState = protocolState,
                   metaRetries = maxRetries,
                   metaLastFailure = None,

@@ -9,7 +9,7 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
-import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
+import io.iohk.atala.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
@@ -48,9 +48,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given requestCredentialGet: Get[RequestCredential] = Get[String].map(decode[RequestCredential](_).getOrElse(???))
   given requestCredentialPut: Put[RequestCredential] = Put[String].contramap(_.asJson.toString)
 
-  given acRequestMetadataGet: Get[CredentialRequestMetadata] =
-    Get[String].map(_.fromJson[CredentialRequestMetadata].getOrElse(???))
-  given acRequestMetadataPut: Put[CredentialRequestMetadata] = Put[String].contramap(_.toJson)
+  given acRequestMetadataGet: Get[AnoncredCredentialRequestMetadata] =
+    Get[String].map(_.fromJson[AnoncredCredentialRequestMetadata].getOrElse(???))
+  given acRequestMetadataPut: Put[AnoncredCredentialRequestMetadata] = Put[String].contramap(_.toJson)
 
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
@@ -62,8 +62,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   created_at,
         |   updated_at,
         |   thid,
-        |   schema_id,
+        |   schema_uri,
         |   credential_definition_id,
+        |   credential_definition_uri,
         |   credential_format,
         |   role,
         |   subject_id,
@@ -85,8 +86,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   ${record.createdAt},
         |   ${record.updatedAt},
         |   ${record.thid},
-        |   ${record.schemaId},
+        |   ${record.schemaUri},
         |   ${record.credentialDefinitionId},
+        |   ${record.credentialDefinitionUri},
         |   ${record.credentialFormat},
         |   ${record.role},
         |   ${record.subjectId},
@@ -129,8 +131,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
            |   created_at,
            |   updated_at,
            |   thid,
-           |   schema_id,
+           |   schema_uri,
            |   credential_definition_id,
+           |   credential_definition_uri,
            |   credential_format,
            |   role,
            |   subject_id,
@@ -196,8 +199,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
             |   created_at,
             |   updated_at,
             |   thid,
-            |   schema_id,
+            |   schema_uri,
             |   credential_definition_id,
+            |   credential_definition_uri,
             |   credential_format,
             |   role,
             |   subject_id,
@@ -246,8 +250,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   created_at,
         |   updated_at,
         |   thid,
-        |   schema_id,
+        |   schema_uri,
         |   credential_definition_id,
+        |   credential_definition_uri,
         |   credential_format,
         |   role,
         |   subject_id,
@@ -287,8 +292,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   created_at,
         |   updated_at,
         |   thid,
-        |   schema_id,
+        |   schema_uri,
         |   credential_definition_id,
+        |   credential_definition_uri,
         |   credential_format,
         |   role,
         |   subject_id,
@@ -377,7 +383,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   override def updateWithAnonCredsRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
-      metadata: CredentialRequestMetadata,
+      metadata: AnoncredCredentialRequestMetadata,
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int] = {
     val cxnIO =
@@ -426,6 +432,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         | SELECT
         |   id,
         |   issued_credential_raw,
+        |   credential_format,
         |   subject_id
         | FROM public.issue_credential_records
         | WHERE
@@ -433,6 +440,37 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   AND $inClauseFragment
         """.stripMargin
       .query[ValidIssuedCredentialRecord]
+      .to[Seq]
+
+    cxnIO
+      .transactWallet(xa)
+
+  }
+
+  override def getValidAnoncredIssuedCredentials(
+      recordIds: Seq[DidCommID]
+  ): RIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]] = {
+    val idAsStrings = recordIds.map(_.toString)
+    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail: _*)
+    val inClauseFragment = Fragments.in(fr"id", nel)
+
+    val cxnIO = sql"""
+                     | SELECT
+                     |   id,
+                     |   issue_credential_data,
+                     |   credential_format,
+                     |   schema_uri,
+                     |   credential_definition_uri,
+                     |   subject_id
+                     | FROM public.issue_credential_records
+                     | WHERE 1=1
+                     |   AND issue_credential_data IS NOT NULL
+                     |   AND schema_uri IS NOT NULL
+                     |   AND credential_definition_uri IS NOT NULL
+                     |   AND credential_format = 'AnonCreds'
+                     |   AND $inClauseFragment
+        """.stripMargin
+      .query[ValidFullIssuedCredentialRecord]
       .to[Seq]
 
     cxnIO

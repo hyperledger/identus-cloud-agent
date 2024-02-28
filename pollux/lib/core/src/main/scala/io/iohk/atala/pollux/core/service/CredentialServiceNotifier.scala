@@ -47,10 +47,10 @@ class CredentialServiceNotifier(
       pairwiseHolderDID: DidId,
       thid: DidCommID,
       credentialDefinitionGUID: UUID,
+      credentialDefinitionId: _root_.java.lang.String,
       claims: Json,
       validityPeriod: Option[Double],
-      automaticIssuance: Option[Boolean],
-      credentialDefinitionId: _root_.java.lang.String
+      automaticIssuance: Option[Boolean]
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createAnonCredsIssueCredentialRecord(
@@ -58,10 +58,10 @@ class CredentialServiceNotifier(
         pairwiseHolderDID,
         thid,
         credentialDefinitionGUID,
+        credentialDefinitionId,
         claims,
         validityPeriod,
-        automaticIssuance,
-        credentialDefinitionId
+        automaticIssuance
       )
     )
 
