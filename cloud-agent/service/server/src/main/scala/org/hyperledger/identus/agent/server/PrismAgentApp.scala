@@ -32,6 +32,32 @@ import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import org.hyperledger.identus.system.controller.SystemServerEndpoints
 import org.hyperledger.identus.verification.controller.VcVerificationServerEndpoints
+import io.iohk.atala.agent.walletapi.model.{Entity, Wallet, WalletSeed}
+import io.iohk.atala.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
+import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
+import io.iohk.atala.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEndpoints}
+import io.iohk.atala.castor.core.service.DIDService
+import io.iohk.atala.connect.controller.ConnectionServerEndpoints
+import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.credentialstatus.controller.CredentialStatusServiceEndpoints
+import io.iohk.atala.event.controller.EventServerEndpoints
+import io.iohk.atala.event.notification.EventNotificationConfig
+import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticator
+import io.iohk.atala.iam.entity.http.EntityServerEndpoints
+import io.iohk.atala.iam.oidc.CredentialIssuerServerEndpoints
+import io.iohk.atala.iam.wallet.http.WalletManagementServerEndpoints
+import io.iohk.atala.issue.controller.IssueServerEndpoints
+import io.iohk.atala.mercury.{DidOps, HttpClient}
+import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
+import io.iohk.atala.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
+import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
+import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
+import io.iohk.atala.presentproof.controller.PresentProofServerEndpoints
+import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.shared.models.WalletAdministrationContext
+import io.iohk.atala.shared.models.{HexString, WalletAccessContext, WalletId}
+import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
+import io.iohk.atala.system.controller.SystemServerEndpoints
 import zio.*
 import zio.metrics.*
 
@@ -135,6 +161,7 @@ object AgentHttpServer {
     allEntityEndpoints <- EntityServerEndpoints.all
     allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
     allEventEndpoints <- EventServerEndpoints.all
+    allOIDCEndpoints <- CredentialIssuerServerEndpoints.all
   } yield allCredentialDefinitionRegistryEndpoints ++
     allSchemaRegistryEndpoints ++
     allVerificationPolicyEndpoints ++
@@ -148,7 +175,8 @@ object AgentHttpServer {
     allSystemEndpoints ++
     allEntityEndpoints ++
     allWalletManagementEndpoints ++
-    allEventEndpoints
+    allEventEndpoints ++
+    allOIDCEndpoints
   def run =
     for {
       allEndpoints <- agentRESTServiceEndpoints
