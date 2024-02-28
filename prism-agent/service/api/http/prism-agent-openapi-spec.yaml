@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Open Enterprise Agent API Reference
-  version: 1.28.0
+  version: 1.29.0
   description: |2
 
     The Open Enterprise Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
@@ -20,16 +20,23 @@ tags:
 - name: Connections Management
   description: |2
 
-    The 'Connections Management' endpoints facilitate the initiation of connection flows between the current Agent and peer Agents, regardless of whether they reside in Cloud Agent or edge environments.
-    <br>
+    The __Connections Management__ endpoints facilitate the initiation of connection flows between the current Agent and peer Agents, regardless of whether they reside in Cloud Agent or edge environments.
     This implementation adheres to the DIDComm Messaging v2.0 - [Out of Band Messages](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) specification [section 9.5.4](https://identity.foundation/didcomm-messaging/spec/v2.0/#invitation) - to generate invitations.
     The <b>from</b> field of the out-of-band invitation message contains a freshly generated Peer DID that complies with the [did:peer:2](https://identity.foundation/peer-did-method-spec/#generating-a-didpeer2) specification.
     This Peer DID includes the 'uri' location of the DIDComm messaging service, essential for the invitee's subsequent execution of the connection flow.
-    <br>
     Upon accepting an invitation, the invitee sends a connection request to the inviter's DIDComm messaging service endpoint.
     The connection request's 'type' attribute must be specified as "https://atalaprism.io/mercury/connections/1.0/request".
     The inviter agent responds with a connection response message, indicated by a 'type' attribute of "https://atalaprism.io/mercury/connections/1.0/response".
     Both request and response types are proprietary to the Open Enterprise Agent ecosystem.
+- name: Issue Credentials Protocol
+  description: |2
+
+    The __Issue Credentials Protocol__ endpoints facilitate the initiation of credential issuance flows between the current Agent and peer Agents, regardless of whether they reside in Cloud Agent or edge environments.
+    This implementation adheres to the [Issue Credential Protocol 3.0](https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential) specification to execute credential issuance flows.
+    The flow is initiated by the issuer who creates a [credential offer](https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential#offer-credential) and sends it to the holder's DIDComm messaging service endpoint.
+    Upon accepting the received offer, the holder sends a [credential request](https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential#request-credential) to the issuer.
+    The issuer agent will then issue the credential (JWT or AnonCreds) and send an [issue credential](https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential#issue-credential) message containing the verifiable credential to the holder.
+    The current implementation only supports one of the three alternative beginnings proposed in the spec, which is "the Issuer begin with an offer".
 - name: Verification
   description: |2-
 
@@ -994,8 +1001,7 @@ paths:
       description: |2
 
         Retrieve a specific connection flow record from the Agent's database based in its unique `connectionId`.
-        The API returns a comprehensive collection of connection flow records within the system, regardless of their state.
-        The returned connection item includes essential metadata such as connection ID, thread ID, state, role, participant information, and other relevant details.
+        The returned item includes essential metadata such as connection ID, thread ID, state, role, participant information, and other relevant details.
       operationId: getConnection
       parameters:
       - name: connectionId
@@ -1529,9 +1535,13 @@ paths:
     post:
       tags:
       - Issue Credentials Protocol
-      summary: As a credential issuer, create a new credential offer to be sent to
-        a holder.
-      description: Creates a new credential offer in the database
+      summary: As a credential issuer, create a new credential offer that will be
+        sent to a holder Agent.
+      description: |2
+
+        Creates a new credential offer that will be delivered, through a previously established DIDComm connection, to a holder Agent.
+        The subsequent credential offer message adheres to the [Issue Credential Protocol 3.0 - Offer Credential](https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential#offer-credential) specification.
+        The created offer can be of two types: 'JWT' or 'AnonCreds'.
       operationId: createCredentialOffer
       requestBody:
         description: The credential offer object.
@@ -1578,8 +1588,12 @@ paths:
     get:
       tags:
       - Issue Credentials Protocol
-      summary: Gets the list of issue credential records.
-      description: Get the list of issue credential records paginated
+      summary: Retrieves the list of issue credential records from the Agent's database.
+      description: |2
+
+        Retrieves the list of issue credential records from the Agent's database.
+        The API returns a comprehensive collection of issue credential flow records within the system, regardless of their state.
+        The returned items include essential metadata such as record ID, thread ID, state, role, issued credential, and other relevant details.
       operationId: getCredentialRecords
       parameters:
       - name: offset
@@ -1600,13 +1614,15 @@ paths:
           format: int32
       - name: thid
         in: query
-        description: The thid of a DIDComm communication.
+        description: The thread ID associated with a specific credential issue flow
+          execution.
         required: false
         schema:
           type: string
       responses:
         '200':
-          description: The list of issue credential records.
+          description: The list of issue credential records available found in the
+            Agent's database.
           content:
             application/json:
               schema:
@@ -1636,19 +1652,25 @@ paths:
     get:
       tags:
       - Issue Credentials Protocol
-      summary: Gets an existing issue credential record by its unique identifier.
-      description: Gets issue credential records by record id
+      summary: Retrieves a specific issue credential flow record from the Agent's
+        database based on its unique `recordId`.
+      description: |2
+
+        Retrieves a specific issue credential flow record from the Agent's database based on its unique `recordId`.
+        The API returns a comprehensive collection of issue credential flow records within the system, regardless of their state.
+        The returned items include essential metadata such as record ID, thread ID, state, role, issued credential, and other relevant details.
       operationId: getCredentialRecord
       parameters:
       - name: recordId
         in: path
-        description: The unique identifier of the issue credential record.
+        description: The `recordId` uniquely identifying the issue credential flow
+          record.
         required: true
         schema:
           type: string
       responses:
         '200':
-          description: The issue credential record.
+          description: The specific issue credential flow record.
           content:
             application/json:
               schema:
@@ -1684,14 +1706,18 @@ paths:
     post:
       tags:
       - Issue Credentials Protocol
-      summary: As a holder, accepts a credential offer received from an issuer.
-      description: Accepts a credential offer received from a VC issuer and sends
-        back a credential request.
+      summary: As a holder, accept a new credential offer received from another issuer
+        Agent.
+      description: |2
+
+        As a holder, accept a new credential offer received from an issuer Agent.
+        The subsequent credential request message sent to the issuer adheres to the [Issue Credential Protocol 3.0 - Request Credential](https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential#request-credential) specification.
       operationId: acceptCredentialOffer
       parameters:
       - name: recordId
         in: path
-        description: The unique identifier of the issue credential record.
+        description: The `recordId` uniquely identifying the issue credential flow
+          record.
         required: true
         schema:
           type: string
@@ -1704,7 +1730,8 @@ paths:
         required: true
       responses:
         '200':
-          description: The issue credential offer was successfully accepted.
+          description: The issue credential offer was successfully accepted, and the
+            updated record is returned in the response body.
           content:
             application/json:
               schema:
@@ -1740,23 +1767,28 @@ paths:
     post:
       tags:
       - Issue Credentials Protocol
-      summary: As an issuer, issues the verifiable credential related to the specified
-        record.
-      description: Sends credential to a holder (holder DID is specified in credential
-        as subjectDid). Credential is constructed from the credential records found
-        by credential id.
+      summary: As an issuer, issues the verifiable credential related the identified
+        issuance flow record.
+      description: |2
+
+        As an issuer, issues the verifiable credential related the identified issuance flow record.
+        The JWT or AnonCreds credential will be generated and sent to the holder Agent asynchronously and through DIDComm.
+        Note that this endpoint should only be called when automatic issuance is disabled for this record (i.e. `automaticIssuance` attribute set to `false` at offer creation time).
       operationId: issueCredential
       parameters:
       - name: recordId
         in: path
-        description: The unique identifier of the issue credential record.
+        description: The `recordId` uniquely identifying the issue credential flow
+          record.
         required: true
         schema:
           type: string
       responses:
         '200':
-          description: The request was processed successfully and the credential will
-            be issued asynchronously.
+          description: |2
+
+            The issue credential request was successfully processed, and the updated record is returned in the response body.
+            The credential will be generated and sent to the holder Agent asynchronously.
           content:
             application/json:
               schema:
@@ -2830,8 +2862,10 @@ components:
       properties:
         subjectId:
           type: string
-          description: The short-form subject Prism DID to which the JWT verifiable
-            credential will be issued.This parameter is used for JWT credentials only.
+          description: |2
+
+            The short-form subject Prism DID to which the JWT verifiable credential will be issued.
+            This parameter only applies if the offer is of type 'JWT'.
           example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
     ActionType:
       type: string
@@ -2842,6 +2876,98 @@ components:
       - REMOVE_KEY
       - REMOVE_SERVICE
       - UPDATE_SERVICE
+    AnoncredCredentialProofV1:
+      required:
+      - credential
+      type: object
+      properties:
+        credential:
+          type: string
+        requestedAttribute:
+          type: array
+          items:
+            type: string
+        requestedPredicate:
+          type: array
+          items:
+            type: string
+    AnoncredCredentialProofsV1:
+      type: object
+      properties:
+        credentialProofs:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnoncredCredentialProofV1'
+      description: A list of proofs from the Anoncred library, each corresponding
+        to a credential.
+    AnoncredNonRevokedIntervalV1:
+      type: object
+      properties:
+        from:
+          type: integer
+          format: int32
+        to:
+          type: integer
+          format: int32
+    AnoncredPresentationRequestV1:
+      required:
+      - requested_attributes
+      - requested_predicates
+      - name
+      - nonce
+      - version
+      type: object
+      properties:
+        requested_attributes:
+          $ref: '#/components/schemas/Map_AnoncredRequestedAttributeV1'
+        requested_predicates:
+          $ref: '#/components/schemas/Map_AnoncredRequestedPredicateV1'
+        name:
+          type: string
+        nonce:
+          type: string
+        version:
+          type: string
+        non_revoked:
+          $ref: '#/components/schemas/AnoncredNonRevokedIntervalV1'
+      description: Anoncred Presentation Request
+      example: AnoncredPresentationRequestV1(Map(attribute1 -> AnoncredRequestedAttributeV1(Attribute
+        1,List(Map(cred_def_id -> credential_definition_id_of_attribute1)),Some(AnoncredNonRevokedIntervalV1(Some(1635734400),Some(1735734400))))),Map(predicate1
+        -> AnoncredRequestedPredicateV1(Predicate 1,>=,18,List(Map(schema_id -> schema_id_of_predicate1)),Some(AnoncredNonRevokedIntervalV1(Some(1635734400),None)))),Example
+        Presentation Request,1234567890,1.0,None)
+    AnoncredRequestedAttributeV1:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+        restrictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Map_String'
+        non_revoked:
+          $ref: '#/components/schemas/AnoncredNonRevokedIntervalV1'
+    AnoncredRequestedPredicateV1:
+      required:
+      - name
+      - p_type
+      - p_value
+      type: object
+      properties:
+        name:
+          type: string
+        p_type:
+          type: string
+        p_value:
+          type: integer
+          format: int32
+        restrictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Map_String'
+        non_revoked:
+          $ref: '#/components/schemas/AnoncredNonRevokedIntervalV1'
     ApiKeyAuthenticationRequest:
       required:
       - entityId
@@ -3099,42 +3225,54 @@ components:
           example: 3600.0
         schemaId:
           type: string
-          description: The unique identifier of the schema used for this credential
-            offer.
-          example: https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676
+          description: |2
+
+            The URL pointing to the JSON schema that will be used for this offer (should be 'http' or 'https').
+            When dereferenced, the returned content should be a JSON schema compliant with the '[Draft 2020-12](https://json-schema.org/draft/2020-12/release-notes)' version of the specification.
+            Note that this parameter only applies when the offer is of type 'JWT'.
+          example: https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema
         credentialDefinitionId:
           type: string
-          description: The unique identifier of the credential definition used for
-            this credential offer (AnonCreds only)
+          description: |2
+
+            The unique identifier (UUID) of the credential definition that will be used for this offer.
+            It should be the identifier of a credential definition that exists in the issuer agent's database.
+            Note that this parameter only applies when the offer is of type 'AnonCreds'.
           format: uuid
           example: d9569cec-c81e-4779-aa86-0d5994d82676
         credentialFormat:
           type: string
-          description: The format used for this credential offer (default to 'JWT')
+          description: The credential format for this offer (defaults to 'JWT')
           example: JWT
         claims:
-          description: The claims that will be associated with the issued verifiable
-            credential.
+          description: |2
+
+            The set of claims that will be included in the issued credential.
+            The JSON object should comply with the schema applicable for this offer (i.e. 'schemaId' or 'credentialDefinitionId').
           example:
             firstname: Alice
             lastname: Wonderland
         automaticIssuance:
           type: boolean
-          description: Specifies whether or not the credential should be automatically
-            generated and issued when receiving the `CredentialRequest` from the holder.
-            If set to `false`, a manual approval by the issuer via API call will be
-            required for the VC to be issued.
+          description: |2
+
+            Specifies whether or not the credential should be automatically generated and issued when receiving the `CredentialRequest` from the holder.
+            If set to `false`, a manual approval by the issuer via another API call will be required for the VC to be issued.
           example: true
         issuingDID:
           type: string
-          description: The issuer DID of the verifiable credential (JWT credentials
-            only)
-          example: did:prism:issuerofverifiablecredentials
+          description: |2
+
+            The short-form issuer Prism DID by which the JWT verifiable credential will be issued.
+            Note that this parameter only applies when the offer is type 'JWT'.
+          example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
         connectionId:
           type: string
-          description: The unique identifier of a DIDComm connection that already
-            exists between the issuer and the holder, and that will be used to execute
-            the issue credential protocol.
+          description: |2
+
+            The unique identifier of a DIDComm connection that already exists between the this issuer agent and the holder cloud or edeg agent.
+            It should be the identifier of a connection that exists in the issuer agent's database.
+            This connection will be used to execute the issue credential protocol.
           format: uuid
           example: d9569cec-c81e-4779-aa86-0d5994d82676
     CreateManagedDIDResponse:
@@ -3927,50 +4065,61 @@ components:
       properties:
         recordId:
           type: string
-          description: The unique identifier of the issue credential record.
+          description: |2
+
+            The unique identifier of the issue credential record.
+            This identifier is internal to the agent and not shared between issuer and holder.
           example: 80d612dc-0ded-4ac9-90b4-1b8eabb04545
         thid:
           type: string
-          description: The unique identifier of the thread this credential record
-            belongs to. The value will identical on both sides of the issue flow (issuer
-            and holder)
+          description: |2
+
+            The unique identifier of the 'thread' identifying the specific issuance flow execution as a whole.
+            This same unique 'thid' value is included in every message exchanged during the flow execution.
+            It is shared between the issuer and the holder agents and its value identical on both sides.
           example: 0527aea1-d131-3948-a34d-03af39aba8b4
         credentialFormat:
           type: string
-          description: The format used for this credential offer (default to 'JWT')
+          description: The credential format for this offer.
           example: JWT
           enum:
           - JWT
           - AnonCreds
         subjectId:
           type: string
-          description: The identifier (e.g DID) of the subject to which the verifiable
-            credential will be issued.
-          example: did:prism:subjectofverifiablecredentials
+          description: |2
+
+            The short-form subject Prism DID to which the JWT verifiable credential will be or has been issued.
+            This parameter only applies if the offer is of type 'JWT' and will only exist in the cloud agent of the holder (it will be empty on the issuer side).
+          example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
         validityPeriod:
           type: number
-          description: The validity period in seconds of the verifiable credential
-            that will be issued.
+          description: |2
+
+            The validity period in seconds of the verifiable credential that will be issued.
+            This parameter will only exist in the cloud agent of the issuer (it will be empty on the holder side).
           format: double
           example: 3600.0
         claims:
-          description: The claims that will be associated with the issued verifiable
-            credential.
+          description: |2
+
+            The set of claims included in the issued credential.
           example:
             firstname: Alice
             lastname: Wonderland
         automaticIssuance:
           type: boolean
-          description: Specifies whether or not the credential should be automatically
-            generated and issued when receiving the `CredentialRequest` from the holder.
-            If set to `false`, a manual approval by the issuer via API call will be
-            required for the VC to be issued.
+          description: |2
+
+            Specifies whether or not the credential is automatically generated and issued when receiving the `CredentialRequest` from the holder.
+            If set to `false`, a manual approval by the issuer via another API call will be required for the VC to be issued.
+            This parameter will only exist in the cloud agent of the issuer (it will be empty on the holder side).
           example: true
         createdAt:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2024-02-20T15:20:56.701907131Z'
+          example: '2024-02-28T18:30:46.014514607Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -3978,8 +4127,7 @@ components:
           format: date-time
         role:
           type: string
-          description: The role played by the Prism agent in the credential issuance
-            flow.
+          description: The role played by the agent in the credential issuance flow.
           example: Issuer
           enum:
           - Issuer
@@ -3987,7 +4135,7 @@ components:
         protocolState:
           type: string
           description: The current state of the issue credential protocol execution.
-          example: OfferPending
+          example: CredentialSent
           enum:
           - OfferPending
           - OfferSent
@@ -4005,57 +4153,64 @@ components:
           - ProblemReportReceived
         credential:
           type: string
-          description: The base64-encoded verifiable credential, in JWT or AnonCreds
-            format, that has been sent by the issuer.
+          description: The base64-encoded credential that was issued by the issuer
+            agent, in 'JWT' or 'AnonCreds' format depending on the offer type.
+          example: eyJzY2hlbWFfaWQiOiJodHRwOi8vaG9zdC5kb2NrZXIuaW50ZXJuYWw6ODA4MC9wcmlzbS1hZ2VudC9zY2hlbWEtcmVnaXN0cnkvc2NoZW1hcy8zOTZmZDE2OC02YmVmLTMyNDItYTJiNy1hNTZlYWM1MDc2OWMvc2NoZW1hIiwiY3JlZF9kZWZfaWQiOiJodHRwOi8vMTkyLjE2OC4wLjE0OjgwODAvcHJpc20tYWdlbnQvY3JlZGVudGlhbC1kZWZpbml0aW9uLXJlZ2lzdHJ5L2RlZmluaXRpb25zLzNhZmQxZWJkLWIzN2ItMzRiNC1iMWQ2LWYwMDQ5ZmU5ZmQ1Mi9kZWZpbml0aW9uIiwicmV2X3JlZ19pZCI6bnVsbCwidmFsdWVzIjp7ImdpdmVuTmFtZSI6eyJyYXciOiJBbGljZSIsImVuY29kZWQiOiIyNzAzNDY0MDAyNDExNzMzMTAzMzA2MzEyODA0NDAwNDMxODIxODQ4NjgxNjkzMTUyMDg4NjQwNTUzNTY1OTkzNDQxNzQzODc4MTUwNyJ9LCJlbWFpbEFkZHJlc3MiOnsicmF3IjoiYWxpY2VAd29uZGVybGFuZC5jb20iLCJlbmNvZGVkIjoiNzUxMDcwNDYzNDAxNjU2NzcwMTE5NDIwNzU2NDQwMDkwNjY1NDE2NjExNDg4MjI1ODkwMzM2Nzk4NjEyMDkxODY0OTI3Njg2Njk5MjQifSwiZmFtaWx5TmFtZSI6eyJyYXciOiJXb25kZXJsYW5kIiwiZW5jb2RlZCI6IjE2NzkwODQ5MzEyMzc0Nzk0NzM2ODEzMzc3NTY3MjUzODUxMzczNjA3OTcwNDczMzc3NzAxNDc3MjY5MTk0MDE5NTU3NjU0NTYyMDM1In0sImRhdGVPZklzc3VhbmNlIjp7InJhdyI6IjIwMjAtMTEtMTNUMjA6MjA6MzkrMDA6MDAiLCJlbmNvZGVkIjoiNTM4Njg1NTk1MzE3NDg0NjcwOTc1MjA4NTkwNTMwODE4MzU3NDc0MzU2MTE2MDY4NDIwNDExNDc1ODIwMDQ4NzQzNDgwNDYxNjQ2ODUifSwiZHJpdmluZ0xpY2Vuc2VJRCI6eyJyYXciOiIxMjM0NSIsImVuY29kZWQiOiIxMjM0NSJ9LCJkcml2aW5nQ2xhc3MiOnsicmF3IjoiMyIsImVuY29kZWQiOiIzIn19LCJzaWduYXR1cmUiOnsicF9jcmVkZW50aWFsIjp7Im1fMiI6IjMzNjg4ODUzNTU3NTg2MDI3MDg3OTY5ODAzMjgzMzcyNzE4Nzc5MDAzNDAzMDgwODMzMjQzNDIxMTU3MDA5NzE4MDUzMTMyNDIwODAwIiwiYSI6IjEwMjUxMTg2OTU5MTg2NDc2NDcwNzU0MTQ0MDg5NDE3MjI4OTM1Mjk0ODgxNDExMTc5ODYwNzgxODIxODY2OTcyODIyMzg1MTQ1OTcwNDA4Mzk2Mjg5OTM2NzgzNTUxMDk4NDA2MjE2MjcwNjgyNDM1ODg3NjY0OTI0MzQwMDg3NTY4MDMyNzMyMzYwMDc5MTI2ODk2MDU3NDA3MTYyMjI0NDgwODM2NTgzNjY2MzQ1MzA5NzQ0NDE5NjA0ODg5ODA1NDU3Mjc4NDE0MjgyMjA4NzIzMDIwNDQzNzk0MjM0NzU1NTgwNjA1MTE1NjU3NTQ4NjE1MTgwNTU1ODEzMjA0MzQyNjkzNjYyODQzNzY4MjQ2NDM1NjU4MjQ5MDYyMjUxMzYwNzE2MzEyNzM4MjAyMTU2NTEwNzM2NDY1ODk2NjIyNDY4MDk3OTY0OTk0NTA1NDUwMjczMzQ2Mzk4MzY4NzcxNDM3MzAzNTI2NjE0NTk4NTU4Mjg0MTAxNzk0NjYwOTAxNDMwOTI4MzY1MTk3MzA2MDIxMzQ5OTQ3MDI2MzIzMzEwOTE3MjgzODM0ODY2NzI1MzgyMDg4NDIzNDU1NzE0MDY3MTk1NDEzMDA4MzAxNTQ2MTA1NzY4NTAxNzMxNjEwMjk3MDY5ODUyNjAxMTgxMTM3OTg2NjM2MDU2MjI4MTE4NzUzMTM1NjMxMDIwNzA0MzYxODQxNTg0MjA0NzIwMDU1NjY0ODIxMTczOTA3MzYyMTQzNTQyNjk1NTExMTMxNzU3NTE0OTUxMDY2ODQ2MzIyMDAyNzYxMzg4MzIwNjkyNSIsImUiOiIyNTkzNDQ3MjMwNTUwNjIwNTk5MDcwMjU0OTE0ODA2OTc1NzE5MzgyNzc4ODk1MTUxNTIzMDYyNDk3Mjg1ODMxMDU2NjU4MDA3MTMzMDY3NTkxNDk5ODE2OTA1NTkxOTM5ODcxNDMwMTIzNjc5MTMyMDYyOTkzMjM4OTk2OTY5NDIyMTMyMzU5NTY3NDI5Mjk4MTYwMTkzMjA4MDYyNzM5NTc5MDExNDE1Njk0NDAwMjUyMTkiLCJ2IjoiMTAwODYwMTE5NjExNDQ0MjUxODg1ODcyNzA0OTEyNDQwMTQzNTA0MDEwMDQ3NzE3MzYxNzgxMjIwOTQ0OTA3OTE3ODM0NTE3NjQyOTk5MDgxMjEzMDcyNTI4NzU5NTczMzIyNDM1NjU5NzY4OTI2NzA4MjE0NTI5Njg0Njg5NTc5MjAwNzY4MDkxMTM0OTM0MzYxNDUyNzM5ODUwMjEyODc1MDUwMzg5NjkzOTMxMjEzMDg2MTUyOTM4NzA2ODc4MzQyNjIxNjQ1MTc2NDY5NTU0NDMyNTY2MDk0MDY5NjU2ODkzNDg1NjQyNDI2MTc0MjA5MjY3OTI1MDEzODkxMTU2MzAzMzY0MzUwMzgwNTUwMzQ4OTk3MDI1Nzc3NDc5NDg3ODI0NDkzNzg4MDYwNTg1NzMxMTY2NDM5OTE1MTc3ODUyNTYwNjczMjkwODA2Mjk5ODEyOTY1NjMwNDc2OTc0NzExNDY4MDE1MzY4NzM2NTc3MDEzNDE2NjE3ODc0MTc3ODgwNjMzNTc1OTAwMzQyODM5MDUxNjc4NjExNDMxMTk5Mzk3NTIzMDE5Njc0NTA3MjM0NDAzNzcyMTcxMDM3Nzg3NzUyNTMwMjIyODYyNDg5OTMzMzczMzY1MjIwNTc4MDIzNDY2NjkyMDQ4MTA0NTE0NjczMzMwMzMwNzQ1OTEyMjUzNzQ0MDQwMjI1NTM4NjMxNDk2MjY4NDM0MDk5Njk3Nzk1NTY5MDA3MTExMjQzMTg4MTc3MzUyNjE5MTUxNzk1NjEzNTAwNjg5MzUwMzQyNTk3NjA1ODY2MjUyOTYwMjQ3ODg4OTE2NDIwNDcyMDEzNDYzMTA5NTA5MjMxNDcwNjc4MDc5MDI2Mzc3MzY4NDEwNTIyODg3NDExOTIyMzE4Njk5NzA4MjkxNzI4NTg3ODgzNjExODMyMjU4MTE5MzI2ODQ5NjkxODI1MDI2MzU2NDQ1OTM1NjYxOTkyODEyNjIwNDY4MzAxMjEwMzMwNTA1NjEwMjYyNTU5MDk5NDgwNzcxMjA0NDU0ODg0MDI5ODA3MDcwOTM4NDU5OTgxNDM1NjQyNTkzNTQyODc0ODAifSwicl9jcmVkZW50aWFsIjpudWxsfSwic2lnbmF0dXJlX2NvcnJlY3RuZXNzX3Byb29mIjp7InNlIjoiMjMwNDc5NjEzNTA0MDI5NTI3NTk3NzM3MTY4NjY0OTQ5MzQwNzk1NTg1ODM5NTQ4OTI2MTEwMjQ2NzU0NzA3OTgyNjc2MDEyMjIyMTYyNzQyNTQ2Nzg4NDI3MDA4MDQ5NzIyNDMwNDgyODAyOTYyNTgxNDE2ODI2MjEzMTgwMTE4MTA4MTA1Nzg1NjA4OTg5NjEyNTU0ODMwOTE5MjU4MTI0NDgyMzUwNTQ2MTkxOTQ5NTU5ODM2NTk4NzcxMTE0MzI1NjA5MTI4MjUxMTc1MDM4NDMxNDA2NzM2NTc1MDkwMzk5ODk0MDQzMjc3MTg5MTM3MzE1NTM5NTQ2MTE3Mjk2NTM1OTMyOTQ3NDk3NTU0Mjg0NDc1NjkxNDE1NDEzMzIzNjE2OTYyNTk1NDAzMTkxMjQ4ODY2NDE1MjI0NDY2MTU2OTgyODg4OTkyNTAxNjc1NTcwNjI0MzQ2MzMyMTE0NjMzMDQ1NzUxNDg3NzU3ODM3MDA5Mzc3ODMwNTI1MTU5MjUwNjMwMjcxNjY3NDQxMDI3MTM5MjE3Nzc5ODU5MDExMjUxOTc1OTczNjY0NTc4MjMxOTk1Mzc3OTE4Mjg4MTkyNjIyMDM5NDEzMDM0ODg5MjM3Mzg2NzU4Mzg3NTcwNTMxNDc1OTQxMDU2MTg3NzUzOTEyNDA0NzkwNzQ5NzgzMTM0OTk3MDgzODk3NjE5MTczMTg3MDg1MzE1MjQ3NTM4NjU2OTcwOTE0NzI2MzM1ODA1ODY5OTk3NzI3OTc5NTUwMjIzNjkzMDA2MjcwNjIzNTc3NjM2NTIyNjIyNTY0MTE4NTMiLCJjIjoiOTM2NzQ1MDczNzcxNzQ3MjE3OTg3OTY2OTYzMDQxNzUzMTE4NDk0NDE4NDQ0NzQ1MDI3NzAyMjI3Nzk0NzU1ODQ2Mjg3ODMzMzU4NTAifSwicmV2X3JlZyI6bnVsbCwid2l0bmVzcyI6bnVsbH0=
         issuingDID:
           type: string
-          description: Issuer DID of the verifiable credential object.
-          example: did:prism:issuerofverifiablecredentials
+          description: |2
+
+            The short-form issuer Prism DID by which the JWT verifiable credential will be or has been issued.
+            Note that this parameter only applies when the offer is type 'JWT'.
+          example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
         metaRetries:
           type: integer
           description: The maximum background processing attempts remaining for this
-            record
+            record.
           format: int32
           example: 5
     IssueCredentialRecordPage:
       required:
-      - self
       - kind
+      - self
       - pageOf
       type: object
       properties:
-        self:
-          type: string
-          description: A string field containing the URL of the current API endpoint
-          example: /prism-agent/schema-registry/schemas?skip=10&limit=10
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/IssueCredentialRecord'
+          description: |2
+
+            An sequence of IssueCredentialRecord resources representing the list of credential records that the paginated response contains.
+          example: []
         kind:
           type: string
-          description: A string field containing the URL of the current API endpoint
-          example: /prism-agent/schema-registry/schemas?skip=10&limit=10
+          description: A string that identifies the type of resource being returned
+            in the response.
+          example: Collection
+        self:
+          type: string
+          description: The URL that uniquely identifies the resource being returned
+            in the response.
+          example: /prism-agent/issue-credentials/records?offset=10&limit=10
         pageOf:
           type: string
           description: A string field indicating the type of resource that the contents
-            field contains
-          example: /prism-agent/schema-registry/schemas
+            field contains.
+          example: /prism-agent/issue-credentials/records
         next:
           type: string
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
-          example: /prism-agent/schema-registry/schemas?skip=20&limit=10
+          example: /prism-agent/issue-credentials/records?offset=20&limit=10
         previous:
           type: string
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
-          example: /prism-agent/schema-registry/schemas?skip=0&limit=10
-        contents:
-          type: array
-          items:
-            $ref: '#/components/schemas/IssueCredentialRecord'
-          description: A sequence of IssueCredentialRecord objects representing the
-            list of credential records that the API response contains
-          example: []
+          example: /prism-agent/issue-credentials/records?offset=0&limit=10
     Json:
       description: The service endpoint. Can contain multiple possible values as described
         in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did)
@@ -4122,6 +4277,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ManagedDID'
+    Map_AnoncredRequestedAttributeV1:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/AnoncredRequestedAttributeV1'
+    Map_AnoncredRequestedPredicateV1:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/AnoncredRequestedPredicateV1'
     Map_String:
       type: object
       additionalProperties:
@@ -4453,6 +4616,8 @@ components:
           description: The unique identifier of the issue credential record - and
             hence VC - to use as the prover accepts the presentation request. Only
             applicable on the prover side when the action is `request-accept`.
+        anoncredPresentationRequest:
+          $ref: '#/components/schemas/AnoncredCredentialProofsV1'
     RequestPresentationInput:
       required:
       - connectionId
@@ -4473,6 +4638,8 @@ components:
           description: The type of proofs requested in the context of this proof presentation
             request (e.g., VC schema, trusted issuers, etc.)
           example: []
+        anoncredPresentationRequest:
+          $ref: '#/components/schemas/AnoncredPresentationRequestV1'
         credentialFormat:
           type: string
           description: The credential format (default to 'JWT')
