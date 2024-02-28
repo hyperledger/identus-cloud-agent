@@ -1,7 +1,6 @@
 package io.iohk.atala.pollux.credentialdefinition
 
-import io.iohk.atala.agent.walletapi.model.BaseEntity
-import io.iohk.atala.agent.walletapi.model.Entity
+import io.iohk.atala.agent.walletapi.model.{BaseEntity, Entity}
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
@@ -112,25 +111,22 @@ object CredentialDefinitionBasicSpec extends ZIOSpecDefault with CredentialDefin
           maybeValidPublicDefinition <- PublicCredentialDefinitionSerDesV1.schemaSerDes.validate(
             fetchedCredentialDefinition.definition.toString()
           )
-          assertValidPublicDefinition = assert(maybeValidPublicDefinition)(Assertion.isTrue)
+          assertValidPublicDefinition = assert(maybeValidPublicDefinition)(Assertion.isUnit)
           maybeValidKeyCorrectnessProof <- ProofKeyCredentialDefinitionSchemaSerDesV1.schemaSerDes.validate(
             fetchedCredentialDefinition.keyCorrectnessProof.toString()
           )
-          assertValidKeyCorrectnessProof = assert(maybeValidKeyCorrectnessProof)(Assertion.isTrue)
+          assertValidKeyCorrectnessProof = assert(maybeValidKeyCorrectnessProof)(Assertion.isUnit)
           storage <- ZIO.service[GenericSecretStorage]
           maybeDidSecret <- storage
             .get[UUID, CredentialDefinitionSecret](fetchedCredentialDefinition.guid)
             .provideSomeLayer(Entity.Default.wacLayer)
           maybeValidPrivateDefinitionZIO = maybeDidSecret match {
             case Some(didSecret) =>
-              val validPrivateDefinition =
-                PrivateCredentialDefinitionSchemaSerDesV1.schemaSerDes.validate(didSecret.json.toString())
-              validPrivateDefinition
-            case None =>
-              ZIO.succeed(false)
+              PrivateCredentialDefinitionSchemaSerDesV1.schemaSerDes.validate(didSecret.json.toString())
+            case None => ZIO.unit
           }
           maybeValidPrivateDefinition <- maybeValidPrivateDefinitionZIO
-          assertValidPrivateDefinition = assert(maybeValidPrivateDefinition)(Assertion.isTrue)
+          assertValidPrivateDefinition = assert(maybeValidPrivateDefinition)(Assertion.isUnit)
         } yield statusCodeIs201 &&
           credentialDefinitionIsCreated &&
           credentialDefinitionIsFetched &&

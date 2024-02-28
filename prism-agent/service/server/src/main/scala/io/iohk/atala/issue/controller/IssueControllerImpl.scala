@@ -78,21 +78,23 @@ class IssueControllerImpl(
                 .mapError(_ =>
                   ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
                 )
+              credentialDefinitionId = {
+                val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl
+                val urlSuffix =
+                  s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
+                val urlPrefix = if (publicEndpointUrl.endsWith("/")) publicEndpointUrl else publicEndpointUrl + "/"
+                s"$urlPrefix$urlSuffix"
+              }
               record <- credentialService
                 .createAnonCredsIssueCredentialRecord(
                   pairwiseIssuerDID = didIdPair.myDID,
                   pairwiseHolderDID = didIdPair.theirDid,
                   thid = DidCommID(),
                   credentialDefinitionGUID = credentialDefinitionGUID,
+                  credentialDefinitionId = credentialDefinitionId,
                   claims = jsonClaims,
                   validityPeriod = request.validityPeriod,
-                  automaticIssuance = request.automaticIssuance.orElse(Some(true)), {
-                    val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl
-                    val urlSuffix =
-                      s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
-                    val urlPrefix = if (publicEndpointUrl.endsWith("/")) publicEndpointUrl else publicEndpointUrl + "/"
-                    s"$urlPrefix$urlSuffix"
-                  }
+                  automaticIssuance = request.automaticIssuance.orElse(Some(true))
                 )
             } yield record
     } yield IssueCredentialRecord.fromDomain(outcome)

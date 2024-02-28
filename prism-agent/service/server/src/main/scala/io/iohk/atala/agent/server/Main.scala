@@ -161,7 +161,7 @@ object MainApp extends ZIOAppDefault {
           DIDServiceImpl.layer,
           EntityServiceImpl.layer,
           ManagedDIDServiceWithEventNotificationImpl.layer,
-          PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
+          LinkSecretServiceImpl.layer >>> PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
           VerificationPolicyServiceImpl.layer,
           WalletManagementServiceImpl.layer,
           // authentication

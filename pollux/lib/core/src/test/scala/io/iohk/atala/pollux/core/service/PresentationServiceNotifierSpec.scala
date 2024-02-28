@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.event.notification.{EventNotificationService, EventNotificationServiceImpl}
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.presentproof.{Presentation, RequestPresentation}
+import io.iohk.atala.mercury.protocol.presentproof.{PresentCredentialRequestFormat, Presentation, RequestPresentation}
 import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import zio.mock.Expectation
@@ -30,13 +30,15 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
     None,
     None,
     None,
+    None,
+    None,
     5,
     None,
     None
   )
 
   private val verifierHappyFlowExpectations =
-    MockPresentationService.CreatePresentationRecord(
+    MockPresentationService.CreateJwtPresentationRecord(
       assertion = Assertion.anything,
       result = Expectation.value(record)
     ) ++
@@ -100,14 +102,13 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
           svc <- ZIO.service[PresentationService]
           ens <- ZIO.service[EventNotificationService]
 
-          record <- svc.createPresentationRecord(
+          record <- svc.createJwtPresentationRecord(
             DidId(""),
             DidId(""),
             DidCommID(""),
             None,
             Seq.empty,
-            None,
-            format = CredentialFormat.JWT,
+            None
           )
           _ <- svc.markRequestPresentationSent(record.id)
           _ <- svc.receivePresentation(presentation(record.thid.value))
@@ -170,7 +171,7 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
           svc <- ZIO.service[PresentationService]
           ens <- ZIO.service[EventNotificationService]
 
-          _ <- svc.receiveRequestPresentation(None, requestPresentationJWT)
+          _ <- svc.receiveRequestPresentation(None, requestPresentation(PresentCredentialRequestFormat.JWT))
           _ <- svc.acceptRequestPresentation(record.id, Seq.empty)
           _ <- svc.markPresentationGenerated(record.id, presentation(record.thid.value))
           _ <- svc.markPresentationSent(record.id)

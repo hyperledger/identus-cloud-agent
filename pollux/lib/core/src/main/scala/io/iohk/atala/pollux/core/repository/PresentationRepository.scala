@@ -51,6 +51,13 @@ trait PresentationRepository {
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int]
 
+  def updateAnoncredPresentationWithCredentialsToUse(
+      recordId: DidCommID,
+      anoncredCredentialsToUseJsonSchemaId: Option[String],
+      anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
+      protocolState: ProtocolState
+  ): RIO[WalletAccessContext, Int]
+
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]

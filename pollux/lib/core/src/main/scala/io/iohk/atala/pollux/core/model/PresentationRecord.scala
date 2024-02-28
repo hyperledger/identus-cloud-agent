@@ -1,12 +1,12 @@
 package io.iohk.atala.pollux.core.model
 
-import io.iohk.atala.mercury.protocol.presentproof.ProposePresentation
-import io.iohk.atala.mercury.protocol.presentproof.RequestPresentation
-import io.iohk.atala.mercury.protocol.presentproof.Presentation
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+
+type AnoncredCredentialProofs = zio.json.ast.Json
 
 final case class PresentationRecord(
     id: DidCommID,
@@ -23,6 +23,8 @@ final case class PresentationRecord(
     proposePresentationData: Option[ProposePresentation],
     presentationData: Option[Presentation],
     credentialsToUse: Option[List[String]],
+    anoncredCredentialsToUseJsonSchemaId: Option[String],
+    anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
     metaRetries: Int,
     metaNextRetry: Option[Instant],
     metaLastFailure: Option[String],
