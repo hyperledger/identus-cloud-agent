@@ -11,6 +11,7 @@ import sttp.apispec.{SecurityScheme, Tag}
 import sttp.model.headers.AuthenticationScheme
 
 import scala.collection.immutable.ListMap
+import io.iohk.atala.issue.controller.IssueEndpoints
 
 object DocModels {
 
@@ -110,6 +111,7 @@ object DocModels {
       .tags(
         List(
           ConnectionEndpoints.tag,
+          IssueEndpoints.tag,
           VerificationPolicyEndpoints.tag,
           SchemaRegistryEndpoints.tag,
           CredentialDefinitionRegistryEndpoints.tag,
