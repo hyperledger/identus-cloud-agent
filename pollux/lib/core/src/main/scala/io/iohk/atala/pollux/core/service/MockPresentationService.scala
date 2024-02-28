@@ -2,22 +2,31 @@ package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProofType, ProposePresentation, RequestPresentation}
+import io.iohk.atala.pollux.anoncreds.AnoncredPresentation
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
+import io.iohk.atala.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.mock.{Mock, Proxy}
 import zio.{IO, URLayer, ZIO, ZLayer, mock}
 
 import java.time.Instant
 import java.util.UUID
-import io.iohk.atala.pollux.core.model.CredentialFormat
 
 object MockPresentationService extends Mock[PresentationService] {
 
-  object CreatePresentationRecord
+  object CreateJwtPresentationRecord
       extends Effect[
         (DidId, DidId, DidCommID, Option[String], Seq[ProofType], Option[Options]),
+        PresentationError,
+        PresentationRecord
+      ]
+
+  object CreateAnoncredPresentationRecord
+      extends Effect[
+        (DidId, DidId, DidCommID, Option[String], AnoncredPresentationRequestV1),
         PresentationError,
         PresentationRecord
       ]
@@ -34,7 +43,16 @@ object MockPresentationService extends Mock[PresentationService] {
 
   object MarkPresentationVerificationFailed extends Effect[DidCommID, PresentationError, PresentationRecord]
 
+  object VerifyAnoncredPresentation extends Effect[DidCommID, PresentationError, PresentationRecord]
+
   object AcceptRequestPresentation extends Effect[(DidCommID, Seq[String]), PresentationError, PresentationRecord]
+
+  object AcceptAnoncredRequestPresentation
+      extends Effect[
+        (DidCommID, AnoncredCredentialProofsV1),
+        PresentationError,
+        PresentationRecord
+      ]
 
   object RejectRequestPresentation extends Effect[DidCommID, PresentationError, PresentationRecord]
 
@@ -54,25 +72,43 @@ object MockPresentationService extends Mock[PresentationService] {
       proxy <- ZIO.service[Proxy]
     } yield new PresentationService {
 
-      override def createPresentationRecord(
+      override def createJwtPresentationRecord(
           pairwiseVerifierDID: DidId,
           pairwiseProverDID: DidId,
           thid: DidCommID,
           connectionId: Option[String],
           proofTypes: Seq[ProofType],
-          options: Option[Options],
-          format: CredentialFormat,
+          options: Option[Options]
       ): IO[PresentationError, PresentationRecord] =
         proxy(
-          CreatePresentationRecord,
+          CreateJwtPresentationRecord,
           (pairwiseVerifierDID, pairwiseProverDID, thid, connectionId, proofTypes, options)
         )
+
+      override def createAnoncredPresentationRecord(
+          pairwiseVerifierDID: DidId,
+          pairwiseProverDID: DidId,
+          thid: DidCommID,
+          connectionId: Option[String],
+          presentationRequest: AnoncredPresentationRequestV1
+      ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
+        proxy(
+          CreateAnoncredPresentationRecord,
+          (pairwiseVerifierDID, pairwiseProverDID, thid, connectionId, presentationRequest)
+        )
+      }
 
       override def acceptRequestPresentation(
           recordId: DidCommID,
           credentialsToUse: Seq[String]
       ): IO[PresentationError, PresentationRecord] =
         proxy(AcceptRequestPresentation, (recordId, credentialsToUse))
+
+      override def acceptAnoncredRequestPresentation(
+          recordId: DidCommID,
+          credentialsToUse: AnoncredCredentialProofsV1
+      ): IO[PresentationError, PresentationRecord] =
+        proxy(AcceptAnoncredRequestPresentation, (recordId, credentialsToUse))
 
       override def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
         proxy(RejectRequestPresentation, recordId)
@@ -104,6 +140,13 @@ object MockPresentationService extends Mock[PresentationService] {
       override def markPresentationVerificationFailed(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
         proxy(MarkPresentationVerificationFailed, recordId)
 
+      override def verifyAnoncredPresentation(
+          presentation: Presentation,
+          requestPresentation: RequestPresentation,
+          recordId: DidCommID
+      ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+        proxy(VerifyAnoncredPresentation, recordId)
+
       override def receiveRequestPresentation(
           connectionId: Option[String],
           request: RequestPresentation
@@ -122,11 +165,26 @@ object MockPresentationService extends Mock[PresentationService] {
           ignoreWithZeroRetries: Boolean
       ): IO[PresentationError, Seq[PresentationRecord]] = ???
 
-      override def createPresentationPayloadFromRecord(
+      override def createJwtPresentationPayloadFromRecord(
           record: DidCommID,
           issuer: Issuer,
           issuanceDate: Instant
       ): IO[PresentationError, PresentationPayload] = ???
+
+      override def createAnoncredPresentationPayloadFromRecord(
+          record: DidCommID,
+          issuer: Issuer,
+          anoncredCredentialProof: AnoncredCredentialProofsV1,
+          issuanceDate: Instant
+      ): IO[PresentationError, AnoncredPresentation] = ???
+
+      override def createAnoncredPresentation(
+          requestPresentation: RequestPresentation,
+          recordId: DidCommID,
+          prover: Issuer,
+          anoncredCredentialProof: AnoncredCredentialProofsV1,
+          issuanceDate: Instant
+      ): ZIO[WalletAccessContext, PresentationError, Presentation] = ???
 
       override def getPresentationRecordsByStates(
           ignoreWithZeroRetries: Boolean,
@@ -158,6 +216,7 @@ object MockPresentationService extends Mock[PresentationService] {
           recordId: DidCommID,
           failReason: Option[String]
       ): IO[PresentationError, Unit] = ???
+
     }
   }
 

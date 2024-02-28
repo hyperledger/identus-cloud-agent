@@ -21,6 +21,7 @@ object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServ
     DidCommID(),
     None,
     None,
+    None,
     CredentialFormat.JWT,
     IssueCredentialRecord.Role.Issuer,
     None,

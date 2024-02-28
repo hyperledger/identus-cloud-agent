@@ -149,10 +149,11 @@ object CredentialSchema {
     for {
       uri <- ZIO.attempt(new URI(schemaId)).mapError(t => URISyntaxError(t.getMessage))
       content <- uriDereferencer.dereference(uri).mapError(err => UnexpectedError(err.toString))
-      validAttrNames <- ZIO
-        .fromEither(content.fromJson[AnoncredSchemaSerDesV1])
-        .mapError(error => CredentialSchemaParsingError(s"AnonCreds Schema parsing error: $error"))
-        .map(_.attrNames)
+      validAttrNames <-
+        AnoncredSchemaSerDesV1.schemaSerDes
+          .deserialize(content)
+          .mapError(error => CredentialSchemaParsingError(s"AnonCreds Schema parsing error: $error"))
+          .map(_.attrNames)
       jsonClaims <- ZIO.fromEither(claims.fromJson[Json]).mapError(err => UnexpectedError(err))
       _ <- jsonClaims match
         case Json.Obj(fields) =>

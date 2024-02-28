@@ -1,16 +1,11 @@
-package io.iohk.atala.pollux.core.service.helper
+package io.iohk.atala.pollux.core.service.serdes
 
-import io.iohk.atala.pollux.core.service.serdes.PublicCredentialDefinitionSerDesV1
-import io.iohk.atala.pollux.core.service.serdes.PublicCredentialPrimaryPublicKeyV1
-import io.iohk.atala.pollux.core.service.serdes.PublicCredentialRevocationKeyV1
-import io.iohk.atala.pollux.core.service.serdes.PublicCredentialValueV1
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import zio.test.assertZIO
 
-object PublicCredentialDefinitionSerDesSpec extends ZIOSpecDefault {
-  val json =
+object PublicCredentialDefinitionSchemaSerDesSpec extends ZIOSpecDefault {
+  val json: String =
     """
       |{
       |  "schemaId": "resource:///anoncred-schema-example.json",
@@ -51,7 +46,7 @@ object PublicCredentialDefinitionSerDesSpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("PublicCredentialDefinitionSerDes")(
     test("should validate a correct schema") {
-      assertZIO(PublicCredentialDefinitionSerDesV1.schemaSerDes.validate(json))(isTrue)
+      assertZIO(PublicCredentialDefinitionSerDesV1.schemaSerDes.validate(json))(isUnit)
     },
     test("should deserialise") {
       val primary = PublicCredentialPrimaryPublicKeyV1(

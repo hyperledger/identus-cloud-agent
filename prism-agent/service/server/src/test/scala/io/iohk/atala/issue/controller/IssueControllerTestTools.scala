@@ -16,7 +16,7 @@ import io.iohk.atala.issue.controller.http.{
   IssueCredentialRecord,
   IssueCredentialRecordPage
 }
-import io.iohk.atala.pollux.anoncreds.LinkSecretWithId
+import io.iohk.atala.pollux.anoncreds.AnoncredLinkSecretWithId
 import io.iohk.atala.pollux.core.model.CredentialFormat
 import io.iohk.atala.pollux.core.repository.{
   CredentialDefinitionRepositoryInMemory,
