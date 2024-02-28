@@ -2,9 +2,11 @@ package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.presentproof.*
+import io.iohk.atala.pollux.anoncreds.AnoncredPresentation
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.*
+import io.iohk.atala.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
@@ -14,28 +16,49 @@ import java.util as ju
 import java.util.UUID
 
 trait PresentationService {
-
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
 
-  def createPresentationRecord(
+  def createJwtPresentationRecord(
       pairwiseVerifierDID: DidId,
       pairwiseProverDID: DidId,
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       options: Option[io.iohk.atala.pollux.core.model.presentation.Options],
-      format: CredentialFormat,
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
+
+  def createAnoncredPresentationRecord(
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: DidId,
+      thid: DidCommID,
+      connectionId: Option[String],
+      presentationRequest: AnoncredPresentationRequestV1
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def getPresentationRecords(
       ignoreWithZeroRetries: Boolean
   ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]]
 
-  def createPresentationPayloadFromRecord(
+  def createJwtPresentationPayloadFromRecord(
       record: DidCommID,
       issuer: Issuer,
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, PresentationPayload]
+
+  def createAnoncredPresentationPayloadFromRecord(
+      record: DidCommID,
+      issuer: Issuer,
+      anoncredCredentialProof: AnoncredCredentialProofsV1,
+      issuanceDate: Instant
+  ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation]
+
+  def createAnoncredPresentation(
+      requestPresentation: RequestPresentation,
+      recordId: DidCommID,
+      prover: Issuer,
+      anoncredCredentialProof: AnoncredCredentialProofsV1,
+      issuanceDate: Instant
+  ): ZIO[WalletAccessContext, PresentationError, Presentation]
 
   def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,
@@ -65,6 +88,11 @@ trait PresentationService {
   def acceptRequestPresentation(
       recordId: DidCommID,
       credentialsToUse: Seq[String]
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
+
+  def acceptAnoncredRequestPresentation(
+      recordId: DidCommID,
+      credentialsToUse: AnoncredCredentialProofsV1
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def rejectRequestPresentation(recordId: DidCommID): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
@@ -103,6 +131,12 @@ trait PresentationService {
   def markPresentationAccepted(recordId: DidCommID): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def markPresentationVerificationFailed(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
+
+  def verifyAnoncredPresentation(
+      presentation: Presentation,
+      requestPresentation: RequestPresentation,
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 

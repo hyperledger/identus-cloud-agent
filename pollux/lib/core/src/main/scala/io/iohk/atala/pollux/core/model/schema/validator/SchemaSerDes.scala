@@ -2,17 +2,23 @@ package io.iohk.atala.pollux.core.model.schema.validator
 
 import com.networknt.schema.JsonSchema
 import io.iohk.atala.pollux.core.model.schema.validator.JsonSchemaError.*
-import zio.IO
-import zio.ZIO
 import zio.json.*
-import zio.json.JsonDecoder
 import zio.json.ast.Json
 import zio.json.ast.Json.*
+import zio.{IO, ZIO}
 
 class SchemaSerDes[S](jsonSchemaSchemaStr: String) {
 
   def initialiseJsonSchema: IO[JsonSchemaError, JsonSchema] =
     JsonSchemaUtils.jsonSchema(jsonSchemaSchemaStr)
+
+  def serializeToJsonString(instance: S)(using encoder: JsonEncoder[S]): String = {
+    instance.toJson
+  }
+
+  def serialize(instance: S)(using encoder: JsonEncoder[S]): Either[String, Json] = {
+    instance.toJsonAST
+  }
 
   def deserialize(
       schema: zio.json.ast.Json
@@ -42,12 +48,12 @@ class SchemaSerDes[S](jsonSchemaSchemaStr: String) {
     } yield json
   }
 
-  def validate(jsonString: String): IO[JsonSchemaError, Boolean] = {
+  def validate(jsonString: String): IO[JsonSchemaError, Unit] = {
     for {
       jsonSchemaSchema <- JsonSchemaUtils.jsonSchema(jsonSchemaSchemaStr)
       schemaValidator = JsonSchemaValidatorImpl(jsonSchemaSchema)
-      _ <- schemaValidator.validate(jsonString)
-    } yield true
+      result <- schemaValidator.validate(jsonString)
+    } yield result
   }
 
 }

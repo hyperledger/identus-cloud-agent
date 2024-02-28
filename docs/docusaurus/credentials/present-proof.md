@@ -1,3 +1,6 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Present proof
 
 The [Present Proof Protocol](/docs/concepts/glossary#present-proof-protocol) allows:
@@ -57,6 +60,9 @@ To do this, he makes a `POST` request to the [`/present-proof/presentations`](/a
 1. `connectionId`: This field represents the unique identifier of an existing connection between the verifier and the Holder/prover. It is for exchanging messages related to the protocol flow execution.
 2. `challenge` and `domain`: The Verifier provides the random seed challenge and operational domain, and the Holder/Prover must sign the generated proof to protect from replay attacks.
 
+<Tabs groupId="vc-formats">
+<TabItem value="jwt" label="JWT">
+
 ```bash
 curl -X 'POST' 'http://localhost:8070/prism-agent/present-proof/presentations' \
   -H 'accept: application/json' \
@@ -71,6 +77,56 @@ curl -X 'POST' 'http://localhost:8070/prism-agent/present-proof/presentations' \
         }
       }'
 ```
+
+</TabItem>
+<TabItem value="anoncreds" label="AnonCreds">
+
+```bash
+curl -X 'POST' 'http://localhost:8070/prism-agent/present-proof/presentations' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+	-H "apikey: $API_KEY" \
+  -d '{
+        "connectionId": "872ddfa9-4115-46c2-8a1b-22c24c7431d7",
+        "anoncredPresentationRequest": {
+          "requested_attributes": {
+            "attribute1": {
+              "name": "Attribute 1",
+              "restrictions": [
+                {
+                  "cred_def_id": "credential_definition_id_of_attribute1"
+                }
+              ],
+              "non_revoked": {
+                 "from": 1635734400,
+                 "to": 1735734400
+               }
+            }
+          },
+          "requested_predicates": {
+            "predicate1": {
+              "name": "age",
+              "p_type": ">=",
+              "p_value": 18,
+              "restrictions": [
+                {
+                  "schema_id": "schema_id_of_predicate1"
+                }
+              ],
+              "non_revoked": {
+                "from": 1635734400
+               }
+            }
+          },
+          "name": "Example Presentation Request",
+          "nonce": "1234567890",
+          "version": "1.0"
+        },
+        "credentialFormat": "AnonCreds" 
+      }'
+```
+</TabItem>
+</Tabs>
 
 Upon execution, a new presentation request record gets created with an initial state of `RequestPending`. The Verifier PRISM Agent will send the presentation request message to the PRISM Agent of the Holder/Prover through the specified DIDComm connection. The record state then is updated to `RequestSent`.
 
@@ -121,6 +177,9 @@ curl -X 'GET' 'http://localhost:8090/prism-agent/present-proof/presentations' \
 
 The Holder/Prover can then accept a specific request, generate the proof, and send it to the Verifier PRISM Agent by making a `PATCH` request to the [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) endpoint:
 
+<Tabs groupId="vc-formats">
+<TabItem value="jwt" label="JWT">
+
 ```bash
 curl -X 'PATCH' 'http://localhost:8090/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
   -H 'Content-Type: application/json' \
@@ -133,8 +192,39 @@ curl -X 'PATCH' 'http://localhost:8090/prism-agent/present-proof/presentations/{
 
 The Holder/Prover will have to provide the following information:
 1. `presentationId`: The unique identifier of the presentation record to accept.
-2. `proofId`: The unique identifier of the verifiable credential record to use as proof. 
+2. `proofId`: The unique identifier of the verifiable credential record to use as proof.
 
+</TabItem>
+<TabItem value="anoncreds" label="AnonCreds">
+
+```bash
+curl -X 'PATCH' 'http://localhost:8090/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
+  -H 'Content-Type: application/json' \
+  -H "apikey: $API_KEY" \
+  -d '{
+        "action": "request-accept",
+        "anoncredPresentationRequest":{
+          "credentialProofs":[
+             {
+                "credential":"3e849b98-f0fd-4cb4-ae96-9ea527a76267",
+                "requestedAttribute":[
+                   "age"
+                ],
+                "requestedPredicate":[
+                   "age"
+                ]
+              }
+          ]
+        }
+      }'
+```
+</TabItem>
+</Tabs>
+
+The Holder/Prover will have to provide the following information:
+1. `presentationId`: The unique identifier of the presentation record to accept.
+2. `anoncredPresentationRequest`: A list of credential unique identifier with the attribute and predicate the credential is answering for.
+   
 The record state is updated to `PresentationPending` and processed by the Holder/Prover PRISM Agent. The agent will automatically generate the proof presentation, change the state to `PresentationGenerated`, and will eventually send it to the Verifier Agent, and change the state to `PresentationSent`.
 
 ```mermaid
@@ -152,4 +242,20 @@ stateDiagram-v2
 
 The following diagram shows the end-to-end flow for a verifier to request and verify a proof presentation from a Holder/prover. 
 
+### JWT Present Proof Flow Diagram
 ![](present-proof-flow.png)
+### Anoncreds Present Proof Flow Diagram
+![](anoncreds-present-proof-flow.png)
+
+<Tabs groupId="vc-formats">
+<TabItem value="jwt" label="JWT">
+
+![](present-proof-flow.png)
+
+</TabItem>
+<TabItem value="anoncreds" label="AnonCreds">
+
+![](anoncreds-present-proof-flow.png)
+
+</TabItem>
+</Tabs>

@@ -8,6 +8,7 @@ import zio.json.*
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+import scala.util.Try
 
 type Definition = zio.json.ast.Json
 type CorrectnessProof = zio.json.ast.Json
@@ -58,7 +59,7 @@ case class CredentialDefinition(
     signatureType: String,
     supportRevocation: Boolean
 ) {
-  def longId = CredentialDefinition.makeLongId(author, id, version)
+  def longId = CredentialDefinition.makeLongId(author, guid, version)
 }
 
 object CredentialDefinition {
@@ -68,6 +69,17 @@ object CredentialDefinition {
 
   def makeGUID(author: String, id: UUID, version: String) =
     UUID.nameUUIDFromBytes(makeLongId(author, id, version).getBytes)
+
+  def extractGUID(longId: String): Option[UUID] = {
+    longId.split("/") match {
+      case Array(_, idWithVersion) =>
+        idWithVersion.split("\\?") match {
+          case Array(id, _) => Try(UUID.fromString(id)).toOption
+          case _            => None
+        }
+      case _ => None
+    }
+  }
 
   def make(
       in: Input,
