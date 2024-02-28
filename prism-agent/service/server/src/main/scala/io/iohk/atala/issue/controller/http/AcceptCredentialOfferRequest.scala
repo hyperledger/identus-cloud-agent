@@ -23,8 +23,10 @@ object AcceptCredentialOfferRequest {
   object annotations {
     object subjectId
         extends Annotation[Option[String]](
-          description = "The short-form subject Prism DID to which the JWT verifiable credential will be issued." +
-            "This parameter is used for JWT credentials only.",
+          description = """
+          |The short-form subject Prism DID to which the JWT verifiable credential will be issued.
+          |This parameter only applies if the offer is of type 'JWT'.
+          |""".stripMargin,
           example = Some("did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f")
         )
 

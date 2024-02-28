@@ -2,6 +2,7 @@ package io.iohk.atala.castor.controller
 
 import io.iohk.atala.api.http.codec.DIDCodec.emptyDidJsonLD
 import io.iohk.atala.api.http.codec.DIDCodec.{didJsonLD, didResolutionJsonLD}
+import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.castor.controller.http.{DIDResolutionResult, DIDInput}
 import sttp.apispec.Tag
 import sttp.model.StatusCode
@@ -90,11 +91,12 @@ object DIDEndpoints {
 
   // MUST conform to https://w3c-ccg.github.io/did-resolution/#bindings-https
   val getDID: PublicEndpoint[
-    String,
+    (RequestContext, String),
     Nothing,
     DIDResolutionResult,
     Any
   ] = infallibleEndpoint.get
+    .in(extractFromRequest[RequestContext](RequestContext.apply))
     .in("dids" / DIDInput.didRefPathSegment)
     .out(resolutionEndpointOutput)
     .name("getDID")

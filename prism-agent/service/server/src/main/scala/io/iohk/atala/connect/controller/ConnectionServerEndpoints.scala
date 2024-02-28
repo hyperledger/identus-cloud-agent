@@ -1,5 +1,6 @@
 package io.iohk.atala.connect.controller
 
+import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.PaginationInput
@@ -28,6 +29,7 @@ class ConnectionServerEndpoints(
           connectionController
             .createConnection(request)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -39,6 +41,7 @@ class ConnectionServerEndpoints(
           connectionController
             .getConnection(connectionId)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -50,6 +53,7 @@ class ConnectionServerEndpoints(
           connectionController
             .getConnections(paginationInput, thid)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 
@@ -61,6 +65,7 @@ class ConnectionServerEndpoints(
           connectionController
             .acceptConnectionInvitation(request)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 

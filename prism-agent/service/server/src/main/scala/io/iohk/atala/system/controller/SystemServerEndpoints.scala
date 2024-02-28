@@ -1,5 +1,6 @@
 package io.iohk.atala.system.controller
 
+import io.iohk.atala.LogUtils.*
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.system.controller.SystemEndpoints.*
 import sttp.tapir.ztapir.*
@@ -9,12 +10,16 @@ class SystemServerEndpoints(systemController: SystemController) {
 
   val healthEndpoint: ZServerEndpoint[Any, Any] =
     health.zServerLogic { case (ctx: RequestContext) =>
-      systemController.health()(ctx)
+      systemController
+        .health()(ctx)
+        .logTrace(ctx)
     }
 
   val metricsEndpoint: ZServerEndpoint[Any, Any] =
     metrics.zServerLogic { case (ctx: RequestContext) =>
-      systemController.metrics()(ctx)
+      systemController
+        .metrics()(ctx)
+        .logTrace(ctx)
     }
 
   val all: List[ZServerEndpoint[Any, Any]] = List(

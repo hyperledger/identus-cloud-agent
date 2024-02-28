@@ -1,3 +1,18 @@
+# [1.28.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.27.0...prism-agent-v1.28.0) (2024-02-20)
+
+
+### Bug Fixes
+
+* **prism-agent:** increase http timeout communication channel closing… ([#901](https://github.com/hyperledger-labs/open-enterprise-agent/issues/901)) ([8d3f29d](https://github.com/hyperledger-labs/open-enterprise-agent/commit/8d3f29ddd830fe102d4bf25a0af8734730c80151))
+* re-enable logging with SLF4J and add traceId ([#869](https://github.com/hyperledger-labs/open-enterprise-agent/issues/869)) ([8f6af25](https://github.com/hyperledger-labs/open-enterprise-agent/commit/8f6af25a8eafd27d5017096da64f89188354a2ca))
+* remove oas schema format for empty repsonse body ([#902](https://github.com/hyperledger-labs/open-enterprise-agent/issues/902)) ([5f2bb08](https://github.com/hyperledger-labs/open-enterprise-agent/commit/5f2bb0872a156c9223ab56efbd47e812967ff582))
+
+
+### Features
+
+* add credential def performance test ([#865](https://github.com/hyperledger-labs/open-enterprise-agent/issues/865)) ([95064d6](https://github.com/hyperledger-labs/open-enterprise-agent/commit/95064d617dda7d45916fbdddf20a544eea4acf4a))
+* **pollux:** add Json VC schema meta validation ([#892](https://github.com/hyperledger-labs/open-enterprise-agent/issues/892)) ([19c42b1](https://github.com/hyperledger-labs/open-enterprise-agent/commit/19c42b10188d1e0242bdceb1f89b6410dcc05353))
+
 # [1.27.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.26.0...prism-agent-v1.27.0) (2024-02-08)
 
 

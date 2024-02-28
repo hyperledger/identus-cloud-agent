@@ -50,7 +50,7 @@ lazy val V = new {
   // https://mvnrepository.com/artifact/dev.zio/zio
   val zio = "2.0.18"
   val zioConfig = "3.0.7"
-  val zioLogging = "2.0.1"
+  val zioLogging = "2.1.16"
   val zioJson = "0.3.0"
   val zioHttp = "3.0.0-RC4"
   val zioCatsInterop = "3.3.0"
@@ -84,7 +84,7 @@ lazy val V = new {
 
   val bouncyCastle = "1.70"
 
-  val jsonSchemaValidator = "1.0.86"
+  val jsonSchemaValidator = "1.3.2"
 
   val vaultDriver = "6.2.0"
   val micrometer = "1.11.2"
@@ -139,6 +139,7 @@ lazy val D = new {
     "com.github.dasniko" % "testcontainers-keycloak" % V.testContainersJavaKeycloak % Test
 
   val doobiePostgres: ModuleID = "org.tpolecat" %% "doobie-postgres" % V.doobie
+  val doobiePostgresCirce: ModuleID = "org.tpolecat" %% "doobie-postgres-circe" % V.doobie
   val doobieHikari: ModuleID = "org.tpolecat" %% "doobie-hikari" % V.doobie
   val flyway: ModuleID = "org.flywaydb" % "flyway-core" % V.flyway
 
@@ -157,7 +158,7 @@ lazy val D = new {
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
-    Seq(doobiePostgres, doobieHikari, flyway)
+    Seq(doobiePostgres, doobiePostgresCirce, doobieHikari, flyway)
 }
 
 lazy val D_Shared = new {
@@ -629,7 +630,7 @@ lazy val resolver = project // maybe merge into models
 lazy val agent = project // maybe merge into models
   .in(file("mercury/mercury-library/agent"))
   .settings(name := "mercury-agent-core")
-  .settings(libraryDependencies ++= Seq(D.zioLog)) // , D.zioSLF4J))
+  .settings(libraryDependencies ++= Seq(D.zioLog, D.zioSLF4J))
   .dependsOn(
     models,
     resolver,

@@ -65,21 +65,29 @@ object CreateIssueCredentialRecordRequest {
 
     object schemaId
         extends Annotation[Option[String]](
-          description = "The unique identifier of the schema used for this credential offer.",
-          example =
-            Some("https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676")
+          description = """
+          |The URL pointing to the JSON schema that will be used for this offer (should be 'http' or 'https').
+          |When dereferenced, the returned content should be a JSON schema compliant with the '[Draft 2020-12](https://json-schema.org/draft/2020-12/release-notes)' version of the specification.
+          |Note that this parameter only applies when the offer is of type 'JWT'.
+          |""".stripMargin,
+          example = Some(
+            "https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema"
+          )
         )
 
     object credentialDefinitionId
         extends Annotation[Option[UUID]](
-          description =
-            "The unique identifier of the credential definition used for this credential offer (AnonCreds only)",
+          description = """
+          |The unique identifier (UUID) of the credential definition that will be used for this offer.
+          |It should be the identifier of a credential definition that exists in the issuer agent's database.
+          |Note that this parameter only applies when the offer is of type 'AnonCreds'.
+          |""".stripMargin,
           example = Some(UUID.fromString("d9569cec-c81e-4779-aa86-0d5994d82676"))
         )
 
     object credentialFormat
         extends Annotation[Option[String]](
-          description = "The format used for this credential offer (default to 'JWT')",
+          description = "The credential format for this offer (defaults to 'JWT')",
           example = Some("JWT"),
           validator = Validator.enumeration(
             List(
@@ -91,7 +99,10 @@ object CreateIssueCredentialRecordRequest {
 
     object claims
         extends Annotation[zio.json.ast.Json](
-          description = "The claims that will be associated with the issued verifiable credential.",
+          description = """
+          |The set of claims that will be included in the issued credential.
+          |The JSON object should comply with the schema applicable for this offer (i.e. 'schemaId' or 'credentialDefinitionId').
+          |""".stripMargin,
           example = zio.json.ast.Json.Obj(
             "firstname" -> zio.json.ast.Json.Str("Alice"),
             "lastname" -> zio.json.ast.Json.Str("Wonderland"),
@@ -100,21 +111,29 @@ object CreateIssueCredentialRecordRequest {
 
     object automaticIssuance
         extends Annotation[Boolean](
-          description =
-            "Specifies whether or not the credential should be automatically generated and issued when receiving the `CredentialRequest` from the holder. If set to `false`, a manual approval by the issuer via API call will be required for the VC to be issued.",
+          description = """
+            |Specifies whether or not the credential should be automatically generated and issued when receiving the `CredentialRequest` from the holder.
+            |If set to `false`, a manual approval by the issuer via another API call will be required for the VC to be issued.
+            |""".stripMargin,
           example = true
         )
 
     object issuingDID
         extends Annotation[Option[String]](
-          description = "The issuer DID of the verifiable credential (JWT credentials only)",
-          example = Some("did:prism:issuerofverifiablecredentials")
+          description = """
+          |The short-form issuer Prism DID by which the JWT verifiable credential will be issued.
+          |Note that this parameter only applies when the offer is type 'JWT'.
+          |""".stripMargin,
+          example = Some("did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f")
         )
 
     object connectionId
         extends Annotation[UUID](
-          description =
-            "The unique identifier of a DIDComm connection that already exists between the issuer and the holder, and that will be used to execute the issue credential protocol.",
+          description = """
+            |The unique identifier of a DIDComm connection that already exists between the this issuer agent and the holder cloud or edeg agent.
+            |It should be the identifier of a connection that exists in the issuer agent's database.
+            |This connection will be used to execute the issue credential protocol.
+            |""".stripMargin,
           example = UUID.fromString("d9569cec-c81e-4779-aa86-0d5994d82676")
         )
 

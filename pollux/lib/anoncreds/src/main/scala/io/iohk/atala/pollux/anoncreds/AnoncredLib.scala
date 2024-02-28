@@ -18,16 +18,16 @@ object AnoncredLib {
       version: String, // SCHEMA_Version
       attr_names: AttributeNames,
       issuer_id: IssuerId, // ISSUER_DID
-  ): SchemaDef = uniffi.anoncreds_wrapper.Schema.apply(name, version, attr_names.toSeq.asJava, issuer_id)
+  ): AnoncredSchemaDef = uniffi.anoncreds_wrapper.Schema.apply(name, version, attr_names.toSeq.asJava, issuer_id)
 
   // issuer
   def createCredDefinition(
       issuer_id: String,
-      schema: SchemaDef,
+      schema: AnoncredSchemaDef,
       tag: String,
       supportRevocation: Boolean,
       signature_type: uniffi.anoncreds_wrapper.SignatureType.CL.type = uniffi.anoncreds_wrapper.SignatureType.CL
-  ) = {
+  ): AnoncredCreateCredentialDefinition = {
     val credentialDefinition: uniffi.anoncreds_wrapper.IssuerCreateCredentialDefinitionReturn =
       uniffi.anoncreds_wrapper
         .Issuer()
@@ -40,7 +40,7 @@ object AnoncredLib {
           uniffi.anoncreds_wrapper.CredentialDefinitionConfig(supportRevocation)
         )
 
-    CreateCredentialDefinition(
+    AnoncredCreateCredentialDefinition(
       credentialDefinition.getCredentialDefinition(),
       credentialDefinition.getCredentialDefinitionPrivate(),
       credentialDefinition.getCredentialKeyCorrectnessProof()
@@ -49,9 +49,9 @@ object AnoncredLib {
 
   // issuer
   def createOffer(
-      credentialDefinition: CreateCredentialDefinition,
+      credentialDefinition: AnoncredCreateCredentialDefinition,
       credentialDefinitionId: String
-  ): CredentialOffer =
+  ): AnoncredCredentialOffer =
     uniffi.anoncreds_wrapper
       .Issuer()
       .createCredentialOffer(
@@ -62,15 +62,15 @@ object AnoncredLib {
 
   // holder
   def createCredentialRequest(
-      linkSecret: LinkSecretWithId,
-      credentialDefinition: CredentialDefinition,
-      credentialOffer: CredentialOffer,
+      linkSecret: AnoncredLinkSecretWithId,
+      credentialDefinition: AnoncredCredentialDefinition,
+      credentialOffer: AnoncredCredentialOffer,
       entropy: String = {
         val tmp = scala.util.Random()
         tmp.setSeed(java.security.SecureRandom.getInstanceStrong().nextLong())
         tmp.nextString(80)
       }
-  ): CreateCrendentialRequest = {
+  ): AnoncredCreateCrendentialRequest = {
     val credentialRequest =
       uniffi.anoncreds_wrapper
         .Prover()
@@ -83,16 +83,16 @@ object AnoncredLib {
           credentialOffer, // CredentialOffer credential_offer
         )
 
-    CreateCrendentialRequest(credentialRequest.getRequest(), credentialRequest.getMetadata())
+    AnoncredCreateCrendentialRequest(credentialRequest.getRequest(), credentialRequest.getMetadata())
   }
 
   // holder
   def processCredential(
-      credential: Credential,
-      metadata: CredentialRequestMetadata,
-      linkSecret: LinkSecretWithId,
-      credentialDefinition: CredentialDefinition,
-  ): Credential = {
+      credential: AnoncredCredential,
+      metadata: AnoncredCredentialRequestMetadata,
+      linkSecret: AnoncredLinkSecretWithId,
+      credentialDefinition: AnoncredCredentialDefinition,
+  ): AnoncredCredential = {
     uniffi.anoncreds_wrapper
       .Prover()
       .processCredential(
@@ -106,16 +106,16 @@ object AnoncredLib {
 
   // issuer
   def createCredential(
-      credentialDefinition: CredentialDefinition,
-      credentialDefinitionPrivate: CredentialDefinitionPrivate,
-      credentialOffer: CredentialOffer,
-      credentialRequest: CredentialRequest,
+      credentialDefinition: AnoncredCredentialDefinition,
+      credentialDefinitionPrivate: AnoncredCredentialDefinitionPrivate,
+      credentialOffer: AnoncredCredentialOffer,
+      credentialRequest: AnoncredCredentialRequest,
       attributeValues: Seq[(String, String)]
       //  java.util.List[AttributeValues] : java.util.List[AttributeValues]
       //  revocationRegistryId : String
       //  revocationStatusList : RevocationStatusList
       //  credentialRevocationConfig : CredentialRevocationConfig
-  ): Credential = {
+  ): AnoncredCredential = {
     uniffi.anoncreds_wrapper
       .Issuer()
       .createCredential(
@@ -140,13 +140,13 @@ object AnoncredLib {
   // [info] Caused by: Predicate is not satisfied
 
   def createPresentation(
-      presentationRequest: PresentationRequest,
-      credentialRequests: Seq[CredentialAndRequestedAttributesPredicates],
+      presentationRequest: AnoncredPresentationRequest,
+      credentialRequests: Seq[AnoncredCredentialRequests],
       selfAttested: Map[String, String],
-      linkSecret: LinkSecret,
-      schemas: Map[SchemaId, SchemaDef],
-      credentialDefinitions: Map[CredentialDefinitionId, CredentialDefinition],
-  ): Either[uniffi.anoncreds_wrapper.AnoncredsException.CreatePresentationException, Presentation] = {
+      linkSecret: AnoncredLinkSecret,
+      schemas: Map[SchemaId, AnoncredSchemaDef],
+      credentialDefinitions: Map[CredentialDefinitionId, AnoncredCredentialDefinition],
+  ): Either[uniffi.anoncreds_wrapper.AnoncredsException.CreatePresentationException, AnoncredPresentation] = {
     try {
       Right(
         uniffi.anoncreds_wrapper
@@ -181,10 +181,10 @@ object AnoncredLib {
 
   // FIXME its always return false ....
   def verifyPresentation(
-      presentation: Presentation,
-      presentationRequest: PresentationRequest,
-      schemas: Map[SchemaId, SchemaDef],
-      credentialDefinitions: Map[CredentialDefinitionId, CredentialDefinition],
+      presentation: AnoncredPresentation,
+      presentationRequest: AnoncredPresentationRequest,
+      schemas: Map[SchemaId, AnoncredSchemaDef],
+      credentialDefinitions: Map[CredentialDefinitionId, AnoncredCredentialDefinition],
   ): Boolean = {
     uniffi.anoncreds_wrapper
       .Verifier()

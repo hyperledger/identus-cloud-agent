@@ -33,7 +33,9 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
       |    "description": "Driving License",
       |    "type": "object",
       |    "properties": {
-      |        "name" : "Alice"
+      |        "name" : {
+      |          "type": "string"
+      |        }
       |    },
       |    "required": [
       |        "name"
