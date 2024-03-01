@@ -6,13 +6,16 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import zio.*
+import io.iohk.atala.prism.crypto.Sha256
 
-class VaultDIDSecretStorage(vaultKV: VaultKVClient) extends DIDSecretStorage {
+import java.nio.charset.StandardCharsets
+
+class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) extends DIDSecretStorage {
 
   override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): RIO[WalletAccessContext, Int] = {
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      path = peerDidKeyPath(walletId)(did, keyId)
+      (path, metadata) = peerDidKeyPath(walletId)(did, keyId)
       alreadyExist <- vaultKV.get[OctetKeyPair](path).map(_.isDefined)
       _ <- vaultKV
         .set[OctetKeyPair](path, keyPair)
@@ -24,16 +27,23 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient) extends DIDSecretStorage {
   override def getKey(did: DidId, keyId: String): RIO[WalletAccessContext, Option[OctetKeyPair]] = {
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      path = peerDidKeyPath(walletId)(did, keyId)
+      (path, _) = peerDidKeyPath(walletId)(did, keyId)
       keyPair <- vaultKV.get[OctetKeyPair](path)
     } yield keyPair
   }
 
-  private def peerDidKeyPath(walletId: WalletId)(did: DidId, keyId: String): String = {
-    s"secret/${walletId.toUUID}/dids/peer/${did.value}/keys/$keyId"
+  private def peerDidKeyPath(walletId: WalletId)(did: DidId, keyId: String): (String, Map[String, String]) = {
+    val peerDidBasePath = s"${walletBasePath(walletId)}/dids/peer"
+    val peerDidRelPath = s"${did.value}/keys/$keyId"
+    if (useSemanticPath) {
+      s"$peerDidBasePath/$peerDidRelPath" -> Map.empty
+    } else {
+      val peerDidRelPathHash = Sha256.compute(peerDidRelPath.getBytes(StandardCharsets.UTF_8)).getHexValue()
+      s"$peerDidBasePath/$peerDidRelPathHash" -> Map(RELATIVE_PATH_METADATA_KEY -> peerDidRelPath)
+    }
   }
 }
 
 object VaultDIDSecretStorage {
-  def layer: URLayer[VaultKVClient, DIDSecretStorage] = ZLayer.fromFunction(VaultDIDSecretStorage(_))
+  def layer: URLayer[VaultKVClient, DIDSecretStorage] = ZLayer.fromFunction(VaultDIDSecretStorage(_, false))
 }

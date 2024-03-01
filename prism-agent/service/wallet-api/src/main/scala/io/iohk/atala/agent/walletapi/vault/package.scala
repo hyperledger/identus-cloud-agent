@@ -3,6 +3,7 @@ package io.iohk.atala.agent.walletapi
 import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.shared.models.HexString
+import io.iohk.atala.shared.models.WalletId
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
@@ -11,6 +12,12 @@ import scala.util.Failure
 import scala.util.Try
 
 package object vault {
+  val RELATIVE_PATH_METADATA_KEY: String = "relativePath"
+
+  private[vault] def walletBasePath(walletId: WalletId): String = {
+    s"secret/${walletId.toUUID}"
+  }
+
   trait KVCodec[T] {
     def encode(value: T): Map[String, String]
     def decode(kv: Map[String, String]): Try[T]
