@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Open Enterprise Agent API Reference
-  version: 1.29.0
+  version: 1.30.0
   description: |2
 
     The Open Enterprise Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
@@ -4119,7 +4119,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2024-02-28T18:30:46.014514607Z'
+          example: '2024-03-01T13:23:42.558546498Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
