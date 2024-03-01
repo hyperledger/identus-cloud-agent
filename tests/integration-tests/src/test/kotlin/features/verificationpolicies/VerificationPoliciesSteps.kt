@@ -8,7 +8,7 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import io.iohk.atala.prism.models.VerificationPolicy
+import io.iohk.atala.prism.models.VerificationPolicyResponse
 import io.iohk.atala.prism.models.VerificationPolicyInput
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
@@ -33,7 +33,7 @@ class VerificationPoliciesSteps {
 
     @Then("{actor} sees new verification policy is available")
     fun newVerificationPolicyIsAvailable(actor: Actor) {
-        val policy = SerenityRest.lastResponse().get<VerificationPolicy>()
+        val policy = SerenityRest.lastResponse().get<VerificationPolicyResponse>()
         actor.attemptsTo(
             Ensure.that(policy.id).isNotNull(),
             Ensure.that(policy.nonce).isNotNull(),
@@ -56,7 +56,7 @@ class VerificationPoliciesSteps {
 
     @When("{actor} updates a new verification policy")
     fun acmeUpdatesAVerificationPolicy(actor: Actor) {
-        val policy = actor.recall<VerificationPolicy>("policy")
+        val policy = actor.recall<VerificationPolicyResponse>("policy")
         val updatePolicyInput = VerificationPolicyInput(
             name = policy.name,
             description = "updated description + ${UUID.randomUUID()}",
@@ -75,9 +75,9 @@ class VerificationPoliciesSteps {
         val updatePolicyInput = actor.forget<VerificationPolicyInput>("updatedPolicyInput")
 
         actor.attemptsTo(
-            Get.resource("/verification/policies/${actor.recall<VerificationPolicy>("policy").id}")
+            Get.resource("/verification/policies/${actor.recall<VerificationPolicyResponse>("policy").id}")
         )
-        val policy = SerenityRest.lastResponse().get<VerificationPolicy>()
+        val policy = SerenityRest.lastResponse().get<VerificationPolicyResponse>()
 
         actor.attemptsTo(
             Ensure.that(policy.id).isNotNull(),
