@@ -1,3 +1,10 @@
+# [1.30.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.29.0...prism-agent-v1.30.0) (2024-03-01)
+
+
+### Features
+
+* **agent:** make the connection pool size configurable, fixes [#913](https://github.com/hyperledger-labs/open-enterprise-agent/issues/913) ([#914](https://github.com/hyperledger-labs/open-enterprise-agent/issues/914)) ([375fe0f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/375fe0f8ee042246aed37f40cbeb8f2042c99958))
+
 # [1.29.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.28.0...prism-agent-v1.29.0) (2024-02-28)
 
 
