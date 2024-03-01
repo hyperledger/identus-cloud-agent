@@ -241,7 +241,7 @@ To set up the environment in the old fashion (three independent Agents), the eng
 
 If the engineer needs to use the API Key Authentication, the following configuration can be used:
 - Enable the API Key Authentication: `API_KEY_ENABLED=true`
-- Enable the Default Entity and Wallet: `API_KEY_AUTHENTICATE_AS_DEFAULT_USER=true`
+- Enable the Default Entity and Wallet: `DEFAULT_WALLET_ENABLED=true`
 - Enable authentication for the Default Entity: `API_KEY_AUTHENTICATE_AS_DEFAULT_USER=true`
 
 To set up the environment in the multi-tenant mode (single Agent), the engineer needs to configure the following:

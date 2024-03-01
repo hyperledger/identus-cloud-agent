@@ -1,3 +1,15 @@
+# [1.29.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.28.0...prism-agent-v1.29.0) (2024-02-28)
+
+
+### Bug Fixes
+
+* correct the config environment variable name ([#905](https://github.com/hyperledger-labs/open-enterprise-agent/issues/905)) ([d86436c](https://github.com/hyperledger-labs/open-enterprise-agent/commit/d86436cbc58571b4167411643623f3ba975550ad))
+
+
+### Features
+
+* ZKP verification ([#792](https://github.com/hyperledger-labs/open-enterprise-agent/issues/792)) ([ab1ab64](https://github.com/hyperledger-labs/open-enterprise-agent/commit/ab1ab648b10a82b39d4bdde6e2c9693c8f7506b8))
+
 # [1.28.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.27.0...prism-agent-v1.28.0) (2024-02-20)
 
 

@@ -9,7 +9,7 @@ import io.iohk.atala.mercury.protocol.issuecredential.{
   OfferCredential,
   RequestCredential
 }
-import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
+import io.iohk.atala.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
 
 import java.time.Instant
@@ -21,8 +21,9 @@ final case class IssueCredentialRecord(
     createdAt: Instant,
     updatedAt: Option[Instant],
     thid: DidCommID,
-    schemaId: Option[String],
+    schemaUri: Option[String],
     credentialDefinitionId: Option[UUID],
+    credentialDefinitionUri: Option[String],
     credentialFormat: CredentialFormat,
     role: Role,
     subjectId: Option[String],
@@ -31,7 +32,7 @@ final case class IssueCredentialRecord(
     protocolState: ProtocolState,
     offerCredentialData: Option[OfferCredential],
     requestCredentialData: Option[RequestCredential],
-    anonCredsRequestMetadata: Option[CredentialRequestMetadata],
+    anonCredsRequestMetadata: Option[AnoncredCredentialRequestMetadata],
     issueCredentialData: Option[IssueCredential],
     issuedCredentialRaw: Option[String],
     issuingDID: Option[CanonicalPrismDID],
@@ -69,6 +70,16 @@ final case class IssueCredentialRecord(
 final case class ValidIssuedCredentialRecord(
     id: DidCommID,
     issuedCredentialRaw: Option[String],
+    credentialFormat: CredentialFormat,
+    subjectId: Option[String]
+)
+
+final case class ValidFullIssuedCredentialRecord(
+    id: DidCommID,
+    issuedCredential: Option[IssueCredential],
+    credentialFormat: CredentialFormat,
+    schemaUri: Option[String],
+    credentialDefinitionUri: Option[String],
     subjectId: Option[String]
 )
 
