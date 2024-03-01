@@ -38,7 +38,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:2.3.0")
     implementation("io.ktor:ktor-client-apache:2.3.0")
     // RestAPI client
-    implementation("io.iohk.atala.prism:prism-kotlin-client:1.18.0")
+    implementation("io.iohk.atala.prism:prism-kotlin-client:1.30.0")
     // Test helpers library
     testImplementation("io.iohk.atala:atala-automation:0.3.0")
     // Hoplite for configuration
