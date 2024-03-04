@@ -28,9 +28,12 @@ import zio.prelude.ZValidation.*
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
 import io.iohk.atala.resolvers.DIDResolver
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+
 import java.time.{Clock, Instant, ZoneId}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.shared.http.*
 object PresentBackgroundJobs extends BackgroundJobsHelper {
 
   val presentProofExchanges = {
@@ -372,6 +375,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               _
             ) => // Verifier
+          // TODO: verify the revocation status of credentials here
           ZIO.logDebug("PresentationRecord: PresentationReceived") *> ZIO.unit
           val clock = java.time.Clock.system(ZoneId.systemDefault)
           presentation match
@@ -384,6 +388,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                     didResolverService <- ZIO.service[JwtDidResolver]
                     credentialsValidationResult <- p.attachments.head.data match {
                       case Base64(data) =>
+                        // JWT verifiable presentation decided frin base64
                         val base64Decoded = new String(java.util.Base64.getDecoder().decode(data))
                         val maybePresentationOptions
                             : Either[PresentationError, Option[io.iohk.atala.pollux.core.model.presentation.Options]] =
@@ -409,7 +414,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                                 .getOrElse(Right(None))
                             )
                             .getOrElse(Left(UnexpectedError("RequestPresentation NotFound")))
-                        for {
+                        val presentationValidationResult = for {
                           _ <- ZIO.fromEither(maybePresentationOptions.map {
                             case Some(options) =>
                               JwtPresentation.validatePresentation(
@@ -425,13 +430,32 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                           // https://www.w3.org/TR/vc-data-model/#proofs-signatures-0
                           // A proof is typically attached to a verifiable presentation for authentication purposes
                           // and to a verifiable credential as a method of assertion.
+                          httpLayer <- ZIO.service[HttpClient]
+                          httpUrlResolver = new UriResolver {
+                            override def resolve(uri: String): IO[GenericUriResolverError, String] = {
+                              val res = HttpClient
+                                .get(uri)
+                                .map(x => x.bodyAsString)
+                                .provideSomeLayer(ZLayer.succeed(httpLayer))
+                              res.mapError(err => SchemaSpecificResolutionError("http", err))
+                            }
+                          }
+                          genericUriResolver = GenericUriResolver(
+                            Map(
+                              "data" -> DataUrlResolver(),
+                              "http" -> httpUrlResolver,
+                              "https" -> httpUrlResolver
+                            )
+                          )
                           result <- JwtPresentation
                             .verify(
                               JWT(base64Decoded),
                               verificationConfig.toPresentationVerificationOptions()
-                            )(didResolverService)(clock)
+                            )(didResolverService, genericUriResolver)(clock)
                             .mapError(error => PresentationError.UnexpectedError(error.mkString))
                         } yield result
+
+                        presentationValidationResult
 
                       case any => ZIO.fail(NotImplemented)
                     }

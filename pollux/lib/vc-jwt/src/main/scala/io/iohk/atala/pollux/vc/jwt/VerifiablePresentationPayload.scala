@@ -6,9 +6,11 @@ import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.shared.http.UriResolver
 import pdi.jwt.{JwtCirce, JwtOptions}
 import zio.*
 import zio.prelude.*
+
 import java.security.PublicKey
 import java.time.temporal.TemporalAmount
 import java.time.{Clock, Instant}
@@ -365,13 +367,17 @@ object JwtPresentation {
   def validateEnclosedCredentials(
       jwt: JWT,
       options: CredentialVerification.CredentialVerificationOptions
-  )(didResolver: DidResolver)(implicit clock: Clock): IO[List[String], Validation[String, Unit]] = {
+  )(didResolver: DidResolver, uriResolver: UriResolver)(implicit
+                                                        clock: Clock
+  ): IO[List[String], Validation[String, Unit]] = {
     val validateJwtPresentation = Validation.fromTry(decodeJwt(jwt)).mapError(_.toString)
 
     val credentialValidationZIO =
       ValidationUtils.foreach(
         validateJwtPresentation
-          .map(validJwtPresentation => validateCredentials(validJwtPresentation, options)(didResolver)(clock))
+          .map(validJwtPresentation =>
+            validateCredentials(validJwtPresentation, options)(didResolver, uriResolver)(clock)
+          )
       )(identity)
 
     credentialValidationZIO.map(validCredentialValidations => {
@@ -386,9 +392,11 @@ object JwtPresentation {
   def validateCredentials(
       decodedJwtPresentation: JwtPresentationPayload,
       options: CredentialVerification.CredentialVerificationOptions
-  )(didResolver: DidResolver)(implicit clock: Clock): ZIO[Any, List[String], IndexedSeq[Validation[String, Unit]]] = {
+  )(didResolver: DidResolver, uriResolver: UriResolver)(implicit
+      clock: Clock
+  ): ZIO[Any, List[String], IndexedSeq[Validation[String, Unit]]] = {
     ZIO.validatePar(decodedJwtPresentation.vp.verifiableCredential) { a =>
-      CredentialVerification.verify(a, options)(didResolver)(clock)
+      CredentialVerification.verify(a, options)(didResolver, uriResolver)(clock)
     }
   }
 
@@ -564,8 +572,10 @@ object JwtPresentation {
     *   the result of the validation.
     */
   def verify(jwt: JWT, options: PresentationVerificationOptions)(
-      didResolver: DidResolver
+      didResolver: DidResolver,
+      uriResolver: UriResolver
   )(implicit clock: Clock): IO[List[String], Validation[String, Unit]] = {
+    // TODO: verify revocation status of credentials inside the presentation
     for {
       signatureValidation <-
         if (options.verifySignature) then
@@ -579,7 +589,9 @@ object JwtPresentation {
       )
       credentialVerification <-
         options.maybeCredentialOptions
-          .map(credentialOptions => validateEnclosedCredentials(jwt, credentialOptions)(didResolver)(clock))
+          .map(credentialOptions =>
+            validateEnclosedCredentials(jwt, credentialOptions)(didResolver, uriResolver)(clock)
+          )
           .getOrElse(ZIO.succeed(Validation.unit))
     } yield Validation.validateWith(
       signatureValidation,

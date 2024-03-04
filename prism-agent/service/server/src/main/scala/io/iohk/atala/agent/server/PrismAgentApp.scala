@@ -100,9 +100,10 @@ object PrismAgentApp {
       : ZIO[CredentialStatusListService & DIDService & ManagedDIDService & AppConfig, Throwable, Unit] = {
     for {
       config <- ZIO.service[AppConfig]
-      _ <- StatusListJobs.syncRevocationStatuses.repeat(
-        Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay)
-      ) // TODO make it configurable
+      _ <- StatusListJobs.syncRevocationStatuses
+        .repeat(
+          Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay)
+        )
     } yield ()
   }
 
