@@ -7,9 +7,12 @@ import io.github.jopenlibs.vault.api.LogicalUtilities
 import io.github.jopenlibs.vault.response.LogicalResponse
 import zio.*
 import zio.http.*
+import zio.json.*
 
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters.*
+import sttp.model.StatusCode
+import io.github.jopenlibs.vault.VaultException
 
 trait VaultKVClient {
   def get[T: KVCodec](path: String): Task[Option[T]]
@@ -37,8 +40,8 @@ class VaultKVClientImpl(vaultRef: Ref[(Vault, VaultConfig)], client: Client) ext
   override def set[T: KVCodec](path: String, data: T, customMetadata: Map[String, String]): Task[Unit] = {
     val kv = summon[KVCodec[T]].encode(data)
     for {
-      vault <- vaultRef.get.map(_._1)
-      vaultConfig <- vaultRef.get.map(_._2)
+      vaultWithConfig <- vaultRef.get
+      (vault, vaultConfig) = vaultWithConfig
       _ <- ZIO
         .attemptBlocking {
           vault
@@ -156,7 +159,16 @@ object VaultKVClientImpl {
     }
   }
 
-  private[vault] class ExtendedLogical(config: VaultConfig, client: Client) extends Logical(config) {
+  private final case class WriteMetadataRequest(
+      `custom_metadata`: Map[String, String]
+  )
+
+  private object WriteMetadataRequest {
+    given JsonEncoder[WriteMetadataRequest] = JsonEncoder.derived
+    given JsonDecoder[WriteMetadataRequest] = JsonDecoder.derived
+  }
+
+  private class ExtendedLogical(config: VaultConfig, client: Client) extends Logical(config) {
     // based on https://github.com/jopenlibs/vault-java-driver/blob/e49312a8cbcd14b260dacb2822c19223feb1b7af/src/main/java/io/github/jopenlibs/vault/api/Logical.java#L275
     def writeMetadata(path: String, metadata: Map[String, String]): Task[Unit] = {
       val pathSegments = path.split("/")
@@ -164,26 +176,54 @@ object VaultKVClientImpl {
       val adjustedPath = LogicalUtilities.addQualifierToPath(pathSegments.toSeq.asJava, pathDepth, "metadata")
       val url = config.getAddress() + "/v1/" + adjustedPath
 
+      val baseHeaders = Headers(
+        Header.ContentType(MediaType.application.json),
+        Header.Custom("X-Vault-Request", "true"),
+      )
+
+      val additionalHeaders = Headers(
+        Seq(
+          Option(config.getToken()).map(Header.Custom("X-Vault-Token", _)),
+          Option(config.getNameSpace()).map(Header.Custom("X-Vault-Namespace", _)),
+        ).flatten
+      )
+
       for {
         url <- ZIO.fromEither(URL.decode(url)).orDie
-        response <- ZIO.scoped {
-          client
-            .request(
-              Request(
-                url = url,
-                method = Method.POST,
-                headers = Headers(
-                  Header.Custom("X-Vault-Token", config.getToken()),
-                  Header.Custom("X-Vault-Namespace", config.getNameSpace()),
-                  Header.Custom("X-Vault-Request", "true"),
+        _ <- ZIO
+          .scoped {
+            client
+              .request(
+                Request(
+                  url = url,
+                  method = Method.POST,
+                  headers = baseHeaders ++ additionalHeaders,
+                  body = Body.fromString(WriteMetadataRequest(custom_metadata = metadata).toJson)
                 )
               )
-            )
-            .retry(
-              Schedule.recurs(config.getMaxRetries()) &&
-                Schedule.spaced(config.getRetryIntervalMilliseconds().millis)
-            )
-        }
+              .timeoutFail(new RuntimeException("Client request timed out"))(5.seconds)
+          }
+          .flatMap { resp =>
+            if (resp.status.isSuccess) ZIO.unit
+            else {
+              resp.body
+                .asString(StandardCharsets.UTF_8)
+                .flatMap { body =>
+                  ZIO.fail(
+                    VaultException(
+                      s"Expecting HTTP status 2xx, but instead receiving ${resp.status.code}. Response body: ${body}",
+                      resp.status.code
+                    )
+                  )
+                }
+            }
+          }
+          .debug("writeMetadata")
+          .retry {
+            val maxRetry = Option(config.getMaxRetries()).getOrElse(0)
+            val retryIntervalMillis = Option(config.getRetryIntervalMilliseconds()).getOrElse(0)
+            Schedule.recurs(maxRetry) && Schedule.spaced(retryIntervalMillis.millis)
+          }
       } yield ()
     }
   }
