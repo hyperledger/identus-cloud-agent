@@ -13,7 +13,8 @@ import io.iohk.atala.iam.oidc.http.{
   CredentialResponse,
   DeferredCredentialResponse,
   ImmediateCredentialResponse,
-  JwtCredentialRequest
+  JwtCredentialRequest,
+  NonceResponse
 }
 import sttp.apispec.Tag
 import sttp.tapir.{
@@ -23,11 +24,11 @@ import sttp.tapir.{
   extractFromRequest,
   model,
   oneOf,
+  oneOfVariantValueMatcher,
   path,
   query,
   statusCode,
-  stringToPath,
-  oneOfVariantValueMatcher
+  stringToPath
 }
 import sttp.model.StatusCode
 import sttp.tapir.json.zio.jsonBody
@@ -50,7 +51,7 @@ object CredentialIssuerEndpoints {
     .tag(tagName)
     .securityIn(jwtAuthHeader)
     .in(extractFromRequest[RequestContext](RequestContext.apply))
-    .in("oidc" / didRefPathSegment / "credential-issuer")
+    .in("oidc" / didRefPathSegment)
 
   val credentialEndpointErrorOutput = oneOf[Either[ErrorResponse, CredentialErrorResponse]](
     oneOfVariantValueMatcher(StatusCode.BadRequest, jsonBody[Either[ErrorResponse, CredentialErrorResponse]]) {
@@ -74,6 +75,7 @@ object CredentialIssuerEndpoints {
     CredentialResponse,
     Any
   ] = baseEndpoint.post
+    .in("credential-issuer")
     .in(jsonBody[CredentialRequest])
     .out(
       statusCode(StatusCode.Ok).description("Credential issued successfully"),
@@ -84,6 +86,25 @@ object CredentialIssuerEndpoints {
     .summary("Credential Endpoint")
     .description(
       """OIDC for VC [Credential Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-endpoint)""".stripMargin
+    )
+
+  val nonceEndpoint: Endpoint[
+    JwtCredentials,
+    (RequestContext, String),
+    Either[ErrorResponse, CredentialErrorResponse],
+    NonceResponse,
+    Any
+  ] = baseEndpoint.get
+    .in("nonce")
+    .out(
+      statusCode(StatusCode.Ok).description("Nonce issued successfully"),
+    )
+    .out(jsonBody[NonceResponse])
+    .errorOut(credentialEndpointErrorOutput)
+    .name("getNonce")
+    .summary("Nonce Endpoint")
+    .description(
+      """The endpoint that returns a `nonce` value for the [Token Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-nonce-endpoint)""".stripMargin
     )
 
 }
