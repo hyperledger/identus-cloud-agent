@@ -4,8 +4,6 @@ import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.circe.*
 import io.circe.syntax.*
 import cats.implicits.*
-import io.iohk.atala.shared.models.HexString
-
 import java.time.{Instant, ZoneOffset}
 import zio.*
 import io.iohk.atala.shared.utils.Json as JsonUtils
