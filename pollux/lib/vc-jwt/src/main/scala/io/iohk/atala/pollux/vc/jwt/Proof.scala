@@ -52,15 +52,11 @@ object EddsaJcs2022ProofGenerator {
       canonicalizedJsonString <- ZIO.fromEither(JsonUtils.canonicalizeToJcs(payload.spaces2))
       canonicalizedJson <- ZIO.fromEither(parser.parse(canonicalizedJsonString))
       dataToSign = canonicalizedJson.noSpaces.getBytes
-      _ <- ZIO.logInfo("Data before singing (Json): " + canonicalizedJson.spaces2)
-      _ <- ZIO.logInfo("Data before singing (bytes): " + HexString.fromByteArray(dataToSign))
       signature = sign(sk, dataToSign)
-      _ <- ZIO.logInfo("Signature: " + HexString.fromByteArray(signature))
       base58BtsEncodedSignature = MultiBaseString(
         header = MultiBaseString.Header.Base58Btc,
         data = ByteVector.view(signature).toBase58
       ).toMultiBaseString
-      _ <- ZIO.logInfo("Public key: " + pk)
       created = Instant.now()
       multiKey = MultiKey(publicKeyMultibase =
         Some(MultiBaseString(header = MultiBaseString.Header.Base64Url, data = Base64Utils.encodeURL(pk.getEncoded)))
@@ -82,20 +78,16 @@ object EddsaJcs2022ProofGenerator {
       canonicalizedJsonString <- ZIO
         .fromEither(JsonUtils.canonicalizeToJcs(payload.spaces2))
         .mapError(_.getMessage)
-      canonicalizedJson <- ZIO.fromEither(parser.parse(canonicalizedJsonString))
+      canonicalizedJson <- ZIO
+        .fromEither(parser.parse(canonicalizedJsonString))
         .mapError(_.getMessage)
       dataToVerify = canonicalizedJson.noSpaces.getBytes
-      _ <- ZIO.logInfo("Data before verifying (Json): " + canonicalizedJson.spaces2)
-      _ <- ZIO.logInfo("Data before verifying (bytes): " + HexString.fromByteArray(dataToVerify))
       signature <- ZIO.fromEither(MultiBaseString.fromString(proofValue).flatMap(_.getBytes))
-      _ <- ZIO.logInfo("Signature: " + HexString.fromByteArray(signature))
       publicKeyBytes <- ZIO.fromEither(
         pk.publicKeyMultibase.toRight("No public key provided inside MultiKey").flatMap(_.getBytes)
       )
       javaPublicKey <- ZIO.fromEither(recoverPublicKey(publicKeyBytes))
-      _ <- ZIO.logInfo("Recovered public key: " + javaPublicKey)
       isValid = verify(javaPublicKey, signature, dataToVerify)
-      _ <- ZIO.logInfo(s"Signature verification result: $isValid")
 
     } yield isValid
 

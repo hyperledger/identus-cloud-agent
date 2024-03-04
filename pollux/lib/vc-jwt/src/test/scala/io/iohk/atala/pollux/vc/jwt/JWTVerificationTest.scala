@@ -95,7 +95,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
   }
 
   override def spec = suite("JWTVerificationSpec")(
-    test("tmp") {
+    test("Validate status list credential proof and revocation status by index") {
       import io.iohk.atala.shared.http.{DataUrlResolver, GenericUriResolver, GenericUriResolverError, UriResolver}
 
       val statusList: CredentialStatus = CredentialStatus(
@@ -103,40 +103,41 @@ object JWTVerificationTest extends ZIOSpecDefault {
         statusPurpose = StatusPurpose.Revocation,
         `type` = "StatusList2021Entry",
         statusListCredential = "http://localhost:8085/credential-status/664382dc-9e6d-4d0c-99d1-85e2c74eb5e9",
-        statusListIndex = 1
+        statusListIndex = 2
       )
 
       val urlResolver = new UriResolver {
         override def resolve(uri: String): IO[GenericUriResolverError, String] = {
           ZIO.succeed(
             """
-            |{
-            |  "proof" : {
-            |    "type" : "DataIntegrityProof",
-            |    "proofPurpose" : "assertionMethod",
-            |    "verificationMethod" : "data:application/json;base64,eyJAY29udGV4dCI6WyJodHRwczovL3czaWQub3JnL3NlY3VyaXR5L211bHRpa2V5L3YxIl0sInR5cGUiOiJNdWx0aWtleSIsInB1YmxpY0tleU11bHRpYmFzZSI6InVNRll3RUFZSEtvWkl6ajBDQVFZRks0RUVBQW9EUWdBRUNYSUZsMlIxOGFtZUxELXlrU09HS1FvQ0JWYkZNNW91bGtjMnZJckp0UzRQWkJnMkxyNEQzUFdYR2xHTXB1aHdwSk84MEFpdzFXeVVHT1hONkJqSlFBPT0ifQ==",
-            |    "created" : "2024-03-04T10:50:35.161099Z",
-            |    "proofValue" : "zAN1rKrJCd3uvtEstA9TzACbmiBpwt7LYC9Qeig6k8zis5EHTBYBtwkJLGyVseMxiwbvpWG4xw1kWqnSSaYxm5smNDs2dJ5yTj",
-            |    "cryptoSuite" : "eddsa-jcs-2022"
-            |  },
-            |  "@context" : [
-            |    "https://www.w3.org/2018/credentials/v1",
-            |    "https://w3id.org/vc/status-list/2021/v1"
-            |  ],
-            |  "type" : [
-            |    "VerifiableCredential",
-            |    "StatusList2021Credential"
-            |  ],
-            |  "id" : "http://localhost:8085/credential-status/664382dc-9e6d-4d0c-99d1-85e2c74eb5e9",
-            |  "issuer" : "did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a",
-            |  "issuanceDate" : 1709549434,
-            |  "credentialSubject" : {
-            |    "id" : "",
-            |    "type" : "StatusList2021",
-            |    "statusPurpose" : "Revocation",
-            |    "encodedList" : "H4sIAAAAAAAA_-3BMQ0AAAACIGf_0MbwARoAAAAAAAAAAAAAAAAAAADgbbmHB0sAQAAA"
-            |  }
-            |}""".stripMargin
+              |{
+              |  "proof" : {
+              |    "type" : "DataIntegrityProof",
+              |    "proofPurpose" : "assertionMethod",
+              |    "verificationMethod" : "data:application/json;base64,eyJAY29udGV4dCI6WyJodHRwczovL3czaWQub3JnL3NlY3VyaXR5L211bHRpa2V5L3YxIl0sInR5cGUiOiJNdWx0aWtleSIsInB1YmxpY0tleU11bHRpYmFzZSI6InVNRll3RUFZSEtvWkl6ajBDQVFZRks0RUVBQW9EUWdBRUNYSUZsMlIxOGFtZUxELXlrU09HS1FvQ0JWYkZNNW91bGtjMnZJckp0UzRQWkJnMkxyNEQzUFdYR2xHTXB1aHdwSk84MEFpdzFXeVVHT1hONkJqSlFBPT0ifQ==",
+              |    "created" : "2024-03-04T14:44:43.867542Z",
+              |    "proofValue" : "zAN1rKqPFt7JayDWWD4Gu7HRsNVrgqHxMhKmYT5AE1FYD5a2zaM8G4WRPBmss9M2h3J5f56sunDFbxJVuDGB8qndknijyBcqr3",
+              |    "cryptoSuite" : "eddsa-jcs-2022"
+              |  },
+              |  "@context" : [
+              |    "https://www.w3.org/2018/credentials/v1",
+              |    "https://w3id.org/vc/status-list/2021/v1"
+              |  ],
+              |  "type" : [
+              |    "VerifiableCredential",
+              |    "StatusList2021Credential"
+              |  ],
+              |  "id" : "http://localhost:8085/credential-status/664382dc-9e6d-4d0c-99d1-85e2c74eb5e9",
+              |  "issuer" : "did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a",
+              |  "issuanceDate" : 1709563483,
+              |  "credentialSubject" : {
+              |    "id" : "",
+              |    "type" : "StatusList2021",
+              |    "statusPurpose" : "Revocation",
+              |    "encodedList" : "H4sIAAAAAAAA_-3BMQ0AAAACIGf_0MbwARoAAAAAAAAAAAAAAAAAAADgbbmHB0sAQAAA"
+              |  }
+              |}
+              |""".stripMargin
           )
         }
       }

@@ -655,6 +655,7 @@ object CredentialVerification {
       statusListString <- uriResolver
         .resolve(credentialStatus.statusListCredential)
         .mapError(err => s"Could not resolve status list credential: $err")
+      _ <- ZIO.logInfo("Credential status: " + credentialStatus)
       vcStatusListCredJson <- ZIO
         .fromEither(io.circe.parser.parse(statusListString))
         .mapError(err => s"Could not parse status list credential as Json string: $err")

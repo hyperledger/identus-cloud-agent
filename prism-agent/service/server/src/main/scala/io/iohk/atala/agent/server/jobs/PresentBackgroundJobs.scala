@@ -28,7 +28,7 @@ import zio.prelude.ZValidation.*
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
 import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import io.iohk.atala.shared.models.WalletAccessContext
 
 import java.time.{Clock, Instant, ZoneId}
 import io.iohk.atala.castor.core.service.DIDService
@@ -375,7 +375,6 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               _
             ) => // Verifier
-          // TODO: verify the revocation status of credentials here
           ZIO.logDebug("PresentationRecord: PresentationReceived") *> ZIO.unit
           val clock = java.time.Clock.system(ZoneId.systemDefault)
           presentation match
@@ -459,7 +458,9 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
                       case any => ZIO.fail(NotImplemented)
                     }
-                    _ <- ZIO.log(s"CredentialsValidationResult: $credentialsValidationResult")
+                    _ <- credentialsValidationResult match
+                      case l @ Failure(_, _) => ZIO.logError(s"CredentialsValidationResult: $l")
+                      case l @ Success(_, _) => ZIO.logInfo(s"CredentialsValidationResult: $l")
                     service <- ZIO.service[PresentationService]
                     presReceivedToProcessedAspect = CustomMetricsAspect.endRecordingTime(
                       s"${record.id}_present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge",

@@ -368,7 +368,7 @@ object JwtPresentation {
       jwt: JWT,
       options: CredentialVerification.CredentialVerificationOptions
   )(didResolver: DidResolver, uriResolver: UriResolver)(implicit
-                                                        clock: Clock
+      clock: Clock
   ): IO[List[String], Validation[String, Unit]] = {
     val validateJwtPresentation = Validation.fromTry(decodeJwt(jwt)).mapError(_.toString)
 

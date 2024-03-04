@@ -31,7 +31,6 @@ object StatusListJobs extends BackgroundJobsHelper {
             .decodeFromJson(vcStatusListCredJson, issuer)
             .mapError(x => new Throwable(x.msg))
           bitString <- vcStatusListCred.getBitString.mapError(x => new Throwable(x.msg))
-          encodedBeforeTmp <- bitString.encoded.mapError(x => new Throwable(x.message))
           updateBitStringEffects = statusListWithCreds.credentials.map { cred =>
             if cred.isCanceled then bitString.setRevokedInPlace(cred.statusListIndex, true)
             else ZIO.unit
