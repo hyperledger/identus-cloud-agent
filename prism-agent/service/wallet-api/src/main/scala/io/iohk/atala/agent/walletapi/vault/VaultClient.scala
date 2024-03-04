@@ -2,23 +2,26 @@ package io.iohk.atala.agent.walletapi.vault
 
 import io.github.jopenlibs.vault.Vault
 import io.github.jopenlibs.vault.VaultConfig
+import io.github.jopenlibs.vault.api.Logical
+import io.github.jopenlibs.vault.api.LogicalUtilities
 import io.github.jopenlibs.vault.response.LogicalResponse
 import zio.*
+import zio.http.*
 
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters.*
 
 trait VaultKVClient {
   def get[T: KVCodec](path: String): Task[Option[T]]
-  def set[T: KVCodec](path: String, data: T): Task[Unit]
+  def set[T: KVCodec](path: String, data: T, customMetadata: Map[String, String] = Map.empty): Task[Unit]
 }
 
-class VaultKVClientImpl(vaultRef: Ref[Vault]) extends VaultKVClient {
+class VaultKVClientImpl(vaultRef: Ref[(Vault, VaultConfig)], client: Client) extends VaultKVClient {
   import VaultKVClientImpl.*
 
   override def get[T: KVCodec](path: String): Task[Option[T]] = {
     for {
-      vault <- vaultRef.get
+      vault <- vaultRef.get.map(_._1)
       maybeData <- ZIO
         .attemptBlocking(
           vault
@@ -31,10 +34,11 @@ class VaultKVClientImpl(vaultRef: Ref[Vault]) extends VaultKVClient {
     } yield decodedData
   }
 
-  override def set[T: KVCodec](path: String, data: T): Task[Unit] = {
+  override def set[T: KVCodec](path: String, data: T, customMetadata: Map[String, String]): Task[Unit] = {
     val kv = summon[KVCodec[T]].encode(data)
     for {
-      vault <- vaultRef.get
+      vault <- vaultRef.get.map(_._1)
+      vaultConfig <- vaultRef.get.map(_._2)
       _ <- ZIO
         .attemptBlocking {
           vault
@@ -42,26 +46,30 @@ class VaultKVClientImpl(vaultRef: Ref[Vault]) extends VaultKVClient {
             .write(path, kv.asJava)
         }
         .handleVaultError("Error writing a secret to Vault.")
+      _ <- ExtendedLogical(vaultConfig, client)
+        .writeMetadata(path, customMetadata)
+        .when(customMetadata.nonEmpty)
     } yield ()
   }
-
 }
 
 object VaultKVClientImpl {
 
   private final case class TokenRefreshState(leaseDuration: Duration)
 
-  def fromToken(address: String, token: String): Task[VaultKVClient] =
+  def fromToken(address: String, token: String): RIO[Client, VaultKVClient] =
     for {
+      client <- ZIO.service[Client]
       vault <- createVaultInstance(address, Some(token))
       vaultRef <- Ref.make(vault)
-    } yield VaultKVClientImpl(vaultRef)
+    } yield VaultKVClientImpl(vaultRef, client)
 
-  def fromAppRole(address: String, roleId: String, secretId: String): Task[VaultKVClient] =
+  def fromAppRole(address: String, roleId: String, secretId: String): RIO[Client, VaultKVClient] =
     for {
+      client <- ZIO.service[Client]
       vault <- createVaultInstance(address)
-      vaultRef <- vaultTokenRefreshLogic(vault, address, roleId, secretId)
-    } yield VaultKVClientImpl(vaultRef)
+      vaultRef <- vaultTokenRefreshLogic(vault._1, address, roleId, secretId)
+    } yield VaultKVClientImpl(vaultRef, client)
 
   private def vaultTokenRefreshLogic(
       authVault: Vault,
@@ -70,7 +78,7 @@ object VaultKVClientImpl {
       secretId: String,
       tokenRefreshBuffer: Duration = 15.seconds,
       retrySchedule: Schedule[Any, Any, Any] = Schedule.spaced(5.second) && Schedule.recurs(10)
-  ): Task[Ref[Vault]] = {
+  ): Task[Ref[(Vault, VaultConfig)]] = {
     val getToken = ZIO
       .attempt {
         val authResponse = authVault.auth().loginByAppRole(roleId, secretId)
@@ -100,13 +108,14 @@ object VaultKVClientImpl {
     } yield vaultRef
   }
 
-  private def createVaultInstance(address: String, token: Option[String] = None): Task[Vault] =
+  private def createVaultInstance(address: String, token: Option[String] = None): Task[(Vault, VaultConfig)] =
     ZIO.attempt {
-      val config = VaultConfig()
+      val configBuilder = VaultConfig()
         .engineVersion(2)
         .address(address)
-      token.foreach(config.token)
-      Vault.create(config.build())
+      token.foreach(configBuilder.token)
+      val config = configBuilder.build()
+      Vault.create(config) -> config
     }
 
   extension [R](resp: RIO[R, LogicalResponse]) {
@@ -147,4 +156,35 @@ object VaultKVClientImpl {
     }
   }
 
+  private[vault] class ExtendedLogical(config: VaultConfig, client: Client) extends Logical(config) {
+    // based on https://github.com/jopenlibs/vault-java-driver/blob/e49312a8cbcd14b260dacb2822c19223feb1b7af/src/main/java/io/github/jopenlibs/vault/api/Logical.java#L275
+    def writeMetadata(path: String, metadata: Map[String, String]): Task[Unit] = {
+      val pathSegments = path.split("/")
+      val pathDepth = config.getPrefixPathDepth()
+      val adjustedPath = LogicalUtilities.addQualifierToPath(pathSegments.toSeq.asJava, pathDepth, "metadata")
+      val url = config.getAddress() + "/v1/" + adjustedPath
+
+      for {
+        url <- ZIO.fromEither(URL.decode(url)).orDie
+        response <- ZIO.scoped {
+          client
+            .request(
+              Request(
+                url = url,
+                method = Method.POST,
+                headers = Headers(
+                  Header.Custom("X-Vault-Token", config.getToken()),
+                  Header.Custom("X-Vault-Namespace", config.getNameSpace()),
+                  Header.Custom("X-Vault-Request", "true"),
+                )
+              )
+            )
+            .retry(
+              Schedule.recurs(config.getMaxRetries()) &&
+                Schedule.spaced(config.getRetryIntervalMilliseconds().millis)
+            )
+        }
+      } yield ()
+    }
+  }
 }

@@ -3,10 +3,10 @@ package io.iohk.atala.agent.walletapi.vault
 import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.prism.crypto.Sha256
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import zio.*
-import io.iohk.atala.prism.crypto.Sha256
 
 import java.nio.charset.StandardCharsets
 
@@ -18,7 +18,7 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) ex
       (path, metadata) = peerDidKeyPath(walletId)(did, keyId)
       alreadyExist <- vaultKV.get[OctetKeyPair](path).map(_.isDefined)
       _ <- vaultKV
-        .set[OctetKeyPair](path, keyPair)
+        .set[OctetKeyPair](path, keyPair, metadata)
         .when(!alreadyExist)
         .someOrFail(Exception(s"Secret on path $path already exists."))
     } yield 1

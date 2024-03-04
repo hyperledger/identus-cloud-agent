@@ -225,7 +225,7 @@ object RepoModule {
       } yield vaultKVClient
     }
 
-    SystemModule.configLayer >>> vaultClient
+    SystemModule.configLayer ++ SystemModule.zioHttpClientLayer >>> vaultClient
   }
 
   val allSecretStorageLayer: TaskLayer[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage] = {
