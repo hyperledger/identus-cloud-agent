@@ -6,7 +6,6 @@ import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.db.DbConfig
 import zio.config.*
 import zio.config.magnolia.Descriptor
-
 import java.net.URL
 import java.time.Duration
 import scala.util.Try
@@ -163,13 +162,28 @@ final case class AgentConfig(
         "The default wallet must be enabled if all the authentication methods are disabled. Default wallet is required for the single-tenant mode."
       )
       _ <- secretStorage.validate
+      _ <- httpEndpoint.validate
+      _ <- didCommEndpoint.validate
     } yield ()
 
 }
 
-final case class HttpEndpointConfig(http: HttpConfig, publicEndpointUrl: String)
+object EndpointConfig {
+  def validate(url: String): Either[String, Unit] = {
+    val urlRegex = """^(http|https)://[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(:[0-9]{1,5})?(/.*)?$""".r
+    urlRegex.findFirstMatchIn(url) match
+      case Some(_) => Right(())
+      case _       => Left(s"Invalid URL: $url")
+  }
+}
 
-final case class DidCommEndpointConfig(http: HttpConfig, publicEndpointUrl: String)
+final case class HttpEndpointConfig(http: HttpConfig, publicEndpointUrl: String) {
+  def validate: Either[String, Unit] = EndpointConfig.validate(publicEndpointUrl)
+}
+
+final case class DidCommEndpointConfig(http: HttpConfig, publicEndpointUrl: String) {
+  def validate: Either[String, Unit] = EndpointConfig.validate(publicEndpointUrl)
+}
 
 final case class HttpConfig(port: Int)
 
