@@ -12,7 +12,7 @@ import scala.util.Failure
 import scala.util.Try
 
 package object vault {
-  val RELATIVE_PATH_METADATA_KEY: String = "relativePath"
+  val SEMANTIC_PATH_METADATA_KEY: String = "semanticPath"
 
   private[vault] def walletBasePath(walletId: WalletId): String = {
     s"secret/${walletId.toUUID}"

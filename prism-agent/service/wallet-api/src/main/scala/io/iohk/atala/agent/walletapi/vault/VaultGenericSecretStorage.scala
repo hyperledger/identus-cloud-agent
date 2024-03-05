@@ -43,12 +43,12 @@ class VaultGenericSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean
       s"$basePath/$relativePath" -> Map.empty
     } else {
       val relativePathHash = Sha256.compute(relativePath.getBytes(StandardCharsets.UTF_8)).getHexValue()
-      s"$basePath/$relativePathHash" -> Map(RELATIVE_PATH_METADATA_KEY -> relativePath)
+      s"$basePath/$relativePathHash" -> Map(SEMANTIC_PATH_METADATA_KEY -> relativePath)
     }
   }
 
 }
 
 object VaultGenericSecretStorage {
-  def layer: URLayer[VaultKVClient, GenericSecretStorage] = ZLayer.fromFunction(VaultGenericSecretStorage(_, false))
+  def layer: URLayer[VaultKVClient, GenericSecretStorage] = ZLayer.fromFunction(VaultGenericSecretStorage(_, true))
 }
