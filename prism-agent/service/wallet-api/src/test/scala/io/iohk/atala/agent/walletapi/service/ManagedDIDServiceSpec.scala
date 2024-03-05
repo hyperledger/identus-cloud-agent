@@ -77,7 +77,7 @@ object ManagedDIDServiceSpec
 
   private def vaultSecretStorageLayer =
     ZLayer.make[DIDSecretStorage & WalletSecretStorage](
-      VaultDIDSecretStorage.layer(true),
+      VaultDIDSecretStorage.layer(useSemanticPath = true),
       VaultWalletSecretStorage.layer,
       vaultKvClientLayer()
     )

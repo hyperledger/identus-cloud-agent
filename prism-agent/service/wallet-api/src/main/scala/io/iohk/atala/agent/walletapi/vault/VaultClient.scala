@@ -159,7 +159,7 @@ object VaultKVClientImpl {
   }
 
   private final case class WriteMetadataRequest(
-      `custom_metadata`: Map[String, String]
+      custom_metadata: Map[String, String]
   )
 
   private object WriteMetadataRequest {
@@ -179,7 +179,6 @@ object VaultKVClientImpl {
         Header.ContentType(MediaType.application.json),
         Header.Custom("X-Vault-Request", "true"),
       )
-
       val additionalHeaders = Headers(
         Seq(
           Option(config.getToken()).map(Header.Custom("X-Vault-Token", _)),
@@ -189,19 +188,16 @@ object VaultKVClientImpl {
 
       for {
         url <- ZIO.fromEither(URL.decode(url)).orDie
+        request =
+          Request(
+            url = url,
+            method = Method.POST,
+            headers = baseHeaders ++ additionalHeaders,
+            body = Body.fromString(WriteMetadataRequest(custom_metadata = metadata).toJson)
+          )
         _ <- ZIO
-          .scoped {
-            client
-              .request(
-                Request(
-                  url = url,
-                  method = Method.POST,
-                  headers = baseHeaders ++ additionalHeaders,
-                  body = Body.fromString(WriteMetadataRequest(custom_metadata = metadata).toJson)
-                )
-              )
-              .timeoutFail(new RuntimeException("Client request timed out"))(5.seconds)
-          }
+          .scoped(client.request(request))
+          .timeoutFail(new RuntimeException("Client request timed out"))(5.seconds)
           .flatMap { resp =>
             if (resp.status.isSuccess) ZIO.unit
             else {

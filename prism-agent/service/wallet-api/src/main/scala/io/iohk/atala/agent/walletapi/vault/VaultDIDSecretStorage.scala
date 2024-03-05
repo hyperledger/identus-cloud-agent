@@ -32,6 +32,7 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) ex
     } yield keyPair
   }
 
+  /** @return A tuple of secret path and a secret custom_metadata */
   private def peerDidKeyPath(walletId: WalletId)(did: DidId, keyId: String): (String, Map[String, String]) = {
     val basePath = s"${walletBasePath(walletId)}/dids/peer"
     val relativePath = s"${did.value}/keys/$keyId"

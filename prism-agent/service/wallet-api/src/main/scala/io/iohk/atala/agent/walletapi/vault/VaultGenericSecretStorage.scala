@@ -34,6 +34,7 @@ class VaultGenericSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean
     } yield result
   }
 
+  /** @return A tuple of secret path and a secret custom_metadata */
   private def constructKeyPath[K, V](
       walletId: WalletId
   )(key: K)(implicit ev: GenericSecret[K, V]): (String, Map[String, String]) = {

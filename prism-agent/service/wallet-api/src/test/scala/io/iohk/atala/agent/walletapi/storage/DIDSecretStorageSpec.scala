@@ -145,7 +145,7 @@ object DIDSecretStorageSpec
         _ <- secretStorage.insertKey(peerDID.did, "agreement", peerDID.jwkForKeyAgreement)
         _ <- secretStorage.insertKey(peerDID.did, "authentication", peerDID.jwkForKeyAuthentication)
       } yield assertCompletes
-    } @@ TestAspect.tag("dev")
+    }
   ).globalWallet
 
   private val multiWalletSpec = suite("multi-wallet")(
