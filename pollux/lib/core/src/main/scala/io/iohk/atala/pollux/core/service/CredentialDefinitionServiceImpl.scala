@@ -34,8 +34,8 @@ class CredentialDefinitionServiceImpl(
   override def create(in: CredentialDefinition.Input): Result[CredentialDefinition] = {
     for {
       uri <- ZIO.attempt(new URI(in.schemaId))
-      content <- uriDereferencer.dereference(uri).debug("content")
-      anoncredSchema <- AnoncredSchemaSerDesV1.schemaSerDes.deserialize(content).debug("anoncredSchema")
+      content <- uriDereferencer.dereference(uri)
+      anoncredSchema <- AnoncredSchemaSerDesV1.schemaSerDes.deserialize(content)
       anoncredLibSchema =
         AnoncredSchemaDef(
           in.schemaId,
