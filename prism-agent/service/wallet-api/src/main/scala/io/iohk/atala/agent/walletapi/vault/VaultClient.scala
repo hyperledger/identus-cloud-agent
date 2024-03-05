@@ -218,7 +218,6 @@ object VaultKVClientImpl {
                 }
             }
           }
-          .debug("writeMetadata")
           .retry {
             val maxRetry = Option(config.getMaxRetries()).getOrElse(0)
             val retryIntervalMillis = Option(config.getRetryIntervalMilliseconds()).getOrElse(0)

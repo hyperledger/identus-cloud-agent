@@ -49,10 +49,23 @@ object DIDSecretStorageSpec
         ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
-    val vaultTestSuite = commonSpec("VaultDIDSecretStorage")
+    val vaultTestSuite = commonSpec("VaultDIDSecretStorage - useSemanticPath = true")
       .provide(
         JdbcDIDNonSecretStorage.layer,
-        VaultDIDSecretStorage.layer,
+        VaultDIDSecretStorage.layer(useSemanticPath = true),
+        VaultWalletSecretStorage.layer,
+        systemTransactorLayer,
+        contextAwareTransactorLayer,
+        pgContainerLayer,
+        vaultKvClientLayer,
+        walletManagementServiceLayer,
+        ZLayer.succeed(WalletAdministrationContext.Admin())
+      )
+
+    val vaultTestSuite2 = commonSpec("VaultDIDSecretStorage - useSemanticPath = false")
+      .provide(
+        JdbcDIDNonSecretStorage.layer,
+        VaultDIDSecretStorage.layer(useSemanticPath = false),
         VaultWalletSecretStorage.layer,
         systemTransactorLayer,
         contextAwareTransactorLayer,
@@ -74,7 +87,12 @@ object DIDSecretStorageSpec
         ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
-    suite("DIDSecretStorage")(jdbcTestSuite, vaultTestSuite, inMemoryTestSuite) @@ TestAspect.sequential
+    suite("DIDSecretStorage")(
+      jdbcTestSuite,
+      vaultTestSuite,
+      vaultTestSuite2,
+      inMemoryTestSuite
+    ) @@ TestAspect.sequential
   }
 
   private def commonSpec(name: String) =
