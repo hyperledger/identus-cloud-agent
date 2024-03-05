@@ -10,6 +10,9 @@
 
 Clone the generated repository on your local machine, move to the project root folder and install the dependencies defined in [`package.json`](./package.json)
 
+*NOTE*: The Project has a dependency on `input-output-hk/prism-typescript-client` which is a private repository.
+To install this dependency, you need to have an environment variable `GITHUB_TOKEN` with the scope `read:packages` set, you can install the dependency by running the following command:
+
 ```bash
 $ yarn install
 ```

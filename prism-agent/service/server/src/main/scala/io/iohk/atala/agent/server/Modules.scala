@@ -58,7 +58,7 @@ object SystemModule {
     )
   }
 
-  val zioHttpClientLayer = {
+  val zioHttpClientLayer: ZLayer[Any, Throwable, Client] = {
     import zio.http.netty.NettyConfig
     import zio.http.{ConnectionPoolConfig, DnsResolver, ZClient}
     (ZLayer.fromZIO(

@@ -23,6 +23,9 @@ case class StatusListCredential(
     @description(annotations.issuer.description)
     @encodedExample(annotations.issuer.example)
     issuer: String,
+    @description(annotations.id.description)
+    @encodedExample(annotations.id.example)
+    id: String,
     @description(annotations.issuanceDate.description)
     @encodedExample(annotations.issuanceDate.example)
     issuanceDate: Instant,
@@ -78,6 +81,12 @@ object StatusListCredential {
         extends Annotation[String](
           description = "DID of the issuer of status list credential",
           example = "did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a"
+        )
+
+    object id
+        extends Annotation[String](
+          description = "Unique identifier of status list credential",
+          example = "http://issuer-agent.com/credential-status/060a2bec-6d6f-4c1f-9414-d3c9dbd3ccc9"
         )
 
     object issuanceDate

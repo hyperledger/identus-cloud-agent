@@ -1246,7 +1246,7 @@ private class CredentialServiceImpl(
             verifyDates = false,
             leeway = Duration.Zero
           )
-        )(didResolver)(clock)
+        )(didResolver, (_: String) => ZIO.succeed(""))(clock)
         .mapError(errors => CredentialRequestValidationError(s"JWT presentation verification failed: $errors"))
 
       result <- verificationResult match
