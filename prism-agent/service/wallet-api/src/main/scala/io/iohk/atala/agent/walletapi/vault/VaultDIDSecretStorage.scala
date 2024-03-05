@@ -33,13 +33,13 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) ex
   }
 
   private def peerDidKeyPath(walletId: WalletId)(did: DidId, keyId: String): (String, Map[String, String]) = {
-    val peerDidBasePath = s"${walletBasePath(walletId)}/dids/peer"
-    val peerDidRelPath = s"${did.value}/keys/$keyId"
+    val basePath = s"${walletBasePath(walletId)}/dids/peer"
+    val relativePath = s"${did.value}/keys/$keyId"
     if (useSemanticPath) {
-      s"$peerDidBasePath/$peerDidRelPath" -> Map.empty
+      s"$basePath/$relativePath" -> Map.empty
     } else {
-      val peerDidRelPathHash = Sha256.compute(peerDidRelPath.getBytes(StandardCharsets.UTF_8)).getHexValue()
-      s"$peerDidBasePath/$peerDidRelPathHash" -> Map(RELATIVE_PATH_METADATA_KEY -> peerDidRelPath)
+      val relativePathHash = Sha256.compute(relativePath.getBytes(StandardCharsets.UTF_8)).getHexValue()
+      s"$basePath/$relativePathHash" -> Map(RELATIVE_PATH_METADATA_KEY -> relativePath)
     }
   }
 }

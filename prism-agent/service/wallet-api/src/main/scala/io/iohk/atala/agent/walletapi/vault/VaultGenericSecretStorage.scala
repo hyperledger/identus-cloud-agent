@@ -2,21 +2,24 @@ package io.iohk.atala.agent.walletapi.vault
 
 import io.iohk.atala.agent.walletapi.storage.GenericSecret
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
+import io.iohk.atala.prism.crypto.Sha256
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import zio.*
 import zio.json.ast.Json
 
-class VaultGenericSecretStorage(vaultKV: VaultKVClient) extends GenericSecretStorage {
+import java.nio.charset.StandardCharsets
+
+class VaultGenericSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) extends GenericSecretStorage {
 
   override def set[K, V](key: K, secret: V)(implicit ev: GenericSecret[K, V]): RIO[WalletAccessContext, Unit] = {
     val payload = ev.encodeValue(secret)
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      path = constructKeyPath(walletId)(key)
+      (path, metadata) = constructKeyPath(walletId)(key)
       alreadyExist <- vaultKV.get[Json](path).map(_.isDefined)
       _ <- vaultKV
-        .set[Json](path, payload)
+        .set[Json](path, payload, metadata)
         .when(!alreadyExist)
         .someOrFail(Exception(s"Secret on path $path already exists."))
     } yield ()
@@ -25,19 +28,27 @@ class VaultGenericSecretStorage(vaultKV: VaultKVClient) extends GenericSecretSto
   override def get[K, V](key: K)(implicit ev: GenericSecret[K, V]): RIO[WalletAccessContext, Option[V]] = {
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      path = constructKeyPath(walletId)(key)
+      (path, _) = constructKeyPath(walletId)(key)
       json <- vaultKV.get[Json](path)
       result <- json.fold(ZIO.none)(json => ZIO.fromTry(ev.decodeValue(json)).asSome)
     } yield result
   }
 
-  private def constructKeyPath[K, V](walletId: WalletId)(key: K)(implicit ev: GenericSecret[K, V]): String = {
-    val keyPath = ev.keyPath(key)
-    s"secret/${walletId.toUUID}/generic-secrets/$keyPath"
+  private def constructKeyPath[K, V](
+      walletId: WalletId
+  )(key: K)(implicit ev: GenericSecret[K, V]): (String, Map[String, String]) = {
+    val basePath = s"secret/${walletId.toUUID}/generic-secrets"
+    val relativePath = ev.keyPath(key)
+    if (useSemanticPath) {
+      s"$basePath/$relativePath" -> Map.empty
+    } else {
+      val relativePathHash = Sha256.compute(relativePath.getBytes(StandardCharsets.UTF_8)).getHexValue()
+      s"$basePath/$relativePathHash" -> Map(RELATIVE_PATH_METADATA_KEY -> relativePath)
+    }
   }
 
 }
 
 object VaultGenericSecretStorage {
-  def layer: URLayer[VaultKVClient, GenericSecretStorage] = ZLayer.fromFunction(VaultGenericSecretStorage(_))
+  def layer: URLayer[VaultKVClient, GenericSecretStorage] = ZLayer.fromFunction(VaultGenericSecretStorage(_, false))
 }

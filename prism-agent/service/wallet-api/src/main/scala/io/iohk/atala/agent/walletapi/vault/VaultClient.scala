@@ -211,7 +211,7 @@ object VaultKVClientImpl {
                 .flatMap { body =>
                   ZIO.fail(
                     VaultException(
-                      s"Expecting HTTP status 2xx, but instead receiving ${resp.status.code}. Response body: ${body}",
+                      s"Expecting HTTP status 2xx, but instead receiving ${resp.status.code}.\n Response body: ${body}",
                       resp.status.code
                     )
                   )
