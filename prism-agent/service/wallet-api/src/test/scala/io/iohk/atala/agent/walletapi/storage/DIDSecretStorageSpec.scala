@@ -49,7 +49,7 @@ object DIDSecretStorageSpec
         ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
-    val vaultTestSuite = commonSpec("VaultDIDSecretStorage - useSemanticPath = true")
+    val vaultTestSuite = commonSpec("VaultDIDSecretStorage")
       .provide(
         JdbcDIDNonSecretStorage.layer,
         VaultDIDSecretStorage.layer(useSemanticPath = true),
@@ -57,12 +57,12 @@ object DIDSecretStorageSpec
         systemTransactorLayer,
         contextAwareTransactorLayer,
         pgContainerLayer,
-        vaultKvClientLayer,
+        vaultKvClientLayer(),
         walletManagementServiceLayer,
         ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
-    val vaultTestSuite2 = commonSpec("VaultDIDSecretStorage - useSemanticPath = false")
+    val vaultFsTestSuite = commonSpec("VaultDIDSecretStorage - file backend")
       .provide(
         JdbcDIDNonSecretStorage.layer,
         VaultDIDSecretStorage.layer(useSemanticPath = false),
@@ -70,7 +70,7 @@ object DIDSecretStorageSpec
         systemTransactorLayer,
         contextAwareTransactorLayer,
         pgContainerLayer,
-        vaultKvClientLayer,
+        vaultKvClientLayer(useFileBackend = true),
         walletManagementServiceLayer,
         ZLayer.succeed(WalletAdministrationContext.Admin())
       )
@@ -90,7 +90,7 @@ object DIDSecretStorageSpec
     suite("DIDSecretStorage")(
       jdbcTestSuite,
       vaultTestSuite,
-      vaultTestSuite2,
+      vaultFsTestSuite,
       inMemoryTestSuite
     ) @@ TestAspect.sequential
   }
@@ -136,6 +136,16 @@ object DIDSecretStorageSpec
         key1 <- secretStorage.getKey(peerDID.did, "agreement")
       } yield assert(key1)(isNone)
     },
+    test("insert with long DID does not fail") {
+      for {
+        nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
+        secretStorage <- ZIO.service[DIDSecretStorage]
+        peerDID = PeerDID.makePeerDid(serviceEndpoint = Some("http://localhost/" + ("a" * 100)))
+        _ <- nonSecretStorage.createPeerDIDRecord(peerDID.did)
+        _ <- secretStorage.insertKey(peerDID.did, "agreement", peerDID.jwkForKeyAgreement)
+        _ <- secretStorage.insertKey(peerDID.did, "authentication", peerDID.jwkForKeyAuthentication)
+      } yield assertCompletes
+    } @@ TestAspect.tag("dev")
   ).globalWallet
 
   private val multiWalletSpec = suite("multi-wallet")(

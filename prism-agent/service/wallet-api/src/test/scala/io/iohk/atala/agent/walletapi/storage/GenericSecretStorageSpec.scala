@@ -53,22 +53,22 @@ object GenericSecretStorageSpec
         ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
-    val vaultTestSuite = commonSpec("VaultGenericSecretStorage - useSemanticPath = true")
+    val vaultTestSuite = commonSpec("VaultGenericSecretStorage")
       .provide(
         VaultWalletSecretStorage.layer,
         VaultGenericSecretStorage.layer(useSemanticPath = true),
         pgContainerLayer,
-        vaultKvClientLayer,
+        vaultKvClientLayer(),
         walletManagementServiceLayer,
         ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
-    val vaultTestSuite2 = commonSpec("VaultGenericSecretStorage - useSemanticPath = false")
+    val vaultFsTestSuite = commonSpec("VaultGenericSecretStorage - file backend")
       .provide(
         VaultWalletSecretStorage.layer,
         VaultGenericSecretStorage.layer(useSemanticPath = false),
         pgContainerLayer,
-        vaultKvClientLayer,
+        vaultKvClientLayer(useFileBackend = true),
         walletManagementServiceLayer,
         ZLayer.succeed(WalletAdministrationContext.Admin())
       )
@@ -86,7 +86,7 @@ object GenericSecretStorageSpec
     suite("GenericSecretStorage")(
       jdbcTestSuite,
       vaultTestSuite,
-      vaultTestSuite2,
+      vaultFsTestSuite,
       inMemoryTestSuite
     ) @@ TestAspect.sequential
   }

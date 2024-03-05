@@ -2,6 +2,7 @@ package io.iohk.atala.agent.walletapi.vault
 
 import io.github.jopenlibs.vault.Vault
 import io.github.jopenlibs.vault.VaultConfig
+import io.github.jopenlibs.vault.VaultException
 import io.github.jopenlibs.vault.api.Logical
 import io.github.jopenlibs.vault.api.LogicalUtilities
 import io.github.jopenlibs.vault.response.LogicalResponse
@@ -11,8 +12,6 @@ import zio.json.*
 
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters.*
-import sttp.model.StatusCode
-import io.github.jopenlibs.vault.VaultException
 
 trait VaultKVClient {
   def get[T: KVCodec](path: String): Task[Option[T]]

@@ -10,10 +10,11 @@ trait VaultTestContainerSupport {
 
   private val TEST_TOKEN = "root"
 
-  protected val vaultContainerLayer: TaskLayer[VaultContainerCustom] = VaultLayer.vaultLayer(vaultToken = TEST_TOKEN)
+  protected def vaultContainerLayer(useFileBackend: Boolean): TaskLayer[VaultContainerCustom] =
+    VaultLayer.vaultLayer(vaultToken = TEST_TOKEN, useFileBackend = useFileBackend)
 
-  protected def vaultKvClientLayer: TaskLayer[VaultKVClient] =
-    vaultContainerLayer ++ Client.default >>> ZLayer.fromFunction { (container: VaultContainerCustom) =>
+  protected def vaultKvClientLayer(useFileBackend: Boolean = false): TaskLayer[VaultKVClient] =
+    vaultContainerLayer(useFileBackend) ++ Client.default >>> ZLayer.fromFunction { (container: VaultContainerCustom) =>
       val address = container.container.getHttpHostAddress()
       ZLayer.fromZIO(VaultKVClientImpl.fromToken(address, TEST_TOKEN))
     }.flatten
