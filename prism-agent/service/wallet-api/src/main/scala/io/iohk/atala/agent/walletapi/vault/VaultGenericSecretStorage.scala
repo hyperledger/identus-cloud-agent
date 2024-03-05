@@ -37,7 +37,7 @@ class VaultGenericSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean
   private def constructKeyPath[K, V](
       walletId: WalletId
   )(key: K)(implicit ev: GenericSecret[K, V]): (String, Map[String, String]) = {
-    val basePath = s"secret/${walletId.toUUID}/generic-secrets"
+    val basePath = s"${walletBasePath(walletId)}/generic-secrets"
     val relativePath = ev.keyPath(key)
     if (useSemanticPath) {
       s"$basePath/$relativePath" -> Map.empty
@@ -50,5 +50,6 @@ class VaultGenericSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean
 }
 
 object VaultGenericSecretStorage {
-  def layer: URLayer[VaultKVClient, GenericSecretStorage] = ZLayer.fromFunction(VaultGenericSecretStorage(_, true))
+  def layer(useSemanticPath: Boolean): URLayer[VaultKVClient, GenericSecretStorage] =
+    ZLayer.fromFunction(VaultGenericSecretStorage(_, useSemanticPath))
 }

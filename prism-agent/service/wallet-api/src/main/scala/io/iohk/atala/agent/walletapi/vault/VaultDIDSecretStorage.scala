@@ -45,5 +45,6 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) ex
 }
 
 object VaultDIDSecretStorage {
-  def layer: URLayer[VaultKVClient, DIDSecretStorage] = ZLayer.fromFunction(VaultDIDSecretStorage(_, true))
+  def layer(useSemanticPath: Boolean): URLayer[VaultKVClient, DIDSecretStorage] =
+    ZLayer.fromFunction(VaultDIDSecretStorage(_, useSemanticPath))
 }
