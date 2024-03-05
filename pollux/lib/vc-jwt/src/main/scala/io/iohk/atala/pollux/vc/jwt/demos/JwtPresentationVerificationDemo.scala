@@ -265,7 +265,8 @@ object JwtPresentationVerificationDemo extends ZIOAppDefault {
             Some(CredentialVerification.CredentialVerificationOptions(verifySignature = true, verifyDates = true))
           )
         )(
-          DidResolverTest()
+          DidResolverTest(),
+          (_: String) => ZIO.succeed("")
         )(clock)
       _ <- printLine(s"W3C IS VALID?: $w3cSignatureValidationResult")
       _ <- printLine(s"JWT IS VALID?: $jwtSignatureValidationResult")
