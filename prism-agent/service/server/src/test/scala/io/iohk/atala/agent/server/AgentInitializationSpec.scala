@@ -1,7 +1,6 @@
 package io.iohk.atala.agent.server
 
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.server.config.VaultConfig
 import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.service.EntityServiceImpl
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
