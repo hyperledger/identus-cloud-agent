@@ -232,6 +232,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             aIssueCredentialRecord.id,
             IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
             rawCredentialData,
+            None,
+            None,
             IssueCredentialRecord.ProtocolState.CredentialReceived
           )
           svc <- ZIO.service[PresentationService]
@@ -471,6 +473,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             aIssueCredentialRecord.id,
             IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
             rawCredentialData,
+            None,
+            None,
             IssueCredentialRecord.ProtocolState.CredentialReceived
           )
           svc <- ZIO.service[PresentationService]
@@ -500,6 +504,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             aIssueCredentialRecord.id,
             IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
             rawCredentialData,
+            Some("SchemaId"),
+            Some("CredDefId"),
             IssueCredentialRecord.ProtocolState.CredentialReceived
           )
           svc <- ZIO.service[PresentationService]
@@ -557,6 +563,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             aIssueCredentialRecord.id,
             IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
             rawCredentialData,
+            None,
+            None,
             IssueCredentialRecord.ProtocolState.CredentialReceived
           )
           svc <- ZIO.service[PresentationService]
@@ -888,11 +896,9 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           Some(credentialsToUseJson),
           PresentationRecord.ProtocolState.RequestPending
         )
-      issuer = createIssuer(DID("did:prism:issuer"))
       presentation <- svc.createAnoncredPresentation(
         aRecord.requestPresentationData.get,
         aRecord.id,
-        issuer,
         credentialsToUse,
         Instant.now()
       )
