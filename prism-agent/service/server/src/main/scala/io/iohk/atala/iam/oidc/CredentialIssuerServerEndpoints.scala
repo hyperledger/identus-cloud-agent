@@ -3,6 +3,7 @@ package io.iohk.atala.iam.oidc
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.{Authenticator, DefaultAuthenticator, SecurityLogic}
+import io.iohk.atala.iam.oidc.controller.CredentialIssuerController
 import io.iohk.atala.iam.oidc.http.{
   CredentialErrorResponse,
   CredentialRequest,
@@ -15,8 +16,9 @@ import zio.*
 import java.time.Instant
 import java.util.UUID
 
-class CredentialIssuerServerEndpoints(
-    authenticator: Authenticator[BaseEntity]
+case class CredentialIssuerServerEndpoints(
+    authenticator: Authenticator[BaseEntity],
+    credentialIssuerController: CredentialIssuerController
 ) {
   val credentialServerEndpoint: ZServerEndpoint[Any, Any] =
     CredentialIssuerEndpoints.credentialEndpoint
@@ -27,7 +29,7 @@ class CredentialIssuerServerEndpoints(
       )
       .serverLogic { wac =>
         { case (ctx: RequestContext, didRef: String, request: CredentialRequest) =>
-          ZIO.succeed(ImmediateCredentialResponse("credential"))
+          credentialIssuerController.issueCredential(ctx, didRef, request)
         }
       }
 
@@ -48,10 +50,11 @@ class CredentialIssuerServerEndpoints(
 }
 
 object CredentialIssuerServerEndpoints {
-  def all: URIO[DefaultAuthenticator, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[DefaultAuthenticator & CredentialIssuerController, List[ZServerEndpoint[Any, Any]]] = {
     for {
       authenticator <- ZIO.service[DefaultAuthenticator]
-      oidcEndpoints = new CredentialIssuerServerEndpoints(authenticator)
+      credentialIssuerController <- ZIO.service[CredentialIssuerController]
+      oidcEndpoints = CredentialIssuerServerEndpoints(authenticator, credentialIssuerController)
     } yield oidcEndpoints.all
   }
 }
