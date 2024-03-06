@@ -27,15 +27,18 @@ Secret storage supports various backends like the Vault service or Postgres data
 By default, the backend chosen for secret storage is Vault, which is suitable for production environments.
 There are multiple supported backend implementations, each catering to specific use cases.
 
-__HashiCorp Vault__
+### HashiCorp Vault
 
 When operating in a production environment, the agent has the option to utilize Vault
 as a secure secret storage backend. This choice is deemed suitable for production because
 all data is encrypted and it also offers additional security-related capabilities.
 By default, the agent uses this backend but the option is configurable.
 To utilize this backend, set the `SECRET_STORAGE_BACKEND` variable to `vault`.
+
+__Authentication and Authorization__
+
 The agent expects to read and write secrets to the path `/secret/*`,
-to ensure the provisioned permissions.
+so ensure the appropriate permissions are provisioned.
 
 Example Vault policy
 
@@ -53,7 +56,34 @@ The agent prefers token authentication if provided with multiple authentication 
 Another method is [AppRole authentication](https://developer.hashicorp.com/vault/docs/auth/approle) which is suitable for automatic workflows.
 To use AppRole authentication, set the environment variable `VAULT_APPROLE_ROLE_ID` and `VAULT_APPROLE_SECRET_ID`.
 
-__Postgres__
+__Storage Backend__
+
+HashiCorp Vault supports multiple backends for storage, such as filesystem, Etcd, PostgreSQL, or Integrated Storage (Raft).
+Each backend has different properties, which have implications for how secrets can be stored.
+The agent logically stores secrets in the following hierarchies.
+
+```
+# Wallet seed
+/secret/<wallet-id>/seed
+
+# Peer DID keys
+/secret/<wallet-id>/dids/peer/<peer-did>/keys/<key-id>
+
+# Generic secrets
+/secret/<wallet-id>/generic-secrets/<specific-path>
+```
+
+Each storage backend has certain limitations, such as size, number of sub-paths, or path length.
+Some backends can support path lengths of up to 32,768 characters, while others only allow a few hundred characters.
+In some cases, the storage backends might not support the above logical convention due to excessively long paths.
+
+To address this issue, the agent supports path shortening.
+This feature can be toggled by setting the environment variable `VAULT_USE_SEMANTIC_PATH=false`.
+When it is disabled, the unbounded portion of the path will be replaced by a SHA-256 digest of the original relative path.
+Additionally, the original path will be stored in the secret metadata.
+
+
+### Postgres
 
 Postgres is an alternative backend option for secret storage.
 However, this option must be explicitly chosen and will replace Vault.
