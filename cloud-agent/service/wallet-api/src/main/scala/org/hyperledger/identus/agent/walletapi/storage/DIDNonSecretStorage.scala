@@ -4,6 +4,10 @@ import org.hyperledger.identus.agent.walletapi.model.*
 import org.hyperledger.identus.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import io.iohk.atala.agent.walletapi.model.*
+import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
+import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import scala.collection.immutable.ArraySeq
@@ -57,5 +61,7 @@ trait DIDNonSecretStorage {
   def createPeerDIDRecord(did: DidId): RIO[WalletAccessContext, Int]
 
   def getPeerDIDRecord(did: DidId): Task[Option[PeerDIDRecord]]
+
+  def getPrismDidWalletId(prismDid: PrismDID): Task[Option[WalletId]]
 
 }

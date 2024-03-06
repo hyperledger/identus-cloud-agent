@@ -36,6 +36,29 @@ import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.core.service.verification.VcVerificationServiceImpl
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
+import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository, JdbcWalletNonSecretStorage}
+import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
+import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
+import io.iohk.atala.castor.core.service.DIDServiceImpl
+import io.iohk.atala.castor.core.util.DIDOperationValidator
+import io.iohk.atala.connect.controller.ConnectionControllerImpl
+import io.iohk.atala.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
+import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
+import io.iohk.atala.credentialstatus.controller.CredentialStatusControllerImpl
+import io.iohk.atala.event.controller.EventControllerImpl
+import io.iohk.atala.event.notification.EventNotificationServiceImpl
+import io.iohk.atala.iam.authentication.DefaultAuthenticator
+import io.iohk.atala.iam.authentication.apikey.JdbcAuthenticationRepository
+import io.iohk.atala.iam.authorization.DefaultPermissionManagementService
+import io.iohk.atala.iam.authorization.core.EntityPermissionManagementService
+import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
+import io.iohk.atala.iam.oidc.controller.CredentialIssuerControllerImpl
+import io.iohk.atala.iam.oidc.domain.{CredentialIssuerService, CredentialIssuerServiceImpl}
+import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
+import io.iohk.atala.issue.controller.IssueControllerImpl
+import io.iohk.atala.mercury.*
+import io.iohk.atala.pollux.core.service.*
+import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
 import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaController,
   CredentialSchemaControllerImpl,
@@ -197,6 +220,8 @@ object MainApp extends ZIOAppDefault {
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
+          // oidc
+          DIDServiceImpl.layer ++ CredentialIssuerServiceImpl.layer >>> CredentialIssuerControllerImpl.layer,
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client

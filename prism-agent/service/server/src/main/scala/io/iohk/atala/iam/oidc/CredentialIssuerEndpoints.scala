@@ -1,37 +1,15 @@
 package io.iohk.atala.iam.oidc
 
-import io.iohk.atala.api.http.{EndpointOutputs, ErrorResponse, RequestContext}
+import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.castor.controller.http.DIDInput
 import io.iohk.atala.castor.controller.http.DIDInput.didRefPathSegment
-import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
-import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import io.iohk.atala.iam.oidc.http.{
-  CredentialErrorResponse,
-  CredentialRequest,
-  CredentialResponse,
-  DeferredCredentialResponse,
-  ImmediateCredentialResponse,
-  JwtCredentialRequest,
-  NonceResponse
-}
+import io.iohk.atala.iam.oidc.http.{CredentialErrorResponse, CredentialRequest, CredentialResponse, NonceResponse}
 import sttp.apispec.Tag
-import sttp.tapir.{
-  Endpoint,
-  EndpointInput,
-  endpoint,
-  extractFromRequest,
-  model,
-  oneOf,
-  oneOfVariantValueMatcher,
-  path,
-  query,
-  statusCode,
-  stringToPath
-}
 import sttp.model.StatusCode
 import sttp.tapir.json.zio.jsonBody
+import sttp.tapir.{Endpoint, endpoint, extractFromRequest, oneOf, oneOfVariantValueMatcher, statusCode, stringToPath}
 
 object CredentialIssuerEndpoints {
 
@@ -46,6 +24,8 @@ object CredentialIssuerEndpoints {
        |""".stripMargin
 
   val tag = Tag(tagName, Some(tagDescription))
+
+  type ExtendedErrorResponse = Either[ErrorResponse, CredentialErrorResponse]
 
   private val baseEndpoint = endpoint
     .tag(tagName)
@@ -71,7 +51,7 @@ object CredentialIssuerEndpoints {
   val credentialEndpoint: Endpoint[
     JwtCredentials,
     (RequestContext, String, CredentialRequest),
-    Either[ErrorResponse, CredentialErrorResponse],
+    ExtendedErrorResponse,
     CredentialResponse,
     Any
   ] = baseEndpoint.post
@@ -91,7 +71,7 @@ object CredentialIssuerEndpoints {
   val nonceEndpoint: Endpoint[
     JwtCredentials,
     (RequestContext, String),
-    Either[ErrorResponse, CredentialErrorResponse],
+    ExtendedErrorResponse,
     NonceResponse,
     Any
   ] = baseEndpoint.get
