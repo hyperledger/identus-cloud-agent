@@ -9,8 +9,25 @@ class VaultContainerCustom(
     dockerImageNameOverride: DockerImageName,
     vaultToken: Option[String] = None,
     secrets: Option[VaultContainer.Secrets] = None,
-    isOnGithubRunner: Boolean = false
+    isOnGithubRunner: Boolean = false,
+    useFileBackend: Boolean = false
 ) extends SingleContainer[JavaVaultContainer[_]] {
+
+  private val vaultFSBackendConfig: String =
+    """{
+      |  "storage": {
+      |    "file": { "path": "/vault/data" }
+      |  }
+      |}
+      """.stripMargin
+
+  private val vaultMemBackendConfig: String =
+    """{
+      |  "storage": {
+      |    "inmem": {}
+      |  }
+      |}
+      """.stripMargin
 
   private val vaultContainer: JavaVaultContainer[_] = new JavaVaultContainer(dockerImageNameOverride) {
     override def getHost: String = {
@@ -28,5 +45,10 @@ class VaultContainerCustom(
     vaultContainer.withSecretInVault(x.path, x.firstSecret, x.secrets: _*)
   }
 
-  override val container: JavaVaultContainer[_] = vaultContainer
+  override val container: JavaVaultContainer[_] = {
+    val con = vaultContainer
+    if (useFileBackend) con.addEnv("VAULT_LOCAL_CONFIG", vaultFSBackendConfig)
+    else con.addEnv("VAULT_LOCAL_CONFIG", vaultMemBackendConfig)
+    con
+  }
 }

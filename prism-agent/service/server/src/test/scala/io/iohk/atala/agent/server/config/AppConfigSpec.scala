@@ -14,6 +14,7 @@ object AppConfigSpec extends ZIOSpecDefault {
     token = None,
     appRoleRoleId = None,
     appRoleSecretId = None,
+    useSemanticPath = true,
   )
 
   override def spec = suite("AppConfigSpec")(

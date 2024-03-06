@@ -31,7 +31,8 @@ final case class VaultConfig(
     address: String,
     token: Option[String],
     appRoleRoleId: Option[String],
-    appRoleSecretId: Option[String]
+    appRoleSecretId: Option[String],
+    useSemanticPath: Boolean
 ) {
   def validate: Either[String, ValidatedVaultConfig] =
     val tokenConfig = token.map(ValidatedVaultConfig.TokenAuth(address, _))
