@@ -269,12 +269,16 @@ object CredentialRepositorySpecSuite {
           aRecord.id,
           IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
           "RAW_CREDENTIAL_DATA",
+          None,
+          None,
           ProtocolState.CredentialReceived
         )
         _ <- repo.updateWithIssuedRawCredential(
           dRecord.id,
           IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
           "RAW_CREDENTIAL_DATA",
+          None,
+          None,
           ProtocolState.CredentialReceived
         )
         records <- repo.getValidIssuedCredentials(Seq(aRecord.id, bRecord.id, dRecord.id))
@@ -387,6 +391,8 @@ object CredentialRepositorySpecSuite {
           aRecord.id,
           issueCredential,
           "RAW_CREDENTIAL_DATA",
+          Some("schemaUri"),
+          Some("credentialDefinitionUri"),
           ProtocolState.CredentialReceived
         )
         updatedRecord <- repo.getIssueCredentialRecord(aRecord.id)
@@ -395,6 +401,8 @@ object CredentialRepositorySpecSuite {
         assertTrue(record.get.issueCredentialData.isEmpty) &&
         assertTrue(updatedRecord.get.issueCredentialData.contains(issueCredential)) &&
         assertTrue(updatedRecord.get.issuedCredentialRaw.contains("RAW_CREDENTIAL_DATA"))
+        assertTrue(updatedRecord.get.credentialDefinitionUri.contains("credentialDefinitionUri"))
+        assertTrue(updatedRecord.get.schemaUri.contains("schemaUri"))
       }
     },
     test("updateFail (fail one retry) updates record") {

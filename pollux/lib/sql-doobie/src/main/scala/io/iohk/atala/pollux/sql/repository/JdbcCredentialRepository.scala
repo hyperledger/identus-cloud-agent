@@ -2,6 +2,7 @@ package io.iohk.atala.pollux.sql.repository
 
 import cats.data.NonEmptyList
 import doobie.*
+import doobie.free.connection
 import doobie.implicits.*
 import doobie.postgres.implicits.*
 import io.circe.*
@@ -19,11 +20,11 @@ import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import org.postgresql.util.PSQLException
 import zio.*
+import zio.interop.catz.*
 import zio.json.*
 
-import doobie.free.connection
 import java.time.Instant
-import zio.interop.catz.*
+import java.util.UUID
 
 class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task], maxRetries: Int)
     extends CredentialRepository {
@@ -500,11 +501,15 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       recordId: DidCommID,
       issue: IssueCredential,
       issuedRawCredential: String,
+      schemaUri: Option[String],
+      credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
+        |   schema_uri = $schemaUri,
+        |   credential_definition_uri = $credentialDefinitionUri,
         |   issue_credential_data = $issue,
         |   issued_credential_raw = $issuedRawCredential,
         |   protocol_state = $protocolState,
