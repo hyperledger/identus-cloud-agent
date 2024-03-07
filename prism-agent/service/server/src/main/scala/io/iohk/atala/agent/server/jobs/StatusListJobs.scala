@@ -8,16 +8,13 @@ import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.protocol.revocationnotificaiton.RevocationNotification
 import io.iohk.atala.pollux.core.service.{CredentialService, CredentialStatusListService}
 import io.iohk.atala.pollux.vc.jwt.revocation.{VCStatusList2021, VCStatusList2021Error}
+import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 object StatusListJobs extends BackgroundJobsHelper {
 
-  val syncRevocationStatuses: ZIO[
-    CredentialStatusListService & CredentialService & DIDService & ManagedDIDService & AppConfig,
-    Throwable,
-    Unit
-  ] =
+  val syncRevocationStatuses =
     for {
       credentialStatusListService <- ZIO.service[CredentialStatusListService]
       credentialService <- ZIO.service[CredentialService]
@@ -43,7 +40,6 @@ object StatusListJobs extends BackgroundJobsHelper {
               val sendMessageEffect = for {
                 maybeIssueCredentialRecord <- credentialService
                   .getIssueCredentialRecord(cred.issueCredentialRecordId)
-                  .provideSomeLayer(ZLayer.succeed(walletAccessContext))
                   .mapError(_.toThrowable)
                 issueCredentialRecord <- ZIO
                   .fromOption(maybeIssueCredentialRecord)
@@ -66,8 +62,9 @@ object StatusListJobs extends BackgroundJobsHelper {
                   issueCredentialProtocolThreadId = issueCredentialProtocolThreadId
                 )
                 didCommAgent <- buildDIDCommAgent(issueCredentialData.from)
-                  .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-                response <- MessagingService.send(revocationNotification.makeMessage).provideSomeLayer(didCommAgent)
+                response <- MessagingService
+                  .send(revocationNotification.makeMessage)
+                  .provideSomeLayer(didCommAgent)
               } yield response
 
               val updateBitStringEffect = bitString.setRevokedInPlace(cred.statusListIndex, true)
@@ -82,7 +79,7 @@ object StatusListJobs extends BackgroundJobsHelper {
                 }
               } yield updated
 
-              updateAndNotify
+              updateAndNotify.provideSomeLayer(ZLayer.succeed(walletAccessContext))
             } else ZIO.unit
           }
           _ <- ZIO
