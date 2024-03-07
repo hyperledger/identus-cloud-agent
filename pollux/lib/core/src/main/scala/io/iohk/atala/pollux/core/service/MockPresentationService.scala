@@ -173,7 +173,6 @@ object MockPresentationService extends Mock[PresentationService] {
 
       override def createAnoncredPresentationPayloadFromRecord(
           record: DidCommID,
-          issuer: Issuer,
           anoncredCredentialProof: AnoncredCredentialProofsV1,
           issuanceDate: Instant
       ): IO[PresentationError, AnoncredPresentation] = ???
@@ -181,7 +180,6 @@ object MockPresentationService extends Mock[PresentationService] {
       override def createAnoncredPresentation(
           requestPresentation: RequestPresentation,
           recordId: DidCommID,
-          prover: Issuer,
           anoncredCredentialProof: AnoncredCredentialProofsV1,
           issuanceDate: Instant
       ): ZIO[WalletAccessContext, PresentationError, Presentation] = ???

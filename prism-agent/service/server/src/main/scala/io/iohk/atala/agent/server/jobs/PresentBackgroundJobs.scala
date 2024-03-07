@@ -373,16 +373,11 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                     AnoncredCredentialProofsV1.schemaSerDes
                       .deserialize(credentialsToUseJson)
                       .mapError(error => PresentationError.UnexpectedError(error.error))
-                  prover <- createPrismDIDIssuerFromPresentationCredentials(
-                    id,
-                    anoncredCredentialProofs.credentialProofs.map(_.credential)
-                  ).provideSomeLayer(ZLayer.succeed(walletAccessContext))
                   presentation <-
                     presentationService
                       .createAnoncredPresentation(
                         requestPresentation,
                         id,
-                        prover,
                         anoncredCredentialProofs,
                         Instant.now()
                       )

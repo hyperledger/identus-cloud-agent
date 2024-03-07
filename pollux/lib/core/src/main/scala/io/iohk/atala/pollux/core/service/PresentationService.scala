@@ -47,7 +47,6 @@ trait PresentationService {
 
   def createAnoncredPresentationPayloadFromRecord(
       record: DidCommID,
-      issuer: Issuer,
       anoncredCredentialProof: AnoncredCredentialProofsV1,
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation]
@@ -55,7 +54,6 @@ trait PresentationService {
   def createAnoncredPresentation(
       requestPresentation: RequestPresentation,
       recordId: DidCommID,
-      prover: Issuer,
       anoncredCredentialProof: AnoncredCredentialProofsV1,
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, Presentation]
