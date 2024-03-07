@@ -4,17 +4,23 @@ import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.pollux.core.service.CredentialStatusListService
+import io.iohk.atala.mercury.*
+import io.iohk.atala.mercury.protocol.revocationnotificaiton.RevocationNotification
+import io.iohk.atala.pollux.core.service.{CredentialService, CredentialStatusListService}
 import io.iohk.atala.pollux.vc.jwt.revocation.{VCStatusList2021, VCStatusList2021Error}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 object StatusListJobs extends BackgroundJobsHelper {
 
-  val syncRevocationStatuses
-      : ZIO[CredentialStatusListService & DIDService & ManagedDIDService & AppConfig, Throwable, Unit] =
+  val syncRevocationStatuses: ZIO[
+    CredentialStatusListService & CredentialService & DIDService & ManagedDIDService & AppConfig,
+    Throwable,
+    Unit
+  ] =
     for {
       credentialStatusListService <- ZIO.service[CredentialStatusListService]
+      credentialService <- ZIO.service[CredentialService]
       credentialStatusListsWithCreds <- credentialStatusListService.getCredentialsAndItsStatuses
         .mapError(_.toThrowable)
 
@@ -32,12 +38,55 @@ object StatusListJobs extends BackgroundJobsHelper {
             .mapError(x => new Throwable(x.msg))
           bitString <- vcStatusListCred.getBitString.mapError(x => new Throwable(x.msg))
           updateBitStringEffects = statusListWithCreds.credentials.map { cred =>
-            if cred.isCanceled then bitString.setRevokedInPlace(cred.statusListIndex, true)
-            else ZIO.unit
+            if cred.isCanceled then {
+
+              val sendMessageEffect = for {
+                maybeIssueCredentialRecord <- credentialService
+                  .getIssueCredentialRecord(cred.issueCredentialRecordId)
+                  .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                  .mapError(_.toThrowable)
+                issueCredentialRecord <- ZIO
+                  .fromOption(maybeIssueCredentialRecord)
+                  .mapError(_ =>
+                    new Throwable(s"Issue credential record not found by id: ${cred.issueCredentialRecordId}")
+                  )
+                issueCredentialData <- ZIO
+                  .fromOption(issueCredentialRecord.issueCredentialData)
+                  .mapError(_ =>
+                    new Throwable(
+                      s"Issue credential data not found in issue credential record by id: ${cred.issueCredentialRecordId}"
+                    )
+                  )
+                issueCredentialProtocolThreadId <- ZIO
+                  .fromOption(issueCredentialData.thid)
+                  .mapError(_ => new Throwable("thid not found in issue credential data"))
+                revocationNotification = RevocationNotification.build(
+                  issueCredentialData.from,
+                  issueCredentialData.to,
+                  issueCredentialProtocolThreadId = issueCredentialProtocolThreadId
+                )
+                didCommAgent <- buildDIDCommAgent(issueCredentialData.from)
+                  .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+                response <- MessagingService.send(revocationNotification.makeMessage).provideSomeLayer(didCommAgent)
+              } yield response
+
+              val updateBitStringEffect = bitString.setRevokedInPlace(cred.statusListIndex, true)
+
+              val updateAndNotify = for {
+                updated <- updateBitStringEffect.mapError(x => new Throwable(x.message))
+                resp <- sendMessageEffect
+                _ <- {
+                  if (resp.status >= 200 && resp.status < 300)
+                    ZIO.logInfo("successfully sent revocation notification message")
+                  else ZIO.logError(s"failed to send revocation notification message")
+                }
+              } yield updated
+
+              updateAndNotify
+            } else ZIO.unit
           }
           _ <- ZIO
             .collectAll(updateBitStringEffects)
-            .mapError(x => new Throwable(x.message))
 
           updatedVcStatusListCred <- vcStatusListCred.updateBitString(bitString).mapError {
             case VCStatusList2021Error.EncodingError(msg: String) => new Throwable(msg)

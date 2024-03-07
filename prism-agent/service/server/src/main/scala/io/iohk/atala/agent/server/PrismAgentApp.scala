@@ -96,8 +96,11 @@ object PrismAgentApp {
         .unit
     } yield ()
 
-  private val syncRevocationStatusListsJob
-      : ZIO[CredentialStatusListService & DIDService & ManagedDIDService & AppConfig, Throwable, Unit] = {
+  private val syncRevocationStatusListsJob: ZIO[
+    CredentialStatusListService & CredentialService & DIDService & ManagedDIDService & AppConfig,
+    Throwable,
+    Unit
+  ] = {
     for {
       config <- ZIO.service[AppConfig]
       _ <- StatusListJobs.syncRevocationStatuses
