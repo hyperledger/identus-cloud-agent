@@ -1,0 +1,7 @@
+root = true
+
+[*.{kt,kts}]
+ktlint_code_style = intellij_idea
+ij_kotlin_packages_to_use_import_on_demand = **
+ij_kotlin_name_count_to_use_star_import = 3
+ij_kotlin_name_count_to_use_star_import_for_members = 3

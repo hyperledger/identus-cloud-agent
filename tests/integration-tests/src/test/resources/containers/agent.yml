@@ -31,8 +31,9 @@ services:
       POLLUX_DB_HOST: postgres
       CONNECT_DB_HOST: postgres
       AGENT_DB_HOST: postgres
-      VAULT_APPROLE_ROLE_ID: agent
-      VAULT_APPROLE_SECRET_ID: agent-secret
+      VAULT_TOKEN: null
+      VAULT_APPROLE_ROLE_ID: null
+      VAULT_APPROLE_SECRET_ID: null
       AUTH_HEADER: apikey
       ADMIN_AUTH_HEADER: "x-admin-api-key"
       # Configuration parameters
