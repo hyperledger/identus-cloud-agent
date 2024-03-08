@@ -282,7 +282,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
            | SET
            |   is_processed = true
            | WHERE
-           |   id IN (${credsInStatusListIds.map(_.toString).mkString(",")})
+           |   id::text IN (${credsInStatusListIds.map(_.toString).mkString(",")})
            |""".stripMargin.update.run
 
     if credsInStatusListIds.nonEmpty then updateQuery.transactWallet(xa).unit else ZIO.unit
