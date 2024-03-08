@@ -138,6 +138,7 @@ class CredentialStatusListRepositoryInMemory(
       credentialStatusListId = credentialStatusListId,
       statusListIndex = statusListIndex,
       isCanceled = false,
+      isProcessed = false,
       createdAt = Instant.now(),
       updatedAt = None
     )
@@ -205,6 +206,7 @@ class CredentialStatusListRepositoryInMemory(
                 issueCredentialRecordId = cred.issueCredentialRecordId,
                 statusListIndex = cred.statusListIndex,
                 isCanceled = cred.isCanceled,
+                isProcessed = cred.isProcessed,
               )
             }
           )
@@ -232,6 +234,10 @@ class CredentialStatusListRepositoryInMemory(
 
   }
 
+  def markAsProcessedMany(
+      credsInStatusListIds: Seq[UUID]
+  ): RIO[WalletAccessContext, Unit] = ???
+
 }
 
 object CredentialStatusListRepositoryInMemory {
@@ -250,6 +256,7 @@ private case class CredentialInStatusList(
     credentialStatusListId: UUID,
     statusListIndex: Int,
     isCanceled: Boolean,
+    isProcessed: Boolean,
     createdAt: Instant = Instant.now(),
     updatedAt: Option[Instant] = None
 )

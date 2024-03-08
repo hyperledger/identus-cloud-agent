@@ -28,7 +28,6 @@ import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.http.*
-
 import java.util.UUID
 
 object DidCommHttpServer {

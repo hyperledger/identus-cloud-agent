@@ -71,19 +71,27 @@ object StatusListJobs extends BackgroundJobsHelper {
 
               val updateAndNotify = for {
                 updated <- updateBitStringEffect.mapError(x => new Throwable(x.message))
-                resp <- sendMessageEffect
-                _ <- {
-                  if (resp.status >= 200 && resp.status < 300)
-                    ZIO.logInfo("successfully sent revocation notification message")
-                  else ZIO.logError(s"failed to send revocation notification message")
-                }
+                _ <-
+                  if !cred.isProcessed then
+                    sendMessageEffect.flatMap { resp =>
+                      if (resp.status >= 200 && resp.status < 300)
+                        ZIO.logInfo("successfully sent revocation notification message")
+                      else ZIO.logError(s"failed to send revocation notification message")
+                    }
+                  else ZIO.unit
               } yield updated
-
               updateAndNotify.provideSomeLayer(ZLayer.succeed(walletAccessContext))
             } else ZIO.unit
           }
           _ <- ZIO
             .collectAll(updateBitStringEffects)
+
+          unprocessedEntityIds = statusListWithCreds.credentials.collect {
+            case x if !x.isProcessed => x.id
+          }
+          _ <- credentialStatusListService
+            .markAsProcessedMany(unprocessedEntityIds)
+            .mapError(_.toThrowable)
 
           updatedVcStatusListCred <- vcStatusListCred.updateBitString(bitString).mapError {
             case VCStatusList2021Error.EncodingError(msg: String) => new Throwable(msg)

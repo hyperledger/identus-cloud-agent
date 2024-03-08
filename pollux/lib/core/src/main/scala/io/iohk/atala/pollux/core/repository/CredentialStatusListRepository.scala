@@ -36,4 +36,8 @@ trait CredentialStatusListRepository {
       credentialStatusListId: UUID,
       statusListCredential: String
   ): RIO[WalletAccessContext, Unit]
+
+  def markAsProcessedMany(
+      credsInStatusListIds: Seq[UUID]
+  ): RIO[WalletAccessContext, Unit]
 }
