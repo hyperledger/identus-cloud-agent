@@ -85,7 +85,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
     ResourceURIDereferencerImpl.layer >+>
     CredentialRepositoryInMemory.layer >+>
     CredentialStatusListRepositoryInMemory.layer >+>
-    ZLayer.succeed(LinkSecretWithId("Unused Linked Secret ID")) >+>
+    ZLayer.succeed(AnoncredLinkSecretWithId("Unused Linked Secret ID")) >+>
     MockDIDService.empty >+>
     MockManagedDIDService.empty >+>
     CredentialServiceImpl.layer >+>
