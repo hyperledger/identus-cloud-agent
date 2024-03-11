@@ -236,7 +236,22 @@ class CredentialStatusListRepositoryInMemory(
 
   def markAsProcessedMany(
       credsInStatusListIds: Seq[UUID]
-  ): RIO[WalletAccessContext, Unit] = ???
+  ): RIO[WalletAccessContext, Unit] = for {
+    statusListsRefs <- walletToStatusListStorageRefs
+    statusLists <- statusListsRefs.get
+    credInStatusListsRefs <- ZIO
+      .collectAll(statusLists.keys.map(k => statusListToCredInStatusListStorageRefs(k)))
+      .map(_.toVector)
+    _ = credInStatusListsRefs.foreach(ref =>
+      ref.update { credInStatusListsMap =>
+        credInStatusListsMap.transform { (id, credInStatusList) =>
+          if (credsInStatusListIds.contains(id))
+            credInStatusList.copy(isProcessed = true, updatedAt = Some(Instant.now()))
+          else credInStatusList
+        }
+      }
+    )
+  } yield ()
 
 }
 
