@@ -49,7 +49,7 @@ object CredentialServiceImpl {
   private val VC_JSON_SCHEMA_TYPE = "CredentialSchema2022"
 }
 
-private class CredentialServiceImpl(
+class CredentialServiceImpl(
     credentialRepository: CredentialRepository,
     didResolver: DidResolver,
     uriDereferencer: URIDereferencer,
@@ -403,7 +403,7 @@ private class CredentialServiceImpl(
     }
   }
 
-  private[this] def getLongForm(
+  def getLongForm(
       did: PrismDID,
       allowUnpublishedIssuingDID: Boolean = false
   ) = {
@@ -420,10 +420,10 @@ private class CredentialServiceImpl(
     } yield longFormPrismDID
   }
 
-  private[this] def createJwtIssuer(
+  def createJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
-  ) = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, JwtIssuer] = {
     for {
       // Automatically infer keyId to use by resolving DID and choose the corresponding VerificationRelationship
       issuingKeyId <- didService
