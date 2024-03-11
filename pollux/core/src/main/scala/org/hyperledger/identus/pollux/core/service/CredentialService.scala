@@ -14,6 +14,14 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
+import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.mercury.protocol.issuecredential.{Attribute, IssueCredential, OfferCredential, RequestCredential}
+import io.iohk.atala.pollux.core.model.*
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError
+import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*
+import io.iohk.atala.pollux.vc.jwt.Issuer
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, ZIO}
 
 import java.nio.charset.StandardCharsets
@@ -119,6 +127,11 @@ trait CredentialService {
       recordId: DidCommID,
       failReason: Option[String]
   ): ZIO[WalletAccessContext, CredentialServiceError, Unit]
+
+  def createJwtIssuer(
+      jwtIssuerDID: PrismDID,
+      verificationRelationship: VerificationRelationship
+  ): ZIO[WalletAccessContext, CredentialServiceError, Issuer]
 
 }
 
