@@ -212,7 +212,8 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
            |   cisl.id as credential_in_status_list_id,
            |   cisl.issue_credential_record_id,
            |   cisl.status_list_index,
-           |   cisl.is_canceled
+           |   cisl.is_canceled,
+           |   cisl.is_processed
            |  FROM public.credential_status_lists csl
            |  LEFT JOIN public.credentials_in_status_list cisl ON csl.id = cisl.credential_status_list_id
            |""".stripMargin
@@ -242,7 +243,8 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
                 item.credentialInStatusListId,
                 item.issueCredentialRecordId,
                 item.statusListIndex,
-                item.isCanceled
+                item.isCanceled,
+                item.isProcessed,
               )
             }
           )
@@ -267,6 +269,23 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
            |""".stripMargin.update.run
 
     updateQuery.transactWallet(xa).unit
+
+  }
+
+  def markAsProcessedMany(
+      credsInStatusListIds: Seq[UUID]
+  ): RIO[WalletAccessContext, Unit] = {
+
+    val updateQuery =
+      sql"""
+           | UPDATE public.credentials_in_status_list
+           | SET
+           |   is_processed = true
+           | WHERE
+           |   id::text IN (${credsInStatusListIds.map(_.toString).mkString(",")})
+           |""".stripMargin.update.run
+
+    if credsInStatusListIds.nonEmpty then updateQuery.transactWallet(xa).unit else ZIO.unit
 
   }
 

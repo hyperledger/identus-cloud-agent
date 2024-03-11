@@ -590,6 +590,14 @@ lazy val protocolIssueCredential = project
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
+lazy val protocolRevocationNotification = project
+  .in(file("mercury/mercury-library/protocol-revocation-notification"))
+  .settings(name := "mercury-protocol-revocation-notification")
+  .settings(libraryDependencies += D.zio)
+  .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
+  .settings(libraryDependencies += D.munitZio)
+  .dependsOn(models)
+
 lazy val protocolPresentProof = project
   .in(file("mercury/mercury-library/protocol-present-proof"))
   .settings(name := "mercury-protocol-present-proof")
@@ -648,6 +656,7 @@ lazy val agent = project // maybe merge into models
     protocolMercuryMailbox,
     protocolLogin,
     protocolIssueCredential,
+    protocolRevocationNotification,
     protocolPresentProof,
     vc,
     protocolConnection,
@@ -880,6 +889,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   protocolReportProblem,
   protocolRouting,
   protocolIssueCredential,
+  protocolRevocationNotification,
   protocolPresentProof,
   vc,
   protocolTrustPing,

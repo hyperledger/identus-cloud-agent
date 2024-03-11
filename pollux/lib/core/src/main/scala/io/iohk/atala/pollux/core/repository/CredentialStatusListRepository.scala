@@ -2,7 +2,6 @@ package io.iohk.atala.pollux.core.repository
 
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
-import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.vc.jwt.Issuer
@@ -36,5 +35,9 @@ trait CredentialStatusListRepository {
   def updateStatusListCredential(
       credentialStatusListId: UUID,
       statusListCredential: String
+  ): RIO[WalletAccessContext, Unit]
+
+  def markAsProcessedMany(
+      credsInStatusListIds: Seq[UUID]
   ): RIO[WalletAccessContext, Unit]
 }

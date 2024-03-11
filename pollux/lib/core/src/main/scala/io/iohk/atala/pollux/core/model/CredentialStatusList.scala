@@ -24,6 +24,7 @@ case class CredInStatusList(
     issueCredentialRecordId: DidCommID,
     statusListIndex: Int,
     isCanceled: Boolean,
+    isProcessed: Boolean,
 )
 
 case class CredentialStatusListWithCred(
@@ -39,6 +40,7 @@ case class CredentialStatusListWithCred(
     issueCredentialRecordId: DidCommID,
     statusListIndex: Int,
     isCanceled: Boolean,
+    isProcessed: Boolean,
 )
 
 case class CredentialStatusListWithCreds(

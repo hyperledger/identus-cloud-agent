@@ -45,6 +45,14 @@ class CredentialStatusListServiceImpl(
       .mapError(RepositoryError.apply)
   }
 
+  def markAsProcessedMany(
+      credsInStatusListIds: Seq[UUID]
+  ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit] = {
+    credentialStatusListRepository
+      .markAsProcessedMany(credsInStatusListIds)
+      .mapError(RepositoryError.apply)
+  }
+
 }
 
 object CredentialStatusListServiceImpl {

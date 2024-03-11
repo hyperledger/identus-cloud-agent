@@ -18,4 +18,6 @@ trait CredentialStatusListService {
       id: UUID,
       statusListCredential: String
   ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit]
+
+  def markAsProcessedMany(ids: Seq[UUID]): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit]
 }
