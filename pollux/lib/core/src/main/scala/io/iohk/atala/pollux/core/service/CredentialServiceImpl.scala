@@ -634,67 +634,86 @@ private class CredentialServiceImpl(
 
   override def receiveCredentialIssue(
       issueCredential: IssueCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
-    for {
-      // TODO Move this type of generic/reusable code to a helper trait
-      record <- getRecordFromThreadIdWithState(
-        issueCredential.thid.map(DidCommID(_)),
-        ignoreWithZeroRetries = true,
-        ProtocolState.RequestPending,
-        ProtocolState.RequestSent
-      )
-      processedAttachments <- {
-        import IssueCredentialIssuedFormat.Anoncred
-        ZIO.collectAll(
-          issueCredential.attachments
-            .map {
-              case AttachmentDescriptor(
-                    id,
-                    media_type,
-                    Base64(v),
-                    Some(Anoncred.name),
-                    _,
-                    _,
-                    _,
-                    _
-                  ) =>
-                processAnonCredsCredential(record, java.util.Base64.getUrlDecoder.decode(v))
-                  .map(processedCredential =>
-                    AttachmentDescriptor.buildBase64Attachment(
-                      id = id,
-                      mediaType = media_type,
-                      format = Some(IssueCredentialIssuedFormat.Anoncred.name),
-                      payload = processedCredential
-                    )
-                  )
-              case attachment => ZIO.succeed(attachment)
-            }
-        )
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = for {
+    // TODO Move this type of generic/reusable code to a helper trait
+    record <- getRecordFromThreadIdWithState(
+      issueCredential.thid.map(DidCommID(_)),
+      ignoreWithZeroRetries = true,
+      ProtocolState.RequestPending,
+      ProtocolState.RequestSent
+    )
+    attachment <- ZIO
+      .fromOption(issueCredential.attachments.headOption)
+      .mapError(_ => CredentialServiceError.UnexpectedError("Missing attachment in credential issued credential"))
+
+    _ <- {
+      val result = attachment match {
+        case AttachmentDescriptor(
+              id,
+              media_type,
+              Base64(v),
+              Some(IssueCredentialIssuedFormat.Anoncred.name),
+              _,
+              _,
+              _,
+              _
+            ) =>
+          for {
+            processedCredential <- processAnonCredsCredential(record, java.util.Base64.getUrlDecoder.decode(v))
+            attachment = AttachmentDescriptor.buildBase64Attachment(
+              id = id,
+              mediaType = media_type,
+              format = Some(IssueCredentialIssuedFormat.Anoncred.name),
+              payload = processedCredential.data.getBytes
+            )
+            processedIssuedCredential = issueCredential.copy(attachments = Seq(attachment))
+            result <-
+              updateWithCredential(
+                processedIssuedCredential,
+                record,
+                attachment,
+                Some(processedCredential.getSchemaId),
+                Some(processedCredential.getCredDefId)
+              )
+          } yield result
+        case attachment =>
+          updateWithCredential(issueCredential, record, attachment, None, None)
       }
-      processedIssuedCredential = issueCredential.copy(attachments = processedAttachments)
-      _ <- credentialRepository
-        .updateWithIssuedRawCredential(
-          record.id,
-          processedIssuedCredential,
-          processedIssuedCredential.attachments.map(_.data.asJson.noSpaces).headOption.getOrElse("???"),
-          ProtocolState.CredentialReceived
-        )
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply)
-      record <- credentialRepository
-        .getIssueCredentialRecord(record.id)
-        .mapError(RepositoryError.apply)
-        .someOrFail(RecordIdNotFound(record.id))
-    } yield record
+      result
+    }
+    record <- credentialRepository
+      .getIssueCredentialRecord(record.id)
+      .mapError(RepositoryError.apply)
+      .someOrFail(RecordIdNotFound(record.id))
+  } yield record
+
+  private def updateWithCredential(
+      issueCredential: IssueCredential,
+      record: IssueCredentialRecord,
+      attachment: AttachmentDescriptor,
+      schemaId: Option[String],
+      credDefId: Option[String]
+  ) = {
+    credentialRepository
+      .updateWithIssuedRawCredential(
+        record.id,
+        issueCredential,
+        attachment.data.asJson.noSpaces,
+        schemaId,
+        credDefId,
+        ProtocolState.CredentialReceived
+      )
+      .flatMap {
+        case 1 => ZIO.succeed(())
+        case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
+      }
+      .mapError(RepositoryError.apply)
   }
 
   private[this] def processAnonCredsCredential(
       record: IssueCredentialRecord,
       credentialBytes: Array[Byte]
-  ): ZIO[WalletAccessContext, CredentialServiceError, Array[Byte]] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError, anoncreds.AnoncredCredential] = {
     for {
       credential <- ZIO.succeed(anoncreds.AnoncredCredential(new String(credentialBytes)))
       credDefContent <- uriDereferencer
@@ -717,7 +736,7 @@ private class CredentialServiceImpl(
           )
         )
         .mapError(error => UnexpectedError(s"AnonCreds credential processing error: ${error.getMessage}"))
-    } yield credential.data.getBytes()
+    } yield credential
   }
 
   override def markOfferSent(
