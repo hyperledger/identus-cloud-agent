@@ -114,10 +114,12 @@ object CredentialResponseEncryption {
   given decoder: JsonDecoder[CredentialResponseEncryption] = DeriveJsonDecoder.gen
 }
 
+type CredentialSubject = Map[String, ClaimDescriptor]
+
 case class CredentialDefinition(
     `@context`: Seq[String],
     `type`: Seq[String],
-    credentialSubject: Option[Map[String, ClaimDescriptor]]
+    credentialSubject: Option[CredentialSubject]
 )
 object CredentialDefinition {
   given schema: Schema[CredentialDefinition] = Schema.derived

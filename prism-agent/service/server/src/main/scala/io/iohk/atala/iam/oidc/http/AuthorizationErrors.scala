@@ -59,6 +59,7 @@ enum CredentialErrorCode {
   case insufficient_scope
   case invalid_credential_request
   case unsupported_credential_type
+  case unsupported_credential_format
   case invalid_proof
   case invalid_encryption_parameters
 }

@@ -1,11 +1,12 @@
 package io.iohk.atala.pollux.core.service
 
 import io.circe.Json
-import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
+import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord}
+import io.iohk.atala.pollux.vc.jwt.{Issuer, W3cCredentialPayload}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.mock.{Mock, Proxy}
 import zio.{IO, URLayer, ZIO, ZLayer, mock}
@@ -201,6 +202,11 @@ object MockCredentialService extends Mock[CredentialService] {
           thid: DidCommID,
           ignoreWithZeroRetries: Boolean
       ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = ???
+
+      override def createJwtIssuer(
+          jwtIssuerDID: PrismDID,
+          verificationRelationship: VerificationRelationship
+      ): ZIO[WalletAccessContext, CredentialServiceError, Issuer] = ???
     }
   }
 }

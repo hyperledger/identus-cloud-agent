@@ -5,7 +5,7 @@ import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.iam.oidc.CredentialIssuerEndpoints.ExtendedErrorResponse
-import io.iohk.atala.iam.oidc.domain.CredentialIssuerService
+import io.iohk.atala.iam.oidc.domain.OIDCCredentialIssuerService
 import io.iohk.atala.iam.oidc.http.*
 import io.iohk.atala.iam.oidc.http.CredentialErrorCode.*
 import zio.{IO, URLayer, ZIO, ZLayer}
@@ -41,6 +41,14 @@ object CredentialIssuerController {
         CredentialErrorResponse(error = invalid_proof, errorDescription = Some(s"Invalid proof: $jwt. Error: $details"))
       )
 
+    def badRequestUnsupportedCredentialFormat(format: CredentialFormat): ExtendedErrorResponse =
+      Right(
+        CredentialErrorResponse(
+          error = unsupported_credential_format,
+          errorDescription = Some(s"Unsupported credential format: $format")
+        )
+      )
+
     def badRequestUnsupportedCredentialType(details: String): ExtendedErrorResponse =
       Right(
         CredentialErrorResponse(
@@ -54,10 +62,10 @@ object CredentialIssuerController {
   }
 }
 
-case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssuerService: CredentialIssuerService)
+case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssuerService: OIDCCredentialIssuerService)
     extends CredentialIssuerController {
   import CredentialIssuerController.Errors.*
-  import CredentialIssuerService.Errors.*
+  import OIDCCredentialIssuerService.Errors.*
 
   def resolveIssuerDID(didRef: String): IO[ExtendedErrorResponse, CanonicalPrismDID] = {
     for {
@@ -87,6 +95,8 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
             credentialDefinition
           ) =>
         issueJwtCredential(didRef, proof, credentialIdentifier, credentialDefinition, credentialResponseEncryption)
+      case other: CredentialRequest => // add other formats here
+        ZIO.fail(badRequestUnsupportedCredentialFormat(credentialRequest.format))
   }
 
   def issueJwtCredential(
@@ -103,7 +113,7 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
           _ <- ZIO
             .ifZIO(credentialIssuerService.verifyJwtProof(jwt))(
               ZIO.unit,
-              ZIO.fail(CredentialIssuerService.Errors.InvalidProof("Invalid proof"))
+              ZIO.fail(OIDCCredentialIssuerService.Errors.InvalidProof("Invalid proof"))
             )
             .mapError { case InvalidProof(message) =>
               badRequestInvalidProof(jwt, message)
@@ -123,13 +133,13 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
               validatedCredentialDefinition
             )
             .mapError(ue => serverError(Some(s"Unexpected error while issuing credential: ${ue.message}")))
-        } yield ImmediateCredentialResponse(credential)
+        } yield ImmediateCredentialResponse(credential.asInstanceOf[String])
       case None => ZIO.fail(badRequestInvalidProof(jwt = "empty", details = "No proof provided"))
     }
   }
 }
 
 object CredentialIssuerControllerImpl {
-  val layer: URLayer[DIDService & CredentialIssuerService, CredentialIssuerController] =
+  val layer: URLayer[DIDService & OIDCCredentialIssuerService, CredentialIssuerController] =
     ZLayer.fromFunction(CredentialIssuerControllerImpl(_, _))
 }
