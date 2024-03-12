@@ -2,26 +2,26 @@ package io.iohk.atala.connect.sql.repository
 
 import cats.data.NonEmptyList
 import doobie.*
+import doobie.free.connection
 import doobie.implicits.*
 import doobie.postgres.implicits.*
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
+import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
+import io.iohk.atala.connect.core.model.ConnectionRecord.Role
 import io.iohk.atala.connect.core.model.*
-import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
-import io.iohk.atala.connect.core.model.error.ConnectionRepositoryError.*
 import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
-import org.postgresql.util.PSQLException
 import zio.*
 import zio.interop.catz.*
+
 import java.time.Instant
 import java.util.UUID
-import doobie.free.connection
 
 class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task]) extends ConnectionRepository {
 
@@ -45,7 +45,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given connectionResponseGet: Get[ConnectionResponse] = Get[String].map(decode[ConnectionResponse](_).getOrElse(???))
   given connectionResponsePut: Put[ConnectionResponse] = Put[String].contramap(_.asJson.toString)
 
-  override def createConnectionRecord(record: ConnectionRecord): RIO[WalletAccessContext, Int] = {
+  override def createConnectionRecord(record: ConnectionRecord): URIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | INSERT INTO public.connection_records(
         |   id,
@@ -82,13 +82,10 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
-      .mapError {
-        case e: PSQLException => UniqueConstraintViolation(e.getMessage())
-        case e                => e
-      }
+      .orDie
   }
 
-  override def getConnectionRecords: RIO[WalletAccessContext, Seq[ConnectionRecord]] = {
+  override def getConnectionRecords: URIO[WalletAccessContext, Seq[ConnectionRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -114,22 +111,27 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO
       .transactWallet(xa)
+      .orDie
   }
 
   override def getConnectionRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): RIO[WalletAccessContext, Seq[ConnectionRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transactWallet(xa)
+  ): URIO[WalletAccessContext, Seq[ConnectionRecord]] = {
+    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+      .transactWallet(xa)
+      .orDie
   }
 
   override def getConnectionRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): Task[Seq[ConnectionRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transact(xb)
+  ): UIO[Seq[ConnectionRecord]] = {
+    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+      .transact(xb)
+      .orDie
   }
 
   private def getRecordsByStates(
@@ -175,7 +177,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         cxnIO
   }
 
-  override def getConnectionRecord(recordId: UUID): RIO[WalletAccessContext, Option[ConnectionRecord]] = {
+  override def getConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Option[ConnectionRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -201,9 +203,10 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO
       .transactWallet(xa)
+      .orDie
   }
 
-  override def deleteConnectionRecord(recordId: UUID): RIO[WalletAccessContext, Int] = {
+  override def deleteConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
       | DELETE
       | FROM public.connection_records
@@ -212,9 +215,10 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .orDie
   }
 
-  override def getConnectionRecordByThreadId(thid: String): RIO[WalletAccessContext, Option[ConnectionRecord]] = {
+  override def getConnectionRecordByThreadId(thid: String): URIO[WalletAccessContext, Option[ConnectionRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -240,6 +244,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO
       .transactWallet(xa)
+      .orDie
   }
 
   override def updateConnectionProtocolState(
@@ -247,7 +252,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       from: ConnectionRecord.ProtocolState,
       to: ConnectionRecord.ProtocolState,
       maxRetries: Int,
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | UPDATE public.connection_records
         | SET
@@ -263,6 +268,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .orDie
   }
 
   override def updateWithConnectionRequest(
@@ -270,7 +276,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       request: ConnectionRequest,
       state: ProtocolState,
       maxRetries: Int,
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | UPDATE public.connection_records
         | SET
@@ -286,6 +292,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .orDie
   }
 
   override def updateWithConnectionResponse(
@@ -293,7 +300,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       response: ConnectionResponse,
       state: ProtocolState,
       maxRetries: Int,
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | UPDATE public.connection_records
         | SET
@@ -309,12 +316,13 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .orDie
   }
 
   def updateAfterFail(
       recordId: UUID,
       failReason: Option[String],
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | UPDATE public.connection_records
         | SET
@@ -324,7 +332,9 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         | WHERE
         |   id = $recordId
         """.stripMargin.update
-    cxnIO.run.transactWallet(xa)
+    cxnIO.run
+      .transactWallet(xa)
+      .orDie
   }
 }
 object JdbcConnectionRepository {

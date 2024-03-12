@@ -15,9 +15,9 @@ import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 
 import java.rmi.UnexpectedException
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
-import java.time.Duration
 private class ConnectionServiceImpl(
     connectionRepository: ConnectionRepository,
     maxRetries: Int = 5, // TODO move to config
@@ -62,7 +62,6 @@ private class ConnectionServiceImpl(
   override def getConnectionRecords(): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]] = {
     for {
       records <- connectionRepository.getConnectionRecords
-        .mapError(RepositoryError.apply)
     } yield records
   }
 
@@ -74,7 +73,6 @@ private class ConnectionServiceImpl(
     for {
       records <- connectionRepository
         .getConnectionRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
-        .mapError(RepositoryError.apply)
     } yield records
   }
 
@@ -86,7 +84,6 @@ private class ConnectionServiceImpl(
     for {
       records <- connectionRepository
         .getConnectionRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
-        .mapError(RepositoryError.apply)
     } yield records
   }
 
@@ -94,9 +91,7 @@ private class ConnectionServiceImpl(
       recordId: UUID
   ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] = {
     for {
-      record <- connectionRepository
-        .getConnectionRecord(recordId)
-        .mapError(RepositoryError.apply)
+      record <- connectionRepository.getConnectionRecord(recordId)
     } yield record
   }
 
@@ -104,9 +99,7 @@ private class ConnectionServiceImpl(
       thid: String
   ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] =
     for {
-      record <- connectionRepository
-        .getConnectionRecordByThreadId(thid)
-        .mapError(RepositoryError.apply)
+      record <- connectionRepository.getConnectionRecordByThreadId(thid)
     } yield record
 
   override def deleteConnectionRecord(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, Int] = ???
@@ -118,9 +111,7 @@ private class ConnectionServiceImpl(
       invitation <- ZIO
         .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
         .mapError(err => InvitationParsingError(err))
-      _ <- connectionRepository
-        .getConnectionRecordByThreadId(invitation.id)
-        .mapError(RepositoryError.apply)
+      _ <- connectionRepository.getConnectionRecordByThreadId(invitation.id)
         .flatMap {
           case None    => ZIO.unit
           case Some(_) => ZIO.fail(InvitationAlreadyReceived(invitation.id))
@@ -165,15 +156,14 @@ private class ConnectionServiceImpl(
         .copy(thid = Some(record.invitation.id)) //  This logic should be moved to the SQL when fetching the record
       count <- connectionRepository
         .updateWithConnectionRequest(recordId, request, ProtocolState.ConnectionRequestPending, maxRetries)
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
-        s"${record.id}_invitee_pending_to_req_sent"
-      )
+        @@ CustomMetricsAspect.startRecordingTime(
+          s"${record.id}_invitee_pending_to_req_sent"
+        )
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- connectionRepository
         .getConnectionRecord(record.id)
-        .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(recordId))
           case Some(value) => ZIO.succeed(value)
@@ -233,7 +223,6 @@ private class ConnectionServiceImpl(
         .mapError(RepositoryError.apply)
       record <- connectionRepository
         .getConnectionRecord(record.id)
-        .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(record.id))
           case Some(value) => ZIO.succeed(value)
@@ -254,15 +243,14 @@ private class ConnectionServiceImpl(
       // response = createDidCommConnectionResponse(record)
       count <- connectionRepository
         .updateWithConnectionResponse(recordId, response, ProtocolState.ConnectionResponsePending, maxRetries)
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
-        s"${record.id}_inviter_pending_to_res_sent"
-      )
+        @@ CustomMetricsAspect.startRecordingTime(
+          s"${record.id}_inviter_pending_to_res_sent"
+        )
       _ <- count match
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- connectionRepository
         .getConnectionRecord(record.id)
-        .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(record.id))
           case Some(value) => ZIO.succeed(value)
@@ -299,7 +287,6 @@ private class ConnectionServiceImpl(
         .mapError(RepositoryError.apply)
       record <- connectionRepository
         .getConnectionRecord(record.id)
-        .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(record.id))
           case Some(value) => ZIO.succeed(value)
@@ -313,7 +300,6 @@ private class ConnectionServiceImpl(
     for {
       maybeRecord <- connectionRepository
         .getConnectionRecord(recordId)
-        .mapError(RepositoryError.apply)
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => RecordIdNotFound(recordId))
@@ -339,7 +325,6 @@ private class ConnectionServiceImpl(
         .mapError(RepositoryError.apply)
       record <- connectionRepository
         .getConnectionRecord(recordId)
-        .mapError(RepositoryError.apply)
     } yield record
   }
 
@@ -353,7 +338,6 @@ private class ConnectionServiceImpl(
         .mapError(_ => UnexpectedError("No `thid` found in credential request"))
       maybeRecord <- connectionRepository
         .getConnectionRecordByThreadId(thid)
-        .mapError(RepositoryError.apply)
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => ThreadIdNotFound(thid))
@@ -370,7 +354,6 @@ private class ConnectionServiceImpl(
   ): ZIO[WalletAccessContext, ConnectionServiceError, Unit] =
     connectionRepository
       .updateAfterFail(recordId, failReason)
-      .mapError(RepositoryError.apply)
       .flatMap {
         case 1 => ZIO.unit
         case n => ZIO.fail(UnexpectedError(s"Invalid number of records updated: $n"))

@@ -67,12 +67,12 @@ object ConnectionRepositorySpecSuite {
         thid = UUID.randomUUID().toString
         aRecord = connectionRecord.copy(thid = thid)
         bRecord = connectionRecord.copy(thid = thid)
-        aCount <- repo.createConnectionRecord(aRecord)
-        bCount <- repo.createConnectionRecord(bRecord).exit
+        _ <- repo.createConnectionRecord(aRecord)
+        res <- repo.createConnectionRecord(bRecord).exit
       } yield {
-        assertTrue(bCount match
-          case Exit.Failure(cause: Cause.Fail[_]) if cause.value.isInstanceOf[UniqueConstraintViolation] => true
-          case _                                                                                         => false
+        assertTrue(res match
+          case Exit.Failure(cause: Cause.Die) => true
+          case _                              => false
         )
       }
     },

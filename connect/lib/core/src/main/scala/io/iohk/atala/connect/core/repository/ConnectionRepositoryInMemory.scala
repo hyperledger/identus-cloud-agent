@@ -32,7 +32,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       response: ConnectionResponse,
       state: ProtocolState,
       maxRetries: Int,
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Int] = {
     for {
       maybeRecord <- getConnectionRecord(recordId)
       count <- maybeRecord
@@ -62,7 +62,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       from: ProtocolState,
       to: ProtocolState,
       maxRetries: Int
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Int] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -88,7 +88,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     } yield count
   }
 
-  override def deleteConnectionRecord(recordId: UUID): RIO[WalletAccessContext, Int] = {
+  override def deleteConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Int] = {
     for {
       maybeRecord <- getConnectionRecord(recordId)
       count <- maybeRecord
@@ -107,7 +107,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       request: ConnectionRequest,
       state: ProtocolState,
       maxRetries: Int,
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Int] = {
     for {
       maybeRecord <- getConnectionRecord(recordId)
       count <- maybeRecord
@@ -135,7 +135,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
   def updateAfterFail(
       recordId: UUID,
       failReason: Option[String],
-  ): RIO[WalletAccessContext, Int] = for {
+  ): URIO[WalletAccessContext, Int] = for {
     maybeRecord <- getConnectionRecord(recordId)
     count <- maybeRecord
       .map(record =>
@@ -179,14 +179,14 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     }
   }
 
-  override def getConnectionRecordByThreadId(thid: String): RIO[WalletAccessContext, Option[ConnectionRecord]] = {
+  override def getConnectionRecordByThreadId(thid: String): URIO[WalletAccessContext, Option[ConnectionRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
     } yield store.values.find(_.thid.toString == thid)
   }
 
-  override def getConnectionRecords: RIO[WalletAccessContext, Seq[ConnectionRecord]] = {
+  override def getConnectionRecords: URIO[WalletAccessContext, Seq[ConnectionRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -197,7 +197,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): RIO[WalletAccessContext, Seq[ConnectionRecord]] = {
+  ): URIO[WalletAccessContext, Seq[ConnectionRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -211,7 +211,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): Task[Seq[ConnectionRecord]] = {
+  ): UIO[Seq[ConnectionRecord]] = {
 
     for {
       refs <- walletRefs.get
@@ -228,22 +228,22 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     }
   }
 
-  override def createConnectionRecord(record: ConnectionRecord): RIO[WalletAccessContext, Int] = {
+  override def createConnectionRecord(record: ConnectionRecord): URIO[WalletAccessContext, Int] = {
     for {
       _ <- for {
         storeRef <- walletStoreRef
         store <- storeRef.get
         maybeRecord <- ZIO.succeed(store.values.find(_.thid == record.thid))
         _ <- maybeRecord match
-          case None        => ZIO.unit
-          case Some(value) => ZIO.fail(UniqueConstraintViolation("Unique Constraint Violation on 'thid'"))
+          case Some(value) => throw RuntimeException("Unique constraint violation on 'thid'")
+          case None => ZIO.unit
       } yield ()
       storeRef <- walletStoreRef
       _ <- storeRef.update(r => r + (record.id -> record))
     } yield 1
   }
 
-  override def getConnectionRecord(recordId: UUID): RIO[WalletAccessContext, Option[ConnectionRecord]] = {
+  override def getConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Option[ConnectionRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
