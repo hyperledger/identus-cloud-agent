@@ -16,6 +16,7 @@ DISABLE_LINTERS:
   - C_CPPLINT # For pollux/lib/anoncreds/src/main/c
   - CPP_CPPLINT # For pollux/lib/anoncreds/src/main/c
   - JAVA_CHECKSTYLE # For pollux/lib/anoncreds/src/main/java
+  - GHERKIN_GHERKIN_LINT
 
 DISABLE_ERRORS_LINTERS:
   - KOTLIN_KTLINT
