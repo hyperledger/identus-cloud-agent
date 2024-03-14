@@ -60,7 +60,7 @@ object ConnectionRepositorySpecSuite {
       for {
         repo <- ZIO.service[ConnectionRepository]
         record = connectionRecord
-        result <- repo.createConnectionRecord(record)
+        result <- repo.create(record)
       } yield assertTrue(result == ())
     },
     test("createConnectionRecord prevents creation of 2 records with the same thid") {
@@ -69,8 +69,8 @@ object ConnectionRepositorySpecSuite {
         thid = UUID.randomUUID().toString
         aRecord = connectionRecord.copy(thid = thid)
         bRecord = connectionRecord.copy(thid = thid)
-        _ <- repo.createConnectionRecord(aRecord)
-        res <- repo.createConnectionRecord(bRecord).exit
+        _ <- repo.create(aRecord)
+        res <- repo.create(bRecord).exit
       } yield {
         assertTrue(res match
           case Exit.Failure(cause: Cause.Die) => true
@@ -83,9 +83,9 @@ object ConnectionRepositorySpecSuite {
         repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         bRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        _ <- repo.createConnectionRecord(bRecord)
-        record <- repo.getConnectionRecord(bRecord.id)
+        _ <- repo.create(aRecord)
+        _ <- repo.create(bRecord)
+        record <- repo.findById(bRecord.id)
       } yield assertTrue(record.contains(bRecord))
     },
     test("getConnectionRecord returns None for an unknown record") {
@@ -93,9 +93,9 @@ object ConnectionRepositorySpecSuite {
         repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         bRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        _ <- repo.createConnectionRecord(bRecord)
-        record <- repo.getConnectionRecord(UUID.randomUUID())
+        _ <- repo.create(aRecord)
+        _ <- repo.create(bRecord)
+        record <- repo.findById(UUID.randomUUID())
       } yield assertTrue(record.isEmpty)
     },
     test("getConnectionRecords returns all records") {
@@ -103,9 +103,9 @@ object ConnectionRepositorySpecSuite {
         repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         bRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        _ <- repo.createConnectionRecord(bRecord)
-        records <- repo.getConnectionRecords
+        _ <- repo.create(aRecord)
+        _ <- repo.create(bRecord)
+        records <- repo.findAll
       } yield {
         assertTrue(records.size == 2) &&
         assertTrue(records.contains(aRecord)) &&
@@ -118,27 +118,27 @@ object ConnectionRepositorySpecSuite {
         aRecord = connectionRecord
         bRecord = connectionRecord
         cRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        _ <- repo.createConnectionRecord(bRecord)
-        _ <- repo.createConnectionRecord(cRecord)
-        _ <- repo.updateConnectionProtocolState(
+        _ <- repo.create(aRecord)
+        _ <- repo.create(bRecord)
+        _ <- repo.create(cRecord)
+        _ <- repo.updateProtocolState(
           aRecord.id,
           ProtocolState.InvitationGenerated,
           ProtocolState.ConnectionRequestReceived,
           1
         )
-        _ <- repo.updateConnectionProtocolState(
+        _ <- repo.updateProtocolState(
           cRecord.id,
           ProtocolState.InvitationGenerated,
           ProtocolState.ConnectionResponsePending,
           1
         )
-        invitationGeneratedRecords <- repo.getConnectionRecordsByStates(
+        invitationGeneratedRecords <- repo.findByStates(
           ignoreWithZeroRetries = true,
           limit = 10,
           ProtocolState.InvitationGenerated
         )
-        otherRecords <- repo.getConnectionRecordsByStates(
+        otherRecords <- repo.findByStates(
           ignoreWithZeroRetries = true,
           limit = 10,
           ProtocolState.ConnectionRequestReceived,
@@ -158,10 +158,10 @@ object ConnectionRepositorySpecSuite {
         aRecord = connectionRecord
         bRecord = connectionRecord
         cRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        _ <- repo.createConnectionRecord(bRecord)
-        _ <- repo.createConnectionRecord(cRecord)
-        records <- repo.getConnectionRecordsByStates(ignoreWithZeroRetries = true, limit = 10)
+        _ <- repo.create(aRecord)
+        _ <- repo.create(bRecord)
+        _ <- repo.create(cRecord)
+        records <- repo.findByStates(ignoreWithZeroRetries = true, limit = 10)
       } yield {
         assertTrue(records.isEmpty)
       }
@@ -172,10 +172,10 @@ object ConnectionRepositorySpecSuite {
         aRecord = connectionRecord
         bRecord = connectionRecord
         cRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        _ <- repo.createConnectionRecord(bRecord)
-        _ <- repo.createConnectionRecord(cRecord)
-        records <- repo.getConnectionRecordsByStates(
+        _ <- repo.create(aRecord)
+        _ <- repo.create(bRecord)
+        _ <- repo.create(cRecord)
+        records <- repo.findByStates(
           ignoreWithZeroRetries = true,
           limit = 2,
           ProtocolState.InvitationGenerated
@@ -189,10 +189,10 @@ object ConnectionRepositorySpecSuite {
         repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         bRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        _ <- repo.createConnectionRecord(bRecord)
-        _ <- repo.deleteConnectionRecord(aRecord.id)
-        records <- repo.getConnectionRecords
+        _ <- repo.create(aRecord)
+        _ <- repo.create(bRecord)
+        _ <- repo.deleteById(aRecord.id)
+        records <- repo.findAll
       } yield {
         assertTrue(records.size == 1) &&
         assertTrue(records.contains(bRecord))
@@ -203,10 +203,10 @@ object ConnectionRepositorySpecSuite {
         repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         bRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        _ <- repo.createConnectionRecord(bRecord)
-        deleteResult <- repo.deleteConnectionRecord(UUID.randomUUID).exit
-        records <- repo.getConnectionRecords
+        _ <- repo.create(aRecord)
+        _ <- repo.create(bRecord)
+        deleteResult <- repo.deleteById(UUID.randomUUID).exit
+        records <- repo.findAll
       } yield {
         assertTrue(deleteResult match
           case Exit.Failure(cause: Cause.Die) => true
@@ -223,9 +223,9 @@ object ConnectionRepositorySpecSuite {
         thid = UUID.randomUUID().toString
         aRecord = connectionRecord.copy(thid = thid)
         bRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        _ <- repo.createConnectionRecord(bRecord)
-        record <- repo.getConnectionRecordByThreadId(thid)
+        _ <- repo.create(aRecord)
+        _ <- repo.create(bRecord)
+        record <- repo.findByThreadId(thid)
       } yield assertTrue(record.contains(aRecord))
     },
     test("getConnectionRecordByThreadId returns nothing for an unknown thid") {
@@ -233,24 +233,24 @@ object ConnectionRepositorySpecSuite {
         repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord.copy(thid = UUID.randomUUID().toString)
         bRecord = connectionRecord.copy(thid = UUID.randomUUID().toString)
-        _ <- repo.createConnectionRecord(aRecord)
-        _ <- repo.createConnectionRecord(bRecord)
-        record <- repo.getConnectionRecordByThreadId(UUID.randomUUID().toString)
+        _ <- repo.create(aRecord)
+        _ <- repo.create(bRecord)
+        record <- repo.findByThreadId(UUID.randomUUID().toString)
       } yield assertTrue(record.isEmpty)
     },
     test("updateConnectionProtocolState updates the record") {
       for {
         repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        record <- repo.getConnectionRecord(aRecord.id)
-        _ <- repo.updateConnectionProtocolState(
+        _ <- repo.create(aRecord)
+        record <- repo.findById(aRecord.id)
+        _ <- repo.updateProtocolState(
           aRecord.id,
           ProtocolState.InvitationGenerated,
           ProtocolState.ConnectionRequestReceived,
           maxRetries
         )
-        updatedRecord <- repo.getConnectionRecord(aRecord.id)
+        updatedRecord <- repo.findById(aRecord.id)
       } yield {
         assertTrue(record.get.protocolState == ProtocolState.InvitationGenerated) &&
         assertTrue(updatedRecord.get.protocolState == ProtocolState.ConnectionRequestReceived)
@@ -260,15 +260,15 @@ object ConnectionRepositorySpecSuite {
       for {
         repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        record <- repo.getConnectionRecord(aRecord.id)
-        _ <- repo.updateConnectionProtocolState(
+        _ <- repo.create(aRecord)
+        record <- repo.findById(aRecord.id)
+        _ <- repo.updateProtocolState(
           aRecord.id,
           ProtocolState.InvitationGenerated,
           ProtocolState.InvitationExpired,
           maxRetries
         )
-        updatedRecord <- repo.getConnectionRecord(aRecord.id)
+        updatedRecord <- repo.findById(aRecord.id)
       } yield {
         assertTrue(record.get.protocolState == ProtocolState.InvitationGenerated) &&
         assertTrue(updatedRecord.get.protocolState == ProtocolState.InvitationExpired)
@@ -278,17 +278,17 @@ object ConnectionRepositorySpecSuite {
       for {
         repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        record <- repo.getConnectionRecord(aRecord.id)
+        _ <- repo.create(aRecord)
+        record <- repo.findById(aRecord.id)
         updateResult <- repo
-          .updateConnectionProtocolState(
+          .updateProtocolState(
             aRecord.id,
             ProtocolState.ConnectionRequestPending,
             ProtocolState.ConnectionRequestReceived,
             maxRetries
           )
           .exit
-        updatedRecord <- repo.getConnectionRecord(aRecord.id)
+        updatedRecord <- repo.findById(aRecord.id)
       } yield {
         assertTrue(updateResult match
           case Exit.Failure(cause: Cause.Die) => true
@@ -302,8 +302,8 @@ object ConnectionRepositorySpecSuite {
       for {
         repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        record <- repo.getConnectionRecord(aRecord.id)
+        _ <- repo.create(aRecord)
+        record <- repo.findById(aRecord.id)
         request = connectionRequest
         _ <- repo.updateWithConnectionRequest(
           aRecord.id,
@@ -311,7 +311,7 @@ object ConnectionRepositorySpecSuite {
           ProtocolState.ConnectionRequestSent,
           maxRetries
         )
-        updatedRecord <- repo.getConnectionRecord(aRecord.id)
+        updatedRecord <- repo.findById(aRecord.id)
       } yield {
         assertTrue(record.get.connectionRequest.isEmpty) &&
         assertTrue(updatedRecord.get.connectionRequest.contains(request))
@@ -321,8 +321,8 @@ object ConnectionRepositorySpecSuite {
       for {
         repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        record <- repo.getConnectionRecord(aRecord.id)
+        _ <- repo.create(aRecord)
+        record <- repo.findById(aRecord.id)
         response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage).toOption.get
         _ <- repo.updateWithConnectionResponse(
           aRecord.id,
@@ -330,7 +330,7 @@ object ConnectionRepositorySpecSuite {
           ProtocolState.ConnectionResponseSent,
           maxRetries
         )
-        updatedRecord <- repo.getConnectionRecord(aRecord.id)
+        updatedRecord <- repo.findById(aRecord.id)
       } yield {
         assertTrue(record.get.connectionResponse.isEmpty) &&
         assertTrue(updatedRecord.get.connectionResponse.contains(response))
@@ -341,10 +341,10 @@ object ConnectionRepositorySpecSuite {
       for {
         repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
-        _ <- repo.createConnectionRecord(aRecord)
-        record <- repo.getConnectionRecord(aRecord.id)
+        _ <- repo.create(aRecord)
+        record <- repo.findById(aRecord.id)
         count <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
-        updatedRecord1 <- repo.getConnectionRecord(aRecord.id)
+        updatedRecord1 <- repo.findById(aRecord.id)
         response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage).toOption.get
         _ <- repo.updateWithConnectionResponse(
           aRecord.id,
@@ -352,7 +352,7 @@ object ConnectionRepositorySpecSuite {
           ProtocolState.ConnectionResponseSent,
           maxRetries
         )
-        updatedRecord2 <- repo.getConnectionRecord(aRecord.id)
+        updatedRecord2 <- repo.findById(aRecord.id)
       } yield {
         assertTrue(record.get.metaRetries == maxRetries) &&
         assertTrue(updatedRecord1.get.metaRetries == (maxRetries - 1)) &&
@@ -376,8 +376,8 @@ object ConnectionRepositorySpecSuite {
         wac2 = ZLayer.succeed(WalletAccessContext(walletId2))
         record1 = connectionRecord
         record2 = connectionRecord
-        result1 <- repo.createConnectionRecord(record1).provide(wac1)
-        result2 <- repo.createConnectionRecord(record2).provide(wac2)
+        result1 <- repo.create(record1).provide(wac1)
+        result2 <- repo.create(record2).provide(wac2)
       } yield assertTrue(result1 == ()) && assertTrue(result2 == ())
     },
     test("getConnectionRecords filters records per tenant") {
@@ -387,11 +387,11 @@ object ConnectionRepositorySpecSuite {
         repo <- ZIO.service[ConnectionRepository]
         wac1 = ZLayer.succeed(WalletAccessContext(walletId1))
         wac2 = ZLayer.succeed(WalletAccessContext(walletId2))
-        _ <- repo.createConnectionRecord(connectionRecord).provide(wac1)
-        _ <- repo.createConnectionRecord(connectionRecord).provide(wac1)
-        _ <- repo.createConnectionRecord(connectionRecord).provide(wac2)
-        wallet1Records <- repo.getConnectionRecords.provide(wac1)
-        wallet2Records <- repo.getConnectionRecords.provide(wac2)
+        _ <- repo.create(connectionRecord).provide(wac1)
+        _ <- repo.create(connectionRecord).provide(wac1)
+        _ <- repo.create(connectionRecord).provide(wac2)
+        wallet1Records <- repo.findAll.provide(wac1)
+        wallet2Records <- repo.findAll.provide(wac2)
       } yield assertTrue(wallet1Records.size == 2) && assertTrue(wallet2Records.size == 1)
     },
     test("getConnectionRecord doesn't return record of a different tenant") {
@@ -402,9 +402,9 @@ object ConnectionRepositorySpecSuite {
         record = connectionRecord
         wac1 = ZLayer.succeed(WalletAccessContext(walletId1))
         wac2 = ZLayer.succeed(WalletAccessContext(walletId2))
-        _ <- repo.createConnectionRecord(record).provide(wac1)
-        wallet1Record <- repo.getConnectionRecord(record.id).provide(wac1)
-        wallet2Record <- repo.getConnectionRecord(record.id).provide(wac2)
+        _ <- repo.create(record).provide(wac1)
+        wallet1Record <- repo.findById(record.id).provide(wac1)
+        wallet2Record <- repo.findById(record.id).provide(wac2)
       } yield assertTrue(wallet1Record.isDefined) && assertTrue(wallet2Record.isEmpty)
     },
     test("getConnectionRecordsByStatesForAllWallets returns correct records for all wallets") {
@@ -417,10 +417,10 @@ object ConnectionRepositorySpecSuite {
         wac2 = ZLayer.succeed(WalletAccessContext(walletId2))
         aRecordWallet1 = connectionRecord
         bRecordWallet2 = connectionRecord
-        _ <- repo.createConnectionRecord(aRecordWallet1).provide(wac1)
-        _ <- repo.createConnectionRecord(bRecordWallet2).provide(wac2)
+        _ <- repo.create(aRecordWallet1).provide(wac1)
+        _ <- repo.create(bRecordWallet2).provide(wac2)
         _ <- repo
-          .updateConnectionProtocolState(
+          .updateProtocolState(
             aRecordWallet1.id,
             ProtocolState.InvitationGenerated,
             ProtocolState.ConnectionRequestReceived,
@@ -428,14 +428,14 @@ object ConnectionRepositorySpecSuite {
           )
           .provide(wac1)
         _ <- repo
-          .updateConnectionProtocolState(
+          .updateProtocolState(
             bRecordWallet2.id,
             ProtocolState.InvitationGenerated,
             ProtocolState.ConnectionResponsePending,
             1
           )
           .provide(wac2)
-        allWalletRecords <- repo.getConnectionRecordsByStatesForAllWallets(
+        allWalletRecords <- repo.findByStatesForAllWallets(
           ignoreWithZeroRetries = true,
           limit = 10,
           ProtocolState.ConnectionRequestReceived,

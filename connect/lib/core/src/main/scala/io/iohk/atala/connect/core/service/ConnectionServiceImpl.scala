@@ -50,12 +50,12 @@ private class ConnectionServiceImpl(
           metaLastFailure = None,
         )
       )
-      count <- connectionRepository.createConnectionRecord(record)
+      count <- connectionRepository.create(record)
     } yield record
 
   override def getConnectionRecords(): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]] = {
     for {
-      records <- connectionRepository.getConnectionRecords
+      records <- connectionRepository.findAll
     } yield records
   }
 
@@ -66,7 +66,7 @@ private class ConnectionServiceImpl(
   ): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]] = {
     for {
       records <- connectionRepository
-        .getConnectionRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+        .findByStates(ignoreWithZeroRetries, limit, states: _*)
     } yield records
   }
 
@@ -77,7 +77,7 @@ private class ConnectionServiceImpl(
   ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = {
     for {
       records <- connectionRepository
-        .getConnectionRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+        .findByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
     } yield records
   }
 
@@ -85,7 +85,7 @@ private class ConnectionServiceImpl(
       recordId: UUID
   ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] = {
     for {
-      record <- connectionRepository.getConnectionRecord(recordId)
+      record <- connectionRepository.findById(recordId)
     } yield record
   }
 
@@ -93,7 +93,7 @@ private class ConnectionServiceImpl(
       thid: String
   ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] =
     for {
-      record <- connectionRepository.getConnectionRecordByThreadId(thid)
+      record <- connectionRepository.findByThreadId(thid)
     } yield record
 
   override def deleteConnectionRecord(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, Int] = ???
@@ -106,7 +106,7 @@ private class ConnectionServiceImpl(
         .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
         .mapError(err => InvitationParsingError(err))
       _ <- connectionRepository
-        .getConnectionRecordByThreadId(invitation.id)
+        .findByThreadId(invitation.id)
         .flatMap {
           case None    => ZIO.unit
           case Some(_) => ZIO.fail(InvitationAlreadyReceived(invitation.id))
@@ -131,7 +131,7 @@ private class ConnectionServiceImpl(
           metaLastFailure = None,
         )
       )
-      count <- connectionRepository.createConnectionRecord(record)
+      count <- connectionRepository.create(record)
     } yield record
 
   override def acceptConnectionInvitation(
@@ -149,7 +149,7 @@ private class ConnectionServiceImpl(
           s"${record.id}_invitee_pending_to_req_sent"
         )
       maybeRecord <- connectionRepository
-        .getConnectionRecord(record.id)
+        .findById(record.id)
       record <- ZIO.getOrFailWith(new RecordIdNotFound(recordId))(maybeRecord)
     } yield record
 
@@ -203,7 +203,7 @@ private class ConnectionServiceImpl(
         ProtocolState.ConnectionRequestReceived,
         maxRetries
       )
-      maybeRecord <- connectionRepository.getConnectionRecord(record.id)
+      maybeRecord <- connectionRepository.findById(record.id)
       record <- ZIO.getOrFailWith(RecordIdNotFound(record.id))(maybeRecord)
     } yield record
 
@@ -223,7 +223,7 @@ private class ConnectionServiceImpl(
         @@ CustomMetricsAspect.startRecordingTime(
           s"${record.id}_inviter_pending_to_res_sent"
         )
-      maybeRecord <- connectionRepository.getConnectionRecord(record.id)
+      maybeRecord <- connectionRepository.findById(record.id)
       record <- ZIO.getOrFailWith(RecordIdNotFound(record.id))(maybeRecord)
     } yield record
 
@@ -254,7 +254,7 @@ private class ConnectionServiceImpl(
         ProtocolState.ConnectionResponseReceived,
         maxRetries
       )
-      maybeRecord <- connectionRepository.getConnectionRecord(record.id)
+      maybeRecord <- connectionRepository.findById(record.id)
       record <- ZIO.getOrFailWith(RecordIdNotFound(record.id))(maybeRecord)
     } yield record
 
@@ -264,7 +264,7 @@ private class ConnectionServiceImpl(
   ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] = {
     for {
       maybeRecord <- connectionRepository
-        .getConnectionRecord(recordId)
+        .findById(recordId)
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => RecordIdNotFound(recordId))
@@ -281,8 +281,8 @@ private class ConnectionServiceImpl(
       to: ProtocolState,
   ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] = {
     for {
-      _ <- connectionRepository.updateConnectionProtocolState(recordId, from, to, maxRetries)
-      record <- connectionRepository.getConnectionRecord(recordId)
+      _ <- connectionRepository.updateProtocolState(recordId, from, to, maxRetries)
+      record <- connectionRepository.findById(recordId)
     } yield record
   }
 
@@ -295,7 +295,7 @@ private class ConnectionServiceImpl(
         .fromOption(thid)
         .mapError(_ => UnexpectedError("No `thid` found in credential request"))
       maybeRecord <- connectionRepository
-        .getConnectionRecordByThreadId(thid)
+        .findByThreadId(thid)
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => ThreadIdNotFound(thid))

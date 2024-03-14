@@ -36,7 +36,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       maxRetries: Int,
   ): URIO[WalletAccessContext, Unit] = {
     for {
-      maybeRecord <- getConnectionRecord(recordId)
+      maybeRecord <- findById(recordId)
       record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
       storeRef <- walletStoreRef
       _ <- storeRef.update(r =>
@@ -54,7 +54,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     } yield ()
   }
 
-  override def updateConnectionProtocolState(
+  override def updateProtocolState(
       recordId: UUID,
       from: ProtocolState,
       to: ProtocolState,
@@ -80,9 +80,9 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     } yield ()
   }
 
-  override def deleteConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Unit] = {
+  override def deleteById(recordId: UUID): URIO[WalletAccessContext, Unit] = {
     for {
-      maybeRecord <- getConnectionRecord(recordId)
+      maybeRecord <- findById(recordId)
       record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
       storeRef <- walletStoreRef
       _ <- storeRef.update(r => r.removed(recordId))
@@ -96,7 +96,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       maxRetries: Int,
   ): URIO[WalletAccessContext, Unit] = {
     for {
-      maybeRecord <- getConnectionRecord(recordId)
+      maybeRecord <- findById(recordId)
       record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
       storeRef <- walletStoreRef
       _ <- storeRef.update(r =>
@@ -118,7 +118,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       recordId: UUID,
       failReason: Option[String],
   ): URIO[WalletAccessContext, Unit] = for {
-    maybeRecord <- getConnectionRecord(recordId)
+    maybeRecord <- findById(recordId)
     record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
     storeRef <- walletStoreRef
     _ <- storeRef.update(r =>
@@ -156,21 +156,21 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     }
   }
 
-  override def getConnectionRecordByThreadId(thid: String): URIO[WalletAccessContext, Option[ConnectionRecord]] = {
+  override def findByThreadId(thid: String): URIO[WalletAccessContext, Option[ConnectionRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
     } yield store.values.find(_.thid.toString == thid)
   }
 
-  override def getConnectionRecords: URIO[WalletAccessContext, Seq[ConnectionRecord]] = {
+  override def findAll: URIO[WalletAccessContext, Seq[ConnectionRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
     } yield store.values.toSeq
   }
 
-  override def getConnectionRecordsByStates(
+  override def findByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
@@ -184,7 +184,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       .toSeq
   }
 
-  override def getConnectionRecordsByStatesForAllWallets(
+  override def findByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
@@ -205,7 +205,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     }
   }
 
-  override def createConnectionRecord(record: ConnectionRecord): URIO[WalletAccessContext, Unit] = {
+  override def create(record: ConnectionRecord): URIO[WalletAccessContext, Unit] = {
     for {
       _ <- for {
         storeRef <- walletStoreRef
@@ -220,7 +220,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     } yield ()
   }
 
-  override def getConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Option[ConnectionRecord]] = {
+  override def findById(recordId: UUID): URIO[WalletAccessContext, Option[ConnectionRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
