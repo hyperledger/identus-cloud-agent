@@ -6,7 +6,6 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
 import io.iohk.atala.shared.models.WalletAccessContext
-import zio.IO
 import zio.URIO
 import zio.UIO
 import zio.URLayer
@@ -18,14 +17,19 @@ import zio.mock.Proxy
 
 import java.time.Duration
 import java.util.UUID
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvitationAlreadyReceived
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvitationParsingError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvalidStateForOperation
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.RecordIdNotFound
 
 object MockConnectionService extends Mock[ConnectionService] {
 
   object CreateConnectionInvitation
       extends Effect[(Option[String], Option[String], Option[String], DidId), Nothing, ConnectionRecord]
-  object ReceiveConnectionInvitation extends Effect[String, ConnectionServiceError, ConnectionRecord]
-  object AcceptConnectionInvitation extends Effect[(UUID, DidId), ConnectionServiceError, ConnectionRecord]
-  object MarkConnectionRequestSent extends Effect[UUID, ConnectionServiceError, ConnectionRecord]
+  object ReceiveConnectionInvitation
+      extends Effect[String, InvitationParsingError | InvitationAlreadyReceived, ConnectionRecord]
+  object AcceptConnectionInvitation extends Effect[(UUID, DidId), RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
+  object MarkConnectionRequestSent extends Effect[UUID, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
   object ReceiveConnectionRequest extends Effect[ConnectionRequest, ConnectionServiceError, ConnectionRecord]
   object AcceptConnectionRequest extends Effect[UUID, ConnectionServiceError, ConnectionRecord]
   object MarkConnectionResponseSent extends Effect[UUID, ConnectionServiceError, ConnectionRecord]
@@ -47,18 +51,18 @@ object MockConnectionService extends Mock[ConnectionService] {
 
       override def receiveConnectionInvitation(
           invitation: String
-      ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+      ): ZIO[WalletAccessContext, InvitationParsingError | InvitationAlreadyReceived, ConnectionRecord] =
         proxy(ReceiveConnectionInvitation, invitation)
 
       override def acceptConnectionInvitation(
           recordId: UUID,
           pairwiseDid: DidId
-      ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+      ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] =
         proxy(AcceptConnectionInvitation, recordId, pairwiseDid)
 
       override def markConnectionRequestSent(
           recordId: UUID
-      ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+      ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] =
         proxy(MarkConnectionRequestSent, recordId)
 
       override def receiveConnectionRequest(

@@ -9,6 +9,10 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer, URIO, UIO}
 import java.time.Duration
 import java.util.UUID
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvitationParsingError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvitationAlreadyReceived
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvalidStateForOperation
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.RecordIdNotFound
 
 class ConnectionServiceNotifier(
     svc: ConnectionService,
@@ -27,18 +31,18 @@ class ConnectionServiceNotifier(
 
   override def receiveConnectionInvitation(
       invitation: String
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, InvitationParsingError | InvitationAlreadyReceived, ConnectionRecord] =
     notifyOnSuccess(svc.receiveConnectionInvitation(invitation))
 
   override def acceptConnectionInvitation(
       recordId: UUID,
       pairwiseDid: DidId
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] =
     notifyOnSuccess(svc.acceptConnectionInvitation(recordId, pairwiseDid))
 
   override def markConnectionRequestSent(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] =
     notifyOnSuccess(svc.markConnectionRequestSent(recordId))
 
   override def receiveConnectionRequest(

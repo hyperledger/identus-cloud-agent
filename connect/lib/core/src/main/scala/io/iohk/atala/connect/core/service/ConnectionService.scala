@@ -9,6 +9,10 @@ import zio.*
 
 import java.time.Duration
 import java.util.UUID
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvitationParsingError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvitationAlreadyReceived
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvalidStateForOperation
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.RecordIdNotFound
 
 trait ConnectionService {
 
@@ -21,16 +25,16 @@ trait ConnectionService {
 
   def receiveConnectionInvitation(
       invitation: String
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): ZIO[WalletAccessContext, InvitationParsingError | InvitationAlreadyReceived, ConnectionRecord]
 
   def acceptConnectionInvitation(
       recordId: UUID,
       pairwiseDid: DidId
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
 
   def markConnectionRequestSent(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
 
   def receiveConnectionRequest(
       request: ConnectionRequest,

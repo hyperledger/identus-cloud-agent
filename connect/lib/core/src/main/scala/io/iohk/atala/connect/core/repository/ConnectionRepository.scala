@@ -33,6 +33,10 @@ trait ConnectionRepository {
       recordId: UUID
   ): URIO[WalletAccessContext, Option[ConnectionRecord]]
 
+  def getById(
+      recordId: UUID
+  ): URIO[WalletAccessContext, ConnectionRecord]
+
   def deleteById(
       recordId: UUID
   ): URIO[WalletAccessContext, Unit]

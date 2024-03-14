@@ -84,23 +84,18 @@ private class ConnectionServiceImpl(
 
   override def receiveConnectionInvitation(
       invitation: String
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, InvitationParsingError | InvitationAlreadyReceived, ConnectionRecord] =
     for {
       invitation <- ZIO
         .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
-        .mapError(err => InvitationParsingError(err))
-      _ <- connectionRepository
-        .findByThreadId(invitation.id)
-        .flatMap {
-          case None    => ZIO.unit
-          case Some(_) => ZIO.fail(InvitationAlreadyReceived(invitation.id))
-        }
+        .mapError(err => InvitationParsingError(err.getMessage()))
+      maybeRecord <- connectionRepository.findByThreadId(invitation.id)
+      _ <- ZIO.noneOrFailWith(maybeRecord)(_ => InvitationAlreadyReceived(invitation.id))
       record <- ZIO.succeed(
         ConnectionRecord(
           id = UUID.randomUUID(),
           createdAt = Instant.now,
           updatedAt = None,
-          // TODO: According to the standard, we should rather use 'pthid' and not 'thid'
           thid = invitation.id,
           label = None,
           goalCode = invitation.body.goal_code,
@@ -115,7 +110,7 @@ private class ConnectionServiceImpl(
           metaLastFailure = None,
         )
       )
-      count <- connectionRepository.create(record)
+      _ <- connectionRepository.create(record)
     } yield record
 
   override def acceptConnectionInvitation(
@@ -139,27 +134,27 @@ private class ConnectionServiceImpl(
 
   override def markConnectionRequestSent(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
-    updateConnectionProtocolState(
-      recordId,
-      ProtocolState.ConnectionRequestPending,
-      ProtocolState.ConnectionRequestSent
-    ).flatMap {
-      case None        => ZIO.fail(RecordIdNotFound(recordId))
-      case Some(value) => ZIO.succeed(value)
-    }
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] =
+    for {
+      record <- getRecordWithState(recordId, ProtocolState.ConnectionRequestPending)
+      updatedRecord <- updateConnectionProtocolState(
+        recordId,
+        ProtocolState.ConnectionRequestPending,
+        ProtocolState.ConnectionRequestSent
+      )
+    } yield updatedRecord
 
   override def markConnectionInvitationExpired(
       recordId: UUID
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
-    updateConnectionProtocolState(
-      recordId,
-      ProtocolState.InvitationGenerated,
-      ProtocolState.InvitationExpired
-    ).flatMap {
-      case None        => ZIO.fail(RecordIdNotFound(recordId))
-      case Some(value) => ZIO.succeed(value)
-    }
+    for {
+      record <- getRecordWithState(recordId, ProtocolState.InvitationGenerated)
+      updatedRecord <- updateConnectionProtocolState(
+        recordId,
+        ProtocolState.InvitationGenerated,
+        ProtocolState.InvitationExpired
+      )
+    } yield updatedRecord
 
   override def receiveConnectionRequest(
       request: ConnectionRequest,
@@ -214,14 +209,14 @@ private class ConnectionServiceImpl(
   override def markConnectionResponseSent(
       recordId: UUID
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
-    updateConnectionProtocolState(
-      recordId,
-      ProtocolState.ConnectionResponsePending,
-      ProtocolState.ConnectionResponseSent,
-    ).flatMap {
-      case None        => ZIO.fail(RecordIdNotFound(recordId))
-      case Some(value) => ZIO.succeed(value)
-    }
+    for {
+      record <- getRecordWithState(recordId, ProtocolState.ConnectionResponsePending)
+      updatedRecord <- updateConnectionProtocolState(
+        recordId,
+        ProtocolState.ConnectionResponsePending,
+        ProtocolState.ConnectionResponseSent,
+      )
+    } yield updatedRecord
 
   override def receiveConnectionResponse(
       response: ConnectionResponse
@@ -247,8 +242,7 @@ private class ConnectionServiceImpl(
       state: ProtocolState
   ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] = {
     for {
-      maybeRecord <- connectionRepository
-        .findById(recordId)
+      maybeRecord <- connectionRepository.findById(recordId)
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => RecordIdNotFound(recordId))
@@ -263,10 +257,10 @@ private class ConnectionServiceImpl(
       recordId: UUID,
       from: ProtocolState,
       to: ProtocolState,
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] = {
+  ): URIO[WalletAccessContext, ConnectionRecord] = {
     for {
       _ <- connectionRepository.updateProtocolState(recordId, from, to, maxRetries)
-      record <- connectionRepository.findById(recordId)
+      record <- connectionRepository.getById(recordId)
     } yield record
   }
 

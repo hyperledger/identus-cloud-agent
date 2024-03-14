@@ -228,6 +228,15 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     } yield record
   }
 
+  override def getById(recordId: UUID): URIO[WalletAccessContext, ConnectionRecord] = {
+    for {
+      storeRef <- walletStoreRef
+      store <- storeRef.get
+      maybeRecord = store.get(recordId)
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+    } yield record
+  }
+
 }
 
 object ConnectionRepositoryInMemory {
