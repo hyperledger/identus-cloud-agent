@@ -210,7 +210,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       .orDie
   }
 
-  override def deleteConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Int] = {
+  override def deleteConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
       | DELETE
       | FROM public.connection_records
@@ -219,6 +219,10 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .flatMap {
+        case 1     => ZIO.unit
+        case count => ZIO.fail(RuntimeException(s"Unexpected affected row count: $count"))
+      }
       .orDie
   }
 

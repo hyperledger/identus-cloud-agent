@@ -3,8 +3,10 @@ package io.iohk.atala.connect.core.repository
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
 import io.iohk.atala.connect.core.model.error.ConnectionRepositoryError.*
-import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
+import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import zio.*
 
 import java.time.Instant
@@ -88,18 +90,13 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     } yield count
   }
 
-  override def deleteConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Int] = {
+  override def deleteConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Unit] = {
     for {
       maybeRecord <- getConnectionRecord(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            storeRef <- walletStoreRef
-            _ <- storeRef.update(r => r.removed(recordId))
-          } yield 1
-        )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      storeRef <- walletStoreRef
+      _ <- storeRef.update(r => r.removed(recordId))
+    } yield ()
   }
 
   override def updateWithConnectionRequest(
@@ -236,7 +233,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
         maybeRecord <- ZIO.succeed(store.values.find(_.thid == record.thid))
         _ <- maybeRecord match
           case Some(value) => throw RuntimeException("Unique constraint violation on 'thid'")
-          case None => ZIO.unit
+          case None        => ZIO.unit
       } yield ()
       storeRef <- walletStoreRef
       _ <- storeRef.update(r => r + (record.id -> record))

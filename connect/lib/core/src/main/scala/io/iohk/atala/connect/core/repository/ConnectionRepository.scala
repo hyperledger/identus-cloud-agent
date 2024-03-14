@@ -35,7 +35,7 @@ trait ConnectionRepository {
 
   def deleteConnectionRecord(
       recordId: UUID
-  ): URIO[WalletAccessContext, Int]
+  ): URIO[WalletAccessContext, Unit]
 
   def getConnectionRecordByThreadId(
       thid: String

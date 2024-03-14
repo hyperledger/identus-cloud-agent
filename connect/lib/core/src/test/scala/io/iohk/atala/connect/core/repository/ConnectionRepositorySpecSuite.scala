@@ -13,6 +13,8 @@ import zio.{Cause, Exit, ZIO, ZLayer}
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+import zio.Exit.Success
+import zio.Exit.Failure
 
 object ConnectionRepositorySpecSuite {
 
@@ -189,10 +191,9 @@ object ConnectionRepositorySpecSuite {
         bRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         _ <- repo.createConnectionRecord(bRecord)
-        count <- repo.deleteConnectionRecord(aRecord.id)
+        _ <- repo.deleteConnectionRecord(aRecord.id)
         records <- repo.getConnectionRecords
       } yield {
-        assertTrue(count == 1) &&
         assertTrue(records.size == 1) &&
         assertTrue(records.contains(bRecord))
       }
@@ -204,10 +205,13 @@ object ConnectionRepositorySpecSuite {
         bRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         _ <- repo.createConnectionRecord(bRecord)
-        count <- repo.deleteConnectionRecord(UUID.randomUUID)
+        deleteResult <- repo.deleteConnectionRecord(UUID.randomUUID).exit
         records <- repo.getConnectionRecords
       } yield {
-        assertTrue(count == 0) &&
+        assertTrue(deleteResult match
+          case Exit.Failure(cause: Cause.Die) => true
+          case _                              => false
+        ) &&
         assertTrue(records.size == 2) &&
         assertTrue(records.contains(aRecord)) &&
         assertTrue(records.contains(bRecord))
