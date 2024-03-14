@@ -82,11 +82,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
-      .flatMap {
-        case 1     => ZIO.unit
-        case count => ZIO.fail(RuntimeException(s"Unexpected affected row count: $count"))
-      }
-      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   override def getConnectionRecords: URIO[WalletAccessContext, Seq[ConnectionRecord]] = {
@@ -219,11 +215,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
-      .flatMap {
-        case 1     => ZIO.unit
-        case count => ZIO.fail(RuntimeException(s"Unexpected affected row count: $count"))
-      }
-      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   override def getConnectionRecordByThreadId(thid: String): URIO[WalletAccessContext, Option[ConnectionRecord]] = {
@@ -276,11 +268,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
-      .flatMap {
-        case 1     => ZIO.unit
-        case count => ZIO.fail(RuntimeException(s"Unexpected affected row count: $count"))
-      }
-      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateWithConnectionRequest(
@@ -304,11 +292,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
-      .flatMap {
-        case 1     => ZIO.unit
-        case count => ZIO.fail(RuntimeException(s"Unexpected affected row count: $count"))
-      }
-      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateWithConnectionResponse(
@@ -332,11 +316,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
-      .flatMap {
-        case 1     => ZIO.unit
-        case count => ZIO.fail(RuntimeException(s"Unexpected affected row count: $count"))
-      }
-      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   def updateAfterFail(
@@ -354,11 +334,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         """.stripMargin.update
     cxnIO.run
       .transactWallet(xa)
-      .flatMap {
-        case 1     => ZIO.unit
-        case count => ZIO.fail(RuntimeException(s"Unexpected affected row count: $count"))
-      }
-      .orDie
+      .ensureOneAffectedRowOrDie
   }
 }
 object JdbcConnectionRepository {
