@@ -10,7 +10,8 @@ import zio.URIO
 import java.util.UUID
 
 trait ConnectionRepository {
-  def createConnectionRecord(record: ConnectionRecord): URIO[WalletAccessContext, Int]
+
+  def createConnectionRecord(record: ConnectionRecord): URIO[WalletAccessContext, Unit]
 
   def getConnectionRecords: URIO[WalletAccessContext, Seq[ConnectionRecord]]
 

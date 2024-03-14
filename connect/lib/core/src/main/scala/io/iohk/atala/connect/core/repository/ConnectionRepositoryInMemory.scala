@@ -228,7 +228,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     }
   }
 
-  override def createConnectionRecord(record: ConnectionRecord): URIO[WalletAccessContext, Int] = {
+  override def createConnectionRecord(record: ConnectionRecord): URIO[WalletAccessContext, Unit] = {
     for {
       _ <- for {
         storeRef <- walletStoreRef
@@ -240,7 +240,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       } yield ()
       storeRef <- walletStoreRef
       _ <- storeRef.update(r => r + (record.id -> record))
-    } yield 1
+    } yield ()
   }
 
   override def getConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Option[ConnectionRecord]] = {

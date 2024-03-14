@@ -58,8 +58,8 @@ object ConnectionRepositorySpecSuite {
       for {
         repo <- ZIO.service[ConnectionRepository]
         record = connectionRecord
-        count <- repo.createConnectionRecord(record)
-      } yield assertTrue(count == 1)
+        result <- repo.createConnectionRecord(record)
+      } yield assertTrue(result == ())
     },
     test("createConnectionRecord prevents creation of 2 records with the same thid") {
       for {
@@ -372,9 +372,9 @@ object ConnectionRepositorySpecSuite {
         wac2 = ZLayer.succeed(WalletAccessContext(walletId2))
         record1 = connectionRecord
         record2 = connectionRecord
-        count1 <- repo.createConnectionRecord(record1).provide(wac1)
-        count2 <- repo.createConnectionRecord(record2).provide(wac2)
-      } yield assertTrue(count1 == 1) && assertTrue(count2 == 1)
+        result1 <- repo.createConnectionRecord(record1).provide(wac1)
+        result2 <- repo.createConnectionRecord(record2).provide(wac2)
+      } yield assertTrue(result1 == ()) && assertTrue(result2 == ())
     },
     test("getConnectionRecords filters records per tenant") {
       val walletId1 = WalletId.random

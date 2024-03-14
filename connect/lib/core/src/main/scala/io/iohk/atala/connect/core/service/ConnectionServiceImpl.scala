@@ -50,13 +50,7 @@ private class ConnectionServiceImpl(
           metaLastFailure = None,
         )
       )
-      count <- connectionRepository
-        .createConnectionRecord(record)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply)
+      count <- connectionRepository.createConnectionRecord(record)
     } yield record
 
   override def getConnectionRecords(): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]] = {
@@ -136,13 +130,7 @@ private class ConnectionServiceImpl(
           metaLastFailure = None,
         )
       )
-      count <- connectionRepository
-        .createConnectionRecord(record)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply)
+      count <- connectionRepository.createConnectionRecord(record)
     } yield record
 
   override def acceptConnectionInvitation(

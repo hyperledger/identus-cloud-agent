@@ -45,7 +45,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given connectionResponseGet: Get[ConnectionResponse] = Get[String].map(decode[ConnectionResponse](_).getOrElse(???))
   given connectionResponsePut: Put[ConnectionResponse] = Put[String].contramap(_.asJson.toString)
 
-  override def createConnectionRecord(record: ConnectionRecord): URIO[WalletAccessContext, Int] = {
+  override def createConnectionRecord(record: ConnectionRecord): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | INSERT INTO public.connection_records(
         |   id,
@@ -82,6 +82,10 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .flatMap {
+        case 1     => ZIO.unit
+        case count => ZIO.fail(RuntimeException(s"Unexpected affected row count: $count"))
+      }
       .orDie
   }
 
