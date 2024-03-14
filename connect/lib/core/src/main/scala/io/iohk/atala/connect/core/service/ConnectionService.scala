@@ -28,16 +28,22 @@ trait ConnectionService {
       pairwiseDid: DidId
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
 
-  def markConnectionRequestSent(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  def markConnectionRequestSent(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
 
   def receiveConnectionRequest(
       request: ConnectionRequest,
       expirationTime: Option[Duration]
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
 
-  def acceptConnectionRequest(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  def acceptConnectionRequest(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
 
-  def markConnectionResponseSent(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  def markConnectionResponseSent(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
 
   def markConnectionInvitationExpired(
       recordId: UUID
@@ -61,13 +67,17 @@ trait ConnectionService {
       states: ConnectionRecord.ProtocolState*
   ): IO[ConnectionServiceError, Seq[ConnectionRecord]]
 
-  def getConnectionRecord(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]]
+  def getConnectionRecord(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]]
 
   def getConnectionRecordByThreadId(
       thid: String
   ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]]
 
-  def deleteConnectionRecord(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, Int]
+  def deleteConnectionRecord(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, ConnectionServiceError, Int]
 
   def reportProcessingFailure(
       recordId: UUID,
