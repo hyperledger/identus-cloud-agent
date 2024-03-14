@@ -34,7 +34,6 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
           ConnectionRecord.ProtocolState.ConnectionRequestPending,
           ConnectionRecord.ProtocolState.ConnectionResponsePending
         )
-        .mapError(err => Throwable(s"Error occurred while getting connection records: $err"))
       _ <- ZIO.foreachPar(records)(performExchange).withParallelism(config.connect.connectBgJobProcessingParallelism)
     } yield ()
   }

@@ -3,9 +3,18 @@ package io.iohk.atala.connect.core.service
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import zio.mock.{Mock, Proxy}
-import zio.{IO, URLayer, ZIO, ZLayer, mock}
+import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
+import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
+import io.iohk.atala.shared.models.WalletAccessContext
+import zio.IO
+import zio.URIO
+import zio.UIO
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
+import zio.mock
+import zio.mock.Mock
+import zio.mock.Proxy
 
 import java.time.Duration
 import java.util.UUID
@@ -13,7 +22,7 @@ import java.util.UUID
 object MockConnectionService extends Mock[ConnectionService] {
 
   object CreateConnectionInvitation
-      extends Effect[(Option[String], Option[String], Option[String], DidId), ConnectionServiceError, ConnectionRecord]
+      extends Effect[(Option[String], Option[String], Option[String], DidId), Nothing, ConnectionRecord]
   object ReceiveConnectionInvitation extends Effect[String, ConnectionServiceError, ConnectionRecord]
   object AcceptConnectionInvitation extends Effect[(UUID, DidId), ConnectionServiceError, ConnectionRecord]
   object MarkConnectionRequestSent extends Effect[UUID, ConnectionServiceError, ConnectionRecord]
@@ -33,66 +42,82 @@ object MockConnectionService extends Mock[ConnectionService] {
           goalCode: Option[String],
           goal: Option[String],
           pairwiseDID: DidId
-      ): IO[ConnectionServiceError, ConnectionRecord] =
+      ): URIO[WalletAccessContext, ConnectionRecord] =
         proxy(CreateConnectionInvitation, label, goalCode, goal, pairwiseDID)
 
-      override def receiveConnectionInvitation(invitation: String): IO[ConnectionServiceError, ConnectionRecord] =
+      override def receiveConnectionInvitation(
+          invitation: String
+      ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
         proxy(ReceiveConnectionInvitation, invitation)
 
       override def acceptConnectionInvitation(
           recordId: UUID,
           pairwiseDid: DidId
-      ): IO[ConnectionServiceError, ConnectionRecord] =
+      ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
         proxy(AcceptConnectionInvitation, recordId, pairwiseDid)
 
-      override def markConnectionRequestSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+      override def markConnectionRequestSent(
+          recordId: UUID
+      ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
         proxy(MarkConnectionRequestSent, recordId)
 
       override def receiveConnectionRequest(
           request: ConnectionRequest,
           expirationTime: Option[Duration]
-      ): IO[ConnectionServiceError, ConnectionRecord] =
+      ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
         proxy(ReceiveConnectionRequest, request)
 
-      override def acceptConnectionRequest(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+      override def acceptConnectionRequest(
+          recordId: UUID
+      ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
         proxy(AcceptConnectionRequest, recordId)
 
-      override def markConnectionInvitationExpired(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+      override def markConnectionInvitationExpired(
+          recordId: UUID
+      ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
         proxy(MarkConnectionInvitationExpired, recordId)
 
-      override def markConnectionResponseSent(recordId: UUID): IO[ConnectionServiceError, ConnectionRecord] =
+      override def markConnectionResponseSent(
+          recordId: UUID
+      ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
         proxy(MarkConnectionResponseSent, recordId)
 
       override def receiveConnectionResponse(
           response: ConnectionResponse
-      ): IO[ConnectionServiceError, ConnectionRecord] =
+      ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
         proxy(ReceiveConnectionResponse, response)
 
-      override def getConnectionRecords(): IO[ConnectionServiceError, Seq[ConnectionRecord]] = ???
+      override def getConnectionRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]] = ???
 
       override def getConnectionRecordsByStates(
           ignoreWithZeroRetries: Boolean,
           limit: Int,
           states: ConnectionRecord.ProtocolState*
-      ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = ???
+      ): URIO[WalletAccessContext, Seq[ConnectionRecord]] = ???
 
       override def getConnectionRecordsByStatesForAllWallets(
           ignoreWithZeroRetries: Boolean,
           limit: Int,
           states: ConnectionRecord.ProtocolState*
-      ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = ???
+      ): UIO[Seq[ConnectionRecord]] = ???
 
-      override def getConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Option[ConnectionRecord]] = ???
+      override def getConnectionRecord(
+          recordId: UUID
+      ): URIO[WalletAccessContext, Option[ConnectionRecord]] = ???
 
-      override def getConnectionRecordByThreadId(thid: String): IO[ConnectionServiceError, Option[ConnectionRecord]] =
+      override def getConnectionRecordByThreadId(
+          thid: String
+      ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
         ???
 
-      override def deleteConnectionRecord(recordId: UUID): IO[ConnectionServiceError, Int] = ???
+      override def deleteConnectionRecord(
+          recordId: UUID
+      ): URIO[WalletAccessContext, Unit] = ???
 
       override def reportProcessingFailure(
           recordId: UUID,
           failReason: Option[String]
-      ): IO[ConnectionServiceError, Unit] = ???
+      ): URIO[WalletAccessContext, Unit] = ???
     }
   }
 }

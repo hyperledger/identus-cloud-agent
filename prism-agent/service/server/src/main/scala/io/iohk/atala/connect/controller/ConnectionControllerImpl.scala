@@ -27,12 +27,10 @@ class ConnectionControllerImpl(
   override def createConnection(request: CreateConnectionRequest)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, Connection] = {
-    val result = for {
+    for {
       pairwiseDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
       connection <- service.createConnectionInvitation(request.label, request.goalCode, request.goal, pairwiseDid.did)
     } yield Connection.fromDomain(connection)
-
-    result.mapError(toHttpError)
   }
 
   override def getConnection(
@@ -52,13 +50,11 @@ class ConnectionControllerImpl(
       paginationInput: PaginationInput,
       thid: Option[String]
   )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ConnectionsPage] = {
-    val result = for {
+    for {
       connections <- thid match
         case None       => service.getConnectionRecords()
         case Some(thid) => service.getConnectionRecordByThreadId(thid).map(_.toSeq)
     } yield ConnectionsPage(contents = connections.map(Connection.fromDomain))
-
-    result.mapError(toHttpError)
   }
 
   override def acceptConnectionInvitation(

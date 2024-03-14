@@ -6,8 +6,7 @@ import io.iohk.atala.event.notification.{Event, EventNotificationService}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.shared.models.WalletAccessContext
-import zio.{URLayer, ZIO, ZLayer}
-import zio.IO
+import zio.{URLayer, ZIO, ZLayer, URIO, UIO}
 import java.time.Duration
 import java.util.UUID
 
@@ -23,7 +22,7 @@ class ConnectionServiceNotifier(
       goalCode: Option[String],
       goal: Option[String],
       pairwiseDID: DidId
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): URIO[WalletAccessContext, ConnectionRecord] =
     notifyOnSuccess(svc.createConnectionInvitation(label, goalCode, goal, pairwiseDID))
 
   override def receiveConnectionInvitation(
@@ -68,7 +67,7 @@ class ConnectionServiceNotifier(
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     notifyOnSuccess(svc.receiveConnectionResponse(response))
 
-  private[this] def notifyOnSuccess(effect: ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]) =
+  private[this] def notifyOnSuccess[E](effect: ZIO[WalletAccessContext, E, ConnectionRecord]) =
     for {
       record <- effect
       _ <- notify(record)
@@ -85,38 +84,38 @@ class ConnectionServiceNotifier(
 
   override def getConnectionRecord(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] =
+  ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
     svc.getConnectionRecord(recordId)
 
   override def getConnectionRecordByThreadId(
       thid: String
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] =
+  ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
     svc.getConnectionRecordByThreadId(thid)
 
-  override def deleteConnectionRecord(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, Int] =
+  override def deleteConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Unit] =
     svc.deleteConnectionRecord(recordId)
 
   override def reportProcessingFailure(
       recordId: UUID,
       failReason: Option[String]
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Unit] =
+  ): URIO[WalletAccessContext, Unit] =
     svc.reportProcessingFailure(recordId, failReason)
 
-  override def getConnectionRecords(): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]] =
+  override def getConnectionRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
     svc.getConnectionRecords()
 
   override def getConnectionRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]] =
+  ): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
     svc.getConnectionRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
 
   override def getConnectionRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): IO[ConnectionServiceError, Seq[ConnectionRecord]] =
+  ): UIO[Seq[ConnectionRecord]] =
     svc.getConnectionRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
 }
 

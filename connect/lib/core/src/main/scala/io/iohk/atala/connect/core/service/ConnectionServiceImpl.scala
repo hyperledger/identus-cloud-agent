@@ -14,7 +14,6 @@ import io.iohk.atala.shared.utils.Base64Utils
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 
-import java.rmi.UnexpectedException
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
@@ -28,7 +27,7 @@ private class ConnectionServiceImpl(
       goalCode: Option[String],
       goal: Option[String],
       pairwiseDID: DidId
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): URIO[WalletAccessContext, ConnectionRecord] =
     for {
       invitation <- ZIO.succeed(ConnectionInvitation.makeConnectionInvitation(pairwiseDID, goalCode, goal))
       record <- ZIO.succeed(
@@ -53,50 +52,35 @@ private class ConnectionServiceImpl(
       count <- connectionRepository.create(record)
     } yield record
 
-  override def getConnectionRecords(): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]] = {
-    for {
-      records <- connectionRepository.findAll
-    } yield records
-  }
+  override def getConnectionRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
+    connectionRepository.findAll
 
   override def getConnectionRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]] = {
-    for {
-      records <- connectionRepository
-        .findByStates(ignoreWithZeroRetries, limit, states: _*)
-    } yield records
-  }
+  ): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
+    connectionRepository.findByStates(ignoreWithZeroRetries, limit, states: _*)
 
   override def getConnectionRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
-  ): IO[ConnectionServiceError, Seq[ConnectionRecord]] = {
-    for {
-      records <- connectionRepository
-        .findByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
-    } yield records
-  }
+  ): UIO[Seq[ConnectionRecord]] =
+    connectionRepository.findByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
 
   override def getConnectionRecord(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] = {
-    for {
-      record <- connectionRepository.findById(recordId)
-    } yield record
-  }
+  ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
+    connectionRepository.findById(recordId)
 
   override def getConnectionRecordByThreadId(
       thid: String
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] =
-    for {
-      record <- connectionRepository.findByThreadId(thid)
-    } yield record
+  ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
+    connectionRepository.findByThreadId(thid)
 
-  override def deleteConnectionRecord(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, Int] = ???
+  override def deleteConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Unit] =
+    connectionRepository.deleteById(recordId)
 
   override def receiveConnectionInvitation(
       invitation: String
@@ -309,7 +293,7 @@ private class ConnectionServiceImpl(
   def reportProcessingFailure(
       recordId: UUID,
       failReason: Option[String]
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Unit] =
+  ): URIO[WalletAccessContext, Unit] =
     connectionRepository.updateAfterFail(recordId, failReason)
 
 }

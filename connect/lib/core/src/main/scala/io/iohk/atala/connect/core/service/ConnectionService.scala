@@ -17,7 +17,7 @@ trait ConnectionService {
       goalCode: Option[String],
       goal: Option[String],
       pairwiseDID: DidId
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): URIO[WalletAccessContext, ConnectionRecord]
 
   def receiveConnectionInvitation(
       invitation: String
@@ -53,34 +53,34 @@ trait ConnectionService {
       response: ConnectionResponse
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
 
-  def getConnectionRecords(): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]]
+  def getConnectionRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]]
 
   def getConnectionRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]]
+  ): URIO[WalletAccessContext, Seq[ConnectionRecord]]
 
   def getConnectionRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): IO[ConnectionServiceError, Seq[ConnectionRecord]]
+  ): UIO[Seq[ConnectionRecord]]
 
   def getConnectionRecord(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]]
+  ): URIO[WalletAccessContext, Option[ConnectionRecord]]
 
   def getConnectionRecordByThreadId(
       thid: String
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]]
+  ): URIO[WalletAccessContext, Option[ConnectionRecord]]
 
   def deleteConnectionRecord(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Int]
+  ): URIO[WalletAccessContext, Unit]
 
   def reportProcessingFailure(
       recordId: UUID,
       failReason: Option[String]
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Unit]
+  ): URIO[WalletAccessContext, Unit]
 }
