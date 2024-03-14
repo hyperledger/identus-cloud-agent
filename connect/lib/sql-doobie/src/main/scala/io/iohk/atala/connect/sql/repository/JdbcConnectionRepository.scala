@@ -284,7 +284,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       request: ConnectionRequest,
       state: ProtocolState,
       maxRetries: Int,
-  ): URIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.connection_records
         | SET
@@ -300,6 +300,10 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .flatMap {
+        case 1     => ZIO.unit
+        case count => ZIO.fail(RuntimeException(s"Unexpected affected row count: $count"))
+      }
       .orDie
   }
 

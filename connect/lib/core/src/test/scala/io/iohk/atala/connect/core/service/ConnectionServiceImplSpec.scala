@@ -4,7 +4,7 @@ import io.circe.syntax.*
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.*
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvalidFlowStateError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvalidStateForOperation
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.mercury.model.{DidId, Message}
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
@@ -224,7 +224,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
 
           } yield {
             assertTrue(exit match
-              case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
+              case Exit.Failure(Cause.Fail(_: InvalidStateForOperation, _)) => true
               case _                                                     => false
             )
 

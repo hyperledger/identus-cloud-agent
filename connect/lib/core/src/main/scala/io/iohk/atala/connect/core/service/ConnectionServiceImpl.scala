@@ -105,7 +105,8 @@ private class ConnectionServiceImpl(
       invitation <- ZIO
         .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
         .mapError(err => InvitationParsingError(err))
-      _ <- connectionRepository.getConnectionRecordByThreadId(invitation.id)
+      _ <- connectionRepository
+        .getConnectionRecordByThreadId(invitation.id)
         .flatMap {
           case None    => ZIO.unit
           case Some(_) => ZIO.fail(InvitationAlreadyReceived(invitation.id))
@@ -136,26 +137,20 @@ private class ConnectionServiceImpl(
   override def acceptConnectionInvitation(
       recordId: UUID,
       pairwiseDid: DidId
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] =
     for {
       record <- getRecordWithState(recordId, ProtocolState.InvitationReceived)
       request = ConnectionRequest
         .makeFromInvitation(record.invitation, pairwiseDid)
-        .copy(thid = Some(record.invitation.id)) //  This logic should be moved to the SQL when fetching the record
-      count <- connectionRepository
+        .copy(thid = Some(record.invitation.id))
+      _ <- connectionRepository
         .updateWithConnectionRequest(recordId, request, ProtocolState.ConnectionRequestPending, maxRetries)
         @@ CustomMetricsAspect.startRecordingTime(
           s"${record.id}_invitee_pending_to_req_sent"
         )
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
-      record <- connectionRepository
+      maybeRecord <- connectionRepository
         .getConnectionRecord(record.id)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(recordId))
-          case Some(value) => ZIO.succeed(value)
-        }
+      record <- ZIO.getOrFailWith(new RecordIdNotFound(recordId))(maybeRecord)
     } yield record
 
   override def markConnectionRequestSent(
@@ -202,19 +197,14 @@ private class ConnectionServiceImpl(
           } yield result
         } else ZIO.unit
       }
-      _ <- connectionRepository
-        .updateWithConnectionRequest(record.id, request, ProtocolState.ConnectionRequestReceived, maxRetries)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply)
-      record <- connectionRepository
-        .getConnectionRecord(record.id)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(record.id))
-          case Some(value) => ZIO.succeed(value)
-        }
+      _ <- connectionRepository.updateWithConnectionRequest(
+        record.id,
+        request,
+        ProtocolState.ConnectionRequestReceived,
+        maxRetries
+      )
+      maybeRecord <- connectionRepository.getConnectionRecord(record.id)
+      record <- ZIO.getOrFailWith(RecordIdNotFound(record.id))(maybeRecord)
     } yield record
 
   override def acceptConnectionRequest(
@@ -284,7 +274,7 @@ private class ConnectionServiceImpl(
   private[this] def getRecordWithState(
       recordId: UUID,
       state: ProtocolState
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] = {
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] = {
     for {
       maybeRecord <- connectionRepository
         .getConnectionRecord(recordId)
@@ -293,7 +283,7 @@ private class ConnectionServiceImpl(
         .mapError(_ => RecordIdNotFound(recordId))
       _ <- record.protocolState match {
         case s if s == state => ZIO.unit
-        case state           => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
+        case state           => ZIO.fail(InvalidStateForOperation(s"Invalid protocol state for operation: $state"))
       }
     } yield record
   }
@@ -331,7 +321,7 @@ private class ConnectionServiceImpl(
         .mapError(_ => ThreadIdNotFound(thid))
       _ <- record.protocolState match {
         case s if states.contains(s) => ZIO.unit
-        case state                   => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
+        case state => ZIO.fail(InvalidStateForOperation(s"Invalid protocol state for operation: $state"))
       }
     } yield record
   }

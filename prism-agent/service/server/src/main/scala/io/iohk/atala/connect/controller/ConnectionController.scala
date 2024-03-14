@@ -46,7 +46,7 @@ object ConnectionController {
         ErrorResponse.badRequest(title = "InvitationParsingError", detail = Some(cause.toString))
       case ConnectionServiceError.UnexpectedError(msg) =>
         ErrorResponse.internalServerError(detail = Some(msg))
-      case ConnectionServiceError.InvalidFlowStateError(msg) =>
+      case ConnectionServiceError.InvalidStateForOperation(msg) =>
         ErrorResponse.badRequest(title = "InvalidFlowState", detail = Some(msg))
       case ConnectionServiceError.InvitationAlreadyReceived(msg) =>
         ErrorResponse.badRequest(title = "InvitationAlreadyReceived", detail = Some(msg))

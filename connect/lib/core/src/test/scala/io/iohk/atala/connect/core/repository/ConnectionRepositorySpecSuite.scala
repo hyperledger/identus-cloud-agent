@@ -302,7 +302,7 @@ object ConnectionRepositorySpecSuite {
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
         request = connectionRequest
-        count <- repo.updateWithConnectionRequest(
+        _ <- repo.updateWithConnectionRequest(
           aRecord.id,
           request,
           ProtocolState.ConnectionRequestSent,
@@ -310,7 +310,6 @@ object ConnectionRepositorySpecSuite {
         )
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
-        assertTrue(count == 1) &&
         assertTrue(record.get.connectionRequest.isEmpty) &&
         assertTrue(updatedRecord.get.connectionRequest.contains(request))
       }
