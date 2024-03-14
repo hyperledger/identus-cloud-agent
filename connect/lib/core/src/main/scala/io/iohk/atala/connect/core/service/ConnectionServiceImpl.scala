@@ -310,12 +310,7 @@ private class ConnectionServiceImpl(
       recordId: UUID,
       failReason: Option[String]
   ): ZIO[WalletAccessContext, ConnectionServiceError, Unit] =
-    connectionRepository
-      .updateAfterFail(recordId, failReason)
-      .flatMap {
-        case 1 => ZIO.unit
-        case n => ZIO.fail(UnexpectedError(s"Invalid number of records updated: $n"))
-      }
+    connectionRepository.updateAfterFail(recordId, failReason)
 
 }
 

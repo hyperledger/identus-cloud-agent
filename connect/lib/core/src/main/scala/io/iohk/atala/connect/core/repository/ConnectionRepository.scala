@@ -65,6 +65,6 @@ trait ConnectionRepository {
   def updateAfterFail(
       recordId: UUID,
       failReason: Option[String],
-  ): URIO[WalletAccessContext, Int]
+  ): URIO[WalletAccessContext, Unit]
 
 }
