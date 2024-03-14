@@ -1,6 +1,7 @@
 package config.services
 
 import com.sksamuel.hoplite.ConfigAlias
+import config.VaultAuthType
 import org.testcontainers.containers.ComposeContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.File
@@ -18,16 +19,16 @@ data class Agent(
     @ConfigAlias("keep_running") override val keepRunning: Boolean = false
 ) : ServiceBase {
 
-    override val env: ComposeContainer = ComposeContainer(
-        File("src/test/resources/containers/agent.yml")
-    ).withEnv(
-        mapOf(
+    override val container: ComposeContainer
+
+    init {
+        val env = mutableMapOf(
             "OPEN_ENTERPRISE_AGENT_VERSION" to version,
             "API_KEY_ENABLED" to authEnabled.toString(),
             "AGENT_DIDCOMM_PORT" to didcommPort.toString(),
-            "DIDCOMM_SERVICE_URL" to (didcommServiceUrl ?: "http://host.docker.internal:${didcommPort}"),
+            "DIDCOMM_SERVICE_URL" to (didcommServiceUrl ?: "http://host.docker.internal:$didcommPort"),
             "AGENT_HTTP_PORT" to httpPort.toString(),
-            "REST_SERVICE_URL" to (restServiceUrl ?: "http://host.docker.internal:${httpPort}"),
+            "REST_SERVICE_URL" to (restServiceUrl ?: "http://host.docker.internal:$httpPort"),
             "PRISM_NODE_PORT" to (prismNode?.httpPort?.toString() ?: ""),
             "SECRET_STORAGE_BACKEND" to if (vault != null) "vault" else "postgres",
             "VAULT_HTTP_PORT" to (vault?.httpPort?.toString() ?: ""),
@@ -35,7 +36,20 @@ data class Agent(
             "KEYCLOAK_HTTP_PORT" to (keycloak?.httpPort?.toString() ?: ""),
             "KEYCLOAK_REALM" to (keycloak?.realm ?: ""),
             "KEYCLOAK_CLIENT_ID" to (keycloak?.clientId ?: ""),
-            "KEYCLOAK_CLIENT_SECRET" to (keycloak?.clientSecret ?: "")
+            "KEYCLOAK_CLIENT_SECRET" to (keycloak?.clientSecret ?: ""),
         )
-    ).waitingFor("open-enterprise-agent", Wait.forHealthcheck())
+
+        // setup token authentication
+        if (vault?.authType == VaultAuthType.TOKEN) {
+            env["VAULT_TOKEN"] = "root"
+        } else {
+            env["VAULT_APPROLE_ROLE_ID"] = "agent"
+            env["VAULT_APPROLE_SECRET_ID"] = "agent-secret"
+        }
+
+        container = ComposeContainer(
+            File("src/test/resources/containers/agent.yml"))
+            .withEnv(env)
+            .waitingFor("open-enterprise-agent", Wait.forHealthcheck())
+    }
 }

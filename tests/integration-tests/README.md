@@ -397,7 +397,7 @@ The following variables must be set before running the tests:
 * `OPEN_ENTERPRISE_AGENT_VERSION`: version of the OEA docker image to use.
 
 ```shell
-TESTS_CONFIG=/configs/basic.conf PRISM_NODE_VERSION=2.2.1 OPEN_ENTERPRISE_AGENT_VERSION=1.19.1 ./gradlew test
+TESTS_CONFIG=/configs/basic.conf PRISM_NODE_VERSION=2.2.1 OPEN_ENTERPRISE_AGENT_VERSION=1.30.1 ./gradlew test
 ```
 
 > Please note: there is no need to pass environment variables if you're using already running agents.
@@ -405,6 +405,24 @@ TESTS_CONFIG=/configs/basic.conf PRISM_NODE_VERSION=2.2.1 OPEN_ENTERPRISE_AGENT_
 Additional `-Dcucumber.filter.tags` option can be used to specify the tags to include or exclude scenarios:
 ```shell
 TESTS_CONFIG=/configs/mt_keycloak.conf ./gradlew test -Dcucumber.filter.tags="@connection and @credentials"
+```
+
+### Gradle task
+
+To simplify the execution, each configuration file creates a new `gradle` task. The naming rule is `test_{fileName}`.
+
+It's possible to execute the configuration file as
+
+```shell
+PRISM_NODE_VERSION=2.2.1 OPEN_ENTERPRISE_AGENT_VERSION=1.30.1 ./gradlew test_basic
+```
+
+Also, it's possible to execute the integration tests to all configurations files. The task is named `regression`, it should take a lot of time to execute.
+
+Note: report is not working due constrains in Serenity BDD reporting system.
+
+```shell
+PRISM_NODE_VERSION=2.2.1 OPEN_ENTERPRISE_AGENT_VERSION=1.30.1 ./gradlew regression
 ```
 
 ### Running scenarios in IntelliJ IDEA

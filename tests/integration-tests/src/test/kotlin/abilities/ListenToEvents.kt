@@ -19,7 +19,7 @@ import java.time.OffsetDateTime
 
 open class ListenToEvents(
     private val url: URL,
-    webhookPort: Int?
+    webhookPort: Int?,
 ) : Ability, HasTeardown {
 
     private val server: ApplicationEngine
@@ -68,7 +68,7 @@ open class ListenToEvents(
             Netty,
             port = webhookPort ?: url.port,
             host = "0.0.0.0",
-            module = { route(this) }
+            module = { route(this) },
         )
             .start(wait = false)
     }
