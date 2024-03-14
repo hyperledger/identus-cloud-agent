@@ -59,8 +59,8 @@ trait ConnectionRepository {
       recordId: UUID,
       from: ProtocolState,
       to: ProtocolState,
-      maxRetries: Int, // max numbre of retries -> set the metaRetries
-  ): URIO[WalletAccessContext, Int]
+      maxRetries: Int,
+  ): URIO[WalletAccessContext, Unit]
 
   def updateAfterFail(
       recordId: UUID,

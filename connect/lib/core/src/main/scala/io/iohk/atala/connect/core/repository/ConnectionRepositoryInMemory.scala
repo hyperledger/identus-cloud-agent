@@ -59,30 +59,25 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       from: ProtocolState,
       to: ProtocolState,
       maxRetries: Int
-  ): URIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
       maybeRecord = store
         .find((uuid, record) => uuid == recordId && record.protocolState == from)
         .map(_._2)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  protocolState = to,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
-                )
-              )
-            )
-          } yield 1
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      _ <- storeRef.update(r =>
+        r.updated(
+          recordId,
+          record.copy(
+            protocolState = to,
+            metaRetries = maxRetries,
+            metaLastFailure = None,
+          )
         )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+      )
+    } yield ()
   }
 
   override def deleteConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Unit] = {

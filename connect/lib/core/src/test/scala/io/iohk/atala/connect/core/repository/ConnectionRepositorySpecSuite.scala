@@ -244,7 +244,7 @@ object ConnectionRepositorySpecSuite {
         aRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
-        count <- repo.updateConnectionProtocolState(
+        _ <- repo.updateConnectionProtocolState(
           aRecord.id,
           ProtocolState.InvitationGenerated,
           ProtocolState.ConnectionRequestReceived,
@@ -252,7 +252,6 @@ object ConnectionRepositorySpecSuite {
         )
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
-        assertTrue(count == 1) &&
         assertTrue(record.get.protocolState == ProtocolState.InvitationGenerated) &&
         assertTrue(updatedRecord.get.protocolState == ProtocolState.ConnectionRequestReceived)
       }
@@ -263,7 +262,7 @@ object ConnectionRepositorySpecSuite {
         aRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
-        count <- repo.updateConnectionProtocolState(
+        _ <- repo.updateConnectionProtocolState(
           aRecord.id,
           ProtocolState.InvitationGenerated,
           ProtocolState.InvitationExpired,
@@ -271,7 +270,6 @@ object ConnectionRepositorySpecSuite {
         )
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
-        assertTrue(count == 1) &&
         assertTrue(record.get.protocolState == ProtocolState.InvitationGenerated) &&
         assertTrue(updatedRecord.get.protocolState == ProtocolState.InvitationExpired)
       }
@@ -282,15 +280,20 @@ object ConnectionRepositorySpecSuite {
         aRecord = connectionRecord
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
-        count <- repo.updateConnectionProtocolState(
-          aRecord.id,
-          ProtocolState.ConnectionRequestPending,
-          ProtocolState.ConnectionRequestReceived,
-          maxRetries
-        )
+        updateResult <- repo
+          .updateConnectionProtocolState(
+            aRecord.id,
+            ProtocolState.ConnectionRequestPending,
+            ProtocolState.ConnectionRequestReceived,
+            maxRetries
+          )
+          .exit
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
-        assertTrue(count == 0) &&
+        assertTrue(updateResult match
+          case Exit.Failure(cause: Cause.Die) => true
+          case _                              => false
+        ) &&
         assertTrue(record.get.protocolState == ProtocolState.InvitationGenerated) &&
         assertTrue(updatedRecord.get.protocolState == ProtocolState.InvitationGenerated)
       }

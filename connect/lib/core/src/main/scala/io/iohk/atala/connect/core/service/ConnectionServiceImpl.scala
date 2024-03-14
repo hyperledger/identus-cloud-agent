@@ -281,15 +281,8 @@ private class ConnectionServiceImpl(
       to: ProtocolState,
   ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]] = {
     for {
-      _ <- connectionRepository
-        .updateConnectionProtocolState(recordId, from, to, maxRetries)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply)
-      record <- connectionRepository
-        .getConnectionRecord(recordId)
+      _ <- connectionRepository.updateConnectionProtocolState(recordId, from, to, maxRetries)
+      record <- connectionRepository.getConnectionRecord(recordId)
     } yield record
   }
 
