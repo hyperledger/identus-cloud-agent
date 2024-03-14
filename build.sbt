@@ -879,6 +879,7 @@ lazy val prismAgentServer = project
     eventNotification
   )
   .dependsOn(sharedTest % "test->test")
+  .dependsOn(polluxCore % "compile->compile;test->test")
 
 // ############################
 // ####  Release process  #####

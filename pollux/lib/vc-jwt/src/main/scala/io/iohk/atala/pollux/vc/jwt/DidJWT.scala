@@ -1,6 +1,6 @@
 package io.iohk.atala.pollux.vc.jwt
 
-import com.nimbusds.jose.{JWSAlgorithm, JWSHeader}
+import com.nimbusds.jose.{JOSEObjectType, JWSAlgorithm, JWSHeader}
 import com.nimbusds.jose.crypto.ECDSASigner
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey}
@@ -59,7 +59,7 @@ class ES256KSigner(privateKey: PrivateKey) extends Signer {
   override def encode(claim: Json): JWT = {
     val claimSet = JWTClaimsSet.parse(claim.noSpaces)
     val signedJwt = SignedJWT(
-      new JWSHeader.Builder(JWSAlgorithm.ES256K).build(),
+      new JWSHeader.Builder(JWSAlgorithm.ES256K).`type`(JOSEObjectType.JWT).build(),
       claimSet
     )
     signedJwt.sign(signer)
