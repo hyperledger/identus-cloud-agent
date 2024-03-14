@@ -218,21 +218,13 @@ private class ConnectionServiceImpl(
           case Some(Left(value))     => ZIO.fail(RepositoryError.apply(new RuntimeException(value)))
           case Some(Right(response)) => ZIO.succeed(response)
       }
-      // response = createDidCommConnectionResponse(record)
-      count <- connectionRepository
+      _ <- connectionRepository
         .updateWithConnectionResponse(recordId, response, ProtocolState.ConnectionResponsePending, maxRetries)
         @@ CustomMetricsAspect.startRecordingTime(
           s"${record.id}_inviter_pending_to_res_sent"
         )
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
-      record <- connectionRepository
-        .getConnectionRecord(record.id)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(record.id))
-          case Some(value) => ZIO.succeed(value)
-        }
+      maybeRecord <- connectionRepository.getConnectionRecord(record.id)
+      record <- ZIO.getOrFailWith(RecordIdNotFound(record.id))(maybeRecord)
     } yield record
 
   override def markConnectionResponseSent(
@@ -256,19 +248,14 @@ private class ConnectionServiceImpl(
         ProtocolState.ConnectionRequestPending,
         ProtocolState.ConnectionRequestSent
       )
-      _ <- connectionRepository
-        .updateWithConnectionResponse(record.id, response, ProtocolState.ConnectionResponseReceived, maxRetries)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply)
-      record <- connectionRepository
-        .getConnectionRecord(record.id)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(record.id))
-          case Some(value) => ZIO.succeed(value)
-        }
+      _ <- connectionRepository.updateWithConnectionResponse(
+        record.id,
+        response,
+        ProtocolState.ConnectionResponseReceived,
+        maxRetries
+      )
+      maybeRecord <- connectionRepository.getConnectionRecord(record.id)
+      record <- ZIO.getOrFailWith(RecordIdNotFound(record.id))(maybeRecord)
     } yield record
 
   private[this] def getRecordWithState(

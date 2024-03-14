@@ -34,29 +34,24 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       response: ConnectionResponse,
       state: ProtocolState,
       maxRetries: Int,
-  ): URIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       maybeRecord <- getConnectionRecord(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            storeRef <- walletStoreRef
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  updatedAt = Some(Instant.now),
-                  connectionResponse = Some(response),
-                  protocolState = state,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
-                )
-              )
-            )
-          } yield 1
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      storeRef <- walletStoreRef
+      _ <- storeRef.update(r =>
+        r.updated(
+          recordId,
+          record.copy(
+            updatedAt = Some(Instant.now),
+            connectionResponse = Some(response),
+            protocolState = state,
+            metaRetries = maxRetries,
+            metaLastFailure = None,
+          )
         )
-        .getOrElse(ZIO.succeed(1))
-    } yield count
+      )
+    } yield ()
   }
 
   override def updateConnectionProtocolState(

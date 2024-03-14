@@ -321,7 +321,7 @@ object ConnectionRepositorySpecSuite {
         _ <- repo.createConnectionRecord(aRecord)
         record <- repo.getConnectionRecord(aRecord.id)
         response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage).toOption.get
-        count <- repo.updateWithConnectionResponse(
+        _ <- repo.updateWithConnectionResponse(
           aRecord.id,
           response,
           ProtocolState.ConnectionResponseSent,
@@ -329,7 +329,6 @@ object ConnectionRepositorySpecSuite {
         )
         updatedRecord <- repo.getConnectionRecord(aRecord.id)
       } yield {
-        assertTrue(count == 1) &&
         assertTrue(record.get.connectionResponse.isEmpty) &&
         assertTrue(updatedRecord.get.connectionResponse.contains(response))
       }
@@ -344,7 +343,7 @@ object ConnectionRepositorySpecSuite {
         count <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
         updatedRecord1 <- repo.getConnectionRecord(aRecord.id)
         response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage).toOption.get
-        count <- repo.updateWithConnectionResponse(
+        _ <- repo.updateWithConnectionResponse(
           aRecord.id,
           response,
           ProtocolState.ConnectionResponseSent,
@@ -358,7 +357,6 @@ object ConnectionRepositorySpecSuite {
         assertTrue(updatedRecord2.get.metaRetries == maxRetries) &&
         assertTrue(updatedRecord2.get.metaLastFailure == None) &&
         // continues to work normally after retry
-        assertTrue(count == 1) &&
         assertTrue(record.get.connectionResponse.isEmpty) &&
         assertTrue(updatedRecord2.get.connectionResponse.contains(response))
       }
