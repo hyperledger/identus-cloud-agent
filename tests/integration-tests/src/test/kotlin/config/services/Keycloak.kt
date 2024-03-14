@@ -3,6 +3,7 @@ package config.services
 import com.sksamuel.hoplite.ConfigAlias
 import config.AgentRole
 import config.Role
+import io.iohk.atala.automation.utils.Logger
 import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder
 import io.restassured.specification.RequestSpecification
@@ -16,22 +17,28 @@ data class Keycloak(
     val realm: String = "atala-demo",
     @ConfigAlias("client_id") val clientId: String = "prism-agent",
     @ConfigAlias("client_secret") val clientSecret: String = "prism-agent-demo-secret",
-    @ConfigAlias("keep_running") override val keepRunning: Boolean = false
+    @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
 ) : ServiceBase {
-
+    private val logger = Logger.get<Keycloak>()
     private val keycloakComposeFile = "src/test/resources/containers/keycloak.yml"
     private val keycloakEnvConfig: Map<String, String> = mapOf(
-        "KEYCLOAK_HTTP_PORT" to httpPort.toString()
+        "KEYCLOAK_HTTP_PORT" to httpPort.toString(),
     )
     private val keycloakClientRoles: List<String> = AgentRole.values().map { it.roleName }
-    override val env: ComposeContainer =
+    override val container: ComposeContainer =
         ComposeContainer(File(keycloakComposeFile)).withEnv(keycloakEnvConfig)
             .waitingFor("keycloak", Wait.forLogMessage(".*Running the server.*", 1))
     private val keycloakBaseUrl = "http://localhost:$httpPort/"
     private var requestBuilder: RequestSpecification? = null
+    private var users: List<Role> = emptyList()
 
-    fun start(users: List<Role>) {
-        super.start()
+    fun setUsers(users: List<Role>): ServiceBase {
+        this.users = users
+        return this
+    }
+
+    override fun postStart() {
+        logger.info("Setting up Keycloak")
         initRequestBuilder()
         createRealm()
         createClient()
@@ -77,8 +84,8 @@ data class Keycloak(
                 mapOf(
                     "realm" to realm,
                     "enabled" to true,
-                    "accessTokenLifespan" to 3600000
-                )
+                    "accessTokenLifespan" to 3600000,
+                ),
             )
             .post("/admin/realms")
             .then().statusCode(HttpStatus.SC_CREATED)
@@ -92,8 +99,8 @@ data class Keycloak(
                     "directAccessGrantsEnabled" to true,
                     "authorizationServicesEnabled" to true,
                     "serviceAccountsEnabled" to true,
-                    "secret" to clientSecret
-                )
+                    "secret" to clientSecret,
+                ),
             )
             .post("/admin/realms/$realm/clients")
             .then().statusCode(HttpStatus.SC_CREATED)
@@ -104,8 +111,8 @@ data class Keycloak(
             RestAssured.given().spec(requestBuilder)
                 .body(
                     mapOf(
-                        "name" to roleName
-                    )
+                        "name" to roleName,
+                    ),
                 )
                 .post("/admin/realms/$realm/clients/$clientId/roles")
                 .then().statusCode(HttpStatus.SC_CREATED)
@@ -125,10 +132,10 @@ data class Keycloak(
                         "credentials" to listOf(
                             mapOf(
                                 "value" to keycloakUser,
-                                "temporary" to false
-                            )
-                        )
-                    )
+                                "temporary" to false,
+                            ),
+                        ),
+                    ),
                 )
                 .post("/admin/realms/$realm/users")
                 .thenReturn()
@@ -154,9 +161,9 @@ data class Keycloak(
                 listOf(
                     mapOf(
                         "name" to role.roleName,
-                        "id" to clientRoleId
-                    )
-                )
+                        "id" to clientRoleId,
+                    ),
+                ),
             )
             .post("/admin/realms/$realm/users/$userId/role-mappings/clients/$clientId")
             .then().statusCode(HttpStatus.SC_NO_CONTENT)

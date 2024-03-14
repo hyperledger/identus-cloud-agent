@@ -16,6 +16,7 @@ object AppConfigSpec extends ZIOSpecDefault {
     appRoleSecretId = None,
     useSemanticPath = true,
   )
+  private val baseInvalidHttpEndpointConfig = "http://:8080"
 
   override def spec = suite("AppConfigSpec")(
     test("load config successfully") {
@@ -73,7 +74,27 @@ object AppConfigSpec extends ZIOSpecDefault {
         appRoleSecretId = Some("secretId"),
       )
       assert(vaultConfig.validate)(isRight(isSubtype[ValidatedVaultConfig.TokenAuth](anything)))
-    }
+    },
+    test("reject config when invalid http endpoint config provided") {
+      for {
+        appConfig <- ZIO.serviceWith[AppConfig](
+          _.focus(_.agent.secretStorage.backend)
+            .replace(SecretStorageBackend.memory)
+            .focus(_.agent.httpEndpoint.publicEndpointUrl)
+            .replace(baseInvalidHttpEndpointConfig)
+        )
+      } yield assert(appConfig.validate)(isLeft(containsString("Invalid URL: http://:8080")))
+    },
+    test("reject config when invalid http didcomm service endpoint url provided") {
+      for {
+        appConfig <- ZIO.serviceWith[AppConfig](
+          _.focus(_.agent.secretStorage.backend)
+            .replace(SecretStorageBackend.memory)
+            .focus(_.agent.didCommEndpoint.publicEndpointUrl)
+            .replace(baseInvalidHttpEndpointConfig)
+        )
+      } yield assert(appConfig.validate)(isLeft(containsString("Invalid URL: http://:8080")))
+    },
   ).provide(SystemModule.configLayer)
 
 }
