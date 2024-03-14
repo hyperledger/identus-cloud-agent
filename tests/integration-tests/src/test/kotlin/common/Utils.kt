@@ -2,7 +2,6 @@ package common
 
 import org.awaitility.Awaitility
 import org.awaitility.core.ConditionTimeoutException
-import org.awaitility.kotlin.withPollInterval
 import org.awaitility.pollinterval.FixedPollInterval
 import java.time.Duration
 
@@ -11,10 +10,10 @@ object Utils {
         blockToWait: () -> Boolean,
         errorMessage: String,
         poolInterval: FixedPollInterval = FixedPollInterval(Duration.ofMillis(500L)),
-        timeout: Duration = Duration.ofSeconds(120L)
+        timeout: Duration = Duration.ofSeconds(120L),
     ) {
         try {
-            Awaitility.await().withPollInterval(poolInterval)
+            Awaitility.await().with().pollInterval(poolInterval)
                 .pollInSameThread()
                 .atMost(timeout)
                 .until {
@@ -22,7 +21,7 @@ object Utils {
                 }
         } catch (err: ConditionTimeoutException) {
             throw ConditionTimeoutException(
-                errorMessage
+                errorMessage,
             )
         }
     }
