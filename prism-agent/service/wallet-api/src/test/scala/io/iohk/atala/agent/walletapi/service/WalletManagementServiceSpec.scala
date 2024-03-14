@@ -51,7 +51,7 @@ object WalletManagementServiceSpec
         contextAwareTransactorLayer,
         pgContainerLayer,
         apolloLayer,
-        vaultKvClientLayer,
+        vaultKvClientLayer(),
       )
 
     suite("WalletManagementService")(suite1, suite2)

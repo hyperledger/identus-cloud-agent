@@ -98,6 +98,8 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       issue: IssueCredential,
       issuedRawCredential: String,
+      schemaUri: Option[String],
+      credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int] = {
     for {
@@ -111,6 +113,8 @@ class CredentialRepositoryInMemory(
                 recordId,
                 record.copy(
                   updatedAt = Some(Instant.now),
+                  schemaUri = schemaUri,
+                  credentialDefinitionUri = credentialDefinitionUri,
                   issueCredentialData = Some(issue),
                   issuedCredentialRaw = Some(issuedRawCredential),
                   protocolState = protocolState,
@@ -149,7 +153,7 @@ class CredentialRepositoryInMemory(
           rec.id
         ) && rec.issueCredentialData.isDefined
           && rec.schemaUri.isDefined
-          && rec.credentialDefinitionId.isDefined
+          && rec.credentialDefinitionUri.isDefined
           && rec.credentialFormat == CredentialFormat.AnonCreds
       )
       .map(rec =>

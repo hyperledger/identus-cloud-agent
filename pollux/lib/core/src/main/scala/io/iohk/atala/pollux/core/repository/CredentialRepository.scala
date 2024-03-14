@@ -67,6 +67,8 @@ trait CredentialRepository {
       recordId: DidCommID,
       issue: IssueCredential,
       issuedRawCredential: String,
+      schemaUri: Option[String],
+      credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int]
 

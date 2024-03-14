@@ -108,7 +108,6 @@ private class PresentationServiceImpl(
 
   override def createAnoncredPresentationPayloadFromRecord(
       recordId: DidCommID,
-      prover: Issuer,
       anoncredCredentialProof: AnoncredCredentialProofsV1,
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] = {
@@ -151,7 +150,6 @@ private class PresentationServiceImpl(
   def createAnoncredPresentation(
       requestPresentation: RequestPresentation,
       recordId: DidCommID,
-      prover: Issuer,
       anoncredCredentialProof: AnoncredCredentialProofsV1,
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, Presentation] = {
@@ -159,7 +157,6 @@ private class PresentationServiceImpl(
       presentationPayload <-
         createAnoncredPresentationPayloadFromRecord(
           recordId,
-          prover,
           anoncredCredentialProof,
           issuanceDate
         )
@@ -605,10 +602,10 @@ private class PresentationServiceImpl(
       issuedCredentials <- credentialRepository
         .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
         .mapError(RepositoryError.apply)
+      validatedCredentialsFormat <- validateCredentialsFormat(record, issuedCredentials)
       _ <- validateCredentials(
         s"No matching issued credentials found in prover db from the given: $credentialsToUse",
-        record,
-        issuedCredentials
+        validatedCredentialsFormat
       )
       count <- presentationRepository
         .updatePresentationWithCredentialsToUse(recordId, Option(credentialsToUse), ProtocolState.PresentationPending)
@@ -641,13 +638,13 @@ private class PresentationServiceImpl(
 
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
-      issuedCredentials <- credentialRepository
-        .getValidIssuedCredentials(
-          credentialsToUse.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential))
-        )
-        .mapError(RepositoryError.apply)
-      _ <- validateCredentials(
-        s"No matching issued credentials found in prover db from the given: $credentialsToUse",
+      issuedCredentials <-
+        credentialRepository
+          .getValidAnoncredIssuedCredentials(
+            credentialsToUse.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential))
+          )
+          .mapError(RepositoryError.apply)
+      _ <- validateFullCredentialsFormat(
         record,
         issuedCredentials
       )
@@ -676,6 +673,23 @@ private class PresentationServiceImpl(
 
   private def validateCredentials(
       errorMessage: String,
+      issuedCredentials: Seq[ValidIssuedCredentialRecord]
+  ) = {
+    val issuedCredentialRaw = issuedCredentials.flatMap(_.issuedCredentialRaw)
+    for {
+      _ <- ZIO.fromEither(
+        Either.cond(
+          issuedCredentialRaw.nonEmpty,
+          issuedCredentialRaw,
+          PresentationError.IssuedCredentialNotFoundError(
+            new Throwable(errorMessage)
+          )
+        )
+      )
+    } yield ()
+  }
+
+  private def validateCredentialsFormat(
       record: PresentationRecord,
       issuedCredentials: Seq[ValidIssuedCredentialRecord]
   ) = {
@@ -701,18 +715,16 @@ private class PresentationServiceImpl(
           )
         )
       )
-      signedCredentials = validatedCredentials.flatMap(_.issuedCredentialRaw)
-      _ <- ZIO.fromEither(
-        Either.cond(
-          signedCredentials.nonEmpty,
-          signedCredentials,
-          PresentationError.IssuedCredentialNotFoundError(
-            new Throwable(errorMessage)
-          )
-        )
-      )
-    } yield ()
+    } yield validatedCredentials
   }
+
+  private def validateFullCredentialsFormat(
+      record: PresentationRecord,
+      issuedCredentials: Seq[ValidFullIssuedCredentialRecord]
+  ) = validateCredentialsFormat(
+    record,
+    issuedCredentials.map(cred => ValidIssuedCredentialRecord(cred.id, None, cred.credentialFormat, cred.subjectId))
+  )
 
   override def acceptPresentation(
       recordId: DidCommID

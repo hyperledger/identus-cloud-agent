@@ -225,42 +225,45 @@ object RepoModule {
       } yield vaultKVClient
     }
 
-    SystemModule.configLayer >>> vaultClient
+    SystemModule.configLayer ++ SystemModule.zioHttpClientLayer >>> vaultClient
   }
 
   val allSecretStorageLayer: TaskLayer[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage] = {
     ZLayer.fromZIO {
       ZIO
         .service[AppConfig]
-        .map(_.agent.secretStorage.backend)
-        .tap(backend => ZIO.logInfo(s"Using '$backend' as a secret storage backend"))
-        .flatMap {
-          case SecretStorageBackend.vault =>
-            ZIO.succeed(
-              ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
-                VaultDIDSecretStorage.layer,
-                VaultWalletSecretStorage.layer,
-                VaultGenericSecretStorage.layer,
-                vaultClientLayer,
+        .map(_.agent.secretStorage)
+        .tap(conf => ZIO.logInfo(s"Using '${conf.backend}' as a secret storage backend"))
+        .flatMap { conf =>
+          val useSemanticPath = conf.vault.map(_.useSemanticPath).getOrElse(true)
+          conf.backend match {
+            case SecretStorageBackend.vault =>
+              ZIO.succeed(
+                ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
+                  VaultDIDSecretStorage.layer(useSemanticPath),
+                  VaultGenericSecretStorage.layer(useSemanticPath),
+                  VaultWalletSecretStorage.layer,
+                  vaultClientLayer,
+                )
               )
-            )
-          case SecretStorageBackend.postgres =>
-            ZIO.succeed(
-              ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
-                JdbcDIDSecretStorage.layer,
-                JdbcWalletSecretStorage.layer,
-                JdbcGenericSecretStorage.layer,
-                agentContextAwareTransactorLayer,
+            case SecretStorageBackend.postgres =>
+              ZIO.succeed(
+                ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
+                  JdbcDIDSecretStorage.layer,
+                  JdbcGenericSecretStorage.layer,
+                  JdbcWalletSecretStorage.layer,
+                  agentContextAwareTransactorLayer,
+                )
               )
-            )
-          case SecretStorageBackend.memory =>
-            ZIO.succeed(
-              ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
-                DIDSecretStorageInMemory.layer,
-                WalletSecretStorageInMemory.layer,
-                GenericSecretStorageInMemory.layer
+            case SecretStorageBackend.memory =>
+              ZIO.succeed(
+                ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
+                  DIDSecretStorageInMemory.layer,
+                  GenericSecretStorageInMemory.layer,
+                  WalletSecretStorageInMemory.layer,
+                )
               )
-            )
+          }
         }
         .provide(SystemModule.configLayer)
     }.flatten

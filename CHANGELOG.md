@@ -1,3 +1,11 @@
+## [1.30.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.30.0...prism-agent-v1.30.1) (2024-03-06)
+
+
+### Bug Fixes
+
+* allow configurable path convention for vault secrets ([#918](https://github.com/hyperledger-labs/open-enterprise-agent/issues/918)) ([234a272](https://github.com/hyperledger-labs/open-enterprise-agent/commit/234a2725614b05466391894f248c7175fb62c5b6))
+* integration test ([#915](https://github.com/hyperledger-labs/open-enterprise-agent/issues/915)) ([320ab6a](https://github.com/hyperledger-labs/open-enterprise-agent/commit/320ab6a876606eb68f48fe7d78983b4e044b5084))
+
 # [1.30.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.29.0...prism-agent-v1.30.0) (2024-03-01)
 
 
