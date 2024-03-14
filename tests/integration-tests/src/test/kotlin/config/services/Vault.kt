@@ -2,6 +2,8 @@ package config.services
 
 import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpStatus
 import com.sksamuel.hoplite.ConfigAlias
+import config.VaultAuthType
+import io.iohk.atala.automation.utils.Logger
 import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder
 import io.restassured.specification.RequestSpecification
@@ -11,29 +13,33 @@ import java.io.File
 
 data class Vault(
     @ConfigAlias("http_port") val httpPort: Int,
-    @ConfigAlias("keep_running") override val keepRunning: Boolean = false
+    @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
+    @ConfigAlias("vault_auth_type") val authType: VaultAuthType = VaultAuthType.APP_ROLE,
 ) : ServiceBase {
-
+    private val logger = Logger.get<Vault>()
     private val vaultComposeFile: String = "src/test/resources/containers/vault.yml"
-    override val env: ComposeContainer = ComposeContainer(File(vaultComposeFile)).withEnv(
+    override val container: ComposeContainer = ComposeContainer(File(vaultComposeFile)).withEnv(
         mapOf(
-            "VAULT_PORT" to httpPort.toString()
-        )
+            "VAULT_PORT" to httpPort.toString(),
+
+            ),
     ).waitingFor(
         "vault",
-        Wait.forHealthcheck()
+        Wait.forHealthcheck(),
     )
     private val vaultBaseUrl = "http://localhost:$httpPort/"
     private var requestBuilder: RequestSpecification? = null
     private val appRoleName = "agent"
     private val appRolePolicyName = "agent-policy"
 
-    override fun start() {
-        super.start()
-        initRequestBuilder()
-        enableAppRoleAuth()
-        createAppRolePolicy()
-        createAppRole()
+    override fun postStart() {
+        if (authType == VaultAuthType.APP_ROLE) {
+            logger.info("Setting up Vault app roles")
+            initRequestBuilder()
+            enableAppRoleAuth()
+            createAppRolePolicy()
+            createAppRole()
+        }
     }
 
     private fun initRequestBuilder() {
@@ -48,8 +54,8 @@ data class Vault(
         RestAssured.given().spec(requestBuilder)
             .body(
                 mapOf(
-                    "type" to "approle"
-                )
+                    "type" to "approle",
+                ),
             )
             .post("/v1/sys/auth/approle")
             .then().statusCode(HttpStatus.SC_NO_CONTENT)
@@ -63,8 +69,8 @@ data class Vault(
                         path "secret/*" {
                             capabilities = ["create", "read", "update", "patch", "delete", "list"]
                         }
-                        """
-                )
+                        """,
+                ),
             )
             .post("/v1/sys/policy/$appRolePolicyName")
             .then().statusCode(HttpStatus.SC_NO_CONTENT)
@@ -75,8 +81,8 @@ data class Vault(
             .body(
                 mapOf(
                     "token_policies" to appRolePolicyName,
-                    "token_ttl" to "60s"
-                )
+                    "token_ttl" to "60s",
+                ),
             )
             .post("/v1/auth/approle/role/$appRoleName")
             .then().statusCode(HttpStatus.SC_NO_CONTENT)
@@ -85,8 +91,8 @@ data class Vault(
         RestAssured.given().spec(requestBuilder)
             .body(
                 mapOf(
-                    "role_id" to "agent"
-                )
+                    "role_id" to "agent",
+                ),
             )
             .post("/v1/auth/approle/role/$appRoleName/role-id")
             .then().statusCode(HttpStatus.SC_NO_CONTENT)
@@ -95,8 +101,8 @@ data class Vault(
         RestAssured.given().spec(requestBuilder)
             .body(
                 mapOf(
-                    "secret_id" to "agent-secret"
-                )
+                    "secret_id" to "agent-secret",
+                ),
             )
             .post("/v1/auth/approle/role/$appRoleName/custom-secret-id")
             .then().statusCode(HttpStatus.SC_OK)
