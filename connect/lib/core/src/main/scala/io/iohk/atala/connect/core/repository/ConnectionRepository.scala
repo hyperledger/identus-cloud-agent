@@ -11,7 +11,9 @@ import java.util.UUID
 
 trait ConnectionRepository {
 
-  def createConnectionRecord(record: ConnectionRecord): URIO[WalletAccessContext, Unit]
+  def createConnectionRecord(
+      record: ConnectionRecord
+  ): URIO[WalletAccessContext, Unit]
 
   def getConnectionRecords: URIO[WalletAccessContext, Seq[ConnectionRecord]]
 
@@ -27,11 +29,17 @@ trait ConnectionRepository {
       states: ConnectionRecord.ProtocolState*
   ): UIO[Seq[ConnectionRecord]]
 
-  def getConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Option[ConnectionRecord]]
+  def getConnectionRecord(
+      recordId: UUID
+  ): URIO[WalletAccessContext, Option[ConnectionRecord]]
 
-  def deleteConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Int]
+  def deleteConnectionRecord(
+      recordId: UUID
+  ): URIO[WalletAccessContext, Int]
 
-  def getConnectionRecordByThreadId(thid: String): URIO[WalletAccessContext, Option[ConnectionRecord]]
+  def getConnectionRecordByThreadId(
+      thid: String
+  ): URIO[WalletAccessContext, Option[ConnectionRecord]]
 
   def updateWithConnectionRequest(
       recordId: UUID,
