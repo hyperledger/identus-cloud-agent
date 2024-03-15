@@ -218,9 +218,13 @@ private class ConnectionServiceImpl(
 
   override def receiveConnectionResponse(
       response: ConnectionResponse
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[
+    WalletAccessContext,
+    ThreadIdMissingInMessage | ThreadIdNotFound | InvalidStateForOperation,
+    ConnectionRecord
+  ] =
     for {
-      thid <- ZIO.fromOption(response.thid).mapError(_ => ThreadIdMissingInMessage)
+      thid <- ZIO.fromOption(response.thid).mapError(_ => ThreadIdMissingInMessage())
       record <- getRecordByThreadIdAndStates(
         thid,
         ProtocolState.ConnectionRequestPending,
@@ -232,8 +236,7 @@ private class ConnectionServiceImpl(
         ProtocolState.ConnectionResponseReceived,
         maxRetries
       )
-      maybeRecord <- connectionRepository.findById(record.id)
-      record <- ZIO.getOrFailWith(RecordIdNotFound(record.id))(maybeRecord)
+      record <- connectionRepository.getById(record.id)
     } yield record
 
   private[this] def getRecordByIdAndStates(

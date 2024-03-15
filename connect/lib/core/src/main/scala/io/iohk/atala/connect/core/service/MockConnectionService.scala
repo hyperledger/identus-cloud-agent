@@ -31,7 +31,12 @@ object MockConnectionService extends Mock[ConnectionService] {
   object MarkConnectionResponseSent extends Effect[UUID, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
   object MarkConnectionInvitationExpired extends Effect[UUID, Nothing, ConnectionRecord]
 
-  object ReceiveConnectionResponse extends Effect[ConnectionResponse, ConnectionServiceError, ConnectionRecord]
+  object ReceiveConnectionResponse
+      extends Effect[
+        ConnectionResponse,
+        ThreadIdMissingInMessage | ThreadIdNotFound | InvalidStateForOperation,
+        ConnectionRecord
+      ]
 
   override val compose: URLayer[mock.Proxy, ConnectionService] = ZLayer {
     for {
@@ -84,7 +89,11 @@ object MockConnectionService extends Mock[ConnectionService] {
 
       override def receiveConnectionResponse(
           response: ConnectionResponse
-      ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+      ): ZIO[
+        WalletAccessContext,
+        ThreadIdMissingInMessage | ThreadIdNotFound | InvalidStateForOperation,
+        ConnectionRecord
+      ] =
         proxy(ReceiveConnectionResponse, response)
 
       override def getConnectionRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]] = ???

@@ -66,7 +66,11 @@ class ConnectionServiceNotifier(
 
   override def receiveConnectionResponse(
       response: ConnectionResponse
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[
+    WalletAccessContext,
+    ThreadIdMissingInMessage | ThreadIdNotFound | InvalidStateForOperation,
+    ConnectionRecord
+  ] =
     notifyOnSuccess(svc.receiveConnectionResponse(response))
 
   private[this] def notifyOnSuccess[E](effect: ZIO[WalletAccessContext, E, ConnectionRecord]) =
