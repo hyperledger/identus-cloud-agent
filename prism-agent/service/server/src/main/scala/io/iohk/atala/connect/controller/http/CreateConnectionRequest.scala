@@ -3,18 +3,22 @@ package io.iohk.atala.connect.controller.http
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.connect.controller.http.CreateConnectionRequest.annotations
 import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.{description, encodedExample}
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate, validateEach}
+import sttp.tapir.Validator.{all, maxLength, minLength}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class CreateConnectionRequest(
     @description(annotations.label.description)
     @encodedExample(annotations.label.example)
+    @validateEach(all(minLength(1), maxLength(255)))
     label: Option[String] = None,
     @description(annotations.goalcode.description)
     @encodedExample(annotations.goalcode.example)
+    @validateEach(all(minLength(1), maxLength(255)))
     goalCode: Option[String] = None,
     @description(annotations.goal.description)
     @encodedExample(annotations.goal.example)
+    @validateEach(all(minLength(1), maxLength(255)))
     goal: Option[String] = None
 )
 

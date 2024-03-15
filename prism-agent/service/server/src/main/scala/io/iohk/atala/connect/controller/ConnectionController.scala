@@ -13,6 +13,7 @@ import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import java.util.UUID
+import scala.util.matching.Regex
 
 trait ConnectionController {
   def createConnection(request: CreateConnectionRequest)(implicit
@@ -34,18 +35,14 @@ trait ConnectionController {
 }
 
 object ConnectionController {
+  private val CamelCaseSplitRegex: Regex = "(([A-Z]?[a-z]+)|([A-Z]))".r
+
   def toHttpError(error: ConnectionServiceError): ErrorResponse =
-    error match
-      case ConnectionServiceError.RecordIdNotFound(recordId) =>
-        ErrorResponse.notFound(detail = Some(s"Record Id not found: $recordId"))
-      case ConnectionServiceError.ThreadIdNotFound(thid) =>
-        ErrorResponse.notFound(detail = Some(s"Thread Id not found: $thid"))
-      case ConnectionServiceError.InvitationParsingError(cause) =>
-        ErrorResponse.badRequest(title = "InvitationParsingError", detail = Some(cause.toString))
-      case ConnectionServiceError.InvalidStateForOperation(state) =>
-        ErrorResponse.badRequest(title = "InvalidFlowState", detail = Some(s"Invalid state for operation: $state"))
-      case ConnectionServiceError.InvitationAlreadyReceived(msg) =>
-        ErrorResponse.badRequest(title = "InvitationAlreadyReceived", detail = Some(msg))
-      case ConnectionServiceError.InvitationExpired(msg) =>
-        ErrorResponse.badRequest(title = "InvitationExpired", detail = Some(msg))
+    val simpleName = error.getClass.getSimpleName
+    ErrorResponse(
+      error.statusCode.code,
+      s"error:ConnectionServiceError:$simpleName",
+      CamelCaseSplitRegex.findAllIn(simpleName).mkString(" "),
+      Some(error.userFacingMessage)
+    )
 }

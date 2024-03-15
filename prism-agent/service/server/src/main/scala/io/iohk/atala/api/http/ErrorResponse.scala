@@ -25,7 +25,7 @@ case class ErrorResponse(
     title: String,
     @description(annotations.detail.description)
     @encodedExample(annotations.detail.example)
-    detail: Option[String],
+    detail: Option[String] = None,
     @description(annotations.instance.description)
     @encodedExample(annotations.instance.example)
     instance: String = INSTANCE_URI_PREFIX + UUID.randomUUID().toString
