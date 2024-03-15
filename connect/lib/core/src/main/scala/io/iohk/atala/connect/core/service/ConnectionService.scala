@@ -44,7 +44,7 @@ trait ConnectionService {
 
   def markConnectionResponseSent(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
 
   def markConnectionInvitationExpired(
       recordId: UUID

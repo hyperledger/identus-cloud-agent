@@ -206,7 +206,7 @@ private class ConnectionServiceImpl(
 
   override def markConnectionResponseSent(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] =
     for {
       record <- getRecordByIdAndStates(recordId, ProtocolState.ConnectionResponsePending)
       updatedRecord <- updateConnectionProtocolState(
