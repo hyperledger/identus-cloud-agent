@@ -14,8 +14,7 @@ import io.iohk.atala.shared.utils.Base64Utils
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 
-import java.time.Duration
-import java.time.Instant
+import java.time.{Duration, Instant}
 import java.util.UUID
 private class ConnectionServiceImpl(
     connectionRepository: ConnectionRepository,
@@ -118,7 +117,7 @@ private class ConnectionServiceImpl(
       pairwiseDid: DidId
   ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] =
     for {
-      record <- getRecordWithState(recordId, ProtocolState.InvitationReceived)
+      record <- getRecordByIdAndStates(recordId, ProtocolState.InvitationReceived)
       request = ConnectionRequest
         .makeFromInvitation(record.invitation, pairwiseDid)
         .copy(thid = Some(record.invitation.id))
@@ -136,7 +135,7 @@ private class ConnectionServiceImpl(
       recordId: UUID
   ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] =
     for {
-      record <- getRecordWithState(recordId, ProtocolState.ConnectionRequestPending)
+      record <- getRecordByIdAndStates(recordId, ProtocolState.ConnectionRequestPending)
       updatedRecord <- updateConnectionProtocolState(
         recordId,
         ProtocolState.ConnectionRequestPending,
@@ -148,7 +147,7 @@ private class ConnectionServiceImpl(
       recordId: UUID
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     for {
-      record <- getRecordWithState(recordId, ProtocolState.InvitationGenerated)
+      record <- getRecordByIdAndStates(recordId, ProtocolState.InvitationGenerated)
       updatedRecord <- updateConnectionProtocolState(
         recordId,
         ProtocolState.InvitationGenerated,
@@ -161,8 +160,8 @@ private class ConnectionServiceImpl(
       expirationTime: Option[Duration] = None
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     for {
-      record <- getRecordFromThreadIdAndState(
-        Some(request.thid.orElse(request.pthid).getOrElse(request.id)),
+      record <- getRecordByThreadIdAndStates(
+        request.thid.getOrElse(request.id),
         ProtocolState.InvitationGenerated
       )
       _ <- expirationTime.fold {
@@ -190,7 +189,7 @@ private class ConnectionServiceImpl(
       recordId: UUID
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     for {
-      record <- getRecordWithState(recordId, ProtocolState.ConnectionRequestReceived)
+      record <- getRecordByIdAndStates(recordId, ProtocolState.ConnectionRequestReceived)
       response <- {
         record.connectionRequest.map(_.makeMessage).map(ConnectionResponse.makeResponseFromRequest(_)) match
           case None                  => ZIO.fail(RepositoryError.apply(new RuntimeException("Unable to make Message")))
@@ -210,7 +209,7 @@ private class ConnectionServiceImpl(
       recordId: UUID
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     for {
-      record <- getRecordWithState(recordId, ProtocolState.ConnectionResponsePending)
+      record <- getRecordByIdAndStates(recordId, ProtocolState.ConnectionResponsePending)
       updatedRecord <- updateConnectionProtocolState(
         recordId,
         ProtocolState.ConnectionResponsePending,
@@ -222,8 +221,9 @@ private class ConnectionServiceImpl(
       response: ConnectionResponse
   ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
     for {
-      record <- getRecordFromThreadIdAndState(
-        response.thid.orElse(response.pthid),
+      thid <- ZIO.fromOption(response.thid).mapError(_ => ThreadIdMissingInMessage)
+      record <- getRecordByThreadIdAndStates(
+        thid,
         ProtocolState.ConnectionRequestPending,
         ProtocolState.ConnectionRequestSent
       )
@@ -237,21 +237,33 @@ private class ConnectionServiceImpl(
       record <- ZIO.getOrFailWith(RecordIdNotFound(record.id))(maybeRecord)
     } yield record
 
-  private[this] def getRecordWithState(
+  private[this] def getRecordByIdAndStates(
       recordId: UUID,
-      state: ProtocolState
+      states: ProtocolState*
   ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] = {
     for {
       maybeRecord <- connectionRepository.findById(recordId)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
-      _ <- record.protocolState match {
-        case s if s == state => ZIO.unit
-        case state           => ZIO.fail(InvalidStateForOperation(s"Invalid protocol state for operation: $state"))
-      }
+      record <- ZIO.fromOption(maybeRecord).mapError(_ => RecordIdNotFound(recordId))
+      _ <- ensureRecordHasExpectedState(record, states*)
     } yield record
   }
+
+  private[this] def getRecordByThreadIdAndStates(
+      thid: String,
+      states: ProtocolState*
+  ): ZIO[WalletAccessContext, ThreadIdNotFound | InvalidStateForOperation, ConnectionRecord] = {
+    for {
+      maybeRecord <- connectionRepository.findByThreadId(thid)
+      record <- ZIO.fromOption(maybeRecord).mapError(_ => ThreadIdNotFound(thid))
+      _ <- ensureRecordHasExpectedState(record, states*)
+    } yield record
+  }
+
+  private[this] def ensureRecordHasExpectedState(record: ConnectionRecord, states: ProtocolState*) =
+    record.protocolState match {
+      case s if states.contains(s) => ZIO.unit
+      case state => ZIO.fail(InvalidStateForOperation(s"Invalid protocol state for operation: $state"))
+    }
 
   private[this] def updateConnectionProtocolState(
       recordId: UUID,
@@ -261,26 +273,6 @@ private class ConnectionServiceImpl(
     for {
       _ <- connectionRepository.updateProtocolState(recordId, from, to, maxRetries)
       record <- connectionRepository.getById(recordId)
-    } yield record
-  }
-
-  private[this] def getRecordFromThreadIdAndState(
-      thid: Option[String],
-      states: ProtocolState*
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] = {
-    for {
-      thid <- ZIO
-        .fromOption(thid)
-        .mapError(_ => UnexpectedError("No `thid` found in credential request"))
-      maybeRecord <- connectionRepository
-        .findByThreadId(thid)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => ThreadIdNotFound(thid))
-      _ <- record.protocolState match {
-        case s if states.contains(s) => ZIO.unit
-        case state => ZIO.fail(InvalidStateForOperation(s"Invalid protocol state for operation: $state"))
-      }
     } yield record
   }
 
