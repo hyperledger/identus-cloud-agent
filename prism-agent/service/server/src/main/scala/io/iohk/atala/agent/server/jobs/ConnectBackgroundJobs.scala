@@ -3,13 +3,11 @@ package io.iohk.atala.agent.server.jobs
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.jobs.BackgroundJobError.ErrorResponseReceivedFromPeerAgent
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.*
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.*
