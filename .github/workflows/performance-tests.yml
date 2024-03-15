@@ -13,8 +13,8 @@ on:
 
 env:
   BENCHMARKING_DIR: "tests/performance-tests/atala-performance-tests-k6"
-  NODE_AUTH_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-  GITHUB_ACTOR: $${{ ${{ github.actor }}
+  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_ACTOR: ${{ github.actor }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
