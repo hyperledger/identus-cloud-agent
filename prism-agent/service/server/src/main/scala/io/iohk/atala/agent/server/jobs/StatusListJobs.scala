@@ -11,6 +11,8 @@ import io.iohk.atala.pollux.vc.jwt.revocation.{VCStatusList2021, VCStatusList202
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
+import zio.metrics.Metric
+import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 
 object StatusListJobs extends BackgroundJobsHelper {
 
@@ -19,7 +21,9 @@ object StatusListJobs extends BackgroundJobsHelper {
       credentialStatusListService <- ZIO.service[CredentialStatusListService]
       credentialService <- ZIO.service[CredentialService]
       credentialStatusListsWithCreds <- credentialStatusListService.getCredentialsAndItsStatuses
-        .mapError(_.toThrowable)
+        .mapError(_.toThrowable) @@ Metric
+        .gauge("revocation_status_list_sync_get_status_lists_w_creds_ms_gauge")
+        .trackDurationWith(_.toMetricsSeconds)
 
       updatedVcStatusListsCredsEffects = credentialStatusListsWithCreds.map { statusListWithCreds =>
         val vcStatusListCredString = statusListWithCreds.statusListCredential
@@ -36,7 +40,6 @@ object StatusListJobs extends BackgroundJobsHelper {
           bitString <- vcStatusListCred.getBitString.mapError(x => new Throwable(x.msg))
           updateBitStringEffects = statusListWithCreds.credentials.map { cred =>
             if cred.isCanceled then {
-
               val sendMessageEffect = for {
                 maybeIssueCredentialRecord <- credentialService
                   .getIssueCredentialRecord(cred.issueCredentialRecordId)
@@ -64,7 +67,9 @@ object StatusListJobs extends BackgroundJobsHelper {
                 didCommAgent <- buildDIDCommAgent(issueCredentialData.from)
                 response <- MessagingService
                   .send(revocationNotification.makeMessage)
-                  .provideSomeLayer(didCommAgent)
+                  .provideSomeLayer(didCommAgent) @@ Metric
+                  .gauge("revocation_status_list_sync_revocation_notification_ms_gauge")
+                  .trackDurationWith(_.toMetricsSeconds)
               } yield response
 
               val updateBitStringEffect = bitString.setRevokedInPlace(cred.statusListIndex, true)
@@ -80,7 +85,9 @@ object StatusListJobs extends BackgroundJobsHelper {
                     }
                   else ZIO.unit
               } yield updated
-              updateAndNotify.provideSomeLayer(ZLayer.succeed(walletAccessContext))
+              updateAndNotify.provideSomeLayer(ZLayer.succeed(walletAccessContext)) @@ Metric
+                .gauge("revocation_status_list_sync_process_single_credential_ms_gauge")
+                .trackDurationWith(_.toMetricsSeconds)
             } else ZIO.unit
           }
           _ <- ZIO
@@ -91,7 +98,9 @@ object StatusListJobs extends BackgroundJobsHelper {
           }
           _ <- credentialStatusListService
             .markAsProcessedMany(unprocessedEntityIds)
-            .mapError(_.toThrowable)
+            .mapError(_.toThrowable) @@ Metric
+            .gauge("revocation_status_list_sync_mark_as_processed_many_ms_gauge")
+            .trackDurationWith(_.toMetricsSeconds)
 
           updatedVcStatusListCred <- vcStatusListCred.updateBitString(bitString).mapError {
             case VCStatusList2021Error.EncodingError(msg: String) => new Throwable(msg)
@@ -108,8 +117,10 @@ object StatusListJobs extends BackgroundJobsHelper {
 
       }
       config <- ZIO.service[AppConfig]
-      _ <- ZIO
-        .collectAll(updatedVcStatusListsCredsEffects)
+      _ <- (ZIO
+        .collectAll(updatedVcStatusListsCredsEffects) @@ Metric
+        .gauge("revocation_status_list_sync_process_status_lists_w_creds_ms_gauge")
+        .trackDurationWith(_.toMetricsSeconds))
         .withParallelism(config.pollux.syncRevocationStatusesBgJobProcessingParallelism)
     } yield ()
 }

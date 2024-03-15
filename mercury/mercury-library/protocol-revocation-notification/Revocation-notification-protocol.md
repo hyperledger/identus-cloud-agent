@@ -23,6 +23,7 @@ Version 1.0: https://atalaprism.io/revocation_notification/1.0/revoke
 {
   "from": "fromDID_value",
   "to": "toDID_value",
+  "piuri":"https://atalaprism.io/revocation_notification/1.0/revoke",
   "body": {
     "issueCredentialProtocolThreadId": "issueCredentialProtocolThreadId_value",
     "comment": "Thread Id used to issue this credential withing issue credential protocol"
