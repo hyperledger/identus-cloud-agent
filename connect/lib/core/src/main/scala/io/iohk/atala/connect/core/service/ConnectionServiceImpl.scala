@@ -87,7 +87,7 @@ private class ConnectionServiceImpl(
     for {
       invitation <- ZIO
         .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
-        .mapError(err => InvitationParsingError(err.getMessage()))
+        .mapError(err => InvitationParsingError(err.getMessage))
       maybeRecord <- connectionRepository.findByThreadId(invitation.id)
       _ <- ZIO.noneOrFailWith(maybeRecord)(_ => InvitationAlreadyReceived(invitation.id))
       record <- ZIO.succeed(
@@ -170,7 +170,7 @@ private class ConnectionServiceImpl(
         if (actualDuration > expiryDuration) {
           for {
             _ <- markConnectionInvitationExpired(record.id)
-            result <- ZIO.fail(InvitationExpired(record.id.toString))
+            result <- ZIO.fail(InvitationExpired(record.invitation.id))
           } yield result
         } else ZIO.unit
       }
@@ -220,11 +220,11 @@ private class ConnectionServiceImpl(
       response: ConnectionResponse
   ): ZIO[
     WalletAccessContext,
-    ThreadIdMissingInMessage | ThreadIdNotFound | InvalidStateForOperation,
+    ThreadIdMissingInReceivedMessage | ThreadIdNotFound | InvalidStateForOperation,
     ConnectionRecord
   ] =
     for {
-      thid <- ZIO.fromOption(response.thid).mapError(_ => ThreadIdMissingInMessage())
+      thid <- ZIO.fromOption(response.thid).mapError(_ => ThreadIdMissingInReceivedMessage(response.id))
       record <- getRecordByThreadIdAndStates(
         thid,
         ProtocolState.ConnectionRequestPending,
@@ -264,7 +264,7 @@ private class ConnectionServiceImpl(
   private[this] def ensureRecordHasExpectedState(record: ConnectionRecord, states: ProtocolState*) =
     record.protocolState match {
       case s if states.contains(s) => ZIO.unit
-      case state => ZIO.fail(InvalidStateForOperation(s"Invalid protocol state for operation: $state"))
+      case state                   => ZIO.fail(InvalidStateForOperation(state))
     }
 
   private[this] def updateConnectionProtocolState(

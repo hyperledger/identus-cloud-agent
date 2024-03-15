@@ -33,7 +33,7 @@ trait ControllerHelper {
         // If Inviter, myDid is the source
         ZIO.succeed(DidIdPair(resp.from, resp.to))
       case _ =>
-        ZIO.fail(InvalidStateForOperation(s"Invalid protocol state for operation: ${record.protocolState}"))
+        ZIO.fail(InvalidStateForOperation(record.protocolState))
     }
   }
 

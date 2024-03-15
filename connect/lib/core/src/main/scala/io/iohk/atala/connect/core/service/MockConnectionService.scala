@@ -34,7 +34,7 @@ object MockConnectionService extends Mock[ConnectionService] {
   object ReceiveConnectionResponse
       extends Effect[
         ConnectionResponse,
-        ThreadIdMissingInMessage | ThreadIdNotFound | InvalidStateForOperation,
+        ThreadIdMissingInReceivedMessage | ThreadIdNotFound | InvalidStateForOperation,
         ConnectionRecord
       ]
 
@@ -91,7 +91,7 @@ object MockConnectionService extends Mock[ConnectionService] {
           response: ConnectionResponse
       ): ZIO[
         WalletAccessContext,
-        ThreadIdMissingInMessage | ThreadIdNotFound | InvalidStateForOperation,
+        ThreadIdMissingInReceivedMessage | ThreadIdNotFound | InvalidStateForOperation,
         ConnectionRecord
       ] =
         proxy(ReceiveConnectionResponse, response)

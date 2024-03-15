@@ -42,8 +42,8 @@ object ConnectionController {
         ErrorResponse.notFound(detail = Some(s"Thread Id not found: $thid"))
       case ConnectionServiceError.InvitationParsingError(cause) =>
         ErrorResponse.badRequest(title = "InvitationParsingError", detail = Some(cause.toString))
-      case ConnectionServiceError.InvalidStateForOperation(msg) =>
-        ErrorResponse.badRequest(title = "InvalidFlowState", detail = Some(msg))
+      case ConnectionServiceError.InvalidStateForOperation(state) =>
+        ErrorResponse.badRequest(title = "InvalidFlowState", detail = Some(s"Invalid state for operation: $state"))
       case ConnectionServiceError.InvitationAlreadyReceived(msg) =>
         ErrorResponse.badRequest(title = "InvitationAlreadyReceived", detail = Some(msg))
       case ConnectionServiceError.InvitationExpired(msg) =>

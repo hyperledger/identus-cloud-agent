@@ -68,7 +68,7 @@ class ConnectionServiceNotifier(
       response: ConnectionResponse
   ): ZIO[
     WalletAccessContext,
-    ThreadIdMissingInMessage | ThreadIdNotFound | InvalidStateForOperation,
+    ThreadIdMissingInReceivedMessage | ThreadIdNotFound | InvalidStateForOperation,
     ConnectionRecord
   ] =
     notifyOnSuccess(svc.receiveConnectionResponse(response))
