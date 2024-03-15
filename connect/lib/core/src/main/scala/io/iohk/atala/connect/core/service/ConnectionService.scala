@@ -40,7 +40,7 @@ trait ConnectionService {
 
   def acceptConnectionRequest(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
 
   def markConnectionResponseSent(
       recordId: UUID

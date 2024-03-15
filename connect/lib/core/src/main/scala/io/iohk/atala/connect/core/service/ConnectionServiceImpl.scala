@@ -185,22 +185,23 @@ private class ConnectionServiceImpl(
 
   override def acceptConnectionRequest(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] =
     for {
       record <- getRecordByIdAndStates(recordId, ProtocolState.ConnectionRequestReceived)
-      response <- {
-        record.connectionRequest.map(_.makeMessage).map(ConnectionResponse.makeResponseFromRequest(_)) match
-          case None                  => ZIO.fail(RepositoryError.apply(new RuntimeException("Unable to make Message")))
-          case Some(Left(value))     => ZIO.fail(RepositoryError.apply(new RuntimeException(value)))
-          case Some(Right(response)) => ZIO.succeed(response)
-      }
+      request <- ZIO
+        .fromOption(record.connectionRequest)
+        .mapError(_ => RuntimeException(s"No connection request found in record: $recordId"))
+        .orDie
+      response <- ZIO
+        .fromEither(ConnectionResponse.makeResponseFromRequest(request.makeMessage))
+        .mapError(str => RuntimeException(s"Cannot make response from request: $recordId"))
+        .orDie
       _ <- connectionRepository
         .updateWithConnectionResponse(recordId, response, ProtocolState.ConnectionResponsePending, maxRetries)
         @@ CustomMetricsAspect.startRecordingTime(
           s"${record.id}_inviter_pending_to_res_sent"
         )
-      maybeRecord <- connectionRepository.findById(record.id)
-      record <- ZIO.getOrFailWith(RecordIdNotFound(record.id))(maybeRecord)
+      record <- connectionRepository.getById(record.id)
     } yield record
 
   override def markConnectionResponseSent(

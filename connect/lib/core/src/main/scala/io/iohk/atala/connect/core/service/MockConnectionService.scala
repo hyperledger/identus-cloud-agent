@@ -12,7 +12,7 @@ import zio.{UIO, URIO, URLayer, ZIO, ZLayer, mock}
 import java.time.Duration
 import java.util.UUID
 
-object MockConnectionService extends Mock[ConnectionService] {
+object MockConnectionService extends Mock[ConnectionService] { 
 
   object CreateConnectionInvitation
       extends Effect[(Option[String], Option[String], Option[String], DidId), Nothing, ConnectionRecord]
@@ -27,7 +27,7 @@ object MockConnectionService extends Mock[ConnectionService] {
         ThreadIdNotFound | InvalidStateForOperation | InvitationExpired,
         ConnectionRecord
       ]
-  object AcceptConnectionRequest extends Effect[UUID, ConnectionServiceError, ConnectionRecord]
+  object AcceptConnectionRequest extends Effect[UUID, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
   object MarkConnectionResponseSent extends Effect[UUID, ConnectionServiceError, ConnectionRecord]
   object MarkConnectionInvitationExpired extends Effect[UUID, Nothing, ConnectionRecord]
 
@@ -69,7 +69,7 @@ object MockConnectionService extends Mock[ConnectionService] {
 
       override def acceptConnectionRequest(
           recordId: UUID
-      ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+      ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] =
         proxy(AcceptConnectionRequest, recordId)
 
       override def markConnectionInvitationExpired(

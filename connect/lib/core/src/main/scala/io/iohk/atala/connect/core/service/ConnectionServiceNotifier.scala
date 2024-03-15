@@ -51,7 +51,7 @@ class ConnectionServiceNotifier(
 
   override def acceptConnectionRequest(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] =
     notifyOnSuccess(svc.acceptConnectionRequest(recordId))
 
   override def markConnectionResponseSent(
