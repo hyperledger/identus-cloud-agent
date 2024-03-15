@@ -52,7 +52,11 @@ trait ConnectionService {
 
   def receiveConnectionResponse(
       response: ConnectionResponse
-  ): ZIO[WalletAccessContext, ThreadIdMissingInReceivedMessage | ThreadIdNotFound | InvalidStateForOperation, ConnectionRecord]
+  ): ZIO[
+    WalletAccessContext,
+    ThreadIdMissingInReceivedMessage | ThreadIdNotFound | InvalidStateForOperation,
+    ConnectionRecord
+  ]
 
   def findAllRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]]
 
