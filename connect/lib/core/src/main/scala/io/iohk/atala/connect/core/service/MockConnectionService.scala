@@ -110,16 +110,16 @@ object MockConnectionService extends Mock[ConnectionService] {
           states: ConnectionRecord.ProtocolState*
       ): UIO[Seq[ConnectionRecord]] = ???
 
-      override def getConnectionRecord(
+      override def findById(
           recordId: UUID
       ): URIO[WalletAccessContext, Option[ConnectionRecord]] = ???
 
-      override def getConnectionRecordByThreadId(
+      override def findByThreadId(
           thid: String
       ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
         ???
 
-      override def deleteConnectionRecord(
+      override def deleteById(
           recordId: UUID
       ): URIO[WalletAccessContext, Unit] = ???
 

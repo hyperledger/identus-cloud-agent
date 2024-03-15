@@ -38,7 +38,7 @@ trait ControllerHelper {
   ): ZIO[WalletAccessContext & ConnectionService, ConnectionServiceError, DidIdPair] = {
     for {
       connectionService <- ZIO.service[ConnectionService]
-      maybeConnection <- connectionService.getConnectionRecord(connectionId)
+      maybeConnection <- connectionService.findById(connectionId)
       didIdPair <- maybeConnection match
         case Some(connRecord: ConnectionRecord) =>
           extractDidIdPairFromValidConnection(connRecord) match {

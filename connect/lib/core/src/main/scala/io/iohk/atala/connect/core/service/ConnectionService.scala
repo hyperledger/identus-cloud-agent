@@ -68,15 +68,15 @@ trait ConnectionService {
       states: ConnectionRecord.ProtocolState*
   ): UIO[Seq[ConnectionRecord]]
 
-  def getConnectionRecord(
+  def findById(
       recordId: UUID
   ): URIO[WalletAccessContext, Option[ConnectionRecord]]
 
-  def getConnectionRecordByThreadId(
+  def findByThreadId(
       thid: String
   ): URIO[WalletAccessContext, Option[ConnectionRecord]]
 
-  def deleteConnectionRecord(
+  def deleteById(
       recordId: UUID
   ): URIO[WalletAccessContext, Unit]
 

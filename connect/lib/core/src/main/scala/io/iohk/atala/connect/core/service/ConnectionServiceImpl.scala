@@ -68,17 +68,17 @@ private class ConnectionServiceImpl(
   ): UIO[Seq[ConnectionRecord]] =
     connectionRepository.findByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
 
-  override def getConnectionRecord(
+  override def findById(
       recordId: UUID
   ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
     connectionRepository.findById(recordId)
 
-  override def getConnectionRecordByThreadId(
+  override def findByThreadId(
       thid: String
   ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
     connectionRepository.findByThreadId(thid)
 
-  override def deleteConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Unit] =
+  override def deleteById(recordId: UUID): URIO[WalletAccessContext, Unit] =
     connectionRepository.deleteById(recordId)
 
   override def receiveConnectionInvitation(

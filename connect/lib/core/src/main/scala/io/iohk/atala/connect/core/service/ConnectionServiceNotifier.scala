@@ -88,18 +88,18 @@ class ConnectionServiceNotifier(
     result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
   }
 
-  override def getConnectionRecord(
+  override def findById(
       recordId: UUID
   ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
-    svc.getConnectionRecord(recordId)
+    svc.findById(recordId)
 
-  override def getConnectionRecordByThreadId(
+  override def findByThreadId(
       thid: String
   ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
-    svc.getConnectionRecordByThreadId(thid)
+    svc.findByThreadId(thid)
 
-  override def deleteConnectionRecord(recordId: UUID): URIO[WalletAccessContext, Unit] =
-    svc.deleteConnectionRecord(recordId)
+  override def deleteById(recordId: UUID): URIO[WalletAccessContext, Unit] =
+    svc.deleteById(recordId)
 
   override def reportProcessingFailure(
       recordId: UUID,

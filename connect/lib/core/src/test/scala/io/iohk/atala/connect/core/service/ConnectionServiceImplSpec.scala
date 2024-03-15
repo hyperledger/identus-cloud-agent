@@ -56,8 +56,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
               Some("Test goal"),
               DidId("did:peer:INVITER")
             )
-            foundRecord <- svc.getConnectionRecord(createdRecord.id)
-            notFoundRecord <- svc.getConnectionRecord(UUID.randomUUID)
+            foundRecord <- svc.findById(createdRecord.id)
+            notFoundRecord <- svc.findById(UUID.randomUUID)
           } yield {
             assertTrue(foundRecord.contains(createdRecord)) &&
             assertTrue(notFoundRecord.isEmpty)

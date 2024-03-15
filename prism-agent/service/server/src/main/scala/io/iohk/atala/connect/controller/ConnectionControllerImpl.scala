@@ -37,7 +37,7 @@ class ConnectionControllerImpl(
       connectionId: UUID
   )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, Connection] = {
     val result = for {
-      maybeConnection <- service.getConnectionRecord(connectionId)
+      maybeConnection <- service.findById(connectionId)
       connection <- ZIO
         .fromOption(maybeConnection)
         .mapError(_ => ConnectionServiceError.RecordIdNotFound(connectionId))
@@ -53,7 +53,7 @@ class ConnectionControllerImpl(
     for {
       connections <- thid match
         case None       => service.getConnectionRecords()
-        case Some(thid) => service.getConnectionRecordByThreadId(thid).map(_.toSeq)
+        case Some(thid) => service.findByThreadId(thid).map(_.toSeq)
     } yield ConnectionsPage(contents = connections.map(Connection.fromDomain))
   }
 
