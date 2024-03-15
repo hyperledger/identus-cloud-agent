@@ -96,30 +96,30 @@ object MockConnectionService extends Mock[ConnectionService] {
       ] =
         proxy(ReceiveConnectionResponse, response)
 
-      override def getConnectionRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]] = ???
+      override def findAllRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]] = ???
 
-      override def getConnectionRecordsByStates(
+      override def findRecordsByStates(
           ignoreWithZeroRetries: Boolean,
           limit: Int,
           states: ConnectionRecord.ProtocolState*
       ): URIO[WalletAccessContext, Seq[ConnectionRecord]] = ???
 
-      override def getConnectionRecordsByStatesForAllWallets(
+      override def findRecordsByStatesForAllWallets(
           ignoreWithZeroRetries: Boolean,
           limit: Int,
           states: ConnectionRecord.ProtocolState*
       ): UIO[Seq[ConnectionRecord]] = ???
 
-      override def findById(
+      override def findRecordById(
           recordId: UUID
       ): URIO[WalletAccessContext, Option[ConnectionRecord]] = ???
 
-      override def findByThreadId(
+      override def findRecordByThreadId(
           thid: String
       ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
         ???
 
-      override def deleteById(
+      override def deleteRecordById(
           recordId: UUID
       ): URIO[WalletAccessContext, Unit] = ???
 

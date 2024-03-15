@@ -42,7 +42,7 @@ trait ControllerHelper {
   ): ZIO[WalletAccessContext & ConnectionService, RecordIdNotFound | InvalidStateForOperation, DidIdPair] = {
     for {
       connectionService <- ZIO.service[ConnectionService]
-      maybeConnection <- connectionService.findById(connectionId)
+      maybeConnection <- connectionService.findRecordById(connectionId)
       connection <- ZIO.getOrFailWith(RecordIdNotFound(connectionId))(maybeConnection)
       didIdPair <- extractDidIdPairFromEstablishedConnection(connection)
     } yield didIdPair

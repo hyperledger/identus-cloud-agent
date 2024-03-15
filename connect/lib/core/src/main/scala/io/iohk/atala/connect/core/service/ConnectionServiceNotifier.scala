@@ -88,18 +88,18 @@ class ConnectionServiceNotifier(
     result.catchAll(e => ZIO.logError(s"Notification service error: $e"))
   }
 
-  override def findById(
+  override def findRecordById(
       recordId: UUID
   ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
-    svc.findById(recordId)
+    svc.findRecordById(recordId)
 
-  override def findByThreadId(
+  override def findRecordByThreadId(
       thid: String
   ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
-    svc.findByThreadId(thid)
+    svc.findRecordByThreadId(thid)
 
-  override def deleteById(recordId: UUID): URIO[WalletAccessContext, Unit] =
-    svc.deleteById(recordId)
+  override def deleteRecordById(recordId: UUID): URIO[WalletAccessContext, Unit] =
+    svc.deleteRecordById(recordId)
 
   override def reportProcessingFailure(
       recordId: UUID,
@@ -107,22 +107,22 @@ class ConnectionServiceNotifier(
   ): URIO[WalletAccessContext, Unit] =
     svc.reportProcessingFailure(recordId, failReason)
 
-  override def getConnectionRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
-    svc.getConnectionRecords()
+  override def findAllRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
+    svc.findAllRecords()
 
-  override def getConnectionRecordsByStates(
+  override def findRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
-    svc.getConnectionRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+    svc.findRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
 
-  override def getConnectionRecordsByStatesForAllWallets(
+  override def findRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): UIO[Seq[ConnectionRecord]] =
-    svc.getConnectionRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+    svc.findRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
 }
 
 object ConnectionServiceNotifier {

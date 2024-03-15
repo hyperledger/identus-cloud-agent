@@ -26,7 +26,7 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
       connectionService <- ZIO.service[ConnectionService]
       config <- ZIO.service[AppConfig]
       records <- connectionService
-        .getConnectionRecordsByStatesForAllWallets(
+        .findRecordsByStatesForAllWallets(
           ignoreWithZeroRetries = true,
           limit = config.connect.connectBgJobRecordsLimit,
           ConnectionRecord.ProtocolState.ConnectionRequestPending,

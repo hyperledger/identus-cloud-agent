@@ -54,29 +54,29 @@ trait ConnectionService {
       response: ConnectionResponse
   ): ZIO[WalletAccessContext, ThreadIdMissingInMessage | ThreadIdNotFound | InvalidStateForOperation, ConnectionRecord]
 
-  def getConnectionRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]]
+  def findAllRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]]
 
-  def getConnectionRecordsByStates(
+  def findRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): URIO[WalletAccessContext, Seq[ConnectionRecord]]
 
-  def getConnectionRecordsByStatesForAllWallets(
+  def findRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): UIO[Seq[ConnectionRecord]]
 
-  def findById(
+  def findRecordById(
       recordId: UUID
   ): URIO[WalletAccessContext, Option[ConnectionRecord]]
 
-  def findByThreadId(
+  def findRecordByThreadId(
       thid: String
   ): URIO[WalletAccessContext, Option[ConnectionRecord]]
 
-  def deleteById(
+  def deleteRecordById(
       recordId: UUID
   ): URIO[WalletAccessContext, Unit]
 

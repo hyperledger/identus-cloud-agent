@@ -51,34 +51,34 @@ private class ConnectionServiceImpl(
       count <- connectionRepository.create(record)
     } yield record
 
-  override def getConnectionRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
+  override def findAllRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
     connectionRepository.findAll
 
-  override def getConnectionRecordsByStates(
+  override def findRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
   ): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
     connectionRepository.findByStates(ignoreWithZeroRetries, limit, states: _*)
 
-  override def getConnectionRecordsByStatesForAllWallets(
+  override def findRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
   ): UIO[Seq[ConnectionRecord]] =
     connectionRepository.findByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
 
-  override def findById(
+  override def findRecordById(
       recordId: UUID
   ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
     connectionRepository.findById(recordId)
 
-  override def findByThreadId(
+  override def findRecordByThreadId(
       thid: String
   ): URIO[WalletAccessContext, Option[ConnectionRecord]] =
     connectionRepository.findByThreadId(thid)
 
-  override def deleteById(recordId: UUID): URIO[WalletAccessContext, Unit] =
+  override def deleteRecordById(recordId: UUID): URIO[WalletAccessContext, Unit] =
     connectionRepository.deleteById(recordId)
 
   override def receiveConnectionInvitation(
