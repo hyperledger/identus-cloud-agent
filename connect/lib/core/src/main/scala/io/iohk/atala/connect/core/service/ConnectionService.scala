@@ -2,6 +2,7 @@ package io.iohk.atala.connect.core.service
 
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.*
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -9,10 +10,6 @@ import zio.*
 
 import java.time.Duration
 import java.util.UUID
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvitationParsingError
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvitationAlreadyReceived
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvalidStateForOperation
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError.RecordIdNotFound
 
 trait ConnectionService {
 
@@ -39,7 +36,7 @@ trait ConnectionService {
   def receiveConnectionRequest(
       request: ConnectionRequest,
       expirationTime: Option[Duration]
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): ZIO[WalletAccessContext, ThreadIdNotFound | InvalidStateForOperation | InvitationExpired, ConnectionRecord]
 
   def acceptConnectionRequest(
       recordId: UUID
@@ -51,7 +48,7 @@ trait ConnectionService {
 
   def markConnectionInvitationExpired(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): URIO[WalletAccessContext, ConnectionRecord]
 
   def receiveConnectionResponse(
       response: ConnectionResponse

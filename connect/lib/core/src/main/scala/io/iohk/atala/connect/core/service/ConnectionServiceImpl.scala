@@ -145,9 +145,8 @@ private class ConnectionServiceImpl(
 
   override def markConnectionInvitationExpired(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): URIO[WalletAccessContext, ConnectionRecord] =
     for {
-      record <- getRecordByIdAndStates(recordId, ProtocolState.InvitationGenerated)
       updatedRecord <- updateConnectionProtocolState(
         recordId,
         ProtocolState.InvitationGenerated,
@@ -158,7 +157,7 @@ private class ConnectionServiceImpl(
   override def receiveConnectionRequest(
       request: ConnectionRequest,
       expirationTime: Option[Duration] = None
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, ThreadIdNotFound | InvalidStateForOperation | InvitationExpired, ConnectionRecord] =
     for {
       record <- getRecordByThreadIdAndStates(
         request.thid.getOrElse(request.id),
@@ -181,8 +180,7 @@ private class ConnectionServiceImpl(
         ProtocolState.ConnectionRequestReceived,
         maxRetries
       )
-      maybeRecord <- connectionRepository.findById(record.id)
-      record <- ZIO.getOrFailWith(RecordIdNotFound(record.id))(maybeRecord)
+      record <- connectionRepository.getById(record.id)
     } yield record
 
   override def acceptConnectionRequest(

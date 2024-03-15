@@ -2,17 +2,15 @@ package io.iohk.atala.connect.core.service
 
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.*
 import io.iohk.atala.event.notification.{Event, EventNotificationService}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.shared.models.WalletAccessContext
-import zio.{URLayer, ZIO, ZLayer, URIO, UIO}
+import zio.{UIO, URIO, URLayer, ZIO, ZLayer}
+
 import java.time.Duration
 import java.util.UUID
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvitationParsingError
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvitationAlreadyReceived
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvalidStateForOperation
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError.RecordIdNotFound
 
 class ConnectionServiceNotifier(
     svc: ConnectionService,
@@ -48,7 +46,7 @@ class ConnectionServiceNotifier(
   override def receiveConnectionRequest(
       request: ConnectionRequest,
       expirationTime: Option[Duration]
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, ThreadIdNotFound | InvalidStateForOperation | InvitationExpired, ConnectionRecord] =
     notifyOnSuccess(svc.receiveConnectionRequest(request, expirationTime))
 
   override def acceptConnectionRequest(
@@ -63,7 +61,7 @@ class ConnectionServiceNotifier(
 
   override def markConnectionInvitationExpired(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord] =
+  ): URIO[WalletAccessContext, ConnectionRecord] =
     notifyOnSuccess(svc.markConnectionInvitationExpired(recordId))
 
   override def receiveConnectionResponse(
