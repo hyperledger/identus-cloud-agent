@@ -20,7 +20,8 @@
 /shared/ @patlo-iog @FabioPinheiro @mineme0110 @yshyn-iohk @bvoiturier @shotexa @CryptoKnightIOG
 
 # E2E tests:
-/tests/ @amagyar-iohk @yshyn-iohk @patlo-iog @mineme0110
+/tests/ @todorkoleviohk @amagyar-iohk @yshyn-iohk @patlo-iog @mineme0110
 
 # Docs:
-/docs/ @davidpoltorak-io @yshyn-iohk
+/docs/ @bvoiturier @yshyn-iohk
+*.md @petevielhaber
