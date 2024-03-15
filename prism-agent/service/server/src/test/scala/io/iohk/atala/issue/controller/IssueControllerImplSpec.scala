@@ -38,12 +38,7 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
         theBodyWasParsedFromJsonAsABadRequest = assert(response.body)(
           isRight(
             isSubtype[ErrorResponse](
-              equalTo(
-                ErrorResponse.badRequest(
-                  "BadRequest",
-                  Some(s"Error parsing string as PrismDID: DID syntax must start with 'did:' prefix")
-                )
-              )
+              hasField("status", _.status, equalTo(StatusCode.BadRequest.code))
             )
           )
         )

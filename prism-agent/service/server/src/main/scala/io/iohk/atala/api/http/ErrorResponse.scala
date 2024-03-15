@@ -9,6 +9,10 @@ import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.server.model.ValuedEndpointOutput
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
+import java.util.UUID
+
+private val INSTANCE_URI_PREFIX = "error:instance:"
+
 case class ErrorResponse(
     @description(annotations.status.description)
     @encodedExample(annotations.status.example)
@@ -24,7 +28,7 @@ case class ErrorResponse(
     detail: Option[String],
     @description(annotations.instance.description)
     @encodedExample(annotations.instance.example)
-    instance: String
+    instance: String = INSTANCE_URI_PREFIX + UUID.randomUUID().toString
 )
 
 object ErrorResponse {
@@ -70,42 +74,38 @@ object ErrorResponse {
         )
   }
 
-  def notFound(title: String = "NotFound", detail: Option[String] = None, instance: String = "") =
-    ErrorResponse(StatusCode.NotFound.code, `type` = "NotFound", title = title, detail = detail, instance = instance)
+  def notFound(title: String = "NotFound", detail: Option[String] = None) =
+    ErrorResponse(StatusCode.NotFound.code, `type` = "NotFound", title = title, detail = detail)
 
-  def internalServerError(title: String = "InternalServerError", detail: Option[String] = None, instance: String = "") =
+  def internalServerError(title: String = "InternalServerError", detail: Option[String] = None) =
     ErrorResponse(
       StatusCode.InternalServerError.code,
       `type` = "InternalServerError",
       title = title,
-      detail = detail,
-      instance = instance
+      detail = detail
     )
 
-  def badRequest(title: String = "BadRequest", detail: Option[String] = None, instance: String = "") =
+  def badRequest(title: String = "BadRequest", detail: Option[String] = None) =
     ErrorResponse(
       StatusCode.BadRequest.code,
       `type` = title,
       title = title,
-      detail = detail,
-      instance = instance
+      detail = detail
     )
 
-  def unprocessableEntity(title: String = "UnprocessableEntity", detail: Option[String] = None, instance: String = "") =
+  def unprocessableEntity(title: String = "UnprocessableEntity", detail: Option[String] = None) =
     ErrorResponse(
       StatusCode.UnprocessableEntity.code,
       `type` = title,
       title = title,
-      detail = detail,
-      instance = instance
+      detail = detail
     )
 
-  def conflict(title: String = "Conflict", detail: Option[String] = None, instance: String = "") =
+  def conflict(title: String = "Conflict", detail: Option[String] = None) =
     ErrorResponse(
       StatusCode.Conflict.code,
       `type` = title,
       title = title,
-      detail = detail,
-      instance = instance
+      detail = detail
     )
 }
