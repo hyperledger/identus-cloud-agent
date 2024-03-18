@@ -94,7 +94,7 @@ object StatusListJobs extends BackgroundJobsHelper {
             .collectAll(updateBitStringEffects)
 
           unprocessedEntityIds = statusListWithCreds.credentials.collect {
-            case x if !x.isProcessed => x.id
+            case x if !x.isProcessed && x.isCanceled => x.id
           }
           _ <- credentialStatusListService
             .markAsProcessedMany(unprocessedEntityIds)
