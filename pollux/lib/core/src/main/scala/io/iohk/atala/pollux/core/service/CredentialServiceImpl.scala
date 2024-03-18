@@ -10,12 +10,7 @@ import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.*
-import io.iohk.atala.pollux.anoncreds.{
-  AnoncredCreateCredentialDefinition,
-  AnoncredCredential,
-  AnoncredCredentialOffer,
-  AnoncredLib
-}
+import io.iohk.atala.pollux.anoncreds.{AnoncredCreateCredentialDefinition, AnoncredCredential, AnoncredCredentialOffer, AnoncredLib}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.CredentialFormat.AnonCreds
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
@@ -26,6 +21,7 @@ import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
 import io.iohk.atala.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer, *}
+import io.iohk.atala.shared.http.{DataUrlResolver, GenericUriResolver}
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
@@ -1282,6 +1278,11 @@ private class CredentialServiceImpl(
 
       clock = java.time.Clock.system(ZoneId.systemDefault)
 
+      genericUriResolver = GenericUriResolver(
+        Map(
+          "data" -> DataUrlResolver(),
+        )
+      )
       verificationResult <- JwtPresentation
         .verify(
           jwt,
@@ -1291,7 +1292,7 @@ private class CredentialServiceImpl(
             verifyDates = false,
             leeway = Duration.Zero
           )
-        )(didResolver, (_: String) => ZIO.succeed(""))(clock)
+        )(didResolver, genericUriResolver)(clock)
         .mapError(errors => CredentialRequestValidationError(s"JWT presentation verification failed: $errors"))
 
       result <- verificationResult match
