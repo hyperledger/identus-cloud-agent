@@ -91,7 +91,6 @@ lazy val V = new {
 
   val nimbusJwt = "10.0.0"
   val keycloak = "22.0.4" // scala-steward:off
-
 }
 
 /** Dependencies */
