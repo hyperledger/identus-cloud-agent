@@ -99,10 +99,10 @@ object PrismAgentApp {
   private val syncRevocationStatusListsJob = {
     for {
       config <- ZIO.service[AppConfig]
-      _ <- StatusListJobs.syncRevocationStatuses
-        .repeat(
-          Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay)
-        )
+      _ <- (StatusListJobs.syncRevocationStatuses @@ Metric
+        .gauge("revocation_status_list_sync_job_ms_gauge")
+        .trackDurationWith(_.toMetricsSeconds))
+        .repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
     } yield ()
   }
 
