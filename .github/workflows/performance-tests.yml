@@ -43,7 +43,7 @@ jobs:
       - uses: KengoTODA/actions-setup-docker-compose@v1
         name: Install `docker-compose`
         with:
-          version: '2.14.2'
+          version: "2.14.2"
 
       - name: Build local version of PRISM Agent
         env:
@@ -113,7 +113,7 @@ jobs:
         with:
           node-version: 16.x
           registry-url: "https://npm.pkg.github.com"
-          scope: 'input-output-hk'
+          scope: "input-output-hk"
 
       - name: Install dependencies
         uses: borales/actions-yarn@v4.2.0
