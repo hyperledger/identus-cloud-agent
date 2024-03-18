@@ -7,7 +7,7 @@ import java.time.Duration
 import java.util.*
 
 object TestConstants {
-    val TESTS_CONFIG = System.getenv("TESTS_CONFIG") ?: "/configs/basic.conf"
+    val TESTS_CONFIG = System.getenv("TESTS_CONFIG") ?: "/configs/two_agents_basic.conf"
     val TEST_VERIFICATION_POLICY = VerificationPolicyInput(
         name = "Trusted Issuer and SchemaID",
         description = "Verification Policy with trusted issuer and schemaId",
