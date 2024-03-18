@@ -5040,6 +5040,10 @@ components:
           items:
             $ref: '#/components/schemas/WebhookNotification'
   securitySchemes:
+    adminApiKeyAuth:
+      type: apiKey
+      name: x-admin-api-key
+      in: header
     apiKeyAuth:
       type: apiKey
       description: API Key Authentication. The header `apikey` must be set with the

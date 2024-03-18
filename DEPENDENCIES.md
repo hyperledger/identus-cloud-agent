@@ -72,6 +72,7 @@ Apache | [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [io.
 Apache | [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [io.getquill # quill-sql_3 # 4.7.3](https://zio.dev/zio-protoquill) | <notextile></notextile>
 Apache | [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [io.getquill # quill-util_3 # 4.7.3](https://zio.dev/zio-quill) | <notextile></notextile>
 Apache | [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [io.getquill # quill-zio_3 # 4.7.3](https://zio.dev/zio-protoquill) | <notextile></notextile>
+Apache | [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [jakarta.validation # jakarta.validation-api # 3.0.2](https://beanvalidation.org) | <notextile></notextile>
 Apache | [Apache License 2.0](https://repository.jboss.org/licenses/apache-2.0.txt) | [org.jboss.logging # jboss-logging # 3.5.1.Final](http://www.jboss.org) | <notextile></notextile>
 Apache | [Apache License 2.0](https://repository.jboss.org/licenses/apache-2.0.txt) | org.jboss.resteasy # resteasy-client # 6.2.4.Final | <notextile></notextile>
 Apache | [Apache License 2.0](https://repository.jboss.org/licenses/apache-2.0.txt) | org.jboss.resteasy # resteasy-client-api # 6.2.4.Final | <notextile></notextile>
@@ -87,6 +88,7 @@ Apache | [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.
 Apache | [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.google.crypto.tink # tink # 1.6.1](http://github.com/google/tink) | <notextile></notextile>
 Apache | [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.google.guava # guava # 31.0.1-android](https://github.com/google/guava) | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [commons-codec # commons-codec # 1.11](http://commons.apache.org/proper/commons-codec/) | <notextile></notextile>
+Apache | [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [commons-codec # commons-codec # 1.15](https://commons.apache.org/proper/commons-codec/) | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0) | [io.iohk.atala # prism-common-jvm # 1.4.1](https://github.com/input-output-hk/atala-prism-sdk.git) | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0) | [io.iohk.atala # prism-crypto-jvm # 1.4.1](https://github.com/input-output-hk/atala-prism-sdk.git) | <notextile></notextile>
 Apache | [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0) | [io.iohk.atala # prism-identity-jvm # 1.4.1](https://github.com/input-output-hk/atala-prism-sdk.git) | <notextile></notextile>
@@ -277,6 +279,7 @@ Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licens
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.google.j2objc # j2objc-annotations # 1.3](https://github.com/google/j2objc/) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | com.twitter # hpack # 1.0.2 | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.zaxxer # HikariCP # 4.0.3](https://github.com/brettwooldridge/HikariCP) | <notextile></notextile>
+Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [commons-logging # commons-logging # 1.2](http://commons.apache.org/proper/commons-logging/) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | io.github.java-diff-utils # java-diff-utils # 4.12 | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [io.iohk.atala # nimbus-jose-jwt # 10.0.0](https://bitbucket.org/connect2id/nimbus-jose-jwt) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [io.ktor # ktor-io-jvm # 1.6.5](https://github.com/ktorio/ktor) | <notextile></notextile>
@@ -383,7 +386,9 @@ Bouncy Castle License | [Bouncy Castle Licence](http://www.bouncycastle.org/lice
 Bouncy Castle License | [Bouncy Castle Licence](https://www.bouncycastle.org/licence.html) | [org.bouncycastle # bcutil-jdk15on # 1.70](https://www.bouncycastle.org/java.html) | <notextile></notextile>
 EPL | [Eclipse Public License 1.0](http://www.eclipse.org/legal/epl-v10.html) | [junit # junit # 4.13.1](http://junit.org) | <notextile></notextile>
 EPL | [Eclipse Public License 1.0](http://www.eclipse.org/legal/epl-v10.html) | [junit # junit # 4.13.2](http://junit.org) | <notextile></notextile>
+GPL | [GPL2 w/ CPE](https://www.gnu.org/software/classpath/license.html) | [jakarta.annotation # jakarta.annotation-api # 2.1.1](https://projects.eclipse.org/projects/ee4j.ca) | <notextile></notextile>
 GPL with Classpath Extension | [CDDL + GPLv2 with classpath exception](https://glassfish.dev.java.net/nonav/public/CDDL+GPL.html) | [javax.annotation # javax.annotation-api # 1.2](http://jcp.org/en/jsr/detail?id=250) | <notextile></notextile>
+GPL with Classpath Extension | [GPL-2.0-with-classpath-exception](https://www.gnu.org/software/classpath/license.html) | [jakarta.ws.rs # jakarta.ws.rs-api # 3.1.0](https://github.com/eclipse-ee4j/jaxrs-api) | <notextile></notextile>
 LGPL | [GNU Lesser General Public License](http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html) | ch.qos.logback # logback-classic # 1.4.8 | <notextile></notextile>
 LGPL | [GNU Lesser General Public License](http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html) | ch.qos.logback # logback-core # 1.4.8 | <notextile></notextile>
 MIT | [MIT](http://opensource.org/licenses/MIT) | [co.fs2 # fs2-core_3 # 3.2.4](https://github.com/typelevel/fs2) | <notextile></notextile>
@@ -434,6 +439,7 @@ MIT | [MIT License](http://www.opensource.org/licenses/mit-license.php) | [org.s
 MIT | [MIT License](http://www.opensource.org/licenses/mit-license.php) | [org.slf4j # slf4j-simple # 2.0.7](http://www.slf4j.org) | <notextile></notextile>
 MIT | [MIT License](http://www.opensource.org/licenses/mit-license.php) | [ua.co.k # strftime4j # 1.0.5](https://github.com/msangel/strftime4j) | <notextile></notextile>
 MIT | [MIT license](http://www.opensource.org/licenses/mit-license.php) | org.codehaus.mojo # animal-sniffer-annotations # 1.19 | <notextile></notextile>
+MIT | [MIT-0](https://spdx.org/licenses/MIT-0.html) | [org.reactivestreams # reactive-streams # 1.0.4](http://www.reactive-streams.org/) | <notextile></notextile>
 MIT | [The MIT License](http://opensource.org/licenses/MIT) | [org.checkerframework # checker-compat-qual # 2.5.5](https://checkerframework.org) | <notextile></notextile>
 MIT | [The MIT License](http://opensource.org/licenses/MIT) | [org.checkerframework # checker-qual # 3.12.0](https://checkerframework.org) | <notextile></notextile>
 MIT | [The MIT License](https://jsoup.org/license) | [org.jsoup # jsoup # 1.14.3](https://jsoup.org/) | <notextile></notextile>
