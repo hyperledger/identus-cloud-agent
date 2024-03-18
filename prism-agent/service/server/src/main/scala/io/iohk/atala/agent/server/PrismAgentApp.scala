@@ -7,7 +7,8 @@ import io.iohk.atala.agent.server.jobs.{
   ConnectBackgroundJobs,
   DIDStateSyncBackgroundJobs,
   IssueBackgroundJobs,
-  PresentBackgroundJobs
+  PresentBackgroundJobs,
+  StatusListJobs
 }
 import io.iohk.atala.agent.walletapi.model.{Entity, Wallet, WalletSeed}
 import io.iohk.atala.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
@@ -16,6 +17,7 @@ import io.iohk.atala.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEn
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionServerEndpoints
 import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.credentialstatus.controller.CredentialStatusServiceEndpoints
 import io.iohk.atala.event.controller.EventServerEndpoints
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticator
@@ -23,7 +25,7 @@ import io.iohk.atala.iam.entity.http.EntityServerEndpoints
 import io.iohk.atala.iam.wallet.http.WalletManagementServerEndpoints
 import io.iohk.atala.issue.controller.IssueServerEndpoints
 import io.iohk.atala.mercury.{DidOps, HttpClient}
-import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
+import io.iohk.atala.pollux.core.service.{CredentialService, CredentialStatusListService, PresentationService}
 import io.iohk.atala.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
@@ -43,7 +45,8 @@ object PrismAgentApp {
     _ <- issueCredentialDidCommExchangesJob.debug.fork
     _ <- presentProofExchangeJob.debug.fork
     _ <- connectDidCommExchangesJob.debug.fork
-    _ <- syncDIDPublicationStateFromDltJob.fork
+    _ <- syncDIDPublicationStateFromDltJob.debug.fork
+    _ <- syncRevocationStatusListsJob.debug.fork
     _ <- AgentHttpServer.run.fork
     fiber <- DidCommHttpServer.run.fork
     _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
@@ -93,6 +96,16 @@ object PrismAgentApp {
         .unit
     } yield ()
 
+  private val syncRevocationStatusListsJob = {
+    for {
+      config <- ZIO.service[AppConfig]
+      _ <- (StatusListJobs.syncRevocationStatuses @@ Metric
+        .gauge("revocation_status_list_sync_job_ms_gauge")
+        .trackDurationWith(_.toMetricsSeconds))
+        .repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
+    } yield ()
+  }
+
   private val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService & WalletManagementService, Unit] =
     ZIO
       .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
@@ -116,6 +129,7 @@ object AgentHttpServer {
     allVerificationPolicyEndpoints <- VerificationPolicyServerEndpoints.all
     allConnectionEndpoints <- ConnectionServerEndpoints.all
     allIssueEndpoints <- IssueServerEndpoints.all
+    allStatusListEndpoints <- CredentialStatusServiceEndpoints.all
     allDIDEndpoints <- DIDServerEndpoints.all
     allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
     allPresentProofEndpoints <- PresentProofServerEndpoints.all
@@ -130,6 +144,7 @@ object AgentHttpServer {
     allDIDEndpoints ++
     allDIDRegistrarEndpoints ++
     allIssueEndpoints ++
+    allStatusListEndpoints ++
     allPresentProofEndpoints ++
     allSystemEndpoints ++
     allEntityEndpoints ++

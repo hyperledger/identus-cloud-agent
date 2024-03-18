@@ -37,6 +37,7 @@ data class Agent(
             "KEYCLOAK_REALM" to (keycloak?.realm ?: ""),
             "KEYCLOAK_CLIENT_ID" to (keycloak?.clientId ?: ""),
             "KEYCLOAK_CLIENT_SECRET" to (keycloak?.clientSecret ?: ""),
+            "POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL" to "http://host.docker.internal:$httpPort"
         )
 
         // setup token authentication

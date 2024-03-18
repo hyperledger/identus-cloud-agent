@@ -41,6 +41,7 @@ services:
       AGENT_HTTP_PORT:
       DIDCOMM_SERVICE_URL:
       REST_SERVICE_URL:
+      POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL:
       API_KEY_ENABLED:
       # Secret storage configuration
       SECRET_STORAGE_BACKEND:

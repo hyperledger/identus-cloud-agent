@@ -10,6 +10,9 @@
 
 Clone the generated repository on your local machine, move to the project root folder and install the dependencies defined in [`package.json`](./package.json)
 
+*NOTE*: The Project has a dependency on `input-output-hk/prism-typescript-client` which is a private repository.
+To install this dependency, you need to have an environment variable `GITHUB_TOKEN` with the scope `read:packages` set, you can install the dependency by running the following command:
+
 ```bash
 $ yarn install
 ```
@@ -30,7 +33,7 @@ Once that is done, we can run our script the same way we usually do, for instanc
 $ k6 run dist/connection-flow-test.js
 ```
 
-# Debugging Tests
+## Debugging Tests
 
 k6 can be configured to log the HTTP request and responses that it makes during test execution. This is useful to debug errors that happen in tests when logs or k6 output does not contain the reason for a failure.
 

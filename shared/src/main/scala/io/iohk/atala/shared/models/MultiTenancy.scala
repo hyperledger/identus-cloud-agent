@@ -7,6 +7,8 @@ opaque type WalletId = UUID
 
 object WalletId {
   def fromUUID(uuid: UUID): WalletId = uuid
+
+  def fromUUIDString(uuidStr: String): WalletId = UUID.fromString(uuidStr)
   def random: WalletId = fromUUID(UUID.randomUUID())
 
   def default: WalletId = fromUUID(UUID.fromString("00000000-0000-0000-0000-000000000000"))
