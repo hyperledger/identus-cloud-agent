@@ -88,6 +88,7 @@ services:
       AGENT_DB_NAME: agent
       AGENT_DB_USER: postgres
       AGENT_DB_PASSWORD: postgres
+      POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL: http://${DOCKERHOST}:${PORT}/prism-agent
       DIDCOMM_SERVICE_URL: http://${DOCKERHOST}:${PORT}/didcomm
       REST_SERVICE_URL: http://${DOCKERHOST}:${PORT}/prism-agent
       PRISM_NODE_HOST: prism-node

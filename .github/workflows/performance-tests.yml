@@ -13,7 +13,9 @@ on:
 
 env:
   BENCHMARKING_DIR: "tests/performance-tests/atala-performance-tests-k6"
-  NODE_AUTH_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_ACTOR: ${{ github.actor }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   run-e2e-tests:
@@ -35,19 +37,17 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          username: ${{ env.GITHUB_ACTOR }}
+          password: ${{ env.GITHUB_TOKEN }}
 
       - uses: KengoTODA/actions-setup-docker-compose@v1
         name: Install `docker-compose`
         with:
-          version: '2.14.2'
+          version: "2.14.2"
 
       - name: Build local version of PRISM Agent
         env:
           ENV_FILE: "infrastructure/local/.env"
-          GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
           sbt docker:publishLocal
           PRISM_AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
@@ -113,7 +113,7 @@ jobs:
         with:
           node-version: 16.x
           registry-url: "https://npm.pkg.github.com"
-          scope: 'input-output-hk'
+          scope: "input-output-hk"
 
       - name: Install dependencies
         uses: borales/actions-yarn@v4.2.0
