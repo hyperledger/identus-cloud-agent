@@ -1,24 +1,18 @@
 package io.iohk.atala.iam.oidc
 
+import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
-import io.iohk.atala.iam.authentication.{Authenticator, DefaultAuthenticator, SecurityLogic}
+import io.iohk.atala.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import io.iohk.atala.iam.oidc.controller.CredentialIssuerController
-import io.iohk.atala.iam.oidc.http.{
-  CredentialErrorResponse,
-  CredentialRequest,
-  ImmediateCredentialResponse,
-  NonceResponse
-}
+import io.iohk.atala.iam.oidc.http.{CredentialErrorResponse, CredentialRequest, NonceResponse}
 import sttp.tapir.ztapir.*
 import zio.*
 
-import java.time.Instant
-import java.util.UUID
-
 case class CredentialIssuerServerEndpoints(
+    credentialIssuerController: CredentialIssuerController,
     authenticator: Authenticator[BaseEntity],
-    credentialIssuerController: CredentialIssuerController
+    authorizer: Authorizer[BaseEntity],
 ) {
   val credentialServerEndpoint: ZServerEndpoint[Any, Any] =
     CredentialIssuerEndpoints.credentialEndpoint
@@ -28,25 +22,43 @@ case class CredentialIssuerServerEndpoints(
           .mapError(Left[ErrorResponse, CredentialErrorResponse])
       )
       .serverLogic { wac =>
-        { case (ctx: RequestContext, didRef: String, request: CredentialRequest) =>
-          credentialIssuerController.issueCredential(ctx, didRef, request)
+        { case (rc: RequestContext, didRef: String, request: CredentialRequest) =>
+          ZIO.succeed(request).debug("credentialRequest") *>
+            credentialIssuerController
+              .issueCredential(rc, didRef, request)
+              .logTrace(rc)
+        }
+      }
+
+  val createCredentialOfferServerEndpoint: ZServerEndpoint[Any, Any] =
+    CredentialIssuerEndpoints.createCredentialOfferEndpoint
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
+        { case (rc, didRef, request) =>
+          credentialIssuerController
+            .createCredentialOffer(rc, didRef, request)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 
   val nonceServerEndpoint: ZServerEndpoint[Any, Any] =
     CredentialIssuerEndpoints.nonceEndpoint
       .zServerSecurityLogic(
-        SecurityLogic // TODO: add OIDC client authenticator
-          .authenticate(_)(authenticator)
-          .mapError(Left[ErrorResponse, CredentialErrorResponse])
+        // FIXME: how can authorization server authorize itself?
+        SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer)
       )
       .serverLogic { wac =>
-        { case (ctx: RequestContext, didRef: String) =>
-          ZIO.succeed(NonceResponse(UUID.randomUUID().toString, Instant.now().plusSeconds(60).toEpochMilli()))
+        { case (rc, didRef, request) =>
+          credentialIssuerController
+            .getNonce(rc, didRef, request)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 
-  val all: List[ZServerEndpoint[Any, Any]] = List(credentialServerEndpoint, nonceServerEndpoint)
+  val all: List[ZServerEndpoint[Any, Any]] =
+    List(credentialServerEndpoint, createCredentialOfferServerEndpoint, nonceServerEndpoint)
 }
 
 object CredentialIssuerServerEndpoints {
@@ -54,7 +66,7 @@ object CredentialIssuerServerEndpoints {
     for {
       authenticator <- ZIO.service[DefaultAuthenticator]
       credentialIssuerController <- ZIO.service[CredentialIssuerController]
-      oidcEndpoints = CredentialIssuerServerEndpoints(authenticator, credentialIssuerController)
+      oidcEndpoints = CredentialIssuerServerEndpoints(credentialIssuerController, authenticator, authenticator)
     } yield oidcEndpoints.all
   }
 }
