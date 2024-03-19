@@ -206,7 +206,7 @@ class IssueCredentialsSteps {
     fun holderReceivesCredentialOffer(holder: Actor) {
         wait(
             {
-                credentialEvent = ListenToEvents.`as`(holder).credentialEvents.lastOrNull {
+                credentialEvent = ListenToEvents.with(holder).credentialEvents.lastOrNull {
                     it.data.thid == holder.recall<String>("thid")
                 }
                 credentialEvent != null &&
@@ -216,7 +216,7 @@ class IssueCredentialsSteps {
                 "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.OFFER_RECEIVED} state.",
         )
 
-        val recordId = ListenToEvents.`as`(holder).credentialEvents.last().data.recordId
+        val recordId = ListenToEvents.with(holder).credentialEvents.last().data.recordId
         holder.remember("recordId", recordId)
     }
 
@@ -254,7 +254,7 @@ class IssueCredentialsSteps {
     fun acmeIssuesTheCredential(issuer: Actor) {
         wait(
             {
-                credentialEvent = ListenToEvents.`as`(issuer).credentialEvents.lastOrNull {
+                credentialEvent = ListenToEvents.with(issuer).credentialEvents.lastOrNull {
                     it.data.thid == issuer.recall<String>("thid")
                 }
                 credentialEvent != null &&
@@ -272,9 +272,10 @@ class IssueCredentialsSteps {
 
         wait(
             {
-                credentialEvent = ListenToEvents.`as`(issuer).credentialEvents.lastOrNull {
+                credentialEvent = ListenToEvents.with(issuer).credentialEvents.lastOrNull {
                     it.data.thid == issuer.recall<String>("thid")
                 }
+                issuer.remember("issuedCredential", credentialEvent!!.data)
                 credentialEvent != null &&
                     credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT
             },
@@ -287,7 +288,7 @@ class IssueCredentialsSteps {
     fun bobHasTheCredentialIssued(holder: Actor) {
         wait(
             {
-                credentialEvent = ListenToEvents.`as`(holder).credentialEvents.lastOrNull {
+                credentialEvent = ListenToEvents.with(holder).credentialEvents.lastOrNull {
                     it.data.thid == holder.recall<String>("thid")
                 }
                 credentialEvent != null &&
@@ -296,7 +297,7 @@ class IssueCredentialsSteps {
             "Holder was unable to receive the credential from Issuer! " +
                 "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED} state.",
         )
-        holder.remember("issuedCredential", ListenToEvents.`as`(holder).credentialEvents.last().data)
+        holder.remember("issuedCredential", ListenToEvents.with(holder).credentialEvents.last().data)
     }
 
     @Then("{actor} should see that credential issuance has failed")
