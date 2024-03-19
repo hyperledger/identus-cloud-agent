@@ -10,7 +10,12 @@ import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.*
-import io.iohk.atala.pollux.anoncreds.{AnoncredCreateCredentialDefinition, AnoncredCredential, AnoncredCredentialOffer, AnoncredLib}
+import io.iohk.atala.pollux.anoncreds.{
+  AnoncredCreateCredentialDefinition,
+  AnoncredCredential,
+  AnoncredCredentialOffer,
+  AnoncredLib
+}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.CredentialFormat.AnonCreds
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
