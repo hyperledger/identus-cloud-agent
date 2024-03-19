@@ -92,7 +92,7 @@ services:
       prism-node:
         condition: service_started
       vault-server:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://prism-agent:8085/_system/health"]
       interval: 30s
