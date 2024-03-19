@@ -2,10 +2,11 @@ package io.iohk.atala.iam.oidc.http
 
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.encodedName
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder, jsonField}
+import zio.json.*
 
 // The idea to have a hierarchy of requests is to be able to use the same endpoint for different types of requests
 // This trait contains the common fields for all the requests
+@jsonDiscriminator("format")
 sealed trait CredentialRequest {
   // REQUIRED when the credential_identifiers parameter was not returned from the Token Response.
   // It MUST NOT be used otherwise
@@ -25,7 +26,7 @@ sealed trait CredentialRequest {
 object CredentialRequest {
   given schema: Schema[CredentialRequest] = Schema
     .oneOfUsingField[CredentialRequest, CredentialFormat](_.format, _.toString)(
-      CredentialFormat.vc_jwt -> JwtCredentialRequest.schema,
+      CredentialFormat.jwt_vc_json -> JwtCredentialRequest.schema,
       CredentialFormat.sd_jwt -> SdJwtCredentialRequest.schema,
       CredentialFormat.anoncreds -> AnoncredsCredentialRequest.schema
     )
@@ -33,6 +34,7 @@ object CredentialRequest {
   given decoder: JsonDecoder[CredentialRequest] = DeriveJsonDecoder.gen
 }
 
+@jsonHint(CredentialFormat.jwt_vc_json.toString)
 case class JwtCredentialRequest(
     format: CredentialFormat,
     proof: Option[Proof],
@@ -51,12 +53,11 @@ case class JwtCredentialRequest(
 
 object JwtCredentialRequest {
   given schema: Schema[JwtCredentialRequest] = Schema.derived
-
   given encoder: JsonEncoder[JwtCredentialRequest] = DeriveJsonEncoder.gen
-
   given decoder: JsonDecoder[JwtCredentialRequest] = DeriveJsonDecoder.gen
 }
 
+@jsonHint(CredentialFormat.sd_jwt.toString)
 case class SdJwtCredentialRequest(
     format: CredentialFormat,
     proof: Option[Proof],
@@ -82,6 +83,7 @@ object SdJwtCredentialRequest {
   given decoder: JsonDecoder[SdJwtCredentialRequest] = DeriveJsonDecoder.gen
 }
 
+@jsonHint(CredentialFormat.anoncreds.toString)
 case class AnoncredsCredentialRequest(
     format: CredentialFormat,
     proof: Option[Proof],
@@ -117,7 +119,7 @@ object CredentialResponseEncryption {
 type CredentialSubject = Map[String, ClaimDescriptor]
 
 case class CredentialDefinition(
-    `@context`: Seq[String],
+    `@context`: Option[Seq[String]],
     `type`: Seq[String],
     credentialSubject: Option[CredentialSubject]
 )
@@ -148,13 +150,14 @@ object Localization {
   given decoder: JsonDecoder[Localization] = DeriveJsonDecoder.gen
 }
 
+@jsonDiscriminator("proof_type")
 sealed trait Proof {
-  val proofType: ProofType
+  val proof_type: ProofType
 }
 
 object Proof {
   given schema: Schema[Proof] = Schema
-    .oneOfUsingField[Proof, ProofType](_.proofType, _.toString)(
+    .oneOfUsingField[Proof, ProofType](_.proof_type, _.toString)(
       ProofType.jwt -> JwtProof.schema,
       ProofType.cwt -> CwtProof.schema,
       ProofType.ldp_vp -> LdpProof.schema
@@ -162,13 +165,13 @@ object Proof {
   given encoder: JsonEncoder[Proof] = DeriveJsonEncoder.gen[Proof]
   given decoder: JsonDecoder[Proof] = DeriveJsonDecoder.gen[Proof]
 }
+
+@jsonHint(ProofType.jwt.toString)
 case class JwtProof(
-    @jsonField("proof_type")
-    @encodedName("proof_type")
-    proofType: ProofType,
+    proof_type: ProofType,
     jwt: String
 ) extends Proof {
-  def this(jwt: String) = this(proofType = ProofType.jwt, jwt)
+  def this(jwt: String) = this(proof_type = ProofType.jwt, jwt)
 }
 
 object JwtProof {
@@ -177,10 +180,9 @@ object JwtProof {
   given decoder: JsonDecoder[JwtProof] = DeriveJsonDecoder.gen
 }
 
+@jsonHint(ProofType.cwt.toString)
 case class CwtProof(
-    @jsonField("proof_type")
-    @encodedName("proof_type")
-    proofType: ProofType,
+    proof_type: ProofType,
     cwt: String
 ) extends Proof
 
@@ -190,10 +192,9 @@ object CwtProof {
   given decoder: JsonDecoder[CwtProof] = DeriveJsonDecoder.gen
 }
 
+@jsonHint(ProofType.ldp_vp.toString)
 case class LdpProof(
-    @jsonField("proof_type")
-    @encodedName("proof_type")
-    proofType: ProofType,
+    proof_type: ProofType,
     vp: String
 ) extends Proof
 
@@ -204,15 +205,17 @@ object LdpProof {
 }
 
 enum CredentialFormat {
-  case vc_jwt
+  case jwt_vc_json
   case sd_jwt
   case anoncreds
 }
 
 object CredentialFormat {
   given schema: Schema[CredentialFormat] = Schema.derivedEnumeration.defaultStringBased
-  given encoder: JsonEncoder[CredentialFormat] = DeriveJsonEncoder.gen
-  given decoder: JsonDecoder[CredentialFormat] = DeriveJsonDecoder.gen
+  given encoder: JsonEncoder[CredentialFormat] = JsonEncoder[String].contramap(_.toString)
+  given decoder: JsonDecoder[CredentialFormat] = JsonDecoder[String].mapOrFail { s =>
+    CredentialFormat.values.find(_.toString == s).toRight(s"Unknown CredentialFormat: $s")
+  }
 }
 
 enum ProofType {
@@ -223,6 +226,8 @@ enum ProofType {
 
 object ProofType {
   given schema: Schema[ProofType] = Schema.derivedEnumeration.defaultStringBased
-  given encoder: JsonEncoder[ProofType] = DeriveJsonEncoder.gen
-  given decoder: JsonDecoder[ProofType] = DeriveJsonDecoder.gen
+  given encoder: JsonEncoder[ProofType] = JsonEncoder[String].contramap(_.toString)
+  given decoder: JsonDecoder[ProofType] = JsonDecoder[String].mapOrFail { s =>
+    ProofType.values.find(_.toString == s).toRight(s"Unknown ProofType: $s")
+  }
 }

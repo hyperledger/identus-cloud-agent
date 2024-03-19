@@ -1,5 +1,6 @@
 package io.iohk.atala.iam.oidc.controller
 
+import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.api.http.ErrorResponse.internalServerError
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID}
@@ -8,6 +9,7 @@ import io.iohk.atala.iam.oidc.CredentialIssuerEndpoints.ExtendedErrorResponse
 import io.iohk.atala.iam.oidc.domain.OIDCCredentialIssuerService
 import io.iohk.atala.iam.oidc.http.*
 import io.iohk.atala.iam.oidc.http.CredentialErrorCode.*
+import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
 
 trait CredentialIssuerController {
@@ -16,6 +18,16 @@ trait CredentialIssuerController {
       didRef: String,
       credentialRequest: CredentialRequest
   ): IO[ExtendedErrorResponse, CredentialResponse]
+  def createCredentialOffer(
+      ctx: RequestContext,
+      didRef: String,
+      credentialOfferRequest: CredentialOfferRequest
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialOfferResponse]
+  def getNonce(
+      ctx: RequestContext,
+      didRef: String,
+      request: NonceRequest
+  ): ZIO[WalletAccessContext, ErrorResponse, NonceResponse]
 }
 
 object CredentialIssuerController {
@@ -72,13 +84,14 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
       prismDID: PrismDID <- ZIO
         .fromEither(PrismDID.fromString(didRef))
         .mapError(didParsingError => badRequestInvalidDID(didRef, didParsingError))
-      resolution <- didService
-        .resolveDID(prismDID)
-        .mapError(didResolutionError => badRequestInvalidDID(didRef, didResolutionError.message))
-      canonicalDID <- ZIO
-        .fromOption(resolution.map(_._2.id))
-        .mapError(_ => badRequestDIDResolutionFailed(didRef, s"The DID $didRef is not resolvable"))
-    } yield canonicalDID
+      // FIXME: do we need to resolve it if the DID document is not used?
+      // resolution <- didService
+      //   .resolveDID(prismDID)
+      //   .mapError(didResolutionError => badRequestInvalidDID(didRef, didResolutionError.message))
+      // canonicalDID <- ZIO
+      //   .fromOption(resolution.map(_._2.id))
+      //   .mapError(_ => badRequestDIDResolutionFailed(didRef, s"The DID $didRef is not resolvable"))
+    } yield prismDID.asCanonical
   }
 
   def issueCredential(
@@ -133,9 +146,50 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
               validatedCredentialDefinition
             )
             .mapError(ue => serverError(Some(s"Unexpected error while issuing credential: ${ue.message}")))
-        } yield ImmediateCredentialResponse(credential.asInstanceOf[String])
+        } yield ImmediateCredentialResponse(credential.value)
       case None => ZIO.fail(badRequestInvalidProof(jwt = "empty", details = "No proof provided"))
     }
+  }
+
+  // TODO: implement
+  override def createCredentialOffer(
+      ctx: RequestContext,
+      didRef: String,
+      credentialOfferRequest: CredentialOfferRequest
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialOfferResponse] = {
+    for {
+      canonicalPrismDID <- ZIO
+        .fromEither(PrismDID.fromString(didRef))
+        .mapBoth(error => ErrorResponse.badRequest(detail = Some(s"Invalid DID input $didRef")), _.asCanonical)
+      resp <- credentialIssuerService
+        .createCredentialOffer(canonicalPrismDID, credentialOfferRequest.claims)
+        .map(offer => CredentialOfferResponse(offer.offerUri))
+        .mapError(ue =>
+          internalServerError(
+            "InternalServerError",
+            Some("TODO - handle error properly!!!"),
+            instance = "CredentialIssuerController"
+          )
+        )
+    } yield resp
+  }
+
+  // TODO: implement
+  override def getNonce(
+      ctx: RequestContext,
+      didRef: String,
+      request: NonceRequest
+  ): ZIO[WalletAccessContext, ErrorResponse, NonceResponse] = {
+    credentialIssuerService
+      .getIssuanceSessionNonce(request.issuerState)
+      .map(nonce => NonceResponse(nonce.toString))
+      .mapError(ue =>
+        internalServerError(
+          "InternalServerError",
+          Some("TODO - handle error properly!!!"),
+          instance = "CredentialIssuerController"
+        )
+      )
   }
 }
 

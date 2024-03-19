@@ -44,7 +44,7 @@ case class CredentialErrorResponse(
     nonce: Option[String] = None,
     @jsonField("c_nonce_expires_in")
     @encodedName("c_nonce_expires_in")
-    nonceExpiresIs: Option[Long] = None
+    nonceExpiresIn: Option[Long] = None
 )
 
 object CredentialErrorResponse {

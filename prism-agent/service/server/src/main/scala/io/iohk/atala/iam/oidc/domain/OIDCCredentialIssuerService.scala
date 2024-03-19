@@ -2,16 +2,19 @@ package io.iohk.atala.iam.oidc.domain
 
 import io.circe.Json
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
-import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, DIDData, DIDMetadata, PrismDID, VerificationRelationship}
+import io.iohk.atala.castor.core.model.did.{PrismDID, VerificationRelationship}
 import io.iohk.atala.castor.core.service.DIDService
+import io.iohk.atala.iam.oidc.http.CredentialOffer
+import io.iohk.atala.iam.oidc.http.CredentialOfferAuthorizationGrant
+import io.iohk.atala.iam.oidc.http.CredentialOfferGrant
 import io.iohk.atala.iam.oidc.http.{CredentialDefinition, CredentialSubject}
 import io.iohk.atala.pollux.core.service.CredentialService
-import io.iohk.atala.pollux.core.service.CredentialServiceImpl.VC_JSON_SCHEMA_TYPE
 import io.iohk.atala.pollux.vc.jwt.{DID, Issuer, JWT, JwtCredential, W3cCredentialPayload}
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
-import zio.{IO, ULayer, URLayer, ZIO, ZLayer}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.time.Instant
+import java.util.UUID
 import scala.util.Try
 
 // OIDC prefix is added to the service name to avoid name conflicts with a similar service CredentialIssuerService
@@ -20,6 +23,7 @@ trait OIDCCredentialIssuerService {
 
   import OIDCCredentialIssuerService.Error
   import OIDCCredentialIssuerService.Errors.*
+
   def verifyJwtProof(jwt: String): IO[InvalidProof, Boolean]
 
   def validateCredentialDefinition(
@@ -29,8 +33,15 @@ trait OIDCCredentialIssuerService {
   def issueJwtCredential(
       prismDID: PrismDID,
       credentialIdentifier: Option[String],
-      credentialDefinition: CredentialDefinition
+      credentialDefinition: CredentialDefinition,
   ): IO[Error, JWT]
+
+  def createCredentialOffer(
+      prismDID: PrismDID,
+      claims: zio.json.ast.Json
+  ): ZIO[WalletAccessContext, Error, CredentialOffer]
+
+  def getIssuanceSessionNonce(issuerState: String): ZIO[WalletAccessContext, Error, UUID]
 }
 
 object OIDCCredentialIssuerService {
@@ -100,7 +111,7 @@ case class OIDCCredentialIssuerServiceImpl(
       `@context` = Set(
         "https://www.w3.org/2018/credentials/v1"
         // TODO: Add schemaID from schema registry
-      ) ++ credentialDefinition.`@context`, // TODO: Figure out how to validate the context ^^^
+      ) ++ credentialDefinition.`@context`.getOrElse(Nil), // TODO: Figure out how to validate the context ^^^
       maybeId = credentialIdentifier,
       `type` = Set(
         "VerifiableCredential"
@@ -133,6 +144,29 @@ case class OIDCCredentialIssuerServiceImpl(
       .fromTry(Try(JwtCredential.encodeJwt(payload.toJwtCredentialPayload, issuer)))
       .mapError(e => ServiceError(s"Failed to issue JWT: ${e.getMessage}"))
   }
+
+  override def getIssuanceSessionNonce(
+      issuerState: String
+  ): ZIO[WalletAccessContext, OIDCCredentialIssuerService.Error, UUID] =
+    ZIO.random.flatMap(_.nextUUID) // TODO: attach to the IssuanceSession
+
+  override def createCredentialOffer(
+      prismDID: PrismDID,
+      claims: zio.json.ast.Json
+  ): ZIO[WalletAccessContext, OIDCCredentialIssuerService.Error, CredentialOffer] =
+    for {
+      issuerState <- ZIO.random.flatMap(_.nextUUID) // TODO: attach issuerState and claims to the IssuanceSession
+    } yield CredentialOffer(
+      credential_issuer =
+        s"http://localhost:8080/prism-agent/${prismDID.toString}", // TODO: add issuer metadata endpoint
+      credential_configuration_ids = Seq("UniversityDegreeCredential"), // TODO: allow credential configuration CRUD
+      grants = Some(
+        CredentialOfferGrant(
+          authorization_code = CredentialOfferAuthorizationGrant(issuer_state = Some(issuerState.toString()))
+        )
+      )
+    )
+
 }
 
 object OIDCCredentialIssuerServiceImpl {
