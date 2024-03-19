@@ -1,11 +1,21 @@
 package io.iohk.atala.iam.oidc
 
-import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
+import io.iohk.atala.api.http.{ErrorResponse, RequestContext, EndpointOutputs}
 import io.iohk.atala.castor.controller.http.DIDInput
 import io.iohk.atala.castor.controller.http.DIDInput.didRefPathSegment
+import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
+import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import io.iohk.atala.iam.oidc.http.{CredentialErrorResponse, CredentialRequest, CredentialResponse, NonceResponse}
+import io.iohk.atala.iam.oidc.http.{
+  CredentialErrorResponse,
+  CredentialRequest,
+  CredentialResponse,
+  NonceResponse,
+  CredentialOfferRequest,
+  CredentialOfferResponse,
+  NonceRequest
+}
 import sttp.apispec.Tag
 import sttp.model.StatusCode
 import sttp.tapir.json.zio.jsonBody
@@ -29,9 +39,15 @@ object CredentialIssuerEndpoints {
 
   private val baseEndpoint = endpoint
     .tag(tagName)
-    .securityIn(jwtAuthHeader)
     .in(extractFromRequest[RequestContext](RequestContext.apply))
-    .in("oidc" / didRefPathSegment)
+    .in("oidc4vc" / didRefPathSegment)
+
+  private val baseIssuerFacingEndpoint = baseEndpoint
+    .securityIn(apiKeyHeader)
+    .securityIn(jwtAuthHeader)
+
+  private val baseHolderFacingEndpoint = baseEndpoint
+    .securityIn(jwtAuthHeader)
 
   val credentialEndpointErrorOutput = oneOf[Either[ErrorResponse, CredentialErrorResponse]](
     oneOfVariantValueMatcher(StatusCode.BadRequest, jsonBody[Either[ErrorResponse, CredentialErrorResponse]]) {
@@ -54,8 +70,8 @@ object CredentialIssuerEndpoints {
     ExtendedErrorResponse,
     CredentialResponse,
     Any
-  ] = baseEndpoint.post
-    .in("credential-issuer")
+  ] = baseHolderFacingEndpoint.post
+    .in("credentials")
     .in(jsonBody[CredentialRequest])
     .out(
       statusCode(StatusCode.Ok).description("Credential issued successfully"),
@@ -68,19 +84,36 @@ object CredentialIssuerEndpoints {
       """OIDC for VC [Credential Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-endpoint)""".stripMargin
     )
 
+  // TODO: implement
+  val createCredentialOfferEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, String, CredentialOfferRequest),
+    ErrorResponse,
+    CredentialOfferResponse,
+    Any
+  ] = baseIssuerFacingEndpoint.post
+    .in("credential-offers")
+    .in(jsonBody[CredentialOfferRequest])
+    .out(
+      statusCode(StatusCode.Created).description("CredentialOffer created successfully"),
+    )
+    .out(jsonBody[CredentialOfferResponse])
+    .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
+
   val nonceEndpoint: Endpoint[
-    JwtCredentials,
-    (RequestContext, String),
-    ExtendedErrorResponse,
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, String, NonceRequest),
+    ErrorResponse,
     NonceResponse,
     Any
-  ] = baseEndpoint.get
-    .in("nonce")
+  ] = baseIssuerFacingEndpoint.post
+    .in("nonces")
+    .in(jsonBody[NonceRequest])
     .out(
       statusCode(StatusCode.Ok).description("Nonce issued successfully"),
     )
     .out(jsonBody[NonceResponse])
-    .errorOut(credentialEndpointErrorOutput)
+    .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
     .name("getNonce")
     .summary("Nonce Endpoint")
     .description(

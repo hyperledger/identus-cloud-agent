@@ -2,7 +2,8 @@ package io.iohk.atala.iam.oidc.http
 
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.encodedName
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder, jsonField}
+import zio.json.*
+import zio.json.ast.Json
 
 sealed trait CredentialResponse {
   // OPTIONAL. String containing a nonce to be used to create a proof of possession of key material when requesting a Credential (see Section 7.2).
@@ -15,8 +16,16 @@ sealed trait CredentialResponse {
 
 object CredentialResponse {
   given schema: Schema[CredentialResponse] = Schema.derived
-  given encoder: JsonEncoder[CredentialResponse] = DeriveJsonEncoder.gen
-  given decoder: JsonDecoder[CredentialResponse] = DeriveJsonDecoder.gen
+  given decoder: JsonDecoder[CredentialResponse] =
+    ImmediateCredentialResponse.decoder
+      .orElse(DeferredCredentialResponse.decoder.widen)
+  given encoder: JsonEncoder[CredentialResponse] = JsonEncoder[Json].contramap { resp =>
+    val jsonAst = resp match {
+      case i: ImmediateCredentialResponse => i.toJsonAST
+      case i: DeferredCredentialResponse  => i.toJsonAST
+    }
+    jsonAst.getOrElse(throw new RuntimeException(s"Failed to encode CredentialResponse to JSON: ${resp}"))
+  }
 }
 
 case class ImmediateCredentialResponse(
