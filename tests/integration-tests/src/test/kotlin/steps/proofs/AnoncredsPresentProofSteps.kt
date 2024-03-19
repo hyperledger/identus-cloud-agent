@@ -8,6 +8,7 @@ import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import models.PresentationEvent
+import models.PresentationStatusAdapter
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.rest.abilities.CallAnApi
@@ -67,7 +68,7 @@ class AnoncredsPresentProofSteps {
                 },
         )
         faber.attemptsTo(
-            Ensure.thatTheLastResponse().apply { println(this.contentType()) }.statusCode().isEqualTo(SC_CREATED),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED)
         )
         val presentationStatus = SerenityRest.lastResponse().get<PresentationStatus>()
         faber.remember("thid", presentationStatus.thid)
@@ -78,11 +79,11 @@ class AnoncredsPresentProofSteps {
     fun bobReceivesTheAnoncredsRequest(bob: Actor) {
         wait(
             {
-                proofEvent = ListenToEvents.`as`(bob).presentationEvents.lastOrNull {
+                proofEvent = ListenToEvents.with(bob).presentationEvents.lastOrNull {
                     it.data.thid == bob.recall<String>("thid")
                 }
                 proofEvent != null &&
-                    proofEvent!!.data.status == PresentationStatus.Status.REQUEST_RECEIVED
+                    proofEvent!!.data.status == PresentationStatusAdapter.Status.REQUEST_RECEIVED
             },
             "ERROR: Bob did not achieve any presentation request!",
         )
