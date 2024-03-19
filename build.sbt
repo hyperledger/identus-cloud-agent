@@ -67,7 +67,7 @@ lazy val V = new {
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
   val testContainersScala = "0.41.0"
-  val testContainersJavaKeycloak = "3.0.0" // scala-steward:off
+  val testContainersJavaKeycloak = "3.2.0" // scala-steward:off
 
   val doobie = "1.0.0-RC2"
   val quill = "4.7.3"
@@ -90,7 +90,7 @@ lazy val V = new {
   val micrometer = "1.11.2"
 
   val nimbusJwt = "10.0.0"
-  val keycloak = "22.0.4" // scala-steward:off
+  val keycloak = "23.0.7" // scala-steward:off
 
 }
 
