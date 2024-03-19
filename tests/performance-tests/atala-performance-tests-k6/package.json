@@ -23,7 +23,7 @@
     "ts-deepmerge": "6.2.0"
   },
   "scripts": {
-    "start": "webpack"
+    "webpack": "webpack"
   },
   "dependencies": {
     "@input-output-hk/prism-typescript-client": "^1.12.0",

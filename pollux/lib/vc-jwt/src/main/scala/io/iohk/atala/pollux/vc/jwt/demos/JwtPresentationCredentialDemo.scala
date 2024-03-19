@@ -68,7 +68,10 @@ import java.time.Instant
       maybeCredentialStatus = Some(
         CredentialStatus(
           id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-          `type` = "CredentialStatusList2017"
+          `type` = "StatusList2021Entry",
+          statusPurpose = StatusPurpose.Revocation,
+          statusListIndex = 0,
+          statusListCredential = "https://example.com/credentials/status/3"
         )
       ),
       maybeRefreshService = Some(
@@ -85,7 +88,7 @@ import java.time.Instant
   val w3cVerifiableCredentialPayload =
     W3cVerifiableCredentialPayload(
       payload = w3cCredentialPayload,
-      proof = Proof(
+      proof = JwtProof(
         `type` = "JwtProof2020",
         jwt = w3cIssuerSignedCredential
       )

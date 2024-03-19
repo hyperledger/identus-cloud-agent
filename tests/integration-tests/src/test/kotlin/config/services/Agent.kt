@@ -16,7 +16,7 @@ data class Agent(
     @ConfigAlias("prism_node") val prismNode: PrismNode?,
     val keycloak: Keycloak?,
     val vault: Vault?,
-    @ConfigAlias("keep_running") override val keepRunning: Boolean = false
+    @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
 ) : ServiceBase {
 
     override val container: ComposeContainer
@@ -37,6 +37,7 @@ data class Agent(
             "KEYCLOAK_REALM" to (keycloak?.realm ?: ""),
             "KEYCLOAK_CLIENT_ID" to (keycloak?.clientId ?: ""),
             "KEYCLOAK_CLIENT_SECRET" to (keycloak?.clientSecret ?: ""),
+            "POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL" to "http://host.docker.internal:$httpPort",
         )
 
         // setup token authentication
@@ -48,7 +49,8 @@ data class Agent(
         }
 
         container = ComposeContainer(
-            File("src/test/resources/containers/agent.yml"))
+            File("src/test/resources/containers/agent.yml"),
+        )
             .withEnv(env)
             .waitingFor("open-enterprise-agent", Wait.forHealthcheck())
     }

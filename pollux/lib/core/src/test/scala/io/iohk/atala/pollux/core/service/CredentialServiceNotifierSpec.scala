@@ -98,7 +98,7 @@ object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServ
           _ <- svc.markOfferSent(issuerRecordId)
           _ <- svc.receiveCredentialRequest(requestCredential())
           _ <- svc.acceptCredentialRequest(issuerRecordId)
-          _ <- svc.generateJWTCredential(issuerRecordId)
+          _ <- svc.generateJWTCredential(issuerRecordId, "https://test-status-list.registry")
           _ <- svc.markCredentialSent(issuerRecordId)
           consumer <- ens.consumer[IssueCredentialRecord]("Issue")
           events <- consumer.poll(50)

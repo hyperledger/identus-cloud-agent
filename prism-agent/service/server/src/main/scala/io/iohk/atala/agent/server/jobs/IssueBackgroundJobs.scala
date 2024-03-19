@@ -406,7 +406,10 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
             walletAccessContext <- buildWalletAccessContextLayer(issue.from)
             result <- (for {
               credentialService <- ZIO.service[CredentialService]
-              _ <- credentialService.generateJWTCredential(id).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+              config <- ZIO.service[AppConfig]
+              _ <- credentialService
+                .generateJWTCredential(id, config.pollux.statusListRegistry.publicEndpointUrl)
+                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
             } yield ()).mapError(e => (walletAccessContext, e))
           } yield result
 
