@@ -123,7 +123,7 @@ if [ -n "$GLOBAL_WEBHOOK_API_KEY" ]; then
 	export GLOBAL_WEBHOOK_API_KEY=${GLOBAL_WEBHOOK_API_KEY}
 fi
 
-PORT=${PORT} NETWORK=${NETWORK} DOCKERHOST=${DOCKERHOST} docker compose \
+PORT=${PORT} NETWORK=${NETWORK} DOCKERHOST=${DOCKERHOST} docker-compose \
 	-p ${NAME} \
 	-f ${SCRIPT_DIR}/../shared/docker-compose.yml \
 	--env-file ${ENV_FILE} ${DEBUG} up ${BACKGROUND} ${WAIT}
