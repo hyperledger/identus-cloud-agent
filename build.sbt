@@ -152,6 +152,7 @@ lazy val D = new {
   val zioTestSbt: ModuleID = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia: ModuleID = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
   val zioMock: ModuleID = "dev.zio" %% "zio-mock" % V.zioMock
+  val zioPrelude: ModuleID = "dev.zio" %% "zio-prelude" % V.zioPreludeVersion
   val mockito: ModuleID = "org.scalatestplus" %% "mockito-4-11" % V.mockito % Test
   val monocle: ModuleID =  "dev.optics" %% "monocle-core"  % V.monocle % Test
   val monocleMacro: ModuleID = "dev.optics" %% "monocle-macro" % V.monocle % Test
@@ -170,7 +171,8 @@ lazy val D_Shared = new {
       // FIXME: split shared DB stuff as subproject?
       D.doobieHikari,
       D.doobiePostgres,
-      D.zioCatsInterop
+      D.zioCatsInterop,
+      D.zioPrelude
     )
 }
 

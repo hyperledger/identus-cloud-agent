@@ -12,7 +12,9 @@ import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.Base64Utils
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
+import io.iohk.atala.shared.validation.ValidationUtils
 import zio.*
+import zio.prelude.*
 
 import java.time.{Duration, Instant}
 import java.util.UUID
@@ -26,8 +28,9 @@ private class ConnectionServiceImpl(
       goalCode: Option[String],
       goal: Option[String],
       pairwiseDID: DidId
-  ): URIO[WalletAccessContext, ConnectionRecord] =
+  ): ZIO[WalletAccessContext, UserInputValidationError, ConnectionRecord] =
     for {
+      _ <- validateInputs(label, goalCode, goal)
       invitation <- ZIO.succeed(ConnectionInvitation.makeConnectionInvitation(pairwiseDID, goalCode, goal))
       record <- ZIO.succeed(
         ConnectionRecord(
@@ -50,6 +53,21 @@ private class ConnectionServiceImpl(
       )
       count <- connectionRepository.create(record)
     } yield record
+
+  private[this] def validateInputs(
+      label: Option[String],
+      goalCode: Option[String],
+      goal: Option[String]
+  ): IO[UserInputValidationError, Unit] = {
+    val validation = Validation
+      .validate(
+        ValidationUtils.validateLengthOptional("label", label, 0, 255),
+        ValidationUtils.validateLengthOptional("goalCode", goalCode, 0, 255),
+        ValidationUtils.validateLengthOptional("goal", goal, 0, 255)
+      )
+      .unit
+    ZIO.fromEither(validation.toEither).mapError(UserInputValidationError.apply)
+  }
 
   override def findAllRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
     connectionRepository.findAll

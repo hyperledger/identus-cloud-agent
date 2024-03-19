@@ -27,10 +27,11 @@ class ConnectionControllerImpl(
   override def createConnection(request: CreateConnectionRequest)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, Connection] = {
-    for {
+    val result = for {
       pairwiseDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
       connection <- service.createConnectionInvitation(request.label, request.goalCode, request.goal, pairwiseDid.did)
     } yield Connection.fromDomain(connection)
+    result.mapError(toHttpError)
   }
 
   override def getConnection(

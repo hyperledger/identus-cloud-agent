@@ -18,7 +18,7 @@ trait ConnectionService {
       goalCode: Option[String],
       goal: Option[String],
       pairwiseDID: DidId
-  ): URIO[WalletAccessContext, ConnectionRecord]
+  ): ZIO[WalletAccessContext, UserInputValidationError, ConnectionRecord]
 
   def receiveConnectionInvitation(
       invitation: String

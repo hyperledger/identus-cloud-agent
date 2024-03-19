@@ -47,7 +47,7 @@ object MockConnectionService extends Mock[ConnectionService] {
           goalCode: Option[String],
           goal: Option[String],
           pairwiseDID: DidId
-      ): URIO[WalletAccessContext, ConnectionRecord] =
+      ): ZIO[WalletAccessContext, UserInputValidationError, ConnectionRecord] =
         proxy(CreateConnectionInvitation, label, goalCode, goal, pairwiseDID)
 
       override def receiveConnectionInvitation(

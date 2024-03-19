@@ -10,15 +10,12 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 case class CreateConnectionRequest(
     @description(annotations.label.description)
     @encodedExample(annotations.label.example)
-    @validateEach(all(minLength(1), maxLength(255)))
     label: Option[String] = None,
     @description(annotations.goalcode.description)
     @encodedExample(annotations.goalcode.example)
-    @validateEach(all(minLength(1), maxLength(255)))
     goalCode: Option[String] = None,
     @description(annotations.goal.description)
     @encodedExample(annotations.goal.example)
-    @validateEach(all(minLength(1), maxLength(255)))
     goal: Option[String] = None
 )
 

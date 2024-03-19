@@ -2,6 +2,7 @@ package io.iohk.atala.connect.core.model.error
 
 import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
 import io.iohk.atala.shared.models.{Failure, StatusCode}
+import zio.NonEmptyChunk
 
 import java.util.UUID
 
@@ -11,6 +12,11 @@ sealed trait ConnectionServiceError(
 ) extends Failure
 
 object ConnectionServiceError {
+  final case class UserInputValidationError(errors: NonEmptyChunk[String])
+      extends ConnectionServiceError(
+        StatusCode.BadRequest,
+        s"The provided input failed validation: errors=${errors.mkString("[", "], [", "]")}"
+      )
   final case class InvitationParsingError(cause: String)
       extends ConnectionServiceError(
         StatusCode.BadRequest,
