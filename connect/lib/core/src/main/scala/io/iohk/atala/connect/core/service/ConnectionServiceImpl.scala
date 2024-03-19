@@ -208,12 +208,10 @@ private class ConnectionServiceImpl(
       record <- getRecordByIdAndStates(recordId, ProtocolState.ConnectionRequestReceived)
       request <- ZIO
         .fromOption(record.connectionRequest)
-        .mapError(_ => RuntimeException(s"No connection request found in record: $recordId"))
-        .orDie
+        .orDieWith(_ => RuntimeException(s"No connection request found in record: $recordId"))
       response <- ZIO
         .fromEither(ConnectionResponse.makeResponseFromRequest(request.makeMessage))
-        .mapError(str => RuntimeException(s"Cannot make response from request: $recordId"))
-        .orDie
+        .orDieWith(str => RuntimeException(s"Cannot make response from request: $recordId"))
       _ <- connectionRepository
         .updateWithConnectionResponse(recordId, response, ProtocolState.ConnectionResponsePending, maxRetries)
         @@ CustomMetricsAspect.startRecordingTime(

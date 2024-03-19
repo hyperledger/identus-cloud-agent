@@ -8,9 +8,8 @@ import doobie.postgres.implicits.*
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
-import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
-import io.iohk.atala.connect.core.model.ConnectionRecord.Role
 import io.iohk.atala.connect.core.model.*
+import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import io.iohk.atala.connect.core.repository.ConnectionRepository
 import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
@@ -21,8 +20,8 @@ import zio.*
 import zio.interop.catz.*
 
 import java.time.Instant
+import java.util as ju
 import java.util.UUID
-import java.{util => ju}
 
 class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task]) extends ConnectionRepository {
 
@@ -210,9 +209,9 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   override def getById(recordId: UUID): URIO[WalletAccessContext, ConnectionRecord] =
     for {
       maybeRecord <- findById(recordId)
-      record <- ZIO.getOrFailWith(RuntimeException(s"Record not found: $recordId"))(maybeRecord).orDie
+      record <- ZIO.fromOption(maybeRecord).orDieWith(_ => RuntimeException(s"Record not found: $recordId"))
     } yield record
-
+  
   override def deleteById(recordId: UUID): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
       | DELETE
