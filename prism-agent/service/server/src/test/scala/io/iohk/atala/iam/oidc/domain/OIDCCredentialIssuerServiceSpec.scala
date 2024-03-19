@@ -62,7 +62,7 @@ object OIDCCredentialIssuerServiceSpec extends MockSpecDefault with CredentialSe
         for {
           oidcCredentialIssuerService <- ZIO.service[OIDCCredentialIssuerService]
           credentialDefinition = CredentialDefinition(
-            `@context` = Seq("https://www.w3.org/2018/credentials/v1"),
+            `@context` = Some(Seq("https://www.w3.org/2018/credentials/v1")),
             `type` = Seq("VerifiableCredential", "CertificateOfBirth"),
             credentialSubject = Some(
               Map(
