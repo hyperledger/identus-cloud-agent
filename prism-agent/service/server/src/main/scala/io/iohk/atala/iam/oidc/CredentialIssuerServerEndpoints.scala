@@ -5,7 +5,7 @@ import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import io.iohk.atala.iam.oidc.controller.CredentialIssuerController
-import io.iohk.atala.iam.oidc.http.{CredentialErrorResponse, CredentialRequest, NonceResponse}
+import io.iohk.atala.iam.oidc.http.{CredentialErrorResponse, CredentialRequest, IssuanceSessionRequest, NonceResponse}
 import sttp.tapir.ztapir.*
 import zio.*
 
@@ -57,8 +57,26 @@ case class CredentialIssuerServerEndpoints(
         }
       }
 
-  val all: List[ZServerEndpoint[Any, Any]] =
-    List(credentialServerEndpoint, createCredentialOfferServerEndpoint, nonceServerEndpoint)
+  val issuanceSessionServerEndpoint: ZServerEndpoint[Any, Any] =
+    CredentialIssuerEndpoints.issuanceSessionEndpoint
+      .zServerSecurityLogic(
+        // FIXME: how can authorization server authorize itself?
+        SecurityLogic
+          .authorizeWalletAccessWith(_)(authenticator, authorizer)
+          .mapError(Left[ErrorResponse, CredentialErrorResponse])
+      )
+      .serverLogic { wac =>
+        { case (ctx: RequestContext, didRef: String, issuanceSessionRequest: IssuanceSessionRequest) =>
+          credentialIssuerController.createIssuanceSession(ctx, didRef, issuanceSessionRequest)
+        }
+      }
+
+  val all: List[ZServerEndpoint[Any, Any]] = List(
+    credentialServerEndpoint,
+    nonceServerEndpoint,
+    createCredentialOfferServerEndpoint,
+    issuanceSessionServerEndpoint
+  )
 }
 
 object CredentialIssuerServerEndpoints {

@@ -1,14 +1,14 @@
 package io.iohk.atala.iam.oidc.controller
 
-import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.api.http.ErrorResponse.internalServerError
-import io.iohk.atala.api.http.RequestContext
+import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.iam.oidc.CredentialIssuerEndpoints.ExtendedErrorResponse
-import io.iohk.atala.iam.oidc.domain.OIDCCredentialIssuerService
+import io.iohk.atala.iam.oidc.domain.IssuanceSession
 import io.iohk.atala.iam.oidc.http.*
 import io.iohk.atala.iam.oidc.http.CredentialErrorCode.*
+import io.iohk.atala.iam.oidc.service.OIDCCredentialIssuerService
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
 
@@ -28,6 +28,12 @@ trait CredentialIssuerController {
       didRef: String,
       request: NonceRequest
   ): ZIO[WalletAccessContext, ErrorResponse, NonceResponse]
+
+  def createIssuanceSession(
+      ctx: RequestContext,
+      didRef: String,
+      issuanceSessionRequest: IssuanceSessionRequest
+  ): IO[ExtendedErrorResponse, Unit]
 }
 
 object CredentialIssuerController {
@@ -190,6 +196,35 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
           instance = "CredentialIssuerController"
         )
       )
+  }
+
+  private def buildIssuanceSession(
+      canonicalPrismDID: CanonicalPrismDID,
+      issuanceSessionRequest: IssuanceSessionRequest
+  ): IssuanceSession = {
+    IssuanceSession(
+      nonce = issuanceSessionRequest.nonce,
+      issuableCredentials = issuanceSessionRequest.issuableCredentials,
+      isPreAuthorized = issuanceSessionRequest.isPreAuthorized,
+      did = issuanceSessionRequest.did,
+      issuerDid = canonicalPrismDID,
+      userPin = issuanceSessionRequest.userPin
+    )
+  }
+
+  override def createIssuanceSession(
+      ctx: RequestContext,
+      didRef: String,
+      issuanceSessionRequest: IssuanceSessionRequest
+  ): IO[ExtendedErrorResponse, Unit] = {
+    for {
+      canonicalPrismDID <- resolveIssuerDID(didRef)
+      issuanceSession = buildIssuanceSession(canonicalPrismDID, issuanceSessionRequest)
+      _ <- credentialIssuerService
+        .createIssuanceSession(issuanceSession)
+        .mapError(ue => serverError(Some(s"Unexpected error while creating issuance session: ${ue.message}")))
+    } yield ()
+
   }
 }
 

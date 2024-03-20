@@ -26,7 +26,8 @@ import io.iohk.atala.iam.authorization.DefaultPermissionManagementService
 import io.iohk.atala.iam.authorization.core.EntityPermissionManagementService
 import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
 import io.iohk.atala.iam.oidc.controller.CredentialIssuerControllerImpl
-import io.iohk.atala.iam.oidc.domain.{OIDCCredentialIssuerService, OIDCCredentialIssuerServiceImpl}
+import io.iohk.atala.iam.oidc.service.{OIDCCredentialIssuerService, OIDCCredentialIssuerServiceImpl}
+import io.iohk.atala.iam.oidc.storage.InMemoryIssuanceSessionService
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
@@ -50,12 +51,12 @@ import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import zio.*
-import zio.metrics.connectors.micrometer
-import zio.metrics.connectors.micrometer.MicrometerConfig
-import zio.metrics.jvm.DefaultJvmMetrics
 import zio.logging.*
 import zio.logging.LogFormat.*
 import zio.logging.backend.SLF4J
+import zio.metrics.connectors.micrometer
+import zio.metrics.connectors.micrometer.MicrometerConfig
+import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.security.Security
 
@@ -188,6 +189,7 @@ object MainApp extends ZIOAppDefault {
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // oidc
+          InMemoryIssuanceSessionService.layer,
           DIDServiceImpl.layer ++ OIDCCredentialIssuerServiceImpl.layer >>> CredentialIssuerControllerImpl.layer,
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
