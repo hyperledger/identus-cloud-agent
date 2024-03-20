@@ -39,68 +39,68 @@ The expectation is for maintainers to perform the following duties for this repo
 - When appropriate, lead/facilitate architectural discussions in the community.
 - When appropriate, lead/facilitate the creation of a product roadmap.
 - Create, clarify, and label issues to be worked on by Contributors.
-- Ensure that there is a well defined (and ideally automated) product test and
+- Ensure that there is a well-defined (and ideally automated) product test and
   release pipeline, including the publication of release artifacts.
 - When appropriate, execute the product release process.
 - Maintain the repository CONTRIBUTING.md file and getting started documents to
-  give guidance and encouragement to those wanting to contribute to the product, and those wanting to become maintainers.
+  give guidance and encouragement to those wanting to contribute to the product and become maintainers.
 - Contribute to the product via GitHub Pull Requests.
 - Monitor requests from the Hyperledger Technical Oversight Committee about the
 contents and management of Hyperledger repositories, such as branch handling,
-required files in repositories and so on.
+required files in repositories, etc.
 - Contribute to the Hyperledger Project's Quarterly Report.
 
 ## Becoming a Maintainer
 
 This community welcomes contributions. Interested contributors are encouraged to
-progress to become maintainers. To become a maintainer the following steps
-occur, roughly in order.
+progress to become maintainers. To become a maintainer, the following steps
+occur roughly in order.
 
 - The proposed maintainer establishes their reputation in the community,
   including authoring five (5) significant merged pull requests, and expresses
   an interest in becoming a maintainer for the repository.
-- A PR is created to update this file to add the proposed maintainer to the list of active maintainers.
-- The PR is authored by an existing maintainer or has a comment on the PR from an existing maintainer supporting the proposal.
-- The PR is authored by the proposed maintainer or has a comment on the PR from the proposed maintainer confirming their interest in being a maintainer.
+A PR has been created to update this file and add the proposed maintainer to the list of active maintainers.
+- An existing maintainer authors the PR or has a comment on the PR from an existing maintainer supporting the proposal.
+- The proposed maintainer authors the PR or has a comment from the proposed maintainer confirming their interest in being a maintainer.
   - The PR or comment from the proposed maintainer must include their
-    willingness to be a long-term (more than 6 month) maintainer.
-- Once the PR and necessary comments have been received, an approval timeframe begins.
-- The PR **MUST** be communicated on all appropriate communication channels, including relevant community calls, chat channels and mailing lists. Comments of support from the community are welcome.
-- The PR is merged and the proposed maintainer becomes a maintainer if either:
-  - Two weeks have passed since at least three (3) Maintainer PR approvals have been recorded, OR
+    willingness to be a long-term (more than 6 months) maintainer.
+- An approval timeframe begins once the PR and necessary comments are received.
+- The PR **MUST** be communicated on all appropriate channels, including relevant community calls, chat channels, and mailing lists. The community's comments of support are welcome.
+- The PR gets merged, and the proposed maintainer becomes a maintainer if either:
+ - Two weeks have passed since the receipt of at least three (3) Maintainer PR approvals, OR
   - An absolute majority of maintainers have approved the PR.
-- If the PR does not get the requisite PR approvals, it may be closed.
-- Once the add maintainer PR has been merged, any necessary updates to the GitHub Teams are made.
+- It may be closed if the PR does not get the requisite PR approvals.
+- Once the add maintainer PR merges, any updates to the GitHub Teams are made.
 
 ## Removing Maintainers
 
-Being a maintainer is not a status symbol or a title to be carried
-indefinitely. It will occasionally be necessary and appropriate to move a
-maintainer to emeritus status. This can occur in the following situations:
+Being a maintainer is not a status symbol or a title or indefinite. 
+Moving the maintainer to emeritus status will occasionally be necessary and appropriate.
+The status change can occur in the following situations:
 
 - Resignation of a maintainer.
 - Violation of the Code of Conduct warranting removal.
 - Inactivity.
   - A general measure of inactivity will be no commits or code review comments
-    for one reporting quarter. This will not be strictly enforced if
+    for one reporting quarter. Inactivity will not be strictly enforced if
     the maintainer expresses a reasonable intent to continue contributing.
-  - Reasonable exceptions to inactivity will be granted for known long term
+  - Reasonable exceptions to inactivity will be granted for known long-term
     leave such as parental leave and medical leave.
-- Other circumstances at the discretion of the other Maintainers.
+- Other circumstances are at the discretion of the other maintainers.
 
 The process to move a maintainer from active to emeritus status is comparable to the process for adding a maintainer, outlined above. In the case of voluntary
-resignation, the Pull Request can be merged following a maintainer PR approval. If the removal is for any other reason, the following steps **SHOULD** be followed:
+resignation, the Pull Request is mergeable following a maintainer PR approval. If the removal is for any other reason, the following steps **SHOULD** be followed:
 
-- A PR is created to update this file to move the maintainer to the list of emeritus maintainers.
-- The PR is authored by, or has a comment supporting the proposal from, an existing maintainer or Hyperledger GitHub organization administrator.
-- Once the PR and necessary comments have been received, the approval timeframe begins.
-- The PR **MAY** be communicated on appropriate communication channels, including relevant community calls, chat channels and mailing lists.
-- The PR is merged and the maintainer transitions to maintainer emeritus if:
-  - The PR is approved by the maintainer to be transitioned, OR
-  - Two weeks have passed since at least three (3) Maintainer PR approvals have been recorded, OR
+- A PR has been created to update this file and move the maintainer to the list of emeritus maintainers.
+- The PR is authored by or has a comment supporting the proposal from an existing maintainer or Hyperledger GitHub organization administrator.
+- The approval timeframe begins upon receipt of the PR and necessary comments.
+- The PR **MAY** be communicated on appropriate channels, including relevant community calls, chat channels, and mailing lists.
+- The PR gets merged, and the maintainer transitions to maintainer emeritus if: 
+  - The PR gets approval from the maintainer to transition, OR 
+  - Two weeks have passed since receipt of at least three (3) Maintainer PR approvals, OR 
   - An absolute majority of maintainers have approved the PR.
-- If the PR does not get the requisite PR approvals, it may be closed.
+- It may be closed if the PR does not get the requisite PR approvals.
 
 Returning to active status from emeritus status uses the same steps as adding a
 new maintainer. Note that the emeritus maintainer already has the 5 required
-significant changes as there is no contribution time horizon for those.
+significant changes, as there is no contribution time horizon for those.
