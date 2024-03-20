@@ -29,7 +29,7 @@ Maintainers are assigned the following scopes in this repository:
 
 ## The Duties of a Maintainer
 
-Maintainers are expected to perform the following duties for this repository. The duties are listed in more or less priority order:
+The expectation is for maintainers to perform the following duties for this repository. The responsibilities listed are in high to low-priority order:
 
 - Review, respond, and act on any security vulnerabilities reported against the repository.
 - Review, provide feedback on, and merge or reject GitHub Pull Requests from
