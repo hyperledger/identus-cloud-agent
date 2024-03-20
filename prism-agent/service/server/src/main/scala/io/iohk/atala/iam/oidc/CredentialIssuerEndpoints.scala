@@ -1,21 +1,13 @@
 package io.iohk.atala.iam.oidc
 
-import io.iohk.atala.api.http.{ErrorResponse, RequestContext, EndpointOutputs}
+import io.iohk.atala.api.http.{EndpointOutputs, ErrorResponse, RequestContext}
 import io.iohk.atala.castor.controller.http.DIDInput
 import io.iohk.atala.castor.controller.http.DIDInput.didRefPathSegment
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import io.iohk.atala.iam.oidc.http.{
-  CredentialErrorResponse,
-  CredentialRequest,
-  CredentialResponse,
-  NonceResponse,
-  CredentialOfferRequest,
-  CredentialOfferResponse,
-  NonceRequest
-}
+import io.iohk.atala.iam.oidc.http.*
 import sttp.apispec.Tag
 import sttp.model.StatusCode
 import sttp.tapir.json.zio.jsonBody
@@ -120,4 +112,23 @@ object CredentialIssuerEndpoints {
       """The endpoint that returns a `nonce` value for the [Token Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-nonce-endpoint)""".stripMargin
     )
 
+  val issuanceSessionEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, String, IssuanceSessionRequest),
+    ExtendedErrorResponse,
+    Unit,
+    Any
+  ] =
+    baseIssuerFacingEndpoint.post
+      .in("issuance-session")
+      .in(jsonBody[IssuanceSessionRequest])
+      .out(
+        statusCode(StatusCode.Created).description("Issuance session created successfully"),
+      )
+      .errorOut(credentialEndpointErrorOutput)
+      .name("createIssuanceSession")
+      .summary("Create Issuance Session")
+      .description(
+        """The endpoint that creates an issuance session for the OIDC VC endpoints""".stripMargin
+      )
 }

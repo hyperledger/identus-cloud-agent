@@ -6,6 +6,8 @@ import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, MockDIDNonSec
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.service.{DIDService, MockDIDService}
 import io.iohk.atala.iam.oidc.http.{ClaimDescriptor, CredentialDefinition, Localization}
+import io.iohk.atala.iam.oidc.service.{OIDCCredentialIssuerService, OIDCCredentialIssuerServiceImpl}
+import io.iohk.atala.iam.oidc.storage.InMemoryIssuanceSessionService
 import io.iohk.atala.pollux.core.repository.{CredentialRepository, CredentialRepositoryInMemory}
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
@@ -25,6 +27,7 @@ object OIDCCredentialIssuerServiceSpec extends MockSpecDefault with CredentialSe
       DIDService & ManagedDIDService & DIDNonSecretStorage,
       CredentialService & CredentialDefinitionService & OIDCCredentialIssuerService
     ](
+      InMemoryIssuanceSessionService.layer,
       CredentialRepositoryInMemory.layer,
       PrismDidResolver.layer,
       credentialDefinitionServiceLayer,

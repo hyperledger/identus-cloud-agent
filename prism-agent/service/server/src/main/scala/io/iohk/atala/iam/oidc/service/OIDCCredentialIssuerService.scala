@@ -1,13 +1,12 @@
-package io.iohk.atala.iam.oidc.domain
+package io.iohk.atala.iam.oidc.service
 
 import io.circe.Json
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.{PrismDID, VerificationRelationship}
 import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.iam.oidc.http.CredentialOffer
-import io.iohk.atala.iam.oidc.http.CredentialOfferAuthorizationGrant
-import io.iohk.atala.iam.oidc.http.CredentialOfferGrant
-import io.iohk.atala.iam.oidc.http.{CredentialDefinition, CredentialSubject}
+import io.iohk.atala.iam.oidc.domain.IssuanceSession
+import io.iohk.atala.iam.oidc.http.*
+import io.iohk.atala.iam.oidc.storage.IssuanceSessionStorage
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.vc.jwt.{DID, Issuer, JWT, JwtCredential, W3cCredentialPayload}
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
@@ -42,6 +41,8 @@ trait OIDCCredentialIssuerService {
   ): ZIO[WalletAccessContext, Error, CredentialOffer]
 
   def getIssuanceSessionNonce(issuerState: String): ZIO[WalletAccessContext, Error, UUID]
+
+  def createIssuanceSession(issuanceSession: IssuanceSession): IO[Error, IssuanceSession]
 }
 
 object OIDCCredentialIssuerService {
@@ -65,7 +66,8 @@ object OIDCCredentialIssuerService {
 case class OIDCCredentialIssuerServiceImpl(
     didService: DIDService,
     didNonSecretStorage: DIDNonSecretStorage,
-    credentialService: CredentialService
+    credentialService: CredentialService,
+    issuanceSessionStorage: IssuanceSessionStorage
 ) extends OIDCCredentialIssuerService {
 
   import OIDCCredentialIssuerService.Error
@@ -98,7 +100,7 @@ case class OIDCCredentialIssuerServiceImpl(
         .provideSomeLayer(ZLayer.succeed(wac))
 
       jwtVC <- buildJwtVerifiableCredential(jwtIssuer.did, credentialIdentifier, credentialDefinition)
-      jwt <- issueJwtVS(jwtIssuer, jwtVC)
+      jwt <- issueJwtVC(jwtIssuer, jwtVC)
     } yield jwt
   }
 
@@ -139,10 +141,16 @@ case class OIDCCredentialIssuerServiceImpl(
     claimsOpt.fold(Json.obj())(claims => Json.obj(claims: _*))
   }
 
-  def issueJwtVS(issuer: Issuer, payload: W3cCredentialPayload): IO[Error, JWT] = {
+  def issueJwtVC(issuer: Issuer, payload: W3cCredentialPayload): IO[Error, JWT] = {
     ZIO
       .fromTry(Try(JwtCredential.encodeJwt(payload.toJwtCredentialPayload, issuer)))
       .mapError(e => ServiceError(s"Failed to issue JWT: ${e.getMessage}"))
+  }
+
+  override def createIssuanceSession(issuanceSession: IssuanceSession): IO[Error, IssuanceSession] = {
+    issuanceSessionStorage
+      .start(issuanceSession)
+      .mapError(e => ServiceError(s"Failed to start issuance session: ${e.message}"))
   }
 
   override def getIssuanceSessionNonce(
@@ -170,6 +178,9 @@ case class OIDCCredentialIssuerServiceImpl(
 }
 
 object OIDCCredentialIssuerServiceImpl {
-  val layer: URLayer[DIDService & DIDNonSecretStorage & CredentialService, OIDCCredentialIssuerService] =
-    ZLayer.fromFunction(OIDCCredentialIssuerServiceImpl(_, _, _))
+  val layer: URLayer[
+    DIDService & DIDNonSecretStorage & CredentialService & IssuanceSessionStorage,
+    OIDCCredentialIssuerService
+  ] =
+    ZLayer.fromFunction(OIDCCredentialIssuerServiceImpl(_, _, _, _))
 }
