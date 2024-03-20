@@ -57,7 +57,7 @@ lazy val V = new {
   val zioMetricsConnector = "2.1.0"
   val zioMock = "1.0.0-RC11"
   val mockito = "3.2.16.0"
-  val monocle =  "3.1.0"
+  val monocle = "3.1.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.6"
@@ -67,7 +67,7 @@ lazy val V = new {
   val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
   val testContainersScala = "0.41.0"
-  val testContainersJavaKeycloak = "3.0.0" // scala-steward:off
+  val testContainersJavaKeycloak = "3.2.0" // scala-steward:off
 
   val doobie = "1.0.0-RC2"
   val quill = "4.7.3"
@@ -90,7 +90,7 @@ lazy val V = new {
   val micrometer = "1.11.2"
 
   val nimbusJwt = "10.0.0"
-  val keycloak = "22.0.4" // scala-steward:off
+  val keycloak = "23.0.7" // scala-steward:off
 
 }
 
@@ -107,6 +107,7 @@ lazy val D = new {
   val tapirPrometheusMetrics: ModuleID = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % V.tapir
   val micrometer: ModuleID = "io.micrometer" % "micrometer-registry-prometheus" % V.micrometer
   val micrometerPrometheusRegistry = "io.micrometer" % "micrometer-core" % V.micrometer
+  val scalaUri = "io.lemonlabs" %% "scala-uri" % V.scalaUri
 
   val zioConfig: ModuleID = "dev.zio" %% "zio-config" % V.zioConfig
   val zioConfigMagnolia: ModuleID = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
@@ -117,6 +118,8 @@ lazy val D = new {
   val circeParser: ModuleID = "io.circe" %% "circe-parser" % V.circe
 
   val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
+  val jsonCanonicalization: ModuleID = "io.github.erdtman" % "java-json-canonicalization" % "1.1"
+  val scodecBits: ModuleID = "org.scodec" %% "scodec-bits" % "1.1.38"
 
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.1"
@@ -139,6 +142,7 @@ lazy val D = new {
     "com.github.dasniko" % "testcontainers-keycloak" % V.testContainersJavaKeycloak % Test
 
   val doobiePostgres: ModuleID = "org.tpolecat" %% "doobie-postgres" % V.doobie
+  val doobiePostgresCirce: ModuleID = "org.tpolecat" %% "doobie-postgres-circe" % V.doobie
   val doobieHikari: ModuleID = "org.tpolecat" %% "doobie-hikari" % V.doobie
   val flyway: ModuleID = "org.flywaydb" % "flyway-core" % V.flyway
 
@@ -152,12 +156,12 @@ lazy val D = new {
   val zioTestMagnolia: ModuleID = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
   val zioMock: ModuleID = "dev.zio" %% "zio-mock" % V.zioMock
   val mockito: ModuleID = "org.scalatestplus" %% "mockito-4-11" % V.mockito % Test
-  val monocle: ModuleID =  "dev.optics" %% "monocle-core"  % V.monocle % Test
+  val monocle: ModuleID = "dev.optics" %% "monocle-core" % V.monocle % Test
   val monocleMacro: ModuleID = "dev.optics" %% "monocle-macro" % V.monocle % Test
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
-    Seq(doobiePostgres, doobieHikari, flyway)
+    Seq(doobiePostgres, doobiePostgresCirce, doobieHikari, flyway)
 }
 
 lazy val D_Shared = new {
@@ -166,10 +170,17 @@ lazy val D_Shared = new {
       D.typesafeConfig,
       D.scalaPbGrpc,
       D.zio,
+      D.zioHttp,
+      D.scalaUri,
       // FIXME: split shared DB stuff as subproject?
       D.doobieHikari,
       D.doobiePostgres,
-      D.zioCatsInterop
+      D.zioCatsInterop,
+      D.jsonCanonicalization,
+      D.scodecBits,
+      D.circeCore,
+      D.circeGeneric,
+      D.circeParser,
     )
 }
 
@@ -206,8 +217,6 @@ lazy val D_Connect = new {
 
 lazy val D_Castor = new {
 
-  val scalaUri = "io.lemonlabs" %% "scala-uri" % V.scalaUri
-
   // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
   // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
   val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % V.prismSdk excludeAll
@@ -224,11 +233,7 @@ lazy val D_Castor = new {
       D.zioMock,
       D.zioTestSbt,
       D.zioTestMagnolia,
-      D.circeCore,
-      D.circeGeneric,
-      D.circeParser,
       prismIdentity,
-      scalaUri
     )
 
   // Project Dependencies
@@ -312,9 +317,8 @@ lazy val D_Pollux_VC_JWT = new {
 
   // Dependency Modules
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
-  val circeDependencies: Seq[ModuleID] = Seq(D.circeCore, D.circeGeneric, D.circeParser)
   val baseDependencies: Seq[ModuleID] =
-    circeDependencies ++ zioDependencies :+ D.jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ scalaTest
+    zioDependencies :+ D.jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ scalaTest
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
@@ -408,7 +412,12 @@ lazy val D_PrismAgent = new {
   lazy val iamDependencies: Seq[ModuleID] = Seq(keycloakAuthz, D.jwtCirce)
 
   lazy val serverDependencies: Seq[ModuleID] =
-    baseDependencies ++ tapirDependencies ++ postgresDependencies ++ Seq(D.zioMock, D.mockito, D.monocle, D.monocleMacro)
+    baseDependencies ++ tapirDependencies ++ postgresDependencies ++ Seq(
+      D.zioMock,
+      D.mockito,
+      D.monocle,
+      D.monocleMacro
+    )
 }
 
 publish / skip := true
@@ -581,6 +590,14 @@ lazy val protocolIssueCredential = project
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
+lazy val protocolRevocationNotification = project
+  .in(file("mercury/mercury-library/protocol-revocation-notification"))
+  .settings(name := "mercury-protocol-revocation-notification")
+  .settings(libraryDependencies += D.zio)
+  .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
+  .settings(libraryDependencies += D.munitZio)
+  .dependsOn(models)
+
 lazy val protocolPresentProof = project
   .in(file("mercury/mercury-library/protocol-present-proof"))
   .settings(name := "mercury-protocol-present-proof")
@@ -639,6 +656,7 @@ lazy val agent = project // maybe merge into models
     protocolMercuryMailbox,
     protocolLogin,
     protocolIssueCredential,
+    protocolRevocationNotification,
     protocolPresentProof,
     vc,
     protocolConnection,
@@ -871,6 +889,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   protocolReportProblem,
   protocolRouting,
   protocolIssueCredential,
+  protocolRevocationNotification,
   protocolPresentProof,
   vc,
   protocolTrustPing,

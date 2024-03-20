@@ -1,3 +1,48 @@
+# [1.31.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.30.1...prism-agent-v1.31.0) (2024-03-20)
+
+
+### Bug Fixes
+
+* add Anoncreds Integration Test ([#923](https://github.com/hyperledger-labs/open-enterprise-agent/issues/923)) ([27a157f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/27a157fb5a83a33704230b35eca80f297eec9a85))
+* align keycloak version ([#936](https://github.com/hyperledger-labs/open-enterprise-agent/issues/936)) ([c920fd6](https://github.com/hyperledger-labs/open-enterprise-agent/commit/c920fd661d31b56466497e462fd0139755290b33))
+* anoncred test ([#940](https://github.com/hyperledger-labs/open-enterprise-agent/issues/940)) ([bb5ead1](https://github.com/hyperledger-labs/open-enterprise-agent/commit/bb5ead1de3b6d2c3fae0019d50a5310b37a2eab3))
+* **pollux:** function that allocates status list credential does not work correctly in multi threaded environment  ([#941](https://github.com/hyperledger-labs/open-enterprise-agent/issues/941)) ([ecc3c01](https://github.com/hyperledger-labs/open-enterprise-agent/commit/ecc3c019749a6b370771bcf62f89ea2599a521ac))
+* **pollux:** Undo edit migration for revocation status lists ([#937](https://github.com/hyperledger-labs/open-enterprise-agent/issues/937)) ([7f7585f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/7f7585f47ee197db162c75f7d118a87b99cc7d06))
+* **prism-agent:** add validation for endpoint url ([#919](https://github.com/hyperledger-labs/open-enterprise-agent/issues/919)) ([0402a87](https://github.com/hyperledger-labs/open-enterprise-agent/commit/0402a8778eda839521c55a127934fba41c7b79ad))
+
+
+### Features
+
+* add revocation for JWT credentials ([#934](https://github.com/hyperledger-labs/open-enterprise-agent/issues/934)) ([88b7fa5](https://github.com/hyperledger-labs/open-enterprise-agent/commit/88b7fa5c6cd92002ef355311eec6e30b63ab1dd6))
+* Fix Update Schema and CredentialDef on Receive Credential ([#920](https://github.com/hyperledger-labs/open-enterprise-agent/issues/920)) ([acbba3c](https://github.com/hyperledger-labs/open-enterprise-agent/commit/acbba3ce92ee9e16893b4978c4a9ec4ce0757d53))
+
+## [1.30.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.30.0...prism-agent-v1.30.1) (2024-03-06)
+
+
+### Bug Fixes
+
+* allow configurable path convention for vault secrets ([#918](https://github.com/hyperledger-labs/open-enterprise-agent/issues/918)) ([234a272](https://github.com/hyperledger-labs/open-enterprise-agent/commit/234a2725614b05466391894f248c7175fb62c5b6))
+* integration test ([#915](https://github.com/hyperledger-labs/open-enterprise-agent/issues/915)) ([320ab6a](https://github.com/hyperledger-labs/open-enterprise-agent/commit/320ab6a876606eb68f48fe7d78983b4e044b5084))
+
+# [1.30.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.29.0...prism-agent-v1.30.0) (2024-03-01)
+
+
+### Features
+
+* **agent:** make the connection pool size configurable, fixes [#913](https://github.com/hyperledger-labs/open-enterprise-agent/issues/913) ([#914](https://github.com/hyperledger-labs/open-enterprise-agent/issues/914)) ([375fe0f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/375fe0f8ee042246aed37f40cbeb8f2042c99958))
+
+# [1.29.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.28.0...prism-agent-v1.29.0) (2024-02-28)
+
+
+### Bug Fixes
+
+* correct the config environment variable name ([#905](https://github.com/hyperledger-labs/open-enterprise-agent/issues/905)) ([d86436c](https://github.com/hyperledger-labs/open-enterprise-agent/commit/d86436cbc58571b4167411643623f3ba975550ad))
+
+
+### Features
+
+* ZKP verification ([#792](https://github.com/hyperledger-labs/open-enterprise-agent/issues/792)) ([ab1ab64](https://github.com/hyperledger-labs/open-enterprise-agent/commit/ab1ab648b10a82b39d4bdde6e2c9693c8f7506b8))
+
 # [1.28.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.27.0...prism-agent-v1.28.0) (2024-02-20)
 
 

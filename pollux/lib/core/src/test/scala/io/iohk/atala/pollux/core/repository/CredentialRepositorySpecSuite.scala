@@ -17,14 +17,15 @@ import java.util.UUID
 object CredentialRepositorySpecSuite {
   val maxRetries = 5 // TODO Move to config
 
-  private def issueCredentialRecord = IssueCredentialRecord(
+  private def issueCredentialRecord(credentialFormat: CredentialFormat) = IssueCredentialRecord(
     id = DidCommID(),
     createdAt = Instant.now,
     updatedAt = None,
     thid = DidCommID(),
-    schemaId = None,
+    schemaUri = None,
     credentialDefinitionId = None,
-    credentialFormat = CredentialFormat.JWT,
+    credentialDefinitionUri = None,
+    credentialFormat = credentialFormat,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,
     validityPeriod = None,
@@ -53,7 +54,7 @@ object CredentialRepositorySpecSuite {
     test("createIssueCredentialRecord creates a new record in DB") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        record = issueCredentialRecord
+        record = issueCredentialRecord(CredentialFormat.JWT)
         count <- repo.createIssueCredentialRecord(record)
       } yield assertTrue(count == 1)
     },
@@ -61,8 +62,8 @@ object CredentialRepositorySpecSuite {
       for {
         repo <- ZIO.service[CredentialRepository]
         thid = DidCommID()
-        aRecord = issueCredentialRecord.copy(thid = thid)
-        bRecord = issueCredentialRecord.copy(thid = thid)
+        aRecord = issueCredentialRecord(CredentialFormat.JWT).copy(thid = thid)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT).copy(thid = thid)
         aCount <- repo.createIssueCredentialRecord(aRecord)
         bCount <- repo.createIssueCredentialRecord(bRecord).exit
       } yield assertTrue(aCount == 1) && assert(bCount)(fails(isSubtype[UniqueConstraintViolation](anything)))
@@ -71,7 +72,7 @@ object CredentialRepositorySpecSuite {
       for {
         repo <- ZIO.service[CredentialRepository]
         issuingDID <- ZIO.fromEither(PrismDID.buildCanonicalFromSuffix("0" * 64))
-        record = issueCredentialRecord.copy(issuingDID = Some(issuingDID))
+        record = issueCredentialRecord(CredentialFormat.JWT).copy(issuingDID = Some(issuingDID))
         count <- repo.createIssueCredentialRecord(record)
         readRecord <- repo.getIssueCredentialRecord(record.id)
       } yield assertTrue(count == 1) && assert(readRecord)(isSome(equalTo(record)))
@@ -79,8 +80,8 @@ object CredentialRepositorySpecSuite {
     test("getIssueCredentialRecord correctly returns an existing record") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        bRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         record <- repo.getIssueCredentialRecord(bRecord.id)
@@ -89,8 +90,8 @@ object CredentialRepositorySpecSuite {
     test("getIssuanceCredentialRecord returns None for an unknown record") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        bRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         record <- repo.getIssueCredentialRecord(DidCommID())
@@ -99,8 +100,8 @@ object CredentialRepositorySpecSuite {
     test("getIssuanceCredentialRecord returns all records") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        bRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         records <- repo.getIssueCredentialRecords(false).map(_._1)
@@ -113,8 +114,8 @@ object CredentialRepositorySpecSuite {
     test("getIssuanceCredentialRecord returns records with offset") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        bRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         records <- repo.getIssueCredentialRecords(false, offset = Some(1)).map(_._1)
@@ -126,8 +127,8 @@ object CredentialRepositorySpecSuite {
     test("getIssuanceCredentialRecord returns records with limit") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        bRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         records <- repo.getIssueCredentialRecords(false, limit = Some(1)).map(_._1)
@@ -139,9 +140,9 @@ object CredentialRepositorySpecSuite {
     test("getIssuanceCredentialRecord returns records with offset and limit") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        bRecord = issueCredentialRecord
-        cRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT)
+        cRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
@@ -156,8 +157,8 @@ object CredentialRepositorySpecSuite {
     test("deleteIssueCredentialRecord deletes an exsiting record") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        bRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         count <- repo.deleteIssueCredentialRecord(aRecord.id)
@@ -171,8 +172,8 @@ object CredentialRepositorySpecSuite {
     test("deleteIssueCredentialRecord does nothing for an unknown record") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        bRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         count <- repo.deleteIssueCredentialRecord(DidCommID())
@@ -188,8 +189,8 @@ object CredentialRepositorySpecSuite {
       for {
         repo <- ZIO.service[CredentialRepository]
         thid = DidCommID()
-        aRecord = issueCredentialRecord.copy(thid = thid)
-        bRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT).copy(thid = thid)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         record <- repo.getIssueCredentialRecordByThreadId(thid, false)
@@ -198,8 +199,8 @@ object CredentialRepositorySpecSuite {
     test("getIssueCredentialRecordByThreadId returns nothing for an unknown thid") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        bRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         record <- repo.getIssueCredentialRecordByThreadId(DidCommID(), false)
@@ -208,9 +209,9 @@ object CredentialRepositorySpecSuite {
     test("getIssueCredentialRecordsByStates returns valid records") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        bRecord = issueCredentialRecord
-        cRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT)
+        cRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
@@ -242,9 +243,9 @@ object CredentialRepositorySpecSuite {
     test("getIssueCredentialRecordsByStates returns an empty list if 'states' parameter is empty") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        bRecord = issueCredentialRecord
-        cRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT)
+        cRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
@@ -256,30 +257,59 @@ object CredentialRepositorySpecSuite {
     test("getValidIssuedCredentials returns valid records") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
-        bRecord = issueCredentialRecord
-        cRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
+        bRecord = issueCredentialRecord(CredentialFormat.JWT)
+        cRecord = issueCredentialRecord(CredentialFormat.JWT)
+        dRecord = issueCredentialRecord(CredentialFormat.AnonCreds)
         _ <- repo.createIssueCredentialRecord(aRecord)
         _ <- repo.createIssueCredentialRecord(bRecord)
         _ <- repo.createIssueCredentialRecord(cRecord)
+        _ <- repo.createIssueCredentialRecord(dRecord)
         _ <- repo.updateWithIssuedRawCredential(
           aRecord.id,
           IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
           "RAW_CREDENTIAL_DATA",
+          None,
+          None,
           ProtocolState.CredentialReceived
         )
-        records <- repo.getValidIssuedCredentials(Seq(aRecord.id, bRecord.id))
+        _ <- repo.updateWithIssuedRawCredential(
+          dRecord.id,
+          IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
+          "RAW_CREDENTIAL_DATA",
+          None,
+          None,
+          ProtocolState.CredentialReceived
+        )
+        records <- repo.getValidIssuedCredentials(Seq(aRecord.id, bRecord.id, dRecord.id))
       } yield {
-        assertTrue(records.size == 1) &&
+        assertTrue(records.size == 2) &&
         assertTrue(
-          records.contains(ValidIssuedCredentialRecord(aRecord.id, Some("RAW_CREDENTIAL_DATA"), aRecord.subjectId))
+          records.contains(
+            ValidIssuedCredentialRecord(
+              dRecord.id,
+              Some("RAW_CREDENTIAL_DATA"),
+              CredentialFormat.JWT,
+              aRecord.subjectId
+            )
+          )
+        )
+        assertTrue(
+          records.contains(
+            ValidIssuedCredentialRecord(
+              dRecord.id,
+              Some("RAW_CREDENTIAL_DATA"),
+              CredentialFormat.AnonCreds,
+              aRecord.subjectId
+            )
+          )
         )
       }
     },
     test("updateCredentialRecordProtocolState updates the record") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
         count <- repo.updateCredentialRecordProtocolState(
@@ -297,7 +327,7 @@ object CredentialRepositorySpecSuite {
     test("updateCredentialRecordProtocolState doesn't update the record for invalid from state") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
         count <- repo.updateCredentialRecordProtocolState(
@@ -315,7 +345,7 @@ object CredentialRepositorySpecSuite {
     test("updateWithRequestCredential updates record") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
         request = requestCredential
@@ -334,7 +364,7 @@ object CredentialRepositorySpecSuite {
     test("updateWithIssueCredential updates record") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
         issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
@@ -353,7 +383,7 @@ object CredentialRepositorySpecSuite {
     test("updateWithIssuedRawCredential updates record") {
       for {
         repo <- ZIO.service[CredentialRepository]
-        aRecord = issueCredentialRecord
+        aRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.createIssueCredentialRecord(aRecord)
         record <- repo.getIssueCredentialRecord(aRecord.id)
         issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
@@ -361,6 +391,8 @@ object CredentialRepositorySpecSuite {
           aRecord.id,
           issueCredential,
           "RAW_CREDENTIAL_DATA",
+          Some("schemaUri"),
+          Some("credentialDefinitionUri"),
           ProtocolState.CredentialReceived
         )
         updatedRecord <- repo.getIssueCredentialRecord(aRecord.id)
@@ -369,10 +401,12 @@ object CredentialRepositorySpecSuite {
         assertTrue(record.get.issueCredentialData.isEmpty) &&
         assertTrue(updatedRecord.get.issueCredentialData.contains(issueCredential)) &&
         assertTrue(updatedRecord.get.issuedCredentialRaw.contains("RAW_CREDENTIAL_DATA"))
+        assertTrue(updatedRecord.get.credentialDefinitionUri.contains("credentialDefinitionUri"))
+        assertTrue(updatedRecord.get.schemaUri.contains("schemaUri"))
       }
     },
     test("updateFail (fail one retry) updates record") {
-      val aRecord = issueCredentialRecord
+      val aRecord = issueCredentialRecord(CredentialFormat.JWT)
 
       val failReason = Some("Just to test")
       for {
@@ -402,7 +436,7 @@ object CredentialRepositorySpecSuite {
       }
     },
     test("updateFail (fail all retry) updates record") {
-      val aRecord = issueCredentialRecord
+      val aRecord = issueCredentialRecord(CredentialFormat.JWT)
 
       for {
         repo <- ZIO.service[CredentialRepository]
@@ -443,8 +477,8 @@ object CredentialRepositorySpecSuite {
       val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
       for {
         repo <- ZIO.service[CredentialRepository]
-        record1 = issueCredentialRecord
-        record2 = issueCredentialRecord
+        record1 = issueCredentialRecord(CredentialFormat.JWT)
+        record2 = issueCredentialRecord(CredentialFormat.JWT)
         count1 <- repo.createIssueCredentialRecord(record1).provide(wallet1)
         count2 <- repo.createIssueCredentialRecord(record2).provide(wallet2)
         ownWalletRecords1 <- repo.getIssueCredentialRecords(false).provide(wallet1)
@@ -466,8 +500,8 @@ object CredentialRepositorySpecSuite {
       val newState = IssueCredentialRecord.ProtocolState.OfferReceived
       for {
         repo <- ZIO.service[CredentialRepository]
-        record1 = issueCredentialRecord
-        record2 = issueCredentialRecord
+        record1 = issueCredentialRecord(CredentialFormat.JWT)
+        record2 = issueCredentialRecord(CredentialFormat.JWT)
         count1 <- repo.createIssueCredentialRecord(record1).provide(wallet1)
         update1 <- repo.updateWithSubjectId(record2.id, "my-id", newState).provide(wallet2)
         update2 <- repo.updateAfterFail(record2.id, Some("fail reason")).provide(wallet2)
@@ -486,7 +520,7 @@ object CredentialRepositorySpecSuite {
       val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
       for {
         repo <- ZIO.service[CredentialRepository]
-        record1 = issueCredentialRecord
+        record1 = issueCredentialRecord(CredentialFormat.JWT)
         count1 <- repo.createIssueCredentialRecord(record1).provide(wallet1)
         delete1 <- repo.deleteIssueCredentialRecord(record1.id).provide(wallet2)
       } yield assert(count1)(equalTo(1)) && assert(delete1)(isZero)
@@ -498,8 +532,8 @@ object CredentialRepositorySpecSuite {
       val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
       for {
         repo <- ZIO.service[CredentialRepository]
-        record1 = issueCredentialRecord
-        record2 = issueCredentialRecord
+        record1 = issueCredentialRecord(CredentialFormat.JWT)
+        record2 = issueCredentialRecord(CredentialFormat.JWT)
         count1 <- repo.createIssueCredentialRecord(record1).provide(wallet1)
         count2 <- repo.createIssueCredentialRecord(record2).provide(wallet2)
         _ <- repo

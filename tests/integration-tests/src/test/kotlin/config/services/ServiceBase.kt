@@ -2,20 +2,27 @@ package config.services
 
 import com.sksamuel.hoplite.ConfigAlias
 import org.testcontainers.containers.ComposeContainer
+import org.testcontainers.lifecycle.Startable
 
-interface ServiceBase {
+interface ServiceBase : Startable {
 
-    val env: ComposeContainer
+    val container: ComposeContainer
 
     @ConfigAlias("keep_running")
     val keepRunning: Boolean
-    fun start() {
-        env.start()
+
+    override fun start() {
+        container.start()
+        postStart()
     }
 
-    fun stop() {
+    fun postStart() {
+
+    }
+
+    override fun stop() {
         if (!keepRunning) {
-            env.stop()
+            container.stop()
         }
     }
 }

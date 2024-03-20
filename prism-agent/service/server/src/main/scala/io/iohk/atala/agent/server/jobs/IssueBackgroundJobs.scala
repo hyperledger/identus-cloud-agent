@@ -2,6 +2,7 @@ package io.iohk.atala.agent.server.jobs
 
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.jobs.BackgroundJobError.ErrorResponseReceivedFromPeerAgent
+import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
@@ -12,7 +13,6 @@ import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.metrics.*
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
 
 object IssueBackgroundJobs extends BackgroundJobsHelper {
 
@@ -148,6 +148,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               _,
+              _,
               Role.Issuer,
               _,
               _,
@@ -202,6 +203,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               _,
+              _,
               CredentialFormat.JWT,
               Role.Holder,
               Some(subjectId),
@@ -237,6 +239,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
 
         case IssueCredentialRecord(
               id,
+              _,
               _,
               _,
               _,
@@ -278,6 +281,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
         // Request should be sent from Holder to Issuer
         case IssueCredentialRecord(
               id,
+              _,
               _,
               _,
               _,
@@ -339,6 +343,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               _,
+              _,
               Role.Issuer,
               _,
               _,
@@ -377,6 +382,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               _,
+              _,
               CredentialFormat.JWT,
               Role.Issuer,
               _,
@@ -400,7 +406,10 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
             walletAccessContext <- buildWalletAccessContextLayer(issue.from)
             result <- (for {
               credentialService <- ZIO.service[CredentialService]
-              _ <- credentialService.generateJWTCredential(id).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+              config <- ZIO.service[AppConfig]
+              _ <- credentialService
+                .generateJWTCredential(id, config.pollux.statusListRegistry.publicEndpointUrl)
+                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
             } yield ()).mapError(e => (walletAccessContext, e))
           } yield result
 
@@ -413,6 +422,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
 
         case IssueCredentialRecord(
               id,
+              _,
               _,
               _,
               _,
@@ -454,6 +464,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
         // Credential has been generated and can be sent directly to the Holder
         case IssueCredentialRecord(
               id,
+              _,
               _,
               _,
               _,

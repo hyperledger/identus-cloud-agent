@@ -1,4 +1,5 @@
 package io.iohk.atala.api.http
+
 import sttp.model.StatusCode
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.{oneOfVariantValueMatcher, *}

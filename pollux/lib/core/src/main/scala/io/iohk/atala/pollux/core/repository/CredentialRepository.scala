@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.core.repository
 
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
-import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
+import io.iohk.atala.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -53,7 +53,7 @@ trait CredentialRepository {
   def updateWithAnonCredsRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
-      metadata: CredentialRequestMetadata,
+      metadata: AnoncredCredentialRequestMetadata,
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int]
 
@@ -67,12 +67,18 @@ trait CredentialRepository {
       recordId: DidCommID,
       issue: IssueCredential,
       issuedRawCredential: String,
+      schemaUri: Option[String],
+      credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int]
 
   def deleteIssueCredentialRecord(recordId: DidCommID): RIO[WalletAccessContext, Int]
 
   def getValidIssuedCredentials(recordId: Seq[DidCommID]): RIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]]
+
+  def getValidAnoncredIssuedCredentials(
+      recordIds: Seq[DidCommID]
+  ): RIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]]
 
   def updateAfterFail(
       recordId: DidCommID,

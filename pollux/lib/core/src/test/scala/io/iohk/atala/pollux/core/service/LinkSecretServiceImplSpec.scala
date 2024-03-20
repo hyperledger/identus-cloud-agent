@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
-import io.iohk.atala.pollux.anoncreds.LinkSecret
+import io.iohk.atala.pollux.anoncreds.AnoncredLinkSecret
 import io.iohk.atala.shared.models.WalletId.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
@@ -30,7 +30,7 @@ object LinkSecretServiceImplSpec extends ZIOSpecDefault {
           record1 <- svc.fetchOrCreate()
           storage <- ZIO.service[GenericSecretStorage]
           maybeDidSecret <- storage
-            .get[String, LinkSecret](LinkSecretServiceImpl.defaultLinkSecretId)
+            .get[String, AnoncredLinkSecret](LinkSecretServiceImpl.defaultLinkSecretId)
         } yield {
           assertTrue(record.id == LinkSecretServiceImpl.defaultLinkSecretId)
           assertTrue(record == record1)

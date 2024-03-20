@@ -9,7 +9,7 @@ import io.iohk.atala.castor.core.service.MockDIDService
 import io.iohk.atala.mercury.model
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.issuecredential.*
-import io.iohk.atala.pollux.anoncreds.Credential
+import io.iohk.atala.pollux.anoncreds.AnoncredCredential
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
@@ -82,7 +82,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
-            assertTrue(record.schemaId.isEmpty) &&
+            assertTrue(record.schemaUri.isEmpty) &&
             assertTrue(record.validityPeriod == validityPeriod) &&
             assertTrue(record.automaticIssuance == automaticIssuance) &&
             assertTrue(record.role == Role.Issuer) &&
@@ -158,7 +158,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
             assertTrue(
-              record.schemaId.contains("resource:///vc-schema-example.json")
+              record.schemaUri.contains("resource:///vc-schema-example.json")
             ) &&
             assertTrue(record.validityPeriod == validityPeriod) &&
             assertTrue(record.automaticIssuance == automaticIssuance) &&
@@ -290,7 +290,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
         } yield {
           assertTrue(holderRecord.thid.toString == offer.thid.get) &&
           assertTrue(holderRecord.updatedAt.isEmpty) &&
-          assertTrue(holderRecord.schemaId.isEmpty) &&
+          assertTrue(holderRecord.schemaUri.isEmpty) &&
           assertTrue(holderRecord.validityPeriod.isEmpty) &&
           assertTrue(holderRecord.automaticIssuance.isEmpty) &&
           assertTrue(holderRecord.role == Role.Holder) &&
@@ -519,7 +519,10 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           // Issuer accepts request
           requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(issuerRecordId)
           // Issuer generates credential
-          credentialGenerateRecord <- issuerSvc.generateJWTCredential(issuerRecordId)
+          credentialGenerateRecord <- issuerSvc.generateJWTCredential(
+            issuerRecordId,
+            "https://test-status-list.registry"
+          )
           // Issuer sends credential
           _ <- issuerSvc.markCredentialSent(issuerRecordId)
           msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.asJson.as[Message])
@@ -602,7 +605,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           assertTrue(record.issueCredentialData.get.attachments.head.data match
             case model.Base64(value) =>
               val ba = new String(Base64.getUrlDecoder.decode(value))
-              Credential(ba).credDefId == credDefId
+              AnoncredCredential(ba).credDefId == credDefId
             case _ => false
           )
         }

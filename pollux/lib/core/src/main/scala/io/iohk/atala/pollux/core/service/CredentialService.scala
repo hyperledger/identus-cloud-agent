@@ -32,10 +32,10 @@ trait CredentialService {
       pairwiseHolderDID: DidId,
       thid: DidCommID,
       credentialDefinitionGUID: UUID,
+      credentialDefinitionId: String,
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
-      automaticIssuance: Option[Boolean],
-      credentialDefinitionId: String
+      automaticIssuance: Option[Boolean]
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   /** Return a list of records as well as a count of all filtered items */
@@ -93,6 +93,7 @@ trait CredentialService {
 
   def generateJWTCredential(
       recordId: DidCommID,
+      statusListRegistryUrl: String,
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def generateAnonCredsCredential(

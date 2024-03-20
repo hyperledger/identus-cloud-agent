@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.core.repository
 
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
-import io.iohk.atala.pollux.anoncreds.CredentialRequestMetadata
+import io.iohk.atala.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.error.CredentialRepositoryError.*
@@ -98,6 +98,8 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       issue: IssueCredential,
       issuedRawCredential: String,
+      schemaUri: Option[String],
+      credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int] = {
     for {
@@ -111,6 +113,8 @@ class CredentialRepositoryInMemory(
                 recordId,
                 record.copy(
                   updatedAt = Some(Instant.now),
+                  schemaUri = schemaUri,
+                  credentialDefinitionUri = credentialDefinitionUri,
                   issueCredentialData = Some(issue),
                   issuedCredentialRaw = Some(issuedRawCredential),
                   protocolState = protocolState,
@@ -133,7 +137,35 @@ class CredentialRepositoryInMemory(
       store <- storeRef.get
     } yield store.values
       .filter(rec => recordId.contains(rec.id) && rec.issuedCredentialRaw.isDefined)
-      .map(rec => ValidIssuedCredentialRecord(rec.id, rec.issuedCredentialRaw, rec.subjectId))
+      .map(rec => ValidIssuedCredentialRecord(rec.id, rec.issuedCredentialRaw, rec.credentialFormat, rec.subjectId))
+      .toSeq
+  }
+
+  override def getValidAnoncredIssuedCredentials(
+      recordId: Seq[DidCommID]
+  ): RIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]] = {
+    for {
+      storeRef <- walletStoreRef
+      store <- storeRef.get
+    } yield store.values
+      .filter(rec =>
+        recordId.contains(
+          rec.id
+        ) && rec.issueCredentialData.isDefined
+          && rec.schemaUri.isDefined
+          && rec.credentialDefinitionUri.isDefined
+          && rec.credentialFormat == CredentialFormat.AnonCreds
+      )
+      .map(rec =>
+        ValidFullIssuedCredentialRecord(
+          rec.id,
+          rec.issueCredentialData,
+          rec.credentialFormat,
+          rec.schemaUri,
+          rec.credentialDefinitionUri,
+          rec.subjectId
+        )
+      )
       .toSeq
   }
 
@@ -287,7 +319,7 @@ class CredentialRepositoryInMemory(
   override def updateWithAnonCredsRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
-      metadata: CredentialRequestMetadata,
+      metadata: AnoncredCredentialRequestMetadata,
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, RuntimeFlags] = {
     for {

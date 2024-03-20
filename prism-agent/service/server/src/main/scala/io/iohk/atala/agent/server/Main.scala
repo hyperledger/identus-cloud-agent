@@ -18,6 +18,7 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
 import io.iohk.atala.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
 import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
+import io.iohk.atala.credentialstatus.controller.CredentialStatusControllerImpl
 import io.iohk.atala.event.controller.EventControllerImpl
 import io.iohk.atala.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
@@ -39,6 +40,7 @@ import io.iohk.atala.pollux.sql.repository.{
   JdbcCredentialDefinitionRepository,
   JdbcCredentialRepository,
   JdbcCredentialSchemaRepository,
+  JdbcCredentialStatusListRepository,
   JdbcPresentationRepository,
   JdbcVerificationPolicyRepository,
   Migrations as PolluxMigrations
@@ -95,7 +97,6 @@ object MainApp extends ZIOAppDefault {
     _ <- ConnectMigrations.validateRLS.provide(RepoModule.connectContextAwareTransactorLayer)
     _ <- AgentMigrations.validateRLS.provide(RepoModule.agentContextAwareTransactorLayer)
   } yield ()
-
   override def run: ZIO[Any, Throwable, Unit] = {
 
     val app = for {
@@ -142,6 +143,7 @@ object MainApp extends ZIOAppDefault {
           DIDControllerImpl.layer,
           DIDRegistrarControllerImpl.layer,
           IssueControllerImpl.layer,
+          CredentialStatusControllerImpl.layer,
           PresentProofControllerImpl.layer,
           VerificationPolicyControllerImpl.layer,
           EntityControllerImpl.layer,
@@ -157,11 +159,12 @@ object MainApp extends ZIOAppDefault {
           ConnectionServiceImpl.layer >>> ConnectionServiceNotifier.layer,
           CredentialSchemaServiceImpl.layer,
           CredentialDefinitionServiceImpl.layer,
+          CredentialStatusListServiceImpl.layer,
           LinkSecretServiceImpl.layer >>> CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
           EntityServiceImpl.layer,
           ManagedDIDServiceWithEventNotificationImpl.layer,
-          PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
+          LinkSecretServiceImpl.layer >>> PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
           VerificationPolicyServiceImpl.layer,
           WalletManagementServiceImpl.layer,
           // authentication
@@ -181,6 +184,7 @@ object MainApp extends ZIOAppDefault {
           RepoModule.agentTransactorLayer >>> JdbcAuthenticationRepository.layer,
           RepoModule.connectContextAwareTransactorLayer ++ RepoModule.connectTransactorLayer >>> JdbcConnectionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialStatusListRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,

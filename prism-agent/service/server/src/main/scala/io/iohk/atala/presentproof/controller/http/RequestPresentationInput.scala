@@ -1,9 +1,10 @@
 package io.iohk.atala.presentproof.controller.http
 
 import io.iohk.atala.api.http.Annotation
+import io.iohk.atala.pollux.core.service.serdes.*
 import io.iohk.atala.presentproof.controller.http.RequestPresentationInput.annotations
-import sttp.tapir.{Schema, Validator}
 import sttp.tapir.Schema.annotations.{description, encodedExample}
+import sttp.tapir.{Schema, Validator}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID
@@ -18,6 +19,9 @@ final case class RequestPresentationInput(
     @description(annotations.proofs.description)
     @encodedExample(annotations.proofs.example)
     proofs: Seq[ProofRequestAux],
+    @description(annotations.anoncredPresentationRequest.description)
+    @encodedExample(annotations.anoncredPresentationRequest.example)
+    anoncredPresentationRequest: Option[AnoncredPresentationRequestV1],
     @description(annotations.credentialFormat.description)
     @encodedExample(annotations.credentialFormat.example)
     credentialFormat: Option[String],
@@ -42,6 +46,54 @@ object RequestPresentationInput {
           example = Seq.empty
         )
 
+    object anoncredPresentationRequest
+        extends Annotation[Option[AnoncredPresentationRequestV1]](
+          description = "Anoncred Presentation Request",
+          example = Some(
+            AnoncredPresentationRequestV1(
+              requested_attributes = Map(
+                "attribute1" -> AnoncredRequestedAttributeV1(
+                  "Attribute 1",
+                  List(
+                    Map(
+                      "cred_def_id" -> "credential_definition_id_of_attribute1"
+                    )
+                  ),
+                  Some(
+                    AnoncredNonRevokedIntervalV1(
+                      Some(1635734400),
+                      Some(1735734400)
+                    )
+                  )
+                )
+              ),
+              requested_predicates = Map(
+                "predicate1" ->
+                  AnoncredRequestedPredicateV1(
+                    "Predicate 1",
+                    ">=",
+                    18,
+                    List(
+                      Map(
+                        "schema_id" -> "schema_id_of_predicate1"
+                      )
+                    ),
+                    Some(
+                      AnoncredNonRevokedIntervalV1(
+                        Some(1635734400),
+                        None
+                      )
+                    )
+                  )
+              ),
+              name = "Example Presentation Request",
+              nonce = "1234567890",
+              version = "1.0",
+              non_revoked = None
+            )
+          )
+        )
+
     object credentialFormat
         extends Annotation[Option[String]](
           description = "The credential format (default to 'JWT')",
@@ -60,6 +112,16 @@ object RequestPresentationInput {
 
   given decoder: JsonDecoder[RequestPresentationInput] =
     DeriveJsonDecoder.gen[RequestPresentationInput]
+
+  import AnoncredPresentationRequestV1.given
+
+  given Schema[AnoncredPresentationRequestV1] = Schema.derived
+
+  given Schema[AnoncredRequestedAttributeV1] = Schema.derived
+
+  given Schema[AnoncredRequestedPredicateV1] = Schema.derived
+
+  given Schema[AnoncredNonRevokedIntervalV1] = Schema.derived
 
   given schema: Schema[RequestPresentationInput] = Schema.derived
 }

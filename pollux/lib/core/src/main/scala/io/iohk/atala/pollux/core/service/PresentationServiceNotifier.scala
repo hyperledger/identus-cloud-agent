@@ -3,16 +3,17 @@ package io.iohk.atala.pollux.core.service
 import io.iohk.atala.event.notification.{Event, EventNotificationService}
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProofType, ProposePresentation, RequestPresentation}
+import io.iohk.atala.pollux.anoncreds.AnoncredPresentation
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{DidCommID, PresentationRecord}
+import io.iohk.atala.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
 import io.iohk.atala.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import io.iohk.atala.shared.models.WalletAccessContext
-import zio.{URLayer, ZIO, ZLayer, IO}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.time.Instant
 import java.util.UUID
-import io.iohk.atala.pollux.core.model.CredentialFormat
 
 class PresentationServiceNotifier(
     svc: PresentationService,
@@ -21,24 +22,39 @@ class PresentationServiceNotifier(
 
   private val presentationUpdatedEvent = "PresentationUpdated"
 
-  override def createPresentationRecord(
+  override def createJwtPresentationRecord(
       pairwiseVerifierDID: DidId,
       pairwiseProverDID: DidId,
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       options: Option[Options],
-      format: CredentialFormat,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(
-      svc.createPresentationRecord(
+      svc.createJwtPresentationRecord(
         pairwiseVerifierDID,
         pairwiseProverDID,
         thid,
         connectionId,
         proofTypes,
-        options,
-        format: CredentialFormat
+        options
+      )
+    )
+
+  def createAnoncredPresentationRecord(
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: DidId,
+      thid: DidCommID,
+      connectionId: Option[String],
+      presentationRequest: AnoncredPresentationRequestV1
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+    notifyOnSuccess(
+      svc.createAnoncredPresentationRecord(
+        pairwiseVerifierDID,
+        pairwiseProverDID,
+        thid,
+        connectionId,
+        presentationRequest
       )
     )
 
@@ -63,6 +79,13 @@ class PresentationServiceNotifier(
       credentialsToUse: Seq[String]
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(svc.acceptRequestPresentation(recordId, credentialsToUse))
+
+  override def acceptAnoncredRequestPresentation(
+      recordId: DidCommID,
+      credentialsToUse: AnoncredCredentialProofsV1
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = notifyOnSuccess(
+    svc.acceptAnoncredRequestPresentation(recordId, credentialsToUse)
+  )
 
   override def rejectRequestPresentation(
       recordId: DidCommID
@@ -94,6 +117,15 @@ class PresentationServiceNotifier(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(svc.markPresentationVerificationFailed(recordId))
+
+  override def verifyAnoncredPresentation(
+      presentation: Presentation,
+      requestPresentation: RequestPresentation,
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+    notifyOnSuccess(
+      svc.verifyAnoncredPresentation(presentation, requestPresentation, recordId)
+    )
 
   override def acceptPresentation(
       recordId: DidCommID
@@ -128,12 +160,27 @@ class PresentationServiceNotifier(
   ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] =
     svc.getPresentationRecords(ignoreWithZeroRetries)
 
-  override def createPresentationPayloadFromRecord(
+  override def createJwtPresentationPayloadFromRecord(
       record: DidCommID,
       issuer: Issuer,
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, PresentationPayload] =
-    svc.createPresentationPayloadFromRecord(record, issuer, issuanceDate)
+    svc.createJwtPresentationPayloadFromRecord(record, issuer, issuanceDate)
+
+  override def createAnoncredPresentationPayloadFromRecord(
+      record: DidCommID,
+      anoncredCredentialProof: AnoncredCredentialProofsV1,
+      issuanceDate: Instant
+  ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] =
+    svc.createAnoncredPresentationPayloadFromRecord(record, anoncredCredentialProof, issuanceDate)
+
+  override def createAnoncredPresentation(
+      requestPresentation: RequestPresentation,
+      recordId: DidCommID,
+      anoncredCredentialProof: AnoncredCredentialProofsV1,
+      issuanceDate: Instant
+  ): ZIO[WalletAccessContext, PresentationError, Presentation] =
+    svc.createAnoncredPresentation(requestPresentation, recordId, anoncredCredentialProof, issuanceDate)
 
   override def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,
