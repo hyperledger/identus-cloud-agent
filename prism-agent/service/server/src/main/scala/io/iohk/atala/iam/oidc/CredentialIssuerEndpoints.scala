@@ -38,9 +38,6 @@ object CredentialIssuerEndpoints {
     .securityIn(apiKeyHeader)
     .securityIn(jwtAuthHeader)
 
-  private val baseHolderFacingEndpoint = baseEndpoint
-    .securityIn(jwtAuthHeader)
-
   val credentialEndpointErrorOutput = oneOf[Either[ErrorResponse, CredentialErrorResponse]](
     oneOfVariantValueMatcher(StatusCode.BadRequest, jsonBody[Either[ErrorResponse, CredentialErrorResponse]]) {
       case Right(CredentialErrorResponse(code, _, _, _)) if code.toHttpStatusCode == StatusCode.BadRequest => true
@@ -62,9 +59,10 @@ object CredentialIssuerEndpoints {
     ExtendedErrorResponse,
     CredentialResponse,
     Any
-  ] = baseHolderFacingEndpoint.post
+  ] = baseEndpoint.post
     .in("credentials")
     .in(jsonBody[CredentialRequest])
+    .securityIn(jwtAuthHeader)
     .out(
       statusCode(StatusCode.Ok).description("Credential issued successfully"),
     )
@@ -131,4 +129,20 @@ object CredentialIssuerEndpoints {
       .description(
         """The endpoint that creates an issuance session for the OIDC VC endpoints""".stripMargin
       )
+
+  val issuerMetadataEndpoint: Endpoint[
+    Unit,
+    (RequestContext, String),
+    ErrorResponse,
+    IssuerMetadata,
+    Any
+  ] = baseEndpoint.get
+    .in(".well-known" / "openid-credential-issuer")
+    .out(
+      statusCode(StatusCode.Ok).description("Issuer Metadata successfully retrieved")
+    )
+    .out(jsonBody[IssuerMetadata])
+    .errorOut(EndpointOutputs.basicFailuresAndNotFound)
+    .name("getIssuerMetadata") // TODO: add endpoint documentation
+
 }

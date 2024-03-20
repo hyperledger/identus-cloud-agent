@@ -18,11 +18,13 @@ trait CredentialIssuerController {
       didRef: String,
       credentialRequest: CredentialRequest
   ): IO[ExtendedErrorResponse, CredentialResponse]
+
   def createCredentialOffer(
       ctx: RequestContext,
       didRef: String,
       credentialOfferRequest: CredentialOfferRequest
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialOfferResponse]
+
   def getNonce(
       ctx: RequestContext,
       didRef: String,
@@ -34,6 +36,11 @@ trait CredentialIssuerController {
       didRef: String,
       issuanceSessionRequest: IssuanceSessionRequest
   ): IO[ExtendedErrorResponse, Unit]
+
+  def getIssuerMetadata(
+      ctx: RequestContext,
+      didRef: String
+  ): IO[ErrorResponse, IssuerMetadata]
 }
 
 object CredentialIssuerController {
@@ -82,23 +89,26 @@ object CredentialIssuerController {
 
 case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssuerService: OIDCCredentialIssuerService)
     extends CredentialIssuerController {
+
   import CredentialIssuerController.Errors.*
   import OIDCCredentialIssuerService.Errors.*
 
-  def resolveIssuerDID(didRef: String): IO[ExtendedErrorResponse, CanonicalPrismDID] = {
+  private def parseIssuerDID[E](didRef: String, errorFn: (String, String) => E): IO[E, CanonicalPrismDID] = {
     for {
-      prismDID: PrismDID <- ZIO
+      prismDID <- ZIO
         .fromEither(PrismDID.fromString(didRef))
-        .mapError(didParsingError => badRequestInvalidDID(didRef, didParsingError))
-      // FIXME: do we need to resolve it if the DID document is not used?
-      // resolution <- didService
-      //   .resolveDID(prismDID)
-      //   .mapError(didResolutionError => badRequestInvalidDID(didRef, didResolutionError.message))
-      // canonicalDID <- ZIO
-      //   .fromOption(resolution.map(_._2.id))
-      //   .mapError(_ => badRequestDIDResolutionFailed(didRef, s"The DID $didRef is not resolvable"))
+        .mapError[E](didParsingError => errorFn(didRef, didParsingError))
     } yield prismDID.asCanonical
   }
+
+  private def parseIssuerDIDBasicError(didRef: String): IO[ErrorResponse, CanonicalPrismDID] =
+    parseIssuerDID(
+      didRef,
+      (didRef, detail) => ErrorResponse.badRequest(detail = Some(s"Invalid DID input $didRef. $detail"))
+    )
+
+  private def parseIssuerDIDOidc4vcError(difRef: String): IO[ExtendedErrorResponse, CanonicalPrismDID] =
+    parseIssuerDID(difRef, badRequestInvalidDID)
 
   def issueCredential(
       ctx: RequestContext,
@@ -128,7 +138,7 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
     maybeProof match {
       case Some(JwtProof(proofType, jwt)) =>
         for {
-          canonicalPrismDID: CanonicalPrismDID <- resolveIssuerDID(didRef)
+          canonicalPrismDID: CanonicalPrismDID <- parseIssuerDIDOidc4vcError(didRef)
           _ <- ZIO
             .ifZIO(credentialIssuerService.verifyJwtProof(jwt))(
               ZIO.unit,
@@ -164,9 +174,7 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
       credentialOfferRequest: CredentialOfferRequest
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialOfferResponse] = {
     for {
-      canonicalPrismDID <- ZIO
-        .fromEither(PrismDID.fromString(didRef))
-        .mapBoth(error => ErrorResponse.badRequest(detail = Some(s"Invalid DID input $didRef")), _.asCanonical)
+      canonicalPrismDID <- parseIssuerDIDBasicError(didRef)
       resp <- credentialIssuerService
         .createCredentialOffer(canonicalPrismDID, credentialOfferRequest.claims)
         .map(offer => CredentialOfferResponse(offer.offerUri))
@@ -218,13 +226,25 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
       issuanceSessionRequest: IssuanceSessionRequest
   ): IO[ExtendedErrorResponse, Unit] = {
     for {
-      canonicalPrismDID <- resolveIssuerDID(didRef)
+      canonicalPrismDID <- parseIssuerDIDOidc4vcError(didRef)
       issuanceSession = buildIssuanceSession(canonicalPrismDID, issuanceSessionRequest)
       _ <- credentialIssuerService
         .createIssuanceSession(issuanceSession)
         .mapError(ue => serverError(Some(s"Unexpected error while creating issuance session: ${ue.message}")))
     } yield ()
 
+  }
+
+  override def getIssuerMetadata(ctx: RequestContext, didRef: String): IO[ErrorResponse, IssuerMetadata] = {
+    // TODO: implement
+    for {
+      canonicalPrismDID <- parseIssuerDIDBasicError(didRef)
+      credentialIssuerBaseUrl = s"http://localhost:8080/prism-agent/oidc4vc/${canonicalPrismDID.toString}"
+    } yield IssuerMetadata(
+      credential_issuer = credentialIssuerBaseUrl,
+      authorization_servers = Some(Seq("TODO: return url")),
+      credential_endpoint = s"$credentialIssuerBaseUrl/credentials",
+    )
   }
 }
 

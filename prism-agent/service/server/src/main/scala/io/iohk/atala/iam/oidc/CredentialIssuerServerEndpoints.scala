@@ -71,11 +71,17 @@ case class CredentialIssuerServerEndpoints(
         }
       }
 
+  val issuerMetadataEndpoint: ZServerEndpoint[Any, Any] = CredentialIssuerEndpoints.issuerMetadataEndpoint
+    .zServerLogic {
+      { case (rc, didRef) => credentialIssuerController.getIssuerMetadata(rc, didRef).logTrace(rc) }
+    }
+
   val all: List[ZServerEndpoint[Any, Any]] = List(
     credentialServerEndpoint,
     nonceServerEndpoint,
     createCredentialOfferServerEndpoint,
-    issuanceSessionServerEndpoint
+    issuanceSessionServerEndpoint,
+    issuerMetadataEndpoint
   )
 }
 
