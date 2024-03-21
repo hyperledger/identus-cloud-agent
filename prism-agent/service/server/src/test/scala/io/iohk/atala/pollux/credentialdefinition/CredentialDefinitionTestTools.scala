@@ -12,9 +12,20 @@ import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
 import io.iohk.atala.pollux.core.repository.CredentialDefinitionRepository
-import io.iohk.atala.pollux.core.service.{CredentialDefinitionService, CredentialDefinitionServiceImpl, ResourceURIDereferencerImpl}
-import io.iohk.atala.pollux.credentialdefinition.controller.{CredentialDefinitionController, CredentialDefinitionControllerImpl}
-import io.iohk.atala.pollux.credentialdefinition.http.{CredentialDefinitionInput, CredentialDefinitionResponse, CredentialDefinitionResponsePage}
+import io.iohk.atala.pollux.core.service.{
+  CredentialDefinitionService,
+  CredentialDefinitionServiceImpl,
+  ResourceURIDereferencerImpl
+}
+import io.iohk.atala.pollux.credentialdefinition.controller.{
+  CredentialDefinitionController,
+  CredentialDefinitionControllerImpl
+}
+import io.iohk.atala.pollux.credentialdefinition.http.{
+  CredentialDefinitionInput,
+  CredentialDefinitionResponse,
+  CredentialDefinitionResponsePage
+}
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialDefinitionRepository
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport

@@ -14,7 +14,11 @@ import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
-import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse, CredentialSchemaResponsePage}
+import io.iohk.atala.pollux.credentialschema.http.{
+  CredentialSchemaInput,
+  CredentialSchemaResponse,
+  CredentialSchemaResponsePage
+}
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport

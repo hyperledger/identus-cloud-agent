@@ -211,7 +211,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       maybeRecord <- findById(recordId)
       record <- ZIO.fromOption(maybeRecord).orDieWith(_ => RuntimeException(s"Record not found: $recordId"))
     } yield record
-  
+
   override def deleteById(recordId: UUID): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
       | DELETE

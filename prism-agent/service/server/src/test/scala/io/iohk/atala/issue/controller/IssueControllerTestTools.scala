@@ -12,7 +12,11 @@ import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
-import io.iohk.atala.issue.controller.http.{CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
+import io.iohk.atala.issue.controller.http.{
+  CreateIssueCredentialRecordRequest,
+  IssueCredentialRecord,
+  IssueCredentialRecordPage
+}
 import io.iohk.atala.pollux.anoncreds.AnoncredLinkSecretWithId
 import io.iohk.atala.pollux.core.model.CredentialFormat
 import io.iohk.atala.pollux.core.repository.{
