@@ -17,16 +17,19 @@ object CustomServerInterceptors {
   private val logger: Logger = getLogger
   private val endpointOutput = jsonBody[ErrorResponse]
 
-  private def handler(response: ErrorResponse, maybeCause: Option[Throwable] = None) = {
+  private def defectHandler(response: ErrorResponse, maybeCause: Option[Throwable] = None) = {
     val statusCode = sttp.model.StatusCode(response.status)
-    maybeCause match
-      case Some(cause) => logger.error(cause)(endpointOutput.codec.encode(response))
-      case None        => logger.debug(endpointOutput.codec.encode(response))
+    // Log defect as 'error' when status code matches a server error (5xx). Log other defects as 'debug'.
+    (statusCode, maybeCause) match
+      case (sc, Some(cause)) if sc.isServerError => logger.error(cause)(endpointOutput.codec.encode(response))
+      case (sc, None) if sc.isServerError        => logger.error(endpointOutput.codec.encode(response))
+      case (_, Some(cause))                      => logger.debug(cause)(endpointOutput.codec.encode(response))
+      case (_, None)                             => logger.debug(endpointOutput.codec.encode(response))
     Some(ValuedEndpointOutput(endpointOutput, response).prepend(sttp.tapir.statusCode, statusCode))
   }
 
   def exceptionHandler[F[_]]: ExceptionHandler[F] = ExceptionHandler.pure[F](ctx =>
-    handler(
+    defectHandler(
       ErrorResponse(
         StatusCode.InternalServerError.code,
         s"error:InternalServerError",
@@ -41,7 +44,7 @@ object CustomServerInterceptors {
   )
 
   def rejectHandler[F[_]]: RejectHandler[F] = RejectHandler.pure[F](resultFailure =>
-    handler(
+    defectHandler(
       ErrorResponse(
         StatusCode.NotFound.code,
         s"error:ResourcePathNotFound",
@@ -63,7 +66,7 @@ object CustomServerInterceptors {
       * next endpoint, and not return an error response straight to the caller. This is achieved by returning Some (stop
       * and report error) or None (try next endpoint) from the failure handler processing logic. Here we rely on
       * [[DefaultDecodeFailureHandler.respond]] to decide whether to stop or continue based on the nature of the
-      * reported failure.
+      * reported failure, and determine the error response status code.
       *
       * @see
       *   <a href="https://docs.oracle.com/en/java/">Tapir Decode failures handling</a>
@@ -71,7 +74,7 @@ object CustomServerInterceptors {
     DefaultDecodeFailureHandler.respond(ctx) match
       case Some((sc, _)) =>
         val details = FailureMessages.failureMessage(ctx)
-        handler(
+        defectHandler(
           ErrorResponse(
             sc.code,
             s"error:RequestBodyDecodingFailure",
