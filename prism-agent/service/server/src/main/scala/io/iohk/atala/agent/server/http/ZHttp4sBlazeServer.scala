@@ -25,7 +25,10 @@ class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry) {
     options <- ZIO.attempt {
       Http4sServerOptions
         .customiseInterceptors[Task]
-        .defaultHandlers(ErrorResponse.failureResponseHandler)
+        .exceptionHandler(CustomServerInterceptors.exceptionHandler)
+        .rejectHandler(CustomServerInterceptors.rejectHandler)
+        .decodeFailureHandler(CustomServerInterceptors.decodeFailureHandler)
+        .serverLog(None)
         .metricsInterceptor(
           srv.metricsInterceptor(
             ignoreEndpoints = Seq(SystemEndpoints.metrics)

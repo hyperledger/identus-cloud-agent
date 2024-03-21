@@ -2,6 +2,7 @@ package io.iohk.atala.issue.controller
 
 import com.typesafe.config.ConfigFactory
 import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.agent.server.http.CustomServerInterceptors
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
@@ -11,11 +12,7 @@ import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.connect.core.service.ConnectionServiceImpl
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
-import io.iohk.atala.issue.controller.http.{
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecord,
-  IssueCredentialRecordPage
-}
+import io.iohk.atala.issue.controller.http.{CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
 import io.iohk.atala.pollux.anoncreds.AnoncredLinkSecretWithId
 import io.iohk.atala.pollux.core.model.CredentialFormat
 import io.iohk.atala.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory}
@@ -107,7 +104,9 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
 
   def bootstrapOptions[F[_]](monadError: MonadError[F]): CustomiseInterceptors[F, Any] = {
     new CustomiseInterceptors[F, Any](_ => ())
-      .defaultHandlers(ErrorResponse.failureResponseHandler)
+      .exceptionHandler(CustomServerInterceptors.exceptionHandler)
+      .rejectHandler(CustomServerInterceptors.rejectHandler)
+      .decodeFailureHandler(CustomServerInterceptors.decodeFailureHandler)
   }
 
   def httpBackend(controller: IssueController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {

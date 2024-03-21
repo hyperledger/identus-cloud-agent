@@ -5,8 +5,6 @@ import sttp.model.StatusCode
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import sttp.tapir.generic.auto.*
-import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.server.model.ValuedEndpointOutput
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
 import java.util.UUID
@@ -37,9 +35,6 @@ object ErrorResponse {
   given decoder: zio.json.JsonDecoder[ErrorResponse] = DeriveJsonDecoder.gen[ErrorResponse]
 
   given schema: Schema[ErrorResponse] = Schema.derived
-
-  def failureResponseHandler(msg: String): ValuedEndpointOutput[_] =
-    ValuedEndpointOutput(jsonBody[ErrorResponse], ErrorResponse.badRequest(detail = Option(msg)))
 
   object annotations {
     object status

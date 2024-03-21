@@ -1,6 +1,7 @@
 package io.iohk.atala.pollux.schema
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import io.iohk.atala.agent.server.http.CustomServerInterceptors
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
@@ -13,11 +14,7 @@ import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
 import io.iohk.atala.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}
 import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
-import io.iohk.atala.pollux.credentialschema.http.{
-  CredentialSchemaInput,
-  CredentialSchemaResponse,
-  CredentialSchemaResponsePage
-}
+import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse, CredentialSchemaResponsePage}
 import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
@@ -84,7 +81,9 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
 
   def bootstrapOptions[F[_]](monadError: MonadError[F]) = {
     new CustomiseInterceptors[F, Any](_ => ())
-      .defaultHandlers(ErrorResponse.failureResponseHandler)
+      .exceptionHandler(CustomServerInterceptors.exceptionHandler)
+      .rejectHandler(CustomServerInterceptors.rejectHandler)
+      .decodeFailureHandler(CustomServerInterceptors.decodeFailureHandler)
   }
 
   def httpBackend(controller: CredentialSchemaController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {
