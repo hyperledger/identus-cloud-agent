@@ -8,12 +8,10 @@ import io.iohk.atala.connect.controller.http.{
   ConnectionsPage,
   CreateConnectionRequest
 }
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 import java.util.UUID
-import scala.util.matching.Regex
 
 trait ConnectionController {
   def createConnection(request: CreateConnectionRequest)(implicit
@@ -32,17 +30,4 @@ trait ConnectionController {
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, Connection]
 
-}
-
-object ConnectionController {
-  private val CamelCaseSplitRegex: Regex = "(([A-Z]?[a-z]+)|([A-Z]))".r
-
-  def toHttpError(error: ConnectionServiceError): ErrorResponse =
-    val simpleName = error.getClass.getSimpleName
-    ErrorResponse(
-      error.statusCode.code,
-      s"error:ConnectionServiceError:$simpleName",
-      CamelCaseSplitRegex.findAllIn(simpleName).mkString(" "),
-      Some(error.userFacingMessage)
-    )
 }

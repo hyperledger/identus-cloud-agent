@@ -12,7 +12,6 @@ import io.iohk.atala.api.util.PaginationUtils
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.castor.core.model.error.DIDResolutionError
 import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.issue.controller.IssueController.toHttpError
@@ -208,7 +207,7 @@ class IssueControllerImpl(
   ): ZIO[R, ErrorResponse, T] = {
     result mapError {
       case e: ErrorResponse                  => e
-      case connError: ConnectionServiceError => ConnectionController.toHttpError(connError)
+      case connError: ConnectionServiceError => connError.asInstanceOf[ErrorResponse] // use implicit conversion
       case credError: CredentialServiceError => toHttpError(credError)
       case resError: DIDResolutionError =>
         ErrorResponse.internalServerError(detail = Some(s"Unable to resolve PrismDID. ${resError.toString()}"))

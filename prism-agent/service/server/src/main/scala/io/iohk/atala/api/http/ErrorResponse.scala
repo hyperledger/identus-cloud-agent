@@ -1,13 +1,17 @@
 package io.iohk.atala.api.http
 
 import io.iohk.atala.api.http.ErrorResponse.annotations
+import io.iohk.atala.connect.controller.http.Connection
+import io.iohk.atala.shared.models.{Failure, WalletAccessContext}
 import sttp.model.StatusCode
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import sttp.tapir.generic.auto.*
+import zio.ZIO
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
 import java.util.UUID
+import scala.util.matching.Regex
 
 private val INSTANCE_URI_PREFIX = "error:instance:"
 
@@ -35,6 +39,19 @@ object ErrorResponse {
   given decoder: zio.json.JsonDecoder[ErrorResponse] = DeriveJsonDecoder.gen[ErrorResponse]
 
   given schema: Schema[ErrorResponse] = Schema.derived
+
+  private val CamelCaseSplitRegex: Regex = "(([A-Z]?[a-z]+)|([A-Z]))".r
+  given failureToErrorResponseConversion[R, A]: Conversion[ZIO[R, Failure, A], ZIO[R, ErrorResponse, A]] = { effect =>
+    effect.mapError { failure =>
+      val simpleName = failure.getClass.getSimpleName
+      ErrorResponse(
+        failure.statusCode.code,
+        s"error:ConnectionServiceError:$simpleName",
+        CamelCaseSplitRegex.findAllIn(simpleName).mkString(" "),
+        Some(failure.userFacingMessage)
+      )
+    }
+  }
 
   object annotations {
     object status
