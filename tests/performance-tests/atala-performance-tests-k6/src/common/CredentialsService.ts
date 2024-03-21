@@ -201,7 +201,7 @@ export class CredentialsService extends HttpService {
     do {
       // console.log(`Waiting for credential offer with thid=${thid}`)
       record = this.getCredentialRecords(thid).find(
-        r => r.thid === thid && r.protocolState === "OfferReceived"
+          r => r.thid === thid && r.protocolState === "OfferReceived"
       );
       if (record) {
         return record;

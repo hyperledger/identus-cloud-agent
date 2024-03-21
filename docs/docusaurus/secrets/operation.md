@@ -19,6 +19,7 @@ PRISM agent uses the following environment variables for secret management.
 | `VAULT_TOKEN`            | The token for accessing HashiCorp Vault                         | -                       |
 | `VAULT_APPROLE_ROLE_ID`  | The `role_id` for HashiCorp Vault authentication with AppRole   | -                       |
 | `VAULT_APPROLE_SECRET_ID`| The `secret_id` for HashiCorp Vault authentication with AppRole | -                       |
+| `VAULT_USE_SEMANTIC_PATH`| Enable full path convention for vault secret path               | true                    |
 | `DEFAULT_WALLET_SEED`    | The seed used for DID key management for the default wallet     | -                       |
 
 ## Storage backend configuration

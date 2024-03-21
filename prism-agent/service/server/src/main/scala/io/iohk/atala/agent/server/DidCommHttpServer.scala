@@ -21,13 +21,13 @@ import io.iohk.atala.mercury.model.error.*
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.mercury.protocol.issuecredential.*
 import io.iohk.atala.mercury.protocol.presentproof.*
+import io.iohk.atala.mercury.protocol.revocationnotificaiton.RevocationNotification
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.http.*
-
 import java.util.UUID
 
 object DidCommHttpServer {
@@ -128,6 +128,7 @@ object DidCommHttpServer {
         _ <- (handleConnect orElse
           handleIssueCredential orElse
           handlePresentProof orElse
+          revocationNotification orElse
           handleUnknownMessage)(msgAndContext._1).provideSomeLayer(ZLayer.succeed(msgAndContext._2))
       } yield ()
     }
@@ -219,6 +220,14 @@ object DidCommHttpServer {
         _ <- ZIO.logInfo("As a Verifier in present-proof got Presentation: " + presentation)
         service <- ZIO.service[PresentationService]
         _ <- service.receivePresentation(presentation)
+      } yield ()
+  }
+
+  private val revocationNotification: PartialFunction[Message, ZIO[Any, Throwable, Unit]] = {
+    case msg if msg.piuri == RevocationNotification.`type` =>
+      for {
+        revocationNotification <- ZIO.attempt(RevocationNotification.readFromMessage(msg))
+        _ <- ZIO.logInfo("Got RevocationNotification: " + revocationNotification)
       } yield ()
   }
 

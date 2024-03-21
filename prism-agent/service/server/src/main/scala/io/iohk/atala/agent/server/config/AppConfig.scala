@@ -55,12 +55,15 @@ object ValidatedVaultConfig {
 
 final case class PolluxConfig(
     database: DatabaseConfig,
+    statusListRegistry: StatusListRegistryConfig,
     issueBgJobRecordsLimit: Int,
     issueBgJobRecurrenceDelay: Duration,
     issueBgJobProcessingParallelism: Int,
     presentationBgJobRecordsLimit: Int,
     presentationBgJobRecurrenceDelay: Duration,
     presentationBgJobProcessingParallelism: Int,
+    syncRevocationStatusesBgJobRecurrenceDelay: Duration,
+    syncRevocationStatusesBgJobProcessingParallelism: Int,
 )
 final case class ConnectConfig(
     database: DatabaseConfig,
@@ -73,6 +76,10 @@ final case class ConnectConfig(
 final case class PrismNodeConfig(service: GrpcServiceConfig)
 
 final case class GrpcServiceConfig(host: String, port: Int, usePlainText: Boolean)
+
+final case class StatusListRegistryConfig(
+    publicEndpointUrl: String
+)
 
 final case class DatabaseConfig(
     host: String,

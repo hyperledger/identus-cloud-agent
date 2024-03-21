@@ -4,12 +4,15 @@ import io.circe
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
-import io.circe.{Decoder, Encoder, HCursor, Json}
+import io.circe.{CursorOp, Decoder, DecodingFailure, Encoder, HCursor, Json}
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.pollux.vc.jwt.revocation.BitString
 import io.iohk.atala.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
+import io.iohk.atala.shared.http.UriResolver
 import pdi.jwt.*
 import zio.prelude.*
 import zio.*
+
 import java.security.PublicKey
 import java.time.temporal.TemporalAmount
 import java.time.{Clock, Instant}
@@ -28,15 +31,25 @@ case class Issuer(did: DID, signer: Signer, publicKey: PublicKey)
 
 sealed trait VerifiableCredentialPayload
 
-case class W3cVerifiableCredentialPayload(payload: W3cCredentialPayload, proof: Proof)
+case class W3cVerifiableCredentialPayload(payload: W3cCredentialPayload, proof: JwtProof)
     extends Verifiable(proof),
       VerifiableCredentialPayload
 
 case class JwtVerifiableCredentialPayload(jwt: JWT) extends VerifiableCredentialPayload
 
+case class AnoncredVerifiableCredentialPayload(json: String) extends VerifiableCredentialPayload //FIXME json type
+
+enum StatusPurpose(val str: String) {
+  case Revocation extends StatusPurpose("Revocation")
+  case Suspension extends StatusPurpose("Suspension")
+}
+
 case class CredentialStatus(
     id: String,
-    `type`: String
+    `type`: String,
+    statusPurpose: StatusPurpose,
+    statusListIndex: Int,
+    statusListCredential: String
 )
 
 case class RefreshService(
@@ -248,10 +261,10 @@ case class JwtCredentialPayload(
 case class W3cCredentialPayload(
     override val `@context`: Set[String],
     override val `type`: Set[String],
-    val maybeId: Option[String],
-    val issuer: DID,
-    val issuanceDate: Instant,
-    val maybeExpirationDate: Option[Instant],
+    maybeId: Option[String],
+    issuer: DID,
+    issuanceDate: Instant,
+    maybeExpirationDate: Option[Instant],
     override val maybeCredentialSchema: Option[CredentialSchema],
     override val credentialSubject: Json,
     override val maybeCredentialStatus: Option[CredentialStatus],
@@ -271,7 +284,7 @@ object CredentialPayload {
   object Implicits {
 
     import InstantDecoderEncoder.*
-    import Proof.Implicits.*
+    import JwtProof.Implicits.*
 
     implicit val didEncoder: Encoder[DID] =
       (did: DID) => did.value.asJson
@@ -292,12 +305,17 @@ object CredentialPayload {
             ("type", credentialSchema.`type`.asJson)
           )
 
+    implicit val credentialStatusPurposeEncoder: Encoder[StatusPurpose] = (a: StatusPurpose) => a.toString.asJson
+
     implicit val credentialStatusEncoder: Encoder[CredentialStatus] =
       (credentialStatus: CredentialStatus) =>
         Json
           .obj(
             ("id", credentialStatus.id.asJson),
-            ("type", credentialStatus.`type`.asJson)
+            ("type", credentialStatus.`type`.asJson),
+            ("statusPurpose", credentialStatus.statusPurpose.asJson),
+            ("statusListIndex", credentialStatus.statusListIndex.asJson),
+            ("statusListCredential", credentialStatus.statusListCredential.asJson)
           )
 
     implicit val w3cCredentialPayloadEncoder: Encoder[W3cCredentialPayload] =
@@ -383,13 +401,29 @@ object CredentialPayload {
           CredentialSchema(id = id, `type` = `type`)
         }
 
+    implicit val credentialStatusPurposeDecoder: Decoder[StatusPurpose] = (c: HCursor) =>
+      Decoder.decodeString(c).flatMap { str =>
+        Try(StatusPurpose.valueOf(str)).toEither.leftMap { _ =>
+          DecodingFailure(s"no enum value matched for $str", List(CursorOp.Field(str)))
+        }
+      }
+
     implicit val credentialStatusDecoder: Decoder[CredentialStatus] =
       (c: HCursor) =>
         for {
           id <- c.downField("id").as[String]
           `type` <- c.downField("type").as[String]
+          statusPurpose <- c.downField("statusPurpose").as[StatusPurpose]
+          statusListIndex <- c.downField("statusListIndex").as[Int]
+          statusListCredential <- c.downField("statusListCredential").as[String]
         } yield {
-          CredentialStatus(id = id, `type` = `type`)
+          CredentialStatus(
+            id = id,
+            `type` = `type`,
+            statusPurpose = statusPurpose,
+            statusListIndex = statusListIndex,
+            statusListCredential = statusListCredential
+          )
         }
 
     implicit val w3cCredentialPayloadDecoder: Decoder[W3cCredentialPayload] =
@@ -491,7 +525,7 @@ object CredentialPayload {
       (c: HCursor) =>
         for {
           payload <- c.as[W3cCredentialPayload]
-          proof <- c.downField("proof").as[Proof]
+          proof <- c.downField("proof").as[JwtProof]
         } yield {
           W3cVerifiableCredentialPayload(
             payload = payload,
@@ -602,14 +636,71 @@ object CredentialVerification {
     *   the result of the validation.
     */
   def verify(verifiableCredentialPayload: VerifiableCredentialPayload, options: CredentialVerificationOptions)(
-      didResolver: DidResolver
+      didResolver: DidResolver,
+      uriResolver: UriResolver
   )(implicit clock: Clock): IO[String, Validation[String, Unit]] = {
     verifiableCredentialPayload match {
-      case (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) =>
-        W3CCredential.verify(w3cVerifiableCredentialPayload, options)(didResolver)
-      case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
-        JwtCredential.verify(jwtVerifiableCredentialPayload, options)(didResolver)
+      case w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload =>
+        W3CCredential.verify(w3cVerifiableCredentialPayload, options)(didResolver, uriResolver)
+      case jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload =>
+        JwtCredential.verify(jwtVerifiableCredentialPayload, options)(didResolver, uriResolver)
     }
+  }
+
+  def verifyCredentialStatus(
+      credentialStatus: CredentialStatus
+  )(uriResolver: UriResolver): IO[String, Validation[String, Unit]] = {
+
+    val res = for {
+      statusListString <- uriResolver
+        .resolve(credentialStatus.statusListCredential)
+        .mapError(err => s"Could not resolve status list credential: $err")
+      _ <- ZIO.logInfo("Credential status: " + credentialStatus)
+      vcStatusListCredJson <- ZIO
+        .fromEither(io.circe.parser.parse(statusListString))
+        .mapError(err => s"Could not parse status list credential as Json string: $err")
+      proof <- ZIO
+        .fromEither(vcStatusListCredJson.hcursor.downField("proof").as[Proof])
+        .mapError(err => s"Could not extract proof from status list credential: $err")
+
+      // Verify proof
+      verified <- proof match
+        case EddsaJcs2022Proof(proofValue, verificationMethod, maybeCreated) =>
+          val publicKeyMultiBaseEffect = uriResolver
+            .resolve(verificationMethod)
+            .mapError(_.toThrowable)
+            .flatMap { jsonResponse =>
+              ZIO.fromEither(io.circe.parser.decode[MultiKey](jsonResponse)).mapError(_.getCause)
+            }
+            .mapError(_.getMessage)
+
+          for {
+            publicKeyMultiBase <- publicKeyMultiBaseEffect
+            statusListCredJsonWithoutProof = vcStatusListCredJson.hcursor.downField("proof").delete.top.get
+            verified <- EddsaJcs2022ProofGenerator
+              .verifyProof(statusListCredJsonWithoutProof, proofValue, publicKeyMultiBase)
+              .mapError(_.getMessage)
+          } yield verified
+
+        // Note: add other proof types here when available
+        case _ => ZIO.fail(s"Unsupported proof type - ${proof.`type`}")
+
+      proofVerificationValidation =
+        if (verified) Validation.unit else Validation.fail("Could not verify status list credential proof")
+
+      // Check revocation status in the list by index
+      encodedBitStringEither = vcStatusListCredJson.hcursor
+        .downField("credentialSubject")
+        .as[Json]
+        .flatMap(_.hcursor.downField("encodedList").as[String])
+      encodedBitString <- ZIO.fromEither(encodedBitStringEither).mapError(_.getMessage)
+      bitString <- BitString.valueOf(encodedBitString).mapError(_.message)
+      isRevoked <- bitString.isRevoked(credentialStatus.statusListIndex).mapError(_.message)
+      revocationValidation = if (isRevoked) Validation.fail("Credential is revoked") else Validation.unit
+
+    } yield Validation.validateWith(proofVerificationValidation, revocationValidation)((a, _) => a)
+
+    res
   }
 }
 
@@ -694,11 +785,14 @@ object JwtCredential {
   }
 
   def verify(jwt: JwtVerifiableCredentialPayload, options: CredentialVerification.CredentialVerificationOptions)(
-      didResolver: DidResolver
-  )(implicit clock: Clock): IO[String, Validation[String, Unit]] = verify(jwt.jwt, options)(didResolver)(clock)
+      didResolver: DidResolver,
+      uriResolver: UriResolver
+  )(implicit clock: Clock): IO[String, Validation[String, Unit]] =
+    verify(jwt.jwt, options)(didResolver, uriResolver)(clock)
 
   def verify(jwt: JWT, options: CredentialVerification.CredentialVerificationOptions)(
-      didResolver: DidResolver
+      didResolver: DidResolver,
+      uriResolver: UriResolver
   )(implicit clock: Clock): IO[String, Validation[String, Unit]] = {
     for {
       signatureValidation <-
@@ -707,7 +801,27 @@ object JwtCredential {
       dateVerification <- ZIO.succeed(
         if (options.verifyDates) then verifyDates(jwt, options.leeway) else Validation.unit
       )
-    } yield Validation.validateWith(signatureValidation, dateVerification)((a, _) => a)
+      revocationVerification <- verifyRevocationStatusJwt(jwt)(uriResolver)
+
+    } yield Validation.validateWith(signatureValidation, dateVerification, revocationVerification)((a, _, _) => a)
+  }
+
+  private def verifyRevocationStatusJwt(jwt: JWT)(uriResolver: UriResolver): IO[String, Validation[String, Unit]] = {
+    val decodeJWT =
+      ZIO
+        .fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))
+        .mapError(_.getMessage)
+
+    val res = for {
+      decodedJWT <- decodeJWT
+      jwtCredentialPayload <- ZIO.fromEither(decode[JwtCredentialPayload](decodedJWT)).mapError(_.getMessage)
+      credentialStatus = jwtCredentialPayload.vc.maybeCredentialStatus
+      result = credentialStatus.fold(ZIO.succeed(Validation.unit))(status =>
+        CredentialVerification.verifyCredentialStatus(status)(uriResolver)
+      )
+    } yield result
+
+    res.flatten
   }
 }
 
@@ -718,7 +832,7 @@ object W3CCredential {
   def encodeW3C(payload: W3cCredentialPayload, issuer: Issuer): W3cVerifiableCredentialPayload = {
     W3cVerifiableCredentialPayload(
       payload = payload,
-      proof = Proof(
+      proof = JwtProof(
         `type` = "JwtProof2020",
         jwt = issuer.signer.encode(payload.asJson)
       )
@@ -727,6 +841,18 @@ object W3CCredential {
 
   def toEncodedJwt(payload: W3cCredentialPayload, issuer: Issuer): JWT =
     JwtCredential.encodeJwt(payload.toJwtCredentialPayload, issuer)
+
+  def toJsonWithEmbeddedProof(payload: W3cCredentialPayload, issuer: Issuer): Task[Json] = {
+    val jsonCred = payload.asJson
+
+    for {
+      proof <- issuer.signer.generateProofForJson(jsonCred, issuer.publicKey)
+      jsonProof <- proof match
+        case a: EddsaJcs2022Proof => ZIO.succeed(a.asJson.dropNullValues)
+      verifiableCredentialWithProof = jsonCred.deepMerge(Map("proof" -> jsonProof).asJson)
+    } yield verifiableCredentialWithProof
+
+  }
 
   def validateW3C(
       payload: W3cVerifiableCredentialPayload,
@@ -745,8 +871,19 @@ object W3CCredential {
     )
   }
 
+  private def verifyRevocationStatusW3c(
+      w3cPayload: W3cVerifiableCredentialPayload,
+  )(uriResolver: UriResolver): IO[String, Validation[String, Unit]] = {
+    // If credential does not have credential status list, it does not support revocation
+    // and we assume revocation status is valid.
+    w3cPayload.payload.maybeCredentialStatus.fold(ZIO.succeed(Validation.unit))(status =>
+      CredentialVerification.verifyCredentialStatus(status)(uriResolver)
+    )
+  }
+
   def verify(w3cPayload: W3cVerifiableCredentialPayload, options: CredentialVerification.CredentialVerificationOptions)(
-      didResolver: DidResolver
+      didResolver: DidResolver,
+      uriResolver: UriResolver
   )(implicit clock: Clock): IO[String, Validation[String, Unit]] = {
     for {
       signatureValidation <-
@@ -755,6 +892,7 @@ object W3CCredential {
       dateVerification <- ZIO.succeed(
         if (options.verifyDates) then verifyDates(w3cPayload, options.leeway) else Validation.unit
       )
-    } yield Validation.validateWith(signatureValidation, dateVerification)((a, _) => a)
+      revocationVerification <- verifyRevocationStatusW3c(w3cPayload)(uriResolver)
+    } yield Validation.validateWith(signatureValidation, dateVerification, revocationVerification)((a, _, _) => a)
   }
 }
