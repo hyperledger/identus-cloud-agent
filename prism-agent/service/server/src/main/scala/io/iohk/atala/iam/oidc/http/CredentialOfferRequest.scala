@@ -7,7 +7,6 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 case class CredentialOfferRequest(
     credentialConfigurationId: Option[String], // TODO: this field should be requried
     claims: zio.json.ast.Json,
-    subjectDID: String
 )
 
 object CredentialOfferRequest {

@@ -169,7 +169,7 @@ case class OIDCCredentialIssuerServiceImpl(
       credential_configuration_ids = Seq("UniversityDegreeCredential"), // TODO: allow credential configuration CRUD
       grants = Some(
         CredentialOfferGrant(
-          authorization_code = CredentialOfferAuthorizationGrant(issuer_state = Some(canonicalIssuingDid.toString()))
+          authorization_code = CredentialOfferAuthorizationGrant(issuer_state = Some(session.issuerState))
         )
       )
     )

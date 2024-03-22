@@ -5,14 +5,11 @@ import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.iam.oidc.CredentialIssuerEndpoints.ExtendedErrorResponse
-import io.iohk.atala.iam.oidc.domain.IssuanceSession
 import io.iohk.atala.iam.oidc.http.*
 import io.iohk.atala.iam.oidc.http.CredentialErrorCode.*
 import io.iohk.atala.iam.oidc.service.OIDCCredentialIssuerService
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
-
-import java.util.UUID
 
 trait CredentialIssuerController {
   def issueCredential(
