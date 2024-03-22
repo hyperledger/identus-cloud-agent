@@ -110,26 +110,6 @@ object CredentialIssuerEndpoints {
       """The endpoint that returns a `nonce` value for the [Token Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-nonce-endpoint)""".stripMargin
     )
 
-  val issuanceSessionEndpoint: Endpoint[
-    (ApiKeyCredentials, JwtCredentials),
-    (RequestContext, String, IssuanceSessionRequest),
-    ExtendedErrorResponse,
-    Unit,
-    Any
-  ] =
-    baseIssuerFacingEndpoint.post
-      .in("issuance-session")
-      .in(jsonBody[IssuanceSessionRequest])
-      .out(
-        statusCode(StatusCode.Created).description("Issuance session created successfully"),
-      )
-      .errorOut(credentialEndpointErrorOutput)
-      .name("createIssuanceSession")
-      .summary("Create Issuance Session")
-      .description(
-        """The endpoint that creates an issuance session for the OIDC VC endpoints""".stripMargin
-      )
-
   val issuerMetadataEndpoint: Endpoint[
     Unit,
     (RequestContext, String),

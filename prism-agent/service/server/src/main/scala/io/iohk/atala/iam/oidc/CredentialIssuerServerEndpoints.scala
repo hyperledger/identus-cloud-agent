@@ -5,7 +5,7 @@ import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import io.iohk.atala.iam.oidc.controller.CredentialIssuerController
-import io.iohk.atala.iam.oidc.http.{CredentialErrorResponse, CredentialRequest, IssuanceSessionRequest, NonceResponse}
+import io.iohk.atala.iam.oidc.http.{CredentialErrorResponse, CredentialRequest, NonceResponse}
 import sttp.tapir.ztapir.*
 import zio.*
 
@@ -57,20 +57,6 @@ case class CredentialIssuerServerEndpoints(
         }
       }
 
-  val issuanceSessionServerEndpoint: ZServerEndpoint[Any, Any] =
-    CredentialIssuerEndpoints.issuanceSessionEndpoint
-      .zServerSecurityLogic(
-        // FIXME: how can authorization server authorize itself?
-        SecurityLogic
-          .authorizeWalletAccessWith(_)(authenticator, authorizer)
-          .mapError(Left[ErrorResponse, CredentialErrorResponse])
-      )
-      .serverLogic { wac =>
-        { case (ctx: RequestContext, didRef: String, issuanceSessionRequest: IssuanceSessionRequest) =>
-          credentialIssuerController.createIssuanceSession(ctx, didRef, issuanceSessionRequest)
-        }
-      }
-
   val issuerMetadataEndpoint: ZServerEndpoint[Any, Any] = CredentialIssuerEndpoints.issuerMetadataEndpoint
     .zServerLogic {
       { case (rc, didRef) => credentialIssuerController.getIssuerMetadata(rc, didRef).logTrace(rc) }
@@ -80,7 +66,6 @@ case class CredentialIssuerServerEndpoints(
     credentialServerEndpoint,
     nonceServerEndpoint,
     createCredentialOfferServerEndpoint,
-    issuanceSessionServerEndpoint,
     issuerMetadataEndpoint
   )
 }

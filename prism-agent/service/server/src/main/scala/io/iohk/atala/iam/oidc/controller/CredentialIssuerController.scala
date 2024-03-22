@@ -12,6 +12,8 @@ import io.iohk.atala.iam.oidc.service.OIDCCredentialIssuerService
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
 
+import java.util.UUID
+
 trait CredentialIssuerController {
   def issueCredential(
       ctx: RequestContext,
@@ -30,12 +32,6 @@ trait CredentialIssuerController {
       didRef: String,
       request: NonceRequest
   ): ZIO[WalletAccessContext, ErrorResponse, NonceResponse]
-
-  def createIssuanceSession(
-      ctx: RequestContext,
-      didRef: String,
-      issuanceSessionRequest: IssuanceSessionRequest
-  ): IO[ExtendedErrorResponse, Unit]
 
   def getIssuerMetadata(
       ctx: RequestContext,
@@ -167,7 +163,6 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
     }
   }
 
-  // TODO: implement
   override def createCredentialOffer(
       ctx: RequestContext,
       didRef: String,
@@ -188,7 +183,6 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
     } yield resp
   }
 
-  // TODO: implement
   override def getNonce(
       ctx: RequestContext,
       didRef: String,
@@ -196,7 +190,7 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
   ): ZIO[WalletAccessContext, ErrorResponse, NonceResponse] = {
     credentialIssuerService
       .getIssuanceSessionNonce(request.issuerState)
-      .map(nonce => NonceResponse(nonce.toString))
+      .map(nonce => NonceResponse(nonce))
       .mapError(ue =>
         internalServerError(
           "InternalServerError",
@@ -206,37 +200,8 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
       )
   }
 
-  private def buildIssuanceSession(
-      canonicalPrismDID: CanonicalPrismDID,
-      issuanceSessionRequest: IssuanceSessionRequest
-  ): IssuanceSession = {
-    IssuanceSession(
-      nonce = issuanceSessionRequest.nonce,
-      issuableCredentials = issuanceSessionRequest.issuableCredentials,
-      isPreAuthorized = issuanceSessionRequest.isPreAuthorized,
-      did = issuanceSessionRequest.did,
-      issuerDid = canonicalPrismDID,
-      userPin = issuanceSessionRequest.userPin
-    )
-  }
-
-  override def createIssuanceSession(
-      ctx: RequestContext,
-      didRef: String,
-      issuanceSessionRequest: IssuanceSessionRequest
-  ): IO[ExtendedErrorResponse, Unit] = {
-    for {
-      canonicalPrismDID <- parseIssuerDIDOidc4vcError(didRef)
-      issuanceSession = buildIssuanceSession(canonicalPrismDID, issuanceSessionRequest)
-      _ <- credentialIssuerService
-        .createIssuanceSession(issuanceSession)
-        .mapError(ue => serverError(Some(s"Unexpected error while creating issuance session: ${ue.message}")))
-    } yield ()
-
-  }
-
+  // TODO: implement
   override def getIssuerMetadata(ctx: RequestContext, didRef: String): IO[ErrorResponse, IssuerMetadata] = {
-    // TODO: implement
     for {
       canonicalPrismDID <- parseIssuerDIDBasicError(didRef)
       credentialIssuerBaseUrl = s"http://localhost:8080/prism-agent/oidc4vc/${canonicalPrismDID.toString}"
