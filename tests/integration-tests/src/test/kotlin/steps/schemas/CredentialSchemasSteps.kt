@@ -1,4 +1,4 @@
-package steps
+package steps.schemas
 
 import common.TestConstants
 import interactions.Get

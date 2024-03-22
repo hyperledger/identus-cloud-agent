@@ -1,4 +1,4 @@
-package features.verificationpolicies
+package steps.verificationpolicies
 
 import common.TestConstants
 import interactions.Get

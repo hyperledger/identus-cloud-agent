@@ -9,6 +9,13 @@ plugins {
 group = "io.iohk.atala.prism"
 version = "1.0-SNAPSHOT"
 
+buildscript {
+    dependencies {
+        classpath("net.serenity-bdd:serenity-single-page-report:4.1.4")
+        classpath("net.serenity-bdd:serenity-json-summary-report:4.1.4")
+    }
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
@@ -34,7 +41,10 @@ dependencies {
     testImplementation("com.sksamuel.hoplite:hoplite-hocon:2.7.5")
     // Kotlin compose
     testImplementation("org.testcontainers:testcontainers:1.19.1")
+}
 
+serenity {
+    reports = listOf("single-page-html", "json-summary")
 }
 
 tasks.register<Delete>("cleanTarget") {
@@ -43,6 +53,7 @@ tasks.register<Delete>("cleanTarget") {
 
 tasks.test {
     dependsOn("cleanTarget")
+    finalizedBy("reports")
     testLogging.showStandardStreams = true
     systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
 }
@@ -74,7 +85,7 @@ afterEvaluate {
             systemProperty("PRISM_NODE_VERSION", System.getenv("PRISM_NODE_VERSION") ?: "")
             systemProperty("OPEN_ENTERPRISE_AGENT_VERSION", System.getenv("OPEN_ENTERPRISE_AGENT_VERSION") ?: "")
             systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
-            finalizedBy("aggregate")
+            finalizedBy("aggregate", "reports")
         }
     }
 
