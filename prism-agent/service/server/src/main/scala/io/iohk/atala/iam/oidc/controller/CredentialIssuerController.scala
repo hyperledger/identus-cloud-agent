@@ -174,11 +174,7 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
         .createCredentialOffer(canonicalPrismDID, credentialOfferRequest.claims)
         .map(offer => CredentialOfferResponse(offer.offerUri))
         .mapError(ue =>
-          internalServerError(
-            "InternalServerError",
-            Some("TODO - handle error properly!!!"),
-            instance = "CredentialIssuerController"
-          )
+          internalServerError(detail = Some(s"Unexpected error while creating credential offer: ${ue.message}"))
         )
     } yield resp
   }
@@ -192,11 +188,7 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
       .getIssuanceSessionNonce(request.issuerState)
       .map(nonce => NonceResponse(nonce))
       .mapError(ue =>
-        internalServerError(
-          "InternalServerError",
-          Some("TODO - handle error properly!!!"),
-          instance = "CredentialIssuerController"
-        )
+        internalServerError(detail = Some(s"Unexpected error while creating credential offer: ${ue.message}"))
       )
   }
 

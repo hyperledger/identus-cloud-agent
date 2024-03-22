@@ -32,7 +32,6 @@ object IssuanceSessionStorage {
 }
 
 case class InMemoryIssuanceSessionService() extends IssuanceSessionStorage {
-  // Key = nonce
   private val issuanceSessions: TrieMap[String, IssuanceSession] = TrieMap.empty
 
   override def start(issuanceSession: IssuanceSession): IO[IssuanceSessionStorage.Error, IssuanceSession] = {
