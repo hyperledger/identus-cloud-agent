@@ -4,7 +4,7 @@ Identus implements the revocation mechanism of JWT credentials according to [Bit
 
 ## Overview
 
-Every credential will contain the property `credentialStatus`, which will look like this
+Every credential will contain the property `credentialStatus`, which will look like this:
 
 ```json
 "credentialStatus": {
