@@ -1,6 +1,6 @@
 # JWT credential revocation
 
-Identus implements revocation mechanism of JWT credentials according to [Bitstring Status List v1.0](https://www.w3.org/TR/2023/WD-vc-status-list-20230427/). It is an open standart that enables Identus to verify revocation status of any credential which implements revocation mechanism using the same specification.
+Identus implements the revocation mechanism of JWT credentials according to [Bitstring Status List v1.0](https://www.w3.org/TR/2023/WD-vc-status-list-20230427/). This open standard enables Identus to verify the revocation status of any credential that implements the revocation mechanism using the same specification.
 
 ## Overview
 
