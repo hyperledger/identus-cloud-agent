@@ -17,7 +17,7 @@ Every credential will contain the property `credentialStatus`, which will look l
 ```
 
 * `type` will always be `StatusList2021Entry`
-* `statusListCredential` is a publically accessable URL that resolves a status list credential, it will look like this:
+* `statusListCredential` is a publically accessible URL that resolves a status list credential that looks like this:
 ```json
 {
   "proof" : {
