@@ -64,7 +64,7 @@ To verify the revocation status of the credential, one must follow these steps:
 
 ## Proof verification
 
-Status list credential integrity can be verified using the embeded proof of type `DataIntegrityProof` via crypto suite `eddsa-jcs-2022`. The exact steps are described in the [Data Integrity EdDSA Cryptosuites v1.0](https://www.w3.org/TR/vc-di-eddsa/#eddsa-jcs-2022)
+Status list credential integrity can be verified using the embedded proof of type `DataIntegrityProof` via crypto suite `eddsa-jcs-2022`. The exact steps are in the [Data Integrity EdDSA Cryptosuites v1.0](https://www.w3.org/TR/vc-di-eddsa/#eddsa-jcs-2022)
 
 
 ## Revocation
