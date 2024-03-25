@@ -48,7 +48,7 @@ Every credential will contain the property `credentialStatus`, which will look l
 }
 
 ```
-* `statusListIndex` is an index in a bit-string at which revocation status of the credential can be verified.
+* `statusListIndex` is an index in a bit string at which the credential's revocation status can be verified.
 
 
 Status list credential contains `encodedList` which is a base64 encoded bit-string that contains revocation status of the credentail.
