@@ -8,11 +8,11 @@ Every credential will contain the property `credentialStatus`, which will look l
 
 ```json
 "credentialStatus": {
-    "id": "http://localhost:8080/prism-agent/credentials/status/3#94567"
+    "id": "http://localhost:8080/prism-agent/prism-agent/credential-status/27526236-3836-4061-9867-f69314e258b4#94567"
     "type": "StatusList2021Entry",
     "statusPurpose": "revocation",
     "statusListIndex": "94567",
-    "statusListCredential": "http://localhost:8080/prism-agent/credentials/status/3"
+    "statusListCredential": "http://localhost:8080/prism-agent/prism-agent/credential-status/27526236-3836-4061-9867-f69314e258b4"
   },
 ```
 
