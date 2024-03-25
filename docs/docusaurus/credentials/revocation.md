@@ -77,7 +77,7 @@ curl -X 'GET' \
   'http://localhost:8080/prism-agent/issue-credentials/records' \
   -H 'accept: application/json'
 ```
-this endpoint will return the credentials issued, every credential includes ID
+This endpoint will return the credentials issued. Every credential includes an ID.
 
 *Revoke the credential*
 ```bash
