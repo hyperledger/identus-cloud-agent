@@ -55,7 +55,7 @@ The status list credential contains  `encodedList`, a base64-encoded bit string 
 
 ## Verification
 
-In order to verify the revocation status of the credential, one must follow these steps:
+To verify the revocation status of the credential, one must follow these steps:
 
 1. resolve Status list credential using the URL found at path - `credentialStatus.statusListCredential`
 2. Verify embeded proof of the credential
