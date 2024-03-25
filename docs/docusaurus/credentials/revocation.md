@@ -59,7 +59,7 @@ To verify the revocation status of the credential, one must follow these steps:
 
 1. resolve Status list credential using the URL found at path - `credentialStatus.statusListCredential`
 2. Verify embeded proof of the credential
-3. decode bit-string which can be found in the JSON document of Status list credential, found at path - `credentialSubject.encodedList`
+3. Decode bit-string, which is in the JSON document of the Status list credential, found at path - `credentialSubject.encodedList`
 4. Use the status list index from `credentialStatus.statusListIndex` to check if the bit at this index in the decoded bit-string from step 3 is on or off. If the bit is on, credential is revoked, otherwise it has not been revoked
 
 ## Proof verification
