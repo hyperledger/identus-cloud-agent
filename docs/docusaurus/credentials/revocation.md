@@ -86,4 +86,6 @@ curl -X 'PATCH' \
   -H 'accept: */*'
 ```
 
-**Note:** [Present proof](./issue.md) will fail the verification if one of the credentials presented by the holder is revoked.
+:::note
+[Present proof](./issue.md) will fail the verification if one of the credentials the holder presents a revoked credential.
+:::
