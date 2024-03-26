@@ -119,7 +119,7 @@ jobs:
 
       - name: Upload artifacts
         if: github.ref_name == 'main' || steps.analyze_test_results.outputs.conclusion == 'failure'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: integration-tests-result
           path: ${{ env.REPORTS_DIR }}

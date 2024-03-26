@@ -20,7 +20,8 @@ const sidebars = {
       },
       items: [
         'credentials/issue',
-        'credentials/present-proof'
+        'credentials/present-proof',
+        'credentials/revocation',
       ]
     },
     {
