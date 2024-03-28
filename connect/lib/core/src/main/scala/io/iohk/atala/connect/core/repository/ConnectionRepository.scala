@@ -4,57 +4,71 @@ import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
 import io.iohk.atala.mercury.protocol.connection.*
 import io.iohk.atala.shared.models.WalletAccessContext
-import zio.RIO
-import zio.Task
+import zio.UIO
+import zio.URIO
+
 import java.util.UUID
 
 trait ConnectionRepository {
-  def createConnectionRecord(record: ConnectionRecord): RIO[WalletAccessContext, Int]
 
-  def getConnectionRecords: RIO[WalletAccessContext, Seq[ConnectionRecord]]
+  def create(
+      record: ConnectionRecord
+  ): URIO[WalletAccessContext, Unit]
 
-  def getConnectionRecordsByStates(
+  def findAll: URIO[WalletAccessContext, Seq[ConnectionRecord]]
+
+  def findByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): RIO[WalletAccessContext, Seq[ConnectionRecord]]
+  ): URIO[WalletAccessContext, Seq[ConnectionRecord]]
 
-  def getConnectionRecordsByStatesForAllWallets(
+  def findByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): Task[Seq[ConnectionRecord]]
+  ): UIO[Seq[ConnectionRecord]]
 
-  def getConnectionRecord(recordId: UUID): RIO[WalletAccessContext, Option[ConnectionRecord]]
+  def findById(
+      recordId: UUID
+  ): URIO[WalletAccessContext, Option[ConnectionRecord]]
 
-  def deleteConnectionRecord(recordId: UUID): RIO[WalletAccessContext, Int]
+  def getById(
+      recordId: UUID
+  ): URIO[WalletAccessContext, ConnectionRecord]
 
-  def getConnectionRecordByThreadId(thid: String): RIO[WalletAccessContext, Option[ConnectionRecord]]
+  def deleteById(
+      recordId: UUID
+  ): URIO[WalletAccessContext, Unit]
+
+  def findByThreadId(
+      thid: String
+  ): URIO[WalletAccessContext, Option[ConnectionRecord]]
 
   def updateWithConnectionRequest(
       recordId: UUID,
       request: ConnectionRequest,
       state: ProtocolState,
-      maxRetries: Int, // max numbre of retries -> set the metaRetries
-  ): RIO[WalletAccessContext, Int]
+      maxRetries: Int,
+  ): URIO[WalletAccessContext, Unit]
 
   def updateWithConnectionResponse(
       recordId: UUID,
       response: ConnectionResponse,
       state: ProtocolState,
-      maxRetries: Int, // max numbre of retries -> set the metaRetries
-  ): RIO[WalletAccessContext, Int]
+      maxRetries: Int,
+  ): URIO[WalletAccessContext, Unit]
 
-  def updateConnectionProtocolState(
+  def updateProtocolState(
       recordId: UUID,
       from: ProtocolState,
       to: ProtocolState,
-      maxRetries: Int, // max numbre of retries -> set the metaRetries
-  ): RIO[WalletAccessContext, Int]
+      maxRetries: Int,
+  ): URIO[WalletAccessContext, Unit]
 
   def updateAfterFail(
       recordId: UUID,
       failReason: Option[String],
-  ): RIO[WalletAccessContext, Int]
+  ): URIO[WalletAccessContext, Unit]
 
 }

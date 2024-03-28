@@ -4,7 +4,7 @@ import io.circe.syntax.*
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.*
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvalidFlowStateError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvalidStateForOperation
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.mercury.model.{DidId, Message}
 import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
@@ -56,8 +56,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
               Some("Test goal"),
               DidId("did:peer:INVITER")
             )
-            foundRecord <- svc.getConnectionRecord(createdRecord.id)
-            notFoundRecord <- svc.getConnectionRecord(UUID.randomUUID)
+            foundRecord <- svc.findRecordById(createdRecord.id)
+            notFoundRecord <- svc.findRecordById(UUID.randomUUID)
           } yield {
             assertTrue(foundRecord.contains(createdRecord)) &&
             assertTrue(notFoundRecord.isEmpty)
@@ -79,7 +79,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
               Some("Test goal"),
               DidId("did:peer:INVITER")
             )
-            records <- svc.getConnectionRecords()
+            records <- svc.findAllRecords()
           } yield {
             assertTrue(records.size == 2) &&
             assertTrue(records.contains(createdRecord1)) &&
@@ -103,8 +103,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
               Some("Test goal"),
               DidId("did:peer:INVITEE")
             )
-            allInviterRecords <- inviterSvc.getConnectionRecords()
-            allInviteeRecords <- inviteeSvc.getConnectionRecords()
+            allInviterRecords <- inviterSvc.findAllRecords()
+            allInviteeRecords <- inviteeSvc.findAllRecords()
           } yield {
             assertTrue(allInviterRecords.size == 1) &&
             assertTrue(allInviterRecords.head == inviterRecord) &&
@@ -124,7 +124,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
               DidId("did:peer:INVITER")
             )
             inviteeRecord <- inviteeSvc.receiveConnectionInvitation(inviterRecord.invitation.toBase64)
-            allInviteeRecords <- inviteeSvc.getConnectionRecords()
+            allInviteeRecords <- inviteeSvc.findAllRecords()
           } yield {
             assertTrue(allInviteeRecords.head == inviteeRecord) &&
             assertTrue(inviteeRecord.label.isEmpty) &&
@@ -163,7 +163,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
               inviteeRecord.id,
               DidId("did:peer:INVITEE")
             )
-            allInviteeRecords <- inviteeSvc.getConnectionRecords()
+            allInviteeRecords <- inviteeSvc.findAllRecords()
           } yield {
             val updatedRecord = maybeInviteeRecord
             assertTrue(allInviteeRecords.head == updatedRecord) &&
@@ -191,7 +191,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             // FIXME: Should the service return an Option while we have dedicated "not found" error for that case !?
             connectionRequest = maybeAcceptedInvitationRecord.connectionRequest.get
             maybeReceivedRequestConnectionRecord <- inviterSvc.receiveConnectionRequest(connectionRequest, None)
-            allInviterRecords <- inviterSvc.getConnectionRecords()
+            allInviterRecords <- inviterSvc.findAllRecords()
           } yield {
             val updatedRecord = maybeReceivedRequestConnectionRecord
             assertTrue(allInviterRecords.head == updatedRecord) &&
@@ -224,8 +224,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
 
           } yield {
             assertTrue(exit match
-              case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
-              case _                                                     => false
+              case Exit.Failure(Cause.Fail(_: InvalidStateForOperation, _)) => true
+              case _                                                        => false
             )
 
           }
@@ -253,7 +253,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
               Some(expiryTime)
             )
             maybeAcceptedRequestConnectionRecord <- inviterSvc.acceptConnectionRequest(inviterRecord.id)
-            allInviterRecords <- inviterSvc.getConnectionRecords()
+            allInviterRecords <- inviterSvc.findAllRecords()
           } yield {
             val updatedRecord = maybeAcceptedRequestConnectionRecord
             assertTrue(allInviterRecords.head == updatedRecord) &&
@@ -297,7 +297,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
             maybeReceivedResponseConnectionRecord <- inviteeSvc.receiveConnectionResponse(
               ConnectionResponse.fromMessage(connectionResponseMessage).toOption.get
             )
-            allInviteeRecords <- inviteeSvc.getConnectionRecords()
+            allInviteeRecords <- inviteeSvc.findAllRecords()
           } yield {
             val updatedRecord = maybeReceivedResponseConnectionRecord
             assertTrue(allInviteeRecords.head == updatedRecord) &&

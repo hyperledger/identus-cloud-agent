@@ -4,7 +4,8 @@ import doobie.*
 import doobie.postgres.implicits.*
 import doobie.syntax.ConnectionIOOps
 import doobie.util.transactor.Transactor
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import zio.*
 import zio.interop.catz.*
 
@@ -41,6 +42,13 @@ object Implicits {
       } yield result
     }
 
+  }
+
+  extension [Int](ma: RIO[WalletAccessContext, Int]) {
+    def ensureOneAffectedRowOrDie: URIO[WalletAccessContext, Unit] = ma.flatMap {
+      case 1     => ZIO.unit
+      case count => ZIO.fail(RuntimeException(s"Unexpected affected row count: $count"))
+    }.orDie
   }
 
 }
