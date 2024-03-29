@@ -203,7 +203,7 @@ When invoking lower-level components, do not directly expose their failure types
 wrappers to encapsulate and abstract failure types originating from lower-level components, thus enhancing
 loose coupling and safeguarding against leakage of underlying implementation details to the caller.
 
-Using failure wrappers and propagate them **should not be the default strategy**. Lower-level failures should primarily
+Using failure wrappers and propagating them **should not be the default strategy**. Lower-level failures should primarily
 be managed at your component implementation level, ensuring that it appropriately handles and recovers them.
 
 Unhandled failures within the component's boundaries should preferably be transformed into defects.
