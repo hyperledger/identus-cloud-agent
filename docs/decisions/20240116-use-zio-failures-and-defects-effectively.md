@@ -204,7 +204,7 @@ wrappers to encapsulate and abstract failure types originating from lower-level 
 loose coupling and safeguarding against leakage of underlying implementation details to the caller.
 
 Using failure wrappers and propagate them **should not be the default strategy**. Lower-level failures should primarily
-be managed at your component implementation level ensuring that it handles and appropriately recovers them.
+be managed at your component implementation level, ensuring that it appropriately handles and recovers them.
 
 Unhandled failures within the component's boundaries should preferably be transformed into defects.
 
