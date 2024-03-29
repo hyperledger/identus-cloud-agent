@@ -203,10 +203,11 @@ Do not directly expose their failure types in your component interface when invo
 wrappers to encapsulate and abstract failure types originating from lower-level components, thus enhancing
 loose coupling and safeguarding against leakage of underlying implementation details to the caller.
 
-Using failure wrappers and propagating them **should not be the default strategy**. Lower-level failures should primarily
+Using failure wrappers and propagating them **should not be the default strategy**. Lower-level failures should
+primarily
 be managed at your component implementation level, ensuring that it appropriately handles and recovers them.
 
-Unhandled failures within the component's boundaries should preferably be transformed into defects.
+Failures not handled within the component's boundaries should preferably be transformed into defects whenever possible.
 
 #### Do not reflexively log errors
 
@@ -234,7 +235,8 @@ layer.
 The repository layer leverages Doobie,
 which [natively relies on unchecked exceptions](https://tpolecat.github.io/doobie/docs/09-Error-Handling.html#about-exceptions).
 Doobie will report any database error as a subclass of `Throwable`, and its specific type will be directly
-linked to the underlying database implementation (i.e. PostgreSQL). Handling it this way means there is no deterministic way to recover
+linked to the underlying database implementation (i.e. PostgreSQL). Handling it this way means there is no deterministic
+way to recover
 from an SQL execution error in a database-agnostic way.
 
 A good approach is to use ZIO Defects to report repository errors, declaring all repository methods as `URIO`
@@ -383,7 +385,7 @@ Do not wrap defects from lower layers (typically repository) in a failure and er
 like [this](https://github.com/hyperledger-labs/open-enterprise-agent/blob/b579fd86ab96db711425f511154e74be75583896/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/model/error/ConnectionServiceError.scala#L8)
 should be prohibited.
 
-Also, considering that failures are expected errors from which user can potentially recover, error case class
+Considering that failures are viewed as **expected errors** from which users can potentially recover, error case classes
 like `UnexpectedError` should be
 prohibited ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/b579fd86ab96db711425f511154e74be75583896/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/model/error/ConnectionServiceError.scala#L12)).
 
@@ -419,12 +421,14 @@ object ConnectionServiceError {
 
 #### User Input Validation
 
-Enforcing user input validation (business invariants) should primarily sit at the service layer and be implemented using the
+Enforcing user input validation (business invariants) should primarily sit at the service layer and be implemented using
+the
 [ZIO Prelude framework](https://zio.dev/zio-prelude/functional-data-types/validation).
 
-While it may also be partially implemented at the REST entry point level via OpenAPI specification, it is crucial to
-enforce validation at the service level as well. This implementation ensures consistency and reliability across all interfaces that may
-call our services, recognizing that REST may not be the sole interface interacting with our services.
+While partially implementing user input validation at the REST entry point level via OpenAPI specification, it is
+crucial to enforce validation at the service level as well. This implementation ensures consistency and reliability
+across all interfaces that may call our services, recognizing that REST may not be the sole interface interacting with
+our services.
 
 ```scala
 class ConnectionServiceImpl() extends ConnectionService {
@@ -487,13 +491,14 @@ The upper layer will automatically do so appropriately and consistently using Ta
 
 All declared Tapir endpoints must
 use [`io.iohk.atala.api.http.ErrorResponse`](https://github.com/hyperledger-labs/open-enterprise-agent/blob/main/prism-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala)
-as their output error type ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/prism-agent/service/server/src/main/scala/io/iohk/atala/connect/controller/ConnectionEndpoints.scala#L45))
+as their output error
+type ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/prism-agent/service/server/src/main/scala/io/iohk/atala/connect/controller/ConnectionEndpoints.scala#L45))
 This type ensures that the response returned to the user complies with
 the [RFC-9457 Problem Details for HTTP APIs](https://www.rfc-editor.org/rfc/rfc9457.html).
 
 ```scala
 object ConnectionEndpoints {
-  
+
   val createConnection: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, CreateConnectionRequest),
@@ -501,15 +506,18 @@ object ConnectionEndpoints {
     Connection,
     Any
   ] = ???
-  
+
 }
 ```
 
 #### Use "Failure => ErrorResponse" Implicit Conversion
 
 If all the underlying services used by a controller comply with the above rules, then the only error type that could
-propagate through the effect’s error channel is the parent [`io.iohk.atala.shared.models.Failure`](https://github.com/hyperledger-labs/open-enterprise-agent/blob/main/shared/src/main/scala/io/iohk/atala/shared/models/Failure.scala) type and its conversion
-to the ErrorResponse type is done automatically via [Scala implicit conversion](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/prism-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala#L44).
+propagate through the effect’s error channel is the
+parent [`io.iohk.atala.shared.models.Failure`](https://github.com/hyperledger-labs/open-enterprise-agent/blob/main/shared/src/main/scala/io/iohk/atala/shared/models/Failure.scala)
+type and its conversion
+to the ErrorResponse type is done automatically
+via [Scala implicit conversion](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/prism-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala#L44).
 
 #### Do not reflexively log errors
 
