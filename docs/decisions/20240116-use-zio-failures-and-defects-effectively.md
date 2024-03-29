@@ -199,7 +199,7 @@ should not expect callers of your component to handle lower-level failures that 
 
 #### Use Failure Wrappers To Prevent Failures Leakage From Lower Layers
 
-When invoking lower-level components, do not directly expose their failure types in your component interface. Use
+Do not directly expose their failure types in your component interface when invoking lower-level components. Use
 wrappers to encapsulate and abstract failure types originating from lower-level components, thus enhancing
 loose coupling and safeguarding against leakage of underlying implementation details to the caller.
 
@@ -234,13 +234,13 @@ layer.
 The repository layer leverages Doobie,
 which [natively relies on unchecked exceptions](https://tpolecat.github.io/doobie/docs/09-Error-Handling.html#about-exceptions).
 Doobie will report any database error as a subclass of `Throwable`, and its specific type will be directly
-linked to the underlying database implementation (i.e. PostgreSQL). This means there is no deterministic way to recover
-from an SQL execution error in a database agnostic way.
+linked to the underlying database implementation (i.e. PostgreSQL). Handling it this way means there is no deterministic way to recover
+from an SQL execution error in a database-agnostic way.
 
 A good approach is to use ZIO Defects to report repository errors, declaring all repository methods as `URIO`
 or `UIO`([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/main/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/repository/ConnectionRepository.scala)).
 Conversely, declaring them as `Task` assumes that the caller (i.e. service) can properly handle and
-recover from the low-level and database specific exceptions exposed in the error channel, which is a fallacy.
+recover from the low-level and database-specific exceptions exposed in the error channel, which is a fallacy.
 
 ```scala
 trait ConnectionRepository {
@@ -288,11 +288,11 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
 #### Apply the `get` vs `find` pattern
 
-Follow the `get` and `find` best practice in the repository interface for read operations:
+Follow the `get` and `find` best practices in the repository interface for read operations:
 
 - `getXxx()` returns the requested record or throws an unexpected exception/defect when not
   found ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/repository/ConnectionRepository.scala#L36)).
-- `findXxx()` returns an `Option` with or without the request record. This allows the caller service to handle
+- `findXxx()` returns an `Option` with or without the request record, which allows the caller service to handle
   the `found`
   and `not-found` cases and report appropriately to the end
   user ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/repository/ConnectionRepository.scala#L32)).
@@ -309,7 +309,7 @@ trait ConnectionRepository {
 
 The `create`, `update` or `delete` repository methods should not return an `Int` indicating the number of rows affected
 by the operation but either return `Unit` when successful or throw an exception/defect when the row count is not what is
-expected, like e.g. an update operation resulting in a `0` affected row
+expected, like i.e. an update operation resulting in a `0` affected row
 count ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/sql-doobie/src/main/scala/io/iohk/atala/connect/sql/repository/JdbcConnectionRepository.scala#L85)).
 
 ```scala
@@ -344,22 +344,22 @@ extension[Int](ma: RIO[WalletAccessContext, Int]) {
 
 #### Do not reflexively log errors
 
-The upper layer will automatically do so in an appropriate and consistent way using Tapir interceptor customisation.
+The upper layer will automatically do so appropriately and consistently using Tapir interceptor customization.
 
 ### Service Layer
 
 #### Reporting `404 Not Found` to user
 
-How can a service appropriately report a `404 Not Found` to a user that e.g. tries to update a record
+How can a service appropriately report a `404 Not Found` to a user that i.e. tries to update a record
 that does not exist in the database? Following the above rules, the `update` method will throw a defect that will be
-caught at the upper level and return a generic `500 Internal Server Error` to the user.
+caught at the upper level and returns a generic `500 Internal Server Error` to the user.
 
 For those cases where a specific error like `404` should be returned, it is up to the service to first call `find()`
-before `update()` and construct a `NotFound` failure, propagated through error channel, if it gives
+before `update()` and construct a `NotFound` failure, propagated through the error channel, if it gives
 a `None` ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/service/ConnectionServiceImpl.scala#L149)).
 
-Relying on the service layer to implement it will guarantee consistent behaviour regardless of the underlying database
-type (could be different RDMS flavour, No-SQL, etc.).
+Relying on the service layer to implement it will guarantee consistent behavior regardless of the underlying database
+type (could be different RDMS flavor, No-SQL, etc.).
 
 ```scala
 class ConnectionServiceImpl() extends ConnectionService {
@@ -379,7 +379,7 @@ class ConnectionServiceImpl() extends ConnectionService {
 
 #### Do not type unexpected errors
 
-Defects from lower layers (typically repository) should not be wrapped in a failure, and error case class declarations
+Do not wrap defects from lower layers (typically repository) in a failure and error case class declarations
 like [this](https://github.com/hyperledger-labs/open-enterprise-agent/blob/b579fd86ab96db711425f511154e74be75583896/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/model/error/ConnectionServiceError.scala#L8)
 should be prohibited.
 
@@ -394,7 +394,7 @@ trait [`io.iohk.atala.shared.models.Failure`](https://github.com/hyperledger-lab
 This allows handling "at the end of the world“ to be done in a consistent and in generic way.
 
 Create an exhaustive and meaningful list of service errors and make sure the value of the `userFacingMessage` attribute
-is chosen wisely! It will be presented "as is" to the user and should not contain any sensitive
+is chosen wisely! It will present "as is" to the user and should not contain any sensitive
 data ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/model/error/ConnectionServiceError.scala#L14)).
 
 ```scala
@@ -419,12 +419,12 @@ object ConnectionServiceError {
 
 #### User Input Validation
 
-User input validation (business invariants) should primarily be enforced at the service layer and implemented using the
+Enforcing user input validation (business invariants) should primarily sit at the service layer and be implemented using the
 [ZIO Prelude framework](https://zio.dev/zio-prelude/functional-data-types/validation).
 
 While it may also be partially implemented at the REST entry point level via OpenAPI specification, it is crucial to
-enforce validation at the service level as well. This ensures consistency and reliability across all interfaces that may
-call our services, recognising that REST may not be the sole interface interacting with our services.
+enforce validation at the service level as well. This implementation ensures consistency and reliability across all interfaces that may
+call our services, recognizing that REST may not be the sole interface interacting with our services.
 
 ```scala
 class ConnectionServiceImpl() extends ConnectionService {
@@ -445,7 +445,7 @@ class ConnectionServiceImpl() extends ConnectionService {
 }
 ```
 
-Validation errors should be modelled using a dedicated error case class and, when possible, provide validation failure
+Modeling validation errors should use a dedicated error case class and, when possible, provide validation failure
 details. One could use a construct like the following:
 
 ```scala
@@ -465,7 +465,7 @@ object ConnectionServiceError {
 
 #### Use Scala 3 Union Types
 
-Use Scala 3 union-types declaration in the effect’s error channel to clearly notify the caller of potential
+Use Scala 3 union-types declaration in the effect’s error channel to notify the caller of potential
 failures ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/service/ConnectionServiceImpl.scala#L178))
 
 ````scala
@@ -479,7 +479,7 @@ class ConnectionServiceImpl() extends ConnectionService {
 
 #### Do not reflexively log errors
 
-The upper layer will automatically do so in an appropriate and consistent way using Tapir interceptor customisation.
+The upper layer will automatically do so appropriately and consistently using Tapir interceptor customization.
 
 ### Controller Layer
 
@@ -513,4 +513,4 @@ to the ErrorResponse type is done automatically via [Scala implicit conversion](
 
 #### Do not reflexively log errors
 
-The upper layer will automatically do so in an appropriate and consistent way using Tapir interceptor customisation.
+The upper layer will automatically do so appropriately and consistently using Tapir interceptor customization.
