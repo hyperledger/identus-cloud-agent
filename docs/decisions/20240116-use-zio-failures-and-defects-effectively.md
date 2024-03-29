@@ -1,8 +1,8 @@
 # Use ZIO Failures and Defects Effectively
 
-- Status: draft
+- Status: accepted
 - Deciders: Fabio Pinheiro, Shailesh Patil, Pat Losoponkul, Yurii Shynbuiev, David Poltorak, Benjamin Voiturier
-- Date: 2024-01-16
+- Date: 2024-03-29
 - Tags: error-handling, zio
 
 ## Context and Problem Statement
