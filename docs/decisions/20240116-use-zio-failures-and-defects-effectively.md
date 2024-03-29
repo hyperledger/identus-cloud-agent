@@ -239,7 +239,7 @@ from an SQL execution error in a database agnostic way.
 
 A good approach is to use ZIO Defects to report repository errors, declaring all repository methods as `URIO`
 or `UIO`([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/main/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/repository/ConnectionRepository.scala)).
-Conversely, declaring them as `Task` assumes that the caller (i.e. service) is able to properly handle and
+Conversely, declaring them as `Task` assumes that the caller (i.e. service) can properly handle and
 recover from the low-level and database specific exceptions exposed in the error channel, which is a fallacy.
 
 ```scala
