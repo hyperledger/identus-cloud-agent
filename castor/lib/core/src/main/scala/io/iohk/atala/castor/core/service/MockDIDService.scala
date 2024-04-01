@@ -2,15 +2,19 @@ package io.iohk.atala.castor.core.service
 
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error
-import io.iohk.atala.prism.crypto.EC
-import io.iohk.atala.prism.crypto.keys.ECKeyPair
+import io.iohk.atala.shared.crypto.Apollo
+import io.iohk.atala.shared.crypto.Secp256k1KeyPair
 import io.iohk.atala.shared.models.Base64UrlString
 import zio.mock.{Expectation, Mock, Proxy}
 import zio.test.Assertion
-import zio.{IO, URLayer, ZIO, ZLayer, mock}
+import zio.{IO, URLayer, ZIO, ZLayer, mock, Unsafe, Runtime}
 
+import java.util.concurrent.TimeUnit
 import scala.collection.immutable.ArraySeq
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
+// FIXME: move this to test code
 object MockDIDService extends Mock[DIDService] {
 
   object ScheduleOperation extends Effect[SignedPrismDIDOperation, error.DIDOperationError, ScheduleDIDOperationOutcome]
@@ -40,9 +44,15 @@ object MockDIDService extends Mock[DIDService] {
 
   def createDID(
       verificationRelationship: VerificationRelationship
-  ): (PrismDIDOperation.Create, ECKeyPair, DIDMetadata, DIDData) = {
-    val masterKeyPair = EC.INSTANCE.generateKeyPair()
-    val keyPair = EC.INSTANCE.generateKeyPair()
+  ): (PrismDIDOperation.Create, Secp256k1KeyPair, DIDMetadata, DIDData) = {
+    // FIXME: unsafe bridge just to avoid refactoring the whole test into ZIO[?, ?, KeyPair]
+    def unsafeRun(effect: ZIO[Any, Nothing, Secp256k1KeyPair]): Secp256k1KeyPair = {
+      val f = Unsafe.unsafe { implicit unsafe => Runtime.default.unsafe.runToFuture(effect) }
+      Await.result(f, Duration(10, TimeUnit.SECONDS))
+    }
+    val masterKeyPair = unsafeRun(Apollo.default.secp256k1.generateKeyPair)
+    val keyPair = unsafeRun(Apollo.default.secp256k1.generateKeyPair)
+
     val createOperation = PrismDIDOperation.Create(
       publicKeys = Seq(
         InternalPublicKey(
@@ -50,7 +60,7 @@ object MockDIDService extends Mock[DIDService] {
           purpose = InternalKeyPurpose.Master,
           publicKeyData = PublicKeyData.ECCompressedKeyData(
             crv = EllipticCurve.SECP256K1,
-            data = Base64UrlString.fromByteArray(masterKeyPair.getPublicKey.getEncodedCompressed)
+            data = Base64UrlString.fromByteArray(masterKeyPair.publicKey.getEncodedCompressed)
           )
         ),
         PublicKey(
@@ -58,7 +68,7 @@ object MockDIDService extends Mock[DIDService] {
           purpose = verificationRelationship,
           publicKeyData = PublicKeyData.ECCompressedKeyData(
             crv = EllipticCurve.SECP256K1,
-            data = Base64UrlString.fromByteArray(keyPair.getPublicKey.getEncodedCompressed)
+            data = Base64UrlString.fromByteArray(keyPair.publicKey.getEncodedCompressed)
           )
         ),
       ),

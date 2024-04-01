@@ -6,7 +6,6 @@ import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.config.SecretStorageBackend
 import io.iohk.atala.agent.server.config.ValidatedVaultConfig
-import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.memory.{
   DIDSecretStorageInMemory,
   GenericSecretStorageInMemory,
@@ -40,6 +39,7 @@ import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
+import io.iohk.atala.shared.crypto.Apollo
 import io.iohk.atala.shared.db.{ContextAwareTask, DbConfig, TransactorLayer}
 import org.keycloak.authorization.client.AuthzClient
 import zio.*
@@ -80,7 +80,7 @@ object SystemModule {
 }
 
 object AppModule {
-  val apolloLayer: ULayer[Apollo] = Apollo.prism14Layer
+  val apolloLayer: ULayer[Apollo] = Apollo.layer
 
   val didJwtResolverLayer: URLayer[DIDService, JwtDidResolver] =
     ZLayer.fromFunction(PrismDidResolver(_))

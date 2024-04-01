@@ -1,6 +1,5 @@
 package io.iohk.atala.system.controller
 
-import io.iohk.atala.api.http.ErrorResponse
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.{DeserializationException, Response, UriContext}
 import sttp.tapir.server.interceptor.CustomiseInterceptors

@@ -1,14 +1,15 @@
-package io.iohk.atala.agent.walletapi.util
+package io.iohk.atala.shared.crypto
 
 import com.ionspin.kotlin.bignum.integer.BigInteger
-import io.iohk.atala.agent.walletapi.util.Prism14CompatUtil.*
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object Prism14CompatUtilSpec extends ZIOSpecDefault {
+object KmpCompatUtilSpec extends ZIOSpecDefault {
 
-  override def spec = suite("Prism14CompatUtil")(
+  import KmpCompatUtil.*
+
+  override def spec = suite("KmpCompatUtil")(
     test("scala to kotlin and back for zero") {
       val bigInt1 = BigInt(0)
       val bigInt2 = bigInt1.toKotlinBigInt.toScalaBigInt

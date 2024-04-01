@@ -1,9 +1,9 @@
-package io.iohk.atala.agent.walletapi.util
+package io.iohk.atala.shared.crypto
 
 import com.ionspin.kotlin.bignum.integer.BigInteger
 import com.ionspin.kotlin.bignum.integer.util.ConversionUtilsKt
 
-object Prism14CompatUtil {
+object KmpCompatUtil {
 
   extension (n: BigInteger) {
     def toScalaBigInt: BigInt = BigInt(ConversionUtilsKt.toTwosComplementByteArray(n))

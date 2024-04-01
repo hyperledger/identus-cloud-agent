@@ -49,8 +49,6 @@ trait WalletManagementController {
 
 object WalletManagementController {
   given walletServiceErrorConversion: Conversion[WalletManagementServiceError, ErrorResponse] = {
-    case WalletManagementServiceError.SeedGenerationError(cause) =>
-      ErrorResponse.internalServerError(detail = Some(cause.getMessage()))
     case WalletManagementServiceError.UnexpectedStorageError(cause) =>
       ErrorResponse.internalServerError(detail = Some(cause.getMessage()))
     case WalletManagementServiceError.TooManyWebhookError(limit, actual) =>

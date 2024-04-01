@@ -17,7 +17,6 @@ sealed trait WalletManagementServiceError {
 }
 
 object WalletManagementServiceError {
-  final case class SeedGenerationError(cause: Throwable) extends WalletManagementServiceError
   final case class UnexpectedStorageError(cause: Throwable) extends WalletManagementServiceError
   final case class TooManyWebhookError(limit: Int, actual: Int) extends WalletManagementServiceError
   final case class DuplicatedWalletId(id: WalletId) extends WalletManagementServiceError
@@ -32,7 +31,6 @@ object WalletManagementServiceError {
   }
 
   given Conversion[WalletManagementServiceError, Throwable] = {
-    case SeedGenerationError(cause)    => Exception("Unable to generate wallet seed.", cause)
     case UnexpectedStorageError(cause) => Exception(cause)
     case TooManyWebhookError(limit, actual) =>
       Exception(s"Too many webhook created for a wallet. Limit $limit, Actual $actual.")

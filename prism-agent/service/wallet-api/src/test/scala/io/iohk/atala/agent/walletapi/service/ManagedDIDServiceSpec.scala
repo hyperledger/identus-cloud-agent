@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.walletapi.service
 
-import io.iohk.atala.agent.walletapi.crypto.{Apollo, ApolloSpecHelper}
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.{
   CreateManagedDIDError,
@@ -15,7 +14,9 @@ import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
+import io.iohk.atala.shared.crypto.ApolloSpecHelper
 import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
@@ -23,7 +24,6 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import scala.collection.immutable.ArraySeq
-import io.iohk.atala.shared.models.WalletAdministrationContext
 
 object ManagedDIDServiceSpec
     extends ZIOSpecDefault,

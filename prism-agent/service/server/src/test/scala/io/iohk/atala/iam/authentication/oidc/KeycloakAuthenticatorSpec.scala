@@ -1,6 +1,5 @@
 package io.iohk.atala.iam.authentication.oidc
 
-import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
@@ -9,6 +8,7 @@ import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
+import io.iohk.atala.shared.crypto.ApolloSpecHelper
 import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.sharedtest.containers.KeycloakAdminClient

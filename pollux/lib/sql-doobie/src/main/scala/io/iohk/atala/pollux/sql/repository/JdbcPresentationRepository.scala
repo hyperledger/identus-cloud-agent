@@ -15,11 +15,9 @@ import io.iohk.atala.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
 import io.iohk.atala.pollux.core.repository.PresentationRepository
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.utils.BytesOps
 import zio.*
 import zio.interop.catz.*
 import zio.json.*
@@ -81,14 +79,6 @@ class JdbcPresentationRepository(
       .transactWallet(xa)
   }
 
-  // deserializes from the hex string
-  private def deserializeInclusionProof(proof: String): MerkleInclusionProof =
-    MerkleInclusionProof.decode(
-      String(
-        BytesOps.hexToBytes(proof)
-      )
-    )
-
   // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
 
@@ -135,8 +125,6 @@ class JdbcPresentationRepository(
   given proposePresentationGet: Get[ProposePresentation] =
     Get[String].map(decode[ProposePresentation](_).getOrElse(???))
   given proposePresentationPut: Put[ProposePresentation] = Put[String].contramap(_.asJson.toString)
-
-  given inclusionProofGet: Get[MerkleInclusionProof] = Get[String].map(deserializeInclusionProof)
 
   override def createPresentationRecord(record: PresentationRecord): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
