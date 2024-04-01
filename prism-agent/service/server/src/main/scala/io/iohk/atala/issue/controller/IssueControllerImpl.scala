@@ -79,7 +79,7 @@ class IssueControllerImpl(
                   ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
                 )
               credentialDefinitionId = {
-                val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl
+                val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl.toExternalForm
                 val urlSuffix =
                   s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
                 val urlPrefix = if (publicEndpointUrl.endsWith("/")) publicEndpointUrl else publicEndpointUrl + "/"

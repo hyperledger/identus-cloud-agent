@@ -345,9 +345,9 @@ class ManagedDIDServiceImpl private[walletapi] (
 
   /** PeerDID related methods
     */
-  def createAndStorePeerDID(serviceEndpoint: String): URIO[WalletAccessContext, PeerDID] =
+  def createAndStorePeerDID(serviceEndpoint: java.net.URL): URIO[WalletAccessContext, PeerDID] =
     for {
-      peerDID <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(serviceEndpoint)))
+      peerDID <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(serviceEndpoint.toExternalForm())))
       _ <- nonSecretStorage.createPeerDIDRecord(peerDID.did).orDie
       _ <- secretStorage.insertKey(peerDID.did, AGREEMENT_KEY_ID, peerDID.jwkForKeyAgreement).orDie
       _ <- secretStorage.insertKey(peerDID.did, AUTHENTICATION_KEY_ID, peerDID.jwkForKeyAuthentication).orDie

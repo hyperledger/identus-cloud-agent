@@ -70,7 +70,7 @@ object MockManagedDIDService extends Mock[ManagedDIDService] {
         ): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = ???
 
         override def createAndStorePeerDID(
-            serviceEndpoint: String
+            serviceEndpoint: java.net.URL
         ): UIO[PeerDID] = ???
 
         override def getPeerDID(

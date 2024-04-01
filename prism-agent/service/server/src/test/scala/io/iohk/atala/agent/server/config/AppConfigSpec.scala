@@ -7,6 +7,7 @@ import zio.test.*
 import zio.test.Assertion.*
 import zio.test.ZIOSpecDefault
 
+/** prismAgentServer/testOnly io.iohk.atala.agent.server.config.AppConfigSpec */
 object AppConfigSpec extends ZIOSpecDefault {
 
   private val baseVaultConfig = VaultConfig(
@@ -16,7 +17,7 @@ object AppConfigSpec extends ZIOSpecDefault {
     appRoleSecretId = None,
     useSemanticPath = true,
   )
-  private val baseInvalidHttpEndpointConfig = "http://:8080"
+  // private val baseInvalidHttpEndpointConfig = java.net.URL("http://:8080")
 
   override def spec = suite("AppConfigSpec")(
     test("load config successfully") {
@@ -75,26 +76,36 @@ object AppConfigSpec extends ZIOSpecDefault {
       )
       assert(vaultConfig.validate)(isRight(isSubtype[ValidatedVaultConfig.TokenAuth](anything)))
     },
-    test("reject config when invalid http endpoint config provided") {
-      for {
-        appConfig <- ZIO.serviceWith[AppConfig](
-          _.focus(_.agent.secretStorage.backend)
-            .replace(SecretStorageBackend.memory)
-            .focus(_.agent.httpEndpoint.publicEndpointUrl)
-            .replace(baseInvalidHttpEndpointConfig)
-        )
-      } yield assert(appConfig.validate)(isLeft(containsString("Invalid URL: http://:8080")))
-    },
-    test("reject config when invalid http didcomm service endpoint url provided") {
-      for {
-        appConfig <- ZIO.serviceWith[AppConfig](
-          _.focus(_.agent.secretStorage.backend)
-            .replace(SecretStorageBackend.memory)
-            .focus(_.agent.didCommEndpoint.publicEndpointUrl)
-            .replace(baseInvalidHttpEndpointConfig)
-        )
-      } yield assert(appConfig.validate)(isLeft(containsString("Invalid URL: http://:8080")))
-    },
-  ).provide(SystemModule.configLayer)
+  ).provide(SystemModule.configLayer) + {
 
+    import AppConfig.given
+    import zio.config.magnolia.*
+    val didCommEndpointConfig: Config[DidCommEndpointConfig] = deriveConfig[DidCommEndpointConfig]
+
+    suite("DidCommEndpointConfig URL type")(
+      test("DidCommEndpointConfig that the correct format") {
+        {
+          for {
+            didCommEndpointConfig <- ZIO.service[DidCommEndpointConfig]
+          } yield assert(true)(isTrue)
+        }.provide(
+          ZLayer.fromZIO(
+            ConfigProvider
+              .fromMap(Map("http.port" -> "9999", "publicEndpointUrl" -> "http://example:8080/path"))
+              .load(didCommEndpointConfig)
+          )
+        )
+      },
+      test("reject config when invalid http didcomm service endpoint url provided") {
+
+        assertZIO(
+          ConfigProvider
+            .fromMap(Map("http.port" -> "9999", "publicEndpointUrl" -> "http://:8080/path"))
+            .load(didCommEndpointConfig)
+            .exit
+        )(fails(isSubtype[Config.Error.InvalidData](anything)))
+        // Config.Error.InvalidData(zio.Chunk("publicEndpointUrl"), "Invalid URL: http://:8080/path")
+      },
+    )
+  }
 }

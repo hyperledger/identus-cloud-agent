@@ -4,8 +4,9 @@ import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.iam.authentication.AuthenticationConfig
 import io.iohk.atala.pollux.vc.jwt.*
 import io.iohk.atala.shared.db.DbConfig
+import zio.Config
 import zio.config.*
-import zio.config.magnolia.Descriptor
+import zio.config.magnolia.*
 import java.net.URL
 import java.time.Duration
 import scala.util.Try
@@ -23,7 +24,18 @@ final case class AppConfig(
 }
 
 object AppConfig {
-  val descriptor: ConfigDescriptor[AppConfig] = Descriptor[AppConfig]
+  given Config[java.net.URL] = Config.string.mapOrFail(url =>
+    val urlRegex = """^(http|https)://[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(:[0-9]{1,5})?(/.*)?$""".r
+    urlRegex.findFirstMatchIn(url) match
+      case Some(_) =>
+        Try(java.net.URL(url)).toEither.left.map(ex /*java.net.MalformedURLException*/ =>
+          Config.Error.InvalidData(zio.Chunk.empty, ex.getMessage())
+        )
+      case _ => Left(Config.Error.InvalidData(zio.Chunk.empty, s"Invalid URL: $url"))
+  )
+
+  val config: Config[AppConfig] = deriveConfig[AppConfig]
+
 }
 
 final case class VaultConfig(
@@ -77,9 +89,7 @@ final case class PrismNodeConfig(service: GrpcServiceConfig)
 
 final case class GrpcServiceConfig(host: String, port: Int, usePlainText: Boolean)
 
-final case class StatusListRegistryConfig(
-    publicEndpointUrl: String
-)
+final case class StatusListRegistryConfig(publicEndpointUrl: java.net.URL)
 
 final case class DatabaseConfig(
     host: String,
@@ -169,28 +179,13 @@ final case class AgentConfig(
         "The default wallet must be enabled if all the authentication methods are disabled. Default wallet is required for the single-tenant mode."
       )
       _ <- secretStorage.validate
-      _ <- httpEndpoint.validate
-      _ <- didCommEndpoint.validate
     } yield ()
 
 }
 
-object EndpointConfig {
-  def validate(url: String): Either[String, Unit] = {
-    val urlRegex = """^(http|https)://[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(:[0-9]{1,5})?(/.*)?$""".r
-    urlRegex.findFirstMatchIn(url) match
-      case Some(_) => Right(())
-      case _       => Left(s"Invalid URL: $url")
-  }
-}
+final case class HttpEndpointConfig(http: HttpConfig, publicEndpointUrl: java.net.URL)
 
-final case class HttpEndpointConfig(http: HttpConfig, publicEndpointUrl: String) {
-  def validate: Either[String, Unit] = EndpointConfig.validate(publicEndpointUrl)
-}
-
-final case class DidCommEndpointConfig(http: HttpConfig, publicEndpointUrl: String) {
-  def validate: Either[String, Unit] = EndpointConfig.validate(publicEndpointUrl)
-}
+final case class DidCommEndpointConfig(http: HttpConfig, publicEndpointUrl: java.net.URL)
 
 final case class HttpConfig(port: Int)
 
@@ -216,13 +211,13 @@ enum SecretStorageBackend {
 }
 
 object SecretStorageBackend {
-  given Descriptor[SecretStorageBackend] =
-    Descriptor.from(
-      Descriptor[String].transformOrFailLeft { s =>
-        Try(SecretStorageBackend.valueOf(s)).toOption
-          .toRight(
-            s"Invalid configuration value '$s'. Possible values: ${SecretStorageBackend.values.mkString("[", ", ", "]")}"
-          )
-      }(_.toString())
-    )
+  // given Descriptor[SecretStorageBackend] =
+  //   Descriptor.from(
+  //     Descriptor[String].transformOrFailLeft { s =>
+  //       Try(SecretStorageBackend.valueOf(s)).toOption
+  //         .toRight(
+  //           s"Invalid configuration value '$s'. Possible values: ${SecretStorageBackend.values.mkString("[", ", ", "]")}"
+  //         )
+  //     }(_.toString())
+  //   )
 }

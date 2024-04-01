@@ -49,7 +49,7 @@ lazy val V = new {
 
   // https://mvnrepository.com/artifact/dev.zio/zio
   val zio = "2.0.18"
-  val zioConfig = "3.0.7"
+  val zioConfig = "4.0.1"
   val zioLogging = "2.1.16"
   val zioJson = "0.3.0"
   val zioHttp = "3.0.0-RC4"
@@ -112,6 +112,7 @@ lazy val D = new {
   val zioConfig: ModuleID = "dev.zio" %% "zio-config" % V.zioConfig
   val zioConfigMagnolia: ModuleID = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
   val zioConfigTypesafe: ModuleID = "dev.zio" %% "zio-config-typesafe" % V.zioConfig
+  val zioConfigRefined: ModuleID = "dev.zio" %% "zio-config-refined" % V.zioConfig
 
   val circeCore: ModuleID = "io.circe" %% "circe-core" % V.circe
   val circeGeneric: ModuleID = "io.circe" %% "circe-generic" % V.circe
@@ -381,6 +382,7 @@ lazy val D_PrismAgent = new {
     D.zioConfig,
     D.zioConfigMagnolia,
     D.zioConfigTypesafe,
+    D.zioConfigRefined,
     D.zioJson,
     logback,
     D.zioHttp,
