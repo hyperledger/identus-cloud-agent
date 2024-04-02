@@ -6,7 +6,7 @@ import zio.*
 
 trait VcVerificationController {
 
-  def verify(request: controller.http.VcVerificationRequests)(implicit
+  def verify(request: List[controller.http.VcVerificationRequest])(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, controller.http.VcVerificationResponses]
+  ): IO[ErrorResponse, List[controller.http.VcVerificationResponse]]
 }

@@ -20,7 +20,7 @@ class VcVerificationServerEndpoints(
     verify
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
-        { case (ctx: RequestContext, request: controller.http.VcVerificationRequests) =>
+        { case (ctx: RequestContext, request: List[controller.http.VcVerificationRequest]) =>
           vcVerificationController
             .verify(request)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
