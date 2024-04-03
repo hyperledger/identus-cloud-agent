@@ -11,7 +11,7 @@ final case class VcVerificationRequest(
     credential: String,
     @description(VcVerificationRequest.annotations.vcVerification.description)
     @encodedExample(VcVerificationRequest.annotations.vcVerification.example)
-    verifications: Option[List[VcVerification]]
+    verifications: List[VcVerification]
 )
 
 object VcVerificationRequest {
@@ -25,23 +25,21 @@ object VcVerificationRequest {
         )
 
     object vcVerification
-        extends Annotation[Option[List[VcVerification]]](
+        extends Annotation[List[VcVerification]](
           description = "The list of Verifications to verify. All verifications run if Verifications left empty",
-          example = Some(
-            List(
-              VcVerification.SignatureVerification,
-              VcVerification.IssuerIdentification,
-              VcVerification.ExpirationCheck,
-              VcVerification.NotBeforeCheck,
-              VcVerification.AudienceCheck,
-              VcVerification.SubjectVerification,
-              VcVerification.IntegrityOfClaims,
-              VcVerification.ComplianceWithStandards,
-              VcVerification.RevocationCheck,
-              VcVerification.AlgorithmVerification,
-              VcVerification.SchemaCheck,
-              VcVerification.SemanticCheckOfClaims,
-            )
+          example = List(
+            VcVerification.SignatureVerification,
+            VcVerification.IssuerIdentification,
+            VcVerification.ExpirationCheck,
+            VcVerification.NotBeforeCheck,
+            VcVerification.AudienceCheck,
+            VcVerification.SubjectVerification,
+            VcVerification.IntegrityOfClaims,
+            VcVerification.ComplianceWithStandards,
+            VcVerification.RevocationCheck,
+            VcVerification.AlgorithmVerification,
+            VcVerification.SchemaCheck,
+            VcVerification.SemanticCheckOfClaims,
           )
         )
   }
