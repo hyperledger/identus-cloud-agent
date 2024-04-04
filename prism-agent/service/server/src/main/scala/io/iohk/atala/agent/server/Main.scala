@@ -48,6 +48,7 @@ import io.iohk.atala.pollux.sql.repository.{
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
+import io.iohk.atala.verification.controller.VcVerificationControllerImpl
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import zio.*
 import zio.metrics.connectors.micrometer
@@ -145,6 +146,7 @@ object MainApp extends ZIOAppDefault {
           IssueControllerImpl.layer,
           CredentialStatusControllerImpl.layer,
           PresentProofControllerImpl.layer,
+          VcVerificationControllerImpl.layer,
           VerificationPolicyControllerImpl.layer,
           EntityControllerImpl.layer,
           WalletManagementControllerImpl.layer,

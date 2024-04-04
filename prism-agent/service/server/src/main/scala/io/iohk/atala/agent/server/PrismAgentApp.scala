@@ -35,6 +35,7 @@ import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.{HexString, WalletAccessContext, WalletId}
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.system.controller.SystemServerEndpoints
+import io.iohk.atala.verification.controller.VcVerificationServerEndpoints
 import zio.*
 import zio.metrics.*
 
@@ -133,6 +134,7 @@ object AgentHttpServer {
     allDIDEndpoints <- DIDServerEndpoints.all
     allDIDRegistrarEndpoints <- DIDRegistrarServerEndpoints.all
     allPresentProofEndpoints <- PresentProofServerEndpoints.all
+    allVcVerificationEndpoints <- VcVerificationServerEndpoints.all
     allSystemEndpoints <- SystemServerEndpoints.all
     allEntityEndpoints <- EntityServerEndpoints.all
     allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
@@ -146,6 +148,7 @@ object AgentHttpServer {
     allIssueEndpoints ++
     allStatusListEndpoints ++
     allPresentProofEndpoints ++
+    allVcVerificationEndpoints ++
     allSystemEndpoints ++
     allEntityEndpoints ++
     allWalletManagementEndpoints ++
