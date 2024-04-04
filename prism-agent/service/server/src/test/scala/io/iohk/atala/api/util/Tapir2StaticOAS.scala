@@ -14,6 +14,7 @@ import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinition
 import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, VerificationPolicyController}
 import io.iohk.atala.presentproof.controller.PresentProofController
 import io.iohk.atala.system.controller.SystemController
+import io.iohk.atala.verification.controller.VcVerificationController
 import org.scalatestplus.mockito.MockitoSugar.*
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
@@ -44,6 +45,7 @@ object Tapir2StaticOAS extends ZIOAppDefault {
         ZLayer.succeed(mock[VerificationPolicyController]) ++
         ZLayer.succeed(mock[DIDRegistrarController]) ++
         ZLayer.succeed(mock[PresentProofController]) ++
+        ZLayer.succeed(mock[VcVerificationController]) ++
         ZLayer.succeed(mock[IssueController]) ++
         ZLayer.succeed(mock[DIDController]) ++
         ZLayer.succeed(mock[SystemController]) ++
