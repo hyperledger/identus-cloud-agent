@@ -2,6 +2,7 @@ package io.iohk.atala.issue.controller
 
 import com.typesafe.config.ConfigFactory
 import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.agent.server.http.CustomServerInterceptors
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
@@ -111,7 +112,9 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
 
   def bootstrapOptions[F[_]](monadError: MonadError[F]): CustomiseInterceptors[F, Any] = {
     new CustomiseInterceptors[F, Any](_ => ())
-      .defaultHandlers(ErrorResponse.failureResponseHandler)
+      .exceptionHandler(CustomServerInterceptors.exceptionHandler)
+      .rejectHandler(CustomServerInterceptors.rejectHandler)
+      .decodeFailureHandler(CustomServerInterceptors.decodeFailureHandler)
   }
 
   def httpBackend(controller: IssueController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {

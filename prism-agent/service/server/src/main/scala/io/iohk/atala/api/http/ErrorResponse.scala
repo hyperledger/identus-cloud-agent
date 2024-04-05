@@ -1,13 +1,19 @@
 package io.iohk.atala.api.http
 
 import io.iohk.atala.api.http.ErrorResponse.annotations
+import io.iohk.atala.connect.controller.http.Connection
+import io.iohk.atala.shared.models.{Failure, WalletAccessContext}
 import sttp.model.StatusCode
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import sttp.tapir.generic.auto.*
-import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.server.model.ValuedEndpointOutput
+import zio.ZIO
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
+
+import java.util.UUID
+import scala.util.matching.Regex
+
+private val INSTANCE_URI_PREFIX = "error:instance:"
 
 case class ErrorResponse(
     @description(annotations.status.description)
@@ -21,10 +27,10 @@ case class ErrorResponse(
     title: String,
     @description(annotations.detail.description)
     @encodedExample(annotations.detail.example)
-    detail: Option[String],
+    detail: Option[String] = None,
     @description(annotations.instance.description)
     @encodedExample(annotations.instance.example)
-    instance: String
+    instance: String = INSTANCE_URI_PREFIX + UUID.randomUUID().toString
 )
 
 object ErrorResponse {
@@ -34,8 +40,18 @@ object ErrorResponse {
 
   given schema: Schema[ErrorResponse] = Schema.derived
 
-  def failureResponseHandler(msg: String): ValuedEndpointOutput[_] =
-    ValuedEndpointOutput(jsonBody[ErrorResponse], ErrorResponse.badRequest(detail = Option(msg)))
+  private val CamelCaseSplitRegex: Regex = "(([A-Z]?[a-z]+)|([A-Z]))".r
+  given failureToErrorResponseConversion[R, A]: Conversion[ZIO[R, Failure, A], ZIO[R, ErrorResponse, A]] = { effect =>
+    effect.mapError { failure =>
+      val simpleName = failure.getClass.getSimpleName
+      ErrorResponse(
+        failure.statusCode.code,
+        s"error:ConnectionServiceError:$simpleName",
+        CamelCaseSplitRegex.findAllIn(simpleName).mkString(" "),
+        Some(failure.userFacingMessage)
+      )
+    }
+  }
 
   object annotations {
     object status
@@ -70,42 +86,38 @@ object ErrorResponse {
         )
   }
 
-  def notFound(title: String = "NotFound", detail: Option[String] = None, instance: String = "") =
-    ErrorResponse(StatusCode.NotFound.code, `type` = "NotFound", title = title, detail = detail, instance = instance)
+  def notFound(title: String = "NotFound", detail: Option[String] = None) =
+    ErrorResponse(StatusCode.NotFound.code, `type` = "NotFound", title = title, detail = detail)
 
-  def internalServerError(title: String = "InternalServerError", detail: Option[String] = None, instance: String = "") =
+  def internalServerError(title: String = "InternalServerError", detail: Option[String] = None) =
     ErrorResponse(
       StatusCode.InternalServerError.code,
       `type` = "InternalServerError",
       title = title,
-      detail = detail,
-      instance = instance
+      detail = detail
     )
 
-  def badRequest(title: String = "BadRequest", detail: Option[String] = None, instance: String = "") =
+  def badRequest(title: String = "BadRequest", detail: Option[String] = None) =
     ErrorResponse(
       StatusCode.BadRequest.code,
       `type` = title,
       title = title,
-      detail = detail,
-      instance = instance
+      detail = detail
     )
 
-  def unprocessableEntity(title: String = "UnprocessableEntity", detail: Option[String] = None, instance: String = "") =
+  def unprocessableEntity(title: String = "UnprocessableEntity", detail: Option[String] = None) =
     ErrorResponse(
       StatusCode.UnprocessableEntity.code,
       `type` = title,
       title = title,
-      detail = detail,
-      instance = instance
+      detail = detail
     )
 
-  def conflict(title: String = "Conflict", detail: Option[String] = None, instance: String = "") =
+  def conflict(title: String = "Conflict", detail: Option[String] = None) =
     ErrorResponse(
       StatusCode.Conflict.code,
       `type` = title,
       title = title,
-      detail = detail,
-      instance = instance
+      detail = detail
     )
 }

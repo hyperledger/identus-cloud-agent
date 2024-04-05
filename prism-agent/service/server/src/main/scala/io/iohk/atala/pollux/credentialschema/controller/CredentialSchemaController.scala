@@ -10,12 +10,12 @@ import io.iohk.atala.pollux.credentialschema.http.{
   CredentialSchemaResponsePage,
   FilterInput
 }
-import zio.*
-
-import scala.language.implicitConversions
-import java.util.UUID
 import io.iohk.atala.shared.models.WalletAccessContext
+import zio.*
 import zio.json.ast.Json
+
+import java.util.UUID
+import scala.language.implicitConversions
 
 trait CredentialSchemaController {
   def createSchema(in: CredentialSchemaInput)(implicit
@@ -59,8 +59,7 @@ object CredentialSchemaController {
       case UpdateError(id, version, author, message) =>
         ErrorResponse.badRequest(
           title = "CredentialSchemaUpdateError",
-          detail = Option(s"Credential schema update error: id=$id, version=$version, author=$author"),
-          instance = message
+          detail = Option(s"Credential schema update error: id=$id, version=$version, author=$author, msg=$message")
         )
       case UnexpectedError(msg: String) =>
         ErrorResponse.internalServerError(detail = Option(msg))

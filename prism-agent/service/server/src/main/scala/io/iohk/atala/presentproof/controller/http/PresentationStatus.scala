@@ -102,6 +102,7 @@ object PresentationStatus {
               "PresentationSent",
               "PresentationReceived",
               "PresentationVerified",
+              "PresentationVerificationFailed",
               "PresentationAccepted",
               "PresentationRejected",
               "ProblemReportPending",

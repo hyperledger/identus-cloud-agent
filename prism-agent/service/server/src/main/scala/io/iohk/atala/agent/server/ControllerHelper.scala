@@ -9,6 +9,7 @@ import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID}
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.{InvalidStateForOperation, RecordIdNotFound}
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -21,32 +22,29 @@ trait ControllerHelper {
 
   protected case class DidIdPair(myDID: DidId, theirDid: DidId)
 
-  private[this] def extractDidIdPairFromValidConnection(connRecord: ConnectionRecord): Option[DidIdPair] = {
-    (connRecord.protocolState, connRecord.connectionResponse, connRecord.role) match {
+  private[this] def extractDidIdPairFromEstablishedConnection(
+      record: ConnectionRecord
+  ): IO[InvalidStateForOperation, DidIdPair] = {
+    (record.protocolState, record.connectionResponse, record.role) match {
       case (ProtocolState.ConnectionResponseReceived, Some(resp), Role.Invitee) =>
         // If Invitee, myDid is the target
-        Some(DidIdPair(resp.to, resp.from))
+        ZIO.succeed(DidIdPair(resp.to, resp.from))
       case (ProtocolState.ConnectionResponseSent, Some(resp), Role.Inviter) =>
         // If Inviter, myDid is the source
-        Some(DidIdPair(resp.from, resp.to))
-      case _ => None
+        ZIO.succeed(DidIdPair(resp.from, resp.to))
+      case _ =>
+        ZIO.fail(InvalidStateForOperation(record.protocolState))
     }
   }
 
   protected def getPairwiseDIDs(
       connectionId: UUID
-  ): ZIO[WalletAccessContext & ConnectionService, ConnectionServiceError, DidIdPair] = {
+  ): ZIO[WalletAccessContext & ConnectionService, RecordIdNotFound | InvalidStateForOperation, DidIdPair] = {
     for {
       connectionService <- ZIO.service[ConnectionService]
-      maybeConnection <- connectionService.getConnectionRecord(connectionId)
-      didIdPair <- maybeConnection match
-        case Some(connRecord: ConnectionRecord) =>
-          extractDidIdPairFromValidConnection(connRecord) match {
-            case Some(didIdPair: DidIdPair) => ZIO.succeed(didIdPair)
-            case None =>
-              ZIO.fail(ConnectionServiceError.UnexpectedError("Invalid connection record state for operation"))
-          }
-        case _ => ZIO.fail(ConnectionServiceError.RecordIdNotFound(connectionId))
+      maybeConnection <- connectionService.findRecordById(connectionId)
+      connection <- ZIO.getOrFailWith(RecordIdNotFound(connectionId))(maybeConnection)
+      didIdPair <- extractDidIdPairFromEstablishedConnection(connection)
     } yield didIdPair
   }
 

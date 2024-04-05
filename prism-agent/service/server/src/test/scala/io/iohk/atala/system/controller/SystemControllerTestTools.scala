@@ -12,6 +12,7 @@ import zio.metrics.jvm.DefaultJvmMetrics
 import io.iohk.atala.system.controller.http.HealthInfo
 import io.iohk.atala.agent.server.SystemModule.configLayer
 import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.agent.server.http.CustomServerInterceptors
 import sttp.monad.MonadError
 import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.test.ZIOSpecDefault
@@ -41,7 +42,9 @@ trait SystemControllerTestTools {
 
   def bootstrapOptions[F[_]](monadError: MonadError[F]): CustomiseInterceptors[F, Any] = {
     new CustomiseInterceptors[F, Any](_ => ())
-      .defaultHandlers(ErrorResponse.failureResponseHandler)
+      .exceptionHandler(CustomServerInterceptors.exceptionHandler)
+      .rejectHandler(CustomServerInterceptors.rejectHandler)
+      .decodeFailureHandler(CustomServerInterceptors.decodeFailureHandler)
   }
 
   def httpBackend(controller: SystemController) = {
