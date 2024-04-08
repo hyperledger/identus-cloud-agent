@@ -1,6 +1,7 @@
 package io.iohk.atala.verification.controller.http
 
 import io.iohk.atala.api.http.Annotation
+import io.iohk.atala.pollux.core.service.verification.VcVerification
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
