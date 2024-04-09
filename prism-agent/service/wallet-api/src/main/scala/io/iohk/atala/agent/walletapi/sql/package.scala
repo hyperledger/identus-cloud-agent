@@ -10,11 +10,13 @@ import io.circe.syntax.*
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState, KeyManagementMode}
 import io.iohk.atala.castor.core.model.ProtoModelHelper.*
+import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.prism.protos.node_models
+import io.iohk.atala.shared.crypto.jwk.JWK
 import io.iohk.atala.shared.models.WalletId
 import zio.json.*
 import zio.json.ast.Json
@@ -67,10 +69,20 @@ package object sql {
   given Meta[KeyManagementMode] = pgEnumString(
     "PRISM_DID_KEY_MODE",
     {
-      case "HD" => KeyManagementMode.HD
-      case s    => throw InvalidEnum[KeyManagementMode](s)
+      case "HD"     => KeyManagementMode.HD
+      case "RANDOM" => KeyManagementMode.RANDOM
+      case s        => throw InvalidEnum[KeyManagementMode](s)
     },
-    { case KeyManagementMode.HD => "HD" }
+    {
+      case KeyManagementMode.HD     => "HD"
+      case KeyManagementMode.RANDOM => "RANDOM"
+    }
+  )
+
+  given Meta[EllipticCurve] = pgEnumString(
+    "CURVE_NAME",
+    s => EllipticCurve.parseString(s).get,
+    _.name
   )
 
   given Meta[PublicationStatusType] = pgEnumString(
@@ -117,6 +129,9 @@ package object sql {
   given octetKeyPairGet: Get[OctetKeyPair] = Get[String].map(OctetKeyPair.parse)
   given octetKeyPairPut: Put[OctetKeyPair] = Put[String].contramap(_.toJSONString)
 
+  given jwkGet: Get[JWK] = Get[String].map(s => JWK.fromString(s).left.map(Exception(_)).toTry.get)
+  given jwkPut: Put[JWK] = Put[String].contramap(_.toJsonString)
+
   given jsonGet: Get[Json] = Get[String].map(_.fromJson[Json] match {
     case Right(value) => value
     case Left(error)  => throw new RuntimeException(error)
@@ -130,7 +145,6 @@ package object sql {
       publishOperationId: Option[Array[Byte]],
       createdAt: Instant,
       updatedAt: Instant,
-      keyMode: KeyManagementMode,
       didIndex: Int,
       walletId: WalletId
   ) {
@@ -190,7 +204,6 @@ package object sql {
         publishOperationId = publishedOperationId.map(_.toArray),
         createdAt = now,
         updatedAt = now,
-        keyMode = state.keyMode,
         didIndex = state.didIndex,
         walletId = walletId
       )

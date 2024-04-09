@@ -1,22 +1,26 @@
 package io.iohk.atala.agent.walletapi.service.handler
 
-import io.iohk.atala.agent.walletapi.model.CreateDIDHdKey
+import io.iohk.atala.agent.walletapi.model.CreateDIDKey
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
 import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
 import io.iohk.atala.agent.walletapi.model.PublicationState
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.model.error.CreateManagedDIDError
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
+import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.agent.walletapi.util.OperationFactory
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.shared.crypto.Apollo
+import io.iohk.atala.shared.crypto.Ed25519KeyPair
+import io.iohk.atala.shared.crypto.X25519KeyPair
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
 private[walletapi] class DIDCreateHandler(
     apollo: Apollo,
     nonSecretStorage: DIDNonSecretStorage,
+    secretStorage: DIDSecretStorage,
     walletSecretStorage: WalletSecretStorage,
 )(
     masterKeyId: String
@@ -36,10 +40,10 @@ private[walletapi] class DIDCreateHandler(
           CreateManagedDIDError.WalletStorageError.apply,
           maybeIdx => maybeIdx.map(_ + 1).getOrElse(0)
         )
-      generated <- operationFactory.makeCreateOperationHdKey(masterKeyId, seed.toByteArray)(didIndex, didTemplate)
-      (createOperation, hdKey) = generated
+      generated <- operationFactory.makeCreateOperation(masterKeyId, seed.toByteArray)(didIndex, didTemplate)
+      (createOperation, keys) = generated
       state = ManagedDIDState(createOperation, didIndex, PublicationState.Created())
-    } yield DIDCreateMaterialImpl(nonSecretStorage)(createOperation, state, hdKey)
+    } yield DIDCreateMaterialImpl(nonSecretStorage, secretStorage)(createOperation, state, keys)
   }
 }
 
@@ -49,17 +53,24 @@ private[walletapi] trait DIDCreateMaterial {
   def persist: RIO[WalletAccessContext, Unit]
 }
 
-private[walletapi] class DIDCreateMaterialImpl(nonSecretStorage: DIDNonSecretStorage)(
+private[walletapi] class DIDCreateMaterialImpl(nonSecretStorage: DIDNonSecretStorage, secretStorage: DIDSecretStorage)(
     val operation: PrismDIDOperation.Create,
     val state: ManagedDIDState,
-    hdKey: CreateDIDHdKey
+    keys: CreateDIDKey
 ) extends DIDCreateMaterial {
   def persist: RIO[WalletAccessContext, Unit] = {
     val did = operation.did
+    val operationHash = operation.toAtalaOperationHash
     for {
       _ <- nonSecretStorage
-        .insertManagedDID(did, state, hdKey.keyPaths ++ hdKey.internalKeyPaths)
+        .insertManagedDID(did, state, keys.hdKeys, keys.randKeyMeta)
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
+      _ <- ZIO.foreach(keys.randKeys.toList) { case (keyId, key) =>
+        key.keyPair match {
+          case kp: Ed25519KeyPair => secretStorage.insertPrismDIDKeyPair(did, keyId, operationHash, kp)
+          case kp: X25519KeyPair  => secretStorage.insertPrismDIDKeyPair(did, keyId, operationHash, kp)
+        }
+      }
     } yield ()
   }
 }

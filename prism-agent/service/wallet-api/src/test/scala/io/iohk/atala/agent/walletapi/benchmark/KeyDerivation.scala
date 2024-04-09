@@ -77,7 +77,7 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
       for {
         vaultClient <- ZIO.service[VaultKVClient]
         apollo <- ZIO.service[Apollo]
-        keyPair <- apollo.secp256k1.generateKeyPair
+        keyPair = apollo.secp256k1.generateKeyPair
         _ <- ZIO
           .foreach(1 to 50_000) { i =>
             given KVCodec[Secp256k1PrivateKey] = codec(apollo)

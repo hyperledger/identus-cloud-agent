@@ -6,6 +6,7 @@ import doobie.postgres.implicits.*
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.{
+  EllipticCurve,
   InternalKeyPurpose,
   PrismDID,
   ScheduledDIDOperationStatus,
@@ -33,7 +34,6 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
         |   publish_operation_id,
         |   created_at,
         |   updated_at,
-        |   key_mode,
         |   did_index,
         |   wallet_id
         | FROM public.prism_did_wallet_state
@@ -50,7 +50,8 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
   override def insertManagedDID(
       did: PrismDID,
       state: ManagedDIDState,
-      hdKey: Map[String, ManagedDIDHdKeyPath]
+      hdKey: Map[String, ManagedDIDHdKeyPath],
+      randKey: Map[String, ManagedDIDRandKeyMeta]
   ): RIO[WalletAccessContext, Unit] = {
     val insertStateIO = (row: DIDStateRow) => sql"""
         | INSERT INTO public.prism_did_wallet_state(
@@ -60,7 +61,6 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
         |   publish_operation_id,
         |   created_at,
         |   updated_at,
-        |   key_mode,
         |   did_index,
         |   wallet_id
         | )
@@ -71,7 +71,6 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
         |   ${row.publishOperationId},
         |   ${row.createdAt},
         |   ${row.updatedAt},
-        |   ${row.keyMode},
         |   ${row.didIndex},
         |   ${row.walletId}
         | )
@@ -79,16 +78,34 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
 
     val operationHash = state.createOperation.toAtalaOperationHash
     val hdKeyValues = (now: Instant) =>
-      hdKey.toList.map { case (key, path) => (did, key, path.keyUsage, path.keyIndex, now, operationHash) }
+      hdKey.toList.map { case (keyId, path) =>
+        (did, keyId, path.keyUsage, Some(path.keyIndex), now, operationHash, path.keyMode, path.curve)
+      }
+    val randKeyValues = (now: Instant) =>
+      randKey.toList.map { (keyId, rand) =>
+        (did, keyId, rand.keyUsage, None, now, operationHash, rand.keyMode, rand.curve)
+      }
     val insertHdKeyIO =
-      Update[(PrismDID, String, VerificationRelationship | InternalKeyPurpose, Int, Instant, Array[Byte])](
-        "INSERT INTO public.prism_did_hd_key(did, key_id, key_usage, key_index, created_at, operation_hash) VALUES (?, ?, ?, ?, ?, ?)"
+      Update[
+        (
+            PrismDID,
+            String,
+            VerificationRelationship | InternalKeyPurpose,
+            Option[Int],
+            Instant,
+            Array[Byte],
+            KeyManagementMode,
+            EllipticCurve
+        )
+      ](
+        "INSERT INTO public.prism_did_key(did, key_id, key_usage, key_index, created_at, operation_hash, key_mode, curve_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
       )
 
     val txnIO = (now: Instant, walletId: WalletId) =>
       for {
         _ <- insertStateIO(DIDStateRow.from(did, state, now, walletId)).run
         _ <- insertHdKeyIO.updateMany(hdKeyValues(now))
+        _ <- insertHdKeyIO.updateMany(randKeyValues(now))
       } yield ()
 
     for {
@@ -140,11 +157,12 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
            | SELECT
            |   hd.key_usage AS key_usage,
            |   MAX(hd.key_index) AS key_index
-           | FROM public.prism_did_hd_key hd
+           | FROM public.prism_did_key hd
            |   LEFT JOIN public.prism_did_wallet_state ws ON hd.did = ws.did
            |   LEFT JOIN public.prism_did_update_lineage ul ON hd.operation_hash = ul.operation_hash
            | WHERE
            |   hd.did = $did
+           |   AND hd.key_mode = ${KeyManagementMode.HD}
            |   AND (ul.status = $status OR (ul.status IS NULL AND hd.operation_hash = sha256(ws.atala_operation_content)))
            | GROUP BY hd.did, hd.key_usage
            """.stripMargin
@@ -178,15 +196,21 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
       }
   }
 
-  override def getHdKeyPath(did: PrismDID, keyId: String): RIO[WalletAccessContext, Option[ManagedDIDHdKeyPath]] = {
+  override def getKeyMeta(
+      did: PrismDID,
+      keyId: String
+  ): RIO[WalletAccessContext, Option[(ManagedDIDKeyMeta, Array[Byte])]] = {
     val status: ScheduledDIDOperationStatus = ScheduledDIDOperationStatus.Confirmed
     val cxnIO =
       sql"""
            | SELECT
            |   ws.did_index,
            |   hd.key_usage,
-           |   hd.key_index
-           | FROM public.prism_did_hd_key hd
+           |   hd.key_index,
+           |   hd.key_mode,
+           |   hd.curve_name,
+           |   hd.operation_hash
+           | FROM public.prism_did_key hd
            |   LEFT JOIN public.prism_did_wallet_state ws ON hd.did = ws.did
            |   LEFT JOIN public.prism_did_update_lineage ul ON hd.operation_hash = ul.operation_hash
            | WHERE
@@ -194,10 +218,28 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
            |   AND hd.key_id = $keyId
            |   AND (ul.status = $status OR (ul.status IS NULL AND hd.operation_hash = sha256(ws.atala_operation_content)))
            """.stripMargin
-        .query[ManagedDIDHdKeyPath]
+        .query[
+          (
+              Option[Int],
+              VerificationRelationship | InternalKeyPurpose,
+              Option[Int],
+              KeyManagementMode,
+              EllipticCurve,
+              Array[Byte]
+          )
+        ]
         .option
 
-    cxnIO.transactWallet(xa)
+    cxnIO
+      .transactWallet(xa)
+      .flatMap {
+        case Some(Some(didIndex), keyUsage, Some(keyIndex), KeyManagementMode.HD, _, oh) =>
+          ZIO.some(ManagedDIDKeyMeta.HD(ManagedDIDHdKeyPath(didIndex, keyUsage, keyIndex)), oh)
+        case Some(_, keyUsage, _, KeyManagementMode.RANDOM, curve, oh) =>
+          ZIO.some(ManagedDIDKeyMeta.Rand(ManagedDIDRandKeyMeta(keyUsage, curve)) -> oh)
+        case None => ZIO.none
+        case _    => ZIO.dieMessage(s"Key metadata of $did#$keyId is corrupted")
+      }
   }
 
   override def listHdKeyPath(
@@ -210,8 +252,8 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
         |   operation_hash,
         |   key_usage,
         |   key_index
-        | FROM public.prism_did_hd_key
-        | WHERE did = $did
+        | FROM public.prism_did_key
+        | WHERE did = $did AND key_mode = ${KeyManagementMode.HD}
         """.stripMargin
         .query[(String, ArraySeq[Byte], VerificationRelationship | InternalKeyPurpose, Int)]
         .to[List]
@@ -226,24 +268,29 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
     }
   }
 
-  override def insertHdKeyPath(
+  override def insertKeyMeta(
       did: PrismDID,
       keyId: String,
-      hdKeyPath: ManagedDIDHdKeyPath,
+      meta: ManagedDIDKeyMeta,
       operationHash: Array[Byte]
   ): RIO[WalletAccessContext, Unit] = {
+    val (keyUsage, keyIndex, keyMode, curve) = meta match {
+      case ManagedDIDKeyMeta.HD(k)   => (k.keyUsage, Some(k.keyIndex), k.keyMode, k.curve)
+      case ManagedDIDKeyMeta.Rand(k) => (k.keyUsage, None, k.keyMode, k.curve)
+    }
     val cxnIO = (now: Instant) => sql"""
-          | INSERT INTO public.prism_did_hd_key(did, key_id, key_usage, key_index, created_at, operation_hash)
+          | INSERT INTO public.prism_did_key(did, key_id, key_usage, key_index, created_at, operation_hash, key_mode, curve_name)
           | VALUES
           | (
           |  $did,
           |  $keyId,
-          |  ${hdKeyPath.keyUsage},
-          |  ${hdKeyPath.keyIndex},
+          |  ${keyUsage},
+          |  ${keyIndex},
           |  $now,
-          |  $operationHash
+          |  $operationHash,
+          |  ${keyMode},
+          |  ${curve}
           | )
-          | ON CONFLICT (did, key_id, operation_hash) DO NOTHING
           |""".stripMargin.update
 
     for {
@@ -273,7 +320,6 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
            |   publish_operation_id,
            |   created_at,
            |   updated_at,
-           |   key_mode,
            |   did_index,
            |   wallet_id
            | FROM public.prism_did_wallet_state

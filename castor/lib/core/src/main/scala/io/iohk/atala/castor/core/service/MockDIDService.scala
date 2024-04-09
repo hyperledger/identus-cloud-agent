@@ -7,12 +7,9 @@ import io.iohk.atala.shared.crypto.Secp256k1KeyPair
 import io.iohk.atala.shared.models.Base64UrlString
 import zio.mock.{Expectation, Mock, Proxy}
 import zio.test.Assertion
-import zio.{IO, URLayer, ZIO, ZLayer, mock, Unsafe, Runtime}
+import zio.{IO, URLayer, ZIO, ZLayer, mock}
 
-import java.util.concurrent.TimeUnit
 import scala.collection.immutable.ArraySeq
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 
 // FIXME: move this to test code
 object MockDIDService extends Mock[DIDService] {
@@ -45,13 +42,8 @@ object MockDIDService extends Mock[DIDService] {
   def createDID(
       verificationRelationship: VerificationRelationship
   ): (PrismDIDOperation.Create, Secp256k1KeyPair, DIDMetadata, DIDData) = {
-    // FIXME: unsafe bridge just to avoid refactoring the whole test into ZIO[?, ?, KeyPair]
-    def unsafeRun(effect: ZIO[Any, Nothing, Secp256k1KeyPair]): Secp256k1KeyPair = {
-      val f = Unsafe.unsafe { implicit unsafe => Runtime.default.unsafe.runToFuture(effect) }
-      Await.result(f, Duration(10, TimeUnit.SECONDS))
-    }
-    val masterKeyPair = unsafeRun(Apollo.default.secp256k1.generateKeyPair)
-    val keyPair = unsafeRun(Apollo.default.secp256k1.generateKeyPair)
+    val masterKeyPair = Apollo.default.secp256k1.generateKeyPair
+    val keyPair = Apollo.default.secp256k1.generateKeyPair
 
     val createOperation = PrismDIDOperation.Create(
       publicKeys = Seq(

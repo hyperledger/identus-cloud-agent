@@ -1,13 +1,14 @@
 package io.iohk.atala.castor.core.util
 
+import io.circe.Json
 import io.iohk.atala.castor.core.model.did.*
-import io.iohk.atala.prism.crypto.EC
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
+import io.iohk.atala.shared.crypto.Apollo
 import io.iohk.atala.shared.models.Base64UrlString
 import zio.*
 import zio.test.Gen
-import io.circe.Json
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+
 import scala.language.implicitConversions
 
 object GenUtils {
@@ -24,12 +25,13 @@ object GenUtils {
       uri <- Gen.const(s"$scheme://$host/$path").map(UriUtils.normalizeUri).collect { case Some(uri) => uri }
     } yield uri
 
+  // TODO: generate all key types
   val publicKeyData: Gen[Any, PublicKeyData] =
     for {
-      curve <- Gen.fromIterable(EllipticCurve.values)
-      pk <- Gen.fromZIO(ZIO.attempt(EC.INSTANCE.generateKeyPair().getPublicKey).orDie)
-      x = Base64UrlString.fromByteArray(pk.getCurvePoint.getX.bytes())
-      y = Base64UrlString.fromByteArray(pk.getCurvePoint.getY.bytes())
+      curve <- Gen.const(EllipticCurve.SECP256K1)
+      pk <- Gen.fromZIO(ZIO.succeed(Apollo.default.secp256k1.generateKeyPair.publicKey))
+      x = Base64UrlString.fromByteArray(pk.getECPoint.x)
+      y = Base64UrlString.fromByteArray(pk.getECPoint.y)
       uncompressedKey = PublicKeyData.ECKeyData(curve, x, y)
       compressedKey = PublicKeyData.ECCompressedKeyData(curve, Base64UrlString.fromByteArray(pk.getEncodedCompressed))
       generated <- Gen.fromIterable(Seq(uncompressedKey, compressedKey))

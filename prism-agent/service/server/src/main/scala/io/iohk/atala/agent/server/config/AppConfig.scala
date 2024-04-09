@@ -207,5 +207,5 @@ final case class SecretStorageConfig(
 }
 
 enum SecretStorageBackend {
-  case vault, postgres, memory
+  case vault, postgres
 }
