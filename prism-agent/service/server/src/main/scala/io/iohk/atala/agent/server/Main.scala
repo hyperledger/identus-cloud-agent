@@ -30,6 +30,7 @@ import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
+import io.iohk.atala.pollux.core.service.verification.VcVerificationServiceImpl
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
 import io.iohk.atala.pollux.credentialschema.controller.{
   CredentialSchemaController,
@@ -169,6 +170,7 @@ object MainApp extends ZIOAppDefault {
           LinkSecretServiceImpl.layer >>> PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
           VerificationPolicyServiceImpl.layer,
           WalletManagementServiceImpl.layer,
+          VcVerificationServiceImpl.layer,
           // authentication
           AppModule.builtInAuthenticatorLayer,
           AppModule.keycloakAuthenticatorLayer,
