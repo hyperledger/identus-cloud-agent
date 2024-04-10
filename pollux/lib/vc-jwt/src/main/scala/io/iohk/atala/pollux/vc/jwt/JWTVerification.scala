@@ -37,7 +37,7 @@ object JWTVerification {
         .fromOptionWith("An algorithm must be specified in the header")(JwtCirce.parseHeader(header).algorithm)
       result <-
         Validation
-          .fromPredicateWith("No PublicKey to validate against found")(
+          .fromPredicateWith("Algorithm Not Supported")(
             SUPPORT_PUBLIC_KEY_TYPES.getOrElse(algorithm.name, Set.empty)
           )(_.nonEmpty)
           .flatMap(_ => Validation.unit)

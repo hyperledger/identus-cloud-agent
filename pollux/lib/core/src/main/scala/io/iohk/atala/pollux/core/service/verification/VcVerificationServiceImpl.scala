@@ -50,6 +50,8 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
       case VcVerification.NotBeforeCheck        => verifyNotBefore(credential)
       case VcVerification.AlgorithmVerification => verifyAlgorithm(credential)
       case VcVerification.IssuerIdentification  => verifyIssuerIdentification(credential)
+      case VcVerification.SubjectVerification   => verifySubjectVerification(credential)
+      case VcVerification.SemanticCheckOfClaims => verifySemanticCheckOfClaims(credential)
       case _ => ZIO.fail(VcVerificationServiceError.UnexpectedError(s"Unsupported Verification $verification"))
     }
   }
@@ -65,32 +67,68 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
           ZIO
             .fromOption(decodedJwt.maybeCredentialSchema)
             .mapError(error => VcVerificationServiceError.UnexpectedError(s"Missing Credential Schema: $error"))
-      } yield CredentialSchema
-        .validateJWTClaims(
-          credentialSchema.id,
-          decodedJwt.credentialSubject.noSpaces,
-          uriDereferencer
-        )
+        result <- CredentialSchema
+          .validSchemaValidator(
+            credentialSchema.id,
+            uriDereferencer
+          )
+          .mapError(error => VcVerificationServiceError.UnexpectedError(s"Schema Validator Failed: $error"))
+      } yield result
 
-    result.map(validation =>
-      validation
-        .as(
+    result
+      .as(
+        VcVerificationOutcome(
+          verification = VcVerification.SchemaCheck,
+          success = true
+        )
+      )
+      .catchAll(_ =>
+        ZIO.succeed(
           VcVerificationOutcome(
             verification = VcVerification.SchemaCheck,
-            success = true
+            success = false
           )
         )
-        .catchAll(_ =>
-          ZIO.succeed(
-            VcVerificationOutcome(
-              verification = VcVerification.SchemaCheck,
-              success = false
-            )
-          )
-        )
-    )
+      )
+  }
 
-    ZIO.succeed(VcVerificationOutcome(verification = VcVerification.SchemaCheck, success = true))
+  private def verifySubjectVerification(credential: String): IO[VcVerificationServiceError, VcVerificationOutcome] = {
+    val result =
+      for {
+        decodedJwt <-
+          JwtCredential
+            .decodeJwt(JWT(credential))
+            .mapError(error => VcVerificationServiceError.UnexpectedError(s"Unable decode JWT: $error"))
+        credentialSchema <-
+          ZIO
+            .fromOption(decodedJwt.maybeCredentialSchema)
+            .mapError(error => VcVerificationServiceError.UnexpectedError(s"Missing Credential Schema: $error"))
+        result <- CredentialSchema
+          .validateJWTCredentialSubject(
+            credentialSchema.id,
+            decodedJwt.credentialSubject.noSpaces,
+            uriDereferencer
+          )
+          .mapError(error =>
+            VcVerificationServiceError.UnexpectedError(s"JWT Credential Subject Validation Failed: $error")
+          )
+      } yield result
+
+    result
+      .as(
+        VcVerificationOutcome(
+          verification = VcVerification.SubjectVerification,
+          success = true
+        )
+      )
+      .catchAll(_ =>
+        ZIO.succeed(
+          VcVerificationOutcome(
+            verification = VcVerification.SubjectVerification,
+            success = false
+          )
+        )
+      )
   }
 
   private def verifySignature(credential: String): IO[VcVerificationServiceError, VcVerificationOutcome] = {
@@ -153,6 +191,32 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
           success = validation
             .map(_ => true)
             .getOrElse(false)
+        )
+      )
+  }
+
+  private def verifySemanticCheckOfClaims(credential: String): IO[VcVerificationServiceError, VcVerificationOutcome] = {
+    val result =
+      for {
+        decodedJwt <-
+          JwtCredential
+            .decodeJwt(JWT(credential))
+            .mapError(error => VcVerificationServiceError.UnexpectedError(s"Unable decode JWT: $error"))
+      } yield decodedJwt
+
+    result
+      .as(
+        VcVerificationOutcome(
+          verification = VcVerification.SubjectVerification,
+          success = true
+        )
+      )
+      .catchAll(_ =>
+        ZIO.succeed(
+          VcVerificationOutcome(
+            verification = VcVerification.SubjectVerification,
+            success = false
+          )
         )
       )
   }
