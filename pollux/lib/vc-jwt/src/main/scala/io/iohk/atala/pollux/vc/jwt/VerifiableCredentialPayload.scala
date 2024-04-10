@@ -742,6 +742,14 @@ object JwtCredential {
     )(_.iss)
   }
 
+  def validateIssuerJWT(
+      jwt: JWT,
+  )(didResolver: DidResolver): IO[String, Validation[String, DIDDocument]] = {
+    JWTVerification.validateIssuer(jwt)(didResolver: DidResolver)(claim =>
+      Validation.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
+    )(_.iss)
+  }
+
   def validateJwtSchema(
       jwt: JWT
   )(schemaResolver: SchemaResolver)(
