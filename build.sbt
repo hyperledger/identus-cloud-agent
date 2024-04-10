@@ -112,7 +112,6 @@ lazy val D = new {
   val zioConfig: ModuleID = "dev.zio" %% "zio-config" % V.zioConfig
   val zioConfigMagnolia: ModuleID = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
   val zioConfigTypesafe: ModuleID = "dev.zio" %% "zio-config-typesafe" % V.zioConfig
-  val zioConfigRefined: ModuleID = "dev.zio" %% "zio-config-refined" % V.zioConfig
 
   val circeCore: ModuleID = "io.circe" %% "circe-core" % V.circe
   val circeGeneric: ModuleID = "io.circe" %% "circe-generic" % V.circe
@@ -382,7 +381,6 @@ lazy val D_PrismAgent = new {
     D.zioConfig,
     D.zioConfigMagnolia,
     D.zioConfigTypesafe,
-    D.zioConfigRefined,
     D.zioJson,
     logback,
     D.zioHttp,

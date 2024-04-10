@@ -211,13 +211,13 @@ enum SecretStorageBackend {
 }
 
 object SecretStorageBackend {
-  // given Descriptor[SecretStorageBackend] =
-  //   Descriptor.from(
-  //     Descriptor[String].transformOrFailLeft { s =>
-  //       Try(SecretStorageBackend.valueOf(s)).toOption
-  //         .toRight(
-  //           s"Invalid configuration value '$s'. Possible values: ${SecretStorageBackend.values.mkString("[", ", ", "]")}"
-  //         )
-  //     }(_.toString())
-  //   )
+  given Descriptor[SecretStorageBackend] =
+    Descriptor.from(
+      Descriptor[String].transformOrFailLeft { s =>
+        Try(SecretStorageBackend.valueOf(s)).toOption
+          .toRight(
+            s"Invalid configuration value '$s'. Possible values: ${SecretStorageBackend.values.mkString("[", ", ", "]")}"
+          )
+      }(_.toString())
+    )
 }
