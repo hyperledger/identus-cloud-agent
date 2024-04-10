@@ -1,19 +1,20 @@
 package io.iohk.atala.pollux.vc.jwt
+
+import com.nimbusds.jose.JWSVerifier
 import com.nimbusds.jose.crypto.ECDSAVerifier
+import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.util.Base64URL
-import com.nimbusds.jose.JWSVerifier
-import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jwt.SignedJWT
 import io.circe
 import io.circe.generic.auto.*
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import pdi.jwt.*
-import zio.prelude.*
 import zio.*
+import zio.prelude.*
 
-import java.security.interfaces.ECPublicKey
 import java.security.PublicKey
+import java.security.interfaces.ECPublicKey
 import scala.util.{Failure, Success, Try}
 
 object JWTVerification {
@@ -24,25 +25,49 @@ object JWTVerification {
     "ES256" -> Set("ES256") // TODO: Only use valid type (added just for compatibility in the Demo code)
   )
 
-  def validateEncodedJwt[T](jwt: JWT, proofPurpose: Option[VerificationRelationship] = None)(
-      didResolver: DidResolver
-  )(decoder: String => Validation[String, T])(issuerDidExtractor: T => String): IO[String, Validation[String, Unit]] = {
-    val decodeJWT = Validation
-      .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
-      .mapError(_.getMessage)
+  def validateAlgorithm(jwt: JWT): Validation[String, Unit] = {
+    val decodedJWT =
+      Validation
+        .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
+        .mapError(_.getMessage)
+    for {
+      decodedJwtTask <- decodedJWT
+      (header, _, _) = decodedJwtTask
+      algorithm <- Validation
+        .fromOptionWith("An algorithm must be specified in the header")(JwtCirce.parseHeader(header).algorithm)
+      result <-
+        Validation
+          .fromPredicateWith("No PublicKey to validate against found")(
+            SUPPORT_PUBLIC_KEY_TYPES.getOrElse(algorithm.name, Set.empty)
+          )(_.nonEmpty)
+          .flatMap(_ => Validation.unit)
 
-    val extractAlgorithm: Validation[String, JwtAlgorithm] =
+    } yield result
+  }
+
+  def validateIssuer[T](jwt: JWT)(didResolver: DidResolver)(
+      decoder: String => Validation[String, T]
+  )(issuerDidExtractor: T => String): IO[String, Validation[String, DIDDocument]] = {
+    val decodedJWT =
+      Validation
+        .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
+        .mapError(_.getMessage)
+
+    val claim: Validation[String, String] =
       for {
-        decodedJwtTask <- decodeJWT
-        (header, _, _) = decodedJwtTask
-        algorithm <- Validation
-          .fromOptionWith("An algorithm must be specified in the header")(JwtCirce.parseHeader(header).algorithm)
-      } yield algorithm
+        decodedJwtTask <- decodedJWT
+        (_, claim, _) = decodedJwtTask
+      } yield claim
 
+    validateIssuerFromClaim(claim)(didResolver)(decoder)(issuerDidExtractor)
+  }
+
+  def validateIssuerFromClaim[T](validatedClaim: Validation[String, String])(didResolver: DidResolver)(
+      decoder: String => Validation[String, T]
+  )(issuerDidExtractor: T => String): IO[String, Validation[String, DIDDocument]] = {
     val validatedIssuerDid: Validation[String, String] =
       for {
-        decodedJwtTask <- decodeJWT
-        (_, claim, _) = decodedJwtTask
+        claim <- validatedClaim
         decodedClaim <- decoder(claim)
         extractIssuerDid = issuerDidExtractor(decodedClaim)
       } yield extractIssuerDid
@@ -54,6 +79,32 @@ object JWTVerification {
             .map(validIssuerDid => resolve(validIssuerDid)(didResolver))
         )(identity)
         .map(b => b.flatten)
+
+    loadDidDocument
+  }
+
+  def validateEncodedJwt[T](jwt: JWT, proofPurpose: Option[VerificationRelationship] = None)(
+      didResolver: DidResolver
+  )(decoder: String => Validation[String, T])(issuerDidExtractor: T => String): IO[String, Validation[String, Unit]] = {
+    val decodedJWT = Validation
+      .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
+      .mapError(_.getMessage)
+
+    val extractAlgorithm: Validation[String, JwtAlgorithm] =
+      for {
+        decodedJwtTask <- decodedJWT
+        (header, _, _) = decodedJwtTask
+        algorithm <- Validation
+          .fromOptionWith("An algorithm must be specified in the header")(JwtCirce.parseHeader(header).algorithm)
+      } yield algorithm
+
+    val claim: Validation[String, String] =
+      for {
+        decodedJwtTask <- decodedJWT
+        (_, claim, _) = decodedJwtTask
+      } yield claim
+
+    val loadDidDocument = validateIssuerFromClaim(claim)(didResolver)(decoder)(issuerDidExtractor)
 
     loadDidDocument
       .map(validatedDidDocument => {
