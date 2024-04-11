@@ -1,6 +1,6 @@
 # Error Handling Report Problem for Agent
 
-- Status: draft
+- Status: accepted
 - Deciders: Shailesh Patil, Fabio Pinheiro, Yurii Shynbuiev, Benjamin Voiturier, David Poltorak
 - Date: 2024-01-16
 - Tags: report, problem, error, handling, agent
