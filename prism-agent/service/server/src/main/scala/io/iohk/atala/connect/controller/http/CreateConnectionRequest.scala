@@ -3,7 +3,7 @@ package io.iohk.atala.connect.controller.http
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.connect.controller.http.CreateConnectionRequest.annotations
 import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.{description, encodedExample}
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate, validateEach}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class CreateConnectionRequest(

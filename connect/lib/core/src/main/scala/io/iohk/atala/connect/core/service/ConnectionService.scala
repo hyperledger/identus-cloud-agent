@@ -2,6 +2,7 @@ package io.iohk.atala.connect.core.service
 
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
+import io.iohk.atala.connect.core.model.error.ConnectionServiceError.*
 import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -17,60 +18,74 @@ trait ConnectionService {
       goalCode: Option[String],
       goal: Option[String],
       pairwiseDID: DidId
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): ZIO[WalletAccessContext, UserInputValidationError, ConnectionRecord]
 
   def receiveConnectionInvitation(
       invitation: String
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): ZIO[WalletAccessContext, InvitationParsingError | InvitationAlreadyReceived, ConnectionRecord]
 
   def acceptConnectionInvitation(
       recordId: UUID,
       pairwiseDid: DidId
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
 
-  def markConnectionRequestSent(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  def markConnectionRequestSent(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
 
   def receiveConnectionRequest(
       request: ConnectionRequest,
       expirationTime: Option[Duration]
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): ZIO[WalletAccessContext, ThreadIdNotFound | InvalidStateForOperation | InvitationExpired, ConnectionRecord]
 
-  def acceptConnectionRequest(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  def acceptConnectionRequest(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
 
-  def markConnectionResponseSent(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  def markConnectionResponseSent(
+      recordId: UUID
+  ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
 
   def markConnectionInvitationExpired(
       recordId: UUID
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): URIO[WalletAccessContext, ConnectionRecord]
 
   def receiveConnectionResponse(
       response: ConnectionResponse
-  ): ZIO[WalletAccessContext, ConnectionServiceError, ConnectionRecord]
+  ): ZIO[
+    WalletAccessContext,
+    ThreadIdMissingInReceivedMessage | ThreadIdNotFound | InvalidStateForOperation,
+    ConnectionRecord
+  ]
 
-  def getConnectionRecords(): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]]
+  def findAllRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]]
 
-  def getConnectionRecordsByStates(
+  def findRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Seq[ConnectionRecord]]
+  ): URIO[WalletAccessContext, Seq[ConnectionRecord]]
 
-  def getConnectionRecordsByStatesForAllWallets(
+  def findRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): IO[ConnectionServiceError, Seq[ConnectionRecord]]
+  ): UIO[Seq[ConnectionRecord]]
 
-  def getConnectionRecord(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]]
+  def findRecordById(
+      recordId: UUID
+  ): URIO[WalletAccessContext, Option[ConnectionRecord]]
 
-  def getConnectionRecordByThreadId(
+  def findRecordByThreadId(
       thid: String
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Option[ConnectionRecord]]
+  ): URIO[WalletAccessContext, Option[ConnectionRecord]]
 
-  def deleteConnectionRecord(recordId: UUID): ZIO[WalletAccessContext, ConnectionServiceError, Int]
+  def deleteRecordById(
+      recordId: UUID
+  ): URIO[WalletAccessContext, Unit]
 
   def reportProcessingFailure(
       recordId: UUID,
       failReason: Option[String]
-  ): ZIO[WalletAccessContext, ConnectionServiceError, Unit]
+  ): URIO[WalletAccessContext, Unit]
 }

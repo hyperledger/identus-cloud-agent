@@ -1,6 +1,7 @@
 package io.iohk.atala.pollux.schema
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import io.iohk.atala.agent.server.http.CustomServerInterceptors
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
@@ -84,7 +85,9 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
 
   def bootstrapOptions[F[_]](monadError: MonadError[F]) = {
     new CustomiseInterceptors[F, Any](_ => ())
-      .defaultHandlers(ErrorResponse.failureResponseHandler)
+      .exceptionHandler(CustomServerInterceptors.exceptionHandler)
+      .rejectHandler(CustomServerInterceptors.rejectHandler)
+      .decodeFailureHandler(CustomServerInterceptors.decodeFailureHandler)
   }
 
   def httpBackend(controller: CredentialSchemaController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {

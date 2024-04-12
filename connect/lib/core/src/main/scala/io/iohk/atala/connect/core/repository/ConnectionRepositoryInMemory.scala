@@ -2,9 +2,10 @@ package io.iohk.atala.connect.core.repository
 
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
-import io.iohk.atala.connect.core.model.error.ConnectionRepositoryError.*
-import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import io.iohk.atala.mercury.protocol.connection.ConnectionRequest
+import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
+import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletId
 import zio.*
 
 import java.time.Instant
@@ -32,74 +33,59 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       response: ConnectionResponse,
       state: ProtocolState,
       maxRetries: Int,
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     for {
-      maybeRecord <- getConnectionRecord(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            storeRef <- walletStoreRef
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  updatedAt = Some(Instant.now),
-                  connectionResponse = Some(response),
-                  protocolState = state,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
-                )
-              )
-            )
-          } yield 1
+      maybeRecord <- findById(recordId)
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      storeRef <- walletStoreRef
+      _ <- storeRef.update(r =>
+        r.updated(
+          recordId,
+          record.copy(
+            updatedAt = Some(Instant.now),
+            connectionResponse = Some(response),
+            protocolState = state,
+            metaRetries = maxRetries,
+            metaLastFailure = None,
+          )
         )
-        .getOrElse(ZIO.succeed(1))
-    } yield count
+      )
+    } yield ()
   }
 
-  override def updateConnectionProtocolState(
+  override def updateProtocolState(
       recordId: UUID,
       from: ProtocolState,
       to: ProtocolState,
       maxRetries: Int
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
       maybeRecord = store
         .find((uuid, record) => uuid == recordId && record.protocolState == from)
         .map(_._2)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  protocolState = to,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
-                )
-              )
-            )
-          } yield 1
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      _ <- storeRef.update(r =>
+        r.updated(
+          recordId,
+          record.copy(
+            protocolState = to,
+            metaRetries = maxRetries,
+            metaLastFailure = None,
+          )
         )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+      )
+    } yield ()
   }
 
-  override def deleteConnectionRecord(recordId: UUID): RIO[WalletAccessContext, Int] = {
+  override def deleteById(recordId: UUID): URIO[WalletAccessContext, Unit] = {
     for {
-      maybeRecord <- getConnectionRecord(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            storeRef <- walletStoreRef
-            _ <- storeRef.update(r => r.removed(recordId))
-          } yield 1
-        )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+      maybeRecord <- findById(recordId)
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      storeRef <- walletStoreRef
+      _ <- storeRef.update(r => r.removed(recordId))
+    } yield ()
   }
 
   override def updateWithConnectionRequest(
@@ -107,53 +93,43 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       request: ConnectionRequest,
       state: ProtocolState,
       maxRetries: Int,
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     for {
-      maybeRecord <- getConnectionRecord(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            storeRef <- walletStoreRef
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  updatedAt = Some(Instant.now),
-                  connectionRequest = Some(request),
-                  protocolState = state,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
-                )
-              )
-            )
-          } yield 1
+      maybeRecord <- findById(recordId)
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      storeRef <- walletStoreRef
+      _ <- storeRef.update(r =>
+        r.updated(
+          recordId,
+          record.copy(
+            updatedAt = Some(Instant.now),
+            connectionRequest = Some(request),
+            protocolState = state,
+            metaRetries = maxRetries,
+            metaLastFailure = None,
+          )
         )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+      )
+    } yield ()
   }
 
   def updateAfterFail(
       recordId: UUID,
       failReason: Option[String],
-  ): RIO[WalletAccessContext, Int] = for {
-    maybeRecord <- getConnectionRecord(recordId)
-    count <- maybeRecord
-      .map(record =>
-        for {
-          storeRef <- walletStoreRef
-          _ <- storeRef.update(r =>
-            r.updated(
-              recordId,
-              record.copy(
-                metaRetries = record.metaRetries - 1,
-                metaLastFailure = failReason,
-              )
-            )
-          )
-        } yield 1
+  ): URIO[WalletAccessContext, Unit] = for {
+    maybeRecord <- findById(recordId)
+    record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+    storeRef <- walletStoreRef
+    _ <- storeRef.update(r =>
+      r.updated(
+        recordId,
+        record.copy(
+          metaRetries = record.metaRetries - 1,
+          metaLastFailure = failReason,
+        )
       )
-      .getOrElse(ZIO.succeed(0))
-  } yield count
+    )
+  } yield ()
 
   def updateAfterFailForAllWallets(
       recordId: UUID,
@@ -179,25 +155,25 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     }
   }
 
-  override def getConnectionRecordByThreadId(thid: String): RIO[WalletAccessContext, Option[ConnectionRecord]] = {
+  override def findByThreadId(thid: String): URIO[WalletAccessContext, Option[ConnectionRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
     } yield store.values.find(_.thid.toString == thid)
   }
 
-  override def getConnectionRecords: RIO[WalletAccessContext, Seq[ConnectionRecord]] = {
+  override def findAll: URIO[WalletAccessContext, Seq[ConnectionRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
     } yield store.values.toSeq
   }
 
-  override def getConnectionRecordsByStates(
+  override def findByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): RIO[WalletAccessContext, Seq[ConnectionRecord]] = {
+  ): URIO[WalletAccessContext, Seq[ConnectionRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -207,11 +183,11 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
       .toSeq
   }
 
-  override def getConnectionRecordsByStatesForAllWallets(
+  override def findByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
-  ): Task[Seq[ConnectionRecord]] = {
+  ): UIO[Seq[ConnectionRecord]] = {
 
     for {
       refs <- walletRefs.get
@@ -228,26 +204,35 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     }
   }
 
-  override def createConnectionRecord(record: ConnectionRecord): RIO[WalletAccessContext, Int] = {
+  override def create(record: ConnectionRecord): URIO[WalletAccessContext, Unit] = {
     for {
       _ <- for {
         storeRef <- walletStoreRef
         store <- storeRef.get
         maybeRecord <- ZIO.succeed(store.values.find(_.thid == record.thid))
         _ <- maybeRecord match
+          case Some(value) => throw RuntimeException("Unique constraint violation on 'thid'")
           case None        => ZIO.unit
-          case Some(value) => ZIO.fail(UniqueConstraintViolation("Unique Constraint Violation on 'thid'"))
       } yield ()
       storeRef <- walletStoreRef
       _ <- storeRef.update(r => r + (record.id -> record))
-    } yield 1
+    } yield ()
   }
 
-  override def getConnectionRecord(recordId: UUID): RIO[WalletAccessContext, Option[ConnectionRecord]] = {
+  override def findById(recordId: UUID): URIO[WalletAccessContext, Option[ConnectionRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
       record = store.get(recordId)
+    } yield record
+  }
+
+  override def getById(recordId: UUID): URIO[WalletAccessContext, ConnectionRecord] = {
+    for {
+      storeRef <- walletStoreRef
+      store <- storeRef.get
+      maybeRecord = store.get(recordId)
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
     } yield record
   }
 

@@ -3,7 +3,6 @@ package io.iohk.atala.presentproof.controller
 import io.iohk.atala.agent.server.ControllerHelper
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
-import io.iohk.atala.connect.controller.ConnectionController
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
 import io.iohk.atala.mercury.model.DidId
@@ -11,7 +10,7 @@ import io.iohk.atala.mercury.protocol.presentproof.ProofType
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options
 import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
-import io.iohk.atala.pollux.core.service.{PresentationService}
+import io.iohk.atala.pollux.core.service.PresentationService
 import io.iohk.atala.presentproof.controller.PresentProofController.toDidCommID
 import io.iohk.atala.presentproof.controller.http.*
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -68,7 +67,7 @@ class PresentProofControllerImpl(
     } yield PresentationStatus.fromDomain(record)
 
     result.mapError {
-      case e: ConnectionServiceError => ConnectionController.toHttpError(e)
+      case e: ConnectionServiceError => e.asInstanceOf[ErrorResponse] // use implicit conversion
       case e: PresentationError      => PresentProofController.toHttpError(e)
     }
   }

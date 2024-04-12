@@ -55,8 +55,7 @@ object CredentialDefinitionController {
       case UpdateError(id, version, author, message) =>
         ErrorResponse.badRequest(
           title = "CredentialDefinitionUpdateError",
-          detail = Option(s"Credential definition update error: id=$id, version=$version, author=$author"),
-          instance = message
+          detail = Option(s"Credential definition update error: id=$id, version=$version, author=$author, msg=$message")
         )
       case CredentialDefinitionCreationError(msg: String) =>
         ErrorResponse.badRequest(detail = Option(msg))

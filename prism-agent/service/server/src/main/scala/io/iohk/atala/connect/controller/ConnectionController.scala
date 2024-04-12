@@ -8,7 +8,6 @@ import io.iohk.atala.connect.controller.http.{
   ConnectionsPage,
   CreateConnectionRequest
 }
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
@@ -31,25 +30,4 @@ trait ConnectionController {
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, Connection]
 
-}
-
-object ConnectionController {
-  def toHttpError(error: ConnectionServiceError): ErrorResponse =
-    error match
-      case ConnectionServiceError.RepositoryError(cause) =>
-        ErrorResponse.internalServerError(title = "RepositoryError", detail = Some(cause.toString))
-      case ConnectionServiceError.RecordIdNotFound(recordId) =>
-        ErrorResponse.notFound(detail = Some(s"Record Id not found: $recordId"))
-      case ConnectionServiceError.ThreadIdNotFound(thid) =>
-        ErrorResponse.notFound(detail = Some(s"Thread Id not found: $thid"))
-      case ConnectionServiceError.InvitationParsingError(cause) =>
-        ErrorResponse.badRequest(title = "InvitationParsingError", detail = Some(cause.toString))
-      case ConnectionServiceError.UnexpectedError(msg) =>
-        ErrorResponse.internalServerError(detail = Some(msg))
-      case ConnectionServiceError.InvalidFlowStateError(msg) =>
-        ErrorResponse.badRequest(title = "InvalidFlowState", detail = Some(msg))
-      case ConnectionServiceError.InvitationAlreadyReceived(msg) =>
-        ErrorResponse.badRequest(title = "InvitationAlreadyReceived", detail = Some(msg))
-      case ConnectionServiceError.InvitationExpired(msg) =>
-        ErrorResponse.badRequest(title = "InvitationExpired", detail = Some(msg))
 }

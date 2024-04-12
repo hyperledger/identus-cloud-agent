@@ -2,6 +2,11 @@ name: Publish prism-agent clients
 
 on:
   workflow_dispatch:
+    inputs:
+      releaseTag:
+        description: "Tag to release clients (e.g. prism-agent-v1.31.0)"
+        required: true
+        type: string
   push:
     tags:
       - "prism-agent-v*"
@@ -11,7 +16,7 @@ jobs:
     name: 'Build and publish Prism-Agent clients'
     runs-on: ubuntu-latest
     env:
-      VERSION_TAG: ${{github.ref_name}}
+      VERSION_TAG: ${{inputs.releaseTag || github.ref_name}}
       ATALA_GITHUB_ACTOR: ${{secrets.ATALA_GITHUB_ACTOR}}
       ATALA_GITHUB_TOKEN: ${{secrets.ATALA_GITHUB_TOKEN}}
       NODE_AUTH_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}

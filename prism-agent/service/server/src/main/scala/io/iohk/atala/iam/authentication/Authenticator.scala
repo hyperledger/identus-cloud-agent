@@ -34,8 +34,7 @@ object AuthenticationError {
       status = sttp.model.StatusCode.Forbidden.code,
       `type` = "authentication_error",
       title = "",
-      detail = Option(error.message),
-      instance = ""
+      detail = Option(error.message)
     )
 }
 
