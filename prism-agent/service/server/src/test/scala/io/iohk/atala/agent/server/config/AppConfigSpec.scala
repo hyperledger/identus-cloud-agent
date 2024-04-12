@@ -107,5 +107,40 @@ object AppConfigSpec extends ZIOSpecDefault {
         // Config.Error.InvalidData(zio.Chunk("publicEndpointUrl"), "Invalid URL: http://:8080/path")
       },
     )
+  } + {
+    import zio.config.magnolia.deriveConfig
+    case class TestSecretStorageBackend(t: SecretStorageBackend)
+    val secretStorageBackendConfig: Config[TestSecretStorageBackend] = deriveConfig[TestSecretStorageBackend]
+
+    suite("SecretStorageBackend enum test deriveConfig")(
+      test("test SecretStorageBackend is postgres") {
+        {
+          for {
+            secretStorageBackend <- ZIO.service[TestSecretStorageBackend]
+            _ <- ZIO.log(secretStorageBackend.toString())
+          } yield assertTrue(secretStorageBackend.t == SecretStorageBackend.postgres)
+        }.provide(
+          ZLayer.fromZIO(
+            ConfigProvider
+              .fromMap(Map("t" -> "postgres"))
+              .load(secretStorageBackendConfig)
+          )
+        )
+      },
+      test("test SecretStorageBackend is not vault") {
+        {
+          for {
+            secretStorageBackend <- ZIO.service[TestSecretStorageBackend]
+            _ <- ZIO.log(secretStorageBackend.toString())
+          } yield assertTrue(secretStorageBackend.t != SecretStorageBackend.vault)
+        }.provide(
+          ZLayer.fromZIO(
+            ConfigProvider
+              .fromMap(Map("t" -> "postgres"))
+              .load(secretStorageBackendConfig)
+          )
+        )
+      },
+    )
   }
 }
