@@ -209,15 +209,3 @@ final case class SecretStorageConfig(
 enum SecretStorageBackend {
   case vault, postgres, memory
 }
-
-object SecretStorageBackend {
-  given Descriptor[SecretStorageBackend] =
-    Descriptor.from(
-      Descriptor[String].transformOrFailLeft { s =>
-        Try(SecretStorageBackend.valueOf(s)).toOption
-          .toRight(
-            s"Invalid configuration value '$s'. Possible values: ${SecretStorageBackend.values.mkString("[", ", ", "]")}"
-          )
-      }(_.toString())
-    )
-}
