@@ -1,7 +1,6 @@
 package io.iohk.atala.verification.controller.http
 
 import io.iohk.atala.api.http.Annotation
-import io.iohk.atala.pollux.core.service.verification.VcVerification
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
@@ -12,16 +11,7 @@ final case class VcVerificationResponse(
     credential: String,
     @description(VcVerificationResponse.annotations.checks.description)
     @encodedExample(VcVerificationResponse.annotations.checks.example)
-    checks: List[VcVerification],
-    @description(VcVerificationResponse.annotations.successfulChecks.description)
-    @encodedExample(VcVerificationResponse.annotations.successfulChecks.example)
-    successfulChecks: List[VcVerification],
-    @description(VcVerificationResponse.annotations.failedChecks.description)
-    @encodedExample(VcVerificationResponse.annotations.failedChecks.example)
-    failedChecks: List[VcVerification],
-    @description(VcVerificationResponse.annotations.failedAsWarningChecks.description)
-    @encodedExample(VcVerificationResponse.annotations.failedAsWarningChecks.example)
-    failedAsWarningChecks: List[VcVerification]
+    result: List[VcVerificationResult],
 )
 
 object VcVerificationResponse {

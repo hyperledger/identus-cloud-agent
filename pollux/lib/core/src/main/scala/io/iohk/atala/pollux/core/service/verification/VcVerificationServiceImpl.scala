@@ -3,6 +3,7 @@ package io.iohk.atala.pollux.core.service.verification
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.service.URIDereferencer
 import io.iohk.atala.pollux.vc.jwt.{DidResolver, JWT, JWTVerification, JwtCredential}
+import sttp.tapir.Schema
 import zio.{IO, *}
 
 class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDereferencer)
@@ -10,53 +11,38 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
   override def verify(
       vcVerificationRequests: List[VcVerificationRequest]
   ): IO[VcVerificationServiceError, List[VcVerificationResult]] = {
-    vcVerificationRequests.map(vcVerificationRequest =>
-      val verificationOutcomesZIO = ZIO.collectAll(
-        vcVerificationRequest.verifications
-          .map(verification => verify(vcVerificationRequest.credential, verification))
+    ZIO.collectAll(
+      vcVerificationRequests.map(vcVerificationRequest =>
+        verify(vcVerificationRequest.credential, vcVerificationRequest.verification, vcVerificationRequest.parameter)
       )
-
-      verificationOutcomesZIO.map(verificationOutcomes => {
-        val successfulChecks = verificationOutcomes.filter(_.success).map(_.verification)
-
-        val failedVerifications = verificationOutcomes.filterNot(_.success).map(_.verification)
-
-        val failedAsErrorChecks =
-          failedVerifications.filter(verification => verification.failureType == VcVerificationFailureType.ERROR)
-
-        val failedAsWarningChecks =
-          failedVerifications.filter(verification => verification.failureType == VcVerificationFailureType.WARN)
-
-        VcVerificationResult(
-          credential = vcVerificationRequest.credential,
-          checks = vcVerificationRequest.verifications,
-          successfulChecks = successfulChecks,
-          failedChecks = failedAsErrorChecks,
-          failedAsWarningChecks = failedAsWarningChecks
-        )
-      })
     )
-    ZIO.succeed(List.empty)
   }
 
   private def verify(
       credential: String,
-      verification: VcVerification
-  ): IO[VcVerificationServiceError, VcVerificationOutcome] = {
-    verification match {
-      case VcVerification.SchemaCheck           => verifySchema(credential)
-      case VcVerification.SignatureVerification => verifySignature(credential)
-      case VcVerification.ExpirationCheck       => verifyExpiration(credential)
-      case VcVerification.NotBeforeCheck        => verifyNotBefore(credential)
-      case VcVerification.AlgorithmVerification => verifyAlgorithm(credential)
-      case VcVerification.IssuerIdentification  => verifyIssuerIdentification(credential)
-      case VcVerification.SubjectVerification   => verifySubjectVerification(credential)
-      case VcVerification.SemanticCheckOfClaims => verifySemanticCheckOfClaims(credential)
-      case _ => ZIO.fail(VcVerificationServiceError.UnexpectedError(s"Unsupported Verification $verification"))
+      verification: VcVerification,
+      maybeParameter: Option[VcVerificationParameter]
+  ): IO[VcVerificationServiceError, VcVerificationResult] = {
+    (verification, maybeParameter) match {
+      case (VcVerification.SchemaCheck, None)                           => verifySchema(credential)
+      case (VcVerification.SignatureVerification, None)                 => verifySignature(credential)
+      case (VcVerification.ExpirationCheck, None)                       => verifyExpiration(credential)
+      case (VcVerification.NotBeforeCheck, None)                        => verifyNotBefore(credential)
+      case (VcVerification.AlgorithmVerification, None)                 => verifyAlgorithm(credential)
+      case (VcVerification.IssuerIdentification, None)                  => verifyIssuerIdentification(credential)
+      case (VcVerification.SubjectVerification, None)                   => verifySubjectVerification(credential)
+      case (VcVerification.SemanticCheckOfClaims, None)                 => verifySemanticCheckOfClaims(credential)
+      case (VcVerification.AudienceCheck, Some(AudienceParameter(aud))) => verifyAudienceCheck(credential, aud)
+      case _ =>
+        ZIO.fail(
+          VcVerificationServiceError.UnexpectedError(
+            s"Unsupported Verification:$verification and Parameters:$maybeParameter"
+          )
+        )
     }
   }
 
-  private def verifySchema(credential: String): IO[VcVerificationServiceError, VcVerificationOutcome] = {
+  private def verifySchema(credential: String): IO[VcVerificationServiceError, VcVerificationResult] = {
     val result =
       for {
         decodedJwt <-
@@ -77,14 +63,16 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
 
     result
       .as(
-        VcVerificationOutcome(
+        VcVerificationResult(
+          credential = credential,
           verification = VcVerification.SchemaCheck,
           success = true
         )
       )
       .catchAll(_ =>
         ZIO.succeed(
-          VcVerificationOutcome(
+          VcVerificationResult(
+            credential = credential,
             verification = VcVerification.SchemaCheck,
             success = false
           )
@@ -92,7 +80,7 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
       )
   }
 
-  private def verifySubjectVerification(credential: String): IO[VcVerificationServiceError, VcVerificationOutcome] = {
+  private def verifySubjectVerification(credential: String): IO[VcVerificationServiceError, VcVerificationResult] = {
     val result =
       for {
         decodedJwt <-
@@ -116,14 +104,16 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
 
     result
       .as(
-        VcVerificationOutcome(
+        VcVerificationResult(
+          credential = credential,
           verification = VcVerification.SubjectVerification,
           success = true
         )
       )
       .catchAll(_ =>
         ZIO.succeed(
-          VcVerificationOutcome(
+          VcVerificationResult(
+            credential = credential,
             verification = VcVerification.SubjectVerification,
             success = false
           )
@@ -131,12 +121,13 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
       )
   }
 
-  private def verifySignature(credential: String): IO[VcVerificationServiceError, VcVerificationOutcome] = {
+  private def verifySignature(credential: String): IO[VcVerificationServiceError, VcVerificationResult] = {
     JwtCredential
       .validateEncodedJWT(JWT(credential))(didResolver)
       .mapError(error => VcVerificationServiceError.UnexpectedError(error))
       .map(validation =>
-        VcVerificationOutcome(
+        VcVerificationResult(
+          credential = credential,
           verification = VcVerification.SignatureVerification,
           success = validation
             .map(_ => true)
@@ -145,9 +136,10 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
       )
   }
 
-  private def verifyExpiration(credential: String): IO[VcVerificationServiceError, VcVerificationOutcome] = {
+  private def verifyExpiration(credential: String): IO[VcVerificationServiceError, VcVerificationResult] = {
     ZIO.succeed(
-      VcVerificationOutcome(
+      VcVerificationResult(
+        credential = credential,
         verification = VcVerification.ExpirationCheck,
         success = JwtCredential
           .validateExpiration(JWT(credential))
@@ -157,9 +149,10 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
     )
   }
 
-  private def verifyNotBefore(credential: String): IO[VcVerificationServiceError, VcVerificationOutcome] = {
+  private def verifyNotBefore(credential: String): IO[VcVerificationServiceError, VcVerificationResult] = {
     ZIO.succeed(
-      VcVerificationOutcome(
+      VcVerificationResult(
+        credential = credential,
         verification = VcVerification.NotBeforeCheck,
         success = JwtCredential
           .validateNotBefore(JWT(credential))
@@ -169,9 +162,10 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
     )
   }
 
-  private def verifyAlgorithm(credential: String): IO[VcVerificationServiceError, VcVerificationOutcome] = {
+  private def verifyAlgorithm(credential: String): IO[VcVerificationServiceError, VcVerificationResult] = {
     ZIO.succeed(
-      VcVerificationOutcome(
+      VcVerificationResult(
+        credential = credential,
         verification = VcVerification.AlgorithmVerification,
         success = JWTVerification
           .validateAlgorithm(JWT(credential))
@@ -181,12 +175,13 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
     )
   }
 
-  private def verifyIssuerIdentification(credential: String): IO[VcVerificationServiceError, VcVerificationOutcome] = {
+  private def verifyIssuerIdentification(credential: String): IO[VcVerificationServiceError, VcVerificationResult] = {
     JwtCredential
       .validateIssuerJWT(JWT(credential))(didResolver)
       .mapError(error => VcVerificationServiceError.UnexpectedError(error))
       .map(validation =>
-        VcVerificationOutcome(
+        VcVerificationResult(
+          credential = credential,
           verification = VcVerification.IssuerIdentification,
           success = validation
             .map(_ => true)
@@ -195,7 +190,7 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
       )
   }
 
-  private def verifySemanticCheckOfClaims(credential: String): IO[VcVerificationServiceError, VcVerificationOutcome] = {
+  private def verifySemanticCheckOfClaims(credential: String): IO[VcVerificationServiceError, VcVerificationResult] = {
     val result =
       for {
         decodedJwt <-
@@ -206,19 +201,34 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
 
     result
       .as(
-        VcVerificationOutcome(
+        VcVerificationResult(
+          credential = credential,
           verification = VcVerification.SubjectVerification,
           success = true
         )
       )
       .catchAll(_ =>
         ZIO.succeed(
-          VcVerificationOutcome(
+          VcVerificationResult(
+            credential = credential,
             verification = VcVerification.SubjectVerification,
             success = false
           )
         )
       )
+  }
+
+  private def verifyAudienceCheck(
+      credential: String,
+      aud: String
+  ): IO[VcVerificationServiceError, VcVerificationResult] = {
+    ZIO.succeed(
+      VcVerificationResult(
+        credential = credential,
+        verification = VcVerification.SubjectVerification,
+        success = true
+      )
+    )
   }
 }
 
