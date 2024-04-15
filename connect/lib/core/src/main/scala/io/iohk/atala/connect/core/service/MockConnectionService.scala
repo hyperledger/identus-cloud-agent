@@ -30,6 +30,7 @@ object MockConnectionService extends Mock[ConnectionService] {
   object AcceptConnectionRequest extends Effect[UUID, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
   object MarkConnectionResponseSent extends Effect[UUID, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord]
   object MarkConnectionInvitationExpired extends Effect[UUID, Nothing, ConnectionRecord]
+  object FindById extends Effect[UUID, Nothing, Option[ConnectionRecord]]
 
   object ReceiveConnectionResponse
       extends Effect[
@@ -112,7 +113,7 @@ object MockConnectionService extends Mock[ConnectionService] {
 
       override def findRecordById(
           recordId: UUID
-      ): URIO[WalletAccessContext, Option[ConnectionRecord]] = ???
+      ): URIO[WalletAccessContext, Option[ConnectionRecord]] = proxy(FindById, recordId)
 
       override def findRecordByThreadId(
           thid: String
