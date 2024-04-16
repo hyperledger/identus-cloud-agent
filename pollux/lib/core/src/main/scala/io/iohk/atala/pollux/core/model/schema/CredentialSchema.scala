@@ -8,7 +8,7 @@ import io.iohk.atala.pollux.core.model.schema.`type`.{
   CredentialJsonSchemaType,
   CredentialSchemaType
 }
-import io.iohk.atala.pollux.core.model.schema.validator.JsonSchemaValidatorImpl
+import io.iohk.atala.pollux.core.model.schema.validator.{JsonSchemaValidator, JsonSchemaValidatorImpl}
 import io.iohk.atala.pollux.core.service.URIDereferencer
 import zio.*
 import zio.json.*
@@ -116,11 +116,10 @@ object CredentialSchema {
   given JsonEncoder[CredentialSchema] = DeriveJsonEncoder.gen[CredentialSchema]
   given JsonDecoder[CredentialSchema] = DeriveJsonDecoder.gen[CredentialSchema]
 
-  def validateJWTClaims(
+  def validSchemaValidator(
       schemaId: String,
-      claims: String,
       uriDereferencer: URIDereferencer
-  ): IO[CredentialSchemaError, Unit] = {
+  ): IO[CredentialSchemaError, JsonSchemaValidator] = {
     for {
       uri <- ZIO.attempt(new URI(schemaId)).mapError(t => URISyntaxError(t.getMessage))
       content <- uriDereferencer.dereference(uri).mapError(err => UnexpectedError(err.toString))
@@ -137,7 +136,17 @@ object CredentialSchema {
             .mapError(error => CredentialSchemaParsingError(s"Failed to parse schema content as Json or OEA: $error"))
             .flatMap(cs => JsonSchemaValidatorImpl.from(cs.schema).mapError(SchemaError.apply))
         )
-      _ <- schemaValidator.validate(claims).mapError(SchemaError.apply)
+    } yield schemaValidator
+  }
+
+  def validateJWTCredentialSubject(
+      schemaId: String,
+      credentialSubject: String,
+      uriDereferencer: URIDereferencer
+  ): IO[CredentialSchemaError, Unit] = {
+    for {
+      schemaValidator <- validSchemaValidator(schemaId, uriDereferencer)
+      _ <- schemaValidator.validate(credentialSubject).mapError(SchemaError.apply)
     } yield ()
   }
 

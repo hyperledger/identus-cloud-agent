@@ -6,17 +6,18 @@ trait VcVerificationService {
   def verify(request: List[VcVerificationRequest]): IO[VcVerificationServiceError, List[VcVerificationResult]]
 }
 
+sealed trait VcVerificationParameter
+
+case class AudienceParameter(aud: String) extends VcVerificationParameter
+
 final case class VcVerificationRequest(
     credential: String,
-    verifications: List[VcVerification]
+    verification: VcVerification,
+    parameter: Option[VcVerificationParameter]
 )
 
 final case class VcVerificationResult(
     credential: String,
-    checks: List[VcVerification],
-    successfulChecks: List[VcVerification],
-    failedChecks: List[VcVerification],
-    failedAsWarningChecks: List[VcVerification]
+    verification: VcVerification,
+    success: Boolean
 )
-
-final case class VcVerificationOutcome(verification: VcVerification, success: Boolean)

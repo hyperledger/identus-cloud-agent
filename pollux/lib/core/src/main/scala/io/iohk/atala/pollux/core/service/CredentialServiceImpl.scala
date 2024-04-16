@@ -139,7 +139,7 @@ private class CredentialServiceImpl(
       _ <- maybeSchemaId match
         case Some(schemaId) =>
           CredentialSchema
-            .validateJWTClaims(schemaId, claims.noSpaces, uriDereferencer)
+            .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriDereferencer)
             .mapError(e => CredentialSchemaError(e))
         case None =>
           ZIO.unit
