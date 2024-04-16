@@ -1,7 +1,7 @@
 package io.iohk.atala.verification.controller.http
 
 import io.iohk.atala.api.http.Annotation
-import io.iohk.atala.pollux.core.service.verification.VcVerification
+import io.iohk.atala.pollux.core.service.verification.VcVerificationRequest as ServiceVcVerificationRequest
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
@@ -12,7 +12,7 @@ final case class VcVerificationRequest(
     credential: String,
     @description(VcVerificationRequest.annotations.vcVerification.description)
     @encodedExample(VcVerificationRequest.annotations.vcVerification.example)
-    verifications: List[VcVerification]
+    verifications: List[ParameterizableVcVerification]
 )
 
 object VcVerificationRequest {
@@ -52,4 +52,14 @@ object VcVerificationRequest {
     DeriveJsonDecoder.gen[VcVerificationRequest]
 
   given credentialVerificationRequestSchema: Schema[VcVerificationRequest] = Schema.derived
+
+  def toService(request: VcVerificationRequest): List[ServiceVcVerificationRequest] = {
+    request.verifications.map(verification =>
+      ServiceVcVerificationRequest(
+        credential = request.credential,
+        verification = VcVerification.convert(verification.verification),
+        parameter = verification.parameter.map(param => VcVerificationParameter.convert(param))
+      )
+    )
+  }
 }
