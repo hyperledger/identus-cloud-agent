@@ -1,9 +1,11 @@
 package io.iohk.atala.verification.controller.http
 
+import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.pollux.core.service
 import io.iohk.atala.pollux.core.service.verification.VcVerification as ServiceVcVerification
 import sttp.tapir.Schema
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import zio.{IO, *}
 
 enum VcVerification {
   case SignatureVerification
@@ -29,20 +31,29 @@ object VcVerification {
 
   given schema: Schema[VcVerification] = Schema.derivedEnumeration.defaultStringBased
 
-  def convert(verification: VcVerification): ServiceVcVerification = {
-    verification match {
-      case SignatureVerification   => ServiceVcVerification.SignatureVerification
-      case IssuerIdentification    => ServiceVcVerification.IssuerIdentification
-      case ExpirationCheck         => ServiceVcVerification.ExpirationCheck
-      case NotBeforeCheck          => ServiceVcVerification.NotBeforeCheck
-      case AudienceCheck           => ServiceVcVerification.AudienceCheck
-      case SubjectVerification     => ServiceVcVerification.SubjectVerification
-      case IntegrityOfClaims       => ServiceVcVerification.IntegrityOfClaims
-      case ComplianceWithStandards => ServiceVcVerification.ComplianceWithStandards
-      case RevocationCheck         => ServiceVcVerification.RevocationCheck
-      case AlgorithmVerification   => ServiceVcVerification.AlgorithmVerification
-      case SchemaCheck             => ServiceVcVerification.SchemaCheck
-      case SemanticCheckOfClaims   => ServiceVcVerification.SemanticCheckOfClaims
+  def convert(
+      verification: VcVerification,
+      maybeParameter: Option[VcVerificationParameter]
+  ): IO[ErrorResponse, ServiceVcVerification] = {
+    (verification, maybeParameter) match {
+      case (SignatureVerification, None)                 => ZIO.succeed(ServiceVcVerification.SignatureVerification)
+      case (IssuerIdentification, None)                  => ZIO.succeed(ServiceVcVerification.IssuerIdentification)
+      case (ExpirationCheck, None)                       => ZIO.succeed(ServiceVcVerification.ExpirationCheck)
+      case (NotBeforeCheck, None)                        => ZIO.succeed(ServiceVcVerification.NotBeforeCheck)
+      case (AudienceCheck, Some(AudienceParameter(aud))) => ZIO.succeed(ServiceVcVerification.AudienceCheck(aud))
+      case (SubjectVerification, None)                   => ZIO.succeed(ServiceVcVerification.SubjectVerification)
+      case (IntegrityOfClaims, None)                     => ZIO.succeed(ServiceVcVerification.IntegrityOfClaims)
+      case (ComplianceWithStandards, None)               => ZIO.succeed(ServiceVcVerification.ComplianceWithStandards)
+      case (RevocationCheck, None)                       => ZIO.succeed(ServiceVcVerification.RevocationCheck)
+      case (AlgorithmVerification, None)                 => ZIO.succeed(ServiceVcVerification.AlgorithmVerification)
+      case (SchemaCheck, None)                           => ZIO.succeed(ServiceVcVerification.SchemaCheck)
+      case (SemanticCheckOfClaims, None)                 => ZIO.succeed(ServiceVcVerification.SemanticCheckOfClaims)
+      case _ =>
+        ZIO.fail(
+          ErrorResponse.badRequest(detail =
+            Some(s"Unsupported Verification:$verification and Parameters:$maybeParameter")
+          )
+        )
     }
   }
 
@@ -52,7 +63,7 @@ object VcVerification {
       case ServiceVcVerification.IssuerIdentification    => IssuerIdentification
       case ServiceVcVerification.ExpirationCheck         => ExpirationCheck
       case ServiceVcVerification.NotBeforeCheck          => NotBeforeCheck
-      case ServiceVcVerification.AudienceCheck           => AudienceCheck
+      case ServiceVcVerification.AudienceCheck(_)        => AudienceCheck
       case ServiceVcVerification.SubjectVerification     => SubjectVerification
       case ServiceVcVerification.IntegrityOfClaims       => IntegrityOfClaims
       case ServiceVcVerification.ComplianceWithStandards => ComplianceWithStandards

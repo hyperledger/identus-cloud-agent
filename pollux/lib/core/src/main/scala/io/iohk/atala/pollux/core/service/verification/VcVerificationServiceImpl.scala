@@ -3,7 +3,6 @@ package io.iohk.atala.pollux.core.service.verification
 import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.service.URIDereferencer
 import io.iohk.atala.pollux.vc.jwt.{DidResolver, JWT, JWTVerification, JwtCredential}
-import sttp.tapir.Schema
 import zio.{IO, *}
 
 class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDereferencer)
@@ -13,7 +12,7 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
   ): IO[VcVerificationServiceError, List[VcVerificationResult]] = {
     ZIO.collectAll(
       vcVerificationRequests.map(vcVerificationRequest =>
-        verify(vcVerificationRequest.credential, vcVerificationRequest.verification, vcVerificationRequest.parameter)
+        verify(vcVerificationRequest.credential, vcVerificationRequest.verification)
       )
     )
   }
@@ -21,22 +20,21 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
   private def verify(
       credential: String,
       verification: VcVerification,
-      maybeParameter: Option[VcVerificationParameter]
   ): IO[VcVerificationServiceError, VcVerificationResult] = {
-    (verification, maybeParameter) match {
-      case (VcVerification.SchemaCheck, None)                           => verifySchema(credential)
-      case (VcVerification.SignatureVerification, None)                 => verifySignature(credential)
-      case (VcVerification.ExpirationCheck, None)                       => verifyExpiration(credential)
-      case (VcVerification.NotBeforeCheck, None)                        => verifyNotBefore(credential)
-      case (VcVerification.AlgorithmVerification, None)                 => verifyAlgorithm(credential)
-      case (VcVerification.IssuerIdentification, None)                  => verifyIssuerIdentification(credential)
-      case (VcVerification.SubjectVerification, None)                   => verifySubjectVerification(credential)
-      case (VcVerification.SemanticCheckOfClaims, None)                 => verifySemanticCheckOfClaims(credential)
-      case (VcVerification.AudienceCheck, Some(AudienceParameter(aud))) => verifyAudienceCheck(credential, aud)
+    verification match {
+      case VcVerification.SchemaCheck           => verifySchema(credential)
+      case VcVerification.SignatureVerification => verifySignature(credential)
+      case VcVerification.ExpirationCheck       => verifyExpiration(credential)
+      case VcVerification.NotBeforeCheck        => verifyNotBefore(credential)
+      case VcVerification.AlgorithmVerification => verifyAlgorithm(credential)
+      case VcVerification.IssuerIdentification  => verifyIssuerIdentification(credential)
+      case VcVerification.SubjectVerification   => verifySubjectVerification(credential)
+      case VcVerification.SemanticCheckOfClaims => verifySemanticCheckOfClaims(credential)
+      case VcVerification.AudienceCheck(aud)    => verifyAudienceCheck(credential, aud)
       case _ =>
         ZIO.fail(
           VcVerificationServiceError.UnexpectedError(
-            s"Unsupported Verification:$verification and Parameters:$maybeParameter"
+            s"Unsupported Verification:$verification"
           )
         )
     }
@@ -222,13 +220,22 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
       credential: String,
       aud: String
   ): IO[VcVerificationServiceError, VcVerificationResult] = {
-    ZIO.succeed(
-      VcVerificationResult(
-        credential = credential,
-        verification = VcVerification.SubjectVerification,
-        success = true
+    val result =
+      for {
+        decodedJwt <-
+          JwtCredential
+            .decodeJwt(JWT(credential))
+            .mapError(error => VcVerificationServiceError.UnexpectedError(s"Unable decode JWT: $error"))
+      } yield decodedJwt.aud.contains(aud)
+
+    result
+      .map(success =>
+        VcVerificationResult(
+          credential = credential,
+          verification = VcVerification.SubjectVerification,
+          success = success
+        )
       )
-    )
   }
 }
 
