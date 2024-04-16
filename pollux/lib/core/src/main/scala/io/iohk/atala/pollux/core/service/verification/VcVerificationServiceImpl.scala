@@ -5,6 +5,8 @@ import io.iohk.atala.pollux.core.service.URIDereferencer
 import io.iohk.atala.pollux.vc.jwt.{DidResolver, JWT, JWTVerification, JwtCredential}
 import zio.{IO, *}
 
+import java.time.OffsetDateTime
+
 class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDereferencer)
     extends VcVerificationService {
   override def verify(
@@ -22,15 +24,15 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
       verification: VcVerification,
   ): IO[VcVerificationServiceError, VcVerificationResult] = {
     verification match {
-      case VcVerification.SchemaCheck           => verifySchema(credential)
-      case VcVerification.SignatureVerification => verifySignature(credential)
-      case VcVerification.ExpirationCheck       => verifyExpiration(credential)
-      case VcVerification.NotBeforeCheck        => verifyNotBefore(credential)
-      case VcVerification.AlgorithmVerification => verifyAlgorithm(credential)
-      case VcVerification.IssuerIdentification  => verifyIssuerIdentification(credential)
-      case VcVerification.SubjectVerification   => verifySubjectVerification(credential)
-      case VcVerification.SemanticCheckOfClaims => verifySemanticCheckOfClaims(credential)
-      case VcVerification.AudienceCheck(aud)    => verifyAudienceCheck(credential, aud)
+      case VcVerification.SchemaCheck               => verifySchema(credential)
+      case VcVerification.SignatureVerification     => verifySignature(credential)
+      case VcVerification.ExpirationCheck(dateTime) => verifyExpiration(credential, dateTime)
+      case VcVerification.NotBeforeCheck(dateTime)  => verifyNotBefore(credential, dateTime)
+      case VcVerification.AlgorithmVerification     => verifyAlgorithm(credential)
+      case VcVerification.IssuerIdentification(iss) => verifyIssuerIdentification(credential, iss)
+      case VcVerification.SubjectVerification       => verifySubjectVerification(credential)
+      case VcVerification.SemanticCheckOfClaims     => verifySemanticCheckOfClaims(credential)
+      case VcVerification.AudienceCheck(aud)        => verifyAudienceCheck(credential, aud)
       case _ =>
         ZIO.fail(
           VcVerificationServiceError.UnexpectedError(
@@ -134,26 +136,32 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
       )
   }
 
-  private def verifyExpiration(credential: String): IO[VcVerificationServiceError, VcVerificationResult] = {
+  private def verifyExpiration(
+      credential: String,
+      dateTime: OffsetDateTime
+  ): IO[VcVerificationServiceError, VcVerificationResult] = {
     ZIO.succeed(
       VcVerificationResult(
         credential = credential,
-        verification = VcVerification.ExpirationCheck,
+        verification = VcVerification.ExpirationCheck(dateTime),
         success = JwtCredential
-          .validateExpiration(JWT(credential))
+          .validateExpiration(JWT(credential), dateTime)
           .map(_ => true)
           .getOrElse(false)
       )
     )
   }
 
-  private def verifyNotBefore(credential: String): IO[VcVerificationServiceError, VcVerificationResult] = {
+  private def verifyNotBefore(
+      credential: String,
+      dateTime: OffsetDateTime
+  ): IO[VcVerificationServiceError, VcVerificationResult] = {
     ZIO.succeed(
       VcVerificationResult(
         credential = credential,
-        verification = VcVerification.NotBeforeCheck,
+        verification = VcVerification.NotBeforeCheck(dateTime),
         success = JwtCredential
-          .validateNotBefore(JWT(credential))
+          .validateNotBefore(JWT(credential), dateTime)
           .map(_ => true)
           .getOrElse(false)
       )
@@ -173,17 +181,24 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
     )
   }
 
-  private def verifyIssuerIdentification(credential: String): IO[VcVerificationServiceError, VcVerificationResult] = {
-    JwtCredential
-      .validateIssuerJWT(JWT(credential))(didResolver)
-      .mapError(error => VcVerificationServiceError.UnexpectedError(error))
-      .map(validation =>
+  private def verifyIssuerIdentification(
+      credential: String,
+      iss: String
+  ): IO[VcVerificationServiceError, VcVerificationResult] = {
+    val result =
+      for {
+        decodedJwt <-
+          JwtCredential
+            .decodeJwt(JWT(credential))
+            .mapError(error => VcVerificationServiceError.UnexpectedError(s"Unable decode JWT: $error"))
+      } yield decodedJwt.iss.contains(iss)
+
+    result
+      .map(success =>
         VcVerificationResult(
           credential = credential,
-          verification = VcVerification.IssuerIdentification,
-          success = validation
-            .map(_ => true)
-            .getOrElse(false)
+          verification = VcVerification.IssuerIdentification(iss),
+          success = success
         )
       )
   }
@@ -232,7 +247,7 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
       .map(success =>
         VcVerificationResult(
           credential = credential,
-          verification = VcVerification.SubjectVerification,
+          verification = VcVerification.AudienceCheck(aud),
           success = success
         )
       )
