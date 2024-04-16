@@ -3,13 +3,7 @@ package io.iohk.atala.agent.server
 import io.iohk.atala.agent.notification.WebhookPublisher
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
-import io.iohk.atala.agent.server.jobs.{
-  ConnectBackgroundJobs,
-  DIDStateSyncBackgroundJobs,
-  IssueBackgroundJobs,
-  PresentBackgroundJobs,
-  StatusListJobs
-}
+import io.iohk.atala.agent.server.jobs.*
 import io.iohk.atala.agent.walletapi.model.{Entity, Wallet, WalletSeed}
 import io.iohk.atala.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
@@ -31,8 +25,7 @@ import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, Ver
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.presentproof.controller.PresentProofServerEndpoints
 import io.iohk.atala.resolvers.DIDResolver
-import io.iohk.atala.shared.models.WalletAdministrationContext
-import io.iohk.atala.shared.models.{HexString, WalletAccessContext, WalletId}
+import io.iohk.atala.shared.models.{HexString, WalletAccessContext, WalletAdministrationContext, WalletId}
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.system.controller.SystemServerEndpoints
 import io.iohk.atala.verification.controller.VcVerificationServerEndpoints
