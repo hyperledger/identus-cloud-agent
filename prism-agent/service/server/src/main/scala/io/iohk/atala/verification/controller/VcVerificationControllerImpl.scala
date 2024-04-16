@@ -11,18 +11,20 @@ class VcVerificationControllerImpl(vcVerificationService: VcVerificationService)
       requests: List[controller.http.VcVerificationRequest]
   )(implicit rc: RequestContext): IO[ErrorResponse, List[controller.http.VcVerificationResponse]] = {
     val result =
-      ZIO.collectAll(requests.map(request => {
-        val serviceRequests = controller.http.VcVerificationRequest.toService(request)
-        for {
-          results <-
-            vcVerificationService
-              .verify(serviceRequests)
-              .mapError(error => VcVerificationController.toHttpError(error))
-        } yield controller.http.VcVerificationResponse(
-          request.credential,
-          results.map(result => controller.http.VcVerificationResult.toService(result))
-        )
-      }))
+      ZIO.collectAll(
+        requests.map(request => {
+          for {
+            serviceRequests <- controller.http.VcVerificationRequest.toService(request)
+            results <-
+              vcVerificationService
+                .verify(serviceRequests)
+                .mapError(error => VcVerificationController.toHttpError(error))
+          } yield controller.http.VcVerificationResponse(
+            request.credential,
+            results.map(result => controller.http.VcVerificationResult.toService(result))
+          )
+        })
+      )
     ZIO.succeed(List.empty)
   }
 }

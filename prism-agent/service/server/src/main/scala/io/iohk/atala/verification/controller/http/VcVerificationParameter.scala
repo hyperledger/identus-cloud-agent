@@ -1,9 +1,5 @@
 package io.iohk.atala.verification.controller.http
 
-import io.iohk.atala.pollux.core.service.verification.{
-  AudienceParameter as ServiceAudienceParameter,
-  VcVerificationParameter as ServiceVcVerificationParameter
-}
 import sttp.tapir.Schema
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
@@ -17,11 +13,6 @@ object VcVerificationParameter {
     DeriveJsonDecoder.gen[VcVerificationParameter]
 
   given schema: Schema[VcVerificationParameter] = Schema.derived
-
-  def convert(parameter: VcVerificationParameter): ServiceVcVerificationParameter = {
-    parameter match
-      case AudienceParameter(aud) => ServiceAudienceParameter(aud)
-  }
 }
 
 case class AudienceParameter(aud: String) extends VcVerificationParameter
