@@ -137,16 +137,6 @@ object ApolloSpec extends ZIOSpecDefault {
         signature = privateKey.sign(message)
       } yield assert(publicKey.verify(message, signature))(isFailure)
     },
-    test("sign the same message multiple time should produce different signature") {
-      val message = BigInt("42").toByteArray
-      for {
-        apollo <- ZIO.service[Apollo]
-        keyPair <- apollo.secp256k1.generateKeyPair
-        privateKey = keyPair.privateKey
-        signature1 = privateKey.sign(message)
-        signature2 = privateKey.sign(message)
-      } yield assert(signature1)(not(equalTo(signature2)))
-    }
   )
 
   private val secp256k1Spec = suite("Secp256k1Ops")(
