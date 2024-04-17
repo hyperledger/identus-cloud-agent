@@ -435,7 +435,9 @@ object ManagedDIDServiceSpec
           _ <- ZIO.foreach(1 to 5) { i =>
             val actions =
               Seq(
-                UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate(s"key-$i", VerificationRelationship.Authentication))
+                UpdateManagedDIDAction.AddKey(
+                  DIDPublicKeyTemplate(s"key-$i", VerificationRelationship.Authentication, EllipticCurve.SECP256K1)
+                )
               )
             svc.updateManagedDID(did, actions)
           }
