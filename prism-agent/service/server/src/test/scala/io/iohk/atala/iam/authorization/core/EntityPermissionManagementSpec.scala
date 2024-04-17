@@ -1,6 +1,5 @@
 package io.iohk.atala.iam.authorization.core
 
-import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.service.EntityService
@@ -12,6 +11,7 @@ import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.sql.JdbcWalletSecretStorage
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error.ServiceError
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error.WalletNotFoundById
+import io.iohk.atala.shared.crypto.ApolloSpecHelper
 import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport

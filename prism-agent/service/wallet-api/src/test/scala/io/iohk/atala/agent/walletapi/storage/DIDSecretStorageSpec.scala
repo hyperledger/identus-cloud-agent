@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.memory.WalletSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.model.Wallet
@@ -13,13 +12,14 @@ import io.iohk.atala.agent.walletapi.sql.{
 }
 import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultWalletSecretStorage}
 import io.iohk.atala.mercury.PeerDID
+import io.iohk.atala.shared.crypto.ApolloSpecHelper
 import io.iohk.atala.shared.models.WalletAccessContext
+import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import io.iohk.atala.shared.models.WalletAdministrationContext
 
 object DIDSecretStorageSpec
     extends ZIOSpecDefault,

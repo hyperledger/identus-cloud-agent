@@ -25,7 +25,7 @@ import io.iohk.atala.iam.entity.http.EntityServerEndpoints
 import io.iohk.atala.iam.wallet.http.WalletManagementServerEndpoints
 import io.iohk.atala.issue.controller.IssueServerEndpoints
 import io.iohk.atala.mercury.{DidOps, HttpClient}
-import io.iohk.atala.pollux.core.service.{CredentialService, CredentialStatusListService, PresentationService}
+import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
 import io.iohk.atala.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver

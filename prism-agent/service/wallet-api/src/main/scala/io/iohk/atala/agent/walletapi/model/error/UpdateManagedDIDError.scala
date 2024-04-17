@@ -10,7 +10,6 @@ object UpdateManagedDIDError {
   final case class DIDNotPublished(did: CanonicalPrismDID) extends UpdateManagedDIDError
   final case class DIDAlreadyDeactivated(did: CanonicalPrismDID) extends UpdateManagedDIDError
   final case class InvalidArgument(msg: String) extends UpdateManagedDIDError
-  final case class KeyGenerationError(cause: Throwable) extends UpdateManagedDIDError
   final case class WalletStorageError(cause: Throwable) extends UpdateManagedDIDError
   final case class OperationError(cause: castor.DIDOperationError) extends UpdateManagedDIDError
   final case class InvalidOperation(cause: castor.OperationValidationError) extends UpdateManagedDIDError

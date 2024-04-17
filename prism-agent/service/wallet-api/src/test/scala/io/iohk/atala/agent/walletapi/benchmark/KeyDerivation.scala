@@ -1,12 +1,10 @@
 package io.iohk.atala.agent.walletapi.benchmark
 
-import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.agent.walletapi.crypto.DerivationPath
-import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
-import io.iohk.atala.agent.walletapi.crypto.ECPrivateKey
 import io.iohk.atala.agent.walletapi.vault.KVCodec
 import io.iohk.atala.agent.walletapi.vault.VaultKVClient
-import io.iohk.atala.castor.core.model.did.EllipticCurve
+import io.iohk.atala.shared.crypto.Apollo
+import io.iohk.atala.shared.crypto.DerivationPath
+import io.iohk.atala.shared.crypto.Secp256k1PrivateKey
 import io.iohk.atala.shared.models.Base64UrlString
 import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.test.container.VaultTestContainerSupport
@@ -19,15 +17,15 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
   private val seedHex = "00" * 64
   private val seed = HexString.fromStringUnsafe(seedHex).toByteArray
 
-  private def codec(apollo: Apollo): KVCodec[ECPrivateKey] = new {
-    override def encode(value: ECPrivateKey): Map[String, String] = {
-      val encodedKey = Base64UrlString.fromByteArray(value.encode).toString()
+  private def codec(apollo: Apollo): KVCodec[Secp256k1PrivateKey] = new {
+    override def encode(value: Secp256k1PrivateKey): Map[String, String] = {
+      val encodedKey = Base64UrlString.fromByteArray(value.getEncoded).toString()
       Map("value" -> encodedKey)
     }
 
-    override def decode(kv: Map[String, String]): Try[ECPrivateKey] = {
+    override def decode(kv: Map[String, String]): Try[Secp256k1PrivateKey] = {
       val encodedBytes = Base64UrlString.fromString(kv.get("value").get).toOption.get.toByteArray
-      apollo.ecKeyFactory.privateKeyFromEncoded(EllipticCurve.SECP256K1, encodedBytes)
+      apollo.secp256k1.privateKeyFromEncoded(encodedBytes)
     }
   }
 
@@ -37,8 +35,8 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
   }
 
   override def spec = suite("Key derivation benchmark")(
-    deriveKeyBenchmark.provide(Apollo.prism14Layer),
-    queryKeyBenchmark.provide(vaultKvClientLayer(), Apollo.prism14Layer)
+    deriveKeyBenchmark.provide(Apollo.layer),
+    queryKeyBenchmark.provide(vaultKvClientLayer(), Apollo.layer)
   ) @@ TestAspect.sequential @@ TestAspect.timed @@ TestAspect.tag("benchmark") @@ TestAspect.ignore
 
   private val deriveKeyBenchmark = suite("Key derivation benchmark")(
@@ -62,8 +60,8 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
         durationList <- ZIO
           .foreachPar(1 to 50_000) { i =>
             Live.live {
-              apollo.ecKeyFactory
-                .deriveKeyPair(EllipticCurve.SECP256K1, seed)(derivationPath(keyIndex = i): _*)
+              apollo.secp256k1
+                .deriveKeyPair(seed)(derivationPath(keyIndex = i): _*)
                 .timed
                 .map(_._1)
             }
@@ -79,15 +77,15 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
       for {
         vaultClient <- ZIO.service[VaultKVClient]
         apollo <- ZIO.service[Apollo]
-        keyPair <- apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
+        keyPair <- apollo.secp256k1.generateKeyPair
         _ <- ZIO
           .foreach(1 to 50_000) { i =>
-            given KVCodec[ECPrivateKey] = codec(apollo)
+            given KVCodec[Secp256k1PrivateKey] = codec(apollo)
             vaultClient.set(s"secret/did/prism/key-$i", keyPair.privateKey)
           }
         durationList <- ZIO
           .foreachPar(1 to 50_000) { i =>
-            given KVCodec[ECPrivateKey] = codec(apollo)
+            given KVCodec[Secp256k1PrivateKey] = codec(apollo)
             Live.live { vaultClient.get(s"secret/did/prism/key-$i").timed.map(_._1) }
           }
           .withParallelism(parallelism)
@@ -102,8 +100,7 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
       apollo <- ZIO.service[Apollo]
       _ <- ZIO
         .foreach(1 to n) { i =>
-          apollo.ecKeyFactory
-            .deriveKeyPair(EllipticCurve.SECP256K1, seed)(derivationPath(keyIndex = i): _*)
+          apollo.secp256k1.deriveKeyPair(seed)(derivationPath(keyIndex = i): _*)
         }
     } yield ()
   }

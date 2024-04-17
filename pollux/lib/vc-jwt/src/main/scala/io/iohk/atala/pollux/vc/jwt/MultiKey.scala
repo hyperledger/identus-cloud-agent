@@ -2,7 +2,6 @@ package io.iohk.atala.pollux.vc.jwt
 
 import io.circe.*
 import io.circe.syntax.*
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 
 case class MultiKey(
     publicKeyMultibase: Option[MultiBaseString] = None,

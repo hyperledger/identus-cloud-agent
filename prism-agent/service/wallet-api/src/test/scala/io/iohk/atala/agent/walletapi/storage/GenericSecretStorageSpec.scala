@@ -1,11 +1,11 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.service.{WalletManagementService, WalletManagementServiceImpl}
 import io.iohk.atala.agent.walletapi.sql.{JdbcGenericSecretStorage, JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
 import io.iohk.atala.agent.walletapi.vault.{VaultGenericSecretStorage, VaultWalletSecretStorage}
+import io.iohk.atala.shared.crypto.ApolloSpecHelper
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
@@ -17,6 +17,7 @@ import zio.test.Assertion.*
 
 import java.util.UUID
 import scala.util.Try
+
 object GenericSecretStorageSpec
     extends ZIOSpecDefault,
       StorageSpecHelper,

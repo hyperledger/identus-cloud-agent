@@ -1,6 +1,8 @@
 package io.iohk.atala.agent.walletapi.util
 
-import io.iohk.atala.agent.walletapi.crypto.{ECKeyPair, ECPublicKey}
+import io.iohk.atala.agent.walletapi.model.HdKeyIndexCounter
+import io.iohk.atala.agent.walletapi.model.ManagedDIDHdKeyPath
+import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.agent.walletapi.model.{
   DIDPublicKeyTemplate,
   ManagedDIDTemplate,
@@ -10,7 +12,7 @@ import io.iohk.atala.agent.walletapi.model.{
   UpdateDIDHdKey,
   UpdateDIDRandKey
 }
-import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, UpdateManagedDIDError}
+import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.castor.core.model.did.{
   CanonicalPrismDID,
   InternalKeyPurpose,
@@ -20,14 +22,11 @@ import io.iohk.atala.castor.core.model.did.{
   PublicKeyData,
   UpdateDIDAction
 }
+import io.iohk.atala.shared.crypto.{Apollo, Secp256k1KeyPair as ECKeyPair, Secp256k1PublicKey as ECPublicKey}
 import io.iohk.atala.shared.models.Base64UrlString
 import zio.*
 
 import scala.collection.immutable.ArraySeq
-import io.iohk.atala.agent.walletapi.model.HdKeyIndexCounter
-import io.iohk.atala.agent.walletapi.crypto.Apollo
-import io.iohk.atala.castor.core.model.did.EllipticCurve
-import io.iohk.atala.agent.walletapi.model.ManagedDIDHdKeyPath
 
 private[util] final case class KeyDerivationOutcome[PK](
     publicKey: PK,
@@ -56,7 +55,7 @@ class OperationFactory(apollo: Apollo) {
       didTemplate: ManagedDIDTemplate
   ): IO[CreateManagedDIDError, (PrismDIDOperation.Create, CreateDIDHdKey)] = {
     val initKeysWithCounter = (Vector.empty[(PublicKey, ManagedDIDHdKeyPath)], HdKeyIndexCounter.zero(didIndex))
-    val result = for {
+    for {
       keysWithCounter <- ZIO.foldLeft(didTemplate.publicKeys)(initKeysWithCounter) {
         case ((keys, keyCounter), template) =>
           derivePublicKey(seed)(template, keyCounter)
@@ -80,22 +79,20 @@ class OperationFactory(apollo: Apollo) {
         internalKeyPaths = Map(masterKeyOutcome.publicKey.id -> masterKeyOutcome.path),
       )
     } yield operation -> hdKeys
-
-    result.mapError(CreateManagedDIDError.KeyGenerationError.apply)
   }
 
   def makeCreateOperationRandKey(
       masterKeyId: String
   )(didTemplate: ManagedDIDTemplate): IO[CreateManagedDIDError, (PrismDIDOperation.Create, CreateDIDRandKey)] = {
     for {
-      randomSeed <- apollo.ecKeyFactory.randomBip32Seed().mapBoth(CreateManagedDIDError.KeyGenerationError.apply, _._1)
+      randomSeed <- apollo.secp256k1.randomBip32Seed.map(_._1)
       operationWithHdKey <- makeCreateOperationHdKey(masterKeyId, randomSeed)(0, didTemplate)
       (operation, hdKeys) = operationWithHdKey
       keyPairs <- ZIO.foreach(hdKeys.keyPaths) { case (id, path) =>
-        deriveSecp256k1KeyPair(randomSeed, path).mapBoth(CreateManagedDIDError.KeyGenerationError.apply, id -> _)
+        deriveSecp256k1KeyPair(randomSeed, path).map(id -> _)
       }
       internalKeyPairs <- ZIO.foreach(hdKeys.internalKeyPaths) { case (id, path) =>
-        deriveSecp256k1KeyPair(randomSeed, path).mapBoth(CreateManagedDIDError.KeyGenerationError.apply, id -> _)
+        deriveSecp256k1KeyPair(randomSeed, path).map(id -> _)
       }
     } yield operation -> CreateDIDRandKey(
       keyPairs = keyPairs,
@@ -113,9 +110,8 @@ class OperationFactory(apollo: Apollo) {
       (Vector.empty[(UpdateManagedDIDAction, Option[(PublicKey, ManagedDIDHdKeyPath)])], fromKeyCounter)
     val actionsWithKeyMaterial = ZIO.foldLeft(actions)(initKeysWithCounter) { case ((acc, keyCounter), action) =>
       val derivation = action match {
-        case UpdateManagedDIDAction.AddKey(template) =>
-          derivePublicKey(seed)(template, keyCounter).mapError(UpdateManagedDIDError.KeyGenerationError.apply).asSome
-        case _ => ZIO.none
+        case UpdateManagedDIDAction.AddKey(template) => derivePublicKey(seed)(template, keyCounter).asSome
+        case _                                       => ZIO.none
       }
       derivation.map {
         case Some(outcome) => (acc :+ (action -> Some((outcome.publicKey, outcome.path))), outcome.nextCounter)
@@ -152,7 +148,7 @@ class OperationFactory(apollo: Apollo) {
       actions: Seq[UpdateManagedDIDAction]
   ): IO[UpdateManagedDIDError, (PrismDIDOperation.Update, UpdateDIDRandKey)] = {
     for {
-      randomSeed <- apollo.ecKeyFactory.randomBip32Seed().mapBoth(UpdateManagedDIDError.KeyGenerationError.apply, _._1)
+      randomSeed <- apollo.secp256k1.randomBip32Seed.map(_._1)
       operationWithHdKey <- makeUpdateOperationHdKey(randomSeed)(
         did,
         previousOperationHash,
@@ -161,7 +157,7 @@ class OperationFactory(apollo: Apollo) {
       )
       (operation, hdKeys) = operationWithHdKey
       keyPairs <- ZIO.foreach(hdKeys.newKeyPaths) { case (id, path) =>
-        deriveSecp256k1KeyPair(randomSeed, path).mapBoth(UpdateManagedDIDError.KeyGenerationError.apply, id -> _)
+        deriveSecp256k1KeyPair(randomSeed, path).map(id -> _)
       }
     } yield operation -> UpdateDIDRandKey(newKeyPairs = keyPairs)
   }
@@ -190,7 +186,7 @@ class OperationFactory(apollo: Apollo) {
   private def derivePublicKey(seed: Array[Byte])(
       template: DIDPublicKeyTemplate,
       keyCounter: HdKeyIndexCounter
-  ): Task[KeyDerivationOutcome[PublicKey]] = {
+  ): UIO[KeyDerivationOutcome[PublicKey]] = {
     val purpose = template.purpose
     val keyPath = keyCounter.path(purpose)
     for {
@@ -203,7 +199,7 @@ class OperationFactory(apollo: Apollo) {
       id: String,
       purpose: InternalKeyPurpose,
       keyCounter: HdKeyIndexCounter
-  ): Task[KeyDerivationOutcome[InternalPublicKey]] = {
+  ): UIO[KeyDerivationOutcome[InternalPublicKey]] = {
     val keyPath = keyCounter.path(purpose)
     for {
       keyPair <- deriveSecp256k1KeyPair(seed, keyPath)
@@ -211,13 +207,12 @@ class OperationFactory(apollo: Apollo) {
     } yield KeyDerivationOutcome(internalPublicKey, keyPath, keyCounter.next(purpose))
   }
 
-  private def deriveSecp256k1KeyPair(seed: Array[Byte], path: ManagedDIDHdKeyPath): Task[ECKeyPair] = {
-    apollo.ecKeyFactory.deriveKeyPair(EllipticCurve.SECP256K1, seed)(path.derivationPath: _*)
-  }
+  private def deriveSecp256k1KeyPair(seed: Array[Byte], path: ManagedDIDHdKeyPath): UIO[ECKeyPair] =
+    apollo.secp256k1.deriveKeyPair(seed)(path.derivationPath: _*)
 
   private def toPublicKeyData(publicKey: ECPublicKey): PublicKeyData = PublicKeyData.ECCompressedKeyData(
-    crv = publicKey.curve,
-    data = Base64UrlString.fromByteArray(publicKey.encode),
+    crv = EllipticCurve.SECP256K1,
+    data = Base64UrlString.fromByteArray(publicKey.getEncodedCompressed),
   )
 
 }
