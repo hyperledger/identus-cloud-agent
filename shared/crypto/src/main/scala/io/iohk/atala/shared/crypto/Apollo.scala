@@ -19,9 +19,8 @@ trait Apollo {
 object Apollo {
   def layer: ULayer[Apollo] = ZLayer.succeed(default)
 
-  // TODO: migrate to KMP Apollo and support other key types
   def default: Apollo = new {
-    override def secp256k1: Secp256k1KeyOps = Prism14Secp256k1Ops
+    override def secp256k1: Secp256k1KeyOps = KmpSecp256k1KeyOps
     override def ed25519: Ed25519KeyOps = ???
     override def x25519: X25519KeyOps = ???
   }

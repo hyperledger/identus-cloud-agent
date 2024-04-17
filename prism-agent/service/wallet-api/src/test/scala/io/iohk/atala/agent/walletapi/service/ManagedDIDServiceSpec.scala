@@ -423,24 +423,22 @@ object ManagedDIDServiceSpec
           testDIDSvc <- ZIO.service[TestDIDService]
           did <- initPublishedDID
           _ <- testDIDSvc.setResolutionResult(Some(resolutionResult()))
-          _ <- ZIO.foreach(1 to 5) { _ =>
-            val actions = Seq(UpdateManagedDIDAction.RemoveKey("key-1"))
+          _ <- ZIO.foreach(1 to 5) { i =>
+            val actions = Seq(UpdateManagedDIDAction.RemoveKey(s"key-$i"))
             svc.updateManagedDID(did, actions)
           }
-          _ <- ZIO.foreach(1 to 5) { _ =>
+          _ <- ZIO.foreach(1 to 5) { i =>
             val actions =
-              Seq(UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate("key-1", VerificationRelationship.Authentication)))
+              Seq(
+                UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate(s"key-$i", VerificationRelationship.Authentication))
+              )
             svc.updateManagedDID(did, actions)
           }
           lineage <- svc.nonSecretStorage.listUpdateLineage(None, None)
         } yield {
           // There are a total of 10 updates: 5 add-key updates & 5 remove-key updates.
-          // There should be 10 unique operationId (randomness in signature) and
-          // 6 unique operationHash since remove-key update all have the same content
-          // and add-key all have different content (randomness in key generation).
           assert(lineage)(hasSize(equalTo(10)))
-          && assert(lineage.map(_.operationId).toSet)(hasSize(equalTo(10)))
-          && assert(lineage.map(_.operationHash).toSet)(hasSize(equalTo(6)))
+          && assert(lineage.map(_.operationHash).toSet)(hasSize(equalTo(10)))
         }
       }
     )
