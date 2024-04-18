@@ -12,7 +12,7 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord}
-import io.iohk.atala.pollux.vc.jwt.{Issuer, W3cCredentialPayload}
+import io.iohk.atala.pollux.vc.jwt.Issuer
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.mock.{Mock, Proxy}
 import zio.{IO, URLayer, ZIO, ZLayer, mock}
