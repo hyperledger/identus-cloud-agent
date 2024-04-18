@@ -1,5 +1,3 @@
----
-
 configs:
   caddyfile_issuer:
     content: |-
@@ -17,7 +15,6 @@ configs:
           reverse_proxy vault-issuer:8200
         }
       }
-
 services:
   agent-issuer:
     depends_on:
@@ -46,7 +43,7 @@ services:
       PRISM_NODE_PORT: '50053'
       REST_SERVICE_URL: http://caddy-issuer:8080/prism-agent
       SECRET_STORAGE_BACKEND: postgres
-    image: ghcr.io/input-output-hk/prism-agent:1.30.1-SNAPSHOT
+    image: ghcr.io/input-output-hk/prism-agent:1.31.0-SNAPSHOT
     restart: always
   caddy-issuer:
     configs:
