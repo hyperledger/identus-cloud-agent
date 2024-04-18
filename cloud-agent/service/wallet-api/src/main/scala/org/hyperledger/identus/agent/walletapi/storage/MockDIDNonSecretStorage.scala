@@ -6,7 +6,7 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.mock.{Expectation, Mock, Proxy}
 import zio.test.Assertion.equalTo
-import zio.{RIO, Task, URLayer, ZIO, ZLayer, mock}
+import zio.*
 
 import scala.collection.immutable.ArraySeq
 
