@@ -14,7 +14,7 @@ in
 
   st-oidc4vc =
     (stack.makeAgentStack { name = "issuer", port = 8080 })
-    & (stack.makeMockServerStack { port = 5000 })
+    & (stack.makeMockServerStack { port = 7777 })
     & (
       stack.makeIssuerKeycloakStack
         {
