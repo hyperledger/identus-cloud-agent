@@ -76,7 +76,7 @@ object CredentialIssuerController {
       )
 
     def serverError(details: Option[String]): ExtendedErrorResponse =
-      Left(internalServerError("InternalServerError", details, instance = "CredentialIssuerController"))
+      Left(internalServerError("InternalServerError", details))
   }
 }
 
