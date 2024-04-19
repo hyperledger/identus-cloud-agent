@@ -57,8 +57,6 @@ object DIDRegistrarController {
   given Conversion[CreateManagedDIDError, ErrorResponse] = {
     case CreateManagedDIDError.InvalidArgument(msg) =>
       ErrorResponse.unprocessableEntity(detail = Some(msg))
-    case CreateManagedDIDError.KeyGenerationError(e) =>
-      ErrorResponse.internalServerError(detail = Some(e.toString))
     case CreateManagedDIDError.WalletStorageError(e) =>
       ErrorResponse.internalServerError(detail = Some(e.toString))
     case CreateManagedDIDError.InvalidOperation(e) =>

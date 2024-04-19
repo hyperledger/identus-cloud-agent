@@ -46,6 +46,7 @@ class DIDOperationValidator(config: Config) extends BaseOperationValidator {
 private object CreateOperationValidator extends BaseOperationValidator {
   def validate(config: Config)(operation: PrismDIDOperation.Create): Either[OperationValidationError, Unit] = {
     for {
+      // TODO: validate public key content
       _ <- validateMaxPublicKeysAccess(config)(operation, extractKeyIds)
       _ <- validateMaxServiceAccess(config)(operation, extractServiceIds)
       _ <- validateUniquePublicKeyId(operation, extractKeyIds)

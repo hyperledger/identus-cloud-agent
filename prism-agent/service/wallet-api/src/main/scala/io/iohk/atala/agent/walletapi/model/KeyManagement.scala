@@ -1,10 +1,10 @@
 package io.iohk.atala.agent.walletapi.model
 
-import io.iohk.atala.agent.walletapi.crypto.DerivationPath
-import io.iohk.atala.agent.walletapi.crypto.ECKeyPair
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.prism.crypto.Sha256
+import io.iohk.atala.shared.crypto.{DerivationPath, Secp256k1KeyPair as ECKeyPair}
+
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions
 

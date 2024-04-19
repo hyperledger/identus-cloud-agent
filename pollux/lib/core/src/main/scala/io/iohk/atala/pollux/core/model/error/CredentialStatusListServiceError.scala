@@ -1,7 +1,6 @@
 package io.iohk.atala.pollux.core.model.error
 
 import io.iohk.atala.pollux.core.model.DidCommID
-import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
 
 import java.util.UUID
 

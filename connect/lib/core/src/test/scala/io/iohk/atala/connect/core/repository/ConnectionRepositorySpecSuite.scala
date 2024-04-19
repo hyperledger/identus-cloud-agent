@@ -6,14 +6,13 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import zio.Exit.Failure
 import zio.test.*
 import zio.{Cause, Exit, ZIO, ZLayer}
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-import zio.Exit.Success
-import zio.Exit.Failure
 
 object ConnectionRepositorySpecSuite {
 
