@@ -35,8 +35,7 @@ import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
 import zio.*
-import zio.config.typesafe.TypesafeConfigSource
-import zio.config.{ReadError, read}
+import zio.config.typesafe.TypesafeConfigProvider
 import zio.json.ast.Json
 import zio.json.ast.Json.*
 import zio.test.*
@@ -55,15 +54,11 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
     ]
   val didResolverLayer = ZLayer.fromZIO(ZIO.succeed(makeResolver(Map.empty)))
 
-  val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
-    read(
-      AppConfig.descriptor.from(
-        TypesafeConfigSource.fromTypesafeConfig(
-          ZIO.attempt(ConfigFactory.load())
-        )
-      )
-    )
-  }
+  val configLayer = ZLayer.fromZIO(
+    TypesafeConfigProvider
+      .fromTypesafeConfig(ConfigFactory.load())
+      .load(AppConfig.config)
+  )
 
   private[this] def makeResolver(lookup: Map[String, DIDDocument]): DidResolver = (didUrl: String) => {
     lookup
