@@ -1,6 +1,5 @@
 package io.iohk.atala.pollux.core.service.verification
 
-import io.iohk.atala.agent.walletapi.crypto.{Prism14ECPrivateKey, Prism14ECPublicKey}
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.service.{DIDService, MockDIDService}
@@ -20,8 +19,8 @@ trait VcVerificationServiceSpecHelper {
   protected val issuer =
     Issuer(
       did = io.iohk.atala.pollux.vc.jwt.DID(issuerDidData.id.did.toString),
-      signer = ES256KSigner(Prism14ECPrivateKey(issuerKp.getPrivateKey).toJavaPrivateKey),
-      publicKey = Prism14ECPublicKey(issuerKp.getPublicKey).toJavaPublicKey
+      signer = ES256KSigner(issuerKp.privateKey.toJavaPrivateKey),
+      publicKey = issuerKp.publicKey.toJavaPublicKey
     )
 
   protected val issuerDidServiceExpectations: Expectation[DIDService] =

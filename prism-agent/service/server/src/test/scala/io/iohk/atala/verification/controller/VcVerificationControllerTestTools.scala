@@ -1,9 +1,6 @@
 package io.iohk.atala.verification.controller
 
-import com.typesafe.config.ConfigFactory
-import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.CustomServerInterceptors
-import io.iohk.atala.agent.walletapi.crypto.{Prism14ECPrivateKey, Prism14ECPublicKey}
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
@@ -22,8 +19,6 @@ import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
 import zio.*
-import zio.config.typesafe.TypesafeConfigSource
-import zio.config.{ReadError, read}
 import zio.test.*
 
 trait VcVerificationControllerTestTools extends PostgresTestContainerSupport {
@@ -35,21 +30,11 @@ trait VcVerificationControllerTestTools extends PostgresTestContainerSupport {
   protected val issuer =
     Issuer(
       did = io.iohk.atala.pollux.vc.jwt.DID(issuerDidData.id.did.toString),
-      signer = ES256KSigner(Prism14ECPrivateKey(issuerKp.getPrivateKey).toJavaPrivateKey),
-      publicKey = Prism14ECPublicKey(issuerKp.getPublicKey).toJavaPublicKey
+      signer = ES256KSigner(issuerKp.privateKey.toJavaPrivateKey),
+      publicKey = issuerKp.publicKey.toJavaPublicKey
     )
 
   val didResolverLayer = ZLayer.fromZIO(ZIO.succeed(makeResolver(Map.empty)))
-
-  val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
-    read(
-      AppConfig.descriptor.from(
-        TypesafeConfigSource.fromTypesafeConfig(
-          ZIO.attempt(ConfigFactory.load())
-        )
-      )
-    )
-  }
 
   private[this] def makeResolver(lookup: Map[String, DIDDocument]): DidResolver = (didUrl: String) => {
     lookup
