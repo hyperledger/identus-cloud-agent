@@ -240,7 +240,7 @@ way to recover
 from an SQL execution error in a database-agnostic way.
 
 A good approach is to use ZIO Defects to report repository errors, declaring all repository methods as `URIO`
-or `UIO`([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/main/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/repository/ConnectionRepository.scala)).
+or `UIO`([example](https://github.com/hyperledger/identus-cloud-agent/blob/main/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/repository/ConnectionRepository.scala)).
 Conversely, declaring them as `Task` assumes that the caller (i.e. service) can properly handle and
 recover from the low-level and database-specific exceptions exposed in the error channel, which is a fallacy.
 
@@ -251,7 +251,7 @@ trait ConnectionRepository {
 ```
 
 Converting a ZIO `Task` to ZIO `UIO` can easily be done
-using `ZIO#orDie`([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/sql-doobie/src/main/scala/io/iohk/atala/connect/sql/repository/JdbcConnectionRepository.scala#L114)).
+using `ZIO#orDie`([example](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/sql-doobie/src/main/scala/io/iohk/atala/connect/sql/repository/JdbcConnectionRepository.scala#L114)).
 
 ```scala
 class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task]) extends ConnectionRepository {
@@ -276,7 +276,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 ```
 
 For those cases where one has to generate a defect, a common way to do this is by using the following ZIO
-construct ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/sql-doobie/src/main/scala/io/iohk/atala/connect/sql/repository/JdbcConnectionRepository.scala#L212)):
+construct ([example](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/sql-doobie/src/main/scala/io/iohk/atala/connect/sql/repository/JdbcConnectionRepository.scala#L212)):
 
 ```scala
 class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task]) extends ConnectionRepository {
@@ -293,11 +293,11 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 Follow the `get` and `find` best practices in the repository interface for read operations:
 
 - `getXxx()` returns the requested record or throws an unexpected exception/defect when not
-  found ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/repository/ConnectionRepository.scala#L36)).
+  found ([example](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/repository/ConnectionRepository.scala#L36)).
 - `findXxx()` returns an `Option` with or without the request record, which allows the caller service to handle
   the `found`
   and `not-found` cases and report appropriately to the end
-  user ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/repository/ConnectionRepository.scala#L32)).
+  user ([example](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/repository/ConnectionRepository.scala#L32)).
 
 ```scala
 trait ConnectionRepository {
@@ -312,7 +312,7 @@ trait ConnectionRepository {
 The `create`, `update` or `delete` repository methods should not return an `Int` indicating the number of rows affected
 by the operation but either return `Unit` when successful or throw an exception/defect when the row count is not what is
 expected, like i.e. an update operation resulting in a `0` affected row
-count ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/sql-doobie/src/main/scala/io/iohk/atala/connect/sql/repository/JdbcConnectionRepository.scala#L85)).
+count ([example](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/sql-doobie/src/main/scala/io/iohk/atala/connect/sql/repository/JdbcConnectionRepository.scala#L85)).
 
 ```scala
 class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task]) extends ConnectionRepository {
@@ -358,7 +358,7 @@ caught at the upper level and returns a generic `500 Internal Server Error` to t
 
 For those cases where a specific error like `404` should be returned, it is up to the service to first call `find()`
 before `update()` and construct a `NotFound` failure, propagated through the error channel, if it gives
-a `None` ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/service/ConnectionServiceImpl.scala#L149)).
+a `None` ([example](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/service/ConnectionServiceImpl.scala#L149)).
 
 Relying on the service layer to implement it will guarantee consistent behavior regardless of the underlying database
 type (could be different RDMS flavor, No-SQL, etc.).
@@ -382,22 +382,22 @@ class ConnectionServiceImpl() extends ConnectionService {
 #### Do not type unexpected errors
 
 Do not wrap defects from lower layers (typically repository) in a failure and error case class declarations
-like [this](https://github.com/hyperledger-labs/open-enterprise-agent/blob/b579fd86ab96db711425f511154e74be75583896/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/model/error/ConnectionServiceError.scala#L8)
+like [this](https://github.com/hyperledger/identus-cloud-agent/blob/b579fd86ab96db711425f511154e74be75583896/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/model/error/ConnectionServiceError.scala#L8)
 should be prohibited.
 
 Considering that failures are viewed as **expected errors** from which users can potentially recover, error case classes
 like `UnexpectedError` should be
-prohibited ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/b579fd86ab96db711425f511154e74be75583896/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/model/error/ConnectionServiceError.scala#L12)).
+prohibited ([example](https://github.com/hyperledger/identus-cloud-agent/blob/b579fd86ab96db711425f511154e74be75583896/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/model/error/ConnectionServiceError.scala#L12)).
 
 #### Extend the common `Failure` trait
 
 Make sure all service errors extend the shared
-trait [`io.iohk.atala.shared.models.Failure`](https://github.com/hyperledger-labs/open-enterprise-agent/blob/main/shared/src/main/scala/io/iohk/atala/shared/models/Failure.scala).
+trait [`io.iohk.atala.shared.models.Failure`](https://github.com/hyperledger/identus-cloud-agent/blob/main/shared/src/main/scala/io/iohk/atala/shared/models/Failure.scala).
 This allows handling "at the end of the world“ to be done in a consistent and in generic way.
 
 Create an exhaustive and meaningful list of service errors and make sure the value of the `userFacingMessage` attribute
 is chosen wisely! It will present "as is" to the user and should not contain any sensitive
-data ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/model/error/ConnectionServiceError.scala#L14)).
+data ([example](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/model/error/ConnectionServiceError.scala#L14)).
 
 ```scala
 trait Failure {
@@ -470,7 +470,7 @@ object ConnectionServiceError {
 #### Use Scala 3 Union Types
 
 Use Scala 3 union-types declaration in the effect’s error channel to notify the caller of potential
-failures ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/service/ConnectionServiceImpl.scala#L178))
+failures ([example](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/connect/lib/core/src/main/scala/io/iohk/atala/connect/core/service/ConnectionServiceImpl.scala#L178))
 
 ````scala
 class ConnectionServiceImpl() extends ConnectionService {
@@ -490,9 +490,9 @@ The upper layer will automatically do so appropriately and consistently using Ta
 #### Reporting RFC-9457 Error Response
 
 All declared Tapir endpoints must
-use [`io.iohk.atala.api.http.ErrorResponse`](https://github.com/hyperledger-labs/open-enterprise-agent/blob/main/prism-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala)
+use [`io.iohk.atala.api.http.ErrorResponse`](https://github.com/hyperledger/identus-cloud-agent/blob/main/prism-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala)
 as their output error
-type ([example](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/prism-agent/service/server/src/main/scala/io/iohk/atala/connect/controller/ConnectionEndpoints.scala#L45))
+type ([example](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/prism-agent/service/server/src/main/scala/io/iohk/atala/connect/controller/ConnectionEndpoints.scala#L45))
 This type ensures that the response returned to the user complies with
 the [RFC-9457 Problem Details for HTTP APIs](https://www.rfc-editor.org/rfc/rfc9457.html).
 
@@ -514,10 +514,10 @@ object ConnectionEndpoints {
 
 If all the underlying services used by a controller comply with the above rules, then the only error type that could
 propagate through the effect’s error channel is the
-parent [`io.iohk.atala.shared.models.Failure`](https://github.com/hyperledger-labs/open-enterprise-agent/blob/main/shared/src/main/scala/io/iohk/atala/shared/models/Failure.scala)
+parent [`io.iohk.atala.shared.models.Failure`](https://github.com/hyperledger/identus-cloud-agent/blob/main/shared/src/main/scala/io/iohk/atala/shared/models/Failure.scala)
 type and its conversion
 to the ErrorResponse type is done automatically
-via [Scala implicit conversion](https://github.com/hyperledger-labs/open-enterprise-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/prism-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala#L44).
+via [Scala implicit conversion](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/prism-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala#L44).
 
 #### Do not reflexively log errors
 
