@@ -5,14 +5,14 @@ import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 
 inThisBuild(
   Seq(
-    organization := "io.iohk.atala",
+    organization := "org.hyperledger.identus",
     scalaVersion := "3.3.1",
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
     versionScheme := Some("semver-spec"),
-    githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks",
+    githubOwner := "hyperledger",
+    githubRepository := "identus-cloud-agent",
     resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
     resolvers += "jitpack" at "https://jitpack.io",
   )
@@ -692,7 +692,7 @@ lazy val agentDidcommx = project
 //     .dependsOn(agent)
 
 // ####################
-// ###  prismNode  ####
+// ###  Node (VDR)  ####
 // ####################
 val prismNodeClient = project
   .in(file("prism-node/client/scala-client"))
