@@ -43,20 +43,21 @@ import io.iohk.atala.shared.crypto.Apollo
 import io.iohk.atala.shared.db.{ContextAwareTask, DbConfig, TransactorLayer}
 import org.keycloak.authorization.client.AuthzClient
 import zio.*
-import zio.config.typesafe.TypesafeConfigSource
-import zio.config.{ReadError, read}
+import zio.config.typesafe.TypesafeConfigProvider
 import zio.http.Client
 
 object SystemModule {
-  val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
-    read(
-      AppConfig.descriptor.from(
-        TypesafeConfigSource.fromTypesafeConfig(
-          ZIO.attempt(ConfigFactory.load())
-        )
-      )
-    )
-  }
+
+  private val tmp: IO[Config.Error, AppConfig] =
+    for {
+      ret: AppConfig <- TypesafeConfigProvider
+        .fromTypesafeConfig(ConfigFactory.load())
+        .load(AppConfig.config)
+      _ <- ZIO.log(s"HTTP server endpoint is setup as '${ret.agent.httpEndpoint.publicEndpointUrl}'")
+      _ <- ZIO.log(s"DIDComm server endpoint is setup as '${ret.agent.didCommEndpoint.publicEndpointUrl}'")
+    } yield ret
+
+  val configLayer = ZLayer.fromZIO(tmp)
 
   val zioHttpClientLayer: ZLayer[Any, Throwable, Client] = {
     import zio.http.netty.NettyConfig

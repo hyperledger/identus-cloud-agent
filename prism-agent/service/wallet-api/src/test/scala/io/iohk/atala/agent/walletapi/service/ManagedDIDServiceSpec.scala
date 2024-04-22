@@ -320,8 +320,9 @@ object ManagedDIDServiceSpec
         ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
         svc <- ZIO.service[ManagedDIDService]
         storage <- ZIO.service[DIDNonSecretStorage]
-        peerDid1 <- svc.createAndStorePeerDID("http://example.com").provide(ctx1)
-        peerDid2 <- svc.createAndStorePeerDID("http://example.com").provide(ctx2)
+        urlTmp = java.net.URL("http://example.com")
+        peerDid1 <- svc.createAndStorePeerDID(urlTmp).provide(ctx1)
+        peerDid2 <- svc.createAndStorePeerDID(urlTmp).provide(ctx2)
         record1 <- storage.getPeerDIDRecord(peerDid1.did)
         record2 <- storage.getPeerDIDRecord(peerDid2.did)
       } yield {
@@ -512,8 +513,9 @@ object ManagedDIDServiceSpec
         ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
         ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
         svc <- ZIO.service[ManagedDIDService]
-        dids1 <- ZIO.foreach(1 to 3)(_ => svc.createAndStorePeerDID("http://example.com")).provide(ctx1)
-        dids2 <- ZIO.foreach(1 to 3)(_ => svc.createAndStorePeerDID("http://example.com")).provide(ctx2)
+        urlTmp = java.net.URL("http://example.com")
+        dids1 <- ZIO.foreach(1 to 3)(_ => svc.createAndStorePeerDID(urlTmp)).provide(ctx1)
+        dids2 <- ZIO.foreach(1 to 3)(_ => svc.createAndStorePeerDID(urlTmp)).provide(ctx2)
         ownWalletDids1 <- ZIO.foreach(dids1)(d => svc.getPeerDID(d.did).exit).provide(ctx1)
         ownWalletDids2 <- ZIO.foreach(dids2)(d => svc.getPeerDID(d.did).exit).provide(ctx2)
         crossWalletDids1 <- ZIO.foreach(dids1)(d => svc.getPeerDID(d.did).exit).provide(ctx2)
