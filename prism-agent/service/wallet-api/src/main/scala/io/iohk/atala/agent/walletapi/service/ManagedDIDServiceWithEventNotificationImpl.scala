@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.walletapi.service
 
-import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.agent.walletapi.model.error.CommonWalletStorageError
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
@@ -11,6 +10,7 @@ import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.event.notification.{Event, EventNotificationService}
+import io.iohk.atala.shared.crypto.Apollo
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 

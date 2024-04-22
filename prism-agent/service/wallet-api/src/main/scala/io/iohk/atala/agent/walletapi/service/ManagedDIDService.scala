@@ -53,7 +53,7 @@ trait ManagedDIDService {
   ): ZIO[WalletAccessContext, UpdateManagedDIDError, ScheduleDIDOperationOutcome]
 
   /** PeerDID related methods */
-  def createAndStorePeerDID(serviceEndpoint: String): URIO[WalletAccessContext, PeerDID]
+  def createAndStorePeerDID(serviceEndpoint: java.net.URL): URIO[WalletAccessContext, PeerDID]
 
   def getPeerDID(didId: DidId): ZIO[WalletAccessContext, DIDSecretStorageError.KeyNotFoundError, PeerDID]
 

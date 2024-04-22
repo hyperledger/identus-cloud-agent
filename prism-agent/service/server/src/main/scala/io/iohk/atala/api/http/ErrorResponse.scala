@@ -1,8 +1,7 @@
 package io.iohk.atala.api.http
 
 import io.iohk.atala.api.http.ErrorResponse.annotations
-import io.iohk.atala.connect.controller.http.Connection
-import io.iohk.atala.shared.models.{Failure, WalletAccessContext}
+import io.iohk.atala.shared.models.Failure
 import sttp.model.StatusCode
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}

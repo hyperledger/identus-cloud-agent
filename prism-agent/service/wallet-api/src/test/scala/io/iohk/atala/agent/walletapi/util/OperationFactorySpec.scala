@@ -1,21 +1,12 @@
 package io.iohk.atala.agent.walletapi.util
 
+import io.iohk.atala.agent.walletapi.model.*
+import io.iohk.atala.castor.core.model.did.*
+import io.iohk.atala.shared.crypto.ApolloSpecHelper
+import io.iohk.atala.shared.models.HexString
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
-import io.iohk.atala.shared.models.HexString
-import io.iohk.atala.agent.walletapi.model.ManagedDIDTemplate
-import io.iohk.atala.castor.core.model.did.InternalPublicKey
-import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
-import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
-import io.iohk.atala.castor.core.model.did.VerificationRelationship
-import io.iohk.atala.castor.core.model.did.PrismDID
-import io.iohk.atala.agent.walletapi.model.HdKeyIndexCounter
-import io.iohk.atala.agent.walletapi.model.UpdateManagedDIDAction
-import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import io.iohk.atala.agent.walletapi.model.VerificationRelationshipCounter
-import io.iohk.atala.castor.core.model.did.UpdateDIDAction
 
 object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
 

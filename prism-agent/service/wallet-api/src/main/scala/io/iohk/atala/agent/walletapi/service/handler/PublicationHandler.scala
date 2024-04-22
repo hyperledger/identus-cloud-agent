@@ -28,8 +28,7 @@ class PublicationHandler(didService: DIDService, keyResolver: KeyResolver)(maste
             ZIO.die(Exception("master-key must exists in the wallet for signing DID operation and submit to Node"))
           )
       signedOperation <- ZIO
-        .fromTry(masterKeyPair.privateKey.sign(operation.toAtalaOperation.toByteArray))
-        .mapError[E](CommonCryptographyError.apply)
+        .succeed(masterKeyPair.privateKey.sign(operation.toAtalaOperation.toByteArray))
         .map(signature =>
           SignedPrismDIDOperation(
             operation = operation,

@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.walletapi.service
 
-import io.iohk.atala.agent.walletapi.crypto.{Prism14ECPrivateKey, Prism14ECPublicKey}
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.*
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
@@ -12,7 +11,7 @@ import io.iohk.atala.castor.core.model.did.{
 }
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.prism.crypto.keys.ECKeyPair
+import io.iohk.atala.shared.crypto.Secp256k1KeyPair
 import zio.mock.*
 import zio.test.Assertion
 import zio.{mock, *}
@@ -70,7 +69,7 @@ object MockManagedDIDService extends Mock[ManagedDIDService] {
         ): IO[UpdateManagedDIDError, ScheduleDIDOperationOutcome] = ???
 
         override def createAndStorePeerDID(
-            serviceEndpoint: String
+            serviceEndpoint: java.net.URL
         ): UIO[PeerDID] = ???
 
         override def getPeerDID(
@@ -94,16 +93,11 @@ object MockManagedDIDService extends Mock[ManagedDIDService] {
         )
       )
 
-  def javaKeyPairWithDIDExpectation(ecKeyPair: ECKeyPair): Expectation[ManagedDIDService] =
+  def javaKeyPairWithDIDExpectation(ecKeyPair: Secp256k1KeyPair): Expectation[ManagedDIDService] =
     MockManagedDIDService.JavaKeyPairWithDID(
       assertion = Assertion.anything,
       result = Expectation.value(
-        Some(
-          (
-            Prism14ECPrivateKey(ecKeyPair.getPrivateKey).toJavaPrivateKey,
-            Prism14ECPublicKey(ecKeyPair.getPublicKey).toJavaPublicKey
-          )
-        )
+        Some((ecKeyPair.privateKey.toJavaPrivateKey, ecKeyPair.publicKey.toJavaPublicKey))
       )
     )
 }

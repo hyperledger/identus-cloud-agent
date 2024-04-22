@@ -6,8 +6,6 @@ import io.iohk.atala.mercury.model.DidId
 import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord}
-import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
-import io.iohk.atala.prism.crypto.MerkleInclusionProof
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.mock.{Mock, Proxy}
 import zio.{IO, URLayer, ZIO, ZLayer, mock}
@@ -57,8 +55,6 @@ object MockCredentialService extends Mock[CredentialService] {
   object AcceptCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object GenerateJWTCredential extends Effect[(DidCommID, String), CredentialServiceError, IssueCredentialRecord]
   object GenerateAnonCredsCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
-  object MarkCredentialRecordsAsPublishQueued
-      extends Effect[Seq[(W3cCredentialPayload, MerkleInclusionProof)], CredentialServiceError, Int]
   object ReceiveCredentialIssue extends Effect[IssueCredential, CredentialServiceError, IssueCredentialRecord]
   object MarkOfferSent extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkRequestSent extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]

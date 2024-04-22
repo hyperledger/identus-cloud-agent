@@ -49,7 +49,7 @@ lazy val V = new {
 
   // https://mvnrepository.com/artifact/dev.zio/zio
   val zio = "2.0.18"
-  val zioConfig = "3.0.7"
+  val zioConfig = "4.0.1"
   val zioLogging = "2.1.16"
   val zioJson = "0.3.0"
   val zioHttp = "3.0.0-RC4"
@@ -82,6 +82,7 @@ lazy val V = new {
   val jwtCirceVersion = "9.1.2"
   val zioPreludeVersion = "1.0.0-RC16"
 
+  val apollo = "1.2.14"
   val bouncyCastle = "1.70"
 
   val jsonSchemaValidator = "1.3.2"
@@ -160,6 +161,18 @@ lazy val D = new {
   val monocle: ModuleID = "dev.optics" %% "monocle-core" % V.monocle % Test
   val monocleMacro: ModuleID = "dev.optics" %% "monocle-macro" % V.monocle % Test
 
+  val apollo = "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo
+  // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
+  // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
+  val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % V.prismSdk excludeAll
+    ExclusionRule(
+      organization = "org.bouncycastle"
+    )
+  // Added here to make prism-crypto works.
+  // Once migrated to apollo, re-evaluate if this should be removed.
+  val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % V.bouncyCastle
+  val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk15on" % V.bouncyCastle
+
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
     Seq(doobiePostgres, doobiePostgresCirce, doobieHikari, flyway)
@@ -183,6 +196,19 @@ lazy val D_Shared = new {
       D.circeCore,
       D.circeGeneric,
       D.circeParser
+    )
+}
+
+lazy val D_SharedCrypto = new {
+  lazy val dependencies: Seq[ModuleID] =
+    Seq(
+      D.apollo,
+      D.bouncyBcpkix,
+      D.bouncyBcprov,
+      D.prismCrypto, // TODO: remove after migrated all primitives to apollo
+      D.zioTest,
+      D.zioTestSbt,
+      D.zioTestMagnolia,
     )
 }
 
@@ -218,15 +244,6 @@ lazy val D_Connect = new {
 }
 
 lazy val D_Castor = new {
-
-  // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
-  // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
-  val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % V.prismSdk excludeAll
-    ExclusionRule(
-      organization = "org.bouncycastle"
-    )
-  val prismIdentity = "io.iohk.atala" % "prism-identity-jvm" % V.prismSdk
-
   // Dependency Modules
   val baseDependencies: Seq[ModuleID] =
     Seq(
@@ -235,7 +252,6 @@ lazy val D_Castor = new {
       D.zioMock,
       D.zioTestSbt,
       D.zioTestMagnolia,
-      prismIdentity,
     )
 
   // Project Dependencies
@@ -258,13 +274,6 @@ lazy val D_Pollux = new {
   val quillDoobie = "io.getquill" %% "quill-doobie" %
     V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
 
-  // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
-  // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
-  val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % V.prismSdk excludeAll
-    ExclusionRule(
-      organization = "org.bouncycastle"
-    )
-
   // Dependency Modules
   val baseDependencies: Seq[ModuleID] = Seq(
     D.zio,
@@ -276,7 +285,7 @@ lazy val D_Pollux = new {
     D.zioMock,
     D.munit,
     D.munitZio,
-    prismCrypto,
+    D.prismCrypto,
     // shared,
     logback,
     slf4jApi,
@@ -342,12 +351,6 @@ lazy val D_Pollux_AnonCreds = new {
 }
 
 lazy val D_PrismAgent = new {
-
-  // Added here to make prism-crypto works.
-  // Once migrated to apollo, re-evaluate if this should be removed.
-  val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % V.bouncyCastle
-  val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk15on" % V.bouncyCastle
-
   val logback = "ch.qos.logback" % "logback-classic" % V.logback
 
   val tapirSwaggerUiBundle = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % V.tapir
@@ -391,7 +394,7 @@ lazy val D_PrismAgent = new {
     D.micrometer,
     D.micrometerPrometheusRegistry
   )
-  val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
+  val bouncyDependencies: Seq[ModuleID] = Seq(D.bouncyBcpkix, D.bouncyBcprov)
   val tapirDependencies: Seq[ModuleID] =
     Seq(
       tapirSwaggerUiBundle,
@@ -459,31 +462,37 @@ val commonSetttings = Seq(
 // #####  shared  ######
 // #####################
 
-lazy val shared = (project in file("shared"))
-  // .configure(publishConfigure)
+lazy val shared = (project in file("shared/core"))
   .settings(commonSetttings)
   .settings(
     organization := "io.iohk.atala",
     organizationName := "Input Output Global",
-    buildInfoPackage := "io.iohk.atala.shared",
     name := "shared",
     crossPaths := false,
     libraryDependencies ++= D_Shared.dependencies
   )
-  .enablePlugins(BuildInfoPlugin)
 
-lazy val sharedTest = (project in file("shared-test"))
+lazy val sharedCrypto = (project in file("shared/crypto"))
   .settings(commonSetttings)
   .settings(
     organization := "io.iohk.atala",
     organizationName := "Input Output Global",
-    buildInfoPackage := "io.iohk.atala.sharedtest",
-    name := "sharedtest",
+    name := "shared-crypto",
+    crossPaths := false,
+    libraryDependencies ++= D_SharedCrypto.dependencies
+  )
+  .dependsOn(shared)
+
+lazy val sharedTest = (project in file("shared/test"))
+  .settings(commonSetttings)
+  .settings(
+    organization := "io.iohk.atala",
+    organizationName := "Input Output Global",
+    name := "shared-test",
     crossPaths := false,
     libraryDependencies ++= D_SharedTest.dependencies
   )
   .dependsOn(shared)
-  .enablePlugins(BuildInfoPlugin)
 
 // #########################
 // ### Models & Services ###
@@ -711,6 +720,7 @@ lazy val castorCore = project
     libraryDependencies ++= D_Castor.coreDependencies
   )
   .dependsOn(shared, prismNodeClient)
+  .dependsOn(sharedCrypto % "compile->compile;test->test")
 
 // #####################
 // #####  pollux  ######
@@ -830,6 +840,7 @@ lazy val prismAgentWalletAPI = project
     eventNotification
   )
   .dependsOn(sharedTest % "test->test")
+  .dependsOn(sharedCrypto % "compile->compile;test->test")
 
 lazy val prismAgentServer = project
   .in(file("prism-agent/service/server"))
@@ -838,6 +849,11 @@ lazy val prismAgentServer = project
     name := "prism-agent",
     fork := true,
     libraryDependencies ++= D_PrismAgent.serverDependencies,
+    excludeDependencies ++= Seq(
+      // Exclude `protobuf-javalite` from all dependencies since we're using scalapbRuntime which already include `protobuf-java`
+      // Having both may introduce conflict on some api https://github.com/protocolbuffers/protobuf/issues/8104
+      ExclusionRule("com.google.protobuf", "protobuf-javalite")
+    ),
     Compile / mainClass := Some("io.iohk.atala.agent.server.MainApp"),
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerUsername := Some("input-output-hk"),
@@ -880,6 +896,7 @@ releaseProcess := Seq[ReleaseStep](
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   shared,
+  sharedCrypto,
   sharedTest,
   models,
   protocolConnection,

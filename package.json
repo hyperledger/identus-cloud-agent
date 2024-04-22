@@ -113,7 +113,7 @@
             "infrastructure/charts/*.tgz",
             "infrastructure/local/.env"
           ],
-          "message": "chore(release): cut open enterprise agent ${nextRelease.version} release\n\n${nextRelease.notes}\n\nSigned-off-by: Anton Baliasnikov <anton.baliasnikov@iohk.io>"
+          "message": "chore(release): cut open enterprise agent ${nextRelease.version} release\n\n${nextRelease.notes}\n\nSigned-off-by: Allain Magyar <allain.magyar@iohk.io>"
         }
       ],
       [
