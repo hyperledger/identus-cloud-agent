@@ -18,7 +18,7 @@ object VcVerificationEndpoints {
     List[http.VcVerificationResponse],
     Any
   ] =
-    endpoint.post
+    endpoint.get
       .tag("Verifiable Credentials Verification")
       .name("verify")
       .summary("As a Verifier, verify a set of credentials")

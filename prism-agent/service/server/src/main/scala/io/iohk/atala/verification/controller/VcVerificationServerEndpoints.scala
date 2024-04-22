@@ -16,7 +16,7 @@ class VcVerificationServerEndpoints(
     authorizer: Authorizer[BaseEntity]
 ) {
 
-  private val verifyEndpoint: ZServerEndpoint[Any, Any] =
+  val verifyEndpoint: ZServerEndpoint[Any, Any] =
     verify
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>

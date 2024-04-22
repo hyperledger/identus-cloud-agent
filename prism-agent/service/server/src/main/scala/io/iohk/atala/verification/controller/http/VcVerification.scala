@@ -36,18 +36,21 @@ object VcVerification {
       maybeParameter: Option[VcVerificationParameter]
   ): IO[ErrorResponse, ServiceVcVerification] = {
     (verification, maybeParameter) match {
-      case (SignatureVerification, None)                 => ZIO.succeed(ServiceVcVerification.SignatureVerification)
-      case (IssuerIdentification, None)                  => ZIO.succeed(ServiceVcVerification.IssuerIdentification)
-      case (ExpirationCheck, None)                       => ZIO.succeed(ServiceVcVerification.ExpirationCheck)
-      case (NotBeforeCheck, None)                        => ZIO.succeed(ServiceVcVerification.NotBeforeCheck)
-      case (AudienceCheck, Some(AudienceParameter(aud))) => ZIO.succeed(ServiceVcVerification.AudienceCheck(aud))
-      case (SubjectVerification, None)                   => ZIO.succeed(ServiceVcVerification.SubjectVerification)
-      case (IntegrityOfClaims, None)                     => ZIO.succeed(ServiceVcVerification.IntegrityOfClaims)
-      case (ComplianceWithStandards, None)               => ZIO.succeed(ServiceVcVerification.ComplianceWithStandards)
-      case (RevocationCheck, None)                       => ZIO.succeed(ServiceVcVerification.RevocationCheck)
-      case (AlgorithmVerification, None)                 => ZIO.succeed(ServiceVcVerification.AlgorithmVerification)
-      case (SchemaCheck, None)                           => ZIO.succeed(ServiceVcVerification.SchemaCheck)
-      case (SemanticCheckOfClaims, None)                 => ZIO.succeed(ServiceVcVerification.SemanticCheckOfClaims)
+      case (SignatureVerification, None) => ZIO.succeed(ServiceVcVerification.SignatureVerification)
+      case (IssuerIdentification, Some(DidParameter(iss))) =>
+        ZIO.succeed(ServiceVcVerification.IssuerIdentification(iss))
+      case (ExpirationCheck, Some(DateTimeParameter(dateTime))) =>
+        ZIO.succeed(ServiceVcVerification.ExpirationCheck(dateTime))
+      case (NotBeforeCheck, Some(DateTimeParameter(dateTime))) =>
+        ZIO.succeed(ServiceVcVerification.NotBeforeCheck(dateTime))
+      case (AudienceCheck, Some(DidParameter(aud))) => ZIO.succeed(ServiceVcVerification.AudienceCheck(aud))
+      case (SubjectVerification, None)              => ZIO.succeed(ServiceVcVerification.SubjectVerification)
+      case (IntegrityOfClaims, None)                => ZIO.succeed(ServiceVcVerification.IntegrityOfClaims)
+      case (ComplianceWithStandards, None)          => ZIO.succeed(ServiceVcVerification.ComplianceWithStandards)
+      case (RevocationCheck, None)                  => ZIO.succeed(ServiceVcVerification.RevocationCheck)
+      case (AlgorithmVerification, None)            => ZIO.succeed(ServiceVcVerification.AlgorithmVerification)
+      case (SchemaCheck, None)                      => ZIO.succeed(ServiceVcVerification.SchemaCheck)
+      case (SemanticCheckOfClaims, None)            => ZIO.succeed(ServiceVcVerification.SemanticCheckOfClaims)
       case _ =>
         ZIO.fail(
           ErrorResponse.badRequest(detail =
@@ -60,9 +63,9 @@ object VcVerification {
   def toService(verification: ServiceVcVerification): VcVerification = {
     verification match {
       case ServiceVcVerification.SignatureVerification   => SignatureVerification
-      case ServiceVcVerification.IssuerIdentification    => IssuerIdentification
-      case ServiceVcVerification.ExpirationCheck         => ExpirationCheck
-      case ServiceVcVerification.NotBeforeCheck          => NotBeforeCheck
+      case ServiceVcVerification.IssuerIdentification(_) => IssuerIdentification
+      case ServiceVcVerification.ExpirationCheck(_)      => ExpirationCheck
+      case ServiceVcVerification.NotBeforeCheck(_)       => NotBeforeCheck
       case ServiceVcVerification.AudienceCheck(_)        => AudienceCheck
       case ServiceVcVerification.SubjectVerification     => SubjectVerification
       case ServiceVcVerification.IntegrityOfClaims       => IntegrityOfClaims

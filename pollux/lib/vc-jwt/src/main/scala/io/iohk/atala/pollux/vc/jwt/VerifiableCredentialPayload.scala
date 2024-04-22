@@ -1,10 +1,10 @@
 package io.iohk.atala.pollux.vc.jwt
 
 import io.circe
+import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
-import io.circe.*
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.pollux.vc.jwt.revocation.BitString
 import io.iohk.atala.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
@@ -15,7 +15,7 @@ import zio.prelude.*
 
 import java.security.PublicKey
 import java.time.temporal.TemporalAmount
-import java.time.{Clock, Instant}
+import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
 import scala.util.Try
 
 opaque type DID = String
@@ -772,16 +772,22 @@ object JwtCredential {
     )(_.replicateZIODiscard(1))
   }
 
-  def validateExpiration(jwt: JWT): Validation[String, Unit] = {
+  def validateExpiration(jwt: JWT, dateTime: OffsetDateTime): Validation[String, Unit] = {
     Validation
-      .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, true, false)))
+      .fromTry(
+        JwtCirce(Clock.fixed(dateTime.toInstant, ZoneId.of(dateTime.getOffset.getId)))
+          .decodeRawAll(jwt.value, JwtOptions(false, true, false))
+      )
       .flatMap(_ => Validation.unit)
       .mapError(_.getMessage)
   }
 
-  def validateNotBefore(jwt: JWT): Validation[String, Unit] = {
+  def validateNotBefore(jwt: JWT, dateTime: OffsetDateTime): Validation[String, Unit] = {
     Validation
-      .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, true)))
+      .fromTry(
+        JwtCirce(Clock.fixed(dateTime.toInstant, ZoneId.of(dateTime.getOffset.getId)))
+          .decodeRawAll(jwt.value, JwtOptions(false, false, true))
+      )
       .flatMap(_ => Validation.unit)
       .mapError(_.getMessage)
   }

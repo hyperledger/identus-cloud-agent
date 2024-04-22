@@ -1,15 +1,17 @@
 package io.iohk.atala.pollux.core.service.verification
 
+import java.time.OffsetDateTime
+
 sealed trait VcVerification
 
 object VcVerification {
   case object SignatureVerification extends VcVerification
 
-  case object IssuerIdentification extends VcVerification
+  case class IssuerIdentification(iss: String) extends VcVerification
 
-  case object ExpirationCheck extends VcVerification
+  case class ExpirationCheck(dateTime: OffsetDateTime) extends VcVerification
 
-  case object NotBeforeCheck extends VcVerification
+  case class NotBeforeCheck(dateTime: OffsetDateTime) extends VcVerification
 
   case class AudienceCheck(aud: String) extends VcVerification
 
