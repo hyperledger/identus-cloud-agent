@@ -2,7 +2,7 @@
 
 # Reporting Security Issues
 
-The Open Cloud Agent (OEA) team and community take security bugs in the components of the OEA ecosystem seriously. We appreciate your efforts to responsibly disclose your findings, and will make every effort to acknowledge your contributions.
+The Identus Cloud Agent (ICA) team and community take security bugs in the components of the OEA ecosystem seriously. We appreciate your efforts to disclose your findings responsibly and will make every effort to acknowledge your contributions.
 
 To report a security issue, please use the GitHub Security Advisory ["Report a Vulnerability"](https://github.com/hyperledger/identus-cloud-agent/security/advisories/new) tab.
 
