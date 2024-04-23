@@ -26,12 +26,13 @@ import io.iohk.atala.iam.authentication.apikey.JdbcAuthenticationRepository
 import io.iohk.atala.iam.authorization.DefaultPermissionManagementService
 import io.iohk.atala.iam.authorization.core.EntityPermissionManagementService
 import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
-import io.iohk.atala.iam.oidc.controller.CredentialIssuerControllerImpl
-import io.iohk.atala.iam.oidc.service.{OIDCCredentialIssuerService, OIDCCredentialIssuerServiceImpl}
-import io.iohk.atala.iam.oidc.storage.InMemoryIssuanceSessionService
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
+import io.iohk.atala.oidc4vc.controller.CredentialIssuerControllerImpl
+import io.iohk.atala.oidc4vc.service.OIDCCredentialIssuerServiceImpl
+import io.iohk.atala.oidc4vc.storage.InMemoryIssuanceSessionService
+import io.iohk.atala.pollux.core.repository.InMemoryOIDC4VCIssuerMetadataRepository
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
 import io.iohk.atala.pollux.credentialschema.controller.{
@@ -193,8 +194,11 @@ object MainApp extends ZIOAppDefault {
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // oidc
+          CredentialIssuerControllerImpl.layer,
           InMemoryIssuanceSessionService.layer,
-          DIDServiceImpl.layer ++ OIDCCredentialIssuerServiceImpl.layer >>> CredentialIssuerControllerImpl.layer,
+          InMemoryOIDC4VCIssuerMetadataRepository.layer,
+          OIDC4VCIssuerMetadataServiceImpl.layer,
+          OIDCCredentialIssuerServiceImpl.layer,
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client

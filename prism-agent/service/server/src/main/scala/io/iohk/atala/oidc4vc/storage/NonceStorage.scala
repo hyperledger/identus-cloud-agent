@@ -1,4 +1,4 @@
-package io.iohk.atala.iam.oidc.storage
+package io.iohk.atala.oidc4vc.storage
 
 trait NonceStorage {
   def getNonce(nonceExpiresAt: Long): String

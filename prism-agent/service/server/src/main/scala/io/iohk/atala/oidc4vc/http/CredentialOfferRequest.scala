@@ -1,4 +1,4 @@
-package io.iohk.atala.iam.oidc.http
+package io.iohk.atala.oidc4vc.http
 
 import sttp.tapir.Schema
 import sttp.tapir.json.zio.schemaForZioJsonValue

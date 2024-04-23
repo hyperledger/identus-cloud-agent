@@ -1,13 +1,12 @@
-package io.iohk.atala.iam.oidc.service
+package io.iohk.atala.oidc4vc.service
 
 import io.circe.Json
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.castor.core.model.did.{PrismDID, VerificationRelationship}
-import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.iam.oidc.domain.IssuanceSession
-import io.iohk.atala.iam.oidc.http.*
-import io.iohk.atala.iam.oidc.storage.IssuanceSessionStorage
+import io.iohk.atala.oidc4vc.domain.IssuanceSession
+import io.iohk.atala.oidc4vc.http.*
+import io.iohk.atala.oidc4vc.storage.IssuanceSessionStorage
 import io.iohk.atala.pollux.core.service.CredentialService
 import io.iohk.atala.pollux.vc.jwt.{DID, Issuer, JWT, JwtCredential, W3cCredentialPayload}
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
@@ -16,6 +15,7 @@ import zio.*
 import java.time.Instant
 import scala.util.Try
 
+// TODO: move to pollux
 // OIDC prefix is added to the service name to avoid name conflicts with a similar service CredentialIssuerService
 // It would be nice to refactor these services and merge them into one
 trait OIDCCredentialIssuerService {
@@ -48,6 +48,7 @@ object OIDCCredentialIssuerService {
     def message: String
   }
 
+  // TODO: use shared Failure trait
   object Errors {
     case class InvalidProof(message: String) extends Error
 
@@ -62,7 +63,6 @@ object OIDCCredentialIssuerService {
 }
 
 case class OIDCCredentialIssuerServiceImpl(
-    didService: DIDService,
     didNonSecretStorage: DIDNonSecretStorage,
     credentialService: CredentialService,
     issuanceSessionStorage: IssuanceSessionStorage
@@ -196,8 +196,8 @@ case class OIDCCredentialIssuerServiceImpl(
 
 object OIDCCredentialIssuerServiceImpl {
   val layer: URLayer[
-    DIDService & DIDNonSecretStorage & CredentialService & IssuanceSessionStorage,
+    DIDNonSecretStorage & CredentialService & IssuanceSessionStorage,
     OIDCCredentialIssuerService
   ] =
-    ZLayer.fromFunction(OIDCCredentialIssuerServiceImpl(_, _, _, _))
+    ZLayer.fromFunction(OIDCCredentialIssuerServiceImpl(_, _, _))
 }

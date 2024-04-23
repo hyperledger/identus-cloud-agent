@@ -1,4 +1,4 @@
-package io.iohk.atala.iam.oidc.domain
+package io.iohk.atala.oidc4vc.domain
 
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import io.iohk.atala.castor.core.model.did.DID

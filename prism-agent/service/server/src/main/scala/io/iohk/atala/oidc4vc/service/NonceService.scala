@@ -1,6 +1,6 @@
-package io.iohk.atala.iam.oidc.service
+package io.iohk.atala.oidc4vc.service
 
-import io.iohk.atala.iam.oidc.service.NonceService.NonceGenerator
+import io.iohk.atala.oidc4vc.service.NonceService.NonceGenerator
 import zio.Task
 
 import java.time.Instant

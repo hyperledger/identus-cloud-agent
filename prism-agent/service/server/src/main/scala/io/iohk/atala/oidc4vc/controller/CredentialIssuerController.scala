@@ -1,15 +1,22 @@
-package io.iohk.atala.iam.oidc.controller
+package io.iohk.atala.oidc4vc.controller
 
+import io.iohk.atala.agent.server.config.AppConfig
+import io.iohk.atala.api.http.ErrorResponse.badRequest
 import io.iohk.atala.api.http.ErrorResponse.internalServerError
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID}
-import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.iam.oidc.CredentialIssuerEndpoints.ExtendedErrorResponse
-import io.iohk.atala.iam.oidc.http.*
-import io.iohk.atala.iam.oidc.http.CredentialErrorCode.*
-import io.iohk.atala.iam.oidc.service.OIDCCredentialIssuerService
+import io.iohk.atala.oidc4vc.CredentialIssuerEndpoints.ExtendedErrorResponse
+import io.iohk.atala.oidc4vc.http.*
+import io.iohk.atala.oidc4vc.http.CredentialErrorCode.*
+import io.iohk.atala.oidc4vc.service.OIDCCredentialIssuerService
+import io.iohk.atala.pollux.core.service.OIDC4VCIssuerMetadataService
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
+
+import java.net.URI
+import java.net.URL
+import java.util.UUID
+import scala.language.implicitConversions
 
 trait CredentialIssuerController {
   def issueCredential(
@@ -26,13 +33,18 @@ trait CredentialIssuerController {
 
   def getNonce(
       ctx: RequestContext,
-      didRef: String,
+      issuerId: UUID,
       request: NonceRequest
   ): ZIO[WalletAccessContext, ErrorResponse, NonceResponse]
 
+  def createCredentialIssuer(
+      ctx: RequestContext,
+      request: CreateCredentialIssuerRequest
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuer]
+
   def getIssuerMetadata(
       ctx: RequestContext,
-      didRef: String
+      issuerId: UUID
   ): IO[ErrorResponse, IssuerMetadata]
 }
 
@@ -80,8 +92,11 @@ object CredentialIssuerController {
   }
 }
 
-case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssuerService: OIDCCredentialIssuerService)
-    extends CredentialIssuerController {
+case class CredentialIssuerControllerImpl(
+    credentialIssuerService: OIDCCredentialIssuerService,
+    issuerMetadataService: OIDC4VCIssuerMetadataService,
+    agentBaseUrl: URL
+) extends CredentialIssuerController {
 
   import CredentialIssuerController.Errors.*
   import OIDCCredentialIssuerService.Errors.*
@@ -178,7 +193,7 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
 
   override def getNonce(
       ctx: RequestContext,
-      didRef: String,
+      issuerId: UUID,
       request: NonceRequest
   ): ZIO[WalletAccessContext, ErrorResponse, NonceResponse] = {
     credentialIssuerService
@@ -189,20 +204,32 @@ case class CredentialIssuerControllerImpl(didService: DIDService, credentialIssu
       )
   }
 
-  // TODO: implement
-  override def getIssuerMetadata(ctx: RequestContext, didRef: String): IO[ErrorResponse, IssuerMetadata] = {
+  override def createCredentialIssuer(
+      ctx: RequestContext,
+      request: CreateCredentialIssuerRequest
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuer] = {
     for {
-      canonicalPrismDID <- parseIssuerDIDBasicError(didRef)
-      credentialIssuerBaseUrl = s"http://localhost:8080/prism-agent/oidc4vc/${canonicalPrismDID.toString}"
-    } yield IssuerMetadata(
-      credential_issuer = credentialIssuerBaseUrl,
-      authorization_servers = Some(Seq("TODO: return url")),
-      credential_endpoint = s"$credentialIssuerBaseUrl/credentials",
-    )
+      authServerUrl <- ZIO
+        .attempt(URI.create(request.authorizationServer).toURL())
+        .mapError(ue => badRequest(detail = Some(s"Invalid URL: ${request.authorizationServer}")))
+      issuer <- issuerMetadataService.createCredentialIssuer(authServerUrl)
+    } yield issuer
+  }
+
+  override def getIssuerMetadata(ctx: RequestContext, issuerId: UUID): IO[ErrorResponse, IssuerMetadata] = {
+    for credentialIssuer <- issuerMetadataService.getCredentialIssuer(issuerId)
+    yield IssuerMetadata.fromIssuer(credentialIssuer, agentBaseUrl)
   }
 }
 
 object CredentialIssuerControllerImpl {
-  val layer: URLayer[DIDService & OIDCCredentialIssuerService, CredentialIssuerController] =
-    ZLayer.fromFunction(CredentialIssuerControllerImpl(_, _))
+  val layer
+      : URLayer[AppConfig & OIDCCredentialIssuerService & OIDC4VCIssuerMetadataService, CredentialIssuerController] =
+    ZLayer.fromZIO(
+      for {
+        agentBaseUrl <- ZIO.serviceWith[AppConfig](_.agent.httpEndpoint.publicEndpointUrl)
+        oidcIssuerService <- ZIO.service[OIDCCredentialIssuerService]
+        oidcIssuerMetadataService <- ZIO.service[OIDC4VCIssuerMetadataService]
+      } yield CredentialIssuerControllerImpl(oidcIssuerService, oidcIssuerMetadataService, agentBaseUrl)
+    )
 }

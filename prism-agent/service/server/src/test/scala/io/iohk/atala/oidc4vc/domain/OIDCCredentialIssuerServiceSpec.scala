@@ -1,15 +1,18 @@
-package io.iohk.atala.iam.oidc.domain
+package io.iohk.atala.oidc4vc.domain
 
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import io.iohk.atala.agent.walletapi.storage.{DIDNonSecretStorage, MockDIDNonSecretStorage}
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.service.{DIDService, MockDIDService}
-import io.iohk.atala.iam.oidc.http.{ClaimDescriptor, CredentialDefinition, Localization}
-import io.iohk.atala.iam.oidc.service.{OIDCCredentialIssuerService, OIDCCredentialIssuerServiceImpl}
-import io.iohk.atala.iam.oidc.storage.InMemoryIssuanceSessionService
-import io.iohk.atala.pollux.core.repository.CredentialStatusListRepositoryInMemory
-import io.iohk.atala.pollux.core.repository.{CredentialRepository, CredentialRepositoryInMemory}
+import io.iohk.atala.oidc4vc.http.{ClaimDescriptor, CredentialDefinition, Localization}
+import io.iohk.atala.oidc4vc.service.{OIDCCredentialIssuerService, OIDCCredentialIssuerServiceImpl}
+import io.iohk.atala.oidc4vc.storage.InMemoryIssuanceSessionService
+import io.iohk.atala.pollux.core.repository.{
+  CredentialRepository,
+  CredentialRepositoryInMemory,
+  CredentialStatusListRepositoryInMemory
+}
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}

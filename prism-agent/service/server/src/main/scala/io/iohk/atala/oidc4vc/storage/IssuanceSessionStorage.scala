@@ -1,6 +1,6 @@
-package io.iohk.atala.iam.oidc.storage
+package io.iohk.atala.oidc4vc.storage
 
-import io.iohk.atala.iam.oidc.domain.IssuanceSession
+import io.iohk.atala.oidc4vc.domain.IssuanceSession
 import zio.{IO, ULayer, ZIO, ZLayer}
 
 import scala.collection.concurrent.TrieMap

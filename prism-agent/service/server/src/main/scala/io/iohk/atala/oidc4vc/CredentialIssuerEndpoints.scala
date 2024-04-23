@@ -1,4 +1,4 @@
-package io.iohk.atala.iam.oidc
+package io.iohk.atala.oidc4vc
 
 import io.iohk.atala.api.http.{EndpointOutputs, ErrorResponse, RequestContext}
 import io.iohk.atala.castor.controller.http.DIDInput
@@ -7,11 +7,13 @@ import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import io.iohk.atala.iam.oidc.http.*
+import io.iohk.atala.oidc4vc.http.*
 import sttp.apispec.Tag
 import sttp.model.StatusCode
+import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{Endpoint, endpoint, extractFromRequest, oneOf, oneOfVariantValueMatcher, statusCode, stringToPath}
+
+import java.util.UUID
 
 object CredentialIssuerEndpoints {
 
@@ -29,12 +31,16 @@ object CredentialIssuerEndpoints {
 
   type ExtendedErrorResponse = Either[ErrorResponse, CredentialErrorResponse]
 
+  private val issuerIdPathSegment = path[UUID]("issuerId")
+    .description("An issuer identifier in the oidc4vc protocol")
+    .example(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))
+
   private val baseEndpoint = endpoint
     .tag(tagName)
     .in(extractFromRequest[RequestContext](RequestContext.apply))
-    .in("oidc4vc" / didRefPathSegment)
+    .in("oidc4vc" / "issuers")
 
-  private val baseIssuerFacingEndpoint = baseEndpoint
+  private val baseIssuerPrivateEndpoint = baseEndpoint
     .securityIn(apiKeyHeader)
     .securityIn(jwtAuthHeader)
 
@@ -60,7 +66,7 @@ object CredentialIssuerEndpoints {
     CredentialResponse,
     Any
   ] = baseEndpoint.post
-    .in("credentials")
+    .in(didRefPathSegment / "credentials")
     .in(jsonBody[CredentialRequest])
     .securityIn(jwtAuthHeader)
     .out(
@@ -81,23 +87,25 @@ object CredentialIssuerEndpoints {
     ErrorResponse,
     CredentialOfferResponse,
     Any
-  ] = baseIssuerFacingEndpoint.post
-    .in("credential-offers")
+  ] = baseIssuerPrivateEndpoint.post
+    .in(didRefPathSegment / "credential-offers")
     .in(jsonBody[CredentialOfferRequest])
     .out(
       statusCode(StatusCode.Created).description("CredentialOffer created successfully"),
     )
     .out(jsonBody[CredentialOfferResponse])
     .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
+    .name("createCredentialOffer")
+    .summary("Create a new credential offer")
 
   val nonceEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
-    (RequestContext, String, NonceRequest),
+    (RequestContext, UUID, NonceRequest),
     ErrorResponse,
     NonceResponse,
     Any
-  ] = baseIssuerFacingEndpoint.post
-    .in("nonces")
+  ] = baseIssuerPrivateEndpoint.post
+    .in(issuerIdPathSegment / "nonces")
     .in(jsonBody[NonceRequest])
     .out(
       statusCode(StatusCode.Ok).description("Nonce issued successfully"),
@@ -110,19 +118,36 @@ object CredentialIssuerEndpoints {
       """The endpoint that returns a `nonce` value for the [Token Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-nonce-endpoint)""".stripMargin
     )
 
+  val createCredentialIssuerEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, CreateCredentialIssuerRequest),
+    ErrorResponse,
+    CredentialIssuer,
+    Any
+  ] = baseIssuerPrivateEndpoint.post
+    .in(jsonBody[CreateCredentialIssuerRequest])
+    .out(
+      statusCode(StatusCode.Created).description("Credential Issuer created successfully")
+    )
+    .out(jsonBody[CredentialIssuer])
+    .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
+    .name("createCredentialIssuer")
+    .summary("Create a new  credential issuer")
+
   val issuerMetadataEndpoint: Endpoint[
     Unit,
-    (RequestContext, String),
+    (RequestContext, UUID),
     ErrorResponse,
     IssuerMetadata,
     Any
   ] = baseEndpoint.get
-    .in(".well-known" / "openid-credential-issuer")
+    .in(issuerIdPathSegment / ".well-known" / "openid-credential-issuer")
     .out(
       statusCode(StatusCode.Ok).description("Issuer Metadata successfully retrieved")
     )
     .out(jsonBody[IssuerMetadata])
     .errorOut(EndpointOutputs.basicFailuresAndNotFound)
-    .name("getIssuerMetadata") // TODO: add endpoint documentation
+    .name("getIssuerMetadata")
+    .summary("Get oidc4vc credential issuer metadata")
 
 }

@@ -1,11 +1,11 @@
-package io.iohk.atala.iam.oidc
+package io.iohk.atala.oidc4vc
 
 import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
-import io.iohk.atala.iam.oidc.controller.CredentialIssuerController
-import io.iohk.atala.iam.oidc.http.{CredentialErrorResponse, CredentialRequest, NonceResponse}
+import io.iohk.atala.oidc4vc.controller.CredentialIssuerController
+import io.iohk.atala.oidc4vc.http.{CredentialErrorResponse, CredentialRequest, NonceResponse}
 import sttp.tapir.ztapir.*
 import zio.*
 
@@ -34,9 +34,9 @@ case class CredentialIssuerServerEndpoints(
     CredentialIssuerEndpoints.createCredentialOfferEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
-        { case (rc, didRef, request) =>
+        { case (rc, id, request) =>
           credentialIssuerController
-            .createCredentialOffer(rc, didRef, request)
+            .createCredentialOffer(rc, id, request)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
@@ -49,24 +49,37 @@ case class CredentialIssuerServerEndpoints(
         SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer)
       )
       .serverLogic { wac =>
-        { case (rc, didRef, request) =>
+        { case (rc, id, request) =>
           credentialIssuerController
-            .getNonce(rc, didRef, request)
+            .getNonce(rc, id, request)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
       }
 
-  val issuerMetadataEndpoint: ZServerEndpoint[Any, Any] = CredentialIssuerEndpoints.issuerMetadataEndpoint
+  val createCredentialIssuerServerEndpoint: ZServerEndpoint[Any, Any] =
+    CredentialIssuerEndpoints.createCredentialIssuerEndpoint
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
+        { case (rc, request) =>
+          credentialIssuerController
+            .createCredentialIssuer(rc, request)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
+        }
+      }
+
+  val issuerMetadataServerEndpoint: ZServerEndpoint[Any, Any] = CredentialIssuerEndpoints.issuerMetadataEndpoint
     .zServerLogic {
       { case (rc, didRef) => credentialIssuerController.getIssuerMetadata(rc, didRef).logTrace(rc) }
     }
 
   val all: List[ZServerEndpoint[Any, Any]] = List(
     credentialServerEndpoint,
-    nonceServerEndpoint,
     createCredentialOfferServerEndpoint,
-    issuerMetadataEndpoint
+    nonceServerEndpoint,
+    createCredentialIssuerServerEndpoint,
+    issuerMetadataServerEndpoint
   )
 }
 

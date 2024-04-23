@@ -1,4 +1,4 @@
-package io.iohk.atala.iam.oidc.http
+package io.iohk.atala.oidc4vc.http
 
 import io.iohk.atala.api.http.EndpointOutputs.statusCodeMatcher
 import io.iohk.atala.api.http.ErrorResponse
