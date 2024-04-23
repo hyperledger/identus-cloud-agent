@@ -77,7 +77,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "helm repo index --url \"https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts\" --merge index.yaml infrastructure/charts"
+          "prepareCmd": "helm repo index --url \"https://raw.githubusercontent.com/hyperledger/cloud-agent/main/infrastructure/charts\" --merge index.yaml infrastructure/charts"
         }
       ],
       [
@@ -113,7 +113,7 @@
             "infrastructure/charts/*.tgz",
             "infrastructure/local/.env"
           ],
-          "message": "chore(release): cut open Cloud agent ${nextRelease.version} release\n\n${nextRelease.notes}\n\nSigned-off-by: Allain Magyar <allain.magyar@iohk.io>"
+          "message": "chore(release): cut Identus Cloud agent ${nextRelease.version} release\n\n${nextRelease.notes}\n\nSigned-off-by: Allain Magyar <allain.magyar@iohk.io>"
         }
       ],
       [
@@ -123,7 +123,7 @@
           "notifyOnFail": true,
           "markdownReleaseNotes": true,
           "onSuccessTemplate": {
-            "text": "A new version of Open Cloud Agent successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/$npm_package_version\n\nRelease notes:\n$release_notes"
+            "text": "A new version of Identus Cloud Agent successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/$npm_package_version\n\nRelease notes:\n$release_notes"
           }
         }
       ]
