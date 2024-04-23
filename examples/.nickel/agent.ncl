@@ -93,6 +93,7 @@ in
             AGENT_DB_PASSWORD = args.agentDb.password,
             DIDCOMM_SERVICE_URL = args.didcommServiceUrl,
             REST_SERVICE_URL = args.restServiceUrl,
+            POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL = args.restServiceUrl,
             PRISM_NODE_HOST = args.node.host,
             PRISM_NODE_PORT = std.to_string args.node.port,
             ADMIN_TOKEN = "admin",

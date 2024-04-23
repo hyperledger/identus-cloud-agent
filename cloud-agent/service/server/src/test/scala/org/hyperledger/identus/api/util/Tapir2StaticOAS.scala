@@ -26,7 +26,7 @@ import io.iohk.atala.credentialstatus.controller.CredentialStatusController
 import io.iohk.atala.event.controller.EventController
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.entity.http.controller.EntityController
-import io.iohk.atala.iam.oidc.controller.CredentialIssuerController
+import io.iohk.atala.oidc4vc.controller.CredentialIssuerController
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementController
 import io.iohk.atala.issue.controller.IssueController
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController

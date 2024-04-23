@@ -116,18 +116,24 @@ object CredentialSchema {
   given JsonEncoder[CredentialSchema] = DeriveJsonEncoder.gen[CredentialSchema]
   given JsonDecoder[CredentialSchema] = DeriveJsonDecoder.gen[CredentialSchema]
 
-  def validSchemaValidator(
-      schemaId: String,
-      uriDereferencer: URIDereferencer
-  ): IO[CredentialSchemaError, JsonSchemaValidator] = {
+  def resolveJWTSchema(uri: URI, uriDereferencer: URIDereferencer): IO[CredentialSchemaError, Json] = {
     for {
-      uri <- ZIO.attempt(new URI(schemaId)).mapError(t => URISyntaxError(t.getMessage))
       content <- uriDereferencer.dereference(uri).mapError(err => UnexpectedError(err.toString))
       json <- ZIO
         .fromEither(content.fromJson[Json])
         .mapError(error =>
           CredentialSchemaError.CredentialSchemaParsingError(s"Failed to parse resolved schema content as Json: $error")
         )
+    } yield json
+  }
+
+  def validSchemaValidator(
+      schemaId: String,
+      uriDereferencer: URIDereferencer
+  ): IO[CredentialSchemaError, JsonSchemaValidator] = {
+    for {
+      uri <- ZIO.attempt(new URI(schemaId)).mapError(t => URISyntaxError(t.getMessage))
+      json <- resolveJWTSchema(uri, uriDereferencer)
       schemaValidator <- JsonSchemaValidatorImpl
         .from(json)
         .orElse(
