@@ -9,11 +9,7 @@ import io.iohk.atala.agent.server.jobs.BackgroundJobError.{
   InvalidState,
   NotImplemented
 }
-import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.*
-import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.mercury.*
 import io.iohk.atala.mercury.model.*
 import io.iohk.atala.mercury.protocol.presentproof.*
@@ -24,7 +20,6 @@ import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, Presentati
 import io.iohk.atala.pollux.core.service.serdes.AnoncredCredentialProofsV1
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
 import io.iohk.atala.pollux.vc.jwt.{JWT, JwtPresentation, DidResolver as JwtDidResolver}
-import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*

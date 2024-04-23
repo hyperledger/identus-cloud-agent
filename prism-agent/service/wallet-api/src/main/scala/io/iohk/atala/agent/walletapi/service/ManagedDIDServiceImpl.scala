@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.walletapi.service
 
-import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.{*, given}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
@@ -13,6 +12,7 @@ import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.mercury.PeerDID
 import io.iohk.atala.mercury.model.DidId
+import io.iohk.atala.shared.crypto.Apollo
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
@@ -345,9 +345,9 @@ class ManagedDIDServiceImpl private[walletapi] (
 
   /** PeerDID related methods
     */
-  def createAndStorePeerDID(serviceEndpoint: String): URIO[WalletAccessContext, PeerDID] =
+  def createAndStorePeerDID(serviceEndpoint: java.net.URL): URIO[WalletAccessContext, PeerDID] =
     for {
-      peerDID <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(serviceEndpoint)))
+      peerDID <- ZIO.succeed(PeerDID.makePeerDid(serviceEndpoint = Some(serviceEndpoint.toExternalForm())))
       _ <- nonSecretStorage.createPeerDIDRecord(peerDID.did).orDie
       _ <- secretStorage.insertKey(peerDID.did, AGREEMENT_KEY_ID, peerDID.jwkForKeyAgreement).orDie
       _ <- secretStorage.insertKey(peerDID.did, AUTHENTICATION_KEY_ID, peerDID.jwkForKeyAuthentication).orDie

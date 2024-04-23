@@ -1,7 +1,6 @@
 package io.iohk.atala.iam.authentication.apikey
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.{Entity, Wallet}
 import io.iohk.atala.agent.walletapi.service.{
   EntityService,
@@ -13,6 +12,7 @@ import io.iohk.atala.agent.walletapi.sql.{JdbcEntityRepository, JdbcWalletNonSec
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.InvalidCredentials
+import io.iohk.atala.shared.crypto.Apollo
 import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
@@ -51,7 +51,7 @@ object ApiKeyAuthenticatorSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         JdbcAuthenticationRepository.layer,
         EntityServiceImpl.layer,
         JdbcEntityRepository.layer,
-        Apollo.prism14Layer,
+        Apollo.layer,
         WalletManagementServiceImpl.layer,
         JdbcWalletNonSecretStorage.layer,
         JdbcWalletSecretStorage.layer,

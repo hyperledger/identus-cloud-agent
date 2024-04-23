@@ -1,6 +1,5 @@
 package io.iohk.atala.credentialstatus.controller
 
-import io.iohk.atala.iam.authentication.{Authenticator, Authorizer}
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.iam.authentication.Authenticator

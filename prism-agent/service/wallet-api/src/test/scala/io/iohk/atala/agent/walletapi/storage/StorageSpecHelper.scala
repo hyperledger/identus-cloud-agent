@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
 import io.iohk.atala.agent.walletapi.model.DIDPublicKeyTemplate
 import io.iohk.atala.agent.walletapi.model.DIDUpdateLineage
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
@@ -9,11 +8,11 @@ import io.iohk.atala.agent.walletapi.model.PublicationState
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.util.OperationFactory
-import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import io.iohk.atala.shared.crypto.ApolloSpecHelper
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletAdministrationContext
 import zio.*
@@ -38,7 +37,7 @@ trait StorageSpecHelper extends ApolloSpecHelper {
     updatedAt = Instant.EPOCH
   )
 
-  protected def generateKeyPair() = apollo.ecKeyFactory.generateKeyPair(EllipticCurve.SECP256K1)
+  protected def generateKeyPair() = apollo.secp256k1.generateKeyPair
 
   protected def generateCreateOperation(keyIds: Seq[String]) =
     OperationFactory(apollo).makeCreateOperationRandKey("master0")(

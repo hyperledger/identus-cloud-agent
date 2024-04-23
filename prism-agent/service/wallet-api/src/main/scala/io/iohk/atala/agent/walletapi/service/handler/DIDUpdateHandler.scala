@@ -1,6 +1,5 @@
 package io.iohk.atala.agent.walletapi.service.handler
 
-import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.DIDUpdateLineage
 import io.iohk.atala.agent.walletapi.model.KeyManagementMode
 import io.iohk.atala.agent.walletapi.model.ManagedDIDState
@@ -16,6 +15,7 @@ import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation.Update
 import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
 import io.iohk.atala.castor.core.model.did.SignedPrismDIDOperation
+import io.iohk.atala.shared.crypto.Apollo
 import io.iohk.atala.shared.models.WalletAccessContext
 import scala.collection.immutable.ArraySeq
 import zio.*

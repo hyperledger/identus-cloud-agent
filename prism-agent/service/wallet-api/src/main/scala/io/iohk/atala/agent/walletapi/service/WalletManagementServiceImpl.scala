@@ -1,11 +1,11 @@
 package io.iohk.atala.agent.walletapi.service
 
-import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.event.notification.EventNotificationConfig
+import io.iohk.atala.shared.crypto.Apollo
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.WalletId
@@ -32,11 +32,12 @@ class WalletManagementServiceImpl(
           ZIO.fail(WalletManagementServiceError.TooManyPermittedWallet())
       }
       seed <- seed.fold(
-        apollo.ecKeyFactory
-          .randomBip32Seed()
-          .map(_._1)
-          .flatMap(bytes => ZIO.fromEither(WalletSeed.fromByteArray(bytes)).mapError(Exception(_)))
-          .mapError(WalletManagementServiceError.SeedGenerationError.apply)
+        apollo.secp256k1.randomBip32Seed
+          .flatMap { case (bytes, _) =>
+            ZIO
+              .fromEither(WalletSeed.fromByteArray(bytes))
+              .orDieWith(msg => Exception(s"Wallet seed generation failed: $msg"))
+          }
       )(ZIO.succeed)
       createdWallet <- nonSecretStorage
         .createWallet(wallet, seed.sha256Digest)

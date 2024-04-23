@@ -6,7 +6,6 @@ import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.config.SecretStorageBackend
 import io.iohk.atala.agent.server.config.ValidatedVaultConfig
-import io.iohk.atala.agent.walletapi.crypto.Apollo
 import io.iohk.atala.agent.walletapi.memory.{
   DIDSecretStorageInMemory,
   GenericSecretStorageInMemory,
@@ -40,23 +39,25 @@ import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
 import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
+import io.iohk.atala.shared.crypto.Apollo
 import io.iohk.atala.shared.db.{ContextAwareTask, DbConfig, TransactorLayer}
 import org.keycloak.authorization.client.AuthzClient
 import zio.*
-import zio.config.typesafe.TypesafeConfigSource
-import zio.config.{ReadError, read}
+import zio.config.typesafe.TypesafeConfigProvider
 import zio.http.Client
 
 object SystemModule {
-  val configLayer: Layer[ReadError[String], AppConfig] = ZLayer.fromZIO {
-    read(
-      AppConfig.descriptor.from(
-        TypesafeConfigSource.fromTypesafeConfig(
-          ZIO.attempt(ConfigFactory.load())
-        )
-      )
-    )
-  }
+
+  private val tmp: IO[Config.Error, AppConfig] =
+    for {
+      ret: AppConfig <- TypesafeConfigProvider
+        .fromTypesafeConfig(ConfigFactory.load())
+        .load(AppConfig.config)
+      _ <- ZIO.log(s"HTTP server endpoint is setup as '${ret.agent.httpEndpoint.publicEndpointUrl}'")
+      _ <- ZIO.log(s"DIDComm server endpoint is setup as '${ret.agent.didCommEndpoint.publicEndpointUrl}'")
+    } yield ret
+
+  val configLayer = ZLayer.fromZIO(tmp)
 
   val zioHttpClientLayer: ZLayer[Any, Throwable, Client] = {
     import zio.http.netty.NettyConfig
@@ -80,7 +81,7 @@ object SystemModule {
 }
 
 object AppModule {
-  val apolloLayer: ULayer[Apollo] = Apollo.prism14Layer
+  val apolloLayer: ULayer[Apollo] = Apollo.layer
 
   val didJwtResolverLayer: URLayer[DIDService, JwtDidResolver] =
     ZLayer.fromFunction(PrismDidResolver(_))

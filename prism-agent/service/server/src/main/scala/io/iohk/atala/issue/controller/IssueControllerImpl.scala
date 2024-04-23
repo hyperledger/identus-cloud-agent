@@ -9,7 +9,7 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.model.{CollectionStats, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.api.util.PaginationUtils
-import io.iohk.atala.castor.core.model.did.PrismDID
+import io.iohk.atala.castor.core.model.did.{DIDData, DIDMetadata, PrismDID, VerificationRelationship}
 import io.iohk.atala.castor.core.model.error.DIDResolutionError
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
@@ -25,6 +25,7 @@ import io.iohk.atala.pollux.core.model.CredentialFormat.{AnonCreds, JWT}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID}
 import io.iohk.atala.pollux.core.service.CredentialService
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord.Role
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}
 
@@ -57,7 +58,7 @@ class IssueControllerImpl(
                 .fromOption(request.issuingDID)
                 .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
                 .flatMap(extractPrismDIDFromString)
-              _ <- validatePrismDID(issuingDID, allowUnpublished = true)
+              _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
               record <- credentialService
                 .createJWTIssueCredentialRecord(
                   pairwiseIssuerDID = didIdPair.myDID,
@@ -78,7 +79,7 @@ class IssueControllerImpl(
                   ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
                 )
               credentialDefinitionId = {
-                val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl
+                val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl.toExternalForm
                 val urlSuffix =
                   s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
                 val urlPrefix = if (publicEndpointUrl.endsWith("/")) publicEndpointUrl else publicEndpointUrl + "/"
@@ -149,7 +150,7 @@ class IssueControllerImpl(
   ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
     val result: ZIO[WalletAccessContext, CredentialServiceError | ErrorResponse, IssueCredentialRecord] = for {
       _ <- request.subjectId match
-        case Some(did) => extractPrismDIDFromString(did).flatMap(validatePrismDID(_, true))
+        case Some(did) => extractPrismDIDFromString(did).flatMap(validatePrismDID(_, true, Role.Holder))
         case None      => ZIO.succeed(())
       id <- extractDidCommIdFromString(recordId)
       outcome <- credentialService.acceptCredentialOffer(id, request.subjectId)
@@ -169,12 +170,26 @@ class IssueControllerImpl(
 
   private def validatePrismDID(
       prismDID: PrismDID,
-      allowUnpublished: Boolean
+      allowUnpublished: Boolean,
+      role: Role
   ): ZIO[WalletAccessContext, ErrorResponse, Unit] = {
     val result = for {
       maybeDIDState <- managedDIDService.getManagedDIDState(prismDID.asCanonical)
-      maybeMetadata <- didService.resolveDID(prismDID).map(_.map(_._1))
-      result <- (maybeDIDState.map(_.publicationState), maybeMetadata.map(_.deactivated)) match {
+      mayBeResolveDID <- didService
+        .resolveDID(prismDID)
+      maybeDidData = mayBeResolveDID.map(_._2)
+      maybeMetadata = mayBeResolveDID.map(_._1)
+      _ <- ZIO.when(role == Role.Holder)(
+        ZIO
+          .fromOption(maybeDidData.flatMap(_.publicKeys.find(_.purpose == VerificationRelationship.Authentication)))
+          .orElseFail(ErrorResponse.badRequest(detail = Some(s"Authentication key not found for the $prismDID")))
+      )
+      _ <- ZIO.when(role == Role.Issuer)(
+        ZIO
+          .fromOption(maybeDidData.flatMap(_.publicKeys.find(_.purpose == VerificationRelationship.AssertionMethod)))
+          .orElseFail(ErrorResponse.badRequest(detail = Some(s"AssertionMethod key not found for the $prismDID")))
+      )
+      _ <- (maybeDIDState.map(_.publicationState), maybeMetadata.map(_.deactivated)) match {
         case (None, _) =>
           ZIO.fail(ErrorResponse.badRequest(detail = Some("The provided DID can't be found in the agent wallet")))
 
@@ -193,7 +208,7 @@ class IssueControllerImpl(
         case (Some(Published(_)), Some(false)) =>
           ZIO.succeed(())
       }
-    } yield result
+    } yield ()
 
     mapIssueErrors(result)
   }

@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.server
 
 import io.iohk.atala.agent.server.config.AppConfig
-import io.iohk.atala.agent.walletapi.crypto.ApolloSpecHelper
+import io.iohk.atala.agent.server.config.SecretStorageBackend
 import io.iohk.atala.agent.walletapi.service.EntityServiceImpl
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.service.WalletManagementServiceImpl
@@ -12,6 +12,7 @@ import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticatorImpl
 import io.iohk.atala.iam.authentication.apikey.JdbcAuthenticationRepository
+import io.iohk.atala.shared.crypto.ApolloSpecHelper
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletAdministrationContext
 import io.iohk.atala.shared.models.WalletId
@@ -23,7 +24,6 @@ import zio.test.Assertion.*
 import zio.test.ZIOSpecDefault
 
 import java.net.URL
-import io.iohk.atala.agent.server.config.SecretStorageBackend
 
 object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupport, ApolloSpecHelper {
 

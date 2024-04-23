@@ -6,19 +6,11 @@ import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import io.circe.*
-import io.circe.syntax.*
 import zio.*
 import pdi.jwt.algorithms.JwtECDSAAlgorithm
 import pdi.jwt.{JwtAlgorithm, JwtCirce}
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 
 import java.security.*
-import io.iohk.atala.shared.utils.Json as JsonUtils
-import io.iohk.atala.shared.utils.Base64Utils as Base64Utils
-
-import scodec.bits.*
-
-import java.time.*
 
 opaque type JWT = String
 
