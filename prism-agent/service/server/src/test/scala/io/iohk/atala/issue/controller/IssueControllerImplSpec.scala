@@ -5,16 +5,16 @@ import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDS
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.{DIDData, DIDMetadata, PrismDIDOperation, VerificationRelationship}
 import io.iohk.atala.castor.core.service.MockDIDService
-import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
-import io.iohk.atala.connect.core.service
-import io.iohk.atala.connect.core.service.MockConnectionService
+import org.hyperledger.identus.connect.core.model.ConnectionRecord
+import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
+import org.hyperledger.identus.connect.core.service
+import org.hyperledger.identus.connect.core.service.MockConnectionService
 import io.iohk.atala.container.util.MigrationAspects.migrate
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest}
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
-import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord}
 import io.iohk.atala.pollux.core.service.MockCredentialService

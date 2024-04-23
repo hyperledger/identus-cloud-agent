@@ -3,8 +3,8 @@ package io.iohk.atala.presentproof.controller
 import io.iohk.atala.agent.server.ControllerHelper
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.connect.core.service.ConnectionService
+import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
+import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.presentproof.ProofType
 import io.iohk.atala.pollux.core.model.error.PresentationError

@@ -2,8 +2,8 @@ package io.iohk.atala.connect.controller.http
 
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.connect.controller.http.Connection.annotations
-import io.iohk.atala.connect.core.model
-import io.iohk.atala.connect.core.model.ConnectionRecord.Role
+import org.hyperledger.identus.connect.core.model
+import org.hyperledger.identus.connect.core.model.ConnectionRecord.Role
 import sttp.model.Uri
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import sttp.tapir.{Schema, Validator}

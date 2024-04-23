@@ -10,8 +10,8 @@ import io.iohk.atala.connect.controller.http.{
   ConnectionsPage,
   CreateConnectionRequest
 }
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.connect.core.service.ConnectionService
+import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
+import org.hyperledger.identus.connect.core.service.ConnectionService
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 

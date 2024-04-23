@@ -6,9 +6,9 @@ import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
-import io.iohk.atala.connect.core.model.ConnectionRecord
-import io.iohk.atala.connect.core.model.ConnectionRecord.*
-import io.iohk.atala.connect.core.service.ConnectionService
+import org.hyperledger.identus.connect.core.model.ConnectionRecord
+import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
+import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext

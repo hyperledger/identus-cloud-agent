@@ -9,11 +9,11 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.model.{CollectionStats, PaginationInput}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.api.util.PaginationUtils
-import io.iohk.atala.castor.core.model.did.{DIDData, DIDMetadata, PrismDID, VerificationRelationship}
+import io.iohk.atala.castor.core.model.did.{PrismDID, VerificationRelationship}
 import io.iohk.atala.castor.core.model.error.DIDResolutionError
 import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.connect.core.model.error.ConnectionServiceError
-import io.iohk.atala.connect.core.service.ConnectionService
+import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
+import org.hyperledger.identus.connect.core.service.ConnectionService
 import io.iohk.atala.issue.controller.IssueController.toHttpError
 import io.iohk.atala.issue.controller.http.{
   AcceptCredentialOfferRequest,

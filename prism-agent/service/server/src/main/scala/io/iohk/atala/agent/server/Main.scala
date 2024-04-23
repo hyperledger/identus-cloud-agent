@@ -16,8 +16,8 @@ import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControlle
 import io.iohk.atala.castor.core.service.DIDServiceImpl
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import io.iohk.atala.connect.controller.ConnectionControllerImpl
-import io.iohk.atala.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
-import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
+import org.hyperledger.identus.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
+import org.hyperledger.identus.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
 import io.iohk.atala.credentialstatus.controller.CredentialStatusControllerImpl
 import io.iohk.atala.event.controller.EventControllerImpl
 import io.iohk.atala.event.notification.EventNotificationServiceImpl

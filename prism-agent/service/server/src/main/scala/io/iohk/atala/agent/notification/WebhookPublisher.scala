@@ -5,7 +5,7 @@ import io.iohk.atala.agent.notification.WebhookPublisherError.UnexpectedError
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
-import io.iohk.atala.connect.core.model.ConnectionRecord
+import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.event.notification.{Event, EventConsumer, EventNotificationService}
 import io.iohk.atala.pollux.core.model.{IssueCredentialRecord, PresentationRecord}

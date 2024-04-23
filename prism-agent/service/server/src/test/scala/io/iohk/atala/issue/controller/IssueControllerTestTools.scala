@@ -8,7 +8,7 @@ import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.connect.core.service.ConnectionService
+import org.hyperledger.identus.connect.core.service.ConnectionService
 import io.iohk.atala.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
 import io.iohk.atala.issue.controller.http.IssueCredentialRecordPage
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord

@@ -10,7 +10,7 @@ import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEndpoints}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.connect.controller.ConnectionServerEndpoints
-import io.iohk.atala.connect.core.service.ConnectionService
+import org.hyperledger.identus.connect.core.service.ConnectionService
 import io.iohk.atala.credentialstatus.controller.CredentialStatusServiceEndpoints
 import io.iohk.atala.event.controller.EventServerEndpoints
 import io.iohk.atala.event.notification.EventNotificationConfig
