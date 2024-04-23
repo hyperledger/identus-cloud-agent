@@ -23,18 +23,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Java and Scala
-        uses: olafurpg/setup-scala@v13
+        uses: olafurpg/setup-scala@v14
         with:
           java-version: openjdk@1.11
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.8.0
+        uses: gradle/gradle-build-action@v3
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ env.GITHUB_ACTOR }}
@@ -67,7 +67,7 @@ jobs:
           NODE_REFRESH_AND_SUBMIT_PERIOD: 1s
           NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD: 1s
           NODE_WALLET_MAX_TPS: 1000
-        uses: isbang/compose-action@v1.4.1
+        uses: hoverkraft-tech/compose-action@v2
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
           compose-flags: "--env-file ./infrastructure/local/.env -p issuer"
@@ -109,20 +109,20 @@ jobs:
           down-flags: "--volumes"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 16.x
           registry-url: "https://npm.pkg.github.com"
           scope: "input-output-hk"
 
       - name: Install dependencies
-        uses: borales/actions-yarn@v4.2.0
+        uses: borales/actions-yarn@v5
         with:
           cmd: install
           dir: ${{ env.BENCHMARKING_DIR }}
 
       - name: Compile tests to JS
-        uses: borales/actions-yarn@v4.2.0
+        uses: borales/actions-yarn@v5
         with:
           cmd: webpack
           dir: ${{ env.BENCHMARKING_DIR }}
