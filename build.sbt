@@ -820,7 +820,7 @@ lazy val eventNotification = project
   .dependsOn(shared)
 
 // #####################
-// #### Prism Agent ####
+// #### Cloud Agent ####
 // #####################
 
 lazy val prismAgentWalletAPI = project
