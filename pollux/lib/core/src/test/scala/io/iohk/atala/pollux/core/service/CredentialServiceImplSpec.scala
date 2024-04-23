@@ -6,9 +6,8 @@ import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.did.VerificationRelationship.AssertionMethod
 import io.iohk.atala.castor.core.service.MockDIDService
-import io.iohk.atala.mercury.model
-import io.iohk.atala.mercury.model.*
-import io.iohk.atala.mercury.protocol.issuecredential.*
+import org.hyperledger.identus.mercury.model.{Base64 => MyBase64, *}
+import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.anoncreds.AnoncredCredential
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
@@ -603,7 +602,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           assertTrue(record.issueCredentialData.isDefined) &&
           assertTrue(record.issueCredentialData.get.attachments.nonEmpty) &&
           assertTrue(record.issueCredentialData.get.attachments.head.data match
-            case model.Base64(value) =>
+            case MyBase64(value) =>
               val ba = new String(Base64.getUrlDecoder.decode(value))
               AnoncredCredential(ba).credDefId == credDefId
             case _ => false

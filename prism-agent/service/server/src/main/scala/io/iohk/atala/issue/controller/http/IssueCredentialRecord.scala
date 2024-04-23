@@ -2,7 +2,7 @@ package io.iohk.atala.issue.controller.http
 
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.issue.controller.http.IssueCredentialRecord.annotations
-import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64}
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64}
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord as PolluxIssueCredentialRecord
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import sttp.tapir.json.zio.schemaForZioJsonValue

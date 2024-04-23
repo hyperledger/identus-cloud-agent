@@ -11,7 +11,7 @@ import io.iohk.atala.castor.core.model.did.{
   ScheduledDIDOperationStatus,
   VerificationRelationship
 }
-import io.iohk.atala.mercury.model.DidId
+import org.hyperledger.identus.mercury.model.DidId
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.{*, given}
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}

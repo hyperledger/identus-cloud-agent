@@ -2,7 +2,7 @@ package io.iohk.atala.connect.core.repository
 
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
-import io.iohk.atala.mercury.protocol.connection.*
+import org.hyperledger.identus.mercury.protocol.connection.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.UIO
 import zio.URIO

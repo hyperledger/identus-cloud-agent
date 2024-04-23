@@ -4,8 +4,8 @@ import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.jobs.BackgroundJobError.ErrorResponseReceivedFromPeerAgent
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
 import io.iohk.atala.castor.core.model.did.*
-import io.iohk.atala.mercury.*
-import io.iohk.atala.mercury.protocol.issuecredential.*
+import org.hyperledger.identus.mercury.*
+import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.service.CredentialService

@@ -28,7 +28,7 @@ import io.iohk.atala.iam.authorization.core.EntityPermissionManagementService
 import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
-import io.iohk.atala.mercury.*
+import org.hyperledger.identus.mercury.*
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.core.service.verification.VcVerificationServiceImpl
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
@@ -47,7 +47,7 @@ import io.iohk.atala.pollux.sql.repository.{
   Migrations as PolluxMigrations
 }
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
-import io.iohk.atala.resolvers.DIDResolver
+import org.hyperledger.identus.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
 import io.iohk.atala.verification.controller.VcVerificationControllerImpl
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}

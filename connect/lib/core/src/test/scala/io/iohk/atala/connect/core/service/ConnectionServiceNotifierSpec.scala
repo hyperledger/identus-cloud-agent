@@ -4,9 +4,9 @@ import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.ProtocolState
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
 import io.iohk.atala.event.notification.*
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.ZIO.*

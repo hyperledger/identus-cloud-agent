@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.event.notification.{EventNotificationService, EventNotificationServiceImpl}
-import io.iohk.atala.mercury.protocol.issuecredential.*
+import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError

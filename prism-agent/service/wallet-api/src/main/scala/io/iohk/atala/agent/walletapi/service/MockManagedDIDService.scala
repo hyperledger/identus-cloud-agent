@@ -9,8 +9,8 @@ import io.iohk.atala.castor.core.model.did.{
   PrismDIDOperation,
   ScheduleDIDOperationOutcome
 }
-import io.iohk.atala.mercury.PeerDID
-import io.iohk.atala.mercury.model.DidId
+import org.hyperledger.identus.mercury.PeerDID
+import org.hyperledger.identus.mercury.model.DidId
 import io.iohk.atala.shared.crypto.Secp256k1KeyPair
 import zio.mock.*
 import zio.test.Assertion

@@ -1,6 +1,6 @@
 package io.iohk.atala.agent.server.jobs
 
-import io.iohk.atala.mercury.HttpResponse
+import org.hyperledger.identus.mercury.HttpResponse
 
 sealed trait BackgroundJobError
 

@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.core.service
 
-import io.iohk.atala.mercury.model.*
-import io.iohk.atala.mercury.protocol.presentproof.*
+import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.anoncreds.AnoncredPresentation
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError

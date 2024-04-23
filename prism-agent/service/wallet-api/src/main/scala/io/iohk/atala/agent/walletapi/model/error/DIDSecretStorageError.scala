@@ -1,6 +1,6 @@
 package io.iohk.atala.agent.walletapi.model.error
 
-import io.iohk.atala.mercury.model.DidId
+import org.hyperledger.identus.mercury.model.DidId
 
 sealed trait DIDSecretStorageError extends Throwable
 

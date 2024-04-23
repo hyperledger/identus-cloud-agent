@@ -7,8 +7,8 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.mercury.model.*
-import io.iohk.atala.mercury.protocol.issuecredential.*
+import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import io.iohk.atala.pollux.*
 import io.iohk.atala.pollux.anoncreds.{
   AnoncredCreateCredentialDefinition,

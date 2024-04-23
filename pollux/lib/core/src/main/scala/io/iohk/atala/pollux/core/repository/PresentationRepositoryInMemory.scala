@@ -1,6 +1,6 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.mercury.protocol.presentproof.*
+import org.hyperledger.identus.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.error.PresentationError.*

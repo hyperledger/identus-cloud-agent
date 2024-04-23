@@ -1,6 +1,6 @@
-package io.iohk.atala.mercury.vc.anoncreds
+package org.hyperledger.identus.vc.anoncreds
 
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredentialRequestFormat
+import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialRequestFormat
 
 /** https://github.com/hyperledger/aries-rfcs/blob/main/features/0771-anoncreds-attachments/README.md#credential-request-format
   */

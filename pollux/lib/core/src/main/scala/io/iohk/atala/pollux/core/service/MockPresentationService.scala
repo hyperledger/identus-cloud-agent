@@ -1,7 +1,12 @@
 package io.iohk.atala.pollux.core.service
 
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProofType, ProposePresentation, RequestPresentation}
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.protocol.presentproof.{
+  Presentation,
+  ProofType,
+  ProposePresentation,
+  RequestPresentation
+}
 import io.iohk.atala.pollux.anoncreds.AnoncredPresentation
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.model.presentation.Options

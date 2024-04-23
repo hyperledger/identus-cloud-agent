@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.PresentationRecord.*
 import io.iohk.atala.pollux.core.service.serdes.{AnoncredCredentialProofV1, AnoncredCredentialProofsV1}

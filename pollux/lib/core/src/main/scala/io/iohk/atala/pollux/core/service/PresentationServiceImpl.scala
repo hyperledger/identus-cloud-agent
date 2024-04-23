@@ -5,9 +5,9 @@ import cats.implicits.*
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
-import io.iohk.atala.mercury.model.*
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredentialIssuedFormat
-import io.iohk.atala.mercury.protocol.presentproof.*
+import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialIssuedFormat
+import org.hyperledger.identus.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.anoncreds.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
@@ -409,7 +409,7 @@ private class PresentationServiceImpl(
       Seq[JwtVerifiableCredentialPayload]
     ] =
       issuedCredentials.map { signedCredential =>
-        decode[io.iohk.atala.mercury.model.Base64](signedCredential)
+        decode[org.hyperledger.identus.mercury.model.Base64](signedCredential)
           .flatMap(x => Right(new String(java.util.Base64.getDecoder.decode(x.base64))))
           .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
           .left
@@ -420,7 +420,7 @@ private class PresentationServiceImpl(
         : Either[PresentationError, Option[io.iohk.atala.pollux.core.model.presentation.Options]] =
       requestPresentation.attachments.headOption
         .map(attachment =>
-          decode[io.iohk.atala.mercury.model.JsonData](attachment.data.asJson.noSpaces)
+          decode[org.hyperledger.identus.mercury.model.JsonData](attachment.data.asJson.noSpaces)
             .flatMap(data =>
               io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
                 .decodeJson(data.json.asJson)

@@ -1,6 +1,6 @@
 package io.iohk.atala.agent.server.http
 
-import io.iohk.atala.mercury.*
+import org.hyperledger.identus.mercury.*
 import zio.*
 import zio.http.{Header as _, *}
 

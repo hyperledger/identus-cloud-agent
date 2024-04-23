@@ -3,9 +3,9 @@ package io.iohk.atala.pollux.core.service
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
-import io.iohk.atala.mercury.model.{AttachmentDescriptor, Base64, DidId}
-import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, IssueCredentialIssuedFormat}
-import io.iohk.atala.mercury.protocol.presentproof.*
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64, DidId}
+import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, IssueCredentialIssuedFormat}
+import org.hyperledger.identus.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.anoncreds.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.*
@@ -92,7 +92,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 val maybePresentationOptions =
                   record.requestPresentationData.get.attachments.headOption
                     .map(attachment =>
-                      decode[io.iohk.atala.mercury.model.JsonData](attachment.data.asJson.noSpaces)
+                      decode[org.hyperledger.identus.mercury.model.JsonData](attachment.data.asJson.noSpaces)
                         .flatMap(data =>
                           io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
                             .decodeJson(data.json.asJson)

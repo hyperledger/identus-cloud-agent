@@ -9,10 +9,8 @@ import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.ConnectionRecord.*
 import io.iohk.atala.connect.core.service.ConnectionService
-import io.iohk.atala.mercury.*
-import io.iohk.atala.mercury.model.*
-import io.iohk.atala.mercury.model.error.*
-import io.iohk.atala.resolvers.DIDResolver
+import org.hyperledger.identus.mercury.*
+import org.hyperledger.identus.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect

@@ -1,8 +1,8 @@
 package io.iohk.atala.connect.core.model
 
 import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
-import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit

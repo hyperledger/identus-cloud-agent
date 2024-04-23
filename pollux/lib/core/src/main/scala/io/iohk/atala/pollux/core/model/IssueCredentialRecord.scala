@@ -1,7 +1,7 @@
 package io.iohk.atala.pollux.core.model
 
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
-import io.iohk.atala.mercury.protocol.issuecredential.{
+import org.hyperledger.identus.mercury.protocol.issuecredential.{
   IssueCredential,
   IssueCredentialIssuedFormat,
   IssueCredentialOfferFormat,

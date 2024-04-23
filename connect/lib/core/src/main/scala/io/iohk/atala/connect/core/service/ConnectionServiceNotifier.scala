@@ -4,8 +4,8 @@ import io.iohk.atala.connect.core.model.ConnectionRecord
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError.*
 import io.iohk.atala.event.notification.{Event, EventNotificationService}
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{UIO, URIO, URLayer, ZIO, ZLayer}
 

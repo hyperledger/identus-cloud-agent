@@ -11,8 +11,8 @@ import io.circe.syntax.*
 import io.iohk.atala.connect.core.model.*
 import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import io.iohk.atala.connect.core.repository.ConnectionRepository
-import io.iohk.atala.mercury.protocol.connection.*
-import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import org.hyperledger.identus.mercury.protocol.connection.*
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.*
 import io.iohk.atala.shared.models.WalletAccessContext

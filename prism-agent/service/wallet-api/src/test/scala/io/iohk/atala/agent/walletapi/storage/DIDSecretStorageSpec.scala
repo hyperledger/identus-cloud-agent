@@ -11,7 +11,7 @@ import io.iohk.atala.agent.walletapi.sql.{
   JdbcWalletSecretStorage
 }
 import io.iohk.atala.agent.walletapi.vault.{VaultDIDSecretStorage, VaultWalletSecretStorage}
-import io.iohk.atala.mercury.PeerDID
+import org.hyperledger.identus.mercury.PeerDID
 import io.iohk.atala.shared.crypto.ApolloSpecHelper
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletAdministrationContext

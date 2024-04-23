@@ -11,7 +11,7 @@ import io.circe
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
-import io.iohk.atala.mercury.protocol.presentproof.*
+import org.hyperledger.identus.mercury.protocol.presentproof.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
 import io.iohk.atala.pollux.core.repository.PresentationRepository

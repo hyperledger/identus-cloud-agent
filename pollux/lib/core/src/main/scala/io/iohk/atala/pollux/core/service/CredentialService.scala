@@ -3,8 +3,13 @@ package io.iohk.atala.pollux.core.service
 import io.circe.syntax.*
 import io.circe.{Json, JsonObject}
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.issuecredential.{Attribute, IssueCredential, OfferCredential, RequestCredential}
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.protocol.issuecredential.{
+  Attribute,
+  IssueCredential,
+  OfferCredential,
+  RequestCredential
+}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError.*

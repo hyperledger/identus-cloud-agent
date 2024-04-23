@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.walletapi.storage
 
 import com.nimbusds.jose.jwk.OctetKeyPair
-import io.iohk.atala.mercury.model.DidId
+import org.hyperledger.identus.mercury.model.DidId
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 

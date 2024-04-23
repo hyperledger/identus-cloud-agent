@@ -11,7 +11,7 @@ import io.iohk.atala.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError.{InvalidStateForOperation, RecordIdNotFound}
 import io.iohk.atala.connect.core.service.ConnectionService
-import io.iohk.atala.mercury.model.DidId
+import org.hyperledger.identus.mercury.model.DidId
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{IO, ZIO}
 

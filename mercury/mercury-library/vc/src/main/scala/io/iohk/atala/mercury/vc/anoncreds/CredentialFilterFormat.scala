@@ -1,6 +1,6 @@
-package io.iohk.atala.mercury.vc.anoncreds
+package org.hyperledger.identus.vc.anoncreds
 
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredentialProposeFormat
+import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialProposeFormat
 
 /** @see
   *   https://github.com/hyperledger/aries-rfcs/blob/main/features/0771-anoncreds-attachments/README.md#credential-filter-format

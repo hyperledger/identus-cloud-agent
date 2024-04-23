@@ -1,6 +1,6 @@
-package io.iohk.atala.mercury.vc.anoncreds
+package org.hyperledger.identus.vc.anoncreds
 
-import io.iohk.atala.mercury.protocol.issuecredential.IssueCredentialRequestFormat
+import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialRequestFormat
 
 type TODO = Any
 

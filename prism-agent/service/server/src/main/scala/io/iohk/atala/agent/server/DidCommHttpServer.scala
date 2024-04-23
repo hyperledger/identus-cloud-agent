@@ -14,17 +14,17 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.service.ConnectionService
-import io.iohk.atala.mercury.*
-import io.iohk.atala.mercury.DidOps.*
-import io.iohk.atala.mercury.model.*
-import io.iohk.atala.mercury.model.error.*
-import io.iohk.atala.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import io.iohk.atala.mercury.protocol.issuecredential.*
-import io.iohk.atala.mercury.protocol.presentproof.*
-import io.iohk.atala.mercury.protocol.revocationnotificaiton.RevocationNotification
+import org.hyperledger.identus.mercury.*
+import org.hyperledger.identus.mercury.DidOps.*
+import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.error.*
+import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
+import org.hyperledger.identus.mercury.protocol.issuecredential.*
+import org.hyperledger.identus.mercury.protocol.presentproof.*
+import org.hyperledger.identus.mercury.protocol.revocationnotificaiton.RevocationNotification
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
-import io.iohk.atala.resolvers.DIDResolver
+import org.hyperledger.identus.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.http.*

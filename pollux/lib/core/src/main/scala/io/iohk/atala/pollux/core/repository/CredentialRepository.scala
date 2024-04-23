@@ -1,6 +1,6 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
+import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
 import io.iohk.atala.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.IssueCredentialRecord.ProtocolState

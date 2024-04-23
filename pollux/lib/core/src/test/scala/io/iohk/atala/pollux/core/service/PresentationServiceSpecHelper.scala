@@ -2,9 +2,9 @@ package io.iohk.atala.pollux.core.service
 
 import com.nimbusds.jose.jwk.*
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
-import io.iohk.atala.mercury.model.{AttachmentDescriptor, DidId}
-import io.iohk.atala.mercury.protocol.presentproof.*
-import io.iohk.atala.mercury.{AgentPeerService, PeerDID}
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
+import org.hyperledger.identus.mercury.protocol.presentproof.*
+import org.hyperledger.identus.mercury.{AgentPeerService, PeerDID}
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError
 import io.iohk.atala.pollux.core.repository.*
@@ -55,12 +55,12 @@ trait PresentationServiceSpecHelper {
     )
   }
 
-  protected def requestCredential = io.iohk.atala.mercury.protocol.issuecredential.RequestCredential(
+  protected def requestCredential = org.hyperledger.identus.mercury.protocol.issuecredential.RequestCredential(
     from = DidId("did:prism:aaa"),
     to = DidId("did:prism:bbb"),
     thid = Some(UUID.randomUUID.toString),
-    body =
-      io.iohk.atala.mercury.protocol.issuecredential.RequestCredential.Body(goal_code = Some("credential issuance")),
+    body = org.hyperledger.identus.mercury.protocol.issuecredential.RequestCredential
+      .Body(goal_code = Some("credential issuance")),
     attachments = Nil
   )
 

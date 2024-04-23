@@ -2,7 +2,7 @@ package io.iohk.atala.connect.controller.http
 
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.connect.controller.http.ConnectionInvitation.annotations
-import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}

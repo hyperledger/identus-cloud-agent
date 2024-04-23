@@ -1,8 +1,12 @@
 package io.iohk.atala.pollux.core.service
 
 import io.iohk.atala.event.notification.{EventNotificationService, EventNotificationServiceImpl}
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.presentproof.{PresentCredentialRequestFormat, Presentation, RequestPresentation}
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.protocol.presentproof.{
+  PresentCredentialRequestFormat,
+  Presentation,
+  RequestPresentation
+}
 import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState
 import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import zio.mock.Expectation

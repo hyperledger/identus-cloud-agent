@@ -5,10 +5,10 @@ import io.iohk.atala.connect.core.model.ConnectionRecord.*
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError.*
 import io.iohk.atala.connect.core.repository.ConnectionRepository
-import io.iohk.atala.mercury.*
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.connection.*
-import io.iohk.atala.mercury.protocol.invitation.v2.Invitation
+import org.hyperledger.identus.*
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.protocol.connection.*
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.utils.Base64Utils
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect

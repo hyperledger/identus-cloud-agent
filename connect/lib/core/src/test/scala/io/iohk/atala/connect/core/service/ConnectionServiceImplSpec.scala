@@ -6,8 +6,8 @@ import io.iohk.atala.connect.core.model.ConnectionRecord.*
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError
 import io.iohk.atala.connect.core.model.error.ConnectionServiceError.InvalidStateForOperation
 import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
-import io.iohk.atala.mercury.model.{DidId, Message}
-import io.iohk.atala.mercury.protocol.connection.ConnectionResponse
+import org.hyperledger.identus.mercury.model.{DidId, Message}
+import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.test.*

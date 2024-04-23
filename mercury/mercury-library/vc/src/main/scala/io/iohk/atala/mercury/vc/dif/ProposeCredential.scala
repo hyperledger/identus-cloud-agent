@@ -1,4 +1,4 @@
-package io.iohk.atala.mercury.vc.dif
+package org.hyperledger.identus.vc.dif
 
 type DID = String
 

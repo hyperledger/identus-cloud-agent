@@ -4,8 +4,8 @@ import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.*
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.*
-import io.iohk.atala.mercury.PeerDID
-import io.iohk.atala.mercury.model.DidId
+import org.hyperledger.identus.mercury.PeerDID
+import org.hyperledger.identus.mercury.model.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 

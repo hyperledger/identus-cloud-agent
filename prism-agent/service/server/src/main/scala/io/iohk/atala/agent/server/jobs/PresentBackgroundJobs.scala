@@ -10,10 +10,10 @@ import io.iohk.atala.agent.server.jobs.BackgroundJobError.{
   NotImplemented
 }
 import io.iohk.atala.castor.core.model.did.*
-import io.iohk.atala.mercury.*
-import io.iohk.atala.mercury.model.*
-import io.iohk.atala.mercury.protocol.presentproof.*
-import io.iohk.atala.mercury.protocol.reportproblem.v2.*
+import org.hyperledger.identus.mercury.*
+import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.protocol.presentproof.*
+import org.hyperledger.identus.mercury.protocol.reportproblem.v2.*
 import io.iohk.atala.pollux.core.model.*
 import io.iohk.atala.pollux.core.model.error.PresentationError.*
 import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
@@ -29,7 +29,7 @@ import zio.prelude.Validation
 import zio.prelude.ZValidation.*
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
-import io.iohk.atala.resolvers.DIDResolver
+import org.hyperledger.identus.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext
 import java.time.{Clock, Instant, ZoneId}
 import io.iohk.atala.castor.core.service.DIDService
@@ -501,7 +501,9 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                             .map(
                               _.attachments.headOption
                                 .map(attachment =>
-                                  decode[io.iohk.atala.mercury.model.JsonData](attachment.data.asJson.noSpaces)
+                                  decode[org.hyperledger.identus.mercury.model.JsonData](
+                                    attachment.data.asJson.noSpaces
+                                  )
                                     .flatMap(data =>
                                       io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
                                         .decodeJson(data.json.asJson)

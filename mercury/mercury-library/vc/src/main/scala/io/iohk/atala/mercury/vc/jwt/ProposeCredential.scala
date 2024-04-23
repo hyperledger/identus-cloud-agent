@@ -1,4 +1,4 @@
-package io.iohk.atala.mercury.vc.jwt
+package org.hyperledger.identus.vc.jwt
 
 type DID = String
 
