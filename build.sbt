@@ -692,7 +692,7 @@ lazy val agentDidcommx = project
 //     .dependsOn(agent)
 
 // ####################
-// ###  Node (VDR)  ####
+// ###  Prism Node ####
 // ####################
 val prismNodeClient = project
   .in(file("prism-node/client/scala-client"))

@@ -64,7 +64,7 @@ The next diagram offers a concise architectural overview, depicting a Cloud Agen
 - Java (OpenJDK 21)
 - SBT (latest version)
 - Git (for cloning the repository)
-- Docker (for running the PostgreSQL database, Hashicorp Vault, APISIX, and VDR)
+- Docker (for running the PostgreSQL database, Hashicorp Vault, APISIX, and  PRISM Node)
 - [GITHUB_TOKEN](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) environment  variable (required for SBT plugins and access to the GitHub packages)
 
 #### Login to GitHub packages
@@ -95,9 +95,9 @@ The following sections describe how to run the Cloud Agent in different configur
 
 The Cloud Agent can be configured to use different types of ledger, secret storage and DID persistence. Any combination of options is available, but the most common configurations are:
 
-| Configuration  | Secret Storage | DIDs persistence | VDR                                  |
-| -------------- | -------------- | ---------------- | ------------------------------------ |
-| Dev            | PostgreSQL     | No               | In-memory                            |
+| Configuration  | Secret Storage | DIDs persistence | Prism Node                                      |
+| -------------- | -------------- | ---------------- |-------------------------------------------------|
+| Dev            | PostgreSQL     | No               | In-memory                                       |
 | Pre-production | PostgreSQL     | Yes              | Distributed Ledger testnet (preview or preprod) |
 | Production     | Hashicorp      | Yes              | Distributed Ledger mainnet                      |
 
@@ -125,7 +125,7 @@ PORT=${PORT} AGENT_VERSION=${AGENT_VERSION} NODE_VERSION=${NODE_VERSION} \
     up --wait
 ```
 
-The `PORT` variable is used to specify the port number for the Cloud Agent to listen on. The `AGENT_VERSION` and `NODE_VERSION` variables are used to specify the versions of the Cloud Agent and VDR to use. The `AGENT_ROLE` variable is used to specify the role of the Cloud Agent. The `AGENT_ROLE` variable can be set to `issuer`, `verifier` or `holder`.
+The `PORT` variable is used to specify the port number for the Cloud Agent to listen on. The `AGENT_VERSION` and `NODE_VERSION` variables are used to specify the versions of the Cloud Agent and  PRISM Node to use. The `AGENT_ROLE` variable is used to specify the role of the Cloud Agent. The `AGENT_ROLE` variable can be set to `issuer`, `verifier` or `holder`.
 
 In real life, you will need to start at least two Cloud Agent instances with different roles. For example, you can start one instance with the `issuer` role and another one with the `holder` role. The `issuer` instance will be used to issue verifiable credentials (VCs) and the `holder` instance will be used to hold VCs. Here is an example of how you can do this:
 
@@ -157,16 +157,16 @@ $ curl http://localhost:8080/cloud-agent/_system/health
 
 > For more information about all available configuration parameters, please, check [Cloud Agent configuration](https://docs.atalaprism.io/docs/atala-prism/prism-cloud-agent/environment-variables) section at the documentation portal and edit the `docker-compose-demo.yml` file accordingly.
 
-#### Compatibility between Cloud Agent and VDR
+#### Compatibility between Cloud Agent and  PRISM Node
 
-There could be some incompatibilities between the most latest versions of Cloud Agent and VDR. Please, use the following table to check the compatibility between the versions:
+There could be some incompatibilities between the most latest versions of Cloud Agent and  PRISM Node. Please, use the following table to check the compatibility between the versions:
 
-| Cloud Agent | Node (VDR) |
+| Cloud Agent | PRISM Node |
 |-------------|------------|
 | >=1.9.2     | 2.2.1      |
 | <1.9.2      | 2.1.1      |
 
-> Please note: it is not guaranteed that the latest version of Cloud Agent will work with the latest version of VDR. We recommend using the versions from the table above.
+> Please note: it is not guaranteed that the latest version of Cloud Agent will work with the latest version of PRISM Node. We recommend using the versions from the table above.
 
 ### Following the Cloud Agent tutorials
 
