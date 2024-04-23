@@ -10,7 +10,8 @@ import java.net.URL
 case class IssuerMetadata(
     credential_issuer: String,
     authorization_servers: Option[Seq[String]],
-    credential_endpoint: String
+    credential_endpoint: String,
+    credential_configurations_supported: Map[String, CredentialConfiguration]
 )
 
 object IssuerMetadata {
@@ -23,7 +24,19 @@ object IssuerMetadata {
     IssuerMetadata(
       credential_issuer = credentialIssuerBaseUrl,
       authorization_servers = Some(Seq(issuer.authorizationServer.toString())),
-      credential_endpoint = s"$credentialIssuerBaseUrl/credentials"
+      credential_endpoint = s"$credentialIssuerBaseUrl/credentials",
+      credential_configurations_supported = Map(
+        // FIXME: hardcode values
+        "UniversityCredential" -> CredentialConfiguration(
+          format = CredentialFormat.jwt_vc_json,
+          scope = "UniversityCredential",
+          credential_definition = CredentialDefinition(
+            `@context` = Some(Seq("https://www.w3.org/2018/credentials/v1")),
+            `type` = Seq("VerifiableCredential"),
+            credentialSubject = None
+          )
+        )
+      )
     )
   }
 }

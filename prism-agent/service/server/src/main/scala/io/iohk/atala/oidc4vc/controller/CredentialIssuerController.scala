@@ -17,6 +17,7 @@ import java.net.URI
 import java.net.URL
 import java.util.UUID
 import scala.language.implicitConversions
+import java.{util => ju}
 
 trait CredentialIssuerController {
   def issueCredential(
@@ -41,6 +42,12 @@ trait CredentialIssuerController {
       ctx: RequestContext,
       request: CreateCredentialIssuerRequest
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuer]
+
+  def createCredentialConfiguration(
+      ctx: RequestContext,
+      issuerId: UUID,
+      request: CreateCredentialConfigurationRequest
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialConfiguration]
 
   def getIssuerMetadata(
       ctx: RequestContext,
@@ -214,6 +221,14 @@ case class CredentialIssuerControllerImpl(
         .mapError(ue => badRequest(detail = Some(s"Invalid URL: ${request.authorizationServer}")))
       issuer <- issuerMetadataService.createCredentialIssuer(authServerUrl)
     } yield issuer
+  }
+
+  override def createCredentialConfiguration(
+      ctx: RequestContext,
+      issuerId: ju.UUID,
+      request: CreateCredentialConfigurationRequest
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialConfiguration] = {
+    ZIO.dieMessage("not implemented")
   }
 
   override def getIssuerMetadata(ctx: RequestContext, issuerId: UUID): IO[ErrorResponse, IssuerMetadata] = {
