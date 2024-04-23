@@ -67,7 +67,7 @@ jobs:
           NODE_REFRESH_AND_SUBMIT_PERIOD: 1s
           NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD: 1s
           NODE_WALLET_MAX_TPS: 1000
-        uses: hoverkraft-tech/compose-action@v2
+        uses: hoverkraft-tech/compose-action@v2.0.0
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
           compose-flags: "--env-file ./infrastructure/local/.env -p issuer"
