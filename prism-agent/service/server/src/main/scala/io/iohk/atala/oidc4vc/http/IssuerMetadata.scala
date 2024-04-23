@@ -6,6 +6,7 @@ import sttp.tapir.Schema.annotations.encodedName
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.net.URL
+import scala.language.implicitConversions
 
 case class IssuerMetadata(
     credential_issuer: String,
@@ -19,24 +20,18 @@ object IssuerMetadata {
   given encoder: JsonEncoder[IssuerMetadata] = DeriveJsonEncoder.gen
   given decoder: JsonDecoder[IssuerMetadata] = DeriveJsonDecoder.gen
 
-  def fromIssuer(issuer: pollux.CredentialIssuer, agentBaseUrl: URL): IssuerMetadata = {
+  def fromIssuer(
+      agentBaseUrl: URL,
+      issuer: pollux.CredentialIssuer,
+      credentialConfigurations: Seq[pollux.CredentialConfiguration]
+  ): IssuerMetadata = {
     val credentialIssuerBaseUrl = agentBaseUrl.toURI().resolve(s"oidc4vc/issuers/${issuer.id}").toString
     IssuerMetadata(
       credential_issuer = credentialIssuerBaseUrl,
       authorization_servers = Some(Seq(issuer.authorizationServer.toString())),
       credential_endpoint = s"$credentialIssuerBaseUrl/credentials",
-      credential_configurations_supported = Map(
-        // FIXME: hardcode values
-        "UniversityCredential" -> CredentialConfiguration(
-          format = CredentialFormat.jwt_vc_json,
-          scope = "UniversityCredential",
-          credential_definition = CredentialDefinition(
-            `@context` = Some(Seq("https://www.w3.org/2018/credentials/v1")),
-            `type` = Seq("VerifiableCredential"),
-            credentialSubject = None
-          )
-        )
-      )
+      credential_configurations_supported =
+        credentialConfigurations.map(cc => (cc.configurationId, cc: CredentialConfiguration)).toMap
     )
   }
 }

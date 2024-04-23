@@ -13,6 +13,7 @@ trait OIDC4VCIssuerMetadataRepository {
   def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]]
 
   def createCredentialConfiguration(issuerId: UUID, config: CredentialConfiguration): URIO[WalletAccessContext, Unit]
+  def findAllCredentialConfigurations(issuerId: UUID): UIO[Seq[CredentialConfiguration]]
 }
 
 class InMemoryOIDC4VCIssuerMetadataRepository(
@@ -45,6 +46,11 @@ class InMemoryOIDC4VCIssuerMetadataRepository(
       _ <- credentialConfigStore.update(_.updated((issuerId, config.configurationId), config))
     } yield ()
   }
+
+  override def findAllCredentialConfigurations(
+      issuerId: UUID
+  ): UIO[Seq[CredentialConfiguration]] =
+    credentialConfigStore.get.map(_.filter(_._1._1 == issuerId).values.toSeq)
 
 }
 

@@ -37,7 +37,7 @@ object CredentialConfiguration {
       credential_definition = CredentialDefinition(
         `@context` = Some(Seq("https://www.w3.org/2018/credentials/v1")),
         `type` = Seq("VerifiableCredential"),
-        credentialSubject = None // TODO: implement conversion from JsonSchhema
+        credentialSubject = Some(Map.empty) // TODO: implement conversion from JsonSchhema
       )
     )
 }

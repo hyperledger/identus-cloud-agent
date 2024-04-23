@@ -237,8 +237,10 @@ case class CredentialIssuerControllerImpl(
   }
 
   override def getIssuerMetadata(ctx: RequestContext, issuerId: UUID): IO[ErrorResponse, IssuerMetadata] = {
-    for credentialIssuer <- issuerMetadataService.getCredentialIssuer(issuerId)
-    yield IssuerMetadata.fromIssuer(credentialIssuer, agentBaseUrl)
+    for
+      credentialIssuer <- issuerMetadataService.getCredentialIssuer(issuerId)
+      credentialConfigurations <- issuerMetadataService.listCredentialConfiguration(issuerId)
+    yield IssuerMetadata.fromIssuer(agentBaseUrl, credentialIssuer, credentialConfigurations)
   }
 }
 

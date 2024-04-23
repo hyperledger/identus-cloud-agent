@@ -39,11 +39,15 @@ object OIDC4VCIssuerMetadataServiceError {
 trait OIDC4VCIssuerMetadataService {
   def createCredentialIssuer(authorizationServer: URL): URIO[WalletAccessContext, CredentialIssuer]
   def getCredentialIssuer(issuerId: UUID): IO[IssuerIdNotFound, CredentialIssuer]
+
   def createCredentialConfiguration(
       issuerId: UUID,
       configurationId: String,
       schemaId: String
   ): ZIO[WalletAccessContext, InvalidSchemaId, CredentialConfiguration]
+  def listCredentialConfiguration(
+      issuerId: UUID
+  ): IO[IssuerIdNotFound, Seq[CredentialConfiguration]]
 }
 
 class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataRepository, uriDereferencer: URIDereferencer)
@@ -81,6 +85,14 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
       _ <- repository.createCredentialConfiguration(issuerId, config)
     } yield config
   }
+
+  override def listCredentialConfiguration(
+      issuerId: UUID
+  ): IO[IssuerIdNotFound, Seq[CredentialConfiguration]] =
+    repository
+      .findIssuer(issuerId)
+      .someOrFail(IssuerIdNotFound(issuerId))
+      .flatMap(_ => repository.findAllCredentialConfigurations(issuerId))
 
 }
 
