@@ -8,6 +8,7 @@ import io.iohk.atala.pollux.core.model.schema.CredentialSchema
 import io.iohk.atala.pollux.core.repository.OIDC4VCIssuerMetadataRepository
 import io.iohk.atala.pollux.core.service.OIDC4VCIssuerMetadataServiceError.InvalidSchemaId
 import io.iohk.atala.pollux.core.service.OIDC4VCIssuerMetadataServiceError.IssuerIdNotFound
+import io.iohk.atala.pollux.core.service.OIDC4VCIssuerMetadataServiceError.UnsupportedCredentialFormat
 import io.iohk.atala.shared.models.Failure
 import io.iohk.atala.shared.models.StatusCode
 import io.iohk.atala.shared.models.WalletAccessContext
@@ -34,17 +35,23 @@ object OIDC4VCIssuerMetadataServiceError {
         StatusCode.BadRequest,
         s"The schemaId $schemaId is not a valid URI syntax: $msg"
       )
+
+  final case class UnsupportedCredentialFormat(format: CredentialFormat)
+      extends OIDC4VCIssuerMetadataServiceError(
+        StatusCode.BadRequest,
+        s"Unsupported credential format in OIDC4VC protocol: $format"
+      )
 }
 
 trait OIDC4VCIssuerMetadataService {
   def createCredentialIssuer(authorizationServer: URL): URIO[WalletAccessContext, CredentialIssuer]
   def getCredentialIssuer(issuerId: UUID): IO[IssuerIdNotFound, CredentialIssuer]
-
   def createCredentialConfiguration(
       issuerId: UUID,
+      format: CredentialFormat,
       configurationId: String,
       schemaId: String
-  ): ZIO[WalletAccessContext, InvalidSchemaId, CredentialConfiguration]
+  ): ZIO[WalletAccessContext, InvalidSchemaId | UnsupportedCredentialFormat, CredentialConfiguration]
   def listCredentialConfiguration(
       issuerId: UUID
   ): IO[IssuerIdNotFound, Seq[CredentialConfiguration]]
@@ -65,10 +72,15 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
 
   override def createCredentialConfiguration(
       issuerId: UUID,
+      format: CredentialFormat,
       configurationId: String,
       schemaId: String
-  ): ZIO[WalletAccessContext, InvalidSchemaId, CredentialConfiguration] = {
+  ): ZIO[WalletAccessContext, InvalidSchemaId | UnsupportedCredentialFormat, CredentialConfiguration] = {
     for {
+      _ <- format match {
+        case CredentialFormat.JWT => ZIO.unit
+        case f                    => ZIO.fail(UnsupportedCredentialFormat(f))
+      }
       schemaUri <- ZIO.attempt(new URI(schemaId)).mapError(t => InvalidSchemaId(schemaId, t.getMessage))
       jsonSchema <- CredentialSchema
         .resolveJWTSchema(schemaUri, uriDereferencer)

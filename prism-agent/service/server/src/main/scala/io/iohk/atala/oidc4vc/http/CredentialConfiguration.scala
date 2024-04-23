@@ -22,7 +22,8 @@ final case class CredentialConfiguration(
     format: CredentialFormat,
     scope: String,
     credential_definition: CredentialDefinition,
-    cryptographic_binding_methods_supported: Seq[String] = Seq("did:prism")
+    cryptographic_binding_methods_supported: Seq[String] = Seq("did:prism"),
+    credential_signing_alg_values_supported: Seq[String] = Seq("ES256K")
 )
 
 object CredentialConfiguration {

@@ -7,7 +7,7 @@ import java.net.URI
 
 final case class CredentialConfiguration(
     configurationId: String,
-    format: CredentialFormat.JWT.type, // TODO: extends to support other formats
+    format: CredentialFormat,
     schemaId: URI,
     dereferencedSchema: Json
 ) {

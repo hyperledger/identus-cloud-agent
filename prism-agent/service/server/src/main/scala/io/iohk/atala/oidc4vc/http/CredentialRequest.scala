@@ -28,7 +28,6 @@ object CredentialRequest {
   given schema: Schema[CredentialRequest] = Schema
     .oneOfUsingField[CredentialRequest, CredentialFormat](_.format, _.toString)(
       CredentialFormat.jwt_vc_json -> JwtCredentialRequest.schema,
-      CredentialFormat.sd_jwt -> SdJwtCredentialRequest.schema,
       CredentialFormat.anoncreds -> AnoncredsCredentialRequest.schema
     )
   given encoder: JsonEncoder[CredentialRequest] = DeriveJsonEncoder.gen
@@ -56,32 +55,6 @@ object JwtCredentialRequest {
   given schema: Schema[JwtCredentialRequest] = Schema.derived
   given encoder: JsonEncoder[JwtCredentialRequest] = DeriveJsonEncoder.gen
   given decoder: JsonDecoder[JwtCredentialRequest] = DeriveJsonDecoder.gen
-}
-
-@jsonHint(CredentialFormat.sd_jwt.toString)
-case class SdJwtCredentialRequest(
-    format: CredentialFormat,
-    proof: Option[Proof],
-    @jsonField("credential_identifier")
-    @encodedName("credential_identifier")
-    credentialIdentifier: Option[String],
-    @jsonField("credential_response_encryption")
-    @encodedName("credential_response_encryption")
-    credentialResponseEncryption: Option[CredentialResponseEncryption],
-    // REQUIRED when the format parameter is present in the Credential Request.
-    // It MUST NOT be used otherwise. It is an object containing the detailed description of the Credential type.
-    @jsonField("credential_definition")
-    @encodedName("credential_definition")
-    credentialDefinition: Option[CredentialDefinition],
-    selectiveDisclosure: String // TODO: it's a fake field for now
-) extends CredentialRequest
-
-object SdJwtCredentialRequest {
-  given schema: Schema[SdJwtCredentialRequest] = Schema.derived
-
-  given encoder: JsonEncoder[SdJwtCredentialRequest] = DeriveJsonEncoder.gen
-
-  given decoder: JsonDecoder[SdJwtCredentialRequest] = DeriveJsonDecoder.gen
 }
 
 @jsonHint(CredentialFormat.anoncreds.toString)
@@ -207,7 +180,6 @@ object LdpProof {
 
 enum CredentialFormat {
   case jwt_vc_json
-  case sd_jwt
   case anoncreds
 }
 
@@ -221,6 +193,11 @@ object CredentialFormat {
   given Conversion[PolluxCredentialFormat, CredentialFormat] = {
     case PolluxCredentialFormat.JWT       => CredentialFormat.jwt_vc_json
     case PolluxCredentialFormat.AnonCreds => CredentialFormat.anoncreds
+  }
+
+  given Conversion[CredentialFormat, PolluxCredentialFormat] = {
+    case CredentialFormat.jwt_vc_json => PolluxCredentialFormat.JWT
+    case CredentialFormat.anoncreds   => PolluxCredentialFormat.AnonCreds
   }
 }
 

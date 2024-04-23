@@ -230,6 +230,7 @@ case class CredentialIssuerControllerImpl(
     for {
       credentialConfiguration <- issuerMetadataService.createCredentialConfiguration(
         issuerId,
+        request.format,
         request.configurationId,
         request.schemaId
       )
