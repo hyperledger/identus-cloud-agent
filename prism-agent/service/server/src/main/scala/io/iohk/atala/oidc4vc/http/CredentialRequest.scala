@@ -1,5 +1,6 @@
 package io.iohk.atala.oidc4vc.http
 
+import io.iohk.atala.pollux.core.model.CredentialFormat as PolluxCredentialFormat
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.encodedName
 import zio.json.*
@@ -215,6 +216,11 @@ object CredentialFormat {
   given encoder: JsonEncoder[CredentialFormat] = JsonEncoder[String].contramap(_.toString)
   given decoder: JsonDecoder[CredentialFormat] = JsonDecoder[String].mapOrFail { s =>
     CredentialFormat.values.find(_.toString == s).toRight(s"Unknown CredentialFormat: $s")
+  }
+
+  given Conversion[PolluxCredentialFormat, CredentialFormat] = {
+    case PolluxCredentialFormat.JWT       => CredentialFormat.jwt_vc_json
+    case PolluxCredentialFormat.AnonCreds => CredentialFormat.anoncreds
   }
 }
 

@@ -1,6 +1,6 @@
 package io.iohk.atala.oidc4vc.http
 
-import io.iohk.atala.pollux.core.model.oidc4vc as pollux
+import io.iohk.atala.pollux.core.model.oidc4vc.CredentialIssuer as PolluxCredentialIssuer
 import sttp.tapir.Schema
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
@@ -21,6 +21,6 @@ object CredentialIssuer {
   given encoder: JsonEncoder[CredentialIssuer] = DeriveJsonEncoder.gen
   given decoder: JsonDecoder[CredentialIssuer] = DeriveJsonDecoder.gen
 
-  given Conversion[pollux.CredentialIssuer, CredentialIssuer] = domain =>
+  given Conversion[PolluxCredentialIssuer, CredentialIssuer] = domain =>
     CredentialIssuer(domain.id, domain.authorizationServer.toString)
 }

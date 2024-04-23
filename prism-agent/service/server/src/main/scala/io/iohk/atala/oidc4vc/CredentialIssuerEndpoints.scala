@@ -80,7 +80,6 @@ object CredentialIssuerEndpoints {
       """OIDC for VC [Credential Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-endpoint)""".stripMargin
     )
 
-  // TODO: implement
   val createCredentialOfferEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, String, CredentialOfferRequest),

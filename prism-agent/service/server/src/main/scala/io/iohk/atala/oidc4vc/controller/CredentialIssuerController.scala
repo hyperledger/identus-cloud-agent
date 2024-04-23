@@ -17,7 +17,6 @@ import java.net.URI
 import java.net.URL
 import java.util.UUID
 import scala.language.implicitConversions
-import java.{util => ju}
 
 trait CredentialIssuerController {
   def issueCredential(
@@ -225,10 +224,16 @@ case class CredentialIssuerControllerImpl(
 
   override def createCredentialConfiguration(
       ctx: RequestContext,
-      issuerId: ju.UUID,
+      issuerId: UUID,
       request: CreateCredentialConfigurationRequest
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialConfiguration] = {
-    ZIO.dieMessage("not implemented")
+    for {
+      credentialConfiguration <- issuerMetadataService.createCredentialConfiguration(
+        issuerId,
+        request.configurationId,
+        request.schemaId
+      )
+    } yield credentialConfiguration: CredentialConfiguration
   }
 
   override def getIssuerMetadata(ctx: RequestContext, issuerId: UUID): IO[ErrorResponse, IssuerMetadata] = {
