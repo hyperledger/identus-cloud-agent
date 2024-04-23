@@ -5,7 +5,7 @@ import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.TooManyWebhook
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.DuplicatedWalletId
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.DuplicatedWalletSeed
-import io.iohk.atala.event.notification.EventNotificationConfig
+import org.hyperledger.identus.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport

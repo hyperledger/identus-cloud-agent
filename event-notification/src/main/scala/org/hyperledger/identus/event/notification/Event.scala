@@ -1,4 +1,4 @@
-package io.iohk.atala.event.notification
+package org.hyperledger.identus.event.notification
 
 import io.iohk.atala.shared.models.WalletId
 import java.time.Instant

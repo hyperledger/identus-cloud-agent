@@ -1,6 +1,6 @@
 package io.iohk.atala.pollux.core.service
 
-import io.iohk.atala.event.notification.{Event, EventNotificationService}
+import org.hyperledger.identus.event.notification.{Event, EventNotificationService}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.presentproof.{
   Presentation,

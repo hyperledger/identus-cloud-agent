@@ -10,7 +10,7 @@ import io.iohk.atala.api.util.PaginationUtils
 import io.iohk.atala.event.controller.http.CreateWebhookNotification
 import io.iohk.atala.event.controller.http.WebhookNotification
 import io.iohk.atala.event.controller.http.WebhookNotificationPage
-import io.iohk.atala.event.notification.EventNotificationConfig
+import org.hyperledger.identus.event.notification.EventNotificationConfig
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementController
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*

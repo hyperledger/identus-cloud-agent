@@ -3,7 +3,6 @@ package org.hyperledger.identus.mercury.protocol.coordinatemediation
 import io.circe._
 import io.circe.parser._
 import munit.*
-import org.hyperledger.identus.mercury.protocol.coordinatemediation.{MediateGrant, MediateDeny}
 
 class CoordinateMediationSpec extends ZSuite {
   val mediateDenyExample = """{

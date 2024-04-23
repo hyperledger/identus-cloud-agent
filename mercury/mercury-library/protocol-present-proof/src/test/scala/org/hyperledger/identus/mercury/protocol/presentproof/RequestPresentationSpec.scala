@@ -7,7 +7,6 @@ import org.hyperledger.identus.mercury.model.AttachmentDescriptor.attachmentDesc
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import munit.*
 import org.hyperledger.identus.mercury.model.LinkData
-import org.hyperledger.identus.mercury.protocol.presentproof.RequestPresentation
 
 class RequestCredentialSpec extends ZSuite {
 

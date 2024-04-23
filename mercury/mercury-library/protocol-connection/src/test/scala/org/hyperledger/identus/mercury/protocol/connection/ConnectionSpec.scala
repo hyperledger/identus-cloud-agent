@@ -3,7 +3,6 @@ package org.hyperledger.identus.mercury.protocol.connection
 import io.circe._
 import io.circe.parser._
 import munit.*
-import org.hyperledger.identus.mercury.protocol.connection.{ConnectionResponse, ConnectionRequest}
 import org.hyperledger.identus.mercury.model.{Message, DidId}
 
 /** protocolConnection/testOnly org.hyperledger.identus.mercury.protocol.connection.CoordinateMediationSpec */

@@ -3,7 +3,6 @@ package org.hyperledger.identus.mercury
 import munit.*
 import org.hyperledger.identus.mercury.model.DidId
 import com.nimbusds.jose.jwk.OctetKeyPair
-import org.hyperledger.identus.mercury.PeerDID
 
 class PeerDIDSpec extends ZSuite {
 

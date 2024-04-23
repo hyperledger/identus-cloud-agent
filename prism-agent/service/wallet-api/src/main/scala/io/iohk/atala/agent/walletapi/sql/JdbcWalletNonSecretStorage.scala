@@ -10,7 +10,7 @@ import io.iohk.atala.agent.walletapi.sql.JdbcWalletNonSecretStorage.MAX_WEBHOOK_
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.TooManyWebhook
-import io.iohk.atala.event.notification.EventNotificationConfig
+import org.hyperledger.identus.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.db.ContextAwareTask
 import io.iohk.atala.shared.db.Implicits.{*, given}
 import io.iohk.atala.shared.models.WalletAccessContext

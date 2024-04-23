@@ -4,7 +4,7 @@ import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
-import io.iohk.atala.event.notification.EventNotificationConfig
+import org.hyperledger.identus.event.notification.EventNotificationConfig
 import io.iohk.atala.shared.crypto.Apollo
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletAdministrationContext

@@ -1,6 +1,6 @@
-package io.iohk.atala.event.notification
+package org.hyperledger.identus.event.notification
 
-import io.iohk.atala.event.notification.EventNotificationServiceError.EventSendingFailed
+import org.hyperledger.identus.event.notification.EventNotificationServiceError.EventSendingFailed
 import zio.concurrent.ConcurrentMap
 import zio.{IO, Queue, URLayer, ZIO, ZLayer}
 

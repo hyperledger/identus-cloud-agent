@@ -13,7 +13,7 @@ import io.iohk.atala.castor.core.model.ProtoModelHelper.*
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
-import io.iohk.atala.event.notification.EventNotificationConfig
+import org.hyperledger.identus.event.notification.EventNotificationConfig
 import io.iohk.atala.prism.protos.node_models
 import io.iohk.atala.shared.models.WalletId
 import zio.json.*

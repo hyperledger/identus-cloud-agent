@@ -20,7 +20,7 @@ import org.hyperledger.identus.connect.core.service.{ConnectionServiceImpl, Conn
 import org.hyperledger.identus.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
 import io.iohk.atala.credentialstatus.controller.CredentialStatusControllerImpl
 import io.iohk.atala.event.controller.EventControllerImpl
-import io.iohk.atala.event.notification.EventNotificationServiceImpl
+import org.hyperledger.identus.event.notification.EventNotificationServiceImpl
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.apikey.JdbcAuthenticationRepository
 import io.iohk.atala.iam.authorization.DefaultPermissionManagementService

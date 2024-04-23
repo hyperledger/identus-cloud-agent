@@ -1,7 +1,7 @@
 package io.iohk.atala.event.controller.http
 
 import io.iohk.atala.api.http.Annotation
-import io.iohk.atala.event.notification.EventNotificationConfig
+import org.hyperledger.identus.event.notification.EventNotificationConfig
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate, validateEach}
 import zio.json.*

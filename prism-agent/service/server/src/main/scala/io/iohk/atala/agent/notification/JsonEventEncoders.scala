@@ -5,7 +5,7 @@ import io.iohk.atala.castor.controller.http.ManagedDID
 import io.iohk.atala.castor.controller.http.ManagedDID.*
 import io.iohk.atala.connect.controller.http.Connection
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
-import io.iohk.atala.event.notification.Event
+import org.hyperledger.identus.event.notification.Event
 import io.iohk.atala.issue.controller.http.IssueCredentialRecord
 import io.iohk.atala.pollux.core.model.{
   IssueCredentialRecord as PolluxIssueCredentialRecord,

@@ -2,7 +2,7 @@ package io.iohk.atala.pollux.core.service
 
 import io.circe.Json
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
-import io.iohk.atala.event.notification.*
+import org.hyperledger.identus.event.notification.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import io.iohk.atala.pollux.core.model.error.CredentialServiceError

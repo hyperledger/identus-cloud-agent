@@ -3,7 +3,6 @@ package org.hyperledger.identus.mercury.model
 import munit.*
 import io.circe.JsonObject
 import scala.language.implicitConversions
-import org.hyperledger.identus.mercury.model.UnpackMessageImp
 
 /** agentDidcommx/testOnly org.hyperledger.identus.mercury.UnpackMessageImpSpec */
 class UnpackMessageImpSpec extends ZSuite {

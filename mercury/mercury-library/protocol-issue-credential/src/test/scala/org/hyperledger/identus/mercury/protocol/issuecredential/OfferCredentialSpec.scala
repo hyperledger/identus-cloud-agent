@@ -6,7 +6,7 @@ import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 import munit.*
-import org.hyperledger.identus.mercury.protocol.issuecredential.{OfferCredential, CredentialPreview, Attribute}
+
 class OfferCredentialSpec extends ZSuite {
 
   test("Issuer OfferCredential") {

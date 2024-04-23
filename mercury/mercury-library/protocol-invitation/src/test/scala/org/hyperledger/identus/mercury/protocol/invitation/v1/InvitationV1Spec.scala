@@ -5,7 +5,6 @@ import io.circe.syntax._
 import io.circe.Json
 import io.circe.parser._
 import org.hyperledger.identus.mercury.protocol.invitation._
-import org.hyperledger.identus.mercury.protocol.invitation.v1.Invitation
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor
 
 class InvitationV1Spec extends ZSuite {

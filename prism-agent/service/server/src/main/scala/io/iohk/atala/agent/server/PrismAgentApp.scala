@@ -13,7 +13,7 @@ import io.iohk.atala.connect.controller.ConnectionServerEndpoints
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import io.iohk.atala.credentialstatus.controller.CredentialStatusServiceEndpoints
 import io.iohk.atala.event.controller.EventServerEndpoints
-import io.iohk.atala.event.notification.EventNotificationConfig
+import org.hyperledger.identus.event.notification.EventNotificationConfig
 import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticator
 import io.iohk.atala.iam.entity.http.EntityServerEndpoints
 import io.iohk.atala.iam.wallet.http.WalletManagementServerEndpoints
