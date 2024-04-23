@@ -1,32 +1,19 @@
 package io.iohk.atala.issue.controller
 
+import com.dimafeng.testcontainers.PostgreSQLContainer
 import com.typesafe.config.ConfigFactory
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.http.CustomServerInterceptors
-import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.model.BaseEntity
-import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
+import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
-import io.iohk.atala.castor.core.service.MockDIDService
-import io.iohk.atala.connect.core.repository.ConnectionRepositoryInMemory
-import io.iohk.atala.connect.core.service.ConnectionServiceImpl
-import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
-import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
-import io.iohk.atala.issue.controller.http.{
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecord,
-  IssueCredentialRecordPage
-}
-import io.iohk.atala.pollux.anoncreds.AnoncredLinkSecretWithId
-import io.iohk.atala.pollux.core.model.CredentialFormat
-import io.iohk.atala.pollux.core.repository.{
-  CredentialDefinitionRepositoryInMemory,
-  CredentialRepositoryInMemory,
-  CredentialStatusListRepositoryInMemory
-}
+import io.iohk.atala.castor.core.service.DIDService
+import io.iohk.atala.connect.core.service.ConnectionService
+import io.iohk.atala.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
+import io.iohk.atala.issue.controller.http.IssueCredentialRecordPage
+import io.iohk.atala.pollux.core.model.IssueCredentialRecord
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.vc.jwt.*
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.{DeserializationException, Response, UriContext}
@@ -36,10 +23,7 @@ import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
 import zio.*
 import zio.config.typesafe.TypesafeConfigProvider
-import zio.json.ast.Json
-import zio.json.ast.Json.*
 import zio.test.*
-import java.util.UUID
 
 trait IssueControllerTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>
@@ -75,33 +59,11 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
       })
   }
 
-  private val controllerLayer = contextAwareTransactorLayer >+>
-    configLayer >+>
-    didResolverLayer >+>
-    ResourceURIDereferencerImpl.layer >+>
-    CredentialRepositoryInMemory.layer >+>
-    CredentialStatusListRepositoryInMemory.layer >+>
-    ZLayer.succeed(AnoncredLinkSecretWithId("Unused Linked Secret ID")) >+>
-    MockDIDService.empty >+>
-    MockManagedDIDService.empty >+>
-    CredentialServiceImpl.layer >+>
-    ConnectionRepositoryInMemory.layer >+>
-    ConnectionServiceImpl.layer >+>
-    IssueControllerImpl.layer
-
-  protected val defaultWalletLayer = ZLayer.succeed(WalletAccessContext(WalletId.default))
-
-  protected val credentialDefinitionServiceLayer =
-    CredentialDefinitionRepositoryInMemory.layer ++ ResourceURIDereferencerImpl.layer >>>
-      CredentialDefinitionServiceImpl.layer
-
-  val testEnvironmentLayer = zio.test.testEnvironment ++
-    pgContainerLayer ++
-    contextAwareTransactorLayer ++
-    GenericSecretStorageInMemory.layer >+> LinkSecretServiceImpl.layer ++
-    GenericSecretStorageInMemory.layer >+> credentialDefinitionServiceLayer >+>
-    controllerLayer ++
-    DefaultEntityAuthenticator.layer
+  lazy val testEnvironmentLayer =
+    ZLayer.makeSome[
+      ManagedDIDService & DIDService & CredentialService & ConnectionService,
+      IssueController & AppConfig & PostgreSQLContainer & AuthenticatorWithAuthZ[BaseEntity]
+    ](IssueControllerImpl.layer, configLayer, pgContainerLayer, DefaultEntityAuthenticator.layer)
 
   val issueUriBase = uri"http://test.com/issue-credentials/"
 
@@ -133,37 +95,4 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
         .backend()
     backend
   }
-
-}
-
-trait IssueGen {
-  self: ZIOSpecDefault with IssueControllerTestTools =>
-  object Generator {
-    val gValidityPeriod: Gen[Any, Double] = Gen.double
-    val gAutomaticIssuance: Gen[Any, Boolean] = Gen.boolean
-    val gIssuingDID: Gen[Any, String] = Gen.alphaNumericStringBounded(5, 20) // TODO Make a DID generator
-    val gConnectionId: Gen[Any, UUID] = Gen.uuid
-
-    val claims = Json.Obj(
-      "key1" -> Json.Str("value1"),
-      "key2" -> Json.Str("value2")
-    )
-
-    val schemaInput = for {
-      validityPeriod <- gValidityPeriod
-      automaticIssuance <- gAutomaticIssuance
-      issuingDID <- gIssuingDID
-      connectionId <- gConnectionId
-    } yield CreateIssueCredentialRecordRequest(
-      validityPeriod = Some(validityPeriod),
-      schemaId = None,
-      claims = claims,
-      automaticIssuance = Some(automaticIssuance),
-      issuingDID = Some(issuingDID),
-      connectionId = connectionId,
-      credentialDefinitionId = None,
-      credentialFormat = Some(CredentialFormat.JWT.toString)
-    )
-  }
-
 }
