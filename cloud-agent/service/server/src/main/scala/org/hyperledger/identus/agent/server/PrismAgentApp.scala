@@ -44,10 +44,10 @@ import io.iohk.atala.event.controller.EventServerEndpoints
 import io.iohk.atala.event.notification.EventNotificationConfig
 import io.iohk.atala.iam.authentication.apikey.ApiKeyAuthenticator
 import io.iohk.atala.iam.entity.http.EntityServerEndpoints
-import io.iohk.atala.iam.oidc.CredentialIssuerServerEndpoints
 import io.iohk.atala.iam.wallet.http.WalletManagementServerEndpoints
 import io.iohk.atala.issue.controller.IssueServerEndpoints
 import io.iohk.atala.mercury.{DidOps, HttpClient}
+import io.iohk.atala.oidc4vc.CredentialIssuerServerEndpoints
 import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
 import io.iohk.atala.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
 import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
