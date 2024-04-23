@@ -51,7 +51,7 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
 
   override def createCredentialIssuer(authorizationServer: URL): URIO[WalletAccessContext, CredentialIssuer] = {
     val issuer = CredentialIssuer(authorizationServer)
-    repository.create(issuer).as(issuer)
+    repository.createIssuer(issuer).as(issuer)
   }
 
   override def getCredentialIssuer(issuerId: UUID): IO[IssuerIdNotFound, CredentialIssuer] =
@@ -72,12 +72,14 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
           case e: URISyntaxError => ZIO.fail(InvalidSchemaId(schemaId, e.message))
           case e                 => ZIO.dieMessage(s"Unexpected error when resolving schema $schemaId: $e")
         }
-    } yield CredentialConfiguration(
-      configurationId = configurationId,
-      format = CredentialFormat.JWT,
-      schemaId = schemaUri,
-      dereferencedSchema = jsonSchema
-    )
+      config = CredentialConfiguration(
+        configurationId = configurationId,
+        format = CredentialFormat.JWT,
+        schemaId = schemaUri,
+        dereferencedSchema = jsonSchema
+      )
+      _ <- repository.createCredentialConfiguration(issuerId, config)
+    } yield config
   }
 
 }

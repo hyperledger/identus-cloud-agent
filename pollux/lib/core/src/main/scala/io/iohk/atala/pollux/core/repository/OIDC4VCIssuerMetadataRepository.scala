@@ -1,5 +1,6 @@
 package io.iohk.atala.pollux.core.repository
 
+import io.iohk.atala.pollux.core.model.oidc4vc.CredentialConfiguration
 import io.iohk.atala.pollux.core.model.oidc4vc.CredentialIssuer
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
@@ -7,22 +8,43 @@ import zio.*
 import java.util.UUID
 
 trait OIDC4VCIssuerMetadataRepository {
-  def create(issuer: CredentialIssuer): URIO[WalletAccessContext, Unit]
+  def createIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, Unit]
   def findAllIssuerForWallet: URIO[WalletAccessContext, Seq[CredentialIssuer]]
   def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]]
+
+  def createCredentialConfiguration(issuerId: UUID, config: CredentialConfiguration): URIO[WalletAccessContext, Unit]
 }
 
-class InMemoryOIDC4VCIssuerMetadataRepository(store: Ref[Map[UUID, CredentialIssuer]])
-    extends OIDC4VCIssuerMetadataRepository {
+class InMemoryOIDC4VCIssuerMetadataRepository(
+    issuerStore: Ref[Map[UUID, CredentialIssuer]],
+    credentialConfigStore: Ref[Map[(UUID, String), CredentialConfiguration]]
+) extends OIDC4VCIssuerMetadataRepository {
 
-  override def create(issuer: CredentialIssuer): URIO[WalletAccessContext, Unit] =
-    store.modify(m => () -> m.updated(issuer.id, issuer))
+  override def createIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, Unit] =
+    issuerStore.modify(m => () -> m.updated(issuer.id, issuer))
 
   override def findAllIssuerForWallet: URIO[WalletAccessContext, Seq[CredentialIssuer]] =
-    store.get.map(_.values.toSeq)
+    issuerStore.get.map(_.values.toSeq)
 
   override def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]] =
-    store.get.map(_.get(issuerId))
+    issuerStore.get.map(_.get(issuerId))
+
+  override def createCredentialConfiguration(
+      issuerId: UUID,
+      config: CredentialConfiguration
+  ): URIO[WalletAccessContext, Unit] = {
+    for {
+      issuerExists <- issuerStore.get.map(_.contains(issuerId))
+      configExists <- credentialConfigStore.get.map(_.contains((issuerId, config.configurationId)))
+      _ <- ZIO
+        .cond(issuerExists, (), s"Issuer with id $issuerId does not exist")
+        .orDieWith(Exception(_))
+      _ <- ZIO
+        .cond(!configExists, (), s"Configuration with id ${config.configurationId} already exists")
+        .orDieWith(Exception(_))
+      _ <- credentialConfigStore.update(_.updated((issuerId, config.configurationId), config))
+    } yield ()
+  }
 
 }
 
@@ -30,7 +52,8 @@ object InMemoryOIDC4VCIssuerMetadataRepository {
   def layer: ULayer[OIDC4VCIssuerMetadataRepository] =
     ZLayer.fromZIO(
       for {
-        store <- Ref.make(Map.empty)
-      } yield InMemoryOIDC4VCIssuerMetadataRepository(store)
+        issuerStore <- Ref.make(Map.empty[UUID, CredentialIssuer])
+        credentialConfigStore <- Ref.make(Map.empty[(UUID, String), CredentialConfiguration])
+      } yield InMemoryOIDC4VCIssuerMetadataRepository(issuerStore, credentialConfigStore)
     )
 }
