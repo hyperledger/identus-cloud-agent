@@ -31,9 +31,11 @@ data class Agent(
             "REST_SERVICE_URL" to (restServiceUrl ?: "http://host.docker.internal:$httpPort"),
             "PRISM_NODE_PORT" to (prismNode?.httpPort?.toString() ?: ""),
             "SECRET_STORAGE_BACKEND" to if (vault != null) "vault" else "postgres",
-            "VAULT_HTTP_PORT" to (vault?.httpPort?.toString() ?: ""),
+            // FIXME: hardcode port 10001 just to avoid invalid URL 'http://host.docker.internal:'
+            "VAULT_HTTP_PORT" to (vault?.httpPort?.toString() ?: "10001"),
             "KEYCLOAK_ENABLED" to (keycloak != null).toString(),
-            "KEYCLOAK_HTTP_PORT" to (keycloak?.httpPort?.toString() ?: ""),
+            // FIXME: hardcode port 10002 just to avoid invalid URL 'http://host.docker.internal:'
+            "KEYCLOAK_HTTP_PORT" to (keycloak?.httpPort?.toString() ?: "10002"),
             "KEYCLOAK_REALM" to (keycloak?.realm ?: ""),
             "KEYCLOAK_CLIENT_ID" to (keycloak?.clientId ?: ""),
             "KEYCLOAK_CLIENT_SECRET" to (keycloak?.clientSecret ?: ""),
