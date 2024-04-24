@@ -10,7 +10,7 @@ object ConnectionInvitation {
   def makeConnectionInvitation(from: DidId): Invitation = {
     makeConnectionInvitation(
       from = from,
-      goalCode = Some("io.atalaprism.connect"),
+      goalCode = Some("org.hyperledger.identus.connect"),
       goal = Some(s"Establish a trust connection between two peers using the protocol '${ConnectionRequest.`type`}'")
     )
   }

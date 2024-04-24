@@ -33,7 +33,7 @@ object ConnectionRepositorySpecSuite {
       from = DidId("did:prism:aaa"),
       body = Invitation
         .Body(
-          goal_code = Some("io.atalaprism.connect"),
+          goal_code = Some("org.hyperledger.identus.connect"),
           goal = Some("Establish a trust connection between two peers"),
           Nil
         )
@@ -50,7 +50,7 @@ object ConnectionRepositorySpecSuite {
     to = DidId("did:prism:bbb"),
     thid = None,
     pthid = Some(UUID.randomUUID().toString),
-    body = ConnectionRequest.Body(goal_code = Some("io.atalaprism.connect"))
+    body = ConnectionRequest.Body(goal_code = Some("org.hyperledger.identus.connect"))
   )
 
   val testSuite = suite("CRUD operations")(
