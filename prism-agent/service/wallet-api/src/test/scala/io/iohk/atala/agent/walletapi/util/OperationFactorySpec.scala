@@ -29,9 +29,9 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
     test("make CrateOperation from same seed is deterministic") {
       val didTemplate = ManagedDIDTemplate(Nil, Nil, Nil)
       for {
-        result1 <- operationFactory.makeCreateOperationHdKey("master0", seed)(0, didTemplate)
+        result1 <- operationFactory.makeCreateOperation("master0", seed)(0, didTemplate)
         (op1, hdKey1) = result1
-        result2 <- operationFactory.makeCreateOperationHdKey("master0", seed)(0, didTemplate)
+        result2 <- operationFactory.makeCreateOperation("master0", seed)(0, didTemplate)
         (op2, hdKey2) = result2
       } yield assert(op1)(equalTo(op2)) &&
         assert(hdKey1)(equalTo(hdKey2))
@@ -39,7 +39,7 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
     test("make CreateOperation must contain 1 master key") {
       val didTemplate = ManagedDIDTemplate(Nil, Nil, Nil)
       for {
-        result <- operationFactory.makeCreateOperationHdKey("master-0", seed)(0, didTemplate)
+        result <- operationFactory.makeCreateOperation("master-0", seed)(0, didTemplate)
         (op, hdKey) = result
         pk = op.publicKeys.head.asInstanceOf[InternalPublicKey]
       } yield assert(op.publicKeys)(hasSize(equalTo(1))) &&
@@ -49,23 +49,22 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
     test("make CreateOperation containing multiple keys") {
       val didTemplate = ManagedDIDTemplate(
         Seq(
-          DIDPublicKeyTemplate("auth-0", VerificationRelationship.Authentication),
-          DIDPublicKeyTemplate("auth-1", VerificationRelationship.Authentication),
-          DIDPublicKeyTemplate("issue-0", VerificationRelationship.AssertionMethod),
+          DIDPublicKeyTemplate("auth-0", VerificationRelationship.Authentication, EllipticCurve.SECP256K1),
+          DIDPublicKeyTemplate("auth-1", VerificationRelationship.Authentication, EllipticCurve.SECP256K1),
+          DIDPublicKeyTemplate("issue-0", VerificationRelationship.AssertionMethod, EllipticCurve.SECP256K1),
         ),
         Nil,
         Nil
       )
       for {
-        result <- operationFactory.makeCreateOperationHdKey("master-0", seed)(0, didTemplate)
+        result <- operationFactory.makeCreateOperation("master-0", seed)(0, didTemplate)
         (op, hdKey) = result
       } yield assert(op.publicKeys.length)(equalTo(4)) &&
-        assert(hdKey.internalKeyPaths.size)(equalTo(1)) &&
-        assert(hdKey.keyPaths.size)(equalTo(3)) &&
-        assert(hdKey.internalKeyPaths.get("master-0").get.keyIndex)(equalTo(0)) &&
-        assert(hdKey.keyPaths.get("auth-0").get.keyIndex)(equalTo(0)) &&
-        assert(hdKey.keyPaths.get("auth-1").get.keyIndex)(equalTo(1)) &&
-        assert(hdKey.keyPaths.get("issue-0").get.keyIndex)(equalTo(0))
+        assert(hdKey.hdKeys.size)(equalTo(4)) &&
+        assert(hdKey.hdKeys.get("master-0").get.keyIndex)(equalTo(0)) &&
+        assert(hdKey.hdKeys.get("auth-0").get.keyIndex)(equalTo(0)) &&
+        assert(hdKey.hdKeys.get("auth-1").get.keyIndex)(equalTo(1)) &&
+        assert(hdKey.hdKeys.get("issue-0").get.keyIndex)(equalTo(0))
     }
   )
 
@@ -73,11 +72,15 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
     test("make UpdateOperation from same seed is deterministic") {
       val counter = HdKeyIndexCounter.zero(0)
       val actions =
-        Seq(UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate("issue-42", VerificationRelationship.AssertionMethod)))
+        Seq(
+          UpdateManagedDIDAction.AddKey(
+            DIDPublicKeyTemplate("issue-42", VerificationRelationship.AssertionMethod, EllipticCurve.SECP256K1)
+          )
+        )
       for {
-        result1 <- operationFactory.makeUpdateOperationHdKey(seed)(didExample, previousOperationHash, actions, counter)
+        result1 <- operationFactory.makeUpdateOperation(seed)(didExample, previousOperationHash, actions, counter)
         (op1, hdKey1) = result1
-        result2 <- operationFactory.makeUpdateOperationHdKey(seed)(didExample, previousOperationHash, actions, counter)
+        result2 <- operationFactory.makeUpdateOperation(seed)(didExample, previousOperationHash, actions, counter)
         (op2, hdKey2) = result2
       } yield assert(op1)(equalTo(op2)) && assert(hdKey1)(equalTo(hdKey2))
     },
@@ -91,11 +94,15 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
           )
         )
       val actions = Seq(
-        UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate("auth-42", VerificationRelationship.Authentication)),
-        UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate("issue-42", VerificationRelationship.AssertionMethod)),
+        UpdateManagedDIDAction.AddKey(
+          DIDPublicKeyTemplate("auth-42", VerificationRelationship.Authentication, EllipticCurve.SECP256K1)
+        ),
+        UpdateManagedDIDAction.AddKey(
+          DIDPublicKeyTemplate("issue-42", VerificationRelationship.AssertionMethod, EllipticCurve.SECP256K1)
+        ),
       )
       for {
-        result <- operationFactory.makeUpdateOperationHdKey(seed)(didExample, previousOperationHash, actions, counter)
+        result <- operationFactory.makeUpdateOperation(seed)(didExample, previousOperationHash, actions, counter)
         (op, hdKey) = result
       } yield {
         // counter is correct
@@ -108,9 +115,9 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
         assert(hdKey.counter.internalKey.master)(equalTo(0)) &&
         assert(hdKey.counter.internalKey.revocation)(equalTo(0)) &&
         // path is correct
-        assert(hdKey.newKeyPaths.size)(equalTo(2)) &&
-        assert(hdKey.newKeyPaths.get("auth-42").get.keyIndex)(equalTo(3)) &&
-        assert(hdKey.newKeyPaths.get("issue-42").get.keyIndex)(equalTo(1)) &&
+        assert(hdKey.hdKeys.size)(equalTo(2)) &&
+        assert(hdKey.hdKeys.get("auth-42").get.keyIndex)(equalTo(3)) &&
+        assert(hdKey.hdKeys.get("issue-42").get.keyIndex)(equalTo(1)) &&
         // operation is correct
         assert(op.actions)(hasSize(equalTo(2))) &&
         assert(op.actions.collect { case UpdateDIDAction.AddKey(pk) => pk.id })(

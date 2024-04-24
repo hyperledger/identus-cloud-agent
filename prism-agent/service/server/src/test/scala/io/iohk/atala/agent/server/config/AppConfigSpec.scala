@@ -24,7 +24,7 @@ object AppConfigSpec extends ZIOSpecDefault {
       for {
         appConfig <- ZIO.serviceWith[AppConfig](
           _.focus(_.agent.secretStorage.backend)
-            .replace(SecretStorageBackend.memory)
+            .replace(SecretStorageBackend.postgres)
         )
       } yield assert(appConfig.validate)(isRight(anything))
     },

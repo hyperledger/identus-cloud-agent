@@ -8,6 +8,7 @@ import io.iohk.atala.agent.walletapi.model.PublicationState
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.util.OperationFactory
+import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
@@ -39,20 +40,12 @@ trait StorageSpecHelper extends ApolloSpecHelper {
 
   protected def generateKeyPair() = apollo.secp256k1.generateKeyPair
 
-  protected def generateCreateOperation(keyIds: Seq[String]) =
-    OperationFactory(apollo).makeCreateOperationRandKey("master0")(
-      ManagedDIDTemplate(
-        publicKeys = keyIds.map(DIDPublicKeyTemplate(_, VerificationRelationship.Authentication)),
-        services = Nil,
-        contexts = Nil
-      )
-    )
-
-  protected def generateCreateOperationHdKey(keyIds: Seq[String], didIndex: Int) =
-    OperationFactory(apollo).makeCreateOperationHdKey("master0", Array.fill(64)(0))(
+  protected def generateCreateOperation(keyIds: Seq[String], didIndex: Int) =
+    OperationFactory(apollo).makeCreateOperation("master0", Array.fill(64)(0))(
       didIndex,
       ManagedDIDTemplate(
-        publicKeys = keyIds.map(DIDPublicKeyTemplate(_, VerificationRelationship.Authentication)),
+        publicKeys =
+          keyIds.map(DIDPublicKeyTemplate(_, VerificationRelationship.Authentication, EllipticCurve.SECP256K1)),
         services = Nil,
         contexts = Nil
       )
@@ -61,13 +54,14 @@ trait StorageSpecHelper extends ApolloSpecHelper {
   protected def initializeDIDStateAndKeys(keyIds: Seq[String] = Nil, didIndex: Int) = {
     for {
       nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
-      generated <- generateCreateOperationHdKey(keyIds, didIndex)
-      (createOperation, hdKeys) = generated
+      generated <- generateCreateOperation(keyIds, didIndex)
+      (createOperation, keys) = generated
       did = createOperation.did
       _ <- nonSecretStorage.insertManagedDID(
         did,
         ManagedDIDState(createOperation, didIndex, PublicationState.Created()),
-        hdKeys.keyPaths ++ hdKeys.internalKeyPaths
+        keys.hdKeys,
+        keys.randKeyMeta
       )
     } yield did
   }

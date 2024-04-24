@@ -1,23 +1,15 @@
 package io.iohk.atala.castor.core.model.did.w3c
 
-import io.iohk.atala.castor.core.model.did.{
-  DIDData,
-  DIDMetadata,
-  PrismDID,
-  PublicKey,
-  PublicKeyData,
-  Service,
-  VerificationRelationship
-}
-import io.iohk.atala.shared.models.HexString
-import io.iohk.atala.castor.core.model.did.ServiceType
 import io.circe.Json
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint
+import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
-import io.iohk.atala.castor.core.model.did.EllipticCurve
-import java.time.format.DateTimeFormatter
-import java.time.ZoneOffset
+import io.iohk.atala.shared.crypto.Apollo
+import io.iohk.atala.shared.models.Base64UrlString
+import io.iohk.atala.shared.models.HexString
+
 import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 object W3CModelHelper extends W3CModelHelper
 
@@ -118,7 +110,6 @@ private[castor] trait W3CModelHelper {
     }
   }
 
-  // FIXME: do we need to support uncompress for OKP key types?
   extension (publicKey: PublicKey) {
     def toW3C(did: PrismDID, controller: PrismDID): PublicKeyRepr = {
       val curve = publicKey.publicKeyData match {
@@ -147,32 +138,31 @@ private[castor] trait W3CModelHelper {
             x = Some(data.toStringNoPadding),
             y = None
           )
-        case PublicKeyData.ECKeyData(crv, _, _) =>
-          throw Exception(s"Uncompressed key for curve ${crv.name} is not supported")
+        case PublicKeyData.ECKeyData(crv, x, _) =>
+          PublicKeyJwk(
+            kty = "OKP",
+            crv = crv.name,
+            x = Some(x.toStringNoPadding),
+            y = None
+          )
       }
     }
 
     private def secp256k1Repr(pk: PublicKeyData): PublicKeyJwk = {
-      pk match {
-        case pk: PublicKeyData.ECCompressedKeyData =>
-          val uncomporessed = pk.toUncompressedKeyData.getOrElse(
-            throw Exception(s"Conversion to uncompress key is not supported for curve ${pk.crv.name}")
-          )
-          PublicKeyJwk(
-            kty = "EC",
-            crv = uncomporessed.crv.name,
-            x = Some(uncomporessed.x.toStringNoPadding),
-            y = Some(uncomporessed.y.toStringNoPadding)
-          )
-        case PublicKeyData.ECKeyData(crv, x, y) =>
-          PublicKeyJwk(
-            kty = "EC",
-            crv = crv.name,
-            x = Some(x.toStringNoPadding),
-            y = Some(y.toStringNoPadding)
-          )
-
+      val (x, y) = pk match {
+        case PublicKeyData.ECKeyData(_, x, y) => (x, y)
+        case PublicKeyData.ECCompressedKeyData(_, data) =>
+          val point = Apollo.default.secp256k1.publicKeyFromEncoded(data.toByteArray).get.getECPoint
+          val x = Base64UrlString.fromByteArray(point.x)
+          val y = Base64UrlString.fromByteArray(point.y)
+          (x, y)
       }
+      PublicKeyJwk(
+        kty = "EC",
+        crv = EllipticCurve.SECP256K1.name,
+        x = Some(x.toStringNoPadding),
+        y = Some(y.toStringNoPadding)
+      )
     }
   }
 
