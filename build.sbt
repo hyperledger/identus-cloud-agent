@@ -6,7 +6,7 @@ import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 inThisBuild(
   Seq(
     organization := "org.hyperledger.identus",
-    scalaVersion := "3.3.1",
+    scalaVersion := "3.3.3",
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
