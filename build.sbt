@@ -709,7 +709,7 @@ val prismNodeClient = project
 // #####################
 
 lazy val castorCore = project
-  .in(file("castor/lib/core"))
+  .in(file("castor"))
   .settings(commonSetttings)
   .settings(
     name := "castor-core",
@@ -819,10 +819,10 @@ lazy val eventNotification = project
 // #####################
 
 lazy val agentWalletAPI = project
-  .in(file("prism-agent/service/wallet-api"))
+  .in(file("cloud-agent/service/wallet-api"))
   .settings(commonSetttings)
   .settings(
-    name := "prism-agent-wallet-api",
+    name := "cloud-agent-wallet-api",
     libraryDependencies ++=
       D_CloudAgent.keyManagementDependencies ++
         D_CloudAgent.iamDependencies ++
@@ -838,10 +838,10 @@ lazy val agentWalletAPI = project
   .dependsOn(sharedCrypto % "compile->compile;test->test")
 
 lazy val cloudAgentServer = project
-  .in(file("prism-agent/service/server"))
+  .in(file("cloud-agent/service/server"))
   .settings(commonSetttings)
   .settings(
-    name := "prism-agent",
+    name := "cloud-agent",
     fork := true,
     libraryDependencies ++= D_CloudAgent.serverDependencies,
     excludeDependencies ++= Seq(
@@ -849,7 +849,7 @@ lazy val cloudAgentServer = project
       // Having both may introduce conflict on some api https://github.com/protocolbuffers/protobuf/issues/8104
       ExclusionRule("com.google.protobuf", "protobuf-javalite")
     ),
-    Compile / mainClass := Some("io.iohk.atala.agent.server.MainApp"),
+    Compile / mainClass := Some("org.hyperledger.identus.agent.server.MainApp"),
     Docker / maintainer := "atala-coredid@iohk.io",
     Docker / dockerUsername := Some("hyperledger"), // https://github.com/hyperledger
     Docker / dockerRepository := Some("ghcr.io"),
