@@ -3,7 +3,11 @@ package io.iohk.atala.agent.walletapi.vault
 import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import org.hyperledger.identus.mercury.model.DidId
+import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.prism.crypto.Sha256
+import io.iohk.atala.shared.crypto.jwk.FromJWK
+import io.iohk.atala.shared.crypto.jwk.JWK
+import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.shared.models.WalletId
 import zio.*
@@ -32,10 +36,55 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) ex
     } yield keyPair
   }
 
+  override def insertPrismDIDKeyPair[K](
+      did: PrismDID,
+      keyId: String,
+      operationHash: Array[Byte],
+      keyPair: K
+  )(using c: Conversion[K, JWK]): URIO[WalletAccessContext, Unit] = {
+    for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      (path, metadata) = prismDIDKeyPath(walletId)(did, keyId, operationHash)
+      alreadyExist <- vaultKV.get[JWK](path).map(_.isDefined)
+      jwk = c(keyPair)
+      _ <- vaultKV
+        .set[JWK](path, jwk, metadata)
+        .when(!alreadyExist)
+        .someOrFail(Exception(s"Secret on path $path already exists."))
+    } yield ()
+  }.orDie
+
+  override def getPrismDIDKeyPair[K](did: PrismDID, keyId: String, operationHash: Array[Byte])(using
+      c: FromJWK[K]
+  ): URIO[WalletAccessContext, Option[K]] = {
+    for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      (path, _) = prismDIDKeyPath(walletId)(did, keyId, operationHash: Array[Byte])
+      keyPair <- vaultKV.get[JWK](path).flatMap {
+        case None      => ZIO.none
+        case Some(jwk) => ZIO.fromEither(c.from(jwk)).mapError(Exception(_)).asSome
+      }
+    } yield keyPair
+  }.orDie
+
   /** @return A tuple of secret path and a secret custom_metadata */
   private def peerDidKeyPath(walletId: WalletId)(did: DidId, keyId: String): (String, Map[String, String]) = {
     val basePath = s"${walletBasePath(walletId)}/dids/peer"
     val relativePath = s"${did.value}/keys/$keyId"
+    if (useSemanticPath) {
+      s"$basePath/$relativePath" -> Map.empty
+    } else {
+      val relativePathHash = Sha256.compute(relativePath.getBytes(StandardCharsets.UTF_8)).getHexValue()
+      s"$basePath/$relativePathHash" -> Map(SEMANTIC_PATH_METADATA_KEY -> relativePath)
+    }
+  }
+
+  /** @return A tuple of secret path and a secret custom_metadata */
+  private def prismDIDKeyPath(
+      walletId: WalletId
+  )(did: PrismDID, keyId: String, operationHash: Array[Byte]): (String, Map[String, String]) = {
+    val basePath = s"${walletBasePath(walletId)}/dids/prism"
+    val relativePath = s"${did.asCanonical}/keys/$keyId/${HexString.fromByteArray(operationHash)}"
     if (useSemanticPath) {
       s"$basePath/$relativePath" -> Map.empty
     } else {

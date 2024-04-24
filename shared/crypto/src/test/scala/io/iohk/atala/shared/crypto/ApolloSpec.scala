@@ -9,19 +9,19 @@ object ApolloSpec extends ZIOSpecDefault {
 
   override def spec = {
     val tests = Seq(
-      publicKeySpec,
-      privateKeySpec,
-      secp256k1Spec,
+      secp256k1PublicKeySpec,
+      secp256k1PrivateKeySpec,
+      secp256k1OpsSpec,
       bip32Spec,
     )
     suite("Apollo - KMP implementation")(tests: _*).provideLayer(Apollo.layer)
   }
 
-  private val publicKeySpec = suite("Secp256k1PublicKey")(
+  private val secp256k1PublicKeySpec = suite("Secp256k1PublicKey")(
     test("same public key bytes must be equal and have same hashCode") {
       for {
         apollo <- ZIO.service[Apollo]
-        keyPair <- apollo.secp256k1.generateKeyPair
+        keyPair = apollo.secp256k1.generateKeyPair
         pk1 = keyPair.publicKey
         pk2 = apollo.secp256k1.publicKeyFromEncoded(pk1.getEncoded).get
       } yield assert(pk1)(equalTo(pk2)) &&
@@ -31,8 +31,8 @@ object ApolloSpec extends ZIOSpecDefault {
     test("different public key bytes must not be equal and have different hashCode") {
       for {
         apollo <- ZIO.service[Apollo]
-        keyPair1 <- apollo.secp256k1.generateKeyPair
-        keyPair2 <- apollo.secp256k1.generateKeyPair
+        keyPair1 = apollo.secp256k1.generateKeyPair
+        keyPair2 = apollo.secp256k1.generateKeyPair
         pk1 = keyPair1.publicKey
         pk2 = keyPair2.publicKey
       } yield assert(pk1)(not(equalTo(pk2))) &&
@@ -60,11 +60,11 @@ object ApolloSpec extends ZIOSpecDefault {
     }
   )
 
-  private val privateKeySpec = suite("Secp256k1PrivateKey")(
+  private val secp256k1PrivateKeySpec = suite("Secp256k1PrivateKey")(
     test("same private key bytes must be equal and have same hashCode") {
       for {
         apollo <- ZIO.service[Apollo]
-        keyPair <- apollo.secp256k1.generateKeyPair
+        keyPair = apollo.secp256k1.generateKeyPair
         pk1 = keyPair.privateKey
         pk2 = apollo.secp256k1.privateKeyFromEncoded(pk1.getEncoded).get
       } yield assert(pk1)(equalTo(pk2)) &&
@@ -74,8 +74,8 @@ object ApolloSpec extends ZIOSpecDefault {
     test("different private key bytes must not be equal and have different hashCode") {
       for {
         apollo <- ZIO.service[Apollo]
-        keyPair1 <- apollo.secp256k1.generateKeyPair
-        keyPair2 <- apollo.secp256k1.generateKeyPair
+        keyPair1 = apollo.secp256k1.generateKeyPair
+        keyPair2 = apollo.secp256k1.generateKeyPair
         pk1 = keyPair1.privateKey
         pk2 = keyPair2.privateKey
       } yield assert(pk1)(not(equalTo(pk2))) &&
@@ -120,7 +120,7 @@ object ApolloSpec extends ZIOSpecDefault {
       val message = BigInt("42").toByteArray
       for {
         apollo <- ZIO.service[Apollo]
-        keyPair <- apollo.secp256k1.generateKeyPair
+        keyPair = apollo.secp256k1.generateKeyPair
         privateKey = keyPair.privateKey
         publicKey = privateKey.toPublicKey
         signature = privateKey.sign(message)
@@ -130,8 +130,8 @@ object ApolloSpec extends ZIOSpecDefault {
       val message = BigInt("42").toByteArray
       for {
         apollo <- ZIO.service[Apollo]
-        keyPair1 <- apollo.secp256k1.generateKeyPair
-        keyPair2 <- apollo.secp256k1.generateKeyPair
+        keyPair1 = apollo.secp256k1.generateKeyPair
+        keyPair2 = apollo.secp256k1.generateKeyPair
         privateKey = keyPair1.privateKey
         publicKey = keyPair2.publicKey
         signature = privateKey.sign(message)
@@ -139,7 +139,7 @@ object ApolloSpec extends ZIOSpecDefault {
     },
   )
 
-  private val secp256k1Spec = suite("Secp256k1Ops")(
+  private val secp256k1OpsSpec = suite("Secp256k1Ops")(
     test("decode invalid public key should fail") {
       for {
         apollo <- ZIO.service[Apollo]

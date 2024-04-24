@@ -1,9 +1,12 @@
 package io.iohk.atala.agent.walletapi.model
 
+import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.prism.crypto.Sha256
-import io.iohk.atala.shared.crypto.{DerivationPath, Secp256k1KeyPair as ECKeyPair}
+import io.iohk.atala.shared.crypto.DerivationPath
+import io.iohk.atala.shared.crypto.Ed25519KeyPair
+import io.iohk.atala.shared.crypto.X25519KeyPair
 
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions
@@ -25,6 +28,7 @@ object WalletSeed {
 
 enum KeyManagementMode {
   case HD extends KeyManagementMode
+  case RANDOM extends KeyManagementMode
 }
 
 final case class VerificationRelationshipCounter(
@@ -97,6 +101,13 @@ object HdKeyIndexCounter {
     HdKeyIndexCounter(didIndex, VerificationRelationshipCounter.zero, InternalKeyCounter.zero)
 }
 
+sealed trait ManagedDIDKeyMeta
+
+object ManagedDIDKeyMeta {
+  final case class HD(path: ManagedDIDHdKeyPath) extends ManagedDIDKeyMeta
+  final case class Rand(meta: ManagedDIDRandKeyMeta) extends ManagedDIDKeyMeta
+}
+
 final case class ManagedDIDHdKeyPath(
     didIndex: Int,
     keyUsage: VerificationRelationship | InternalKeyPurpose,
@@ -105,6 +116,10 @@ final case class ManagedDIDHdKeyPath(
 
   private val WALLET_PURPOSE: Int = 0x1d
   private val PRISM_DID_METHOD_PATH: Int = 0x1d
+
+  def curve: EllipticCurve = EllipticCurve.SECP256K1
+
+  def keyMode: KeyManagementMode = KeyManagementMode.HD
 
   def derivationPath: Seq[DerivationPath] =
     Seq(
@@ -130,19 +145,37 @@ final case class ManagedDIDHdKeyPath(
   }
 }
 
-private[walletapi] final case class CreateDIDRandKey(
-    keyPairs: Map[String, ECKeyPair],
-    internalKeyPairs: Map[String, ECKeyPair]
-)
+final case class ManagedDIDRandKeyPair(
+    keyUsage: VerificationRelationship | InternalKeyPurpose,
+    keyPair: Ed25519KeyPair | X25519KeyPair
+) {
+  def meta: ManagedDIDRandKeyMeta = {
+    val curve = keyPair match {
+      case _: Ed25519KeyPair => EllipticCurve.ED25519
+      case _: X25519KeyPair  => EllipticCurve.X25519
+    }
+    ManagedDIDRandKeyMeta(keyUsage, curve)
+  }
+}
 
-private[walletapi] final case class UpdateDIDRandKey(newKeyPairs: Map[String, ECKeyPair])
+final case class ManagedDIDRandKeyMeta(
+    keyUsage: VerificationRelationship | InternalKeyPurpose,
+    curve: EllipticCurve
+) {
+  def keyMode: KeyManagementMode = KeyManagementMode.RANDOM
+}
 
-private[walletapi] final case class CreateDIDHdKey(
-    keyPaths: Map[String, ManagedDIDHdKeyPath],
-    internalKeyPaths: Map[String, ManagedDIDHdKeyPath],
-)
+private[walletapi] final case class CreateDIDKey(
+    hdKeys: Map[String, ManagedDIDHdKeyPath],
+    randKeys: Map[String, ManagedDIDRandKeyPair]
+) {
+  def randKeyMeta: Map[String, ManagedDIDRandKeyMeta] = randKeys.map { case (k, v) => k -> v.meta }
+}
 
-private[walletapi] final case class UpdateDIDHdKey(
-    newKeyPaths: Map[String, ManagedDIDHdKeyPath],
+private[walletapi] final case class UpdateDIDKey(
+    hdKeys: Map[String, ManagedDIDHdKeyPath],
+    randKeys: Map[String, ManagedDIDRandKeyPair],
     counter: HdKeyIndexCounter
-)
+) {
+  def randKeyMeta: Map[String, ManagedDIDRandKeyMeta] = randKeys.map { case (k, v) => k -> v.meta }
+}

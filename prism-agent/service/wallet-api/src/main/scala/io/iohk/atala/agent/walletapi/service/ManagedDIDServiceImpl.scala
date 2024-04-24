@@ -13,6 +13,9 @@ import io.iohk.atala.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.mercury.model.DidId
 import io.iohk.atala.shared.crypto.Apollo
+import io.iohk.atala.shared.crypto.Ed25519KeyPair
+import io.iohk.atala.shared.crypto.Secp256k1KeyPair
+import io.iohk.atala.shared.crypto.X25519KeyPair
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 
@@ -36,11 +39,12 @@ class ManagedDIDServiceImpl private[walletapi] (
   private val AGREEMENT_KEY_ID = "agreement"
   private val AUTHENTICATION_KEY_ID = "authentication"
 
-  // TODO: implement seed caching & TTL in dispatching layer
-  private val keyResolver = KeyResolver(apollo, nonSecretStorage, walletSecretStorage)
+  private val keyResolver = KeyResolver(apollo, nonSecretStorage, secretStorage, walletSecretStorage)
   private val publicationHandler = PublicationHandler(didService, keyResolver)(DEFAULT_MASTER_KEY_ID)
-  private val didCreateHandler = DIDCreateHandler(apollo, nonSecretStorage, walletSecretStorage)(DEFAULT_MASTER_KEY_ID)
-  private val didUpdateHandler = DIDUpdateHandler(apollo, nonSecretStorage, walletSecretStorage, publicationHandler)
+  private val didCreateHandler =
+    DIDCreateHandler(apollo, nonSecretStorage, secretStorage, walletSecretStorage)(DEFAULT_MASTER_KEY_ID)
+  private val didUpdateHandler =
+    DIDUpdateHandler(apollo, nonSecretStorage, secretStorage, walletSecretStorage, publicationHandler)
 
   def syncManagedDIDState: ZIO[WalletAccessContext, GetManagedDIDError, Unit] = nonSecretStorage
     .listManagedDID(offset = None, limit = None)
@@ -53,28 +57,34 @@ class ManagedDIDServiceImpl private[walletapi] (
   def syncUnconfirmedUpdateOperations: ZIO[WalletAccessContext, GetManagedDIDError, Unit] =
     syncUnconfirmedUpdateOperationsByDID(did = None)
 
-  // FIXME
-  // Instead of returning the privateKey directly, it should provide more secure interface like
-  // {{{ def signWithDID(did, keyId, bytes): IO[?, Array[Byte]] }}}.
-  // For the time being, the purpose of this method is just to disallow SecretStorage to be
-  // used outside of this module.
   def javaKeyPairWithDID(
       did: CanonicalPrismDID,
       keyId: String
   ): ZIO[WalletAccessContext, GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]] = {
+    findDIDKeyPair(did, keyId)
+      .flatMap {
+        case None                            => ZIO.none
+        case Some(keyPair: Secp256k1KeyPair) => ZIO.some(keyPair)
+        case _ => ZIO.dieMessage("Only secp256k1 keypair is supported for Java KeyPair conversion")
+      }
+      .map(
+        _.map { keyPair =>
+          (keyPair.privateKey.toJavaPrivateKey, keyPair.publicKey.toJavaPublicKey)
+        }
+      )
+  }
+
+  override def findDIDKeyPair(
+      did: CanonicalPrismDID,
+      keyId: String
+  ): ZIO[WalletAccessContext, GetKeyError, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]] =
     nonSecretStorage
       .getManagedDIDState(did)
       .flatMap {
         case None        => ZIO.none
-        case Some(state) => keyResolver.getKey(state.createOperation.did, state.keyMode, keyId)
+        case Some(state) => keyResolver.getKey(state.createOperation.did, keyId)
       }
-      .mapBoth(
-        GetKeyError.WalletStorageError.apply,
-        _.map { ecKeyPair =>
-          (ecKeyPair.privateKey.toJavaPrivateKey, ecKeyPair.publicKey.toJavaPublicKey)
-        }
-      )
-  }
+      .orDie
 
   def getManagedDIDState(
       did: CanonicalPrismDID

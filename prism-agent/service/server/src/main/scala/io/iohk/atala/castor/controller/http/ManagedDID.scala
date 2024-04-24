@@ -6,6 +6,7 @@ import io.iohk.atala.agent.walletapi.model.ManagedDIDDetail
 import io.iohk.atala.agent.walletapi.model.PublicationState
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.castor.core.model.did as castorDomain
+import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.shared.utils.Traverse.*
@@ -169,6 +170,31 @@ object Purpose {
   given schema: Schema[Purpose] = Schema.derivedEnumeration.defaultStringBased
 }
 
+enum Curve {
+  case secp256k1 extends Curve
+  case Ed25519 extends Curve
+  case X25519 extends Curve
+}
+
+object Curve {
+  given Conversion[Curve, EllipticCurve] = {
+    case Curve.secp256k1 => EllipticCurve.SECP256K1
+    case Curve.Ed25519   => EllipticCurve.ED25519
+    case Curve.X25519    => EllipticCurve.X25519
+  }
+
+  given Conversion[EllipticCurve, Curve] = {
+    case EllipticCurve.SECP256K1 => Curve.secp256k1
+    case EllipticCurve.ED25519   => Curve.Ed25519
+    case EllipticCurve.X25519    => Curve.X25519
+  }
+
+  given encoder: JsonEncoder[Curve] = JsonEncoder[String].contramap(_.toString)
+  given decoder: JsonDecoder[Curve] =
+    JsonDecoder[String].mapOrFail(s => Curve.values.find(_.toString == s).toRight(s"Unknown curve: $s"))
+  given schema: Schema[Curve] = Schema.derivedEnumeration.defaultStringBased
+}
+
 @description("A key-pair template to add to DID document.")
 final case class ManagedDIDKeyTemplate(
     @description(ManagedDIDKeyTemplate.annotations.id.description)
@@ -176,8 +202,14 @@ final case class ManagedDIDKeyTemplate(
     id: String,
     @description(ManagedDIDKeyTemplate.annotations.purpose.description)
     @encodedExample(ManagedDIDKeyTemplate.annotations.purpose.example)
-    purpose: Purpose
-)
+    purpose: Purpose,
+    // @description(ManagedDIDKeyTemplate.annotations.curve.description)
+    // @encodedExample(ManagedDIDKeyTemplate.annotations.curve.example)
+    // curve: Option[Curve]
+) {
+  // TODO: this curve option is hidden for now, to be added back after integration test with node
+  def curve: Option[Curve] = None
+}
 
 object ManagedDIDKeyTemplate {
   object annotations {
@@ -192,6 +224,13 @@ object ManagedDIDKeyTemplate {
           description = "Purpose of the verification material in the DID Document",
           example = VerificationRelationship.Authentication
         )
+
+    object curve
+        extends Annotation[Option[Curve]](
+          description =
+            "The curve name of the verification material in the DID Document. Defaults to `secp256k1` if not specified.",
+          example = Some(Curve.Ed25519)
+        )
   }
 
   given encoder: JsonEncoder[ManagedDIDKeyTemplate] = DeriveJsonEncoder.gen[ManagedDIDKeyTemplate]
@@ -201,7 +240,8 @@ object ManagedDIDKeyTemplate {
   given Conversion[ManagedDIDKeyTemplate, walletDomain.DIDPublicKeyTemplate] = publicKeyTemplate =>
     walletDomain.DIDPublicKeyTemplate(
       id = publicKeyTemplate.id,
-      purpose = publicKeyTemplate.purpose
+      purpose = publicKeyTemplate.purpose,
+      curve = publicKeyTemplate.curve.getOrElse(Curve.secp256k1)
     )
 }
 

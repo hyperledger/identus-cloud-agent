@@ -6,11 +6,6 @@ import io.grpc.ManagedChannelBuilder
 import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.agent.server.config.SecretStorageBackend
 import io.iohk.atala.agent.server.config.ValidatedVaultConfig
-import io.iohk.atala.agent.walletapi.memory.{
-  DIDSecretStorageInMemory,
-  GenericSecretStorageInMemory,
-  WalletSecretStorageInMemory
-}
 import io.iohk.atala.agent.walletapi.service.EntityService
 import io.iohk.atala.agent.walletapi.service.WalletManagementService
 import io.iohk.atala.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcGenericSecretStorage, JdbcWalletSecretStorage}
@@ -254,14 +249,6 @@ object RepoModule {
                   JdbcGenericSecretStorage.layer,
                   JdbcWalletSecretStorage.layer,
                   agentContextAwareTransactorLayer,
-                )
-              )
-            case SecretStorageBackend.memory =>
-              ZIO.succeed(
-                ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
-                  DIDSecretStorageInMemory.layer,
-                  GenericSecretStorageInMemory.layer,
-                  WalletSecretStorageInMemory.layer,
                 )
               )
           }

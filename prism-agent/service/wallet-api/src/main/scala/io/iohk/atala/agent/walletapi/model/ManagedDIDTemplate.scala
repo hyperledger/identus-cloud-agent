@@ -1,7 +1,12 @@
 package io.iohk.atala.agent.walletapi.model
 
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint
-import io.iohk.atala.castor.core.model.did.{Service, VerificationRelationship, ServiceType}
+import io.iohk.atala.castor.core.model.did.{
+  EllipticCurve,
+  Service,
+  ServiceEndpoint,
+  ServiceType,
+  VerificationRelationship
+}
 
 final case class ManagedDIDTemplate(
     publicKeys: Seq[DIDPublicKeyTemplate],
@@ -11,7 +16,8 @@ final case class ManagedDIDTemplate(
 
 final case class DIDPublicKeyTemplate(
     id: String,
-    purpose: VerificationRelationship
+    purpose: VerificationRelationship,
+    curve: EllipticCurve
 )
 
 sealed trait UpdateManagedDIDAction

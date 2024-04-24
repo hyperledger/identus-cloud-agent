@@ -193,19 +193,18 @@ lazy val D_Shared = new {
       D.zioPrelude,
       D.jsonCanonicalization,
       D.scodecBits,
-      D.circeCore,
-      D.circeGeneric,
-      D.circeParser
     )
 }
 
 lazy val D_SharedCrypto = new {
   lazy val dependencies: Seq[ModuleID] =
     Seq(
+      D.zioJson,
       D.apollo,
       D.bouncyBcpkix,
       D.bouncyBcprov,
       D.prismCrypto, // TODO: remove after migrated all primitives to apollo
+      D.nimbusJwt,
       D.zioTest,
       D.zioTestSbt,
       D.zioTestMagnolia,
@@ -252,6 +251,9 @@ lazy val D_Castor = new {
       D.zioMock,
       D.zioTestSbt,
       D.zioTestMagnolia,
+      D.circeCore,
+      D.circeGeneric,
+      D.circeParser
     )
 
   // Project Dependencies

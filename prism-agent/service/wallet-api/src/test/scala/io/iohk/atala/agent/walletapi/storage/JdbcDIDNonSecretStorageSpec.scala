@@ -34,6 +34,7 @@ object JdbcDIDNonSecretStorageSpec
         _ <- storage.insertManagedDID(
           op.did,
           ManagedDIDState(op, idx, PublicationState.Created()),
+          Map.empty,
           Map.empty
         )
         _ <- TestClock.adjust(delay)
@@ -75,16 +76,18 @@ object JdbcDIDNonSecretStorageSpec
         storage <- ZIO.service[DIDNonSecretStorage]
         did1 = PrismDID.buildCanonicalFromSuffix("0" * 64).toOption.get
         did2 = PrismDID.buildCanonicalFromSuffix("1" * 64).toOption.get
-        createOperation1 <- generateCreateOperation(Seq("key-1")).map(_._1)
-        createOperation2 <- generateCreateOperation(Seq("key-1")).map(_._1)
+        createOperation1 <- generateCreateOperation(Seq("key-1"), 0).map(_._1)
+        createOperation2 <- generateCreateOperation(Seq("key-1"), 1).map(_._1)
         _ <- storage.insertManagedDID(
           did1,
           ManagedDIDState(createOperation1, 0, PublicationState.Created()),
+          Map.empty,
           Map.empty
         )
         _ <- storage.insertManagedDID(
           did2,
           ManagedDIDState(createOperation2, 1, PublicationState.Created()),
+          Map.empty,
           Map.empty
         )
         states <- storage.listManagedDID(None, None).map(_._1)
@@ -93,7 +96,7 @@ object JdbcDIDNonSecretStorageSpec
     test("list stored dids and return correct item count when using offset and limit") {
       for {
         storage <- ZIO.service[DIDNonSecretStorage]
-        operations <- ZIO.foreach(1 to 50)(_ => generateCreateOperation(Seq("key-1")).map(_._1))
+        operations <- ZIO.foreach(1 to 50)(i => generateCreateOperation(Seq("key-1"), i).map(_._1))
         _ <- insertDIDStateWithDelay(operations, 100.millis)
         resultsWithCount <- storage.listManagedDID(offset = Some(20), limit = Some(10))
         (results, count) = resultsWithCount
@@ -103,7 +106,7 @@ object JdbcDIDNonSecretStorageSpec
     test("list stored dids and return correct item count when using offset only") {
       for {
         storage <- ZIO.service[DIDNonSecretStorage]
-        operations <- ZIO.foreach(1 to 50)(_ => generateCreateOperation(Seq("key-1")).map(_._1))
+        operations <- ZIO.foreach(1 to 50)(i => generateCreateOperation(Seq("key-1"), i).map(_._1))
         _ <- insertDIDStateWithDelay(operations, 100.millis)
         resultsWithCount <- storage.listManagedDID(offset = Some(20), limit = None)
         (results, count) = resultsWithCount
@@ -113,7 +116,7 @@ object JdbcDIDNonSecretStorageSpec
     test("list stored dids and return correct item count when using limit only") {
       for {
         storage <- ZIO.service[DIDNonSecretStorage]
-        operations <- ZIO.foreach(1 to 50)(_ => generateCreateOperation(Seq("key-1")).map(_._1))
+        operations <- ZIO.foreach(1 to 50)(i => generateCreateOperation(Seq("key-1"), i).map(_._1))
         _ <- insertDIDStateWithDelay(operations, 100.millis)
         resultsWithCount <- storage.listManagedDID(offset = None, limit = Some(10))
         (results, count) = resultsWithCount
@@ -123,7 +126,7 @@ object JdbcDIDNonSecretStorageSpec
     test("return empty list when limit is zero") {
       for {
         storage <- ZIO.service[DIDNonSecretStorage]
-        operations <- ZIO.foreach(1 to 50)(_ => generateCreateOperation(Seq("key-1")).map(_._1))
+        operations <- ZIO.foreach(1 to 50)(i => generateCreateOperation(Seq("key-1"), i).map(_._1))
         _ <- insertDIDStateWithDelay(operations, 100.millis)
         resultsWithCount <- storage.listManagedDID(offset = None, limit = Some(0))
         (results, count) = resultsWithCount
@@ -133,7 +136,7 @@ object JdbcDIDNonSecretStorageSpec
     test("fail when limit is negative") {
       for {
         storage <- ZIO.service[DIDNonSecretStorage]
-        operations <- ZIO.foreach(1 to 50)(_ => generateCreateOperation(Seq("key-1")).map(_._1))
+        operations <- ZIO.foreach(1 to 50)(i => generateCreateOperation(Seq("key-1"), i).map(_._1))
         _ <- insertDIDStateWithDelay(operations, 100.millis)
         exit <- storage.listManagedDID(offset = None, limit = Some(-1)).exit
       } yield assert(exit)(
@@ -145,7 +148,7 @@ object JdbcDIDNonSecretStorageSpec
     test("fail when offset is negative") {
       for {
         storage <- ZIO.service[DIDNonSecretStorage]
-        operations <- ZIO.foreach(1 to 50)(_ => generateCreateOperation(Seq("key-1")).map(_._1))
+        operations <- ZIO.foreach(1 to 50)(i => generateCreateOperation(Seq("key-1"), i).map(_._1))
         _ <- insertDIDStateWithDelay(operations, 100.millis)
         exit <- storage.listManagedDID(offset = Some(-1), limit = None).exit
       } yield assert(exit)(
@@ -174,12 +177,12 @@ object JdbcDIDNonSecretStorageSpec
           (3, PublicationState.Published(ArraySeq.fill(32)(1))),
         )
         states <- ZIO.foreach(inputs) { case (didIndex, publicationState) =>
-          val operation = generateCreateOperationHdKey(Seq("key-1"), didIndex).map(_._1)
+          val operation = generateCreateOperation(Seq("key-1"), didIndex).map(_._1)
           operation.map(o => ManagedDIDState(o, didIndex, publicationState))
         }
         readStates <- ZIO.foreach(states) { state =>
           for {
-            _ <- storage.insertManagedDID(state.createOperation.did, state, Map.empty)
+            _ <- storage.insertManagedDID(state.createOperation.did, state, Map.empty, Map.empty)
             readState <- storage.getManagedDIDState(state.createOperation.did)
           } yield readState
         }

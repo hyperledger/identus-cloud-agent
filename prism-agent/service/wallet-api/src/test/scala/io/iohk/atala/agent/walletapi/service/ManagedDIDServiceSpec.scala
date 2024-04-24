@@ -238,8 +238,8 @@ object ManagedDIDServiceSpec
     test("create and store DID secret in DIDSecretStorage") {
       val template = generateDIDTemplate(
         publicKeys = Seq(
-          DIDPublicKeyTemplate("key1", VerificationRelationship.Authentication),
-          DIDPublicKeyTemplate("key2", VerificationRelationship.KeyAgreement)
+          DIDPublicKeyTemplate("key1", VerificationRelationship.Authentication, EllipticCurve.SECP256K1),
+          DIDPublicKeyTemplate("key2", VerificationRelationship.KeyAgreement, EllipticCurve.SECP256K1)
         )
       )
       for {
@@ -251,9 +251,9 @@ object ManagedDIDServiceSpec
     test("created DID have corresponding public keys in CreateOperation") {
       val template = generateDIDTemplate(
         publicKeys = Seq(
-          DIDPublicKeyTemplate("key1", VerificationRelationship.Authentication),
-          DIDPublicKeyTemplate("key2", VerificationRelationship.KeyAgreement),
-          DIDPublicKeyTemplate("key3", VerificationRelationship.AssertionMethod)
+          DIDPublicKeyTemplate("key1", VerificationRelationship.Authentication, EllipticCurve.SECP256K1),
+          DIDPublicKeyTemplate("key2", VerificationRelationship.KeyAgreement, EllipticCurve.SECP256K1),
+          DIDPublicKeyTemplate("key3", VerificationRelationship.AssertionMethod, EllipticCurve.SECP256K1)
         )
       )
       for {
@@ -289,7 +289,7 @@ object ManagedDIDServiceSpec
       // this template will fail during validation for reserved key id
       val template = generateDIDTemplate(
         publicKeys = Seq(
-          DIDPublicKeyTemplate("master0", VerificationRelationship.Authentication)
+          DIDPublicKeyTemplate("master0", VerificationRelationship.Authentication, EllipticCurve.SECP256K1)
         )
       )
       val result = ZIO.serviceWithZIO[ManagedDIDService](_.createAndStoreDID(template))
@@ -394,7 +394,9 @@ object ManagedDIDServiceSpec
           did <- initPublishedDID
           _ <- testDIDSvc.setResolutionResult(Some(resolutionResult()))
           actions = Seq("key-1", "key-2").map(id =>
-            UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate(id, VerificationRelationship.Authentication))
+            UpdateManagedDIDAction.AddKey(
+              DIDPublicKeyTemplate(id, VerificationRelationship.Authentication, EllipticCurve.SECP256K1)
+            )
           )
           _ <- svc.updateManagedDID(did, actions)
           keyPaths <- svc.nonSecretStorage.listHdKeyPath(did)
@@ -409,7 +411,9 @@ object ManagedDIDServiceSpec
           did <- initPublishedDID
           _ <- testDIDSvc.setResolutionResult(Some(resolutionResult()))
           actions = Seq("key-1", "key-2").map(id =>
-            UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate(id, VerificationRelationship.Authentication))
+            UpdateManagedDIDAction.AddKey(
+              DIDPublicKeyTemplate(id, VerificationRelationship.Authentication, EllipticCurve.SECP256K1)
+            )
           )
           _ <- svc.updateManagedDID(did, actions) // 1st update
           _ <- svc.updateManagedDID(did, actions.take(1)) // 2nd update: key-1 is added twice
@@ -431,7 +435,9 @@ object ManagedDIDServiceSpec
           _ <- ZIO.foreach(1 to 5) { i =>
             val actions =
               Seq(
-                UpdateManagedDIDAction.AddKey(DIDPublicKeyTemplate(s"key-$i", VerificationRelationship.Authentication))
+                UpdateManagedDIDAction.AddKey(
+                  DIDPublicKeyTemplate(s"key-$i", VerificationRelationship.Authentication, EllipticCurve.SECP256K1)
+                )
               )
             svc.updateManagedDID(did, actions)
           }
