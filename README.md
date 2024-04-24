@@ -118,19 +118,19 @@ System requirements can vary depending on the use case. The following are the mi
 
 Here is a general example of running a Cloud Agent locally:
 ```bash
-PORT=${PORT} AGENT_VERSION=${AGENT_VERSION} NODE_VERSION=${NODE_VERSION} \
+PORT=${PORT} AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=${PRISM_NODE_VERSION} \
   docker compose \
     -p "${AGENT_ROLE}" \
     -f ./infrastructure/shared/docker-compose-demo.yml \
     up --wait
 ```
 
-The `PORT` variable is used to specify the port number for the Cloud Agent to listen on. The `AGENT_VERSION` and `NODE_VERSION` variables are used to specify the versions of the Cloud Agent and  PRISM Node to use. The `AGENT_ROLE` variable is used to specify the role of the Cloud Agent. The `AGENT_ROLE` variable can be set to `issuer`, `verifier` or `holder`.
+The `PORT` variable is used to specify the port number for the Cloud Agent to listen on. The `AGENT_VERSION` and `PRISM_NODE_VERSION` variables are used to specify the versions of the Cloud Agent and  PRISM Node to use. The `AGENT_ROLE` variable is used to specify the role of the Cloud Agent. The `AGENT_ROLE` variable can be set to `issuer`, `verifier` or `holder`.
 
 In real life, you will need to start at least two Cloud Agent instances with different roles. For example, you can start one instance with the `issuer` role and another one with the `holder` role. The `issuer` instance will be used to issue verifiable credentials (VCs) and the `holder` instance will be used to hold VCs. Here is an example of how you can do this:
 
 ```bash
-PORT=8080 AGENT_VERSION=${AGENT_VERSION} NODE_VERSION=2.2.1 \
+PORT=8080 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.2.1 \
   docker compose \
     -p "issuer" \
     -f ./infrastructure/shared/docker-compose-demo.yml \
@@ -138,7 +138,7 @@ PORT=8080 AGENT_VERSION=${AGENT_VERSION} NODE_VERSION=2.2.1 \
 ```
 
 ```bash
-PORT=8090 AGENT_VERSION=${AGENT_VERSION} NODE_VERSION=2.2.1 \
+PORT=8090 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.2.1 \
   docker compose \
     -p "holder" \
     -f ./infrastructure/shared/docker-compose-demo.yml \
