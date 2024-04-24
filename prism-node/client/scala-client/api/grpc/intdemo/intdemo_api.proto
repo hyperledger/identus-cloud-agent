@@ -2,9 +2,9 @@ syntax = "proto3";
 
 import "intdemo/intdemo_models.proto";
 
-package io.iohk.atala.prism.intdemo.protos;
+package org.hyperledger.identus.prism.intdemo.protos;
 
-// This service simulates an application run by a government body who use io.iohk.atala's connector.
+// This service simulates an application run by a government body who use org.hyperledger.identus's connector.
 service IDService {
     rpc GetConnectionToken (GetConnectionTokenRequest) returns (GetConnectionTokenResponse) {}
     rpc GetSubjectStatus (GetSubjectStatusRequest) returns (GetSubjectStatusResponse) {}
@@ -12,7 +12,7 @@ service IDService {
     rpc SetPersonalData (SetPersonalDataRequest) returns (SetPersonalDataResponse) {}
 }
 
-// This service simulates an application run by a university who use io.iohk.atala's connector.
+// This service simulates an application run by a university who use org.hyperledger.identus's connector.
 service DegreeService {
     rpc GetConnectionToken (GetConnectionTokenRequest) returns (GetConnectionTokenResponse) {}
     rpc GetSubjectStatus (GetSubjectStatusRequest) returns (GetSubjectStatusResponse) {}

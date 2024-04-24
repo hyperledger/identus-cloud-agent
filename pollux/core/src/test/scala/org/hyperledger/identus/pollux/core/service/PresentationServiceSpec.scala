@@ -2,7 +2,7 @@ package org.hyperledger.identus.pollux.core.service
 
 import io.circe.parser.decode
 import io.circe.syntax.*
-import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
+import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64, DidId}
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, IssueCredentialIssuedFormat}
 import org.hyperledger.identus.mercury.protocol.presentproof.*

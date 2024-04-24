@@ -1,6 +1,6 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import io.iohk.atala.castor.core.model.did.w3c.{
+import org.hyperledger.identus.castor.core.model.did.w3c.{
   DIDDocumentRepr,
   DIDResolutionErrorRepr,
   PublicKeyJwk,
@@ -9,7 +9,7 @@ import io.iohk.atala.castor.core.model.did.w3c.{
   ServiceRepr,
   makeW3CResolver
 }
-import io.iohk.atala.castor.core.service.DIDService
+import org.hyperledger.identus.castor.core.service.DIDService
 import zio.*
 
 import java.time.Instant

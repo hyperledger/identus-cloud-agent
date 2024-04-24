@@ -1,6 +1,6 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
+import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.repository.CredentialDefinitionRepositoryInMemory

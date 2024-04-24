@@ -2,8 +2,8 @@ package org.hyperledger.identus.pollux.core.service.verification
 
 import io.circe.*
 import io.circe.syntax.*
-import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
-import io.iohk.atala.castor.core.service.MockDIDService
+import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
+import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.pollux.core.service.ResourceURIDereferencerImpl
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*

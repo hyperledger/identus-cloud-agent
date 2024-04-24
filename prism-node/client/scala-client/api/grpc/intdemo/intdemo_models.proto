@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package io.iohk.atala.prism.intdemo.protos;
+package org.hyperledger.identus.prism.intdemo.protos;
 
 message Date {
     int32 year = 1; // positive value

@@ -2,10 +2,10 @@ package org.hyperledger.identus.pollux.core.service
 
 import io.circe.Json
 import io.circe.syntax.*
-import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
-import io.iohk.atala.castor.core.model.did.*
-import io.iohk.atala.castor.core.model.did.VerificationRelationship.AssertionMethod
-import io.iohk.atala.castor.core.service.MockDIDService
+import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
+import org.hyperledger.identus.castor.core.model.did.*
+import org.hyperledger.identus.castor.core.model.did.VerificationRelationship.AssertionMethod
+import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.mercury.model.{Base64 => MyBase64, *}
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredential

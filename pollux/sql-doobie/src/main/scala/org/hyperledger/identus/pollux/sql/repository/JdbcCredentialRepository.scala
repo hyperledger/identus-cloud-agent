@@ -8,7 +8,7 @@ import doobie.postgres.implicits.*
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
-import io.iohk.atala.castor.core.model.did.*
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.*

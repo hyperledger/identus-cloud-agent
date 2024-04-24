@@ -8,7 +8,7 @@ import com.nimbusds.jose.util.Base64URL
 import com.nimbusds.jwt.SignedJWT
 import io.circe
 import io.circe.generic.auto.*
-import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import pdi.jwt.*
 import zio.*
 import zio.prelude.*

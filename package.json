@@ -53,7 +53,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "sbt \"prismAgentServer/test:runMain io.iohk.atala.api.util.Tapir2StaticOAS ${process.env.PWD}/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml ${nextRelease.version}\""
+          "prepareCmd": "sbt \"prismAgentServer/test:runMain org.hyperledger.identus.api.util.Tapir2StaticOAS ${process.env.PWD}/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml ${nextRelease.version}\""
         }
       ],
       [

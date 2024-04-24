@@ -90,8 +90,8 @@ flowchart BT
 
 ```shell
 # Alice Agent (send messagem to Bob's Mediator)
-sbt "agentDidcommx/runMain io.iohk.atala.AgentClientAlice"
+sbt "agentDidcommx/runMain org.hyperledger.identus.AgentClientAlice"
 
 # Bob Agent (fetch his message from Mediator)
-sbt "agentDidcommx/runMain io.iohk.atala.AgentClientBob"
+sbt "agentDidcommx/runMain org.hyperledger.identus.AgentClientBob"
 ```

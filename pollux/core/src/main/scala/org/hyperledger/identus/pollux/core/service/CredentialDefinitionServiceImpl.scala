@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.iohk.atala.agent.walletapi.storage
-import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
+import org.hyperledger.identus.agent.walletapi.storage
+import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.pollux.anoncreds.{AnoncredLib, AnoncredSchemaDef}
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{SchemaError, URISyntaxError}

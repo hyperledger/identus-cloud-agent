@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.service
 
 import io.circe.Json
-import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
+import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError

@@ -11,7 +11,7 @@ import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{
   IndexOutOfBounds,
   InvalidSize
 }
-import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID}
+import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021}
 
 import java.time.Instant

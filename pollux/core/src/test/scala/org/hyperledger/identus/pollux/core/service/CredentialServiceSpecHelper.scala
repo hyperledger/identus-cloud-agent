@@ -1,11 +1,11 @@
 package org.hyperledger.identus.pollux.core.service
 
 import io.circe.Json
-import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
-import io.iohk.atala.castor.core.model.did.PrismDID
-import io.iohk.atala.castor.core.service.DIDService
+import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
+import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
+import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
+import org.hyperledger.identus.castor.core.model.did.PrismDID
+import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.core.model.*

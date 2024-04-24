@@ -392,7 +392,7 @@ prohibited ([example](https://github.com/hyperledger/identus-cloud-agent/blob/b5
 #### Extend the common `Failure` trait
 
 Make sure all service errors extend the shared
-trait [`io.iohk.atala.shared.models.Failure`](https://github.com/hyperledger/identus-cloud-agent/blob/main/shared/src/main/scala/io/iohk/atala/shared/models/Failure.scala).
+trait [`org.hyperledger.identus.shared.models.Failure`](https://github.com/hyperledger/identus-cloud-agent/blob/main/shared/src/main/scala/io/iohk/atala/shared/models/Failure.scala).
 This allows handling "at the end of the world“ to be done in a consistent and in generic way.
 
 Create an exhaustive and meaningful list of service errors and make sure the value of the `userFacingMessage` attribute
@@ -490,7 +490,7 @@ The upper layer will automatically do so appropriately and consistently using Ta
 #### Reporting RFC-9457 Error Response
 
 All declared Tapir endpoints must
-use [`io.iohk.atala.api.http.ErrorResponse`](https://github.com/hyperledger/identus-cloud-agent/blob/main/prism-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala)
+use [`org.hyperledger.identus.api.http.ErrorResponse`](https://github.com/hyperledger/identus-cloud-agent/blob/main/prism-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala)
 as their output error
 type ([example](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/prism-agent/service/server/src/main/scala/io/iohk/atala/connect/controller/ConnectionEndpoints.scala#L45))
 This type ensures that the response returned to the user complies with
@@ -514,7 +514,7 @@ object ConnectionEndpoints {
 
 If all the underlying services used by a controller comply with the above rules, then the only error type that could
 propagate through the effect’s error channel is the
-parent [`io.iohk.atala.shared.models.Failure`](https://github.com/hyperledger/identus-cloud-agent/blob/main/shared/src/main/scala/io/iohk/atala/shared/models/Failure.scala)
+parent [`org.hyperledger.identus.shared.models.Failure`](https://github.com/hyperledger/identus-cloud-agent/blob/main/shared/src/main/scala/io/iohk/atala/shared/models/Failure.scala)
 type and its conversion
 to the ErrorResponse type is done automatically
 via [Scala implicit conversion](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/prism-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala#L44).

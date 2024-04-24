@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.service.verification
 
-import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
-import io.iohk.atala.castor.core.model.did.VerificationRelationship
-import io.iohk.atala.castor.core.service.{DIDService, MockDIDService}
+import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
+import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.service.{DIDService, MockDIDService}
 import org.hyperledger.identus.pollux.core.service.{ResourceURIDereferencerImpl, URIDereferencer}
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.models.WalletId.*

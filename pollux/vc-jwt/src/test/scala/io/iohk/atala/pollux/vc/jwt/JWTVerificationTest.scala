@@ -5,7 +5,7 @@ import com.nimbusds.jose.jwk.gen.ECKeyGenerator
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import io.circe.*
 import io.circe.syntax.*
-import io.iohk.atala.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import zio.*
 import zio.test.*

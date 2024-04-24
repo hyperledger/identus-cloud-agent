@@ -1,6 +1,6 @@
 package org.hyperledger.identus.pollux.core.model
 
-import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
+import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
 import org.hyperledger.identus.shared.models.WalletId
 import java.time.Instant

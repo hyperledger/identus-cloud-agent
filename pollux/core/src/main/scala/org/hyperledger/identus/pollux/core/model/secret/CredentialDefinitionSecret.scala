@@ -1,6 +1,6 @@
 package org.hyperledger.identus.pollux.core.model.secret
 
-import io.iohk.atala.agent.walletapi.storage.GenericSecret
+import org.hyperledger.identus.agent.walletapi.storage.GenericSecret
 import zio.json.ast.Json
 
 import java.util.UUID

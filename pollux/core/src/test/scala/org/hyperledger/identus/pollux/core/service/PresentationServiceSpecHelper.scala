@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.service
 
 import com.nimbusds.jose.jwk.*
-import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
+import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.mercury.{AgentPeerService, PeerDID}

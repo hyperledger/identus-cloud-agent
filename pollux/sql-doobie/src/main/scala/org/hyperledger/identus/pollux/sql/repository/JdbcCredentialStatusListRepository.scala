@@ -6,7 +6,7 @@ import doobie.postgres.*
 import doobie.postgres.implicits.*
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, StatusPurpose}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, BitStringError, VCStatusList2021}
-import io.iohk.atala.castor.core.model.did.*
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask

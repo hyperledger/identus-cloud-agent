@@ -13,7 +13,7 @@
     "UnusedImport"
 )
 
-package io.iohk.atala.prism.models
+package org.hyperledger.identus.prism.models
 
 import com.google.gson.annotations.SerializedName
 

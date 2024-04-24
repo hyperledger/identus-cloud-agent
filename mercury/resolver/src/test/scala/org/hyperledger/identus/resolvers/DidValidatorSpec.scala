@@ -2,7 +2,7 @@ package org.hyperledger.identus.resolvers
 
 import munit.*
 
-/** resolver/testOnly io.iohk.atala.resolvers.DidValidatorSpec
+/** resolver/testOnly org.hyperledger.identus.resolvers.DidValidatorSpec
   */
 class DidValidatorSpec extends ZSuite {
   val exPRISM = "did:prism:66940961cc0f6a884ff5876992991b994ca518aa34b3bacfd15f2b51a7b042cf"

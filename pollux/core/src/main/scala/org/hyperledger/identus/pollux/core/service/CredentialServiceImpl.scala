@@ -2,11 +2,11 @@ package org.hyperledger.identus.pollux.core.service
 
 import io.circe.Json
 import io.circe.syntax.*
-import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
-import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
-import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
-import io.iohk.atala.castor.core.service.DIDService
+import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
+import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
+import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
+import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
+import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.*

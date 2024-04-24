@@ -1,6 +1,6 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import io.iohk.atala.castor.core.model.did.PrismDID
+import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.*
