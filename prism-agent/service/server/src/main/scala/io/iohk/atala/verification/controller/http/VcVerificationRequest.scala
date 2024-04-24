@@ -1,7 +1,7 @@
 package io.iohk.atala.verification.controller.http
 
 import io.iohk.atala.api.http.{Annotation, ErrorResponse}
-import io.iohk.atala.pollux.core.service.verification.VcVerificationRequest as ServiceVcVerificationRequest
+import org.hyperledger.identus.pollux.core.service.verification.VcVerificationRequest as ServiceVcVerificationRequest
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}

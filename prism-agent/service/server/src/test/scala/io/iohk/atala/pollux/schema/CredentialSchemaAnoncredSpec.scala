@@ -1,14 +1,14 @@
-package io.iohk.atala.pollux.schema
+package org.hyperledger.identus.pollux.schema
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
-import io.iohk.atala.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
-import io.iohk.atala.pollux.core.model.schema.`type`.{AnoncredSchemaType, CredentialJsonSchemaType}
-import io.iohk.atala.pollux.credentialschema.*
-import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
-import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse}
+import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
+import org.hyperledger.identus.pollux.core.model.schema.`type`.{AnoncredSchemaType, CredentialJsonSchemaType}
+import org.hyperledger.identus.pollux.credentialschema.*
+import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaController
+import org.hyperledger.identus.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse}
 import sttp.client3.basicRequest
 import sttp.client3.ziojson.{asJsonAlways, *}
 import sttp.model.StatusCode

@@ -1,13 +1,13 @@
 package io.iohk.atala.issue.controller
 
 import io.iohk.atala.api.http.ErrorResponse
-import io.iohk.atala.pollux.core.model.DidCommID
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.vc.jwt.W3cCredentialPayload
+import org.hyperledger.identus.pollux.core.model.DidCommID
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
+import org.hyperledger.identus.pollux.vc.jwt.W3cCredentialPayload
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import io.iohk.atala.pollux.vc.jwt.*
+import org.hyperledger.identus.pollux.vc.jwt.*
 import io.circe.*
 import java.time.Instant
 

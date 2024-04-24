@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.credentialschema
+package org.hyperledger.identus.pollux.credentialschema
 
 import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
@@ -8,9 +8,9 @@ import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.Authorizer
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.SecurityLogic
-import io.iohk.atala.pollux.credentialschema.VerificationPolicyEndpoints.*
-import io.iohk.atala.pollux.credentialschema.controller.VerificationPolicyController
-import io.iohk.atala.pollux.credentialschema.http.{VerificationPolicyResponse, VerificationPolicyInput}
+import org.hyperledger.identus.pollux.credentialschema.VerificationPolicyEndpoints.*
+import org.hyperledger.identus.pollux.credentialschema.controller.VerificationPolicyController
+import org.hyperledger.identus.pollux.credentialschema.http.{VerificationPolicyResponse, VerificationPolicyInput}
 import io.iohk.atala.shared.models.WalletAccessContext
 import java.util.UUID
 import sttp.tapir.ztapir.*

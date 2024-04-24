@@ -1,9 +1,9 @@
-package io.iohk.atala.pollux.credentialdefinition.http
+package org.hyperledger.identus.pollux.credentialdefinition.http
 
 import io.iohk.atala.api.http.*
-import io.iohk.atala.pollux.core.model
-import io.iohk.atala.pollux.core.model.schema.CredentialDefinition
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponse.annotations
+import org.hyperledger.identus.pollux.core.model
+import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
+import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponse.annotations
 import sttp.model.Uri
 import sttp.model.Uri.*
 import sttp.tapir.Schema

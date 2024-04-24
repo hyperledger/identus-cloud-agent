@@ -15,9 +15,9 @@ import io.iohk.atala.issue.controller.http.{AcceptCredentialOfferRequest, Create
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
-import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord}
-import io.iohk.atala.pollux.core.service.MockCredentialService
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
+import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord}
+import org.hyperledger.identus.pollux.core.service.MockCredentialService
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, UriContext, basicRequest}
 import sttp.model.StatusCode

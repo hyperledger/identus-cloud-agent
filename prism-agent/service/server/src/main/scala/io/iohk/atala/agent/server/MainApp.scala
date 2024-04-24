@@ -29,15 +29,15 @@ import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControl
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import org.hyperledger.identus.mercury.*
-import io.iohk.atala.pollux.core.service.*
-import io.iohk.atala.pollux.core.service.verification.VcVerificationServiceImpl
-import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
-import io.iohk.atala.pollux.credentialschema.controller.{
+import org.hyperledger.identus.pollux.core.service.*
+import org.hyperledger.identus.pollux.core.service.verification.VcVerificationServiceImpl
+import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
+import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaController,
   CredentialSchemaControllerImpl,
   VerificationPolicyControllerImpl
 }
-import io.iohk.atala.pollux.sql.repository.{
+import org.hyperledger.identus.pollux.sql.repository.{
   JdbcCredentialDefinitionRepository,
   JdbcCredentialRepository,
   JdbcCredentialSchemaRepository,

@@ -1,12 +1,12 @@
-package io.iohk.atala.pollux.schema
+package org.hyperledger.identus.pollux.schema
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.container.util.MigrationAspects.*
-import io.iohk.atala.pollux.core.model.schema.CredentialSchema
-import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
-import io.iohk.atala.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
+import org.hyperledger.identus.pollux.core.model.schema.`type`.CredentialJsonSchemaType
+import org.hyperledger.identus.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}
+import org.hyperledger.identus.pollux.sql.repository.JdbcCredentialSchemaRepository
 import zio.*
 import zio.ZIO.*
 import zio.json.*

@@ -2,7 +2,7 @@ package io.iohk.atala.presentproof.controller.http
 
 import io.iohk.atala.api.http.Annotation
 import org.hyperledger.identus.mercury.model.Base64
-import io.iohk.atala.pollux.core.model.PresentationRecord
+import org.hyperledger.identus.pollux.core.model.PresentationRecord
 import io.iohk.atala.presentproof.controller.http.PresentationStatus.annotations
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import sttp.tapir.{Schema, Validator}

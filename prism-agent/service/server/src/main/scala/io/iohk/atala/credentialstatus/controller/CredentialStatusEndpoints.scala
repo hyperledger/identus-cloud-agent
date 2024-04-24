@@ -8,7 +8,7 @@ import sttp.tapir.json.zio.jsonBody
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import java.util.UUID
-import io.iohk.atala.pollux.core.model.DidCommID
+import org.hyperledger.identus.pollux.core.model.DidCommID
 import io.iohk.atala.api.http.codec.DidCommIDCodec.given
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials

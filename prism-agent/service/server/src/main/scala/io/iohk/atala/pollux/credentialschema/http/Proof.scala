@@ -1,10 +1,10 @@
-package io.iohk.atala.pollux.credentialschema.http
+package org.hyperledger.identus.pollux.credentialschema.http
 
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import sttp.tapir.generic.auto.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
-import io.iohk.atala.pollux.credentialschema.http.Proof.annotations
+import org.hyperledger.identus.pollux.credentialschema.http.Proof.annotations
 import io.iohk.atala.api.http.*
 
 import java.time.OffsetDateTime

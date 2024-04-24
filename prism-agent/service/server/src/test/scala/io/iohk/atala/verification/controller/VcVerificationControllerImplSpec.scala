@@ -6,8 +6,8 @@ import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import io.iohk.atala.castor.core.service.MockDIDService
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
-import io.iohk.atala.pollux.vc.jwt.*
-import io.iohk.atala.pollux.vc.jwt.CredentialPayload.Implicits.*
+import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import io.iohk.atala.verification.controller.http.*
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}

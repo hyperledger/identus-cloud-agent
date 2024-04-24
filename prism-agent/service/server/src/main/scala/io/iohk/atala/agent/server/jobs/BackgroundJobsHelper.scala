@@ -7,7 +7,7 @@ import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID, Verifica
 import io.iohk.atala.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.{AgentPeerService, DidAgent}
-import io.iohk.atala.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer}
+import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{ZIO, ZLayer}
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
@@ -57,7 +57,7 @@ trait BackgroundJobsHelper {
         )
       (privateKey, publicKey) = ecKeyPair
       jwtIssuer = JwtIssuer(
-        io.iohk.atala.pollux.vc.jwt.DID(jwtIssuerDID.toString),
+        org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
         ES256KSigner(privateKey),
         publicKey
       )

@@ -1,9 +1,9 @@
-package io.iohk.atala.pollux.credentialschema.http
+package org.hyperledger.identus.pollux.credentialschema.http
 
 import io.iohk.atala.api.http.Annotation
-import io.iohk.atala.pollux.core.model
-import io.iohk.atala.pollux.core.model.CredentialSchemaAndTrustedIssuersConstraint
-import io.iohk.atala.pollux.credentialschema.http
+import org.hyperledger.identus.pollux.core.model
+import org.hyperledger.identus.pollux.core.model.CredentialSchemaAndTrustedIssuersConstraint
+import org.hyperledger.identus.pollux.credentialschema.http
 import sttp.model.Uri
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample, encodedName, validate}

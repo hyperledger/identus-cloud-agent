@@ -1,8 +1,8 @@
-package io.iohk.atala.pollux.credentialschema.controller
+package org.hyperledger.identus.pollux.credentialschema.controller
 
 import io.iohk.atala.api.http.model.{Order, Pagination}
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
-import io.iohk.atala.pollux.credentialschema.http.{
+import org.hyperledger.identus.pollux.credentialschema.http.{
   VerificationPolicyResponse,
   VerificationPolicyInput,
   VerificationPolicyResponsePage

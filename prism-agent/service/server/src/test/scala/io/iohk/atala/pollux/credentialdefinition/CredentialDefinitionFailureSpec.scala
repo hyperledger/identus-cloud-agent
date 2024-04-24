@@ -1,11 +1,11 @@
-package io.iohk.atala.pollux.credentialdefinition
+package org.hyperledger.identus.pollux.credentialdefinition
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.service.MockManagedDIDService
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.migrate
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
-import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
+import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, basicRequest}
 import sttp.model.StatusCode

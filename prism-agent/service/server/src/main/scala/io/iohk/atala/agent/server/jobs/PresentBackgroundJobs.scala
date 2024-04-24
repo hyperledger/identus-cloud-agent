@@ -14,12 +14,12 @@ import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.mercury.protocol.reportproblem.v2.*
-import io.iohk.atala.pollux.core.model.*
-import io.iohk.atala.pollux.core.model.error.PresentationError.*
-import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
-import io.iohk.atala.pollux.core.service.serdes.AnoncredCredentialProofsV1
-import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
-import io.iohk.atala.pollux.vc.jwt.{JWT, JwtPresentation, DidResolver as JwtDidResolver}
+import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
+import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
+import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
+import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
+import org.hyperledger.identus.pollux.vc.jwt.{JWT, JwtPresentation, DidResolver as JwtDidResolver}
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*
@@ -103,7 +103,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       DIDNonSecretStorage & DIDService & ManagedDIDService,
     Unit
   ] = {
-    import io.iohk.atala.pollux.core.model.PresentationRecord.ProtocolState.*
+    import org.hyperledger.identus.pollux.core.model.PresentationRecord.ProtocolState.*
 
     val VerifierReqPendingToSentSuccess = counterMetric(
       "present_proof_flow_verifier_request_pending_to_sent_success_counter"
@@ -495,8 +495,9 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                     credentialsValidationResult <- p.attachments.head.data match {
                       case Base64(data) =>
                         val base64Decoded = new String(java.util.Base64.getDecoder.decode(data))
-                        val maybePresentationOptions
-                            : Either[PresentationError, Option[io.iohk.atala.pollux.core.model.presentation.Options]] =
+                        val maybePresentationOptions: Either[PresentationError, Option[
+                          org.hyperledger.identus.pollux.core.model.presentation.Options
+                        ]] =
                           mayBeRequestPresentation
                             .map(
                               _.attachments.headOption
@@ -505,7 +506,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                                     attachment.data.asJson.noSpaces
                                   )
                                     .flatMap(data =>
-                                      io.iohk.atala.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
+                                      org.hyperledger.identus.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
                                         .decodeJson(data.json.asJson)
                                         .map(_.options)
                                         .leftMap(err =>

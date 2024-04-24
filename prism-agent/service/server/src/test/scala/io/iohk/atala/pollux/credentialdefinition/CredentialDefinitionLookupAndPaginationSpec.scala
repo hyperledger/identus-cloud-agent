@@ -1,10 +1,13 @@
-package io.iohk.atala.pollux.credentialdefinition
+package org.hyperledger.identus.pollux.credentialdefinition
 
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.container.util.MigrationAspects.migrate
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
-import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
-import io.iohk.atala.pollux.credentialdefinition.http.{CredentialDefinitionResponse, CredentialDefinitionResponsePage}
+import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController
+import org.hyperledger.identus.pollux.credentialdefinition.http.{
+  CredentialDefinitionResponse,
+  CredentialDefinitionResponsePage
+}
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}

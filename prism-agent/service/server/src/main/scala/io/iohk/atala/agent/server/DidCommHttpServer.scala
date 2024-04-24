@@ -22,8 +22,8 @@ import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, C
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.mercury.protocol.revocationnotificaiton.RevocationNotification
-import io.iohk.atala.pollux.core.model.error.{CredentialServiceError, PresentationError}
-import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
+import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
+import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.resolvers.DIDResolver
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*

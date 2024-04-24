@@ -2,7 +2,7 @@ package io.iohk.atala.agent.server.config
 
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.iam.authentication.AuthenticationConfig
-import io.iohk.atala.pollux.vc.jwt.*
+import org.hyperledger.identus.pollux.vc.jwt.*
 import io.iohk.atala.shared.db.DbConfig
 import zio.Config
 import zio.config.*

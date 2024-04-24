@@ -53,9 +53,9 @@ trait ControllerHelper {
 
   protected def extractDidCommIdFromString(
       maybeDidCommId: String
-  ): IO[ErrorResponse, io.iohk.atala.pollux.core.model.DidCommID] =
+  ): IO[ErrorResponse, org.hyperledger.identus.pollux.core.model.DidCommID] =
     ZIO
-      .fromTry(Try(io.iohk.atala.pollux.core.model.DidCommID(maybeDidCommId)))
+      .fromTry(Try(org.hyperledger.identus.pollux.core.model.DidCommID(maybeDidCommId)))
       .mapError(e => ErrorResponse.badRequest(detail = Some(s"Error parsing string as DidCommID: ${e.getMessage}")))
 
   protected def extractPrismDIDFromString(maybeDid: String): IO[ErrorResponse, PrismDID] =

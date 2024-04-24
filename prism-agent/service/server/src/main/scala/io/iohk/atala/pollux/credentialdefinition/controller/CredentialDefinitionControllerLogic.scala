@@ -1,10 +1,10 @@
-package io.iohk.atala.pollux.credentialdefinition.controller
+package org.hyperledger.identus.pollux.credentialdefinition.controller
 
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.CollectionStats
 import io.iohk.atala.api.http.model.Pagination
 import io.iohk.atala.api.util.PaginationUtils
-import io.iohk.atala.pollux.credentialdefinition.http.CredentialDefinitionResponsePage
+import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponsePage
 import sttp.model.Uri
 
 case class CredentialDefinitionControllerLogic(

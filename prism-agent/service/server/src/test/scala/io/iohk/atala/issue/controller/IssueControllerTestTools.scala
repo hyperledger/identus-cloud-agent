@@ -11,9 +11,9 @@ import io.iohk.atala.castor.core.service.DIDService
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import io.iohk.atala.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
 import io.iohk.atala.issue.controller.http.IssueCredentialRecordPage
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord
-import io.iohk.atala.pollux.core.service.*
-import io.iohk.atala.pollux.vc.jwt.*
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord
+import org.hyperledger.identus.pollux.core.service.*
+import org.hyperledger.identus.pollux.vc.jwt.*
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.{DeserializationException, Response, UriContext}

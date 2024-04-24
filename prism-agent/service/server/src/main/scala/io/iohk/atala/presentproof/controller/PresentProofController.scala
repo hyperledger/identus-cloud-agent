@@ -2,7 +2,7 @@ package io.iohk.atala.presentproof.controller
 
 import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
-import io.iohk.atala.pollux.core.model.error.PresentationError
+import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import io.iohk.atala.presentproof.controller.http.*
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.ZIO
@@ -86,8 +86,8 @@ object PresentProofController {
           detail = Some(s"The Credential format '$format' is not Unsupported")
         )
 
-  def toDidCommID(str: String): ZIO[Any, ErrorResponse, io.iohk.atala.pollux.core.model.DidCommID] =
+  def toDidCommID(str: String): ZIO[Any, ErrorResponse, org.hyperledger.identus.pollux.core.model.DidCommID] =
     ZIO
-      .fromTry(Try(io.iohk.atala.pollux.core.model.DidCommID(str)))
+      .fromTry(Try(org.hyperledger.identus.pollux.core.model.DidCommID(str)))
       .mapError(e => ErrorResponse.badRequest(s"Error parsing string as DidCommID: ${e.getMessage}"))
 }

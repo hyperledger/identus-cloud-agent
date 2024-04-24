@@ -6,9 +6,9 @@ import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNot
 import io.iohk.atala.castor.core.model.did.*
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
-import io.iohk.atala.pollux.core.model.*
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.service.CredentialService
+import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
+import org.hyperledger.identus.pollux.core.service.CredentialService
 import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
 import zio.*

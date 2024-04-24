@@ -6,9 +6,9 @@ import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.service.MockDIDService
 import io.iohk.atala.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
-import io.iohk.atala.pollux.core.service.*
-import io.iohk.atala.pollux.core.service.verification.{VcVerificationService, VcVerificationServiceImpl}
-import io.iohk.atala.pollux.vc.jwt.*
+import org.hyperledger.identus.pollux.core.service.*
+import org.hyperledger.identus.pollux.core.service.verification.{VcVerificationService, VcVerificationServiceImpl}
+import org.hyperledger.identus.pollux.vc.jwt.*
 import io.iohk.atala.shared.models.WalletId.*
 import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
@@ -29,7 +29,7 @@ trait VcVerificationControllerTestTools extends PostgresTestContainerSupport {
 
   protected val issuer =
     Issuer(
-      did = io.iohk.atala.pollux.vc.jwt.DID(issuerDidData.id.did.toString),
+      did = org.hyperledger.identus.pollux.vc.jwt.DID(issuerDidData.id.did.toString),
       signer = ES256KSigner(issuerKp.privateKey.toJavaPrivateKey),
       publicKey = issuerKp.publicKey.toJavaPublicKey
     )

@@ -7,10 +7,10 @@ import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.presentproof.ProofType
-import io.iohk.atala.pollux.core.model.error.PresentationError
-import io.iohk.atala.pollux.core.model.presentation.Options
-import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
-import io.iohk.atala.pollux.core.service.PresentationService
+import org.hyperledger.identus.pollux.core.model.error.PresentationError
+import org.hyperledger.identus.pollux.core.model.presentation.Options
+import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
+import org.hyperledger.identus.pollux.core.service.PresentationService
 import io.iohk.atala.presentproof.controller.PresentProofController.toDidCommID
 import io.iohk.atala.presentproof.controller.http.*
 import io.iohk.atala.shared.models.WalletAccessContext

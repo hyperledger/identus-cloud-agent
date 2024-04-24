@@ -2,7 +2,7 @@ package io.iohk.atala.api.http.codec
 
 import sttp.tapir._
 import sttp.tapir.Codec.PlainCodec
-import io.iohk.atala.pollux.core.model.DidCommID
+import org.hyperledger.identus.pollux.core.model.DidCommID
 import sttp.tapir.DecodeResult.*
 
 object DidCommIDCodec {

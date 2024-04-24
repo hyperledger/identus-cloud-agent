@@ -19,10 +19,13 @@ import io.iohk.atala.iam.entity.http.EntityServerEndpoints
 import io.iohk.atala.iam.wallet.http.WalletManagementServerEndpoints
 import io.iohk.atala.issue.controller.IssueServerEndpoints
 import org.hyperledger.identus.mercury.{DidOps, HttpClient}
-import io.iohk.atala.pollux.core.service.{CredentialService, PresentationService}
-import io.iohk.atala.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
-import io.iohk.atala.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
-import io.iohk.atala.pollux.vc.jwt.DidResolver as JwtDidResolver
+import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
+import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
+import org.hyperledger.identus.pollux.credentialschema.{
+  SchemaRegistryServerEndpoints,
+  VerificationPolicyServerEndpoints
+}
+import org.hyperledger.identus.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.presentproof.controller.PresentProofServerEndpoints
 import io.iohk.atala.shared.models.{HexString, WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.resolvers.DIDResolver

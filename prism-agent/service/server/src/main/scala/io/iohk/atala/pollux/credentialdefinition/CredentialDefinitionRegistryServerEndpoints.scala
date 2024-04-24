@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.credentialdefinition
+package org.hyperledger.identus.pollux.credentialdefinition
 
 import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
@@ -8,10 +8,10 @@ import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.Authorizer
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.SecurityLogic
-import io.iohk.atala.pollux.credentialdefinition
-import io.iohk.atala.pollux.credentialdefinition.CredentialDefinitionRegistryEndpoints.*
-import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
-import io.iohk.atala.pollux.credentialdefinition.http.{CredentialDefinitionInput, FilterInput}
+import org.hyperledger.identus.pollux.credentialdefinition
+import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryEndpoints.*
+import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController
+import org.hyperledger.identus.pollux.credentialdefinition.http.{CredentialDefinitionInput, FilterInput}
 import sttp.tapir.ztapir.*
 import zio.*
 

@@ -1,10 +1,10 @@
-package io.iohk.atala.pollux.credentialschema.controller
+package org.hyperledger.identus.pollux.credentialschema.controller
 
 import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.model.{Order, Pagination}
-import io.iohk.atala.pollux.core.service.CredentialSchemaService
-import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
-import io.iohk.atala.pollux.credentialschema.http.{
+import org.hyperledger.identus.pollux.core.service.CredentialSchemaService
+import org.hyperledger.identus.pollux.core.service.CredentialSchemaService.Error.*
+import org.hyperledger.identus.pollux.credentialschema.http.{
   CredentialSchemaInput,
   CredentialSchemaResponse,
   CredentialSchemaResponsePage,

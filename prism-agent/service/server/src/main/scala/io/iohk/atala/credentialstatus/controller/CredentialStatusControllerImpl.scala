@@ -2,9 +2,9 @@ package io.iohk.atala.credentialstatus.controller
 
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.credentialstatus.controller.http.StatusListCredential
-import io.iohk.atala.pollux.core.service.CredentialStatusListService
+import org.hyperledger.identus.pollux.core.service.CredentialStatusListService
 import zio.*
-import io.iohk.atala.pollux.core.model.DidCommID
+import org.hyperledger.identus.pollux.core.model.DidCommID
 import io.iohk.atala.shared.models.WalletAccessContext
 
 import java.util.UUID

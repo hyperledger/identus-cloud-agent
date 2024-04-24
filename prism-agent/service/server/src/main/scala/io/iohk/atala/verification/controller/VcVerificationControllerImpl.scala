@@ -1,7 +1,7 @@
 package io.iohk.atala.verification.controller
 
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
-import io.iohk.atala.pollux.core.service.verification.VcVerificationService
+import org.hyperledger.identus.pollux.core.service.verification.VcVerificationService
 import io.iohk.atala.verification.controller
 import zio.*
 

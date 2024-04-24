@@ -1,7 +1,7 @@
-package io.iohk.atala.pollux.credentialdefinition.http
+package org.hyperledger.identus.pollux.credentialdefinition.http
 
 import io.iohk.atala.api.http.*
-import io.iohk.atala.pollux.credentialdefinition.http.Proof.annotations
+import org.hyperledger.identus.pollux.credentialdefinition.http.Proof.annotations
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.description
 import sttp.tapir.Schema.annotations.encodedExample

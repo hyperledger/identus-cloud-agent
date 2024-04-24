@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.schema
+package org.hyperledger.identus.pollux.schema
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import io.iohk.atala.agent.server.http.CustomServerInterceptors
@@ -9,17 +9,20 @@ import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.iam.authentication.DefaultEntityAuthenticator
-import io.iohk.atala.pollux.core.model.schema.`type`.CredentialJsonSchemaType
-import io.iohk.atala.pollux.core.repository.CredentialSchemaRepository
-import io.iohk.atala.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}
-import io.iohk.atala.pollux.credentialschema.SchemaRegistryServerEndpoints
-import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl}
-import io.iohk.atala.pollux.credentialschema.http.{
+import org.hyperledger.identus.pollux.core.model.schema.`type`.CredentialJsonSchemaType
+import org.hyperledger.identus.pollux.core.repository.CredentialSchemaRepository
+import org.hyperledger.identus.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}
+import org.hyperledger.identus.pollux.credentialschema.SchemaRegistryServerEndpoints
+import org.hyperledger.identus.pollux.credentialschema.controller.{
+  CredentialSchemaController,
+  CredentialSchemaControllerImpl
+}
+import org.hyperledger.identus.pollux.credentialschema.http.{
   CredentialSchemaInput,
   CredentialSchemaResponse,
   CredentialSchemaResponsePage
 }
-import io.iohk.atala.pollux.sql.repository.JdbcCredentialSchemaRepository
+import org.hyperledger.identus.pollux.sql.repository.JdbcCredentialSchemaRepository
 import io.iohk.atala.shared.models.WalletAccessContext
 import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub

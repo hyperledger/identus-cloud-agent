@@ -1,17 +1,17 @@
-package io.iohk.atala.pollux.credentialschema.controller
+package org.hyperledger.identus.pollux.credentialschema.controller
 
 import io.iohk.atala.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
 import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination}
 import io.iohk.atala.castor.core.model.did.{LongFormPrismDID, PrismDID}
-import io.iohk.atala.pollux.core.model.schema.CredentialSchema.FilteredEntries
-import io.iohk.atala.pollux.core.service.CredentialSchemaService
-import io.iohk.atala.pollux.core.service.CredentialSchemaService.Error.*
-import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController.domainToHttpErrorIO
-import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaInput.toDomain
-import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponse.fromDomain
-import io.iohk.atala.pollux.credentialschema.http.{
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.FilteredEntries
+import org.hyperledger.identus.pollux.core.service.CredentialSchemaService
+import org.hyperledger.identus.pollux.core.service.CredentialSchemaService.Error.*
+import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaController.domainToHttpErrorIO
+import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaInput.toDomain
+import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponse.fromDomain
+import org.hyperledger.identus.pollux.credentialschema.http.{
   CredentialSchemaInput,
   CredentialSchemaResponse,
   CredentialSchemaResponsePage,

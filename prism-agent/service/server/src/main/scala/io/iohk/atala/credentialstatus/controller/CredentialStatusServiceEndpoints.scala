@@ -11,7 +11,7 @@ import sttp.tapir.ztapir.*
 import zio.*
 import io.iohk.atala.credentialstatus.controller.CredentialStatusEndpoints.*
 import sttp.model.StatusCode
-import io.iohk.atala.pollux.core.model.DidCommID
+import org.hyperledger.identus.pollux.core.model.DidCommID
 
 import java.util.UUID
 

@@ -1,9 +1,9 @@
-package io.iohk.atala.pollux.credentialschema.http
+package org.hyperledger.identus.pollux.credentialschema.http
 
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
-import io.iohk.atala.pollux.credentialschema.http.CredentialSchemaResponsePage.annotations
+import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponsePage.annotations
 import io.iohk.atala.api.http.Annotation
 
 case class CredentialSchemaResponsePage(

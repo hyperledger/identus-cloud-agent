@@ -1,13 +1,13 @@
 package io.iohk.atala.credentialstatus.controller.http
 
-import io.iohk.atala.pollux.vc.jwt.StatusPurpose
+import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
 import io.iohk.atala.api.http.Annotation
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import io.iohk.atala.credentialstatus.controller.http.StatusListCredential.annotations
 import sttp.tapir.Schema
 import zio.json.*
-import io.iohk.atala.pollux.core.model.CredentialStatusList
-import io.iohk.atala.pollux.core.model.error.CredentialStatusListServiceError
+import org.hyperledger.identus.pollux.core.model.CredentialStatusList
+import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import zio.json.ast.Json
 import zio.*

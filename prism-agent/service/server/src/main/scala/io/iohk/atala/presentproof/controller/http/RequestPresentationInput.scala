@@ -1,7 +1,7 @@
 package io.iohk.atala.presentproof.controller.http
 
 import io.iohk.atala.api.http.Annotation
-import io.iohk.atala.pollux.core.service.serdes.*
+import org.hyperledger.identus.pollux.core.service.serdes.*
 import io.iohk.atala.presentproof.controller.http.RequestPresentationInput.annotations
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import sttp.tapir.{Schema, Validator}

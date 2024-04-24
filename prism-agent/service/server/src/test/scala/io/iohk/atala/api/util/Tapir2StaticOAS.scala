@@ -10,8 +10,11 @@ import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.entity.http.controller.EntityController
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementController
 import io.iohk.atala.issue.controller.IssueController
-import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
-import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, VerificationPolicyController}
+import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController
+import org.hyperledger.identus.pollux.credentialschema.controller.{
+  CredentialSchemaController,
+  VerificationPolicyController
+}
 import io.iohk.atala.presentproof.controller.PresentProofController
 import io.iohk.atala.system.controller.SystemController
 import io.iohk.atala.verification.controller.VcVerificationController

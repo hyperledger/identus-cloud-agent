@@ -1,14 +1,14 @@
-package io.iohk.atala.pollux.credentialschema.controller
+package org.hyperledger.identus.pollux.credentialschema.controller
 
 import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.model.{CollectionStats, Order, Pagination}
-import io.iohk.atala.pollux.core.model
-import io.iohk.atala.pollux.core.model.CredentialSchemaAndTrustedIssuersConstraint
-import io.iohk.atala.pollux.core.model.error.VerificationPolicyError
-import io.iohk.atala.pollux.core.model.error.VerificationPolicyError.*
-import io.iohk.atala.pollux.core.service.VerificationPolicyService
-import io.iohk.atala.pollux.credentialschema.http.VerificationPolicyResponse.*
-import io.iohk.atala.pollux.credentialschema.http.{
+import org.hyperledger.identus.pollux.core.model
+import org.hyperledger.identus.pollux.core.model.CredentialSchemaAndTrustedIssuersConstraint
+import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError
+import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError.*
+import org.hyperledger.identus.pollux.core.service.VerificationPolicyService
+import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyResponse.*
+import org.hyperledger.identus.pollux.credentialschema.http.{
   VerificationPolicyResponse,
   VerificationPolicyInput,
   VerificationPolicyResponsePage

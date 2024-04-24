@@ -1,8 +1,8 @@
 package io.iohk.atala.verification.controller.http
 
 import io.iohk.atala.api.http.ErrorResponse
-import io.iohk.atala.pollux.core.service
-import io.iohk.atala.pollux.core.service.verification.VcVerification as ServiceVcVerification
+import org.hyperledger.identus.pollux.core.service
+import org.hyperledger.identus.pollux.core.service.verification.VcVerification as ServiceVcVerification
 import sttp.tapir.Schema
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import zio.{IO, *}

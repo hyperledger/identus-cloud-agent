@@ -721,7 +721,7 @@ lazy val castorCore = project
 // #####################
 
 lazy val polluxVcJWT = project
-  .in(file("pollux/lib/vc-jwt"))
+  .in(file("pollux/vc-jwt"))
   .settings(commonSetttings)
   .settings(
     name := "pollux-vc-jwt",
@@ -730,7 +730,7 @@ lazy val polluxVcJWT = project
   .dependsOn(castorCore)
 
 lazy val polluxCore = project
-  .in(file("pollux/lib/core"))
+  .in(file("pollux/core"))
   .settings(commonSetttings)
   .settings(
     name := "pollux-core",
@@ -742,7 +742,7 @@ lazy val polluxCore = project
   .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds)
 
 lazy val polluxDoobie = project
-  .in(file("pollux/lib/sql-doobie"))
+  .in(file("pollux/sql-doobie"))
   .settings(commonSetttings)
   .settings(
     name := "pollux-sql-doobie",
@@ -757,7 +757,7 @@ lazy val polluxDoobie = project
 // ########################
 
 lazy val polluxAnoncreds = project
-  .in(file("pollux/lib/anoncreds"))
+  .in(file("pollux/anoncreds"))
   .enablePlugins(BuildInfoPlugin)
   .enablePlugins(JavaAppPackaging)
   .settings(
@@ -770,7 +770,7 @@ lazy val polluxAnoncreds = project
   )
 
 lazy val polluxAnoncredsTest = project
-  .in(file("pollux/lib/anoncredsTest"))
+  .in(file("pollux/anoncredsTest"))
   .settings(libraryDependencies ++= Seq("org.scalatest" %% "scalatest" % "3.2.15" % Test))
   .dependsOn(polluxAnoncreds % "compile->test")
 

@@ -37,7 +37,7 @@ import io.iohk.atala.iam.authentication.oidc.KeycloakConfig
 import io.iohk.atala.iam.authentication.oidc.KeycloakEntity
 import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
-import io.iohk.atala.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
+import org.hyperledger.identus.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import io.iohk.atala.shared.crypto.Apollo
 import io.iohk.atala.shared.db.{ContextAwareTask, DbConfig, TransactorLayer}

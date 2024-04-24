@@ -7,7 +7,7 @@ import io.iohk.atala.connect.controller.http.Connection
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.event.notification.Event
 import io.iohk.atala.issue.controller.http.IssueCredentialRecord
-import io.iohk.atala.pollux.core.model.{
+import org.hyperledger.identus.pollux.core.model.{
   IssueCredentialRecord as PolluxIssueCredentialRecord,
   PresentationRecord as PolluxPresentationRecord
 }

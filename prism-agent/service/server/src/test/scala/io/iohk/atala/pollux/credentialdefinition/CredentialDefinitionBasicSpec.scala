@@ -1,18 +1,21 @@
-package io.iohk.atala.pollux.credentialdefinition
+package org.hyperledger.identus.pollux.credentialdefinition
 
 import io.iohk.atala.agent.walletapi.model.{BaseEntity, Entity}
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.api.http.ErrorResponse
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
-import io.iohk.atala.pollux.core.model.secret.CredentialDefinitionSecret
-import io.iohk.atala.pollux.core.service.serdes.{
+import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
+import org.hyperledger.identus.pollux.core.service.serdes.{
   PrivateCredentialDefinitionSchemaSerDesV1,
   ProofKeyCredentialDefinitionSchemaSerDesV1,
   PublicCredentialDefinitionSerDesV1
 }
-import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
-import io.iohk.atala.pollux.credentialdefinition.http.{CredentialDefinitionInput, CredentialDefinitionResponse}
+import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController
+import org.hyperledger.identus.pollux.credentialdefinition.http.{
+  CredentialDefinitionInput,
+  CredentialDefinitionResponse
+}
 import sttp.client3.basicRequest
 import sttp.client3.ziojson.*
 import sttp.model.StatusCode

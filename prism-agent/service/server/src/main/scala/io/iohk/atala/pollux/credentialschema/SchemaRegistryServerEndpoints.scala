@@ -1,13 +1,13 @@
-package io.iohk.atala.pollux.credentialschema
+package org.hyperledger.identus.pollux.credentialschema
 
 import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.api.http.model.{Order, PaginationInput}
 import io.iohk.atala.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
-import io.iohk.atala.pollux.credentialschema.SchemaRegistryEndpoints.*
-import io.iohk.atala.pollux.credentialschema.controller.CredentialSchemaController
-import io.iohk.atala.pollux.credentialschema.http.{CredentialSchemaInput, FilterInput}
+import org.hyperledger.identus.pollux.credentialschema.SchemaRegistryEndpoints.*
+import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaController
+import org.hyperledger.identus.pollux.credentialschema.http.{CredentialSchemaInput, FilterInput}
 import io.iohk.atala.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
 import zio.*

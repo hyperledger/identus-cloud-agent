@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.credentialdefinition
+package org.hyperledger.identus.pollux.credentialdefinition
 
 import io.iohk.atala.api.http.*
 import io.iohk.atala.api.http.EndpointOutputs.*
@@ -8,7 +8,7 @@ import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import io.iohk.atala.pollux.credentialdefinition.http.{
+import org.hyperledger.identus.pollux.credentialdefinition.http.{
   CredentialDefinitionInput,
   CredentialDefinitionResponse,
   CredentialDefinitionResponsePage,

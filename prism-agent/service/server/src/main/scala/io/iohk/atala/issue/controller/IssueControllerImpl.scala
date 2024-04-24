@@ -21,11 +21,11 @@ import io.iohk.atala.issue.controller.http.{
   IssueCredentialRecord,
   IssueCredentialRecordPage
 }
-import io.iohk.atala.pollux.core.model.CredentialFormat.{AnonCreds, JWT}
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.{CredentialFormat, DidCommID}
-import io.iohk.atala.pollux.core.service.CredentialService
-import io.iohk.atala.pollux.core.model.IssueCredentialRecord.Role
+import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
+import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
+import org.hyperledger.identus.pollux.core.service.CredentialService
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}
 

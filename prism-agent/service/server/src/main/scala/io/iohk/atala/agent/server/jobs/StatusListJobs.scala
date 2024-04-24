@@ -4,8 +4,8 @@ import io.iohk.atala.agent.server.config.AppConfig
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.protocol.revocationnotificaiton.RevocationNotification
-import io.iohk.atala.pollux.core.service.{CredentialService, CredentialStatusListService}
-import io.iohk.atala.pollux.vc.jwt.revocation.{VCStatusList2021, VCStatusList2021Error}
+import org.hyperledger.identus.pollux.core.service.{CredentialService, CredentialStatusListService}
+import org.hyperledger.identus.pollux.vc.jwt.revocation.{VCStatusList2021, VCStatusList2021Error}
 import io.iohk.atala.shared.models.WalletAccessContext
 import zio.*
 import zio.metrics.Metric
