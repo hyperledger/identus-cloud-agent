@@ -9,7 +9,7 @@ import io.iohk.atala.issue.controller.http.{
   IssueCredentialRecordPage
 }
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 trait IssueController {

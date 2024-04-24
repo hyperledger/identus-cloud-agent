@@ -7,7 +7,7 @@ import io.iohk.atala.castor.core.service.MockDIDService
 import org.hyperledger.identus.pollux.core.service.ResourceURIDereferencerImpl
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.Config.OffsetDateTime
 import zio.test.*

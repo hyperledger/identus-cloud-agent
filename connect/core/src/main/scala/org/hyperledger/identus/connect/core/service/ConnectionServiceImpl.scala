@@ -9,10 +9,10 @@ import org.hyperledger.identus.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.utils.Base64Utils
-import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
-import io.iohk.atala.shared.validation.ValidationUtils
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.utils.Base64Utils
+import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
+import org.hyperledger.identus.shared.validation.ValidationUtils
 import zio.*
 import zio.prelude.*
 

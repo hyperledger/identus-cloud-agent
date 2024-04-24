@@ -14,10 +14,10 @@ import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.shared.crypto.ApolloSpecHelper
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletAdministrationContext
-import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
+import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
 import zio.test.*

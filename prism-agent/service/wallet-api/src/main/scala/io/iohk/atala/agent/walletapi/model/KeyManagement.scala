@@ -4,9 +4,9 @@ import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.castor.core.model.did.InternalKeyPurpose
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.prism.crypto.Sha256
-import io.iohk.atala.shared.crypto.DerivationPath
-import io.iohk.atala.shared.crypto.Ed25519KeyPair
-import io.iohk.atala.shared.crypto.X25519KeyPair
+import org.hyperledger.identus.shared.crypto.DerivationPath
+import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
+import org.hyperledger.identus.shared.crypto.X25519KeyPair
 
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions

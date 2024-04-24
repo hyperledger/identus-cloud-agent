@@ -8,7 +8,7 @@ import io.iohk.atala.iam.authentication.Authorizer
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.SecurityLogic
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementController
-import io.iohk.atala.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
 import sttp.tapir.ztapir.*
 import zio.*
 

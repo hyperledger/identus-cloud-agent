@@ -27,9 +27,9 @@ import org.hyperledger.identus.pollux.credentialschema.{
 }
 import org.hyperledger.identus.pollux.vc.jwt.DidResolver as JwtDidResolver
 import io.iohk.atala.presentproof.controller.PresentProofServerEndpoints
-import io.iohk.atala.shared.models.{HexString, WalletAccessContext, WalletAdministrationContext, WalletId}
+import org.hyperledger.identus.shared.models.{HexString, WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.resolvers.DIDResolver
-import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
+import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import io.iohk.atala.system.controller.SystemServerEndpoints
 import io.iohk.atala.verification.controller.VcVerificationServerEndpoints
 import zio.*

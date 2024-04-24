@@ -4,13 +4,13 @@ import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError
 import org.hyperledger.identus.event.notification.EventNotificationConfig
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.util.UUID
 import scala.language.implicitConversions
-import io.iohk.atala.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
 
 sealed trait WalletManagementServiceError {
   final def toThrowable: Throwable = this

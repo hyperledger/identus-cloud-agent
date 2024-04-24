@@ -8,7 +8,7 @@ import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.I
 import org.hyperledger.identus.connect.core.repository.ConnectionRepositoryInMemory
 import org.hyperledger.identus.mercury.model.{DidId, Message}
 import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

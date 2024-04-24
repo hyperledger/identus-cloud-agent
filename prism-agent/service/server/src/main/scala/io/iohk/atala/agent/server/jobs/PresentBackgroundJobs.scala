@@ -20,8 +20,8 @@ import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, 
 import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.vc.jwt.{JWT, JwtPresentation, DidResolver as JwtDidResolver}
-import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
-import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
+import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
+import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.json.ast.Json
 import zio.metrics.*
@@ -30,11 +30,11 @@ import zio.prelude.ZValidation.*
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
 import org.hyperledger.identus.resolvers.DIDResolver
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import java.time.{Clock, Instant, ZoneId}
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
-import io.iohk.atala.shared.http.*
+import org.hyperledger.identus.shared.http.*
 
 object PresentBackgroundJobs extends BackgroundJobsHelper {
 

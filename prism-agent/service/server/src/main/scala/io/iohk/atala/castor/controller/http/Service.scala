@@ -7,7 +7,7 @@ import io.iohk.atala.castor.controller.http.Service.annotations
 import io.iohk.atala.castor.core.model.ProtoModelHelper
 import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.castor.core.model.did.w3c
-import io.iohk.atala.shared.utils.Traverse.*
+import org.hyperledger.identus.shared.utils.Traverse.*
 import scala.language.implicitConversions
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}

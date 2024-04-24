@@ -1,6 +1,6 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.RIO
 
 trait Repository[F[_], T]

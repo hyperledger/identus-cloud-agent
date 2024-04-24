@@ -8,7 +8,7 @@ import io.iohk.atala.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.{AgentPeerService, DidAgent}
 import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer}
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{ZIO, ZLayer}
 import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError

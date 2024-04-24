@@ -6,8 +6,8 @@ import io.iohk.atala.iam.authentication.admin.{AdminApiKeyAuthenticator, AdminAp
 import io.iohk.atala.iam.authentication.apikey.{ApiKeyAuthenticator, ApiKeyCredentials}
 import io.iohk.atala.iam.authentication.oidc.KeycloakEntity
 import io.iohk.atala.iam.authentication.oidc.{KeycloakAuthenticator, JwtCredentials}
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
 import zio.*
 
 case class DefaultAuthenticator(

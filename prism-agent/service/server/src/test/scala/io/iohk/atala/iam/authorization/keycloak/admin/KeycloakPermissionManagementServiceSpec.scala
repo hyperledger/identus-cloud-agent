@@ -16,11 +16,11 @@ import io.iohk.atala.iam.authentication.oidc.{
 import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error.UnexpectedError
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error.WalletNotFoundById
-import io.iohk.atala.shared.crypto.ApolloSpecHelper
-import io.iohk.atala.shared.models.WalletAdministrationContext
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
-import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
-import io.iohk.atala.sharedtest.containers.{KeycloakContainerCustom, KeycloakTestContainerSupport}
+import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
+import org.hyperledger.identus.sharedtest.containers.{KeycloakContainerCustom, KeycloakTestContainerSupport}
 import io.iohk.atala.test.container.DBTestUtils
 import zio.*
 import zio.ZIO.*

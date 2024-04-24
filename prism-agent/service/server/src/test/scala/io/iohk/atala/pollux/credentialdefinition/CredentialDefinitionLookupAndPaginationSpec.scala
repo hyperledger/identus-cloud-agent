@@ -8,7 +8,7 @@ import org.hyperledger.identus.pollux.credentialdefinition.http.{
   CredentialDefinitionResponse,
   CredentialDefinitionResponsePage
 }
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
 import sttp.model.{StatusCode, Uri}

@@ -9,8 +9,8 @@ import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.event.notification.{Event, EventConsumer, EventNotificationService}
 import org.hyperledger.identus.pollux.core.model.{IssueCredentialRecord, PresentationRecord}
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 import zio.http.*
 import zio.json.*

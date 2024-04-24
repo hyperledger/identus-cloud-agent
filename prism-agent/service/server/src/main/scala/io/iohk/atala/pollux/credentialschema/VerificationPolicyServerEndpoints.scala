@@ -11,7 +11,7 @@ import io.iohk.atala.iam.authentication.SecurityLogic
 import org.hyperledger.identus.pollux.credentialschema.VerificationPolicyEndpoints.*
 import org.hyperledger.identus.pollux.credentialschema.controller.VerificationPolicyController
 import org.hyperledger.identus.pollux.credentialschema.http.{VerificationPolicyResponse, VerificationPolicyInput}
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import java.util.UUID
 import sttp.tapir.ztapir.*
 import zio.*

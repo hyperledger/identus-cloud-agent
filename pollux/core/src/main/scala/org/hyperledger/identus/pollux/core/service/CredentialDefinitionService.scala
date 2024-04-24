@@ -3,7 +3,7 @@ package org.hyperledger.identus.pollux.core.service
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.*
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{IO, ZIO}
 
 import java.util.UUID

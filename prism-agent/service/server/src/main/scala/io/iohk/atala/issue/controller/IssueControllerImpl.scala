@@ -26,7 +26,7 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
 import org.hyperledger.identus.pollux.core.service.CredentialService
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}
 
 class IssueControllerImpl(

@@ -12,7 +12,7 @@ import org.hyperledger.identus.pollux.core.model.{
   PresentationRecord as PolluxPresentationRecord
 }
 import io.iohk.atala.presentproof.controller.http.PresentationStatus
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 import zio.json.*
 

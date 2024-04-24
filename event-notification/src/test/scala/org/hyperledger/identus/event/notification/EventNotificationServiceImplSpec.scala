@@ -2,7 +2,7 @@ package org.hyperledger.identus.event.notification
 
 import zio.*
 import zio.test.*
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletId
 
 object EventNotificationServiceImplSpec extends ZIOSpecDefault {
 

@@ -14,7 +14,7 @@ import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{Protocol
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.MockSpecDefault
 import zio.test.*

@@ -25,8 +25,8 @@ import io.iohk.atala.prism.protos.common_models.OperationStatus
 import io.iohk.atala.prism.protos.node_models.KeyUsage
 import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
 import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
-import io.iohk.atala.shared.models.Base64UrlString
-import io.iohk.atala.shared.utils.Traverse.*
+import org.hyperledger.identus.shared.models.Base64UrlString
+import org.hyperledger.identus.shared.utils.Traverse.*
 import java.time.Instant
 import scala.language.implicitConversions
 import zio.*

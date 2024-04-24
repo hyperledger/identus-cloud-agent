@@ -15,9 +15,9 @@ import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.PresentationRecord.ProtocolState
 import org.hyperledger.identus.pollux.core.repository.PresentationRepository
-import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.Implicits.*
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.db.ContextAwareTask
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.interop.catz.*
 import zio.json.*

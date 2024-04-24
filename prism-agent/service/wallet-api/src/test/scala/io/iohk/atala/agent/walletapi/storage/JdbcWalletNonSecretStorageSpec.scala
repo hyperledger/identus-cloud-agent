@@ -6,9 +6,9 @@ import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.TooMany
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.DuplicatedWalletId
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorageError.DuplicatedWalletSeed
 import org.hyperledger.identus.event.notification.EventNotificationConfig
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
-import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.DBTestUtils
 import zio.*
 import zio.test.*

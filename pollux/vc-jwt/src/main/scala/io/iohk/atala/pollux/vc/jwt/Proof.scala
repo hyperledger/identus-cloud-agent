@@ -6,8 +6,8 @@ import io.circe.syntax.*
 import cats.implicits.*
 import java.time.{Instant, ZoneOffset}
 import zio.*
-import io.iohk.atala.shared.utils.Json as JsonUtils
-import io.iohk.atala.shared.utils.Base64Utils
+import org.hyperledger.identus.shared.utils.Json as JsonUtils
+import org.hyperledger.identus.shared.utils.Base64Utils
 import scodec.bits.ByteVector
 import scala.util.Try
 import java.security.*

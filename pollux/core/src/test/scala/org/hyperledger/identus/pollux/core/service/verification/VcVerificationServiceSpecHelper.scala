@@ -5,8 +5,8 @@ import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.service.{DIDService, MockDIDService}
 import org.hyperledger.identus.pollux.core.service.{ResourceURIDereferencerImpl, URIDereferencer}
 import org.hyperledger.identus.pollux.vc.jwt.*
-import io.iohk.atala.shared.models.WalletId.*
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.WalletId.*
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.Expectation
 

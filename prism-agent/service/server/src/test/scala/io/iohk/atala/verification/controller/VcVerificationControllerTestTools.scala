@@ -9,9 +9,9 @@ import io.iohk.atala.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAu
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.core.service.verification.{VcVerificationService, VcVerificationServiceImpl}
 import org.hyperledger.identus.pollux.vc.jwt.*
-import io.iohk.atala.shared.models.WalletId.*
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
-import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
+import org.hyperledger.identus.shared.models.WalletId.*
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import sttp.client3.UriContext
 import sttp.client3.testing.SttpBackendStub
 import sttp.monad.MonadError

@@ -14,7 +14,7 @@ import io.iohk.atala.issue.controller.http.IssueCredentialRecordPage
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.vc.jwt.*
-import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
+import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.{DeserializationException, Response, UriContext}
 import sttp.monad.MonadError

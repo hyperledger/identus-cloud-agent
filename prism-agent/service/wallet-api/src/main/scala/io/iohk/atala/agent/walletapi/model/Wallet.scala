@@ -1,6 +1,6 @@
 package io.iohk.atala.agent.walletapi.model
 
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletId
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit

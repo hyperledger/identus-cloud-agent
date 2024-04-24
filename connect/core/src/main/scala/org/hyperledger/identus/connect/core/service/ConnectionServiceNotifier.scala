@@ -6,7 +6,7 @@ import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.*
 import org.hyperledger.identus.event.notification.{Event, EventNotificationService}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{UIO, URIO, URLayer, ZIO, ZLayer}
 
 import java.time.Duration

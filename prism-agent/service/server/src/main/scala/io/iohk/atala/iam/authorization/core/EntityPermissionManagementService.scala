@@ -5,8 +5,8 @@ import io.iohk.atala.agent.walletapi.service.EntityService
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error.ServiceError
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error.WalletNotFoundById
-import io.iohk.atala.shared.models.WalletAdministrationContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import scala.language.implicitConversions

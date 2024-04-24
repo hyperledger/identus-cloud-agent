@@ -2,7 +2,7 @@ package org.hyperledger.identus.pollux.sql.model.db
 
 import io.getquill.*
 import io.getquill.doobie.DoobieContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletId
 import java.util.UUID
 
 import java.time.OffsetDateTime

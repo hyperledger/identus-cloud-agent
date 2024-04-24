@@ -13,9 +13,9 @@ import io.iohk.atala.castor.core.model.did.{
   VerificationRelationship
 }
 import org.hyperledger.identus.mercury.model.DidId
-import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.Implicits.{*, given}
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.db.ContextAwareTask
+import org.hyperledger.identus.shared.db.Implicits.{*, given}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.interop.catz.*
 

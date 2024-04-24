@@ -4,8 +4,8 @@ import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.repository.CredentialDefinitionRepositoryInMemory
-import io.iohk.atala.shared.models.WalletId.*
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.WalletId.*
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.time.OffsetDateTime

@@ -6,10 +6,10 @@ import org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.pollux.core.model.{CredentialSchemaAndTrustedIssuersConstraint, VerificationPolicy}
 import org.hyperledger.identus.pollux.core.repository.VerificationPolicyRepository
 import org.hyperledger.identus.pollux.sql.model.db
-import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.Implicits.*
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.db.ContextAwareTask
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.time.{OffsetDateTime, ZoneOffset}

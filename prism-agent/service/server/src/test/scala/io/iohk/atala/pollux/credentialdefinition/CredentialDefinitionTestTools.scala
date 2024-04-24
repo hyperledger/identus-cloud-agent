@@ -27,8 +27,8 @@ import org.hyperledger.identus.pollux.credentialdefinition.http.{
   CredentialDefinitionResponsePage
 }
 import org.hyperledger.identus.pollux.sql.repository.JdbcCredentialDefinitionRepository
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}

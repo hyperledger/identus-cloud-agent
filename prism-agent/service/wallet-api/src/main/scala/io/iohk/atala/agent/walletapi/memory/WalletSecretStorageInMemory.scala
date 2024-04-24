@@ -2,8 +2,8 @@ package io.iohk.atala.agent.walletapi.memory
 
 import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 class WalletSecretStorageInMemory(storeRef: Ref[Map[WalletId, WalletSeed]]) extends WalletSecretStorage {

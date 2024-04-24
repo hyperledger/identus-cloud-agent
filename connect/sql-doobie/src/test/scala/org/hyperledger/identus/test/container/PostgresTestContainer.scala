@@ -1,7 +1,7 @@
 package org.hyperledger.identus.test.container
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import io.iohk.atala.sharedtest.containers.PostgresTestContainer.postgresContainer
+import org.hyperledger.identus.sharedtest.containers.PostgresTestContainer.postgresContainer
 import zio.*
 import zio.ZIO.*
 

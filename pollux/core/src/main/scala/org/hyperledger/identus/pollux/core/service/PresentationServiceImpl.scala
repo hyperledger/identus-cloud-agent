@@ -17,8 +17,8 @@ import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.Anoncred
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.pollux.vc.jwt.*
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 
 import java.net.URI

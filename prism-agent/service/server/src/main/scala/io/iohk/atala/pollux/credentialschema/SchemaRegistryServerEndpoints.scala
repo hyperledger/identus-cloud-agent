@@ -8,7 +8,7 @@ import io.iohk.atala.iam.authentication.{Authenticator, Authorizer, DefaultAuthe
 import org.hyperledger.identus.pollux.credentialschema.SchemaRegistryEndpoints.*
 import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaController
 import org.hyperledger.identus.pollux.credentialschema.http.{CredentialSchemaInput, FilterInput}
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
 import zio.*
 

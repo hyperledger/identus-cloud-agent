@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.walletapi.storage
 
 import io.iohk.atala.agent.walletapi.model.WalletSeed
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 trait WalletSecretStorage {

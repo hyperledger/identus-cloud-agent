@@ -5,8 +5,8 @@ import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.iam.authentication.oidc.KeycloakEntity
 import io.iohk.atala.iam.authorization.core.PermissionManagement
 import io.iohk.atala.iam.authorization.core.PermissionManagement.Error
-import io.iohk.atala.shared.models.WalletAdministrationContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 class DefaultPermissionManagementService(

@@ -6,7 +6,7 @@ import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
-import io.iohk.atala.shared.http.UriResolver
+import org.hyperledger.identus.shared.http.UriResolver
 import pdi.jwt.{JwtCirce, JwtOptions}
 import zio.*
 import zio.prelude.*

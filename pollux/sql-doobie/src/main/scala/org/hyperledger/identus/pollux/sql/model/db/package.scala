@@ -2,7 +2,7 @@ package org.hyperledger.identus.pollux.sql.model
 
 import io.getquill.MappedEncoding
 import java.util.UUID
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletId
 
 package object db {
 

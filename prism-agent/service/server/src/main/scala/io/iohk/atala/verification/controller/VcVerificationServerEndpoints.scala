@@ -4,7 +4,7 @@ import io.iohk.atala.LogUtils.*
 import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.api.http.RequestContext
 import io.iohk.atala.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import io.iohk.atala.verification.controller
 import io.iohk.atala.verification.controller.VcVerificationEndpoints.verify
 import sttp.tapir.ztapir.*

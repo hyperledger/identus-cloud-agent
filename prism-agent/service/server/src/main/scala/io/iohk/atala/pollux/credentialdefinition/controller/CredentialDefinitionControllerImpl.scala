@@ -18,7 +18,7 @@ import org.hyperledger.identus.pollux.credentialdefinition.http.{
   CredentialDefinitionResponsePage,
   FilterInput
 }
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.json.ast.Json
 

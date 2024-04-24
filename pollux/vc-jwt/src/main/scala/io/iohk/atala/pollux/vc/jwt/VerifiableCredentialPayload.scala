@@ -8,7 +8,7 @@ import io.circe.syntax.*
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitString
 import org.hyperledger.identus.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
-import io.iohk.atala.shared.http.UriResolver
+import org.hyperledger.identus.shared.http.UriResolver
 import pdi.jwt.*
 import zio.*
 import zio.prelude.*

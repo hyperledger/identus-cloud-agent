@@ -10,7 +10,7 @@ import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import io.iohk.atala.shared.http.*
+import org.hyperledger.identus.shared.http.*
 import java.security.Security
 import java.time.Instant
 

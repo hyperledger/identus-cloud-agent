@@ -4,8 +4,8 @@ import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
 import org.hyperledger.identus.mercury.protocol.connection.ConnectionRequest
 import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.time.Instant

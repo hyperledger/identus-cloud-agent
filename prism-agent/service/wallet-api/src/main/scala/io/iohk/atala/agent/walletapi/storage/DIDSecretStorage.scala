@@ -3,9 +3,9 @@ package io.iohk.atala.agent.walletapi.storage
 import com.nimbusds.jose.jwk.OctetKeyPair
 import org.hyperledger.identus.mercury.model.DidId
 import io.iohk.atala.castor.core.model.did.PrismDID
-import io.iohk.atala.shared.crypto.jwk.FromJWK
-import io.iohk.atala.shared.crypto.jwk.JWK
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.crypto.jwk.FromJWK
+import org.hyperledger.identus.shared.crypto.jwk.JWK
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 /** A simple single-user DID key storage */

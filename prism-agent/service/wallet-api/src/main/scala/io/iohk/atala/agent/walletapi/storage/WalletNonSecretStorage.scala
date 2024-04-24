@@ -2,8 +2,8 @@ package io.iohk.atala.agent.walletapi.storage
 
 import io.iohk.atala.agent.walletapi.model.Wallet
 import org.hyperledger.identus.event.notification.EventNotificationConfig
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import org.postgresql.util.PSQLException
 import zio.*
 

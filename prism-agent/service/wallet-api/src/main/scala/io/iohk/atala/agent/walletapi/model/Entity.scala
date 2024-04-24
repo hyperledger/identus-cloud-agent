@@ -1,6 +1,6 @@
 package io.iohk.atala.agent.walletapi.model
 
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.time.Instant

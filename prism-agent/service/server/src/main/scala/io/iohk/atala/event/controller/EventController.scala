@@ -12,7 +12,7 @@ import io.iohk.atala.event.controller.http.WebhookNotification
 import io.iohk.atala.event.controller.http.WebhookNotificationPage
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import io.iohk.atala.iam.wallet.http.controller.WalletManagementController
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 import java.net.URL

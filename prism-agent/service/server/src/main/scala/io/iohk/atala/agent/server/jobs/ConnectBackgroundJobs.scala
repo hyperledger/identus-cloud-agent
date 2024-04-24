@@ -11,9 +11,9 @@ import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.resolvers.DIDResolver
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.utils.DurationOps.toMetricsSeconds
-import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
+import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.metrics.*
 

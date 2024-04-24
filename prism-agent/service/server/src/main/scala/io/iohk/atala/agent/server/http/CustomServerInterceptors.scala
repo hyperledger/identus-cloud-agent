@@ -1,7 +1,7 @@
 package io.iohk.atala.agent.server.http
 
 import io.iohk.atala.api.http.ErrorResponse
-import io.iohk.atala.shared.models.StatusCode
+import org.hyperledger.identus.shared.models.StatusCode
 import org.log4s.*
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody

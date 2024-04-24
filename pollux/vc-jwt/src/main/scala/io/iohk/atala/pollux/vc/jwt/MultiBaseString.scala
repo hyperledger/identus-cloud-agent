@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
 import io.circe.*
-import io.iohk.atala.shared.utils.Base64Utils
+import org.hyperledger.identus.shared.utils.Base64Utils
 import scodec.bits.ByteVector
 
 case class MultiBaseString(header: MultiBaseString.Header, data: String) {

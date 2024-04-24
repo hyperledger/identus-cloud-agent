@@ -7,7 +7,7 @@ import org.hyperledger.identus.pollux.credentialschema.http.{
   VerificationPolicyInput,
   VerificationPolicyResponsePage
 }
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 import java.util.UUID

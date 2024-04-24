@@ -9,9 +9,9 @@ import org.hyperledger.identus.pollux.sql.model.db.{
   CredentialDefinitionSql,
   CredentialDefinition as CredentialDefinitionRow
 }
-import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.Implicits.*
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.db.ContextAwareTask
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.interop.catz.*
 

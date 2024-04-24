@@ -4,7 +4,7 @@ import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
 import io.iohk.atala.castor.core.util.Prelude.*
-import io.iohk.atala.shared.crypto.Apollo
+import org.hyperledger.identus.shared.crypto.Apollo
 import zio.*
 
 import scala.collection.immutable.ArraySeq

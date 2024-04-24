@@ -15,9 +15,9 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError
 import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError.*
 import org.hyperledger.identus.pollux.core.repository.CredentialRepository
-import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.Implicits.*
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.db.ContextAwareTask
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.postgresql.util.PSQLException
 import zio.*
 import zio.interop.catz.*

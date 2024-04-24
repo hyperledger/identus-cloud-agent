@@ -1,6 +1,6 @@
 package org.hyperledger.identus.event.notification
 
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletId
 import java.time.Instant
 import java.util.UUID
 

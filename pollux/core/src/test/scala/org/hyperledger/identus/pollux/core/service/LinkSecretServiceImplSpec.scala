@@ -3,8 +3,8 @@ package org.hyperledger.identus.pollux.core.service
 import io.iohk.atala.agent.walletapi.memory.GenericSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.pollux.anoncreds.AnoncredLinkSecret
-import io.iohk.atala.shared.models.WalletId.*
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.WalletId.*
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.test.*
 import zio.test.TestAspect.*

@@ -3,7 +3,7 @@ package io.iohk.atala.agent.walletapi.util
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.agent.walletapi.model.error.{CreateManagedDIDError, UpdateManagedDIDError}
 import io.iohk.atala.castor.core.model.did.*
-import io.iohk.atala.shared.crypto.{
+import org.hyperledger.identus.shared.crypto.{
   Apollo,
   Ed25519KeyPair,
   Ed25519PublicKey,
@@ -12,7 +12,7 @@ import io.iohk.atala.shared.crypto.{
   X25519KeyPair,
   X25519PublicKey
 }
-import io.iohk.atala.shared.models.Base64UrlString
+import org.hyperledger.identus.shared.models.Base64UrlString
 import zio.*
 
 import scala.collection.immutable.ArraySeq

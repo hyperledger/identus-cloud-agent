@@ -3,9 +3,9 @@ package org.hyperledger.identus.pollux.sql.repository
 import doobie.*
 import doobie.implicits.*
 import doobie.util.transactor.Transactor
-import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.DbConfig
-import io.iohk.atala.shared.db.Implicits.*
+import org.hyperledger.identus.shared.db.ContextAwareTask
+import org.hyperledger.identus.shared.db.DbConfig
+import org.hyperledger.identus.shared.db.Implicits.*
 import org.flywaydb.core.Flyway
 import zio.*
 import zio.interop.catz.*

@@ -2,7 +2,7 @@ package io.iohk.atala.iam.authentication.apikey
 
 import io.iohk.atala.container.util.MigrationAspects.migrate
 import io.iohk.atala.iam.authentication.apikey.AuthenticationMethodType.ApiKey
-import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
+import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import zio.Runtime.removeDefaultLoggers
 import zio.ZIO
 import zio.test.*

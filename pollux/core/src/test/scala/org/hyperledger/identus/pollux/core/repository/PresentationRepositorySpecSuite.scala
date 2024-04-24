@@ -5,7 +5,7 @@ import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, Prop
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.PresentationRecord.*
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofV1, AnoncredCredentialProofsV1}
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.test.*
 import zio.test.Assertion.*
 import zio.{ZIO, ZLayer}

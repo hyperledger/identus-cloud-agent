@@ -3,7 +3,7 @@ package io.iohk.atala.castor.core.util
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
-import io.iohk.atala.shared.models.Base64UrlString
+import org.hyperledger.identus.shared.models.Base64UrlString
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

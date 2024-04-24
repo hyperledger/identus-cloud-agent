@@ -3,8 +3,8 @@ package io.iohk.atala.agent.walletapi.vault
 import io.iohk.atala.agent.walletapi.storage.GenericSecret
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
 import io.iohk.atala.prism.crypto.Sha256
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 import zio.json.ast.Json
 

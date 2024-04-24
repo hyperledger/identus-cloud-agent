@@ -2,7 +2,7 @@ package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.pollux.core.model.CredentialStatusList
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, StatusPurpose, revocation}
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{

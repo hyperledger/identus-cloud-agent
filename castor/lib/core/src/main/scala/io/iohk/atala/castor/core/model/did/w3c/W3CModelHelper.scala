@@ -3,9 +3,9 @@ package io.iohk.atala.castor.core.model.did.w3c
 import io.circe.Json
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
-import io.iohk.atala.shared.crypto.Apollo
-import io.iohk.atala.shared.models.Base64UrlString
-import io.iohk.atala.shared.models.HexString
+import org.hyperledger.identus.shared.crypto.Apollo
+import org.hyperledger.identus.shared.models.Base64UrlString
+import org.hyperledger.identus.shared.models.HexString
 
 import java.time.Instant
 import java.time.ZoneOffset

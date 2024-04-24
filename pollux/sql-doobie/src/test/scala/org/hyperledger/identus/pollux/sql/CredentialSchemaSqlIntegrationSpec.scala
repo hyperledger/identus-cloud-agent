@@ -5,11 +5,11 @@ import doobie.*
 import doobie.util.transactor.Transactor
 import io.getquill.*
 import org.hyperledger.identus.pollux.sql.model.db.{CredentialSchema, CredentialSchemaSql}
-import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.Implicits.*
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
-import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
+import org.hyperledger.identus.shared.db.ContextAwareTask
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.MigrationAspects.*
 import zio.*
 import zio.json.ast.Json

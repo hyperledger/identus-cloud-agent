@@ -10,8 +10,8 @@ import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.service.DIDService
 import io.iohk.atala.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.event.notification.{Event, EventNotificationService}
-import io.iohk.atala.shared.crypto.Apollo
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.crypto.Apollo
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 class ManagedDIDServiceWithEventNotificationImpl(

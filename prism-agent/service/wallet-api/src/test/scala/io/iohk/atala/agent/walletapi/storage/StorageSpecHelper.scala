@@ -13,9 +13,9 @@ import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
 import io.iohk.atala.castor.core.model.did.ScheduledDIDOperationStatus
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
-import io.iohk.atala.shared.crypto.ApolloSpecHelper
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
 import zio.*
 import zio.test.*
 

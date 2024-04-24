@@ -6,8 +6,8 @@ import io.iohk.atala.agent.walletapi.service.{EntityService, WalletManagementSer
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.*
 import io.iohk.atala.prism.crypto.Sha256
-import io.iohk.atala.shared.models.WalletAdministrationContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID

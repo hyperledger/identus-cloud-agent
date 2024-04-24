@@ -7,7 +7,7 @@ import org.hyperledger.identus.event.notification.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.ZIO.*
 import zio.mock.Expectation

@@ -3,7 +3,7 @@ package io.iohk.atala.agent.walletapi.storage
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import org.hyperledger.identus.mercury.model.DidId
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 import scala.collection.immutable.ArraySeq

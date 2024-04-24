@@ -6,10 +6,10 @@ import io.iohk.atala.agent.walletapi.storage.DIDNonSecretStorage
 import io.iohk.atala.castor.core.model.did.*
 import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.mercury.model.*
-import io.iohk.atala.shared.crypto.Ed25519KeyPair
-import io.iohk.atala.shared.crypto.Secp256k1KeyPair
-import io.iohk.atala.shared.crypto.X25519KeyPair
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
+import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
+import org.hyperledger.identus.shared.crypto.X25519KeyPair
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}

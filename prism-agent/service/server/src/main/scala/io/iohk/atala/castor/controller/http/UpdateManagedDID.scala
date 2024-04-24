@@ -3,7 +3,7 @@ package io.iohk.atala.castor.controller.http
 import io.iohk.atala.agent.walletapi.model as walletDomain
 import io.iohk.atala.api.http.Annotation
 import io.iohk.atala.castor.core.model.did as castorDomain
-import io.iohk.atala.shared.utils.Traverse.*
+import org.hyperledger.identus.shared.utils.Traverse.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}

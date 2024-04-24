@@ -12,10 +12,10 @@ import io.iohk.atala.agent.walletapi.sql.{JdbcEntityRepository, JdbcWalletNonSec
 import io.iohk.atala.container.util.MigrationAspects.*
 import io.iohk.atala.iam.authentication.AuthenticationError
 import io.iohk.atala.iam.authentication.AuthenticationError.InvalidCredentials
-import io.iohk.atala.shared.crypto.Apollo
-import io.iohk.atala.shared.models.WalletAdministrationContext
-import io.iohk.atala.shared.models.WalletId
-import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
+import org.hyperledger.identus.shared.crypto.Apollo
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import zio.Runtime.removeDefaultLoggers
 import zio.test.Assertion.*
 import zio.test.TestAspect.sequential

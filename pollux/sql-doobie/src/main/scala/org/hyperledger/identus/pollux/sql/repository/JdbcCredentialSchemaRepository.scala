@@ -6,9 +6,9 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.repository.Repository.*
 import org.hyperledger.identus.pollux.core.repository.{CredentialSchemaRepository, Repository}
 import org.hyperledger.identus.pollux.sql.model.db.{CredentialSchemaSql, CredentialSchema as CredentialSchemaRow}
-import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.Implicits.*
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.db.ContextAwareTask
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.interop.catz.*
 

@@ -5,7 +5,7 @@ import io.iohk.atala.credentialstatus.controller.http.StatusListCredential
 import org.hyperledger.identus.pollux.core.service.CredentialStatusListService
 import zio.*
 import org.hyperledger.identus.pollux.core.model.DidCommID
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 
 import java.util.UUID
 

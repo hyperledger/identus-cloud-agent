@@ -1,4 +1,4 @@
-package io.iohk.atala.sharedtest.containers
+package org.hyperledger.identus.sharedtest.containers
 
 import com.dimafeng.testcontainers.{SingleContainer, VaultContainer}
 import org.testcontainers.vault.{VaultContainer => JavaVaultContainer}

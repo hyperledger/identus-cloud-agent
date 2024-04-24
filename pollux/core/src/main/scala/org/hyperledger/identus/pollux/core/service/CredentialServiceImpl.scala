@@ -26,9 +26,9 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
 import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer, *}
-import io.iohk.atala.shared.http.{DataUrlResolver, GenericUriResolver}
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.utils.aspects.CustomMetricsAspect
+import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.prelude.ZValidation
 

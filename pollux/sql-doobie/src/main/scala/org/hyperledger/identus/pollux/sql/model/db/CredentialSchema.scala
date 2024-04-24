@@ -5,7 +5,7 @@ import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.doobie.DoobieContext
 import io.getquill.idiom.*
 import org.hyperledger.identus.pollux.core.model.schema.Schema
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletId
 
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit

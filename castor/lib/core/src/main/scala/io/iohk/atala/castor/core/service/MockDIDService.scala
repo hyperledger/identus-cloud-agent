@@ -2,9 +2,9 @@ package io.iohk.atala.castor.core.service
 
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error
-import io.iohk.atala.shared.crypto.Apollo
-import io.iohk.atala.shared.crypto.Secp256k1KeyPair
-import io.iohk.atala.shared.models.Base64UrlString
+import org.hyperledger.identus.shared.crypto.Apollo
+import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
+import org.hyperledger.identus.shared.models.Base64UrlString
 import zio.mock.{Expectation, Mock, Proxy}
 import zio.test.Assertion
 import zio.{IO, URLayer, ZIO, ZLayer, mock}

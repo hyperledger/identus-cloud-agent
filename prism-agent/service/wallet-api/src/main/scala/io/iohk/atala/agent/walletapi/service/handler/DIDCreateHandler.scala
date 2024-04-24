@@ -11,10 +11,10 @@ import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import io.iohk.atala.agent.walletapi.util.OperationFactory
 import io.iohk.atala.castor.core.model.did.PrismDIDOperation
-import io.iohk.atala.shared.crypto.Apollo
-import io.iohk.atala.shared.crypto.Ed25519KeyPair
-import io.iohk.atala.shared.crypto.X25519KeyPair
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.crypto.Apollo
+import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
+import org.hyperledger.identus.shared.crypto.X25519KeyPair
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 private[walletapi] class DIDCreateHandler(

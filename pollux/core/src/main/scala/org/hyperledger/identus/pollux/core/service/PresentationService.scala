@@ -8,7 +8,7 @@ import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
 import org.hyperledger.identus.pollux.vc.jwt.*
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 import java.time.Instant

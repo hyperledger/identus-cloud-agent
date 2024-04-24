@@ -17,8 +17,8 @@ import io.iohk.atala.castor.controller.http.ManagedDID
 import io.iohk.atala.castor.controller.http.ManagedDIDPage
 import io.iohk.atala.castor.controller.http.UpdateManagedDIDRequest
 import io.iohk.atala.castor.core.model.did.PrismDID
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.utils.Traverse.*
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.utils.Traverse.*
 import scala.language.implicitConversions
 import zio.*
 

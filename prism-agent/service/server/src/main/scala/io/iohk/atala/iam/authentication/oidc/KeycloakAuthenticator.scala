@@ -7,7 +7,7 @@ import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethod
 import io.iohk.atala.iam.authentication.AuthenticationError.InvalidCredentials
 import io.iohk.atala.iam.authentication.AuthenticatorWithAuthZ
 import io.iohk.atala.iam.authentication.Credentials
-import io.iohk.atala.shared.utils.Traverse.*
+import org.hyperledger.identus.shared.utils.Traverse.*
 import pdi.jwt.JwtCirce
 import pdi.jwt.JwtClaim
 import pdi.jwt.JwtOptions

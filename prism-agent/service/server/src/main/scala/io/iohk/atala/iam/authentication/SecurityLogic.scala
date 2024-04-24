@@ -8,8 +8,8 @@ import io.iohk.atala.iam.authentication.AuthenticationError.AuthenticationMethod
 import io.iohk.atala.iam.authentication.admin.AdminApiKeyCredentials
 import io.iohk.atala.iam.authentication.apikey.ApiKeyCredentials
 import io.iohk.atala.iam.authentication.oidc.JwtCredentials
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
 import zio.*
 
 object SecurityLogic {

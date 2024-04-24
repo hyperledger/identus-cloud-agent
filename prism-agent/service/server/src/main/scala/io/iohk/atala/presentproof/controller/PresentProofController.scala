@@ -4,7 +4,7 @@ import io.iohk.atala.api.http.model.PaginationInput
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import io.iohk.atala.presentproof.controller.http.*
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.ZIO
 
 import java.util.UUID

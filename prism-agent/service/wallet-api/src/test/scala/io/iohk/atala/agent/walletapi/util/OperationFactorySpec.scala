@@ -2,8 +2,8 @@ package io.iohk.atala.agent.walletapi.util
 
 import io.iohk.atala.agent.walletapi.model.*
 import io.iohk.atala.castor.core.model.did.*
-import io.iohk.atala.shared.crypto.ApolloSpecHelper
-import io.iohk.atala.shared.models.HexString
+import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
+import org.hyperledger.identus.shared.models.HexString
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

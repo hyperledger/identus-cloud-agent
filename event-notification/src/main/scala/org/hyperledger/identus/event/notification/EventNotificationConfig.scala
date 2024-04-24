@@ -1,7 +1,7 @@
 package org.hyperledger.identus.event.notification
 
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.net.URL

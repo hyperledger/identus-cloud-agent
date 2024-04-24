@@ -4,7 +4,7 @@ import doobie.util.{Get, Put}
 import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID}
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletId
 
 given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
 given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)

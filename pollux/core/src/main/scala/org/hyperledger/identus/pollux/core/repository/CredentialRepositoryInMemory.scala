@@ -5,7 +5,7 @@ import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadat
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
 import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError.*
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.time.Instant

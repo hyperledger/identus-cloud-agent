@@ -16,8 +16,8 @@ import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.castor.core.model.did.{PrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import io.iohk.atala.prism.protos.node_models
-import io.iohk.atala.shared.crypto.jwk.JWK
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.crypto.jwk.JWK
+import org.hyperledger.identus.shared.models.WalletId
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*

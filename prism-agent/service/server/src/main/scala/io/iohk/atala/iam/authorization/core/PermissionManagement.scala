@@ -6,8 +6,8 @@ import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityAlread
 import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityNotFound
 import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityStorageError
 import io.iohk.atala.agent.walletapi.model.error.EntityServiceError.EntityWalletNotFound
-import io.iohk.atala.shared.models.WalletAdministrationContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.util.UUID

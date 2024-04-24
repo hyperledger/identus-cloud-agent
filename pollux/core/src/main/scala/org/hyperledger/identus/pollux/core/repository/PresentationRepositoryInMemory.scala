@@ -4,7 +4,7 @@ import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.PresentationRecord.ProtocolState
 import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.time.Instant

@@ -3,7 +3,7 @@ package org.hyperledger.identus.pollux.core.service
 import io.iohk.atala.agent.walletapi.storage.{GenericSecret, GenericSecretStorage}
 import org.hyperledger.identus.pollux.anoncreds.{AnoncredLinkSecret, AnoncredLinkSecretWithId}
 import org.hyperledger.identus.pollux.core.model.error.LinkSecretError
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.json.ast.Json
 

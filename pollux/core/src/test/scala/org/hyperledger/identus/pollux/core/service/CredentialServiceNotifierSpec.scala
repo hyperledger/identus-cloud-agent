@@ -5,7 +5,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.{Expectation, MockSpecDefault}
 import zio.test.*

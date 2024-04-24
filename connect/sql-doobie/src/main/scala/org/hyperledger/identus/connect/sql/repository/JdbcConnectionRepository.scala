@@ -13,9 +13,9 @@ import org.hyperledger.identus.connect.core.model.ConnectionRecord.{ProtocolStat
 import org.hyperledger.identus.connect.core.repository.ConnectionRepository
 import org.hyperledger.identus.mercury.protocol.connection.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.Implicits.*
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.db.ContextAwareTask
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.interop.catz.*
 

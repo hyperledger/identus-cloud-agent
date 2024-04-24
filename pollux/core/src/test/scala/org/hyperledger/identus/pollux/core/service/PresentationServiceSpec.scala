@@ -23,7 +23,7 @@ import org.hyperledger.identus.pollux.core.service.serdes.{
   AnoncredPresentationV1
 }
 import org.hyperledger.identus.pollux.vc.jwt.*
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

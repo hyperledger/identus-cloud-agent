@@ -2,9 +2,9 @@ package io.iohk.atala.agent.walletapi
 
 import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.agent.walletapi.model.WalletSeed
-import io.iohk.atala.shared.crypto.jwk.JWK
-import io.iohk.atala.shared.models.HexString
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.crypto.jwk.JWK
+import org.hyperledger.identus.shared.models.HexString
+import org.hyperledger.identus.shared.models.WalletId
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*

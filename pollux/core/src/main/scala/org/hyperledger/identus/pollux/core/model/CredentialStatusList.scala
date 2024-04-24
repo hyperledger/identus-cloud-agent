@@ -2,7 +2,7 @@ package org.hyperledger.identus.pollux.core.model
 
 import io.iohk.atala.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletId
 import java.time.Instant
 import java.util.UUID
 

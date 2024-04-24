@@ -5,9 +5,9 @@ import doobie.implicits.*
 import doobie.postgres.implicits.*
 import io.iohk.atala.agent.walletapi.storage.GenericSecret
 import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
-import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.Implicits.*
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.db.ContextAwareTask
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.json.ast.Json
 

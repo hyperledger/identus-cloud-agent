@@ -15,7 +15,7 @@ import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.{
 }
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.model.DidId
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{IO, ZIO}
 
 import java.util.UUID

@@ -4,8 +4,8 @@ import io.circe.Json
 import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
-import io.iohk.atala.shared.crypto.Apollo
-import io.iohk.atala.shared.models.Base64UrlString
+import org.hyperledger.identus.shared.crypto.Apollo
+import org.hyperledger.identus.shared.models.Base64UrlString
 import zio.*
 import zio.test.Gen
 

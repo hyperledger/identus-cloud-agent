@@ -2,8 +2,8 @@ package org.hyperledger.identus.pollux.sql.repository
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.hyperledger.identus.pollux.core.repository._
-import io.iohk.atala.shared.db.DbConfig
-import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
+import org.hyperledger.identus.shared.db.DbConfig
+import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import zio._
 import zio.test._
 

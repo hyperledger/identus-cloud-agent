@@ -17,10 +17,10 @@ import io.iohk.atala.iam.wallet.http.model.CreateWalletRequest
 import io.iohk.atala.iam.wallet.http.model.CreateWalletUmaPermissionRequest
 import io.iohk.atala.iam.wallet.http.model.WalletDetail
 import io.iohk.atala.iam.wallet.http.model.WalletDetailPage
-import io.iohk.atala.shared.models.HexString
-import io.iohk.atala.shared.models.WalletAdministrationContext
-import io.iohk.atala.shared.models.WalletAdministrationContext.Admin
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.HexString
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.WalletAdministrationContext.Admin
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.util.UUID

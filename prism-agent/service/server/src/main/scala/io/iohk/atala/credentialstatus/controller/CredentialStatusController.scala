@@ -3,7 +3,7 @@ package io.iohk.atala.credentialstatus.controller
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.credentialstatus.controller.http.StatusListCredential
 import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import org.hyperledger.identus.pollux.core.model.DidCommID
 

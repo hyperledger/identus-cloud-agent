@@ -2,7 +2,7 @@ package io.iohk.atala.test.container
 
 import io.iohk.atala.agent.walletapi.vault.VaultKVClient
 import io.iohk.atala.agent.walletapi.vault.VaultKVClientImpl
-import io.iohk.atala.sharedtest.containers.VaultContainerCustom
+import org.hyperledger.identus.sharedtest.containers.VaultContainerCustom
 import zio.*
 import zio.http.Client
 

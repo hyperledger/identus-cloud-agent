@@ -25,7 +25,7 @@ import org.hyperledger.identus.mercury.protocol.revocationnotificaiton.Revocatio
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.resolvers.DIDResolver
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.http.*
 import java.util.UUID

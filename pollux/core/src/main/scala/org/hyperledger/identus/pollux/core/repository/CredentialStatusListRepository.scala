@@ -2,7 +2,7 @@ package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 import java.util.UUID

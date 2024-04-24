@@ -9,7 +9,7 @@ import io.iohk.atala.castor.core.model.did as castorDomain
 import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.castor.core.model.did.PrismDID
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
-import io.iohk.atala.shared.utils.Traverse.*
+import org.hyperledger.identus.shared.utils.Traverse.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}

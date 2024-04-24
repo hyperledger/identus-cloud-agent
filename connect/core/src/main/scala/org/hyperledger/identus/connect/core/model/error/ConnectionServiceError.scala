@@ -1,7 +1,7 @@
 package org.hyperledger.identus.connect.core.model.error
 
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
-import io.iohk.atala.shared.models.{Failure, StatusCode}
+import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 import zio.NonEmptyChunk
 
 import java.util.UUID

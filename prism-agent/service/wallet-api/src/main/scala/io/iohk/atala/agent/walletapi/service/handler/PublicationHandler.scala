@@ -9,8 +9,8 @@ import io.iohk.atala.castor.core.model.did.ScheduleDIDOperationOutcome
 import io.iohk.atala.castor.core.model.did.SignedPrismDIDOperation
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.service.DIDService
-import io.iohk.atala.shared.crypto.Secp256k1KeyPair
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions
 import zio.*

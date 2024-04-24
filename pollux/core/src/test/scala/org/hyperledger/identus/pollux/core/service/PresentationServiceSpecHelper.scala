@@ -10,7 +10,7 @@ import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.repository.*
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.pollux.vc.jwt.*
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.security.*

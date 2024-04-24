@@ -5,10 +5,10 @@ import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.service.{WalletManagementService, WalletManagementServiceImpl}
 import io.iohk.atala.agent.walletapi.sql.{JdbcGenericSecretStorage, JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
 import io.iohk.atala.agent.walletapi.vault.{VaultGenericSecretStorage, VaultWalletSecretStorage}
-import io.iohk.atala.shared.crypto.ApolloSpecHelper
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletAdministrationContext
-import io.iohk.atala.sharedtest.containers.PostgresTestContainerSupport
+import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import io.iohk.atala.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
 import zio.json.ast.Json

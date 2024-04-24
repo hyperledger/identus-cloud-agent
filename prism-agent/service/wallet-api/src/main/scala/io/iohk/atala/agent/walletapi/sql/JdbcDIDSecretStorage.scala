@@ -7,11 +7,11 @@ import doobie.postgres.implicits.*
 import io.iohk.atala.agent.walletapi.storage.DIDSecretStorage
 import org.hyperledger.identus.mercury.model.DidId
 import io.iohk.atala.castor.core.model.did.PrismDID
-import io.iohk.atala.shared.crypto.jwk.FromJWK
-import io.iohk.atala.shared.crypto.jwk.JWK
-import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.Implicits.*
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.crypto.jwk.FromJWK
+import org.hyperledger.identus.shared.crypto.jwk.JWK
+import org.hyperledger.identus.shared.db.ContextAwareTask
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 import java.time.Instant

@@ -15,7 +15,7 @@ import io.iohk.atala.presentproof.controller.PresentProofEndpoints.{
   updatePresentation
 }
 import io.iohk.atala.presentproof.controller.http.{RequestPresentationAction, RequestPresentationInput}
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
 import zio.*
 

@@ -5,10 +5,10 @@ import io.iohk.atala.agent.walletapi.model.WalletSeed
 import io.iohk.atala.agent.walletapi.storage.WalletNonSecretStorage
 import io.iohk.atala.agent.walletapi.storage.WalletSecretStorage
 import org.hyperledger.identus.event.notification.EventNotificationConfig
-import io.iohk.atala.shared.crypto.Apollo
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletAdministrationContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.crypto.Apollo
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.util.UUID

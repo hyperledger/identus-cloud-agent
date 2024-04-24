@@ -6,7 +6,7 @@ import io.iohk.atala.iam.authentication.Authenticator
 import io.iohk.atala.iam.authentication.Authorizer
 import io.iohk.atala.iam.authentication.DefaultAuthenticator
 import io.iohk.atala.iam.authentication.SecurityLogic
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import sttp.tapir.ztapir.*
 import zio.*
 

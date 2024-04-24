@@ -9,12 +9,12 @@ import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, BitStringErr
 import io.iohk.atala.castor.core.model.did.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
-import io.iohk.atala.shared.db.ContextAwareTask
-import io.iohk.atala.shared.db.Implicits.*
+import org.hyperledger.identus.shared.db.ContextAwareTask
+import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.*
 import zio.*
 import zio.interop.catz.*
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 
 import java.time.Instant
 import java.util.UUID

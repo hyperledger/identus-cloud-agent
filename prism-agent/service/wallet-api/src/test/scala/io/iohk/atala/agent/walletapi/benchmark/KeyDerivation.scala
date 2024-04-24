@@ -2,11 +2,11 @@ package io.iohk.atala.agent.walletapi.benchmark
 
 import io.iohk.atala.agent.walletapi.vault.KVCodec
 import io.iohk.atala.agent.walletapi.vault.VaultKVClient
-import io.iohk.atala.shared.crypto.Apollo
-import io.iohk.atala.shared.crypto.DerivationPath
-import io.iohk.atala.shared.crypto.Secp256k1PrivateKey
-import io.iohk.atala.shared.models.Base64UrlString
-import io.iohk.atala.shared.models.HexString
+import org.hyperledger.identus.shared.crypto.Apollo
+import org.hyperledger.identus.shared.crypto.DerivationPath
+import org.hyperledger.identus.shared.crypto.Secp256k1PrivateKey
+import org.hyperledger.identus.shared.models.Base64UrlString
+import org.hyperledger.identus.shared.models.HexString
 import io.iohk.atala.test.container.VaultTestContainerSupport
 import scala.util.Try
 import zio.*

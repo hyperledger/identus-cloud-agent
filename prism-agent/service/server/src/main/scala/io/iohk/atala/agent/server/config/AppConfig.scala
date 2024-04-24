@@ -3,7 +3,7 @@ package io.iohk.atala.agent.server.config
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.iam.authentication.AuthenticationConfig
 import org.hyperledger.identus.pollux.vc.jwt.*
-import io.iohk.atala.shared.db.DbConfig
+import org.hyperledger.identus.shared.db.DbConfig
 import zio.Config
 import zio.config.*
 import zio.config.magnolia.*

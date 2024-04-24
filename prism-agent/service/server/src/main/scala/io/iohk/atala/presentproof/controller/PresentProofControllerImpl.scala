@@ -13,7 +13,7 @@ import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, P
 import org.hyperledger.identus.pollux.core.service.PresentationService
 import io.iohk.atala.presentproof.controller.PresentProofController.toDidCommID
 import io.iohk.atala.presentproof.controller.http.*
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}
 
 import java.util.UUID

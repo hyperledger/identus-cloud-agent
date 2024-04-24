@@ -1,8 +1,8 @@
 package io.iohk.atala.test.container
 
 import zio.*
-import io.iohk.atala.sharedtest.containers.VaultTestContainer
-import io.iohk.atala.sharedtest.containers.VaultContainerCustom
+import org.hyperledger.identus.sharedtest.containers.VaultTestContainer
+import org.hyperledger.identus.sharedtest.containers.VaultContainerCustom
 
 object VaultLayer {
 

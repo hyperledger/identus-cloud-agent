@@ -1,6 +1,6 @@
 package io.iohk.atala.iam.authorization.keycloak.admin
 
-import io.iohk.atala.sharedtest.containers.{KeycloakContainerCustom, KeycloakTestContainerSupport}
+import org.hyperledger.identus.sharedtest.containers.{KeycloakContainerCustom, KeycloakTestContainerSupport}
 import zio.*
 import zio.ZIO.*
 import zio.test.*

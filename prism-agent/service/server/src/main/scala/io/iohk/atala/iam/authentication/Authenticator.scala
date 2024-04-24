@@ -4,9 +4,9 @@ import io.iohk.atala.agent.walletapi.model.BaseEntity
 import io.iohk.atala.agent.walletapi.model.Entity
 import io.iohk.atala.agent.walletapi.model.EntityRole
 import io.iohk.atala.api.http.ErrorResponse
-import io.iohk.atala.shared.models.WalletAccessContext
-import io.iohk.atala.shared.models.WalletAdministrationContext
-import io.iohk.atala.shared.models.WalletId
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.{IO, ZIO, ZLayer}
 
 trait Credentials
