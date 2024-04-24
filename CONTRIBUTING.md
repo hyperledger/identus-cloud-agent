@@ -1,6 +1,6 @@
-# Contributing to Atala PRISM
+# Contributing to Identus
 
-We would love for you to contribute to Atala PRISM and help make it even better than it is today!
+We would love for you to contribute to Identus and help make it even better than it is today!
 As a contributor, here are the guidelines we would like you to follow:
 
  - [DCO](#dco)
@@ -13,7 +13,7 @@ As a contributor, here are the guidelines we would like you to follow:
 
 ## <a name="dco"></a> Developer Certificate of Origin (DCO)
 
-PRISM Cloud Agent enforces the Developer Certificate of Origin (DCO). It requires all commit messages to contain the `Signed-off-by` line with an email address that matches the commit author and the name on your GitHub account.
+Cloud Agent enforces the Developer Certificate of Origin (DCO). It requires all commit messages to contain the `Signed-off-by` line with an email address that matches the commit author and the name on your GitHub account.
 
 Please read and follow set up [DCO](./DCO.md).
 
@@ -43,13 +43,13 @@ If you would like to *implement* a new feature, please consider the size of the 
 
 Before you submit an issue, please search the issue tracker. An issue for your problem might already exist and the discussion might inform you of workarounds readily available.
 
-You can file new issues by selecting a `Bug Report` template on our [Issues submition page](https://github.com/input-output-hk/atala-prism-building-blocks/issues/new/choose).
+You can file new issues by selecting a `Bug Report` template on our [Issues submition page](https://github.com/hyperledger/identus-cloud-agent/issues/new/choose).
 
 ### <a name="submit-pr"></a> Submitting a Pull Request (PR)
 
 Before you submit your Pull Request (PR) consider the following guidelines:
 
-1. Search [GitHub](https://github.com/input-output-hk/atala-prism-building-blocks/pulls) for an open or closed PR that relates to your submission.
+1. Search [GitHub](https://github.com/hyperledger/identus-cloud-agent/pulls) for an open or closed PR that relates to your submission.
    You don't want to duplicate existing efforts.
 
 2. Be sure that an issue describes the problem you're fixing, or documents the design for the feature you'd like to add.
@@ -57,7 +57,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
 
 3. Make sure all your commits have DCO sign-off line with an email address that matches the commit author and the name on your GitHub account.
 
-4. [Fork](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo) the https://github.com/input-output-hk/atala-prism-building-blocks repo.
+4. [Fork](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo) the https://github.com/hyperledger/identus-cloud-agent repo.
 
 5. In your forked repository, make your changes in a new git branch:
 
@@ -85,7 +85,7 @@ Before you submit your Pull Request (PR) consider the following guidelines:
     git push origin my-fix-branch
     ```
 
-11. In GitHub, send a pull request to `atala-prism-building-blocks:main`.
+11. In GitHub, send a pull request to `identus-cloud-agent:main`.
 
 That's it! Thank you for your contribution!
 

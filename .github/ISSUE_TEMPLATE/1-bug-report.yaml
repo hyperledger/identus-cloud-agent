@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a bug in the Atala PRISM Cloud Agent
+description: Report a bug in the Identus Cloud Agent
 
 body:
   - type: dropdown

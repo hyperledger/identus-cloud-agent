@@ -1,5 +1,5 @@
 {
-  "name": "atala-prism-building-blocks",
+  "name": "identus-cloud-agent",
   "version": "1.31.0",
   "engines": {
     "node": ">=16.13.0"
@@ -28,7 +28,7 @@
         "prerelease": "snapshot"
       }
     ],
-    "tagFormat": "prism-agent-v${version}",
+    "tagFormat": "cloud-agent-v${version}",
     "plugins": [
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",
@@ -41,7 +41,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "sed -i.bak \"s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${nextRelease.version}/\" ./infrastructure/local/.env && rm -f ./infrastructure/local/.env.bak"
+          "prepareCmd": "sed -i.bak \"s/AGENT_VERSION=.*/AGENT_VERSION=${nextRelease.version}/\" ./infrastructure/local/.env && rm -f ./infrastructure/local/.env.bak"
         }
       ],
       [
@@ -53,7 +53,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "sbt \"prismAgentServer/test:runMain io.iohk.atala.api.util.Tapir2StaticOAS ${process.env.PWD}/prism-agent/service/api/http/prism-agent-openapi-spec.yaml ${nextRelease.version}\""
+          "prepareCmd": "sbt \"prismAgentServer/test:runMain org.hyperledger.identus.api.util.Tapir2StaticOAS ${process.env.PWD}/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml ${nextRelease.version}\""
         }
       ],
       [
@@ -89,7 +89,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "docker buildx build --platform=linux/arm64,linux/amd64 --push -t ghcr.io/hyperledger/identus-cloud-agent:${nextRelease.version} ./prism-agent/service/server/target/docker/stage"
+          "prepareCmd": "docker buildx build --platform=linux/arm64,linux/amd64 --push -t ghcr.io/hyperledger/identus-cloud-agent:${nextRelease.version} ./cloud-agent/service/server/target/docker/stage"
         }
       ],
       [
@@ -107,13 +107,13 @@
             "DEPENDENCIES.md",
             "package.json",
             "package-lock.json",
-            "prism-agent/service/api/http/prism-agent-openapi-spec.yaml",
+            "cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml",
             "infrastructure/charts/agent/Chart.yaml",
             "infrastructure/charts/index.yaml",
             "infrastructure/charts/*.tgz",
             "infrastructure/local/.env"
           ],
-          "message": "chore(release): cut open enterprise agent ${nextRelease.version} release\n\n${nextRelease.notes}\n\nSigned-off-by: Allain Magyar <allain.magyar@iohk.io>"
+          "message": "chore(release): cut Identus Cloud agent ${nextRelease.version} release\n\n${nextRelease.notes}\n\nSigned-off-by: Allain Magyar <allain.magyar@iohk.io>"
         }
       ],
       [
@@ -123,7 +123,7 @@
           "notifyOnFail": true,
           "markdownReleaseNotes": true,
           "onSuccessTemplate": {
-            "text": "A new version of Opent Enterprise Agent successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/$npm_package_version\n\nRelease notes:\n$release_notes"
+            "text": "A new version of Identus Cloud Agent successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/$npm_package_version\n\nRelease notes:\n$release_notes"
           }
         }
       ]

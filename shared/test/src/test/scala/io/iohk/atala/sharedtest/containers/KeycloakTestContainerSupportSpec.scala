@@ -1,4 +1,4 @@
-package io.iohk.atala.sharedtest.containers
+package org.hyperledger.identus.sharedtest.containers
 
 import zio.ZIO
 import zio.test.*

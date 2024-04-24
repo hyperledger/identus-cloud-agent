@@ -1,4 +1,4 @@
-package io.iohk.atala.sharedtest.containers
+package org.hyperledger.identus.sharedtest.containers
 
 import org.keycloak.admin.client.Keycloak
 import org.keycloak.representations.idm.{
