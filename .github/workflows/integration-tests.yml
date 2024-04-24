@@ -73,14 +73,13 @@ jobs:
           OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_prism_agent.outputs.open_enterprise_agent_version }}
           ATALA_GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
           ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-        continue-on-error: true
         run: |
-          ./gradlew test --tests "IntegrationTestsRunner" || true
+          ./gradlew test --tests "IntegrationTestsRunner"
           ./gradlew reports
 
       - name: Extract test results
         id: analyze_test_results
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' && always()
         run: |
           JSON_RESULTS="target/site/serenity/serenity-summary.json"
           CONCLUSION=failure
@@ -118,14 +117,14 @@ jobs:
           check_name: "Integration Test Results"
 
       - name: Upload artifacts
-        if: github.ref_name == 'main' || steps.analyze_test_results.outputs.conclusion == 'failure'
+        if: github.ref_name == 'main' || failure()
         uses: actions/upload-artifact@v4
         with:
           name: integration-tests-result
           path: ${{ env.REPORTS_DIR }}
 
       - name: Slack Notification
-        if: github.ref_name == 'main' && steps.analyze_test_results.outputs.conclusion == 'failure'
+        if: github.ref_name == 'main' && failure()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: ${{ steps.analyze_test_results.outputs.conclusion }}
