@@ -23,7 +23,7 @@ server:
   image:
       repository: ghcr.io
       pullPolicy: IfNotPresent
-      tag: input-output-hk/prism-agent
+      tag: hyperledger/prism-agent
   resources:
     limits:
       cpu: 500m
