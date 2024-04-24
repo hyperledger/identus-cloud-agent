@@ -1,6 +1,6 @@
 package io.iohk.atala.system.controller
 
-import io.iohk.atala.agent.server.buildinfo.BuildInfo
+import org.hyperledger.identus.agent.server.buildinfo.BuildInfo
 import io.iohk.atala.api.http.{ErrorResponse, RequestContext}
 import io.iohk.atala.system.controller.http.HealthInfo
 import io.micrometer.prometheus.PrometheusMeterRegistry

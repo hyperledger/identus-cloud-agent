@@ -1,6 +1,6 @@
 package io.iohk.atala.agent.server.http
 
-import io.iohk.atala.agent.server.buildinfo.BuildInfo
+import org.hyperledger.identus.agent.server.buildinfo.BuildInfo
 import sttp.apispec.openapi.OpenAPI
 import sttp.tapir.redoc.RedocUIOptions
 import sttp.tapir.redoc.bundle.RedocInterpreter

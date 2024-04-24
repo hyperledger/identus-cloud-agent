@@ -350,7 +350,7 @@ lazy val D_Pollux_AnonCreds = new {
   val baseDependencies: Seq[ModuleID] = Seq(D.zio, D.zioJson)
 }
 
-lazy val D_PrismAgent = new {
+lazy val D_CloudAgent = new {
   val logback = "ch.qos.logback" % "logback-classic" % V.logback
 
   val tapirSwaggerUiBundle = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % V.tapir
@@ -465,8 +465,6 @@ val commonSetttings = Seq(
 lazy val shared = (project in file("shared/core"))
   .settings(commonSetttings)
   .settings(
-    organization := "io.iohk.atala",
-    organizationName := "Input Output Global",
     name := "shared",
     crossPaths := false,
     libraryDependencies ++= D_Shared.dependencies
@@ -475,8 +473,6 @@ lazy val shared = (project in file("shared/core"))
 lazy val sharedCrypto = (project in file("shared/crypto"))
   .settings(commonSetttings)
   .settings(
-    organization := "io.iohk.atala",
-    organizationName := "Input Output Global",
     name := "shared-crypto",
     crossPaths := false,
     libraryDependencies ++= D_SharedCrypto.dependencies
@@ -486,8 +482,6 @@ lazy val sharedCrypto = (project in file("shared/crypto"))
 lazy val sharedTest = (project in file("shared/test"))
   .settings(commonSetttings)
   .settings(
-    organization := "io.iohk.atala",
-    organizationName := "Input Output Global",
     name := "shared-test",
     crossPaths := false,
     libraryDependencies ++= D_SharedTest.dependencies
@@ -503,7 +497,7 @@ lazy val sharedTest = (project in file("shared/test"))
   * This module must not depend on external libraries!
   */
 lazy val models = project
-  .in(file("mercury/mercury-library/models"))
+  .in(file("mercury/models"))
   .settings(name := "mercury-data-models")
   .settings(
     libraryDependencies ++= Seq(D.zio),
@@ -529,7 +523,7 @@ models implementation for didcommx () */
 // #################
 
 lazy val protocolConnection = project
-  .in(file("mercury/mercury-library/protocol-connection"))
+  .in(file("mercury/protocol-connection"))
   .settings(name := "mercury-protocol-connection")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -537,7 +531,7 @@ lazy val protocolConnection = project
   .dependsOn(models, protocolInvitation)
 
 lazy val protocolCoordinateMediation = project
-  .in(file("mercury/mercury-library/protocol-coordinate-mediation"))
+  .in(file("mercury/protocol-coordinate-mediation"))
   .settings(name := "mercury-protocol-coordinate-mediation")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -545,14 +539,14 @@ lazy val protocolCoordinateMediation = project
   .dependsOn(models)
 
 lazy val protocolDidExchange = project
-  .in(file("mercury/mercury-library/protocol-did-exchange"))
+  .in(file("mercury/protocol-did-exchange"))
   .settings(name := "mercury-protocol-did-exchange")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .dependsOn(models, protocolInvitation)
 
 lazy val protocolInvitation = project
-  .in(file("mercury/mercury-library/protocol-invitation"))
+  .in(file("mercury/protocol-invitation"))
   .settings(name := "mercury-protocol-invitation")
   .settings(libraryDependencies += D.zio)
   .settings(
@@ -567,13 +561,13 @@ lazy val protocolInvitation = project
   .dependsOn(models)
 
 lazy val protocolMercuryMailbox = project
-  .in(file("mercury/mercury-library/protocol-mercury-mailbox"))
+  .in(file("mercury/protocol-mercury-mailbox"))
   .settings(name := "mercury-protocol-mailbox")
   .settings(libraryDependencies += D.zio)
   .dependsOn(models, protocolInvitation, protocolRouting)
 
 lazy val protocolLogin = project
-  .in(file("mercury/mercury-library/protocol-outofband-login"))
+  .in(file("mercury/protocol-outofband-login"))
   .settings(name := "mercury-protocol-outofband-login")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies += D.zio)
@@ -582,19 +576,19 @@ lazy val protocolLogin = project
   .dependsOn(models)
 
 lazy val protocolReportProblem = project
-  .in(file("mercury/mercury-library/protocol-report-problem"))
+  .in(file("mercury/protocol-report-problem"))
   .settings(name := "mercury-protocol-report-problem")
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
 lazy val protocolRouting = project
-  .in(file("mercury/mercury-library/protocol-routing"))
+  .in(file("mercury/protocol-routing"))
   .settings(name := "mercury-protocol-routing-2-0")
   .settings(libraryDependencies += D.zio)
   .dependsOn(models)
 
 lazy val protocolIssueCredential = project
-  .in(file("mercury/mercury-library/protocol-issue-credential"))
+  .in(file("mercury/protocol-issue-credential"))
   .settings(name := "mercury-protocol-issue-credential")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -602,7 +596,7 @@ lazy val protocolIssueCredential = project
   .dependsOn(models)
 
 lazy val protocolRevocationNotification = project
-  .in(file("mercury/mercury-library/protocol-revocation-notification"))
+  .in(file("mercury/protocol-revocation-notification"))
   .settings(name := "mercury-protocol-revocation-notification")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -610,7 +604,7 @@ lazy val protocolRevocationNotification = project
   .dependsOn(models)
 
 lazy val protocolPresentProof = project
-  .in(file("mercury/mercury-library/protocol-present-proof"))
+  .in(file("mercury/protocol-present-proof"))
   .settings(name := "mercury-protocol-present-proof")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -618,12 +612,12 @@ lazy val protocolPresentProof = project
   .dependsOn(models)
 
 lazy val vc = project
-  .in(file("mercury/mercury-library/vc"))
+  .in(file("mercury/vc"))
   .settings(name := "mercury-verifiable-credentials")
   .dependsOn(protocolIssueCredential, protocolPresentProof) //TODO merge those two modules into this one
 
 lazy val protocolTrustPing = project
-  .in(file("mercury/mercury-library/protocol-trust-ping"))
+  .in(file("mercury/protocol-trust-ping"))
   .settings(name := "mercury-protocol-trust-ping")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -636,7 +630,7 @@ lazy val protocolTrustPing = project
 
 // TODO move stuff to the models module
 lazy val resolver = project // maybe merge into models
-  .in(file("mercury/mercury-library/resolver"))
+  .in(file("mercury/resolver"))
   .settings(name := "mercury-resolver")
   .settings(
     libraryDependencies ++= Seq(
@@ -655,7 +649,7 @@ lazy val resolver = project // maybe merge into models
 // ##############
 
 lazy val agent = project // maybe merge into models
-  .in(file("mercury/mercury-library/agent"))
+  .in(file("mercury/agent"))
   .settings(name := "mercury-agent-core")
   .settings(libraryDependencies ++= Seq(D.zioLog, D.zioSLF4J))
   .dependsOn(
@@ -677,7 +671,7 @@ lazy val agent = project // maybe merge into models
 
 /** agents implementation with didcommx */
 lazy val agentDidcommx = project
-  .in(file("mercury/mercury-library/agent-didcommx"))
+  .in(file("mercury/agent-didcommx"))
   .settings(name := "mercury-agent-didcommx")
   .settings(libraryDependencies += D.didcommx)
   .settings(libraryDependencies += D.munitZio)
@@ -686,7 +680,7 @@ lazy val agentDidcommx = project
 // ///** TODO Demos agents and services implementation with did-scala */
 // lazy val agentDidScala =
 //   project
-//     .in(file("mercury/mercury-library/agent-did-scala"))
+//     .in(file("mercury/agent-did-scala"))
 //     .settings(name := "mercury-agent-didscala")
 //     .settings(skip / publish := true)
 //     .dependsOn(agent)
@@ -743,7 +737,7 @@ lazy val polluxCore = project
     libraryDependencies ++= D_Pollux.coreDependencies
   )
   .dependsOn(shared)
-  .dependsOn(prismAgentWalletAPI)
+  .dependsOn(agentWalletAPI)
   .dependsOn(polluxVcJWT)
   .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds)
 
@@ -772,7 +766,6 @@ lazy val polluxAnoncreds = project
     Compile / unmanagedResourceDirectories ++= Seq(
       baseDirectory.value / "native-lib" / "NATIVE"
     ),
-    // libraryDependencies += "io.iohk.atala.prism.anoncredskmp" % "anoncreds-kmp-jvm" % "0.3.5-M2",
     libraryDependencies ++= D_Pollux_AnonCreds.baseDependencies
   )
 
@@ -786,7 +779,7 @@ lazy val polluxAnoncredsTest = project
 // #####################
 
 lazy val connectCore = project
-  .in(file("connect/lib/core"))
+  .in(file("connect/core"))
   .settings(commonSetttings)
   .settings(
     name := "connect-core",
@@ -797,7 +790,7 @@ lazy val connectCore = project
   .dependsOn(protocolConnection, protocolReportProblem, eventNotification)
 
 lazy val connectDoobie = project
-  .in(file("connect/lib/sql-doobie"))
+  .in(file("connect/sql-doobie"))
   .settings(commonSetttings)
   .settings(
     name := "connect-sql-doobie",
@@ -823,15 +816,15 @@ lazy val eventNotification = project
 // #### Cloud Agent ####
 // #####################
 
-lazy val prismAgentWalletAPI = project
+lazy val agentWalletAPI = project
   .in(file("prism-agent/service/wallet-api"))
   .settings(commonSetttings)
   .settings(
     name := "prism-agent-wallet-api",
     libraryDependencies ++=
-      D_PrismAgent.keyManagementDependencies ++
-        D_PrismAgent.iamDependencies ++
-        D_PrismAgent.postgresDependencies ++
+      D_CloudAgent.keyManagementDependencies ++
+        D_CloudAgent.iamDependencies ++
+        D_CloudAgent.postgresDependencies ++
         Seq(D.zioMock)
   )
   .dependsOn(
@@ -842,13 +835,13 @@ lazy val prismAgentWalletAPI = project
   .dependsOn(sharedTest % "test->test")
   .dependsOn(sharedCrypto % "compile->compile;test->test")
 
-lazy val prismAgentServer = project
+lazy val cloudAgentServer = project
   .in(file("prism-agent/service/server"))
   .settings(commonSetttings)
   .settings(
     name := "prism-agent",
     fork := true,
-    libraryDependencies ++= D_PrismAgent.serverDependencies,
+    libraryDependencies ++= D_CloudAgent.serverDependencies,
     excludeDependencies ++= Seq(
       // Exclude `protobuf-javalite` from all dependencies since we're using scalapbRuntime which already include `protobuf-java`
       // Having both may introduce conflict on some api https://github.com/protocolbuffers/protobuf/issues/8104
@@ -856,18 +849,18 @@ lazy val prismAgentServer = project
     ),
     Compile / mainClass := Some("io.iohk.atala.agent.server.MainApp"),
     Docker / maintainer := "atala-coredid@iohk.io",
-    Docker / dockerUsername := Some("input-output-hk"),
+    Docker / dockerUsername := Some("hyperledger"), // https://github.com/hyperledger
     Docker / dockerRepository := Some("ghcr.io"),
     dockerExposedPorts := Seq(8080, 8085, 8090),
     // Official docker image for openjdk 21 with curl and bash
     dockerBaseImage := "openjdk:21-jdk",
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
-    buildInfoPackage := "io.iohk.atala.agent.server.buildinfo",
+    buildInfoPackage := "org.hyperledger.identus.agent.server.buildinfo",
     Compile / packageDoc / publishArtifact := false
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
   .enablePlugins(BuildInfoPlugin)
-  .dependsOn(prismAgentWalletAPI % "compile->compile;test->test")
+  .dependsOn(agentWalletAPI % "compile->compile;test->test")
   .dependsOn(
     agent,
     polluxCore,
@@ -890,7 +883,7 @@ releaseProcess := Seq[ReleaseStep](
   runClean,
   runTest,
   setReleaseVersion,
-  ReleaseStep(releaseStepTask(prismAgentServer / Docker / stage)),
+  ReleaseStep(releaseStepTask(cloudAgentServer / Docker / stage)),
   setNextVersion
 )
 
@@ -923,8 +916,8 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   polluxAnoncredsTest,
   connectCore,
   connectDoobie,
-  prismAgentWalletAPI,
-  prismAgentServer,
+  agentWalletAPI,
+  cloudAgentServer,
   eventNotification,
 )
 

@@ -6,7 +6,7 @@ import sttp.client3.{DeserializationException, UriContext, asString, basicReques
 import sttp.model.StatusCode
 import zio.test.*
 import zio.test.Assertion.*
-import io.iohk.atala.agent.server.buildinfo.BuildInfo
+import org.hyperledger.identus.agent.server.buildinfo.BuildInfo
 import zio.*
 
 object SystemControllerImplSpec extends ZIOSpecDefault with SystemControllerTestTools {
