@@ -30,6 +30,7 @@ import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
 import io.iohk.atala.issue.controller.IssueControllerImpl
 import io.iohk.atala.mercury.*
 import io.iohk.atala.pollux.core.service.*
+import io.iohk.atala.pollux.core.service.verification.VcVerificationServiceImpl
 import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
 import io.iohk.atala.pollux.credentialschema.controller.{
   CredentialSchemaController,
@@ -48,6 +49,7 @@ import io.iohk.atala.pollux.sql.repository.{
 import io.iohk.atala.presentproof.controller.PresentProofControllerImpl
 import io.iohk.atala.resolvers.DIDResolver
 import io.iohk.atala.system.controller.SystemControllerImpl
+import io.iohk.atala.verification.controller.VcVerificationControllerImpl
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import zio.*
 import zio.metrics.connectors.micrometer
@@ -145,6 +147,7 @@ object MainApp extends ZIOAppDefault {
           IssueControllerImpl.layer,
           CredentialStatusControllerImpl.layer,
           PresentProofControllerImpl.layer,
+          VcVerificationControllerImpl.layer,
           VerificationPolicyControllerImpl.layer,
           EntityControllerImpl.layer,
           WalletManagementControllerImpl.layer,
@@ -167,6 +170,7 @@ object MainApp extends ZIOAppDefault {
           LinkSecretServiceImpl.layer >>> PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
           VerificationPolicyServiceImpl.layer,
           WalletManagementServiceImpl.layer,
+          VcVerificationServiceImpl.layer,
           // authentication
           AppModule.builtInAuthenticatorLayer,
           AppModule.keycloakAuthenticatorLayer,

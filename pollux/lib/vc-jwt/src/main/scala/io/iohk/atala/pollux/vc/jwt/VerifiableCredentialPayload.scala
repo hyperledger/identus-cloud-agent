@@ -1,21 +1,21 @@
 package io.iohk.atala.pollux.vc.jwt
 
 import io.circe
+import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
-import io.circe.{CursorOp, Decoder, DecodingFailure, Encoder, HCursor, Json}
 import io.iohk.atala.castor.core.model.did.VerificationRelationship
 import io.iohk.atala.pollux.vc.jwt.revocation.BitString
 import io.iohk.atala.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
 import io.iohk.atala.shared.http.UriResolver
 import pdi.jwt.*
-import zio.prelude.*
 import zio.*
+import zio.prelude.*
 
 import java.security.PublicKey
 import java.time.temporal.TemporalAmount
-import java.time.{Clock, Instant}
+import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
 import scala.util.Try
 
 opaque type DID = String
@@ -716,6 +716,20 @@ object JwtCredential {
       .flatMap(decode[JwtCredentialPayload](_).toTry)
   }
 
+  def decodeJwt(jwt: JWT): IO[String, JwtCredentialPayload] = {
+    val decodeJWT =
+      ZIO.fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false))).mapError(_.getMessage)
+
+    val validatedDecodedClaim: IO[String, JwtCredentialPayload] =
+      for {
+        decodedJwtTask <- decodeJWT
+        (_, claim, _) = decodedJwtTask
+        decodedClaim <- ZIO.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
+      } yield decodedClaim
+
+    validatedDecodedClaim
+  }
+
   def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
     JwtCirce.isValid(jwt.value, publicKey, JwtOptions(expiration = false, notBefore = false))
 
@@ -724,6 +738,14 @@ object JwtCredential {
       proofPurpose: Option[VerificationRelationship] = None
   )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
     JWTVerification.validateEncodedJwt(jwt, proofPurpose)(didResolver: DidResolver)(claim =>
+      Validation.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
+    )(_.iss)
+  }
+
+  def validateIssuerJWT(
+      jwt: JWT,
+  )(didResolver: DidResolver): IO[String, Validation[String, DIDDocument]] = {
+    JWTVerification.validateIssuer(jwt)(didResolver: DidResolver)(claim =>
       Validation.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
     )(_.iss)
   }
@@ -748,6 +770,26 @@ object JwtCredential {
         CredentialPayloadValidation.validateSchema(decodedClaim)(schemaResolver)(schemaToValidator)
       )
     )(_.replicateZIODiscard(1))
+  }
+
+  def validateExpiration(jwt: JWT, dateTime: OffsetDateTime): Validation[String, Unit] = {
+    Validation
+      .fromTry(
+        JwtCirce(Clock.fixed(dateTime.toInstant, ZoneId.of(dateTime.getOffset.getId)))
+          .decodeRawAll(jwt.value, JwtOptions(false, true, false))
+      )
+      .flatMap(_ => Validation.unit)
+      .mapError(_.getMessage)
+  }
+
+  def validateNotBefore(jwt: JWT, dateTime: OffsetDateTime): Validation[String, Unit] = {
+    Validation
+      .fromTry(
+        JwtCirce(Clock.fixed(dateTime.toInstant, ZoneId.of(dateTime.getOffset.getId)))
+          .decodeRawAll(jwt.value, JwtOptions(false, false, true))
+      )
+      .flatMap(_ => Validation.unit)
+      .mapError(_.getMessage)
   }
 
   def validateSchemaAndSignature(
