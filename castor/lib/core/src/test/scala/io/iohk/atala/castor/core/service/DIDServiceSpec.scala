@@ -4,10 +4,10 @@ import com.google.protobuf.ByteString
 import io.iohk.atala.castor.core.model.did.{DIDData, PrismDID, PrismDIDOperation}
 import io.iohk.atala.castor.core.model.error.DIDResolutionError
 import io.iohk.atala.castor.core.util.{DIDOperationValidator, GenUtils}
-import io.iohk.atala.prism.protos.common_models.{HealthCheckRequest, HealthCheckResponse}
-import io.iohk.atala.prism.protos.node_api
-import io.iohk.atala.prism.protos.node_models
-import io.iohk.atala.prism.protos.node_api.{
+import org.hyperledger.identus.protos.common_models.{HealthCheckRequest, HealthCheckResponse}
+import org.hyperledger.identus.protos.node_api
+import org.hyperledger.identus.protos.node_models
+import org.hyperledger.identus.protos.node_api.{
   GetBatchStateRequest,
   GetBatchStateResponse,
   GetCredentialRevocationTimeRequest,

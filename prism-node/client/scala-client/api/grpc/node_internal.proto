@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package io.iohk.atala.prism.protos;
+package org.hyperledger.identus.protos;
 
 import "node_models.proto";
 
 option java_multiple_files = true;
-option java_package = "io.iohk.atala.prism.protos";
+option java_package = "org.hyperledger.identus.protos";
 
 /**
  * Represent a block that holds operations.

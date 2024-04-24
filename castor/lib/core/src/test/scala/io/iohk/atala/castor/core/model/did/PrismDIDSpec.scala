@@ -2,7 +2,7 @@ package io.iohk.atala.castor.core.model.did
 
 import com.google.protobuf.ByteString
 import io.iohk.atala.prism.crypto.{Sha256, Sha256Digest}
-import io.iohk.atala.prism.protos.node_models
+import org.hyperledger.identus.protos.node_models
 import org.hyperledger.identus.shared.models.Base64UrlString
 import zio.*
 import zio.test.*

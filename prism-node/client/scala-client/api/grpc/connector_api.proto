@@ -1,13 +1,13 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "io.iohk.atala.prism.protos";
+option java_package = "org.hyperledger.identus.protos";
 
 import "common_models.proto";
 import "connector_models.proto";
 import "node_models.proto";
 
-package io.iohk.atala.prism.protos;
+package org.hyperledger.identus.protos;
 
 /**
  * The Connector API.
@@ -213,7 +213,7 @@ message GetConnectionByTokenRequest {
 }
 // The response while finding a connection by token.
 message GetConnectionByTokenResponse {
-	io.iohk.atala.prism.protos.Connection connection = 1;
+	org.hyperledger.identus.protos.Connection connection = 1;
 }
 
 // Finds a connection by the given id.
@@ -222,7 +222,7 @@ message GetConnectionByIdRequest {
 }
 // The response while finding a connection by id.
 message GetConnectionByIdResponse {
-  io.iohk.atala.prism.protos.ConnectionInfo connection = 1;
+  org.hyperledger.identus.protos.ConnectionInfo connection = 1;
 }
 
 // Requests connections instantiated by/with us, possibly after a known connection.
@@ -235,7 +235,7 @@ message GetConnectionsPaginatedRequest {
 
 // Result with instantiated connections.
 message GetConnectionsPaginatedResponse {
-  repeated io.iohk.atala.prism.protos.ConnectionInfo connections = 1; // Connections sorted in ascending order by instantiation time.
+  repeated org.hyperledger.identus.protos.ConnectionInfo connections = 1; // Connections sorted in ascending order by instantiation time.
 }
 
 // Request to obtain information of connection token.
@@ -263,12 +263,12 @@ message AddConnectionFromTokenRequest {
   reserved "paymentNonce";
 
   string token = 1; // A token to instantiate a connection.
-  io.iohk.atala.prism.protos.EncodedPublicKey holder_encoded_public_key = 4; // Uncompressed encoded public key.
+  org.hyperledger.identus.protos.EncodedPublicKey holder_encoded_public_key = 4; // Uncompressed encoded public key.
 }
 
 // Confirmation of connection instantiation.
 message AddConnectionFromTokenResponse {
-  io.iohk.atala.prism.protos.ConnectionInfo connection = 1; // Instantiated connection information.
+  org.hyperledger.identus.protos.ConnectionInfo connection = 1; // Instantiated connection information.
 }
 
 // Request to revoke a connection.
@@ -299,7 +299,7 @@ message GetMessagesPaginatedRequest {
 
 // Response with messages.
 message GetMessagesPaginatedResponse {
-  repeated io.iohk.atala.prism.protos.ReceivedMessage messages = 1; // Messages sorted by reception time in ascending order.
+  repeated org.hyperledger.identus.protos.ReceivedMessage messages = 1; // Messages sorted by reception time in ascending order.
 }
 
 // Request to stream new messages, which starts the stream from messages received after the given lastSeenMessageId
@@ -310,7 +310,7 @@ message GetMessageStreamRequest {
 
 // Response for the new messages stream.
 message GetMessageStreamResponse {
-  io.iohk.atala.prism.protos.ReceivedMessage message = 1; // The received message.
+  org.hyperledger.identus.protos.ReceivedMessage message = 1; // The received message.
 }
 
 // Finds available messages from the given connection.
@@ -319,7 +319,7 @@ message GetMessagesForConnectionRequest {
   string connection_id = 1;
 }
 message GetMessagesForConnectionResponse {
-  repeated io.iohk.atala.prism.protos.ReceivedMessage messages = 1;
+  repeated org.hyperledger.identus.protos.ReceivedMessage messages = 1;
 }
 
 // Finds the available keys to send end-to-end encrypted messages.
@@ -330,7 +330,7 @@ message GetConnectionCommunicationKeysRequest {
 message GetConnectionCommunicationKeysResponse {
   // Keys that can be used for communication with the other end of connection with their IDs.
   // keyId inside might be empty if there is just one key in the collection.
-  repeated io.iohk.atala.prism.protos.ConnectionKey keys = 1;
+  repeated org.hyperledger.identus.protos.ConnectionKey keys = 1;
 }
 
 // Request to send message.
@@ -365,7 +365,7 @@ message SendMessagesResponse {
 message RegisterDIDRequest {
   oneof register_with {
     // The necessary operation to publish the DID to the blockchain.
-    io.iohk.atala.prism.protos.SignedAtalaOperation create_did_operation = 1;
+    org.hyperledger.identus.protos.SignedAtalaOperation create_did_operation = 1;
     // The already published DID.
     string existing_did = 5;
   }

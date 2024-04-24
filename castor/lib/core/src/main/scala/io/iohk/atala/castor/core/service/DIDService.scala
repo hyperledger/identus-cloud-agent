@@ -16,9 +16,9 @@ import io.iohk.atala.castor.core.model.did.{
 import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.model.error.{DIDOperationError, DIDResolutionError}
 import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeService
-import io.iohk.atala.prism.protos.node_models.OperationOutput.OperationMaybe
-import io.iohk.atala.prism.protos.{node_api, node_models}
+import org.hyperledger.identus.protos.node_api.NodeServiceGrpc.NodeService
+import org.hyperledger.identus.protos.node_models.OperationOutput.OperationMaybe
+import org.hyperledger.identus.protos.{node_api, node_models}
 import org.hyperledger.identus.shared.models.HexString
 import java.time.Instant
 import scala.collection.immutable.ArraySeq

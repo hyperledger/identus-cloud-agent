@@ -8,8 +8,8 @@ import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
 import io.iohk.atala.castor.core.model.did.ServiceType
 import io.iohk.atala.castor.core.util.GenUtils
-import io.iohk.atala.prism.protos.common_models.Ledger
-import io.iohk.atala.prism.protos.node_models
+import org.hyperledger.identus.protos.common_models.Ledger
+import org.hyperledger.identus.protos.node_models
 import java.time.Instant
 import scala.language.implicitConversions
 import zio.*

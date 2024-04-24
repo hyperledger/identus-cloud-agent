@@ -4,7 +4,7 @@ import io.iohk.atala.castor.core.model.ProtoModelHelper
 import io.iohk.atala.prism.crypto.Sha256
 
 import scala.collection.compat.immutable.ArraySeq
-import io.iohk.atala.prism.protos.node_models
+import org.hyperledger.identus.protos.node_models
 
 sealed trait PrismDIDOperation {
   def did: CanonicalPrismDID

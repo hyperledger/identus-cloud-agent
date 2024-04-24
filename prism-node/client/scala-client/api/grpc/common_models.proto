@@ -1,9 +1,9 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "io.iohk.atala.prism.protos";
+option java_package = "org.hyperledger.identus.protos";
 
-package io.iohk.atala.prism.protos;
+package org.hyperledger.identus.protos;
 
 import "google/protobuf/timestamp.proto";
 

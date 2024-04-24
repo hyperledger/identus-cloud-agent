@@ -21,10 +21,10 @@ import io.iohk.atala.castor.core.model.did.{
   UpdateDIDAction,
   VerificationRelationship
 }
-import io.iohk.atala.prism.protos.common_models.OperationStatus
-import io.iohk.atala.prism.protos.node_models.KeyUsage
-import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
-import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
+import org.hyperledger.identus.protos.common_models.OperationStatus
+import org.hyperledger.identus.protos.node_models.KeyUsage
+import org.hyperledger.identus.protos.node_models.PublicKey.KeyData
+import org.hyperledger.identus.protos.{common_models, node_api, node_models}
 import org.hyperledger.identus.shared.models.Base64UrlString
 import org.hyperledger.identus.shared.utils.Traverse.*
 import java.time.Instant
