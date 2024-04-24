@@ -15,7 +15,7 @@ import io.iohk.atala.pollux.core.repository.{
 }
 import io.iohk.atala.pollux.core.service.*
 import io.iohk.atala.pollux.vc.jwt.PrismDidResolver
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import io.iohk.atala.shared.models.WalletId
 import zio.mock.MockSpecDefault
 import zio.test.*
 import zio.test.Assertion.*
@@ -35,6 +35,7 @@ object OIDCCredentialIssuerServiceSpec extends MockSpecDefault with CredentialSe
       CredentialRepositoryInMemory.layer,
       CredentialStatusListRepositoryInMemory.layer,
       PrismDidResolver.layer,
+      ResourceURIDereferencerImpl.layer,
       credentialDefinitionServiceLayer,
       GenericSecretStorageInMemory.layer,
       LinkSecretServiceImpl.layer,

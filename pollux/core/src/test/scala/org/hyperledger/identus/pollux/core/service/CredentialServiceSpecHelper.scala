@@ -28,8 +28,7 @@ trait CredentialServiceSpecHelper {
   protected val defaultWalletLayer = ZLayer.succeed(WalletAccessContext(WalletId.default))
 
   protected val credentialDefinitionServiceLayer =
-    CredentialDefinitionRepositoryInMemory.layer ++ ResourceURIDereferencerImpl.layer >+>
-      CredentialDefinitionServiceImpl.layer ++ defaultWalletLayer
+    CredentialDefinitionRepositoryInMemory.layer >>> CredentialDefinitionServiceImpl.layer
 
   protected val credentialServiceLayer
       : URLayer[DIDService & ManagedDIDService & URIDereferencer, CredentialService & CredentialDefinitionService] =
