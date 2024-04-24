@@ -9,6 +9,7 @@ import io.iohk.atala.castor.core.model.did.ScheduleDIDOperationOutcome
 import io.iohk.atala.castor.core.model.did.SignedPrismDIDOperation
 import io.iohk.atala.castor.core.model.error.DIDOperationError
 import io.iohk.atala.castor.core.service.DIDService
+import io.iohk.atala.shared.crypto.Secp256k1KeyPair
 import io.iohk.atala.shared.models.WalletAccessContext
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions
@@ -22,11 +23,10 @@ class PublicationHandler(didService: DIDService, keyResolver: KeyResolver)(maste
     for {
       masterKeyPair <-
         keyResolver
-          .getKey(state, masterKeyId)
-          .mapError[E](CommonWalletStorageError.apply)
-          .someOrElseZIO(
-            ZIO.die(Exception("master-key must exists in the wallet for signing DID operation and submit to Node"))
-          )
+          .getKey(state.did, masterKeyId)
+          .someOrFail(Exception("master-key must exists in the wallet for signing DID operation and submit to Node"))
+          .collect(Exception("master-key must be secp256k1 key")) { case keyPair: Secp256k1KeyPair => keyPair }
+          .orDie
       signedOperation <- ZIO
         .succeed(masterKeyPair.privateKey.sign(operation.toAtalaOperation.toByteArray))
         .map(signature =>

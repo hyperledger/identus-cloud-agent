@@ -1,7 +1,5 @@
 package io.iohk.atala.agent.walletapi.storage
 
-import io.iohk.atala.agent.walletapi.memory.DIDSecretStorageInMemory
-import io.iohk.atala.agent.walletapi.memory.WalletSecretStorageInMemory
 import io.iohk.atala.agent.walletapi.model.Wallet
 import io.iohk.atala.agent.walletapi.service.{WalletManagementService, WalletManagementServiceImpl}
 import io.iohk.atala.agent.walletapi.sql.{
@@ -75,23 +73,10 @@ object DIDSecretStorageSpec
         ZLayer.succeed(WalletAdministrationContext.Admin())
       )
 
-    val inMemoryTestSuite = commonSpec("InMemoryDIDSecretStorage")
-      .provide(
-        JdbcDIDNonSecretStorage.layer,
-        DIDSecretStorageInMemory.layer,
-        WalletSecretStorageInMemory.layer,
-        systemTransactorLayer,
-        contextAwareTransactorLayer,
-        pgContainerLayer,
-        walletManagementServiceLayer,
-        ZLayer.succeed(WalletAdministrationContext.Admin())
-      )
-
     suite("DIDSecretStorage")(
       jdbcTestSuite,
       vaultTestSuite,
       vaultFsTestSuite,
-      inMemoryTestSuite
     ) @@ TestAspect.sequential
   }
 

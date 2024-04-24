@@ -15,7 +15,8 @@ trait DIDNonSecretStorage {
   def insertManagedDID(
       did: PrismDID,
       state: ManagedDIDState,
-      hdKey: Map[String, ManagedDIDHdKeyPath]
+      hdKey: Map[String, ManagedDIDHdKeyPath],
+      randKey: Map[String, ManagedDIDRandKeyMeta]
   ): RIO[WalletAccessContext, Unit]
 
   def updateManagedDID(did: PrismDID, patch: ManagedDIDStatePatch): RIO[WalletAccessContext, Unit]
@@ -24,12 +25,12 @@ trait DIDNonSecretStorage {
 
   def getHdKeyCounter(did: PrismDID): RIO[WalletAccessContext, Option[HdKeyIndexCounter]]
 
-  def getHdKeyPath(did: PrismDID, keyId: String): RIO[WalletAccessContext, Option[ManagedDIDHdKeyPath]]
+  def getKeyMeta(did: PrismDID, keyId: String): RIO[WalletAccessContext, Option[(ManagedDIDKeyMeta, Array[Byte])]]
 
-  def insertHdKeyPath(
+  def insertKeyMeta(
       did: PrismDID,
       keyId: String,
-      hdKeyPath: ManagedDIDHdKeyPath,
+      meta: ManagedDIDKeyMeta,
       operationHash: Array[Byte]
   ): RIO[WalletAccessContext, Unit]
 

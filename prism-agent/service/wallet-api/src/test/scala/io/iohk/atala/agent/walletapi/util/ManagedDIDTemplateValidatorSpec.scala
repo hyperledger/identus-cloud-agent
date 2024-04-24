@@ -2,14 +2,16 @@ package io.iohk.atala.agent.walletapi.util
 
 import io.iohk.atala.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDTemplate}
 import io.iohk.atala.agent.walletapi.service.ManagedDIDService
+import io.iohk.atala.castor.core.model.did.EllipticCurve
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 import io.iohk.atala.castor.core.model.did.ServiceEndpoint.UriValue
 import io.iohk.atala.castor.core.model.did.{Service, ServiceType, VerificationRelationship}
-import scala.language.implicitConversions
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+
+import scala.language.implicitConversions
 
 object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
 
@@ -23,7 +25,8 @@ object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
         publicKeys = Seq(
           DIDPublicKeyTemplate(
             id = "auth0",
-            purpose = VerificationRelationship.Authentication
+            purpose = VerificationRelationship.Authentication,
+            curve = EllipticCurve.SECP256K1
           )
         ),
         services = Seq(
@@ -42,7 +45,8 @@ object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
         publicKeys = Seq(
           DIDPublicKeyTemplate(
             id = ManagedDIDService.DEFAULT_MASTER_KEY_ID,
-            purpose = VerificationRelationship.Authentication
+            purpose = VerificationRelationship.Authentication,
+            curve = EllipticCurve.SECP256K1
           )
         ),
         services = Nil,

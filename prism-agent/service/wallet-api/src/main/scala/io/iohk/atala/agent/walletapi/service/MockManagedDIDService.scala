@@ -11,7 +11,9 @@ import io.iohk.atala.castor.core.model.did.{
 }
 import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.mercury.model.DidId
+import io.iohk.atala.shared.crypto.Ed25519KeyPair
 import io.iohk.atala.shared.crypto.Secp256k1KeyPair
+import io.iohk.atala.shared.crypto.X25519KeyPair
 import zio.mock.*
 import zio.test.Assertion
 import zio.{mock, *}
@@ -40,6 +42,11 @@ object MockManagedDIDService extends Mock[ManagedDIDService] {
             keyId: String
         ): IO[GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]] =
           proxy(JavaKeyPairWithDID, did, keyId)
+
+        override def findDIDKeyPair(
+            did: CanonicalPrismDID,
+            keyId: String
+        ): IO[GetKeyError, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]] = ???
 
         override def getManagedDIDState(
             did: CanonicalPrismDID

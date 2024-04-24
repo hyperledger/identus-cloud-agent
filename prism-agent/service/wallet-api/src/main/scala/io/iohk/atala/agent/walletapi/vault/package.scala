@@ -2,6 +2,7 @@ package io.iohk.atala.agent.walletapi
 
 import com.nimbusds.jose.jwk.OctetKeyPair
 import io.iohk.atala.agent.walletapi.model.WalletSeed
+import io.iohk.atala.shared.crypto.jwk.JWK
 import io.iohk.atala.shared.models.HexString
 import io.iohk.atala.shared.models.WalletId
 import zio.json.*
@@ -67,5 +68,16 @@ package object vault {
           .map(s => Exception(s"Fail to parse JSON from string: $s"))
           .toTry
       } yield keyPair
+  }
+
+  given KVCodec[JWK] = new {
+    override def encode(value: JWK): Map[String, String] =
+      Map("value" -> value.toJsonString)
+
+    override def decode(kv: Map[String, String]): Try[JWK] =
+      for {
+        json <- kv.get("value").toRight(Exception("A property 'value' is missing from vault KV data")).toTry
+        jwk <- JWK.fromString(json).left.map(Exception(_)).toTry
+      } yield jwk
   }
 }
