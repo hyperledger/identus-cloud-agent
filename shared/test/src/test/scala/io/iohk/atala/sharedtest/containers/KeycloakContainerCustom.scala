@@ -1,8 +1,8 @@
-package io.iohk.atala.sharedtest.containers
+package org.hyperledger.identus.sharedtest.containers
 
 import com.dimafeng.testcontainers.SingleContainer
 import dasniko.testcontainers.keycloak.ExtendableKeycloakContainer
-import io.iohk.atala.sharedtest.containers.KeycloakTestContainer.keycloakContainer
+import org.hyperledger.identus.sharedtest.containers.KeycloakTestContainer.keycloakContainer
 import org.testcontainers.utility.DockerImageName
 import zio.{TaskLayer, ZIO, ZLayer}
 

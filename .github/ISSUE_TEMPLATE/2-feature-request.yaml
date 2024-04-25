@@ -1,5 +1,5 @@
 name: 'Feature Request'
-description: Suggest a new feature for Atala PRISM Cloud Agent
+description: Suggest a new feature for Identus Cloud Agent
 
 body:
   - type: textarea
