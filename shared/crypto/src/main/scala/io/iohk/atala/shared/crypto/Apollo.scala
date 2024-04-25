@@ -21,8 +21,8 @@ object Apollo {
 
   def default: Apollo = new {
     override def secp256k1: Secp256k1KeyOps = KmpSecp256k1KeyOps
-    override def ed25519: Ed25519KeyOps = ???
-    override def x25519: X25519KeyOps = ???
+    override def ed25519: Ed25519KeyOps = KmpEd25519KeyOps
+    override def x25519: X25519KeyOps = KmpX25519KeyOps
   }
 }
 
@@ -50,7 +50,7 @@ enum DerivationPath {
   case Hardened(i: Int) extends DerivationPath
 }
 
-final case class ECPoint(x: BigInt, y: BigInt)
+final case class ECPoint(x: Array[Byte], y: Array[Byte])
 
 // secp256k1
 final case class Secp256k1KeyPair(publicKey: Secp256k1PublicKey, privateKey: Secp256k1PrivateKey)
@@ -71,8 +71,8 @@ trait Secp256k1PublicKey extends PublicKey, Verifiable {
 
   def toJavaPublicKey: java.security.interfaces.ECPublicKey = {
     val point = getECPoint
-    val x = point.x
-    val y = point.y
+    val x = BigInt(1, point.x)
+    val y = BigInt(1, point.y)
     val keyFactory = KeyFactory.getInstance("EC", new BouncyCastleProvider())
     val ecParameterSpec = ECNamedCurveTable.getParameterSpec("secp256k1")
     val ecNamedCurveSpec = ECNamedCurveSpec(
@@ -112,21 +112,23 @@ trait Secp256k1PrivateKey extends PrivateKey, Signable {
 }
 trait Secp256k1KeyOps {
   def publicKeyFromEncoded(bytes: Array[Byte]): Try[Secp256k1PublicKey]
+  def publicKeyFromCoordinate(x: Array[Byte], y: Array[Byte]): Try[Secp256k1PublicKey]
   def privateKeyFromEncoded(bytes: Array[Byte]): Try[Secp256k1PrivateKey]
-  def generateKeyPair: UIO[Secp256k1KeyPair]
+  def generateKeyPair: Secp256k1KeyPair
   def randomBip32Seed: UIO[(Array[Byte], Seq[String])]
   def deriveKeyPair(seed: Array[Byte])(path: DerivationPath*): UIO[Secp256k1KeyPair]
 }
 
 // ed25519
 final case class Ed25519KeyPair(publicKey: Ed25519PublicKey, privateKey: Ed25519PrivateKey)
-trait Ed25519PublicKey extends PublicKey
+trait Ed25519PublicKey extends PublicKey, Verifiable
 trait Ed25519PrivateKey extends PrivateKey, Signable {
   type Pub = Ed25519PublicKey
 }
 trait Ed25519KeyOps {
   def publicKeyFromEncoded(bytes: Array[Byte]): Try[Ed25519PublicKey]
   def privateKeyFromEncoded(bytes: Array[Byte]): Try[Ed25519PrivateKey]
+  def generateKeyPair: Ed25519KeyPair
 }
 
 // x25519
@@ -138,4 +140,5 @@ trait X25519PrivateKey extends PrivateKey {
 trait X25519KeyOps {
   def publicKeyFromEncoded(bytes: Array[Byte]): Try[X25519PublicKey]
   def privateKeyFromEncoded(bytes: Array[Byte]): Try[X25519PrivateKey]
+  def generateKeyPair: X25519KeyPair
 }

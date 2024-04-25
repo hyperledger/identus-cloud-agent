@@ -1,27 +1,15 @@
 package io.iohk.atala.castor.core.util
 
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint
-import io.iohk.atala.castor.core.model.did.{
-  EllipticCurve,
-  InternalKeyPurpose,
-  InternalPublicKey,
-  PrismDID,
-  PrismDIDOperation,
-  PublicKey,
-  PublicKeyData,
-  Service,
-  ServiceType,
-  UpdateDIDAction,
-  VerificationRelationship
-}
+import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
 import io.iohk.atala.shared.models.Base64UrlString
-import scala.collection.immutable.ArraySeq
-import scala.language.implicitConversions
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+
+import scala.collection.immutable.ArraySeq
+import scala.language.implicitConversions
 
 object DIDOperationValidatorSpec extends ZIOSpecDefault {
 
@@ -38,8 +26,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
 
   private val publicKeyData = PublicKeyData.ECKeyData(
     crv = EllipticCurve.SECP256K1,
-    x = Base64UrlString.fromStringUnsafe("00"),
-    y = Base64UrlString.fromStringUnsafe("00")
+    x = Base64UrlString.fromStringUnsafe("LlGgkX4eiiodghQ38ZO_9tNRYxZa2ruB-NBRHrwmdSY="),
+    y = Base64UrlString.fromStringUnsafe("gyvCAIE6guYGrBAjufAYl39R08896d2tjQDztWL3yP4=")
   )
 
   private def invalidArgumentContainsString(text: String): Assertion[Either[Any, Any]] = isLeft(
@@ -303,12 +291,10 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val op = createPrismDIDOperation(publicKeys = Nil)
         assert(DIDOperationValidator(Config.default).validate(op))(isRight)
       },
-      // Test that the validator accepts a CreateOperation when the services list is not present
       test("accept CreateOperation when services is None") {
         val op = createPrismDIDOperation(services = Nil)
         assert(DIDOperationValidator(Config.default).validate(op))(isRight)
       },
-      // Test that the validator rejects a CreateOperation when a service has an empty id string.
       test("reject CreateOperation when service id is empty") {
         val op = createPrismDIDOperation(services =
           Seq(
@@ -352,6 +338,42 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("service id is invalid: [Wrong service]")
+        )
+      },
+      test("reject CreateOperation when publicKeyData is invalid") {
+        val op = createPrismDIDOperation(
+          publicKeys = Seq(
+            PublicKey(
+              id = "key-0",
+              purpose = VerificationRelationship.Authentication,
+              publicKeyData = PublicKeyData.ECKeyData(
+                crv = EllipticCurve.SECP256K1,
+                x = Base64UrlString.fromStringUnsafe("00"),
+                y = Base64UrlString.fromStringUnsafe("00")
+              )
+            )
+          )
+        )
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          isLeft(equalTo(OperationValidationError.InvalidPublicKeyData(Seq("key-0"))))
+        )
+      },
+      test("reject CreateOperation when master key is not a secp256k1 key") {
+        val op = createPrismDIDOperation(
+          internalKeys = Seq(
+            InternalPublicKey(
+              id = "master0",
+              purpose = InternalKeyPurpose.Master,
+              publicKeyData = PublicKeyData.ECKeyData(
+                crv = EllipticCurve.ED25519,
+                x = Base64UrlString.fromStringUnsafe("11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"),
+                y = Base64UrlString.fromStringUnsafe("")
+              )
+            )
+          )
+        )
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          isLeft(equalTo(OperationValidationError.InvalidMasterKeyType(Seq("master0"))))
         )
       }
     ).provideLayer(testLayer)
@@ -573,6 +595,40 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val op = updatePrismDIDOperation(Seq(UpdateDIDAction.UpdateService("service-1", None, None)))
         assert(DIDOperationValidator(Config.default).validate(op))(
           invalidArgumentContainsString("must not have both 'type' and 'serviceEndpoints' empty")
+        )
+      },
+      test("reject UpdateOperation publicKeyData is invalid") {
+        val action = UpdateDIDAction.AddKey(
+          PublicKey(
+            id = "key0",
+            purpose = VerificationRelationship.Authentication,
+            publicKeyData = PublicKeyData.ECKeyData(
+              crv = EllipticCurve.SECP256K1,
+              x = Base64UrlString.fromStringUnsafe("00"),
+              y = Base64UrlString.fromStringUnsafe("00")
+            )
+          )
+        )
+        val op = updatePrismDIDOperation(Seq(action))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          isLeft(equalTo(OperationValidationError.InvalidPublicKeyData(Seq("key0"))))
+        )
+      },
+      test("reject UpdateOperation when master key is not a secp256k1 key") {
+        val action = UpdateDIDAction.AddInternalKey(
+          InternalPublicKey(
+            id = "master0",
+            purpose = InternalKeyPurpose.Master,
+            publicKeyData = PublicKeyData.ECKeyData(
+              crv = EllipticCurve.ED25519,
+              x = Base64UrlString.fromStringUnsafe("11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"),
+              y = Base64UrlString.fromStringUnsafe("")
+            )
+          )
+        )
+        val op = updatePrismDIDOperation(Seq(action))
+        assert(DIDOperationValidator(Config.default).validate(op))(
+          isLeft(equalTo(OperationValidationError.InvalidMasterKeyType(Seq("master0"))))
         )
       }
     )

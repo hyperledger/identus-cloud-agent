@@ -1,14 +1,14 @@
 package io.iohk.atala.castor.core.util
 
-import io.iohk.atala.castor.core.model.did.PublicKey
-import io.iohk.atala.castor.core.model.did.ServiceEndpoint
-import io.iohk.atala.castor.core.model.did.ServiceType
-import io.iohk.atala.castor.core.model.did.{InternalKeyPurpose, InternalPublicKey, PrismDIDOperation, UpdateDIDAction}
+import io.iohk.atala.castor.core.model.did.*
 import io.iohk.atala.castor.core.model.error.OperationValidationError
 import io.iohk.atala.castor.core.util.DIDOperationValidator.Config
 import io.iohk.atala.castor.core.util.Prelude.*
-import scala.collection.immutable.ArraySeq
+import io.iohk.atala.shared.crypto.Apollo
 import zio.*
+
+import scala.collection.immutable.ArraySeq
+import scala.util.Failure
 
 object DIDOperationValidator {
   final case class Config(
@@ -46,11 +46,12 @@ class DIDOperationValidator(config: Config) extends BaseOperationValidator {
 private object CreateOperationValidator extends BaseOperationValidator {
   def validate(config: Config)(operation: PrismDIDOperation.Create): Either[OperationValidationError, Unit] = {
     for {
-      // TODO: validate public key content
       _ <- validateMaxPublicKeysAccess(config)(operation, extractKeyIds)
       _ <- validateMaxServiceAccess(config)(operation, extractServiceIds)
       _ <- validateUniquePublicKeyId(operation, extractKeyIds)
       _ <- validateUniqueServiceId(operation, extractServiceIds)
+      _ <- validateMasterKeyIsSecp256k1(operation, extractKeyData)
+      _ <- validateKeyData(operation, extractKeyData)
       _ <- validateKeyIdIsUriFragment(operation, extractKeyIds)
       _ <- validateKeyIdLength(config)(operation, extractKeyIds)
       _ <- validateServiceIdIsUriFragment(operation, extractServiceIds)
@@ -71,10 +72,17 @@ private object CreateOperationValidator extends BaseOperationValidator {
     else Left(OperationValidationError.InvalidArgument("create operation must contain at least 1 master key"))
   }
 
-  private def extractKeyIds(operation: PrismDIDOperation.Create): Seq[String] =
+  private def extractKeyIds(operation: PrismDIDOperation.Create): Seq[String] = operation.publicKeys.map {
+    case PublicKey(id, _, _)         => id
+    case InternalPublicKey(id, _, _) => id
+  }
+
+  private def extractKeyData(
+      operation: PrismDIDOperation.Create
+  ): Seq[(String, VerificationRelationship | InternalKeyPurpose, PublicKeyData)] =
     operation.publicKeys.map {
-      case PublicKey(id, _, _)         => id
-      case InternalPublicKey(id, _, _) => id
+      case PublicKey(id, purpose, data)         => (id, purpose, data)
+      case InternalPublicKey(id, purpose, data) => (id, purpose, data)
     }
 
   private def extractServiceIds(operation: PrismDIDOperation.Create): Seq[String] = operation.services.map(_.id)
@@ -86,7 +94,6 @@ private object CreateOperationValidator extends BaseOperationValidator {
   private def extractServiceType(operation: PrismDIDOperation.Create): Seq[(String, ServiceType)] = {
     operation.services.map { s => (s.id, s.`type`) }
   }
-
 }
 
 private object UpdateOperationValidator extends BaseOperationValidator {
@@ -94,6 +101,8 @@ private object UpdateOperationValidator extends BaseOperationValidator {
     for {
       _ <- validateMaxPublicKeysAccess(config)(operation, extractKeyIds)
       _ <- validateMaxServiceAccess(config)(operation, extractServiceIds)
+      _ <- validateMasterKeyIsSecp256k1(operation, extractKeyData)
+      _ <- validateKeyData(operation, extractKeyData)
       _ <- validateKeyIdIsUriFragment(operation, extractKeyIds)
       _ <- validateKeyIdLength(config)(operation, extractKeyIds)
       _ <- validateServiceIdIsUriFragment(operation, extractServiceIds)
@@ -133,24 +142,24 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       )
   }
 
-  private def extractKeyIds(operation: PrismDIDOperation.Update): Seq[String] = operation.actions.flatMap {
-    case UpdateDIDAction.AddKey(publicKey)         => Some(publicKey.id)
-    case UpdateDIDAction.AddInternalKey(publicKey) => Some(publicKey.id)
-    case UpdateDIDAction.RemoveKey(id)             => Some(id)
-    case _: UpdateDIDAction.AddService             => None
-    case _: UpdateDIDAction.RemoveService          => None
-    case _: UpdateDIDAction.UpdateService          => None
-    case _: UpdateDIDAction.PatchContext           => None
+  private def extractKeyIds(operation: PrismDIDOperation.Update): Seq[String] = operation.actions.collect {
+    case UpdateDIDAction.AddKey(pk)         => pk.id
+    case UpdateDIDAction.AddInternalKey(pk) => pk.id
+    case UpdateDIDAction.RemoveKey(id)      => id
   }
 
-  private def extractServiceIds(operation: PrismDIDOperation.Update): Seq[String] = operation.actions.flatMap {
-    case _: UpdateDIDAction.AddKey               => None
-    case _: UpdateDIDAction.AddInternalKey       => None
-    case _: UpdateDIDAction.RemoveKey            => None
-    case UpdateDIDAction.AddService(service)     => Some(service.id)
-    case UpdateDIDAction.RemoveService(id)       => Some(id)
-    case UpdateDIDAction.UpdateService(id, _, _) => Some(id)
-    case _: UpdateDIDAction.PatchContext         => None
+  private def extractKeyData(
+      operation: PrismDIDOperation.Update
+  ): Seq[(String, VerificationRelationship | InternalKeyPurpose, PublicKeyData)] =
+    operation.actions.collect {
+      case UpdateDIDAction.AddKey(pk)         => (pk.id, pk.purpose, pk.publicKeyData)
+      case UpdateDIDAction.AddInternalKey(pk) => (pk.id, pk.purpose, pk.publicKeyData)
+    }
+
+  private def extractServiceIds(operation: PrismDIDOperation.Update): Seq[String] = operation.actions.collect {
+    case UpdateDIDAction.AddService(service)     => service.id
+    case UpdateDIDAction.RemoveService(id)       => id
+    case UpdateDIDAction.UpdateService(id, _, _) => id
   }
 
   private def extractServiceEndpoint(operation: PrismDIDOperation.Update): Seq[(String, ServiceEndpoint)] =
@@ -165,12 +174,8 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       case UpdateDIDAction.UpdateService(id, Some(serviceType), _) => id -> serviceType
     }
 
-  private def extractContexts(operation: PrismDIDOperation.Update): Seq[Seq[String]] = {
-    operation.actions.flatMap {
-      case UpdateDIDAction.PatchContext(context) => Some(context)
-      case _                                     => None
-    }
-  }
+  private def extractContexts(operation: PrismDIDOperation.Update): Seq[Seq[String]] =
+    operation.actions.collect { case UpdateDIDAction.PatchContext(context) => context }
 }
 
 private object DeactivateOperationValidator extends BaseOperationValidator {
@@ -185,6 +190,7 @@ private trait BaseOperationValidator {
   type ServiceTypeExtractor[T] = T => Seq[(String, ServiceType)]
   type ServiceEndpointExtractor[T] = T => Seq[(String, ServiceEndpoint)]
   type ContextExtractor[T] = T => Seq[Seq[String]]
+  type KeyDataExtractor[T] = T => Seq[(String, VerificationRelationship | InternalKeyPurpose, PublicKeyData)]
 
   protected def validateMaxPublicKeysAccess[T <: PrismDIDOperation](
       config: Config
@@ -352,6 +358,47 @@ private trait BaseOperationValidator {
   /** @return true if a given uri is normalized */
   protected def isUriNormalized(uri: String): Boolean = {
     UriUtils.normalizeUri(uri).contains(uri)
+  }
+
+  protected def validateKeyData[T <: PrismDIDOperation](
+      operation: T,
+      keyDataExtractor: KeyDataExtractor[T]
+  ): Either[OperationValidationError, Unit] = {
+    val keys = keyDataExtractor(operation)
+    val apollo = Apollo.default
+    val parsedKeys = keys.map { case (id, _, keyData) =>
+      val pk = keyData match {
+        case PublicKeyData.ECKeyData(EllipticCurve.SECP256K1, x, y) =>
+          apollo.secp256k1.publicKeyFromCoordinate(x.toByteArray, y.toByteArray)
+        case PublicKeyData.ECKeyData(EllipticCurve.ED25519, x, _) =>
+          apollo.ed25519.publicKeyFromEncoded(x.toByteArray)
+        case PublicKeyData.ECKeyData(EllipticCurve.X25519, x, _) =>
+          apollo.x25519.publicKeyFromEncoded(x.toByteArray)
+        case PublicKeyData.ECCompressedKeyData(EllipticCurve.SECP256K1, data) =>
+          apollo.secp256k1.publicKeyFromEncoded(data.toByteArray)
+        case PublicKeyData.ECCompressedKeyData(EllipticCurve.ED25519, data) =>
+          apollo.ed25519.publicKeyFromEncoded(data.toByteArray)
+        case PublicKeyData.ECCompressedKeyData(EllipticCurve.X25519, data) =>
+          apollo.x25519.publicKeyFromEncoded(data.toByteArray)
+      }
+      id -> pk
+    }
+
+    val invalidKeyDataIds = parsedKeys.collect { case (id, Failure(_)) => id }
+    if (invalidKeyDataIds.isEmpty) Right(())
+    else Left(OperationValidationError.InvalidPublicKeyData(invalidKeyDataIds))
+  }
+
+  protected def validateMasterKeyIsSecp256k1[T <: PrismDIDOperation](
+      operation: T,
+      keyDataExtractor: KeyDataExtractor[T]
+  ): Either[OperationValidationError, Unit] = {
+    val keys = keyDataExtractor(operation)
+    val masterKeys = keys.collect { case (id, InternalKeyPurpose.Master, keyData) => id -> keyData }
+    val invalidKeyIds = masterKeys.filter(_._2.crv != EllipticCurve.SECP256K1).map(_._1)
+
+    if (invalidKeyIds.isEmpty) Right(())
+    else Left(OperationValidationError.InvalidMasterKeyType(invalidKeyIds))
   }
 
 }

@@ -12,7 +12,7 @@ final case class ManagedDIDState(
     didIndex: Int,
     publicationState: PublicationState
 ) {
-  def keyMode: KeyManagementMode = KeyManagementMode.HD
+  def did: CanonicalPrismDID = createOperation.did
 }
 
 sealed trait PublicationState
