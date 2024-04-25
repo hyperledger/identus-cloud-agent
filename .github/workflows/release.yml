@@ -20,7 +20,7 @@ on:
 jobs:
   release:
     env:
-      GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
+      # GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
       # New JDK version makes 'localhost' lookup on linux return ipv6.
