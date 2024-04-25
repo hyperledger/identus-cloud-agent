@@ -7,8 +7,8 @@ body:
     attributes:
       label: Is this a regression?
       options:
-        - 'Yes'
-        - 'No'
+        - "Yes"
+        - "No"
     validations:
       required: true
 
@@ -23,11 +23,13 @@ body:
     id: exception-or-error
     attributes:
       label: Please provide the exception or error you saw
+      render: "Markdown"
 
   - type: textarea
     id: environment
     attributes:
       label: Please provide the environment you discovered this bug in
+      render: "Markdown"
 
   - type: textarea
     id: other

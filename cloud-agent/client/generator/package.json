@@ -1,5 +1,5 @@
 {
-  "name": "prism-agent-clients-generator",
+  "name": "cloud-agent-clients-generator",
   "version": "1.0.0",
   "description": "Generates the clients based on the OAS for many languages",
   "author": "Allain Magyar",
