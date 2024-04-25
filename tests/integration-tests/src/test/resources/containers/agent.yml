@@ -22,7 +22,7 @@ services:
 
   # Open Enterprise Agent
   open-enterprise-agent:
-    image: ghcr.io/input-output-hk/prism-agent:${OPEN_ENTERPRISE_AGENT_VERSION}
+    image: ghcr.io/hyperledger/cloud-agent:${OPEN_ENTERPRISE_AGENT_VERSION}
     environment:
       PRISM_NODE_HOST: host.docker.internal
       PRISM_NODE_PORT:
