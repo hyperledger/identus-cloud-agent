@@ -20,7 +20,8 @@ on:
 jobs:
   release:
     env:
-      GITHUB_ACTOR: ${{ github.actor }}
+      GITHUB_ACTOR: "hyperledger-bot"
+      GITHUB_ACTOR_EMAIL: "hyperledger-bot@hyperledger.org"
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
       # New JDK version makes 'localhost' lookup on linux return ipv6.
@@ -54,15 +55,16 @@ jobs:
       - uses: crazy-max/ghaction-import-gpg@v3
         id: import_gpg
         with:
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-private-key: ${{ secrets.HYP_BOT_GPG_PRIVATE }}
+          passphrase: ${{ secrets.HYP_BOT_GPG_PASSWORD }}
           git-user-signingkey: true
           git-commit-gpgsign: true
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: github.actor
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ env.GITHUB_ACTOR }}
+          password: ${{ env.GITHUB_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
