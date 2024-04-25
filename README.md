@@ -3,7 +3,7 @@
     <img src="docs/images/logos/atala-prism-logo.png" alt="atala-prism-logo" width="513px" height="99px" />
   </a>
   <br>
-  <i> <font size="18"> Open Enterprise Cloud Agent </font> </i>
+  <i> <font size="18">Identus Cloud Agent</font> </i>
   <br>
   <br>
   <a href='https://coveralls.io/github/input-output-hk/atala-prism-building-blocks?branch=main'><img src='https://coveralls.io/repos/github/input-output-hk/atala-prism-building-blocks/badge.svg?branch=main&amp;t=91BUzX&kill_cache=1' alt='Coverage Status' /></a>

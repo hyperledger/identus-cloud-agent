@@ -5,14 +5,14 @@ import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 
 inThisBuild(
   Seq(
-    organization := "io.iohk.atala",
+    organization := "org.hyperledger",
     scalaVersion := "3.3.1",
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
     versionScheme := Some("semver-spec"),
-    githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks",
+    githubOwner := "hyperledger",
+    githubRepository := "identus-cloud-agent",
     resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
     resolvers += "jitpack" at "https://jitpack.io",
   )
@@ -848,7 +848,7 @@ lazy val prismAgentServer = project
   .in(file("prism-agent/service/server"))
   .settings(commonSetttings)
   .settings(
-    name := "prism-agent",
+    name := "identus-cloud-agent",
     fork := true,
     libraryDependencies ++= D_PrismAgent.serverDependencies,
     excludeDependencies ++= Seq(
@@ -858,7 +858,7 @@ lazy val prismAgentServer = project
     ),
     Compile / mainClass := Some("io.iohk.atala.agent.server.MainApp"),
     Docker / maintainer := "atala-coredid@iohk.io",
-    Docker / dockerUsername := Some("input-output-hk"),
+    Docker / dockerUsername := Some("hyperledger"),
     Docker / dockerRepository := Some("ghcr.io"),
     dockerExposedPorts := Seq(8080, 8085, 8090),
     // Official docker image for openjdk 21 with curl and bash

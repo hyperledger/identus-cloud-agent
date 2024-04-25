@@ -77,7 +77,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "helm repo index --url \"https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts\" --merge index.yaml infrastructure/charts"
+          "prepareCmd": "helm repo index --url \"https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts\" --merge index.yaml infrastructure/charts"
         }
       ],
       [
@@ -89,7 +89,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "docker buildx build --platform=linux/arm64,linux/amd64 --push -t ghcr.io/input-output-hk/prism-agent:${nextRelease.version} ./prism-agent/service/server/target/docker/stage"
+          "prepareCmd": "docker buildx build --platform=linux/arm64,linux/amd64 --push -t ghcr.io/hyperledger/identus-cloud-agent:${nextRelease.version} ./prism-agent/service/server/target/docker/stage"
         }
       ],
       [
