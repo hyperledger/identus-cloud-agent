@@ -24,13 +24,11 @@ body:
     id: exception-or-error
     attributes:
       label: Please provide the exception or error you saw
-      render: true
 
   - type: textarea
     id: environment
     attributes:
       label: Please provide the environment you discovered this bug in
-      render: true
 
   - type: textarea
     id: other
