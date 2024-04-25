@@ -3,7 +3,11 @@ package org.hyperledger.identus.agent.walletapi.storage
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.agent.walletapi.model.Wallet
 import org.hyperledger.identus.agent.walletapi.service.{WalletManagementService, WalletManagementServiceImpl}
-import org.hyperledger.identus.agent.walletapi.sql.{JdbcGenericSecretStorage, JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
+import org.hyperledger.identus.agent.walletapi.sql.{
+  JdbcGenericSecretStorage,
+  JdbcWalletNonSecretStorage,
+  JdbcWalletSecretStorage
+}
 import org.hyperledger.identus.agent.walletapi.vault.{VaultGenericSecretStorage, VaultWalletSecretStorage}
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
 import org.hyperledger.identus.shared.models.WalletAccessContext

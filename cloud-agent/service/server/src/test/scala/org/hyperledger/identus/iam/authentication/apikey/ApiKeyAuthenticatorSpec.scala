@@ -8,7 +8,11 @@ import org.hyperledger.identus.agent.walletapi.service.{
   WalletManagementService,
   WalletManagementServiceImpl
 }
-import org.hyperledger.identus.agent.walletapi.sql.{JdbcEntityRepository, JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
+import org.hyperledger.identus.agent.walletapi.sql.{
+  JdbcEntityRepository,
+  JdbcWalletNonSecretStorage,
+  JdbcWalletSecretStorage
+}
 import org.hyperledger.identus.container.util.MigrationAspects.*
 import org.hyperledger.identus.iam.authentication.AuthenticationError
 import org.hyperledger.identus.iam.authentication.AuthenticationError.InvalidCredentials

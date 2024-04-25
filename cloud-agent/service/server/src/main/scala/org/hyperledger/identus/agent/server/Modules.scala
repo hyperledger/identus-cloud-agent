@@ -8,7 +8,11 @@ import org.hyperledger.identus.agent.server.config.SecretStorageBackend
 import org.hyperledger.identus.agent.server.config.ValidatedVaultConfig
 import org.hyperledger.identus.agent.walletapi.service.EntityService
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
-import org.hyperledger.identus.agent.walletapi.sql.{JdbcDIDSecretStorage, JdbcGenericSecretStorage, JdbcWalletSecretStorage}
+import org.hyperledger.identus.agent.walletapi.sql.{
+  JdbcDIDSecretStorage,
+  JdbcGenericSecretStorage,
+  JdbcWalletSecretStorage
+}
 import org.hyperledger.identus.agent.walletapi.storage.{DIDSecretStorage, GenericSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.agent.walletapi.vault.*
 import org.hyperledger.identus.agent.walletapi.vault.{

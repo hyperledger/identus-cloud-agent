@@ -10,7 +10,11 @@ import org.hyperledger.identus.agent.walletapi.service.{
   ManagedDIDServiceWithEventNotificationImpl,
   WalletManagementServiceImpl
 }
-import org.hyperledger.identus.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository, JdbcWalletNonSecretStorage}
+import org.hyperledger.identus.agent.walletapi.sql.{
+  JdbcDIDNonSecretStorage,
+  JdbcEntityRepository,
+  JdbcWalletNonSecretStorage
+}
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import org.hyperledger.identus.castor.core.service.DIDServiceImpl
