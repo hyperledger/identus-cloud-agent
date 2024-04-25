@@ -28,7 +28,7 @@ jobs:
       JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
     steps:
       - uses: actions/checkout@v3
