@@ -37,6 +37,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.event.inputs.release-branch }}
           fetch-depth: 0
+          persist-credentials: false
       - name: Setup Java and Scala
         uses: olafurpg/setup-scala@v14
         with:
