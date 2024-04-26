@@ -1,9 +1,9 @@
-package io.iohk.atala.agent.walletapi.storage
+package org.hyperledger.identus.agent.walletapi.storage
 
-import io.iohk.atala.agent.walletapi.model.*
-import io.iohk.atala.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.agent.walletapi.model.*
+import org.hyperledger.identus.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.mock.{Expectation, Mock, Proxy}
 import zio.test.Assertion.equalTo
 import zio.*
@@ -39,8 +39,9 @@ case class MockDIDNonSecretStorage(proxy: Proxy) extends DIDNonSecretStorage {
   override def insertManagedDID(
       did: PrismDID,
       state: ManagedDIDState,
-      hdKey: Map[String, ManagedDIDHdKeyPath]
-  ): RIO[WalletAccessContext, Unit] = proxy(MockDIDNonSecretStorage.InsertManagedDID, (did, state, hdKey))
+      hdKey: Map[String, ManagedDIDHdKeyPath],
+      randKey: Map[String, ManagedDIDRandKeyMeta]
+  ): RIO[WalletAccessContext, Unit] = proxy(MockDIDNonSecretStorage.InsertManagedDID, (did, state, hdKey, randKey))
 
   override def updateManagedDID(did: PrismDID, patch: ManagedDIDStatePatch): RIO[WalletAccessContext, Unit] =
     proxy(MockDIDNonSecretStorage.UpdateManagedDID, (did, patch))
@@ -51,16 +52,19 @@ case class MockDIDNonSecretStorage(proxy: Proxy) extends DIDNonSecretStorage {
   override def getHdKeyCounter(did: PrismDID): RIO[WalletAccessContext, Option[HdKeyIndexCounter]] =
     proxy(MockDIDNonSecretStorage.GetHdKeyCounter, did)
 
-  override def getHdKeyPath(did: PrismDID, keyId: String): RIO[WalletAccessContext, Option[ManagedDIDHdKeyPath]] =
-    proxy(MockDIDNonSecretStorage.GetHdKeyPath, (did, keyId))
+  override def getKeyMeta(
+      did: PrismDID,
+      keyId: String
+  ): RIO[WalletAccessContext, Option[(ManagedDIDKeyMeta, Array[Byte])]] =
+    proxy(MockDIDNonSecretStorage.GetKeyMeta, (did, keyId))
 
-  override def insertHdKeyPath(
+  override def insertKeyMeta(
       did: PrismDID,
       keyId: String,
-      hdKeyPath: ManagedDIDHdKeyPath,
+      meta: ManagedDIDKeyMeta,
       operationHash: Array[Byte]
   ): RIO[WalletAccessContext, Unit] =
-    proxy(MockDIDNonSecretStorage.InsertHdKeyPath, (did, keyId, hdKeyPath, operationHash))
+    proxy(MockDIDNonSecretStorage.InsertHdKeyMeta, (did, keyId, meta, operationHash))
 
   override def listHdKeyPath(
       did: PrismDID
@@ -82,12 +86,17 @@ object MockDIDNonSecretStorage extends Mock[DIDNonSecretStorage] {
   object GetPeerDIDRecord extends Effect[DidId, Throwable, Option[PeerDIDRecord]]
   object GetPrismDidWalletId extends Effect[PrismDID, Throwable, Option[WalletId]]
   object GetManagedDIDState extends Effect[PrismDID, Throwable, Option[ManagedDIDState]]
-  object InsertManagedDID extends Effect[(PrismDID, ManagedDIDState, Map[String, ManagedDIDHdKeyPath]), Throwable, Unit]
+  object InsertManagedDID
+      extends Effect[
+        (PrismDID, ManagedDIDState, Map[String, ManagedDIDHdKeyPath], Map[String, ManagedDIDRandKeyMeta]),
+        Throwable,
+        Unit
+      ]
   object UpdateManagedDID extends Effect[(PrismDID, ManagedDIDStatePatch), Throwable, Unit]
   object GetMaxDIDIndex extends Effect[Unit, Throwable, Option[Int]]
   object GetHdKeyCounter extends Effect[PrismDID, Throwable, Option[HdKeyIndexCounter]]
-  object GetHdKeyPath extends Effect[(PrismDID, String), Throwable, Option[ManagedDIDHdKeyPath]]
-  object InsertHdKeyPath extends Effect[(PrismDID, String, ManagedDIDHdKeyPath, Array[Byte]), Throwable, Unit]
+  object GetKeyMeta extends Effect[(PrismDID, String), Throwable, Option[(ManagedDIDKeyMeta, Array[Byte])]]
+  object InsertHdKeyMeta extends Effect[(PrismDID, String, ManagedDIDKeyMeta, Array[Byte]), Throwable, Unit]
   object ListHdKeyPath extends Effect[PrismDID, Throwable, Seq[(String, ArraySeq[Byte], ManagedDIDHdKeyPath)]]
   object ListManagedDID extends Effect[(Option[Int], Option[Int]), Throwable, (Seq[(PrismDID, ManagedDIDState)], Int)]
 
