@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.core.repository
+package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialConfiguration
 import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialIssuer
