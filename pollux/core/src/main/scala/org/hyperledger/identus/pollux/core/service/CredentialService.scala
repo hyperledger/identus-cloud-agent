@@ -2,18 +2,6 @@ package org.hyperledger.identus.pollux.core.service
 
 import io.circe.syntax.*
 import io.circe.{Json, JsonObject}
-import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
-import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.issuecredential.{
-  Attribute,
-  IssueCredential,
-  OfferCredential,
-  RequestCredential
-}
-import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{

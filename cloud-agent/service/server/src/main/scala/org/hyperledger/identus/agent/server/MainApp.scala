@@ -1,6 +1,7 @@
 package org.hyperledger.identus.agent.server
 
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
+import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.http.ZioHttpClient
 import org.hyperledger.identus.agent.server.sql.Migrations as AgentMigrations
@@ -33,36 +34,12 @@ import org.hyperledger.identus.iam.entity.http.controller.{EntityController, Ent
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementControllerImpl
 import org.hyperledger.identus.issue.controller.IssueControllerImpl
 import org.hyperledger.identus.mercury.*
-import org.hyperledger.identus.pollux.core.service.*
-import org.hyperledger.identus.pollux.core.service.verification.VcVerificationServiceImpl
-import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
-import org.hyperledger.identus.agent.walletapi.sql.{
-  JdbcDIDNonSecretStorage,
-  JdbcEntityRepository,
-  JdbcWalletNonSecretStorage
-}
-import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
-import org.hyperledger.identus.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
-import org.hyperledger.identus.castor.core.service.DIDServiceImpl
-import org.hyperledger.identus.castor.core.util.DIDOperationValidator
-import org.hyperledger.identus.connect.controller.ConnectionControllerImpl
-import org.hyperledger.identus.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
-import org.hyperledger.identus.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
-import org.hyperledger.identus.event.controller.EventControllerImpl
-import org.hyperledger.identus.event.notification.EventNotificationServiceImpl
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
-import org.hyperledger.identus.iam.authentication.apikey.JdbcAuthenticationRepository
-import org.hyperledger.identus.iam.authorization.DefaultPermissionManagementService
-import org.hyperledger.identus.iam.authorization.core.EntityPermissionManagementService
-import org.hyperledger.identus.iam.entity.http.controller.{EntityController, EntityControllerImpl}
-import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementControllerImpl
-import org.hyperledger.identus.issue.controller.IssueControllerImpl
-import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.oidc4vc.controller.CredentialIssuerControllerImpl
 import org.hyperledger.identus.oidc4vc.service.OIDCCredentialIssuerServiceImpl
 import org.hyperledger.identus.oidc4vc.storage.InMemoryIssuanceSessionService
 import org.hyperledger.identus.pollux.core.repository.InMemoryOIDC4VCIssuerMetadataRepository
 import org.hyperledger.identus.pollux.core.service.*
+import org.hyperledger.identus.pollux.core.service.verification.VcVerificationServiceImpl
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
 import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaController,
@@ -82,7 +59,6 @@ import org.hyperledger.identus.presentproof.controller.PresentProofControllerImp
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.system.controller.SystemControllerImpl
 import org.hyperledger.identus.verification.controller.VcVerificationControllerImpl
-import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import zio.*
 import zio.logging.*
 import zio.logging.LogFormat.*

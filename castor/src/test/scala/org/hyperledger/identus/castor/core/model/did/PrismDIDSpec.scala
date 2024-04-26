@@ -7,7 +7,6 @@ import org.hyperledger.identus.shared.models.Base64UrlString
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import org.hyperledger.identus.castor.core.model.did.PrismDID
 
 object PrismDIDSpec extends ZIOSpecDefault {
 
