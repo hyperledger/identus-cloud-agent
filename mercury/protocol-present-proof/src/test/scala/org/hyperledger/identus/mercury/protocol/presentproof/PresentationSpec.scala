@@ -7,7 +7,6 @@ import org.hyperledger.identus.mercury.model.AttachmentDescriptor
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 import munit.*
 import org.hyperledger.identus.mercury.model.{LinkData, DidId}
-import org.hyperledger.identus.mercury.protocol.presentproof.Presentation
 
 class PresentationSpec extends ZSuite {
 

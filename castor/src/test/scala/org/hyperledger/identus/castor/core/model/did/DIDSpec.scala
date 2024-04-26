@@ -1,10 +1,9 @@
 package org.hyperledger.identus.castor.core.model.did
 
+import org.hyperledger.identus.castor.core.util.GenUtils
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import org.hyperledger.identus.castor.core.util.GenUtils
-import org.hyperledger.identus.castor.core.model.did.{DID, PrismDID}
 
 object DIDSpec extends ZIOSpecDefault {
 

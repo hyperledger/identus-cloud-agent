@@ -10,6 +10,7 @@ import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
 import org.hyperledger.identus.iam.entity.http.controller.EntityController
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementController
 import org.hyperledger.identus.issue.controller.IssueController
+import org.hyperledger.identus.oidc4vc.controller.CredentialIssuerController
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController
 import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaController,
@@ -18,23 +19,6 @@ import org.hyperledger.identus.pollux.credentialschema.controller.{
 import org.hyperledger.identus.presentproof.controller.PresentProofController
 import org.hyperledger.identus.system.controller.SystemController
 import org.hyperledger.identus.verification.controller.VcVerificationController
-import org.hyperledger.identus.agent.server.AgentHttpServer
-import org.hyperledger.identus.agent.server.http.DocModels
-import org.hyperledger.identus.castor.controller.{DIDController, DIDRegistrarController}
-import org.hyperledger.identus.connect.controller.ConnectionController
-import org.hyperledger.identus.event.controller.EventController
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
-import org.hyperledger.identus.iam.entity.http.controller.EntityController
-import org.hyperledger.identus.oidc4vc.controller.CredentialIssuerController
-import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementController
-import org.hyperledger.identus.issue.controller.IssueController
-import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController
-import org.hyperledger.identus.pollux.credentialschema.controller.{
-  CredentialSchemaController,
-  VerificationPolicyController
-}
-import org.hyperledger.identus.presentproof.controller.PresentProofController
-import org.hyperledger.identus.system.controller.SystemController
 import org.scalatestplus.mockito.MockitoSugar.*
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}

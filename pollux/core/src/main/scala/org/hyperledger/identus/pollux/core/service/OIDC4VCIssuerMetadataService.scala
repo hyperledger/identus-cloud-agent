@@ -5,7 +5,6 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.URI
 import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialConfiguration
 import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialIssuer
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
-import org.hyperledger.identus.pollux.core.service.URIDereferencer
 import org.hyperledger.identus.pollux.core.repository.OIDC4VCIssuerMetadataRepository
 import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.InvalidSchemaId
 import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.IssuerIdNotFound

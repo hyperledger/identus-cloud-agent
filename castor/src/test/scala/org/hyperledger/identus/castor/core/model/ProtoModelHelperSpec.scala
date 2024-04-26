@@ -3,19 +3,19 @@ package org.hyperledger.identus.castor.core.model
 import com.google.protobuf.timestamp.Timestamp
 import io.circe.Json
 import io.circe.JsonObject
+import io.iohk.atala.prism.protos.common_models.Ledger
+import io.iohk.atala.prism.protos.node_models
 import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint
 import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriValue
 import org.hyperledger.identus.castor.core.model.did.ServiceType
 import org.hyperledger.identus.castor.core.util.GenUtils
-import io.iohk.atala.prism.protos.common_models.Ledger
-import io.iohk.atala.prism.protos.node_models
-import java.time.Instant
-import scala.language.implicitConversions
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import org.hyperledger.identus.castor.core.model.ProtoModelHelper
+
+import java.time.Instant
+import scala.language.implicitConversions
 
 object ProtoModelHelperSpec extends ZIOSpecDefault {
 
