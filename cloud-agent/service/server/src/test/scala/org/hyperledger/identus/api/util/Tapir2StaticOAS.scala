@@ -18,21 +18,23 @@ import org.hyperledger.identus.pollux.credentialschema.controller.{
 import org.hyperledger.identus.presentproof.controller.PresentProofController
 import org.hyperledger.identus.system.controller.SystemController
 import org.hyperledger.identus.verification.controller.VcVerificationController
-import io.iohk.atala.agent.server.AgentHttpServer
-import io.iohk.atala.agent.server.http.DocModels
-import io.iohk.atala.castor.controller.{DIDController, DIDRegistrarController}
-import io.iohk.atala.connect.controller.ConnectionController
-import io.iohk.atala.credentialstatus.controller.CredentialStatusController
-import io.iohk.atala.event.controller.EventController
-import io.iohk.atala.iam.authentication.DefaultAuthenticator
-import io.iohk.atala.iam.entity.http.controller.EntityController
-import io.iohk.atala.oidc4vc.controller.CredentialIssuerController
-import io.iohk.atala.iam.wallet.http.controller.WalletManagementController
-import io.iohk.atala.issue.controller.IssueController
-import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionController
-import io.iohk.atala.pollux.credentialschema.controller.{CredentialSchemaController, VerificationPolicyController}
-import io.iohk.atala.presentproof.controller.PresentProofController
-import io.iohk.atala.system.controller.SystemController
+import org.hyperledger.identus.agent.server.AgentHttpServer
+import org.hyperledger.identus.agent.server.http.DocModels
+import org.hyperledger.identus.castor.controller.{DIDController, DIDRegistrarController}
+import org.hyperledger.identus.connect.controller.ConnectionController
+import org.hyperledger.identus.event.controller.EventController
+import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
+import org.hyperledger.identus.iam.entity.http.controller.EntityController
+import org.hyperledger.identus.oidc4vc.controller.CredentialIssuerController
+import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementController
+import org.hyperledger.identus.issue.controller.IssueController
+import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController
+import org.hyperledger.identus.pollux.credentialschema.controller.{
+  CredentialSchemaController,
+  VerificationPolicyController
+}
+import org.hyperledger.identus.presentproof.controller.PresentProofController
+import org.hyperledger.identus.system.controller.SystemController
 import org.scalatestplus.mockito.MockitoSugar.*
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}

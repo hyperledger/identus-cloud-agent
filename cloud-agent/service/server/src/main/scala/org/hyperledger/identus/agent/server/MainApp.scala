@@ -36,31 +36,34 @@ import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.core.service.verification.VcVerificationServiceImpl
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
-import io.iohk.atala.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository, JdbcWalletNonSecretStorage}
-import io.iohk.atala.agent.walletapi.storage.GenericSecretStorage
-import io.iohk.atala.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
-import io.iohk.atala.castor.core.service.DIDServiceImpl
-import io.iohk.atala.castor.core.util.DIDOperationValidator
-import io.iohk.atala.connect.controller.ConnectionControllerImpl
-import io.iohk.atala.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
-import io.iohk.atala.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
-import io.iohk.atala.credentialstatus.controller.CredentialStatusControllerImpl
-import io.iohk.atala.event.controller.EventControllerImpl
-import io.iohk.atala.event.notification.EventNotificationServiceImpl
-import io.iohk.atala.iam.authentication.DefaultAuthenticator
-import io.iohk.atala.iam.authentication.apikey.JdbcAuthenticationRepository
-import io.iohk.atala.iam.authorization.DefaultPermissionManagementService
-import io.iohk.atala.iam.authorization.core.EntityPermissionManagementService
-import io.iohk.atala.iam.entity.http.controller.{EntityController, EntityControllerImpl}
-import io.iohk.atala.iam.wallet.http.controller.WalletManagementControllerImpl
-import io.iohk.atala.issue.controller.IssueControllerImpl
-import io.iohk.atala.mercury.*
-import io.iohk.atala.oidc4vc.controller.CredentialIssuerControllerImpl
-import io.iohk.atala.oidc4vc.service.OIDCCredentialIssuerServiceImpl
-import io.iohk.atala.oidc4vc.storage.InMemoryIssuanceSessionService
-import io.iohk.atala.pollux.core.repository.InMemoryOIDC4VCIssuerMetadataRepository
-import io.iohk.atala.pollux.core.service.*
-import io.iohk.atala.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
+import org.hyperledger.identus.agent.walletapi.sql.{
+  JdbcDIDNonSecretStorage,
+  JdbcEntityRepository,
+  JdbcWalletNonSecretStorage
+}
+import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
+import org.hyperledger.identus.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
+import org.hyperledger.identus.castor.core.service.DIDServiceImpl
+import org.hyperledger.identus.castor.core.util.DIDOperationValidator
+import org.hyperledger.identus.connect.controller.ConnectionControllerImpl
+import org.hyperledger.identus.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
+import org.hyperledger.identus.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
+import org.hyperledger.identus.event.controller.EventControllerImpl
+import org.hyperledger.identus.event.notification.EventNotificationServiceImpl
+import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
+import org.hyperledger.identus.iam.authentication.apikey.JdbcAuthenticationRepository
+import org.hyperledger.identus.iam.authorization.DefaultPermissionManagementService
+import org.hyperledger.identus.iam.authorization.core.EntityPermissionManagementService
+import org.hyperledger.identus.iam.entity.http.controller.{EntityController, EntityControllerImpl}
+import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementControllerImpl
+import org.hyperledger.identus.issue.controller.IssueControllerImpl
+import org.hyperledger.identus.mercury.*
+import org.hyperledger.identus.oidc4vc.controller.CredentialIssuerControllerImpl
+import org.hyperledger.identus.oidc4vc.service.OIDCCredentialIssuerServiceImpl
+import org.hyperledger.identus.oidc4vc.storage.InMemoryIssuanceSessionService
+import org.hyperledger.identus.pollux.core.repository.InMemoryOIDC4VCIssuerMetadataRepository
+import org.hyperledger.identus.pollux.core.service.*
+import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
 import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaController,
   CredentialSchemaControllerImpl,

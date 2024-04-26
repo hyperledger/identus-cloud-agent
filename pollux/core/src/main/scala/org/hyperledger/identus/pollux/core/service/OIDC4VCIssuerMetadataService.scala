@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.core.service
+package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.URISyntaxError
@@ -6,10 +6,10 @@ import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialConfiguration
 import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialIssuer
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.service.URIDereferencer
-import io.iohk.atala.pollux.core.repository.OIDC4VCIssuerMetadataRepository
-import io.iohk.atala.pollux.core.service.OIDC4VCIssuerMetadataServiceError.InvalidSchemaId
-import io.iohk.atala.pollux.core.service.OIDC4VCIssuerMetadataServiceError.IssuerIdNotFound
-import io.iohk.atala.pollux.core.service.OIDC4VCIssuerMetadataServiceError.UnsupportedCredentialFormat
+import org.hyperledger.identus.pollux.core.repository.OIDC4VCIssuerMetadataRepository
+import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.InvalidSchemaId
+import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.IssuerIdNotFound
+import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.UnsupportedCredentialFormat
 import org.hyperledger.identus.shared.models.Failure
 import org.hyperledger.identus.shared.models.StatusCode
 import org.hyperledger.identus.shared.models.WalletAccessContext
