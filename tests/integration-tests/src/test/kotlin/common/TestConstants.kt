@@ -1,6 +1,6 @@
 package common
 
-import io.iohk.atala.prism.models.*
+import org.hyperledger.identus.client.models.*
 import java.time.Duration
 
 object TestConstants {
