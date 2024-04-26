@@ -20,3 +20,4 @@ target/
 **.env.*
 workspace.json
 docs/architecture/structurizr/.structurizr/
+cloud-agent/client/typescript
