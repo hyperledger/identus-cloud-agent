@@ -31,6 +31,7 @@ import zio.test.TestAspect.*
 
 import java.util.UUID
 
+/*  testOnly org.hyperledger.identus.iam.authorization.keycloak.admin.KeycloakPermissionManagementServiceSpec */
 object KeycloakPermissionManagementServiceSpec
     extends ZIOSpecDefault
     with KeycloakTestContainerSupport
