@@ -1,8 +1,5 @@
 package steps.common
 
-import steps.connection.ConnectionSteps
-import steps.credentials.IssueCredentialsSteps
-import steps.did.PublishDidSteps
 import interactions.Get
 import io.cucumber.java.ParameterType
 import io.cucumber.java.en.Given
@@ -16,6 +13,9 @@ import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.actors.OnStage
 import org.apache.http.HttpStatus
+import steps.connection.ConnectionSteps
+import steps.credentials.IssueCredentialsSteps
+import steps.did.PublishDidSteps
 
 class CommonSteps {
     @ParameterType(".*")

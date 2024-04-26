@@ -74,7 +74,7 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
         backend = httpBackend(vcVerificationController, authenticator)
         response: Response[Either[DeserializationException[String], List[VcVerificationResponse]]] <-
           basicRequest
-            .get(uri"${vcVerificationUriBase}")
+            .post(uri"${vcVerificationUriBase}")
             .body(
               List(
                 VcVerificationRequest(

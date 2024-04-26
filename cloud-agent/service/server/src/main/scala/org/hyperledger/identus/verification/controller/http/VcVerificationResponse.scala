@@ -9,8 +9,8 @@ final case class VcVerificationResponse(
     @description(VcVerificationResponse.annotations.credential.description)
     @encodedExample(VcVerificationResponse.annotations.credential.example)
     credential: String,
-    @description(VcVerificationResponse.annotations.checks.description)
-    @encodedExample(VcVerificationResponse.annotations.checks.example)
+    @description(VcVerificationResponse.annotations.vcVerificationResults.description)
+    @encodedExample(VcVerificationResponse.annotations.vcVerificationResults.example)
     result: List[VcVerificationResult],
 )
 
@@ -25,79 +25,22 @@ object VcVerificationResponse {
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
         )
 
-    object checks
-        extends Annotation[List[VcVerification]](
+    object vcVerificationResults
+        extends Annotation[List[VcVerificationResult]](
           description = "The list executed Verifications",
           example = List(
-            VcVerification.SignatureVerification,
-            VcVerification.IssuerIdentification,
-            VcVerification.ExpirationCheck,
-            VcVerification.NotBeforeCheck,
-            VcVerification.AudienceCheck,
-            VcVerification.SubjectVerification,
-            VcVerification.IntegrityOfClaims,
-            VcVerification.ComplianceWithStandards,
-            VcVerification.RevocationCheck,
-            VcVerification.AlgorithmVerification,
-            VcVerification.SchemaCheck,
-            VcVerification.SemanticCheckOfClaims,
-          )
-        )
-
-    object successfulChecks
-        extends Annotation[List[VcVerification]](
-          description = "The list of successful Verifications",
-          example = List(
-            VcVerification.SignatureVerification,
-            VcVerification.IssuerIdentification,
-            VcVerification.ExpirationCheck,
-            VcVerification.NotBeforeCheck,
-            VcVerification.AudienceCheck,
-            VcVerification.SubjectVerification,
-            VcVerification.IntegrityOfClaims,
-            VcVerification.ComplianceWithStandards,
-            VcVerification.RevocationCheck,
-            VcVerification.AlgorithmVerification,
-            VcVerification.SchemaCheck,
-            VcVerification.SemanticCheckOfClaims,
-          )
-        )
-
-    object failedChecks
-        extends Annotation[List[VcVerification]](
-          description = "The list of failed Verifications.",
-          example = List(
-            VcVerification.SignatureVerification,
-            VcVerification.IssuerIdentification,
-            VcVerification.ExpirationCheck,
-            VcVerification.NotBeforeCheck,
-            VcVerification.AudienceCheck,
-            VcVerification.SubjectVerification,
-            VcVerification.IntegrityOfClaims,
-            VcVerification.ComplianceWithStandards,
-            VcVerification.RevocationCheck,
-            VcVerification.AlgorithmVerification,
-            VcVerification.SchemaCheck,
-            VcVerification.SemanticCheckOfClaims,
-          )
-        )
-
-    object failedAsWarningChecks
-        extends Annotation[List[VcVerification]](
-          description = "The list of failed Verifications as warning",
-          example = List(
-            VcVerification.SignatureVerification,
-            VcVerification.IssuerIdentification,
-            VcVerification.ExpirationCheck,
-            VcVerification.NotBeforeCheck,
-            VcVerification.AudienceCheck,
-            VcVerification.SubjectVerification,
-            VcVerification.IntegrityOfClaims,
-            VcVerification.ComplianceWithStandards,
-            VcVerification.RevocationCheck,
-            VcVerification.AlgorithmVerification,
-            VcVerification.SchemaCheck,
-            VcVerification.SemanticCheckOfClaims,
+            VcVerificationResult(VcVerification.SignatureVerification, true),
+            VcVerificationResult(VcVerification.IssuerIdentification, true),
+            VcVerificationResult(VcVerification.ExpirationCheck, true),
+            VcVerificationResult(VcVerification.NotBeforeCheck, true),
+            VcVerificationResult(VcVerification.AudienceCheck, true),
+            VcVerificationResult(VcVerification.SubjectVerification, true),
+            VcVerificationResult(VcVerification.IntegrityOfClaims, true),
+            VcVerificationResult(VcVerification.ComplianceWithStandards, true),
+            VcVerificationResult(VcVerification.RevocationCheck, true),
+            VcVerificationResult(VcVerification.AlgorithmVerification, true),
+            VcVerificationResult(VcVerification.SchemaCheck, true),
+            VcVerificationResult(VcVerification.SemanticCheckOfClaims, true),
           )
         )
   }

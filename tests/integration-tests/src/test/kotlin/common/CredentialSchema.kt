@@ -19,7 +19,7 @@ enum class CredentialSchema {
                 "name" to JsonSchemaProperty(type = "string"),
                 "age" to JsonSchemaProperty(type = "integer"),
             ),
-            required = listOf("name", "age")
+            required = listOf("name", "age"),
         )
         override val credentialSchema: CredentialSchemaInput = CredentialSchemaInput(
             author = "did:prism:agent",
@@ -30,7 +30,7 @@ enum class CredentialSchema {
             tags = listOf("school", "students"),
             version = "1.0.0",
         )
-    };
+    }, ;
 
     abstract val credentialSchema: CredentialSchemaInput
     abstract val schema: JsonSchema
