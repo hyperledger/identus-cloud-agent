@@ -77,6 +77,7 @@ jobs:
           GIT_COMMITTER_EMAIL: ${{ steps.import_gpg.outputs.email }}
           GIT_AUTHOR_NAME: ${{ steps.import_gpg.outputs.name }}
           GIT_COMMITTER_NAME: ${{ steps.import_gpg.outputs.name }}
+          GITHUB_TOKEN: ${{ secrets.IDENTUS_CI }}
         run: |
           npm install
           npx semantic-release
