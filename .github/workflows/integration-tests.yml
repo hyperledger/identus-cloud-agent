@@ -73,7 +73,7 @@ jobs:
           OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.open_enterprise_agent_version }}
           ATALA_GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
           ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-        continue-on-error: true
+#        continue-on-error: true
         run: |
           ./gradlew test --tests "IntegrationTestsRunner"
 
