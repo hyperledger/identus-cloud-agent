@@ -21,3 +21,7 @@ target/
 workspace.json
 docs/architecture/structurizr/.structurizr/
 cloud-agent/client/typescript
+cloud-agent/client/kotlin/src/main/kotlin/
+!cloud-agent/client/kotlin/src/main/kotlin/org/hyperledger/identus/client/models/CredentialSubject.kt
+!cloud-agent/client/kotlin/src/main/kotlin/org/hyperledger/identus/client/models/Service.kt
+!cloud-agent/client/kotlin/src/main/kotlin/org/hyperledger/identus/client/models/UpdateManagedDIDServiceAction.kt
