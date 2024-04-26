@@ -60,7 +60,7 @@ lazy val V = new {
   val monocle = "3.2.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
-  val circe = "0.14.6"
+  val circe = "0.14.7"
 
   val tapir = "1.10.5"
 
