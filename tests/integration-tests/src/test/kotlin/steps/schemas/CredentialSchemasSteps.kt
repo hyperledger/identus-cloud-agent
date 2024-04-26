@@ -114,7 +114,7 @@ class CredentialSchemasSteps {
     @Then("{actor} should see the schema creation failed")
     fun schemaCreationShouldFail(agent: Actor) {
         agent.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST)
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST),
         )
     }
 }
@@ -135,7 +135,7 @@ enum class SchemaErrorTemplate {
                     },
                     "required": ["name"]
                 }
-                """.trimIndent()
+            """.trimIndent()
         }
     },
     CUSTOM_WORDS_NOT_DEFINED {
@@ -174,7 +174,7 @@ enum class SchemaErrorTemplate {
             }
             """
         }
-    };
+    }, ;
 
     abstract fun inner_schema(): String
 

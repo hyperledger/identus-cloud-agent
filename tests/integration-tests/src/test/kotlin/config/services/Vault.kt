@@ -22,7 +22,7 @@ data class Vault(
         mapOf(
             "VAULT_PORT" to httpPort.toString(),
 
-            ),
+        ),
     ).waitingFor(
         "vault",
         Wait.forHealthcheck(),
