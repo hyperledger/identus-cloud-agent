@@ -1,4 +1,4 @@
-package io.iohk.atala.pollux.core.model.oidc4vc
+package org.hyperledger.identus.pollux.core.model.oidc4vc
 
 import java.net.URL
 import java.time.Instant

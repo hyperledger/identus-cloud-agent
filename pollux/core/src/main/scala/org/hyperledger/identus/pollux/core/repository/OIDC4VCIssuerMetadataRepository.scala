@@ -1,8 +1,8 @@
 package io.iohk.atala.pollux.core.repository
 
-import io.iohk.atala.pollux.core.model.oidc4vc.CredentialConfiguration
-import io.iohk.atala.pollux.core.model.oidc4vc.CredentialIssuer
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialConfiguration
+import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialIssuer
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 import java.util.UUID

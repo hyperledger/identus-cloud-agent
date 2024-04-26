@@ -1,17 +1,18 @@
 package io.iohk.atala.pollux.core.service
 
-import io.iohk.atala.pollux.core.model.CredentialFormat
-import io.iohk.atala.pollux.core.model.error.CredentialSchemaError.URISyntaxError
-import io.iohk.atala.pollux.core.model.oidc4vc.CredentialConfiguration
-import io.iohk.atala.pollux.core.model.oidc4vc.CredentialIssuer
-import io.iohk.atala.pollux.core.model.schema.CredentialSchema
+import org.hyperledger.identus.pollux.core.model.CredentialFormat
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.URISyntaxError
+import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialConfiguration
+import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialIssuer
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
+import org.hyperledger.identus.pollux.core.service.URIDereferencer
 import io.iohk.atala.pollux.core.repository.OIDC4VCIssuerMetadataRepository
 import io.iohk.atala.pollux.core.service.OIDC4VCIssuerMetadataServiceError.InvalidSchemaId
 import io.iohk.atala.pollux.core.service.OIDC4VCIssuerMetadataServiceError.IssuerIdNotFound
 import io.iohk.atala.pollux.core.service.OIDC4VCIssuerMetadataServiceError.UnsupportedCredentialFormat
-import io.iohk.atala.shared.models.Failure
-import io.iohk.atala.shared.models.StatusCode
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.Failure
+import org.hyperledger.identus.shared.models.StatusCode
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 import java.net.URI

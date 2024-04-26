@@ -7,13 +7,13 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import io.iohk.atala.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
-import io.iohk.atala.mercury.model.DidId
-import io.iohk.atala.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
-import io.iohk.atala.pollux.core.model.error.CredentialServiceError
-import io.iohk.atala.pollux.core.model.{DidCommID, IssueCredentialRecord}
-import io.iohk.atala.pollux.vc.jwt.Issuer
-import io.iohk.atala.shared.models.WalletAccessContext
+import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
+import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
+import org.hyperledger.identus.pollux.vc.jwt.Issuer
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.mock.{Mock, Proxy}
 import zio.{IO, URLayer, ZIO, ZLayer, mock}
 
