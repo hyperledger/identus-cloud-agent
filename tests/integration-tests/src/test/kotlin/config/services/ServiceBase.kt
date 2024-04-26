@@ -17,7 +17,6 @@ interface ServiceBase : Startable {
     }
 
     fun postStart() {
-
     }
 
     override fun stop() {

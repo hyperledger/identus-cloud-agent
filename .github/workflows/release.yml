@@ -20,17 +20,21 @@ on:
 jobs:
   release:
     env:
-      GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
-      GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+      GITHUB_ACTOR: "hyperledger-bot"
+      GITHUB_ACTOR_EMAIL: "hyperledger-bot@hyperledger.org"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
       # New JDK version makes 'localhost' lookup on linux return ipv6.
       # Our test containers are on ipv4. We need to make 'localhost' resolve to ipv4.
       JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v3
         with:
-          token: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.event.inputs.release-branch }}
           fetch-depth: 0
       - name: Setup Java and Scala
@@ -51,15 +55,18 @@ jobs:
       - uses: crazy-max/ghaction-import-gpg@v3
         id: import_gpg
         with:
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-private-key: ${{ secrets.HYP_BOT_GPG_PRIVATE }}
+          passphrase: ${{ secrets.HYP_BOT_GPG_PASSWORD }}
           git-user-signingkey: true
           git-commit-gpgsign: true
+          git_config_global: true
+          git_tag_gpgsign: true
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          username: ${{ env.GITHUB_ACTOR }}
+          password: ${{ env.GITHUB_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx

@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a bug in the Atala PRISM Cloud Agent
+description: Report a bug in the Identus Cloud Agent
 
 body:
   - type: dropdown
@@ -7,8 +7,8 @@ body:
     attributes:
       label: Is this a regression?
       options:
-        - 'Yes'
-        - 'No'
+        - "Yes"
+        - "No"
     validations:
       required: true
 
@@ -23,13 +23,13 @@ body:
     id: exception-or-error
     attributes:
       label: Please provide the exception or error you saw
-      render: true
+      render: "Markdown"
 
   - type: textarea
     id: environment
     attributes:
       label: Please provide the environment you discovered this bug in
-      render: true
+      render: "Markdown"
 
   - type: textarea
     id: other

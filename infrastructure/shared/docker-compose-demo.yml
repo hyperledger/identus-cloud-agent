@@ -29,7 +29,7 @@ services:
         condition: service_healthy
 
   prism-agent:
-    image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
+    image: ghcr.io/hyperledger/identus-cloud-agent:${AGENT_VERSION}
     environment:
       DIDCOMM_SERVICE_URL: http://${DOCKERHOST}:${PORT}/didcomm
       REST_SERVICE_URL: http://${DOCKERHOST}:${PORT}/prism-agent

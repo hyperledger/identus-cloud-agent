@@ -1,5 +1,5 @@
 # Examples of OpenAPI specifications
-This directory contains OpenAPI/Swagger specifications of Atala competitors.
+This directory contains OpenAPI/Swagger specifications of Identus competitors.
 Not all the companies are real competitors, but number of them are experts in particular area, so we have a good opportunity to get inspiration and build a better solution.
 
 ### godiddy-api.yaml

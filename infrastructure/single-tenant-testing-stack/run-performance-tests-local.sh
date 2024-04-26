@@ -30,7 +30,7 @@ echo "--------------------------------------"
 (
     export K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write
     export K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM=true
-    cd ${SCRIPT_DIR}/../../tests/performance-tests/atala-performance-tests-k6
+    cd ${SCRIPT_DIR}/../../tests/performance-tests/agent-performance-tests-k6
     yarn install
     yarn webpack
     k6 run -e SCENARIO_LABEL=st-create-prism-did-smoke dist/create-prism-did-test.js -o experimental-prometheus-rw

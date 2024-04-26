@@ -94,8 +94,9 @@ class PublishDidSteps {
         if (agent.recallAll().containsKey("hasPublishedDid")) {
             return
         }
-        if (!agent.recallAll().containsKey("shortFormDid")
-            && !agent.recallAll().containsKey("longFormDid")) {
+        if (!agent.recallAll().containsKey("shortFormDid") &&
+            !agent.recallAll().containsKey("longFormDid")
+        ) {
             createsUnpublishedDid(agent)
         }
         hePublishesDidToLedger(agent)
@@ -103,8 +104,9 @@ class PublishDidSteps {
 
     @Given("{actor} has an unpublished DID")
     fun agentHasAnUnpublishedDID(agent: Actor) {
-        if (agent.recallAll().containsKey("shortFormDid")
-            || agent.recallAll().containsKey("longFormDid")) {
+        if (agent.recallAll().containsKey("shortFormDid") ||
+            agent.recallAll().containsKey("longFormDid")
+        ) {
             // is not published
             if (!agent.recallAll().containsKey("hasPublishedDid")) {
                 return
