@@ -37,6 +37,11 @@ object MediateGrant {
     * FIXME https://github.com/roots-id/didcomm-mediator/issues/17
     */
   final case class Body(routing_did: String) // Seq[String])
+
+  object Body {
+    given Encoder[Body] = deriveEncoder[Body]
+    given Decoder[Body] = deriveDecoder[Body]
+  }
 }
 
 final case class KeylistUpdate(id: String, `type`: PIURI, body: KeylistUpdate.Body) {
@@ -51,6 +56,11 @@ object KeylistUpdate {
 
   final case class Body(updates: Seq[Update])
 
+  object Body {
+    given Encoder[Body] = deriveEncoder[Body]
+    given Decoder[Body] = deriveDecoder[Body]
+  }
+
   /** @param recipient_did
     *   DID subject of the update.
     * @param action
@@ -60,6 +70,10 @@ object KeylistUpdate {
   enum Action:
     case add extends Action
     case remove extends Action
+  object Action {
+    given Encoder[Action] = deriveEncoder[Action]
+    given Decoder[Action] = deriveDecoder[Action]
+  }
 }
 
 final case class KeylistResponse(id: String, `type`: PIURI, body: KeylistResponse.Body) {
@@ -74,6 +88,11 @@ object KeylistResponse {
 
   final case class Body(updated: Seq[Update])
 
+  object Body {
+    given Encoder[Body] = deriveEncoder[Body]
+    given Decoder[Body] = deriveDecoder[Body]
+  }
+
   /** @param recipient_did
     *   DID subject of the update.
     * @param action
@@ -85,11 +104,20 @@ object KeylistResponse {
   enum Action:
     case add extends Action
     case remove extends Action
+  object Action {
+    given Encoder[Action] = deriveEncoder[Action]
+    given Decoder[Action] = deriveDecoder[Action]
+  }
+
   enum Result:
     case client_error extends Result
     case server_error extends Result
     case no_change extends Result
     case success extends Result
+  object Result {
+    given Encoder[Result] = deriveEncoder[Result]
+    given Decoder[Result] = deriveDecoder[Result]
+  }
 }
 
 final case class KeylistQuery(id: String, `type`: PIURI, body: KeylistQuery.Body) {
@@ -102,6 +130,14 @@ object KeylistQuery {
 
   final case class Body(paginate: Option[Paginate] = None)
   final case class Paginate(limit: Int, offset: Int)
+  object Body {
+    given Encoder[Body] = deriveEncoder[Body]
+    given Decoder[Body] = deriveDecoder[Body]
+  }
+  object Paginate {
+    given Encoder[Paginate] = deriveEncoder[Paginate]
+    given Decoder[Paginate] = deriveDecoder[Paginate]
+  }
 }
 
 final case class Keylist(id: String, `type`: PIURI, body: Keylist.Body) {
@@ -117,4 +153,17 @@ object Keylist {
   final case class Body(keys: Seq[Key], pagination: Option[Pagination])
   final case class Key(recipient_did: String)
   final case class Pagination(count: Int, offset: Int, remaining: Int)
+
+  object Body {
+    given Encoder[Body] = deriveEncoder[Body]
+    given Decoder[Body] = deriveDecoder[Body]
+  }
+  object Key {
+    given Encoder[Key] = deriveEncoder[Key]
+    given Decoder[Key] = deriveDecoder[Key]
+  }
+  object Pagination {
+    given Encoder[Pagination] = deriveEncoder[Pagination]
+    given Decoder[Pagination] = deriveDecoder[Pagination]
+  }
 }

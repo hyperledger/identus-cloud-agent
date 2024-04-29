@@ -53,7 +53,7 @@ lazy val V = new {
   val zioLogging = "2.1.17"
   val zioJson = "0.6.2"
   val zioHttp = "3.0.0-RC6"
-  val zioCatsInterop = "23.1.0.2"
+  val zioCatsInterop = "3.3.0" // TODO "23.1.0.2" // https://mvnrepository.com/artifact/dev.zio/zio-interop-cats
   val zioMetricsConnector = "2.3.1"
   val zioMock = "1.0.0-RC12"
   val mockito = "3.2.18.0"
@@ -62,7 +62,8 @@ lazy val V = new {
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.7"
 
-  val tapir = "1.10.5"
+  val tapir = "1.6.4" // TODO "1.10.5"
+  val http4sBlaze = "0.23.15" // TODO "0.23.16"
 
   val typesafeConfig = "1.4.3"
   val protobuf = "3.1.9"
@@ -360,7 +361,7 @@ lazy val D_CloudAgent = new {
 
   val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % V.tapir
   val tapirHttp4sServerZio = "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % V.tapir
-  val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.16"
+  val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % V.http4sBlaze
 
   val tapirRedocBundle = "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % V.tapir
 
