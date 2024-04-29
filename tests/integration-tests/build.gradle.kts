@@ -22,8 +22,8 @@ repositories {
     maven {
         url = uri("https://maven.pkg.github.com/hyperledger/identus-cloud-agent/")
         credentials {
-            username = System.getenv("ATALA_GITHUB_ACTOR")
-            password = System.getenv("ATALA_GITHUB_TOKEN")
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")
         }
     }
 }
