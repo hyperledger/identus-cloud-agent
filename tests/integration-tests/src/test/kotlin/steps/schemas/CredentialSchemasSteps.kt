@@ -11,8 +11,8 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import io.iohk.atala.prism.models.CredentialSchemaInput
-import io.iohk.atala.prism.models.CredentialSchemaResponse
+import org.hyperledger.identus.client.models.CredentialSchemaInput
+import org.hyperledger.identus.client.models.CredentialSchemaResponse
 import models.JsonSchema
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor

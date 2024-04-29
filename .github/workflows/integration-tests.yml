@@ -40,8 +40,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          username: hyperledger-bot
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Compose
         uses: ndeloof/install-compose-action@v0.0.1
@@ -54,8 +54,8 @@ jobs:
         env:
           CLOUD_AGENT_PATH: "../.."
           ENV_FILE: "infrastructure/local/.env"
-          GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          GITHUB_ACTOR: hyperledger-bot
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd "${CLOUD_AGENT_PATH}" || exit 129
           sbt docker:publishLocal
@@ -71,16 +71,25 @@ jobs:
         env:
           PRISM_NODE_VERSION: ${{ steps.build_local_cloud_agent.outputs.prism_node_version }}
           OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.open_enterprise_agent_version }}
-          ATALA_GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-        continue-on-error: true
+          GITHUB_ACTOR: hyperledger-bot
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        continue-on-error: true
         run: |
-          ./gradlew test --tests "IntegrationTestsRunner" || true
+          ./gradlew test --tests "IntegrationTestsRunner"
+
+      - name: Make report of integration tests
+        if: always()
+        env:
+          PRISM_NODE_VERSION: ${{ steps.build_local_cloud_agent.outputs.prism_node_version }}
+          OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.open_enterprise_agent_version }}
+          GITHUB_ACTOR: hyperledger-bot
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           ./gradlew reports
 
       - name: Extract test results
         id: analyze_test_results
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' && always()
         run: |
           JSON_RESULTS="target/site/serenity/serenity-summary.json"
           CONCLUSION=failure
@@ -118,14 +127,14 @@ jobs:
           check_name: "Integration Test Results"
 
       - name: Upload artifacts
-        if: github.ref_name == 'main' || steps.analyze_test_results.outputs.conclusion == 'failure'
+        if: github.ref_name == 'main' || failure()
         uses: actions/upload-artifact@v4
         with:
           name: integration-tests-result
           path: ${{ env.REPORTS_DIR }}
 
       - name: Slack Notification
-        if: github.ref_name == 'main' && steps.analyze_test_results.outputs.conclusion == 'failure'
+        if: github.ref_name == 'main' && failure()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: ${{ steps.analyze_test_results.outputs.conclusion }}
