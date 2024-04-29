@@ -384,7 +384,7 @@ Here is an example of the agent configuration for sandbox environment:
 1. Docker and Docker Compose are installed.
 2. JDK >=17.
 3. IntelliJ IDEA with Kotlin and Cucumber plugins.
-4. `ATALA_GITHUB_ACTOR` and `ATALA_GITHUB_TOKEN` environment variables are set to download dependencies.
+4. `GITHUB_ACTOR` and `GITHUB_TOKEN` environment variables are set to download dependencies.
 
 > If you have troubles with JDK version incompatibilities in IntelliJ IDEA,
 > make sure JDK is set not only for the project itself, but also for the Gradle daemon.

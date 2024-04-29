@@ -40,8 +40,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          username: ${{ secrets.GITHUB_ACTOR }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Compose
         uses: ndeloof/install-compose-action@v0.0.1
@@ -54,8 +54,8 @@ jobs:
         env:
           CLOUD_AGENT_PATH: "../.."
           ENV_FILE: "infrastructure/local/.env"
-          GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd "${CLOUD_AGENT_PATH}" || exit 129
           sbt docker:publishLocal
@@ -71,8 +71,8 @@ jobs:
         env:
           PRISM_NODE_VERSION: ${{ steps.build_local_cloud_agent.outputs.prism_node_version }}
           OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.open_enterprise_agent_version }}
-          ATALA_GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew test --tests "IntegrationTestsRunner"
           ./gradlew reports
