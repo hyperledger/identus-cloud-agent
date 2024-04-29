@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package io.iohk.atala.prism.protos;
+package org.hyperledger.identus.protos;
 
 import "scalapb/scalapb.proto";
 

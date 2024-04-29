@@ -1,9 +1,9 @@
-package io.iohk.atala.sharedtest.containers
+package org.hyperledger.identus.sharedtest.containers
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.util.transactor.Transactor
-import io.iohk.atala.shared.db.{ContextAwareTask, DbConfig, TransactorLayer}
-import io.iohk.atala.sharedtest.containers.PostgresTestContainer.postgresContainer
+import org.hyperledger.identus.shared.db.{ContextAwareTask, DbConfig, TransactorLayer}
+import org.hyperledger.identus.sharedtest.containers.PostgresTestContainer.postgresContainer
 import zio.*
 
 object PostgresLayer {

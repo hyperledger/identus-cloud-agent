@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  BENCHMARKING_DIR: "tests/performance-tests/atala-performance-tests-k6"
+  BENCHMARKING_DIR: "tests/performance-tests/agent-performance-tests-k6"
   NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_ACTOR: ${{ github.actor }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -45,13 +45,13 @@ jobs:
         with:
           version: "2.14.2"
 
-      - name: Build local version of PRISM Agent
+      - name: Build local version of Cloud Agent
         env:
           ENV_FILE: "infrastructure/local/.env"
         run: |
           sbt docker:publishLocal
-          PRISM_AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
-          sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
+          AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
+          sed -i.bak "s/AGENT_VERSION=.*/AGENT_VERSION=${AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
           cat "${ENV_FILE}"
 
       - name: Start services for issuer

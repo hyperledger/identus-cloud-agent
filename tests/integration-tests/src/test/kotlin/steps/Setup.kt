@@ -167,6 +167,7 @@ object Setup {
         config.services?.vault?.stop()
     }
 }
+
 @BeforeAll
 fun init() {
     Setup.initServices()

@@ -1,0 +1,19 @@
+{
+  "name": "cloud-agent-clients-generator",
+  "version": "1.0.0",
+  "description": "Generates the clients based on the OAS for many languages",
+  "author": "Allain Magyar",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "npm-run-all clean:all generate:all",
+    "generate:all": "./generate-clients.sh",
+    "clean:all": "./clean.sh",
+    "publish:clients": "./publish-clients.sh"
+  },
+  "dependencies": {
+    "@openapitools/openapi-generator-cli": "2.7.0",
+    "npm-run-all": "^4.1.5"
+  }
+}

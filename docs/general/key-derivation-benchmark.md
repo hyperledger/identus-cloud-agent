@@ -18,7 +18,7 @@ __System information__
 __JVM options__
 - Xmx:4G
 
-The tests can be run by running the `io.iohk.atala.agent.walletapi.benchmark.KeyDerivation`.
+The tests can be run by running the `org.hyperledger.identus.agent.walletapi.benchmark.KeyDerivation`.
 The tests are being ignored to avoid running them on CI. When running locally,
 the ignore aspect should be removed and the test can be run by
 

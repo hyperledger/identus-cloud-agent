@@ -82,7 +82,7 @@ services:
   ##########################c
 
   prism-agent-issuer:
-    image: ghcr.io/input-output-hk/prism-agent:0.5.0
+    image: ghcr.io/hyperledger/prism-agent:0.5.0
     environment:
       REST_SERVICE_PORT: 8080
       DIDCOMM_SERVICE_PORT: 8081
@@ -115,7 +115,7 @@ services:
       retries: 5
 
   prism-agent-holder:
-    image: ghcr.io/input-output-hk/prism-agent:0.5.0
+    image: ghcr.io/hyperledger/prism-agent:0.5.0
     environment:
       REST_SERVICE_PORT: 8090
       DIDCOMM_SERVICE_PORT: 8091
