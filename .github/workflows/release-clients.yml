@@ -17,9 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERSION_TAG: ${{inputs.releaseTag || github.ref_name}}
-      GITHUB_ACTOR: ${{secrets.GITHUB_ACTOR}}
+      GITHUB_ACTOR: "hyperledger-bot"
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
 
     steps:
       - name: Checkout
@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: "lts/*"
           registry-url: https://npm.pkg.github.com/
-          scope: "@hyperledger-labs"
+          scope: "@hyperledger"
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -44,8 +44,8 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: hyperledger-bot
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ env.GITHUB_ACTOR }}
+          password: ${{ env.GITHUB_TOKEN }}
 
       - name: Setup yq - portable yaml processor
         uses: mikefarah/yq@v4.34.2
