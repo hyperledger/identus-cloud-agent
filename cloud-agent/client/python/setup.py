@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Prism Agent
+    Identus Cloud Agent
 
     No description provided
 
@@ -11,7 +11,7 @@
 
 from setuptools import setup, find_packages  # noqa: H301
 
-NAME = "open-enterprise-agent-python-client"
+NAME = "cloud-agent-client-python"
 VERSION = "0.0.1"
 
 REQUIRES = [
@@ -26,16 +26,16 @@ REQUIRES = [
 setup(
     name=NAME,
     version=VERSION,
-    description="Prism Agent Client",
+    description="Identus Cloud Agent Client",
     author="Allain Magyar",
     author_email="",
-    url="https://github.com/hyperledger-labs/open-enterprise-agent",
-    keywords=["Prism Agent"],
+    url="https://github.com/hyperledger/identus-cloud-agent",
+    keywords=["Identus Cloud Agent Client"],
     python_requires=">=3.7",
     install_requires=REQUIRES,
     packages=find_packages(exclude=["test", "tests"]),
     include_package_data=True,
     long_description="""\
-    Prism-agent models generated from OpenAPI Specification
+    Identus Cloud Agent models generated from the OpenAPI Specification
     """
 )

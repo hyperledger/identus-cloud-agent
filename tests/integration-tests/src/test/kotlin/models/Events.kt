@@ -2,10 +2,10 @@ package models
 
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
-import io.iohk.atala.prism.models.Connection
-import io.iohk.atala.prism.models.IssueCredentialRecord
-import io.iohk.atala.prism.models.ManagedDID
-import io.iohk.atala.prism.models.PresentationStatus
+import org.hyperledger.identus.client.models.Connection
+import org.hyperledger.identus.client.models.IssueCredentialRecord
+import org.hyperledger.identus.client.models.ManagedDID
+import org.hyperledger.identus.client.models.PresentationStatus
 
 data class Event(
     @SerializedName("type") var type: String,
