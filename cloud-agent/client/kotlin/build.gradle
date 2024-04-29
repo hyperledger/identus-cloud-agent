@@ -53,7 +53,7 @@ publishing {
             name = "GitHubPackages"
             url = "https://maven.pkg.github.com/hyperledger/identus-cloud-agent/"
             credentials {
-                username = System.getenv("GITHUB_USER")
+                username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
             }
         }
