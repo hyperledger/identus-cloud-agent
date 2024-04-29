@@ -1,6 +1,6 @@
 {
   "name": "identus-cloud-agent",
-  "version": "1.31.0",
+  "version": "1.32.0",
   "engines": {
     "node": ">=16.13.0"
   },
@@ -11,11 +11,11 @@
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "conventional-changelog-conventionalcommits": "^5.0.0",
-    "gradle-semantic-release-plugin": "1.7.3",
+    "gradle-semantic-release-plugin": "1.9.1",
     "husky": "^8.0.1",
     "pinst": "^3.0.0",
     "prettier": "^2.7.1",
-    "semantic-release": "^19.0.3",
+    "semantic-release": "^23.0.8",
     "semantic-release-slack-bot": "^3.5.3"
   },
   "release": {
@@ -53,7 +53,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "sbt \"prismAgentServer/test:runMain org.hyperledger.identus.api.util.Tapir2StaticOAS ${process.env.PWD}/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml ${nextRelease.version}\""
+          "prepareCmd": "sbt \"cloudAgentServer/test:runMain org.hyperledger.identus.api.util.Tapir2StaticOAS ${process.env.PWD}/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml ${nextRelease.version}\""
         }
       ],
       [

@@ -7,7 +7,7 @@ import interactions.Post
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import io.iohk.atala.prism.models.*
+import org.hyperledger.identus.client.models.*
 import models.PresentationEvent
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
@@ -35,39 +35,39 @@ class AnoncredsPresentProofSteps {
                         restrictions = listOf(
                             mapOf(
                                 ("attr::sex::value" to "M"),
-                                ("cred_def_id" to credentialDefinitionId)
-                            )
-                        )
-                    )
+                                ("cred_def_id" to credentialDefinitionId),
+                            ),
+                        ),
+                    ),
             ),
             requestedPredicates = mapOf(
                 "age" to AnoncredRequestedPredicateV1(
                     name = "age",
                     pType = ">=",
                     pValue = 18,
-                    restrictions = emptyList()
-                )
+                    restrictions = emptyList(),
+                ),
             ),
             name = "proof_req_1",
             nonce = "1103253414365527824079144",
-            version = "0.1"
+            version = "0.1",
         )
         val presentationRequest = RequestPresentationInput(
             connectionId = faber.recall<Connection>("connection-with-${bob.name}").connectionId,
             credentialFormat = "AnonCreds",
             anoncredPresentationRequest = anoncredsPresentationRequestV1,
-            proofs = emptyList()
+            proofs = emptyList(),
         )
         faber.attemptsTo(
             Post.to("/present-proof/presentations")
                 .with {
                     it.body(
-                        presentationRequest
+                        presentationRequest,
                     )
-                }
+                },
         )
         faber.attemptsTo(
-            Ensure.thatTheLastResponse().apply { println(this.contentType()) }.statusCode().isEqualTo(SC_CREATED)
+            Ensure.thatTheLastResponse().apply { println(this.contentType()) }.statusCode().isEqualTo(SC_CREATED),
         )
         val presentationStatus = SerenityRest.lastResponse().get<PresentationStatus>()
         faber.remember("thid", presentationStatus.thid)
@@ -84,7 +84,7 @@ class AnoncredsPresentProofSteps {
                 proofEvent != null &&
                     proofEvent!!.data.status == PresentationStatus.Status.REQUEST_RECEIVED
             },
-            "ERROR: Bob did not achieve any presentation request!"
+            "ERROR: Bob did not achieve any presentation request!",
         )
         bob.remember("presentationId", proofEvent!!.data.presentationId)
     }
@@ -98,19 +98,19 @@ class AnoncredsPresentProofSteps {
                     AnoncredCredentialProofV1(
                         bob.recall<IssueCredentialRecord>("issuedCredential").recordId,
                         listOf("sex"),
-                        listOf("age")
-                    )
-                )
+                        listOf("age"),
+                    ),
+                ),
             ),
-            action = RequestPresentationAction.Action.REQUEST_MINUS_ACCEPT
+            action = RequestPresentationAction.Action.REQUEST_MINUS_ACCEPT,
         )
 
         bob.attemptsTo(
             Patch.to("/present-proof/presentations/${bob.recall<String>("presentationId")}").with {
                 it.body(
-                    requestPresentationAction
+                    requestPresentationAction,
                 )
-            }
+            },
         )
     }
 }

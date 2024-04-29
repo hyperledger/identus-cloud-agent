@@ -1,6 +1,6 @@
 package common
 
-import io.iohk.atala.prism.models.CredentialSchemaInput
+import org.hyperledger.identus.client.models.CredentialSchemaInput
 import models.JsonSchema
 import models.JsonSchemaProperty
 import java.util.UUID
@@ -19,7 +19,7 @@ enum class CredentialSchema {
                 "name" to JsonSchemaProperty(type = "string"),
                 "age" to JsonSchemaProperty(type = "integer"),
             ),
-            required = listOf("name", "age")
+            required = listOf("name", "age"),
         )
         override val credentialSchema: CredentialSchemaInput = CredentialSchemaInput(
             author = "did:prism:agent",
@@ -30,7 +30,7 @@ enum class CredentialSchema {
             tags = listOf("school", "students"),
             version = "1.0.0",
         )
-    };
+    }, ;
 
     abstract val credentialSchema: CredentialSchemaInput
     abstract val schema: JsonSchema

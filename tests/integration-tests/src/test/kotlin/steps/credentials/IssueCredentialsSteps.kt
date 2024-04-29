@@ -8,7 +8,7 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import io.iohk.atala.prism.models.*
+import org.hyperledger.identus.client.models.*
 import models.AnoncredsSchema
 import models.CredentialEvent
 import net.serenitybdd.rest.SerenityRest
@@ -26,7 +26,7 @@ class IssueCredentialsSteps {
         holder: Actor,
         didForm: String,
         schemaGuid: String?,
-        claims: Map<String, Any>
+        claims: Map<String, Any>,
     ) {
         val did: String = if (didForm == "short") {
             issuer.recall("shortFormDid")
@@ -85,12 +85,12 @@ class IssueCredentialsSteps {
         issuer: Actor,
         holder: Actor,
         format: String,
-        schema: CredentialSchema
+        schema: CredentialSchema,
     ) {
         val schemaGuid = issuer.recall<String>(schema.name)!!
         val claims = linkedMapOf(
             "name" to "Name",
-            "age" to 18
+            "age" to 18,
         )
         sendCredentialOffer(issuer, holder, format, schemaGuid, claims)
         saveCredentialOffer(issuer, holder)
@@ -101,12 +101,12 @@ class IssueCredentialsSteps {
         issuer: Actor,
         holder: Actor,
         format: String,
-        schema: CredentialSchema
+        schema: CredentialSchema,
     ) {
         val schemaGuid = issuer.recall<String>(schema.name)!!
         val claims = linkedMapOf(
             "name" to "Name",
-            "surname" to "Surname"
+            "surname" to "Surname",
         )
         sendCredentialOffer(issuer, holder, "short", schemaGuid, claims)
     }
@@ -210,10 +210,10 @@ class IssueCredentialsSteps {
                     it.data.thid == holder.recall<String>("thid")
                 }
                 credentialEvent != null &&
-                        credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.OFFER_RECEIVED
+                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.OFFER_RECEIVED
             },
             "Holder was unable to receive the credential offer from Issuer! " +
-                    "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.OFFER_RECEIVED} state.",
+                "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.OFFER_RECEIVED} state.",
         )
 
         val recordId = ListenToEvents.`as`(holder).credentialEvents.last().data.recordId
@@ -258,7 +258,7 @@ class IssueCredentialsSteps {
                     it.data.thid == issuer.recall<String>("thid")
                 }
                 credentialEvent != null &&
-                        credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.REQUEST_RECEIVED
+                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.REQUEST_RECEIVED
             },
             "Issuer was unable to receive the credential request from Holder! Protocol state did not achieve RequestReceived state.",
         )
@@ -276,10 +276,10 @@ class IssueCredentialsSteps {
                     it.data.thid == issuer.recall<String>("thid")
                 }
                 credentialEvent != null &&
-                        credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT
+                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT
             },
             "Issuer was unable to issue the credential! " +
-                    "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT} state.",
+                "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT} state.",
         )
     }
 
@@ -291,10 +291,10 @@ class IssueCredentialsSteps {
                     it.data.thid == holder.recall<String>("thid")
                 }
                 credentialEvent != null &&
-                        credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED
+                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED
             },
             "Holder was unable to receive the credential from Issuer! " +
-                    "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED} state.",
+                "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED} state.",
         )
         holder.remember("issuedCredential", ListenToEvents.`as`(holder).credentialEvents.last().data)
     }
@@ -302,7 +302,7 @@ class IssueCredentialsSteps {
     @Then("{actor} should see that credential issuance has failed")
     fun issuerShouldSeeThatCredentialIssuanceHasFailed(issuer: Actor) {
         issuer.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST)
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST),
         )
     }
 }

@@ -1,10 +1,7 @@
 package common
 
-import io.iohk.atala.prism.models.*
-import models.JsonSchema
-import models.JsonSchemaProperty
+import org.hyperledger.identus.client.models.*
 import java.time.Duration
-import java.util.UUID
 
 object TestConstants {
     val TESTS_CONFIG = System.getProperty("TESTS_CONFIG") ?: "/configs/basic.conf"

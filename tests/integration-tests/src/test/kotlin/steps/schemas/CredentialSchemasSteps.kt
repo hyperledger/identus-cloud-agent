@@ -11,8 +11,8 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import io.iohk.atala.prism.models.CredentialSchemaInput
-import io.iohk.atala.prism.models.CredentialSchemaResponse
+import org.hyperledger.identus.client.models.CredentialSchemaInput
+import org.hyperledger.identus.client.models.CredentialSchemaResponse
 import models.JsonSchema
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
@@ -114,7 +114,7 @@ class CredentialSchemasSteps {
     @Then("{actor} should see the schema creation failed")
     fun schemaCreationShouldFail(agent: Actor) {
         agent.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST)
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST),
         )
     }
 }
@@ -135,7 +135,7 @@ enum class SchemaErrorTemplate {
                     },
                     "required": ["name"]
                 }
-                """.trimIndent()
+            """.trimIndent()
         }
     },
     CUSTOM_WORDS_NOT_DEFINED {
@@ -174,7 +174,7 @@ enum class SchemaErrorTemplate {
             }
             """
         }
-    };
+    }, ;
 
     abstract fun inner_schema(): String
 

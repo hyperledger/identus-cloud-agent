@@ -1,21 +1,21 @@
 package steps.common
 
-import steps.connection.ConnectionSteps
-import steps.credentials.IssueCredentialsSteps
-import steps.did.PublishDidSteps
 import interactions.Get
 import io.cucumber.java.ParameterType
 import io.cucumber.java.en.Given
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import io.iohk.atala.prism.models.Connection
-import io.iohk.atala.prism.models.ConnectionsPage
-import io.iohk.atala.prism.models.IssueCredentialRecord
-import io.iohk.atala.prism.models.IssueCredentialRecordPage
+import org.hyperledger.identus.client.models.Connection
+import org.hyperledger.identus.client.models.ConnectionsPage
+import org.hyperledger.identus.client.models.IssueCredentialRecord
+import org.hyperledger.identus.client.models.IssueCredentialRecordPage
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.actors.OnStage
 import org.apache.http.HttpStatus
+import steps.connection.ConnectionSteps
+import steps.credentials.IssueCredentialsSteps
+import steps.did.PublishDidSteps
 
 class CommonSteps {
     @ParameterType(".*")

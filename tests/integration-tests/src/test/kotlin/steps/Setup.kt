@@ -8,8 +8,8 @@ import config.AgentRole
 import config.Config
 import io.cucumber.java.AfterAll
 import io.cucumber.java.BeforeAll
-import io.iohk.atala.prism.models.CreateWalletRequest
-import io.iohk.atala.prism.models.CreateWebhookNotification
+import org.hyperledger.identus.client.models.CreateWalletRequest
+import org.hyperledger.identus.client.models.CreateWebhookNotification
 import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder
 import net.serenitybdd.screenplay.Actor
@@ -167,6 +167,7 @@ object Setup {
         config.services?.vault?.stop()
     }
 }
+
 @BeforeAll
 fun init() {
     Setup.initServices()

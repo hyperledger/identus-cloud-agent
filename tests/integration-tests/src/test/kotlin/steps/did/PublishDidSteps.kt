@@ -10,7 +10,7 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import io.iohk.atala.prism.models.*
+import org.hyperledger.identus.client.models.*
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
@@ -94,8 +94,9 @@ class PublishDidSteps {
         if (agent.recallAll().containsKey("hasPublishedDid")) {
             return
         }
-        if (!agent.recallAll().containsKey("shortFormDid")
-            && !agent.recallAll().containsKey("longFormDid")) {
+        if (!agent.recallAll().containsKey("shortFormDid") &&
+            !agent.recallAll().containsKey("longFormDid")
+        ) {
             createsUnpublishedDid(agent)
         }
         hePublishesDidToLedger(agent)
@@ -103,8 +104,9 @@ class PublishDidSteps {
 
     @Given("{actor} has an unpublished DID")
     fun agentHasAnUnpublishedDID(agent: Actor) {
-        if (agent.recallAll().containsKey("shortFormDid")
-            || agent.recallAll().containsKey("longFormDid")) {
+        if (agent.recallAll().containsKey("shortFormDid") ||
+            agent.recallAll().containsKey("longFormDid")
+        ) {
             // is not published
             if (!agent.recallAll().containsKey("hasPublishedDid")) {
                 return
