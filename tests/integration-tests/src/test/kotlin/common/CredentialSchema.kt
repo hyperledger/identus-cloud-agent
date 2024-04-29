@@ -1,6 +1,6 @@
 package common
 
-import io.iohk.atala.prism.models.CredentialSchemaInput
+import org.hyperledger.identus.client.models.CredentialSchemaInput
 import models.JsonSchema
 import models.JsonSchemaProperty
 import java.util.UUID

@@ -1,25 +1,25 @@
-name: Publish prism-agent clients
+name: Publish Identus-cloud-agent clients
 
 on:
   workflow_dispatch:
     inputs:
       releaseTag:
-        description: "Tag to release clients (e.g. prism-agent-v1.31.0)"
+        description: "Tag to release clients (e.g. identus-cloud-agent-v1.33.0)"
         required: true
         type: string
   push:
     tags:
-      - "prism-agent-v*"
+      - "identus-cloud-agent-v*"
 
 jobs:
   publish-clients:
-    name: 'Build and publish Prism-Agent clients'
+    name: 'Build and publish Identus-cloud-Agent clients'
     runs-on: ubuntu-latest
     env:
       VERSION_TAG: ${{inputs.releaseTag || github.ref_name}}
-      ATALA_GITHUB_ACTOR: ${{secrets.ATALA_GITHUB_ACTOR}}
-      ATALA_GITHUB_TOKEN: ${{secrets.ATALA_GITHUB_TOKEN}}
-      NODE_AUTH_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+      GITHUB_ACTOR: ${{secrets.GITHUB_ACTOR}}
+      GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     steps:
       - name: Checkout
@@ -44,20 +44,20 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          username: hyperledger-bot
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup yq - portable yaml processor
         uses: mikefarah/yq@v4.34.2
 
       - name: Install generator dependencies
-        working-directory: prism-agent/client/generator
+        working-directory: cloud-agent/client/generator
         run: yarn install
 
       - name: Generate clients
-        working-directory: prism-agent/client/generator
+        working-directory: cloud-agent/client/generator
         run: yarn generate:all
 
       - name: Publish clients
-        working-directory: prism-agent/client/generator
+        working-directory: cloud-agent/client/generator
         run: yarn publish:clients
