@@ -40,7 +40,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ secrets.GITHUB_ACTOR }}
+          username: hyperledger-bot
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Compose
@@ -54,7 +54,7 @@ jobs:
         env:
           CLOUD_AGENT_PATH: "../.."
           ENV_FILE: "infrastructure/local/.env"
-          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+          GITHUB_ACTOR: hyperledger-bot
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd "${CLOUD_AGENT_PATH}" || exit 129
@@ -71,7 +71,7 @@ jobs:
         env:
           PRISM_NODE_VERSION: ${{ steps.build_local_cloud_agent.outputs.prism_node_version }}
           OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.open_enterprise_agent_version }}
-          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+          GITHUB_ACTOR: hyperledger-bot
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #        continue-on-error: true
         run: |
@@ -82,7 +82,7 @@ jobs:
         env:
           PRISM_NODE_VERSION: ${{ steps.build_local_cloud_agent.outputs.prism_node_version }}
           OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.open_enterprise_agent_version }}
-          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+          GITHUB_ACTOR: hyperledger-bot
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew reports

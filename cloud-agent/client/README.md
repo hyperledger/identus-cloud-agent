@@ -20,7 +20,7 @@ yarn publish:clients
 
 ## Cloud-agent lifecycle
 
-`prism-client-generator` creates the clients after the `Cloud-agent-v*` tag is created.
+`identus-client-generator` creates the clients after the `cloud-agent-v*` tag is created.
 
 ## Supported clients
 
