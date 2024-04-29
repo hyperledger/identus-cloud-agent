@@ -62,13 +62,13 @@ lazy val V = new {
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.7"
 
-  val tapir = "1.6.4" // TODO "1.10.5"
-  val http4sBlaze = "0.23.15" // TODO "0.23.16"
+  val tapir = "1.6.4" // scala-steward:off // TODO "1.10.5"
+  val http4sBlaze = "0.23.15" // scala-steward:off  // TODO "0.23.16"
 
   val typesafeConfig = "1.4.3"
   val protobuf = "3.1.9"
   val testContainersScala = "0.41.3"
-  val testContainersJavaKeycloak = "3.2.0" // scala-steward:off
+  val testContainersJavaKeycloak = "3.3.0" // scala-steward:off
 
   val doobie = "1.0.0-RC5"
   val quill = "4.8.3"
