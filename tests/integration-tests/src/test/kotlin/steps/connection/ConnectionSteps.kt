@@ -8,9 +8,9 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import io.iohk.atala.prism.models.AcceptConnectionInvitationRequest
-import io.iohk.atala.prism.models.Connection
-import io.iohk.atala.prism.models.CreateConnectionRequest
+import org.hyperledger.identus.client.models.AcceptConnectionInvitationRequest
+import org.hyperledger.identus.client.models.Connection
+import org.hyperledger.identus.client.models.CreateConnectionRequest
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus.SC_CREATED

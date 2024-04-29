@@ -1,4 +1,4 @@
-# Prism-agent client generator
+# Cloud-agent client generator
 
 This project goal is to generate the models based on the OpenAPI Specification.
 
@@ -18,9 +18,9 @@ cd generator
 yarn publish:clients
 ```
 
-## Prism-agent lifecycle
+## Cloud-agent lifecycle
 
-`prism-client-generator` creates the clients after the `prism-agent-v*` tag is created.
+`identus-client-generator` creates the clients after the `cloud-agent-v*` tag is created.
 
 ## Supported clients
 

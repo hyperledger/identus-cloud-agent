@@ -13,7 +13,7 @@
     "UnusedImport"
 )
 
-package org.hyperledger.identus.prism.models
+package org.hyperledger.identus.client.models
 
 import com.google.gson.annotations.SerializedName
 

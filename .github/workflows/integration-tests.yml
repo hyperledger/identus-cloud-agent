@@ -41,7 +41,7 @@ jobs:
         with:
           registry: ghcr.io
           username: hyperledger-bot
-          password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Compose
         uses: ndeloof/install-compose-action@v0.0.1
@@ -55,7 +55,7 @@ jobs:
           CLOUD_AGENT_PATH: "../.."
           ENV_FILE: "infrastructure/local/.env"
           GITHUB_ACTOR: hyperledger-bot
-          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd "${CLOUD_AGENT_PATH}" || exit 129
           sbt docker:publishLocal
@@ -73,8 +73,18 @@ jobs:
           OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.open_enterprise_agent_version }}
           GITHUB_ACTOR: hyperledger-bot
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        continue-on-error: true
         run: |
           ./gradlew test --tests "IntegrationTestsRunner"
+
+      - name: Make report of integration tests
+        if: always()
+        env:
+          PRISM_NODE_VERSION: ${{ steps.build_local_cloud_agent.outputs.prism_node_version }}
+          OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.open_enterprise_agent_version }}
+          GITHUB_ACTOR: hyperledger-bot
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           ./gradlew reports
 
       - name: Extract test results
