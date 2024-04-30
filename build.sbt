@@ -44,52 +44,52 @@ inThisBuild(
 )
 
 lazy val V = new {
-  val munit = "1.0.0-RC1" // "0.7.29"
-  val munitZio = "0.2.0"
+  val munit = "1.0.0-M8" // "0.7.29"
+  val munitZio = "0.1.1"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.22"
+  val zio = "2.0.18"
   val zioConfig = "4.0.1"
-  val zioLogging = "2.1.17"
-  val zioJson = "0.6.2"
-  val zioHttp = "3.0.0-RC6"
+  val zioLogging = "2.1.16"
+  val zioJson = "0.3.0"
+  val zioHttp = "3.0.0-RC4"
   val zioCatsInterop = "3.3.0" // TODO "23.1.0.2" // https://mvnrepository.com/artifact/dev.zio/zio-interop-cats
-  val zioMetricsConnector = "2.3.1"
-  val zioMock = "1.0.0-RC12"
-  val mockito = "3.2.18.0"
-  val monocle = "3.2.0"
+  val zioMetricsConnector = "2.1.0"
+  val zioMock = "1.0.0-RC11"
+  val mockito = "3.2.16.0"
+  val monocle = "3.1.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.7"
 
   val tapir = "1.6.4" // scala-steward:off // TODO "1.10.5"
-  val http4sBlaze = "0.23.15" // scala-steward:off  // TODO "0.23.16"
+  val http4sBlaze = "0.23.12" // "0.23.15" // scala-steward:off  // TODO "0.23.16"
 
   val typesafeConfig = "1.4.3"
   val protobuf = "3.1.9"
-  val testContainersScala = "0.41.3"
+  val testContainersScala = "0.41.0"
   val testContainersJavaKeycloak = "3.2.0" // scala-steward:off
 
-  val doobie = "1.0.0-RC5"
-  val quill = "4.8.3"
-  val flyway = "9.22.3"
-  val postgresDriver = "42.2.29"
-  val logback = "1.4.14"
-  val slf4j = "2.0.13"
+  val doobie = "1.0.0-RC2"
+  val quill = "4.7.3"
+  val flyway = "9.8.3"
+  val postgresDriver = "42.2.27"
+  val logback = "1.4.8"
+  val slf4j = "2.0.7"
 
   val prismSdk = "1.4.1" // scala-steward:off
   val scalaUri = "4.0.3"
 
-  val jwtCirceVersion = "9.4.6"
-  val zioPreludeVersion = "1.0.0-RC24"
+  val jwtCirceVersion = "9.1.2"
+  val zioPreludeVersion = "1.0.0-RC16"
 
   val apollo = "1.2.14"
-  val bouncyCastle = "1.78.1"
+  val bouncyCastle = "1.70"
 
-  val jsonSchemaValidator = "1.3.3"
+  val jsonSchemaValidator = "1.3.2"
 
   val vaultDriver = "6.2.0"
-  val micrometer = "1.11.11"
+  val micrometer = "1.11.2"
 
   val nimbusJwt = "10.0.0"
   val keycloak = "23.0.7" // scala-steward:off //TODO 24.0.3 // update all quay.io/keycloak/keycloak
@@ -171,8 +171,8 @@ lazy val D = new {
     )
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.
-  val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk18on" % V.bouncyCastle
-  val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk18on" % V.bouncyCastle
+  val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % V.bouncyCastle
+  val bouncyBcprov = "org.bouncycastle" % "bcpkix-jdk15on" % V.bouncyCastle
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
@@ -327,7 +327,7 @@ lazy val D_Pollux_VC_JWT = new {
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
 
-  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.18" % Test
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % Test
 
   // Dependency Modules
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
