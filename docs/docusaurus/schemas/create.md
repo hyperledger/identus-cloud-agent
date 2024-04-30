@@ -1,6 +1,6 @@
 # Create the credential schema
 
-The PRISM platform v2.0 exposes REST API for creation, fetching, and searching the [credential schema](/docs/concepts/glossary#credential-schema) records.
+The Identus Platform exposes REST API for creation, fetching, and searching the [credential schema](/docs/concepts/glossary#credential-schema) records.
 
 The OpenAPI specification and ReDoc documentation describe the endpoint.
 
@@ -323,7 +323,7 @@ The response should contain the JSON object representing the schema you just cre
 }
 ```
 
-The PRISM Agent instance's triple `author`, `id`, and `version` are unique.
+The Cloud Agent instance's triple `author`, `id`, and `version` are unique.
 So, having a single [DID](/docs/concepts/glossary#decentralized-identifier) reference that the author uses, creating the credential schema with the same `id` and `version`
 is impossible.
 

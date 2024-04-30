@@ -14,9 +14,9 @@ The connection protocol has two roles:
 
 ## Prerequisites
 
-1. Inviter and Invitee PRISM Agents up and running
+1. Inviter and Invitee Cloud Agents up and running
 
-## PRISM Agent endpoints overview
+## Identus Cloud Agent endpoints overview
 
 The protocol uses the following REST API endpoints:
 
@@ -27,7 +27,7 @@ The protocol uses the following REST API endpoints:
 3. [`POST /connection-invitations`](/agent-api/#tag/Connections-Management/operation/acceptConnectionInvitation): Accepts an externally received invitation
 
 :::info
-Please check the full [PRISM Agent API](/agent-api) specification for more detailed information.
+Please check the full [Cloud Agent API](/agent-api) specification for more detailed information.
 :::
 
 ## Inviter Flow
@@ -79,7 +79,7 @@ The following diagram shows the end-to-end flow for establishing a connection be
 
 ## Command line example
 
-The following example demonstrates how you could use two PRISM Agent APIs to set up a connection between them.
+The following example demonstrates how you could use two Cloud Agent APIs to set up a connection between them.
 
 ### Inviter creates an invitation
 
@@ -208,5 +208,5 @@ Example response:
 ```
 
 :::info
-Please check the full [PRISM Agent API](/agent-api) specification for more detailed information.
+Please check the full [Cloud Agent API](/agent-api) specification for more detailed information.
 :::
