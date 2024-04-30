@@ -7,11 +7,13 @@ import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.util.UUID
+import java.{util => ju}
 
 trait OIDC4VCIssuerMetadataRepository {
   def createIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, Unit]
   def findWalletIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]]
   def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]]
+  def deleteIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit]
   def createCredentialConfiguration(issuerId: UUID, config: CredentialConfiguration): URIO[WalletAccessContext, Unit]
   def findAllCredentialConfigurations(issuerId: UUID): UIO[Seq[CredentialConfiguration]]
 }
@@ -35,6 +37,12 @@ class InMemoryOIDC4VCIssuerMetadataRepository(
 
   override def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]] =
     issuerStore.get.map(m => m.values.flatten.find(_.id == issuerId))
+
+  override def deleteIssuer(issuerId: ju.UUID): URIO[WalletAccessContext, Unit] =
+    for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      _ <- issuerStore.update(m => m.updated(walletId, m.getOrElse(walletId, Nil).filter(_.id != issuerId)))
+    } yield ()
 
   override def createCredentialConfiguration(
       issuerId: UUID,

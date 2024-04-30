@@ -146,6 +146,19 @@ object CredentialIssuerEndpoints {
     .name("getCredentialIssuers")
     .summary("List all credential issuers")
 
+  val deleteCredentialIssuerEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, UUID),
+    ErrorResponse,
+    Unit,
+    Any
+  ] = baseIssuerPrivateEndpoint.delete
+    .in(issuerIdPathSegment)
+    .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
+    .out(statusCode(StatusCode.Ok).description("Credential issuer deleted successfully"))
+    .name("deleteCredentialIssuer")
+    .summary("Delete a credential issuer")
+
   val createCredentialConfigurationEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID, CreateCredentialConfigurationRequest),

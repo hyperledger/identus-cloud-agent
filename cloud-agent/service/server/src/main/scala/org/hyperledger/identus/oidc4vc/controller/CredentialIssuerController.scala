@@ -47,6 +47,11 @@ trait CredentialIssuerController {
       ctx: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuerPage]
 
+  def deleteCredentialIssuer(
+      ctx: RequestContext,
+      issuerId: UUID,
+  ): ZIO[WalletAccessContext, ErrorResponse, Unit]
+
   def createCredentialConfiguration(
       ctx: RequestContext,
       issuerId: UUID,
@@ -238,6 +243,14 @@ case class CredentialIssuerControllerImpl(
       pageOf = PaginationUtils.composePageOfUri(uri).toString,
       contents = issuers.map(i => i)
     )
+
+  override def deleteCredentialIssuer(
+      ctx: RequestContext,
+      issuerId: UUID
+  ): ZIO[WalletAccessContext, ErrorResponse, Unit] =
+    for {
+      _ <- issuerMetadataService.deleteCredentialIssuer(issuerId)
+    } yield ()
 
   override def createCredentialConfiguration(
       ctx: RequestContext,

@@ -47,6 +47,7 @@ trait OIDC4VCIssuerMetadataService {
   def createCredentialIssuer(authorizationServer: URL): URIO[WalletAccessContext, CredentialIssuer]
   def getCredentialIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]]
   def getCredentialIssuer(issuerId: UUID): IO[IssuerIdNotFound, CredentialIssuer]
+  def deleteCredentialIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit]
   def createCredentialConfiguration(
       issuerId: UUID,
       format: CredentialFormat,
@@ -73,6 +74,9 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
     repository
       .findIssuer(issuerId)
       .someOrFail(IssuerIdNotFound(issuerId))
+
+  override def deleteCredentialIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit] =
+    repository.deleteIssuer(issuerId)
 
   override def createCredentialConfiguration(
       issuerId: UUID,
