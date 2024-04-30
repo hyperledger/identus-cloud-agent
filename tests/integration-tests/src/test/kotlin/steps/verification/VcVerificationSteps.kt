@@ -24,11 +24,11 @@ class VcVerificationSteps {
                         ParameterizableVcVerification(VcVerification.SIGNATURE_VERIFICATION),
                         ParameterizableVcVerification(
                             VcVerification.NOT_BEFORE_CHECK,
-                            DateTimeParameter(OffsetDateTime.now()) as VcVerificationParameter,
+                            DateTimeParameter(OffsetDateTime.now()),
                         ),
                         ParameterizableVcVerification(
                             VcVerification.EXPIRATION_CHECK,
-                            DateTimeParameter(OffsetDateTime.now()) as VcVerificationParameter,
+                            DateTimeParameter(OffsetDateTime.now()),
                         ),
                     ),
                 ),
