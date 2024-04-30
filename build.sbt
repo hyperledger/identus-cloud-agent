@@ -86,7 +86,9 @@ lazy val V = new {
   val apollo = "1.2.14"
   val bouncyCastle = "1.78.1"
 
-  val jsonSchemaValidator = "1.3.3"
+  val jsonSchemaValidator = "1.3.2" // scala-steward:off //TODO 1.3.2 need to fix:
+  // [error] 	org.hyperledger.identus.pollux.core.model.schema.AnoncredSchemaTypeSpec
+  // [error] 	org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaSpec
 
   val vaultDriver = "6.2.0"
   val micrometer = "1.11.11"
