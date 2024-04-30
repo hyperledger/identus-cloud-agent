@@ -68,7 +68,7 @@ lazy val V = new {
   val typesafeConfig = "1.4.3"
   val protobuf = "3.1.9"
   val testContainersScala = "0.41.3"
-  val testContainersJavaKeycloak = "3.3.0" // scala-steward:off
+  val testContainersJavaKeycloak = "3.2.0" // scala-steward:off
 
   val doobie = "1.0.0-RC5"
   val quill = "4.8.3"
@@ -92,7 +92,7 @@ lazy val V = new {
   val micrometer = "1.11.11"
 
   val nimbusJwt = "10.0.0"
-  val keycloak = "23.0.7" // scala-steward:off
+  val keycloak = "23.0.7" // scala-steward:off //TODO 24.0.3 // update all quay.io/keycloak/keycloak
 
 }
 
