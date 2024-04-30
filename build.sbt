@@ -63,7 +63,7 @@ lazy val V = new {
   val circe = "0.14.7"
 
   val tapir = "1.6.4" // scala-steward:off // TODO "1.10.5"
-  val http4sBlaze = "0.23.12" // "0.23.15" // scala-steward:off  // TODO "0.23.16"
+  val http4sBlaze = "0.23.15" // scala-steward:off  // TODO "0.23.16"
 
   val typesafeConfig = "1.4.3"
   val protobuf = "3.1.9"
@@ -80,8 +80,8 @@ lazy val V = new {
   val prismSdk = "1.4.1" // scala-steward:off
   val scalaUri = "4.0.3"
 
-  val jwtCirceVersion = "9.1.2"
-  val zioPreludeVersion = "1.0.0-RC16"
+  val jwtCirceVersion = "9.4.6"
+  val zioPreludeVersion = "1.0.0-RC24"
 
   val apollo = "1.2.14"
   val bouncyCastle = "1.78.1"
