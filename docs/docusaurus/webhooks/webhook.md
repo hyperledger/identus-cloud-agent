@@ -2,8 +2,8 @@
 
 ## Introduction
 
-Welcome to the tutorial on webhook notifications in PRISM Agent. In this tutorial, we will explore how webhook
-notifications can enhance your experience with PRISM Agent by providing real-time updates on events. By leveraging
+Welcome to the tutorial on webhook notifications in the Cloud Agent. In this tutorial, we will explore how webhook
+notifications can enhance your experience with the Cloud Agent by providing real-time updates on events. By leveraging
 webhook notifications, you can stay informed about important changes happening within the agent.
 
 ## Understanding Webhook Notifications
@@ -15,9 +15,9 @@ endpoints (webhook URLs) when events occur. They establish a direct communicatio
 receive instant updates and respond in a timely manner, promoting efficient integration between event-driven
 systems.
 
-### Purpose of Webhook Notifications in PRISM Agent
+### Purpose of Webhook Notifications in the Cloud Agent
 
-Webhook notifications in PRISM Agent serve as a vital feature, enabling you to receive timely updates on various events
+Webhook notifications in the CLoud Agent serve as a vital feature, enabling you to receive timely updates on various events
 occurring within the agent. Webhooks allow you to receive HTTP requests containing event details at a specified
 endpoint (webhook URL). These events are specifically related to the execution of
 the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials/issue),
@@ -25,7 +25,7 @@ and [Presentation](/tutorials/credentials/present-proof) flows. Webhook notifica
 state
 change during the execution of these protocols.
 
-By leveraging webhooks, you can integrate PRISM Agent seamlessly into your applications and systems. You can track and
+By leveraging webhooks, you can integrate the Cloud Agent seamlessly into your applications and systems. You can track and
 monitor the progress of the main flows, receiving timely updates about changes and events.
 
 ## Configuring the Webhook Feature
@@ -33,12 +33,12 @@ monitor the progress of the main flows, receiving timely updates about changes a
 ### Enabling the Webhook Feature
 
 There are two kinds of webhook notifications: global webhooks and wallet webhooks.
-Global webhooks capture all events that happen on the PRISM Agent across all wallets,
+Global webhooks capture all events that happen on the Cloud Agent across all wallets,
 whereas wallet webhooks only capture events that are specific to assets within a particular wallet.
 
 #### Enable global webhook using environment variables
 
-PRISM Agent uses the following environment variables to manage global webhook notifications:
+The Cloud Agent uses the following environment variables to manage global webhook notifications:
 
 | Name                     | Description                                                              | Default |
 |--------------------------|--------------------------------------------------------------------------|---------|
@@ -47,13 +47,13 @@ PRISM Agent uses the following environment variables to manage global webhook no
 
 #### Enable wallet webhook for default wallet using environment variables
 
-In a multi-tenant scenario, the PRISM Agent can optionally create a default wallet to simplify the development and deployment process.
+In a multi-tenant scenario, the Cloud Agent can optionally create a default wallet to simplify the development and deployment process.
 The webhook configuration for this default wallet can be defined using environment variables.
 After the default wallet is created, its webhook settings are stored in the system and are no longer influenced by these environment variables.
 
 | Name                             | Description                                                              | Default |
 |----------------------------------|--------------------------------------------------------------------------|---------|
-| `DEFAULT_WALLET_ENABLED`         | Automatically create default on PRISM Agent startup                      | true    |
+| `DEFAULT_WALLET_ENABLED`         | Automatically create default on the Cloud Agent startup                  | true    |
 | `DEFAULT_WALLET_WEBHOOK_URL`     | The webhook endpoint URL where the notifications will be sent            | null    |
 | `DEFAULT_WALLET_WEBHOOK_API_KEY` | The optional API key (bearer token) to use as the `Authorization` header | null    |
 
@@ -89,11 +89,11 @@ Response Example:
 It is essential to secure the webhook endpoint to protect the integrity and confidentiality of the event data. Consider
 the following best practices when securing your webhook endpoint:
 
-- Use HTTPS to encrypt communication between PRISM Agent and the webhook endpoint.
+- Use HTTPS to encrypt communication between the Cloud Agent and the webhook endpoint.
 - Implement authentication mechanisms (e.g., API keys, tokens) to verify the authenticity of incoming requests.
 - Validate and sanitize incoming webhook requests to mitigate potential security risks.
 
-One of the authorization mechanism for PRISM Agent's webhook notifications is the bearer token. If
+One of the authorization mechanism for the Cloud Agent's webhook notifications is the bearer token. If
 configured, the token will be included in the `Authorization` header of the HTTP request sent by the agent to the
 webhook endpoint. You can configure this bearer token by setting the value of the
 `GLOBAL_WEBHOOK_API_KEY` or `DEFAULT_WALLET_WEBHOOK_API_KEY` environment variable.
@@ -105,7 +105,7 @@ This option offers increased flexibility when custom or multiple headers are nee
 
 ### Event Format
 
-Webhook notifications from PRISM Agent are sent as JSON payloads in the HTTP requests.
+Webhook notifications from the Cloud Agent are sent as JSON payloads in the HTTP requests.
 
 The event format is consistent across all events. Each event follows a common structure, while the 'data' field
 within the event payload contains information specific to the type of event. Here is an example of the JSON payload
@@ -155,7 +155,7 @@ generated):
 
 ### Common Event Types
 
-PRISM Agent sends webhook notifications for events related to protocol state changes in
+The Cloud Agent sends webhook notifications for events related to protocol state changes in
 the [Connect](/tutorials/connections/connection), [Issue](/tutorials/credentials/issue),
 [Presentation](/tutorials/credentials/present-proof) flows, and also [DID publication](/tutorials/dids/publish)
 state changes. These events allow you to track the progress and updates within these flows in real-time.
@@ -198,21 +198,21 @@ State change notifications that you can expect to receive through webhook notifi
 
 ### Handling Incoming Webhook Requests
 
-To handle incoming webhook notifications from PRISM Agent in your application, follow these general steps:
+To handle incoming webhook notifications from the Cloud Agent in your application, follow these general steps:
 
 1. Receive the HTTP request at your specified webhook endpoint.
 2. Parse the JSON payload of the request to extract the event details.
 3. Process the event data according to your application's requirements.
 4. Send a response back to acknowledge the successful receipt of the webhook notification. For a successful reception,
    the response status code should be `>= 200` and `< 300`. Any other response status code will lead to a new attempt
-   from the PRISM Agent.
+   from the Cloud Agent.
 
 ### Error Handling and Retry Mechanisms
 
-When working with webhook notifications in PRISM Agent, it is important to consider error handling and retry mechanisms.
-In case of failed webhook notifications or errors, PRISM Agent employs an automatic retry mechanism to ensure delivery.
+When working with webhook notifications in the Cloud Agent, it is important to consider error handling and retry mechanisms.
+In case of failed webhook notifications or errors, the Cloud Agent employs an automatic retry mechanism to ensure delivery.
 The agent will attempt to send the webhook notification up to three times, with a five-second interval between each
-attempt. Please note that the number of retries and the interval duration are currently not configurable in PRISM Agent.
+attempt. Please note that the number of retries and the interval duration are currently not configurable in the Cloud Agent.
 
 By default, this retry mechanism provides a reasonable level of reliability for delivering webhook notifications,
 allowing for temporary network issues or intermittent failures.
@@ -312,12 +312,12 @@ if __name__ == '__main__':
 
 ## Conclusion
 
-Congratulations! You've learned about webhook notifications in PRISM Agent. By leveraging this feature, you can receive
-real-time updates on events happening within the agent, enabling you to integrate PRISM Agent seamlessly into your
+Congratulations! You've learned about webhook notifications in the Cloud Agent. By leveraging this feature, you can receive
+real-time updates on events happening within the agent, enabling you to integrate the Cloud Agent seamlessly into your
 applications. Remember to secure your webhook endpoint and handle webhook notifications effectively to maximize the
 benefits of this feature.
 
-Start integrating webhook notifications into your PRISM Agent workflow and unlock the power of real-time event updates!
+Start integrating webhook notifications into your Cloud Agent workflow and unlock the power of real-time event updates!
 
-If you have any further questions or need assistance, don't hesitate to reach out to the PRISM Agent support team or
+If you have any further questions or need assistance, don't hesitate to reach out to the Identus support team or
 refer to the official documentation for more details.

@@ -8,36 +8,36 @@
 
 ## Introduction
 
-This document describes the account management in the PRISM platform, types of accounts, and their usage, account authentication, and logical isolation of accounts.
+This document describes the account management in the Identus Platform, types of accounts, and their usage, account authentication, and logical isolation of accounts.
 
 ## Technical Overview
 
 Account management is a set of operations that allow users to manage their accounts.
 Account is required for both single and multi-tenant configurations.
-In the PRISM platform, the account owns the corresponding Wallet managed by the Agent.
+In the Identus Platform, the account owns the corresponding Wallet managed by the Cloud Agent.
 The account is identified by the tenant ID and represented by the Entity in the Vault service.
 
 ### Account Types
 
-The PRISM platform supports the following types of accounts:
-- PRISM Agent Account - application account used by the PRISM Agent to authenticate itself to the Vault service
+The Identus Platform supports the following types of accounts:
+- Cloud Agent Account - application account used by the Cloud Agent to authenticate itself to the Vault service
 - Wallet Account - application or user account used to access the Wallet assets over the REST API or WEB UI
 
 ### Account Creation
 
-The PRISM Agent Account is created by before the start of the PRISM Agent using the Vault cli, REST API or WEB UI.
+The Cloud Agent Account is created by before the start of the Cloud Agent using the Vault cli, REST API or WEB UI.
 The Wallet account can be created on the go by the Agent or using the Vault cli, REST API or WEB UI.
 
-### PRISM Agent Account
+### Cloud Agent Account
 
-The Agent account required to authenticate the instance of the Agent.
+The Cloud Agent account required to authenticate the instance of the Cloud Agent.
 The account is responsible for creating the Wallet accounts and issuing the tokens to the Wallet instance.
-The Agent account doesn't have the access to the Wallet secrets.
-PRISM Agent uses [AppRole](https://www.vaultproject.io/docs/auth/approle) authentication method to authenticate itself to the Vault service.
+The Cloud Agent account doesn't have the access to the Wallet secrets.
+The Cloud Agent uses [AppRole](https://www.vaultproject.io/docs/auth/approle) authentication method to authenticate itself to the Vault service.
 
 ### Wallet Account
 
-The Wallet account is required to authenticate the entity to the PRISM platform and give it the access to Wallet.
+The Wallet account is required to authenticate the entity to the Identus Platform and give it the access to Wallet.
 The Wallet account can be authenticated by the following methods:
 - JWT/OIDC token
 - user/password 

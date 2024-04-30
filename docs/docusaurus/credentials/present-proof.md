@@ -20,13 +20,13 @@ The present proof protocol has two roles:
 
 Before using the Proof Presentation protocol, the following conditions must be present:
 
-1. Holder/Prover and Verifier PRISM Agents must be up and running
-2. A connection must be established between the Holder/Prover and Verifier PRISM Agents (see [Connections](../connections/connection.md))
+1. Holder/Prover and Verifier Cloud Agents must be up and running
+2. A connection must be established between the Holder/Prover and Verifier Cloud Agents (see [Connections](../connections/connection.md))
 3. The Holder/Prover should hold a [verifiable credential (VC)](/docs/concepts/glossary#verifiable-credential) received from an [Issuer](/docs/concepts/glossary#issuer) see [Issue](./issue.md).
 
 ## Overview
 
-This protocol supports the presentation of verifiable claims between two Atala PRISM Agents, the Holder/Prover and the Verifier.
+This protocol supports the presentation of verifiable claims between two Cloud Agents, the Holder/Prover and the Verifier.
 
 The protocol consists of the following main parts:
 
@@ -45,12 +45,12 @@ The protocol consists of the following main parts:
 | [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) | PATCH | Updates an existing presentation proof record to, e.g., accept the request on the Holder/Prover side or accept the presentation on the Verifier side. | Verifier, Holder/Prover |
 
 :::info
-For more detailed information, please, check the full [PRISM Agent API](/agent-api).
+For more detailed information, please, check the full [Cloud Agent API](/agent-api).
 :::
 
 ## Verifier interactions
 
-This section describes the interactions available to the Verifier with the PRISM Agent.
+This section describes the interactions available to the Verifier with the Cloud Agent.
 
 ### Creating and sending a Presentation Request
 
@@ -128,7 +128,7 @@ curl -X 'POST' 'http://localhost:8070/prism-agent/present-proof/presentations' \
 </TabItem>
 </Tabs>
 
-Upon execution, a new presentation request record gets created with an initial state of `RequestPending`. The Verifier PRISM Agent will send the presentation request message to the PRISM Agent of the Holder/Prover through the specified DIDComm connection. The record state then is updated to `RequestSent`.
+Upon execution, a new presentation request record gets created with an initial state of `RequestPending`. The Verifier Cloud Agent will send the presentation request message to the Cloud Agent of the Holder/Prover through the specified DIDComm connection. The record state then is updated to `RequestSent`.
 
 The Verifier can retrieve the list of presentation records by making a `GET` request to the [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/getAllPresentation) endpoint:
 ```bash
@@ -138,7 +138,7 @@ curl -X 'GET' 'http://localhost:8070/prism-agent/present-proof/presentations' \
 ```
 
 ### Accept presentation proof received from the Holder/prover
-Once the Holder/Prover has received a proof presentation request, he can accept it using an appropriate verifiable credential. The PRISM Agent of the Verifier will receive that proof and verify it. Upon successful verification, the presentation record state gets updated to `PresentationVerified`.
+Once the Holder/Prover has received a proof presentation request, he can accept it using an appropriate verifiable credential. The Cloud Agent of the Verifier will receive that proof and verify it. Upon successful verification, the presentation record state gets updated to `PresentationVerified`.
 
 The Verifier can then explicitly accept the specific verified proof presentation to change the record state to `PresentationAccepted` by making a `PATCH` request to the [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) endpoint:
 
@@ -164,10 +164,10 @@ stateDiagram-v2
 ```
 
 ## Holder/Prover
-This section describes the interactions available to the Holder/Prover with his PRISM Agent.
+This section describes the interactions available to the Holder/Prover with his Cloud Agent.
 
 ### Reviewing and accepting a received presentation request
-The Holder/Prover can retrieve the list of presentation requests received by its PRISM Agent from different Verifiers making a `GET` request to the [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/getAllPresentation) endpoint:
+The Holder/Prover can retrieve the list of presentation requests received by its Cloud Agent from different Verifiers making a `GET` request to the [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/getAllPresentation) endpoint:
 
 ```bash
 curl -X 'GET' 'http://localhost:8090/prism-agent/present-proof/presentations' \
@@ -175,7 +175,7 @@ curl -X 'GET' 'http://localhost:8090/prism-agent/present-proof/presentations' \
   -H "apikey: $API_KEY"
 ```
 
-The Holder/Prover can then accept a specific request, generate the proof, and send it to the Verifier PRISM Agent by making a `PATCH` request to the [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) endpoint:
+The Holder/Prover can then accept a specific request, generate the proof, and send it to the Verifier Cloud Agent by making a `PATCH` request to the [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) endpoint:
 
 <Tabs groupId="vc-formats">
 <TabItem value="jwt" label="JWT">
@@ -225,7 +225,7 @@ The Holder/Prover will have to provide the following information:
 1. `presentationId`: The unique identifier of the presentation record to accept.
 2. `anoncredPresentationRequest`: A list of credential unique identifier with the attribute and predicate the credential is answering for.
    
-The record state is updated to `PresentationPending` and processed by the Holder/Prover PRISM Agent. The agent will automatically generate the proof presentation, change the state to `PresentationGenerated`, and will eventually send it to the Verifier Agent, and change the state to `PresentationSent`.
+The record state is updated to `PresentationPending` and processed by the Holder/Prover Cloud Agent. The agent will automatically generate the proof presentation, change the state to `PresentationGenerated`, and will eventually send it to the Verifier Agent, and change the state to `PresentationSent`.
 
 ```mermaid
 ---
