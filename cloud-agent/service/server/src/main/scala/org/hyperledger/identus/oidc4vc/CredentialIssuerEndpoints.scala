@@ -133,6 +133,19 @@ object CredentialIssuerEndpoints {
     .name("createCredentialIssuer")
     .summary("Create a new  credential issuer")
 
+  val getCredentialIssuersEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    RequestContext,
+    ErrorResponse,
+    CredentialIssuerPage,
+    Any
+  ] = baseIssuerPrivateEndpoint.get
+    .errorOut(EndpointOutputs.basicFailuresAndForbidden)
+    .out(statusCode(StatusCode.Ok).description("List the credential issuers"))
+    .out(jsonBody[CredentialIssuerPage])
+    .name("getCredentialIssuers")
+    .summary("List all credential issuers")
+
   val createCredentialConfigurationEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID, CreateCredentialConfigurationRequest),

@@ -3,54 +3,65 @@ package org.hyperledger.identus.pollux.core.repository
 import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialConfiguration
 import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialIssuer
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.util.UUID
 
 trait OIDC4VCIssuerMetadataRepository {
   def createIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, Unit]
-  def findAllIssuerForWallet: URIO[WalletAccessContext, Seq[CredentialIssuer]]
+  def findWalletIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]]
   def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]]
-
   def createCredentialConfiguration(issuerId: UUID, config: CredentialConfiguration): URIO[WalletAccessContext, Unit]
   def findAllCredentialConfigurations(issuerId: UUID): UIO[Seq[CredentialConfiguration]]
 }
 
 class InMemoryOIDC4VCIssuerMetadataRepository(
-    issuerStore: Ref[Map[UUID, CredentialIssuer]],
-    credentialConfigStore: Ref[Map[(UUID, String), CredentialConfiguration]]
+    issuerStore: Ref[Map[WalletId, Seq[CredentialIssuer]]],
+    credentialConfigStore: Ref[Map[(WalletId, UUID), Seq[CredentialConfiguration]]]
 ) extends OIDC4VCIssuerMetadataRepository {
 
   override def createIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, Unit] =
-    issuerStore.modify(m => () -> m.updated(issuer.id, issuer))
+    for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      _ <- issuerStore.modify(m => () -> m.updated(walletId, m.getOrElse(walletId, Nil) :+ issuer))
+    } yield ()
 
-  override def findAllIssuerForWallet: URIO[WalletAccessContext, Seq[CredentialIssuer]] =
-    issuerStore.get.map(_.values.toSeq)
+  override def findWalletIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]] =
+    for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      store <- issuerStore.get
+    } yield store.getOrElse(walletId, Nil)
 
   override def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]] =
-    issuerStore.get.map(_.get(issuerId))
+    issuerStore.get.map(m => m.values.flatten.find(_.id == issuerId))
 
   override def createCredentialConfiguration(
       issuerId: UUID,
       config: CredentialConfiguration
   ): URIO[WalletAccessContext, Unit] = {
     for {
-      issuerExists <- issuerStore.get.map(_.contains(issuerId))
-      configExists <- credentialConfigStore.get.map(_.contains((issuerId, config.configurationId)))
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      issuerExists <- issuerStore.get.map(_.getOrElse(walletId, Nil).exists(_.id == issuerId))
+      configExists <- credentialConfigStore.get
+        .map(m => m.getOrElse((walletId, issuerId), Nil).exists(_.configurationId == config.configurationId))
       _ <- ZIO
         .cond(issuerExists, (), s"Issuer with id $issuerId does not exist")
         .orDieWith(Exception(_))
       _ <- ZIO
         .cond(!configExists, (), s"Configuration with id ${config.configurationId} already exists")
         .orDieWith(Exception(_))
-      _ <- credentialConfigStore.update(_.updated((issuerId, config.configurationId), config))
+      _ <- credentialConfigStore
+        .update(m => m.updated((walletId, issuerId), m.getOrElse((walletId, issuerId), Nil) :+ config))
     } yield ()
   }
 
   override def findAllCredentialConfigurations(
       issuerId: UUID
   ): UIO[Seq[CredentialConfiguration]] =
-    credentialConfigStore.get.map(_.filter(_._1._1 == issuerId).values.toSeq)
+    credentialConfigStore.get.map { m =>
+      m.collect { case ((_, iss), configs) if iss == issuerId => configs }.flatten.toSeq
+    }
 
 }
 
@@ -58,8 +69,8 @@ object InMemoryOIDC4VCIssuerMetadataRepository {
   def layer: ULayer[OIDC4VCIssuerMetadataRepository] =
     ZLayer.fromZIO(
       for {
-        issuerStore <- Ref.make(Map.empty[UUID, CredentialIssuer])
-        credentialConfigStore <- Ref.make(Map.empty[(UUID, String), CredentialConfiguration])
+        issuerStore <- Ref.make(Map.empty[WalletId, Seq[CredentialIssuer]])
+        credentialConfigStore <- Ref.make(Map.empty[(WalletId, UUID), Seq[CredentialConfiguration]])
       } yield InMemoryOIDC4VCIssuerMetadataRepository(issuerStore, credentialConfigStore)
     )
 }

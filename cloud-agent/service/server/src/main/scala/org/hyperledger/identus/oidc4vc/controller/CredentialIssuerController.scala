@@ -4,6 +4,7 @@ import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.api.http.ErrorResponse.badRequest
 import org.hyperledger.identus.api.http.ErrorResponse.internalServerError
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.util.PaginationUtils
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
 import org.hyperledger.identus.oidc4vc.CredentialIssuerEndpoints.ExtendedErrorResponse
 import org.hyperledger.identus.oidc4vc.http.*
@@ -41,6 +42,10 @@ trait CredentialIssuerController {
       ctx: RequestContext,
       request: CreateCredentialIssuerRequest
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuer]
+
+  def getCredentialIssuers(
+      ctx: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuerPage]
 
   def createCredentialConfiguration(
       ctx: RequestContext,
@@ -222,6 +227,18 @@ case class CredentialIssuerControllerImpl(
     } yield issuer
   }
 
+  override def getCredentialIssuers(
+      ctx: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuerPage] =
+    val uri = ctx.request.uri
+    for {
+      issuers <- issuerMetadataService.getCredentialIssuers
+    } yield CredentialIssuerPage(
+      self = uri.toString(),
+      pageOf = PaginationUtils.composePageOfUri(uri).toString,
+      contents = issuers.map(i => i)
+    )
+
   override def createCredentialConfiguration(
       ctx: RequestContext,
       issuerId: UUID,
@@ -240,7 +257,7 @@ case class CredentialIssuerControllerImpl(
   override def getIssuerMetadata(ctx: RequestContext, issuerId: UUID): IO[ErrorResponse, IssuerMetadata] = {
     for
       credentialIssuer <- issuerMetadataService.getCredentialIssuer(issuerId)
-      credentialConfigurations <- issuerMetadataService.listCredentialConfiguration(issuerId)
+      credentialConfigurations <- issuerMetadataService.getCredentialConfigurations(issuerId)
     yield IssuerMetadata.fromIssuer(agentBaseUrl, credentialIssuer, credentialConfigurations)
   }
 }

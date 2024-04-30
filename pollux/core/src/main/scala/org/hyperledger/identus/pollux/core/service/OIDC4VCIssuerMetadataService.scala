@@ -45,6 +45,7 @@ object OIDC4VCIssuerMetadataServiceError {
 
 trait OIDC4VCIssuerMetadataService {
   def createCredentialIssuer(authorizationServer: URL): URIO[WalletAccessContext, CredentialIssuer]
+  def getCredentialIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]]
   def getCredentialIssuer(issuerId: UUID): IO[IssuerIdNotFound, CredentialIssuer]
   def createCredentialConfiguration(
       issuerId: UUID,
@@ -52,7 +53,7 @@ trait OIDC4VCIssuerMetadataService {
       configurationId: String,
       schemaId: String
   ): ZIO[WalletAccessContext, InvalidSchemaId | UnsupportedCredentialFormat, CredentialConfiguration]
-  def listCredentialConfiguration(
+  def getCredentialConfigurations(
       issuerId: UUID
   ): IO[IssuerIdNotFound, Seq[CredentialConfiguration]]
 }
@@ -64,6 +65,9 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
     val issuer = CredentialIssuer(authorizationServer)
     repository.createIssuer(issuer).as(issuer)
   }
+
+  override def getCredentialIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]] =
+    repository.findWalletIssuers
 
   override def getCredentialIssuer(issuerId: UUID): IO[IssuerIdNotFound, CredentialIssuer] =
     repository
@@ -98,7 +102,7 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
     } yield config
   }
 
-  override def listCredentialConfiguration(
+  override def getCredentialConfigurations(
       issuerId: UUID
   ): IO[IssuerIdNotFound, Seq[CredentialConfiguration]] =
     repository
