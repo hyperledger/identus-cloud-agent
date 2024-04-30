@@ -1,6 +1,6 @@
 # Update the credential schema
 
-The PRISM platform v2.0 exposes REST API for creation, fetching, and searching the credential schema records.
+The Identus Platform exposes REST API for creation, fetching, and searching the credential schema records.
 
 The OpenAPI specification and ReDoc documentation describe the endpoint.
 

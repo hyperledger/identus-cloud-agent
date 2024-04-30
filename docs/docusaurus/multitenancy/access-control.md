@@ -8,7 +8,7 @@
 
 ## Introduction
 
-Current document describes the levels of access control in the PRISM platform configured in the Vault service
+Current document describes the levels of access control in the Identus Platform configured in the Vault service
 The Vault service uses policies to control the access to the secrets, configuration, and other resources.
 The policies are applied to the entities and groups of entities.
 
@@ -31,7 +31,7 @@ Managed by DevOps and SRE teams.
 
 ### Management Account
 
-Management Account is special account that allows to manage the PRISM platform.
+Management Account is special account that allows to manage the Cloud Agent.
 
 The account with the limited access to configure the Vault service with the following permissions:
 - manage the Wallet accounts
@@ -42,7 +42,7 @@ Management Account can be used in the configuration scripts or by the SRE team.
 
 ### Agent Account
 
-Agent Account is created for the PRISM Agent to authenticate itself to the Vault service.
+Agent Account is created for the Cloud Agent to authenticate itself to the Vault service.
 AppRole authentication method is used for this account.
 
 The account with the limited access to configure the Vault service with the following permissions:
@@ -53,7 +53,7 @@ The account with the limited access to configure the Vault service with the foll
 ### Wallet Account
 
 The Wallet Account is created for and used by the Wallet.
-The Wallet Account is has access to the secrets of the Wallet and the PRISM Agent must guarantee the data isolation at the Wallet level.
+The Wallet Account is has access to the secrets of the Wallet and the Cloud Agent must guarantee the data isolation at the Wallet level.
 This account has the following permissions:
 - list, read, write, delete the secrets associated with the Wallet
 - use the REST API associated with the Wallet
@@ -73,14 +73,14 @@ The following practices are applied to implement the PoLP:
 **NOTE**: there are other PoLP practices that are not covered in this document. These practices will be ignored for local development and testing purposes.
 
 In order to implement the PoLP, the following access control rules are defined:
-- PRISM Agent account has access to the Wallet account that belong to the Agent only
-- PRISM Agent account transparently issues the token to the Wallet account based on configured authentication method
+- the Cloud Agent account has access to the Wallet account that belong to the Agent only
+- the Cloud Agent account transparently issues the token to the Wallet account based on configured authentication method
 
 ### Token Issuing, Renewal, Expiration and Revocation
 
 These policies are applied to all tokens except the SUDO account (root token).
 
-All tokens issued by the PRISM platform have the following properties:
+All tokens issued by the Identus Platform have the following properties:
 - expiration time
 - maximum time to live (TTL)
 - renewable flag

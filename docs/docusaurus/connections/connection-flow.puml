@@ -2,8 +2,8 @@
 title Connect flow
 
 actor Invitee as invitee
-participant "Invitee PRISM Agent" as inviteeAgent
-participant "Inviter PRISM Agent" as inviterAgent
+participant "Invitee Cloud Agent" as inviteeAgent
+participant "Inviter Cloud Agent" as inviterAgent
 actor Inviter as inviter
 
 == Generate and send a connection invitation ==
