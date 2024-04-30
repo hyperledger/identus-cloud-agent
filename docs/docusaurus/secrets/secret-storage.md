@@ -10,48 +10,48 @@
 ## Introduction
 
 Secrets are sensitive data that should be stored securely.
-There are following types of the secrets in the PRISM Platform:
+There are following types of the secrets in the Identus Platform:
 - seed: a secret used to derive cryptographic keys
 - private key: a secret used to sign data
 - any other entities that contain sensitive data (for instance, `credential-definition` and the `link-secret` used by the AnonCreds)
 
 **NOTE**: public keys are not considered as secrets and can be stored in the same of other storage depending on the needs
 
-The PRISM Platform provides a secure storage for secrets.
+The Identus Platform provides a secure storage for secrets.
 Hashicorp Vault is used as a secret storage service and provides a REST API, Web UI and command client to interact with the service.
 
-**NOTE:** The PRISM Platform uses a single Vault instance for all tenants per environment. Logical data separation is achieved by using Vault namespaces and policies applied to the tenant.
+**NOTE:** The Identus Platform uses a single Vault instance for all tenants per environment. Logical data separation is achieved by using Vault namespaces and policies applied to the tenant.
 
 ## Terminology
 
 ### Vault
 Vault is a secrets management service developed by HashiCorp.
-It can be used as the default secret storage for the PRISM Platform as well as for authentication and account management.
+It can be used as the default secret storage for the Identus Platform as well as for authentication and account management.
 
-**NOTE**: The PRISM platform must not be dependent on the Vault service and must be able to use other services for the same purposes
+**NOTE**: The Identus Platform must not be dependent on the Vault service and must be able to use other services for the same purposes
 
 ### Agent
-PRISM Agent is a service that provides an APIs to interact with the PRISM Platform and use the SSI capabilities.
+The Cloud Agent is a service that provides an APIs to interact with the Identus Platform and use the SSI capabilities.
 
 ### Wallet
 Logical component of the Agent that holds secrets and provides the logical or physical isolation of the data.
 
 ## Technical Overview
 
-### PRISM Agent Logical Isolation
-Each instance of the PRISM agent needs to have access to the secrets but must be isolated from other agents at the same environment.
+### The Cloud Agent Logical Isolation
+Each instance of the Cloud Agent needs to have access to the secrets but must be isolated from other agents at the same environment.
 For horizontal scalability the group of agents can be configured to share the same namespace, so they can access the same secrets, but they still need to use different Vault account to authenticate themselves to the Vault service.
 
-### PRISM Agent Authentication
-Each instance of the PRISM agent needs to authenticate itself to the Vault service.
+### The Cloud Agent Authentication
+Each instance of the Cloud Agent needs to authenticate itself to the Vault service.
 The Vault service uses a token-based authentication mechanism.
-The PRISM agent uses a Vault [AppRole](https://developer.hashicorp.com/vault/docs/auth/approle) authentication method to authenticate itself to the Vault service.
+The Cloud Agent uses a Vault [AppRole](https://developer.hashicorp.com/vault/docs/auth/approle) authentication method to authenticate itself to the Vault service.
 The token issued to the agent has the expiration time set in the application configuration.
 After the token expires, the agent needs to re-authenticate itself to the Vault service.
 
 ### Wallet Authentication
 Each instance of the Wallet needs to authenticate itself to the Vault service.
-The PRISM agent issues the authentication token to the Wallet based on the tenant ID.
+The Cloud Agent issues the authentication token to the Wallet based on the tenant ID.
 
 ### Secrets Engine Configuration
 The Vault service uses a secrets engine to store secrets.
@@ -64,9 +64,9 @@ KV2 secrets engine is used to store secrets in the Vault service and provides th
 - secrets are logically separated by tenants
 
 ### Single and Multi-Tenant Configuration
-The PRISM Platform supports single and multi-tenant configurations.
-In the single-tenant configuration, the PRISM Agent uses a single Wallet and a single Vault account to authenticate itself to the Vault service.
-In the multi-tenant configuration, the PRISM Agent manages multiple Wallets, each Wallet is associated with a single tenant.
+The Identus Platform supports single and multi-tenant configurations.
+In the single-tenant configuration, the Cloud Agent uses a single Wallet and a single Vault account to authenticate itself to the Vault service.
+In the multi-tenant configuration, the Cloud Agent manages multiple Wallets, each Wallet is associated with a single tenant.
 Multi-tenant configuration is used to achieve logical data separation between tenants, so each Wallet can access only its own secrets.
 The Wallet is identified by the tenant ID and represented by the account in the Vault service.
 
@@ -85,7 +85,7 @@ sequenceDiagram
 
 ### Key Derivation
 
-The PRISM Platform uses HD key derivation to derive cryptographic keys from the seed.
+The Identus Platform uses HD key derivation to derive cryptographic keys from the seed.
 The Wallet is initialized with the seed and uses it to derive cryptographic keys for managed DIDs.
 Key derivation path is conventional and is defined as follows:
 ```
