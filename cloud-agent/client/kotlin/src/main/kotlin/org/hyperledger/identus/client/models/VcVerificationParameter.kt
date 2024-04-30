@@ -15,9 +15,6 @@
 
 package org.hyperledger.identus.client.models
 
-import org.hyperledger.identus.client.models.DateTimeParameter
-import org.hyperledger.identus.client.models.DidParameter
-
 import com.google.gson.annotations.SerializedName
 
 /**
@@ -28,10 +25,10 @@ import com.google.gson.annotations.SerializedName
  */
 
 
-open class VcVerificationParameter (
+ data class VcVerificationParameter (
 
     @SerializedName("dateTime")
-    val dateTime: java.time.OffsetDateTime? = null,
+    var dateTime: java.time.OffsetDateTime? = null,
 
     @SerializedName("aud")
     val aud: kotlin.String? = null

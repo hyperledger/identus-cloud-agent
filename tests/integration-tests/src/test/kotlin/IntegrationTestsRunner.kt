@@ -3,7 +3,7 @@ import net.serenitybdd.cucumber.CucumberWithSerenity
 import org.junit.runner.RunWith
 
 @CucumberOptions(
-    features = ["src/test/resources/features"],
+    features = ["src/test/resources/features/verification"],
     snippets = CucumberOptions.SnippetType.CAMELCASE,
     plugin = ["pretty"],
 )

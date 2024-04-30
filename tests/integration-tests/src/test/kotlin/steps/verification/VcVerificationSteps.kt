@@ -24,11 +24,11 @@ class VcVerificationSteps {
                         ParameterizableVcVerification(VcVerification.SIGNATURE_VERIFICATION),
                         ParameterizableVcVerification(
                             VcVerification.NOT_BEFORE_CHECK,
-                            DateTimeParameter(OffsetDateTime.now()),
+                            VcVerificationParameter(dateTime = OffsetDateTime.now()),
                         ),
                         ParameterizableVcVerification(
                             VcVerification.EXPIRATION_CHECK,
-                            DateTimeParameter(OffsetDateTime.now()),
+                            VcVerificationParameter(dateTime = OffsetDateTime.now()),
                         ),
                     ),
                 ),
@@ -37,7 +37,7 @@ class VcVerificationSteps {
                     listOf(
                         ParameterizableVcVerification(
                             VcVerification.AUDIENCE_CHECK,
-                            DidParameter("did:prism:verifier") as VcVerificationParameter,
+                            VcVerificationParameter(aud = "did:prism:verifier"),
                         ),
                     ),
                 ),
