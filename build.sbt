@@ -60,12 +60,12 @@ lazy val V = new {
   val monocle = "3.1.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
-  val circe = "0.14.7"
+  val circe = "0.14.6"
 
   val tapir = "1.6.4" // scala-steward:off // TODO "1.10.5"
   val http4sBlaze = "0.23.12" // "0.23.15" // scala-steward:off  // TODO "0.23.16"
 
-  val typesafeConfig = "1.4.3"
+  val typesafeConfig = "1.4.2"
   val protobuf = "3.1.9"
   val testContainersScala = "0.41.0"
   val testContainersJavaKeycloak = "3.2.0" // scala-steward:off
@@ -172,7 +172,7 @@ lazy val D = new {
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.
   val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % V.bouncyCastle
-  val bouncyBcprov = "org.bouncycastle" % "bcpkix-jdk15on" % V.bouncyCastle
+  val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk15on" % V.bouncyCastle
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
