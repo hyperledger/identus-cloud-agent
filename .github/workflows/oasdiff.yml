@@ -1,7 +1,6 @@
 ---
 name: "OAS Breaking Changes"
 
-
 defaults:
   run:
     shell: bash
@@ -10,7 +9,6 @@ on:
   pull_request:
     branches:
       - main
-
   workflow_dispatch:
     inputs:
       revision_tag:
@@ -23,6 +21,9 @@ on:
         description: "Base tag to check the breaking changes in the OAS"
         default: "main"
 
+permissions:
+  pull-requests: write
+
 # https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/prism-agent-v1.29.0/prism-agent/service/api/http/prism-agent-openapi-spec.yaml
 # https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml
 
@@ -32,31 +33,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Resolve the base OpenAPI spec URL
+        env:
+          BASE_TAG: ${{ github.event.inputs.base_tag }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
-          BASE_TAG="${{ github.event.inputs.base_tag }}"
           echo "Base tag: $BASE_TAG"
-          if [[ $BASE_TAG == 'cloud-agent-v*' ]]; then
+          if [[ $BASE_TAG =~ 'cloud-agent-v*' ]]; then
             echo "BASE_URL=https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/$BASE_TAG/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml" >> $GITHUB_ENV
-          elif [[ $BASE_TAG == 'prism-agent-v*' ]]; then
+          elif [[ $BASE_TAG =~ 'prism-agent-v*' ]]; then
             echo "BASE_URL=https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/$BASE_TAG/prism-agent/service/api/http/prism-agent-openapi-spec.yaml" >> $GITHUB_ENV
           elif [[ $BASE_TAG == 'main' ]]; then
             echo "BASE_URL=https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/$BASE_TAG/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml" >> $GITHUB_ENV
-          elif [[ ${{ github.event_name }} == 'pull_request' ]]; then
+          elif [[ $GITHUB_EVENT_NAME == 'pull_request' ]]; then
             echo "BASE_URL=https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml" >> $GITHUB_ENV
           fi
 
       - name: Resolve the revision OpenAPI spec URL
+        env:
+          REV_TAG: ${{ github.event.inputs.revision_tag }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
         run: |
-          REV_TAG="${{ github.event.inputs.revision_tag }}"
           echo "Revision tag: $REV_TAG"
-          if [[ $REV_TAG == 'cloud-agent-v*' ]]; then
+          if [[ $REV_TAG =~ 'cloud-agent-v*' ]]; then
             echo "REV_URL=https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/$REV_TAG/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml" >> $GITHUB_ENV
-          elif [[ $REV_TAG == 'prism-agent-v*' ]]; then
+          elif [[ $REV_TAG =~ 'prism-agent-v*' ]]; then
             echo "REV_URL=https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/$REV_TAG/prism-agent/service/api/http/prism-agent-openapi-spec.yaml" >> $GITHUB_ENV
           elif [[ $REV_TAG == 'main' ]]; then
             echo "REV_URL=https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/$REV_TAG/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml" >> $GITHUB_ENV
-          elif [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            BRANCH_NAME=${{ github.head_ref || github.ref_name }}
+          elif [[ $GITHUB_EVENT_NAME == 'pull_request' ]]; then    
             echo "REV_URL=https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/$BRANCH_NAME/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml" >> $GITHUB_ENV
           fi
 
