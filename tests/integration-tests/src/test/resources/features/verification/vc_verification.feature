@@ -1,3 +1,4 @@
+@credential_schema
 Feature: Vc Verification schemas
 
   Background:
