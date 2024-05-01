@@ -188,12 +188,12 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       case Nil =>
         connection.pure(Nil)
       case head +: tail =>
-        val nel = NonEmptyList.of(head, tail: _*)
-        val inClauseFragment = Fragments.in(fr"protocol_state", nel)
-        val conditionFragment = Fragments.andOpt(
-          Some(inClauseFragment),
-          Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
-        )
+        val conditionFragment = {
+          val nel = NonEmptyList.of(head, tail: _*)
+          val inClauseFragment = Fragments.in(fr"protocol_state", nel)
+          if (!ignoreWithZeroRetries) inClauseFragment
+          else Fragments.and(inClauseFragment, fr"meta_retries > 0")
+        }
         val cxnIO = sql"""
             | SELECT
             |   id,
