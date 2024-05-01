@@ -56,14 +56,14 @@ jobs:
           elif [[ $REV_TAG == 'main' ]]; then
             echo "REV_URL=https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/$REV_TAG/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml" >> $GITHUB_ENV
           elif [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+            BRANCH_NAME=${{ github.head_ref || github.ref_name }}
             echo "REV_URL=https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/$BRANCH_NAME/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml" >> $GITHUB_ENV
           fi
 
       - name: Check URLS
         run: |
           echo "Base url: ${{ env.BASE_URL }}"
-          echo "Revision url: ${{ env.REV_URL}}"
+          echo "Revision url: ${{ env.REV_URL }}"
 
       - name: Running OpenAPI Spec diff action
         uses: oasdiff/oasdiff-action/breaking@main
