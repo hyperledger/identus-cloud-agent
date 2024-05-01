@@ -5,6 +5,7 @@ import cats.effect.kernel.Resource
 import cats.effect.std.Dispatcher
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
+import doobie.util.log.LogHandler
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
 import zio.*
@@ -17,6 +18,7 @@ object TransactorLayer {
       ZIO.service[DbConfig].flatMap { config =>
         // Here we use `Dispatcher.apply`
         // but at the agent level it is `Dispatcher.parallel` due to evicted version
+        // Dispatcher.parallel[Task].allocated.map { case (dispatcher, _) =>
         Dispatcher[Task].allocated.map { case (dispatcher, _) =>
           given Dispatcher[Task] = dispatcher
           TransactorLayer.hikari[Task](config)
@@ -32,6 +34,7 @@ object TransactorLayer {
 
         // Here we use `Dispatcher.apply`
         // but at the agent level it is `Dispatcher.parallel` due to evicted version
+        // Dispatcher.parallel[ContextAwareTask].allocated.map { case (dispatcher, _) =>
         Dispatcher[ContextAwareTask].allocated.map { case (dispatcher, _) =>
           given Dispatcher[ContextAwareTask] = dispatcher
           TransactorLayer.hikari[ContextAwareTask](config)
@@ -41,6 +44,7 @@ object TransactorLayer {
   }
 
   def hikari[A[_]: Async: Dispatcher](config: DbConfig)(using tag: Tag[Transactor[A]]): TaskLayer[Transactor[A]] = {
+
     val transactorLayerZio = ZIO
       .attempt {
         // https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing
@@ -58,6 +62,7 @@ object TransactorLayer {
           // transaction EC. Everything will be closed and shut down cleanly after use.
           ec <- ExecutionContexts.fixedThreadPool[A](config.awaitConnectionThreads) // our connect EC
           xa <- HikariTransactor.fromHikariConfig[A](hikariConfig, ec)
+          // xa <- HikariTransactor.fromHikariConfig[A](hikariConfig, Some(LogHandler.jdkLogHandler))
         } yield xa
 
         pool.toManaged.toLayer[Transactor[A]]

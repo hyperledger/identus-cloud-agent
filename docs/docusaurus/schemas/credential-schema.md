@@ -3,7 +3,7 @@
 ## Abstract
 
 This document describes the purpose, supported formats, and technical details of the Credential Schema implementation in
-the Atala PRISM Platform.
+the Identus Platform.
 
 ## 1. Introduction
 
@@ -13,7 +13,7 @@ of authorship.
 By putting schema definitions on a public blockchain, they are available for all verifiers to examine to determine the
 semantic interoperability of the Credential.
 
-The PRISM Platform supports the following specifications of the credential schemas:
+The Identus Platform supports the following specifications of the credential schemas:
 
 - [Verifiable Credentials JSON Schema 2022](https://w3c-ccg.github.io/vc-json-schemas/)
 - [AnonCreds Schema](https://hyperledger.github.io/anoncreds-spec/#term:schemas)
@@ -30,7 +30,7 @@ The author can use credential schema to issue the following types of verifiable 
 - Anoncred Verifiable Credential
 - all types above but encoded as JWT
 
-Limitations and constraints of the PRISM Platform v2.0:
+Limitations and constraints of the Identus Platform:
 
 - The Issuer does not sign the Credential Schema
 - The Issuer does not publish the Credential Schema to the VDR (the Cardano blockchain)
@@ -131,7 +131,7 @@ format.
 
 The version field must be the schema evolution and describe the impact of the changes.
 For the breaking changes, the `major` version must get increased.
-In the current implementation, the PRISM Platform doesn't validate whether the new version is backward compatible.
+In the current implementation, the Identus Platform doesn't validate whether the new version is backward compatible.
 This logic may get implemented later, so the Issuer is responsible for correctly setting the credential schema's next
 version.
 
@@ -232,7 +232,7 @@ A valid [ANONCRED-SCHEMA](https://hyperledger.github.io/anoncreds-spec/#term:sch
 ### tags (String[])
 
 It is a set of tokens that allow one to look up and filter the credential schema records.
-This field is not a part of the W3C specification. Its usage by the PRISM platform for filtering the records.
+This field is not a part of the W3C specification. Its usage by the Identus Platform for filtering the records.
 **Example:**
 
 ```json

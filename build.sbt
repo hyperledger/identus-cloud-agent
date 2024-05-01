@@ -44,54 +44,57 @@ inThisBuild(
 )
 
 lazy val V = new {
-  val munit = "1.0.0-M8" // "0.7.29"
-  val munitZio = "0.1.1"
+  val munit = "1.0.0-RC1" // "0.7.29"
+  val munitZio = "0.2.0"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.18"
+  val zio = "2.0.22"
   val zioConfig = "4.0.1"
-  val zioLogging = "2.1.16"
-  val zioJson = "0.3.0"
-  val zioHttp = "3.0.0-RC4"
-  val zioCatsInterop = "3.3.0"
-  val zioMetricsConnector = "2.1.0"
-  val zioMock = "1.0.0-RC11"
-  val mockito = "3.2.16.0"
-  val monocle = "3.1.0"
+  val zioLogging = "2.1.17"
+  val zioJson = "0.6.2"
+  val zioHttp = "3.0.0-RC6"
+  val zioCatsInterop = "3.3.0" // TODO "23.1.0.2" // https://mvnrepository.com/artifact/dev.zio/zio-interop-cats
+  val zioMetricsConnector = "2.3.1"
+  val zioMock = "1.0.0-RC12"
+  val mockito = "3.2.18.0"
+  val monocle = "3.2.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
-  val circe = "0.14.6"
+  val circe = "0.14.7"
 
-  val tapir = "1.6.4"
+  val tapir = "1.6.4" // scala-steward:off // TODO "1.10.5"
+  val http4sBlaze = "0.23.15" // scala-steward:off  // TODO "0.23.16"
 
-  val typesafeConfig = "1.4.2"
+  val typesafeConfig = "1.4.3"
   val protobuf = "3.1.9"
-  val testContainersScala = "0.41.0"
+  val testContainersScala = "0.41.3"
   val testContainersJavaKeycloak = "3.2.0" // scala-steward:off
 
   val doobie = "1.0.0-RC2"
   val quill = "4.7.3"
-  val flyway = "9.8.3"
-  val postgresDriver = "42.2.27"
-  val logback = "1.4.8"
-  val slf4j = "2.0.7"
+  val flyway = "9.22.3"
+  val postgresDriver = "42.2.29"
+  val logback = "1.4.14"
+  val slf4j = "2.0.13"
 
   val prismSdk = "1.4.1" // scala-steward:off
   val scalaUri = "4.0.3"
 
-  val jwtCirceVersion = "9.1.2"
-  val zioPreludeVersion = "1.0.0-RC16"
+  val jwtCirceVersion = "9.4.6"
+  val zioPreludeVersion = "1.0.0-RC24"
 
   val apollo = "1.2.14"
-  val bouncyCastle = "1.70"
+  val bouncyCastle = "1.78.1"
 
-  val jsonSchemaValidator = "1.3.2"
+  val jsonSchemaValidator = "1.3.2" // scala-steward:off //TODO 1.3.2 need to fix:
+  // [error] 	org.hyperledger.identus.pollux.core.model.schema.AnoncredSchemaTypeSpec
+  // [error] 	org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaSpec
 
   val vaultDriver = "6.2.0"
-  val micrometer = "1.11.2"
+  val micrometer = "1.11.11"
 
   val nimbusJwt = "10.0.0"
-  val keycloak = "23.0.7" // scala-steward:off
+  val keycloak = "23.0.7" // scala-steward:off //TODO 24.0.3 // update all quay.io/keycloak/keycloak
 
 }
 
@@ -123,7 +126,7 @@ lazy val D = new {
   val scodecBits: ModuleID = "org.scodec" %% "scodec-bits" % "1.1.38"
 
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
-  val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.1"
+  val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.2"
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.5.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
 
@@ -170,8 +173,8 @@ lazy val D = new {
     )
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.
-  val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % V.bouncyCastle
-  val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk15on" % V.bouncyCastle
+  val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk18on" % V.bouncyCastle
+  val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk18on" % V.bouncyCastle
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
@@ -311,7 +314,7 @@ lazy val D_Pollux = new {
 
 lazy val D_Pollux_VC_JWT = new {
 
-  private lazy val circeJsonSchema = ("net.reactivecore" %% "circe-json-schema" % "0.3.0")
+  private lazy val circeJsonSchema = ("net.reactivecore" %% "circe-json-schema" % "0.4.1")
     .cross(CrossVersion.for3Use2_13)
     .exclude("io.circe", "circe-core_2.13")
     .exclude("io.circe", "circe-generic_2.13")
@@ -360,13 +363,13 @@ lazy val D_CloudAgent = new {
 
   val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % V.tapir
   val tapirHttp4sServerZio = "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % V.tapir
-  val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.12"
+  val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % V.http4sBlaze
 
   val tapirRedocBundle = "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % V.tapir
 
   val tapirSttpStubServer =
     "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % V.tapir % Test
-  val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.3" % Test
+  val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.16" % Test
 
   val quillDoobie =
     "io.getquill" %% "quill-doobie" % V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
