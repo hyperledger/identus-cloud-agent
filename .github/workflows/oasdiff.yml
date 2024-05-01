@@ -1,6 +1,6 @@
 ---
-name: "Cloud Agent OAS Breaking changes"
-run-name: "Cloud Agent OAS Diff between revision ${{ github.event.inputs.revision_tag }} and base ${{ github.event.inputs.base_tag }}"
+name: "OAS Breaking Changes"
+
 
 defaults:
   run:
@@ -20,7 +20,7 @@ on:
       base_tag:
         required: false
         type: string
-        description: "Base tag to to check the breaking changes in the OAS"
+        description: "Base tag to check the breaking changes in the OAS"
         default: "main"
 
 # https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/prism-agent-v1.29.0/prism-agent/service/api/http/prism-agent-openapi-spec.yaml
