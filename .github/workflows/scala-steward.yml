@@ -3,7 +3,7 @@ name: Scala Steward Workflow
 # This workflow will launch at 00:00 every Sunday
 on:
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: "0 0 * * 0"
   workflow_dispatch:
 
 jobs:
@@ -24,9 +24,9 @@ jobs:
       - name: Launch Scala Steward
         uses: scala-steward-org/scala-steward-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          github-token: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           sign-commits: true
           author-email: ${{ steps.import_gpg.outputs.email }}
           author-name: ${{ steps.import_gpg.outputs.name }}
