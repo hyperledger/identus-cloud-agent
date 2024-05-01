@@ -2,11 +2,14 @@
 name: "Cloud Agent OAS Breaking changes"
 run-name: "Cloud Agent OAS Diff between revision ${{ inputs.revision_tag }} and base ${{ inputs.base_tag }}"
 
-on:
-  pull_request:
-    branches:
-      - main
+defaults:
+  run:
+    shell: bash
 
+on:
+#  pull_request:
+#    branches:
+#      - main
   workflow_dispatch:
     inputs:
       revision_tag:
