@@ -91,8 +91,6 @@ class VcVerificationSteps {
                     ]""",
                 )
                 it.header(Header("apiKey", "pylnapbvyudwmfrt"))
-                it.log().headers()
-                it.log().body()
             },
         )
         val vcVerificationResponses = SerenityRest.lastResponse().body().asString()
