@@ -1,8 +1,5 @@
-@credential_schema
 Feature: Vc Verification schemas
 
-  Background:
-    When Issuer creates unpublished DID
-
-  Scenario: Successful Verifies VcVerificationRequest
-    When Issuer verifies VcVerificationRequest
+Scenario: Successful Verifies VcVerificationRequest
+  Given Issuer and Holder have an existing connection
+  When Issuer verifies VcVerificationRequest
