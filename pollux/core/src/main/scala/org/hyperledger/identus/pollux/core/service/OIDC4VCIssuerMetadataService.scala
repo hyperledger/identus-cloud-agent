@@ -6,6 +6,7 @@ import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialConfiguration
 import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialIssuer
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.repository.OIDC4VCIssuerMetadataRepository
+import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.CredentialConfigurationNotFound
 import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.InvalidSchemaId
 import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.IssuerIdNotFound
 import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.UnsupportedCredentialFormat
@@ -28,6 +29,12 @@ object OIDC4VCIssuerMetadataServiceError {
       extends OIDC4VCIssuerMetadataServiceError(
         StatusCode.NotFound,
         s"There is no credential issuer matching the provided identifier: issuerId=$issuerId"
+      )
+
+  final case class CredentialConfigurationNotFound(issuerId: UUID, configurationId: String)
+      extends OIDC4VCIssuerMetadataServiceError(
+        StatusCode.NotFound,
+        s"There is no credential configuration matching the provided identifier: issuerId=$issuerId, configurationId=$configurationId"
       )
 
   final case class InvalidSchemaId(schemaId: String, msg: String)
@@ -61,6 +68,10 @@ trait OIDC4VCIssuerMetadataService {
   def getCredentialConfigurations(
       issuerId: UUID
   ): IO[IssuerIdNotFound, Seq[CredentialConfiguration]]
+  def deleteCredentialConfiguration(
+      issuerId: UUID,
+      configurationId: String,
+  ): ZIO[WalletAccessContext, IssuerIdNotFound | CredentialConfigurationNotFound, Unit]
 }
 
 class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataRepository, uriDereferencer: URIDereferencer)
@@ -129,6 +140,19 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
       .findIssuer(issuerId)
       .someOrFail(IssuerIdNotFound(issuerId))
       .flatMap(_ => repository.findAllCredentialConfigurations(issuerId))
+
+  override def deleteCredentialConfiguration(
+      issuerId: UUID,
+      configurationId: String
+  ): ZIO[WalletAccessContext, IssuerIdNotFound | CredentialConfigurationNotFound, Unit] =
+    for {
+      _ <- getCredentialIssuer(issuerId)
+      configs <- getCredentialConfigurations(issuerId)
+      _ <- ZIO
+        .fail(CredentialConfigurationNotFound(issuerId, configurationId))
+        .unless(configs.map(_.configurationId).contains(configurationId))
+      _ <- repository.deleteCredentialConfiguration(issuerId, configurationId)
+    } yield ()
 
 }
 

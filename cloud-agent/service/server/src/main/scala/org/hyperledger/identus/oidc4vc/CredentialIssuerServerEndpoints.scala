@@ -121,12 +121,11 @@ case class CredentialIssuerServerEndpoints(
     CredentialIssuerEndpoints.deleteCredentialConfigurationEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
-        { case (rc, issuerId, credentialId) =>
-          // credentialIssuerController
-          //   .deleteCredentialConfiguration(rc, issuerId, credentialId)
-          //   .provideSomeLayer(ZLayer.succeed(wac))
-          //   .logTrace(rc)
-          ZIO.dieMessage("Not implemented") // TODO: implement
+        { case (rc, issuerId, configurationId) =>
+          credentialIssuerController
+            .deleteCredentialConfiguration(rc, issuerId, configurationId)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 

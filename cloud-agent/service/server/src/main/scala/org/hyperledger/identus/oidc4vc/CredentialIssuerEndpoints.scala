@@ -201,17 +201,16 @@ object CredentialIssuerEndpoints {
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID, String),
     ErrorResponse,
-    CredentialConfiguration,
+    Unit,
     Any
   ] = baseIssuerPrivateEndpoint.delete
     .in(issuerIdPathSegment / "credential-configurations" / credentialConfigurationIdSegment)
     .out(
-      statusCode(StatusCode.Created).description("Credential configuration created successfully")
+      statusCode(StatusCode.Ok).description("Credential configuration deleted successfully")
     )
-    .out(jsonBody[CredentialConfiguration])
     .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
-    .name("createCredentialConfiguration")
-    .summary("Create a new  credential configuration")
+    .name("deleteCredentialConfiguration")
+    .summary("Delete the credential configuration")
 
   val issuerMetadataEndpoint: Endpoint[
     Unit,

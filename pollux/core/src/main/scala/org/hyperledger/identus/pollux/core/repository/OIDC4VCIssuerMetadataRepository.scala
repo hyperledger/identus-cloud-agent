@@ -18,6 +18,7 @@ trait OIDC4VCIssuerMetadataRepository {
   def deleteIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit]
   def createCredentialConfiguration(issuerId: UUID, config: CredentialConfiguration): URIO[WalletAccessContext, Unit]
   def findAllCredentialConfigurations(issuerId: UUID): UIO[Seq[CredentialConfiguration]]
+  def deleteCredentialConfiguration(issuerId: UUID, configurationId: String): URIO[WalletAccessContext, Unit]
 }
 
 class InMemoryOIDC4VCIssuerMetadataRepository(
@@ -57,7 +58,9 @@ class InMemoryOIDC4VCIssuerMetadataRepository(
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       _ <- issuerStore.update(m => m.updated(walletId, m.getOrElse(walletId, Nil).filter(_.id != issuerId)))
-      _ <- credentialConfigStore.update(m => m.filterNot { case ((wid, issId), _) => wid == walletId && issId == issuerId })
+      _ <- credentialConfigStore.update(m =>
+        m.filterNot { case ((wid, issId), _) => wid == walletId && issId == issuerId }
+      )
     } yield ()
 
   override def createCredentialConfiguration(
@@ -86,6 +89,20 @@ class InMemoryOIDC4VCIssuerMetadataRepository(
     credentialConfigStore.get.map { m =>
       m.collect { case ((_, iss), configs) if iss == issuerId => configs }.flatten.toSeq
     }
+
+  override def deleteCredentialConfiguration(
+      issuerId: UUID,
+      configurationId: String
+  ): URIO[WalletAccessContext, Unit] =
+    for {
+      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+      _ <- credentialConfigStore.update(m =>
+        m.updated(
+          (walletId, issuerId),
+          m.getOrElse((walletId, issuerId), Nil).filter(_.configurationId != configurationId)
+        )
+      )
+    } yield ()
 
 }
 
