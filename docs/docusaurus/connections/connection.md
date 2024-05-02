@@ -16,7 +16,7 @@ The connection protocol has two roles:
 
 1. Inviter and Invitee Cloud Agents up and running
 
-## Identus Cloud Agent endpoints overview
+## Cloud Agent endpoints overview
 
 The protocol uses the following REST API endpoints:
 

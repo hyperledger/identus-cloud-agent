@@ -21,7 +21,7 @@ In tenant management with external IAM, there are 2 roles:
    1. A realm called `my-realm` is created
    2. A client called `prism-agent` under `my-realm` with __authorization__ feature is created. (See [create client instruction](https://www.keycloak.org/docs/latest/authorization_services/index.html#_resource_server_create_client))
    3. Make sure the `prism-agent` client has __direct access grants__ enabled to simplify the login process for this tutorial
-3. the Cloud Agent up and running
+3. the Cloud Agent is up and running
 4. the Cloud Agent is configured with the following environment variables:
    1. `ADMIN_TOKEN=my-admin-token`
    2. `DEFAULT_WALLET_ENABLED=false`

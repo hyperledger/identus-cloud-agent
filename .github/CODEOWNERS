@@ -7,8 +7,8 @@
 # Pollux:
 /pollux/ @patlo-iog @CryptoKnightIOG @mineme0110
 
-# PRISM Agent:
-/prism-agent/ @bvoiturier @yshyn-iohk @patlo-iog
+# Cloud Agent:
+/cloud-agent/ @bvoiturier @yshyn-iohk @patlo-iog
 
 # CI pipelines:
 /.github/ @mineme0110

@@ -1,6 +1,6 @@
 # Create the Credential Definition
 
-The Identus Cloud Agent exposes REST API for creation, fetching, and searching the [credential definition](/docs/concepts/glossary#credential-definition) records.
+The Cloud Agent exposes REST API for creation, fetching, and searching the [credential definition](/docs/concepts/glossary#credential-definition) records.
 
 The OpenAPI specification and ReDoc documentation describe the endpoint.
 
@@ -131,7 +131,7 @@ You should receive a response containing the JSON object representing the creden
 }
 ```
 
-Remember, in the Identus Cloud Agent, the combination of author, id, and version uniquely identifies each credential definition. Thus, using the same agent DID as the author, you cannot establish another credential definition with identical id and version values.
+Remember, in the Cloud Agent, the combination of author, id, and version uniquely identifies each credential definition. Thus, using the same agent DID as the author, you cannot establish another credential definition with identical id and version values.
 
 ### 4. Update the Credential Definition
 

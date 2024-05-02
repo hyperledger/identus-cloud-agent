@@ -130,8 +130,7 @@ Response Example:
 
 With the new tenant now equipped with both a wallet and an entity,
 the final step involves setting up the entity's authentication method.
-Once this step is completed, the administrator should provide the tenant with an `apikey`, granting them access to
-utilize the Agent.
+Once this step is completed, the administrator should provide the tenant with an `apikey`, granting them access to utilize the Agent.
 
 ```bash
 curl -X 'POST' \

@@ -1,8 +1,8 @@
-# PrismAgent service
+# CloudAgent service
 
 ## Quickstart
 
-### Running PrismAgent service locally
+### Running CloudAgent service locally
 
 see `./infrastucture/local/README.md` for instruction
 
@@ -10,7 +10,7 @@ see `./infrastucture/local/README.md` for instruction
 
 ## DID key management
 
-`prism-agent` is a cloud agent that represents the digital identity (is a DID controller)
+`cloud-agent` is a cloud agent that represents the digital identity (is a DID controller)
 of the Issuing / Verification organization. As a DID controller, it needs to perform
 the operation with private and public keys through the Wallet API abstraction level.
 The interface for key-mangement is heavily inspired by
@@ -31,7 +31,7 @@ Basic documentation on how to execute the Connect flow from command line can be 
 Basic documentation on how to execute the Issue flow from the command line can be found [here](./issue.md).
 
 ---
-## Presnt Proof flow
+## Present Proof flow
 Basic documentation on how to execute the Present Proof flow from the command line can be found [here](./present-proof.md).
 
 
