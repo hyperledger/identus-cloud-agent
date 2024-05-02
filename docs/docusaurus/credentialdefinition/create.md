@@ -1,6 +1,6 @@
 # Create the Credential Definition
 
-The PRISM platform v2.0 exposes REST API for creation, fetching, and searching the [credential definition](/docs/concepts/glossary#credential-definition) records.
+The Identus Cloud Agent exposes REST API for creation, fetching, and searching the [credential definition](/docs/concepts/glossary#credential-definition) records.
 
 The OpenAPI specification and ReDoc documentation describe the endpoint.
 
@@ -12,7 +12,7 @@ The following guide demonstrates how to create a birth certificate credential de
 
 ### 1. Define the Credential Definition for the Verifiable Credential
 
-Assume you are aiming to define a credential for birth certificates. This credential definition has specific properties and ties to a schema in the PRISM platform.
+Assume you are aiming to define a credential for birth certificates. This credential definition has specific properties and ties to a schema in the Cloud Agent.
 
 Here's a sample content of the credential definition:
 
@@ -131,7 +131,7 @@ You should receive a response containing the JSON object representing the creden
 }
 ```
 
-Remember, in the PRISM platform, the combination of author, id, and version uniquely identifies each credential definition. Thus, using the same agent DID as the author, you cannot establish another credential definition with identical id and version values.
+Remember, in the Identus Cloud Agent, the combination of author, id, and version uniquely identifies each credential definition. Thus, using the same agent DID as the author, you cannot establish another credential definition with identical id and version values.
 
 ### 4. Update the Credential Definition
 

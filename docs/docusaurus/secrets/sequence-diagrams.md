@@ -8,7 +8,7 @@
 
 ## Introduction
 
-The current document describes the sequence diagrams of the PRISM platform components: APISIX, Agent, Wallet, Vault, Tenant.
+The current document describes the sequence diagrams of the Identus Platform components: APISIX, Cloud Agent, Wallet, Vault, Tenant.
 The diagrams are stated from the simplest scenarios to the more complex ones to enforce the security and privacy of the data.
 
 ## Sequence Diagrams
@@ -84,12 +84,12 @@ sequenceDiagram
 
 This diagram describes the flow for the secret management for the single tenant with the Wallet.
 
-Goal: Tenant uses JWT token to authenticate to the PRISM platform.
+Goal: Tenant uses JWT token to authenticate to the Identus Platform.
 
 Context:
 - The Agent is authenticated to the Vault using the AppRole authentication method.
 - Tenant uses the access token to access the REST API via APISIX (probably this might be removed, we need to decide what to do with the `api-token`)
-- Tenant represented by any REST API client, Web or Mobile application authenticated to the PRISM platform using JWT token.
+- Tenant represented by any REST API client, Web or Mobile application authenticated to the Identus Platform using JWT token.
 - Tenant uses the Wallet to communicate with the Vault
 
 

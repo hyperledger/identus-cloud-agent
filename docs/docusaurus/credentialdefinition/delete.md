@@ -2,7 +2,7 @@
 
 Unfortunately, once published (especially in the [Verifiable Data Registry (VDR)](/docs/concepts/glossary#verifiable-data-registry), deleting the credential definition becomes unfeasible.
 
-In the PRISM Platform v2.0, credential definitions aren't published to the VDR. This functionality will be incorporated in subsequent versions of the platform. Hence, the platform currently doesn't provide a REST API for deletion.
+In the Identus Platform, credential definitions aren't published to the VDR. This functionality will be incorporated in subsequent versions of the platform. Hence, the platform currently doesn't provide a REST API for deletion.
 
 If you need to `delete` the credential definition, it's advisable to contact the database administrator or directly remove it from the Postgres instance using its `guid`.
 

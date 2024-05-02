@@ -42,6 +42,11 @@ object CredentialPreview {
 
 case class CredentialPreviewBody(attributes: Seq[Attribute])
 
+object CredentialPreviewBody {
+  given Encoder[CredentialPreviewBody] = deriveEncoder[CredentialPreviewBody]
+  given Decoder[CredentialPreviewBody] = deriveDecoder[CredentialPreviewBody]
+}
+
 /** @param name
   *   name key maps to the attribute name as a string.
   * @param media_type
