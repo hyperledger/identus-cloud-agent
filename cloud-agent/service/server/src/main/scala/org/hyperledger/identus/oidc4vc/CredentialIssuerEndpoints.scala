@@ -17,7 +17,7 @@ import java.util.UUID
 
 object CredentialIssuerEndpoints {
 
-  private val tagName = "OIDC Credential Issuer"
+  private val tagName = "OIDC4VC"
   private val tagDescription =
     s"""
        |The __${tagName}__ is a service that issues credentials to users by implementing the [OIDC for Credential Issuance](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html) specification.
@@ -34,6 +34,10 @@ object CredentialIssuerEndpoints {
   private val issuerIdPathSegment = path[UUID]("issuerId")
     .description("An issuer identifier in the oidc4vc protocol")
     .example(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))
+
+  private val credentialConfigurationIdSegment = path[String]("credentialConfigurationId")
+    .description("An identifier for the credential configuration")
+    .example("credentialConfigurationId")
 
   private val baseEndpoint = endpoint
     .tag(tagName)
@@ -126,7 +130,7 @@ object CredentialIssuerEndpoints {
   ] = baseIssuerPrivateEndpoint.post
     .in(jsonBody[CreateCredentialIssuerRequest])
     .out(
-      statusCode(StatusCode.Created).description("Credential Issuer created successfully")
+      statusCode(StatusCode.Created).description("Credential issuer created successfully")
     )
     .out(jsonBody[CredentialIssuer])
     .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
@@ -146,6 +150,23 @@ object CredentialIssuerEndpoints {
     .name("getCredentialIssuers")
     .summary("List all credential issuers")
 
+  val updateCredentialIssuerEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, UUID, PatchCredentialIssuerRequest),
+    ErrorResponse,
+    CredentialIssuer,
+    Any
+  ] = baseIssuerPrivateEndpoint.patch
+    .in(issuerIdPathSegment)
+    .in(jsonBody[PatchCredentialIssuerRequest])
+    .out(
+      statusCode(StatusCode.Ok).description("Credential issuer updated successfully")
+    )
+    .out(jsonBody[CredentialIssuer])
+    .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
+    .name("updateCredentialIssuer")
+    .summary("Update the credential issuer")
+
   val deleteCredentialIssuerEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID),
@@ -157,7 +178,7 @@ object CredentialIssuerEndpoints {
     .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
     .out(statusCode(StatusCode.Ok).description("Credential issuer deleted successfully"))
     .name("deleteCredentialIssuer")
-    .summary("Delete a credential issuer")
+    .summary("Delete the credential issuer")
 
   val createCredentialConfigurationEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
@@ -168,6 +189,22 @@ object CredentialIssuerEndpoints {
   ] = baseIssuerPrivateEndpoint.post
     .in(issuerIdPathSegment / "credential-configurations")
     .in(jsonBody[CreateCredentialConfigurationRequest])
+    .out(
+      statusCode(StatusCode.Created).description("Credential configuration created successfully")
+    )
+    .out(jsonBody[CredentialConfiguration])
+    .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
+    .name("createCredentialConfiguration")
+    .summary("Create a new  credential configuration")
+
+  val deleteCredentialConfigurationEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, UUID, String),
+    ErrorResponse,
+    CredentialConfiguration,
+    Any
+  ] = baseIssuerPrivateEndpoint.delete
+    .in(issuerIdPathSegment / "credential-configurations" / credentialConfigurationIdSegment)
     .out(
       statusCode(StatusCode.Created).description("Credential configuration created successfully")
     )

@@ -16,6 +16,14 @@ object CreateCredentialIssuerRequest {
 
 case class CredentialIssuer(id: UUID, authorizationServer: String)
 
+case class PatchCredentialIssuerRequest(authorizationServer: Option[String] = None)
+
+object PatchCredentialIssuerRequest {
+  given schema: Schema[PatchCredentialIssuerRequest] = Schema.derived
+  given encoder: JsonEncoder[PatchCredentialIssuerRequest] = DeriveJsonEncoder.gen
+  given decoder: JsonDecoder[PatchCredentialIssuerRequest] = DeriveJsonDecoder.gen
+}
+
 object CredentialIssuer {
   given schema: Schema[CredentialIssuer] = Schema.derived
   given encoder: JsonEncoder[CredentialIssuer] = DeriveJsonEncoder.gen

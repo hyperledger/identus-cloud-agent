@@ -81,6 +81,19 @@ case class CredentialIssuerServerEndpoints(
         }
       }
 
+  val updateCredentialIssuerServerEndpoint: ZServerEndpoint[Any, Any] =
+    CredentialIssuerEndpoints.updateCredentialIssuerEndpoint
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
+        { case (rc, issuerId, request) =>
+          // credentialIssuerController
+          //   .updateCredentialIssuer(rc, issuerId, request)
+          //   .provideSomeLayer(ZLayer.succeed(wac))
+          //   .logTrace(rc)
+          ZIO.dieMessage("Not implemented") // TODO: implement
+        }
+      }
+
   val deleteCredentialIssuerServerEndpoint: ZServerEndpoint[Any, Any] =
     CredentialIssuerEndpoints.deleteCredentialIssuerEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
@@ -105,6 +118,19 @@ case class CredentialIssuerServerEndpoints(
         }
       }
 
+  val deleteCredentialConfigurationServerEndpoint: ZServerEndpoint[Any, Any] =
+    CredentialIssuerEndpoints.deleteCredentialConfigurationEndpoint
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
+        { case (rc, issuerId, credentialId) =>
+          // credentialIssuerController
+          //   .deleteCredentialConfiguration(rc, issuerId, credentialId)
+          //   .provideSomeLayer(ZLayer.succeed(wac))
+          //   .logTrace(rc)
+          ZIO.dieMessage("Not implemented") // TODO: implement
+        }
+      }
+
   val issuerMetadataServerEndpoint: ZServerEndpoint[Any, Any] = CredentialIssuerEndpoints.issuerMetadataEndpoint
     .zServerLogic {
       { case (rc, didRef) => credentialIssuerController.getIssuerMetadata(rc, didRef).logTrace(rc) }
@@ -116,8 +142,10 @@ case class CredentialIssuerServerEndpoints(
     nonceServerEndpoint,
     createCredentialIssuerServerEndpoint,
     getCredentialIssuersServerEndpoint,
+    updateCredentialIssuerServerEndpoint,
     deleteCredentialIssuerServerEndpoint,
     createCredentialConfigurationServerEndpoint,
+    deleteCredentialConfigurationServerEndpoint,
     issuerMetadataServerEndpoint
   )
 }
