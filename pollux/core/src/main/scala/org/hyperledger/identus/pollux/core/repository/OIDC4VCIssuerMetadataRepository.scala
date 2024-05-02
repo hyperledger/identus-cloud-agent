@@ -47,15 +47,17 @@ class InMemoryOIDC4VCIssuerMetadataRepository(
     for {
       issuer <- findIssuer(issuerId)
         .someOrElseZIO(ZIO.dieMessage("Update credential issuer fail. The issuer does not exist"))
-      updatedIssuer = issuer.copy(updatedAt = Instant.now)
+      updatedAuthServerIssuer = authorizationServer
+        .fold(issuer)(url => issuer.copy(authorizationServer = url))
       _ <- deleteIssuer(issuerId)
-      _ <- createIssuer(updatedIssuer)
-    } yield updatedIssuer
+      _ <- createIssuer(updatedAuthServerIssuer.copy(updatedAt = Instant.now))
+    } yield updatedAuthServerIssuer
 
   override def deleteIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit] =
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       _ <- issuerStore.update(m => m.updated(walletId, m.getOrElse(walletId, Nil).filter(_.id != issuerId)))
+      _ <- credentialConfigStore.update(m => m.filterNot { case ((wid, issId), _) => wid == walletId && issId == issuerId })
     } yield ()
 
   override def createCredentialConfiguration(
