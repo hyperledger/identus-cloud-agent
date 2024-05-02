@@ -44,10 +44,14 @@ object OIDC4VCIssuerMetadataServiceError {
 }
 
 trait OIDC4VCIssuerMetadataService {
+  def getCredentialIssuer(issuerId: UUID): IO[IssuerIdNotFound, CredentialIssuer]
   def createCredentialIssuer(authorizationServer: URL): URIO[WalletAccessContext, CredentialIssuer]
   def getCredentialIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]]
-  def getCredentialIssuer(issuerId: UUID): IO[IssuerIdNotFound, CredentialIssuer]
-  def deleteCredentialIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit]
+  def updateCredentialIssuer(
+      issuerId: UUID,
+      authorizationServer: Option[URL] = None
+  ): ZIO[WalletAccessContext, IssuerIdNotFound, CredentialIssuer]
+  def deleteCredentialIssuer(issuerId: UUID): ZIO[WalletAccessContext, IssuerIdNotFound, Unit]
   def createCredentialConfiguration(
       issuerId: UUID,
       format: CredentialFormat,
@@ -75,8 +79,20 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
       .findIssuer(issuerId)
       .someOrFail(IssuerIdNotFound(issuerId))
 
-  override def deleteCredentialIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit] =
-    repository.deleteIssuer(issuerId)
+  override def updateCredentialIssuer(
+      issuerId: UUID,
+      authorizationServer: Option[URL]
+  ): ZIO[WalletAccessContext, IssuerIdNotFound, CredentialIssuer] =
+    for {
+      _ <- getCredentialIssuer(issuerId)
+      updatedIssuer <- repository.updateIssuer(issuerId, authorizationServer = authorizationServer)
+    } yield updatedIssuer
+
+  override def deleteCredentialIssuer(issuerId: UUID): ZIO[WalletAccessContext, IssuerIdNotFound, Unit] =
+    for {
+      _ <- getCredentialIssuer(issuerId)
+      _ <- repository.deleteIssuer(issuerId)
+    } yield ()
 
   override def createCredentialConfiguration(
       issuerId: UUID,

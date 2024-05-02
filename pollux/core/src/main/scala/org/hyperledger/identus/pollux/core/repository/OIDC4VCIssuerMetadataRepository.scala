@@ -6,13 +6,15 @@ import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
+import java.net.URL
+import java.time.Instant
 import java.util.UUID
-import java.{util => ju}
 
 trait OIDC4VCIssuerMetadataRepository {
+  def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]]
   def createIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, Unit]
   def findWalletIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]]
-  def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]]
+  def updateIssuer(issuerId: UUID, authorizationServer: Option[URL] = None): URIO[WalletAccessContext, CredentialIssuer]
   def deleteIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit]
   def createCredentialConfiguration(issuerId: UUID, config: CredentialConfiguration): URIO[WalletAccessContext, Unit]
   def findAllCredentialConfigurations(issuerId: UUID): UIO[Seq[CredentialConfiguration]]
@@ -22,6 +24,9 @@ class InMemoryOIDC4VCIssuerMetadataRepository(
     issuerStore: Ref[Map[WalletId, Seq[CredentialIssuer]]],
     credentialConfigStore: Ref[Map[(WalletId, UUID), Seq[CredentialConfiguration]]]
 ) extends OIDC4VCIssuerMetadataRepository {
+
+  override def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]] =
+    issuerStore.get.map(m => m.values.flatten.find(_.id == issuerId))
 
   override def createIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, Unit] =
     for {
@@ -35,10 +40,19 @@ class InMemoryOIDC4VCIssuerMetadataRepository(
       store <- issuerStore.get
     } yield store.getOrElse(walletId, Nil)
 
-  override def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]] =
-    issuerStore.get.map(m => m.values.flatten.find(_.id == issuerId))
+  override def updateIssuer(
+      issuerId: UUID,
+      authorizationServer: Option[URL]
+  ): URIO[WalletAccessContext, CredentialIssuer] =
+    for {
+      issuer <- findIssuer(issuerId)
+        .someOrElseZIO(ZIO.dieMessage("Update credential issuer fail. The issuer does not exist"))
+      updatedIssuer = issuer.copy(updatedAt = Instant.now)
+      _ <- deleteIssuer(issuerId)
+      _ <- createIssuer(updatedIssuer)
+    } yield updatedIssuer
 
-  override def deleteIssuer(issuerId: ju.UUID): URIO[WalletAccessContext, Unit] =
+  override def deleteIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit] =
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       _ <- issuerStore.update(m => m.updated(walletId, m.getOrElse(walletId, Nil).filter(_.id != issuerId)))

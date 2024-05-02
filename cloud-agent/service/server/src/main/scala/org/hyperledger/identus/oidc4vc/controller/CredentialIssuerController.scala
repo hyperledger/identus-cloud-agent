@@ -47,6 +47,12 @@ trait CredentialIssuerController {
       ctx: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuerPage]
 
+  def updateCredentialIssuer(
+      ctx: RequestContext,
+      issuerId: UUID,
+      request: PatchCredentialIssuerRequest
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuer]
+
   def deleteCredentialIssuer(
       ctx: RequestContext,
       issuerId: UUID,
@@ -116,6 +122,11 @@ case class CredentialIssuerControllerImpl(
 
   import CredentialIssuerController.Errors.*
   import OIDCCredentialIssuerService.Errors.*
+
+  private def parseURL(url: String): IO[ErrorResponse, URL] =
+    ZIO
+      .attempt(URI.create(url).toURL())
+      .mapError(ue => badRequest(detail = Some(s"Invalid URL: $url")))
 
   private def parseIssuerDID[E](didRef: String, errorFn: (String, String) => E): IO[E, CanonicalPrismDID] = {
     for {
@@ -223,14 +234,11 @@ case class CredentialIssuerControllerImpl(
   override def createCredentialIssuer(
       ctx: RequestContext,
       request: CreateCredentialIssuerRequest
-  ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuer] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuer] =
     for {
-      authServerUrl <- ZIO
-        .attempt(URI.create(request.authorizationServer).toURL())
-        .mapError(ue => badRequest(detail = Some(s"Invalid URL: ${request.authorizationServer}")))
+      authServerUrl <- parseURL(request.authorizationServer)
       issuer <- issuerMetadataService.createCredentialIssuer(authServerUrl)
     } yield issuer
-  }
 
   override def getCredentialIssuers(
       ctx: RequestContext
@@ -243,6 +251,21 @@ case class CredentialIssuerControllerImpl(
       pageOf = PaginationUtils.composePageOfUri(uri).toString,
       contents = issuers.map(i => i)
     )
+
+  override def updateCredentialIssuer(
+      ctx: RequestContext,
+      issuerId: UUID,
+      request: PatchCredentialIssuerRequest
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuer] =
+    for {
+      maybeAuthServerUrl <- ZIO
+        .succeed(request.authorizationServer)
+        .flatMap {
+          case Some(url) => parseURL(url).asSome
+          case None      => ZIO.none
+        }
+      issuer <- issuerMetadataService.updateCredentialIssuer(issuerId, maybeAuthServerUrl)
+    } yield issuer: CredentialIssuer
 
   override def deleteCredentialIssuer(
       ctx: RequestContext,

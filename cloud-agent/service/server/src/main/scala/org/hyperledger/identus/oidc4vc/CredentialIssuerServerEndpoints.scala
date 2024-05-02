@@ -86,11 +86,10 @@ case class CredentialIssuerServerEndpoints(
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (rc, issuerId, request) =>
-          // credentialIssuerController
-          //   .updateCredentialIssuer(rc, issuerId, request)
-          //   .provideSomeLayer(ZLayer.succeed(wac))
-          //   .logTrace(rc)
-          ZIO.dieMessage("Not implemented") // TODO: implement
+          credentialIssuerController
+            .updateCredentialIssuer(rc, issuerId, request)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
         }
       }
 
