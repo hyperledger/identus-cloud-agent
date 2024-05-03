@@ -125,7 +125,7 @@ Response Example:
 
 There are multiple ways to complete this step.
 The goal is to ensure the user has registered on Keycloak.
-Keycloak offers great flexibility, allowing users to self-register, 
+Keycloak offers great flexibility, allowing users to self-register,
 For this tutorial, we will generate the user manually using Keycloak admin API for simplicity.
 
 The first step is to get an admin token from Keycloak using the username and password.
