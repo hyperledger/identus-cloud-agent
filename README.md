@@ -96,7 +96,7 @@ The following sections describe how to run the Cloud Agent in different configur
 The Cloud Agent can be configured to use different types of ledger, secret storage and DID persistence. Any combination of options is available, but the most common configurations are:
 
 | Configuration  | Secret Storage | DIDs persistence | Prism Node                                      |
-| -------------- | -------------- | ---------------- |-------------------------------------------------|
+|----------------|----------------|------------------|-------------------------------------------------|
 | Dev            | PostgreSQL     | No               | In-memory                                       |
 | Pre-production | PostgreSQL     | Yes              | Distributed Ledger testnet (preview or preprod) |
 | Production     | Hashicorp      | Yes              | Distributed Ledger mainnet                      |
@@ -179,7 +179,7 @@ The following tutorials will help you get started with the Cloud Agent and issue
 
 ## User documentation
 
-All extended documentation, tutorials and API references for the Identus ecosystem can be found at https://docs.atalaprism.io/
+All extended documentation, tutorials and API references for the Identus ecosystem can be found at <https://docs.atalaprism.io/>
 
 ## Contributing
 
