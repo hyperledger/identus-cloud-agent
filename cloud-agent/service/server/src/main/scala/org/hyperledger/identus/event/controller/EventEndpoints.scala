@@ -22,13 +22,13 @@ object EventEndpoints {
 
   private val tagName = "Events"
   private val tagDescription =
-    s"""
-       |The __${tagName}__ endpoints enable users to manage event-related resources, such as webhook notifications.
+    s"""The __${tagName}__ endpoints enable users to manage event-related resources, such as webhook notifications.
        |These notifications are specifically designed to inform about events occurring within the wallet, including but not limited to:
        |
        |- DID publication notifications
-       |- Issuance protocol state change notifications
        |- DIDComm connection notifications
+       |- Issuance protocol notifications
+       |- Presentation protocol notifications
        |
        |For more detailed information regarding event notifications, please refer to this [documentation](https://docs.atalaprism.io/tutorials/webhooks/webhook).
        |""".stripMargin

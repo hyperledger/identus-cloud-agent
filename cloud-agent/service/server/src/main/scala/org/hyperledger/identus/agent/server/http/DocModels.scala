@@ -3,6 +3,7 @@ package org.hyperledger.identus.agent.server.http
 import org.hyperledger.identus.castor.controller.{DIDEndpoints, DIDRegistrarEndpoints}
 import org.hyperledger.identus.connect.controller.ConnectionEndpoints
 import org.hyperledger.identus.event.controller.EventEndpoints
+import org.hyperledger.identus.iam.entity.http.EntityEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementEndpoints
 import org.hyperledger.identus.issue.controller.IssueEndpoints
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryEndpoints
@@ -117,7 +118,8 @@ object DocModels {
           DIDRegistrarEndpoints.tag,
           WalletManagementEndpoints.tag,
           SystemEndpoints.tag,
-          EventEndpoints.tag
+          EventEndpoints.tag,
+          EntityEndpoints.tag
         )
       )
 
