@@ -169,7 +169,7 @@ object EntityEndpoints {
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
   val getEntitiesEndpoint: Endpoint[
     (AdminApiKeyCredentials, JwtCredentials),
-    (RequestContext,PaginationInput),
+    (RequestContext, PaginationInput),
     ErrorResponse,
     EntityResponsePage,
     Any
