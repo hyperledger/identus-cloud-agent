@@ -77,7 +77,6 @@ lazy val V = new {
   val logback = "1.4.14"
   val slf4j = "2.0.13"
 
-  val prismSdk = "1.4.1" // scala-steward:off
   val scalaUri = "4.0.3"
 
   val jwtCirceVersion = "9.4.6"
@@ -165,12 +164,7 @@ lazy val D = new {
   val monocleMacro: ModuleID = "dev.optics" %% "monocle-macro" % V.monocle % Test
 
   val apollo = "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo
-  // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
-  // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
-  val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % V.prismSdk excludeAll
-    ExclusionRule(
-      organization = "org.bouncycastle"
-    )
+  // TODO: check this
   // Added here to make prism-crypto works.
   // Once migrated to apollo, re-evaluate if this should be removed.
   val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk18on" % V.bouncyCastle
@@ -206,7 +200,6 @@ lazy val D_SharedCrypto = new {
       D.apollo,
       D.bouncyBcpkix,
       D.bouncyBcprov,
-      D.prismCrypto, // TODO: remove after migrated all primitives to apollo
       D.nimbusJwt,
       D.zioTest,
       D.zioTestSbt,
@@ -290,7 +283,6 @@ lazy val D_Pollux = new {
     D.zioMock,
     D.munit,
     D.munitZio,
-    D.prismCrypto,
     // shared,
     logback,
     slf4jApi,

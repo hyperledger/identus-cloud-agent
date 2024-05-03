@@ -2,7 +2,7 @@ package org.hyperledger.identus.agent.walletapi.vault
 
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecret
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
-import io.iohk.atala.prism.crypto.Sha256
+import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.models.WalletId
 import zio.*
@@ -43,7 +43,7 @@ class VaultGenericSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean
     if (useSemanticPath) {
       s"$basePath/$relativePath" -> Map.empty
     } else {
-      val relativePathHash = Sha256.compute(relativePath.getBytes(StandardCharsets.UTF_8)).getHexValue()
+      val relativePathHash = Sha256Hash.compute(relativePath.getBytes(StandardCharsets.UTF_8)).hexEncoded
       s"$basePath/$relativePathHash" -> Map(SEMANTIC_PATH_METADATA_KEY -> relativePath)
     }
   }
