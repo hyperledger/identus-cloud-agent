@@ -25,8 +25,8 @@ In self-service tenant management with external IAM, there is only one role:
    2. A client called `prism-agent` under `my-realm` with __authorization__ feature is created. (See [create client instruction](https://www.keycloak.org/docs/latest/authorization_services/index.html#_resource_server_create_client))
    3. Make sure the `prism-agent` client has __direct access grants__ enabled to simplify the login process for this tutorial.
    4. Make sure to [allow user self-registration](https://www.keycloak.org/docs/latest/server_admin/index.html#con-user-registration_server_administration_guide).
-3. PRISM Agent up and running
-4. PRISM Agent is configured with the following environment variables:
+3. The Cloud Agent is up and running
+4. The Cloud Agent is configured with the following environment variables:
    1. `ADMIN_TOKEN=my-admin-token`
    2. `DEFAULT_WALLET_ENABLED=false`
    3. `KEYCLOAK_ENABLED=true`
@@ -45,11 +45,11 @@ When the agent uses this token for the wallet creation, the agent recognizes it 
 ## Endpoints
 
 ### Agent endpoints
-| Endpoint                  | Description                        | Role   |
-|---------------------------|------------------------------------|--------|
-| `GET /wallets`            | List the wallets on PRISM Agent    | Tenant |
-| `POST /wallets`           | Create a new wallet on PRISM Agent | Tenant |
-| `GET /did-registrar/dids` | List the DIDs inside the wallet    | Tenant |
+| Endpoint                  | Description                            | Role   |
+|---------------------------|----------------------------------------|--------|
+| `GET /wallets`            | List the wallets on the Cloud Agent    | Tenant |
+| `POST /wallets`           | Create a new wallet on the Cloud Agent | Tenant |
+| `GET /did-registrar/dids` | List the DIDs inside the wallet        | Tenant |
 
 ### Keycloak endpoints
 | Endpoint                                             | Description           | Role   |
@@ -153,7 +153,7 @@ Response Example:
 
 In this step, the agent creates both wallet resource and UMA permission on Keycloak, assigning the new wallet to the user who created it.
 
-### 5. Perform a simple action to verify access to PRISM Agent
+### 5. Perform a simple action to verify access to the Cloud Agent
 
 Without further operation, the wallet should be available for the tenant.
 To prove that the tenant can access the wallet, list the DIDs using RPT in the `Authorization` header.

@@ -1,6 +1,6 @@
 # Migration from `apikey` to `JWT` authentication
 
-PRISM Agent authentication supports multiple authentication methods simultaneously, which means the user can seamlessly use any available credentials including `apikey` or `JWT` to access the wallet.
+The Cloud Agent authentication supports multiple authentication methods simultaneously, which means the user can seamlessly use any available credentials including `apikey` or `JWT` to access the wallet.
 The agent's [UMA](/docs/concepts/glossary#uma) permission resource also exposes the self-service permission endpoint, allowing users to manage the permissions for their wallets.
 It allows users to transition from `apikey` to `JWT` authentication without admin intervention.
 
@@ -14,8 +14,8 @@ In the migration process from `apikey` to `JWT`, there is only one role:
 
 1. Keycloak up and running
 2. Keycloak is configured the same as in [Tenant Onboarding Self-Service](./tenant-onboarding-self-service.md)
-3. PRISM Agent up and running
-4. PRISM Agent is configured the same as in [Tenant Onboarding Self-Service](./tenant-onboarding-self-service.md)
+3. The Cloud Agent is up and running
+4. The Cloud Agent is configured the same as in [Tenant Onboarding Self-Service](./tenant-onboarding-self-service.md)
 5. The user has access to the wallet using `apikey`. (See [Tenant Onboarding](./tenant-onboarding.md))
 6. The user has an account registered on Keycloak
 
@@ -28,12 +28,12 @@ To migrate to `JWT` authentication, users can create a new UMA permission for th
 ## Endpoints
 
 ### Agent endpoints
-| Endpoint                                   | Description                          | Role   |
-|--------------------------------------------|--------------------------------------|--------|
-| `GET /wallets`                             | List the wallets on PRISM Agent      | Tenant |
-| `POST /wallets`                            | Create a new wallet on PRISM Agent   | Tenant |
-| `POST /wallets/{walletId}/uma-permissions` | Create a uma-permission for a wallet | Tenant |
-| `GET /did-registrar/dids`                  | List the DIDs inside the wallet      | Tenant |
+| Endpoint                                   | Description                            | Role   |
+|--------------------------------------------|----------------------------------------|--------|
+| `GET /wallets`                             | List the wallets on the Cloud Agent    | Tenant |
+| `POST /wallets`                            | Create a new wallet on the Cloud Agent | Tenant |
+| `POST /wallets/{walletId}/uma-permissions` | Create a uma-permission for a wallet   | Tenant |
+| `GET /did-registrar/dids`                  | List the DIDs inside the wallet        | Tenant |
 
 ### Keycloak endpoints
 | Endpoint                                             | Description           | Role   |
@@ -140,7 +140,7 @@ Make sure to use the correct `subject` for the user and the correct `walletId` f
 
 The response should return the status `200 OK` in case of successful permission creation.
 
-### 5. Perform a simple action to verify access to PRISM Agent
+### 5. Perform a simple action to verify access to the Cloud Agent
 
 After successful UMA permission creation, the user should be able to use the `JWT` token to authenticate the wallet.
 List the wallet using a new `Authorization` header. The listed wallets should contain the wallet with the same ID in step 1.

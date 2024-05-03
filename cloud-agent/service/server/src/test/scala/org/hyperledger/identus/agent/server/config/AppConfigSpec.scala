@@ -7,7 +7,6 @@ import zio.test.*
 import zio.test.Assertion.*
 import zio.test.ZIOSpecDefault
 
-/** prismAgentServer/testOnly io.iohk.atala.agent.server.config.AppConfigSpec */
 object AppConfigSpec extends ZIOSpecDefault {
 
   private val baseVaultConfig = VaultConfig(

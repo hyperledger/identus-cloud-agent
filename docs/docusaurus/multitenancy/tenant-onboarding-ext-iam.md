@@ -4,7 +4,7 @@ In the [Tenant Onboarding](./tenant-onboarding.md) tutorial, we explored the bas
 Although it is usable and straightforward, more featureful tools are available for handling identity and access management.
 The agent can seamlessly connect with [Keycloak](/docs/concepts/glossary#keycloak-service) as an external IAM system, allowing the application built on top to utilize the capabilities that come with Keycloak.
 
-The PRISM Agent leverages standard protocols like [OIDC](/docs/concepts/glossary#oidc) and [UMA](/docs/concepts/glossary#uma) for authentication and access management.
+The Cloud Agent leverages standard protocols like [OIDC](/docs/concepts/glossary#oidc) and [UMA](/docs/concepts/glossary#uma) for authentication and access management.
 The user's identity gets established through the ID token, and wallet permissions are searchable using the [RPT (requesting party token)](/docs/concepts/glossary#rpt).
 
 ## Roles
@@ -21,8 +21,8 @@ In tenant management with external IAM, there are 2 roles:
    1. A realm called `my-realm` is created
    2. A client called `prism-agent` under `my-realm` with __authorization__ feature is created. (See [create client instruction](https://www.keycloak.org/docs/latest/authorization_services/index.html#_resource_server_create_client))
    3. Make sure the `prism-agent` client has __direct access grants__ enabled to simplify the login process for this tutorial
-3. PRISM Agent up and running
-4. PRISM Agent is configured with the following environment variables:
+3. the Cloud Agent is up and running
+4. the Cloud Agent is configured with the following environment variables:
    1. `ADMIN_TOKEN=my-admin-token`
    2. `DEFAULT_WALLET_ENABLED=false`
    3. `KEYCLOAK_ENABLED=true`
@@ -53,12 +53,12 @@ The tenant can access the multi-tenant agent by providing the RPT in the `Author
 ## Endpoints
 
 ### Agent endpoints
-| Endpoint                                   | Description                          | Role          |
-|--------------------------------------------|--------------------------------------|---------------|
-| `GET /wallets`                             | List the wallets on PRISM Agent      | Administrator |
-| `POST /wallets`                            | Create a new wallet on PRISM Agent   | Administrator |
-| `POST /wallets/{walletId}/uma-permissions` | Create a uma-permission for a wallet | Administrator |
-| `GET /did-registrar/dids`                  | List the DIDs inside the wallet      | Tenant        |
+| Endpoint                                   | Description                            | Role          |
+|--------------------------------------------|----------------------------------------|---------------|
+| `GET /wallets`                             | List the wallets on the Cloud Agent    | Administrator |
+| `POST /wallets`                            | Create a new wallet on the Cloud Agent | Administrator |
+| `POST /wallets/{walletId}/uma-permissions` | Create a uma-permission for a wallet   | Administrator |
+| `GET /did-registrar/dids`                  | List the DIDs inside the wallet        | Tenant        |
 
 ### Keycloak endpoints
 | Endpoint                                             | Description                   | Role                  |
@@ -70,7 +70,7 @@ The tenant can access the multi-tenant agent by providing the RPT in the `Author
 
 ### 1. Check the existing wallets
 
-When running PRISM Agent using the configurations above, the Agent should start with an empty state.
+When running Cloud Agent using the configurations above, the Cloud Agent should start with an empty state.
 Listing wallets on it should return empty results.
 
 ```bash
@@ -125,7 +125,7 @@ Response Example:
 
 There are multiple ways to complete this step.
 The goal is to ensure the user has registered on Keycloak.
-Keycloak offers great flexibility, allowing users to self-register, 
+Keycloak offers great flexibility, allowing users to self-register,
 For this tutorial, we will generate the user manually using Keycloak admin API for simplicity.
 
 The first step is to get an admin token from Keycloak using the username and password.
@@ -291,7 +291,7 @@ Example RPT payload (some fields omitted for readability)
 }
 ```
 
-### 3. Perform a simple action to verify access to PRISM Agent
+### 3. Perform a simple action to verify access to the Cloud Agent
 
 To prove that the tenant can access the wallet using RPT,
 try listing the DIDs in the wallet using RPT in the `Authorization` header.

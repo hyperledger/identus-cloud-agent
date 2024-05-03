@@ -1,23 +1,23 @@
-# Creating a PRISM agent wallet seed
+# Creating the Cloud Agent wallet seed
 
 ## Introduction
 
-PRISM agent utilizes a hierarchical-deterministic key derivation algorithm for managing PRISM DIDs,
+The Cloud Agent utilizes a hierarchical-deterministic key derivation algorithm for managing PRISM DIDs,
 which follows the BIP32 standard. In order to generate the required keys,
 BIP32 uses a master binary seed serving as the root of the derivation tree,
 and all other keys are derived from this seed.
-Given that the PRISM agent employs BIP32, it expects a 64-byte binary seed as input.
+Given that the Cloud Agent employs BIP32, it expects a 64-byte binary seed as input.
 Various methods exist for generating a byte sequence, each serving different purposes.
 
-PRISM agent does not have any opinion on how the seed should be generated as long as a valid hex string is provided.
+The Cloud Agent does not have any opinion on how the seed should be generated as long as a valid hex string is provided.
 However, it is strongly recommended to use high entropy for generating the master seed.
-PRISM agent allows customizing the default wallet seed by using the environment variable `DEFAULT_WALLET_SEED`.
+The Cloud Agent allows customizing the default wallet seed by using the environment variable `DEFAULT_WALLET_SEED`.
 Other wallet seeds can also be configured when creating a wallet using REST API.
 The variable must contain a 64-byte value encoded in hexadecimal format.
 
 ### 1. Static seed
 
-PRISM agent expects any valid 64-byte input for a wallet seed.
+The Cloud Agent expects any valid 64-byte input for a wallet seed.
 Any static 128-character hexadecimal string can be used to simplify the testing.
 
 For example

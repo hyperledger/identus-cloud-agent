@@ -20,8 +20,8 @@ The same person may also represent these roles.
    1. A realm called `my-realm` is created
    2. A client called `prism-agent` under `my-realm` with __authorization__ feature is created. (See [create client instruction](https://www.keycloak.org/docs/latest/authorization_services/index.html#_resource_server_create_client))
    3. Make sure the `prism-agent` client has __direct access grants__ enabled to simplify the login
-3. PRISM Agent up and running
-4. PRISM Agent is configured with the following environment variables:
+3. The Cloud Agent is up and running
+4. The Cloud Agent is configured with the following environment variables:
    1. `KEYCLOAK_ENABLED=true`
    2. `KEYCLOAK_URL=http://localhost:9980` (replace with appropriate value)
    3. `KEYCLOAK_REALM=my-realm`
@@ -42,9 +42,9 @@ Despite UMA permissions configured for the user, the agent strictly maintains a 
 ## Endpoints
 
 ### Agent endpoints
-| Endpoint                                   | Description                          | Role          |
-|--------------------------------------------|--------------------------------------|---------------|
-| `GET /wallets`                             | List the wallets on PRISM Agent      | Administrator |
+| Endpoint                                   | Description                         | Role          |
+|--------------------------------------------|-------------------------------------|---------------|
+| `GET /wallets`                             | List the wallets on the Cloud Agent | Administrator |
 
 ### Keycloak endpoints
 | Endpoint                                             | Description                   | Role         |

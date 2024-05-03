@@ -9,33 +9,33 @@ allowing them to exchange information and interact.
 
 The connection protocol has two roles:
 
-1.  [Inviter](/docs/concepts/glossary#inviter): A subject that initiates a connection request by sending a [connection invitation](/docs/concepts/glossary#connection-invitation).
-2.  [Invitee](/docs/concepts/glossary#invitee): A subject that receives a connection invitation and accepts it by sending a [connection request](/docs/concepts/glossary#connection-request).
+1. [Inviter](/docs/concepts/glossary#inviter): A subject that initiates a connection request by sending a [connection invitation](/docs/concepts/glossary#connection-invitation).
+2. [Invitee](/docs/concepts/glossary#invitee): A subject that receives a connection invitation and accepts it by sending a [connection request](/docs/concepts/glossary#connection-request).
 
 ## Prerequisites
 
-1. Inviter and Invitee PRISM Agents up and running
+1. Inviter and Invitee Cloud Agents up and running
 
-## PRISM Agent endpoints overview
+## Cloud Agent endpoints overview
 
 The protocol uses the following REST API endpoints:
 
 1. [`/connections`](/agent-api/#tag/Connections-Management):
-   - [`POST`](/agent-api/#tag/Connections-Management/operation/createConnection): Creates a new connection and returns an invitation 
+   - [`POST`](/agent-api/#tag/Connections-Management/operation/createConnection): Creates a new connection and returns an invitation
    - [`GET`](/agent-api/#tag/Connections-Management/operation/getConnections): Returns a list of connections
 2. [`GET /connections/{connectionId}`](/agent-api/#tag/Connections-Management/operation/getConnection): Returns an existing connection record by id
 3. [`POST /connection-invitations`](/agent-api/#tag/Connections-Management/operation/acceptConnectionInvitation): Accepts an externally received invitation
 
 :::info
-Please check the full [PRISM Agent API](/agent-api) specification for more detailed information.
+Please check the full [Cloud Agent API](/agent-api) specification for more detailed information.
 :::
 
 ## Inviter Flow
 
-1.  Generate and share a new Out-of-Band (OOB) invitation (connection gets created in `InvitationGenerated` state)
-2.  Receive a connection request from the Invitee (connection moves to `ConnectionRequestReceived` state)
-3.  Accept the connection request (connection moves to `ConnectionResponsePending` state)
-4.  Send the connection response via the DIDComm Agent (connection achieves `ConnectionResponseSent` state)
+1. Generate and share a new Out-of-Band (OOB) invitation (connection gets created in `InvitationGenerated` state)
+2. Receive a connection request from the Invitee (connection moves to `ConnectionRequestReceived` state)
+3. Accept the connection request (connection moves to `ConnectionResponsePending` state)
+4. Send the connection response via the DIDComm Agent (connection achieves `ConnectionResponseSent` state)
 
 The following diagram represents the Inviter's Connection state transitions:
 ```mermaid
@@ -53,10 +53,10 @@ ConnectionResponseSent --> [*]
 
 ## Invitee Flow
 
-1.  Receive the OOB invitation (`InvitationReceived` state)
-2.  Accept the invitation (connection is created in `ConnectionRequestPending` state)
-3.  Send the connection request via [DIDComm](/docs/concepts/glossary#didcomm) (connection achieves `ConnectionRequestSent` state)
-4.  Receive the connection response (connection achieves `ConnectionResponseReceived` state)
+1. Receive the OOB invitation (`InvitationReceived` state)
+2. Accept the invitation (connection is created in `ConnectionRequestPending` state)
+3. Send the connection request via [DIDComm](/docs/concepts/glossary#didcomm) (connection achieves `ConnectionRequestSent` state)
+4. Receive the connection response (connection achieves `ConnectionResponseReceived` state)
 
 The following diagram represents the Invitee's Connection state transitions:
 ```mermaid
@@ -79,16 +79,16 @@ The following diagram shows the end-to-end flow for establishing a connection be
 
 ## Command line example
 
-The following example demonstrates how you could use two PRISM Agent APIs to set up a connection between them.
+The following example demonstrates how you could use two Cloud Agent APIs to set up a connection between them.
 
 ### Inviter creates an invitation
 
 ```shell
 curl -X 'POST' \
-	'http://localhost:8080/prism-agent/connections' \
-	-H 'Content-Type: application/json' \
-	-H "apikey: $API_KEY" \
-	-d '{ "label": "Connect with Alice" }' | jq
+ 'http://localhost:8080/prism-agent/connections' \
+ -H 'Content-Type: application/json' \
+ -H "apikey: $API_KEY" \
+ -d '{ "label": "Connect with Alice" }' | jq
 ```
 
 Example response:
@@ -114,10 +114,10 @@ Example response:
 Replace `{RAW_INVITATION}` with the value of the '_oob' query string parameter from the invitation URL above
 ```shell
 curl -X 'POST' \
-	'http://localhost:8090/prism-agent/connection-invitations' \
-	-H 'Content-Type: application/json' \
-	-H "apikey: $API_KEY" \
-	-d '{ "invitation": "{RAW_INVITATION}" }' | jq
+ 'http://localhost:8090/prism-agent/connection-invitations' \
+ -H 'Content-Type: application/json' \
+ -H "apikey: $API_KEY" \
+ -d '{ "invitation": "{RAW_INVITATION}" }' | jq
 ```
 
 Example response:
@@ -208,5 +208,5 @@ Example response:
 ```
 
 :::info
-Please check the full [PRISM Agent API](/agent-api) specification for more detailed information.
+Please check the full [Cloud Agent API](/agent-api) specification for more detailed information.
 :::

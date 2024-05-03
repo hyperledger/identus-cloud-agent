@@ -130,7 +130,7 @@ object MainApp extends ZIOAppDefault {
       _ <- preMigrations
       _ <- migrations
 
-      app <- PrismAgentApp.run
+      app <- CloudAgentApp.run
         .provide(
           DidCommX.liveLayer,
           // infra

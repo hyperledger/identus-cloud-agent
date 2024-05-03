@@ -3,7 +3,7 @@
 In a multi-tenant setup, it's crucial to understand the various roles within the system.
 There are two key roles in tenant management: administrators and tenants.
 Administrators are in charge of managing wallets and tenants,
-while tenants are users who engage in standard SSI interactions with the PRISM Agent.
+while tenants are users who engage in standard SSI interactions with the Cloud Agent.
 
 ## Roles
 
@@ -14,12 +14,12 @@ In tenant management, there are 2 roles:
 
 ## Prerequisites
 
-1. PRISM Agent up and running
-2. PRISM Agent is configured with the following environment variables:
-   1. `ADMIN_TOKEN=my-admin-token`
-   2. `API_KEY_ENABLED=true`
-   3. `API_KEY_AUTO_PROVISIONING=false`
-   4. `DEFAULT_WALLET_ENABLED=false`
+1. The Cloud Agent up and running
+2. The Cloud Agent is configured with the following environment variables:
+    1. `ADMIN_TOKEN=my-admin-token`
+    2. `API_KEY_ENABLED=true`
+    3. `API_KEY_AUTO_PROVISIONING=false`
+    4. `DEFAULT_WALLET_ENABLED=false`
 
 ## Overview
 
@@ -27,15 +27,15 @@ This is a guide on how to onboard a new tenant from scratch.
 This tutorial will demonstrate the creation of a new entity representing the tenant,
 the provisioning of a wallet, and enabling an authentication method for this tenant.
 Subsequently, the tenant will gain the capability to engage in SSI activities within an
-isolated wallet environment using the PRISM Agent.
+isolated wallet environment using the Cloud Agent.
 
 ## Endpoints
 
 | Endpoint                          | Description                                | Role          |
 |-----------------------------------|--------------------------------------------|---------------|
-| `GET /wallets`                    | List the wallets on PRISM Agent            | Administrator |
-| `POST /wallets`                   | Create a new wallet on PRISM Agent         | Administrator |
-| `POST /iam/entities`              | Create a new entity on PRISM Agent         | Administrator |
+| `GET /wallets`                    | List the wallets on the Cloud Agent        | Administrator |
+| `POST /wallets`                   | Create a new wallet on the Cloud Agent     | Administrator |
+| `POST /iam/entities`              | Create a new entity on the Cloud Agent     | Administrator |
 | `POST /iam/apikey-authentication` | Create a new authentication for the entity | Administrator |
 | `GET /did-registrar/dids`         | List the DIDs inside the wallet            | Tenant        |
 
@@ -43,7 +43,7 @@ isolated wallet environment using the PRISM Agent.
 
 ### 1. Check the existing wallets
 
-When running PRISM Agent using the configurations above, the Agent should start with an empty state.
+When running the Cloud Agent using the configurations above, the Agent should start with an empty state.
 Listing wallets on it should return empty results.
 
 ```bash
@@ -69,7 +69,6 @@ Response Example:
 The wallet can be created using a `POST /wallets` endpoint.
 This wallet is going to act as a container for the tenant's assets (DIDs, VCs, Connections, etc.).
 The wallet seed may be provided during the wallet creation or omitted to let the Agent generate one randomly.
-
 
 ```bash
 curl -X 'POST' \
@@ -151,9 +150,9 @@ HTTP code 201 returns in the case of the successful request execution.
 
 ## Tenant interactions
 
-With the `apikey` provisioned by the administrator, the tenant is able to authenticate and use PRISM Agent.
+With the `apikey` provisioned by the administrator, the tenant is able to authenticate and use the Cloud Agent.
 
-### 1. Perform a simple action to verify access to PRISM Agent
+### 1. Perform a simple action to verify access to the Cloud Agent
 
 To prove that the tenant can be authenticated as the created entity and use the wallet,
 try listing the DIDs in the wallet using `apikey` header.

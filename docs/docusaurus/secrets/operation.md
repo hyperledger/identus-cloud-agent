@@ -2,7 +2,7 @@
 
 ## Introduction
 
-PRISM agent offers a DID (Decentralized Identifier) management solution
+The Cloud Agent offers a DID (Decentralized Identifier) management solution
 which involves creating, storing and using key materials.
 To generate a DID key material, the software relies on a seed, following the BIP32 / BIP39 standards.
 The system operators have the option to either provide their own seed or
@@ -10,12 +10,12 @@ allow the software to generate one automatically. However, in a production envir
 it is crucial for the system operators to explicitly supply the seed to the agent.
 This ensures full control over the DID key material and guarantees secure management of user identities.
 
-PRISM agent uses the following environment variables for secret management.
+The Cloud Agent uses the following environment variables for secret management.
 
 | Name                     | Description                                                     | Default                 |
 |--------------------------|-----------------------------------------------------------------|-------------------------|
 | `SECRET_STORAGE_BACKEND` | The storage backend that will be used for the secret storage    | `vault`                 |
-| `VAULT_ADDR`             | The address which PRISM Agent can reach the Vault               | `http://localhost:8200` |
+| `VAULT_ADDR`             | The address which the Cloud Agent can reach the Vault           | `http://localhost:8200` |
 | `VAULT_TOKEN`            | The token for accessing HashiCorp Vault                         | -                       |
 | `VAULT_APPROLE_ROLE_ID`  | The `role_id` for HashiCorp Vault authentication with AppRole   | -                       |
 | `VAULT_APPROLE_SECRET_ID`| The `secret_id` for HashiCorp Vault authentication with AppRole | -                       |
