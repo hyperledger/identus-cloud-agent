@@ -3,6 +3,7 @@ name: MegaLinter
 
 on:
   pull_request:
+  workflow_dispatch:
 
 env: # Comment env block if you don't want to apply fixes
   # Apply linter fixes configuration
@@ -26,12 +27,13 @@ jobs:
       pull-requests: write
 
     steps:
-      # Git Chekcout
+      # Git Checkout
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: MegaLinter
         id: ml
@@ -47,6 +49,16 @@ jobs:
             mega-linter.log
           overwrite: true
 
+      - uses: crazy-max/ghaction-import-gpg@v3
+        id: import_gpg
+        with:
+          gpg-private-key: ${{ secrets.HYP_BOT_GPG_PRIVATE }}
+          passphrase: ${{ secrets.HYP_BOT_GPG_PASSWORD }}
+          git-user-signingkey: true
+          git-commit-gpgsign: true
+          git_config_global: true
+          git_tag_gpgsign: true
+
       # Create pull request if applicable (for now works only on PR from same repository, not from forks)
       - name: Create Pull Request with applied fixes
         id: cpr
@@ -54,9 +66,12 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "style: Apply linters automatic fixes"
-          title: "style: Apply linters automatic fixes"
-          labels: "hyperledger-bot"
+          commit-message: "style: apply linters automatic fixes"
+          title: "style: apply linters automatic fixes"
+          signoff: true
+          committer: "Hyperledger Bot <hyperledger-bot@hyperledger.org>"
+          author: "Hyperledger Bot <hyperledger-bot@hyperledger.org>"
+
       - name: Create PR output
         if: steps.ml.outputs.has_updated_sources == 1 && (env.APPLY_FIXES_EVENT == 'all' || env.APPLY_FIXES_EVENT == github.event_name) && env.APPLY_FIXES_MODE == 'pull_request' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && !contains(github.event.head_commit.message, 'skip fix')
         run: |
