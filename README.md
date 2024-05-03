@@ -6,7 +6,7 @@
   <i> <font size="18">Identus Cloud Agent</font> </i>
   <br>
   <br>
-  <a href='https://coveralls.io/github/input-output-hk/atala-prism-building-blocks?branch=main'><img src='https://coveralls.io/repos/github/input-output-hk/atala-prism-building-blocks/badge.svg?branch=main&amp;t=91BUzX&kill_cache=1' alt='Coverage Status' /></a>
+  <a href='https://coveralls.io/github/hyperledger/identus-cloud-agent?branch=main'><img src='https://coveralls.io/repos/github/hyperledger/identus-cloud-agent/badge.svg?branch=main' alt='Coverage Status' /></a>
   <a href="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/unit-tests.yml"> <img src="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/unit-tests.yml/badge.svg" alt="Unit tests" /> </a>
   <a href="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/integration-tests.yml"> <img src="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/integration-tests.yml/badge.svg" alt="End-to-end tests" /> </a>
   <a href="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/performance-tests.yml"> <img src="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/performance-tests.yml/badge.svg" alt="Performance tests" /> </a>
@@ -96,7 +96,7 @@ The following sections describe how to run the Cloud Agent in different configur
 The Cloud Agent can be configured to use different types of ledger, secret storage and DID persistence. Any combination of options is available, but the most common configurations are:
 
 | Configuration  | Secret Storage | DIDs persistence | Prism Node                                      |
-| -------------- | -------------- | ---------------- |-------------------------------------------------|
+|----------------|----------------|------------------|-------------------------------------------------|
 | Dev            | PostgreSQL     | No               | In-memory                                       |
 | Pre-production | PostgreSQL     | Yes              | Distributed Ledger testnet (preview or preprod) |
 | Production     | Hashicorp      | Yes              | Distributed Ledger mainnet                      |
@@ -179,7 +179,7 @@ The following tutorials will help you get started with the Cloud Agent and issue
 
 ## User documentation
 
-All extended documentation, tutorials and API references for the Identus ecosystem can be found at https://docs.atalaprism.io/
+All extended documentation, tutorials and API references for the Identus ecosystem can be found at <https://docs.atalaprism.io/>
 
 ## Contributing
 
