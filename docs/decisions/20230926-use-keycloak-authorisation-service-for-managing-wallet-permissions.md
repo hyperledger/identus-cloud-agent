@@ -73,13 +73,13 @@ sequenceDiagram
     actor Admin
     actor User
     participant Client
-    participant PrismAgent
+    participant CloudAgent
     participant Keycloak
 
     autonumber
 
-    Admin ->> PrismAgent: Create a new wallet
-    PrismAgent ->> Keycloak: Register a new resource
+    Admin ->> CloudAgent: Create a new wallet
+    CloudAgent ->> Keycloak: Register a new resource
     Admin ->> Keycloak: Create a new user
     Admin ->> Keycloak: Create a new user-credential
     Admin ->> Keycloak: Create a new permission
@@ -93,7 +93,7 @@ sequenceDiagram
     actor Admin
     actor User
     participant Client
-    participant PrismAgent
+    participant CloudAgent
     participant Keycloak
 
     autonumber
@@ -103,17 +103,17 @@ sequenceDiagram
     Client ->> Keycloak: Login with preconfigured flow
     Keycloak ->> Client: JWT AccessToken
     User ->> Client: Check my VC
-    Client ->> PrismAgent: Get CredentialRecord
+    Client ->> CloudAgent: Get CredentialRecord
 
     opt Bearer token is not RPT
-      PrismAgent ->> Keycloak: Get permissions
-      Keycloak ->> PrismAgent: Permitted resource(s)
+      CloudAgent ->> Keycloak: Get permissions
+      Keycloak ->> CloudAgent: Permitted resource(s)
     end
 
     alt is permitted
-        PrismAgent ->> Client: CredentialRecord
+        CloudAgent ->> Client: CredentialRecord
     else is not permitted
-        PrismAgent ->> Client: 403 Forbidden
+        CloudAgent ->> Client: 403 Forbidden
     end
 ```
 

@@ -23,7 +23,7 @@ The tests are being ignored to avoid running them on CI. When running locally,
 the ignore aspect should be removed and the test can be run by
 
 ```bash
-sbt prismAgentWalletAPI/'testOnly -- -tag benchmark'
+sbt agentWalletAPI/'testOnly -- -tag benchmark'
 ```
 
 ## Scenario
