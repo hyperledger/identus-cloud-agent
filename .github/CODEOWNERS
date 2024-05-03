@@ -11,7 +11,7 @@
 /cloud-agent/ @bvoiturier @yshyn-iohk @patlo-iog
 
 # CI pipelines:
-/.github/ @mineme0110
+/.github/ @mineme0110 @patlo-iog
 
 # PRISM Node:
 /prism-node/ @shotexa
