@@ -14,7 +14,7 @@ In the migration process from `apikey` to `JWT`, there is only one role:
 
 1. Keycloak up and running
 2. Keycloak is configured the same as in [Tenant Onboarding Self-Service](./tenant-onboarding-self-service.md)
-3. The Cloud Agent up and running
+3. The Cloud Agent is up and running
 4. The Cloud Agent is configured the same as in [Tenant Onboarding Self-Service](./tenant-onboarding-self-service.md)
 5. The user has access to the wallet using `apikey`. (See [Tenant Onboarding](./tenant-onboarding.md))
 6. The user has an account registered on Keycloak

@@ -37,7 +37,7 @@ import org.hyperledger.identus.verification.controller.VcVerificationServerEndpo
 import zio.*
 import zio.metrics.*
 
-object PrismAgentApp {
+object CloudAgentApp {
 
   def run = for {
     _ <- AgentInitialization.run
