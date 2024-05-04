@@ -35,7 +35,7 @@ dependencies {
     // RestAPI client
     testImplementation("org.hyperledger.identus:cloud-agent-client-kotlin:1.32.0")
     // Test helpers library
-    testImplementation("io.iohk.atala:atala-automation:0.3.2")
+    testImplementation("io.iohk.atala:atala-automation:0.4.0")
     // Hoplite for configuration
     testImplementation("com.sksamuel.hoplite:hoplite-core:2.7.5")
     testImplementation("com.sksamuel.hoplite:hoplite-hocon:2.7.5")
