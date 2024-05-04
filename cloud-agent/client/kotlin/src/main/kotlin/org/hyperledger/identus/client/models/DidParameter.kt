@@ -10,23 +10,21 @@
     "ArrayInDataClass",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "UnusedImport",
 )
 
 package org.hyperledger.identus.client.models
 
-
 import com.google.gson.annotations.SerializedName
 
 /**
- * 
  *
- * @param did 
- * @param parameterType 
+ *
+ * @param did
+ * @param parameterType
  */
 
-
-data class DidParameter (
+data class DidParameter(
 
     @SerializedName("did")
     override val did: kotlin.String,
@@ -37,4 +35,3 @@ data class DidParameter (
     @get:SerializedName("dateTime")
     override val dateTime: java.time.OffsetDateTime? = null,
 ) : VcVerificationParameter
-
