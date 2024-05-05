@@ -74,7 +74,7 @@ lazy val V = new {
   val quill = "4.7.3"
   val flyway = "9.22.3"
   val postgresDriver = "42.2.29"
-  val logback = "1.4.14"
+  val logback = "1.5.6"
   val slf4j = "2.0.13"
 
   val prismSdk = "1.4.1" // scala-steward:off
