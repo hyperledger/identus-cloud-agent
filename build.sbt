@@ -91,7 +91,7 @@ lazy val V = new {
   // [error] 	org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaSpec
 
   val vaultDriver = "6.2.0"
-  val micrometer = "1.11.11"
+  val micrometer = "1.12.5"
 
   val nimbusJwt = "10.0.0"
   val keycloak = "23.0.7" // scala-steward:off //TODO 24.0.3 // update all quay.io/keycloak/keycloak
