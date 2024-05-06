@@ -2,7 +2,6 @@ package org.hyperledger.identus.shared.crypto
 
 import java.security.MessageDigest
 
-// TODO: move behind Apollo interface if it makes sense
 // Reference: https://github.com/input-output-hk/atala-prism/blob/open-source-node/node/src/main/scala/io/iohk/atala/prism/node/crypto/CryptoUtils.scala
 sealed trait Sha256Hash {
   def bytes: Vector[Byte]

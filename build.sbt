@@ -167,11 +167,6 @@ lazy val D = new {
   val monocleMacro: ModuleID = "dev.optics" %% "monocle-macro" % V.monocle % Test
 
   val apollo = "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo
-  // TODO: check this
-  // Added here to make prism-crypto works.
-  // Once migrated to apollo, re-evaluate if this should be removed.
-  val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk18on" % V.bouncyCastle
-  val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk18on" % V.bouncyCastle
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
@@ -201,8 +196,6 @@ lazy val D_SharedCrypto = new {
     Seq(
       D.zioJson,
       D.apollo,
-      D.bouncyBcpkix,
-      D.bouncyBcprov,
       D.nimbusJwt,
       D.zioTest,
       D.zioTestSbt,
@@ -394,7 +387,6 @@ lazy val D_CloudAgent = new {
     D.micrometer,
     D.micrometerPrometheusRegistry
   )
-  val bouncyDependencies: Seq[ModuleID] = Seq(D.bouncyBcpkix, D.bouncyBcprov)
   val tapirDependencies: Seq[ModuleID] =
     Seq(
       tapirSwaggerUiBundle,
@@ -412,7 +404,7 @@ lazy val D_CloudAgent = new {
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
-    baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop, D.zioMock, vaultDriver)
+    baseDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop, D.zioMock, vaultDriver)
 
   lazy val iamDependencies: Seq[ModuleID] = Seq(keycloakAuthz, D.jwtCirce)
 
