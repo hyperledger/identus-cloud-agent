@@ -21,7 +21,7 @@ import org.hyperledger.identus.issue.controller.http.{
   IssueCredentialRecord,
   IssueCredentialRecordPage
 }
-import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT}
+import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
 import org.hyperledger.identus.pollux.core.service.CredentialService
@@ -49,7 +49,9 @@ class IssueControllerImpl(
       jsonClaims <- ZIO // TODO Get read of Circe and use zio-json all the way down
         .fromEither(io.circe.parser.parse(request.claims.toString()))
         .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
-      credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+      credentialFormat = request.credentialFormat
+        .flatMap(CredentialFormat.fromString)
+        .get // TODO fix get make a ZIO.fail
       outcome <-
         credentialFormat match
           case JWT =>
@@ -61,6 +63,25 @@ class IssueControllerImpl(
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
               record <- credentialService
                 .createJWTIssueCredentialRecord(
+                  pairwiseIssuerDID = didIdPair.myDID,
+                  pairwiseHolderDID = didIdPair.theirDid,
+                  thid = DidCommID(),
+                  maybeSchemaId = request.schemaId,
+                  claims = jsonClaims,
+                  validityPeriod = request.validityPeriod,
+                  automaticIssuance = request.automaticIssuance.orElse(Some(true)),
+                  issuingDID = issuingDID.asCanonical
+                )
+            } yield record
+          case SDJWT =>
+            for {
+              issuingDID <- ZIO
+                .fromOption(request.issuingDID)
+                .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
+                .flatMap(extractPrismDIDFromString)
+              _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
+              record <- credentialService
+                .createSDJWTIssueCredentialRecord(
                   pairwiseIssuerDID = didIdPair.myDID,
                   pairwiseHolderDID = didIdPair.theirDid,
                   thid = DidCommID(),
@@ -175,15 +196,31 @@ class IssueControllerImpl(
   ): ZIO[WalletAccessContext, ErrorResponse, Unit] = {
     val result = for {
       maybeDIDState <- managedDIDService.getManagedDIDState(prismDID.asCanonical)
-      mayBeResolveDID <- didService
-        .resolveDID(prismDID)
-      maybeDidData = mayBeResolveDID.map(_._2)
-      maybeMetadata = mayBeResolveDID.map(_._1)
-      _ <- ZIO.when(role == Role.Holder)(
+      initialResolveDID <- didService.resolveDID(prismDID)
+      oInitialDidData = initialResolveDID.map(_._2)
+      mayBeResolveWithLongFormOrShortForm <-
+        if (oInitialDidData.isEmpty) {
+          for {
+            oLongFormDid <- getLongFormPrismDID(prismDID, allowUnpublished).provideSomeLayer(
+              ZLayer.succeed(managedDIDService)
+            )
+            longFormDid <- ZIO
+              .fromOption(oLongFormDid)
+              .orElseFail(
+                ErrorResponse.badRequest(detail = Some(s"Longform of PrismDid Cannot be found: $oLongFormDid"))
+              )
+            resolvedDID <- didService.resolveDID(longFormDid)
+          } yield resolvedDID
+        } else {
+          ZIO.succeed(initialResolveDID)
+        }
+      maybeDidData = mayBeResolveWithLongFormOrShortForm.map(_._2)
+      maybeMetadata = mayBeResolveWithLongFormOrShortForm.map(_._1)
+      _ <- ZIO.when(role == Role.Holder) {
         ZIO
           .fromOption(maybeDidData.flatMap(_.publicKeys.find(_.purpose == VerificationRelationship.Authentication)))
           .orElseFail(ErrorResponse.badRequest(detail = Some(s"Authentication key not found for the $prismDID")))
-      )
+      }
       _ <- ZIO.when(role == Role.Issuer)(
         ZIO
           .fromOption(maybeDidData.flatMap(_.publicKeys.find(_.purpose == VerificationRelationship.AssertionMethod)))

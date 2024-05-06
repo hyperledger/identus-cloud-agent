@@ -15,7 +15,7 @@ import io.iohk.atala.prism.apollo.utils.KMMX25519PublicKey
 import zio.*
 
 import scala.jdk.CollectionConverters.*
-import scala.util.{Try, Success, Failure}
+import scala.util.{Failure, Success, Try}
 
 final case class KmpSecp256k1PublicKey(publicKey: KMMECSecp256k1PublicKey) extends Secp256k1PublicKey {
 
@@ -109,6 +109,7 @@ object KmpSecp256k1KeyOps extends Secp256k1KeyOps {
 }
 
 final case class KmpEd25519PublicKey(publicKey: KMMEdPublicKey) extends Ed25519PublicKey {
+
   override def getEncoded: Array[Byte] = publicKey.getRaw()
   override def verify(data: Array[Byte], signature: Array[Byte]): Try[Unit] =
     Try(publicKey.verify(data, signature))

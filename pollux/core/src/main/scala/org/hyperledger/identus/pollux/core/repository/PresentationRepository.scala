@@ -51,6 +51,13 @@ trait PresentationRepository {
       protocolState: ProtocolState
   ): RIO[WalletAccessContext, Int]
 
+  def updateSDJWTPresentationWithCredentialsToUse(
+      recordId: DidCommID,
+      credentialsToUse: Option[Seq[String]],
+      sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
+      protocolState: ProtocolState
+  ): RIO[WalletAccessContext, Int]
+
   def updateAnoncredPresentationWithCredentialsToUse(
       recordId: DidCommID,
       anoncredCredentialsToUseJsonSchemaId: Option[String],
