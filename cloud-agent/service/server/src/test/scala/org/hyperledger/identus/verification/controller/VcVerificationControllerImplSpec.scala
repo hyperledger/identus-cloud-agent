@@ -72,31 +72,30 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
         signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
         authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
         backend = httpBackend(vcVerificationController, authenticator)
+        request = List(
+          VcVerificationRequest(
+            signedJwtCredential.value,
+            List(
+              ParameterizableVcVerification(VcVerification.SignatureVerification, None),
+              ParameterizableVcVerification(VcVerification.NotBeforeCheck, Some(DateTimeParameter(currentTime))),
+              ParameterizableVcVerification(VcVerification.ExpirationCheck, Some(DateTimeParameter(currentTime)))
+            )
+          ),
+          VcVerificationRequest(
+            signedJwtCredential.value,
+            List(
+              ParameterizableVcVerification(VcVerification.AudienceCheck, Some(DidParameter(verifier.value))),
+              ParameterizableVcVerification(
+                VcVerification.IssuerIdentification,
+                Some(DidParameter(issuer.did.value))
+              )
+            )
+          )
+        ).toJsonPretty
         response: Response[Either[DeserializationException[String], List[VcVerificationResponse]]] <-
           basicRequest
             .post(uri"${vcVerificationUriBase}")
-            .body(
-              List(
-                VcVerificationRequest(
-                  signedJwtCredential.value,
-                  List(
-                    ParameterizableVcVerification(VcVerification.SignatureVerification, None),
-                    ParameterizableVcVerification(VcVerification.NotBeforeCheck, Some(DateTimeParameter(currentTime))),
-                    ParameterizableVcVerification(VcVerification.ExpirationCheck, Some(DateTimeParameter(currentTime)))
-                  )
-                ),
-                VcVerificationRequest(
-                  signedJwtCredential.value,
-                  List(
-                    ParameterizableVcVerification(VcVerification.AudienceCheck, Some(DidParameter(verifier.value))),
-                    ParameterizableVcVerification(
-                      VcVerification.IssuerIdentification,
-                      Some(DidParameter(issuer.did.value))
-                    )
-                  )
-                )
-              ).toJsonPretty
-            )
+            .body(request)
             .response(asJsonAlways[List[VcVerificationResponse]])
             .send(backend)
         statusCodeIs200 = assert(response.code)(equalTo(StatusCode.Ok))
