@@ -67,6 +67,8 @@ lazy val V = new {
 
   val typesafeConfig = "1.4.3"
   val protobuf = "3.1.9"
+  val grpcOkHttp = "1.63.0"
+
   val testContainersScala = "0.41.3"
   val testContainersJavaKeycloak = "3.2.0" // scala-steward:off
 
@@ -137,6 +139,7 @@ lazy val D = new {
   val scalaPbRuntime: ModuleID =
     "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
   val scalaPbGrpc: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
+  val grpcOkHttp: ModuleID = "io.grpc" % "grpc-okhttp" % V.grpcOkHttp
 
   val testcontainersPostgres: ModuleID =
     "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala % Test
@@ -689,7 +692,7 @@ val prismNodeClient = project
   .in(file("prism-node/client/scala-client"))
   .settings(
     name := "prism-node-client",
-    libraryDependencies ++= Seq(D.scalaPbGrpc, D.scalaPbRuntime),
+    libraryDependencies ++= Seq(D.scalaPbGrpc, D.scalaPbRuntime, D.grpcOkHttp),
     coverageEnabled := false,
     // gRPC settings
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
