@@ -18,6 +18,7 @@ import zio.*
 import java.net.URI
 import java.net.URL
 import java.util.UUID
+import org.hyperledger.identus.shared.db.Errors.UnexpectedAffectedRow
 
 sealed trait OIDC4VCIssuerMetadataServiceError(
     val statusCode: StatusCode,
@@ -100,10 +101,11 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
     } yield updatedIssuer
 
   override def deleteCredentialIssuer(issuerId: UUID): ZIO[WalletAccessContext, IssuerIdNotFound, Unit] =
-    for {
-      _ <- getCredentialIssuer(issuerId)
-      _ <- repository.deleteIssuer(issuerId)
-    } yield ()
+    repository
+      .deleteIssuer(issuerId)
+      .catchSomeDefect { case _: UnexpectedAffectedRow =>
+        ZIO.fail(IssuerIdNotFound(issuerId))
+      }
 
   override def createCredentialConfiguration(
       issuerId: UUID,

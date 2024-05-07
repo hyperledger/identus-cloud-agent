@@ -63,7 +63,16 @@ class JdbcOIDC4VCIssuerMetadataRepository(xa: Transactor[ContextAwareTask]) exte
       config: CredentialConfiguration
   ): URIO[WalletAccessContext, Unit] = ???
 
-  override def deleteIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit] = ???
+  override def deleteIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit] = {
+    val cxnIO = sql"""
+        | DELETE FROM public.issuer_metadata
+        | WHERE id = $issuerId
+        """.stripMargin.update
+
+    cxnIO.run
+      .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
+  }
 
 }
 
