@@ -82,9 +82,9 @@ object DocModels {
       .servers(
         List(
           Server(url = "http://localhost:8085", description = Some("Local Prism Agent")),
-          Server(url = "http://localhost/prism-agent", description = Some("Local Prism Agent with APISIX proxy")),
+          Server(url = "http://localhost/cloud-agent", description = Some("Local Cloud Agent with APISIX proxy")),
           Server(
-            url = "https://k8s-dev.atalaprism.io/prism-agent",
+            url = "https://k8s-dev.atalaprism.io/cloud-agent",
             description = Some("Prism Agent on the Staging Environment")
           ),
         )

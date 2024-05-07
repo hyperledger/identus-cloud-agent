@@ -57,7 +57,7 @@ object ConnectionsPage {
     object self
         extends Annotation[String](
           description = "The URL that uniquely identifies the resource being returned in the response.",
-          example = "/prism-agent/connections?offset=10&limit=10"
+          example = "/cloud-agent/connections?offset=10&limit=10"
         )
 
     object pageOf
@@ -70,14 +70,14 @@ object ConnectionsPage {
         extends Annotation[String](
           description =
             "An optional string field containing the URL of the next page of results. If the API response does not contain any more pages, this field should be set to None.",
-          example = "/prism-agent/connections?offset=20&limit=10"
+          example = "/cloud-agent/connections?offset=20&limit=10"
         )
 
     object previous
         extends Annotation[String](
           description =
             "An optional string field containing the URL of the previous page of results. If the API response is the first page of results, this field should be set to None.",
-          example = "/prism-agent/connections?offset=0&limit=10"
+          example = "/cloud-agent/connections?offset=0&limit=10"
         )
   }
 

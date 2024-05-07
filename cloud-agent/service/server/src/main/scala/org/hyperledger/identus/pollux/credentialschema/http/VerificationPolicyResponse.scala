@@ -174,7 +174,7 @@ object VerificationPolicyResponse {
     object self
         extends Annotation[String](
           description = "The URL that uniquely identifies the resource being returned in the response.",
-          example = "/prism-agent/verification/policies/0527aea1-d131-3948-a34d-03af39aba8b4"
+          example = "/cloud-agent/verification/policies/0527aea1-d131-3948-a34d-03af39aba8b4"
         )
 
     object kind
@@ -229,7 +229,7 @@ object VerificationPolicyResponse {
   }
 
   val example = VerificationPolicyResponse(
-    self = "/prism-agent/verification/policies",
+    self = "/cloud-agent/verification/policies",
     kind = "VerificationPolicy",
     id = UUID.fromString("0527aea1-d131-3948-a34d-03af39aba8b4"),
     nonce = 0,
@@ -286,7 +286,7 @@ object VerificationPolicyResponsePage {
     object self
         extends Annotation[String](
           description = "The URL that uniquely identifies the resource being returned in the response.",
-          example = "/prism-agent/verification/policies?name=Trusted&offset=0&limit=10"
+          example = "/cloud-agent/verification/policies?name=Trusted&offset=0&limit=10"
         )
 
     object kind
@@ -298,21 +298,21 @@ object VerificationPolicyResponsePage {
     object pageOf
         extends Annotation[String](
           description = "A string field indicating the type of resource that the contents field contains",
-          example = "/prism-agent/verification/policies"
+          example = "/cloud-agent/verification/policies"
         )
 
     object next
         extends Annotation[String](
           description = "An optional string field containing the URL of the next page of results. " +
             "If the API response does not contain any more pages, this field should be set to None.",
-          example = "/prism-agent/verification/policies?skip=20&limit=10"
+          example = "/cloud-agent/verification/policies?skip=20&limit=10"
         )
 
     object previous
         extends Annotation[String](
           description = "An optional string field containing the URL of the previous page of results. " +
             "If the API response is the first page of results, this field should be set to None.",
-          example = "/prism-agent/verification/policies?skip=0&limit=10"
+          example = "/cloud-agent/verification/policies?skip=0&limit=10"
         )
     object contents
         extends Annotation[Seq[VerificationPolicyResponse]](
@@ -323,11 +323,11 @@ object VerificationPolicyResponsePage {
   }
 
   val example = VerificationPolicyResponsePage(
-    self = "/prism-agent/verification/policies?name=Trusted&offset=0&limit=10",
+    self = "/cloud-agent/verification/policies?name=Trusted&offset=0&limit=10",
     kind = "VerificationPolicyPage",
-    pageOf = "/prism-agent/verification/policies",
-    next = Some("/prism-agent/verification/policies?skip=20&limit=10"),
-    previous = Some("/prism-agent/verification/policies?skip=0&limit=10"),
+    pageOf = "/cloud-agent/verification/policies",
+    next = Some("/cloud-agent/verification/policies?skip=20&limit=10"),
+    previous = Some("/cloud-agent/verification/policies?skip=0&limit=10"),
     contents = List(VerificationPolicyResponse.example)
   )
 }
