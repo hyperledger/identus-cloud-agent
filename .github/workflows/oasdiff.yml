@@ -61,7 +61,7 @@ jobs:
             echo "REV_URL=https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/$REV_TAG/prism-agent/service/api/http/prism-agent-openapi-spec.yaml" >> $GITHUB_ENV
           elif [[ "$REV_TAG" == 'main' ]]; then
             echo "REV_URL=https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/$REV_TAG/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml" >> $GITHUB_ENV
-          elif [[ "$GITHUB_EVENT_NAME" == 'pull_request' ]]; then    
+          elif [[ "$GITHUB_EVENT_NAME" == 'pull_request' ]]; then
             echo "REV_URL=https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/$BRANCH_NAME/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml" >> $GITHUB_ENV
           fi
 
