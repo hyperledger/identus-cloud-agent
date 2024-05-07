@@ -64,7 +64,7 @@ To do this, he makes a `POST` request to the [`/present-proof/presentations`](/a
 <TabItem value="jwt" label="JWT">
 
 ```bash
-curl -X 'POST' 'http://localhost:8070/prism-agent/present-proof/presentations' \
+curl -X 'POST' 'http://localhost:8070/cloud-agent/present-proof/presentations' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
 	-H "apikey: $API_KEY" \
@@ -82,7 +82,7 @@ curl -X 'POST' 'http://localhost:8070/prism-agent/present-proof/presentations' \
 <TabItem value="anoncreds" label="AnonCreds">
 
 ```bash
-curl -X 'POST' 'http://localhost:8070/prism-agent/present-proof/presentations' \
+curl -X 'POST' 'http://localhost:8070/cloud-agent/present-proof/presentations' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
 	-H "apikey: $API_KEY" \
@@ -132,7 +132,7 @@ Upon execution, a new presentation request record gets created with an initial s
 
 The Verifier can retrieve the list of presentation records by making a `GET` request to the [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/getAllPresentation) endpoint:
 ```bash
-curl -X 'GET' 'http://localhost:8070/prism-agent/present-proof/presentations' \
+curl -X 'GET' 'http://localhost:8070/cloud-agent/present-proof/presentations' \
   -H 'accept: application/json' \
 	-H "apikey: $API_KEY"
 ```
@@ -143,7 +143,7 @@ Once the Holder/Prover has received a proof presentation request, he can accept 
 The Verifier can then explicitly accept the specific verified proof presentation to change the record state to `PresentationAccepted` by making a `PATCH` request to the [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) endpoint:
 
 ```bash
-curl -X 'PATCH' 'http://localhost:8070/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
+curl -X 'PATCH' 'http://localhost:8070/cloud-agent/present-proof/presentations/{PRESENTATION_ID}' \
   -H 'Content-Type: application/json' \
   -H "apikey: $API_KEY" \
   -d '{
@@ -170,7 +170,7 @@ This section describes the interactions available to the Holder/Prover with his 
 The Holder/Prover can retrieve the list of presentation requests received by its Cloud Agent from different Verifiers making a `GET` request to the [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/getAllPresentation) endpoint:
 
 ```bash
-curl -X 'GET' 'http://localhost:8090/prism-agent/present-proof/presentations' \
+curl -X 'GET' 'http://localhost:8090/cloud-agent/present-proof/presentations' \
   -H 'accept: application/json' \
   -H "apikey: $API_KEY"
 ```
@@ -181,7 +181,7 @@ The Holder/Prover can then accept a specific request, generate the proof, and se
 <TabItem value="jwt" label="JWT">
 
 ```bash
-curl -X 'PATCH' 'http://localhost:8090/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
+curl -X 'PATCH' 'http://localhost:8090/cloud-agent/present-proof/presentations/{PRESENTATION_ID}' \
   -H 'Content-Type: application/json' \
   -H "apikey: $API_KEY" \
   -d '{
@@ -198,7 +198,7 @@ The Holder/Prover will have to provide the following information:
 <TabItem value="anoncreds" label="AnonCreds">
 
 ```bash
-curl -X 'PATCH' 'http://localhost:8090/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
+curl -X 'PATCH' 'http://localhost:8090/cloud-agent/present-proof/presentations/{PRESENTATION_ID}' \
   -H 'Content-Type: application/json' \
   -H "apikey: $API_KEY" \
   -d '{

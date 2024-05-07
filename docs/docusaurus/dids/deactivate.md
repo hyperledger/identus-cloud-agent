@@ -45,7 +45,7 @@ The example uses the following endpoints
 Given the DID Controller has a DID managed by the Cloud Agent and that DID is published, he can resolve the DID document using short-form DID.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
+curl --location --request GET 'http://localhost:8080/cloud-agent/dids/{didRef}' \
 --header "apikey: $API_KEY" \
 --header 'Accept: */*'
 ```
@@ -71,7 +71,7 @@ The active status comes from the last step.
 The DID deactivation can be performed by calling `POST /did-registrar/dids/{didRef}/deactivations` and replacing `{didRef}` with the DID to deactivate.
 
 ```bash
-curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids/{didRef}/deactivations' \
+curl --location --request POST 'http://localhost:8080/cloud-agent/did-registrar/dids/{didRef}/deactivations' \
 --header "apikey: $API_KEY" \
 --header 'Accept: application/json'
 ```

@@ -8,11 +8,11 @@ Every credential will contain the property `credentialStatus`, which will look l
 
 ```json
 "credentialStatus": {
-    "id": "http://localhost:8080/prism-agent/prism-agent/credential-status/27526236-3836-4061-9867-f69314e258b4#94567"
+    "id": "http://localhost:8080/cloud-agent/cloud-agent/credential-status/27526236-3836-4061-9867-f69314e258b4#94567"
     "type": "StatusList2021Entry",
     "statusPurpose": "revocation",
     "statusListIndex": "94567",
-    "statusListCredential": "http://localhost:8080/prism-agent/prism-agent/credential-status/27526236-3836-4061-9867-f69314e258b4"
+    "statusListCredential": "http://localhost:8080/cloud-agent/cloud-agent/credential-status/27526236-3836-4061-9867-f69314e258b4"
   },
 ```
 
@@ -36,7 +36,7 @@ Every credential will contain the property `credentialStatus`, which will look l
     "VerifiableCredential",
     "StatusList2021Credential"
   ],
-  "id" : "http://localhost:8080/prism-agent/credential-status/27526236-3836-4061-9867-f69314e258b4",
+  "id" : "http://localhost:8080/cloud-agent/credential-status/27526236-3836-4061-9867-f69314e258b4",
   "issuer" : "did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a",
   "issuanceDate" : 1711212350,
   "credentialSubject" : {
@@ -74,7 +74,7 @@ Only issuers of a credential can revoke a credential.
 *Get the list of credentials*
 ```bash
 curl -X 'GET' \
-  'http://localhost:8080/prism-agent/issue-credentials/records' \
+  'http://localhost:8080/cloud-agent/issue-credentials/records' \
   -H 'accept: application/json'
 ```
 This endpoint will return the credentials issued. Every credential includes an ID.
@@ -82,7 +82,7 @@ This endpoint will return the credentials issued. Every credential includes an I
 *Revoke the credential*
 ```bash
 curl -X 'PATCH' \
-  'http://localhost:8080/prism-agent/revoke-credential/<credential_id>' \
+  'http://localhost:8080/cloud-agent/revoke-credential/<credential_id>' \
   -H 'accept: */*'
 ```
 

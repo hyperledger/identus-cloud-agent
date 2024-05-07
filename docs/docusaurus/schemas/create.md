@@ -79,7 +79,7 @@ Specification.
 1. Open your preferred REST API client, such as Postman or Insomnia, or use the client stub generated based on the
    OpenAPI specification.
 
-2. In the client, create a new POST request to the `/prism-agent/schema-registry/schemas` endpoint.
+2. In the client, create a new POST request to the `/cloud-agent/schema-registry/schemas` endpoint.
 
 Note that the value of the `author` field must match the short form of a PRISM DID that has been created using the same agent. An unpublished DID is sufficient. Please refer to the [Create DID](../dids/create.md) documentation page for more details on how to create a PRISM DID.  
 
@@ -141,7 +141,7 @@ In the request body, create a JSON object:
 
 ```shell
 curl -X 'POST' \
-  'http://localhost:8080/prism-agent/schema-registry/schemas' \
+  'http://localhost:8080/cloud-agent/schema-registry/schemas' \
   -H 'accept: application/json' \
   -H "apikey: $API_KEY" \
   -H 'Content-Type: application/json' \
@@ -254,13 +254,13 @@ curl -X 'POST' \
 
 ### 3. Retrieve the created schema
 
-To retrieve the newly created schema, create a new GET request to the `/prism-agent/schema-registry/schemas/{guid}`
+To retrieve the newly created schema, create a new GET request to the `/cloud-agent/schema-registry/schemas/{guid}`
 endpoint, where `{guid}` is the GUID returned in the response from the previous step.
 Send the GET request to retrieve the schema. Curl example is the following:
 
 ```shell
 curl -X 'GET' \
-  'http://localhost:8080/prism-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2' \
+  'http://localhost:8080/cloud-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2' \
   -H 'accept: application/json' \
   -H "apikey: $API_KEY"
 ```
