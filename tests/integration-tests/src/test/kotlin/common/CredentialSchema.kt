@@ -1,8 +1,8 @@
 package common
 
-import org.hyperledger.identus.client.models.CredentialSchemaInput
 import models.JsonSchema
 import models.JsonSchemaProperty
+import org.hyperledger.identus.client.models.CredentialSchemaInput
 import java.util.UUID
 
 enum class CredentialSchema {
