@@ -4,7 +4,7 @@ import com.nimbusds.jose.jwk.OctetKeyPair
 import org.hyperledger.identus.agent.walletapi.storage.DIDSecretStorage
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.castor.core.model.did.PrismDID
-import io.iohk.atala.prism.crypto.Sha256
+import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.crypto.jwk.FromJWK
 import org.hyperledger.identus.shared.crypto.jwk.JWK
 import org.hyperledger.identus.shared.models.HexString
@@ -74,7 +74,7 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) ex
     if (useSemanticPath) {
       s"$basePath/$relativePath" -> Map.empty
     } else {
-      val relativePathHash = Sha256.compute(relativePath.getBytes(StandardCharsets.UTF_8)).getHexValue()
+      val relativePathHash = Sha256Hash.compute(relativePath.getBytes(StandardCharsets.UTF_8)).hexEncoded
       s"$basePath/$relativePathHash" -> Map(SEMANTIC_PATH_METADATA_KEY -> relativePath)
     }
   }
@@ -88,7 +88,7 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) ex
     if (useSemanticPath) {
       s"$basePath/$relativePath" -> Map.empty
     } else {
-      val relativePathHash = Sha256.compute(relativePath.getBytes(StandardCharsets.UTF_8)).getHexValue()
+      val relativePathHash = Sha256Hash.compute(relativePath.getBytes(StandardCharsets.UTF_8)).hexEncoded
       s"$basePath/$relativePathHash" -> Map(SEMANTIC_PATH_METADATA_KEY -> relativePath)
     }
   }

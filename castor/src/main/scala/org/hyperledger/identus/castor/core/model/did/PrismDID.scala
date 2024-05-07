@@ -1,7 +1,7 @@
 package org.hyperledger.identus.castor.core.model.did
 
 import org.hyperledger.identus.castor.core.model.ProtoModelHelper
-import io.iohk.atala.prism.crypto.{Sha256, Sha256Digest}
+import org.hyperledger.identus.shared.crypto.Sha256Hash
 import io.iohk.atala.prism.protos.node_models
 import io.iohk.atala.prism.protos.node_models.AtalaOperation.Operation
 import org.hyperledger.identus.shared.models.Base64UrlString
@@ -30,7 +30,7 @@ object PrismDID extends ProtoModelHelper {
   val LONG_FORM_SUFFIX_REGEX: Regex = "^([0-9a-f]{64}):([A-Za-z0-9_-]+$)".r
 
   def buildCanonical(stateHash: Array[Byte]): Either[String, CanonicalPrismDID] =
-    Try(Sha256Digest.fromBytes(stateHash)).toEither.left
+    Try(Sha256Hash.fromBytes(stateHash)).toEither.left
       .map(_.getMessage)
       .map(_ => CanonicalPrismDID(HexString.fromByteArray(stateHash)))
 
@@ -109,7 +109,7 @@ final case class LongFormPrismDID private[did] (atalaOperation: node_models.Atal
 
   override val stateHash: HexString = {
     val encodedState = atalaOperation.toByteArray
-    HexString.fromByteArray(Sha256.compute(encodedState).getValue)
+    HexString.fromByteArray(Sha256Hash.compute(encodedState).bytes.toArray)
   }
 
   override val suffix: DIDMethodSpecificId = {
