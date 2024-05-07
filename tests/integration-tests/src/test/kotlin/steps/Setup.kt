@@ -8,8 +8,6 @@ import config.AgentRole
 import config.Config
 import io.cucumber.java.AfterAll
 import io.cucumber.java.BeforeAll
-import org.hyperledger.identus.client.models.CreateWalletRequest
-import org.hyperledger.identus.client.models.CreateWebhookNotification
 import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder
 import net.serenitybdd.screenplay.Actor
@@ -17,6 +15,8 @@ import net.serenitybdd.screenplay.actors.Cast
 import net.serenitybdd.screenplay.actors.OnStage
 import net.serenitybdd.screenplay.rest.abilities.CallAnApi
 import org.apache.http.HttpStatus
+import org.hyperledger.identus.client.models.CreateWalletRequest
+import org.hyperledger.identus.client.models.CreateWebhookNotification
 import java.util.UUID
 
 object Setup {
