@@ -1,12 +1,12 @@
 package steps.proofs
 
 import abilities.ListenToEvents
-import common.Utils.wait
 import interactions.Patch
 import interactions.Post
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
+import io.iohk.atala.automation.utils.Wait
 import models.PresentationEvent
 import models.PresentationStatusAdapter
 import net.serenitybdd.rest.SerenityRest
@@ -31,15 +31,15 @@ class AnoncredsPresentProofSteps {
         val anoncredsPresentationRequestV1 = AnoncredPresentationRequestV1(
             requestedAttributes = mapOf(
                 "sex" to
-                    AnoncredRequestedAttributeV1(
-                        name = "sex",
-                        restrictions = listOf(
-                            mapOf(
-                                ("attr::sex::value" to "M"),
-                                ("cred_def_id" to credentialDefinitionId),
+                        AnoncredRequestedAttributeV1(
+                            name = "sex",
+                            restrictions = listOf(
+                                mapOf(
+                                    ("attr::sex::value" to "M"),
+                                    ("cred_def_id" to credentialDefinitionId),
+                                ),
                             ),
                         ),
-                    ),
             ),
             requestedPredicates = mapOf(
                 "age" to AnoncredRequestedPredicateV1(
@@ -77,21 +77,21 @@ class AnoncredsPresentProofSteps {
 
     @When("{actor} receives the anoncreds request")
     fun bobReceivesTheAnoncredsRequest(bob: Actor) {
-        wait(
-            {
-                proofEvent = ListenToEvents.with(bob).presentationEvents.lastOrNull {
-                    it.data.thid == bob.recall<String>("thid")
-                }
-                proofEvent != null &&
-                    proofEvent!!.data.status == PresentationStatusAdapter.Status.REQUEST_RECEIVED
-            },
-            "ERROR: Bob did not achieve any presentation request!",
+        Wait.until(
+            errorMessage = "ERROR: Bob did not achieve any presentation request!"
         )
+        {
+            proofEvent = ListenToEvents.with(bob).presentationEvents.lastOrNull {
+                it.data.thid == bob.recall<String>("thid")
+            }
+            proofEvent != null &&
+                    proofEvent!!.data.status == PresentationStatusAdapter.Status.REQUEST_RECEIVED
+        }
         bob.remember("presentationId", proofEvent!!.data.presentationId)
     }
 
-    @When("{actor} accepts the anoncreds presentation request from {actor}")
-    fun bobAcceptsTheAnoncredsPresentationWithProof(bob: Actor, faber: Actor) {
+    @When("{actor} accepts the anoncreds presentation request")
+    fun bobAcceptsTheAnoncredsPresentationWithProof(bob: Actor) {
         val requestPresentationAction = RequestPresentationAction(
             anoncredPresentationRequest =
             AnoncredCredentialProofsV1(
@@ -106,8 +106,9 @@ class AnoncredsPresentProofSteps {
             action = RequestPresentationAction.Action.REQUEST_MINUS_ACCEPT,
         )
 
+        val presentationId = bob.recall<String>("presentationId")
         bob.attemptsTo(
-            Patch.to("/present-proof/presentations/${bob.recall<String>("presentationId")}").with {
+            Patch.to("/present-proof/presentations/$presentationId").with {
                 it.body(
                     requestPresentationAction,
                 )
