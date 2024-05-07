@@ -8,9 +8,8 @@ import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialConfiguration
 import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialIssuer
 import org.hyperledger.identus.pollux.core.repository.OIDC4VCIssuerMetadataRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits.{*, given}
+import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.net.URL
@@ -21,10 +20,25 @@ class JdbcOIDC4VCIssuerMetadataRepository(xa: Transactor[ContextAwareTask]) exte
 
   override def findAllCredentialConfigurations(issuerId: UUID): UIO[Seq[CredentialConfiguration]] = ???
 
-  override def findWalletIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]] = ???
+  override def findWalletIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]] = {
+    val cxnIO = sql"""
+      |SELECT
+      |  id,
+      |  authorization_server,
+      |  created_at,
+      |  updated_at
+      |FROM public.issuer_metadata
+      """.stripMargin
+      .query[CredentialIssuer]
+      .to[Seq]
+
+    cxnIO
+      .transactWallet(xa)
+      .orDie
+  }
 
   override def createIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, Unit] = {
-    val cxnIO = (walletId: WalletId) => sql"""
+    val cxnIO = sql"""
         |INSERT INTO public.issuer_metadata (
         |  id,
         |  authorization_server,
@@ -36,14 +50,13 @@ class JdbcOIDC4VCIssuerMetadataRepository(xa: Transactor[ContextAwareTask]) exte
         |  ${issuer.authorizationServer},
         |  ${issuer.createdAt},
         |  ${issuer.updatedAt},
-        |  ${walletId}
+        |  current_setting('app.current_wallet_id')::UUID
         |)
         """.stripMargin.update
 
-    for {
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      _ <- cxnIO(walletId).run.transactWallet(xa).ensureOneAffectedRowOrDie
-    } yield ()
+    cxnIO.run
+      .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
   override def deleteCredentialConfiguration(
