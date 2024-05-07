@@ -8,7 +8,7 @@ echo "--------------------------------------"
 echo "Starting multitenant using local/run.sh"
 echo "--------------------------------------"
 
-${SCRIPT_DIR}/run.sh -p 8080 -n multitenant -w
+"${SCRIPT_DIR}"/run.sh -p 8080 -n multitenant -w
 
 export AGENT_AUTH_REQUIRED=true
 export AGENT_AUTH_HEADER=apikey
@@ -47,6 +47,6 @@ curl --location 'http://localhost:8080/cloud-agent/events/webhooks' \
   }'
 
 (
-	cd ${SCRIPT_DIR}/../../tests/integration-tests/
+	cd "${SCRIPT_DIR}"/../../tests/integration-tests/
 	./gradlew test reports
 )

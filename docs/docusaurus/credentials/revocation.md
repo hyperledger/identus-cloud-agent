@@ -69,7 +69,7 @@ Status list credential integrity can be verified using the embedded proof of typ
 
 ## Revocation
 
-Only issuers of a credential can revoke a credential. 
+Only issuers of a credential can revoke a credential.
 
 *Get the list of credentials*
 ```bash

@@ -111,10 +111,10 @@ The JSON Schema changes must be defined as follows:
 2. In the client, create a new PUT request to the `/cloud-agent/schema-registry/schemas/{id}` endpoint, where `id` is a
    locally unique credential schema id, formatted as a URL.
 
-Note that the value of the `author` field must match the short form of a PRISM DID that has been created using the same agent. An unpublished DID is sufficient. Please refer to the [Create DID](../dids/create.md) documentation page for more details on how to create a PRISM DID. 
+Note that the value of the `author` field must match the short form of a PRISM DID that has been created using the same agent. An unpublished DID is sufficient. Please refer to the [Create DID](../dids/create.md) documentation page for more details on how to create a PRISM DID.
 
 In the request body, create a JSON object:
-   
+
 ```json
 {
   "name": "driving-license",

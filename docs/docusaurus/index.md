@@ -17,6 +17,6 @@ Throughout all code examples in tutorials, the following conventions are in use:
 ```shell
 export API_KEY=<API Key value>
 ```
-Alternatively, replace `$API_KEY` with your key in the CURL commands supplied throughout this tutorial. ::: 
+Alternatively, replace `$API_KEY` with your key in the CURL commands supplied throughout this tutorial. :::
 
 

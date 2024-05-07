@@ -87,7 +87,7 @@ To do this, make a `POST` request to the [`/issue-credentials/credential-offers`
    The Cloud Agent must be able to dereference the specified URL (i.e. fetch the VC schema content from it), in order to validate the provided claims against it.
    When not specified, the claims fields is not validated and can be any valid JSON object.
    Please refer to the [Create VC schema](../schemas/create.md) doc for details on how to create a VC schema.
-5. `credentialFormat`: The format of the credential that will be issued - `JWT` in this case. When not specified, the default value is `JWT`. 
+5. `credentialFormat`: The format of the credential that will be issued - `JWT` in this case. When not specified, the default value is `JWT`.
 
 
 :::note

@@ -67,7 +67,7 @@ For the above fields, the JSON Schema definition must be:
 The fields `$id` and `$schema` must correspond values that describe
 
 - the identity of the given JSON Schema as a **correctly formatted URL** `https://example.com/driving-license-1.0.0` and
-- the meta schema fixed to `https://json-schema.org/draft/2020-12/schema` which is the only supported value 
+- the meta schema fixed to `https://json-schema.org/draft/2020-12/schema` which is the only supported value
 
 All the claims are listed under the `properties` object with corresponding `type`s and `format`s according to JSON
 Specification.
