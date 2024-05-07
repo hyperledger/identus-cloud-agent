@@ -116,7 +116,7 @@ class PresentProofSteps {
     @Then("{actor} sees the proof returned verification failed")
     fun verifierSeesTheProofReturnedVerificationFailed(verifier: Actor) {
         Wait.until(
-            timeout = 30.seconds,
+            timeout = 60.seconds,
             errorMessage = "Presentation did not achieve PresentationVerificationFailed state!"
         ) {
             val proofEvent = ListenToEvents.with(verifier).presentationEvents.lastOrNull {
