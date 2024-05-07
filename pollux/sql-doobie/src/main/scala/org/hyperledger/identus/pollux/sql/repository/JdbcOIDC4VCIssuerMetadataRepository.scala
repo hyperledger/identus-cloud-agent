@@ -11,14 +11,32 @@ import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
+import zio.interop.catz.*
 
 import java.net.URL
 import java.util.UUID
 
 // TODO: implement all members
-class JdbcOIDC4VCIssuerMetadataRepository(xa: Transactor[ContextAwareTask]) extends OIDC4VCIssuerMetadataRepository {
+class JdbcOIDC4VCIssuerMetadataRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task])
+    extends OIDC4VCIssuerMetadataRepository {
 
-  override def findAllCredentialConfigurations(issuerId: UUID): UIO[Seq[CredentialConfiguration]] = ???
+  override def findIssuerById(issuerId: UUID): UIO[Option[CredentialIssuer]] = {
+    val cxnIO = sql"""
+      |SELECT
+      |  id,
+      |  authorization_server,
+      |  created_at,
+      |  updated_at
+      |FROM public.issuer_metadata
+      |WHERE id = $issuerId
+      """.stripMargin
+      .query[CredentialIssuer]
+      .option
+
+    cxnIO
+      .transact(xb)
+      .orDie
+  }
 
   override def findWalletIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]] = {
     val cxnIO = sql"""
@@ -59,22 +77,10 @@ class JdbcOIDC4VCIssuerMetadataRepository(xa: Transactor[ContextAwareTask]) exte
       .ensureOneAffectedRowOrDie
   }
 
-  override def deleteCredentialConfiguration(
-      issuerId: UUID,
-      configurationId: String
-  ): URIO[WalletAccessContext, Unit] = ???
-
-  override def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]] = ???
-
   override def updateIssuer(
       issuerId: UUID,
       authorizationServer: Option[URL]
   ): URIO[WalletAccessContext, CredentialIssuer] = ???
-
-  override def createCredentialConfiguration(
-      issuerId: UUID,
-      config: CredentialConfiguration
-  ): URIO[WalletAccessContext, Unit] = ???
 
   override def deleteIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
@@ -87,9 +93,21 @@ class JdbcOIDC4VCIssuerMetadataRepository(xa: Transactor[ContextAwareTask]) exte
       .ensureOneAffectedRowOrDie
   }
 
+  override def findAllCredentialConfigurations(issuerId: UUID): UIO[Seq[CredentialConfiguration]] = ???
+
+  override def createCredentialConfiguration(
+      issuerId: UUID,
+      config: CredentialConfiguration
+  ): URIO[WalletAccessContext, Unit] = ???
+
+  override def deleteCredentialConfiguration(
+      issuerId: UUID,
+      configurationId: String
+  ): URIO[WalletAccessContext, Unit] = ???
+
 }
 
 object JdbcOIDC4VCIssuerMetadataRepository {
-  val layer: URLayer[Transactor[ContextAwareTask], OIDC4VCIssuerMetadataRepository] =
-    ZLayer.fromFunction(new JdbcOIDC4VCIssuerMetadataRepository(_))
+  val layer: URLayer[Transactor[ContextAwareTask] & Transactor[Task], OIDC4VCIssuerMetadataRepository] =
+    ZLayer.fromFunction(new JdbcOIDC4VCIssuerMetadataRepository(_, _))
 }

@@ -88,7 +88,7 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
 
   override def getCredentialIssuer(issuerId: UUID): IO[IssuerIdNotFound, CredentialIssuer] =
     repository
-      .findIssuer(issuerId)
+      .findIssuerById(issuerId)
       .someOrFail(IssuerIdNotFound(issuerId))
 
   override def updateCredentialIssuer(
@@ -139,7 +139,7 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
       issuerId: UUID
   ): IO[IssuerIdNotFound, Seq[CredentialConfiguration]] =
     repository
-      .findIssuer(issuerId)
+      .findIssuerById(issuerId)
       .someOrFail(IssuerIdNotFound(issuerId))
       .flatMap(_ => repository.findAllCredentialConfigurations(issuerId))
 

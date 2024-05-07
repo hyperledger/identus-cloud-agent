@@ -11,7 +11,7 @@ import java.time.Instant
 import java.util.UUID
 
 trait OIDC4VCIssuerMetadataRepository {
-  def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]]
+  def findIssuerById(issuerId: UUID): UIO[Option[CredentialIssuer]]
   def createIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, Unit]
   def findWalletIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]]
   def updateIssuer(issuerId: UUID, authorizationServer: Option[URL] = None): URIO[WalletAccessContext, CredentialIssuer]
@@ -26,7 +26,7 @@ class InMemoryOIDC4VCIssuerMetadataRepository(
     credentialConfigStore: Ref[Map[(WalletId, UUID), Seq[CredentialConfiguration]]]
 ) extends OIDC4VCIssuerMetadataRepository {
 
-  override def findIssuer(issuerId: UUID): UIO[Option[CredentialIssuer]] =
+  override def findIssuerById(issuerId: UUID): UIO[Option[CredentialIssuer]] =
     issuerStore.get.map(m => m.values.flatten.find(_.id == issuerId))
 
   override def createIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, Unit] =
@@ -46,7 +46,7 @@ class InMemoryOIDC4VCIssuerMetadataRepository(
       authorizationServer: Option[URL]
   ): URIO[WalletAccessContext, CredentialIssuer] =
     for {
-      issuer <- findIssuer(issuerId)
+      issuer <- findIssuerById(issuerId)
         .someOrElseZIO(ZIO.dieMessage("Update credential issuer fail. The issuer does not exist"))
       updatedAuthServerIssuer = authorizationServer
         .fold(issuer)(url => issuer.copy(authorizationServer = url))
