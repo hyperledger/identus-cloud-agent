@@ -90,7 +90,7 @@ class UpdateDidSteps {
     @Then("{actor} sees PRISM DID was successfully updated with new keys")
     fun actorSeesDidSuccessfullyUpdatedWithNewKeys(actor: Actor) {
         Wait.until(
-            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!"
+            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!",
         ) {
             actor.attemptsTo(
                 Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
@@ -109,7 +109,7 @@ class UpdateDidSteps {
     @Then("{actor} sees PRISM DID was successfully updated and keys removed")
     fun actorSeesDidSuccessfullyUpdatedAndKeysRemoved(actor: Actor) {
         Wait.until(
-            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!"
+            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!",
         ) {
             actor.attemptsTo(
                 Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
@@ -128,7 +128,7 @@ class UpdateDidSteps {
     @Then("{actor} sees PRISM DID was successfully updated with new services")
     fun actorSeesDidSuccessfullyUpdatedWithNewServices(actor: Actor) {
         Wait.until(
-            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!"
+            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!",
         ) {
             actor.attemptsTo(
                 Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
@@ -144,7 +144,7 @@ class UpdateDidSteps {
     @Then("{actor} sees PRISM DID was successfully updated by removing services")
     fun actorSeesDidSuccessfullyUpdatedByRemovingServices(actor: Actor) {
         Wait.until(
-            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!"
+            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!",
         ) {
             actor.attemptsTo(
                 Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
@@ -160,7 +160,7 @@ class UpdateDidSteps {
     @Then("{actor} sees PRISM DID was successfully updated by updating services")
     fun actorSeesDidSuccessfullyUpdatedByUpdatingServices(actor: Actor) {
         Wait.until(
-            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!"
+            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!",
         ) {
             actor.attemptsTo(
                 Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
