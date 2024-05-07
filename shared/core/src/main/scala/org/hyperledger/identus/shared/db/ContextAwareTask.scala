@@ -44,7 +44,7 @@ object Implicits {
 
   }
 
-  extension [Int](ma: RIO[WalletAccessContext, Int]) {
+  extension (ma: RIO[WalletAccessContext, Int]) {
     def ensureOneAffectedRowOrDie: URIO[WalletAccessContext, Unit] = ma.flatMap {
       case 1     => ZIO.unit
       case count => ZIO.fail(RuntimeException(s"Unexpected affected row count: $count"))
