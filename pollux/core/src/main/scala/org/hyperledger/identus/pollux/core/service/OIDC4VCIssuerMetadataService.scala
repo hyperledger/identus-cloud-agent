@@ -1,6 +1,8 @@
 package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.CredentialSchemaParsingError
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.SchemaError
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.URISyntaxError
 import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialConfiguration
 import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialIssuer
@@ -10,6 +12,7 @@ import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceE
 import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.InvalidSchemaId
 import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.IssuerIdNotFound
 import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.UnsupportedCredentialFormat
+import org.hyperledger.identus.shared.db.Errors.UnexpectedAffectedRow
 import org.hyperledger.identus.shared.models.Failure
 import org.hyperledger.identus.shared.models.StatusCode
 import org.hyperledger.identus.shared.models.WalletAccessContext
@@ -18,7 +21,6 @@ import zio.*
 import java.net.URI
 import java.net.URL
 import java.util.UUID
-import org.hyperledger.identus.shared.db.Errors.UnexpectedAffectedRow
 
 sealed trait OIDC4VCIssuerMetadataServiceError(
     val statusCode: StatusCode,
@@ -123,17 +125,20 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
         case f                    => ZIO.fail(UnsupportedCredentialFormat(f))
       }
       schemaUri <- ZIO.attempt(new URI(schemaId)).mapError(t => InvalidSchemaId(schemaId, t.getMessage))
-      jsonSchema <- CredentialSchema
-        .resolveJWTSchema(schemaUri, uriDereferencer)
+      _ <- CredentialSchema
+        .validSchemaValidator(schemaUri.toString(), uriDereferencer)
         .catchAll {
           case e: URISyntaxError => ZIO.fail(InvalidSchemaId(schemaId, e.message))
-          case e                 => ZIO.dieMessage(s"Unexpected error when resolving schema $schemaId: $e")
+          case _: CredentialSchemaParsingError | _: SchemaError =>
+            ZIO.fail(InvalidSchemaId(schemaId, "The schema URI does not contain a valid schema response"))
+          case e => ZIO.dieMessage(s"Unexpected error when resolving schema $schemaId: $e")
         }
+      now <- ZIO.clockWith(_.instant)
       config = CredentialConfiguration(
         configurationId = configurationId,
         format = CredentialFormat.JWT,
         schemaId = schemaUri,
-        dereferencedSchema = jsonSchema
+        createdAt = now
       )
       _ <- repository.createCredentialConfiguration(issuerId, config)
     } yield config
@@ -145,21 +150,17 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
     repository
       .findIssuerById(issuerId)
       .someOrFail(IssuerIdNotFound(issuerId))
-      .flatMap(_ => repository.findAllCredentialConfigurations(issuerId))
+      .flatMap(_ => repository.findCredentialConfigurationsByIssuer(issuerId))
 
   override def deleteCredentialConfiguration(
       issuerId: UUID,
       configurationId: String
   ): ZIO[WalletAccessContext, IssuerIdNotFound | CredentialConfigurationNotFound, Unit] =
-    for {
-      _ <- getCredentialIssuer(issuerId)
-      configs <- getCredentialConfigurations(issuerId)
-      _ <- ZIO
-        .fail(CredentialConfigurationNotFound(issuerId, configurationId))
-        .unless(configs.map(_.configurationId).contains(configurationId))
-      _ <- repository.deleteCredentialConfiguration(issuerId, configurationId)
-    } yield ()
-
+    repository
+      .deleteCredentialConfiguration(issuerId, configurationId)
+      .catchSomeDefect { case _: UnexpectedAffectedRow =>
+        ZIO.fail(CredentialConfigurationNotFound(issuerId, configurationId))
+      }
 }
 
 object OIDC4VCIssuerMetadataServiceImpl {

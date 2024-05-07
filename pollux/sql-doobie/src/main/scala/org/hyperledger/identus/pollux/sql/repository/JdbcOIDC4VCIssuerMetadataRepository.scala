@@ -112,17 +112,62 @@ class JdbcOIDC4VCIssuerMetadataRepository(xa: Transactor[ContextAwareTask], xb: 
       .ensureOneAffectedRowOrDie
   }
 
-  override def findAllCredentialConfigurations(issuerId: UUID): UIO[Seq[CredentialConfiguration]] = ???
+  override def findCredentialConfigurationsByIssuer(issuerId: UUID): UIO[Seq[CredentialConfiguration]] = {
+    val cxnIO = sql"""
+      |SELECT
+      |  configuration_id,
+      |  format,
+      |  schema_id,
+      |  created_at
+      |FROM public.issuer_credential_configuration
+      |WHERE issuer_id = $issuerId
+      """.stripMargin
+      .query[CredentialConfiguration]
+      .to[Seq]
+
+    cxnIO
+      .transact(xb)
+      .orDie
+  }
 
   override def createCredentialConfiguration(
       issuerId: UUID,
       config: CredentialConfiguration
-  ): URIO[WalletAccessContext, Unit] = ???
+  ): URIO[WalletAccessContext, Unit] = {
+    val cxnIO = sql"""
+        |INSERT INTO public.issuer_credential_configuration (
+        |  configuration_id,
+        |  issuer_id,
+        |  format,
+        |  schema_id,
+        |  created_at
+        |) VALUES (
+        |  ${config.configurationId},
+        |  ${issuerId},
+        |  ${config.format},
+        |  ${config.schemaId},
+        |  ${config.createdAt}
+        |)
+        """.stripMargin.update
+
+    cxnIO.run
+      .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
+  }
 
   override def deleteCredentialConfiguration(
       issuerId: UUID,
       configurationId: String
-  ): URIO[WalletAccessContext, Unit] = ???
+  ): URIO[WalletAccessContext, Unit] = {
+    val cxnIO = sql"""
+        | DELETE FROM public.issuer_credential_configuration
+        | WHERE issuer_id = $issuerId AND configuration_id = $configurationId
+        """.stripMargin.update
+
+    cxnIO.run
+      .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
+  }
 
 }
 

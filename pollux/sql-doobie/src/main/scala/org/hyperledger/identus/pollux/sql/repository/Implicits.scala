@@ -28,3 +28,9 @@ given statusPurposePut: Put[StatusPurpose] = Put[String].contramap {
 
 given urlGet: Get[URL] = Get[String].map(s => URI.create(s).toURL())
 given urlPut: Put[URL] = Put[String].contramap(_.toString())
+
+given uriGet: Get[URI] = Get[String].map(s => URI.create(s))
+given uriPut: Put[URI] = Put[String].contramap(_.toString())
+
+given credFormatGet: Get[CredentialFormat] = Get[String].map(CredentialFormat.valueOf)
+given credFormatPut: Put[CredentialFormat] = Put[String].contramap(_.toString())

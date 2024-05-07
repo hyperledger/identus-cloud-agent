@@ -17,7 +17,7 @@ trait OIDC4VCIssuerMetadataRepository {
   def updateIssuer(issuerId: UUID, authorizationServer: Option[URL] = None): URIO[WalletAccessContext, Unit]
   def deleteIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit]
   def createCredentialConfiguration(issuerId: UUID, config: CredentialConfiguration): URIO[WalletAccessContext, Unit]
-  def findAllCredentialConfigurations(issuerId: UUID): UIO[Seq[CredentialConfiguration]]
+  def findCredentialConfigurationsByIssuer(issuerId: UUID): UIO[Seq[CredentialConfiguration]]
   def deleteCredentialConfiguration(issuerId: UUID, configurationId: String): URIO[WalletAccessContext, Unit]
 }
 
@@ -83,7 +83,7 @@ class InMemoryOIDC4VCIssuerMetadataRepository(
     } yield ()
   }
 
-  override def findAllCredentialConfigurations(
+  override def findCredentialConfigurationsByIssuer(
       issuerId: UUID
   ): UIO[Seq[CredentialConfiguration]] =
     credentialConfigStore.get.map { m =>
