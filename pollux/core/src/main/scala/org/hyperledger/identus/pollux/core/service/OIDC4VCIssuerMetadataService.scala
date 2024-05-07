@@ -71,10 +71,14 @@ trait OIDC4VCIssuerMetadataService {
   def getCredentialConfigurations(
       issuerId: UUID
   ): IO[IssuerIdNotFound, Seq[CredentialConfiguration]]
+  def getCredentialConfigurationById(
+      issuerId: UUID,
+      configurationId: String
+  ): ZIO[WalletAccessContext, CredentialConfigurationNotFound, CredentialConfiguration]
   def deleteCredentialConfiguration(
       issuerId: UUID,
       configurationId: String,
-  ): ZIO[WalletAccessContext, IssuerIdNotFound | CredentialConfigurationNotFound, Unit]
+  ): ZIO[WalletAccessContext, CredentialConfigurationNotFound, Unit]
 }
 
 class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataRepository, uriDereferencer: URIDereferencer)
@@ -152,10 +156,18 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
       .someOrFail(IssuerIdNotFound(issuerId))
       .flatMap(_ => repository.findCredentialConfigurationsByIssuer(issuerId))
 
+  override def getCredentialConfigurationById(
+      issuerId: UUID,
+      configurationId: String
+  ): ZIO[WalletAccessContext, CredentialConfigurationNotFound, CredentialConfiguration] =
+    repository
+      .findCredentialConfigurationById(issuerId, configurationId)
+      .someOrFail(CredentialConfigurationNotFound(issuerId, configurationId))
+
   override def deleteCredentialConfiguration(
       issuerId: UUID,
       configurationId: String
-  ): ZIO[WalletAccessContext, IssuerIdNotFound | CredentialConfigurationNotFound, Unit] =
+  ): ZIO[WalletAccessContext, CredentialConfigurationNotFound, Unit] =
     repository
       .deleteCredentialConfiguration(issuerId, configurationId)
       .catchSomeDefect { case _: UnexpectedAffectedRow =>

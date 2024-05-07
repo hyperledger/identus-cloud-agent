@@ -197,6 +197,22 @@ object CredentialIssuerEndpoints {
     .name("createCredentialConfiguration")
     .summary("Create a new  credential configuration")
 
+  val getCredentialConfigurationEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, UUID, String),
+    ErrorResponse,
+    CredentialConfiguration,
+    Any
+  ] = baseIssuerPrivateEndpoint.get
+    .in(issuerIdPathSegment / "credential-configurations" / credentialConfigIdSegment)
+    .out(
+      statusCode(StatusCode.Ok).description("Get credential configuration successfully")
+    )
+    .out(jsonBody[CredentialConfiguration])
+    .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
+    .name("getCredentialConfiguration")
+    .summary("Get the credential configuration")
+
   val deleteCredentialConfigurationEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID, String),

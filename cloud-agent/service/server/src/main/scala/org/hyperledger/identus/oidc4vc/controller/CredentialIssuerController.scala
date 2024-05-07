@@ -64,6 +64,12 @@ trait CredentialIssuerController {
       request: CreateCredentialConfigurationRequest
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialConfiguration]
 
+  def getCredentialConfiguration(
+      ctx: RequestContext,
+      issuerId: UUID,
+      configurationId: String
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialConfiguration]
+
   def deleteCredentialConfiguration(
       ctx: RequestContext,
       issuerId: UUID,
@@ -296,6 +302,15 @@ case class CredentialIssuerControllerImpl(
     } yield credentialConfiguration: CredentialConfiguration
   }
 
+  override def getCredentialConfiguration(
+      ctx: RequestContext,
+      issuerId: UUID,
+      configurationId: String
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialConfiguration] =
+    for {
+      credentialConfiguration <- issuerMetadataService.getCredentialConfigurationById(issuerId, configurationId)
+    } yield credentialConfiguration: CredentialConfiguration
+
   override def deleteCredentialConfiguration(
       ctx: RequestContext,
       issuerId: UUID,
@@ -304,10 +319,10 @@ case class CredentialIssuerControllerImpl(
     issuerMetadataService.deleteCredentialConfiguration(issuerId, configurationId)
 
   override def getIssuerMetadata(ctx: RequestContext, issuerId: UUID): IO[ErrorResponse, IssuerMetadata] = {
-    for
+    for {
       credentialIssuer <- issuerMetadataService.getCredentialIssuer(issuerId)
       credentialConfigurations <- issuerMetadataService.getCredentialConfigurations(issuerId)
-    yield IssuerMetadata.fromIssuer(agentBaseUrl, credentialIssuer, credentialConfigurations)
+    } yield IssuerMetadata.fromIssuer(agentBaseUrl, credentialIssuer, credentialConfigurations)
   }
 }
 

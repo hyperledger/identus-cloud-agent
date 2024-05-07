@@ -117,6 +117,18 @@ case class CredentialIssuerServerEndpoints(
         }
       }
 
+  val getCredentialConfigurationServerEndpoint: ZServerEndpoint[Any, Any] =
+    CredentialIssuerEndpoints.getCredentialConfigurationEndpoint
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
+        { case (rc, issuerId, configurationId) =>
+          credentialIssuerController
+            .getCredentialConfiguration(rc, issuerId, configurationId)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(rc)
+        }
+      }
+
   val deleteCredentialConfigurationServerEndpoint: ZServerEndpoint[Any, Any] =
     CredentialIssuerEndpoints.deleteCredentialConfigurationEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
@@ -143,6 +155,7 @@ case class CredentialIssuerServerEndpoints(
     updateCredentialIssuerServerEndpoint,
     deleteCredentialIssuerServerEndpoint,
     createCredentialConfigurationServerEndpoint,
+    getCredentialConfigurationServerEndpoint,
     deleteCredentialConfigurationServerEndpoint,
     issuerMetadataServerEndpoint
   )
