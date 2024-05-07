@@ -37,7 +37,7 @@ object CredentialIssuerEndpoints {
 
   private val credentialConfigurationIdSegment = path[String]("credentialConfigurationId")
     .description("An identifier for the credential configuration")
-    .example("credentialConfigurationId")
+    .example("configurationId")
 
   private val baseEndpoint = endpoint
     .tag(tagName)

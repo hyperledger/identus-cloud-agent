@@ -23,7 +23,9 @@ final case class CredentialConfiguration(
     scope: String,
     credential_definition: CredentialDefinition,
     cryptographic_binding_methods_supported: Seq[String] = Seq("did:prism"),
-    credential_signing_alg_values_supported: Seq[String] = Seq("ES256K")
+    credential_signing_alg_values_supported: Seq[String] = Seq("ES256K"),
+    proof_types_supported: SupportProofType =
+      SupportProofType(jwt = ProofTypeConfiguration(proof_signing_alg_values_supported = Seq("ES256K")))
 )
 
 object CredentialConfiguration {
@@ -41,4 +43,20 @@ object CredentialConfiguration {
         credentialSubject = None
       )
     )
+}
+
+final case class SupportProofType(jwt: ProofTypeConfiguration)
+
+object SupportProofType {
+  given schema: Schema[SupportProofType] = Schema.derived
+  given encoder: JsonEncoder[SupportProofType] = DeriveJsonEncoder.gen
+  given decoder: JsonDecoder[SupportProofType] = DeriveJsonDecoder.gen
+}
+
+final case class ProofTypeConfiguration(proof_signing_alg_values_supported: Seq[String])
+
+object ProofTypeConfiguration {
+  given schema: Schema[ProofTypeConfiguration] = Schema.derived
+  given encoder: JsonEncoder[ProofTypeConfiguration] = DeriveJsonEncoder.gen
+  given decoder: JsonDecoder[ProofTypeConfiguration] = DeriveJsonDecoder.gen
 }
