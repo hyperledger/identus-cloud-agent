@@ -2,7 +2,10 @@ package org.hyperledger.identus.agent.server.http
 
 import org.hyperledger.identus.castor.controller.{DIDEndpoints, DIDRegistrarEndpoints}
 import org.hyperledger.identus.connect.controller.ConnectionEndpoints
+import org.hyperledger.identus.event.controller.EventEndpoints
+import org.hyperledger.identus.iam.entity.http.EntityEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementEndpoints
+import org.hyperledger.identus.issue.controller.IssueEndpoints
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryEndpoints
 import org.hyperledger.identus.pollux.credentialschema.{SchemaRegistryEndpoints, VerificationPolicyEndpoints}
 import org.hyperledger.identus.system.controller.SystemEndpoints
@@ -11,7 +14,6 @@ import sttp.apispec.{SecurityScheme, Tag}
 import sttp.model.headers.AuthenticationScheme
 
 import scala.collection.immutable.ListMap
-import org.hyperledger.identus.issue.controller.IssueEndpoints
 
 object DocModels {
 
@@ -115,7 +117,9 @@ object DocModels {
           DIDEndpoints.tag,
           DIDRegistrarEndpoints.tag,
           WalletManagementEndpoints.tag,
-          SystemEndpoints.tag
+          SystemEndpoints.tag,
+          EventEndpoints.tag,
+          EntityEndpoints.tag
         )
       )
 

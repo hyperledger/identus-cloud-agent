@@ -5,7 +5,7 @@ import org.hyperledger.identus.agent.walletapi.model.Wallet
 import org.hyperledger.identus.agent.walletapi.service.{EntityService, WalletManagementService}
 import org.hyperledger.identus.iam.authentication.AuthenticationError
 import org.hyperledger.identus.iam.authentication.AuthenticationError.*
-import io.iohk.atala.prism.crypto.Sha256
+import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.models.WalletAdministrationContext
 import org.hyperledger.identus.shared.models.WalletId
 import zio.{IO, URLayer, ZIO, ZLayer}
@@ -73,7 +73,7 @@ case class ApiKeyAuthenticatorImpl(
     for {
       saltAndApiKey <- ZIO.succeed(apiKeyConfig.salt + apiKey)
       secret <- ZIO
-        .fromTry(Try(Sha256.compute(saltAndApiKey.getBytes).getHexValue))
+        .fromTry(Try(Sha256Hash.compute(saltAndApiKey.getBytes).hexEncoded))
         .logError("Failed to compute SHA256 hash")
         .mapError(cause => AuthenticationRepositoryError.UnexpectedError(cause))
       entityId <- repository
@@ -88,7 +88,7 @@ case class ApiKeyAuthenticatorImpl(
     for {
       saltAndApiKey <- ZIO.succeed(apiKeyConfig.salt + apiKey)
       secret <- ZIO
-        .fromTry(Try(Sha256.compute(saltAndApiKey.getBytes).getHexValue))
+        .fromTry(Try(Sha256Hash.compute(saltAndApiKey.getBytes).hexEncoded))
         .logError("Failed to compute SHA256 hash")
         .mapError(cause => AuthenticationError.UnexpectedError(cause.getMessage))
       _ <- repository
@@ -102,7 +102,7 @@ case class ApiKeyAuthenticatorImpl(
     for {
       saltAndApiKey <- ZIO.succeed(apiKeyConfig.salt + apiKey)
       secret <- ZIO
-        .fromTry(Try(Sha256.compute(saltAndApiKey.getBytes).getHexValue))
+        .fromTry(Try(Sha256Hash.compute(saltAndApiKey.getBytes).hexEncoded))
         .logError("Failed to compute SHA256 hash")
         .mapError(cause => AuthenticationError.UnexpectedError(cause.getMessage))
       _ <- repository

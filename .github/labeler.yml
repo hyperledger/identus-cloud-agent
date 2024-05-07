@@ -15,10 +15,10 @@ pollux:
   - changed-files:
       - any-glob-to-any-file:
           - pollux/**/*
-prism-agent:
+cloud-agent:
   - changed-files:
       - any-glob-to-any-file:
-          - prism-agent/**/*
+          - cloud-agent/**/*
 prism-node:
   - changed-files:
       - any-glob-to-any-file:

@@ -8,6 +8,7 @@ import org.hyperledger.identus.iam.authentication.admin.AdminApiKeySecurityLogic
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import org.hyperledger.identus.iam.entity.http.model.*
+import sttp.apispec.Tag
 import sttp.model.StatusCode
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.{Endpoint, EndpointInput, endpoint, extractFromRequest, path, query, statusCode, stringToPath}
@@ -15,6 +16,24 @@ import sttp.tapir.{Endpoint, EndpointInput, endpoint, extractFromRequest, path, 
 import java.util.UUID
 
 object EntityEndpoints {
+
+  private val tagName = "Identity and Access Management"
+  private val tagDescription =
+    s"""
+       |The __${tagName}__ endpoints allow [agent administrators](https://docs.atalaprism.io/docs/concepts/glossary#administrator)
+       |to manage identity and access management for the agent's tenants.
+       |It provides basic built-in IAM capabilities as an alternative to more feature rich external IAM solutions.
+       |
+       |Entities are resources that represent individual tenants and
+       |wallets act as containers for Self-Sovereign Identity (SSI) resources within the agent.
+       |The administrator can grant tenant access to specific wallets by associating the wallet ID with the Entity.
+       |Additionally, the administrator can create API keys for entities and provide them to the tenants out-of-band.
+       |These API keys can then be used for authorization to access specific wallets.
+       |
+       |For more detailed information related to the agent IAM and its usage, please refer to this [documentation](https://docs.atalaprism.io/docs/atala-prism/prism-cloud-agent/authentication).
+       |""".stripMargin
+
+  val tag = Tag(tagName, Some(tagDescription))
 
   val createEntityEndpoint: Endpoint[
     (AdminApiKeyCredentials, JwtCredentials),
@@ -48,7 +67,7 @@ object EntityEndpoints {
       .description(
         "Create the new entity record. The entity record is a representation of the account in the system."
       )
-      .tag("Identity and Access Management")
+      .tag(tagName)
 
   val updateEntityNameEndpoint: Endpoint[
     (AdminApiKeyCredentials, JwtCredentials),
@@ -84,7 +103,7 @@ object EntityEndpoints {
       .description(
         "Update the entity record name by `id`"
       )
-      .tag("Identity and Access Management")
+      .tag(tagName)
 
   val updateEntityWalletIdEndpoint: Endpoint[
     (AdminApiKeyCredentials, JwtCredentials),
@@ -120,7 +139,7 @@ object EntityEndpoints {
       .description(
         "Update the entity record `walletId` field by `id`"
       )
-      .tag("Identity and Access Management")
+      .tag(tagName)
 
   val getEntityByIdEndpoint: Endpoint[
     (AdminApiKeyCredentials, JwtCredentials),
@@ -145,15 +164,12 @@ object EntityEndpoints {
       .description(
         "Get the entity by the unique identifier"
       )
-      .tag("Identity and Access Management")
+      .tag(tagName)
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
   val getEntitiesEndpoint: Endpoint[
     (AdminApiKeyCredentials, JwtCredentials),
-    (
-        RequestContext,
-        PaginationInput
-    ),
+    (RequestContext, PaginationInput),
     ErrorResponse,
     EntityResponsePage,
     Any
@@ -171,7 +187,7 @@ object EntityEndpoints {
       .description(
         "Get all entities with the pagination by `offset` and `limit` parameters "
       )
-      .tag("Identity and Access Management")
+      .tag(tagName)
 
   val deleteEntityByIdEndpoint: Endpoint[
     (AdminApiKeyCredentials, JwtCredentials),
@@ -198,7 +214,7 @@ object EntityEndpoints {
       .description(
         "Delete the entity by the unique identifier"
       )
-      .tag("Identity and Access Management")
+      .tag(tagName)
 
   val addEntityApiKeyAuthenticationEndpoint: Endpoint[
     (AdminApiKeyCredentials, JwtCredentials),
@@ -229,7 +245,7 @@ object EntityEndpoints {
     .description(
       "Register the `apikey` for the entity."
     )
-    .tag("Identity and Access Management")
+    .tag(tagName)
 
   val deleteEntityApiKeyAuthenticationEndpoint: Endpoint[
     (AdminApiKeyCredentials, JwtCredentials),
@@ -260,5 +276,5 @@ object EntityEndpoints {
     .description(
       "Unregister the `apikey` for the entity."
     )
-    .tag("Identity and Access Management")
+    .tag(tagName)
 }

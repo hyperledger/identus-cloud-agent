@@ -5,19 +5,33 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.time.OffsetDateTime
 
-sealed trait VcVerificationParameter
+sealed trait VcVerificationParameter(val parameterType: String)
 
 object VcVerificationParameter {
-  given encoder: JsonEncoder[VcVerificationParameter] =
-    DeriveJsonEncoder.gen[VcVerificationParameter]
+  given encoder: JsonEncoder[VcVerificationParameter] = DidParameter.encoder
+    .orElseEither(DateTimeParameter.encoder)
+    .contramap[VcVerificationParameter] {
+      case did: DidParameter           => Left(did)
+      case dateTime: DateTimeParameter => Right(dateTime)
+    }
 
-  given decoder: JsonDecoder[VcVerificationParameter] =
-    DeriveJsonDecoder.gen[VcVerificationParameter]
+  given decoder: JsonDecoder[VcVerificationParameter] = DidParameter.decoder
+    .orElseEither(DateTimeParameter.decoder)
+    .map[VcVerificationParameter] {
+      case Left(did)       => did
+      case Right(dateTime) => dateTime
+    }
 
-  given schema: Schema[VcVerificationParameter] = Schema.derived
+  given schema: Schema[VcVerificationParameter] =
+    Schema
+      .oneOfUsingField[VcVerificationParameter, String](a => a.parameterType, t => t)(
+        ("DidParameter", DidParameter.schema),
+        ("DateTimeParameter", DateTimeParameter.schema)
+      )
+
 }
 
-case class DidParameter(aud: String) extends VcVerificationParameter
+case class DidParameter(did: String) extends VcVerificationParameter("DidParameter")
 
 object DidParameter {
   given encoder: JsonEncoder[DidParameter] =
@@ -29,7 +43,7 @@ object DidParameter {
   given schema: Schema[DidParameter] = Schema.derived
 }
 
-case class DateTimeParameter(dateTime: OffsetDateTime) extends VcVerificationParameter
+case class DateTimeParameter(dateTime: OffsetDateTime) extends VcVerificationParameter("DateTimeParameter")
 
 object DateTimeParameter {
   given encoder: JsonEncoder[DateTimeParameter] =

@@ -4,7 +4,7 @@ import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.pollux.core.service
 import org.hyperledger.identus.pollux.core.service.verification.VcVerification as ServiceVcVerification
 import sttp.tapir.Schema
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import zio.json.{JsonDecoder, JsonEncoder}
 import zio.{IO, *}
 
 enum VcVerification {
@@ -23,11 +23,12 @@ enum VcVerification {
 }
 
 object VcVerification {
-  given encoder: JsonEncoder[VcVerification] =
-    DeriveJsonEncoder.gen[VcVerification]
+  given encoder: JsonEncoder[VcVerification] = JsonEncoder[String].contramap(_.toString)
 
   given decoder: JsonDecoder[VcVerification] =
-    DeriveJsonDecoder.gen[VcVerification]
+    JsonDecoder[String].mapOrFail(s =>
+      VcVerification.values.find(_.toString == s).toRight(s"Unknown VcVerification: $s")
+    )
 
   given schema: Schema[VcVerification] = Schema.derivedEnumeration.defaultStringBased
 
