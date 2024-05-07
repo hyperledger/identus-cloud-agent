@@ -35,7 +35,7 @@ object CredentialIssuerEndpoints {
     .description("An issuer identifier in the oidc4vc protocol")
     .example(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))
 
-  private val credentialConfigurationIdSegment = path[String]("credentialConfigurationId")
+  private val credentialConfigIdSegment = path[String]("configurationId")
     .description("An identifier for the credential configuration")
     .example("configurationId")
 
@@ -204,7 +204,7 @@ object CredentialIssuerEndpoints {
     Unit,
     Any
   ] = baseIssuerPrivateEndpoint.delete
-    .in(issuerIdPathSegment / "credential-configurations" / credentialConfigurationIdSegment)
+    .in(issuerIdPathSegment / "credential-configurations" / credentialConfigIdSegment)
     .out(
       statusCode(StatusCode.Ok).description("Credential configuration deleted successfully")
     )

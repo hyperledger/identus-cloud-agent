@@ -4,6 +4,8 @@ import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialConfiguration
 import sttp.tapir.Schema
 import zio.json.*
 
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import scala.language.implicitConversions
 
 final case class CreateCredentialConfigurationRequest(
@@ -19,13 +21,11 @@ object CreateCredentialConfigurationRequest {
 }
 
 final case class CredentialConfiguration(
+    configurationId: String,
     format: CredentialFormat,
     scope: String,
-    credential_definition: CredentialDefinition,
-    cryptographic_binding_methods_supported: Seq[String] = Seq("did:prism"),
-    credential_signing_alg_values_supported: Seq[String] = Seq("ES256K"),
-    proof_types_supported: SupportProofType =
-      SupportProofType(jwt = ProofTypeConfiguration(proof_signing_alg_values_supported = Seq("ES256K")))
+    schemaId: String,
+    createdAt: OffsetDateTime
 )
 
 object CredentialConfiguration {
@@ -35,28 +35,10 @@ object CredentialConfiguration {
 
   given Conversion[PolluxCredentialConfiguration, CredentialConfiguration] = cc =>
     CredentialConfiguration(
+      configurationId = cc.configurationId,
       format = cc.format,
       scope = cc.scope,
-      credential_definition = CredentialDefinition(
-        `@context` = Some(Seq("https://www.w3.org/2018/credentials/v1")),
-        `type` = Seq("VerifiableCredential"),
-        credentialSubject = None
-      )
+      schemaId = cc.schemaId.toString(),
+      createdAt = cc.createdAt.atOffset(ZoneOffset.UTC),
     )
-}
-
-final case class SupportProofType(jwt: ProofTypeConfiguration)
-
-object SupportProofType {
-  given schema: Schema[SupportProofType] = Schema.derived
-  given encoder: JsonEncoder[SupportProofType] = DeriveJsonEncoder.gen
-  given decoder: JsonDecoder[SupportProofType] = DeriveJsonDecoder.gen
-}
-
-final case class ProofTypeConfiguration(proof_signing_alg_values_supported: Seq[String])
-
-object ProofTypeConfiguration {
-  given schema: Schema[ProofTypeConfiguration] = Schema.derived
-  given encoder: JsonEncoder[ProofTypeConfiguration] = DeriveJsonEncoder.gen
-  given decoder: JsonDecoder[ProofTypeConfiguration] = DeriveJsonDecoder.gen
 }
