@@ -14,6 +14,7 @@ import zio.*
 import zio.interop.catz.*
 
 import java.net.URL
+import java.time.Instant
 import java.util.UUID
 
 // TODO: implement all members
@@ -80,7 +81,25 @@ class JdbcOIDC4VCIssuerMetadataRepository(xa: Transactor[ContextAwareTask], xb: 
   override def updateIssuer(
       issuerId: UUID,
       authorizationServer: Option[URL]
-  ): URIO[WalletAccessContext, CredentialIssuer] = ???
+  ): URIO[WalletAccessContext, Unit] = {
+    val setFr = (now: Instant) =>
+      Fragments.setOpt(
+        Some(fr"updated_at = $now"),
+        authorizationServer.map(url => fr"authorization_server = $url")
+      )
+    val cxnIO = (setFr: Fragment) => sql"""
+        |UPDATE public.issuer_metadata
+        |$setFr
+        |WHERE id = $issuerId
+        """.stripMargin.update
+
+    for {
+      now <- ZIO.clockWith(_.instant)
+      _ <- cxnIO(setFr(now)).run
+        .transactWallet(xa)
+        .ensureOneAffectedRowOrDie
+    } yield ()
+  }
 
   override def deleteIssuer(issuerId: UUID): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""

@@ -96,8 +96,12 @@ class OIDC4VCIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
       authorizationServer: Option[URL]
   ): ZIO[WalletAccessContext, IssuerIdNotFound, CredentialIssuer] =
     for {
-      _ <- getCredentialIssuer(issuerId)
-      updatedIssuer <- repository.updateIssuer(issuerId, authorizationServer = authorizationServer)
+      _ <- repository
+        .updateIssuer(issuerId, authorizationServer = authorizationServer)
+        .catchSomeDefect { case _: UnexpectedAffectedRow =>
+          ZIO.fail(IssuerIdNotFound(issuerId))
+        }
+      updatedIssuer <- getCredentialIssuer(issuerId)
     } yield updatedIssuer
 
   override def deleteCredentialIssuer(issuerId: UUID): ZIO[WalletAccessContext, IssuerIdNotFound, Unit] =
