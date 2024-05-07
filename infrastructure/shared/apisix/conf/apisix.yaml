@@ -10,11 +10,23 @@ routes:
         allow_origins: "*"
       proxy-rewrite:
         regex_uri: ["^/prism-agent/(.*)", "/$1"]
+  - uri: /cloud-agent/*
+    upstream_id: 4
+    plugins:
+      cors:
+        allow_origins: "*"
+      proxy-rewrite:
+        regex_uri: ["^/cloud-agent/(.*)", "/$1"]
   - uri: /docs/prism-agent/api/*
     upstream_id: 4
     plugins:
       proxy-rewrite:
         regex_uri: ["^/docs/prism-agent/api/(.*)", "/docs/$1"]
+  - uri: /docs/cloud-agent/api/*
+    upstream_id: 4
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/docs/cloud-agent/api/(.*)", "/docs/$1"]
   - uri: /didcomm*
     upstream_id: 3
     plugins:

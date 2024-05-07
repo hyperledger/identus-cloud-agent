@@ -16,11 +16,11 @@ echo "--------------------------------------"
 PORT=${PORT} docker compose -f ${SCRIPT_DIR}/docker-compose.yml \
 	--env-file ${ENV_FILE} up -d --wait
 
-export ISSUER_AGENT_URL=http://localhost:${PORT}/issuer/prism-agent
+export ISSUER_AGENT_URL=http://localhost:${PORT}/issuer/cloud-agent
 export ISSUER_AGENT_API_KEY=default
-export HOLDER_AGENT_URL=http://localhost:${PORT}/holder/prism-agent
+export HOLDER_AGENT_URL=http://localhost:${PORT}/holder/cloud-agent
 export HOLDER_AGENT_API_KEY=default
-export VERIFIER_AGENT_URL=http://localhost:${PORT}/verifier/prism-agent
+export VERIFIER_AGENT_URL=http://localhost:${PORT}/verifier/cloud-agent
 export VERIFIER_AGENT_API_KEY=default
 
 echo "--------------------------------------"

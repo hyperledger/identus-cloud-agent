@@ -69,7 +69,7 @@ services:
       timeout: 5s
       retries: 5
 
-  prism-agent:
+  cloud-agent:
     image: ghcr.io/hyperledger/identus-cloud-agent:${AGENT_VERSION}
     environment:
       POLLUX_DB_HOST: db
@@ -110,7 +110,7 @@ services:
       KEYCLOAK_ENABLED: true
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REALM: atala-demo
-      KEYCLOAK_CLIENT_ID: prism-agent
+      KEYCLOAK_CLIENT_ID: prism-agent # TODO: Fix this later
       KEYCLOAK_CLIENT_SECRET: prism-agent-demo-secret
       KEYCLOAK_UMA_AUTO_UPGRADE_RPT: true
     depends_on:
@@ -121,7 +121,7 @@ services:
       vault-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://prism-agent:8085/_system/health"]
+      test: ["CMD", "curl", "-f", "http://cloud-agent:8085/_system/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -132,7 +132,7 @@ services:
     image: swaggerapi/swagger-ui:v5.1.0
     environment:
       - 'URLS=[
-        { name: "Prism Agent", url: "/docs/prism-agent/api/docs.yaml" }
+        { name: "Cloud Agent", url: "/docs/cloud-agent/api/docs.yaml" }
         ]'
 
   apisix:
@@ -143,7 +143,7 @@ services:
     ports:
       - "${PORT}:9080/tcp"
     depends_on:
-      - prism-agent
+      - cloud-agent
       - swagger-ui
 
   keycloak:

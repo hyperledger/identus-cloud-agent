@@ -27,6 +27,6 @@ echo "Run e2e tests"
 echo "--------------------------------------"
 
 (
-	cd ${SCRIPT_DIR}/../../tests/e2e-tests/
+	cd ${SCRIPT_DIR}/../../tests/integration-tests/
 	./gradlew test reports
 )
