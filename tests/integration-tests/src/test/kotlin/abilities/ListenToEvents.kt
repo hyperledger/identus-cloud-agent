@@ -23,9 +23,7 @@ open class ListenToEvents(
 ) : Ability, HasTeardown {
 
     private val server: ApplicationEngine
-    private val gson = GsonBuilder()
-        .registerTypeAdapter(OffsetDateTime::class.java, CustomGsonObjectMapperFactory.OffsetDateTimeDeserializer())
-        .create()
+    private val gson = GsonBuilder().registerTypeAdapter(OffsetDateTime::class.java, CustomGsonObjectMapperFactory.OffsetDateTimeTypeAdapter()).create()
 
     var connectionEvents: MutableList<ConnectionEvent> = mutableListOf()
     var credentialEvents: MutableList<CredentialEvent> = mutableListOf()

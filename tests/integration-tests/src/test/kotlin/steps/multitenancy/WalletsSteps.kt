@@ -8,12 +8,12 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import org.hyperledger.identus.client.models.CreateWalletRequest
-import org.hyperledger.identus.client.models.WalletDetail
-import org.hyperledger.identus.client.models.WalletDetailPage
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus.*
+import org.hyperledger.identus.client.models.CreateWalletRequest
+import org.hyperledger.identus.client.models.WalletDetail
+import org.hyperledger.identus.client.models.WalletDetailPage
 import java.util.*
 import kotlin.random.Random
 
