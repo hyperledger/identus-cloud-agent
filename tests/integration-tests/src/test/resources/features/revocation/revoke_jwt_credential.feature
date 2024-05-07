@@ -1,4 +1,4 @@
-@revocation @jwt
+@revocation @jwt @xubis
 Feature: Credential revocation - JWT
 
   Background:
@@ -18,3 +18,4 @@ Feature: Credential revocation - JWT
     And Holder receives the request
     And Holder makes the presentation of the proof to Issuer
     Then Issuer has the proof verified
+    And Issuer should see the credential is not revoked

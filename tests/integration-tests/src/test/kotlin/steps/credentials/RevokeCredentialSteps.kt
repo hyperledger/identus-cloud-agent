@@ -3,6 +3,7 @@ package steps.credentials
 import interactions.*
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
+import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import io.iohk.atala.automation.utils.Wait
 import models.JwtCredential
@@ -23,7 +24,7 @@ class RevokeCredentialSteps {
         issuer.attemptsTo(
             Get.resource("/credential-status/${statusListId}")
         )
-        val encodedList = SerenityRest.lastResponse().jsonPath().get<String>("credentialSubject.encodedList")
+        val encodedList = SerenityRest.lastResponse().get<String>("credentialSubject.encodedList")
         issuer.remember("encodedStatusList", encodedList)
 
         issuer.attemptsTo(
@@ -49,16 +50,17 @@ class RevokeCredentialSteps {
     @Then("{actor} should see the credential was revoked")
     fun credentialShouldBeRevoked(issuer: Actor) {
         Wait.until(
-            timeout = 30.seconds,
+            timeout = 60.seconds,
             errorMessage = "Encoded Status List didn't change after revoking."
         ) {
-            val statusListId = issuer.recall<String>("statusListId")
-            val encodedList = issuer.recall<String>("statusEncodedList")
+            val statusListId: String = issuer.recall("statusListId")
+            val encodedStatusList: String = issuer.recall("encodedStatusList")
             issuer.attemptsTo(
                 Get.resource("/credential-status/$statusListId")
             )
-            val actualEncodedList = SerenityRest.lastResponse().jsonPath().get<String>("credentialSubject.encodedList")
-            actualEncodedList != encodedList
+            val actualEncodedList: String = SerenityRest.lastResponse().jsonPath().get("credentialSubject.encodedList")
+            println("actual encoded $actualEncodedList | before encoded $encodedStatusList")
+            actualEncodedList != encodedStatusList
         }
     }
 

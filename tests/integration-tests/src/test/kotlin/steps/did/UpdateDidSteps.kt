@@ -1,24 +1,17 @@
 package steps.did
 
 import common.TestConstants
-import common.Utils.wait
 import interactions.Get
 import interactions.Post
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
+import io.iohk.atala.automation.utils.Wait
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
-import org.hyperledger.identus.client.models.ActionType
-import org.hyperledger.identus.client.models.DIDOperationResponse
-import org.hyperledger.identus.client.models.DIDResolutionResult
-import org.hyperledger.identus.client.models.Json
-import org.hyperledger.identus.client.models.RemoveEntryById
-import org.hyperledger.identus.client.models.UpdateManagedDIDRequest
-import org.hyperledger.identus.client.models.UpdateManagedDIDRequestAction
-import org.hyperledger.identus.client.models.UpdateManagedDIDServiceAction
+import org.hyperledger.identus.client.models.*
 
 class UpdateDidSteps {
 
@@ -92,94 +85,84 @@ class UpdateDidSteps {
 
     @Then("{actor} sees PRISM DID was successfully updated with new keys")
     fun actorSeesDidSuccessfullyUpdatedWithNewKeys(actor: Actor) {
-        wait(
-            {
-                actor.attemptsTo(
-                    Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
-                )
-                val authUris = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.authentication!!
-                val verificationMethods = SerenityRest.lastResponse()
-                    .get<DIDResolutionResult>().didDocument!!.verificationMethod!!.map { it.id }
-                authUris.any {
-                    it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_UPDATE_NEW_AUTH_KEY.id}"
-                } && verificationMethods.any {
-                    it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_AUTH_KEY.id}"
-                }
-            },
-            "ERROR: DID UPDATE operation did not succeed on the ledger!",
-            timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,
-        )
+        Wait.until(
+            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!"
+        ) {
+            actor.attemptsTo(
+                Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
+            )
+            val authUris = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.authentication!!
+            val verificationMethods = SerenityRest.lastResponse()
+                .get<DIDResolutionResult>().didDocument!!.verificationMethod!!.map { it.id }
+            authUris.any {
+                it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_UPDATE_NEW_AUTH_KEY.id}"
+            } && verificationMethods.any {
+                it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_AUTH_KEY.id}"
+            }
+        }
     }
 
     @Then("{actor} sees PRISM DID was successfully updated and keys removed")
     fun actorSeesDidSuccessfullyUpdatedAndKeysRemoved(actor: Actor) {
-        wait(
-            {
-                actor.attemptsTo(
-                    Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
-                )
-                val authUris = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.authentication!!
-                val verificationMethods = SerenityRest.lastResponse()
-                    .get<DIDResolutionResult>().didDocument!!.verificationMethod!!.map { it.id }
-                authUris.none {
-                    it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_AUTH_KEY.id}"
-                } && verificationMethods.none {
-                    it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_AUTH_KEY.id}"
-                }
-            },
-            "ERROR: DID UPDATE operation did not succeed on the ledger!",
-            timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,
-        )
+        Wait.until(
+            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!"
+        ) {
+            actor.attemptsTo(
+                Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
+            )
+            val authUris = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.authentication!!
+            val verificationMethods = SerenityRest.lastResponse()
+                .get<DIDResolutionResult>().didDocument!!.verificationMethod!!.map { it.id }
+            authUris.none {
+                it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_AUTH_KEY.id}"
+            } && verificationMethods.none {
+                it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_AUTH_KEY.id}"
+            }
+        }
     }
 
     @Then("{actor} sees PRISM DID was successfully updated with new services")
     fun actorSeesDidSuccessfullyUpdatedWithNewServices(actor: Actor) {
-        wait(
-            {
-                actor.attemptsTo(
-                    Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
-                )
-                val serviceIds =
-                    SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.service!!.map { it.id }
-                serviceIds.any {
-                    it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_UPDATE_NEW_SERVICE.id}"
-                }
-            },
-            "ERROR: DID UPDATE operation did not succeed on the ledger!",
-            timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,
-        )
+        Wait.until(
+            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!"
+        ) {
+            actor.attemptsTo(
+                Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
+            )
+            val serviceIds =
+                SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.service!!.map { it.id }
+            serviceIds.any {
+                it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_UPDATE_NEW_SERVICE.id}"
+            }
+        }
     }
 
     @Then("{actor} sees PRISM DID was successfully updated by removing services")
     fun actorSeesDidSuccessfullyUpdatedByRemovingServices(actor: Actor) {
-        wait(
-            {
-                actor.attemptsTo(
-                    Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
-                )
-                val serviceIds =
-                    SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.service!!.map { it.id }
-                serviceIds.none {
-                    it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_UPDATE_NEW_SERVICE.id}"
-                }
-            },
-            "ERROR: DID UPDATE operation did not succeed on the ledger!",
-            timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,
-        )
+        Wait.until(
+            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!"
+        ) {
+            actor.attemptsTo(
+                Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
+            )
+            val serviceIds =
+                SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.service!!.map { it.id }
+            serviceIds.none {
+                it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_UPDATE_NEW_SERVICE.id}"
+            }
+        }
     }
 
     @Then("{actor} sees PRISM DID was successfully updated by updating services")
     fun actorSeesDidSuccessfullyUpdatedByUpdatingServices(actor: Actor) {
-        wait(
-            {
-                actor.attemptsTo(
-                    Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
-                )
-                val service = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.service!!
-                service.any { it.serviceEndpoint.value.contains(TestConstants.PRISM_DID_UPDATE_NEW_SERVICE_URL) }
-            },
-            "ERROR: DID UPDATE operation did not succeed on the ledger!",
-            timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,
-        )
+        Wait.until(
+            errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!"
+        ) {
+            actor.attemptsTo(
+                Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
+            )
+            val service = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.service!!
+            service.any { it.serviceEndpoint.value.contains(TestConstants.PRISM_DID_UPDATE_NEW_SERVICE_URL) }
+        }
     }
 }

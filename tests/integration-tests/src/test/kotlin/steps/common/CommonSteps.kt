@@ -37,7 +37,7 @@ class CommonSteps {
 
         val publishDidSteps = PublishDidSteps()
         publishDidSteps.createsUnpublishedDid(holder)
-        publishDidSteps.actorHavePublishedPrismDid(issuer)
+        publishDidSteps.agentHasAPublishedDID(issuer)
 
         val issueSteps = IssueCredentialsSteps()
         issueSteps.issuerOffersACredential(issuer, holder, "short")
