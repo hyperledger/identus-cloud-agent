@@ -2,49 +2,21 @@ package steps.did
 
 import abilities.ListenToEvents
 import common.TestConstants
-import common.Utils.wait
 import interactions.Get
 import interactions.Post
-import io.cucumber.java.en.Given
-import io.cucumber.java.en.Then
-import io.cucumber.java.en.When
+import io.cucumber.java.en.*
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
+import io.iohk.atala.automation.utils.Wait
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
 import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
 import org.hyperledger.identus.client.models.*
+import kotlin.time.Duration.Companion.seconds
 
 class PublishDidSteps {
-
-    @Given("{actor} have published PRISM DID")
-    fun actorHavePublishedPrismDid(actor: Actor) {
-        actor.attemptsTo(
-            Get.resource("/did-registrar/dids"),
-        )
-        actor.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
-        )
-        val publishedDids = SerenityRest.lastResponse().get<ManagedDIDPage>().contents!!.filter {
-            // TODO: fix openapi spec to have statuses as enum
-            it.status == "PUBLISHED"
-        }
-        val did = publishedDids.firstOrNull {
-            actor.attemptsTo(
-                Get.resource("/dids/${it.did}"),
-            )
-            !SerenityRest.lastResponse().get<DIDResolutionResult>().didDocumentMetadata.deactivated!!
-        }
-        if (did == null) {
-            createsUnpublishedDid(actor)
-            hePublishesDidToLedger(actor)
-        } else {
-            actor.remember("shortFormDid", did.did)
-        }
-    }
-
     @Given("{actor} creates unpublished DID")
     fun createsUnpublishedDid(actor: Actor) {
         val createDidRequest = CreateManagedDidRequest(
@@ -65,27 +37,21 @@ class PublishDidSteps {
                 .with {
                     it.body(createDidRequest)
                 },
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
         )
 
         val managedDid = SerenityRest.lastResponse().get<ManagedDID>()
+
         actor.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
             Ensure.that(managedDid.longFormDid!!).isNotEmpty(),
-        )
-
-        actor.remember("longFormDid", managedDid.longFormDid)
-
-        actor.attemptsTo(
             Get.resource("/did-registrar/dids/${managedDid.longFormDid}"),
-        )
-        actor.attemptsTo(
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
         )
+
         val did = SerenityRest.lastResponse().get<ManagedDID>()
-        actor.remember(
-            "shortFormDid",
-            did.did,
-        )
+
+        actor.remember("longFormDid", managedDid.longFormDid)
+        actor.remember("shortFormDid", did.did)
         actor.forget<String>("hasPublishedDid")
     }
 
@@ -128,17 +94,15 @@ class PublishDidSteps {
             Ensure.that(didOperationResponse.scheduledOperation.id).isNotEmpty(),
         )
 
-        wait(
-            {
-                val didEvent =
-                    ListenToEvents.with(actor).didEvents.lastOrNull {
-                        it.data.did == actor.recall<String>("shortFormDid")
-                    }
-                didEvent != null && didEvent.data.status == "PUBLISHED"
-            },
-            "ERROR: DID was not published to ledger!",
-            timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,
-        )
+        Wait.until(
+            timeout = 30.seconds,
+            errorMessage = "ERROR: DID was not published to ledger!"
+        ) {
+            val didEvent = ListenToEvents.with(actor).didEvents.lastOrNull {
+                it.data.did == actor.recall<String>("shortFormDid")
+            }
+            didEvent != null && didEvent.data.status == "PUBLISHED"
+        }
         actor.attemptsTo(
             Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
         )
