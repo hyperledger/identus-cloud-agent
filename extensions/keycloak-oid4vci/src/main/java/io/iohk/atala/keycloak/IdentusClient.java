@@ -36,7 +36,7 @@ public class IdentusClient {
 
     public NonceResponse syncTokenDetails(String issuerState) {
         try (CloseableHttpClient client = httpClient.get()) {
-            HttpPost post = new HttpPost(identusUrl + "/oidc4vc/did:prism:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/nonces");
+            HttpPost post = new HttpPost(identusUrl + "/oid4vci/issuers/08877304-a111-4fe4-a84c-8666610b1665/nonces"); // TODO: use real issuer URL
             post.setEntity(new StringEntity(JsonSerialization.writeValueAsString(new NonceRequest(issuerState)), ContentType.APPLICATION_JSON));
             return NonceResponse.fromResponse(client.execute(post));
         } catch (IOException e) {

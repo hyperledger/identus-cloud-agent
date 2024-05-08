@@ -12,7 +12,7 @@ in
     & (stack.makeAgentStack { name = "holder", port = 8081 })
     & (stack.makeAgentStack { name = "verifier", port = 8082 }),
 
-  st-oidc4vc =
+  st-oid4vci =
     (stack.makeAgentStack { name = "issuer", port = 8080 })
     & (stack.makeMockServerStack { port = 7777 })
     & (
@@ -21,7 +21,7 @@ in
           name = "issuer",
           port = 9980,
           realm = "students",
-          build = "../../extensions/keycloak-oidc4vc",
+          build = "../../extensions/keycloak-oid4vci",
           extraEnvs = { IDENTUS_URL = "http://caddy-issuer:8080/prism-agent" }
         }
     ),

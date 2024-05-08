@@ -21,7 +21,8 @@ let NodeServiceArgs = {
 }
 in
 {
-  makeNodeService | NodeServiceArgs -> _ = fun args =>
+  makeNodeService | NodeServiceArgs -> _
+    = fun args =>
       {
         image = "ghcr.io/input-output-hk/prism-node:%{args.version}",
         restart = "always",

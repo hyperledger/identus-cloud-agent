@@ -8,7 +8,8 @@ let DbServiceArgs = {
 }
 in
 {
-  makeDbService | DbServiceArgs -> _ = fun args =>
+  makeDbService | DbServiceArgs -> _
+    = fun args =>
       {
         image = "postgres:%{args.version}",
         restart = "always",

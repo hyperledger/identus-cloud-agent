@@ -7,11 +7,11 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.URI
 import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialConfiguration
 import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialIssuer
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
-import org.hyperledger.identus.pollux.core.repository.OIDC4VCIssuerMetadataRepository
-import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.CredentialConfigurationNotFound
-import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.InvalidSchemaId
-import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.IssuerIdNotFound
-import org.hyperledger.identus.pollux.core.service.OIDC4VCIssuerMetadataServiceError.UnsupportedCredentialFormat
+import org.hyperledger.identus.pollux.core.repository.OID4VCIIssuerMetadataRepository
+import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.CredentialConfigurationNotFound
+import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.InvalidSchemaId
+import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.IssuerIdNotFound
+import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.UnsupportedCredentialFormat
 import org.hyperledger.identus.shared.db.Errors.UnexpectedAffectedRow
 import org.hyperledger.identus.shared.models.Failure
 import org.hyperledger.identus.shared.models.StatusCode
@@ -22,34 +22,34 @@ import java.net.URI
 import java.net.URL
 import java.util.UUID
 
-sealed trait OIDC4VCIssuerMetadataServiceError(
+sealed trait OID4VCIIssuerMetadataServiceError(
     val statusCode: StatusCode,
     val userFacingMessage: String
 ) extends Failure
 
-object OIDC4VCIssuerMetadataServiceError {
+object OID4VCIIssuerMetadataServiceError {
   final case class IssuerIdNotFound(issuerId: UUID)
-      extends OIDC4VCIssuerMetadataServiceError(
+      extends OID4VCIIssuerMetadataServiceError(
         StatusCode.NotFound,
         s"There is no credential issuer matching the provided identifier: issuerId=$issuerId"
       )
 
   final case class CredentialConfigurationNotFound(issuerId: UUID, configurationId: String)
-      extends OIDC4VCIssuerMetadataServiceError(
+      extends OID4VCIIssuerMetadataServiceError(
         StatusCode.NotFound,
         s"There is no credential configuration matching the provided identifier: issuerId=$issuerId, configurationId=$configurationId"
       )
 
   final case class InvalidSchemaId(schemaId: String, msg: String)
-      extends OIDC4VCIssuerMetadataServiceError(
+      extends OID4VCIIssuerMetadataServiceError(
         StatusCode.BadRequest,
         s"The schemaId $schemaId is not a valid URI syntax: $msg"
       )
 
   final case class UnsupportedCredentialFormat(format: CredentialFormat)
-      extends OIDC4VCIssuerMetadataServiceError(
+      extends OID4VCIIssuerMetadataServiceError(
         StatusCode.BadRequest,
-        s"Unsupported credential format in OIDC4VC protocol: $format"
+        s"Unsupported credential format in OID4VCI protocol: $format"
       )
 }
 
@@ -81,7 +81,7 @@ trait OID4VCIIssuerMetadataService {
   ): ZIO[WalletAccessContext, CredentialConfigurationNotFound, Unit]
 }
 
-class OID4VCIIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataRepository, uriDereferencer: URIDereferencer)
+class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataRepository, uriDereferencer: URIDereferencer)
     extends OID4VCIIssuerMetadataService {
 
   override def createCredentialIssuer(authorizationServer: URL): URIO[WalletAccessContext, CredentialIssuer] = {
@@ -176,7 +176,7 @@ class OID4VCIIssuerMetadataServiceImpl(repository: OIDC4VCIssuerMetadataReposito
 }
 
 object OID4VCIIssuerMetadataServiceImpl {
-  def layer: URLayer[OIDC4VCIssuerMetadataRepository & URIDereferencer, OID4VCIIssuerMetadataService] = {
+  def layer: URLayer[OID4VCIIssuerMetadataRepository & URIDereferencer, OID4VCIIssuerMetadataService] = {
     ZLayer.fromFunction(OID4VCIIssuerMetadataServiceImpl(_, _))
   }
 }

@@ -6,7 +6,7 @@ import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor
 import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialConfiguration
 import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialIssuer
-import org.hyperledger.identus.pollux.core.repository.OIDC4VCIssuerMetadataRepository
+import org.hyperledger.identus.pollux.core.repository.OID4VCIIssuerMetadataRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
@@ -17,9 +17,8 @@ import java.net.URL
 import java.time.Instant
 import java.util.UUID
 
-// TODO: implement all members
-class JdbcOIDC4VCIssuerMetadataRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task])
-    extends OIDC4VCIssuerMetadataRepository {
+class JdbcOID4VCIIssuerMetadataRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task])
+    extends OID4VCIIssuerMetadataRepository {
 
   override def findIssuerById(issuerId: UUID): UIO[Option[CredentialIssuer]] = {
     val cxnIO = sql"""
@@ -192,7 +191,7 @@ class JdbcOIDC4VCIssuerMetadataRepository(xa: Transactor[ContextAwareTask], xb: 
 
 }
 
-object JdbcOIDC4VCIssuerMetadataRepository {
-  val layer: URLayer[Transactor[ContextAwareTask] & Transactor[Task], OIDC4VCIssuerMetadataRepository] =
-    ZLayer.fromFunction(new JdbcOIDC4VCIssuerMetadataRepository(_, _))
+object JdbcOID4VCIIssuerMetadataRepository {
+  val layer: URLayer[Transactor[ContextAwareTask] & Transactor[Task], OID4VCIIssuerMetadataRepository] =
+    ZLayer.fromFunction(new JdbcOID4VCIIssuerMetadataRepository(_, _))
 }

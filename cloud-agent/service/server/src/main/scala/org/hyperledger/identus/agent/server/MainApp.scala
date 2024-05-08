@@ -45,7 +45,7 @@ import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaControllerImpl,
   VerificationPolicyControllerImpl
 }
-import org.hyperledger.identus.pollux.sql.repository.JdbcOIDC4VCIssuerMetadataRepository
+import org.hyperledger.identus.pollux.sql.repository.JdbcOID4VCIIssuerMetadataRepository
 import org.hyperledger.identus.pollux.sql.repository.{
   JdbcCredentialDefinitionRepository,
   JdbcCredentialRepository,
@@ -200,7 +200,7 @@ object MainApp extends ZIOAppDefault {
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
-          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcOIDC4VCIssuerMetadataRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcOID4VCIIssuerMetadataRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // oidc
           CredentialIssuerControllerImpl.layer,

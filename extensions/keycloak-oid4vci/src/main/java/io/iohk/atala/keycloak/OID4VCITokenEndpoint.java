@@ -16,12 +16,12 @@ import org.keycloak.services.clientpolicy.ClientPolicyContext;
 
 import java.util.function.Function;
 
-public class OIDC4VCTokenEndpoint extends TokenEndpoint {
-    private static final Logger logger = Logger.getLogger(OIDC4VCTokenEndpoint.class);
+public class OID4VCITokenEndpoint extends TokenEndpoint {
+    private static final Logger logger = Logger.getLogger(OID4VCITokenEndpoint.class);
 
     private final IdentusClient identusClient;
 
-    public OIDC4VCTokenEndpoint(KeycloakSession session, TokenManager tokenManager, EventBuilder event) {
+    public OID4VCITokenEndpoint(KeycloakSession session, TokenManager tokenManager, EventBuilder event) {
         super(session, tokenManager, event);
         this.identusClient = new IdentusClient();
     }
@@ -29,7 +29,7 @@ public class OIDC4VCTokenEndpoint extends TokenEndpoint {
     @Override
     public Response createTokenResponse(UserModel user, UserSessionModel userSession, ClientSessionContext clientSessionCtx,
                                         String scopeParam, boolean code, Function<TokenManager.AccessTokenResponseBuilder, ClientPolicyContext> clientPolicyContextGenerator) {
-        String noteKey = AuthorizationEndpoint.LOGIN_SESSION_NOTE_ADDITIONAL_REQ_PARAMS_PREFIX + OIDC4VCConstants.ISSUER_STATE;
+        String noteKey = AuthorizationEndpoint.LOGIN_SESSION_NOTE_ADDITIONAL_REQ_PARAMS_PREFIX + OID4VCIConstants.ISSUER_STATE;
         String issuerState = clientSessionCtx.getClientSession().getNote(noteKey);
 
         if (code && issuerState != null) {
@@ -40,8 +40,8 @@ public class OIDC4VCTokenEndpoint extends TokenEndpoint {
 
             NonceResponse nonceResponse = identusClient.syncTokenDetails(issuerState);
             AccessTokenResponse responseEntity = (AccessTokenResponse) originalResponse.getEntity();
-            responseEntity.setOtherClaims(OIDC4VCConstants.C_NONCE, nonceResponse.getNonce());
-            responseEntity.setOtherClaims(OIDC4VCConstants.C_NONCE_EXPIRE, nonceResponse.getNonceExpiresIn());
+            responseEntity.setOtherClaims(OID4VCIConstants.C_NONCE, nonceResponse.getNonce());
+            responseEntity.setOtherClaims(OID4VCIConstants.C_NONCE_EXPIRE, nonceResponse.getNonceExpiresIn());
             return Response.fromResponse(originalResponse)
                     .entity(responseEntity)
                     .build();

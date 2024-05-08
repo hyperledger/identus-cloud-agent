@@ -93,7 +93,7 @@ services:
     volumes:
     - ./bootstrap:/hurl
   external-keycloak-issuer:
-    build: ../../extensions/keycloak-oidc4vc
+    build: ../../extensions/keycloak-oid4vci
     command:
     - start-dev
     - --features=preview

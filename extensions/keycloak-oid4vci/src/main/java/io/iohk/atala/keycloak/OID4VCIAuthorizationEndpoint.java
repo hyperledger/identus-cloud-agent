@@ -7,20 +7,20 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.protocol.oidc.endpoints.AuthorizationEndpoint;
 import org.keycloak.sessions.AuthenticationSessionModel;
 
-public class OIDC4VCAuthorizationEndpoint extends AuthorizationEndpoint {
-    private static final Logger logger = Logger.getLogger(OIDC4VCTokenEndpoint.class);
+public class OID4VCIAuthorizationEndpoint extends AuthorizationEndpoint {
+    private static final Logger logger = Logger.getLogger(OID4VCITokenEndpoint.class);
 
     private final String issuerState;
 
-    public OIDC4VCAuthorizationEndpoint(KeycloakSession session, EventBuilder event) {
+    public OID4VCIAuthorizationEndpoint(KeycloakSession session, EventBuilder event) {
         super(session, event);
-        this.issuerState = session.getContext().getUri().getQueryParameters().getFirst(OIDC4VCConstants.ISSUER_STATE);
+        this.issuerState = session.getContext().getUri().getQueryParameters().getFirst(OID4VCIConstants.ISSUER_STATE);
     }
 
     @Override
     protected AuthenticationSessionModel createAuthenticationSession(ClientModel client, String requestState) {
         AuthenticationSessionModel authSession = super.createAuthenticationSession(client, requestState);
-        authSession.setClientNote(OIDC4VCConstants.ISSUER_STATE, issuerState);
+        authSession.setClientNote(OID4VCIConstants.ISSUER_STATE, issuerState);
         return super.createAuthenticationSession(client, requestState);
     }
 }

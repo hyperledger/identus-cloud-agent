@@ -17,7 +17,7 @@ import java.util.UUID
 
 object CredentialIssuerEndpoints {
 
-  private val tagName = "OpenID for Verifiable Credential"
+  private val tagName = "OpenID for Verifiable Credential Issuance"
   private val tagDescription =
     s"""
        |The __${tagName}__ is a service that issues credentials to users by implementing the [OIDC for Credential Issuance](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html) specification.
@@ -32,7 +32,7 @@ object CredentialIssuerEndpoints {
   type ExtendedErrorResponse = Either[ErrorResponse, CredentialErrorResponse]
 
   private val issuerIdPathSegment = path[UUID]("issuerId")
-    .description("An issuer identifier in the oidc4vc protocol")
+    .description("An issuer identifier in the oid4vci protocol")
     .example(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))
 
   private val credentialConfigIdSegment = path[String]("credentialConfigId")
@@ -203,7 +203,7 @@ object CredentialIssuerEndpoints {
     .description(
       """Create a new credential configuration for the issuer.
         |It represents the configuration of the credential that can be issued by the issuer.
-        |This credential configuration object will be displayed in the OIDC4VC credential issuer metadata.""".stripMargin
+        |This credential configuration object will be displayed in the credential issuer metadata.""".stripMargin
     )
 
   val getCredentialConfigurationEndpoint: Endpoint[
@@ -251,6 +251,6 @@ object CredentialIssuerEndpoints {
     .out(jsonBody[IssuerMetadata])
     .errorOut(EndpointOutputs.basicFailuresAndNotFound)
     .name("getIssuerMetadata")
-    .summary("Get oidc4vc credential issuer metadata")
+    .summary("Get the credential issuer metadata")
 
 }

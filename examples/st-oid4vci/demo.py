@@ -66,7 +66,7 @@ def prepare_issuer():
 
     global CREDENTIAL_ISSUER
     canonical_did = issuer_did["did"]
-    CREDENTIAL_ISSUER = f"{AGENT_URL}/oid4vci/{canonical_did}"
+    CREDENTIAL_ISSUER = f"{AGENT_URL}/oid4vci/issuers/{canonical_did}"
     print(f"CREDENTIAL_ISSUER: {CREDENTIAL_ISSUER}")
 
 

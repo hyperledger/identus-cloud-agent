@@ -11,8 +11,8 @@
 
 Example of the script to install the required packages in a virtual environment:
 ```shell
-python -m venv {path-to-the-project-dir}/open-enterprise-agent/examples/st-oidc4vc/python-env
-source {path-to-the-project-dir}/open-enterprise-agent/examples/st-oidc4vc/python-env/bin/activate
+python -m venv {path-to-the-project-dir}/open-enterprise-agent/examples/st-oid4vci/python-env
+source {path-to-the-project-dir}/open-enterprise-agent/examples/st-oid4vci/python-env/bin/activate
 pip install requests pyjwt cryptography
 ```
 
@@ -28,7 +28,7 @@ sbt docker:publishLocal
 docker-compose up --build
 ```
 
-This builds a custom Keycloak image with OIDC4VC plugin.
+This builds a custom Keycloak image with OID4VCI plugin.
 The Keycloak UI is available at `http://localhost:9980` and the admin username is `admin` with password `admin`.
 
 ### 2. Run the issuance demo script

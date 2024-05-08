@@ -8,7 +8,7 @@ import zio.*
 import java.net.URL
 import java.util.UUID
 
-trait OIDC4VCIssuerMetadataRepository {
+trait OID4VCIIssuerMetadataRepository {
   def findIssuerById(issuerId: UUID): UIO[Option[CredentialIssuer]]
   def createIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, Unit]
   def findWalletIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]]

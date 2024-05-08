@@ -7,8 +7,8 @@ import org.keycloak.models.KeycloakSession;
 import org.keycloak.protocol.oidc.OIDCLoginProtocolFactory;
 import org.keycloak.protocol.oidc.OIDCProviderConfig;
 
-public class OIDC4VCLoginProtocolFactory extends OIDCLoginProtocolFactory {
-    private static final Logger logger = Logger.getLogger(OIDC4VCLoginProtocolFactory.class);
+public class OID4VCILoginProtocolFactory extends OIDCLoginProtocolFactory {
+    private static final Logger logger = Logger.getLogger(OID4VCILoginProtocolFactory.class);
     private OIDCProviderConfig providerConfig;
 
     @Override
@@ -24,6 +24,6 @@ public class OIDC4VCLoginProtocolFactory extends OIDCLoginProtocolFactory {
 
     @Override
     public Object createProtocolEndpoint(KeycloakSession session, EventBuilder event) {
-        return new OIDC4VCLoginProtocolService(session, event, providerConfig);
+        return new OID4VCILoginProtocolService(session, event, providerConfig);
     }
 }
