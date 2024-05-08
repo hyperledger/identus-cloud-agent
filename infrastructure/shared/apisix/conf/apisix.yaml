@@ -3,18 +3,18 @@ plugins:
   - name: cors
 
 routes:
-  - uri: /prism-agent/*
+  - uri: /cloud-agent/*
     upstream_id: 4
     plugins:
       cors:
         allow_origins: "*"
       proxy-rewrite:
-        regex_uri: ["^/prism-agent/(.*)", "/$1"]
-  - uri: /docs/prism-agent/api/*
+        regex_uri: ["^/cloud-agent/(.*)", "/$1"]
+  - uri: /docs/cloud-agent/api/*
     upstream_id: 4
     plugins:
       proxy-rewrite:
-        regex_uri: ["^/docs/prism-agent/api/(.*)", "/docs/$1"]
+        regex_uri: ["^/docs/cloud-agent/api/(.*)", "/docs/$1"]
   - uri: /didcomm*
     upstream_id: 3
     plugins:
@@ -31,11 +31,11 @@ routes:
 upstreams:
   - id: 3
     nodes:
-      "prism-agent:8090": 1 # didcom and system
+      "cloud-agent:8090": 1 # didcom and system
     type: roundrobin
   - id: 4
     nodes:
-      "prism-agent:8085": 1 # tapir
+      "cloud-agent:8085": 1 # tapir
     type: roundrobin
   - id: 5
     nodes:

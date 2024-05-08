@@ -1,6 +1,6 @@
 # Running locally
 
-This folder contains scripts to run the Atala `building-block` stack for end-user usage - without building any local components.
+This folder contains scripts to run the Identus Cloud Agent stack for end-user usage - without building any local components.
 
 All images will be pulled from a remote repository and the `.env` file controls the versions of these images.
 

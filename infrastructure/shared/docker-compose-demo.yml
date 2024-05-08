@@ -28,11 +28,11 @@ services:
       db:
         condition: service_healthy
 
-  prism-agent:
+  cloud-agent:
     image: ghcr.io/hyperledger/identus-cloud-agent:${AGENT_VERSION}
     environment:
       DIDCOMM_SERVICE_URL: http://${DOCKERHOST}:${PORT}/didcomm
-      REST_SERVICE_URL: http://${DOCKERHOST}:${PORT}/prism-agent
+      REST_SERVICE_URL: http://${DOCKERHOST}:${PORT}/cloud-agent
       PRISM_NODE_HOST: prism-node
       PRISM_NODE_PORT: 50053
       SECRET_STORAGE_BACKEND: postgres
@@ -54,7 +54,7 @@ services:
       prism-node:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://prism-agent:8085/_system/health"]
+      test: ["CMD", "curl", "-f", "http://cloud-agent:8085/_system/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -65,7 +65,7 @@ services:
     image: swaggerapi/swagger-ui:v5.4.2
     environment:
       - 'URLS=[
-        { name: "Prism Agent", url: "/docs/prism-agent/api/docs.yaml" }
+        { name: "Prism Agent", url: "/docs/cloud-agent/api/docs.yaml" }
         ]'
 
   apisix:
@@ -76,7 +76,7 @@ services:
     ports:
       - "${PORT}:9080/tcp"
     depends_on:
-      - prism-agent
+      - cloud-agent
       - swagger-ui
 
 volumes:

@@ -77,8 +77,8 @@ ADMIN_ACCESS_TOKEN=$(get_admin_token)
 echo "Creating a new test realm ..."
 create_realm $ADMIN_ACCESS_TOKEN
 
-echo "Creating a new prism-agent client ..."
-create_client $ADMIN_ACCESS_TOKEN "prism-agent" $PRISM_AGENT_CLIENT_SECRET
+echo "Creating a new cloud-agent client ..."
+create_client $ADMIN_ACCESS_TOKEN "cloud-agent" $PRISM_AGENT_CLIENT_SECRET
 
 echo "Creating a new sample user ..."
 create_user $ADMIN_ACCESS_TOKEN "alice" "1234"

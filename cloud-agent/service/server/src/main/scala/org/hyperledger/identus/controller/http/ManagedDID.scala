@@ -203,12 +203,12 @@ final case class ManagedDIDKeyTemplate(
     @description(ManagedDIDKeyTemplate.annotations.purpose.description)
     @encodedExample(ManagedDIDKeyTemplate.annotations.purpose.example)
     purpose: Purpose,
-    // @description(ManagedDIDKeyTemplate.annotations.curve.description)
-    // @encodedExample(ManagedDIDKeyTemplate.annotations.curve.example)
-    // curve: Option[Curve]
+    @description(ManagedDIDKeyTemplate.annotations.curve.description)
+    @encodedExample(ManagedDIDKeyTemplate.annotations.curve.example)
+    curve: Option[Curve]
 ) {
   // TODO: this curve option is hidden for now, to be added back after integration test with node
-  def curve: Option[Curve] = None
+  //def curve: Option[Curve] = None
 }
 
 object ManagedDIDKeyTemplate {
