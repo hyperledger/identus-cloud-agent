@@ -57,11 +57,11 @@ object DocModels {
       .openapi("3.0.3")
       .info(
         Info(
-          title = "Open Enterprise Agent API Reference",
+          title = "Identus Cloud Agent API Reference",
           version = "1.0", // Will be replaced dynamically by 'Tapir2StaticOAS'
           summary = None,
           description = Some("""
-              |The Open Enterprise Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
+              |The Identus Cloud Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
               |It supports DID (Decentralized Identifiers) management, verifiable credential exchange, and secure messaging based on DIDComm standards.
               |The API is designed to be interoperable with various blockchain and DLT (Distributed Ledger Technology) platforms, ensuring wide compatibility and flexibility.
               |Key features include connection management, credential issuance and verification, and secure, privacy-preserving communication between entities.
@@ -81,11 +81,14 @@ object DocModels {
       )
       .servers(
         List(
-          Server(url = "http://localhost:8085", description = Some("Local Prism Agent")),
-          Server(url = "http://localhost/prism-agent", description = Some("Local Prism Agent with APISIX proxy")),
+          Server(url = "http://localhost:8085", description = Some("The local instance of the Cloud Agent")),
           Server(
-            url = "https://k8s-dev.atalaprism.io/prism-agent",
-            description = Some("Prism Agent on the Staging Environment")
+            url = "http://localhost/cloud-agent",
+            description = Some("The local instance of the Cloud Agent behind the APISIX proxy")
+          ),
+          Server(
+            url = "https://k8s-dev.atalaprism.io/cloud-agent",
+            description = Some("The Cloud Agent in the Staging Environment")
           ),
         )
       )

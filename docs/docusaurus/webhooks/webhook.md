@@ -64,7 +64,7 @@ For each individual wallet, users can create a new webhook by making a POST requ
 which in turn creates a new webhook resource specific to their wallet.
 
 ```bash
-curl --location --request POST 'http://localhost:8080/prism-agent/events/webhooks' \
+curl --location --request POST 'http://localhost:8080/cloud-agent/events/webhooks' \
   --header 'Content-Type: application/json' \
   --header 'Accept: application/json' \
   --header "apiKey: $API_KEY" \

@@ -22,8 +22,8 @@ In self-service tenant management with external IAM, there is only one role:
 1. Keycloak is up and running.
 2. Keycloak is configured as follows
    1. A realm called `my-realm` is created
-   2. A client called `prism-agent` under `my-realm` with __authorization__ feature is created. (See [create client instruction](https://www.keycloak.org/docs/latest/authorization_services/index.html#_resource_server_create_client))
-   3. Make sure the `prism-agent` client has __direct access grants__ enabled to simplify the login process for this tutorial.
+   2. A client called `cloud-agent` under `my-realm` with __authorization__ feature is created. (See [create client instruction](https://www.keycloak.org/docs/latest/authorization_services/index.html#_resource_server_create_client))
+   3. Make sure the `cloud-agent` client has __direct access grants__ enabled to simplify the login process for this tutorial.
    4. Make sure to [allow user self-registration](https://www.keycloak.org/docs/latest/server_admin/index.html#con-user-registration_server_administration_guide).
 3. The Cloud Agent is up and running
 4. The Cloud Agent is configured with the following environment variables:
@@ -32,7 +32,7 @@ In self-service tenant management with external IAM, there is only one role:
    3. `KEYCLOAK_ENABLED=true`
    4. `KEYCLOAK_URL=http://localhost:9980` (replace with appropriate value)
    5. `KEYCLOAK_REALM=my-realm`
-   6. `KEYCLOAK_CLIENT_ID=prism-agent`
+   6. `KEYCLOAK_CLIENT_ID=cloud-agent`
    7. `KEYCLOAK_CLIENT_SECRET=<KEYCLOAK_CLIENT_SECRET>` (replace with appropriate value)
    8. `KEYCLOAK_UMA_AUTO_UPGRADE_RPT=true`
 
@@ -102,7 +102,7 @@ Listing wallets on it should return empty results.
 
 ```bash
 curl -X 'GET' \
-  'http://localhost:8080/prism-agent/wallets' \
+  'http://localhost:8080/cloud-agent/wallets' \
   -H 'Authorization: Bearer eyJhbGciOi...7ocDHofUDQ' \
   -H 'Accept: application/json'
 ```
@@ -130,7 +130,7 @@ If the user already has the wallet associated, the wallet creation will fail as 
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:8080/prism-agent/wallets' \
+  'http://localhost:8080/cloud-agent/wallets' \
   -H 'Authorization: Bearer eyJhbGciOi...7ocDHofUDQ' \
   -H 'Accept: application/json' \
   -H 'Content-Type: application/json' \
@@ -159,7 +159,7 @@ Without further operation, the wallet should be available for the tenant.
 To prove that the tenant can access the wallet, list the DIDs using RPT in the `Authorization` header.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids' \
+curl --location --request GET 'http://localhost:8080/cloud-agent/did-registrar/dids' \
   -H 'Authorization: Bearer eyJhbGciOi...7ocDHofUDQ' \
   -H 'Accept: application/json'
 ```

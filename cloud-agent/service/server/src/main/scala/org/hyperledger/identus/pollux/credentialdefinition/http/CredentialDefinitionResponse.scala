@@ -135,7 +135,7 @@ object CredentialDefinitionResponse {
     object self
         extends Annotation[String](
           description = "The URL that uniquely identifies the resource being returned in the response.",
-          example = "/prism-agent/credential-definition-registry/schemas/0527aea1-d131-3948-a34d-03af39aba8b4"
+          example = "/cloud-agent/credential-definition-registry/schemas/0527aea1-d131-3948-a34d-03af39aba8b4"
         )
 
     object kind
@@ -187,7 +187,7 @@ object CredentialDefinitionResponse {
         extends Annotation[Option[String]](
           description = "The unique identifier of the schema used for this credential definition.",
           example =
-            Some("https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676")
+            Some("https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676")
         )
 
     object authored

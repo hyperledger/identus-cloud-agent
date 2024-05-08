@@ -127,7 +127,7 @@ object CredentialSchemaResponse {
     object self
         extends Annotation[String](
           description = "The URL that uniquely identifies the resource being returned in the response.",
-          example = "/prism-agent/schema-registry/schemas/0527aea1-d131-3948-a34d-03af39aba8b4"
+          example = "/cloud-agent/schema-registry/schemas/0527aea1-d131-3948-a34d-03af39aba8b4"
         )
     object kind
         extends Annotation[String](
