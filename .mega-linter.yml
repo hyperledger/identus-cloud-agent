@@ -17,17 +17,6 @@ DISABLE_LINTERS:
   - CPP_CPPLINT # For pollux/lib/anoncreds/src/main/c
   - JAVA_CHECKSTYLE # For pollux/lib/anoncreds/src/main/java
   - GHERKIN_GHERKIN_LINT
-  # For python, disable all except PYTHON_BLACK linter
-  - PYTHON_PYLINT
-  - PYTHON_FLAKE8
-  - PYTHON_ISORT
-  - PYTHON_BANDIT
-  - PYTHON_MYPY
-  - PYTHON_PYRIGHT
-  - PYTHON_RUFF
-  # TODO: revert before merging to `main`. Disabled to ease the development of keycloak extension
-  - JAVA_CHECKSTYLE
-  - JAVA_PMD
 
 DISABLE_ERRORS_LINTERS:
   - KOTLIN_KTLINT
