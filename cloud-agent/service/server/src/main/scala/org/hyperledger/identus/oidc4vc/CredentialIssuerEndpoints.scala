@@ -17,7 +17,7 @@ import java.util.UUID
 
 object CredentialIssuerEndpoints {
 
-  private val tagName = "OIDC4VC"
+  private val tagName = "OpenID for Verifiable Credential"
   private val tagDescription =
     s"""
        |The __${tagName}__ is a service that issues credentials to users by implementing the [OIDC for Credential Issuance](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html) specification.
@@ -35,9 +35,9 @@ object CredentialIssuerEndpoints {
     .description("An issuer identifier in the oidc4vc protocol")
     .example(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))
 
-  private val credentialConfigIdSegment = path[String]("configurationId")
+  private val credentialConfigIdSegment = path[String]("credentialConfigId")
     .description("An identifier for the credential configuration")
-    .example("configurationId")
+    .example("UniversityDegree")
 
   private val baseEndpoint = endpoint
     .tag(tagName)
@@ -100,6 +100,10 @@ object CredentialIssuerEndpoints {
     .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
     .name("createCredentialOffer")
     .summary("Create a new credential offer")
+    .description(
+      """Create a new credential offer and return a compliant `CredentialOffer` for the holder's
+        |[Credential Offer Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-offer-endpoint).""".stripMargin
+    )
 
   val nonceEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
@@ -196,6 +200,11 @@ object CredentialIssuerEndpoints {
     .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
     .name("createCredentialConfiguration")
     .summary("Create a new  credential configuration")
+    .description(
+      """Create a new credential configuration for the issuer.
+        |It represents the configuration of the credential that can be issued by the issuer.
+        |This credential configuration object will be displayed in the OIDC4VC credential issuer metadata.""".stripMargin
+    )
 
   val getCredentialConfigurationEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),

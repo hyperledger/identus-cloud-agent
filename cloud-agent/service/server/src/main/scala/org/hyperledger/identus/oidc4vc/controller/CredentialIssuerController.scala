@@ -283,9 +283,8 @@ case class CredentialIssuerControllerImpl(
       ctx: RequestContext,
       issuerId: UUID
   ): ZIO[WalletAccessContext, ErrorResponse, Unit] =
-    for {
-      _ <- issuerMetadataService.deleteCredentialIssuer(issuerId)
-    } yield ()
+    for _ <- issuerMetadataService.deleteCredentialIssuer(issuerId)
+    yield ()
 
   override def createCredentialConfiguration(
       ctx: RequestContext,
@@ -307,9 +306,8 @@ case class CredentialIssuerControllerImpl(
       issuerId: UUID,
       configurationId: String
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialConfiguration] =
-    for {
-      credentialConfiguration <- issuerMetadataService.getCredentialConfigurationById(issuerId, configurationId)
-    } yield credentialConfiguration: CredentialConfiguration
+    for credentialConfiguration <- issuerMetadataService.getCredentialConfigurationById(issuerId, configurationId)
+    yield credentialConfiguration: CredentialConfiguration
 
   override def deleteCredentialConfiguration(
       ctx: RequestContext,
