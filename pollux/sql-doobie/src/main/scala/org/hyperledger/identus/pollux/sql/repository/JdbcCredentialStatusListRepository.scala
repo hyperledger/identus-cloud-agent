@@ -10,7 +10,7 @@ import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.db.Implicits.{*, given}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.*
 import zio.*
 import zio.interop.catz.*

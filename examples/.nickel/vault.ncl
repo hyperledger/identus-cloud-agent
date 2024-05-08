@@ -10,7 +10,8 @@ let VaultServiceArgs = {
 }
 in
 {
-  makeVaultService | VaultServiceArgs -> _ = fun args =>
+  makeVaultService | VaultServiceArgs -> _
+    = fun args =>
       {
         image = "hashicorp/vault:%{args.version}",
         ports = ["%{std.to_string args.hostPort}:8200"],

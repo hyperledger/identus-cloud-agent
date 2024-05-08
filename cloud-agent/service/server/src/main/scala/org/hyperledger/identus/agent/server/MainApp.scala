@@ -34,10 +34,9 @@ import org.hyperledger.identus.iam.entity.http.controller.{EntityController, Ent
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementControllerImpl
 import org.hyperledger.identus.issue.controller.IssueControllerImpl
 import org.hyperledger.identus.mercury.*
-import org.hyperledger.identus.oidc4vc.controller.CredentialIssuerControllerImpl
-import org.hyperledger.identus.oidc4vc.service.OIDCCredentialIssuerServiceImpl
-import org.hyperledger.identus.oidc4vc.storage.InMemoryIssuanceSessionService
-import org.hyperledger.identus.pollux.core.repository.InMemoryOIDC4VCIssuerMetadataRepository
+import org.hyperledger.identus.oid4vci.controller.CredentialIssuerControllerImpl
+import org.hyperledger.identus.oid4vci.service.OIDCCredentialIssuerServiceImpl
+import org.hyperledger.identus.oid4vci.storage.InMemoryIssuanceSessionService
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.core.service.verification.VcVerificationServiceImpl
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
@@ -46,6 +45,7 @@ import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaControllerImpl,
   VerificationPolicyControllerImpl
 }
+import org.hyperledger.identus.pollux.sql.repository.JdbcOID4VCIIssuerMetadataRepository
 import org.hyperledger.identus.pollux.sql.repository.{
   JdbcCredentialDefinitionRepository,
   JdbcCredentialRepository,
@@ -200,12 +200,12 @@ object MainApp extends ZIOAppDefault {
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcOID4VCIIssuerMetadataRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // oidc
           CredentialIssuerControllerImpl.layer,
           InMemoryIssuanceSessionService.layer,
-          InMemoryOIDC4VCIssuerMetadataRepository.layer,
-          OIDC4VCIssuerMetadataServiceImpl.layer,
+          OID4VCIIssuerMetadataServiceImpl.layer,
           OIDCCredentialIssuerServiceImpl.layer,
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,

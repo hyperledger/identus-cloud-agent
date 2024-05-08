@@ -70,9 +70,10 @@ let AgentServiceArgs = {
 }
 in
 {
-  makeAgentService | AgentServiceArgs -> _ = fun args =>
+  makeAgentService | AgentServiceArgs -> _
+    = fun args =>
       {
-        image = "ghcr.io/input-output-hk/prism-agent:%{args.version}",
+        image = "ghcr.io/hyperledger/identus-cloud-agent:%{args.version}",
         restart = "always",
         environment =
           {

@@ -16,7 +16,8 @@ let CaddyServiceArgs = {
 }
 in
 {
-  makeCaddyConfig | CaddyServiceArgs -> _ = fun args =>
+  makeCaddyConfig | CaddyServiceArgs -> _
+    = fun args =>
       {
         "caddyfile_%{args.name}" = {
           content = m%"
@@ -37,7 +38,8 @@ in
             "%
         }
       },
-  makeCaddyService | CaddyServiceArgs -> _ = fun args =>
+  makeCaddyService | CaddyServiceArgs -> _
+    = fun args =>
       {
         image = "caddy:%{args.version}",
         restart = "always",
