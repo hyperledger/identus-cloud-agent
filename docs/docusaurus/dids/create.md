@@ -45,7 +45,7 @@ The example uses the following endpoints
 ### 1. Check existing DID on the Cloud Agent
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids' \
+curl --location --request GET 'http://localhost:8080/cloud-agent/did-registrar/dids' \
   --header "apikey: $API_KEY" \
   --header 'Accept: application/json'
 ```
@@ -58,7 +58,7 @@ Since key pairs are generated and managed by the Cloud Agent, DID controller onl
 The current PRISM DID method supports a key with a single purpose, but it is extendible to support a key with multiple purposes in the future.
 
 ```bash
-curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids' \
+curl --location --request POST 'http://localhost:8080/cloud-agent/did-registrar/dids' \
   --header 'Content-Type: application/json' \
   --header 'Accept: application/json' \
   --header "apikey: $API_KEY" \
@@ -97,8 +97,8 @@ Check the `GET /did-registrar/dids` endpoint. The response should return a list 
         }
     ],
     "kind": "ManagedDIDPage",
-    "pageOf": "http://localhost:8080/prism-agent/did-registrar/dids",
-    "self": "http://localhost:8080/prism-agent/did-registrar/dids"
+    "pageOf": "http://localhost:8080/cloud-agent/did-registrar/dids",
+    "self": "http://localhost:8080/cloud-agent/did-registrar/dids"
 }
 ```
 
@@ -110,7 +110,7 @@ Replacing the `{didRef}` with the long-form DID, and the response should return 
 Replacing the `{didRef}` with the short-form DID, and the resolution should fail since the DID still needs to be published.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
+curl --location --request GET 'http://localhost:8080/cloud-agent/dids/{didRef}' \
 --header "apikey: $API_KEY" \
 --header 'Accept: */*'
 ```

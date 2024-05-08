@@ -64,27 +64,27 @@ object CredentialSchemaResponsePage {
     object self
         extends Annotation[String](
           description = "A string field containing the URL of the current API endpoint",
-          example = "/prism-agent/schema-registry/schemas?skip=10&limit=10"
+          example = "/cloud-agent/schema-registry/schemas?skip=10&limit=10"
         )
 
     object pageOf
         extends Annotation[String](
           description = "A string field indicating the type of resource that the contents field contains",
-          example = "/prism-agent/schema-registry/schemas"
+          example = "/cloud-agent/schema-registry/schemas"
         )
 
     object next
         extends Annotation[String](
           description = "An optional string field containing the URL of the next page of results. " +
             "If the API response does not contain any more pages, this field should be set to None.",
-          example = "/prism-agent/schema-registry/schemas?skip=20&limit=10"
+          example = "/cloud-agent/schema-registry/schemas?skip=20&limit=10"
         )
 
     object previous
         extends Annotation[String](
           description = "An optional string field containing the URL of the previous page of results. " +
             "If the API response is the first page of results, this field should be set to None.",
-          example = "/prism-agent/schema-registry/schemas?skip=0&limit=10"
+          example = "/cloud-agent/schema-registry/schemas?skip=0&limit=10"
         )
   }
 }
