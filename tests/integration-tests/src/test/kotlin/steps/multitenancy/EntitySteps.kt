@@ -3,12 +3,12 @@ package steps.multitenancy
 import interactions.Post
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import org.hyperledger.identus.client.models.ApiKeyAuthenticationRequest
-import org.hyperledger.identus.client.models.CreateEntityRequest
-import org.hyperledger.identus.client.models.EntityResponse
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus.SC_CREATED
+import org.hyperledger.identus.client.models.ApiKeyAuthenticationRequest
+import org.hyperledger.identus.client.models.CreateEntityRequest
+import org.hyperledger.identus.client.models.EntityResponse
 import java.util.*
 
 class EntitySteps {

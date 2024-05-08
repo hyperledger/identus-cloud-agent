@@ -33,9 +33,9 @@ dependencies {
     testImplementation("io.ktor:ktor-server-netty:2.3.0")
     testImplementation("io.ktor:ktor-client-apache:2.3.0")
     // RestAPI client
-    testImplementation("org.hyperledger.identus:cloud-agent-client-kotlin:1.32.0")
+    testImplementation("org.hyperledger.identus:cloud-agent-client-kotlin:1.32.1")
     // Test helpers library
-    testImplementation("io.iohk.atala:atala-automation:0.3.2")
+    testImplementation("io.iohk.atala:atala-automation:0.4.0")
     // Hoplite for configuration
     testImplementation("com.sksamuel.hoplite:hoplite-core:2.7.5")
     testImplementation("com.sksamuel.hoplite:hoplite-hocon:2.7.5")

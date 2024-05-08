@@ -5,10 +5,10 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import org.hyperledger.identus.client.models.HealthInfo
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
+import org.hyperledger.identus.client.models.HealthInfo
 
 class SystemSteps {
     @When("{actor} makes a request to the health endpoint")
