@@ -1,7 +1,6 @@
 import json
 import jwt
 import requests
-import threading
 import time
 import urllib
 
@@ -79,7 +78,7 @@ def issuer_create_credential_offer(claims):
 
 
 def holder_get_issuer_metadata(credential_issuer: str):
-    metadata_url = f"{credential_issuer}/.well-known/openid-credential-issuer"
+    # metadata_url = f"{credential_issuer}/.well-known/openid-credential-issuer"
     # TODO: OEA should return these instead of hardcoded values
     return {
         "credential_issuer": CREDENTIAL_ISSUER,
@@ -175,7 +174,6 @@ def holder_extract_credential_offer(offer_uri: str):
 def holder_get_credential(credential_endpoint: str, token_response):
     access_token = token_response["access_token"]
     c_nonce = token_response["c_nonce"]
-    c_nonce_expires_in = token_response["c_nonce_expires_in"]
 
     # generate proof
     private_key = ec.generate_private_key(ec.SECP256K1())
