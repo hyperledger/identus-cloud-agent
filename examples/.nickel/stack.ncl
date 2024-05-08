@@ -26,7 +26,8 @@ let AgentStackConfig = {
 }
 in
 {
-  makeMockServerStack | { port | Number } -> _ = fun args =>
+  makeMockServerStack | { port | Number } -> _
+    = fun args =>
       {
         services = {
           mockserver = {
@@ -35,7 +36,8 @@ in
           }
         }
       },
-  makeIssuerKeycloakStack | ExternalKeycloakStackConfig -> _ = fun args =>
+  makeIssuerKeycloakStack | ExternalKeycloakStackConfig -> _
+    = fun args =>
       {
         services = {
           "external-keycloak-%{args.name}" =
@@ -70,7 +72,8 @@ in
               },
         }
       },
-  makeAgentStack | AgentStackConfig -> _ = fun args =>
+  makeAgentStack | AgentStackConfig -> _
+    = fun args =>
       let pgDockerVolumeName = "pg_data_%{args.name}" in
       let hosts = {
         caddy = "caddy-%{args.name}",

@@ -18,6 +18,18 @@ HTTP 201
 [Captures]
 issuer_did: jsonpath "$.longFormDid" regex "(did:prism:[a-z0-9]+):.+$"
 
+# Issuer publish DID
+POST {{ issuer_url }}/prism-agent/did-registrar/dids/{{ issuer_did }}/publications
+HTTP 202
+
+# Issuer wait for DID to be published
+GET {{ issuer_url }}/prism-agent/did-registrar/dids/{{ issuer_did }}
+[Options]
+retry: -1
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "PUBLISHED"
+
 # Holder create DID
 POST {{ holder_url }}/prism-agent/did-registrar/dids
 {
@@ -33,7 +45,7 @@ POST {{ holder_url }}/prism-agent/did-registrar/dids
 }
 HTTP 201
 [Captures]
-holder_did: jsonpath "$.longFormDid" regex "(did:prism:[a-z0-9]+):.+$"
+holder_did: jsonpath "$.longFormDid"
 
 ##############################
 # Issuance Connection
