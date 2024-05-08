@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialConfiguration
-import org.hyperledger.identus.pollux.core.model.oidc4vc.CredentialIssuer
+import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialConfiguration
+import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialIssuer
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 

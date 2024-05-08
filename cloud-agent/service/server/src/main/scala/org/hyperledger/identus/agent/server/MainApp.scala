@@ -34,9 +34,9 @@ import org.hyperledger.identus.iam.entity.http.controller.{EntityController, Ent
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementControllerImpl
 import org.hyperledger.identus.issue.controller.IssueControllerImpl
 import org.hyperledger.identus.mercury.*
-import org.hyperledger.identus.oidc4vc.controller.CredentialIssuerControllerImpl
-import org.hyperledger.identus.oidc4vc.service.OIDCCredentialIssuerServiceImpl
-import org.hyperledger.identus.oidc4vc.storage.InMemoryIssuanceSessionService
+import org.hyperledger.identus.oid4vci.controller.CredentialIssuerControllerImpl
+import org.hyperledger.identus.oid4vci.service.OIDCCredentialIssuerServiceImpl
+import org.hyperledger.identus.oid4vci.storage.InMemoryIssuanceSessionService
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.core.service.verification.VcVerificationServiceImpl
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
@@ -205,7 +205,7 @@ object MainApp extends ZIOAppDefault {
           // oidc
           CredentialIssuerControllerImpl.layer,
           InMemoryIssuanceSessionService.layer,
-          OIDC4VCIssuerMetadataServiceImpl.layer,
+          OID4VCIIssuerMetadataServiceImpl.layer,
           OIDCCredentialIssuerServiceImpl.layer,
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
