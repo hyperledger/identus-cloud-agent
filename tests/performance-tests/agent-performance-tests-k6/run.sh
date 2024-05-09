@@ -139,13 +139,13 @@ echo "K6 downloaded"
 cd "$AGENT_DIR"
 
 ##sbt docker:publishLocal
-PRISM_AGENT_VERSION=$(cut -d '"' -f 2 version.sbt)
+AGENT_VERSION=$(cut -d '"' -f 2 version.sbt)
 
 ## back to performance folder
 cd "$PERF_DIR"
 
 # set version to env file
-sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
+sed -i.bak "s/AGENT_VERSION=.*/AGENT_VERSION=${AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
 
 # create agents in parallel
 createIssuer &

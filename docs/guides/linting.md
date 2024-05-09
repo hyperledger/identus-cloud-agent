@@ -128,7 +128,7 @@ Linter - Suggested Change: Customise
 
 
   In /github/workspace/infrastructure/dev/get-versions.sh line 8:
-  export AGENT_VERSION=$(cd ../../prism-agent/service && sbt "project server" -Dsbt.supershell=false -error "print version")
+  export AGENT_VERSION=$(cd ../../cloud-agent/service && sbt "project server" -Dsbt.supershell=false -error "print version")
          ^-----------------^ SC2155 (warning): Declare and assign separately to avoid masking return values.
 
   For more information:

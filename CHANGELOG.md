@@ -1,3 +1,15 @@
+# [1.33.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.32.1...cloud-agent-v1.33.0) (2024-05-09)
+
+
+### Bug Fixes
+
+* integration test ([#1011](https://github.com/hyperledger/identus-cloud-agent/issues/1011)) ([d674f31](https://github.com/hyperledger/identus-cloud-agent/commit/d674f3162be44ba05d50b305be4838525d982706))
+
+
+### Features
+
+* rename `prism-agent` to `cloud-agent` ([#1019](https://github.com/hyperledger/identus-cloud-agent/issues/1019)) ([74560da](https://github.com/hyperledger/identus-cloud-agent/commit/74560dabf59dac15ccd086edb7a77d9e5055621e))
+
 ## [1.32.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.32.0...cloud-agent-v1.32.1) (2024-05-07)
 
 

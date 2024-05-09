@@ -50,7 +50,7 @@ To find the wallet, list them using `apikey`.
 
 ```bash
 curl -X 'GET' \
-  'http://localhost:8080/prism-agent/wallets' \
+  'http://localhost:8080/cloud-agent/wallets' \
   -H 'accept: application/json' \
   -H "apikey: my-tenant-token"
 ```
@@ -126,7 +126,7 @@ To do this, invoke the `POST /wallets/{walletId}/uma-permissions` endpoint on th
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:8080/prism-agent/wallets/99734c87-5c9d-4697-b5fd-dea4e9590ba7/uma-permissions' \
+  'http://localhost:8080/cloud-agent/wallets/99734c87-5c9d-4697-b5fd-dea4e9590ba7/uma-permissions' \
   -v \
   -H 'accept: */*' \
   -H "apikey: my-tenant-token" \
@@ -147,7 +147,7 @@ List the wallet using a new `Authorization` header. The listed wallets should co
 
 ```bash
 curl -X 'GET' \
-  'http://localhost:8080/prism-agent/wallets' \
+  'http://localhost:8080/cloud-agent/wallets' \
   -H 'accept: application/json' \
   -H 'Authorization: Bearer eyJhbGciOi...7ocDHofUDQ'
 ```

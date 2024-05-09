@@ -48,7 +48,7 @@ Listing wallets on it should return empty results.
 
 ```bash
 curl -X 'GET' \
-  'http://localhost:8080/prism-agent/wallets' \
+  'http://localhost:8080/cloud-agent/wallets' \
   -H 'accept: application/json' \
   -H 'x-admin-api-key: my-admin-token'
 ```
@@ -72,7 +72,7 @@ The wallet seed may be provided during the wallet creation or omitted to let the
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:8080/prism-agent/wallets' \
+  'http://localhost:8080/cloud-agent/wallets' \
   -H 'accept: application/json' \
   -H 'x-admin-api-key: my-admin-token' \
   -H 'Content-Type: application/json' \
@@ -100,7 +100,7 @@ To create a new entity, send a `POST` request to the `/iam/entities` endpoint wi
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:8080/prism-agent/iam/entities' \
+  'http://localhost:8080/cloud-agent/iam/entities' \
   -H 'accept: application/json' \
   -H 'x-admin-api-key: my-admin-token' \
   -H 'Content-Type: application/json' \
@@ -134,7 +134,7 @@ Once this step is completed, the administrator should provide the tenant with an
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:8080/prism-agent/iam/apikey-authentication' \
+  'http://localhost:8080/cloud-agent/iam/apikey-authentication' \
   -H 'accept: */*' \
   -H 'x-admin-api-key: my-admin-token' \
   -H 'Content-Type: application/json' \
@@ -158,7 +158,7 @@ To prove that the tenant can be authenticated as the created entity and use the 
 try listing the DIDs in the wallet using `apikey` header.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids' \
+curl --location --request GET 'http://localhost:8080/cloud-agent/did-registrar/dids' \
   --header "apikey: my-tenant-token" \
   --header 'Accept: application/json'
 ```

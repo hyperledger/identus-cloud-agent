@@ -18,16 +18,16 @@ The same person may also represent these roles.
 1. Keycloak is up and running
 2. Keycloak is configured as follows
    1. A realm called `my-realm` is created
-   2. A client called `prism-agent` under `my-realm` with __authorization__ feature is created. (See [create client instruction](https://www.keycloak.org/docs/latest/authorization_services/index.html#_resource_server_create_client))
-   3. Make sure the `prism-agent` client has __direct access grants__ enabled to simplify the login
+   2. A client called `cloud-agent` under `my-realm` with __authorization__ feature is created. (See [create client instruction](https://www.keycloak.org/docs/latest/authorization_services/index.html#_resource_server_create_client))
+   3. Make sure the `cloud-agent` client has __direct access grants__ enabled to simplify the login
 3. The Cloud Agent is up and running
 4. The Cloud Agent is configured with the following environment variables:
    1. `KEYCLOAK_ENABLED=true`
    2. `KEYCLOAK_URL=http://localhost:9980` (replace with appropriate value)
    3. `KEYCLOAK_REALM=my-realm`
-   4. `KEYCLOAK_CLIENT_ID=prism-agent`
+   4. `KEYCLOAK_CLIENT_ID=cloud-agent`
    5. `KEYCLOAK_CLIENT_SECRET=<KEYCLOAK_CLIENT_SECRET>` (replace with appropriate value)
-   6. `KEYCLOAL_ROLES_CLAIM_PATH=resource_access.prism-agent.roles`
+   6. `KEYCLOAL_ROLES_CLAIM_PATH=resource_access.cloud-agent.roles`
 
 ## Overview
 
@@ -42,14 +42,14 @@ Despite UMA permissions configured for the user, the agent strictly maintains a 
 ## Endpoints
 
 ### Agent endpoints
-| Endpoint                                   | Description                         | Role          |
-|--------------------------------------------|-------------------------------------|---------------|
-| `GET /wallets`                             | List the wallets on the Cloud Agent | Administrator |
+| Endpoint       | Description                         | Role          |
+|----------------|-------------------------------------|---------------|
+| `GET /wallets` | List the wallets on the Cloud Agent | Administrator |
 
 ### Keycloak endpoints
-| Endpoint                                             | Description                   | Role         |
-|------------------------------------------------------|-------------------------------|--------------|
-| `POST /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token         | Administrator|
+| Endpoint                                             | Description           | Role          |
+|------------------------------------------------------|-----------------------|---------------|
+| `POST /realms/{realm}/protocol/openid-connect/token` | Issue a new JWT token | Administrator |
 
 ## Keycloak Administrator interactions
 
@@ -109,7 +109,7 @@ Inspecting the `access_token` payload, it should have the following content
 ```json
 {
   "resource_access": {
-    "prism-agent": {
+    "cloud-agent": {
       "roles": [
         "admin"
       ]
@@ -132,7 +132,7 @@ To prove that the admin can perform admin tasks,
 try listing all the tenants' wallets using the JWT in the `Authorization` header.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/wallets' \
+curl --location --request GET 'http://localhost:8080/cloud-agent/wallets' \
   -H 'Authorization: Bearer eyJhbGciOi...e7H6W8RUvA' \
   -H 'Accept: application/json'
 ```

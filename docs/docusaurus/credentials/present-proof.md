@@ -13,8 +13,8 @@ The protocol provides endpoints for a Verifier to request new proof presentation
 
 The present proof protocol has two roles:
 
-1.  Verifier: A subject requesting a proof presentation by sending a request presentation message, then verifying the presentation.
-2.  Holder/Prover: A [subject](/docs/concepts/glossary#subject) that receives a [proof presentation](/docs/concepts/glossary#proof-presentation) request, prepares a proof, and sends it to the verifier by sending a proof presentation message.
+1. Verifier: A subject requesting a proof presentation by sending a request presentation message, then verifying the presentation.
+2. Holder/Prover: A [subject](/docs/concepts/glossary#subject) that receives a [proof presentation](/docs/concepts/glossary#proof-presentation) request, prepares a proof, and sends it to the verifier by sending a proof presentation message.
 
 ## Prerequisites
 
@@ -37,12 +37,12 @@ The protocol consists of the following main parts:
 
 ## Endpoints
 
-| Endpoint | Method | Description | Role |
-| --- | --- | --- | --- |
-| [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/requestPresentation) | POST | Creates and sends a new proof presentation request.  | Verifier |
-| [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/getAllPresentation) | GET | Retrieves the collection of all the existing presentation proof records - sent or received. | Verifier, Holder/Prover |
-| [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/getPresentation) | GET | Retrieves a specific presentation proof record by `id`. | Verifier, Holder/Prover |
-| [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) | PATCH | Updates an existing presentation proof record to, e.g., accept the request on the Holder/Prover side or accept the presentation on the Verifier side. | Verifier, Holder/Prover |
+| Endpoint                                                                                          | Method | Description                                                                                                                                           | Role                    |
+|---------------------------------------------------------------------------------------------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|
+| [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/requestPresentation)     | POST   | Creates and sends a new proof presentation request.                                                                                                   | Verifier                |
+| [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/getAllPresentation)      | GET    | Retrieves the collection of all the existing presentation proof records - sent or received.                                                           | Verifier, Holder/Prover |
+| [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/getPresentation)    | GET    | Retrieves a specific presentation proof record by `id`.                                                                                               | Verifier, Holder/Prover |
+| [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) | PATCH  | Updates an existing presentation proof record to, e.g., accept the request on the Holder/Prover side or accept the presentation on the Verifier side. | Verifier, Holder/Prover |
 
 :::info
 For more detailed information, please, check the full [Cloud Agent API](/agent-api).
@@ -64,10 +64,10 @@ To do this, he makes a `POST` request to the [`/present-proof/presentations`](/a
 <TabItem value="jwt" label="JWT">
 
 ```bash
-curl -X 'POST' 'http://localhost:8070/prism-agent/present-proof/presentations' \
+curl -X 'POST' 'http://localhost:8070/cloud-agent/present-proof/presentations' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
-	-H "apikey: $API_KEY" \
+ -H "apikey: $API_KEY" \
   -d '{
         "connectionId": "872ddfa9-4115-46c2-8a1b-22c24c7431d7",
         "proofs":[],
@@ -82,10 +82,10 @@ curl -X 'POST' 'http://localhost:8070/prism-agent/present-proof/presentations' \
 <TabItem value="anoncreds" label="AnonCreds">
 
 ```bash
-curl -X 'POST' 'http://localhost:8070/prism-agent/present-proof/presentations' \
+curl -X 'POST' 'http://localhost:8070/cloud-agent/present-proof/presentations' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
-	-H "apikey: $API_KEY" \
+ -H "apikey: $API_KEY" \
   -d '{
         "connectionId": "872ddfa9-4115-46c2-8a1b-22c24c7431d7",
         "anoncredPresentationRequest": {
@@ -132,9 +132,9 @@ Upon execution, a new presentation request record gets created with an initial s
 
 The Verifier can retrieve the list of presentation records by making a `GET` request to the [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/getAllPresentation) endpoint:
 ```bash
-curl -X 'GET' 'http://localhost:8070/prism-agent/present-proof/presentations' \
+curl -X 'GET' 'http://localhost:8070/cloud-agent/present-proof/presentations' \
   -H 'accept: application/json' \
-	-H "apikey: $API_KEY"
+ -H "apikey: $API_KEY"
 ```
 
 ### Accept presentation proof received from the Holder/prover
@@ -143,7 +143,7 @@ Once the Holder/Prover has received a proof presentation request, he can accept 
 The Verifier can then explicitly accept the specific verified proof presentation to change the record state to `PresentationAccepted` by making a `PATCH` request to the [`/present-proof/presentations/{id}`](/agent-api/#tag/Present-Proof/operation/updatePresentation) endpoint:
 
 ```bash
-curl -X 'PATCH' 'http://localhost:8070/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
+curl -X 'PATCH' 'http://localhost:8070/cloud-agent/present-proof/presentations/{PRESENTATION_ID}' \
   -H 'Content-Type: application/json' \
   -H "apikey: $API_KEY" \
   -d '{
@@ -170,7 +170,7 @@ This section describes the interactions available to the Holder/Prover with his 
 The Holder/Prover can retrieve the list of presentation requests received by its Cloud Agent from different Verifiers making a `GET` request to the [`/present-proof/presentations`](/agent-api/#tag/Present-Proof/operation/getAllPresentation) endpoint:
 
 ```bash
-curl -X 'GET' 'http://localhost:8090/prism-agent/present-proof/presentations' \
+curl -X 'GET' 'http://localhost:8090/cloud-agent/present-proof/presentations' \
   -H 'accept: application/json' \
   -H "apikey: $API_KEY"
 ```
@@ -181,7 +181,7 @@ The Holder/Prover can then accept a specific request, generate the proof, and se
 <TabItem value="jwt" label="JWT">
 
 ```bash
-curl -X 'PATCH' 'http://localhost:8090/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
+curl -X 'PATCH' 'http://localhost:8090/cloud-agent/present-proof/presentations/{PRESENTATION_ID}' \
   -H 'Content-Type: application/json' \
   -H "apikey: $API_KEY" \
   -d '{
@@ -198,7 +198,7 @@ The Holder/Prover will have to provide the following information:
 <TabItem value="anoncreds" label="AnonCreds">
 
 ```bash
-curl -X 'PATCH' 'http://localhost:8090/prism-agent/present-proof/presentations/{PRESENTATION_ID}' \
+curl -X 'PATCH' 'http://localhost:8090/cloud-agent/present-proof/presentations/{PRESENTATION_ID}' \
   -H 'Content-Type: application/json' \
   -H "apikey: $API_KEY" \
   -d '{
@@ -224,7 +224,7 @@ curl -X 'PATCH' 'http://localhost:8090/prism-agent/present-proof/presentations/{
 The Holder/Prover will have to provide the following information:
 1. `presentationId`: The unique identifier of the presentation record to accept.
 2. `anoncredPresentationRequest`: A list of credential unique identifier with the attribute and predicate the credential is answering for.
-   
+
 The record state is updated to `PresentationPending` and processed by the Holder/Prover Cloud Agent. The agent will automatically generate the proof presentation, change the state to `PresentationGenerated`, and will eventually send it to the Verifier Agent, and change the state to `PresentationSent`.
 
 ```mermaid
@@ -240,7 +240,7 @@ stateDiagram-v2
 
 ## Sequence diagram
 
-The following diagram shows the end-to-end flow for a verifier to request and verify a proof presentation from a Holder/prover. 
+The following diagram shows the end-to-end flow for a verifier to request and verify a proof presentation from a Holder/prover.
 
 ### JWT Present Proof Flow Diagram
 ![](present-proof-flow.png)

@@ -70,27 +70,27 @@ object CredentialDefinitionResponsePage {
     object self
         extends Annotation[String](
           description = "A string field containing the URL of the current API endpoint",
-          example = "/prism-agent/credential-definition-registry/definitions?skip=10&limit=10"
+          example = "/cloud-agent/credential-definition-registry/definitions?skip=10&limit=10"
         )
 
     object pageOf
         extends Annotation[String](
           description = "A string field indicating the type of resource that the contents field contains",
-          example = "/prism-agent/credential-definition-registry/definitions"
+          example = "/cloud-agent/credential-definition-registry/definitions"
         )
 
     object next
         extends Annotation[String](
           description = "An optional string field containing the URL of the next page of results. " +
             "If the API response does not contain any more pages, this field should be set to None.",
-          example = "/prism-agent/credential-definition-registry/definitions?skip=20&limit=10"
+          example = "/cloud-agent/credential-definition-registry/definitions?skip=20&limit=10"
         )
 
     object previous
         extends Annotation[String](
           description = "An optional string field containing the URL of the previous page of results. " +
             "If the API response is the first page of results, this field should be set to None.",
-          example = "/prism-agent/credential-definition-registry/definitions?skip=0&limit=10"
+          example = "/cloud-agent/credential-definition-registry/definitions?skip=0&limit=10"
         )
   }
 }

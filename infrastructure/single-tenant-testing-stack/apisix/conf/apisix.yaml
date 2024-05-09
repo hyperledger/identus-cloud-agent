@@ -7,31 +7,49 @@ routes:
     plugins:
       proxy-rewrite:
         regex_uri: ["^/issuer/prism-agent/(.*)", "/$1"]
+  - uri: /issuer/cloud-agent/*
+    upstream_id: 1
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/issuer/cloud-agent/(.*)", "/$1"]
   - uri: /issuer/didcomm*
     upstream_id: 2
     plugins:
       proxy-rewrite:
         regex_uri: ["^/issuer/didcomm(.*)", "/$1"]
+
   - uri: /verifier/prism-agent/*
     upstream_id: 3
     plugins:
       proxy-rewrite:
         regex_uri: ["^/verifier/prism-agent/(.*)", "/$1"]
+  - uri: /verifier/cloud-agent/*
+    upstream_id: 3
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/verifier/cloud-agent/(.*)", "/$1"]
   - uri: /verifier/didcomm*
     upstream_id: 4
     plugins:
       proxy-rewrite:
         regex_uri: ["^/verifier/didcomm(.*)", "/$1"]
+
   - uri: /holder/prism-agent/*
     upstream_id: 5
     plugins:
       proxy-rewrite:
         regex_uri: ["^/holder/prism-agent/(.*)", "/$1"]
+  - uri: /holder/cloud-agent/*
+    upstream_id: 5
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/holder/cloud-agent/(.*)", "/$1"]
   - uri: /holder/didcomm*
     upstream_id: 6
     plugins:
       proxy-rewrite:
         regex_uri: ["^/holder/didcomm(.*)", "/$1"]
+
 upstreams:
   - id: 1
     nodes:

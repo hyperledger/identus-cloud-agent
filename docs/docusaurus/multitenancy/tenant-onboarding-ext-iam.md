@@ -19,8 +19,8 @@ In tenant management with external IAM, there are 2 roles:
 1. Keycloak up and running
 2. Keycloak is configured as follows
    1. A realm called `my-realm` is created
-   2. A client called `prism-agent` under `my-realm` with __authorization__ feature is created. (See [create client instruction](https://www.keycloak.org/docs/latest/authorization_services/index.html#_resource_server_create_client))
-   3. Make sure the `prism-agent` client has __direct access grants__ enabled to simplify the login process for this tutorial
+   2. A client called `cloud-agent` under `my-realm` with __authorization__ feature is created. (See [create client instruction](https://www.keycloak.org/docs/latest/authorization_services/index.html#_resource_server_create_client))
+   3. Make sure the `cloud-agent` client has __direct access grants__ enabled to simplify the login process for this tutorial
 3. the Cloud Agent is up and running
 4. the Cloud Agent is configured with the following environment variables:
    1. `ADMIN_TOKEN=my-admin-token`
@@ -28,7 +28,7 @@ In tenant management with external IAM, there are 2 roles:
    3. `KEYCLOAK_ENABLED=true`
    4. `KEYCLOAK_URL=http://localhost:9980` (replace with appropriate value)
    5. `KEYCLOAK_REALM=my-realm`
-   6. `KEYCLOAK_CLIENT_ID=prism-agent`
+   6. `KEYCLOAK_CLIENT_ID=cloud-agent`
    7. `KEYCLOAK_CLIENT_SECRET=<KEYCLOAK_CLIENT_SECRET>` (replace with appropriate value)
    8. `KEYCLOAK_UMA_AUTO_UPGRADE_RPT=false`
 
@@ -75,7 +75,7 @@ Listing wallets on it should return empty results.
 
 ```bash
 curl -X 'GET' \
-  'http://localhost:8080/prism-agent/wallets' \
+  'http://localhost:8080/cloud-agent/wallets' \
   -H 'accept: application/json' \
   -H 'x-admin-api-key: my-admin-token'
 ```
@@ -100,7 +100,7 @@ Provide a wallet seed during the wallet creation or let the Agent generate one
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:8080/prism-agent/wallets' \
+  'http://localhost:8080/cloud-agent/wallets' \
   -H 'accept: application/json' \
   -H 'x-admin-api-key: my-admin-token' \
   -H 'Content-Type: application/json' \
@@ -196,7 +196,7 @@ This can be done by invoking the `POST /wallets/{walletId}/uma-permissions` endp
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:8080/prism-agent/wallets/99734c87-5c9d-4697-b5fd-dea4e9590ba7/uma-permissions' \
+  'http://localhost:8080/cloud-agent/wallets/99734c87-5c9d-4697-b5fd-dea4e9590ba7/uma-permissions' \
   -v \
   -H 'accept: */*' \
   -H 'x-admin-api-key: my-admin-token' \
@@ -258,7 +258,7 @@ curl -X POST \
   'http://localhost:9980/realms/my-realm/protocol/openid-connect/token' \
   -H "Authorization: Bearer eyJhbGciOi...7ocDHofUDQ" \
   -d "grant_type=urn:ietf:params:oauth:grant-type:uma-ticket" \
-  -d "audience=prism-agent"
+  -d "audience=cloud-agent"
 ```
 
 Example token response (some fields omitted for readability)
@@ -297,7 +297,7 @@ To prove that the tenant can access the wallet using RPT,
 try listing the DIDs in the wallet using RPT in the `Authorization` header.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids' \
+curl --location --request GET 'http://localhost:8080/cloud-agent/did-registrar/dids' \
   -H 'Authorization: Bearer eyJhbGciOi...e7H6W8RUvA' \
   -H 'Accept: application/json'
 ```

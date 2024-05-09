@@ -62,7 +62,7 @@ The example uses the following endpoints
 Given the DID Controller has a DID on the Cloud Agent and that DID is published, he can resolve the DID document using short-form DID.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
+curl --location --request GET 'http://localhost:8080/cloud-agent/dids/{didRef}' \
 --header "apikey: $API_KEY" \
 --header 'Accept: */*'
 ```
@@ -104,7 +104,7 @@ The DID Controller wishes to remove that key and add a new key called `key-2`
 The DID Controller submits a DID update request to `POST /did-registrar/dids/{didRef}/updates`.
 
 ```bash
-curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids/did:prism:4262377859267f308a06ec6acf211fbe4d6745aa9e637e04548771169616fb86/updates' \
+curl --location --request POST 'http://localhost:8080/cloud-agent/did-registrar/dids/did:prism:4262377859267f308a06ec6acf211fbe4d6745aa9e637e04548771169616fb86/updates' \
 --header 'Content-Type: application/json' \
 --header 'Accept: application/json' \
 --header "apikey: $API_KEY" \
