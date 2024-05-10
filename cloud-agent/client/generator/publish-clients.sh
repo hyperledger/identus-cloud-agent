@@ -1,5 +1,5 @@
 #!/bin/bash
-#set -e
+set -e
 
 AGENT_VERSION=${VERSION_TAG:13}
 echo version=${AGENT_VERSION}
@@ -8,7 +8,7 @@ echo version=${AGENT_VERSION}
 yarn
 
 # kotlin
-# gradle -p ../kotlin -Pversion=${AGENT_VERSION} publish
+gradle -p ../kotlin -Pversion=${AGENT_VERSION} publish
 
 # typescript
 yarn --cwd ../typescript
