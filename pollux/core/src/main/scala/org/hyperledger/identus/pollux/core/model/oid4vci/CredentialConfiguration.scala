@@ -4,6 +4,7 @@ import org.hyperledger.identus.pollux.core.model.CredentialFormat
 
 import java.net.URI
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 final case class CredentialConfiguration(
     configurationId: String,
@@ -12,4 +13,8 @@ final case class CredentialConfiguration(
     createdAt: Instant
 ) {
   def scope: String = configurationId
+
+  def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): CredentialConfiguration = copy(
+    createdAt = createdAt.truncatedTo(unit),
+  )
 }
