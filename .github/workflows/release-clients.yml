@@ -11,6 +11,10 @@ on:
     tags:
       - "identus-cloud-agent-v*"
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   publish-clients:
     name: 'Build and publish Identus-cloud-Agent clients'
@@ -19,7 +23,7 @@ jobs:
       VERSION_TAG: ${{inputs.releaseTag || github.ref_name}}
       GITHUB_ACTOR: "hyperledger-bot"
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout

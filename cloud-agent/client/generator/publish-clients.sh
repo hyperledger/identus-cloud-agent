@@ -7,7 +7,7 @@ AGENT_VERSION=${VERSION_TAG:13}
 yarn
 
 # kotlin
-gradle -p ../kotlin -Pversion=${AGENT_VERSION} publish
+# gradle -p ../kotlin -Pversion=${AGENT_VERSION} publish
 
 # typescript
 yarn --cwd ../typescript
