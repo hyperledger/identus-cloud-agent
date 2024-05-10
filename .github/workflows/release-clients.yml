@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       releaseTag:
-        description: "Tag to release clients (e.g. identus-cloud-agent-v1.33.0)"
+        description: "Tag to release clients (e.g. cloud-agent-v1.33.0)"
         required: true
         type: string
   push:
     tags:
-      - "identus-cloud-agent-v*"
+      - "cloud-agent-v*"
 
 permissions:
   contents: read
