@@ -1,7 +1,8 @@
 #!/bin/bash
-set -e
+#set -e
 
 AGENT_VERSION=${VERSION_TAG:13}
+echo version=${AGENT_VERSION}
 
 # install dependencies
 yarn
