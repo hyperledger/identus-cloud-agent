@@ -14,7 +14,7 @@ object JdbcOID4VCIIssuerMetadataRepositorySpec extends ZIOSpecDefault, PostgresT
     paths = "classpath:sql/pollux"
   )
 
-  private val testEnvironemtnLayer = ZLayer.make[OID4VCIIssuerMetadataRepository](
+  private val testEnvironmentLayer = ZLayer.make[OID4VCIIssuerMetadataRepository](
     JdbcOID4VCIIssuerMetadataRepository.layer,
     contextAwareTransactorLayer,
     systemTransactorLayer
@@ -26,7 +26,7 @@ object JdbcOID4VCIIssuerMetadataRepositorySpec extends ZIOSpecDefault, PostgresT
       OID4VCIIssuerMetadataRepositorySpecSuite.multitenantTestSuite,
     ) @@ migration).provide(
       Runtime.removeDefaultLoggers,
-      testEnvironemtnLayer,
+      testEnvironmentLayer,
       pgContainerLayer,
     )
 }

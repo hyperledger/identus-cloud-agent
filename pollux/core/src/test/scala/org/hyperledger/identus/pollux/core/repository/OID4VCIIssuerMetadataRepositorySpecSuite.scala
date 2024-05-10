@@ -31,8 +31,8 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
       repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
       authServer1 = URI.create("http://example-1.com").toURL()
       authServer2 = URI.create("http://example-2.com").toURL()
-      issuer1 = CredentialIssuer(authorizationServer = authServer1).withTruncatedTimestamp()
-      issuer2 = CredentialIssuer(authorizationServer = authServer2).withTruncatedTimestamp()
+      issuer1 = CredentialIssuer(authorizationServer = authServer1)
+      issuer2 = CredentialIssuer(authorizationServer = authServer2)
       _ <- repo.createIssuer(issuer1).provide(wallet1)
       _ <- repo.createIssuer(issuer2).provide(wallet2)
     } yield (issuer1, wallet1, issuer2, wallet2)
@@ -51,8 +51,8 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
         repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
         authServer1 = URI.create("http://example-1.com").toURL()
         authServer2 = URI.create("http://example-2.com").toURL()
-        issuer1 = CredentialIssuer(authorizationServer = authServer1).withTruncatedTimestamp()
-        issuer2 = CredentialIssuer(authorizationServer = authServer2).withTruncatedTimestamp()
+        issuer1 = CredentialIssuer(authorizationServer = authServer1)
+        issuer2 = CredentialIssuer(authorizationServer = authServer2)
         _ <- repo.createIssuer(issuer1)
         _ <- repo.createIssuer(issuer2)
         maybeIssuer1 <- repo.findIssuerById(issuer1.id)
@@ -64,7 +64,7 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
       for {
         repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
         authServer1 = URI.create("http://example-1.com").toURL()
-        issuer1 = CredentialIssuer(authorizationServer = authServer1).withTruncatedTimestamp()
+        issuer1 = CredentialIssuer(authorizationServer = authServer1)
         _ <- repo.createIssuer(issuer1)
         exit <- repo.createIssuer(issuer1).exit
       } yield assert(exit)(dies(anything))
@@ -73,7 +73,7 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
       for {
         repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
         authServer = URI.create("http://example-1.com").toURL()
-        issuer = CredentialIssuer(authorizationServer = authServer).withTruncatedTimestamp()
+        issuer = CredentialIssuer(authorizationServer = authServer)
         _ <- repo.createIssuer(issuer)
         _ <- repo.deleteIssuer(issuer.id)
         maybeIssuer <- repo.findIssuerById(issuer.id)
@@ -83,7 +83,7 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
       for {
         repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
         authServer = URI.create("http://example-1.com").toURL()
-        issuer = CredentialIssuer(authorizationServer = authServer).withTruncatedTimestamp()
+        issuer = CredentialIssuer(authorizationServer = authServer)
         exit <- repo.deleteIssuer(issuer.id).exit
       } yield assert(exit)(dies(isSubtype[UnexpectedAffectedRow](anything)))
     },
@@ -92,7 +92,7 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
         repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
         authServer1 = URI.create("http://example-1.com").toURL()
         authServer2 = URI.create("http://example-2.com").toURL()
-        issuer = CredentialIssuer(authorizationServer = authServer1).withTruncatedTimestamp()
+        issuer = CredentialIssuer(authorizationServer = authServer1)
         _ <- repo.createIssuer(issuer)
         _ <- repo.updateIssuer(issuer.id, authorizationServer = Some(authServer2))
         updatedIssuer <- repo.findIssuerById(issuer.id).some
@@ -105,7 +105,7 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
         repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
         authServer1 = URI.create("http://example-1.com").toURL()
         authServer2 = URI.create("http://example-2.com").toURL()
-        issuer = CredentialIssuer(authorizationServer = authServer1).withTruncatedTimestamp()
+        issuer = CredentialIssuer(authorizationServer = authServer1)
         _ <- repo.createIssuer(issuer)
         _ <- repo.updateIssuer(issuer.id) // empty patch
         updatedIssuer <- repo.findIssuerById(issuer.id).some
@@ -125,7 +125,7 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
       for {
         repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
         authServer = URI.create("http://example-1.com").toURL()
-        issuer = CredentialIssuer(authorizationServer = authServer).withTruncatedTimestamp()
+        issuer = CredentialIssuer(authorizationServer = authServer)
         _ <- repo.createIssuer(issuer)
         _ <- repo.createCredentialConfiguration(issuer.id, credConfig)
         maybeCredConfig <- repo.findCredentialConfigurationById(issuer.id, credConfig.configurationId)
@@ -146,8 +146,8 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
         repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
         authServer1 = URI.create("http://example-1.com").toURL()
         authServer2 = URI.create("http://example-2.com").toURL()
-        issuer1 = CredentialIssuer(authorizationServer = authServer1).withTruncatedTimestamp()
-        issuer2 = CredentialIssuer(authorizationServer = authServer2).withTruncatedTimestamp()
+        issuer1 = CredentialIssuer(authorizationServer = authServer1)
+        issuer2 = CredentialIssuer(authorizationServer = authServer2)
         _ <- repo.createIssuer(issuer1)
         _ <- repo.createIssuer(issuer2)
         _ <- repo.createCredentialConfiguration(issuer1.id, credConfig)
@@ -167,21 +167,27 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
     test("list credential configurations successfully") {
       for {
         repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
-        authServer = URI.create("http://example-1.com").toURL()
-        issuer = CredentialIssuer(authorizationServer = authServer).withTruncatedTimestamp()
+        authServer1 = URI.create("http://example-1.com").toURL()
+        issuer1 = CredentialIssuer(authorizationServer = authServer1)
+        issuer2 = CredentialIssuer(authorizationServer = authServer1)
         credConfig1 = credConfig.copy(configurationId = "DrivingLicense")
         credConfig2 = credConfig.copy(configurationId = "UniversityDegree")
-        _ <- repo.createIssuer(issuer)
-        _ <- repo.createCredentialConfiguration(issuer.id, credConfig1)
-        _ <- repo.createCredentialConfiguration(issuer.id, credConfig2)
-        credConfigs <- repo.findCredentialConfigurationsByIssuer(issuer.id)
-      } yield assert(credConfigs)(hasSameElements(Seq(credConfig1, credConfig2)))
+        credConfig3 = credConfig.copy(configurationId = "TrainingCertificate")
+        _ <- repo.createIssuer(issuer1)
+        _ <- repo.createIssuer(issuer2)
+        _ <- repo.createCredentialConfiguration(issuer1.id, credConfig1)
+        _ <- repo.createCredentialConfiguration(issuer1.id, credConfig2)
+        _ <- repo.createCredentialConfiguration(issuer2.id, credConfig3)
+        credConfigs1 <- repo.findCredentialConfigurationsByIssuer(issuer1.id)
+        credConfigs2 <- repo.findCredentialConfigurationsByIssuer(issuer2.id)
+      } yield assert(credConfigs1)(hasSameElements(Seq(credConfig1, credConfig2))) &&
+        assert(credConfigs2)(hasSameElements(Seq(credConfig3)))
     },
     test("find and list return empty result for non-existing configurations") {
       for {
         repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
         authServer = URI.create("http://example-1.com").toURL()
-        issuer = CredentialIssuer(authorizationServer = authServer).withTruncatedTimestamp()
+        issuer = CredentialIssuer(authorizationServer = authServer)
         _ <- repo.createIssuer(issuer)
         maybeCredConfig <- repo.findCredentialConfigurationById(issuer.id, credConfig.configurationId)
         credConfigs <- repo.findCredentialConfigurationsByIssuer(issuer.id)
@@ -192,7 +198,7 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
       for {
         repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
         authServer = URI.create("http://example-1.com").toURL()
-        issuer = CredentialIssuer(authorizationServer = authServer).withTruncatedTimestamp()
+        issuer = CredentialIssuer(authorizationServer = authServer)
         _ <- repo.createIssuer(issuer)
         _ <- repo.createCredentialConfiguration(issuer.id, credConfig)
         maybeCredConfig1 <- repo.findCredentialConfigurationById(issuer.id, credConfig.configurationId)
@@ -205,20 +211,20 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
       for {
         repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
         authServer = URI.create("http://example-1.com").toURL()
-        issuer = CredentialIssuer(authorizationServer = authServer).withTruncatedTimestamp()
+        issuer = CredentialIssuer(authorizationServer = authServer)
         randomId <- ZIO.randomWith(_.nextUUID)
         _ <- repo.createIssuer(issuer)
         _ <- repo.createCredentialConfiguration(issuer.id, credConfig)
         exit1 <- repo.deleteCredentialConfiguration(issuer.id, "ExampleLicense").exit
         exit2 <- repo.deleteCredentialConfiguration(randomId, "ExampleLicense").exit
-      } yield assert(exit1)(dies(isSubtype[UnexpectedAffectedRow](anything))) &&
-        assert(exit2)(dies(isSubtype[UnexpectedAffectedRow](anything)))
+      } yield assert(exit1)(diesWithA[UnexpectedAffectedRow]) &&
+        assert(exit2)(diesWithA[UnexpectedAffectedRow])
     },
     test("delete issuer also delete credential configuration") {
       for {
         repo <- ZIO.service[OID4VCIIssuerMetadataRepository]
         authServer = URI.create("http://example-1.com").toURL()
-        issuer = CredentialIssuer(authorizationServer = authServer).withTruncatedTimestamp()
+        issuer = CredentialIssuer(authorizationServer = authServer)
         _ <- repo.createIssuer(issuer)
         _ <- repo.createCredentialConfiguration(issuer.id, credConfig)
         _ <- repo.deleteIssuer(issuer.id)
@@ -244,7 +250,7 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
         init <- initMultiWalletIssuers
         (issuer1, wallet1, issuer2, wallet2) = init
         exit <- repo.updateIssuer(issuer1.id).provide(wallet2).exit
-      } yield assert(exit)(dies(isSubtype[UnexpectedAffectedRow](anything)))
+      } yield assert(exit)(diesWithA[UnexpectedAffectedRow])
     },
     test("delete issuer across wallet is not allowed") {
       for {
@@ -252,7 +258,7 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
         init <- initMultiWalletIssuers
         (issuer1, wallet1, issuer2, wallet2) = init
         exit <- repo.deleteIssuer(issuer1.id).provide(wallet2).exit
-      } yield assert(exit)(dies(isSubtype[UnexpectedAffectedRow](anything)))
+      } yield assert(exit)(diesWithA[UnexpectedAffectedRow])
     },
     test("create credential configuration across wallet is not allowed") {
       for {
@@ -268,7 +274,7 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
         init <- initMultiWalletIssuers
         (issuer1, wallet1, issuer2, wallet2) = init
         exit <- repo.deleteCredentialConfiguration(issuer1.id, credConfig.configurationId).provide(wallet2).exit
-      } yield assert(exit)(dies(isSubtype[UnexpectedAffectedRow](anything)))
+      } yield assert(exit)(diesWithA[UnexpectedAffectedRow])
     },
   )
 
