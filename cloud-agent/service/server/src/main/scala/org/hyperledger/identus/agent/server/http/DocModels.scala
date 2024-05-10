@@ -2,7 +2,10 @@ package org.hyperledger.identus.agent.server.http
 
 import org.hyperledger.identus.castor.controller.{DIDEndpoints, DIDRegistrarEndpoints}
 import org.hyperledger.identus.connect.controller.ConnectionEndpoints
+import org.hyperledger.identus.event.controller.EventEndpoints
+import org.hyperledger.identus.iam.entity.http.EntityEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementEndpoints
+import org.hyperledger.identus.issue.controller.IssueEndpoints
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryEndpoints
 import org.hyperledger.identus.pollux.credentialschema.{SchemaRegistryEndpoints, VerificationPolicyEndpoints}
 import org.hyperledger.identus.system.controller.SystemEndpoints
@@ -11,7 +14,6 @@ import sttp.apispec.{SecurityScheme, Tag}
 import sttp.model.headers.AuthenticationScheme
 
 import scala.collection.immutable.ListMap
-import org.hyperledger.identus.issue.controller.IssueEndpoints
 
 object DocModels {
 
@@ -55,11 +57,11 @@ object DocModels {
       .openapi("3.0.3")
       .info(
         Info(
-          title = "Open Enterprise Agent API Reference",
+          title = "Identus Cloud Agent API Reference",
           version = "1.0", // Will be replaced dynamically by 'Tapir2StaticOAS'
           summary = None,
           description = Some("""
-              |The Open Enterprise Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
+              |The Identus Cloud Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
               |It supports DID (Decentralized Identifiers) management, verifiable credential exchange, and secure messaging based on DIDComm standards.
               |The API is designed to be interoperable with various blockchain and DLT (Distributed Ledger Technology) platforms, ensuring wide compatibility and flexibility.
               |Key features include connection management, credential issuance and verification, and secure, privacy-preserving communication between entities.
@@ -79,11 +81,14 @@ object DocModels {
       )
       .servers(
         List(
-          Server(url = "http://localhost:8085", description = Some("Local Prism Agent")),
-          Server(url = "http://localhost/prism-agent", description = Some("Local Prism Agent with APISIX proxy")),
+          Server(url = "http://localhost:8085", description = Some("The local instance of the Cloud Agent")),
           Server(
-            url = "https://k8s-dev.atalaprism.io/prism-agent",
-            description = Some("Prism Agent on the Staging Environment")
+            url = "http://localhost/cloud-agent",
+            description = Some("The local instance of the Cloud Agent behind the APISIX proxy")
+          ),
+          Server(
+            url = "https://k8s-dev.atalaprism.io/cloud-agent",
+            description = Some("The Cloud Agent in the Staging Environment")
           ),
         )
       )
@@ -115,7 +120,9 @@ object DocModels {
           DIDEndpoints.tag,
           DIDRegistrarEndpoints.tag,
           WalletManagementEndpoints.tag,
-          SystemEndpoints.tag
+          SystemEndpoints.tag,
+          EventEndpoints.tag,
+          EntityEndpoints.tag
         )
       )
 

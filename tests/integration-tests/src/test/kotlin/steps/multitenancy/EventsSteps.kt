@@ -2,9 +2,9 @@ package steps.multitenancy
 
 import interactions.Post
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import org.hyperledger.identus.client.models.CreateWebhookNotification
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
+import org.hyperledger.identus.client.models.CreateWebhookNotification
 
 class EventsSteps {
     fun registerNewWebhook(actor: Actor, webhookUrl: String) {

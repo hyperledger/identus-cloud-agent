@@ -71,7 +71,7 @@ object CreateIssueCredentialRecordRequest {
           |Note that this parameter only applies when the offer is of type 'JWT'.
           |""".stripMargin,
           example = Some(
-            "https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema"
+            "https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema"
           )
         )
 

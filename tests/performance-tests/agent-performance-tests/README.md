@@ -27,7 +27,7 @@ For example, running `ConnectionSimulation` from `simulations` package:
 ## Environments configuration
 
 There are multiple configuration environment variables available through `common.Configuration` module:
-* `ISSUER_AGENT_URL`: URL for Issuer Agent, example: `http://localhost:8080/prism-agent`
+* `ISSUER_AGENT_URL`: URL for Issuer Agent, example: `http://localhost:8080/cloud-agent`
 * `ISSUER_AGENT_API_KEY`: access key for Issuer agent if hosted on remote env
-* `HOLDER_AGENT_URL`: URL for Holder Agent, example: `http://localhost:8090/prism-agent`
+* `HOLDER_AGENT_URL`: URL for Holder Agent, example: `http://localhost:8090/cloud-agent`
 * `HOLDER_AGENT_API_KEY`: access key for Holder agent if hosted on remote env

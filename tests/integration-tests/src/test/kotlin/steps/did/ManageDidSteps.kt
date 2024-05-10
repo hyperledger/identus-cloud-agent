@@ -7,6 +7,9 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
+import net.serenitybdd.rest.SerenityRest
+import net.serenitybdd.screenplay.Actor
+import org.apache.http.HttpStatus.SC_CREATED
 import org.hyperledger.identus.client.models.CreateManagedDidRequest
 import org.hyperledger.identus.client.models.CreateManagedDidRequestDocumentTemplate
 import org.hyperledger.identus.client.models.Json
@@ -15,9 +18,6 @@ import org.hyperledger.identus.client.models.ManagedDIDKeyTemplate
 import org.hyperledger.identus.client.models.ManagedDIDPage
 import org.hyperledger.identus.client.models.Purpose
 import org.hyperledger.identus.client.models.Service
-import net.serenitybdd.rest.SerenityRest
-import net.serenitybdd.screenplay.Actor
-import org.apache.http.HttpStatus.SC_CREATED
 
 class ManageDidSteps {
 

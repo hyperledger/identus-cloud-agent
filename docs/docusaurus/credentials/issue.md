@@ -87,7 +87,7 @@ To do this, make a `POST` request to the [`/issue-credentials/credential-offers`
    The Cloud Agent must be able to dereference the specified URL (i.e. fetch the VC schema content from it), in order to validate the provided claims against it.
    When not specified, the claims fields is not validated and can be any valid JSON object.
    Please refer to the [Create VC schema](../schemas/create.md) doc for details on how to create a VC schema.
-5. `credentialFormat`: The format of the credential that will be issued - `JWT` in this case. When not specified, the default value is `JWT`. 
+5. `credentialFormat`: The format of the credential that will be issued - `JWT` in this case. When not specified, the default value is `JWT`.
 
 
 :::note
@@ -99,7 +99,7 @@ Once the request initiates, a new credential record for the issuer gets created 
 ```shell
 # Issuer POST request to create a new credential offer
 curl -X 'POST' \
-  'http://localhost:8080/prism-agent/issue-credentials/credential-offers' \
+  'http://localhost:8080/cloud-agent/issue-credentials/credential-offers' \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "apikey: $API_KEY" \
@@ -115,7 +115,7 @@ curl -X 'POST' \
           "credentialFormat": "JWT",
           "issuingDID": "did:prism:9f847f8bbb66c112f71d08ab39930d468ccbfe1e0e1d002be53d46c431212c26",
           "connectionId": "9d075518-f97e-4f11-9d10-d7348a7a0fda",
-          "schemaId": "http://localhost:8080/prism-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2"
+          "schemaId": "http://localhost:8080/cloud-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2"
         }'
 ```
 
@@ -136,7 +136,7 @@ Once the request initiates, a new credential record for the issuer gets created 
 ```shell
 # Issuer POST request to create a new credential offer
 curl -X 'POST' \
-  'http://localhost:8080/prism-agent/issue-credentials/credential-offers' \
+  'http://localhost:8080/cloud-agent/issue-credentials/credential-offers' \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "apikey: $API_KEY" \
@@ -177,7 +177,7 @@ The Issuer can then use the [`/issue-credentials/records/{recordId}/issue-creden
 # make sure you have `issuer_record_id` extracted from created credential offer
 # and the record achieved `RequestReceived` state
 curl -X POST \
-    "http://localhost:8080/prism-agent/issue-credentials/records/$issuer_record_id/issue-credential" \
+    "http://localhost:8080/cloud-agent/issue-credentials/records/$issuer_record_id/issue-credential" \
     -H "Content-Type: application/json" \
     -H "apikey: $API_KEY"
 ```
@@ -215,7 +215,7 @@ This process is automatic for the Cloud Agent.
 You could check if a new credential offer is available using [`/issue-credentials/records`](/#tag/Issue-Credentials-Protocol/operation/getCredentialRecords) request and check for any records available in `OfferReceived` state:
 ```shell
 # Holder GET request to retrieve credential records
-curl "http://localhost:8090/prism-agent/issue-credentials/records" \
+curl "http://localhost:8090/cloud-agent/issue-credentials/records" \
     -H "Content-Type: application/json" \
     -H "apikey: $API_KEY"
 ```
@@ -233,7 +233,7 @@ To accept the offer, the Holder can make a `POST` request to the [`/issue-creden
 
 ```shell
 # Holder POST request to accept the credential offer
-curl -X POST "http://localhost:8090/prism-agent/issue-credentials/records/$holder_record_id/accept-offer" \
+curl -X POST "http://localhost:8090/cloud-agent/issue-credentials/records/$holder_record_id/accept-offer" \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "apikey: $API_KEY" \
@@ -249,7 +249,7 @@ curl -X POST "http://localhost:8090/prism-agent/issue-credentials/records/$holde
 
 ```shell
 # Holder POST request to accept the credential offer
-curl -X POST "http://localhost:8090/prism-agent/issue-credentials/records/$holder_record_id/accept-offer" \
+curl -X POST "http://localhost:8090/cloud-agent/issue-credentials/records/$holder_record_id/accept-offer" \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "apikey: $API_KEY" \

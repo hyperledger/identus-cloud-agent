@@ -1,7 +1,7 @@
 package org.hyperledger.identus.castor.core.model.did
 
 import org.hyperledger.identus.castor.core.model.ProtoModelHelper
-import io.iohk.atala.prism.crypto.Sha256
+import org.hyperledger.identus.shared.crypto.Sha256Hash
 
 import scala.collection.compat.immutable.ArraySeq
 import io.iohk.atala.prism.protos.node_models
@@ -9,7 +9,7 @@ import io.iohk.atala.prism.protos.node_models
 sealed trait PrismDIDOperation {
   def did: CanonicalPrismDID
   def toAtalaOperation: node_models.AtalaOperation
-  def toAtalaOperationHash: Array[Byte] = Sha256.compute(toAtalaOperation.toByteArray).getValue
+  def toAtalaOperationHash: Array[Byte] = Sha256Hash.compute(toAtalaOperation.toByteArray).bytes.toArray
 }
 
 object PrismDIDOperation extends ProtoModelHelper {
@@ -38,7 +38,7 @@ final case class SignedPrismDIDOperation(
     import ProtoModelHelper.*
     this.toProto
   }
-  def toAtalaOperationId: Array[Byte] = Sha256.compute(toSignedAtalaOperation.toByteArray).getValue
+  def toAtalaOperationId: Array[Byte] = Sha256Hash.compute(toSignedAtalaOperation.toByteArray).bytes.toArray
 }
 
 final case class ScheduleDIDOperationOutcome(

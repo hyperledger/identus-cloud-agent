@@ -67,7 +67,7 @@ object EntityResponse {
     object self
         extends Annotation[String](
           description = "The `self` link of the entity.",
-          example = "http://localhost:8080/prism-agent/iam/entities/00000000-0000-0000-0000-000000000000"
+          example = "http://localhost:8080/cloud-agent/iam/entities/00000000-0000-0000-0000-000000000000"
         )
 
     object id
@@ -103,7 +103,7 @@ object EntityResponse {
 
   val Example = EntityResponse(
     kind = "Entity",
-    self = "/prism-agent/iam/entities/00000000-0000-0000-0000-000000000000",
+    self = "/cloud-agent/iam/entities/00000000-0000-0000-0000-000000000000",
     id = UUID.fromString("00000000-0000-0000-0000-000000000000"),
     name = "John Doe",
     walletId = UUID.fromString("00000000-0000-0000-0000-000000000000"),

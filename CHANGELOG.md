@@ -1,3 +1,25 @@
+# [1.33.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.32.1...cloud-agent-v1.33.0) (2024-05-09)
+
+
+### Bug Fixes
+
+* integration test ([#1011](https://github.com/hyperledger/identus-cloud-agent/issues/1011)) ([d674f31](https://github.com/hyperledger/identus-cloud-agent/commit/d674f3162be44ba05d50b305be4838525d982706))
+
+
+### Features
+
+* rename `prism-agent` to `cloud-agent` ([#1019](https://github.com/hyperledger/identus-cloud-agent/issues/1019)) ([74560da](https://github.com/hyperledger/identus-cloud-agent/commit/74560dabf59dac15ccd086edb7a77d9e5055621e))
+
+## [1.32.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.32.0...cloud-agent-v1.32.1) (2024-05-07)
+
+
+### Bug Fixes
+
+* expose pg_admin port on the localhost interface only ([#957](https://github.com/hyperledger/identus-cloud-agent/issues/957)) ([73674b5](https://github.com/hyperledger/identus-cloud-agent/commit/73674b5da6a41c4972ac3c45005ce768608b558e))
+* Fix OneOf OpenAPI Serialization Issue ([#1010](https://github.com/hyperledger/identus-cloud-agent/issues/1010)) ([393c296](https://github.com/hyperledger/identus-cloud-agent/commit/393c29654b8d3d53071f0d2932a16ff81688ece6))
+* remove prism-crypto dependency ([#1015](https://github.com/hyperledger/identus-cloud-agent/issues/1015)) ([46e594c](https://github.com/hyperledger/identus-cloud-agent/commit/46e594c21bdb43d78f41be6c803ad8b80dc89504))
+* update open-api-spec and generator script and package.json ([#990](https://github.com/hyperledger/identus-cloud-agent/issues/990)) ([88c1b5e](https://github.com/hyperledger/identus-cloud-agent/commit/88c1b5eadf62ad0efcd4ee53b793bb08cce9667f))
+
 # [1.32.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.31.0...cloud-agent-v1.32.0) (2024-04-26)
 
 

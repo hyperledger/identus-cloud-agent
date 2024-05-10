@@ -85,7 +85,7 @@ The following example demonstrates how you could use two Cloud Agent APIs to set
 
 ```shell
 curl -X 'POST' \
- 'http://localhost:8080/prism-agent/connections' \
+ 'http://localhost:8080/cloud-agent/connections' \
  -H 'Content-Type: application/json' \
  -H "apikey: $API_KEY" \
  -d '{ "label": "Connect with Alice" }' | jq
@@ -114,7 +114,7 @@ Example response:
 Replace `{RAW_INVITATION}` with the value of the '_oob' query string parameter from the invitation URL above
 ```shell
 curl -X 'POST' \
- 'http://localhost:8090/prism-agent/connection-invitations' \
+ 'http://localhost:8090/cloud-agent/connection-invitations' \
  -H 'Content-Type: application/json' \
  -H "apikey: $API_KEY" \
  -d '{ "invitation": "{RAW_INVITATION}" }' | jq
@@ -143,7 +143,7 @@ Example response:
 ### Invitee retrieves the list of connections
 
 ```shell
-curl -X 'GET' 'http://localhost:8090/prism-agent/connections' \
+curl -X 'GET' 'http://localhost:8090/cloud-agent/connections' \
     -H "apikey: $API_KEY" | jq
 ```
 
@@ -176,7 +176,7 @@ Example output:
 ### Inviter retrieves the list of connections
 
 ```shell
-curl -X 'GET' 'http://localhost:8080/prism-agent/connections' \
+curl -X 'GET' 'http://localhost:8080/cloud-agent/connections' \
     -H "apikey: $API_KEY" | jq
 ```
 

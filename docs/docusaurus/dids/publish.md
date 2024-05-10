@@ -49,7 +49,7 @@ The `{didRef}` path segment can be either short-form or long-form DID.
 When a DID gets created and not published, it has the status of `CREATED`.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids/{didRef}' \
+curl --location --request GET 'http://localhost:8080/cloud-agent/did-registrar/dids/{didRef}' \
 --header "apikey: $API_KEY" \
 --header 'Accept: application/json'
 ```
@@ -68,7 +68,7 @@ Example response
 To publish a DID, use DID Controller `POST` a request to `/did-registrar/dids/{didRef}/publications` endpoint.
 
 ```bash
-curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids/{didRef}/publications' \
+curl --location --request POST 'http://localhost:8080/cloud-agent/did-registrar/dids/{didRef}/publications' \
 --header "apikey: $API_KEY" \
 --header 'Accept: application/json'
 ```
@@ -127,7 +127,7 @@ To confirm that the short-form DID is resolvable, test the DID against the resol
 Replace `{didRef}` with the short-form DID; the response should return a DID document.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
+curl --location --request GET 'http://localhost:8080/cloud-agent/dids/{didRef}' \
 --header "apikey: $API_KEY" \
 --header 'Accept: */*'
 ```

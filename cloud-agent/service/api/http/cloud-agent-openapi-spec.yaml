@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
-  title: Open Enterprise Agent API Reference
-  version: 1.32.0
+  title: Identus Cloud Agent API Reference
+  version: 1.33.0
   description: |2
 
-    The Open Enterprise Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
+    The Identus Cloud Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
     It supports DID (Decentralized Identifiers) management, verifiable credential exchange, and secure messaging based on DIDComm standards.
     The API is designed to be interoperable with various blockchain and DLT (Distributed Ledger Technology) platforms, ensuring wide compatibility and flexibility.
     Key features include connection management, credential issuance and verification, and secure, privacy-preserving communication between entities.
@@ -127,13 +127,38 @@ tags:
 
     The __metrics__ endpoint returns the runtime metrics of the running service scraped from the internal prometheus registry.
     This information is collected by the prometheus server and can be used to monitor the running service.
+- name: Events
+  description: |
+    The __Events__ endpoints enable users to manage event-related resources, such as webhook notifications.
+    These notifications are specifically designed to inform about events occurring within the wallet, including but not limited to:
+
+    - DID publication notifications
+    - DIDComm connection notifications
+    - Issuance protocol notifications
+    - Presentation protocol notifications
+
+    For more detailed information regarding event notifications, please refer to this [documentation](https://docs.atalaprism.io/tutorials/webhooks/webhook).
+- name: Identity and Access Management
+  description: |2
+
+    The __Identity and Access Management__ endpoints allow [agent administrators](https://docs.atalaprism.io/docs/concepts/glossary#administrator)
+    to manage identity and access management for the agent's tenants.
+    It provides basic built-in IAM capabilities as an alternative to more feature rich external IAM solutions.
+
+    Entities are resources that represent individual tenants and
+    wallets act as containers for Self-Sovereign Identity (SSI) resources within the agent.
+    The administrator can grant tenant access to specific wallets by associating the wallet ID with the Entity.
+    Additionally, the administrator can create API keys for entities and provide them to the tenants out-of-band.
+    These API keys can then be used for authorization to access specific wallets.
+
+    For more detailed information related to the agent IAM and its usage, please refer to this [documentation](https://docs.atalaprism.io/docs/atala-prism/prism-cloud-agent/authentication).
 servers:
 - url: http://localhost:8085
-  description: Local Prism Agent
-- url: http://localhost/prism-agent
-  description: Local Prism Agent with APISIX proxy
-- url: https://k8s-dev.atalaprism.io/prism-agent
-  description: Prism Agent on the Staging Environment
+  description: The local instance of the Cloud Agent
+- url: http://localhost/cloud-agent
+  description: The local instance of the Cloud Agent behind the APISIX proxy
+- url: https://k8s-dev.atalaprism.io/cloud-agent
+  description: The Cloud Agent in the Staging Environment
 paths:
   /credential-definition-registry/definitions:
     get:
@@ -2849,6 +2874,10 @@ paths:
       tags:
       - Events
       summary: List wallet webhook notifications
+      description: "List all registered webhook notifications.\nEach webhook notification\
+        \ contains a unique identifier, the URL to which the events are sent,\nand\
+        \ the custom headers to be included in the dispatched webhook request.\n \
+        \     "
       operationId: getEventsWebhooks
       responses:
         '200':
@@ -2882,6 +2911,9 @@ paths:
       tags:
       - Events
       summary: Create wallet webhook notifications
+      description: "Create a new wallet webhook notification and subscribe to events.\n\
+        A dispatched webhook request may contain static custom headers for authentication\
+        \ or custom metadata.\n      "
       operationId: postEventsWebhooks
       requestBody:
         content:
@@ -3272,7 +3304,7 @@ components:
           type: string
           description: The URL that uniquely identifies the resource being returned
             in the response.
-          example: /prism-agent/connections?offset=10&limit=10
+          example: /cloud-agent/connections?offset=10&limit=10
         pageOf:
           type: string
           description: A string field indicating the type of resource that the contents
@@ -3283,13 +3315,13 @@ components:
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
-          example: /prism-agent/connections?offset=20&limit=10
+          example: /cloud-agent/connections?offset=20&limit=10
         previous:
           type: string
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
-          example: /prism-agent/connections?offset=0&limit=10
+          example: /cloud-agent/connections?offset=0&limit=10
     CreateConnectionRequest:
       type: object
       properties:
@@ -3351,7 +3383,7 @@ components:
             The URL pointing to the JSON schema that will be used for this offer (should be 'http' or 'https').
             When dereferenced, the returned content should be a JSON schema compliant with the '[Draft 2020-12](https://json-schema.org/draft/2020-12/release-notes)' version of the specification.
             Note that this parameter only applies when the offer is of type 'JWT'.
-          example: https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema
+          example: https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema
         credentialDefinitionId:
           type: string
           description: |2
@@ -3468,6 +3500,8 @@ components:
       properties:
         url:
           type: string
+          description: A URL of webhook for event notification
+          example: http://example.com
         customHeaders:
           $ref: '#/components/schemas/Map_String'
     CredentialDefinitionInput:
@@ -3515,7 +3549,7 @@ components:
           type: string
           description: The unique identifier of the schema used for this credential
             definition.
-          example: https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676
+          example: https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676
         signatureType:
           type: string
           description: Signature type used in the CredentialDefinition.
@@ -3597,7 +3631,7 @@ components:
           type: string
           description: The unique identifier of the schema used for this credential
             definition.
-          example: https://agent-host.com/prism-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676
+          example: https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676
         definition:
           description: Definition object that represents the actual definition of
             the credential.
@@ -3632,7 +3666,7 @@ components:
           type: string
           description: The URL that uniquely identifies the resource being returned
             in the response.
-          example: /prism-agent/credential-definition-registry/schemas/0527aea1-d131-3948-a34d-03af39aba8b4
+          example: /cloud-agent/credential-definition-registry/schemas/0527aea1-d131-3948-a34d-03af39aba8b4
     CredentialDefinitionResponsePage:
       required:
       - kind
@@ -3655,24 +3689,24 @@ components:
         self:
           type: string
           description: A string field containing the URL of the current API endpoint
-          example: /prism-agent/schema-registry/schemas?skip=10&limit=10
+          example: /cloud-agent/schema-registry/schemas?skip=10&limit=10
         pageOf:
           type: string
           description: A string field indicating the type of resource that the contents
             field contains
-          example: /prism-agent/schema-registry/schemas
+          example: /cloud-agent/schema-registry/schemas
         next:
           type: string
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
-          example: /prism-agent/schema-registry/schemas?skip=20&limit=10
+          example: /cloud-agent/schema-registry/schemas?skip=20&limit=10
         previous:
           type: string
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
-          example: /prism-agent/schema-registry/schemas?skip=0&limit=10
+          example: /cloud-agent/schema-registry/schemas?skip=0&limit=10
     CredentialSchemaInput:
       required:
       - name
@@ -3865,7 +3899,7 @@ components:
           type: string
           description: The URL that uniquely identifies the resource being returned
             in the response.
-          example: /prism-agent/schema-registry/schemas/0527aea1-d131-3948-a34d-03af39aba8b4
+          example: /cloud-agent/schema-registry/schemas/0527aea1-d131-3948-a34d-03af39aba8b4
     CredentialSchemaResponsePage:
       required:
       - kind
@@ -3888,24 +3922,24 @@ components:
         self:
           type: string
           description: A string field containing the URL of the current API endpoint
-          example: /prism-agent/schema-registry/schemas?skip=10&limit=10
+          example: /cloud-agent/schema-registry/schemas?skip=10&limit=10
         pageOf:
           type: string
           description: A string field indicating the type of resource that the contents
             field contains
-          example: /prism-agent/schema-registry/schemas
+          example: /cloud-agent/schema-registry/schemas
         next:
           type: string
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
-          example: /prism-agent/schema-registry/schemas?skip=20&limit=10
+          example: /cloud-agent/schema-registry/schemas?skip=20&limit=10
         previous:
           type: string
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
-          example: /prism-agent/schema-registry/schemas?skip=0&limit=10
+          example: /cloud-agent/schema-registry/schemas?skip=0&limit=10
     CredentialSubject:
       required:
       - id
@@ -4058,11 +4092,14 @@ components:
     DateTimeParameter:
       required:
       - dateTime
+      - parameterType
       type: object
       properties:
         dateTime:
           type: string
           format: date-time
+        parameterType:
+          type: string
     DidOperationSubmission:
       required:
       - id
@@ -4079,10 +4116,13 @@ components:
           example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
     DidParameter:
       required:
-      - aud
+      - did
+      - parameterType
       type: object
       properties:
-        aud:
+        did:
+          type: string
+        parameterType:
           type: string
     EntityResponse:
       required:
@@ -4102,7 +4142,7 @@ components:
         self:
           type: string
           description: The `self` link of the entity.
-          example: http://localhost:8080/prism-agent/iam/entities/00000000-0000-0000-0000-000000000000
+          example: http://localhost:8080/cloud-agent/iam/entities/00000000-0000-0000-0000-000000000000
         id:
           type: string
           description: The unique `id` of the entity
@@ -4141,7 +4181,7 @@ components:
           description: A sequence of CredentialSchemaResponse objects representing
             the list of credential schemas that the API response contains
           example:
-          - EntityResponse(Entity,/prism-agent/iam/entities/00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,John
+          - EntityResponse(Entity,/cloud-agent/iam/entities/00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,John
             Doe,00000000-0000-0000-0000-000000000000,2023-01-01T00:00:00Z,2023-01-01T00:00:00Z)
         kind:
           type: string
@@ -4151,24 +4191,24 @@ components:
         self:
           type: string
           description: A string field containing the URL of the current API endpoint
-          example: /prism-agent/schema-registry/schemas?skip=10&limit=10
+          example: /cloud-agent/schema-registry/schemas?skip=10&limit=10
         pageOf:
           type: string
           description: A string field indicating the type of resource that the contents
             field contains
-          example: /prism-agent/schema-registry/schemas
+          example: /cloud-agent/schema-registry/schemas
         next:
           type: string
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
-          example: /prism-agent/schema-registry/schemas?skip=20&limit=10
+          example: /cloud-agent/schema-registry/schemas?skip=20&limit=10
         previous:
           type: string
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
-          example: /prism-agent/schema-registry/schemas?skip=0&limit=10
+          example: /cloud-agent/schema-registry/schemas?skip=0&limit=10
     ErrorResponse:
       required:
       - status
@@ -4278,7 +4318,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2024-04-26T13:30:41.666452407Z'
+          example: '2024-05-09T03:52:24.537313621Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -4352,24 +4392,24 @@ components:
           type: string
           description: The URL that uniquely identifies the resource being returned
             in the response.
-          example: /prism-agent/issue-credentials/records?offset=10&limit=10
+          example: /cloud-agent/issue-credentials/records?offset=10&limit=10
         pageOf:
           type: string
           description: A string field indicating the type of resource that the contents
             field contains.
-          example: /prism-agent/issue-credentials/records
+          example: /cloud-agent/issue-credentials/records
         next:
           type: string
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
-          example: /prism-agent/issue-credentials/records?offset=20&limit=10
+          example: /cloud-agent/issue-credentials/records?offset=20&limit=10
         previous:
           type: string
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
-          example: /prism-agent/issue-credentials/records?offset=0&limit=10
+          example: /cloud-agent/issue-credentials/records?offset=0&limit=10
     Json:
       description: The service endpoint. Can contain multiple possible values as described
         in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did)
@@ -4879,7 +4919,7 @@ components:
           type: string
           description: Issuance timestamp of status list credential
           format: date-time
-          example: '2024-04-26T13:30:41.708554220Z'
+          example: '2024-05-09T03:52:24.573534586Z'
         credentialSubject:
           $ref: '#/components/schemas/CredentialSubject'
         proof:
@@ -4999,6 +5039,11 @@ components:
       oneOf:
       - $ref: '#/components/schemas/DateTimeParameter'
       - $ref: '#/components/schemas/DidParameter'
+      discriminator:
+        propertyName: parameterType
+        mapping:
+          DateTimeParameter: '#/components/schemas/DateTimeParameter'
+          DidParameter: '#/components/schemas/DidParameter'
     VcVerificationRequest:
       required:
       - credential
@@ -5154,7 +5199,7 @@ components:
           type: string
           description: The URL that uniquely identifies the resource being returned
             in the response.
-          example: /prism-agent/verification/policies/0527aea1-d131-3948-a34d-03af39aba8b4
+          example: /cloud-agent/verification/policies/0527aea1-d131-3948-a34d-03af39aba8b4
         kind:
           type: string
           description: A string that identifies the type of resource being returned
@@ -5217,7 +5262,7 @@ components:
           type: string
           description: The URL that uniquely identifies the resource being returned
             in the response.
-          example: /prism-agent/verification/policies?name=Trusted&offset=0&limit=10
+          example: /cloud-agent/verification/policies?name=Trusted&offset=0&limit=10
         kind:
           type: string
           description: A string that identifies the type of resource being returned
@@ -5227,19 +5272,19 @@ components:
           type: string
           description: A string field indicating the type of resource that the contents
             field contains
-          example: /prism-agent/verification/policies
+          example: /cloud-agent/verification/policies
         next:
           type: string
           description: An optional string field containing the URL of the next page
             of results. If the API response does not contain any more pages, this
             field should be set to None.
-          example: /prism-agent/verification/policies?skip=20&limit=10
+          example: /cloud-agent/verification/policies?skip=20&limit=10
         previous:
           type: string
           description: An optional string field containing the URL of the previous
             page of results. If the API response is the first page of results, this
             field should be set to None.
-          example: /prism-agent/verification/policies?skip=0&limit=10
+          example: /cloud-agent/verification/policies?skip=0&limit=10
         contents:
           type: array
           items:
@@ -5247,7 +5292,7 @@ components:
           description: A sequence of VerificationPolicyResponse objects representing
             the list of verification policies that the paginated response contains
           example:
-          - self: /prism-agent/verification/policies
+          - self: /cloud-agent/verification/policies
             kind: VerificationPolicy
             id: 0527aea1-d131-3948-a34d-03af39aba8b4
             nonce: 0
