@@ -87,7 +87,7 @@ sbt clean compile test docker:publishLocal
 
 ### Installation and usage
 
-Cloud Agent is distributed as a Docker image to be run in a containerized environment. All versions can be found [here](https://github.com/orgs/input-output-hk/packages/container/package/cloud-agent).
+Cloud Agent is distributed as a Docker image to be run in a containerized environment. Versions after v1.31.0 can be found [here](https://github.com/hyperledger/identus-cloud-agent/pkgs/container/identus-cloud-agent) and before v1.31.0, [here](https://github.com/orgs/input-output-hk/packages/container/package/prism-agent).
 
 The following sections describe how to run the Cloud Agent in different configurations.
 
