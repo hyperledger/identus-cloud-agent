@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   publish-clients:
-    name: 'Build and publish Identus-cloud-Agent clients'
+    name: "Build and publish Identus Cloud Agent clients"
     runs-on: ubuntu-latest
     env:
       VERSION_TAG: ${{inputs.releaseTag || github.ref_name}}
@@ -39,7 +39,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2.8.0
