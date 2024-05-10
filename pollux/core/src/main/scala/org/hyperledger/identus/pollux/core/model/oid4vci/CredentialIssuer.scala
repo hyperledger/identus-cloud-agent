@@ -15,6 +15,6 @@ case class CredentialIssuer(id: UUID, authorizationServer: URL, createdAt: Insta
 object CredentialIssuer {
   def apply(authorizationServer: URL): CredentialIssuer = {
     val now = Instant.now
-    CredentialIssuer(UUID.randomUUID(), authorizationServer, now, now)
+    CredentialIssuer(UUID.randomUUID(), authorizationServer, now, now).withTruncatedTimestamp()
   }
 }
