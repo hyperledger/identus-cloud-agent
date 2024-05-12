@@ -84,7 +84,7 @@ lazy val V = new {
   val jwtCirceVersion = "10.0.1"
   val zioPreludeVersion = "1.0.0-RC25"
 
-  val apollo = "1.2.14"
+  val apollo = "1.2.16"
   val bouncyCastle = "1.78.1"
 
   val jsonSchemaValidator = "1.3.2" // scala-steward:off //TODO 1.3.2 need to fix:
