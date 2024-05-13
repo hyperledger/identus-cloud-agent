@@ -12,6 +12,7 @@ LOGIN_REDIRECT_URL = "http://localhost:7777/cb"
 
 AGENT_URL = "http://localhost:8080/prism-agent"
 CREDENTIAL_ISSUER = None
+CREDENTIAL_ISSUER_DID = None
 CREDENTIAL_CONFIGURATION_ID = "UniversityDegreeCredential"
 AUTHORIZATION_SERVER = "http://localhost:9980/realms/students"
 
@@ -36,6 +37,7 @@ def prepare_mock_server():
 
 
 def prepare_issuer():
+    # prepare issuging DID
     dids = requests.get(f"{AGENT_URL}/did-registrar/dids").json()["contents"]
     if len(dids) == 0:
         requests.post(
@@ -62,11 +64,53 @@ def prepare_issuer():
             requests.post(
                 f"{AGENT_URL}/did-registrar/dids/{canonical_did}/publications"
             )
-
-    global CREDENTIAL_ISSUER
     canonical_did = issuer_did["did"]
-    CREDENTIAL_ISSUER = f"{AGENT_URL}/oid4vci/issuers/{canonical_did}"
-    print(f"CREDENTIAL_ISSUER: {CREDENTIAL_ISSUER}")
+    global CREDENTIAL_ISSUER_DID
+    CREDENTIAL_ISSUER_DID = canonical_did
+
+    # prepare schema
+    schema = requests.post(
+        f"{AGENT_URL}/schema-registry/schemas",
+        json={
+            "name": "UniversityDegree",
+            "version": "1.0.0",
+            "type": "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json",
+            "schema": {
+                "$id": "https://example.com/driving-license-1.0",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                    "firstName": {"type": "string"},
+                    "grade": {"type": "number"},
+                },
+                "required": ["firstName", "grade"],
+                "additionalProperties": False,
+            },
+            "tags": [],
+            "author": canonical_did,
+        },
+    ).json()
+    schema_guid = schema["guid"]
+
+    # prepare issuer
+    credential_issuer = requests.post(
+        f"{AGENT_URL}/oid4vci/issuers",
+        json={"authorizationServer": AUTHORIZATION_SERVER},
+    ).json()
+    issuer_id = credential_issuer["id"]
+    global CREDENTIAL_ISSUER
+    CREDENTIAL_ISSUER = f"{AGENT_URL}/oid4vci/issuers/{issuer_id}"
+
+    # prepare credential configuration
+    cred_config = requests.post(
+        f"{CREDENTIAL_ISSUER}/credential-configurations",
+        json={
+            "configurationId": CREDENTIAL_CONFIGURATION_ID,
+            "format": "jwt_vc_json",
+            # TODO: align docker host URL
+            "schemaId": f"http://localhost:8085/schema-registry/schemas/{schema_guid}/schema",
+        },
+    ).json()
 
 
 def issuer_create_credential_offer(claims):
@@ -78,35 +122,17 @@ def issuer_create_credential_offer(claims):
 
 
 def holder_get_issuer_metadata(credential_issuer: str):
-    # metadata_url = f"{credential_issuer}/.well-known/openid-credential-issuer"
-    # TODO: OEA should return these instead of hardcoded values
-    return {
-        "credential_issuer": CREDENTIAL_ISSUER,
-        "authorization_servers": [AUTHORIZATION_SERVER],
-        "credential_endpoint": f"{CREDENTIAL_ISSUER}/credentials",
-        "credential_identifiers_supported": False,
-        "credential_configurations_supported": {
-            CREDENTIAL_CONFIGURATION_ID: {
-                "format": "jwt_vc_json",
-                "scope": CREDENTIAL_CONFIGURATION_ID,
-                "credential_signing_alg_values_supported": ["ES256K"],
-                "credential_definition": {
-                    "type": ["VerifiableCredential", "UniversityDegreeCredential"],
-                    "credentialSubject": {
-                        "degree": {},
-                        "gpa": {"display": [{"name": "GPA"}]},
-                    },
-                },
-            }
-        },
-    }
+    metadata_url = f"{CREDENTIAL_ISSUER}/.well-known/openid-credential-issuer"
+    response = requests.get(metadata_url).json()
+    # TODO: use credential_endpoint from response
+    response["credential_endpoint"] = f"{AGENT_URL}/oid4vci/issuers/did:prism:0000000000000000000000000000000000000000000000000000000000000000/credentials"
+    return response
 
 
 def holder_get_issuer_as_metadata(authorization_server: str):
     metadata_url = f"{authorization_server}/.well-known/openid-configuration"
     response = requests.get(metadata_url)
     metadata = response.json()
-    # print(json.dumps(metadata, indent=2))
     return metadata
 
 
