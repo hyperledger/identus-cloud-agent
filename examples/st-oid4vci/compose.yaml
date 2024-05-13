@@ -25,34 +25,34 @@ services:
       AGENT_DB_HOST: db-issuer
       AGENT_DB_NAME: agent
       AGENT_DB_PASSWORD: postgres
-      AGENT_DB_PORT: '5432'
+      AGENT_DB_PORT: "5432"
       AGENT_DB_USER: postgres
-      API_KEY_ENABLED: 'false'
+      API_KEY_ENABLED: "false"
       CONNECT_DB_HOST: db-issuer
       CONNECT_DB_NAME: connect
       CONNECT_DB_PASSWORD: postgres
-      CONNECT_DB_PORT: '5432'
+      CONNECT_DB_PORT: "5432"
       CONNECT_DB_USER: postgres
       DIDCOMM_SERVICE_URL: http://caddy-issuer:8080/didcomm
       POLLUX_DB_HOST: db-issuer
       POLLUX_DB_NAME: pollux
       POLLUX_DB_PASSWORD: postgres
-      POLLUX_DB_PORT: '5432'
+      POLLUX_DB_PORT: "5432"
       POLLUX_DB_USER: postgres
       POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL: http://caddy-issuer:8080/prism-agent
       PRISM_NODE_HOST: node
-      PRISM_NODE_PORT: '50053'
+      PRISM_NODE_PORT: "50053"
       REST_SERVICE_URL: http://caddy-issuer:8080/prism-agent
       SECRET_STORAGE_BACKEND: postgres
     image: ghcr.io/hyperledger/identus-cloud-agent:1.33.0-SNAPSHOT
     restart: always
   caddy-issuer:
     configs:
-    - source: caddyfile_issuer
-      target: /etc/caddy/Caddyfile
+      - source: caddyfile_issuer
+        target: /etc/caddy/Caddyfile
     image: caddy:2.7.6-alpine
     ports:
-    - 8080:8080
+      - 8080:8080
     restart: always
   db-issuer:
     environment:
@@ -63,26 +63,26 @@ services:
       interval: 10s
       retries: 5
       test:
-      - CMD
-      - pg_isready
-      - -U
-      - postgres
-      - -d
-      - postgres
+        - CMD
+        - pg_isready
+        - -U
+        - postgres
+        - -d
+        - postgres
       timeout: 5s
     image: postgres:13
     restart: always
     volumes:
-    - pg_data_issuer:/var/lib/postgresql/data
-    - ../.shared/postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
-    - ../.shared/postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
+      - pg_data_issuer:/var/lib/postgresql/data
+      - ../.shared/postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+      - ../.shared/postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
   external-keycloak-init-issuer:
     command:
-    - --glob
-    - /hurl/*.hurl
-    - --test
+      - --glob
+      - /hurl/*.hurl
+      - --test
     environment:
-      HURL_alice_password: '1234'
+      HURL_alice_password: "1234"
       HURL_alice_username: alice
       HURL_alice_wallet_client_id: alice-wallet
       HURL_keycloak_admin_password: admin
@@ -91,26 +91,26 @@ services:
       HURL_keycloak_realm: students
     image: ghcr.io/orange-opensource/hurl:4.2.0
     volumes:
-    - ./bootstrap:/hurl
+      - ./bootstrap:/hurl
   external-keycloak-issuer:
     build: ../../extensions/keycloak-oid4vci
     command:
-    - start-dev
-    - --features=preview
-    - --health-enabled=true
-    - --hostname-url=http://localhost:9980
-    - --hostname-admin-url=http://localhost:9980
+      - start-dev
+      - --features=preview
+      - --health-enabled=true
+      - --hostname-url=http://localhost:9980
+      - --hostname-admin-url=http://localhost:9980
     environment:
       IDENTUS_URL: http://caddy-issuer:8080/prism-agent
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
     ports:
-    - 9980:8080
+      - 9980:8080
     restart: always
   mockserver:
     image: mockserver/mockserver:5.15.0
     ports:
-    - 7777:1080
+      - 7777:1080
   node:
     depends_on:
       node-db:
@@ -131,20 +131,20 @@ services:
       interval: 10s
       retries: 5
       test:
-      - CMD
-      - pg_isready
-      - -U
-      - postgres
-      - -d
-      - postgres
+        - CMD
+        - pg_isready
+        - -U
+        - postgres
+        - -d
+        - postgres
       timeout: 5s
     image: postgres:13
     restart: always
     volumes:
-    - pg_data_node:/var/lib/postgresql/data
-    - ../.shared/postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
-    - ../.shared/postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
-version: '3'
+      - pg_data_node:/var/lib/postgresql/data
+      - ../.shared/postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+      - ../.shared/postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
+version: "3"
 volumes:
   pg_data_issuer: {}
   pg_data_node: {}
