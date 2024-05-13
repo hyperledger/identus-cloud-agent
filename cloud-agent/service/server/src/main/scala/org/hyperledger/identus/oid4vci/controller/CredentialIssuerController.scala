@@ -28,7 +28,7 @@ trait CredentialIssuerController {
 
   def createCredentialOffer(
       ctx: RequestContext,
-      didRef: String,
+      issuerId: UUID,
       credentialOfferRequest: CredentialOfferRequest
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialOfferResponse]
 
@@ -216,13 +216,12 @@ case class CredentialIssuerControllerImpl(
 
   override def createCredentialOffer(
       ctx: RequestContext,
-      didRef: String,
+      issuerId: UUID,
       credentialOfferRequest: CredentialOfferRequest
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialOfferResponse] = {
     for {
-      canonicalPrismDID <- parseIssuerDIDBasicError(didRef)
       resp <- credentialIssuerService
-        .createCredentialOffer(canonicalPrismDID, credentialOfferRequest.claims)
+        .createCredentialOffer(issuerId, credentialOfferRequest.claims)
         .map(offer => CredentialOfferResponse(offer.offerUri))
         .mapError(ue =>
           internalServerError(detail = Some(s"Unexpected error while creating credential offer: ${ue.message}"))

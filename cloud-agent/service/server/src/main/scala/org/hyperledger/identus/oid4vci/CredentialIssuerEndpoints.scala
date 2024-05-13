@@ -86,12 +86,12 @@ object CredentialIssuerEndpoints {
 
   val createCredentialOfferEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
-    (RequestContext, String, CredentialOfferRequest),
+    (RequestContext, UUID, CredentialOfferRequest),
     ErrorResponse,
     CredentialOfferResponse,
     Any
   ] = baseIssuerPrivateEndpoint.post
-    .in(didRefPathSegment / "credential-offers")
+    .in(issuerIdPathSegment / "credential-offers")
     .in(jsonBody[CredentialOfferRequest])
     .out(
       statusCode(StatusCode.Created).description("CredentialOffer created successfully"),

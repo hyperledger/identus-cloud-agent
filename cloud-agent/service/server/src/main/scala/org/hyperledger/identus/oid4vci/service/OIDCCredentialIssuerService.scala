@@ -13,6 +13,7 @@ import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.time.Instant
+import java.util.UUID
 import scala.util.Try
 
 // TODO: move to pollux
@@ -36,7 +37,7 @@ trait OIDCCredentialIssuerService {
   ): IO[Error, JWT]
 
   def createCredentialOffer(
-      issuerDID: PrismDID,
+      issuerId: UUID,
       claims: zio.json.ast.Json
   ): ZIO[WalletAccessContext, Error, CredentialOffer]
 
@@ -154,18 +155,22 @@ case class OIDCCredentialIssuerServiceImpl(
       .someOrFail(ServiceError(s"The IssuanceSession with the issuerState $issuerState does not exist"))
 
   override def createCredentialOffer(
-      issuingDid: PrismDID,
+      issuerId: UUID,
       claims: zio.json.ast.Json
   ): ZIO[WalletAccessContext, OIDCCredentialIssuerService.Error, CredentialOffer] =
-    val canonicalIssuingDid = issuingDid.asCanonical
+    // TODO: do not use hardcoded value
+    val canonicalIssuingDid = PrismDID
+      .fromString("did:prism:0000000000000000000000000000000000000000000000000000000000000000")
+      .toOption
+      .get
+      .asCanonical
     for {
       session <- buildNewIssuanceSession(canonicalIssuingDid, claims)
       _ <- issuanceSessionStorage
         .start(session)
         .mapError(e => ServiceError(s"Failed to start issuance session: ${e.message}"))
     } yield CredentialOffer(
-      credential_issuer =
-        s"http://localhost:8080/prism-agent/${canonicalIssuingDid.toString}", // TODO: add issuer metadata endpoint
+      credential_issuer = s"http://localhost:8080/prism-agent/${issuerId}", // TODO: add issuer metadata endpoint
       credential_configuration_ids = Seq("UniversityDegreeCredential"), // TODO: allow credential configuration CRUD
       grants = Some(
         CredentialOfferGrant(
