@@ -13,7 +13,7 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
 
   private def generateIssuer(): UIO[Issuer] = {
     val keyGen = KeyPairGenerator.getInstance("EC")
-    val ecSpec = ECGenParameterSpec("secp256r1")
+    val ecSpec = ECGenParameterSpec("secp256k1")
     keyGen.initialize(ecSpec, SecureRandom())
     val keyPair = keyGen.generateKeyPair()
     val privateKey = keyPair.getPrivate
