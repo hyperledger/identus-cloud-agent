@@ -38,10 +38,8 @@ object CredentialDefinitionLookupAndPaginationSpec
             .get(uri)
             .response(asJsonAlways[CredentialDefinitionResponsePage])
             .send(backend)
-        } yield {
-          println(response)
-          response
-        }
+        } yield response
+      _ <- ZIO.log(response.toString)
       firstPage <- ZIO.fromEither(response.body)
       otherPagesStream = zio.stream.ZStream
         .unfoldZIO[Any, Throwable, CredentialDefinitionResponsePage, CredentialDefinitionResponsePage](firstPage)(

@@ -44,7 +44,6 @@ object PresentationStatus {
         p.attachments.head.data match {
           case Base64(data) =>
             val base64Decoded = new String(java.util.Base64.getDecoder.decode(data))
-            println(s"Base64decode:\n\n ${base64Decoded} \n\n")
             Seq(base64Decoded)
           case any => ???
         }

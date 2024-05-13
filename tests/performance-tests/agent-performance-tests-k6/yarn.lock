@@ -993,10 +993,10 @@
   resolved "https://registry.yarnpkg.com/@discoveryjs/json-ext/-/json-ext-0.5.7.tgz#1d572bfbbe14b7704e0ba0f39b74815b84870d70"
   integrity sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw==
 
-"@input-output-hk/prism-typescript-client@^1.12.0":
-  version "1.12.0"
-  resolved "https://npm.pkg.github.com/download/@input-output-hk/prism-typescript-client/1.12.0/b327649cf9be1a2f6c41ac2cdac7467523165cfe#b327649cf9be1a2f6c41ac2cdac7467523165cfe"
-  integrity sha512-0YAR+Rhu7WA0Y2jAv8eH0i4VG0G4AOWysc+T+G7sCsCI0PjmgiG9CvUz10tupEnO7n8fwvVGSA7lu2SD5NKEyw==
+"@hyperledger/identus-cloud-agent-client-ts@^1.33.0":
+  version "1.33.0"
+  resolved "https://npm.pkg.github.com/download/@hyperledger/identus-cloud-agent-client-ts/1.33.0/6f0f6f6a36ceb0790981ad3ba425db1d6b0103cd#6f0f6f6a36ceb0790981ad3ba425db1d6b0103cd"
+  integrity sha512-kVF/PnkV2T+G8TX0frHq7ENeK8RQCrif+HapyMj0CtWrfPmm5Qlh7XeFqY1H80HOMTanB9i15PwIabb717rkhQ==
   dependencies:
     es6-promise "^4.2.4"
     url-parse "^1.4.3"
