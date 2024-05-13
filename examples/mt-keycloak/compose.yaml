@@ -51,7 +51,7 @@ services:
       PRISM_NODE_PORT: '50053'
       REST_SERVICE_URL: http://caddy-default:8080/prism-agent
       SECRET_STORAGE_BACKEND: postgres
-    image: ghcr.io/hyperledger/identus-cloud-agent:1.32.0-SNAPSHOT
+    image: ghcr.io/hyperledger/identus-cloud-agent:1.33.0-SNAPSHOT
     restart: always
   caddy-default:
     configs:

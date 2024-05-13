@@ -34,9 +34,9 @@ case class CredentialIssuerServerEndpoints(
     CredentialIssuerEndpoints.createCredentialOfferEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
-        { case (rc, id, request) =>
+        { case (rc, issuerId, request) =>
           credentialIssuerController
-            .createCredentialOffer(rc, id, request)
+            .createCredentialOffer(rc, issuerId, request)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
