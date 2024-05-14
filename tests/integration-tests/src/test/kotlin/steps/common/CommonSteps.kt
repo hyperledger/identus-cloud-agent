@@ -11,8 +11,6 @@ import net.serenitybdd.screenplay.actors.OnStage
 import org.apache.http.HttpStatus
 import org.hyperledger.identus.client.models.Connection
 import org.hyperledger.identus.client.models.ConnectionsPage
-import org.hyperledger.identus.client.models.IssueCredentialRecord
-import org.hyperledger.identus.client.models.IssueCredentialRecordPage
 import steps.connection.ConnectionSteps
 import steps.credentials.IssueCredentialsSteps
 import steps.did.PublishDidSteps
