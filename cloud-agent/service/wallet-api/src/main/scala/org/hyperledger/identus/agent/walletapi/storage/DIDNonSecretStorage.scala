@@ -6,8 +6,6 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
-import scala.collection.immutable.ArraySeq
-
 trait DIDNonSecretStorage {
 
   def getManagedDIDState(did: PrismDID): RIO[WalletAccessContext, Option[ManagedDIDState]]
@@ -34,8 +32,6 @@ trait DIDNonSecretStorage {
       meta: ManagedDIDKeyMeta,
       operationHash: Array[Byte]
   ): RIO[WalletAccessContext, Unit]
-
-  def listHdKeyPath(did: PrismDID): RIO[WalletAccessContext, Seq[(String, ArraySeq[Byte], ManagedDIDHdKeyPath)]]
 
   /** Return a list of Managed DID as well as a count of all filtered items */
   def listManagedDID(

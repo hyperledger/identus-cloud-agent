@@ -1,5 +1,6 @@
 package org.hyperledger.identus.mercury.protocol.invitation
 
+import java.net.URI
 import java.net.URL
 import java.{util => ju}
 import org.hyperledger.identus.mercury.protocol.invitation.v2._
@@ -8,7 +9,7 @@ import io.circe.parser._
 
 object OutOfBand {
 
-  def parseLink(url: String): Option[String] = parseLink(new URL(url))
+  def parseLink(url: String): Option[String] = parseLink(new URI(url).toURL())
   def parseLink(url: URL): Option[String] = (url.getQuery() match {
     case str if str.startsWith("_oob=") => Some(str.drop(5))
     case _                              => None

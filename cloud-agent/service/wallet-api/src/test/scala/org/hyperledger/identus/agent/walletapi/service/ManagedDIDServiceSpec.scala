@@ -343,7 +343,7 @@ object ManagedDIDServiceSpec
         ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
         svc <- ZIO.service[ManagedDIDService]
         storage <- ZIO.service[DIDNonSecretStorage]
-        urlTmp = java.net.URL("http://example.com")
+        urlTmp = java.net.URI("http://example.com").toURL()
         peerDid1 <- svc.createAndStorePeerDID(urlTmp).provide(ctx1)
         peerDid2 <- svc.createAndStorePeerDID(urlTmp).provide(ctx2)
         record1 <- storage.getPeerDIDRecord(peerDid1.did)
@@ -563,7 +563,7 @@ object ManagedDIDServiceSpec
         ctx1 = ZLayer.succeed(WalletAccessContext(walletId1))
         ctx2 = ZLayer.succeed(WalletAccessContext(walletId2))
         svc <- ZIO.service[ManagedDIDService]
-        urlTmp = java.net.URL("http://example.com")
+        urlTmp = java.net.URI("http://example.com").toURL()
         dids1 <- ZIO.foreach(1 to 3)(_ => svc.createAndStorePeerDID(urlTmp)).provide(ctx1)
         dids2 <- ZIO.foreach(1 to 3)(_ => svc.createAndStorePeerDID(urlTmp)).provide(ctx2)
         ownWalletDids1 <- ZIO.foreach(dids1)(d => svc.getPeerDID(d.did).exit).provide(ctx1)
