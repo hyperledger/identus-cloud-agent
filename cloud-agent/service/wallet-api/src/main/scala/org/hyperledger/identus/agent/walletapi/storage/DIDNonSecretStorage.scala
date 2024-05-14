@@ -25,6 +25,7 @@ trait DIDNonSecretStorage {
 
   def getHdKeyCounter(did: PrismDID): RIO[WalletAccessContext, Option[HdKeyIndexCounter]]
 
+  /** Return a tuple of key metadata and the operation hash */
   def getKeyMeta(did: PrismDID, keyId: String): RIO[WalletAccessContext, Option[(ManagedDIDKeyMeta, Array[Byte])]]
 
   def insertKeyMeta(

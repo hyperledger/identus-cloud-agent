@@ -15,6 +15,9 @@ import org.hyperledger.identus.castor.core.model.error
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
+import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
+import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
+import org.hyperledger.identus.shared.crypto.X25519KeyPair
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.models.WalletAdministrationContext
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
@@ -235,18 +238,38 @@ object ManagedDIDServiceSpec
       } yield assert(didsBefore)(isEmpty) &&
         assert(didsAfter.map(_._1))(hasSameElements(Seq(did)))
     },
-    test("create and store DID secret in DIDSecretStorage") {
+    test("create and store DID secret in DIDSecretStorage for keys") {
       val template = generateDIDTemplate(
         publicKeys = Seq(
           DIDPublicKeyTemplate("key1", VerificationRelationship.Authentication, EllipticCurve.SECP256K1),
-          DIDPublicKeyTemplate("key2", VerificationRelationship.KeyAgreement, EllipticCurve.SECP256K1)
+          DIDPublicKeyTemplate("key2", VerificationRelationship.Authentication, EllipticCurve.SECP256K1),
+          DIDPublicKeyTemplate("key3", VerificationRelationship.AssertionMethod, EllipticCurve.ED25519),
+          DIDPublicKeyTemplate("key4", VerificationRelationship.KeyAgreement, EllipticCurve.X25519),
         )
       )
       for {
         svc <- ZIO.service[ManagedDIDService]
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
-        keyPaths <- svc.nonSecretStorage.listHdKeyPath(did)
-      } yield assert(keyPaths.map(_._1))(hasSameElements(Seq("key1", "key2", ManagedDIDService.DEFAULT_MASTER_KEY_ID)))
+        masterKey <- svc.nonSecretStorage.getKeyMeta(did, ManagedDIDService.DEFAULT_MASTER_KEY_ID).some.map(_._1)
+        key1 <- svc.nonSecretStorage.getKeyMeta(did, "key1").some.map(_._1)
+        key2 <- svc.nonSecretStorage.getKeyMeta(did, "key2").some.map(_._1)
+        key3 <- svc.nonSecretStorage.getKeyMeta(did, "key3").some.map(_._1)
+        key4 <- svc.nonSecretStorage.getKeyMeta(did, "key4").some.map(_._1)
+        masterKeyPair <- svc.findDIDKeyPair(did, ManagedDIDService.DEFAULT_MASTER_KEY_ID).some
+        key1KeyPair <- svc.findDIDKeyPair(did, "key1").some
+        key2KeyPair <- svc.findDIDKeyPair(did, "key2").some
+        key3KeyPair <- svc.findDIDKeyPair(did, "key3").some
+        key4KeyPair <- svc.findDIDKeyPair(did, "key4").some
+      } yield assert(masterKey)(isSubtype[ManagedDIDKeyMeta.HD](anything)) &&
+        assert(key1)(isSubtype[ManagedDIDKeyMeta.HD](anything)) &&
+        assert(key2)(isSubtype[ManagedDIDKeyMeta.HD](anything)) &&
+        assert(key3)(isSubtype[ManagedDIDKeyMeta.Rand](anything)) &&
+        assert(key4)(isSubtype[ManagedDIDKeyMeta.Rand](anything)) &&
+        assert(masterKeyPair)(isSubtype[Secp256k1KeyPair](anything)) &&
+        assert(key1KeyPair)(isSubtype[Secp256k1KeyPair](anything)) &&
+        assert(key2KeyPair)(isSubtype[Secp256k1KeyPair](anything)) &&
+        assert(key3KeyPair)(isSubtype[Ed25519KeyPair](anything)) &&
+        assert(key4KeyPair)(isSubtype[X25519KeyPair](anything))
     },
     test("created DID have corresponding public keys in CreateOperation") {
       val template = generateDIDTemplate(
@@ -393,16 +416,25 @@ object ManagedDIDServiceSpec
           testDIDSvc <- ZIO.service[TestDIDService]
           did <- initPublishedDID
           _ <- testDIDSvc.setResolutionResult(Some(resolutionResult()))
-          actions = Seq("key-1", "key-2").map(id =>
+          actions = Seq(
             UpdateManagedDIDAction.AddKey(
-              DIDPublicKeyTemplate(id, VerificationRelationship.Authentication, EllipticCurve.SECP256K1)
+              DIDPublicKeyTemplate("key-1", VerificationRelationship.Authentication, EllipticCurve.SECP256K1)
+            ),
+            UpdateManagedDIDAction.AddKey(
+              DIDPublicKeyTemplate("key-2", VerificationRelationship.Authentication, EllipticCurve.ED25519)
+            ),
+            UpdateManagedDIDAction.AddKey(
+              DIDPublicKeyTemplate("key-3", VerificationRelationship.KeyAgreement, EllipticCurve.X25519)
             )
           )
           _ <- svc.updateManagedDID(did, actions)
-          keyPaths <- svc.nonSecretStorage.listHdKeyPath(did)
-        } yield assert(keyPaths.map(_._1))(
-          hasSameElements(Seq(ManagedDIDService.DEFAULT_MASTER_KEY_ID, "key-1", "key-2"))
-        )
+          _ <- svc.syncUnconfirmedUpdateOperations
+          key1KeyPair <- svc.findDIDKeyPair(did, "key-1").some
+          key2KeyPair <- svc.findDIDKeyPair(did, "key-2").some
+          key3KeyPair <- svc.findDIDKeyPair(did, "key-3").some
+        } yield assert(key1KeyPair)(isSubtype[Secp256k1KeyPair](anything)) &&
+          assert(key2KeyPair)(isSubtype[Ed25519KeyPair](anything)) &&
+          assert(key3KeyPair)(isSubtype[X25519KeyPair](anything))
       },
       test("store private keys with the same key-id across multiple update operation") {
         for {
@@ -410,17 +442,29 @@ object ManagedDIDServiceSpec
           testDIDSvc <- ZIO.service[TestDIDService]
           did <- initPublishedDID
           _ <- testDIDSvc.setResolutionResult(Some(resolutionResult()))
-          actions = Seq("key-1", "key-2").map(id =>
+          actions = Seq(
             UpdateManagedDIDAction.AddKey(
-              DIDPublicKeyTemplate(id, VerificationRelationship.Authentication, EllipticCurve.SECP256K1)
+              DIDPublicKeyTemplate("key-1", VerificationRelationship.Authentication, EllipticCurve.SECP256K1)
+            ),
+            UpdateManagedDIDAction.AddKey(
+              DIDPublicKeyTemplate("key-2", VerificationRelationship.Authentication, EllipticCurve.ED25519)
             )
           )
           _ <- svc.updateManagedDID(did, actions) // 1st update
-          _ <- svc.updateManagedDID(did, actions.take(1)) // 2nd update: key-1 is added twice
-          keyPaths <- svc.nonSecretStorage.listHdKeyPath(did)
-        } yield assert(keyPaths.map(_._1))(
-          hasSameElements(Seq(ManagedDIDService.DEFAULT_MASTER_KEY_ID, "key-1", "key-1", "key-2"))
-        )
+          _ <- testDIDSvc.setOperationStatus(ScheduledDIDOperationStatus.Confirmed)
+          _ <- svc.syncUnconfirmedUpdateOperations
+          key1KeyPair1 <- svc.findDIDKeyPair(did, "key-1").some
+          key2KeyPair1 <- svc.findDIDKeyPair(did, "key-2").some
+          _ <- svc.updateManagedDID(did, actions) // 2nd update
+          _ <- testDIDSvc.setOperationStatus(ScheduledDIDOperationStatus.Rejected)
+          _ <- svc.syncUnconfirmedUpdateOperations
+          key1KeyPair2 <- svc.findDIDKeyPair(did, "key-1").some
+          key2KeyPair2 <- svc.findDIDKeyPair(did, "key-2").some
+        } yield assert(key1KeyPair1)(isSubtype[Secp256k1KeyPair](anything)) &&
+          assert(key2KeyPair1)(isSubtype[Ed25519KeyPair](anything)) &&
+          // 2nd update with rejected status does not update the key pair
+          assert(key1KeyPair2)(equalTo(key1KeyPair1)) &&
+          assert(key2KeyPair2)(equalTo(key2KeyPair1))
       },
       test("store did lineage for each update operation") {
         for {

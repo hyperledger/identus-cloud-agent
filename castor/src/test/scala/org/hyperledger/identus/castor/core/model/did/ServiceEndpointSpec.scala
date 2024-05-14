@@ -3,7 +3,6 @@ package org.hyperledger.identus.castor.core.model.did
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint
 
 object ServiceEndpointSpec extends ZIOSpecDefault {
 
