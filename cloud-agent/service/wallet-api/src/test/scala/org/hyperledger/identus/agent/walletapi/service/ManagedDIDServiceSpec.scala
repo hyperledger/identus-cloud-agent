@@ -238,7 +238,7 @@ object ManagedDIDServiceSpec
       } yield assert(didsBefore)(isEmpty) &&
         assert(didsAfter.map(_._1))(hasSameElements(Seq(did)))
     },
-    test("create and store DID secret in DIDSecretStorage for keys") {
+    test("create and store DID secret in DIDSecretStorage") {
       val template = generateDIDTemplate(
         publicKeys = Seq(
           DIDPublicKeyTemplate("key1", VerificationRelationship.Authentication, EllipticCurve.SECP256K1),
