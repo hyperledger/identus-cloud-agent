@@ -1,34 +1,30 @@
 package org.hyperledger.identus.pollux.vc.jwt.revocation
 
-import org.hyperledger.identus.pollux.vc.jwt.{DID, ES256Signer, Issuer, JwtCredential}
+import org.hyperledger.identus.pollux.vc.jwt.{DID, ES256KSigner, Issuer, JwtCredential}
 import zio.test.{Spec, ZIOSpecDefault, assertTrue}
 import zio.{UIO, ZIO}
-
-import java.security.spec.ECGenParameterSpec
-import java.security.{KeyPairGenerator, SecureRandom}
+import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
 
 object VCStatusList2021Spec extends ZIOSpecDefault {
 
   private val VC_ID = "https://example.com/credentials/status/3"
 
   private def generateIssuer(): UIO[Issuer] = {
-    val keyGen = KeyPairGenerator.getInstance("EC")
-    val ecSpec = ECGenParameterSpec("secp256k1")
-    keyGen.initialize(ecSpec, SecureRandom())
-    val keyPair = keyGen.generateKeyPair()
-    val privateKey = keyPair.getPrivate
-    val publicKey = keyPair.getPublic
+
+    val keyPair = KmpSecp256k1KeyOps.generateKeyPair
+    val javaSKey = keyPair.privateKey.toJavaPrivateKey
+    val javaPKey = keyPair.publicKey.toJavaPublicKey
+
     ZIO.succeed(
       Issuer(
         did = DID("did:issuer:MDP8AsFhHzhwUvGNuYkX7T"),
-        signer = ES256Signer(privateKey),
-        publicKey = publicKey
+        signer = ES256KSigner(javaSKey),
+        publicKey = javaPKey
       )
     )
   }
 
   override def spec = suite("VCStatusList2021")(
-    // TODO: add test to verify the proof is valid
     test("Should generate status list VC as JSON with embedded proof") {
       for {
         issuer <- generateIssuer()
@@ -57,7 +53,6 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
         bitString <- BitString.getInstance()
         statusList <- VCStatusList2021.build(VC_ID, s"$VC_ID#list", issuer, bitString)
         encodedJwtVC <- statusList.encoded
-        _ <- ZIO.logInfo(s"$encodedJwtVC")
         valid <- ZIO.succeed(JwtCredential.validateEncodedJwt(encodedJwtVC, issuer.publicKey))
       } yield {
         assertTrue(valid)

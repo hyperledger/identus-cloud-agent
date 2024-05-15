@@ -17,6 +17,8 @@ import java.security.PublicKey
 import java.time.temporal.TemporalAmount
 import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
 import scala.util.Try
+import com.nimbusds.jwt.SignedJWT
+import scala.util.Failure
 
 opaque type DID = String
 object DID {
@@ -711,9 +713,16 @@ object JwtCredential {
   def encodeJwt(payload: JwtCredentialPayload, issuer: Issuer): JWT = issuer.signer.encode(payload.asJson)
 
   def decodeJwt(jwt: JWT, publicKey: PublicKey): Try[JwtCredentialPayload] = {
-    JwtCirce
-      .decodeRaw(jwt.value, publicKey, options = JwtOptions(expiration = false, notBefore = false))
-      .flatMap(decode[JwtCredentialPayload](_).toTry)
+    val signedJWT = SignedJWT.parse(jwt.value)
+    val verifier = JWTVerification.toECDSAVerifier(publicKey)
+
+    val isSignatureValid = signedJWT.verify(verifier)
+
+    if isSignatureValid then
+      val claimsSet = signedJWT.getJWTClaimsSet.toString
+      decode[JwtCredentialPayload](claimsSet).toTry
+    else
+      Failure(Exception(s"Invalid JWT signature for: ${JWT.value}"))
   }
 
   def decodeJwt(jwt: JWT): IO[String, JwtCredentialPayload] = {
@@ -731,7 +740,9 @@ object JwtCredential {
   }
 
   def validateEncodedJwt(jwt: JWT, publicKey: PublicKey): Boolean =
-    JwtCirce.isValid(jwt.value, publicKey, JwtOptions(expiration = false, notBefore = false))
+    val signedJWT = SignedJWT.parse(jwt.value)
+    val verifier = JWTVerification.toECDSAVerifier(publicKey)
+    signedJWT.verify(verifier)
 
   def validateEncodedJWT(
       jwt: JWT,
