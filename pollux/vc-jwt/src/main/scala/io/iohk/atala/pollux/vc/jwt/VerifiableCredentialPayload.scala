@@ -721,8 +721,7 @@ object JwtCredential {
     if isSignatureValid then
       val claimsSet = signedJWT.getJWTClaimsSet.toString
       decode[JwtCredentialPayload](claimsSet).toTry
-    else
-      Failure(Exception(s"Invalid JWT signature for: ${JWT.value}"))
+    else Failure(Exception(s"Invalid JWT signature for: ${JWT.value}"))
   }
 
   def decodeJwt(jwt: JWT): IO[String, JwtCredentialPayload] = {
