@@ -32,7 +32,6 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import scala.concurrent.Future
-import org.hyperledger.identus.castor.core.service.{DIDService, DIDServiceImpl}
 
 object DIDServiceSpec extends ZIOSpecDefault {
 

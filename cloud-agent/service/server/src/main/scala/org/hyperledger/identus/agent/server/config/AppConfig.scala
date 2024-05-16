@@ -28,7 +28,7 @@ object AppConfig {
     val urlRegex = """^(http|https)://[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(:[0-9]{1,5})?(/.*)?$""".r
     urlRegex.findFirstMatchIn(url) match
       case Some(_) =>
-        Try(java.net.URL(url)).toEither.left.map(ex /*java.net.MalformedURLException*/ =>
+        Try(java.net.URI(url).toURL()).toEither.left.map(ex /*java.net.MalformedURLException*/ =>
           Config.Error.InvalidData(zio.Chunk.empty, ex.getMessage())
         )
       case _ => Left(Config.Error.InvalidData(zio.Chunk.empty, s"Invalid URL: $url"))

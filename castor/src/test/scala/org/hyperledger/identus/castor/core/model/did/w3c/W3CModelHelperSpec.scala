@@ -12,7 +12,6 @@ import org.hyperledger.identus.castor.core.util.GenUtils
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import org.hyperledger.identus.castor.core.model.did.w3c.W3CModelHelper
 
 object W3CModelHelperSpec extends ZIOSpecDefault {
 

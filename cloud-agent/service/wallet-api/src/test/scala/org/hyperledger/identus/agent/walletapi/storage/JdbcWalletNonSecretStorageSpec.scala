@@ -14,7 +14,7 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-import java.net.URL
+import java.net.URI
 
 object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 
@@ -156,7 +156,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
         wallet <- createWallets(1).map(_.head)
-        config = EventNotificationConfig(wallet.id, URL("https://example.com"))
+        config = EventNotificationConfig(wallet.id, URI("https://example.com").toURL())
         _ <- storage
           .createWalletNotification(config)
           .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
@@ -171,11 +171,11 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
         limit = JdbcWalletNonSecretStorage.MAX_WEBHOOK_PER_WALLET
         _ <- ZIO.foreach(1 to limit) { _ =>
           storage
-            .createWalletNotification(EventNotificationConfig(wallet.id, URL("https://example.com")))
+            .createWalletNotification(EventNotificationConfig(wallet.id, URI("https://example.com").toURL()))
             .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
         }
         exit <- storage
-          .createWalletNotification(EventNotificationConfig(wallet.id, URL("https://example.com")))
+          .createWalletNotification(EventNotificationConfig(wallet.id, URI("https://example.com").toURL()))
           .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
           .exit
       } yield assert(exit)(fails(isSubtype[TooManyWebhook](anything)))
@@ -186,7 +186,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
         wallets <- createWallets(2)
         wallet1 = wallets.head
         wallet2 = wallets.last
-        config = EventNotificationConfig(wallet1.id, URL("https://example.com"))
+        config = EventNotificationConfig(wallet1.id, URI("https://example.com").toURL())
         _ <- storage
           .createWalletNotification(config)
           .provide(ZLayer.succeed(WalletAccessContext(wallet1.id)))
