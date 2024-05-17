@@ -77,7 +77,7 @@ class ConnectionSteps {
     @When("{actor} receives the connection request and sends back the response")
     fun inviterReceivesTheConnectionRequest(inviter: Actor) {
         Wait.until(
-            errorMessage = "Inviter connection didn't reach ${Connection.State.CONNECTION_RESPONSE_SENT} state"
+            errorMessage = "Inviter connection didn't reach ${Connection.State.CONNECTION_RESPONSE_SENT} state",
         ) {
             val lastEvent = ListenToEvents.with(inviter).connectionEvents.lastOrNull {
                 it.data.thid == inviter.recall<Connection>("connection").thid
@@ -89,13 +89,13 @@ class ConnectionSteps {
     @When("{actor} receives the connection response")
     fun inviteeReceivesTheConnectionResponse(invitee: Actor) {
         Wait.until(
-            errorMessage = "Invitee connection didn't reach ${Connection.State.CONNECTION_RESPONSE_RECEIVED} state."
+            errorMessage = "Invitee connection didn't reach ${Connection.State.CONNECTION_RESPONSE_RECEIVED} state.",
         ) {
             val lastEvent = ListenToEvents.with(invitee).connectionEvents.lastOrNull {
                 it.data.thid == invitee.recall<Connection>("connection").thid
             }
             lastEvent != null &&
-                    lastEvent.data.state == Connection.State.CONNECTION_RESPONSE_RECEIVED
+                lastEvent.data.state == Connection.State.CONNECTION_RESPONSE_RECEIVED
         }
     }
 

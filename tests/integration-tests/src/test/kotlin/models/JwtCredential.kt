@@ -4,7 +4,6 @@ import com.jayway.jsonpath.DocumentContext
 import com.jayway.jsonpath.JsonPath
 import java.util.Base64
 
-
 class JwtCredential(base64: String) {
     private val payload: DocumentContext
 
@@ -18,5 +17,4 @@ class JwtCredential(base64: String) {
         val listUrl = payload.read<String>("$.vc.credentialStatus.statusListCredential")
         return listUrl.split("/credential-status/")[1]
     }
-
 }

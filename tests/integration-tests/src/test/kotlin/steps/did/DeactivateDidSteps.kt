@@ -32,7 +32,6 @@ class DeactivateDidSteps {
         val deactivatedDid = actor.forget<String>("shortFormDid")
         actor.forget<String>("longFormDid")
         actor.remember("deactivatedDid", deactivatedDid)
-
     }
 
     @Then("{actor} sees that PRISM DID is successfully deactivated")

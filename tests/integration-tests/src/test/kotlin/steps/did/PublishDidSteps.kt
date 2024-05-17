@@ -98,7 +98,7 @@ class PublishDidSteps {
 
         Wait.until(
             timeout = 30.seconds,
-            errorMessage = "ERROR: DID was not published to ledger!"
+            errorMessage = "ERROR: DID was not published to ledger!",
         ) {
             val didEvent = ListenToEvents.with(actor).didEvents.lastOrNull {
                 it.data.did == actor.recall<String>("shortFormDid")

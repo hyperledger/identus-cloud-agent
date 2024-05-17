@@ -31,15 +31,15 @@ class AnoncredsPresentProofSteps {
         val anoncredsPresentationRequestV1 = AnoncredPresentationRequestV1(
             requestedAttributes = mapOf(
                 "sex" to
-                        AnoncredRequestedAttributeV1(
-                            name = "sex",
-                            restrictions = listOf(
-                                mapOf(
-                                    ("attr::sex::value" to "M"),
-                                    ("cred_def_id" to credentialDefinitionId),
-                                ),
+                    AnoncredRequestedAttributeV1(
+                        name = "sex",
+                        restrictions = listOf(
+                            mapOf(
+                                ("attr::sex::value" to "M"),
+                                ("cred_def_id" to credentialDefinitionId),
                             ),
                         ),
+                    ),
             ),
             requestedPredicates = mapOf(
                 "age" to AnoncredRequestedPredicateV1(
@@ -68,7 +68,7 @@ class AnoncredsPresentProofSteps {
                 },
         )
         faber.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED)
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
         )
         val presentationStatus = SerenityRest.lastResponse().get<PresentationStatus>()
         faber.remember("thid", presentationStatus.thid)
@@ -78,14 +78,13 @@ class AnoncredsPresentProofSteps {
     @When("{actor} receives the anoncreds request")
     fun bobReceivesTheAnoncredsRequest(bob: Actor) {
         Wait.until(
-            errorMessage = "ERROR: Bob did not achieve any presentation request!"
-        )
-        {
+            errorMessage = "ERROR: Bob did not achieve any presentation request!",
+        ) {
             proofEvent = ListenToEvents.with(bob).presentationEvents.lastOrNull {
                 it.data.thid == bob.recall<String>("thid")
             }
             proofEvent != null &&
-                    proofEvent!!.data.status == PresentationStatusAdapter.Status.REQUEST_RECEIVED
+                proofEvent!!.data.status == PresentationStatusAdapter.Status.REQUEST_RECEIVED
         }
         bob.remember("presentationId", proofEvent!!.data.presentationId)
     }
