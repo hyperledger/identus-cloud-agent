@@ -1,4 +1,4 @@
-@revocation @jwt @xubis
+@revocation @jwt
 Feature: Credential revocation - JWT
 
   Background:
