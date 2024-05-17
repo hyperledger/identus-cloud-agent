@@ -52,7 +52,7 @@ class PresentProofSteps {
     fun bobReceivesTheRequest(bob: Actor) {
         Wait.until(
             timeout = 30.seconds,
-            errorMessage = "ERROR: Bob did not achieve any presentation request!"
+            errorMessage = "ERROR: Bob did not achieve any presentation request!",
         ) {
             val proofEvent = ListenToEvents.with(bob).presentationEvents.lastOrNull {
                 it.data.thid == bob.recall<String>("thid")
@@ -91,7 +91,7 @@ class PresentProofSteps {
     fun bobSeesProofIsRejected(bob: Actor) {
         Wait.until(
             timeout = 30.seconds,
-            errorMessage = "ERROR: Faber did not receive presentation from Bob!"
+            errorMessage = "ERROR: Faber did not receive presentation from Bob!",
         ) {
             val proofEvent = ListenToEvents.with(bob).presentationEvents.lastOrNull {
                 it.data.thid == bob.recall<String>("thid")
@@ -104,7 +104,7 @@ class PresentProofSteps {
     fun faberHasTheProofVerified(faber: Actor) {
         Wait.until(
             timeout = 30.seconds,
-            errorMessage = "Presentation did not achieve PresentationVerified state!"
+            errorMessage = "Presentation did not achieve PresentationVerified state!",
         ) {
             val proofEvent = ListenToEvents.with(faber).presentationEvents.lastOrNull {
                 it.data.thid == faber.recall<String>("thid")
@@ -117,7 +117,7 @@ class PresentProofSteps {
     fun verifierSeesTheProofReturnedVerificationFailed(verifier: Actor) {
         Wait.until(
             timeout = 60.seconds,
-            errorMessage = "Presentation did not achieve PresentationVerificationFailed state!"
+            errorMessage = "Presentation did not achieve PresentationVerificationFailed state!",
         ) {
             val proofEvent = ListenToEvents.with(verifier).presentationEvents.lastOrNull {
                 it.data.thid == verifier.recall<String>("thid")
