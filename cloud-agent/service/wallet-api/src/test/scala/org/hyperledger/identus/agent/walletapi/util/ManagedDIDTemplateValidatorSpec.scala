@@ -53,6 +53,30 @@ object ManagedDIDTemplateValidatorSpec extends ZIOSpecDefault {
         contexts = Nil
       )
       assert(ManagedDIDTemplateValidator.validate(template))(isLeft)
+    },
+    test("reject DID template if key usage is not allowed") {
+      val makeTemplate = (keyTemplate: DIDPublicKeyTemplate) =>
+        ManagedDIDTemplate(
+          publicKeys = Seq(keyTemplate),
+          services = Nil,
+          contexts = Nil
+        )
+      val template1 = makeTemplate(
+        DIDPublicKeyTemplate(
+          id = "key-1",
+          purpose = VerificationRelationship.KeyAgreement,
+          curve = EllipticCurve.ED25519
+        )
+      )
+      val template2 = makeTemplate(
+        DIDPublicKeyTemplate(
+          id = "key-1",
+          purpose = VerificationRelationship.Authentication,
+          curve = EllipticCurve.X25519
+        )
+      )
+      assert(ManagedDIDTemplateValidator.validate(template1))(isLeft) &&
+      assert(ManagedDIDTemplateValidator.validate(template2))(isLeft)
     }
   )
 

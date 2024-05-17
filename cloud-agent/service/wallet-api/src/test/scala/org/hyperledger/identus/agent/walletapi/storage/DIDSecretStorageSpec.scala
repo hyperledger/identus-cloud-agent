@@ -1,5 +1,7 @@
 package org.hyperledger.identus.agent.walletapi.storage
 
+import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
+import org.hyperledger.identus.agent.walletapi.model.PublicationState
 import org.hyperledger.identus.agent.walletapi.model.Wallet
 import org.hyperledger.identus.agent.walletapi.service.{WalletManagementService, WalletManagementServiceImpl}
 import org.hyperledger.identus.agent.walletapi.sql.{
@@ -9,8 +11,12 @@ import org.hyperledger.identus.agent.walletapi.sql.{
   JdbcWalletSecretStorage
 }
 import org.hyperledger.identus.agent.walletapi.vault.{VaultDIDSecretStorage, VaultWalletSecretStorage}
+import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
 import org.hyperledger.identus.mercury.PeerDID
+import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
+import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
+import org.hyperledger.identus.shared.crypto.X25519KeyPair
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.models.WalletAdministrationContext
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
@@ -130,7 +136,53 @@ object DIDSecretStorageSpec
         _ <- secretStorage.insertKey(peerDID.did, "agreement", peerDID.jwkForKeyAgreement)
         _ <- secretStorage.insertKey(peerDID.did, "authentication", peerDID.jwkForKeyAuthentication)
       } yield assertCompletes
-    }
+    },
+    test("insert and get the same key for Prism KeyPair") {
+      for {
+        nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
+        secretStorage <- ZIO.service[DIDSecretStorage]
+        key1 = Apollo.default.ed25519.generateKeyPair
+        key2 = Apollo.default.x25519.generateKeyPair
+        createOperation = PrismDIDOperation.Create(Nil, Nil, Nil)
+        did = createOperation.did
+        state = ManagedDIDState(createOperation, 0, PublicationState.Created())
+        _ <- nonSecretStorage.insertManagedDID(did, state, Map.empty, Map.empty)
+        _ <- secretStorage.insertPrismDIDKeyPair(did, "key-1", createOperation.toAtalaOperationHash, key1)
+        _ <- secretStorage.insertPrismDIDKeyPair(did, "key-2", createOperation.toAtalaOperationHash, key2)
+        getKey1 <- secretStorage
+          .getPrismDIDKeyPair[Ed25519KeyPair](did, "key-1", createOperation.toAtalaOperationHash)
+          .some
+        getKey2 <- secretStorage
+          .getPrismDIDKeyPair[X25519KeyPair](did, "key-2", createOperation.toAtalaOperationHash)
+          .some
+      } yield assert(key1)(equalTo(getKey1)) &&
+        assert(key2)(equalTo(getKey2))
+    },
+    test("insert same key id for Prism KeyPair return error") {
+      for {
+        nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
+        secretStorage <- ZIO.service[DIDSecretStorage]
+        key1 = Apollo.default.ed25519.generateKeyPair
+        key2 = Apollo.default.x25519.generateKeyPair
+        createOperation = PrismDIDOperation.Create(Nil, Nil, Nil)
+        did = createOperation.did
+        state = ManagedDIDState(createOperation, 0, PublicationState.Created())
+        _ <- nonSecretStorage.insertManagedDID(did, state, Map.empty, Map.empty)
+        _ <- secretStorage.insertPrismDIDKeyPair(did, "key-1", createOperation.toAtalaOperationHash, key1)
+        exit <- secretStorage.insertPrismDIDKeyPair(did, "key-1", createOperation.toAtalaOperationHash, key2).exit
+        getKey1 <- secretStorage
+          .getPrismDIDKeyPair[Ed25519KeyPair](did, "key-1", createOperation.toAtalaOperationHash)
+          .some
+      } yield assert(key1)(equalTo(getKey1)) && assert(exit)(dies(anything))
+    },
+    test("get non-exist Prism KeyPair return None") {
+      for {
+        secretStorage <- ZIO.service[DIDSecretStorage]
+        createOperation = PrismDIDOperation.Create(Nil, Nil, Nil)
+        did = createOperation.did
+        key1 <- secretStorage.getPrismDIDKeyPair[Ed25519KeyPair](did, "key-1", createOperation.toAtalaOperationHash)
+      } yield assert(key1)(isNone)
+    },
   ).globalWallet
 
   private val multiWalletSpec = suite("multi-wallet")(

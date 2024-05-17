@@ -22,6 +22,7 @@ import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
 
+import java.net.URI
 import java.net.URL
 import java.time.Instant
 import java.util.UUID
@@ -123,7 +124,7 @@ package object sql {
   given arraySeqByteGet: Get[ArraySeq[Byte]] = Get[Array[Byte]].map(ArraySeq.from)
   given arraySeqBytePut: Put[ArraySeq[Byte]] = Put[Array[Byte]].contramap(_.toArray)
 
-  given urlGet: Get[URL] = Get[String].map(URL(_))
+  given urlGet: Get[URL] = Get[String].map(URI(_).toURL())
   given urlPut: Put[URL] = Put[String].contramap(_.toString())
 
   given octetKeyPairGet: Get[OctetKeyPair] = Get[String].map(OctetKeyPair.parse)

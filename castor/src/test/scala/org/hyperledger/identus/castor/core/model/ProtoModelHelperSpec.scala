@@ -15,7 +15,6 @@ import scala.language.implicitConversions
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import org.hyperledger.identus.castor.core.model.ProtoModelHelper
 
 object ProtoModelHelperSpec extends ZIOSpecDefault {
 

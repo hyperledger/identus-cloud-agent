@@ -1,5 +1,6 @@
 package org.hyperledger.identus.mercury.protocol.outofbandlogin
 
+import java.net.URI
 import java.net.URL
 import org.hyperledger.identus.mercury
 
@@ -10,7 +11,7 @@ object Utils {
     */
   def getNewMsgId: String = java.util.UUID.randomUUID().toString
 
-  def parseLink(url: String): Option[String] = parseLink(new URL(url))
+  def parseLink(url: String): Option[String] = parseLink(new URI(url).toURL())
   def parseLink(url: URL): Option[String] = (url.getQuery() match {
     case str if str.startsWith("_oob=") => Some(str.drop(5))
     case _                              => None

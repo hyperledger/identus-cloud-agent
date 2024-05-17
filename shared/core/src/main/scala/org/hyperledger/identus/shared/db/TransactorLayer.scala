@@ -5,7 +5,6 @@ import cats.effect.kernel.Resource
 import cats.effect.std.Dispatcher
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
-import doobie.util.log.LogHandler
 import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
 import zio.*
