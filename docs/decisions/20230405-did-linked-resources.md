@@ -393,9 +393,9 @@ As the solution is based on the latest ToIP specification, it derives all positi
 #### Negative Consequences
 - scalability: the specification is inspired by the Cheqd approach to store the linkedResourceMetadata inside of the DID Document
 - the convention for references and the logic must be carefully reviewed:
-	- `schemaId` in this solution is `{didRef}/resources/{cardano_transaction_id}`, so it doesn't refer to the `id` but to the Tx where everything else is stored (it's an interesting idea for a stateless design)
-	- resource metadata is built according to the ToIP specification but for AnonCreds entities only: credential schema and credential definition.
-- technology stack: it doesn't fit to current Atala PRISM platform, but can be used for inspiration.
+  - `schemaId` in this solution is `{didRef}/resources/{cardano_transaction_id}`, so it doesn't refer to the `id` but to the Tx where everything else is stored (it's an interesting idea for a stateless design)
+  - resource metadata is built according to the ToIP specification but for AnonCreds entities only: credential schema and credential definition.
+- technology stack: it doesn't fit to current platform, but can be used for inspiration.
 
 
 ### Hyperledger AnonCreds
@@ -495,9 +495,9 @@ Taking into account the advantages and disadvantages of the existing solutions t
 -the resource is linked to the DID by convention specified in the W3C specification, so specifying the resource in the DID URL and defining the service endpoint that exposes the resource allows to discover and fetch the resource using the Universal Resolver
 - as an option, the same resource can be discovered and fetched by the PRISM platform backend and SDK without loading the Universal resolver
 - the resource integrity must be guaranteed by one of the following options:
-	- by signing the payload with one of the DID's keys or 
-	- by publishing the resource metadata that contains the information about the resource (id, type, name, media type, hash) on-chain or
-	- for the resource that is less than the blockchain limitation (up to 64KB) by publishing the resource together with the hash, and/or signature
+  - by signing the payload with one of the DID's keys or
+  - by publishing the resource metadata that contains the information about the resource (id, type, name, media type, hash) on-chain or
+  - for the resource that is less than the blockchain limitation (up to 64KB) by publishing the resource together with the hash, and/or signature
 - the resource can be stored in the cloud storage - PostgreSQL database - for indexing and lookup API
 
 As the Atala PRISM platform can leverage the Cardano blockchain and there is a strong requirement for longevity and security - the resource together with the signature and/or hash must be stored in the Cardano blockchain.
@@ -506,9 +506,9 @@ An example of this solution will be the following (concerning the current infras
 
 - prism-node must be able to store the generic resource payload, signature and/or hash on-chain and restore the given resource in the underlying database (PostgreSQL) for indexing and lookup API
 - credential schema (or any other resource module) must be a part of the Atala SSI infrastructure and allow
-	- publishing the concrete resource as a generic resource using the prism-node API
-	- expose the API for discovery and fetching the resource by URL
-	- expose the API for managing the resources (create, publish, lookup with pagination)
+  - publishing the concrete resource as a generic resource using the prism-node API
+  - expose the API for discovery and fetching the resource by URL
+  - expose the API for managing the resources (create, publish, lookup with pagination)
 - the Universal Resolver for the DID Method must be able to discover and fetch the resource by DID URL
 - is needed, SDK and backend services can fetch the resources directly (not via the Universal Resolver)
 
