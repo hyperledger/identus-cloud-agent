@@ -1,4 +1,4 @@
-# Store private keys of Issuers inside prism-agent
+# Store private keys of Issuers inside the cloud-agent
 
 - Status: accepted
 - Deciders: Benjamin Voiturier, Pat Losoponkul, Miloš Džepina, Shailesh Patil, Shota Jolbordi, Bart Suichies, Ezequiel Postan, Yurii Shynbuiev, David Poltorak
@@ -6,14 +6,14 @@
 
 ## Context and Problem Statement
 
-While each holder has a wallet application on the phone (edge agent) to store private keys, contacts, and credentials, PRISM 2.0 will provide a custodial solution to Issuers and Verifiers. Thus they won't have their wallets or store/manage keys. There needs to be storage for the private keys of issuers and Verifiers on the PRISM side.
+While each holder has a wallet application on the phone (edge agent) to store private keys, contacts, and credentials, Identus Cloud Agent will provide a custodial solution to Issuers and Verifiers. Thus they won't have their wallets or store/manage keys. There needs to be storage for the private keys of Issuers and Verifiers on the Cloud Agent side.
 
 
 ## Considered Options
 
-- Having issuers store and manage their own keys on the edge wallet (prism 1.4 approach)
-- Storing keys in a dedicated wallet application that is connected to prism-agent (cloud agent)
-- Having prism-agent store and manage keys directly 
+- Having issuers store and manage their own keys on the edge wallet (Prism 1.4 approach)
+- Storing keys in a dedicated wallet application that is connected to cloud agent
+- Having cloud agent store and manage keys directly
 
 
 ## Decision Outcome

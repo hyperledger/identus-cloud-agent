@@ -12,7 +12,7 @@ Technical Story: [Apollo Cryptographic Module KMM | https://input-output.atlassi
 <br><br>
 
 ### 1. Summary
-This proposal sets out to crystallize a long-term plan for PRISM's cryptographic functionality. Rather than constructing an entirely new cryptographic functionality, our focus is on integrating robust, secure and tested libraries, meeting several key requirements in the process. 
+This proposal sets out to crystallize a long-term plan for Identus's cryptographic functionality. Rather than constructing an entirely new cryptographic functionality, our focus is on integrating robust, secure and tested libraries, meeting several key requirements in the process.
 
 By leveraging the flexibility of Kotlin Multiplatform, this library will ensure strong, provable security, centralized management of all cryptography, easy upgrades, and efficient code reuse across multiple platforms. 
 
@@ -27,10 +27,10 @@ This proposal outlines a comprehensive plan to develop a cryptographic library u
 Our cryptographic library will provide engineers with high assurances of security. This will be accomplished by using cryptographic primitives that are secure, with this security being provable through rigorous mathematical proofs. Documentation will accompany these proofs to offer transparency and enable a deeper understanding of the underlying logic and assurances.
 
 #### 2.2 Centralized Cryptography Management
-We propose the creation of a cryptographic library that serves as the central management hub for all cryptographic operations within PRISM. By preventing "DIY" implementations, we decrease potential vulnerabilities and establish a standard, thus enhancing overall security across our organization.
+We propose the creation of a cryptographic library that serves as the central management hub for all cryptographic operations within the Identus platform. By preventing "DIY" implementations, we decrease potential vulnerabilities and establish a standard, thus enhancing overall security across our organization.
 
 #### 2.3 Easy Upgrade Path
-In light of emerging cryptographic needs such as the introduction of quantum-resistant cryptography, our library will be designed with easy upgrades in mind. Its modular design will allow for the seamless introduction of new cryptographic primitives as they become necessary or advisable. This adaptability will ensure that cryptographic upgrades across all of PRISM are consistent and efficient.
+In light of emerging cryptographic needs such as the introduction of quantum-resistant cryptography, our library will be designed with easy upgrades in mind. Its modular design will allow for the seamless introduction of new cryptographic primitives as they become necessary or advisable. This adaptability will ensure that cryptographic upgrades across all of Identus's components are consistent and efficient.
 
 #### 2.4 Code Reusability
 Our library will make the most of Kotlin Multiplatform's capabilities for code reuse across different platforms. We aim to design cryptographic functions that promote this potential, thus minimizing the development effort required for adding new functionality or adapting to different platforms.
@@ -132,4 +132,4 @@ Owners of this triage process are the engineering + roadmap leads. Those will ta
 
 ### 9. Conclusion
 
-This proposed Kotlin Multiplatform cryptographic library will ensure that PRISM remains at the forefront of secure digital operations by providing strong, provable security, centralized cryptographic management, easy upgradeability, and efficient code reuse. By addressing these critical constraints and harnessing the benefits of Kotlin Multiplatform, we are set to create a library that will set a new standard for cryptographic operations within PRISM.
+This proposed Kotlin Multiplatform cryptographic library will ensure that Identus remains at the forefront of secure digital operations by providing strong, provable security, centralized cryptographic management, easy upgradeability, and efficient code reuse. By addressing these critical constraints and harnessing the benefits of Kotlin Multiplatform, we are set to create a library that will set a new standard for cryptographic operations within the Identus platform.

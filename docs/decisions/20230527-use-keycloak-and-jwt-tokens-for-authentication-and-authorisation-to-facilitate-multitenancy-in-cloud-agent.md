@@ -5,7 +5,7 @@
 - Date: 2023-05-27
 - Tags: multitenancy, authorisation, authentication
 
-Technical Story: [Research Spike - 1d: find a way to authenticate and authorise the PRISM agent instance administrator | https://input-output.atlassian.net/browse/ATL-4362]
+Technical Story: [Research Spike - 1d: find a way to authenticate and authorise the Cloud Agent instance administrator | https://input-output.atlassian.net/browse/ATL-4362]
 
 ## Context and Problem Statement
 
@@ -22,7 +22,7 @@ In our Multi-tenant Value Brief, we propose modifications to the agent, enabling
 As we transition to multi-tenancy, several critical questions emerge:
 
 1. How should the cloud agent authenticate, or verify the identities of, its API consumers?
-2. How should the cloud agent authorise a particular identity to use a specific instance of PRISM?
+2. How should the cloud agent authorise a particular identity to use a specific instance of the agent?
 3. As the cloud agent becomes capable of hosting multiple tenants whose workloads must remain isolated, how should it become tenant-aware? That is, how should it determine which tenant an API consumer belongs to, and authorise them to manage and operate within that tenant?
 4. How can we mitigate the security risk associated with a leaked pre-shared key/token?"
 

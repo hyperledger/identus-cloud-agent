@@ -7,9 +7,9 @@
 
 ## Context and Problem Statement
 
-PostgreSQL is essential to the Atala PRISM technology stack, where most entities are stored.
+PostgreSQL is essential to the Identus platform technology stack, where most entities are stored.
 
-Backend services: PRISM Agent, PRISM Mediator, and PRISM Node use PostgreSQL.
+Backend services: Identus Cloud Agent, Identus Mediator, and PRISM Node use PostgreSQL.
 
 [Doobie](https://tpolecat.github.io/doobie/index.html) library is currently used in Scala code to communicate with Postgresql. Quotes from the website
 
@@ -175,5 +175,5 @@ val result: Future[Seq[Person]] = db.run(q.result)
 - [Database access libraries in Scala](https://medium.com/@takezoe/database-access-libraries-in-scala-7aa7590aa3db)
 - [Typechecking SQL queries with doobie](https://godatadriven.com/blog/typechecking-sql-queries-with-doobie/)
 - [Typechecking SQL in Slick and doobie](https://underscore.io/blog/posts/2015/05/28/typechecking-sql.html)
-- [Doobie example in the Pollux library](https://github.com/input-output-hk/atala-prism-building-blocks/blob/pollux-v0.17.0/pollux/lib/sql-doobie/src/main/scala/io/iohk/atala/pollux/sql/repository/JdbcCredentialRepository.scala)
-- [Quill example in the Pollux library](https://github.com/input-output-hk/atala-prism-building-blocks/blob/pollux-v0.17.0/pollux/lib/sql-doobie/src/main/scala/io/iohk/atala/pollux/sql/model/VerifiableCredentialSchema.scala)
+- [Doobie example in the Pollux library](https://github.com/hyperledger/identus-cloud-agent/blob/pollux-v0.17.0/pollux/lib/sql-doobie/src/main/scala/io/iohk/atala/pollux/sql/repository/JdbcCredentialRepository.scala)
+- [Quill example in the Pollux library](https://github.com/hyperledger/identus-cloud-agent/blob/pollux-v0.17.0/pollux/lib/sql-doobie/src/main/scala/io/iohk/atala/pollux/sql/model/VerifiableCredentialSchema.scala)

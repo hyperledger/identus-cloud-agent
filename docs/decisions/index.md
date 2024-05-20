@@ -2,7 +2,7 @@
 
 # Architecture knowledge base
 
-Welcome 👋 to the architecture knowledge base of atala-prism-building-blocks.
+Welcome 👋 to the architecture knowledge base of the Identus platform.
 
 You will find here all the Architecture Decision Records (ADR) of the project.
 

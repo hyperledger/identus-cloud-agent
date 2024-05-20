@@ -10,12 +10,12 @@
 [Research Spike - Schema and Verifiable Presentation Registry](https://input-output.atlassian.net/browse/ATL-3186)
 
 - Provide a clear and concise analysis of the various schema registry implementation and the associated benefits and downfalls of each approach. 
-- Provide a concrete proposal for what we would like to implement for PRISM.
-- Provide a generic way of storing and linking the resources for the DID in the PRISM platform.
+- Provide a concrete proposal for what we would like to implement for the Identus platform.
+- Provide a generic way of storing and linking the resources for the DID in the Identus platform.
 
 ## Context and Problem Statement
 
-Atala Prism platform must be able to store and distribute the various resources such as credential schemas, logos, revocation status lists, and documents (aka any text, JSON, images, etc). But in the scope of the current ADR the following resource types are discussed:
+Identus platform must be able to store and distribute the various resources such as credential schemas, logos, revocation status lists, and documents (aka any text, JSON, images, etc). But in the scope of the current ADR the following resource types are discussed:
 
 - credential schema (JSON and AnonCreds)
 - credential definition (AnonCreds)
@@ -395,7 +395,7 @@ As the solution is based on the latest ToIP specification, it derives all positi
 - the convention for references and the logic must be carefully reviewed:
 	- `schemaId` in this solution is `{didRef}/resources/{cardano_transaction_id}`, so it doesn't refer to the `id` but to the Tx where everything else is stored (it's an interesting idea for a stateless design)
 	- resource metadata is built according to the ToIP specification but for AnonCreds entities only: credential schema and credential definition.
-- technology stack: it doesn't fit to current Atala PRISM platform, but can be used for inspiration.
+- technology stack: it doesn't fit to current platform, but can be used for inspiration.
 
 
 ### Hyperledger AnonCreds
@@ -483,24 +483,24 @@ Are similar to the Hyperledger AnonCreds solution
 The main benefit of the Trinsic approach to storing resources is a good abstraction layer, documentation, REST API and a variety of supported programming languages in SDKs for dealing with underlying resources.
 
 
-### Atala PRISM solution #1 (W3C with dynamic resource resolution)
+### Solution #1 (W3C with dynamic resource resolution)
 
-Atala PRISM solution for storing the resources linked to the DID depends on two decisions that are described in the Context and Problem Statement:
+The solution for storing the resources linked to the DID depends on two decisions that are described in the Context and Problem Statement:
 
 - where the resource is stored
 - how the resource is discovered and fetched
 
-Taking into account the advantages and disadvantages of the existing solutions the decision about the solution for the Atala PRISM platform might be the following:
+Taking into account the advantages and disadvantages of the existing solutions the decision about the solution for the Identus platform might be the following:
 
 -the resource is linked to the DID by convention specified in the W3C specification, so specifying the resource in the DID URL and defining the service endpoint that exposes the resource allows to discover and fetch the resource using the Universal Resolver
-- as an option, the same resource can be discovered and fetched by the PRISM platform backend and SDK without loading the Universal resolver
+- as an option, the same resource can be discovered and fetched by the Identus platform backend and SDK without loading the Universal resolver
 - the resource integrity must be guaranteed by one of the following options:
 	- by signing the payload with one of the DID's keys or 
 	- by publishing the resource metadata that contains the information about the resource (id, type, name, media type, hash) on-chain or
 	- for the resource that is less than the blockchain limitation (up to 64KB) by publishing the resource together with the hash, and/or signature
 - the resource can be stored in the cloud storage - PostgreSQL database - for indexing and lookup API
 
-As the Atala PRISM platform can leverage the Cardano blockchain and there is a strong requirement for longevity and security - the resource together with the signature and/or hash must be stored in the Cardano blockchain.
+As the Identus platform can leverage the Cardano blockchain and there is a strong requirement for longevity and security - the resource together with the signature and/or hash must be stored in the Cardano blockchain.
 
 An example of this solution will be the following (concerning the current infrastructure and services):
 
@@ -582,9 +582,9 @@ For example, it might look like the following JSON object:
 
 ... and published on the Cardano blockchain as a payload of the AtalaOperation object, so can be retrieved from the blockchain and added to the indexed database for resolution by the REST API
 
-Given there is an Agent or CredentialSchema service that exposes the REST API for fetching the credential schema by ID (in the current implementation it corresponds to the PrismAgent `/schema-registry/credential-schema/{uuid}`, but later might be changed to `/credential-schema/{didRef}/{id}?version={version}` )
+Given there is an Agent or CredentialSchema service that exposes the REST API for fetching the credential schema by ID (in the current implementation it corresponds to the Cloud Agent `/schema-registry/credential-schema/{uuid}`, but later might be changed to `/credential-schema/{didRef}/{id}?version={version}` )
 
-So, the services of the PRISM platform and SDK can resolve the given schema by URL and use the convenient lookup API with filtering and pagination to manage the credential schema in the Web application.
+So, the services of the Identus platform and SDKs can resolve the given schema by URL and use the convenient lookup API with filtering and pagination to manage the credential schema in the Web application.
 
 To define the `schemaId` in the message of Issue Credential and Present Proof protocols the following DID URL can be used:
 
@@ -638,7 +638,7 @@ Storing resources larger than 64KB is out of the scope of this ADR. These must b
 
 ---
 
-### Atala PRISM solution #2 (ToIP specification implementation)
+### Solution #2 (ToIP specification implementation)
 
 ToIP specification can be used to implement the resource resolution.
 To implement it the following things are required:
@@ -648,9 +648,9 @@ To implement it the following things are required:
 - add `didDocumentMetadata.linkedResourceMetadata` field to the DID method and implement the logic in the VDR layer
 - implement the service layer according to the ToIP specification
 
-ToIP solution specifies the requirements to the VDR (blockchain) that is not easy to achieve with the current implementation of the Atala PRISM platform. 
+ToIP solution specifies the requirements to the VDR (blockchain) that is not easy to achieve with the current implementation of the Identus platform.
 According to this specification, the Universal Resolver must have the direct access to the blockchain or use a centralized layer for fetching the resources over REST API.
-Before implementing this specification is the Atala PRISM platform we need to answer the following questions:
+Before implementing this specification is the Identus platform we need to answer the following questions:
 
 - who is hosting the `prism-node` infrastructure for the Universal Resolver and how it's managed?
 - should we make the PRISM DID Method responsible for resource resolution logic?
@@ -670,7 +670,7 @@ Before implementing this specification is the Atala PRISM platform we need to an
 
 Each option has technical challenges and limitations, but it's possible to define the following decisions as an outcome:
 
-- the resource MUST be stored on-chain to guarantee trust and longevity aspects, for the Atala PRISM platform it is the Cardano blockchain
+- the resource MUST be stored on-chain to guarantee trust and longevity aspects, for the Identus platform it is the Cardano blockchain
 - the resource SHOULD be indexed for quick lookup over the API
 - the resource CAN be referenced in the DID Document for additional discoverability
 - the resource MUST be dereferenced from the DID URL according to W3C or ToIP specification and implementation
@@ -679,20 +679,20 @@ Each option has technical challenges and limitations, but it's possible to defin
 - the solution SHOULD be scalable
 - the solution MUST be interoperable and easily adopted by the SSI ecosystem
 
-Atala PRISM solution option #1 is considered a good option as it satisfies the requirements and the majority of the negative consequences are mitigated.
+The solution option #1 is considered a good option as it satisfies the requirements and the majority of the negative consequences are mitigated.
 The following comparison table is a summary of the available options.
 
-| Option | Simplicity | Trust | Scalability | Interop | Discoverability | Decentalisation |
-| ------ | ---------- | ----- | ----------- | ------- | --------------- | --------------- |
-| linkedResources field | :heavy_plus_sign: | :heavy_check_mark: | :heavy_minus_sign: | :heavy_minus_sign: | :heavy_plus_sign: | N/A |
-| linkedResourceMetadata (Cheqd)| :heavy_minus_sign:/:heavy_plus_sign: | :heavy_check_mark: | :heavy_minus_sign:/:heavy_plus_sign:| :heavy_plus_sign:|:heavy_plus_sign: | :heavy_check_mark: |
-| DID URL Dereferencing (W3C specification)| :heavy_plus_sign: | N/A | :heavy_plus_sign: | :heavy_plus_sign: | :heavy_minus_sign: | :heavy_check_mark: |
+| Option                                     | Simplicity | Trust | Scalability | Interop | Discoverability | Decentalisation |
+|--------------------------------------------| ---------- | ----- | ----------- | ------- | --------------- | --------------- |
+| linkedResources field                      | :heavy_plus_sign: | :heavy_check_mark: | :heavy_minus_sign: | :heavy_minus_sign: | :heavy_plus_sign: | N/A |
+| linkedResourceMetadata (Cheqd)             | :heavy_minus_sign:/:heavy_plus_sign: | :heavy_check_mark: | :heavy_minus_sign:/:heavy_plus_sign:| :heavy_plus_sign:|:heavy_plus_sign: | :heavy_check_mark: |
+| DID URL Dereferencing (W3C specification)  | :heavy_plus_sign: | N/A | :heavy_plus_sign: | :heavy_plus_sign: | :heavy_minus_sign: | :heavy_check_mark: |
 | DID URL Dereferencing (ToIP specification) | :heavy_minus_sign: | :heavy_check_mark: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign: | :heavy_check_mark: |
-| RootsID - Cardano AnonCreds | :heavy_plus_sign: | :heavy_check_mark: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign: | :heavy_plus_sign: | :heavy_check_mark: |
-| Hyperledger AnonCreds | :heavy_plus_sign: | :heavy_check_mark:| :heavy_plus_sign: | :heavy_minus_sign: | :heavy_minus_sign: | :heavy_check_mark: |
-| Trinsic | :heavy_minus_sign: | :heavy_check_mark: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_minus_sign: | :heavy_minus_sign: | :heavy_check_mark: |
-| Atala PRISM #1 W3C | :heavy_plus_sign: | :heavy_check_mark: | :heavy_plus_sign: | :heavy_plus_sign: | :heavy_minus_sign: | :heavy_check_mark: |
-| Atala PRISM #2 ToIP | :heavy_minus_sign: | :heavy_check_mark: | :heavy_minus_sign:/:heavy_plus_sign: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign: | :heavy_check_mark: |
+| RootsID - Cardano AnonCreds                | :heavy_plus_sign: | :heavy_check_mark: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign: | :heavy_plus_sign: | :heavy_check_mark: |
+| Hyperledger AnonCreds                      | :heavy_plus_sign: | :heavy_check_mark:| :heavy_plus_sign: | :heavy_minus_sign: | :heavy_minus_sign: | :heavy_check_mark: |
+| Trinsic                                    | :heavy_minus_sign: | :heavy_check_mark: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_minus_sign: | :heavy_minus_sign: | :heavy_check_mark: |
+| Solution #1 W3C                            | :heavy_plus_sign: | :heavy_check_mark: | :heavy_plus_sign: | :heavy_plus_sign: | :heavy_minus_sign: | :heavy_check_mark: |
+| Solution #2 ToIP                           | :heavy_minus_sign: | :heavy_check_mark: | :heavy_minus_sign:/:heavy_plus_sign: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign: | :heavy_check_mark: |
 
 ---
 
@@ -707,14 +707,14 @@ Each option reviewed in this ADR is a composition of the following architectural
 - decentralized or SaaS solution
 - SDK, Universal Resolver or REST API for fetching the resource
 
-The main benefits of option #1 for the Atala PRISM platform are the following:
+The main benefits of option #1 for the Identus platform are the following:
 
 - the resource is stored on-chain
 - the resource is published and indexed by the managed VDR layer (prism-node)
 - the resource is available via REST API & SDK for the product-level applications
 - the resource is dereferenced via the DID URL in the DID resolver
 - the resource is linked to the DID dynamically (using DID URL + dereferencing algorithm)
-- this solution is scalable and decentralized (anyone can deploy the PRISM stack)
+- this solution is scalable and decentralized (anyone can deploy the Identus stack)
 - level of trust can be guaranteed by the underlying VDR and enforced by hashes or signatures of the resource
 
 
