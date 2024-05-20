@@ -8,7 +8,6 @@ import org.hyperledger.identus.shared.crypto.Apollo
 import zio.*
 
 import scala.collection.immutable.ArraySeq
-import scala.util.Failure
 
 object DIDOperationValidator {
   final case class Config(
