@@ -51,7 +51,6 @@ private object CreateOperationValidator extends BaseOperationValidator {
       _ <- validateUniquePublicKeyId(operation, extractKeyIds)
       _ <- validateUniqueServiceId(operation, extractServiceIds)
       _ <- validateMasterKeyIsSecp256k1(operation, extractKeyData)
-      _ <- validateKeyData(operation, extractKeyData)
       _ <- validateKeyIdIsUriFragment(operation, extractKeyIds)
       _ <- validateKeyIdLength(config)(operation, extractKeyIds)
       _ <- validateServiceIdIsUriFragment(operation, extractServiceIds)
@@ -102,7 +101,6 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       _ <- validateMaxPublicKeysAccess(config)(operation, extractKeyIds)
       _ <- validateMaxServiceAccess(config)(operation, extractServiceIds)
       _ <- validateMasterKeyIsSecp256k1(operation, extractKeyData)
-      _ <- validateKeyData(operation, extractKeyData)
       _ <- validateKeyIdIsUriFragment(operation, extractKeyIds)
       _ <- validateKeyIdLength(config)(operation, extractKeyIds)
       _ <- validateServiceIdIsUriFragment(operation, extractServiceIds)
@@ -360,45 +358,26 @@ private trait BaseOperationValidator {
     UriUtils.normalizeUri(uri).contains(uri)
   }
 
-  protected def validateKeyData[T <: PrismDIDOperation](
-      operation: T,
-      keyDataExtractor: KeyDataExtractor[T]
-  ): Either[OperationValidationError, Unit] = {
-    val keys = keyDataExtractor(operation)
-    val apollo = Apollo.default
-    val parsedKeys = keys.map { case (id, _, keyData) =>
-      val pk = keyData match {
-        case PublicKeyData.ECKeyData(EllipticCurve.SECP256K1, x, y) =>
-          apollo.secp256k1.publicKeyFromCoordinate(x.toByteArray, y.toByteArray)
-        case PublicKeyData.ECKeyData(EllipticCurve.ED25519, x, _) =>
-          apollo.ed25519.publicKeyFromEncoded(x.toByteArray)
-        case PublicKeyData.ECKeyData(EllipticCurve.X25519, x, _) =>
-          apollo.x25519.publicKeyFromEncoded(x.toByteArray)
-        case PublicKeyData.ECCompressedKeyData(EllipticCurve.SECP256K1, data) =>
-          apollo.secp256k1.publicKeyFromEncoded(data.toByteArray)
-        case PublicKeyData.ECCompressedKeyData(EllipticCurve.ED25519, data) =>
-          apollo.ed25519.publicKeyFromEncoded(data.toByteArray)
-        case PublicKeyData.ECCompressedKeyData(EllipticCurve.X25519, data) =>
-          apollo.x25519.publicKeyFromEncoded(data.toByteArray)
-      }
-      id -> pk
-    }
-
-    val invalidKeyDataIds = parsedKeys.collect { case (id, Failure(_)) => id }
-    if (invalidKeyDataIds.isEmpty) Right(())
-    else Left(OperationValidationError.InvalidPublicKeyData(invalidKeyDataIds))
-  }
-
   protected def validateMasterKeyIsSecp256k1[T <: PrismDIDOperation](
       operation: T,
       keyDataExtractor: KeyDataExtractor[T]
   ): Either[OperationValidationError, Unit] = {
     val keys = keyDataExtractor(operation)
     val masterKeys = keys.collect { case (id, InternalKeyPurpose.Master, keyData) => id -> keyData }
-    val invalidKeyIds = masterKeys.filter(_._2.crv != EllipticCurve.SECP256K1).map(_._1)
+    val invalidKeyIds = masterKeys
+      .filter { case (_, pk) =>
+        pk match {
+          case PublicKeyData.ECKeyData(EllipticCurve.SECP256K1, x, y) =>
+            Apollo.default.secp256k1.publicKeyFromCoordinate(x.toByteArray, y.toByteArray).isFailure
+          case PublicKeyData.ECCompressedKeyData(EllipticCurve.SECP256K1, data) =>
+            Apollo.default.secp256k1.publicKeyFromEncoded(data.toByteArray).isFailure
+          case _ => true // master key must be secp256k1
+        }
+      }
+      .map(_._1)
 
     if (invalidKeyIds.isEmpty) Right(())
-    else Left(OperationValidationError.InvalidMasterKeyType(invalidKeyIds))
+    else Left(OperationValidationError.InvalidMasterKeyData(invalidKeyIds))
   }
 
 }
