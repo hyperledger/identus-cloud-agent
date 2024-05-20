@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Deciders: Yurii Shynbuiev,David Poltorak, Benjamin Voiturier, Shailesh Patil
-- Date: [2023-05-09] 
+- Date: [2023-05-09]
 - Tags: multi-tenant, routing, message
 
 ## Context and Problem Statement

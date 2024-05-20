@@ -1,7 +1,7 @@
 # Data isolation for multi-tenancy
 
 - Status: accepted
-- Deciders: Benjamin Voiturier, Yurii Shynbuiev, Shailesh Patil 
+- Deciders: Benjamin Voiturier, Yurii Shynbuiev, Shailesh Patil
 - Date: 2023-05-10
 - Tags: multi-tenancy, data-isolation, PostgreSQL
 
@@ -13,7 +13,7 @@ This ADR is about the data isolation for multi-tenancy that must be implemented 
 
 ## Context and Problem Statement
 
-In a multi-tenant architecture, where multiple clients or tenants share the same infrastructure or application, data isolation is crucial to ensure the privacy and security of each tenant's data. 
+In a multi-tenant architecture, where multiple clients or tenants share the same infrastructure or application, data isolation is crucial to ensure the privacy and security of each tenant's data.
 
 The specific requirements for data isolation may vary depending on the system and its specific needs. However, here are some common requirements for achieving data isolation in a multi-tenant architecture:
 
@@ -21,7 +21,7 @@ The specific requirements for data isolation may vary depending on the system an
 
 Tenants' data should be logically separated from each other, meaning that each tenant should have their own isolated environment within the system. This can be achieved through logical partitions, such as separate databases, schemas, or tables.
 
-### Physical Separation 
+### Physical Separation
 
 In addition to logical separation, physical separation can provide an extra layer of isolation. This involves segregating tenants' data onto separate physical resources, such as servers, storage devices, or networks. Physical separation helps prevent data leakage or unauthorized access between tenants.
 
@@ -119,7 +119,7 @@ Moreover, for the SaaS application to manage thousands of organizations and mill
 - The Complexity of the Implementation - this option can be implemented on top of the current codebase without significant refactoring of the codebase and additional work for infrastructure engineers.
 
 
-### Negative Consequences 
+### Negative Consequences
 
 - Physical Separation - is not covered by this option
 
@@ -176,7 +176,7 @@ The main advantages of Citus:
 - provides additional monitoring and statistics to manage the tenants
 - routing to the shard is managed by Citus using the `hash` of the table index (compared to AWS sharding option, the routing is done at the application layer and the system table contains the information about the mapping of the tenant to the instance of the database)
 
-One of the previously described options `should` be implemented behind these options. 
+One of the previously described options `should` be implemented behind these options.
 
 - Good, because can manage millions of tenants
 - Good, because can manage the isolation (logical or physical bases on the configured mapping of the tenant to the database)

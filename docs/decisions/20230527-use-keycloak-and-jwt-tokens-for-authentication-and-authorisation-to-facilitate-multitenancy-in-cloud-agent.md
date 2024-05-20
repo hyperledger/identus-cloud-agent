@@ -37,7 +37,7 @@ As we transition to multi-tenancy, several critical questions emerge:
 ## Considered Options
 
 All options use OIDC and the Client Credentials Grant flow which is suitable for machine-to-machine use.
- 
+
 We have not included an option where we write our own AuthN/AuthZ implementation. All options require an additional component to be added to the stack to store identity related data [Users, roles etc] and to potentially act as a Policy Decision Point (PDP), Policy Administration Point (PAP) and a Policyf Information Point (PIP).
 
 ### Keycloak as AuthN/AuthZ

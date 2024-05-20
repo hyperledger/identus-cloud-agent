@@ -1,4 +1,4 @@
-# JWT credential revocation status list expansion strategy 
+# JWT credential revocation status list expansion strategy
 
 - Status: accepted
 - Decider: Benjamin Voiturier, Yurii Shynbuiev, Ezequiel Postan, Shota Jolbordi
@@ -9,7 +9,7 @@ Technical Story: [Revocation status list expansion strategy decision | https://i
 
 ## Context and Problem Statement
 
-In the process of devising a mechanism for revoking JWT credentials, we've opted to implement the [statusList2021](https://www.w3.org/TR/vc-status-list/) method. 
+In the process of devising a mechanism for revoking JWT credentials, we've opted to implement the [statusList2021](https://www.w3.org/TR/vc-status-list/) method.
 This approach entails the creation of a "status list credential" that incorporates a gZip compressed status list in a form a bitString.
 The specification recommends a minimum size of 16 KB for the status list included in a credential.
 However, it does not delineate a maximum size, nor does it provide guidance on how to proceed if the selected status list surpasses its capacity to store information about revoked credentials.
@@ -49,7 +49,7 @@ If we stick with the smallest recommended status list size, one revocation statu
 ## Pros and Cons of the Options
 
 
-#### Option 1:
+#### Option 1
 Option 1 offers the primary advantage of being straightforward to implement.
 It is also important to note that Option 2 isn't significantly more challenging to implement, so we shouldn't overly prioritize this consideration.
 
@@ -60,16 +60,16 @@ For example, a sequence of 5 zeros (00000) will be stored as 5(0), indicating fi
 Assuming that most credentials won't be revoked and will have an index of 0 in the status list, the gzipped status list in the status list credential should be very compact.
 This is the most crucial factor to consider in the end.
 
-#### Option 2:
+#### Option 2
 
-Option 2 slightly reduces privacy compared to Option 1 in certain scenarios. 
+Option 2 slightly reduces privacy compared to Option 1 in certain scenarios.
 For example, in cases where the number of Verifiable Credentials (VCs) starts small but grows over time.
 Initially, both options face the same issue with a small anonymity set due to the limited number of VCs issued.
 As the number of VCs increases, Option 1 maintains a continuously growing anonymity set.
 However, in Option 2, when the issuer reaches the 16KB limit and creates a new list, there will be a period where the new list has only a few VCs, resulting in a smaller anonymity set for VCs in the second list.
 
 
-Option 2 however, has a big advantage considering upcoming need for AnonCreds revocation. 
+Option 2 however, has a big advantage considering upcoming need for AnonCreds revocation.
 AnonCreds doesn't allow for expanding the status list size once defined during revocation registry creation.
 Pushing back Option 2 for AnonCreds and starting with an initial capacity of 1 million credentials may not be efficient.
 The size of the attached TAILS FILE grows rapidly with capacity (e.g., 8.4MB for 32,768 VCs!).

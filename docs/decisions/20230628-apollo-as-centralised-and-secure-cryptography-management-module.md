@@ -14,7 +14,7 @@ Technical Story: [Apollo Cryptographic Module KMM | https://input-output.atlassi
 ### 1. Summary
 This proposal sets out to crystallize a long-term plan for Identus's cryptographic functionality. Rather than constructing an entirely new cryptographic functionality, our focus is on integrating robust, secure and tested libraries, meeting several key requirements in the process.
 
-By leveraging the flexibility of Kotlin Multiplatform, this library will ensure strong, provable security, centralized management of all cryptography, easy upgrades, and efficient code reuse across multiple platforms. 
+By leveraging the flexibility of Kotlin Multiplatform, this library will ensure strong, provable security, centralized management of all cryptography, easy upgrades, and efficient code reuse across multiple platforms.
 
 A significant additional advantage of our chosen framework, particularly for the JavaScript version of this library, is the future potential to export to WebAssembly (WASM).
 
@@ -99,15 +99,15 @@ In order to consider this completed or done the existing SDK's must have integra
 <br><br>
 
 #### Implementation resources
-| Engineer | Role | Availability |
-| ----------- | ----------- | ----------- |
-| Francisco Javier Ribó | Engineering Lead + Developer | Part time |
-| Yurii | Engineering + CoreDID Integration Lead | Part time |
-| Gonçalo Frade | SDK Project Lead + Roadmap Lead + Developer | Part time |
-| Alexandros Zacharakis Jesus Diaz Vico | Cryptography Engineers + Roadmap Lead | Part time |
-| Ahmed Moussa | KMM Lead / architect + Developer | Fulltime |
-| Cristian Gonzalez | Developer | Fulltime |
-| Curtis HArding | Developer | Part time |
+| Engineer                              | Role                                        | Availability |
+|---------------------------------------|---------------------------------------------|--------------|
+| Francisco Javier Ribó                 | Engineering Lead + Developer                | Part time    |
+| Yurii                                 | Engineering + CoreDID Integration Lead      | Part time    |
+| Gonçalo Frade                         | SDK Project Lead + Roadmap Lead + Developer | Part time    |
+| Alexandros Zacharakis Jesus Diaz Vico | Cryptography Engineers + Roadmap Lead       | Part time    |
+| Ahmed Moussa                          | KMM Lead / architect + Developer            | Fulltime     |
+| Cristian Gonzalez                     | Developer                                   | Fulltime     |
+| Curtis HArding                        | Developer                                   | Part time    |
 
 <br><br>
 
@@ -117,7 +117,7 @@ The main goal of this section is to describe the process where we choose what co
 **Comments**
 
 
-1. There is a risk of starting to add to Apollo "anything that looks like cryptography". For instance, the Anoncreds part that takes care of formatting the credentials (which is what anoncreds-rs does) should not go into Apollo. 
+1. There is a risk of starting to add to Apollo "anything that looks like cryptography". For instance, the Anoncreds part that takes care of formatting the credentials (which is what anoncreds-rs does) should not go into Apollo.
 2. But the underlying cryptographic functionality (for which anoncreds-rs calls libursa) should go into Apollo.
 3. Maybe something similar applies to HD wallets.
 

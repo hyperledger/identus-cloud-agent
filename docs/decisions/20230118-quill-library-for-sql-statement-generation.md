@@ -1,8 +1,8 @@
 # Quill library for SQL statement generation and validation
 
 - Status: accepted
-- Deciders: Yurii Shynbuiev, Fabio Pinheiro, Benjamin Voiturier 
-- Date: [2023-01-17] 
+- Deciders: Yurii Shynbuiev, Fabio Pinheiro, Benjamin Voiturier
+- Date: [2023-01-17]
 - Tags: DAL, SQL, Postrgresql, Typesafe
 
 ## Context and Problem Statement
@@ -37,7 +37,7 @@ Quill provides a Quoted Domain Specific Language (QDSL) to express queries in Sc
 4. Compile-time query validation: If configured, the query is verified against the database at compile time, and the compilation fails if it is not valid. The query validation does not alter the database state.
 ```
 
-There are [Slick](https://scala-slick.org/) and [ScalikeJDBC](http://scalikejdbc.org/) libraries as well. 
+There are [Slick](https://scala-slick.org/) and [ScalikeJDBC](http://scalikejdbc.org/) libraries as well.
 
 Comparison of these libraries is not a goal of this ADR, but it's essential to know the differences.
 
@@ -164,7 +164,7 @@ val q = TableQuery[Person].filter(_.id === 1)
 val result: Future[Seq[Person]] = db.run(q.result)
 ```
 
-#### Two more real example of Doobie and Quill usage are in the [Links](#links) section.
+#### Two more real example of Doobie and Quill usage are in the [Links](#links) section
 
 ## Links
 

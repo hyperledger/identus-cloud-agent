@@ -9,7 +9,7 @@
 
 [Research Spike - Schema and Verifiable Presentation Registry](https://input-output.atlassian.net/browse/ATL-3186)
 
-- Provide a clear and concise analysis of the various schema registry implementation and the associated benefits and downfalls of each approach. 
+- Provide a clear and concise analysis of the various schema registry implementation and the associated benefits and downfalls of each approach.
 - Provide a concrete proposal for what we would like to implement for the Identus platform.
 - Provide a generic way of storing and linking the resources for the DID in the Identus platform.
 
@@ -46,11 +46,11 @@ The technical solution contains a lot of variations and particular small decisio
 
 ### Storage limitations
 
-All decentralized storage (DLT or IPFS) has storage limitations, and the amount of data that can be stored is limited by the available storage capacity and the way how the resources are stored. 
+All decentralized storage (DLT or IPFS) has storage limitations, and the amount of data that can be stored is limited by the available storage capacity and the way how the resources are stored.
 
 The following aspect must be taken into account for storing the resources in DLT:
 
-- transaction size limit (can be mitigated by data fragmentation, so the single resource is stored in multiple transactions) - 16KB, 32KB, 64KB, up to 1MB - depending on the type of the blockchain 
+- transaction size limit (can be mitigated by data fragmentation, so the single resource is stored in multiple transactions) - 16KB, 32KB, 64KB, up to 1MB - depending on the type of the blockchain
 - throughput - bytes we can insert to storage per unit of time
 - latency - multi-second time per insert
 - cost - each insertion costs fees
@@ -71,7 +71,7 @@ For larger resource types IPFS or another option should be considered. Large res
 
 IPFS doesn't have a size limitation (it's limited by the underlying storage or the particular SDK) and requires additional infrastructure and `incentives` (the way to pay for the storage) from the community.
 
-IPFS can be used for storing the resources, but it should be covered in the scope of separated ADR. 
+IPFS can be used for storing the resources, but it should be covered in the scope of separated ADR.
 
 ### Scalability
 
@@ -85,7 +85,7 @@ Scalability issues also must be considered in the decision for linking the resou
 
 ### Access control
 
-SSI resources stored in DLT and IPFS can be accessed by anyone who has access to the network. 
+SSI resources stored in DLT and IPFS can be accessed by anyone who has access to the network.
 
 This can be a security concern for organizations that need to control access to their SSI resources.
 
@@ -95,7 +95,7 @@ The types of resources such as credential schemas, logos, and revocation lists s
 
 ### Data privacy
 
-While DLT and IPFS are designed to be secure, there is still a risk that SSI resources stored on these platforms could be accessed or stolen by unauthorized parties. 
+While DLT and IPFS are designed to be secure, there is still a risk that SSI resources stored on these platforms could be accessed or stolen by unauthorized parties.
 
 This is especially concerning when it comes to sensitive personal information.
 
@@ -181,34 +181,34 @@ The drawbacks of the solution:
 
 Each resource entry is a part of the collection and is described in the `linkedResourceMetadata` field.
 
-The solution is described in the Cheqd ARD in the [Links](#Links) section of the current ADR 
+The solution is described in the Cheqd ARD in the [Links](#links) section of the current ADR
 
 Example:
 
 ```
 {
-	"didDocumentMetadata": {
-		"linkedResourceMetadata": [
-		  {
-		    "resourceURI": "did:cheqd:mainnet:1f8e08a2-eeb6-40c3-9e01-33e4a0d1479d/resources/f3d39687-69f5-4046-a960-3aae86a0d3ca",
-		    "resourceCollectionId": "1f8e08a2-eeb6-40c3-9e01-33e4a0d1479d",
-		    "resourceId": "f3d39687-69f5-4046-a960-3aae86a0d3ca",
-		    "resourceName": "PassportSchema", // First version of a Resource called PassportSchema
-		    "resourceType": "CL-Schema",
-		    "mediaType": "application/json",
-		    "created": "2022-07-19T08:40:00Z",
-		    "checksum": "7b2022636f6e74656e74223a202274657374206461746122207d0ae3b0c44298",
-		    "previousVersionId": null, // null if no previous version, otherwise, resourceId of previous version
-		    "nextVersionId": null, // null if no new version, otherwise, resourceId of new version
-		  }
-		]
-	}
+ "didDocumentMetadata": {
+  "linkedResourceMetadata": [
+    {
+      "resourceURI": "did:cheqd:mainnet:1f8e08a2-eeb6-40c3-9e01-33e4a0d1479d/resources/f3d39687-69f5-4046-a960-3aae86a0d3ca",
+      "resourceCollectionId": "1f8e08a2-eeb6-40c3-9e01-33e4a0d1479d",
+      "resourceId": "f3d39687-69f5-4046-a960-3aae86a0d3ca",
+      "resourceName": "PassportSchema", // First version of a Resource called PassportSchema
+      "resourceType": "CL-Schema",
+      "mediaType": "application/json",
+      "created": "2022-07-19T08:40:00Z",
+      "checksum": "7b2022636f6e74656e74223a202274657374206461746122207d0ae3b0c44298",
+      "previousVersionId": null, // null if no previous version, otherwise, resourceId of previous version
+      "nextVersionId": null, // null if no new version, otherwise, resourceId of new version
+    }
+  ]
+ }
 }
 ```
 
-The solution is not fully interoperable with the SSI ecosystem, but it's probably the first successful specification that formalizes the DID-linked resources and the DID URL. 
+The solution is not fully interoperable with the SSI ecosystem, but it's probably the first successful specification that formalizes the DID-linked resources and the DID URL.
 
-Cheqd's approach for linking the resources to the DID is not a part of the current version of DID specification. Even if it's possible to find some information about `linkedResources` and `linkedResourceMetadata` optional field of the DIDDoc in the cache of the search system or ChatGPT. 
+Cheqd's approach for linking the resources to the DID is not a part of the current version of DID specification. Even if it's possible to find some information about `linkedResources` and `linkedResourceMetadata` optional field of the DIDDoc in the cache of the search system or ChatGPT.
 
 Looks like the ToIP specification is inspired by Cheqd's ADR.
 
@@ -236,10 +236,10 @@ The main idea is an algorithm that allows using the DID URL and the information 
 Dereference is performed by defining the service `id` and `relativeRef` params or `path` in the DID URL
 
 **NOTE:**
-The `service.type` property is not taken into account in this flow. 
+The `service.type` property is not taken into account in this flow.
 According to the did-core specification, the service type and its associated properties SHOULD be registered in the [DID Specification Registries](
 https://www.w3.org/TR/did-spec-registries/#service-types).
-So, defining and registering the `schemaService` or `resourceService` should be the next step to facilitate the interoperability of SSI systems. 
+So, defining and registering the `schemaService` or `resourceService` should be the next step to facilitate the interoperability of SSI systems.
 
 Example 1: using `service` and `relativeRef`
 
@@ -321,7 +321,7 @@ ToIP specification doesn't describe the details about the storage of the underly
 
 The new specification for DID URL dereferencing is an improved specification with recommended Cheqd idea to publish the resource metadata in the DID Document.
 
-The main difference with the previous specification is an introduction of parameters that can discover the resource (instead of using `resource` field only) and simplification of the Cheqd's approach by skipping the `collection` abstraction. 
+The main difference with the previous specification is an introduction of parameters that can discover the resource (instead of using `resource` field only) and simplification of the Cheqd's approach by skipping the `collection` abstraction.
 
 The DID Document refers to the associated resource via linked resource metadata.
 
@@ -331,7 +331,7 @@ The current status of the document is a draft, but it's going to be published in
 
 The list of resource parameters with descriptions is the following:
 
-- `resourceUri` (required): A string or a map that conforms to the rules of [RFC3986] for URIs which SHOULD directly lead to a location where the resource can be accessed from. 
+- `resourceUri` (required): A string or a map that conforms to the rules of [RFC3986] for URIs which SHOULD directly lead to a location where the resource can be accessed from.
 - `resourceCollectionId` (optional): A string that conforms to a method-specific unique identifier format.
 - `resourceId` (optional): A string that conforms to a method-specific unique identifier format.
 - `resourceName` (required): A string that uniquely names and identifies a resource. This property, along with the resourceType below, can be used to track version changes within a resource.
@@ -340,13 +340,13 @@ The list of resource parameters with descriptions is the following:
 - `mediaType` (required): A string that identifies the IANA-registered Media Type for a resource.
 - `created` (required): A JSON String serialized as an XML DateTime normalized to UTC 00:00:00 and without sub-second decimal precision.
 - `checksum` (optional): A string that provides a checksum (e.g. SHA256, MD5) for the resource to facilitate data integrity.
-- `previousVersionId` (optional): The value of the property MUST be a string. This is the previous version of a resource with the same resourceName and resourceType. The value must be 'null' if there is no previous version. 
-- `nextVersionId` (optional): The value of the property MUST be a string. This is the previous version of a resource with the same resourceName and resourceType. The value must be 'null' if there is no previous version. 
+- `previousVersionId` (optional): The value of the property MUST be a string. This is the previous version of a resource with the same resourceName and resourceType. The value must be 'null' if there is no previous version.
+- `nextVersionId` (optional): The value of the property MUST be a string. This is the previous version of a resource with the same resourceName and resourceType. The value must be 'null' if there is no previous version.
 
 This specification describes many important aspects:
 
-- the list of the query parameters in the DID URL for dereferencing the resource and error messages, 
-- DID Method and VDR requirements, and 
+- the list of the query parameters in the DID URL for dereferencing the resource and error messages,
+- DID Method and VDR requirements, and
 - DID Resolver requirements
 
 #### Positive Consequences
@@ -354,7 +354,7 @@ This specification describes many important aspects:
 - interoperability: the resource is resolved in a standard way according to the ToIP specification following W3C specification for DID URL dereferencing
 - discoverability: the resource defined in DID URL is resolved and fetched dynamically
 - scalability: compared to W3C specification, the DID Document is not required to fetch the resource, so instead of 2-3 steps (calls), the resource resolution should be completed in a single step. The behavior must be described in the DID Method and implemented by the DID resolver.
-- trust: publishing the `checksum` of the resource inside of the DID Document allows other SSI system to check the resource validity. 
+- trust: publishing the `checksum` of the resource inside of the DID Document allows other SSI system to check the resource validity.
 
 #### Negative Consequences
 
@@ -393,8 +393,8 @@ As the solution is based on the latest ToIP specification, it derives all positi
 #### Negative Consequences
 - scalability: the specification is inspired by the Cheqd approach to store the linkedResourceMetadata inside of the DID Document
 - the convention for references and the logic must be carefully reviewed:
-	- `schemaId` in this solution is `{didRef}/resources/{cardano_transaction_id}`, so it doesn't refer to the `id` but to the Tx where everything else is stored (it's an interesting idea for a stateless design)
-	- resource metadata is built according to the ToIP specification but for AnonCreds entities only: credential schema and credential definition.
+ 	- `schemaId` in this solution is `{didRef}/resources/{cardano_transaction_id}`, so it doesn't refer to the `id` but to the Tx where everything else is stored (it's an interesting idea for a stateless design)
+ 	- resource metadata is built according to the ToIP specification but for AnonCreds entities only: credential schema and credential definition.
 - technology stack: it doesn't fit to current platform, but can be used for inspiration.
 
 
@@ -402,7 +402,7 @@ As the solution is based on the latest ToIP specification, it derives all positi
 
 According to the AnonCreds specification, such kinds of resources as credential schema and credential definition are stored on-chain. Indy blockchain is used by the Hyperledger technology stack.
 
-The credential schema and definition are not signed by the issuer, but the transaction with the underlying resource is published by the issuer. So, the integrity of the resource is guaranteed by the fact that it's published inside of the transaction signed by the issuer. 
+The credential schema and definition are not signed by the issuer, but the transaction with the underlying resource is published by the issuer. So, the integrity of the resource is guaranteed by the fact that it's published inside of the transaction signed by the issuer.
 
 Example of the credential schema transaction:
 
@@ -495,9 +495,9 @@ Taking into account the advantages and disadvantages of the existing solutions t
 -the resource is linked to the DID by convention specified in the W3C specification, so specifying the resource in the DID URL and defining the service endpoint that exposes the resource allows to discover and fetch the resource using the Universal Resolver
 - as an option, the same resource can be discovered and fetched by the Identus platform backend and SDK without loading the Universal resolver
 - the resource integrity must be guaranteed by one of the following options:
-	- by signing the payload with one of the DID's keys or 
-	- by publishing the resource metadata that contains the information about the resource (id, type, name, media type, hash) on-chain or
-	- for the resource that is less than the blockchain limitation (up to 64KB) by publishing the resource together with the hash, and/or signature
+ 	- by signing the payload with one of the DID's keys or
+ 	- by publishing the resource metadata that contains the information about the resource (id, type, name, media type, hash) on-chain or
+ 	- for the resource that is less than the blockchain limitation (up to 64KB) by publishing the resource together with the hash, and/or signature
 - the resource can be stored in the cloud storage - PostgreSQL database - for indexing and lookup API
 
 As the Identus platform can leverage the Cardano blockchain and there is a strong requirement for longevity and security - the resource together with the signature and/or hash must be stored in the Cardano blockchain.
@@ -506,9 +506,9 @@ An example of this solution will be the following (concerning the current infras
 
 - prism-node must be able to store the generic resource payload, signature and/or hash on-chain and restore the given resource in the underlying database (PostgreSQL) for indexing and lookup API
 - credential schema (or any other resource module) must be a part of the Atala SSI infrastructure and allow
-	- publishing the concrete resource as a generic resource using the prism-node API
-	- expose the API for discovery and fetching the resource by URL
-	- expose the API for managing the resources (create, publish, lookup with pagination)
+ 	- publishing the concrete resource as a generic resource using the prism-node API
+ 	- expose the API for discovery and fetching the resource by URL
+ 	- expose the API for managing the resources (create, publish, lookup with pagination)
 - the Universal Resolver for the DID Method must be able to discover and fetch the resource by DID URL
 - is needed, SDK and backend services can fetch the resources directly (not via the Universal Resolver)
 
@@ -616,7 +616,7 @@ Storing resources larger than 64KB is out of the scope of this ADR. These must b
 
 - the image is stored in the cloud database in a binary format
 - the metadata and the hash of the image are stored on-chain
-- optionally, the signature of the owner DID can be generated for the payload and stored together with the hash 
+- optionally, the signature of the owner DID can be generated for the payload and stored together with the hash
 - to prove the integrity of the image file, the hash of the binary representation must be the same and/or the signature must be verified
 - the resource can be fetched in the same way and the credential schema from the previous example
 
@@ -632,7 +632,7 @@ Storing resources larger than 64KB is out of the scope of this ADR. These must b
 #### Negative Consequences
 
 - longevity: for the resource that can not be stored on-chain because of the large size longevity is guaranteed by the cloud recovery procedures and data backup. As an option for mitigating this problem, the resource can be stored in IPFS (additional ADR is required for this)
-- vendor lock: the solution is coupled to the Cardano blockchain 
+- vendor lock: the solution is coupled to the Cardano blockchain
 
 **NOTE:** one of the main concerns of this ADR is storing the resources on-chain because of size limitation, throughput, latency and cost. This option allows to postpone this decision and implement the DID-linked resources without the need of storing resources on-chain.
 
@@ -682,17 +682,17 @@ Each option has technical challenges and limitations, but it's possible to defin
 The solution option #1 is considered a good option as it satisfies the requirements and the majority of the negative consequences are mitigated.
 The following comparison table is a summary of the available options.
 
-| Option                                     | Simplicity | Trust | Scalability | Interop | Discoverability | Decentalisation |
-|--------------------------------------------| ---------- | ----- | ----------- | ------- | --------------- | --------------- |
-| linkedResources field                      | :heavy_plus_sign: | :heavy_check_mark: | :heavy_minus_sign: | :heavy_minus_sign: | :heavy_plus_sign: | N/A |
-| linkedResourceMetadata (Cheqd)             | :heavy_minus_sign:/:heavy_plus_sign: | :heavy_check_mark: | :heavy_minus_sign:/:heavy_plus_sign:| :heavy_plus_sign:|:heavy_plus_sign: | :heavy_check_mark: |
-| DID URL Dereferencing (W3C specification)  | :heavy_plus_sign: | N/A | :heavy_plus_sign: | :heavy_plus_sign: | :heavy_minus_sign: | :heavy_check_mark: |
-| DID URL Dereferencing (ToIP specification) | :heavy_minus_sign: | :heavy_check_mark: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign: | :heavy_check_mark: |
-| RootsID - Cardano AnonCreds                | :heavy_plus_sign: | :heavy_check_mark: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign: | :heavy_plus_sign: | :heavy_check_mark: |
-| Hyperledger AnonCreds                      | :heavy_plus_sign: | :heavy_check_mark:| :heavy_plus_sign: | :heavy_minus_sign: | :heavy_minus_sign: | :heavy_check_mark: |
-| Trinsic                                    | :heavy_minus_sign: | :heavy_check_mark: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_minus_sign: | :heavy_minus_sign: | :heavy_check_mark: |
-| Solution #1 W3C                            | :heavy_plus_sign: | :heavy_check_mark: | :heavy_plus_sign: | :heavy_plus_sign: | :heavy_minus_sign: | :heavy_check_mark: |
-| Solution #2 ToIP                           | :heavy_minus_sign: | :heavy_check_mark: | :heavy_minus_sign:/:heavy_plus_sign: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign: | :heavy_check_mark: |
+| Option                                     | Simplicity                           | Trust              | Scalability                          | Interop                              | Discoverability    | Decentalisation    |
+|--------------------------------------------|--------------------------------------|--------------------|--------------------------------------|--------------------------------------|--------------------|--------------------|
+| linkedResources field                      | :heavy_plus_sign:                    | :heavy_check_mark: | :heavy_minus_sign:                   | :heavy_minus_sign:                   | :heavy_plus_sign:  | N/A                |
+| linkedResourceMetadata (Cheqd)             | :heavy_minus_sign:/:heavy_plus_sign: | :heavy_check_mark: | :heavy_minus_sign:/:heavy_plus_sign: | :heavy_plus_sign:                    | :heavy_plus_sign:  | :heavy_check_mark: |
+| DID URL Dereferencing (W3C specification)  | :heavy_plus_sign:                    | N/A                | :heavy_plus_sign:                    | :heavy_plus_sign:                    | :heavy_minus_sign: | :heavy_check_mark: |
+| DID URL Dereferencing (ToIP specification) | :heavy_minus_sign:                   | :heavy_check_mark: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign:  | :heavy_check_mark: |
+| RootsID - Cardano AnonCreds                | :heavy_plus_sign:                    | :heavy_check_mark: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign:                    | :heavy_plus_sign:  | :heavy_check_mark: |
+| Hyperledger AnonCreds                      | :heavy_plus_sign:                    | :heavy_check_mark: | :heavy_plus_sign:                    | :heavy_minus_sign:                   | :heavy_minus_sign: | :heavy_check_mark: |
+| Trinsic                                    | :heavy_minus_sign:                   | :heavy_check_mark: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_minus_sign:                   | :heavy_minus_sign: | :heavy_check_mark: |
+| Solution #1 W3C                            | :heavy_plus_sign:                    | :heavy_check_mark: | :heavy_plus_sign:                    | :heavy_plus_sign:                    | :heavy_minus_sign: | :heavy_check_mark: |
+| Solution #2 ToIP                           | :heavy_minus_sign:                   | :heavy_check_mark: | :heavy_minus_sign:/:heavy_plus_sign: | :heavy_plus_sign:/:heavy_minus_sign: | :heavy_plus_sign:  | :heavy_check_mark: |
 
 ---
 

@@ -123,15 +123,15 @@ the [ZIO Types of Errors](https://zio.dev/reference/error-management/types) docu
 That is, carefully distinguishing between:
 
 - **ZIO Failures**
-    - The expected/recoverable errors (i.e. domain-specific errors).
-    - Declared in the Error channel of the effect => ZIO[R, E, A].
-    - Supposed to be handled by the caller to prevent call stack propagation.
+  - The expected/recoverable errors (i.e. domain-specific errors).
+  - Declared in the Error channel of the effect => ZIO[R, E, A].
+  - Supposed to be handled by the caller to prevent call stack propagation.
 
 - **ZIO Defects**
-    - The unexpected/unrecoverable errors.
-    - Not represented in the ZIO effect.
-    - We do NOT expect the caller to handle them.
-    - Propagated throughout the call stack until converted to a Failure or logged for traceability and debugging
+  - The unexpected/unrecoverable errors.
+  - Not represented in the ZIO effect.
+  - We do NOT expect the caller to handle them.
+  - Propagated throughout the call stack until converted to a Failure or logged for traceability and debugging
       purposes by
       the uppermost layer.
 
