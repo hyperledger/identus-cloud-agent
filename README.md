@@ -135,7 +135,7 @@ The `PORT` variable is used to specify the port number for the Cloud Agent to li
 In real life, you will need to start at least two Cloud Agent instances with different roles. For example, you can start one instance with the `issuer` role and another one with the `holder` role. The `issuer` instance will be used to issue verifiable credentials (VCs) and the `holder` instance will be used to hold VCs. Here is an example of how you can do this:
 
 ```bash
-PORT=8080 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.2.1 \
+PORT=8080 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.3.0 \
   docker compose \
     -p "issuer" \
     -f ./infrastructure/shared/docker-compose-demo.yml \
@@ -143,7 +143,7 @@ PORT=8080 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.2.1 \
 ```
 
 ```bash
-PORT=8090 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.2.1 \
+PORT=8090 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.3.0 \
   docker compose \
     -p "holder" \
     -f ./infrastructure/shared/docker-compose-demo.yml \
