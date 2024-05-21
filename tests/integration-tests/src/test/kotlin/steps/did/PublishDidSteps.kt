@@ -50,8 +50,10 @@ class PublishDidSteps {
         val createDidRequest = CreateManagedDidRequest(
             CreateManagedDidRequestDocumentTemplate(
                 publicKeys = listOf(
-                    ManagedDIDKeyTemplate("auth-1", Purpose.AUTHENTICATION),
-                    ManagedDIDKeyTemplate("assertion-1", Purpose.ASSERTION_METHOD),
+                    ManagedDIDKeyTemplate("auth-1", Purpose.AUTHENTICATION, Curve.SECP256K1),
+                    ManagedDIDKeyTemplate("auth-2", Purpose.AUTHENTICATION, Curve.ED25519),
+                    ManagedDIDKeyTemplate("assertion-1", Purpose.ASSERTION_METHOD, Curve.SECP256K1),
+                    ManagedDIDKeyTemplate("comm-1", Purpose.KEY_AGREEMENT, Curve.X25519),
                 ),
                 services = listOf(
                     Service("https://foo.bar.com", listOf("LinkedDomains"), Json("https://foo.bar.com/")),

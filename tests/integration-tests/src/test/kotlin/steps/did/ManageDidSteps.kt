@@ -10,28 +10,27 @@ import io.iohk.atala.automation.serenity.ensure.Ensure
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus.SC_CREATED
-import org.hyperledger.identus.client.models.CreateManagedDidRequest
-import org.hyperledger.identus.client.models.CreateManagedDidRequestDocumentTemplate
-import org.hyperledger.identus.client.models.Json
-import org.hyperledger.identus.client.models.ManagedDID
-import org.hyperledger.identus.client.models.ManagedDIDKeyTemplate
-import org.hyperledger.identus.client.models.ManagedDIDPage
-import org.hyperledger.identus.client.models.Purpose
-import org.hyperledger.identus.client.models.Service
+import org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY
+import org.hyperledger.identus.client.models.*
 
 class ManageDidSteps {
 
     @Given("{actor} creates {int} PRISM DIDs")
     fun createsMultipleManagedDids(actor: Actor, number: Int) {
         repeat(number) {
-            createManageDid(actor)
+            createManageDidWithSecp256k1Key(actor)
         }
         actor.remember("number", number)
     }
 
     @When("{actor} creates PRISM DID")
-    fun createManageDid(actor: Actor) {
-        val createDidRequest = createPrismDidRequest()
+    fun createManageDidWithSecp256k1Key(actor: Actor) {
+        createManageDid(actor, Curve.SECP256K1, Purpose.AUTHENTICATION)
+    }
+
+    @When("{actor} creates PRISM DID with {curve} key having {purpose} purpose")
+    fun createManageDid(actor: Actor, curve: Curve, purpose: Purpose) {
+        val createDidRequest = createPrismDidRequest(curve, purpose)
 
         actor.attemptsTo(
             Post.to("/did-registrar/dids")
@@ -40,19 +39,17 @@ class ManageDidSteps {
                 },
         )
 
-        actor.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
-        )
+        if (SerenityRest.lastResponse().statusCode() == SC_CREATED) {
+            var createdDids = actor.recall<MutableList<String>>("createdDids")
+            if (createdDids == null) {
+                createdDids = mutableListOf()
+            }
 
-        var createdDids = actor.recall<MutableList<String>>("createdDids")
-        if (createdDids == null) {
-            createdDids = mutableListOf()
+            val managedDid = SerenityRest.lastResponse().get<ManagedDID>()
+
+            createdDids.add(managedDid.longFormDid!!)
+            actor.remember("createdDids", createdDids)
         }
-
-        val managedDid = SerenityRest.lastResponse().get<ManagedDID>()
-
-        createdDids.add(managedDid.longFormDid!!)
-        actor.remember("createdDids", createdDids)
     }
 
     @When("{actor} lists all PRISM DIDs")
@@ -71,6 +68,15 @@ class ManageDidSteps {
         )
     }
 
+    @Then("{actor} sees PRISM DID was not successfully created")
+    fun theDidShouldNotBeRegisteredSuccessfully(actor: Actor) {
+        val error = SerenityRest.lastResponse().get<ErrorResponse>()
+        actor.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_UNPROCESSABLE_ENTITY),
+            Ensure.that(error.detail ?: "").isNotEmpty(),
+        )
+    }
+
     @Then("{actor} sees the list contains all created DIDs")
     fun seeTheListContainsAllCreatedDids(actor: Actor) {
         val expectedDids = actor.recall<List<String>>("createdDids")
@@ -81,9 +87,9 @@ class ManageDidSteps {
         )
     }
 
-    private fun createPrismDidRequest(): CreateManagedDidRequest = CreateManagedDidRequest(
+    private fun createPrismDidRequest(curve: Curve, purpose: Purpose): CreateManagedDidRequest = CreateManagedDidRequest(
         CreateManagedDidRequestDocumentTemplate(
-            publicKeys = listOf(ManagedDIDKeyTemplate("auth-1", Purpose.AUTHENTICATION)),
+            publicKeys = listOf(ManagedDIDKeyTemplate("auth-1", purpose, curve)),
             services = listOf(
                 Service("https://foo.bar.com", listOf("LinkedDomains"), Json("https://foo.bar.com/")),
             ),
