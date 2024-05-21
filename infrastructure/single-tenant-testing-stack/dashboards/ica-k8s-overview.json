@@ -19,7 +19,7 @@
           "uid": "${DS_LOKI}"
         },
         "enable": false,
-        "expr": "{compose_service=~\".*-oea\"} |= \"ERROR\"",
+        "expr": "{compose_service=~\".*-agent\"} |= \"ERROR\"",
         "iconColor": "red",
         "instant": false,
         "name": "Error in log"
@@ -213,7 +213,7 @@
             "uid": "${DS_LOKI}"
           },
           "editorMode": "code",
-          "expr": "count_over_time({compose_service=~\".*-oea\"}[$__interval])",
+          "expr": "count_over_time({compose_service=~\".*-agent\"}[$__interval])",
           "legendFormat": "{{ compose_service }}",
           "queryType": "range",
           "refId": "A"
@@ -319,7 +319,7 @@
             "uid": "${DS_LOKI}"
           },
           "editorMode": "code",
-          "expr": "count_over_time({compose_service=~\".*-oea\"} |= \"ERROR\" [$__interval])",
+          "expr": "count_over_time({compose_service=~\".*-agent\"} |= \"ERROR\" [$__interval])",
           "legendFormat": "{{ compose_service }}",
           "queryType": "range",
           "refId": "A"
@@ -761,7 +761,7 @@
                 "uid": "${DS_LOKI}"
               },
               "editorMode": "code",
-              "expr": "{compose_service=~\".*-oea\"} |= \"ERROR\"",
+              "expr": "{compose_service=~\".*-agent\"} |= \"ERROR\"",
               "hide": false,
               "queryType": "range",
               "refId": "B"
