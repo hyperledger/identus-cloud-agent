@@ -7,8 +7,6 @@ import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import io.circe.*
 import zio.*
-import pdi.jwt.algorithms.JwtECDSAAlgorithm
-import pdi.jwt.{JwtAlgorithm, JwtCirce}
 
 import java.security.*
 
