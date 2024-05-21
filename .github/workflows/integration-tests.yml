@@ -18,6 +18,10 @@ defaults:
     shell: bash
     working-directory: "tests/integration-tests"
 
+permissions:
+  checks: write
+  pull-requests: write
+
 jobs:
   run-integration-tests:
     name: "Run integration tests"
@@ -64,8 +68,8 @@ jobs:
 
       - uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
-          java-version: '19'
+          distribution: "zulu"
+          java-version: "19"
 
       - name: Run integration tests
         env:
@@ -73,7 +77,7 @@ jobs:
           OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.open_enterprise_agent_version }}
           GITHUB_ACTOR: hyperledger-bot
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        continue-on-error: true
+        #        continue-on-error: true
         run: |
           ./gradlew test --tests "IntegrationTestsRunner"
 
@@ -143,6 +147,6 @@ jobs:
             Failed: ${{ steps.analyze_test_results.outputs.failures }}
             Errors in tests: ${{ steps.analyze_test_results.outputs.errors }}
             Skipped (known bugs): ${{ steps.analyze_test_results.outputs.skipped }}
-          SLACK_TITLE: "Open Enterprise Agent Integration Tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
+          SLACK_TITLE: "Identus Cloud Agent Integration Tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
           SLACK_USERNAME: circleci
           SLACK_WEBHOOK: ${{ secrets.E2E_TESTS_SLACK_WEBHOOK }}

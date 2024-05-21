@@ -123,15 +123,15 @@ the [ZIO Types of Errors](https://zio.dev/reference/error-management/types) docu
 That is, carefully distinguishing between:
 
 - **ZIO Failures**
-    - The expected/recoverable errors (i.e. domain-specific errors).
-    - Declared in the Error channel of the effect => ZIO[R, E, A].
-    - Supposed to be handled by the caller to prevent call stack propagation.
+  - The expected/recoverable errors (i.e. domain-specific errors).
+  - Declared in the Error channel of the effect => ZIO[R, E, A].
+  - Supposed to be handled by the caller to prevent call stack propagation.
 
 - **ZIO Defects**
-    - The unexpected/unrecoverable errors.
-    - Not represented in the ZIO effect.
-    - We do NOT expect the caller to handle them.
-    - Propagated throughout the call stack until converted to a Failure or logged for traceability and debugging
+  - The unexpected/unrecoverable errors.
+  - Not represented in the ZIO effect.
+  - We do NOT expect the caller to handle them.
+  - Propagated throughout the call stack until converted to a Failure or logged for traceability and debugging
       purposes by
       the uppermost layer.
 
@@ -490,9 +490,9 @@ The upper layer will automatically do so appropriately and consistently using Ta
 #### Reporting RFC-9457 Error Response
 
 All declared Tapir endpoints must
-use [`org.hyperledger.identus.api.http.ErrorResponse`](https://github.com/hyperledger/identus-cloud-agent/blob/main/prism-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala)
+use [`org.hyperledger.identus.api.http.ErrorResponse`](https://github.com/hyperledger/identus-cloud-agent/blob/main/cloud-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala)
 as their output error
-type ([example](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/prism-agent/service/server/src/main/scala/io/iohk/atala/connect/controller/ConnectionEndpoints.scala#L45))
+type ([example](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/cloud-agent/service/server/src/main/scala/io/iohk/atala/connect/controller/ConnectionEndpoints.scala#L45))
 This type ensures that the response returned to the user complies with
 the [RFC-9457 Problem Details for HTTP APIs](https://www.rfc-editor.org/rfc/rfc9457.html).
 
@@ -517,7 +517,7 @@ propagate through the effect’s error channel is the
 parent [`org.hyperledger.identus.shared.models.Failure`](https://github.com/hyperledger/identus-cloud-agent/blob/main/shared/src/main/scala/io/iohk/atala/shared/models/Failure.scala)
 type and its conversion
 to the ErrorResponse type is done automatically
-via [Scala implicit conversion](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/prism-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala#L44).
+via [Scala implicit conversion](https://github.com/hyperledger/identus-cloud-agent/blob/eb898e068f768507d6979a5d9bab35ef7ad4a045/cloud-agent/service/server/src/main/scala/io/iohk/atala/api/http/ErrorResponse.scala#L44).
 
 #### Do not reflexively log errors
 

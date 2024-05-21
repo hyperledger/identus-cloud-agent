@@ -1,8 +1,8 @@
 # Key derivation benchmark
 
-This document provides a performance benchmark of a key derivation used inside the PRISM agent
+This document provides a performance benchmark of a key derivation used inside the Cloud Agent
 in comparison with a key retrieval from HashiCorp Vault. It should provide a baseline for
-future decisions in managing the key material on PRISM agent.
+future decisions in managing the key material on the agent.
 
 ## Test setup
 

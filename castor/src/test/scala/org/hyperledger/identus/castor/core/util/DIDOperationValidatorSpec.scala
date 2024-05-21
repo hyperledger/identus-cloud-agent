@@ -340,24 +340,6 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           invalidArgumentContainsString("service id is invalid: [Wrong service]")
         )
       },
-      test("reject CreateOperation when publicKeyData is invalid") {
-        val op = createPrismDIDOperation(
-          publicKeys = Seq(
-            PublicKey(
-              id = "key-0",
-              purpose = VerificationRelationship.Authentication,
-              publicKeyData = PublicKeyData.ECKeyData(
-                crv = EllipticCurve.SECP256K1,
-                x = Base64UrlString.fromStringUnsafe("00"),
-                y = Base64UrlString.fromStringUnsafe("00")
-              )
-            )
-          )
-        )
-        assert(DIDOperationValidator(Config.default).validate(op))(
-          isLeft(equalTo(OperationValidationError.InvalidPublicKeyData(Seq("key-0"))))
-        )
-      },
       test("reject CreateOperation when master key is not a secp256k1 key") {
         val op = createPrismDIDOperation(
           internalKeys = Seq(
@@ -369,11 +351,20 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
                 x = Base64UrlString.fromStringUnsafe("11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"),
                 y = Base64UrlString.fromStringUnsafe("")
               )
+            ),
+            InternalPublicKey(
+              id = "master1",
+              purpose = InternalKeyPurpose.Master,
+              publicKeyData = PublicKeyData.ECKeyData(
+                crv = EllipticCurve.SECP256K1,
+                x = Base64UrlString.fromStringUnsafe("11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"),
+                y = Base64UrlString.fromStringUnsafe("")
+              )
             )
           )
         )
         assert(DIDOperationValidator(Config.default).validate(op))(
-          isLeft(equalTo(OperationValidationError.InvalidMasterKeyType(Seq("master0"))))
+          isLeft(equalTo(OperationValidationError.InvalidMasterKeyData(Seq("master0", "master1"))))
         )
       }
     ).provideLayer(testLayer)
@@ -597,25 +588,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           invalidArgumentContainsString("must not have both 'type' and 'serviceEndpoints' empty")
         )
       },
-      test("reject UpdateOperation publicKeyData is invalid") {
-        val action = UpdateDIDAction.AddKey(
-          PublicKey(
-            id = "key0",
-            purpose = VerificationRelationship.Authentication,
-            publicKeyData = PublicKeyData.ECKeyData(
-              crv = EllipticCurve.SECP256K1,
-              x = Base64UrlString.fromStringUnsafe("00"),
-              y = Base64UrlString.fromStringUnsafe("00")
-            )
-          )
-        )
-        val op = updatePrismDIDOperation(Seq(action))
-        assert(DIDOperationValidator(Config.default).validate(op))(
-          isLeft(equalTo(OperationValidationError.InvalidPublicKeyData(Seq("key0"))))
-        )
-      },
       test("reject UpdateOperation when master key is not a secp256k1 key") {
-        val action = UpdateDIDAction.AddInternalKey(
+        val action1 = UpdateDIDAction.AddInternalKey(
           InternalPublicKey(
             id = "master0",
             purpose = InternalKeyPurpose.Master,
@@ -626,9 +600,20 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
             )
           )
         )
-        val op = updatePrismDIDOperation(Seq(action))
+        val action2 = UpdateDIDAction.AddInternalKey(
+          InternalPublicKey(
+            id = "master1",
+            purpose = InternalKeyPurpose.Master,
+            publicKeyData = PublicKeyData.ECKeyData(
+              crv = EllipticCurve.SECP256K1,
+              x = Base64UrlString.fromStringUnsafe("11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"),
+              y = Base64UrlString.fromStringUnsafe("")
+            )
+          )
+        )
+        val op = updatePrismDIDOperation(Seq(action1, action2))
         assert(DIDOperationValidator(Config.default).validate(op))(
-          isLeft(equalTo(OperationValidationError.InvalidMasterKeyType(Seq("master0"))))
+          isLeft(equalTo(OperationValidationError.InvalidMasterKeyData(Seq("master0", "master1"))))
         )
       }
     )
