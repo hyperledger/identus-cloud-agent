@@ -10,6 +10,11 @@
   <a href="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/unit-tests.yml"> <img src="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/unit-tests.yml/badge.svg" alt="Unit tests" /> </a>
   <a href="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/integration-tests.yml"> <img src="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/integration-tests.yml/badge.svg" alt="End-to-end tests" /> </a>
   <a href="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/performance-tests.yml"> <img src="https://github.com/hyperledger/identus-cloud-agent/actions/workflows/performance-tests.yml/badge.svg" alt="Performance tests" /> </a>
+  <a href="https://scala-steward.org">
+      <img src="https://img.shields.io/badge/Scala_Steward-helping-blue.svg?style=flat&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAQCAMAAAARSr4IAAAAVFBMVEUAAACHjojlOy5NWlrKzcYRKjGFjIbp293YycuLa3pYY2LSqql4f3pCUFTgSjNodYRmcXUsPD/NTTbjRS+2jomhgnzNc223cGvZS0HaSD0XLjbaSjElhIr+AAAAAXRSTlMAQObYZgAAAHlJREFUCNdNyosOwyAIhWHAQS1Vt7a77/3fcxxdmv0xwmckutAR1nkm4ggbyEcg/wWmlGLDAA3oL50xi6fk5ffZ3E2E3QfZDCcCN2YtbEWZt+Drc6u6rlqv7Uk0LdKqqr5rk2UCRXOk0vmQKGfc94nOJyQjouF9H/wCc9gECEYfONoAAAAASUVORK5CYII=" alt="Scala Steward badge">
+  </a>
+
+
 </p>
 <hr>
 
@@ -87,7 +92,7 @@ sbt clean compile test docker:publishLocal
 
 ### Installation and usage
 
-Cloud Agent is distributed as a Docker image to be run in a containerized environment. All versions can be found [here](https://github.com/orgs/input-output-hk/packages/container/package/cloud-agent).
+Cloud Agent is distributed as a Docker image to be run in a containerized environment. Versions after v1.31.0 can be found [here](https://github.com/hyperledger/identus-cloud-agent/pkgs/container/identus-cloud-agent) and before v1.31.0, [here](https://github.com/orgs/input-output-hk/packages/container/package/prism-agent).
 
 The following sections describe how to run the Cloud Agent in different configurations.
 

@@ -23,6 +23,7 @@ import zio.test.*
 import zio.test.Assertion.*
 import zio.test.ZIOSpecDefault
 
+import java.net.URI
 import java.net.URL
 
 object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupport, ApolloSpecHelper {
@@ -113,7 +114,7 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
     test("create wallet with provided webhook") {
       val url = "http://example.com"
       for {
-        _ <- AgentInitialization.run.overrideConfig(webhookUrl = Some(URL(url)))
+        _ <- AgentInitialization.run.overrideConfig(webhookUrl = Some(URI(url).toURL()))
         webhooks <- ZIO
           .serviceWithZIO[WalletNonSecretStorage](
             _.walletNotification
@@ -127,7 +128,7 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
       val url = "http://example.com"
       val apiKey = "secret"
       for {
-        _ <- AgentInitialization.run.overrideConfig(webhookUrl = Some(URL(url)), webhookApiKey = Some(apiKey))
+        _ <- AgentInitialization.run.overrideConfig(webhookUrl = Some(URI(url).toURL()), webhookApiKey = Some(apiKey))
         webhooks <- ZIO
           .serviceWithZIO[WalletNonSecretStorage](
             _.walletNotification

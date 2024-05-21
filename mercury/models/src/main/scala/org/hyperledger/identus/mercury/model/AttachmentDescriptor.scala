@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury.model
 
 import java.util.Base64 as JBase64
-import io.circe.{Decoder, Encoder, HCursor, Json, JsonObject}
+import io.circe.{Decoder, Encoder, Json, JsonObject}
 import io.circe.generic.semiauto.*
 import io.circe.syntax.*
 import cats.syntax.functor.*
