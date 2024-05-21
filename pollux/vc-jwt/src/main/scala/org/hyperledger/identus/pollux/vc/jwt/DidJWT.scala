@@ -29,19 +29,6 @@ trait Signer {
 
 }
 
-class ES256Signer(privateKey: PrivateKey) extends Signer {
-  val algorithm: JwtECDSAAlgorithm = JwtAlgorithm.ES256
-  private val provider = BouncyCastleProviderSingleton.getInstance
-  Security.addProvider(provider)
-
-  override def encode(claim: Json): JWT = JWT(JwtCirce.encode(claim, privateKey, algorithm))
-
-  override def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof] = {
-    EddsaJcs2022ProofGenerator.generateProof(payload, privateKey, pk)
-  }
-
-}
-
 // works with java 7, 8, 11 & bouncycastle provider
 // https://connect2id.com/products/nimbus-jose-jwt/jca-algorithm-support#alg-support-table
 class ES256KSigner(privateKey: PrivateKey) extends Signer {

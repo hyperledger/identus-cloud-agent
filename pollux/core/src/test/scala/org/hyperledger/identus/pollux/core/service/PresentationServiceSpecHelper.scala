@@ -11,9 +11,8 @@ import org.hyperledger.identus.pollux.core.repository.*
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
 import zio.*
-
-import java.security.*
 import java.time.Instant
 import java.util.UUID
 
@@ -42,16 +41,16 @@ trait PresentationServiceSpecHelper {
     CredentialRepositoryInMemory.layer
   ) ++ defaultWalletLayer
 
-  def createIssuer(did: DID) = {
-    val keyGen = KeyPairGenerator.getInstance("EC")
-    keyGen.initialize(Curve.P_256.toECParameterSpec)
-    val keyPair = keyGen.generateKeyPair()
-    val privateKey = keyPair.getPrivate
-    val publicKey = keyPair.getPublic
+  def createIssuer(did: DID): Issuer = {
+
+    val keyPair = KmpSecp256k1KeyOps.generateKeyPair
+    val javaSKey = keyPair.privateKey.toJavaPrivateKey
+    val javaPKey = keyPair.publicKey.toJavaPublicKey
+
     Issuer(
       did = did,
-      signer = ES256Signer(privateKey),
-      publicKey = publicKey
+      signer = ES256KSigner(javaSKey),
+      publicKey = javaPKey
     )
   }
 

@@ -66,11 +66,6 @@ case class MockDIDNonSecretStorage(proxy: Proxy) extends DIDNonSecretStorage {
   ): RIO[WalletAccessContext, Unit] =
     proxy(MockDIDNonSecretStorage.InsertHdKeyMeta, (did, keyId, meta, operationHash))
 
-  override def listHdKeyPath(
-      did: PrismDID
-  ): RIO[WalletAccessContext, Seq[(String, ArraySeq[Byte], ManagedDIDHdKeyPath)]] =
-    proxy(MockDIDNonSecretStorage.ListHdKeyPath, did)
-
   override def listManagedDID(
       offset: Option[Int],
       limit: Option[Int]

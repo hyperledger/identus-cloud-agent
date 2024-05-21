@@ -242,32 +242,6 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
       }
   }
 
-  override def listHdKeyPath(
-      did: PrismDID
-  ): RIO[WalletAccessContext, Seq[(String, ArraySeq[Byte], ManagedDIDHdKeyPath)]] = {
-    val cxnIO =
-      sql"""
-        | SELECT
-        |   key_id,
-        |   operation_hash,
-        |   key_usage,
-        |   key_index
-        | FROM public.prism_did_key
-        | WHERE did = $did AND key_mode = ${KeyManagementMode.HD}
-        """.stripMargin
-        .query[(String, ArraySeq[Byte], VerificationRelationship | InternalKeyPurpose, Int)]
-        .to[List]
-
-    for {
-      state <- getManagedDIDState(did)
-      paths <- cxnIO.transactWallet(xa)
-    } yield state.map(_.didIndex).fold(Nil) { didIndex =>
-      paths.map { (keyId, operationHash, keyUsage, keyIndex) =>
-        (keyId, operationHash, ManagedDIDHdKeyPath(didIndex, keyUsage, keyIndex))
-      }
-    }
-  }
-
   override def insertKeyMeta(
       did: PrismDID,
       keyId: String,

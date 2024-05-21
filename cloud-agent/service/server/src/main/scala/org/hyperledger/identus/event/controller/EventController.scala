@@ -15,7 +15,7 @@ import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementContro
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
-import java.net.URL
+import java.net.URI
 import scala.language.implicitConversions
 import java.util.UUID
 
@@ -44,7 +44,9 @@ class EventControllerImpl(service: WalletManagementService) extends EventControl
       request: CreateWebhookNotification
   )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, WebhookNotification] = {
     for {
-      url <- ZIO.attempt(new URL(request.url)).mapError(e => ErrorResponse.badRequest(detail = Some(e.toString())))
+      url <- ZIO
+        .attempt(new URI(request.url).toURL())
+        .mapError(e => ErrorResponse.badRequest(detail = Some(e.toString())))
       notificationConfig <- EventNotificationConfig.applyWallet(url, request.customHeaders.getOrElse(Map.empty))
       _ <- service
         .createWalletNotification(notificationConfig)

@@ -121,9 +121,25 @@ trait Secp256k1KeyOps {
 
 // ed25519
 final case class Ed25519KeyPair(publicKey: Ed25519PublicKey, privateKey: Ed25519PrivateKey)
-trait Ed25519PublicKey extends PublicKey, Verifiable
+trait Ed25519PublicKey extends PublicKey, Verifiable {
+  override final def hashCode(): Int = HexString.fromByteArray(getEncoded).hashCode()
+
+  override final def equals(x: Any): Boolean = x match {
+    case otherPK: Ed25519PublicKey =>
+      HexString.fromByteArray(this.getEncoded) == HexString.fromByteArray(otherPK.getEncoded)
+    case _ => false
+  }
+}
 trait Ed25519PrivateKey extends PrivateKey, Signable {
   type Pub = Ed25519PublicKey
+
+  override final def hashCode(): Int = HexString.fromByteArray(getEncoded).hashCode()
+
+  override final def equals(x: Any): Boolean = x match {
+    case otherPK: Ed25519PrivateKey =>
+      HexString.fromByteArray(this.getEncoded) == HexString.fromByteArray(otherPK.getEncoded)
+    case _ => false
+  }
 }
 trait Ed25519KeyOps {
   def publicKeyFromEncoded(bytes: Array[Byte]): Try[Ed25519PublicKey]
@@ -133,9 +149,25 @@ trait Ed25519KeyOps {
 
 // x25519
 final case class X25519KeyPair(publicKey: X25519PublicKey, privateKey: X25519PrivateKey)
-trait X25519PublicKey extends PublicKey
+trait X25519PublicKey extends PublicKey {
+  override final def hashCode(): Int = HexString.fromByteArray(getEncoded).hashCode()
+
+  override final def equals(x: Any): Boolean = x match {
+    case otherPK: X25519PublicKey =>
+      HexString.fromByteArray(this.getEncoded) == HexString.fromByteArray(otherPK.getEncoded)
+    case _ => false
+  }
+}
 trait X25519PrivateKey extends PrivateKey {
   type Pub = X25519PublicKey
+
+  override final def hashCode(): Int = HexString.fromByteArray(getEncoded).hashCode()
+
+  override final def equals(x: Any): Boolean = x match {
+    case otherPK: X25519PrivateKey =>
+      HexString.fromByteArray(this.getEncoded) == HexString.fromByteArray(otherPK.getEncoded)
+    case _ => false
+  }
 }
 trait X25519KeyOps {
   def publicKeyFromEncoded(bytes: Array[Byte]): Try[X25519PublicKey]
