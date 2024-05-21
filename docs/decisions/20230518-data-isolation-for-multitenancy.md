@@ -1,19 +1,19 @@
 # Data isolation for multi-tenancy
 
-- Status: draft
-- Deciders: Benjamin Voiturier, Yurii Shynbuiev, Shailesh Patil 
+- Status: accepted
+- Deciders: Benjamin Voiturier, Yurii Shynbuiev, Shailesh Patil
 - Date: 2023-05-10
 - Tags: multi-tenancy, data-isolation, PostgreSQL
 
 Technical Story:
 
-The PRISM platform must support the multi-tenancy, so the data of the tenants must be isolated from each other and the access control policies must be applied to the data of each tenant.
+The Identus platform must support the multi-tenancy, so the data of the tenants must be isolated from each other and the access control policies must be applied to the data of each tenant.
 
-This ADR is about the data isolation for multi-tenancy that must be implemented in the PRISM Agent.
+This ADR is about the data isolation for multi-tenancy that must be implemented in the Cloud Agent.
 
 ## Context and Problem Statement
 
-In a multi-tenant architecture, where multiple clients or tenants share the same infrastructure or application, data isolation is crucial to ensure the privacy and security of each tenant's data. 
+In a multi-tenant architecture, where multiple clients or tenants share the same infrastructure or application, data isolation is crucial to ensure the privacy and security of each tenant's data.
 
 The specific requirements for data isolation may vary depending on the system and its specific needs. However, here are some common requirements for achieving data isolation in a multi-tenant architecture:
 
@@ -21,7 +21,7 @@ The specific requirements for data isolation may vary depending on the system an
 
 Tenants' data should be logically separated from each other, meaning that each tenant should have their own isolated environment within the system. This can be achieved through logical partitions, such as separate databases, schemas, or tables.
 
-### Physical Separation 
+### Physical Separation
 
 In addition to logical separation, physical separation can provide an extra layer of isolation. This involves segregating tenants' data onto separate physical resources, such as servers, storage devices, or networks. Physical separation helps prevent data leakage or unauthorized access between tenants.
 
@@ -51,7 +51,7 @@ Data isolation mechanisms should be designed to minimize performance impacts and
 
 ### Technology Stack
 
-The PRISM platform heavily uses the relational database PostgreSQL. Even having the abstraction as a Data Access Layer (DAL), introducing the alternative solution implies a lot of engineering efforts for refactoring and is not recommended at the current phase of the platform development.
+The Identus platform heavily uses the relational database PostgreSQL. Even having the abstraction as a Data Access Layer (DAL), introducing the alternative solution implies a lot of engineering efforts for refactoring and is not recommended at the current phase of the platform development.
 
 ## Decision Drivers
 
@@ -73,7 +73,7 @@ Logical and Physical Separations define the level of `isolation` for storage, co
 
 - Performance and Scalability: Data isolation mechanisms should be designed to minimize performance impacts and provide scalability. The architecture should be able to handle increasing numbers of tenants and their data without sacrificing performance or compromising isolation.
 
-- The Complexity of the Implementation: It's essential to build the multi-tenancy capability for the PRISM platform without the introduction of unnecessary complexity at the application layer, operation layer, and maintenance, in a way that allows evolving the platform naturally along with the growth of the users, scalability requirements, and real business needs.
+- The Complexity of the Implementation: It's essential to build the multi-tenancy capability for the Identus platform without the introduction of unnecessary complexity at the application layer, operation layer, and maintenance, in a way that allows evolving the platform naturally along with the growth of the users, scalability requirements, and real business needs.
 
 ## Considered Options
 
@@ -99,10 +99,10 @@ Sharding options (Citus extension and AWS sharding) must be used with the combin
 
 ## Decision Outcome
 
-The `Row Security Policies` option is the easiest for implementation at the current phase of the Atala PRISM development.
+The `Row Security Policies` option is the easiest for implementation at the current phase of the Identus platform development.
 A single instance of the PostgreSQL database can keep the data and handle requests of hundreds of thousands of tenants leveraging the Row Security Policies without additional operation and infrastructure costs.
 
-At the same time, the PRISM Agent architecture can support `Instance per Tenant` or `Database per Tenant` configuration by isolating the DAL under the repository interface. So, these options also can be considered for organizations with a lot of tenants to provide better isolation and data protection guarantees.
+At the same time, the Cloud Agent architecture can support `Instance per Tenant` or `Database per Tenant` configuration by isolating the DAL under the repository interface. So, these options also can be considered for organizations with a lot of tenants to provide better isolation and data protection guarantees.
 These two options are excellent for a group of tenants under a single organisation or can be considered for tenants that require geographical separation of data, but should not be used for a single tenant.
 
 Moreover, for the SaaS application to manage thousands of organizations and millions of tenants, the `Row Security Policies` option will not be enough because of the resource limitations and amount of requests to the database. In this case, one of the PostgreSQL sharding options is required together with `Row Security Policies`. So, either `Citus extension` or Amazon RDS sharding should be used. `Citus extension` is a preferred way for an on-premise environment, but, it probably, can be used in AWS as well.
@@ -119,7 +119,7 @@ Moreover, for the SaaS application to manage thousands of organizations and mill
 - The Complexity of the Implementation - this option can be implemented on top of the current codebase without significant refactoring of the codebase and additional work for infrastructure engineers.
 
 
-### Negative Consequences 
+### Negative Consequences
 
 - Physical Separation - is not covered by this option
 
@@ -176,7 +176,7 @@ The main advantages of Citus:
 - provides additional monitoring and statistics to manage the tenants
 - routing to the shard is managed by Citus using the `hash` of the table index (compared to AWS sharding option, the routing is done at the application layer and the system table contains the information about the mapping of the tenant to the instance of the database)
 
-One of the previously described options `should` be implemented behind these options. 
+One of the previously described options `should` be implemented behind these options.
 
 - Good, because can manage millions of tenants
 - Good, because can manage the isolation (logical or physical bases on the configured mapping of the tenant to the database)
