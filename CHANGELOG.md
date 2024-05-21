@@ -1,3 +1,17 @@
+## [1.33.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.33.0...cloud-agent-v1.33.1) (2024-05-21)
+
+
+### Bug Fixes
+
+* broken link for the cloud agent packages in readme file ([#1032](https://github.com/hyperledger/identus-cloud-agent/issues/1032)) ([92d17c2](https://github.com/hyperledger/identus-cloud-agent/commit/92d17c2b5f82d0ca35313ab51bd90b6f55d2cd87))
+* expose new key types in rest api ([#1066](https://github.com/hyperledger/identus-cloud-agent/issues/1066)) ([9ce8d3a](https://github.com/hyperledger/identus-cloud-agent/commit/9ce8d3a8742f86c9a593c705e0f3aa472ff10987))
+* rename the folder to identus for vc-jwt ([#1063](https://github.com/hyperledger/identus-cloud-agent/issues/1063)) ([364a5dc](https://github.com/hyperledger/identus-cloud-agent/commit/364a5dc7eb2b9f23b18f3775c207feff02893cbe))
+
+
+### Performance Improvements
+
+* update ts client in the performance tests, cleanup `println` ([#1041](https://github.com/hyperledger/identus-cloud-agent/issues/1041)) ([7d5ceba](https://github.com/hyperledger/identus-cloud-agent/commit/7d5cebafb34191964acfdf190c743a2ba253e883))
+
 # [1.33.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.32.1...cloud-agent-v1.33.0) (2024-05-09)
 
 
