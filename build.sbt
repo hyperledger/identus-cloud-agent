@@ -122,7 +122,7 @@ lazy val D = new {
 
   val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
   val jsonCanonicalization: ModuleID = "io.github.erdtman" % "java-json-canonicalization" % "1.1"
-  val scodecBits: ModuleID = "org.scodec" %% "scodec-bits" % "1.1.38"
+  val scodecBits: ModuleID = "org.scodec" %% "scodec-bits" % "1.2.0"
 
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.2"
