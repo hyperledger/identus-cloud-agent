@@ -15,10 +15,7 @@ import org.hyperledger.identus.client.models.ActionType
 import org.hyperledger.identus.client.models.DIDOperationResponse
 import org.hyperledger.identus.client.models.DIDResolutionResult
 import org.hyperledger.identus.client.models.Json
-import org.hyperledger.identus.client.models.ManagedDIDKeyTemplate
-import org.hyperledger.identus.client.models.Purpose
 import org.hyperledger.identus.client.models.RemoveEntryById
-import org.hyperledger.identus.client.models.Service
 import org.hyperledger.identus.client.models.UpdateManagedDIDRequest
 import org.hyperledger.identus.client.models.UpdateManagedDIDRequestAction
 import org.hyperledger.identus.client.models.UpdateManagedDIDServiceAction
@@ -29,7 +26,7 @@ class UpdateDidSteps {
     fun actorUpdatesPrismDidByAddingNewKeys(actor: Actor) {
         val updatePrismDidAction = UpdateManagedDIDRequestAction(
             actionType = ActionType.ADD_KEY,
-            ManagedDIDKeyTemplate("auth-2", Purpose.AUTHENTICATION),
+            addKey = TestConstants.PRISM_DID_UPDATE_NEW_AUTH_KEY,
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)
     }
@@ -38,7 +35,7 @@ class UpdateDidSteps {
     fun actorUpdatesPrismDidByRemovingKeys(actor: Actor) {
         val updatePrismDidAction = UpdateManagedDIDRequestAction(
             actionType = ActionType.REMOVE_KEY,
-            removeKey = RemoveEntryById("auth-1"),
+            removeKey = RemoveEntryById(TestConstants.PRISM_DID_AUTH_KEY.id),
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)
     }
@@ -47,11 +44,7 @@ class UpdateDidSteps {
     fun actorUpdatesPrismDidWithNewServices(actor: Actor) {
         val updatePrismDidAction = UpdateManagedDIDRequestAction(
             actionType = ActionType.ADD_SERVICE,
-            addService = Service(
-                "https://new.service.com",
-                listOf("LinkedDomains"),
-                Json("https://new.service.com/"),
-            ),
+            addService = TestConstants.PRISM_DID_UPDATE_NEW_SERVICE,
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)
     }
@@ -60,7 +53,7 @@ class UpdateDidSteps {
     fun actorUpdatesPrismDidByRemovingServices(actor: Actor) {
         val updatePrismDidAction = UpdateManagedDIDRequestAction(
             actionType = ActionType.REMOVE_SERVICE,
-            removeService = RemoveEntryById("https://new.service.com"),
+            removeService = RemoveEntryById(TestConstants.PRISM_DID_UPDATE_NEW_SERVICE.id),
         )
         actor.remember("updatePrismDidAction", updatePrismDidAction)
     }
