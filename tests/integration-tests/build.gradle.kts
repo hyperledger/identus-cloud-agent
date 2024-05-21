@@ -84,7 +84,7 @@ afterEvaluate {
             testLogging.showStandardStreams = true
             systemProperty("TESTS_CONFIG", "/configs/$fileName.conf")
             systemProperty("PRISM_NODE_VERSION", System.getenv("PRISM_NODE_VERSION") ?: "")
-            systemProperty("OPEN_ENTERPRISE_AGENT_VERSION", System.getenv("OPEN_ENTERPRISE_AGENT_VERSION") ?: "")
+            systemProperty("AGENT_VERSION", System.getenv("AGENT_VERSION") ?: "")
             systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
             finalizedBy("aggregate", "reports")
         }

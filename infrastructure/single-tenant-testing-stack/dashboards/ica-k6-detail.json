@@ -19,7 +19,7 @@
           "uid": "${DS_LOKI}"
         },
         "enable": false,
-        "expr": "{compose_service=~\".*-oea\"} |= \"ERROR\"",
+        "expr": "{compose_service=~\".*-agent\"} |= \"ERROR\"",
         "iconColor": "red",
         "instant": false,
         "name": "Error in log"
@@ -95,9 +95,7 @@
             "justifyMode": "center",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -210,7 +208,7 @@
                 "uid": "${DS_LOKI}"
               },
               "editorMode": "code",
-              "expr": "count_over_time({compose_service=~\".*-oea\"}[$__interval])",
+              "expr": "count_over_time({compose_service=~\".*-agent\"}[$__interval])",
               "legendFormat": "{{ compose_service }}",
               "queryType": "range",
               "refId": "A"
@@ -316,7 +314,7 @@
                 "uid": "${DS_LOKI}"
               },
               "editorMode": "code",
-              "expr": "count_over_time({compose_service=~\".*-oea\"} |= \"ERROR\" [$__interval])",
+              "expr": "count_over_time({compose_service=~\".*-agent\"} |= \"ERROR\" [$__interval])",
               "legendFormat": "{{ compose_service }}",
               "queryType": "range",
               "refId": "A"
@@ -378,9 +376,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -446,9 +442,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -513,9 +507,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -580,9 +572,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
+              "calcs": ["lastNotNull"],
               "fields": "",
               "values": false
             },
@@ -660,7 +650,7 @@
                 "uid": "${DS_LOKI}"
               },
               "editorMode": "code",
-              "expr": "{compose_service=~\".*-oea\"} |= \"ERROR\"",
+              "expr": "{compose_service=~\".*-agent\"} |= \"ERROR\"",
               "hide": false,
               "queryType": "range",
               "refId": "B"
@@ -768,9 +758,7 @@
             "justifyMode": "center",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "min"
-              ],
+              "calcs": ["min"],
               "fields": "",
               "values": false
             },
@@ -830,9 +818,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "mean"
-              ],
+              "calcs": ["mean"],
               "fields": "",
               "values": false
             },
@@ -892,9 +878,7 @@
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
-              "calcs": [
-                "max"
-              ],
+              "calcs": ["max"],
               "fields": "",
               "values": false
             },
@@ -1033,10 +1017,7 @@
                   {
                     "id": "custom.lineStyle",
                     "value": {
-                      "dash": [
-                        10,
-                        10
-                      ],
+                      "dash": [10, 10],
                       "fill": "dash"
                     }
                   },
@@ -1222,19 +1203,12 @@
           "interval": "5",
           "options": {
             "legend": {
-              "calcs": [
-                "min",
-                "mean",
-                "max",
-                "lastNotNull"
-              ],
+              "calcs": ["min", "mean", "max", "lastNotNull"],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
             },
-            "timezones": [
-              "browser"
-            ],
+            "timezones": ["browser"],
             "tooltip": {
               "mode": "multi",
               "sort": "none"
@@ -1444,12 +1418,7 @@
           "id": 12,
           "options": {
             "legend": {
-              "calcs": [
-                "min",
-                "lastNotNull",
-                "max",
-                "mean"
-              ],
+              "calcs": ["min", "lastNotNull", "max", "mean"],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -1562,11 +1531,7 @@
           "links": [],
           "options": {
             "legend": {
-              "calcs": [
-                "min",
-                "lastNotNull",
-                "max"
-              ],
+              "calcs": ["min", "lastNotNull", "max"],
               "displayMode": "table",
               "placement": "bottom",
               "showLegend": true
@@ -1701,10 +1666,7 @@
                   {
                     "id": "custom.lineStyle",
                     "value": {
-                      "dash": [
-                        10,
-                        10
-                      ],
+                      "dash": [10, 10],
                       "fill": "dash"
                     }
                   }
@@ -1741,10 +1703,7 @@
                   {
                     "id": "custom.lineStyle",
                     "value": {
-                      "dash": [
-                        10,
-                        10
-                      ],
+                      "dash": [10, 10],
                       "fill": "dash"
                     }
                   }
@@ -1883,10 +1842,7 @@
                   {
                     "id": "custom.lineStyle",
                     "value": {
-                      "dash": [
-                        10,
-                        10
-                      ],
+                      "dash": [10, 10],
                       "fill": "dash"
                     }
                   }
@@ -1923,10 +1879,7 @@
                   {
                     "id": "custom.lineStyle",
                     "value": {
-                      "dash": [
-                        10,
-                        10
-                      ],
+                      "dash": [10, 10],
                       "fill": "dash"
                     }
                   }
@@ -2731,9 +2684,7 @@
             "footer": {
               "countRows": false,
               "fields": "",
-              "reducer": [
-                "sum"
-              ],
+              "reducer": ["sum"],
               "show": false
             },
             "frameIndex": 1,
@@ -2822,34 +2773,23 @@
               "options": {
                 "fields": {
                   "Value": {
-                    "aggregations": [
-                      "min",
-                      "max"
-                    ],
+                    "aggregations": ["min", "max"],
                     "operation": "aggregate"
                   },
                   "Value #A": {
-                    "aggregations": [
-                      "lastNotNull"
-                    ],
+                    "aggregations": ["lastNotNull"],
                     "operation": "aggregate"
                   },
                   "Value #B": {
-                    "aggregations": [
-                      "lastNotNull"
-                    ],
+                    "aggregations": ["lastNotNull"],
                     "operation": "aggregate"
                   },
                   "Value #C": {
-                    "aggregations": [
-                      "lastNotNull"
-                    ],
+                    "aggregations": ["lastNotNull"],
                     "operation": "aggregate"
                   },
                   "Value #D": {
-                    "aggregations": [
-                      "lastNotNull"
-                    ],
+                    "aggregations": ["lastNotNull"],
                     "operation": "aggregate"
                   },
                   "Value #E": {
@@ -2857,9 +2797,7 @@
                     "operation": "aggregate"
                   },
                   "Value #F": {
-                    "aggregations": [
-                      "lastNotNull"
-                    ],
+                    "aggregations": ["lastNotNull"],
                     "operation": "aggregate"
                   },
                   "method": {
@@ -3014,9 +2952,7 @@
               "countRows": false,
               "enablePagination": true,
               "fields": [],
-              "reducer": [
-                "sum"
-              ],
+              "reducer": ["sum"],
               "show": false
             },
             "frameIndex": 2,
@@ -3053,39 +2989,27 @@
               "options": {
                 "fields": {
                   "Value": {
-                    "aggregations": [
-                      "lastNotNull"
-                    ],
+                    "aggregations": ["lastNotNull"],
                     "operation": "aggregate"
                   },
                   "Value #A": {
-                    "aggregations": [
-                      "lastNotNull"
-                    ],
+                    "aggregations": ["lastNotNull"],
                     "operation": "aggregate"
                   },
                   "Value #B": {
-                    "aggregations": [
-                      "lastNotNull"
-                    ],
+                    "aggregations": ["lastNotNull"],
                     "operation": "aggregate"
                   },
                   "Value #C": {
-                    "aggregations": [
-                      "lastNotNull"
-                    ],
+                    "aggregations": ["lastNotNull"],
                     "operation": "aggregate"
                   },
                   "Value #D": {
-                    "aggregations": [
-                      "lastNotNull"
-                    ],
+                    "aggregations": ["lastNotNull"],
                     "operation": "aggregate"
                   },
                   "Value #E": {
-                    "aggregations": [
-                      "lastNotNull"
-                    ],
+                    "aggregations": ["lastNotNull"],
                     "operation": "aggregate"
                   },
                   "Value #F": {
