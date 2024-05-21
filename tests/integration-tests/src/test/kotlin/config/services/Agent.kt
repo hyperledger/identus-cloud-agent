@@ -54,6 +54,6 @@ data class Agent(
             File("src/test/resources/containers/agent.yml"),
         )
             .withEnv(env)
-            .waitingFor("open-enterprise-agent", Wait.forHealthcheck())
+            .waitingFor("identus-cloud-agent", Wait.forHealthcheck())
     }
 }

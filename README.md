@@ -1,9 +1,9 @@
 <p align="center">
   <a href="https://atalaprism.io">
-    <img src="docs/images/logos/atala-prism-logo.png" alt="atala-prism-logo" width="513px" height="99px" />
+    <img src="docs/images/logos/identus-logo.svg" alt="identus-logo" width="513px" height="99px" />
   </a>
   <br>
-  <i> <font size="18">Identus Cloud Agent</font> </i>
+  <i> <font size="18">Cloud Agent</font> </i>
   <br>
   <br>
   <a href='https://coveralls.io/github/hyperledger/identus-cloud-agent?branch=main'><img src='https://coveralls.io/repos/github/hyperledger/identus-cloud-agent/badge.svg?branch=main' alt='Coverage Status' /></a>
@@ -135,7 +135,7 @@ The `PORT` variable is used to specify the port number for the Cloud Agent to li
 In real life, you will need to start at least two Cloud Agent instances with different roles. For example, you can start one instance with the `issuer` role and another one with the `holder` role. The `issuer` instance will be used to issue verifiable credentials (VCs) and the `holder` instance will be used to hold VCs. Here is an example of how you can do this:
 
 ```bash
-PORT=8080 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.2.1 \
+PORT=8080 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.3.0 \
   docker compose \
     -p "issuer" \
     -f ./infrastructure/shared/docker-compose-demo.yml \
@@ -143,7 +143,7 @@ PORT=8080 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.2.1 \
 ```
 
 ```bash
-PORT=8090 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.2.1 \
+PORT=8090 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.3.0 \
   docker compose \
     -p "holder" \
     -f ./infrastructure/shared/docker-compose-demo.yml \
