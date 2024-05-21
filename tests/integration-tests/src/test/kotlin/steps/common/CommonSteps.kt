@@ -9,18 +9,26 @@ import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.actors.OnStage
 import org.apache.http.HttpStatus
-import org.hyperledger.identus.client.models.Connection
-import org.hyperledger.identus.client.models.ConnectionsPage
-import org.hyperledger.identus.client.models.IssueCredentialRecord
-import org.hyperledger.identus.client.models.IssueCredentialRecordPage
+import org.hyperledger.identus.client.models.*
 import steps.connection.ConnectionSteps
 import steps.credentials.IssueCredentialsSteps
 import steps.did.PublishDidSteps
+import java.lang.IllegalArgumentException
 
 class CommonSteps {
     @ParameterType(".*")
     fun actor(actorName: String): Actor {
         return OnStage.theActorCalled(actorName)
+    }
+
+    @ParameterType(".*")
+    fun curve(value: String): Curve {
+        return Curve.decode(value) ?: throw IllegalArgumentException("$value is not a valid Curve value")
+    }
+
+    @ParameterType(".*")
+    fun purpose(value: String): Purpose {
+        return Purpose.decode(value) ?: throw IllegalArgumentException("$value is not a valid Purpose value")
     }
 
     @Given("{actor} has an issued credential from {actor}")
