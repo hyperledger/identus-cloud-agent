@@ -1,9 +1,9 @@
 <p align="center">
   <a href="https://atalaprism.io">
-    <img src="docs/images/logos/atala-prism-logo.png" alt="atala-prism-logo" width="513px" height="99px" />
+    <img src="docs/images/logos/identus-logo.svg" alt="identus-logo" width="513px" height="99px" />
   </a>
   <br>
-  <i> <font size="18">Identus Cloud Agent</font> </i>
+  <i> <font size="18">Cloud Agent</font> </i>
   <br>
   <br>
   <a href='https://coveralls.io/github/hyperledger/identus-cloud-agent?branch=main'><img src='https://coveralls.io/repos/github/hyperledger/identus-cloud-agent/badge.svg?branch=main' alt='Coverage Status' /></a>
