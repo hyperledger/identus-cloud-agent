@@ -21,8 +21,8 @@ services:
   # Secret storage - hashicorp
 
   # Open Enterprise Agent
-  open-enterprise-agent:
-    image: ghcr.io/hyperledger/identus-cloud-agent:${OPEN_ENTERPRISE_AGENT_VERSION}
+  identus-cloud-agent:
+    image: ghcr.io/hyperledger/identus-cloud-agent:${AGENT_VERSION}
     environment:
       PRISM_NODE_HOST: host.docker.internal
       PRISM_NODE_PORT:
@@ -64,7 +64,7 @@ services:
           "CMD",
           "curl",
           "-f",
-          "http://open-enterprise-agent:${AGENT_HTTP_PORT}/_system/health",
+          "http://identus-cloud-agent:${AGENT_HTTP_PORT}/_system/health",
         ]
       interval: 10s
       timeout: 5s
