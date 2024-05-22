@@ -3,13 +3,6 @@ package org.hyperledger.identus.pollux.anoncreds
 import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.jdk.CollectionConverters.*
-import org.hyperledger.identus.pollux.anoncreds.{
-  AnoncredLinkSecretWithId,
-  AnoncredLinkSecret,
-  AnoncredPresentationRequest,
-  AnoncredLib,
-  AnoncredCredentialRequests
-}
 
 /** polluxAnoncredsTest/Test/testOnly org.hyperledger.identus.pollux.anoncreds.PoCNewLib
   */

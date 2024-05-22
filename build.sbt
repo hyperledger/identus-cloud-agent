@@ -72,10 +72,10 @@ lazy val V = new {
   val testContainersScala = "0.41.3"
   val testContainersJavaKeycloak = "3.2.0" // scala-steward:off
 
-  val doobie = "1.0.0-RC2"
-  val quill = "4.7.3"
+  val doobie = "1.0.0-RC5"
+  val quill = "4.8.4"
   val flyway = "9.22.3"
-  val postgresDriver = "42.2.29"
+  val postgresDriver = "42.7.3"
   val logback = "1.4.14"
   val slf4j = "2.0.13"
 
