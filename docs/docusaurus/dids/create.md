@@ -54,8 +54,9 @@ The result should show an empty list, as no DIDs exist on this Cloud Agent insta
 ### 2. Create the Cloud Agent managed DID using DID registrar endpoint
 
 The DID controller can create a new DID by sending a [DID document](/docs/concepts/glossary#did-document) template to the Agent.
-Since key pairs are generated and managed by the Cloud Agent, DID controller only has to specify the key `id` and its purpose (e.g., `authentication`, `assertionMethod`, etc.).
-The current PRISM DID method supports a key with a single purpose, but it is extendible to support a key with multiple purposes in the future.
+Since key pairs are generated and managed by the Cloud Agent, DID controller only has to specify the key `id`,
+`purpose` (`authentication`, `assertionMethod`, etc.), and optional `curve` (`secp256k1`, `Ed25519`, `X25519`).
+If the `curve` is omitted, the agent uses the `secp256k1` curve by default.
 
 ```bash
 curl --location --request POST 'http://localhost:8080/cloud-agent/did-registrar/dids' \
@@ -67,7 +68,8 @@ curl --location --request POST 'http://localhost:8080/cloud-agent/did-registrar/
       "publicKeys": [
         {
           "id": "auth-1",
-          "purpose": "authentication"
+          "purpose": "authentication",
+          "curve": "secp256k1"
         }
       ],
       "services": []
