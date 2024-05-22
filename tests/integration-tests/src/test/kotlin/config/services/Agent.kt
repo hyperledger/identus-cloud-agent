@@ -23,7 +23,7 @@ data class Agent(
 
     init {
         val env = mutableMapOf(
-            "OPEN_ENTERPRISE_AGENT_VERSION" to version,
+            "AGENT_VERSION" to version,
             "API_KEY_ENABLED" to authEnabled.toString(),
             "AGENT_DIDCOMM_PORT" to didcommPort.toString(),
             "DIDCOMM_SERVICE_URL" to (didcommServiceUrl ?: "http://host.docker.internal:$didcommPort"),
@@ -54,6 +54,6 @@ data class Agent(
             File("src/test/resources/containers/agent.yml"),
         )
             .withEnv(env)
-            .waitingFor("open-enterprise-agent", Wait.forHealthcheck())
+            .waitingFor("identus-cloud-agent", Wait.forHealthcheck())
     }
 }
