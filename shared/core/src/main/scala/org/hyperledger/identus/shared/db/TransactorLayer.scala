@@ -5,7 +5,6 @@ import cats.effect.kernel.Resource
 import cats.effect.std.Dispatcher
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
-import doobie.util.ExecutionContexts
 import doobie.util.transactor.Transactor
 import zio.*
 import zio.interop.catz.*
@@ -18,7 +17,7 @@ object TransactorLayer {
         // Here we use `Dispatcher.apply`
         // but at the agent level it is `Dispatcher.parallel` due to evicted version
         // Dispatcher.parallel[Task].allocated.map { case (dispatcher, _) =>
-        Dispatcher[Task].allocated.map { case (dispatcher, _) =>
+        Dispatcher.parallel[Task].allocated.map { case (dispatcher, _) =>
           given Dispatcher[Task] = dispatcher
           TransactorLayer.hikari[Task](config)
         }
@@ -34,7 +33,7 @@ object TransactorLayer {
         // Here we use `Dispatcher.apply`
         // but at the agent level it is `Dispatcher.parallel` due to evicted version
         // Dispatcher.parallel[ContextAwareTask].allocated.map { case (dispatcher, _) =>
-        Dispatcher[ContextAwareTask].allocated.map { case (dispatcher, _) =>
+        Dispatcher.parallel[ContextAwareTask].allocated.map { case (dispatcher, _) =>
           given Dispatcher[ContextAwareTask] = dispatcher
           TransactorLayer.hikari[ContextAwareTask](config)
         }
@@ -56,14 +55,7 @@ object TransactorLayer {
         hikariConfig
       }
       .map { hikariConfig =>
-        val pool: Resource[A, Transactor[A]] = for {
-          // Resource yielding a transactor configured with a bounded connect EC and an unbounded
-          // transaction EC. Everything will be closed and shut down cleanly after use.
-          ec <- ExecutionContexts.fixedThreadPool[A](config.awaitConnectionThreads) // our connect EC
-          xa <- HikariTransactor.fromHikariConfig[A](hikariConfig, ec)
-          // xa <- HikariTransactor.fromHikariConfig[A](hikariConfig, Some(LogHandler.jdkLogHandler))
-        } yield xa
-
+        val pool: Resource[A, Transactor[A]] = HikariTransactor.fromHikariConfig[A](hikariConfig)
         pool.toManaged.toLayer[Transactor[A]]
       }
 
