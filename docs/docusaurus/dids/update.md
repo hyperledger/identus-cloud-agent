@@ -120,7 +120,8 @@ curl --location --request POST 'http://localhost:8080/cloud-agent/did-registrar/
             "actionType": "ADD_KEY",
             "addKey": {
                 "id": "key-2",
-                "purpose": "authentication"
+                "purpose": "authentication",
+                "curve": "secp256k1"
             }
         }
     ]
