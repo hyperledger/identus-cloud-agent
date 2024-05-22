@@ -26,6 +26,7 @@ jobs:
   run-integration-tests:
     name: "Run integration tests"
     runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.title, '[skip ci]') }}
     env:
       REPORTS_DIR: "tests/integration-tests/target/site/serenity"
     steps:
