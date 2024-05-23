@@ -10,11 +10,11 @@ Technical Story: [External IAM provider integration for Authentication and Autho
 ## Context and Problem Statement
 
 As we move forward with multi-tenancy, it's essential to give extra attention to authentication and authorisation.
-Currently, our authentication and authorisation processes are managed by a simple built-in IAM implementation within the cloud agent.
+Currently, our authentication and authorisation processes are managed by a simple built-in IAM implementation within the Cloud Agent.
 While this setup is straightforward and functional, it's a somewhat basic and proprietary approach.
 Transitioning to an industry-standard IAM system like Keycloak represents an important step towards a more robust authentication and authorisation framework.
 
-Within our multi-tenant cloud agent, we have some key concepts:
+Within our multi-tenant Cloud Agent, we have some key concepts:
 wallets (representing resources), entities (representing users), and authentication methods.
 These models are integrated into our current IAM implementation within the agent allowing a loose coupling of users and resources, as well as resource access.
 

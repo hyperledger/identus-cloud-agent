@@ -58,10 +58,17 @@ Before starting to use the Cloud Agent, it is important to understand the basic 
 
 ### Architecture
 
-The next diagram offers a concise architectural overview, depicting a Cloud Agent instance, a controller, the interconnections linking the controller and agent, as well as the external routes to other agents and public ledgers across the Internet.
+The next diagrams offers a concise architectural overview, depicting a Cloud Agent instance, a controller, the interconnections linking the controller and agent, as well as the external routes to other agents and public ledgers across the Internet.
 
-![Cloud Agent architecture](docs/images/cloud-agent-architecture-dark.png#gh-dark-mode-only)
-![Cloud Agent architecture](docs/images/cloud-agent-architecture-light.png#gh-light-mode-only)
+#### Identus Ecosystem Achitecture
+
+![Identus Architecture](docs/images/identus-architecture-dark.png#gh-dark-mode-only)
+![Identus Architecture](docs/images/identus-architecture-light.png#gh-light-mode-only)
+
+#### Identus Cloud Agent Architecture
+
+![Identus Cloud Agent Architecture](docs/images/identus-cloud-agent-architecture-dark.png#gh-dark-mode-only)
+![Identus Cloud Agent Architecture](docs/images/identus-cloud-agent-architecture-light.png#gh-light-mode-only)
 
 ### Running the Cloud Agent locally on MacOS or Linux
 #### Prerequisites

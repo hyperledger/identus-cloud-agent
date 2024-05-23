@@ -24,7 +24,7 @@ It's crucial to keep in mind that this status list will be part of a "status lis
 This credential will be frequently requested through the REST API during verification by verifiers and will be downloaded over the network.
 Therefore, we need to ensure that the status list remains reasonably small in size to prevent any slowdowns in the verification process.
 
-In the future, there might be a need to reorganize the state and possibly move status lists to another public registry for verifiers to depend on. This is not the current scenario, as each cloud agent currently maintains status lists specific to their respective tenants.
+In the future, there might be a need to reorganize the state and possibly move status lists to another public registry for verifiers to depend on. This is not the current scenario, as each Cloud Agent currently maintains status lists specific to their respective tenants.
 
 Absolutely, it's crucial to avoid overengineering the solution. This ensures that the code remains manageable and easy to maintain in the long run.
 
