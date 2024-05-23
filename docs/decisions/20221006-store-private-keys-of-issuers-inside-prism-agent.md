@@ -1,4 +1,4 @@
-# Store private keys of Issuers inside the cloud-agent
+# Store private keys of Issuers inside the Cloud Agent
 
 - Status: accepted
 - Deciders: Benjamin Voiturier, Pat Losoponkul, Miloš Džepina, Shailesh Patil, Shota Jolbordi, Bart Suichies, Ezequiel Postan, Yurii Shynbuiev, David Poltorak
@@ -12,8 +12,8 @@ While each holder has a wallet application on the phone (edge agent) to store pr
 ## Considered Options
 
 - Having issuers store and manage their own keys on the edge wallet (Prism 1.4 approach)
-- Storing keys in a dedicated wallet application that is connected to cloud agent
-- Having cloud agent store and manage keys directly
+- Storing keys in a dedicated wallet application that is connected to the Cloud Agent
+- Having the Cloud Agent store and manage keys directly
 
 
 ## Decision Outcome

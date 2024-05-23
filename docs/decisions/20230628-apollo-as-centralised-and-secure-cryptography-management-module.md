@@ -12,7 +12,7 @@ Technical Story: [Apollo Cryptographic Module KMM | https://input-output.atlassi
 <br><br>
 
 ### 1. Summary
-This proposal sets out to crystallize a long-term plan for Identus's cryptographic functionality. Rather than constructing an entirely new cryptographic functionality, our focus is on integrating robust, secure and tested libraries, meeting several key requirements in the process.
+This proposal sets out to crystallize a long-term plan for Identus' cryptographic functionality. Rather than constructing an entirely new cryptographic functionality, our focus is on integrating robust, secure and tested libraries, meeting several key requirements in the process.
 
 By leveraging the flexibility of Kotlin Multiplatform, this library will ensure strong, provable security, centralized management of all cryptography, easy upgrades, and efficient code reuse across multiple platforms.
 
@@ -30,7 +30,7 @@ Our cryptographic library will provide engineers with high assurances of securit
 We propose the creation of a cryptographic library that serves as the central management hub for all cryptographic operations within the Identus platform. By preventing "DIY" implementations, we decrease potential vulnerabilities and establish a standard, thus enhancing overall security across our organization.
 
 #### 2.3 Easy Upgrade Path
-In light of emerging cryptographic needs such as the introduction of quantum-resistant cryptography, our library will be designed with easy upgrades in mind. Its modular design will allow for the seamless introduction of new cryptographic primitives as they become necessary or advisable. This adaptability will ensure that cryptographic upgrades across all of Identus's components are consistent and efficient.
+In light of emerging cryptographic needs such as the introduction of quantum-resistant cryptography, our library will be designed with easy upgrades in mind. Its modular design will allow for the seamless introduction of new cryptographic primitives as they become necessary or advisable. This adaptability will ensure that cryptographic upgrades across all of Identus' components are consistent and efficient.
 
 #### 2.4 Code Reusability
 Our library will make the most of Kotlin Multiplatform's capabilities for code reuse across different platforms. We aim to design cryptographic functions that promote this potential, thus minimizing the development effort required for adding new functionality or adapting to different platforms.

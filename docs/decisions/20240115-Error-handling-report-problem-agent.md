@@ -19,8 +19,8 @@ For DIDComm, the aspect of interoperability is especially critical in the contex
 In DIDComm, an agent developed by one team is required to be adept at interpreting errors reported by an agent from a completely different team,
 presenting a unique challenge in this area.
 
-As of the time of writing, the cloud agent supports 3 DIDComm flows: `Connection`, `Issuance` and `Verification.`
-Each cloud agent operates a background thread that facilitates interactions between two agents.
+As of the time of writing, the Cloud Agent supports 3 DIDComm flows: `Connection`, `Issuance` and `Verification.`
+Each Cloud Agent operates a background thread that facilitates interactions between two agents.
 For each flow, the agent tracks a protocol state, and depending on this state, it triggers a DIDComm(V2) message to communicate with the other agent.
 The communication between two agents, Agent A and Agent B, occurs asynchronously in the background job.
 If an error occurs in this background job over DIDComm in Agent A, it is recorded in Agent A's logs. However, Agent B remains uninformed about any such errors.
@@ -31,7 +31,7 @@ What are our needs? Let’s try to sum up the required capabilities based on
 [Report Problem 2.0](https://identity.foundation/didcomm-messaging/spec/#problem-reports), we need:
 
 
-The cloud agent is designed to perform three distinct roles: `Issuer`, `Holder`, and `Verifier`. Within these roles, 
+The Cloud Agent is designed to perform three distinct roles: `Issuer`, `Holder`, and `Verifier`. Within these roles, 
 it operates across three protocol flows, namely `Connection`, `Issuance`, and `Verification`.
 
 | Agent(Protocol) Flows       | Protocols                                                                                          |
@@ -145,7 +145,7 @@ https://github.com/decentralized-identity/waci-didcomm/blob/main/present_proof/p
 
 ## Decision Outcome
 
-In the event of an issue in a cloud agent, the following actions are taken:
+In the event of an issue in the Cloud Agent, the following actions are taken:
 
 1. The error is logged, including the X-Request-ID and the thread ID (thid).
 
