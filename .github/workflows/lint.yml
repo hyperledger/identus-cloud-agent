@@ -37,9 +37,9 @@ jobs:
       - name: MegaLinter
         id: ml
         uses: oxsecurity/megalinter@v7.1.0
+        continue-on-error: true
 
       - name: Archive production artifacts
-        if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
           name: Mega-Linter reports

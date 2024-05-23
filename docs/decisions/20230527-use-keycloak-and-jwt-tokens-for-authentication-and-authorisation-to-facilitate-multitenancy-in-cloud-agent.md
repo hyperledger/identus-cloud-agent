@@ -1,4 +1,4 @@
-# Use Keycloak and JWT tokens for Authentication and Authorisation to facilitate multitenancy in cloud agent
+# Use Keycloak and JWT tokens for Authentication and Authorisation to facilitate multitenancy in the Cloud Agent
 
 - Status: accepted
 - Deciders: David Poltorak, Yurii Shynbuiev, Shailesh Patil, Ben Voiturier
@@ -21,9 +21,9 @@ In our Multi-tenant Value Brief, we propose modifications to the agent, enabling
 
 As we transition to multi-tenancy, several critical questions emerge:
 
-1. How should the cloud agent authenticate, or verify the identities of, its API consumers?
-2. How should the cloud agent authorise a particular identity to use a specific instance of the agent?
-3. As the cloud agent becomes capable of hosting multiple tenants whose workloads must remain isolated, how should it become tenant-aware? That is, how should it determine which tenant an API consumer belongs to, and authorise them to manage and operate within that tenant?
+1. How should the Cloud Agent authenticate, or verify the identities of, its API consumers?
+2. How should the Cloud Agent authorise a particular identity to use a specific instance of the agent?
+3. As the Cloud Agent becomes capable of hosting multiple tenants whose workloads must remain isolated, how should it become tenant-aware? That is, how should it determine which tenant an API consumer belongs to, and authorise them to manage and operate within that tenant?
 4. How can we mitigate the security risk associated with a leaked pre-shared key/token?"
 
 ## Decision Drivers

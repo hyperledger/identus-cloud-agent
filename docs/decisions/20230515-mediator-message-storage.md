@@ -64,7 +64,7 @@ Kafka Stream was also considered but current usecases are more towards storage o
 
 MongoDB provides flexibility with json storage and queries
 
-- Good, because it is horizontally scalabale
+- Good, because it is horizontally scalable
 - Good, because typically performs better with large, unstructured datasets and write-heavy applications
 - Good, because have strong communities and extensive support materials, so you can expect to find help when you encounter issues.
 - Bad, Is not full ACID compliance
