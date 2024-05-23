@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://atalaprism.io">
+  <a href="https://www.hyperledger.org/projects/identus">
     <img src="docs/images/logos/identus-logo.svg" alt="identus-logo" width="513px" height="99px" />
   </a>
   <br>
@@ -58,7 +58,7 @@ Before starting to use the Cloud Agent, it is important to understand the basic 
 
 ### Architecture
 
-The next diagrams offers a concise architectural overview, depicting a Cloud Agent instance, a controller, the interconnections linking the controller and agent, as well as the external routes to other agents and public ledgers across the Internet.
+The next diagrams offer a concise architectural overview, depicting a Cloud Agent instance, a controller, the interconnections linking the controller and agent, as well as the external routes to other agents and public ledgers across the Internet.
 
 #### Identus Ecosystem Achitecture
 
@@ -115,7 +115,7 @@ The Cloud Agent can be configured to use different types of ledger, secret stora
 
 To start playing with Cloud Agent, we recommend using the Dev configuration. Pre-production and production configurations are intended for real-world use cases and require additional more complex configurations of the Distributed Ledger stack setup.
 
-> If you're interested in a hosted version of Cloud Agent, please, contact us at [atalaprism.io](https://atalaprism.io).
+> If you're interested in a hosted version of Cloud Agent, please, contact us at [Identus](https://www.hyperledger.org/projects/identus).
 
 #### System requirements
 
