@@ -99,7 +99,7 @@ sbt clean compile test docker:publishLocal
 
 ### Installation and usage
 
-Cloud Agent is distributed as a Docker image to be run in a containerized environment. Versions after v1.31.0 can be found [here](https://github.com/hyperledger/identus-cloud-agent/pkgs/container/identus-cloud-agent) and before v1.31.0, [here](https://github.com/orgs/input-output-hk/packages/container/package/prism-agent).
+Cloud Agent is distributed as a Docker image to be run in a containerized environment. Versions after v1.31.0 can be found [here](https://github.com/hyperledger/identus-cloud-agent/pkgs/container/identus-cloud-agent) and before v1.31.0, [there](https://github.com/orgs/input-output-hk/packages/container/package/prism-agent).
 
 The following sections describe how to run the Cloud Agent in different configurations.
 
@@ -115,7 +115,7 @@ The Cloud Agent can be configured to use different types of ledger, secret stora
 
 To start playing with Cloud Agent, we recommend using the Dev configuration. Pre-production and production configurations are intended for real-world use cases and require additional more complex configurations of the Distributed Ledger stack setup.
 
-> If you're interested in a hosted version of Cloud Agent, please, contact us at [Identus](https://www.hyperledger.org/projects/identus).
+> If you're interested in a hosted version of Cloud Agent, please, contact us via the [Identus site](https://www.hyperledger.org/projects/identus).
 
 #### System requirements
 
