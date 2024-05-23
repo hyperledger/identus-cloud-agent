@@ -73,8 +73,10 @@ jobs:
           committer: "Hyperledger Bot <hyperledger-bot@hyperledger.org>"
           author: "Hyperledger Bot <hyperledger-bot@hyperledger.org>"
 
-      - name: Create PR output
+      - name: Create PR output and fail the build
         if: steps.ml.outputs.has_updated_sources == 1 && (env.APPLY_FIXES_EVENT == 'all' || env.APPLY_FIXES_EVENT == github.event_name) && env.APPLY_FIXES_MODE == 'pull_request' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && !contains(github.event.head_commit.message, 'skip fix')
         run: |
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
           echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
+          echo "Failing the build to prevent PR merge to main. Review the PR and merge it manually"
+          exit 1
