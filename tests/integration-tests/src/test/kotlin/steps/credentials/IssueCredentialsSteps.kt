@@ -2,20 +2,17 @@ package steps.credentials
 
 import abilities.ListenToEvents
 import common.CredentialSchema
-import common.Utils.wait
 import interactions.Post
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import models.AnoncredsSchema
+import io.iohk.atala.automation.utils.Wait
 import models.CredentialEvent
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
-import net.serenitybdd.screenplay.rest.abilities.CallAnApi
 import org.apache.http.HttpStatus.*
 import org.hyperledger.identus.client.models.*
-import java.util.UUID
 
 class IssueCredentialsSteps {
 
@@ -108,65 +105,7 @@ class IssueCredentialsSteps {
             "name" to "Name",
             "surname" to "Surname",
         )
-        sendCredentialOffer(issuer, holder, "short", schemaGuid, claims)
-    }
-
-    @When("{actor} creates anoncred schema")
-    fun acmeCreatesAnoncredSchema(issuer: Actor) {
-        issuer.attemptsTo(
-            Post.to("/schema-registry/schemas")
-                .with {
-                    it.body(
-                        CredentialSchemaInput(
-                            author = issuer.recall("shortFormDid"),
-                            name = UUID.randomUUID().toString(),
-                            description = "Simple student credentials schema",
-                            type = "AnoncredSchemaV1",
-                            schema = AnoncredsSchema(
-                                name = "StudentCredential",
-                                version = "1.0",
-                                issuerId = issuer.recall("shortFormDid"),
-                                attrNames = listOf("name", "age", "sex"),
-                            ),
-                            tags = listOf("school", "students"),
-                            version = "1.0.0",
-                        ),
-                    )
-                },
-        )
-        issuer.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
-        )
-        val schema = SerenityRest.lastResponse().get<CredentialSchemaResponse>()
-        issuer.remember("anoncredsSchema", schema)
-    }
-
-    @When("{actor} creates anoncred credential definition")
-    fun acmeCreatesAnoncredCredentialDefinition(issuer: Actor) {
-        val schemaRegistryUrl = issuer.usingAbilityTo(CallAnApi::class.java).resolve("/schema-registry/schemas")
-            .replace("localhost", "host.docker.internal")
-        issuer.attemptsTo(
-            Post.to("/credential-definition-registry/definitions")
-                .with {
-                    it.body(
-                        CredentialDefinitionInput(
-                            name = "StudentCredential",
-                            version = "1.0.0",
-                            schemaId = "$schemaRegistryUrl/${issuer.recall<CredentialSchemaResponse>("anoncredsSchema").guid}/schema",
-                            description = "Simple student credentials definition",
-                            author = issuer.recall("shortFormDid"),
-                            signatureType = "CL",
-                            tag = "student",
-                            supportRevocation = false,
-                        ),
-                    )
-                },
-        )
-        issuer.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
-        )
-        val credentialDefinition = SerenityRest.lastResponse().get<CredentialDefinitionResponse>()
-        issuer.remember("anoncredsCredentialDefinition", credentialDefinition)
+        sendCredentialOffer(issuer, holder, format, schemaGuid, claims)
     }
 
     @When("{actor} offers anoncred to {actor}")
@@ -204,19 +143,18 @@ class IssueCredentialsSteps {
 
     @When("{actor} receives the credential offer")
     fun holderReceivesCredentialOffer(holder: Actor) {
-        wait(
-            {
-                credentialEvent = ListenToEvents.`as`(holder).credentialEvents.lastOrNull {
-                    it.data.thid == holder.recall<String>("thid")
-                }
-                credentialEvent != null &&
-                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.OFFER_RECEIVED
-            },
-            "Holder was unable to receive the credential offer from Issuer! " +
+        Wait.until(
+            errorMessage = "Holder was unable to receive the credential offer from Issuer! " +
                 "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.OFFER_RECEIVED} state.",
-        )
+        ) {
+            credentialEvent = ListenToEvents.with(holder).credentialEvents.lastOrNull {
+                it.data.thid == holder.recall<String>("thid")
+            }
+            credentialEvent != null &&
+                credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.OFFER_RECEIVED
+        }
 
-        val recordId = ListenToEvents.`as`(holder).credentialEvents.last().data.recordId
+        val recordId = ListenToEvents.with(holder).credentialEvents.last().data.recordId
         holder.remember("recordId", recordId)
     }
 
@@ -252,16 +190,15 @@ class IssueCredentialsSteps {
 
     @When("{actor} issues the credential")
     fun acmeIssuesTheCredential(issuer: Actor) {
-        wait(
-            {
-                credentialEvent = ListenToEvents.`as`(issuer).credentialEvents.lastOrNull {
-                    it.data.thid == issuer.recall<String>("thid")
-                }
-                credentialEvent != null &&
-                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.REQUEST_RECEIVED
-            },
-            "Issuer was unable to receive the credential request from Holder! Protocol state did not achieve RequestReceived state.",
-        )
+        Wait.until(
+            errorMessage = "Issuer was unable to receive the credential request from Holder! Protocol state did not achieve RequestReceived state.",
+        ) {
+            credentialEvent = ListenToEvents.with(issuer).credentialEvents.lastOrNull {
+                it.data.thid == issuer.recall<String>("thid")
+            }
+            credentialEvent != null &&
+                credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.REQUEST_RECEIVED
+        }
         val recordId = credentialEvent!!.data.recordId
         issuer.attemptsTo(
             Post.to("/issue-credentials/records/$recordId/issue-credential"),
@@ -270,33 +207,32 @@ class IssueCredentialsSteps {
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
         )
 
-        wait(
-            {
-                credentialEvent = ListenToEvents.`as`(issuer).credentialEvents.lastOrNull {
-                    it.data.thid == issuer.recall<String>("thid")
-                }
-                credentialEvent != null &&
-                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT
-            },
-            "Issuer was unable to issue the credential! " +
+        Wait.until(
+            errorMessage = "Issuer was unable to issue the credential! " +
                 "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT} state.",
-        )
+        ) {
+            credentialEvent = ListenToEvents.with(issuer).credentialEvents.lastOrNull {
+                it.data.thid == issuer.recall<String>("thid")
+            }
+            issuer.remember("issuedCredential", credentialEvent!!.data)
+            credentialEvent != null &&
+                credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT
+        }
     }
 
     @Then("{actor} receives the issued credential")
     fun bobHasTheCredentialIssued(holder: Actor) {
-        wait(
-            {
-                credentialEvent = ListenToEvents.`as`(holder).credentialEvents.lastOrNull {
-                    it.data.thid == holder.recall<String>("thid")
-                }
-                credentialEvent != null &&
-                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED
-            },
-            "Holder was unable to receive the credential from Issuer! " +
+        Wait.until(
+            errorMessage = "Holder was unable to receive the credential from Issuer! " +
                 "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED} state.",
-        )
-        holder.remember("issuedCredential", ListenToEvents.`as`(holder).credentialEvents.last().data)
+        ) {
+            credentialEvent = ListenToEvents.with(holder).credentialEvents.lastOrNull {
+                it.data.thid == holder.recall<String>("thid")
+            }
+            credentialEvent != null &&
+                credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED
+        }
+        holder.remember("issuedCredential", ListenToEvents.with(holder).credentialEvents.last().data)
     }
 
     @Then("{actor} should see that credential issuance has failed")

@@ -15,9 +15,8 @@ Feature: Issue Credentials Protocol with published DID
     Then Holder receives the issued credential
 
   Scenario: Issuing anoncred with published PRISM DID
-    When Issuer creates anoncred schema
-    And Issuer creates anoncred credential definition
-    And Issuer offers anoncred to Holder
+    Given Issuer has an anoncred schema definition
+    When Issuer offers anoncred to Holder
     And Holder receives the credential offer
     And Holder accepts credential offer for anoncred
     And Issuer issues the credential

@@ -2,7 +2,7 @@
 Feature: Update DID
 
 Background: Published DID is created
-  Given Issuer have published PRISM DID
+  Given Issuer has a published DID
 
 Scenario: Update PRISM DID by adding new services
   When Issuer updates PRISM DID with new services

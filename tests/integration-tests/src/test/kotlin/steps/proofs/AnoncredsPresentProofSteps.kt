@@ -1,13 +1,14 @@
 package steps.proofs
 
 import abilities.ListenToEvents
-import common.Utils.wait
 import interactions.Patch
 import interactions.Post
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
+import io.iohk.atala.automation.utils.Wait
 import models.PresentationEvent
+import models.PresentationStatusAdapter
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.rest.abilities.CallAnApi
@@ -67,7 +68,7 @@ class AnoncredsPresentProofSteps {
                 },
         )
         faber.attemptsTo(
-            Ensure.thatTheLastResponse().apply { println(this.contentType()) }.statusCode().isEqualTo(SC_CREATED),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
         )
         val presentationStatus = SerenityRest.lastResponse().get<PresentationStatus>()
         faber.remember("thid", presentationStatus.thid)
@@ -76,21 +77,20 @@ class AnoncredsPresentProofSteps {
 
     @When("{actor} receives the anoncreds request")
     fun bobReceivesTheAnoncredsRequest(bob: Actor) {
-        wait(
-            {
-                proofEvent = ListenToEvents.`as`(bob).presentationEvents.lastOrNull {
-                    it.data.thid == bob.recall<String>("thid")
-                }
-                proofEvent != null &&
-                    proofEvent!!.data.status == PresentationStatus.Status.REQUEST_RECEIVED
-            },
-            "ERROR: Bob did not achieve any presentation request!",
-        )
+        Wait.until(
+            errorMessage = "ERROR: Bob did not achieve any presentation request!",
+        ) {
+            proofEvent = ListenToEvents.with(bob).presentationEvents.lastOrNull {
+                it.data.thid == bob.recall<String>("thid")
+            }
+            proofEvent != null &&
+                proofEvent!!.data.status == PresentationStatusAdapter.Status.REQUEST_RECEIVED
+        }
         bob.remember("presentationId", proofEvent!!.data.presentationId)
     }
 
-    @When("{actor} accepts the anoncreds presentation request from {actor}")
-    fun bobAcceptsTheAnoncredsPresentationWithProof(bob: Actor, faber: Actor) {
+    @When("{actor} accepts the anoncreds presentation request")
+    fun bobAcceptsTheAnoncredsPresentationWithProof(bob: Actor) {
         val requestPresentationAction = RequestPresentationAction(
             anoncredPresentationRequest =
             AnoncredCredentialProofsV1(
@@ -105,8 +105,9 @@ class AnoncredsPresentProofSteps {
             action = RequestPresentationAction.Action.REQUEST_MINUS_ACCEPT,
         )
 
+        val presentationId = bob.recall<String>("presentationId")
         bob.attemptsTo(
-            Patch.to("/present-proof/presentations/${bob.recall<String>("presentationId")}").with {
+            Patch.to("/present-proof/presentations/$presentationId").with {
                 it.body(
                     requestPresentationAction,
                 )
