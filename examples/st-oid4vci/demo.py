@@ -125,7 +125,9 @@ def holder_get_issuer_metadata(credential_issuer: str):
     metadata_url = f"{CREDENTIAL_ISSUER}/.well-known/openid-credential-issuer"
     response = requests.get(metadata_url).json()
     # TODO: use credential_endpoint from response
-    response["credential_endpoint"] = f"{AGENT_URL}/oid4vci/issuers/did:prism:0000000000000000000000000000000000000000000000000000000000000000/credentials"
+    response[
+        "credential_endpoint"
+    ] = f"{AGENT_URL}/oid4vci/issuers/did:prism:0000000000000000000000000000000000000000000000000000000000000000/credentials"
     return response
 
 
