@@ -1,11 +1,11 @@
-# Performance framework for Atala PRISM
+# Performance framework for the Identus platform
 
 - Status: accepted
 - Deciders: Anton Baliasnikov, Shota Jolbordi, David Poltorak
 - Date: 2023-07-14
 - Tags: benchmarks, performance, k6, load testing
 
-Technical Story: [PRISM Performance Management](https://input-output.atlassian.net/browse/ATL-4119)
+Technical Story: [Performance Management](https://input-output.atlassian.net/browse/ATL-4119)
 
 ## Context and Problem Statement
 

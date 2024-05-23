@@ -31,8 +31,7 @@ package object error {
     final case class TooManyDidPublicKeyAccess(limit: Int, access: Option[Int]) extends OperationValidationError
     final case class TooManyDidServiceAccess(limit: Int, access: Option[Int]) extends OperationValidationError
     final case class InvalidArgument(msg: String) extends OperationValidationError
-    final case class InvalidPublicKeyData(ids: Seq[String]) extends OperationValidationError
-    final case class InvalidMasterKeyType(ids: Seq[String]) extends OperationValidationError
+    final case class InvalidMasterKeyData(ids: Seq[String]) extends OperationValidationError
   }
 
 }

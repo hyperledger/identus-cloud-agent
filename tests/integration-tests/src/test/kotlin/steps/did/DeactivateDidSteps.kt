@@ -1,13 +1,12 @@
 package steps.did
 
-import common.TestConstants
-import common.Utils.wait
 import interactions.Get
 import interactions.Post
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
+import io.iohk.atala.automation.utils.Wait
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
@@ -29,19 +28,18 @@ class DeactivateDidSteps {
             Ensure.that(didOperationResponse.scheduledOperation.didRef).isNotEmpty(),
             Ensure.that(didOperationResponse.scheduledOperation.id).isNotEmpty(),
         )
+        actor.forget<String>("hasPublishedDid")
+        val deactivatedDid = actor.forget<String>("shortFormDid")
+        actor.forget<String>("longFormDid")
+        actor.remember("deactivatedDid", deactivatedDid)
     }
 
     @Then("{actor} sees that PRISM DID is successfully deactivated")
     fun actorSeesThatPrismDidIsSuccessfullyDeactivated(actor: Actor) {
-        wait(
-            {
-                actor.attemptsTo(
-                    Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
-                )
-                SerenityRest.lastResponse().get<DIDResolutionResult>().didDocumentMetadata.deactivated!!
-            },
-            "ERROR: DID deactivate operation did not succeed on the ledger!",
-            timeout = TestConstants.DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN,
-        )
+        val deactivatedDid = actor.recall<String>("deactivatedDid")
+        Wait.until(errorMessage = "ERROR: DID deactivate operation did not succeed on the ledger!") {
+            actor.attemptsTo(Get.resource("/dids/$deactivatedDid"))
+            SerenityRest.lastResponse().get<DIDResolutionResult>().didDocumentMetadata.deactivated!!
+        }
     }
 }

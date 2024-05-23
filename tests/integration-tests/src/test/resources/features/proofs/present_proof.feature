@@ -1,3 +1,4 @@
+@proof @jwt
 Feature: Present Proof Protocol
 
 Scenario: Holder presents credential proof to verifier

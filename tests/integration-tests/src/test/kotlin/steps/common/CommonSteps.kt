@@ -9,13 +9,11 @@ import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.actors.OnStage
 import org.apache.http.HttpStatus
-import org.hyperledger.identus.client.models.Connection
-import org.hyperledger.identus.client.models.ConnectionsPage
-import org.hyperledger.identus.client.models.IssueCredentialRecord
-import org.hyperledger.identus.client.models.IssueCredentialRecordPage
+import org.hyperledger.identus.client.models.*
 import steps.connection.ConnectionSteps
 import steps.credentials.IssueCredentialsSteps
 import steps.did.PublishDidSteps
+import java.lang.IllegalArgumentException
 
 class CommonSteps {
     @ParameterType(".*")
@@ -23,33 +21,30 @@ class CommonSteps {
         return OnStage.theActorCalled(actorName)
     }
 
+    @ParameterType(".*")
+    fun curve(value: String): Curve {
+        return Curve.decode(value) ?: throw IllegalArgumentException("$value is not a valid Curve value")
+    }
+
+    @ParameterType(".*")
+    fun purpose(value: String): Purpose {
+        return Purpose.decode(value) ?: throw IllegalArgumentException("$value is not a valid Purpose value")
+    }
+
     @Given("{actor} has an issued credential from {actor}")
     fun holderHasIssuedCredentialFromIssuer(holder: Actor, issuer: Actor) {
-        holder.attemptsTo(
-            Get.resource("/issue-credentials/records"),
-        )
-        holder.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
-        )
-        val receivedCredential = SerenityRest.lastResponse().get<IssueCredentialRecordPage>().contents!!.findLast { credential ->
-            credential.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED &&
-                credential.credentialFormat == IssueCredentialRecord.CredentialFormat.JWT
-        }
+        actorsHaveExistingConnection(issuer, holder)
 
-        if (receivedCredential != null) {
-            holder.remember("issuedCredential", receivedCredential)
-        } else {
-            val publishDidSteps = PublishDidSteps()
-            val issueSteps = IssueCredentialsSteps()
-            actorsHaveExistingConnection(issuer, holder)
-            publishDidSteps.agentHasAnUnpublishedDID(holder)
-            publishDidSteps.agentHasAPublishedDID(issuer)
-            issueSteps.issuerOffersACredential(issuer, holder, "short")
-            issueSteps.holderReceivesCredentialOffer(holder)
-            issueSteps.holderAcceptsCredentialOfferForJwt(holder)
-            issueSteps.acmeIssuesTheCredential(issuer)
-            issueSteps.bobHasTheCredentialIssued(holder)
-        }
+        val publishDidSteps = PublishDidSteps()
+        publishDidSteps.createsUnpublishedDid(holder)
+        publishDidSteps.agentHasAPublishedDID(issuer)
+
+        val issueSteps = IssueCredentialsSteps()
+        issueSteps.issuerOffersACredential(issuer, holder, "short")
+        issueSteps.holderReceivesCredentialOffer(holder)
+        issueSteps.holderAcceptsCredentialOfferForJwt(holder)
+        issueSteps.acmeIssuesTheCredential(issuer)
+        issueSteps.bobHasTheCredentialIssued(holder)
     }
 
     @Given("{actor} and {actor} have an existing connection")

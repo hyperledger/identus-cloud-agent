@@ -18,10 +18,15 @@ defaults:
     shell: bash
     working-directory: "tests/integration-tests"
 
+permissions:
+  checks: write
+  pull-requests: write
+
 jobs:
   run-integration-tests:
     name: "Run integration tests"
     runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.title, '[skip ci]') }}
     env:
       REPORTS_DIR: "tests/integration-tests/target/site/serenity"
     steps:
@@ -59,21 +64,21 @@ jobs:
         run: |
           cd "${CLOUD_AGENT_PATH}" || exit 129
           sbt docker:publishLocal
-          echo "open_enterprise_agent_version=$(cut -d'=' -f2 version.sbt | tr -d '" ')" >> "${GITHUB_OUTPUT}"
+          echo "agent_version=$(cut -d'=' -f2 version.sbt | tr -d '" ')" >> "${GITHUB_OUTPUT}"
           echo "prism_node_version=$(grep PRISM_NODE_VERSION infrastructure/local/.env | cut -d'=' -f2 | tr -d ' ')" >> "${GITHUB_OUTPUT}"
 
       - uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
-          java-version: '19'
+          distribution: "zulu"
+          java-version: "19"
 
       - name: Run integration tests
         env:
           PRISM_NODE_VERSION: ${{ steps.build_local_cloud_agent.outputs.prism_node_version }}
-          OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.open_enterprise_agent_version }}
+          AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.agent_version }}
           GITHUB_ACTOR: hyperledger-bot
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        continue-on-error: true
+        #        continue-on-error: true
         run: |
           ./gradlew test --tests "IntegrationTestsRunner"
 
@@ -81,7 +86,7 @@ jobs:
         if: always()
         env:
           PRISM_NODE_VERSION: ${{ steps.build_local_cloud_agent.outputs.prism_node_version }}
-          OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.open_enterprise_agent_version }}
+          AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.agent_version }}
           GITHUB_ACTOR: hyperledger-bot
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -143,6 +148,6 @@ jobs:
             Failed: ${{ steps.analyze_test_results.outputs.failures }}
             Errors in tests: ${{ steps.analyze_test_results.outputs.errors }}
             Skipped (known bugs): ${{ steps.analyze_test_results.outputs.skipped }}
-          SLACK_TITLE: "Open Enterprise Agent Integration Tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
+          SLACK_TITLE: "Identus Cloud Agent Integration Tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
           SLACK_USERNAME: circleci
           SLACK_WEBHOOK: ${{ secrets.E2E_TESTS_SLACK_WEBHOOK }}

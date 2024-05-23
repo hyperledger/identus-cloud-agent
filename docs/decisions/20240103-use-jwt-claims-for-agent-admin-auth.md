@@ -62,7 +62,7 @@ Example JWT payload containing `ClientRole`. (Some claims are omitted for readab
 {
   "exp": 1704267723,
   "aud": [
-    "prism-agent",
+    "cloud-agent",
     "account"
   ],
   "realm_access": {
@@ -73,7 +73,7 @@ Example JWT payload containing `ClientRole`. (Some claims are omitted for readab
     ]
   },
   "resource_access": {
-    "prism-agent": {
+    "cloud-agent": {
       "roles": [
         "admin"
       ]

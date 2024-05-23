@@ -1,6 +1,6 @@
 {
   "name": "identus-cloud-agent",
-  "version": "1.33.0",
+  "version": "1.33.1",
   "engines": {
     "node": ">=16.13.0"
   },
@@ -25,7 +25,7 @@
       },
       {
         "name": "prerelease/*",
-        "prerelease": "snapshot"
+        "prerelease": "snapshot.${name.replace(\"prerelease/\", \"\")}"
       }
     ],
     "tagFormat": "cloud-agent-v${version}",
@@ -123,7 +123,7 @@
           "notifyOnFail": true,
           "markdownReleaseNotes": true,
           "onSuccessTemplate": {
-            "text": "A new version of Identus Cloud Agent successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/$npm_package_version\n\nRelease notes:\n$release_notes"
+            "text": "A new version of Identus Cloud Agent successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/cloud-agent-v$npm_package_version\n\nRelease notes:\n$release_notes"
           }
         }
       ]

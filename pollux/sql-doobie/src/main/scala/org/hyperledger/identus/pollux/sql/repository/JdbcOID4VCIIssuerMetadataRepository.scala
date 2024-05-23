@@ -82,9 +82,9 @@ class JdbcOID4VCIIssuerMetadataRepository(xa: Transactor[ContextAwareTask], xb: 
       authorizationServer: Option[URL]
   ): URIO[WalletAccessContext, Unit] = {
     val setFr = (now: Instant) =>
-      Fragments.setOpt(
-        Some(fr"updated_at = $now"),
-        authorizationServer.map(url => fr"authorization_server = $url")
+      Fragments.set(
+        fr"updated_at = $now",
+        (Seq(authorizationServer.map(url => fr"authorization_server = $url")).flatten): _*
       )
     val cxnIO = (setFr: Fragment) => sql"""
         |UPDATE public.issuer_metadata

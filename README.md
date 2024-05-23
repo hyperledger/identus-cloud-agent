@@ -1,9 +1,9 @@
 <p align="center">
-  <a href="https://atalaprism.io">
-    <img src="docs/images/logos/atala-prism-logo.png" alt="atala-prism-logo" width="513px" height="99px" />
+  <a href="https://www.hyperledger.org/projects/identus">
+    <img src="docs/images/logos/identus-logo.svg" alt="identus-logo" width="513px" height="99px" />
   </a>
   <br>
-  <i> <font size="18">Identus Cloud Agent</font> </i>
+  <i> <font size="18">Cloud Agent</font> </i>
   <br>
   <br>
   <a href='https://coveralls.io/github/hyperledger/identus-cloud-agent?branch=main'><img src='https://coveralls.io/repos/github/hyperledger/identus-cloud-agent/badge.svg?branch=main' alt='Coverage Status' /></a>
@@ -58,10 +58,17 @@ Before starting to use the Cloud Agent, it is important to understand the basic 
 
 ### Architecture
 
-The next diagram offers a concise architectural overview, depicting a Cloud Agent instance, a controller, the interconnections linking the controller and agent, as well as the external routes to other agents and public ledgers across the Internet.
+The next diagrams offer a concise architectural overview, depicting a Cloud Agent instance, a controller, the interconnections linking the controller and agent, as well as the external routes to other agents and public ledgers across the Internet.
 
-![Cloud Agent architecture](docs/images/cloud-agent-architecture-dark.png#gh-dark-mode-only)
-![Cloud Agent architecture](docs/images/cloud-agent-architecture-light.png#gh-light-mode-only)
+#### Identus Ecosystem Achitecture
+
+![Identus Architecture](docs/images/identus-architecture-dark.png#gh-dark-mode-only)
+![Identus Architecture](docs/images/identus-architecture-light.png#gh-light-mode-only)
+
+#### Identus Cloud Agent Architecture
+
+![Identus Cloud Agent Architecture](docs/images/identus-cloud-agent-architecture-dark.png#gh-dark-mode-only)
+![Identus Cloud Agent Architecture](docs/images/identus-cloud-agent-architecture-light.png#gh-light-mode-only)
 
 ### Running the Cloud Agent locally on MacOS or Linux
 #### Prerequisites
@@ -92,7 +99,7 @@ sbt clean compile test docker:publishLocal
 
 ### Installation and usage
 
-Cloud Agent is distributed as a Docker image to be run in a containerized environment. Versions after v1.31.0 can be found [here](https://github.com/hyperledger/identus-cloud-agent/pkgs/container/identus-cloud-agent) and before v1.31.0, [here](https://github.com/orgs/input-output-hk/packages/container/package/prism-agent).
+Cloud Agent is distributed as a Docker image to be run in a containerized environment. Versions after v1.31.0 can be found [here](https://github.com/hyperledger/identus-cloud-agent/pkgs/container/identus-cloud-agent) and before v1.31.0, [there](https://github.com/orgs/input-output-hk/packages/container/package/prism-agent).
 
 The following sections describe how to run the Cloud Agent in different configurations.
 
@@ -108,7 +115,7 @@ The Cloud Agent can be configured to use different types of ledger, secret stora
 
 To start playing with Cloud Agent, we recommend using the Dev configuration. Pre-production and production configurations are intended for real-world use cases and require additional more complex configurations of the Distributed Ledger stack setup.
 
-> If you're interested in a hosted version of Cloud Agent, please, contact us at [atalaprism.io](https://atalaprism.io).
+> If you're interested in a hosted version of Cloud Agent, please, contact us via the [Identus site](https://www.hyperledger.org/projects/identus).
 
 #### System requirements
 
@@ -135,7 +142,7 @@ The `PORT` variable is used to specify the port number for the Cloud Agent to li
 In real life, you will need to start at least two Cloud Agent instances with different roles. For example, you can start one instance with the `issuer` role and another one with the `holder` role. The `issuer` instance will be used to issue verifiable credentials (VCs) and the `holder` instance will be used to hold VCs. Here is an example of how you can do this:
 
 ```bash
-PORT=8080 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.2.1 \
+PORT=8080 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.3.0 \
   docker compose \
     -p "issuer" \
     -f ./infrastructure/shared/docker-compose-demo.yml \
@@ -143,7 +150,7 @@ PORT=8080 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.2.1 \
 ```
 
 ```bash
-PORT=8090 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.2.1 \
+PORT=8090 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.3.0 \
   docker compose \
     -p "holder" \
     -f ./infrastructure/shared/docker-compose-demo.yml \
