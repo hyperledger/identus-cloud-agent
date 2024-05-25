@@ -122,6 +122,9 @@ lazy val D = new {
 
   val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
   val jsonCanonicalization: ModuleID = "io.github.erdtman" % "java-json-canonicalization" % "1.1"
+  val titaniumJsonLd: ModuleID = "com.apicatalog" % "titanium-json-ld" % "1.4.0"
+  val jakartaJson: ModuleID = "org.glassfish" % "jakarta.json" % "2.0.1"
+  val ironVC: ModuleID = "com.apicatalog" % "iron-verifiable-credentials" % "0.14.0"
   val scodecBits: ModuleID = "org.scodec" %% "scodec-bits" % "1.1.38"
 
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
@@ -185,6 +188,9 @@ lazy val D_Shared = new {
       D.zioCatsInterop,
       D.zioPrelude,
       D.jsonCanonicalization,
+      D.titaniumJsonLd,
+      D.jakartaJson,
+      D.ironVC,
       D.scodecBits,
     )
 }
