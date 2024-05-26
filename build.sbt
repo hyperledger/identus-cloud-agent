@@ -81,7 +81,7 @@ lazy val V = new {
 
   val scalaUri = "4.0.3"
 
-  val jwtCirceVersion = "9.4.6"
+  val jwtCirceVersion = "10.0.1"
   val zioPreludeVersion = "1.0.0-RC24"
 
   val apollo = "1.2.16"
