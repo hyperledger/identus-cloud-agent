@@ -21,7 +21,6 @@ sealed trait Proof {
   val created: Option[Instant] = None
   val domain: Option[String] = None
   val challenge: Option[String] = None
-  val proofValue: String
   val previousProof: Option[String] = None
   val nonce: Option[String] = None
 }
@@ -30,7 +29,8 @@ object Proof {
   given decodeProof: Decoder[Proof] = new Decoder[Proof] {
     final def apply(c: HCursor): Decoder.Result[Proof] = {
       val decoders: List[Decoder[Proof]] = List(
-        Decoder[EddsaJcs2022Proof].widen
+        Decoder[EddsaJcs2022Proof].widen,
+        Decoder[EcdsaSecp256k1Signature2019Proof].widen
           // Note: Add another proof types here when available
       )
 
@@ -160,6 +160,58 @@ object EddsaJcs2022Proof {
           proofValue = proofValue,
           verificationMethod = verificationMethod,
           maybeCreated = created
+        )
+      }
+}
+
+case class EcdsaSecp256k1Signature2019Proof(
+    jws: String,
+    verificationMethod: String,
+    override val created: Option[Instant],
+    override val challenge: Option[String],
+    override val domain: Option[String],
+    override val nonce: Option[String]
+) extends Proof {
+  override val `type`: String = "EcdsaSecp256k1Signature2019"
+  override val proofPurpose: String = "assertionMethod"
+}
+
+object EcdsaSecp256k1Signature2019Proof {
+  given proofEncoder: Encoder[EcdsaSecp256k1Signature2019Proof] =
+    (proof: EcdsaSecp256k1Signature2019Proof) =>
+      Json
+        .obj(
+          ("id", proof.id.asJson),
+          ("type", proof.`type`.asJson),
+          ("proofPurpose", proof.proofPurpose.asJson),
+          ("verificationMethod", proof.verificationMethod.asJson),
+          ("created", proof.created.map(_.atOffset(ZoneOffset.UTC)).asJson),
+          ("domain", proof.domain.asJson),
+          ("challenge", proof.challenge.asJson),
+          ("jws", proof.jws.asJson),
+          ("nonce", proof.nonce.asJson),
+        )
+
+  given proofDecoder: Decoder[EcdsaSecp256k1Signature2019Proof] =
+    (c: HCursor) =>
+      for {
+        id <- c.downField("id").as[Option[String]]
+        `type` <- c.downField("type").as[String]
+        proofPurpose <- c.downField("proofPurpose").as[String]
+        verificationMethod <- c.downField("verificationMethod").as[String]
+        created <- c.downField("created").as[Option[Instant]]
+        domain <- c.downField("domain").as[Option[String]]
+        challenge <- c.downField("challenge").as[Option[String]]
+        jws <- c.downField("jws").as[String]
+        nonce <- c.downField("nonce").as[Option[String]]
+      } yield {
+        EcdsaSecp256k1Signature2019Proof(
+          jws = jws,
+          verificationMethod = verificationMethod,
+          created = created,
+          challenge = challenge,
+          domain = domain,
+          nonce = nonce
         )
       }
 }
