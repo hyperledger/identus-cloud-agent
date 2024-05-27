@@ -116,16 +116,24 @@ def prepare_issuer():
 def issuer_create_credential_offer(claims):
     response = requests.post(
         f"{CREDENTIAL_ISSUER}/credential-offers",
-        json={"schemaId": "TODO", "claims": claims},
+        json={
+            "credentialConfigurationId": CREDENTIAL_CONFIGURATION_ID,
+            "issuingDID": CREDENTIAL_ISSUER_DID,
+            "claims": claims,
+        },
     )
     return response.json()["credentialOffer"]
 
 
 def holder_get_issuer_metadata(credential_issuer: str):
-    metadata_url = f"{CREDENTIAL_ISSUER}/.well-known/openid-credential-issuer"
+    # FIXME: override this just to make url reachable from host
+    def override_host(url):
+        return url.replace("http://caddy-issuer:8080/prism-agent", AGENT_URL)
+
+    metadata_url = override_host(f"{credential_issuer}/.well-known/openid-credential-issuer")
     response = requests.get(metadata_url).json()
-    # TODO: use credential_endpoint from response
-    response["credential_endpoint"] = f"{AGENT_URL}/oid4vci/issuers/did:prism:0000000000000000000000000000000000000000000000000000000000000000/credentials"
+    response["credential_endpoint"] = override_host(response["credential_endpoint"])
+    response["credential_issuer"] = override_host(response["credential_issuer"])
     return response
 
 

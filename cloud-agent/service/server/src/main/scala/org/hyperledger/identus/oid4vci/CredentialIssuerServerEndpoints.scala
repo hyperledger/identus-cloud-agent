@@ -2,10 +2,10 @@ package org.hyperledger.identus.oid4vci
 
 import org.hyperledger.identus.LogUtils.*
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import org.hyperledger.identus.oid4vci.controller.CredentialIssuerController
-import org.hyperledger.identus.oid4vci.http.{CredentialErrorResponse, CredentialRequest, NonceResponse}
+import org.hyperledger.identus.oid4vci.http.{CredentialErrorResponse, NonceResponse}
 import sttp.tapir.ztapir.*
 import zio.*
 
@@ -22,10 +22,10 @@ case class CredentialIssuerServerEndpoints(
           .mapError(Left[ErrorResponse, CredentialErrorResponse])
       )
       .serverLogic { wac =>
-        { case (rc: RequestContext, didRef: String, request: CredentialRequest) =>
+        { case (rc, issuerId, request) =>
           ZIO.succeed(request).debug("credentialRequest") *>
             credentialIssuerController
-              .issueCredential(rc, didRef, request)
+              .issueCredential(rc, issuerId, request)
               .logTrace(rc)
         }
       }

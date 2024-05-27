@@ -2,7 +2,6 @@ package org.hyperledger.identus.oid4vci.service
 
 import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
 import org.hyperledger.identus.oid4vci.domain.IssuanceSession
 import org.hyperledger.identus.oid4vci.http.*
@@ -12,6 +11,7 @@ import org.hyperledger.identus.pollux.vc.jwt.{DID, Issuer, JWT, JwtCredential, W
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
+import java.net.URL
 import java.time.Instant
 import java.util.UUID
 import scala.util.Try
@@ -37,11 +37,16 @@ trait OIDCCredentialIssuerService {
   ): IO[Error, JWT]
 
   def createCredentialOffer(
+      credentialIssuerBaseUrl: URL,
       issuerId: UUID,
-      claims: zio.json.ast.Json
+      credentialConfigurationId: String,
+      issuingDID: PrismDID,
+      claims: zio.json.ast.Json,
   ): ZIO[WalletAccessContext, Error, CredentialOffer]
 
   def getIssuanceSessionNonce(issuerState: String): ZIO[WalletAccessContext, Error, String]
+
+  def getIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession]
 }
 
 object OIDCCredentialIssuerService {
@@ -151,27 +156,25 @@ case class OIDCCredentialIssuerServiceImpl(
   ): ZIO[WalletAccessContext, OIDCCredentialIssuerService.Error, String] =
     issuanceSessionStorage
       .getByIssuerState(issuerState)
-      .mapBoth(e => ServiceError(s"Failed to start issuance session: ${e.message}"), _.map(_.nonce))
+      .mapBoth(e => ServiceError(s"Failed to get issuance session: ${e.message}"), _.map(_.nonce))
       .someOrFail(ServiceError(s"The IssuanceSession with the issuerState $issuerState does not exist"))
 
   override def createCredentialOffer(
+      credentialIssuerBaseUrl: URL,
       issuerId: UUID,
+      credentialConfigurationId: String,
+      issuingDID: PrismDID,
       claims: zio.json.ast.Json
   ): ZIO[WalletAccessContext, OIDCCredentialIssuerService.Error, CredentialOffer] =
-    // TODO: do not use hardcoded value
-    val canonicalIssuingDid = PrismDID
-      .fromString("did:prism:0000000000000000000000000000000000000000000000000000000000000000")
-      .toOption
-      .get
-      .asCanonical
+    // TODO: validate claims with credential schema
     for {
-      session <- buildNewIssuanceSession(canonicalIssuingDid, claims)
+      session <- buildNewIssuanceSession(issuingDID, claims)
       _ <- issuanceSessionStorage
         .start(session)
         .mapError(e => ServiceError(s"Failed to start issuance session: ${e.message}"))
     } yield CredentialOffer(
-      credential_issuer = s"http://localhost:8080/prism-agent/${issuerId}", // TODO: add issuer metadata endpoint
-      credential_configuration_ids = Seq("UniversityDegreeCredential"), // TODO: allow credential configuration CRUD
+      credential_issuer = credentialIssuerBaseUrl.toString(),
+      credential_configuration_ids = Seq(credentialConfigurationId),
       grants = Some(
         CredentialOfferGrant(
           authorization_code = CredentialOfferAuthorizationGrant(issuer_state = Some(session.issuerState))
@@ -179,8 +182,15 @@ case class OIDCCredentialIssuerServiceImpl(
       )
     )
 
+  def getIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession] = {
+    issuanceSessionStorage
+      .getByNonce(nonce)
+      .mapError(e => ServiceError(s"Failed to get issuance session: ${e.message}"))
+      .someOrFail(ServiceError(s"The IssuanceSession with the nonce $nonce does not exist"))
+  }
+
   private def buildNewIssuanceSession(
-      issuerDid: CanonicalPrismDID,
+      issuerDid: PrismDID,
       claims: zio.json.ast.Json
   ): UIO[IssuanceSession] = {
     for {

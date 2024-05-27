@@ -5,7 +5,7 @@ import org.hyperledger.identus.api.http.ErrorResponse.badRequest
 import org.hyperledger.identus.api.http.ErrorResponse.internalServerError
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.util.PaginationUtils
-import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
+import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.oid4vci.CredentialIssuerEndpoints.ExtendedErrorResponse
 import org.hyperledger.identus.oid4vci.http.*
 import org.hyperledger.identus.oid4vci.http.CredentialErrorCode.*
@@ -22,7 +22,7 @@ import scala.language.implicitConversions
 trait CredentialIssuerController {
   def issueCredential(
       ctx: RequestContext,
-      didRef: String,
+      issuerId: UUID,
       credentialRequest: CredentialRequest
   ): IO[ExtendedErrorResponse, CredentialResponse]
 
@@ -140,26 +140,12 @@ case class CredentialIssuerControllerImpl(
       .attempt(URI.create(url).toURL())
       .mapError(ue => badRequest(detail = Some(s"Invalid URL: $url")))
 
-  private def parseIssuerDID[E](didRef: String, errorFn: (String, String) => E): IO[E, CanonicalPrismDID] = {
-    for {
-      prismDID <- ZIO
-        .fromEither(PrismDID.fromString(didRef))
-        .mapError[E](didParsingError => errorFn(didRef, didParsingError))
-    } yield prismDID.asCanonical
-  }
-
-  private def parseIssuerDIDBasicError(didRef: String): IO[ErrorResponse, CanonicalPrismDID] =
-    parseIssuerDID(
-      didRef,
-      (didRef, detail) => ErrorResponse.badRequest(detail = Some(s"Invalid DID input $didRef. $detail"))
-    )
-
-  private def parseIssuerDIDOidc4vcError(difRef: String): IO[ExtendedErrorResponse, CanonicalPrismDID] =
-    parseIssuerDID(difRef, badRequestInvalidDID)
+  private def baseCredentialIssuerUrl(issuerId: UUID): URL =
+    URI(s"$agentBaseUrl/oid4vci/issuers/$issuerId").toURL()
 
   def issueCredential(
       ctx: RequestContext,
-      didRef: String,
+      issuerId: UUID,
       credentialRequest: CredentialRequest
   ): IO[ExtendedErrorResponse, CredentialResponse] = {
     credentialRequest match
@@ -170,13 +156,13 @@ case class CredentialIssuerControllerImpl(
             credentialResponseEncryption,
             credentialDefinition
           ) =>
-        issueJwtCredential(didRef, proof, credentialIdentifier, credentialDefinition, credentialResponseEncryption)
+        issueJwtCredential(issuerId, proof, credentialIdentifier, credentialDefinition, credentialResponseEncryption)
       case other: CredentialRequest => // add other formats here
         ZIO.fail(badRequestUnsupportedCredentialFormat(credentialRequest.format))
   }
 
   def issueJwtCredential(
-      didRef: String,
+      issuerId: UUID,
       maybeProof: Option[Proof],
       maybeCredentialIdentifier: Option[String],
       maybeCredentialDefinition: Option[CredentialDefinition],
@@ -185,7 +171,6 @@ case class CredentialIssuerControllerImpl(
     maybeProof match {
       case Some(JwtProof(proofType, jwt)) =>
         for {
-          canonicalPrismDID: CanonicalPrismDID <- parseIssuerDIDOidc4vcError(didRef)
           _ <- ZIO
             .ifZIO(credentialIssuerService.verifyJwtProof(jwt))(
               ZIO.unit,
@@ -194,6 +179,10 @@ case class CredentialIssuerControllerImpl(
             .mapError { case InvalidProof(message) =>
               badRequestInvalidProof(jwt, message)
             }
+          nonce = "todo - extract jwt nonce" // TODO: validate proof and extract nonce
+          session <- credentialIssuerService
+            .getIssuanceSessionByNonce(nonce)
+            .mapError(_ => badRequestInvalidProof(jwt, "nonce is not associated to the issuance session"))
           credentialDefinition <- ZIO
             .fromOption(maybeCredentialDefinition)
             .mapError(_ => badRequestUnsupportedCredentialType("No credential definition provided"))
@@ -204,7 +193,7 @@ case class CredentialIssuerControllerImpl(
             )
           credential <- credentialIssuerService
             .issueJwtCredential(
-              canonicalPrismDID,
+              session.issuingDid,
               maybeCredentialIdentifier,
               validatedCredentialDefinition
             )
@@ -220,8 +209,17 @@ case class CredentialIssuerControllerImpl(
       credentialOfferRequest: CredentialOfferRequest
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialOfferResponse] = {
     for {
+      issuingDid <- ZIO
+        .fromEither(PrismDID.fromString(credentialOfferRequest.issuingDID))
+        .mapError(e => badRequest(detail = Some(s"Invalid DID: $e")))
       resp <- credentialIssuerService
-        .createCredentialOffer(issuerId, credentialOfferRequest.claims)
+        .createCredentialOffer(
+          baseCredentialIssuerUrl(issuerId),
+          issuerId,
+          credentialOfferRequest.credentialConfigurationId,
+          issuingDid,
+          credentialOfferRequest.claims
+        )
         .map(offer => CredentialOfferResponse(offer.offerUri))
         .mapError(ue =>
           internalServerError(detail = Some(s"Unexpected error while creating credential offer: ${ue.message}"))
@@ -319,7 +317,11 @@ case class CredentialIssuerControllerImpl(
     for {
       credentialIssuer <- issuerMetadataService.getCredentialIssuer(issuerId)
       credentialConfigurations <- issuerMetadataService.getCredentialConfigurations(issuerId)
-    } yield IssuerMetadata.fromIssuer(agentBaseUrl, credentialIssuer, credentialConfigurations)
+    } yield IssuerMetadata.fromIssuer(
+      baseCredentialIssuerUrl(issuerId),
+      credentialIssuer,
+      credentialConfigurations
+    )
   }
 }
 
