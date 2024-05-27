@@ -24,7 +24,7 @@ public class OID4VCITokenEndpoint extends TokenEndpoint {
     public OID4VCITokenEndpoint(KeycloakSession session, TokenManager tokenManager, EventBuilder event) {
         super(session, tokenManager, event);
         this.identusClient = new IdentusClient();
-    }
+}
 
     @Override
     public Response createTokenResponse(UserModel user, UserSessionModel userSession, ClientSessionContext clientSessionCtx,
