@@ -1,6 +1,5 @@
 package org.hyperledger.identus.oid4vci.domain
 
-import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.castor.core.model.did.DID
 import org.hyperledger.identus.castor.core.model.did.PrismDID
 

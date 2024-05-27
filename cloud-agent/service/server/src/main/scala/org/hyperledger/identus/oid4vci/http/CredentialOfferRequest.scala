@@ -5,7 +5,7 @@ import sttp.tapir.json.zio.schemaForZioJsonValue
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class CredentialOfferRequest(
-    credentialConfigurationId: Option[String], // TODO: this field should be requried
+    credentialConfigurationId: String,
     issuingDID: String,
     claims: zio.json.ast.Json,
 )

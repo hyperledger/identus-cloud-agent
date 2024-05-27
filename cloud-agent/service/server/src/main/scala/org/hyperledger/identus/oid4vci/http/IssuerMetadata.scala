@@ -21,13 +21,12 @@ object IssuerMetadata {
   given decoder: JsonDecoder[IssuerMetadata] = DeriveJsonDecoder.gen
 
   def fromIssuer(
-      agentBaseUrl: URL,
+      credentialIssuerBaseUrl: URL,
       issuer: pollux.CredentialIssuer,
       credentialConfigurations: Seq[pollux.CredentialConfiguration]
   ): IssuerMetadata = {
-    val credentialIssuerBaseUrl = agentBaseUrl.toURI().resolve(s"oid4vci/issuers/${issuer.id}").toString
     IssuerMetadata(
-      credential_issuer = credentialIssuerBaseUrl,
+      credential_issuer = credentialIssuerBaseUrl.toString(),
       authorization_servers = Some(Seq(issuer.authorizationServer.toString())),
       credential_endpoint = s"$credentialIssuerBaseUrl/credentials",
       credential_configurations_supported =

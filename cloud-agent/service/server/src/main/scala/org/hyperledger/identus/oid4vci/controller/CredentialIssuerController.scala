@@ -140,6 +140,9 @@ case class CredentialIssuerControllerImpl(
       .attempt(URI.create(url).toURL())
       .mapError(ue => badRequest(detail = Some(s"Invalid URL: $url")))
 
+  private def baseCredentialIssuerUrl(issuerId: UUID): URL =
+    URI(s"$agentBaseUrl/oid4vci/issuers/$issuerId").toURL()
+
   def issueCredential(
       ctx: RequestContext,
       issuerId: UUID,
@@ -210,7 +213,13 @@ case class CredentialIssuerControllerImpl(
         .fromEither(PrismDID.fromString(credentialOfferRequest.issuingDID))
         .mapError(e => badRequest(detail = Some(s"Invalid DID: $e")))
       resp <- credentialIssuerService
-        .createCredentialOffer(issuerId, issuingDid, credentialOfferRequest.claims)
+        .createCredentialOffer(
+          baseCredentialIssuerUrl(issuerId),
+          issuerId,
+          credentialOfferRequest.credentialConfigurationId,
+          issuingDid,
+          credentialOfferRequest.claims
+        )
         .map(offer => CredentialOfferResponse(offer.offerUri))
         .mapError(ue =>
           internalServerError(detail = Some(s"Unexpected error while creating credential offer: ${ue.message}"))
@@ -308,7 +317,11 @@ case class CredentialIssuerControllerImpl(
     for {
       credentialIssuer <- issuerMetadataService.getCredentialIssuer(issuerId)
       credentialConfigurations <- issuerMetadataService.getCredentialConfigurations(issuerId)
-    } yield IssuerMetadata.fromIssuer(agentBaseUrl, credentialIssuer, credentialConfigurations)
+    } yield IssuerMetadata.fromIssuer(
+      baseCredentialIssuerUrl(issuerId),
+      credentialIssuer,
+      credentialConfigurations
+    )
   }
 }
 
