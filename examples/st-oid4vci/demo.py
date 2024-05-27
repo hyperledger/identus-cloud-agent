@@ -130,7 +130,9 @@ def holder_get_issuer_metadata(credential_issuer: str):
     def override_host(url):
         return url.replace("http://caddy-issuer:8080/prism-agent", AGENT_URL)
 
-    metadata_url = override_host(f"{credential_issuer}/.well-known/openid-credential-issuer")
+    metadata_url = override_host(
+        f"{credential_issuer}/.well-known/openid-credential-issuer"
+    )
     response = requests.get(metadata_url).json()
     response["credential_endpoint"] = override_host(response["credential_endpoint"])
     response["credential_issuer"] = override_host(response["credential_issuer"])
