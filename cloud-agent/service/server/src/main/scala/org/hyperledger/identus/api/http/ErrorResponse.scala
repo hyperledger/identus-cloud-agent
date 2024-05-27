@@ -10,6 +10,7 @@ import zio.ZIO
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
 import java.util.UUID
+import scala.language.implicitConversions
 import scala.util.matching.Regex
 
 private val INSTANCE_URI_PREFIX = "error:instance:"
