@@ -126,12 +126,14 @@ def issuer_create_credential_offer(claims):
 
 
 def holder_get_issuer_metadata(credential_issuer: str):
-    metadata_url = f"{CREDENTIAL_ISSUER}/.well-known/openid-credential-issuer"
+    # FIXME: override this just to make url reachable from host
+    def override_host(url):
+        return url.replace("http://caddy-issuer:8080/prism-agent", AGENT_URL)
+
+    metadata_url = override_host(f"{credential_issuer}/.well-known/openid-credential-issuer")
     response = requests.get(metadata_url).json()
-    # TODO: align docker host URL
-    response["credential_endpoint"] = response["credential_endpoint"].replace(
-        "http://caddy-issuer:8080/prism-agent", AGENT_URL
-    )
+    response["credential_endpoint"] = override_host(response["credential_endpoint"])
+    response["credential_issuer"] = override_host(response["credential_issuer"])
     return response
 
 
