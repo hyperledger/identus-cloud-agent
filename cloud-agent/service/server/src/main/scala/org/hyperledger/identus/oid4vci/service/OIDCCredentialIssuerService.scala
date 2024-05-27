@@ -38,10 +38,13 @@ trait OIDCCredentialIssuerService {
 
   def createCredentialOffer(
       issuerId: UUID,
-      claims: zio.json.ast.Json
+      issuingDID: PrismDID,
+      claims: zio.json.ast.Json,
   ): ZIO[WalletAccessContext, Error, CredentialOffer]
 
   def getIssuanceSessionNonce(issuerState: String): ZIO[WalletAccessContext, Error, String]
+
+  def getIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession]
 }
 
 object OIDCCredentialIssuerService {
@@ -151,21 +154,16 @@ case class OIDCCredentialIssuerServiceImpl(
   ): ZIO[WalletAccessContext, OIDCCredentialIssuerService.Error, String] =
     issuanceSessionStorage
       .getByIssuerState(issuerState)
-      .mapBoth(e => ServiceError(s"Failed to start issuance session: ${e.message}"), _.map(_.nonce))
+      .mapBoth(e => ServiceError(s"Failed to get issuance session: ${e.message}"), _.map(_.nonce))
       .someOrFail(ServiceError(s"The IssuanceSession with the issuerState $issuerState does not exist"))
 
   override def createCredentialOffer(
       issuerId: UUID,
+      issuingDID: PrismDID,
       claims: zio.json.ast.Json
   ): ZIO[WalletAccessContext, OIDCCredentialIssuerService.Error, CredentialOffer] =
-    // TODO: do not use hardcoded value
-    val canonicalIssuingDid = PrismDID
-      .fromString("did:prism:0000000000000000000000000000000000000000000000000000000000000000")
-      .toOption
-      .get
-      .asCanonical
     for {
-      session <- buildNewIssuanceSession(canonicalIssuingDid, claims)
+      session <- buildNewIssuanceSession(issuingDID, claims)
       _ <- issuanceSessionStorage
         .start(session)
         .mapError(e => ServiceError(s"Failed to start issuance session: ${e.message}"))
@@ -179,8 +177,15 @@ case class OIDCCredentialIssuerServiceImpl(
       )
     )
 
+  def getIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession] = {
+    issuanceSessionStorage
+      .getByNonce(nonce)
+      .mapError(e => ServiceError(s"Failed to get issuance session: ${e.message}"))
+      .someOrFail(ServiceError(s"The IssuanceSession with the nonce $nonce does not exist"))
+  }
+
   private def buildNewIssuanceSession(
-      issuerDid: CanonicalPrismDID,
+      issuerDid: PrismDID,
       claims: zio.json.ast.Json
   ): UIO[IssuanceSession] = {
     for {

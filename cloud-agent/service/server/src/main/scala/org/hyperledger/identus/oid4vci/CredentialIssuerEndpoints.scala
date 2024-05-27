@@ -1,8 +1,6 @@
 package org.hyperledger.identus.oid4vci
 
 import org.hyperledger.identus.api.http.{EndpointOutputs, ErrorResponse, RequestContext}
-import org.hyperledger.identus.castor.controller.http.DIDInput
-import org.hyperledger.identus.castor.controller.http.DIDInput.didRefPathSegment
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
@@ -65,12 +63,12 @@ object CredentialIssuerEndpoints {
 
   val credentialEndpoint: Endpoint[
     JwtCredentials,
-    (RequestContext, String, CredentialRequest),
+    (RequestContext, UUID, CredentialRequest),
     ExtendedErrorResponse,
     CredentialResponse,
     Any
   ] = baseEndpoint.post
-    .in(didRefPathSegment / "credentials")
+    .in(issuerIdPathSegment / "credentials")
     .in(jsonBody[CredentialRequest])
     .securityIn(jwtAuthHeader)
     .out(
