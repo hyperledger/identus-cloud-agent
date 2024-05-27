@@ -1,7 +1,7 @@
 {
   # identus
-  agent = "1.33.0-SNAPSHOT",
-  node = "2.2.1",
+  agent = "1.33.1-SNAPSHOT",
+  node = "2.4.0",
   # 3rd party
   caddy = "2.7.6-alpine",
   mockServer = "5.15.0",
