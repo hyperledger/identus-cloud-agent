@@ -45,7 +45,7 @@ object CloudAgentApp {
     _ <- syncDIDPublicationStateFromDltJob.debug.fork
     _ <- syncRevocationStatusListsJob.debug.fork
     _ <- AgentHttpServer.run.fork
-    fiber <- DidCommHttpServer.run.fork
+    fiber <- DidCommHttpServer.runNew.fork
     _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
     _ <- fiber.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
@@ -153,7 +153,7 @@ object AgentHttpServer {
     for {
       allEndpoints <- agentRESTServiceEndpoints
       allEndpointsWithDocumentation = ZHttpEndpoints.withDocumentations[Task](allEndpoints)
-      server <- ZHttp4sBlazeServer.make
+      server <- ZHttp4sBlazeServer.make("rest_api")
       appConfig <- ZIO.service[AppConfig]
       _ <- server.start(allEndpointsWithDocumentation, port = appConfig.agent.httpEndpoint.http.port).debug
     } yield ()

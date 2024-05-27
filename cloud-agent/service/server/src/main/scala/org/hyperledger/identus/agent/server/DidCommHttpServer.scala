@@ -8,16 +8,20 @@ import org.hyperledger.identus.agent.server.DidCommHttpServerError.{
   RequestBodyParsingError
 }
 import org.hyperledger.identus.agent.server.config.AppConfig
+import org.hyperledger.identus.agent.server.http.ZHttp4sBlazeServer
 import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError
 import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
+import org.hyperledger.identus.api.http.EndpointOutputs.basicFailuresAndNotFound
+import org.hyperledger.identus.api.http.ErrorResponse.*
+import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.DidOps.*
-import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.error.*
+import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.mercury.protocol.presentproof.*
@@ -25,12 +29,91 @@ import org.hyperledger.identus.mercury.protocol.revocationnotificaiton.Revocatio
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.resolvers.DIDResolver
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{Failure, StatusCode, WalletAccessContext}
+import sttp.tapir.ztapir.{RichZEndpoint, ZServerEndpoint}
+import sttp.tapir.{endpoint, *}
 import zio.*
 import zio.http.*
+
 import java.util.UUID
+import scala.language.implicitConversions
 
 object DidCommHttpServer {
+
+  object DIDCommEndpoints {
+    val handleDIDCommMessage: PublicEndpoint[
+      (RequestContext, String),
+      ErrorResponse,
+      Unit,
+      Any
+    ] = endpoint.post
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in(stringBody)
+      .in("")
+      .out(emptyOutput)
+      .errorOut(basicFailuresAndNotFound)
+  }
+
+  trait DIDCommController {
+    def handleDIDCommMessage(msg: String)(implicit rc: RequestContext): IO[ErrorResponse, Unit]
+  }
+
+  sealed trait DIDCommControllerError(
+      val statusCode: StatusCode,
+      val userFacingMessage: String
+  ) extends Failure
+
+  object DIDCommControllerError {
+    final case class InvalidContentType(maybeContentType: Option[String])
+        extends DIDCommControllerError(
+          StatusCode.BadRequest,
+          maybeContentType match
+            case Some(value) => s"The 'content-type' request header value is invalid: $value"
+            case None        => s"The 'content-type' request header is undefined"
+        )
+  }
+
+  class DIDCommControllerImpl extends DIDCommController {
+    override def handleDIDCommMessage(msg: String)(implicit rc: RequestContext): IO[ErrorResponse, Unit] = {
+      val contentType = rc.request.contentType
+      if (contentType.contains(MediaTypes.contentTypeEncrypted)) ZIO.unit
+      else ZIO.fail(DIDCommControllerError.InvalidContentType(contentType))
+    }
+  }
+
+  object DIDCommControllerImpl {
+    val layer: ULayer[DIDCommController] =
+      ZLayer.succeed(new DIDCommControllerImpl())
+  }
+
+  class DIDCommServerEndpoints(
+      didCommController: DIDCommController
+  ) {
+    private val handleDIDCommMessageServerEndpoint: ZServerEndpoint[Any, Any] = DIDCommEndpoints.handleDIDCommMessage
+      .zServerLogic { case (ctx: RequestContext, msg: String) =>
+        didCommController.handleDIDCommMessage(msg)(ctx)
+      }
+
+    val all: List[ZServerEndpoint[Any, Any]] = List(handleDIDCommMessageServerEndpoint)
+  }
+
+  object DIDCommServerEndpoints {
+    def all: URIO[DIDCommController, List[ZServerEndpoint[Any, Any]]] = {
+      for {
+        didCommController <- ZIO.service[DIDCommController]
+        didCommEndpoints = new DIDCommServerEndpoints(didCommController)
+      } yield didCommEndpoints.all
+    }
+  }
+
+  def runNew = for {
+    allEndpoints <- DIDCommServerEndpoints.all
+    server <- ZHttp4sBlazeServer.make("didcomm")
+    appConfig <- ZIO.service[AppConfig]
+    didCommServicePort = appConfig.agent.didCommEndpoint.http.port
+    _ <- ZIO.logInfo(s"Running DIDComm Server on port '$didCommServicePort''")
+    _ <- server.start(allEndpoints, didCommServicePort).debug
+  } yield ()
 
   def run = {
     def server(didCommServicePort: Int) = {

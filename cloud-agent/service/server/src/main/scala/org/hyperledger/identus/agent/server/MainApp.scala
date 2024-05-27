@@ -4,17 +4,8 @@ import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.http.ZioHttpClient
 import org.hyperledger.identus.agent.server.sql.Migrations as AgentMigrations
-import org.hyperledger.identus.agent.walletapi.service.{
-  EntityServiceImpl,
-  ManagedDIDService,
-  ManagedDIDServiceWithEventNotificationImpl,
-  WalletManagementServiceImpl
-}
-import org.hyperledger.identus.agent.walletapi.sql.{
-  JdbcDIDNonSecretStorage,
-  JdbcEntityRepository,
-  JdbcWalletNonSecretStorage
-}
+import org.hyperledger.identus.agent.walletapi.service.{EntityServiceImpl, ManagedDIDService, ManagedDIDServiceWithEventNotificationImpl, WalletManagementServiceImpl}
+import org.hyperledger.identus.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcEntityRepository, JdbcWalletNonSecretStorage}
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import org.hyperledger.identus.castor.core.service.DIDServiceImpl
@@ -36,25 +27,14 @@ import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.core.service.verification.VcVerificationServiceImpl
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
-import org.hyperledger.identus.pollux.credentialschema.controller.{
-  CredentialSchemaController,
-  CredentialSchemaControllerImpl,
-  VerificationPolicyControllerImpl
-}
-import org.hyperledger.identus.pollux.sql.repository.{
-  JdbcCredentialDefinitionRepository,
-  JdbcCredentialRepository,
-  JdbcCredentialSchemaRepository,
-  JdbcCredentialStatusListRepository,
-  JdbcPresentationRepository,
-  JdbcVerificationPolicyRepository,
-  Migrations as PolluxMigrations
-}
+import org.hyperledger.identus.pollux.credentialschema.controller.{CredentialSchemaController, CredentialSchemaControllerImpl, VerificationPolicyControllerImpl}
+import org.hyperledger.identus.pollux.sql.repository.{JdbcCredentialDefinitionRepository, JdbcCredentialRepository, JdbcCredentialSchemaRepository, JdbcCredentialStatusListRepository, JdbcPresentationRepository, JdbcVerificationPolicyRepository, Migrations as PolluxMigrations}
 import org.hyperledger.identus.presentproof.controller.PresentProofControllerImpl
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.system.controller.SystemControllerImpl
 import org.hyperledger.identus.verification.controller.VcVerificationControllerImpl
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
+import org.hyperledger.identus.agent.server.DidCommHttpServer.DIDCommControllerImpl
 import zio.*
 import zio.metrics.connectors.micrometer
 import zio.metrics.connectors.micrometer.MicrometerConfig
@@ -163,6 +143,7 @@ object MainApp extends ZIOAppDefault {
           EntityControllerImpl.layer,
           WalletManagementControllerImpl.layer,
           EventControllerImpl.layer,
+          DidCommHttpServer.DIDCommControllerImpl.layer,
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverLayer,
