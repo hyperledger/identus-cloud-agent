@@ -47,7 +47,7 @@ object ConnectionServiceError {
   final case class InvalidStateForOperation(state: ProtocolState)
       extends ConnectionServiceError(
         StatusCode.BadRequest,
-        s"The operation is not allowed for the current connection record state: $state=$state"
+        s"The operation is not allowed for the current connection record state: state=$state"
       )
   final case class InvitationExpired(invitationId: String)
       extends ConnectionServiceError(
