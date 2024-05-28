@@ -3,7 +3,7 @@ package org.hyperledger.identus.pollux.core.service
 import cats.*
 import cats.implicits.*
 import io.circe.*
-import io.circe.parser.{decode, *}
+import io.circe.parser.*
 import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialIssuedFormat
