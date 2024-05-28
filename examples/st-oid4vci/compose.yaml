@@ -82,13 +82,13 @@ services:
     - /hurl/*.hurl
     - --test
     environment:
-      HURL_alice_password: '1234'
-      HURL_alice_username: alice
-      HURL_alice_wallet_client_id: alice-wallet
-      HURL_keycloak_admin_password: admin
-      HURL_keycloak_admin_user: admin
-      HURL_keycloak_base_url: http://external-keycloak-issuer:8080
-      HURL_keycloak_realm: students
+      HURL_ALICE_PASSWORD: '1234'
+      HURL_ALICE_USERNAME: alice
+      HURL_ALICE_WALLET_CLIENT_ID: alice-wallet
+      HURL_KEYCLOAK_ADMIN_PASSWORD: admin
+      HURL_KEYCLOAK_ADMIN_USER: admin
+      HURL_KEYCLOAK_BASE_URL: http://external-keycloak-issuer:8080
+      HURL_KEYCLOAK_REALM: students
     image: ghcr.io/orange-opensource/hurl:4.2.0
     volumes:
     - ./bootstrap:/hurl
