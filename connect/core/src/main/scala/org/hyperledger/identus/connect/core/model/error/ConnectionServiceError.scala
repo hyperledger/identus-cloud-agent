@@ -9,7 +9,9 @@ import java.util.UUID
 sealed trait ConnectionServiceError(
     val statusCode: StatusCode,
     val userFacingMessage: String
-) extends Failure
+) extends Failure {
+  override val namespace: String = "ConnectionServiceError"
+}
 
 object ConnectionServiceError {
   final case class UserInputValidationError(errors: NonEmptyChunk[String])

@@ -45,7 +45,7 @@ object CloudAgentApp {
     _ <- syncDIDPublicationStateFromDltJob.debug.fork
     _ <- syncRevocationStatusListsJob.debug.fork
     _ <- AgentHttpServer.run.fork
-    fiber <- DidCommHttpServer.runNew.fork
+    fiber <- DidCommHttpServer.run.fork
     _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
     _ <- fiber.join *> ZIO.log(s"Server End")
     _ <- ZIO.never

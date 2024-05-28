@@ -34,7 +34,7 @@ import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.system.controller.SystemControllerImpl
 import org.hyperledger.identus.verification.controller.VcVerificationControllerImpl
 import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
-import org.hyperledger.identus.agent.server.DidCommHttpServer.DIDCommControllerImpl
+import org.hyperledger.identus.didcomm.controller.DIDCommControllerImpl
 import zio.*
 import zio.metrics.connectors.micrometer
 import zio.metrics.connectors.micrometer.MicrometerConfig
@@ -143,7 +143,7 @@ object MainApp extends ZIOAppDefault {
           EntityControllerImpl.layer,
           WalletManagementControllerImpl.layer,
           EventControllerImpl.layer,
-          DidCommHttpServer.DIDCommControllerImpl.layer,
+          DIDCommControllerImpl.layer,
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverLayer,

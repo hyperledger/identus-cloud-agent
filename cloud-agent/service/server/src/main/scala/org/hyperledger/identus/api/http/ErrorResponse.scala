@@ -49,7 +49,7 @@ object ErrorResponse {
     val simpleName = failure.getClass.getSimpleName
     ErrorResponse(
       failure.statusCode.code,
-      s"error:ConnectionServiceError:$simpleName",
+      s"error:${failure.namespace}:$simpleName",
       CamelCaseSplitRegex.findAllIn(simpleName).mkString(" "),
       Some(failure.userFacingMessage)
     )
