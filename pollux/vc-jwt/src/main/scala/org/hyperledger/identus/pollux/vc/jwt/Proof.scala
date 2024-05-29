@@ -13,7 +13,7 @@ import scala.util.Try
 import java.security.*
 import java.security.spec.X509EncodedKeySpec
 import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import javax.management.RuntimeErrorException
+
 sealed trait Proof {
   val id: Option[String] = None
   val `type`: String
@@ -176,14 +176,6 @@ object EddsaJcs2022ProofGenerator {
       )
     isValid = verify(javaPublicKey, signature, dataToVerify)
   } yield isValid
-
-  private def sign(privateKey: PrivateKey, data: Array[Byte]): Array[Byte] = {
-
-    val signer = Signature.getInstance("Ed25519", provider)
-    signer.initSign(privateKey)
-    signer.update(data)
-    signer.sign()
-  }
 
   private def recoverPublicKey(pkBytes: Array[Byte]): Either[String, PublicKey] = {
     val keyFactory = KeyFactory.getInstance("Ed25519", provider)

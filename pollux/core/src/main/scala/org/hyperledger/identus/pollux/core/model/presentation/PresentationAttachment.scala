@@ -1,9 +1,7 @@
 package org.hyperledger.identus.pollux.core.model.presentation
 
-import io.circe.*
-import io.circe.generic.semiauto.*
-import uniffi.anoncreds_wrapper.PresentationRequest
-import zio.json.ast
+import io.circe._
+import io.circe.generic.semiauto._
 
 case class Field(
     id: Option[String] = None,

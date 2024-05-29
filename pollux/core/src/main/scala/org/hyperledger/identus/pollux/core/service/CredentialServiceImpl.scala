@@ -1090,10 +1090,8 @@ private class CredentialServiceImpl(
             mediaType = Some("application/json"),
             format = Some(IssueCredentialOfferFormat.SDJWT.name),
             payload = PresentationAttachment(
-              Some(Options(challenge, domain)),
-              PresentationDefinition(format =
-                Some(ClaimFormat(jwt = Some(Jwt(alg = Seq("ES256K"), proof_type = Nil))))
-              ) // FIXME
+              Some(Options(challenge, domain)), // TODO holder binding ATL-7183
+              PresentationDefinition(format = Some(ClaimFormat(jwt = Some(Jwt(alg = Seq("ES256K"), proof_type = Nil)))))
             )
           )
         )

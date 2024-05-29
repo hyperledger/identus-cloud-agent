@@ -87,7 +87,6 @@ object SDJWT {
   def createPresentation(
       sdjwt: CredentialJson,
       claimsToDisclose: String,
-      // signAlg: String // FIXME
   ): PresentationJson = {
     val holder = SdjwtHolderWrapper(sdjwt.value, SdjwtSerializationFormat.JSON)
     val presentation = holder.createPresentation(

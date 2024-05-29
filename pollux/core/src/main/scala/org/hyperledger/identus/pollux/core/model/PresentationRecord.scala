@@ -26,7 +26,7 @@ final case class PresentationRecord(
     credentialsToUse: Option[List[String]],
     anoncredCredentialsToUseJsonSchemaId: Option[String],
     anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
-    sdJwtClaimsToUseJsonSchemaId: Option[String], // FIX ME we would need this
+    sdJwtClaimsToUseJsonSchemaId: Option[String],
     sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
     metaRetries: Int,
     metaNextRetry: Option[Instant],
