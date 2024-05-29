@@ -1,4 +1,4 @@
-@DLT
+@DLT @did @update
 Feature: Update DID
 
 Background: Published DID is created
