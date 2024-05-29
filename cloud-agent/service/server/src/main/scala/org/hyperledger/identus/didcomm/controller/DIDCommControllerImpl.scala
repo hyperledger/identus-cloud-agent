@@ -4,17 +4,14 @@ import io.circe.*
 import io.circe.parser.*
 import org.hyperledger.identus.agent.server.DidCommHttpServerError.DIDCommMessageParsingError
 import org.hyperledger.identus.agent.server.config.AppConfig
-import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError
-import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.service.ConnectionService
-import org.hyperledger.identus.didcomm.controller.DIDCommControllerError.UnexpectedError
+import org.hyperledger.identus.didcomm.controller.DIDCommControllerError.*
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.DidOps.*
-import org.hyperledger.identus.mercury.error.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
@@ -22,7 +19,7 @@ import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.mercury.protocol.revocationnotificaiton.RevocationNotification
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
-import org.hyperledger.identus.shared.models.{StatusCode, WalletAccessContext}
+import org.hyperledger.identus.shared.models.{Failure, StatusCode, WalletAccessContext}
 import zio.*
 
 import java.util.UUID
@@ -55,7 +52,7 @@ class DIDCommControllerImpl(
 
   private[this] def validateContentType(contentType: Option[String]) = {
     if (contentType.contains(MediaTypes.contentTypeEncrypted)) ZIO.unit
-    else ZIO.fail(DIDCommControllerError.InvalidContentType(contentType))
+    else ZIO.fail(InvalidContentType(contentType))
   }
 
   private[this] def handleMessage(msg: String) = {
@@ -64,24 +61,28 @@ class DIDCommControllerImpl(
         _ <- ZIO.logInfo("Received new DIDComm message")
         _ <- ZIO.logTrace(msg)
         msgAndContext <- unpackMessage(msg)
+        _ <- processMessage(msgAndContext._1)
           .catchAll {
-            case _: ParseResponse         => ZIO.fail(UnexpectedError(StatusCode.BadRequest))
-            case _: DIDSecretStorageError => ZIO.fail(UnexpectedError(StatusCode.UnprocessableContent))
-          }
-        _ <- handle(msgAndContext._1)
-          .catchAll {
-            case err: ConnectionServiceError   => ZIO.fail(err)
+            case t: Throwable                  => ZIO.die(t) // Convert any 'Throwable' failure to a defect
+            case f: Failure                    => ZIO.fail(f)
             case _: DIDCommMessageParsingError => ZIO.fail(UnexpectedError(StatusCode.BadRequest))
             case _: CredentialServiceError     => ZIO.fail(UnexpectedError(StatusCode.UnprocessableContent))
             case _: PresentationError          => ZIO.fail(UnexpectedError(StatusCode.UnprocessableContent))
-            case _: Throwable                  => ZIO.fail(UnexpectedError(StatusCode.InternalServerError))
           }
           .provideSomeLayer(ZLayer.succeed(msgAndContext._2))
       } yield ()
     }
   }
 
-  private def handle = handleConnect orElse
+  private def processMessage: PartialFunction[
+    Message,
+    ZIO[
+      PresentationService & WalletAccessContext with CredentialService & WalletAccessContext with ConnectionService &
+        WalletAccessContext & AppConfig,
+      DIDCommMessageParsingError | ConnectionServiceError | CredentialServiceError | PresentationError | Throwable,
+      Any
+    ]
+  ] = handleConnect orElse
     handleIssueCredential orElse
     handlePresentProof orElse
     revocationNotification orElse
@@ -89,23 +90,21 @@ class DIDCommControllerImpl(
 
   private[this] def unpackMessage(
       jsonString: String
-  ): ZIO[
-    DidOps & ManagedDIDService & DIDNonSecretStorage,
-    ParseResponse | DIDSecretStorageError,
-    (Message, WalletAccessContext)
-  ] = {
-    // Needed for implicit conversion from didcommx UnpackResuilt to mercury UnpackMessage
+  ): ZIO[DidOps & ManagedDIDService & DIDNonSecretStorage, DIDCommControllerError, (Message, WalletAccessContext)] = {
     for {
-      recipientDid <- extractFirstRecipientDid(jsonString).mapError(err => ParseResponse(err))
+      recipientDid <- extractFirstRecipientDid(jsonString).mapError(err => RequestBodyParsingError(err.getMessage))
       _ <- ZIO.logInfo(s"Extracted recipient Did => $recipientDid")
       didId = DidId(recipientDid)
       nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
       maybePeerDIDRecord <- nonSecretStorage.getPeerDIDRecord(didId).orDie
-      peerDIDRecord <- ZIO.fromOption(maybePeerDIDRecord).mapError(_ => WalletNotFoundError(didId))
+      peerDIDRecord <- ZIO.fromOption(maybePeerDIDRecord).mapError(_ => PeerDIDNotFoundError(didId))
       _ <- ZIO.logInfo(s"PeerDID record successfully loaded in DIDComm receiver endpoint: $peerDIDRecord")
       walletAccessContext = WalletAccessContext(peerDIDRecord.walletId)
       managedDIDService <- ZIO.service[ManagedDIDService]
-      peerDID <- managedDIDService.getPeerDID(didId).provide(ZLayer.succeed(walletAccessContext))
+      peerDID <- managedDIDService
+        .getPeerDID(didId)
+        .mapError(e => PeerDIDKeyNotFoundError(e.didId, e.keyId))
+        .provide(ZLayer.succeed(walletAccessContext))
       agent = AgentPeerService.makeLayer(peerDID)
       msg <- unpack(jsonString).provideSomeLayer(agent)
     } yield (msg.message, walletAccessContext)
