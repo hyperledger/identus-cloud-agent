@@ -1,11 +1,11 @@
 package org.hyperledger.identus.agent.server.http
 
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.system.controller.SystemEndpoints
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.http4s.*
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Router
+import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.system.controller.SystemEndpoints
 import sttp.tapir.*
 import sttp.tapir.server.http4s.Http4sServerOptions
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
@@ -14,10 +14,10 @@ import sttp.tapir.ztapir.ZServerEndpoint
 import zio.*
 import zio.interop.catz.*
 
-class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry) {
+class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNamespace: String) {
 
   private val tapirPrometheusMetricsZIO: Task[PrometheusMetrics[Task]] = ZIO.attempt {
-    PrometheusMetrics.default[Task](registry = micrometerRegistry.getPrometheusRegistry)
+    PrometheusMetrics.default[Task](namespace = metricsNamespace, registry = micrometerRegistry.getPrometheusRegistry)
   }
 
   private val serverOptionsZIO: ZIO[PrometheusMetrics[Task], Throwable, Http4sServerOptions[Task]] = for {
@@ -69,10 +69,10 @@ class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry) {
 }
 
 object ZHttp4sBlazeServer {
-  def make: URIO[PrometheusMeterRegistry, ZHttp4sBlazeServer] = {
+  def make(metricsNamespace: String): URIO[PrometheusMeterRegistry, ZHttp4sBlazeServer] = {
     for {
       micrometerRegistry <- ZIO.service[PrometheusMeterRegistry]
-      zHttp4sBlazeServer = ZHttp4sBlazeServer(micrometerRegistry)
+      zHttp4sBlazeServer = ZHttp4sBlazeServer(micrometerRegistry, metricsNamespace)
     } yield zHttp4sBlazeServer
   }
 }
