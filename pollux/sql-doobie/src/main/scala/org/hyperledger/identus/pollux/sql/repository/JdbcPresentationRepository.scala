@@ -54,6 +54,31 @@ class JdbcPresentationRepository(
       .transactWallet(xa)
   }
 
+  override def updateSDJWTPresentationWithCredentialsToUse(
+      recordId: DidCommID,
+      credentialsToUse: Option[Seq[String]],
+      sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
+      protocolState: ProtocolState
+  ): RIO[WalletAccessContext, Int] = {
+    val cxnIO =
+      sql"""
+           | UPDATE public.presentation_records
+           | SET
+           |   credentials_to_use = ${credentialsToUse.map(_.toList)},
+           |   sd_jwt_claims_to_disclose = $sdJwtClaimsToDisclose,
+           |   protocol_state = $protocolState,
+           |   updated_at = ${Instant.now},
+           |   meta_retries = $maxRetries,
+           |   meta_next_retry = ${Instant.now},
+           |   meta_last_failure = null
+           | WHERE
+           |   id = $recordId
+        """.stripMargin.update
+
+    cxnIO.run
+      .transactWallet(xa)
+  }
+
   def updateAnoncredPresentationWithCredentialsToUse(
       recordId: DidCommID,
       anoncredCredentialsToUseJsonSchemaId: Option[String],
@@ -92,11 +117,15 @@ class JdbcPresentationRepository(
     circeJson.noSpaces.fromJson[Json].getOrElse(Json.Null)
   }
 
-  given jsonGet: Get[AnoncredCredentialProofs] = Get[circe.Json].map { jsonString =>
-    circeJsonToZioJson(jsonString)
-  }
-
+  given jsonGet: Get[AnoncredCredentialProofs] = Get[circe.Json].map { jsonString => circeJsonToZioJson(jsonString) }
   given jsonPut: Put[AnoncredCredentialProofs] = Put[circe.Json].contramap(zioJsonToCirceJson(_))
+
+  def zioJsonToCirceJsonObj(zioJson: Json.Obj): circe.Json =
+    parse(zioJson.toString).getOrElse(circe.Json.Null)
+  def circeJsonToZioJsonObj(circeJson: circe.Json): Json.Obj =
+    circeJson.noSpaces.fromJson[Json.Obj].getOrElse(Json.Obj())
+  given Get[SdJwtCredentialToDisclose] = Get[circe.Json].map { jsonString => circeJsonToZioJsonObj(jsonString) }
+  given Put[SdJwtCredentialToDisclose] = Put[circe.Json].contramap(zioJsonToCirceJsonObj(_))
 
   given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
   given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)
@@ -143,6 +172,8 @@ class JdbcPresentationRepository(
         |   credentials_to_use,
         |   anoncred_credentials_to_use_json_schema_id,
         |   anoncred_credentials_to_use,
+        |   sd_jwt_claims_to_use_json_schema_id,
+        |   sd_jwt_claims_to_disclose,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure,
@@ -162,6 +193,8 @@ class JdbcPresentationRepository(
         |   ${record.credentialsToUse.map(_.toList)},
         |   ${record.anoncredCredentialsToUseJsonSchemaId},
         |   ${record.anoncredCredentialsToUse},
+        |   ${record.sdJwtClaimsToUseJsonSchemaId},
+        |   ${record.sdJwtClaimsToDisclose},
         |   ${record.metaRetries},
         |   ${record.metaNextRetry},
         |   ${record.metaLastFailure},
@@ -197,6 +230,8 @@ class JdbcPresentationRepository(
         |   credentials_to_use,
         |   anoncred_credentials_to_use_json_schema_id,
         |   anoncred_credentials_to_use,
+        |   sd_jwt_claims_to_use_json_schema_id,
+        |   sd_jwt_claims_to_disclose,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure
@@ -245,6 +280,8 @@ class JdbcPresentationRepository(
             |   credentials_to_use,
             |   anoncred_credentials_to_use_json_schema_id,
             |   anoncred_credentials_to_use,
+            |   sd_jwt_claims_to_use_json_schema_id,
+            |   sd_jwt_claims_to_disclose,
             |   meta_retries,
             |   meta_next_retry,
             |   meta_last_failure
@@ -291,6 +328,8 @@ class JdbcPresentationRepository(
         |   credentials_to_use,
         |   anoncred_credentials_to_use_json_schema_id,
         |   anoncred_credentials_to_use,
+        |   sd_jwt_claims_to_use_json_schema_id,
+        |   sd_jwt_claims_to_disclose,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure
@@ -325,6 +364,8 @@ class JdbcPresentationRepository(
         |   credentials_to_use,
         |   anoncred_credentials_to_use_json_schema_id,
         |   anoncred_credentials_to_use,
+        |   sd_jwt_claims_to_use_json_schema_id,
+        |   sd_jwt_claims_to_disclose,
         |   meta_retries,
         |   meta_next_retry,
         |   meta_last_failure

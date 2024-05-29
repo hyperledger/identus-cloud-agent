@@ -11,7 +11,11 @@ import org.hyperledger.identus.connect.core.service
 import org.hyperledger.identus.connect.core.service.MockConnectionService
 import org.hyperledger.identus.container.util.MigrationAspects.migrate
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
-import org.hyperledger.identus.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest}
+import org.hyperledger.identus.issue.controller.http.{
+  AcceptCredentialOfferRequest,
+  CreateIssueCredentialRecordRequest,
+  IssueCredentialRecordPage
+}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
@@ -112,6 +116,11 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
     None
   )
   val acceptCredentialOfferRequest = AcceptCredentialOfferRequest(
+    Some(
+      "did:prism:332518729a7b7805f73a788e0944802527911901d9b7c16152281be9bc62d944"
+    )
+  )
+  val acceptCredentialOfferRequest2 = AcceptCredentialOfferRequest(
     Some(
       "did:prism:332518729a7b7805f73a788e0944802527911901d9b7c16152281be9bc62d944:CosBCogBEkkKFW15LWtleS1hdXRoZW50aWNhdGlvbhAESi4KCXNlY3AyNTZrMRIhAuYoRIefsLhkvYwHz8gDtkG2b0kaZTDOLj_SExWX1fOXEjsKB21hc3RlcjAQAUouCglzZWNwMjU2azESIQLOzab8f0ibt1P0zdMfoWDQTSlPc8_tkV9Jk5BBsXB8fA"
     )
@@ -243,10 +252,10 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
         issueControllerService <- ZIO.service[IssueController]
         authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
         backend = httpBackend(issueControllerService, authenticator)
-        response: IssueCredentialBadRequestResponse <- basicRequest
+        response: IssueCredentialPageResponse <- basicRequest
           .post(uri"${issueUriBase}/records/123e4567-e89b-12d3-a456-426614174000/accept-offer")
           .body(acceptCredentialOfferRequest.toJsonPretty)
-          .response(asJsonAlways[ErrorResponse])
+          .response(asJsonAlways[IssueCredentialRecordPage])
           .send(backend)
 
         isSuccessRequestStatusCode = assert(response.code)(equalTo(StatusCode.Ok))
