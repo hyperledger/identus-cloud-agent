@@ -49,9 +49,7 @@ class IssueControllerImpl(
       jsonClaims <- ZIO // TODO Get read of Circe and use zio-json all the way down
         .fromEither(io.circe.parser.parse(request.claims.toString()))
         .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
-      credentialFormat = request.credentialFormat
-        .flatMap(CredentialFormat.fromString)
-        .get // TODO fix get make a ZIO.fail
+      credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
       outcome <-
         credentialFormat match
           case JWT =>

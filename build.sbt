@@ -769,8 +769,7 @@ lazy val polluxSDJWT = project
   .settings(commonSetttings)
   .settings(
     name := "pollux-sd-jwt",
-    resolvers := Resolver.sonatypeOssRepos("snapshots"),
-    libraryDependencies += "io.iohk" % "sd-jwt-kmp-jvm" % "1.0-SNAPSHOT"
+    libraryDependencies += "io.iohk.atala" % "sd-jwt-kmp-jvm" % "0.1.2"
   )
   .dependsOn(sharedCrypto)
 
