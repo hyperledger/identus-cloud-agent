@@ -112,7 +112,36 @@ class PresentationRepositoryInMemory(
         .getOrElse(ZIO.succeed(0))
     } yield count
   }
-
+  override def updateSDJWTPresentationWithCredentialsToUse(
+      recordId: DidCommID,
+      credentialsToUse: Option[Seq[String]],
+      sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
+      protocolState: ProtocolState
+  ): RIO[WalletAccessContext, Int] = {
+    for {
+      storeRef <- walletStoreRef
+      maybeRecord <- getPresentationRecord(recordId)
+      count <- maybeRecord
+        .map(record =>
+          for {
+            _ <- storeRef.update(r =>
+              r.updated(
+                recordId,
+                record.copy(
+                  updatedAt = Some(Instant.now),
+                  credentialsToUse = credentialsToUse.map(_.toList),
+                  sdJwtClaimsToDisclose = sdJwtClaimsToDisclose,
+                  protocolState = protocolState,
+                  metaRetries = maxRetries,
+                  metaLastFailure = None,
+                )
+              )
+            )
+          } yield 1
+        )
+        .getOrElse(ZIO.succeed(0))
+    } yield count
+  }
   def updateAnoncredPresentationWithCredentialsToUse(
       recordId: DidCommID,
       anoncredCredentialsToUseJsonSchemaId: Option[String],
