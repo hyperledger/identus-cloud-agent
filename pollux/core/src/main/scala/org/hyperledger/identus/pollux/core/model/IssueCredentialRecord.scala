@@ -44,18 +44,21 @@ final case class IssueCredentialRecord(
     offerCredentialData.map { data =>
       credentialFormat.match
         case CredentialFormat.JWT       => (IssueCredentialOfferFormat.JWT, data)
+        case CredentialFormat.SDJWT     => (IssueCredentialOfferFormat.SDJWT, data)
         case CredentialFormat.AnonCreds => (IssueCredentialOfferFormat.Anoncred, data)
     }
   def requestCredentialFormatAndData: Option[(IssueCredentialRequestFormat, RequestCredential)] =
     requestCredentialData.map { data =>
       credentialFormat.match
         case CredentialFormat.JWT       => (IssueCredentialRequestFormat.JWT, data)
+        case CredentialFormat.SDJWT     => (IssueCredentialRequestFormat.SDJWT, data)
         case CredentialFormat.AnonCreds => (IssueCredentialRequestFormat.Anoncred, data)
     }
   def issuedCredentialFormatAndData: Option[(IssueCredentialIssuedFormat, IssueCredential)] =
     issueCredentialData.map { data =>
       credentialFormat.match
         case CredentialFormat.JWT       => (IssueCredentialIssuedFormat.JWT, data)
+        case CredentialFormat.SDJWT     => (IssueCredentialIssuedFormat.SDJWT, data)
         case CredentialFormat.AnonCreds => (IssueCredentialIssuedFormat.Anoncred, data)
     }
 
