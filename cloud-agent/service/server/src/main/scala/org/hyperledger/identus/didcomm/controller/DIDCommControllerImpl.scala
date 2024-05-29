@@ -1,7 +1,5 @@
 package org.hyperledger.identus.didcomm.controller
 
-import io.circe.*
-import io.circe.parser.*
 import org.hyperledger.identus.agent.server.DidCommHttpServerError.DIDCommMessageParsingError
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
@@ -10,6 +8,7 @@ import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.didcomm.controller.DIDCommControllerError.*
+import org.hyperledger.identus.didcomm.controller.http.DIDCommMessage
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.DidOps.*
 import org.hyperledger.identus.mercury.model.*
@@ -21,6 +20,7 @@ import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, 
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.shared.models.{Failure, StatusCode, WalletAccessContext}
 import zio.*
+import zio.json.*
 
 import java.util.UUID
 import scala.language.implicitConversions
@@ -35,7 +35,7 @@ class DIDCommControllerImpl(
     appConfig: AppConfig
 ) extends DIDCommController {
 
-  override def handleDIDCommMessage(msg: String)(implicit rc: RequestContext): IO[ErrorResponse, Unit] = {
+  override def handleDIDCommMessage(msg: DIDCommMessage)(implicit rc: RequestContext): IO[ErrorResponse, Unit] = {
     for {
       _ <- validateContentType(rc.request.contentType)
       _ <- handleMessage(msg)
@@ -47,11 +47,9 @@ class DIDCommControllerImpl(
     else ZIO.fail(InvalidContentType(contentType))
   }
 
-  private[this] def handleMessage(msg: String) = {
+  private[this] def handleMessage(msg: DIDCommMessage) = {
     ZIO.logAnnotate("request-id", UUID.randomUUID.toString) {
       for {
-        _ <- ZIO.logInfo("Received new DIDComm message")
-        _ <- ZIO.logTrace(msg)
         msgAndContext <- unpackMessage(msg)
         _ <- processMessage(msgAndContext._1)
           .catchAll {
@@ -72,11 +70,11 @@ class DIDCommControllerImpl(
     revocationNotification orElse
     handleUnknownMessage
 
-  private[this] def unpackMessage(
-      jsonString: String
-  ): IO[DIDCommControllerError, (Message, WalletAccessContext)] = {
+  private[this] def unpackMessage(msg: DIDCommMessage): IO[DIDCommControllerError, (Message, WalletAccessContext)] =
     for {
-      recipientDid <- extractFirstRecipientDid(jsonString).mapError(err => RequestBodyParsingError(err.getMessage))
+      recipientDid <- ZIO
+        .fromOption(msg.recipients.headOption.map(_.header.kid.split("#")(0)))
+        .mapError(_ => RecipientNotFoundError())
       _ <- ZIO.logInfo(s"Extracted recipient Did => $recipientDid")
       didId = DidId(recipientDid)
       maybePeerDIDRecord <- didNonSecretStorage.getPeerDIDRecord(didId).orDie
@@ -88,17 +86,8 @@ class DIDCommControllerImpl(
         .mapError(e => PeerDIDKeyNotFoundError(e.didId, e.keyId))
         .provide(ZLayer.succeed(walletAccessContext))
       agent = AgentPeerService.makeLayer(peerDID)
-      msg <- unpack(jsonString).provide(ZLayer.succeed(didOps), agent)
+      msg <- unpack(msg.toJson).provide(ZLayer.succeed(didOps), agent)
     } yield (msg.message, walletAccessContext)
-  }
-
-  private[this] def extractFirstRecipientDid(jsonMessage: String): IO[ParsingFailure | DecodingFailure, String] = {
-    val doc = parse(jsonMessage).getOrElse(Json.Null)
-    val cursor = doc.hcursor
-    ZIO.fromEither(
-      cursor.downField("recipients").downArray.downField("header").downField("kid").as[String].map(_.split("#")(0))
-    )
-  }
 
   /*
    * Connect

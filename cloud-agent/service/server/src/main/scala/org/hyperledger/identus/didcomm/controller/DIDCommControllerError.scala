@@ -19,6 +19,12 @@ object DIDCommControllerError {
           case None        => s"The 'content-type' request header is undefined"
       )
 
+  final case class RecipientNotFoundError()
+      extends DIDCommControllerError(
+        StatusCode.UnprocessableContent,
+        "Recipient not found in the DIDComm Message"
+      )
+
   final case class UnexpectedError(override val statusCode: StatusCode)
       extends DIDCommControllerError(
         statusCode,
