@@ -38,15 +38,7 @@ class DIDCommControllerImpl(
   override def handleDIDCommMessage(msg: String)(implicit rc: RequestContext): IO[ErrorResponse, Unit] = {
     for {
       _ <- validateContentType(rc.request.contentType)
-      _ <- handleMessage(msg).provideSome(
-        ZLayer.succeed(didOps),
-        ZLayer.succeed(managedDIDService),
-        ZLayer.succeed(didNonSecretStorage),
-        ZLayer.succeed(connectionService),
-        ZLayer.succeed(credentialService),
-        ZLayer.succeed(presentationService),
-        ZLayer.succeed(appConfig),
-      )
+      _ <- handleMessage(msg)
     } yield ()
   }
 
@@ -74,15 +66,7 @@ class DIDCommControllerImpl(
     }
   }
 
-  private def processMessage: PartialFunction[
-    Message,
-    ZIO[
-      PresentationService & WalletAccessContext with CredentialService & WalletAccessContext with ConnectionService &
-        WalletAccessContext & AppConfig,
-      DIDCommMessageParsingError | ConnectionServiceError | CredentialServiceError | PresentationError | Throwable,
-      Any
-    ]
-  ] = handleConnect orElse
+  private def processMessage = handleConnect orElse
     handleIssueCredential orElse
     handlePresentProof orElse
     revocationNotification orElse
@@ -90,23 +74,21 @@ class DIDCommControllerImpl(
 
   private[this] def unpackMessage(
       jsonString: String
-  ): ZIO[DidOps & ManagedDIDService & DIDNonSecretStorage, DIDCommControllerError, (Message, WalletAccessContext)] = {
+  ): IO[DIDCommControllerError, (Message, WalletAccessContext)] = {
     for {
       recipientDid <- extractFirstRecipientDid(jsonString).mapError(err => RequestBodyParsingError(err.getMessage))
       _ <- ZIO.logInfo(s"Extracted recipient Did => $recipientDid")
       didId = DidId(recipientDid)
-      nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
-      maybePeerDIDRecord <- nonSecretStorage.getPeerDIDRecord(didId).orDie
+      maybePeerDIDRecord <- didNonSecretStorage.getPeerDIDRecord(didId).orDie
       peerDIDRecord <- ZIO.fromOption(maybePeerDIDRecord).mapError(_ => PeerDIDNotFoundError(didId))
       _ <- ZIO.logInfo(s"PeerDID record successfully loaded in DIDComm receiver endpoint: $peerDIDRecord")
       walletAccessContext = WalletAccessContext(peerDIDRecord.walletId)
-      managedDIDService <- ZIO.service[ManagedDIDService]
       peerDID <- managedDIDService
         .getPeerDID(didId)
         .mapError(e => PeerDIDKeyNotFoundError(e.didId, e.keyId))
         .provide(ZLayer.succeed(walletAccessContext))
       agent = AgentPeerService.makeLayer(peerDID)
-      msg <- unpack(jsonString).provideSomeLayer(agent)
+      msg <- unpack(jsonString).provide(ZLayer.succeed(didOps), agent)
     } yield (msg.message, walletAccessContext)
   }
 
@@ -122,7 +104,7 @@ class DIDCommControllerImpl(
    * Connect
    */
   private[this] val handleConnect: PartialFunction[Message, ZIO[
-    ConnectionService & WalletAccessContext & AppConfig,
+    WalletAccessContext,
     DIDCommMessageParsingError | ConnectionServiceError,
     Unit
   ]] = {
@@ -132,11 +114,9 @@ class DIDCommControllerImpl(
           .fromEither(ConnectionRequest.fromMessage(msg))
           .mapError(DIDCommMessageParsingError.apply)
         _ <- ZIO.logInfo("As an Inviter in connect got ConnectionRequest: " + connectionRequest)
-        connectionService <- ZIO.service[ConnectionService]
-        config <- ZIO.service[AppConfig]
         record <- connectionService.receiveConnectionRequest(
           connectionRequest,
-          Some(config.connect.connectInvitationExpiry)
+          Some(appConfig.connect.connectInvitationExpiry)
         )
         _ <- connectionService.acceptConnectionRequest(record.id)
       } yield ()
@@ -146,7 +126,6 @@ class DIDCommControllerImpl(
           .fromEither(ConnectionResponse.fromMessage(msg))
           .mapError(DIDCommMessageParsingError.apply)
         _ <- ZIO.logInfo("As an Invitee in connect got ConnectionResponse: " + connectionResponse)
-        connectionService <- ZIO.service[ConnectionService]
         _ <- connectionService.receiveConnectionResponse(connectionResponse)
       } yield ()
   }
@@ -155,26 +134,23 @@ class DIDCommControllerImpl(
    * Issue Credential
    */
   private[this] val handleIssueCredential
-      : PartialFunction[Message, ZIO[CredentialService & WalletAccessContext, CredentialServiceError, Unit]] = {
+      : PartialFunction[Message, ZIO[WalletAccessContext, CredentialServiceError, Unit]] = {
     case msg if msg.piuri == OfferCredential.`type` =>
       for {
         offerFromIssuer <- ZIO.succeed(OfferCredential.readFromMessage(msg))
         _ <- ZIO.logInfo("As an Holder in issue-credential got OfferCredential: " + offerFromIssuer)
-        credentialService <- ZIO.service[CredentialService]
         _ <- credentialService.receiveCredentialOffer(offerFromIssuer)
       } yield ()
     case msg if msg.piuri == RequestCredential.`type` =>
       for {
         requestCredential <- ZIO.succeed(RequestCredential.readFromMessage(msg))
         _ <- ZIO.logInfo("As an Issuer in issue-credential got RequestCredential: " + requestCredential)
-        credentialService <- ZIO.service[CredentialService]
         _ <- credentialService.receiveCredentialRequest(requestCredential)
       } yield ()
     case msg if msg.piuri == IssueCredential.`type` =>
       for {
         issueCredential <- ZIO.succeed(IssueCredential.readFromMessage(msg))
         _ <- ZIO.logInfo("As an Holder in issue-credential got IssueCredential: " + issueCredential)
-        credentialService <- ZIO.service[CredentialService]
         _ <- credentialService.receiveCredentialIssue(issueCredential)
       } yield ()
   }
@@ -182,28 +158,24 @@ class DIDCommControllerImpl(
   /*
    * Present Proof
    */
-  private[this] val handlePresentProof
-      : PartialFunction[Message, ZIO[PresentationService & WalletAccessContext, PresentationError, Unit]] = {
+  private[this] val handlePresentProof: PartialFunction[Message, ZIO[WalletAccessContext, PresentationError, Unit]] = {
     case msg if msg.piuri == ProposePresentation.`type` =>
       for {
         proposePresentation <- ZIO.succeed(ProposePresentation.readFromMessage(msg))
         _ <- ZIO.logInfo("As a Verifier in  present-proof got ProposePresentation: " + proposePresentation)
-        service <- ZIO.service[PresentationService]
-        _ <- service.receiveProposePresentation(proposePresentation)
+        _ <- presentationService.receiveProposePresentation(proposePresentation)
       } yield ()
     case msg if msg.piuri == RequestPresentation.`type` =>
       for {
         requestPresentation <- ZIO.succeed(RequestPresentation.readFromMessage(msg))
         _ <- ZIO.logInfo("As a Prover in present-proof got RequestPresentation: " + requestPresentation)
-        service <- ZIO.service[PresentationService]
-        _ <- service.receiveRequestPresentation(None, requestPresentation)
+        _ <- presentationService.receiveRequestPresentation(None, requestPresentation)
       } yield ()
     case msg if msg.piuri == Presentation.`type` =>
       for {
         presentation <- ZIO.succeed(Presentation.readFromMessage(msg))
         _ <- ZIO.logInfo("As a Verifier in present-proof got Presentation: " + presentation)
-        service <- ZIO.service[PresentationService]
-        _ <- service.receivePresentation(presentation)
+        _ <- presentationService.receivePresentation(presentation)
       } yield ()
   }
 
