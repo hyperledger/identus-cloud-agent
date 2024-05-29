@@ -1,3 +1,4 @@
+@verification @api
 Feature: Vc Verification schemas
 
 Scenario: Successful Verifies VcVerificationRequest
