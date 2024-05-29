@@ -1,4 +1,4 @@
-@DLT
+@DLT @did @deactivate
 Feature: Deactivate DID
 
 Scenario: Deactivate DID

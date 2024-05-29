@@ -1,4 +1,4 @@
-@dev
+@DLT @did @create
 Feature: Create and publish DID
 
 Scenario Outline: Create PRISM DID
