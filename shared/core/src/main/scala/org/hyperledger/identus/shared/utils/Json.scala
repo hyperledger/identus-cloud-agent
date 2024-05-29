@@ -1,7 +1,7 @@
 package org.hyperledger.identus.shared.utils
 
 import org.erdtman.jcs.JsonCanonicalizer
-import scala.util.Try
+import java.io.IOException
 
 object Json {
 
@@ -13,8 +13,7 @@ object Json {
     *   canonicalized JSON string
     */
 
-  def canonicalizeToJcs(jsonStr: String): Either[Throwable, String] = {
-    val canonicalizer = Try { new JsonCanonicalizer(jsonStr) }
-    canonicalizer.map(_.getEncodedString).toEither
-  }
+  def canonicalizeToJcs(jsonStr: String): Either[IOException, String] =
+    try { Right(new JsonCanonicalizer(jsonStr).getEncodedString) }
+    catch case exception: IOException => Left(exception)
 }

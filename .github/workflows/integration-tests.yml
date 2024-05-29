@@ -36,7 +36,7 @@ jobs:
       - name: Setup Java and Scala
         uses: olafurpg/setup-scala@v14
         with:
-          java-version: openjdk@1.11
+          java-version: openjdk@1.17
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v3
