@@ -1,9 +1,8 @@
 package org.hyperledger.identus.didcomm.controller
 
-import org.hyperledger.identus.api.http.EndpointOutputs.basicFailuresAndNotFound
+import org.hyperledger.identus.api.http.EndpointOutputs.{FailureVariant, basicFailuresWith}
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
-import sttp.tapir.PublicEndpoint
-import sttp.tapir.{endpoint, *}
+import sttp.tapir.{PublicEndpoint, endpoint, *}
 
 object DIDCommEndpoints {
   val handleDIDCommMessage: PublicEndpoint[
@@ -16,5 +15,5 @@ object DIDCommEndpoints {
     .in(stringBody)
     .in("")
     .out(emptyOutput)
-    .errorOut(basicFailuresAndNotFound)
+    .errorOut(basicFailuresWith(FailureVariant.unprocessableEntity, FailureVariant.notFound))
 }
