@@ -27,8 +27,8 @@ import org.hyperledger.identus.pollux.credentialschema.{
 }
 import org.hyperledger.identus.pollux.vc.jwt.DidResolver as JwtDidResolver
 import org.hyperledger.identus.presentproof.controller.PresentProofServerEndpoints
-import org.hyperledger.identus.shared.models.{HexString, WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.resolvers.DIDResolver
+import org.hyperledger.identus.shared.models.{HexString, WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import org.hyperledger.identus.system.controller.SystemServerEndpoints
 import org.hyperledger.identus.verification.controller.VcVerificationServerEndpoints
@@ -44,8 +44,8 @@ object CloudAgentApp {
     _ <- connectDidCommExchangesJob.debug.fork
     _ <- syncDIDPublicationStateFromDltJob.debug.fork
     _ <- syncRevocationStatusListsJob.debug.fork
-    _ <- AgentHttpServer.run.fork
-    fiber <- DidCommHttpServer.run.fork
+    _ <- AgentHttpServer.run.tapDefect(e => ZIO.logErrorCause("Agent HTTP Server failure", e)).fork
+    fiber <- DidCommHttpServer.run.tapDefect(e => ZIO.logErrorCause("DIDComm HTTP Server failure", e)).fork
     _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
     _ <- fiber.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
