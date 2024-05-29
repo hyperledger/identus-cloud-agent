@@ -1361,12 +1361,10 @@ private class CredentialServiceImpl(
       preview = offerCredentialData.body.credential_preview
       claims <- CredentialService.convertAttributesToJsonClaims(preview.body.attributes)
       sdJwtPrivateKey = sdjwt.IssuerPrivateKey(ed25519KeyPair.privateKey)
-      // jwtPresentation.iss.asJson
       didDocResult <- didResolver.resolve(jwtPresentation.iss) map {
-        case failed: DIDResolutionFailed       => ???
+        case failed: DIDResolutionFailed       => CredentialServiceError.UnexpectedError(failed.error.toString)
         case succeeded: DIDResolutionSucceeded => succeeded.didDocument.authentication.map(x => x)
       }
-      // FIXME
       now = Instant.now.getEpochSecond
       in30Days = Instant.now.plus(30, ChronoUnit.DAYS).getEpochSecond // FIXME hardcode 30days
       claimsUpdated = claims
@@ -1544,7 +1542,7 @@ private class CredentialServiceImpl(
       jwt <- attachmentDescriptor.data match
         case Base64(b64) =>
           ZIO.succeed {
-            val base64Decoded = new String(java.util.Base64.getDecoder().decode(b64))
+            val base64Decoded = new String(java.util.Base64.getDecoder.decode(b64))
             JWT(base64Decoded)
           }
         case _ => ZIO.fail(UnexpectedError(s"Attachment doesn't contain Base64Data: ${record.id}"))
