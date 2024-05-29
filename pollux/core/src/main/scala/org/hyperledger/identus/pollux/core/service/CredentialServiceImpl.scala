@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.core.service
 
+import com.nimbusds.jose.jwk.OctetKeyPair
 import io.circe.Json
 import io.circe.syntax.*
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
@@ -31,12 +32,18 @@ import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.prelude.ZValidation
+import org.hyperledger.identus.castor.core.model.did.EllipticCurve
 
 import java.net.URI
 import java.rmi.UnexpectedException
 import java.time.{Instant, ZoneId}
 import java.util.UUID
 import scala.language.implicitConversions
+import org.hyperledger.identus.pollux.sdjwt
+import org.hyperledger.identus.pollux.sdjwt.*
+import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey}
+
+import java.time.temporal.ChronoUnit
 
 object CredentialServiceImpl {
   val layer: URLayer[
@@ -190,6 +197,70 @@ class CredentialServiceImpl(
     } yield record
   }
 
+  def createSDJWTIssueCredentialRecord(
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
+      thid: DidCommID,
+      maybeSchemaId: Option[String],
+      claims: io.circe.Json,
+      validityPeriod: Option[Double] = None,
+      automaticIssuance: Option[Boolean],
+      issuingDID: CanonicalPrismDID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+    for {
+      _ <- maybeSchemaId match
+        case Some(schemaId) =>
+          CredentialSchema
+            .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriDereferencer)
+            .mapError(e => CredentialSchemaError(e))
+        case None =>
+          ZIO.unit
+      attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
+      offer <- createSDJWTDidCommOfferCredential(
+        pairwiseIssuerDID = pairwiseIssuerDID,
+        pairwiseHolderDID = pairwiseHolderDID,
+        maybeSchemaId = maybeSchemaId,
+        claims = attributes,
+        thid = thid,
+        UUID.randomUUID().toString,
+        "domain"
+      )
+      record <- ZIO.succeed(
+        IssueCredentialRecord(
+          id = DidCommID(),
+          createdAt = Instant.now,
+          updatedAt = None,
+          thid = thid,
+          schemaUri = maybeSchemaId,
+          credentialDefinitionId = None,
+          credentialDefinitionUri = None,
+          credentialFormat = CredentialFormat.SDJWT,
+          role = IssueCredentialRecord.Role.Issuer,
+          subjectId = None,
+          validityPeriod = validityPeriod,
+          automaticIssuance = automaticIssuance,
+          protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
+          offerCredentialData = Some(offer),
+          requestCredentialData = None,
+          anonCredsRequestMetadata = None,
+          issueCredentialData = None,
+          issuedCredentialRaw = None,
+          issuingDID = Some(issuingDID),
+          metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
+          metaLastFailure = None,
+        )
+      )
+      count <- credentialRepository
+        .createIssueCredentialRecord(record)
+        .flatMap {
+          case 1 => ZIO.succeed(())
+          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
+        }
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect
+        .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
+    } yield record
+
   override def createAnonCredsIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
@@ -290,6 +361,7 @@ class CredentialServiceImpl(
 
       credentialFormat <- format match
         case value if value == IssueCredentialOfferFormat.JWT.name      => ZIO.succeed(CredentialFormat.JWT)
+        case value if value == IssueCredentialOfferFormat.SDJWT.name    => ZIO.succeed(CredentialFormat.SDJWT)
         case value if value == IssueCredentialOfferFormat.Anoncred.name => ZIO.succeed(CredentialFormat.AnonCreds)
         case value                                                      => ZIO.fail(UnsupportedCredentialFormat(value))
 
@@ -335,7 +407,7 @@ class CredentialServiceImpl(
       attachment: AttachmentDescriptor
   ) = for {
     _ <- credentialFormat match
-      case CredentialFormat.JWT =>
+      case CredentialFormat.JWT | CredentialFormat.SDJWT =>
         attachment.data match
           case JsonData(json) =>
             ZIO
@@ -344,6 +416,11 @@ class CredentialServiceImpl(
                 CredentialServiceError
                   .UnexpectedError(s"Unexpected error parsing credential offer attachment: ${e.toString}")
               )
+          case Base64(base64) => // TODO
+            ZIO.fail(
+              CredentialServiceError
+                .UnexpectedError(s"A Base64 attachment it's not yet implemented for credential offer")
+            )
           case _ =>
             ZIO.fail(
               CredentialServiceError
@@ -376,6 +453,17 @@ class CredentialServiceImpl(
       record <- getRecordWithState(recordId, ProtocolState.OfferReceived)
       count <- (record.credentialFormat, maybeSubjectId) match
         case (CredentialFormat.JWT, Some(subjectId)) =>
+          for {
+            _ <- ZIO
+              .fromEither(PrismDID.fromString(subjectId))
+              .mapError(_ => CredentialServiceError.UnsupportedDidFormat(subjectId))
+            count <- credentialRepository
+              .updateWithSubjectId(recordId, subjectId, ProtocolState.RequestPending)
+              .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+              s"${record.id}_issuance_flow_holder_req_pending_to_generated"
+            )
+          } yield count
+        case (CredentialFormat.SDJWT, Some(subjectId)) =>
           for {
             _ <- ZIO
               .fromEither(PrismDID.fromString(subjectId))
@@ -479,6 +567,58 @@ class CredentialServiceImpl(
     } yield jwtIssuer
   }
 
+  private[this] def getEd25519SigningKeyPair(
+      jwtIssuerDID: PrismDID,
+      verificationRelationship: VerificationRelationship
+  ) = {
+    for {
+      issuingKeyId <- didService
+        .resolveDID(jwtIssuerDID)
+        .mapError(e => UnexpectedError(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
+        .someOrFail(UnexpectedError(s"Issuing DID resolution result is not found"))
+        .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
+        .someOrFail(
+          UnexpectedError(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
+        )
+      ed25519keyPair <- managedDIDService
+        .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
+        .map(_.collect { case keyPair: Ed25519KeyPair => keyPair })
+        .mapError(e => UnexpectedError(s"Error occurred while getting issuer key-pair: ${e.toString}"))
+        .someOrFail(
+          UnexpectedError(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
+        )
+    } yield ed25519keyPair
+  }
+
+  /** @param jwtIssuerDID
+    *   This can holder prism did / issuer prism did
+    * @param verificationRelationship
+    *   Holder it Authentication and Issuer it is AssertionMethod
+    * @return
+    *   JwtIssuer
+    * @see
+    *   org.hyperledger.identus.pollux.vc.jwt.Issuer
+    */
+  private[this] def getSDJwtIssuer(
+      jwtIssuerDID: PrismDID,
+      verificationRelationship: VerificationRelationship
+  ): ZIO[WalletAccessContext, UnexpectedError, JwtIssuer] = {
+    for {
+      ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
+    } yield {
+
+      val d = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519keyPair.privateKey.getEncoded)
+      val x = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519keyPair.publicKey.getEncoded)
+      val okpJson = s"""{"kty":"OKP","crv":"Ed25519","d":"$d","x":"$x"}"""
+      val octetKeyPair = OctetKeyPair.parse(okpJson)
+      JwtIssuer(
+        org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
+        EdSigner(ed25519keyPair),
+        Ed25519PublicKey.toJavaEd25519PublicKey(ed25519keyPair.publicKey.getEncoded)
+      )
+    }
+  }
+
   override def generateJWTCredentialRequest(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
@@ -492,6 +632,45 @@ class CredentialServiceImpl(
         .mapError(_ => CredentialServiceError.UnsupportedDidFormat(subjectId))
       longFormPrismDID <- getLongForm(subjectDID, true).mapError(err => UnexpectedError(err.getMessage))
       jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
+      presentationPayload <- createPresentationPayload(record, jwtIssuer)
+      signedPayload = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, jwtIssuer)
+      formatAndOffer <- ZIO
+        .fromOption(record.offerCredentialFormatAndData)
+        .mapError(_ => InvalidFlowStateError(s"No offer found for this record: $recordId"))
+      request = createDidCommRequestCredential(formatAndOffer._1, formatAndOffer._2, signedPayload)
+      count <- credentialRepository
+        .updateWithJWTRequestCredential(recordId, request, ProtocolState.RequestGenerated)
+        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.endRecordingTime(
+        s"${record.id}_issuance_flow_holder_req_pending_to_generated",
+        "issuance_flow_holder_req_pending_to_generated_ms_gauge"
+      ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
+      _ <- count match
+        case 1 => ZIO.succeed(())
+        case n => ZIO.fail(RecordIdNotFound(recordId))
+      record <- credentialRepository
+        .getIssueCredentialRecord(record.id)
+        .mapError(RepositoryError.apply)
+        .flatMap {
+          case None        => ZIO.fail(RecordIdNotFound(recordId))
+          case Some(value) => ZIO.succeed(value)
+        }
+    } yield record
+  }
+
+  // Holder requesting the credential
+  override def generateSDJWTCredentialRequest(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+    for {
+      record <- getRecordWithState(recordId, ProtocolState.RequestPending)
+      subjectId <- ZIO
+        .fromOption(record.subjectId)
+        .mapError(_ => CredentialServiceError.UnexpectedError(s"Subject Id not found in record: ${recordId.value}"))
+      subjectDID <- ZIO
+        .fromEither(PrismDID.fromString(subjectId))
+        .mapError(_ => CredentialServiceError.UnsupportedDidFormat(subjectId))
+      longFormPrismDID <- getLongForm(subjectDID, true).mapError(err => UnexpectedError(err.getMessage))
+      jwtIssuer <- getSDJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
       presentationPayload <- createPresentationPayload(record, jwtIssuer)
       signedPayload = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, jwtIssuer)
       formatAndOffer <- ZIO
@@ -892,6 +1071,42 @@ class CredentialServiceImpl(
     )
   }
 
+  private[this] def createSDJWTDidCommOfferCredential(
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
+      maybeSchemaId: Option[String],
+      claims: Seq[Attribute],
+      thid: DidCommID,
+      challenge: String,
+      domain: String
+  ) = {
+    for {
+      credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = maybeSchemaId, attributes = claims))
+      body = OfferCredential.Body(
+        goal_code = Some("Offer Credential"),
+        credential_preview = credentialPreview,
+      )
+      attachments <- ZIO.succeed(
+        Seq(
+          AttachmentDescriptor.buildJsonAttachment(
+            mediaType = Some("application/json"),
+            format = Some(IssueCredentialOfferFormat.SDJWT.name),
+            payload = PresentationAttachment(
+              Some(Options(challenge, domain)), // TODO holder binding ATL-7183
+              PresentationDefinition(format = Some(ClaimFormat(jwt = Some(Jwt(alg = Seq("ES256K"), proof_type = Nil)))))
+            )
+          )
+        )
+      )
+    } yield OfferCredential(
+      body = body,
+      attachments = attachments,
+      from = pairwiseIssuerDID,
+      to = pairwiseHolderDID,
+      thid = Some(thid.value)
+    )
+  }
+
   private[this] def createAnonCredsDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
@@ -1107,6 +1322,73 @@ class CredentialServiceImpl(
       record <- markCredentialGenerated(record, issueCredential)
     } yield record
   }
+  // Issuer Generating the credential
+  override def generateSDJWTCredential(
+      recordId: DidCommID,
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+    for {
+      record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
+      issuingDID <- ZIO
+        .fromOption(record.issuingDID)
+        .mapError(_ => CredentialServiceError.UnexpectedError(s"Issuing Id not found in record: ${recordId.value}"))
+      issue <- ZIO
+        .fromOption(record.issueCredentialData)
+        .mapError(_ =>
+          CredentialServiceError.UnexpectedError(s"Issue credential data not found in record: ${recordId.value}")
+        )
+      longFormPrismDID <- getLongForm(issuingDID, true).mapError(err => UnexpectedError(err.getMessage))
+      maybeOfferOptions <- getOptionsFromOfferCredentialData(record)
+      requestJwt <- getJwtFromRequestCredentialData(record)
+
+      // domain/challenge validation + JWT verification
+      jwtPresentation <- validateRequestCredentialDataProof(maybeOfferOptions, requestJwt).tapBoth(
+        error =>
+          ZIO.logErrorCause("JWT Presentation Validation Failed!!", Cause.fail(error)) *> credentialRepository
+            .updateCredentialRecordProtocolState(
+              record.id,
+              ProtocolState.CredentialPending,
+              ProtocolState.ProblemReportPending
+            )
+            .mapError(t => RepositoryError(t)),
+        payload => ZIO.logInfo("JWT Presentation Validation Successful!")
+      )
+      ed25519KeyPair <- getEd25519SigningKeyPair(longFormPrismDID, VerificationRelationship.AssertionMethod)
+      offerCredentialData <- ZIO
+        .fromOption(record.offerCredentialData)
+        .mapError(_ =>
+          CredentialServiceError.CreateCredentialPayloadFromRecordError(
+            new Throwable("Could not extract claims from \"requestCredential\" DIDComm message")
+          )
+        )
+      preview = offerCredentialData.body.credential_preview
+      claims <- CredentialService.convertAttributesToJsonClaims(preview.body.attributes)
+      sdJwtPrivateKey = sdjwt.IssuerPrivateKey(ed25519KeyPair.privateKey)
+      didDocResult <- didResolver.resolve(jwtPresentation.iss) map {
+        case failed: DIDResolutionFailed       => CredentialServiceError.UnexpectedError(failed.error.toString)
+        case succeeded: DIDResolutionSucceeded => succeeded.didDocument.authentication.map(x => x)
+      }
+      now = Instant.now.getEpochSecond
+      in30Days = Instant.now.plus(30, ChronoUnit.DAYS).getEpochSecond // FIXME hardcode 30days
+      claimsUpdated = claims
+        .add("iss", issuingDID.did.toString.asJson)
+        .add("sub", jwtPresentation.iss.asJson) // This is subject did
+        .add("iat", now.asJson)
+        .add("exp", in30Days.asJson)
+      credential = SDJWT.issueCredential(
+        sdJwtPrivateKey,
+        claimsUpdated.asJson.noSpaces,
+      ) // FIXME TO ADD Key of the Holder This issue is also with JWT
+
+      issueCredential = IssueCredential.build(
+        fromDID = issue.from,
+        toDID = issue.to,
+        thid = issue.thid,
+        credentials = Seq(IssueCredentialIssuedFormat.SDJWT -> credential.value.getBytes)
+      )
+      record <- markCredentialGenerated(record, issueCredential)
+    } yield record
+
+  }
 
   private[this] def allocateNewCredentialInStatusListForWallet(
       record: IssueCredentialRecord,
@@ -1262,7 +1544,7 @@ class CredentialServiceImpl(
       jwt <- attachmentDescriptor.data match
         case Base64(b64) =>
           ZIO.succeed {
-            val base64Decoded = new String(java.util.Base64.getDecoder().decode(b64))
+            val base64Decoded = new String(java.util.Base64.getDecoder.decode(b64))
             JWT(base64Decoded)
           }
         case _ => ZIO.fail(UnexpectedError(s"Attachment doesn't contain Base64Data: ${record.id}"))

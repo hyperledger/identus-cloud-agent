@@ -1,20 +1,25 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
 import com.nimbusds.jose.JWSVerifier
-import com.nimbusds.jose.crypto.ECDSAVerifier
+import com.nimbusds.jose.crypto.{ECDSAVerifier, Ed25519Verifier}
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.util.Base64URL
 import com.nimbusds.jwt.SignedJWT
 import io.circe
 import io.circe.generic.auto.*
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
+import org.bouncycastle.crypto.util.SubjectPublicKeyInfoFactory
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.shared.crypto.Ed25519PublicKey
 import pdi.jwt.*
 import zio.*
 import zio.prelude.*
 
-import java.security.PublicKey
-import java.security.interfaces.ECPublicKey
+import java.security.interfaces.{ECPublicKey, EdECPublicKey}
+import java.security.spec.X509EncodedKeySpec
+import java.security.{KeyFactory, PublicKey}
 import scala.util.{Failure, Success, Try}
 
 object JWTVerification {
@@ -22,6 +27,7 @@ object JWTVerification {
   // https://github.com/decentralized-identity/did-jwt/blob/8b3655097a1382934cabdf774d580e6731a636b1/src/JWT.ts#L146
   val SUPPORT_PUBLIC_KEY_TYPES: Map[String, Set[String]] = Map(
     "ES256K" -> Set("EcdsaSecp256k1VerificationKey2019", "JsonWebKey2020"),
+    "EdDSA" -> Set("Ed25519VerificationKey2020", "JsonWebKey2020"),
     // Add support for other key types here
   )
 
@@ -122,7 +128,10 @@ object JWTVerification {
   def toECDSAVerifier(publicKey: PublicKey): JWSVerifier = {
     val verifier: JWSVerifier = publicKey match {
       case key: ECPublicKey => ECDSAVerifier(key)
-      case key              => throw Exception(s"unsupported public-key type: ${key.getClass.getCanonicalName}")
+      case key: EdECPublicKey =>
+        val octetKeyPair = Ed25519PublicKey.toPublicKeyOctetKeyPair(key)
+        Ed25519Verifier(octetKeyPair)
+      case key => throw Exception(s"unsupported public-key type: ${key.getClass.getCanonicalName}")
     }
     verifier.getJCAContext.setProvider(BouncyCastleProviderSingleton.getInstance)
     verifier
@@ -179,6 +188,7 @@ object JWTVerification {
     // To be fully compliant, key extraction MUST follow the referenced URI which
     // might not be in the same DID document. For now, this only performs lookup within
     // the same DID document which is what Prism DID currently support.
+
     val dereferencedKeysToCheck: Vector[VerificationMethod] = {
       val (referenced, embedded) = publicKeysToCheck.partitionMap[String, VerificationMethod] {
         case uri: String            => Left(uri)
@@ -202,9 +212,19 @@ object JWTVerification {
       for {
         publicKeyJwk <- verificationMethod.publicKeyJwk
         curve <- publicKeyJwk.crv
-        x <- publicKeyJwk.x.map(Base64URL.from)
-        y <- publicKeyJwk.y.map(Base64URL.from)
-      } yield new ECKey.Builder(Curve.parse(curve), x, y).build().toPublicKey
+
+        key <- curve match
+          case "Ed25519" =>
+            publicKeyJwk.x.map(Base64URL.from).map { base64 =>
+              Ed25519PublicKey.toJavaEd25519PublicKey(base64.decode())
+            }
+          case "secp256k1" =>
+            for {
+              x <- publicKeyJwk.x.map(Base64URL.from)
+              y <- publicKeyJwk.y.map(Base64URL.from)
+            } yield new ECKey.Builder(Curve.parse(curve), x, y).build().toPublicKey
+
+      } yield key
     Validation.fromOptionWith("Unable to parse Public Key")(maybePublicKey)
   }
 }

@@ -43,6 +43,29 @@ class CredentialServiceNotifier(
       )
     )
 
+  override def createSDJWTIssueCredentialRecord(
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
+      thid: DidCommID,
+      maybeSchemaId: Option[String],
+      claims: io.circe.Json,
+      validityPeriod: Option[Double] = None,
+      automaticIssuance: Option[Boolean],
+      issuingDID: CanonicalPrismDID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+    notifyOnSuccess(
+      svc.createSDJWTIssueCredentialRecord(
+        pairwiseIssuerDID,
+        pairwiseHolderDID,
+        thid,
+        maybeSchemaId,
+        claims,
+        validityPeriod,
+        automaticIssuance,
+        issuingDID
+      )
+    )
+
   override def createAnonCredsIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
@@ -87,6 +110,11 @@ class CredentialServiceNotifier(
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(svc.generateJWTCredentialRequest(recordId))
 
+  override def generateSDJWTCredentialRequest(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+    notifyOnSuccess(svc.generateSDJWTCredentialRequest(recordId))
+
   override def generateAnonCredsCredentialRequest(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
@@ -122,6 +150,11 @@ class CredentialServiceNotifier(
       statusListRegistryUrl: String
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(svc.generateJWTCredential(recordId, statusListRegistryUrl))
+
+  override def generateSDJWTCredential(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+    notifyOnSuccess(svc.generateSDJWTCredential(recordId))
 
   override def generateAnonCredsCredential(
       recordId: DidCommID
