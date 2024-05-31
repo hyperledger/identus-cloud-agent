@@ -1,16 +1,13 @@
 package org.hyperledger.identus.agent.walletapi.benchmark
 
-import org.hyperledger.identus.agent.walletapi.vault.KVCodec
-import org.hyperledger.identus.agent.walletapi.vault.VaultKVClient
-import org.hyperledger.identus.shared.crypto.Apollo
-import org.hyperledger.identus.shared.crypto.DerivationPath
-import org.hyperledger.identus.shared.crypto.Secp256k1PrivateKey
-import org.hyperledger.identus.shared.models.Base64UrlString
-import org.hyperledger.identus.shared.models.HexString
+import org.hyperledger.identus.agent.walletapi.vault.{KVCodec, VaultKVClient}
+import org.hyperledger.identus.shared.crypto.{Apollo, DerivationPath, Secp256k1PrivateKey}
+import org.hyperledger.identus.shared.models.{Base64UrlString, HexString}
 import org.hyperledger.identus.test.container.VaultTestContainerSupport
-import scala.util.Try
 import zio.*
 import zio.test.*
+
+import scala.util.Try
 
 object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
 

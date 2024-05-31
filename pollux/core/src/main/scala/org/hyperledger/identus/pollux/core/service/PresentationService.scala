@@ -14,8 +14,8 @@ import zio.*
 import zio.json.ast
 
 import java.time.Instant
-import java.util as ju
 import java.util.UUID
+import java.util as ju
 
 trait PresentationService {
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]

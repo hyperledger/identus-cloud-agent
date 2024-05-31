@@ -1,18 +1,16 @@
 package org.hyperledger.identus.iam.authentication.apikey
 
-import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.agent.walletapi.model.Wallet
+import org.hyperledger.identus.agent.walletapi.model.{Entity, Wallet}
 import org.hyperledger.identus.agent.walletapi.service.{EntityService, WalletManagementService}
 import org.hyperledger.identus.iam.authentication.AuthenticationError
 import org.hyperledger.identus.iam.authentication.AuthenticationError.*
 import org.hyperledger.identus.shared.crypto.Sha256Hash
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
 import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
-import scala.util.Try
 import scala.language.implicitConversions
+import scala.util.Try
 
 case class ApiKeyAuthenticatorImpl(
     apiKeyConfig: ApiKeyConfig,

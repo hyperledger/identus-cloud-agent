@@ -2,11 +2,11 @@ package org.hyperledger.identus.agent.server.http
 
 import org.hyperledger.identus.agent.server.buildinfo.BuildInfo
 import sttp.apispec.openapi.OpenAPI
-import sttp.tapir.redoc.RedocUIOptions
 import sttp.tapir.redoc.bundle.RedocInterpreter
+import sttp.tapir.redoc.RedocUIOptions
 import sttp.tapir.server.ServerEndpoint
-import sttp.tapir.swagger.SwaggerUIOptions
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
+import sttp.tapir.swagger.SwaggerUIOptions
 
 object ZHttpEndpoints {
 

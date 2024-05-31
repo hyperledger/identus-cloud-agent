@@ -1,14 +1,14 @@
 package org.hyperledger.identus.mercury
 
-import scala.util.chaining._
-import zio._
-import io.circe.parser._
+import io.circe.parser.*
 import io.circe.JsonObject
-
-import org.hyperledger.identus._
-import org.hyperledger.identus.mercury.model._
-import org.hyperledger.identus.mercury.protocol.coordinatemediation._
+import org.hyperledger.identus.*
+import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.protocol.coordinatemediation.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
+import zio.*
+
+import scala.util.chaining.*
 
 object CoordinateMediationPrograms {
 

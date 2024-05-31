@@ -1,6 +1,7 @@
 package org.hyperledger.identus.shared.utils
 
 import org.erdtman.jcs.JsonCanonicalizer
+
 import java.io.IOException
 
 object Json {

@@ -4,8 +4,8 @@ import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.pollux.core.service
 import org.hyperledger.identus.pollux.core.service.verification.VcVerification as ServiceVcVerification
 import sttp.tapir.Schema
-import zio.json.{JsonDecoder, JsonEncoder}
 import zio.{IO, *}
+import zio.json.{JsonDecoder, JsonEncoder}
 
 enum VcVerification {
   case SignatureVerification

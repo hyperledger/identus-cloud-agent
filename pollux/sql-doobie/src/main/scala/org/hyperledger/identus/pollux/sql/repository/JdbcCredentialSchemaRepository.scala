@@ -3,9 +3,9 @@ package org.hyperledger.identus.pollux.sql.repository
 import doobie.*
 import doobie.implicits.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
-import org.hyperledger.identus.pollux.core.repository.Repository.*
 import org.hyperledger.identus.pollux.core.repository.{CredentialSchemaRepository, Repository}
-import org.hyperledger.identus.pollux.sql.model.db.{CredentialSchemaSql, CredentialSchema as CredentialSchemaRow}
+import org.hyperledger.identus.pollux.core.repository.Repository.*
+import org.hyperledger.identus.pollux.sql.model.db.{CredentialSchema as CredentialSchemaRow, CredentialSchemaSql}
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.WalletAccessContext

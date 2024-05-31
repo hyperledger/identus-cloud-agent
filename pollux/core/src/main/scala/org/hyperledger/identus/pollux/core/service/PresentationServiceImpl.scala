@@ -16,20 +16,20 @@ import org.hyperledger.identus.pollux.core.model.presentation.{SdJwtPresentation
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import org.hyperledger.identus.pollux.core.service.serdes.*
+import org.hyperledger.identus.pollux.sdjwt.{CredentialJson, PresentationJson, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.json.*
-import org.hyperledger.identus.pollux.sdjwt.{CredentialJson, PresentationJson, SDJWT}
 
 import java.net.URI
 import java.rmi.UnexpectedException
 import java.time.Instant
+import java.util.{Base64 as JBase64, UUID}
 import java.util as ju
-import java.util.{UUID, Base64 as JBase64}
+import scala.util.chaining.*
 import scala.util.Try
-import scala.util.chaining._
 
 private class PresentationServiceImpl(
     uriDereferencer: URIDereferencer,

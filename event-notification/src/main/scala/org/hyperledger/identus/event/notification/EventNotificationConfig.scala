@@ -1,13 +1,12 @@
 package org.hyperledger.identus.event.notification
 
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.net.URL
+import java.time.temporal.ChronoUnit
 import java.time.Instant
 import java.util.UUID
-import java.time.temporal.ChronoUnit
 
 final case class EventNotificationConfig(
     id: UUID,

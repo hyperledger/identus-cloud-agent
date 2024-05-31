@@ -9,14 +9,14 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.Filtere
 import org.hyperledger.identus.pollux.core.service.CredentialSchemaService
 import org.hyperledger.identus.pollux.core.service.CredentialSchemaService.Error.*
 import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaController.domainToHttpErrorIO
-import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaInput.toDomain
-import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponse.fromDomain
 import org.hyperledger.identus.pollux.credentialschema.http.{
   CredentialSchemaInput,
   CredentialSchemaResponse,
   CredentialSchemaResponsePage,
   FilterInput
 }
+import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaInput.toDomain
+import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponse.fromDomain
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.json.ast.Json

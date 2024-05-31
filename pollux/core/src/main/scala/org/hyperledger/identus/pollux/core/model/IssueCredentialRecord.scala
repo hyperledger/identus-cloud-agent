@@ -12,8 +12,8 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
 
-import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.time.Instant
 import java.util.UUID
 
 final case class IssueCredentialRecord(

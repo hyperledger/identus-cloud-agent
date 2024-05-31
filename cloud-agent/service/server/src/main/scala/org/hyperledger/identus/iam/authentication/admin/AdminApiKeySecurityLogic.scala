@@ -1,9 +1,9 @@
 package org.hyperledger.identus.iam.authentication.admin
 
+import sttp.tapir.ztapir.*
 import sttp.tapir.EndpointIO
 import sttp.tapir.EndpointInput.Auth
 import sttp.tapir.EndpointInput.AuthType.ApiKey
-import sttp.tapir.ztapir.*
 
 object AdminApiKeySecurityLogic {
 

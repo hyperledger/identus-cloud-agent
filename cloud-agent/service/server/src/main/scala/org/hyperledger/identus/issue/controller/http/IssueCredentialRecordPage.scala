@@ -1,10 +1,10 @@
 package org.hyperledger.identus.issue.controller.http
 
-import sttp.tapir.Schema
+import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.issue.controller.http.IssueCredentialRecordPage.annotations
+import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
-import org.hyperledger.identus.api.http.Annotation
 
 /** @param self
   *   The reference to the connection collection itself. for example: ''https://atala-prism-products.io/dids''

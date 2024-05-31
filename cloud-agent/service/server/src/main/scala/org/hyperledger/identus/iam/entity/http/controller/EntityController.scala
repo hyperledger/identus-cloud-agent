@@ -1,8 +1,8 @@
 package org.hyperledger.identus.iam.entity.http.controller
 
 import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError
-import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.iam.entity.http.model.{CreateEntityRequest, EntityResponse, EntityResponsePage}
 import zio.*
 

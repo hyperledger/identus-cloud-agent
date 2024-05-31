@@ -2,8 +2,8 @@ package org.hyperledger.identus.mercury.protocol.connection
 
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import org.hyperledger.identus.mercury.model.{DidId, Message, PIURI}
 import io.circe.syntax.*
+import org.hyperledger.identus.mercury.model.{DidId, Message, PIURI}
 
 object ConnectionResponse {
   def `type`: PIURI = "https://atalaprism.io/mercury/connections/1.0/response"

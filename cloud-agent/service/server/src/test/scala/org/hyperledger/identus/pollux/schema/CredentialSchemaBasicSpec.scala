@@ -14,13 +14,13 @@ import sttp.client3.basicRequest
 import sttp.client3.ziojson.*
 import sttp.model.StatusCode
 import zio.*
-import zio.ZIO.*
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
 import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
+import zio.ZIO.*
 
 import java.util.UUID
 

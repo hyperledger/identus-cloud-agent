@@ -1,7 +1,6 @@
 package org.hyperledger.identus.iam.authentication.oidc
 
-import org.hyperledger.identus.iam.authentication.AuthenticationError
-import org.hyperledger.identus.iam.authentication.Credentials
+import org.hyperledger.identus.iam.authentication.{AuthenticationError, Credentials}
 
 final case class JwtCredentials(token: Option[String]) extends Credentials
 

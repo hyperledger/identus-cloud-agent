@@ -7,11 +7,12 @@ import doobie.util.transactor.Transactor
 import org.hyperledger.identus.agent.walletapi.model.WalletSeed
 import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits.{*, given}
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
-import java.time.Instant
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.db.Implicits.given
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
+
+import java.time.Instant
 
 class JdbcWalletSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletSecretStorage {
 

@@ -1,10 +1,10 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import com.nimbusds.jose.JWSVerifier
 import com.nimbusds.jose.crypto.{ECDSAVerifier, Ed25519Verifier}
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.util.Base64URL
+import com.nimbusds.jose.JWSVerifier
 import com.nimbusds.jwt.SignedJWT
 import io.circe
 import io.circe.generic.auto.*
@@ -17,9 +17,9 @@ import pdi.jwt.*
 import zio.*
 import zio.prelude.*
 
+import java.security.{KeyFactory, PublicKey}
 import java.security.interfaces.{ECPublicKey, EdECPublicKey}
 import java.security.spec.X509EncodedKeySpec
-import java.security.{KeyFactory, PublicKey}
 import scala.util.{Failure, Success, Try}
 
 object JWTVerification {

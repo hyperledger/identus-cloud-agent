@@ -1,19 +1,21 @@
 package org.hyperledger.identus.agent.walletapi.service.handler
 
+import org.hyperledger.identus.agent.walletapi.model.error.{CommonCryptographyError, CommonWalletStorageError}
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
-import org.hyperledger.identus.agent.walletapi.model.error.CommonCryptographyError
-import org.hyperledger.identus.agent.walletapi.model.error.CommonWalletStorageError
 import org.hyperledger.identus.agent.walletapi.util.KeyResolver
-import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
-import org.hyperledger.identus.castor.core.model.did.ScheduleDIDOperationOutcome
-import org.hyperledger.identus.castor.core.model.did.SignedPrismDIDOperation
+import org.hyperledger.identus.castor.core.model.did.{
+  PrismDIDOperation,
+  ScheduleDIDOperationOutcome,
+  SignedPrismDIDOperation
+}
 import org.hyperledger.identus.castor.core.model.error.DIDOperationError
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import zio.*
+
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions
-import zio.*
 
 class PublicationHandler(didService: DIDService, keyResolver: KeyResolver)(masterKeyId: String) {
   def signOperationWithMasterKey[E](state: ManagedDIDState, operation: PrismDIDOperation)(using

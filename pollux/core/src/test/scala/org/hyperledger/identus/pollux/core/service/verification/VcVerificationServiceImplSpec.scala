@@ -9,8 +9,8 @@ import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
-import zio.Config.OffsetDateTime
 import zio.test.*
+import zio.Config.OffsetDateTime
 
 import java.time.Instant
 
