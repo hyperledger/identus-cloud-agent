@@ -607,11 +607,7 @@ private class CredentialServiceImpl(
     for {
       ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
     } yield {
-
-      val d = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519keyPair.privateKey.getEncoded)
-      val x = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519keyPair.publicKey.getEncoded)
-      val okpJson = s"""{"kty":"OKP","crv":"Ed25519","d":"$d","x":"$x"}"""
-      val octetKeyPair = OctetKeyPair.parse(okpJson)
+      val octetKeyPair = ed25519keyPair.toOctetKeyPair
       JwtIssuer(
         org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
         EdSigner(ed25519keyPair),
@@ -1326,6 +1322,7 @@ private class CredentialServiceImpl(
   // Issuer Generating the credential
   override def generateSDJWTCredential(
       recordId: DidCommID,
+      expirationTime: Duration,
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
@@ -1369,12 +1366,13 @@ private class CredentialServiceImpl(
         case succeeded: DIDResolutionSucceeded => succeeded.didDocument.authentication.map(x => x)
       }
       now = Instant.now.getEpochSecond
-      in30Days = Instant.now.plus(30, ChronoUnit.DAYS).getEpochSecond // FIXME hardcode 30days
+      exp = claims("exp").flatMap(_.asNumber).flatMap(_.toLong)
+      expInSeconds = exp.getOrElse(Instant.now.plus(expirationTime).getEpochSecond)
       claimsUpdated = claims
         .add("iss", issuingDID.did.toString.asJson)
         .add("sub", jwtPresentation.iss.asJson) // This is subject did
         .add("iat", now.asJson)
-        .add("exp", in30Days.asJson)
+        .add("exp", expInSeconds.asJson)
       credential = SDJWT.issueCredential(
         sdJwtPrivateKey,
         claimsUpdated.asJson.noSpaces,

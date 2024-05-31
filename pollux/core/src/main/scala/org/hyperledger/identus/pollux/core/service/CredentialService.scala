@@ -4,17 +4,12 @@ import io.circe.{Json, JsonObject}
 import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.issuecredential.{
-  Attribute,
-  IssueCredential,
-  OfferCredential,
-  RequestCredential
-}
+import org.hyperledger.identus.mercury.protocol.issuecredential.{Attribute, IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{IO, ZIO}
+import zio.{Duration, IO, ZIO}
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID
@@ -118,6 +113,7 @@ trait CredentialService {
 
   def generateSDJWTCredential(
       recordId: DidCommID,
+      expirationTime: Duration,
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def generateAnonCredsCredential(
