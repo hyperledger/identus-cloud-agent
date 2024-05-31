@@ -1,20 +1,24 @@
 package org.hyperledger.identus.pollux.credentialschema
 
-import org.hyperledger.identus.LogUtils.*
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.api.http.model.{Order, PaginationInput}
-import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.Order
+import org.hyperledger.identus.api.http.model.PaginationInput
+import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.iam.authentication.Authenticator
 import org.hyperledger.identus.iam.authentication.Authorizer
 import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
 import org.hyperledger.identus.iam.authentication.SecurityLogic
-import org.hyperledger.identus.pollux.credentialschema.VerificationPolicyEndpoints.*
 import org.hyperledger.identus.pollux.credentialschema.controller.VerificationPolicyController
-import org.hyperledger.identus.pollux.credentialschema.http.{VerificationPolicyResponse, VerificationPolicyInput}
+import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyInput
+import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyResponse
+import org.hyperledger.identus.pollux.credentialschema.VerificationPolicyEndpoints.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import java.util.UUID
+import org.hyperledger.identus.LogUtils.*
 import sttp.tapir.ztapir.*
 import zio.*
+
+import java.util.UUID
 
 class VerificationPolicyServerEndpoints(
     controller: VerificationPolicyController,

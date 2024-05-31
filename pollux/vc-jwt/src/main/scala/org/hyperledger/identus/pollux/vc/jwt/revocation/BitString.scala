@@ -1,12 +1,18 @@
 package org.hyperledger.identus.pollux.vc.jwt.revocation
 
-import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{DecodingError, EncodingError, IndexOutOfBounds}
-import zio.{IO, UIO, ZIO}
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.DecodingError
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.EncodingError
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.IndexOutOfBounds
+import zio.IO
+import zio.UIO
+import zio.ZIO
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.util
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 import java.util.Base64
-import java.util.zip.{GZIPInputStream, GZIPOutputStream}
 
 class BitString private (val bitSet: util.BitSet, val size: Int) {
   def setRevokedInPlace(index: Int, value: Boolean): IO[IndexOutOfBounds, Unit] =

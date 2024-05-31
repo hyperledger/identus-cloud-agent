@@ -1,7 +1,10 @@
 package org.hyperledger.identus.shared.http
 
+import io.lemonlabs.uri.DataUrl
+import io.lemonlabs.uri.Uri
+import io.lemonlabs.uri.Url
+import io.lemonlabs.uri.Urn
 import zio.*
-import io.lemonlabs.uri.{DataUrl, Uri, Url, Urn}
 
 trait UriResolver {
 

@@ -1,12 +1,13 @@
 package org.hyperledger.identus.mercury.protocol.presentproof
 
-import io.circe.Json
 import io.circe.parser.*
 import io.circe.syntax.*
+import io.circe.Json
+import munit.*
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
-import munit.*
-import org.hyperledger.identus.mercury.model.{LinkData, DidId}
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.model.LinkData
 
 class ProposePresentationSpec extends ZSuite {
 

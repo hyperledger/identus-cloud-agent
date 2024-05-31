@@ -1,8 +1,9 @@
 package org.hyperledger.identus.presentproof.controller
 
-import org.hyperledger.identus.api.http.EndpointOutputs.*
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.EndpointOutputs.*
+import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials

@@ -5,9 +5,9 @@ import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.net.URL
+import java.time.temporal.ChronoUnit
 import java.time.Instant
 import java.util.UUID
-import java.time.temporal.ChronoUnit
 
 final case class EventNotificationConfig(
     id: UUID,

@@ -7,15 +7,19 @@ import doobie.util.invariant.InvalidEnum
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
+import io.iohk.atala.prism.protos.node_models
+import org.hyperledger.identus.agent.walletapi.model.KeyManagementMode
+import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
+import org.hyperledger.identus.agent.walletapi.model.PublicationState
 import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState, KeyManagementMode}
-import org.hyperledger.identus.castor.core.model.ProtoModelHelper.*
 import org.hyperledger.identus.castor.core.model.did.EllipticCurve
 import org.hyperledger.identus.castor.core.model.did.InternalKeyPurpose
+import org.hyperledger.identus.castor.core.model.did.PrismDID
+import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
+import org.hyperledger.identus.castor.core.model.did.ScheduledDIDOperationStatus
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
-import org.hyperledger.identus.castor.core.model.did.{PrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
+import org.hyperledger.identus.castor.core.model.ProtoModelHelper.*
 import org.hyperledger.identus.event.notification.EventNotificationConfig
-import io.iohk.atala.prism.protos.node_models
 import org.hyperledger.identus.shared.crypto.jwk.JWK
 import org.hyperledger.identus.shared.models.WalletId
 import zio.json.*

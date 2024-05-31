@@ -1,9 +1,15 @@
 package org.hyperledger.identus.issue.controller
 
-import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, ManagedDIDState, PublicationState}
-import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
+import org.hyperledger.identus.agent.walletapi.model.BaseEntity
+import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
+import org.hyperledger.identus.agent.walletapi.model.PublicationState
+import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
+import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.castor.core.model.did.{DIDData, DIDMetadata, PrismDIDOperation, VerificationRelationship}
+import org.hyperledger.identus.castor.core.model.did.DIDData
+import org.hyperledger.identus.castor.core.model.did.DIDMetadata
+import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
+import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
@@ -11,19 +17,22 @@ import org.hyperledger.identus.connect.core.service
 import org.hyperledger.identus.connect.core.service.MockConnectionService
 import org.hyperledger.identus.container.util.MigrationAspects.migrate
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
-import org.hyperledger.identus.issue.controller.http.{
-  AcceptCredentialOfferRequest,
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecordPage
-}
+import org.hyperledger.identus.issue.controller.http.AcceptCredentialOfferRequest
+import org.hyperledger.identus.issue.controller.http.CreateIssueCredentialRecordRequest
+import org.hyperledger.identus.issue.controller.http.IssueCredentialRecordPage
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
-import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord}
+import org.hyperledger.identus.pollux.core.model.CredentialFormat
+import org.hyperledger.identus.pollux.core.model.DidCommID
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import org.hyperledger.identus.pollux.core.service.MockCredentialService
+import sttp.client3.basicRequest
 import sttp.client3.ziojson.*
-import sttp.client3.{DeserializationException, UriContext, basicRequest}
+import sttp.client3.DeserializationException
+import sttp.client3.UriContext
 import sttp.model.StatusCode
 import zio.*
 import zio.json.EncoderOps

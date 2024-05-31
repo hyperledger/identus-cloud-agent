@@ -1,11 +1,13 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, CredentialStatusListWithCreds, DidCommID}
-import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
-import zio.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError.*
+import org.hyperledger.identus.pollux.core.model.CredentialStatusList
+import org.hyperledger.identus.pollux.core.model.CredentialStatusListWithCreds
+import org.hyperledger.identus.pollux.core.model.DidCommID
+import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import zio.*
 
 import java.util.UUID
 

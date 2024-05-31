@@ -1,20 +1,18 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import org.hyperledger.identus.castor.core.model.did.w3c.{
-  DIDDocumentRepr,
-  DIDResolutionErrorRepr,
-  PublicKeyJwk,
-  PublicKeyRepr,
-  PublicKeyReprOrRef,
-  ServiceRepr,
-  makeW3CResolver
-}
+import io.circe.Json
+import org.hyperledger.identus.castor.core.model.did.w3c.makeW3CResolver
+import org.hyperledger.identus.castor.core.model.did.w3c.DIDDocumentRepr
+import org.hyperledger.identus.castor.core.model.did.w3c.DIDResolutionErrorRepr
+import org.hyperledger.identus.castor.core.model.did.w3c.PublicKeyJwk
+import org.hyperledger.identus.castor.core.model.did.w3c.PublicKeyRepr
+import org.hyperledger.identus.castor.core.model.did.w3c.PublicKeyReprOrRef
+import org.hyperledger.identus.castor.core.model.did.w3c.ServiceRepr
 import org.hyperledger.identus.castor.core.service.DIDService
 import zio.*
 
 import java.time.Instant
 import scala.annotation.unused
-import io.circe.Json
 
 trait DidResolver {
   def resolve(didUrl: String): UIO[DIDResolutionResult]

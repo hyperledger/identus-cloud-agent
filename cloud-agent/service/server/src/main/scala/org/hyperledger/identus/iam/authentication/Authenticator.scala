@@ -7,7 +7,9 @@ import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.models.WalletAdministrationContext
 import org.hyperledger.identus.shared.models.WalletId
-import zio.{IO, ZIO, ZLayer}
+import zio.IO
+import zio.ZIO
+import zio.ZLayer
 
 trait Credentials
 

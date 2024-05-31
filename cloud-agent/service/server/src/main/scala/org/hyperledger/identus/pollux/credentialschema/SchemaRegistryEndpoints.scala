@@ -1,34 +1,32 @@
 package org.hyperledger.identus.pollux.credentialschema
 
 import org.hyperledger.identus.api.http.*
-import org.hyperledger.identus.api.http.EndpointOutputs.*
 import org.hyperledger.identus.api.http.codec.OrderCodec.*
-import org.hyperledger.identus.api.http.model.{Order, PaginationInput}
+import org.hyperledger.identus.api.http.model.Order
+import org.hyperledger.identus.api.http.model.PaginationInput
+import org.hyperledger.identus.api.http.EndpointOutputs.*
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import org.hyperledger.identus.pollux.credentialschema.http.{
-  CredentialSchemaInput,
-  CredentialSchemaResponse,
-  CredentialSchemaResponsePage,
-  FilterInput
-}
-import sttp.apispec.{ExternalDocumentation, Tag}
+import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaInput
+import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponse
+import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponsePage
+import org.hyperledger.identus.pollux.credentialschema.http.FilterInput
+import sttp.apispec.ExternalDocumentation
+import sttp.apispec.Tag
 import sttp.model.StatusCode
+import sttp.tapir.endpoint
+import sttp.tapir.extractFromRequest
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.json.zio.schemaForZioJsonValue
-import sttp.tapir.{
-  Endpoint,
-  EndpointInput,
-  PublicEndpoint,
-  endpoint,
-  extractFromRequest,
-  path,
-  query,
-  statusCode,
-  stringToPath
-}
+import sttp.tapir.path
+import sttp.tapir.query
+import sttp.tapir.statusCode
+import sttp.tapir.stringToPath
+import sttp.tapir.Endpoint
+import sttp.tapir.EndpointInput
+import sttp.tapir.PublicEndpoint
 import zio.json.ast.Json
 
 import java.util.UUID

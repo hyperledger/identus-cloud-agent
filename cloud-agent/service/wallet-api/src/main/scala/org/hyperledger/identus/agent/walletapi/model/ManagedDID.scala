@@ -1,6 +1,8 @@
 package org.hyperledger.identus.agent.walletapi.model
 
-import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
+import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
+import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
+import org.hyperledger.identus.castor.core.model.did.ScheduledDIDOperationStatus
 
 import java.time.Instant
 import scala.collection.immutable.ArraySeq

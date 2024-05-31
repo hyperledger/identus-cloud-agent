@@ -1,32 +1,33 @@
 package org.hyperledger.identus.castor.core.service
 
 import com.google.protobuf.ByteString
-import org.hyperledger.identus.castor.core.model.did.{DIDData, PrismDID, PrismDIDOperation}
-import org.hyperledger.identus.castor.core.model.error.DIDResolutionError
-import org.hyperledger.identus.castor.core.util.{GenUtils}
-import org.hyperledger.identus.castor.core.util.DIDOperationValidator
-import io.iohk.atala.prism.protos.common_models.{HealthCheckRequest, HealthCheckResponse}
+import io.iohk.atala.prism.protos.common_models.HealthCheckRequest
+import io.iohk.atala.prism.protos.common_models.HealthCheckResponse
 import io.iohk.atala.prism.protos.node_api
+import io.iohk.atala.prism.protos.node_api.GetBatchStateRequest
+import io.iohk.atala.prism.protos.node_api.GetBatchStateResponse
+import io.iohk.atala.prism.protos.node_api.GetCredentialRevocationTimeRequest
+import io.iohk.atala.prism.protos.node_api.GetCredentialRevocationTimeResponse
+import io.iohk.atala.prism.protos.node_api.GetDidDocumentRequest
+import io.iohk.atala.prism.protos.node_api.GetDidDocumentResponse
+import io.iohk.atala.prism.protos.node_api.GetLastSyncedBlockTimestampRequest
+import io.iohk.atala.prism.protos.node_api.GetLastSyncedBlockTimestampResponse
+import io.iohk.atala.prism.protos.node_api.GetNodeBuildInfoRequest
+import io.iohk.atala.prism.protos.node_api.GetNodeBuildInfoResponse
+import io.iohk.atala.prism.protos.node_api.GetNodeNetworkProtocolInfoRequest
+import io.iohk.atala.prism.protos.node_api.GetNodeNetworkProtocolInfoResponse
+import io.iohk.atala.prism.protos.node_api.GetOperationInfoRequest
+import io.iohk.atala.prism.protos.node_api.GetOperationInfoResponse
+import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
+import io.iohk.atala.prism.protos.node_api.ScheduleOperationsRequest
+import io.iohk.atala.prism.protos.node_api.ScheduleOperationsResponse
 import io.iohk.atala.prism.protos.node_models
-import io.iohk.atala.prism.protos.node_api.{
-  GetBatchStateRequest,
-  GetBatchStateResponse,
-  GetCredentialRevocationTimeRequest,
-  GetCredentialRevocationTimeResponse,
-  GetDidDocumentRequest,
-  GetDidDocumentResponse,
-  GetLastSyncedBlockTimestampRequest,
-  GetLastSyncedBlockTimestampResponse,
-  GetNodeBuildInfoRequest,
-  GetNodeBuildInfoResponse,
-  GetNodeNetworkProtocolInfoRequest,
-  GetNodeNetworkProtocolInfoResponse,
-  GetOperationInfoRequest,
-  GetOperationInfoResponse,
-  NodeServiceGrpc,
-  ScheduleOperationsRequest,
-  ScheduleOperationsResponse
-}
+import org.hyperledger.identus.castor.core.model.did.DIDData
+import org.hyperledger.identus.castor.core.model.did.PrismDID
+import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
+import org.hyperledger.identus.castor.core.model.error.DIDResolutionError
+import org.hyperledger.identus.castor.core.util.DIDOperationValidator
+import org.hyperledger.identus.castor.core.util.GenUtils
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

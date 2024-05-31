@@ -2,8 +2,10 @@ package org.hyperledger.identus.didcomm.controller
 
 import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.didcomm.controller.http.DIDCommMessage
-import sttp.tapir.ztapir.{RichZEndpoint, ZServerEndpoint}
-import zio.{URIO, ZIO}
+import sttp.tapir.ztapir.RichZEndpoint
+import sttp.tapir.ztapir.ZServerEndpoint
+import zio.URIO
+import zio.ZIO
 
 class DIDCommServerEndpoints(
     didCommController: DIDCommController

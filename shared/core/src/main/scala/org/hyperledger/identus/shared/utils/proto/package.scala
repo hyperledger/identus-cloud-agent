@@ -1,7 +1,8 @@
 package org.hyperledger.identus.shared.utils
 
 import com.google.protobuf.ByteString
-import org.hyperledger.identus.shared.utils.proto.ValidationError.{InvalidValue, MissingValue}
+import org.hyperledger.identus.shared.utils.proto.ValidationError.InvalidValue
+import org.hyperledger.identus.shared.utils.proto.ValidationError.MissingValue
 
 package object proto {
 

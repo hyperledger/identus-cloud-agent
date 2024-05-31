@@ -2,34 +2,35 @@ package org.hyperledger.identus.castor.core.model
 
 import com.google.protobuf.ByteString
 import io.circe.Json
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
-import org.hyperledger.identus.castor.core.model.did.{
-  DIDData,
-  EllipticCurve,
-  InternalKeyPurpose,
-  InternalPublicKey,
-  PrismDID,
-  PrismDIDOperation,
-  PublicKey,
-  PublicKeyData,
-  ScheduledDIDOperationDetail,
-  ScheduledDIDOperationStatus,
-  Service,
-  ServiceEndpoint,
-  ServiceType,
-  SignedPrismDIDOperation,
-  UpdateDIDAction,
-  VerificationRelationship
-}
+import io.iohk.atala.prism.protos.common_models
 import io.iohk.atala.prism.protos.common_models.OperationStatus
+import io.iohk.atala.prism.protos.node_api
+import io.iohk.atala.prism.protos.node_models
 import io.iohk.atala.prism.protos.node_models.KeyUsage
 import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
-import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
+import org.hyperledger.identus.castor.core.model.did.DIDData
+import org.hyperledger.identus.castor.core.model.did.EllipticCurve
+import org.hyperledger.identus.castor.core.model.did.InternalKeyPurpose
+import org.hyperledger.identus.castor.core.model.did.InternalPublicKey
+import org.hyperledger.identus.castor.core.model.did.PrismDID
+import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
+import org.hyperledger.identus.castor.core.model.did.PublicKey
+import org.hyperledger.identus.castor.core.model.did.PublicKeyData
+import org.hyperledger.identus.castor.core.model.did.ScheduledDIDOperationDetail
+import org.hyperledger.identus.castor.core.model.did.ScheduledDIDOperationStatus
+import org.hyperledger.identus.castor.core.model.did.Service
+import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint
+import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+import org.hyperledger.identus.castor.core.model.did.ServiceType
+import org.hyperledger.identus.castor.core.model.did.SignedPrismDIDOperation
+import org.hyperledger.identus.castor.core.model.did.UpdateDIDAction
+import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.shared.models.Base64UrlString
 import org.hyperledger.identus.shared.utils.Traverse.*
+import zio.*
+
 import java.time.Instant
 import scala.language.implicitConversions
-import zio.*
 
 object ProtoModelHelper extends ProtoModelHelper
 

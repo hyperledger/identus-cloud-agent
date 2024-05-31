@@ -1,18 +1,18 @@
 package org.hyperledger.identus.pollux.credentialschema.controller
 
 import org.hyperledger.identus.api.http.*
-import org.hyperledger.identus.api.http.model.{CollectionStats, Order, Pagination}
+import org.hyperledger.identus.api.http.model.CollectionStats
+import org.hyperledger.identus.api.http.model.Order
+import org.hyperledger.identus.api.http.model.Pagination
 import org.hyperledger.identus.pollux.core.model
-import org.hyperledger.identus.pollux.core.model.CredentialSchemaAndTrustedIssuersConstraint
 import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError
 import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError.*
+import org.hyperledger.identus.pollux.core.model.CredentialSchemaAndTrustedIssuersConstraint
 import org.hyperledger.identus.pollux.core.service.VerificationPolicyService
+import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyInput
+import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyResponse
 import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyResponse.*
-import org.hyperledger.identus.pollux.credentialschema.http.{
-  VerificationPolicyResponse,
-  VerificationPolicyInput,
-  VerificationPolicyResponsePage
-}
+import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyResponsePage
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.ZIO.*

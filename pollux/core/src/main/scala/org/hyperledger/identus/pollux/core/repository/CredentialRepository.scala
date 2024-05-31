@@ -1,6 +1,7 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
+import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredential
+import org.hyperledger.identus.mercury.protocol.issuecredential.RequestCredential
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState

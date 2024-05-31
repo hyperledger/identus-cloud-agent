@@ -1,7 +1,8 @@
 package org.hyperledger.identus.connect.sql.repository
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import org.hyperledger.identus.connect.core.repository.{ConnectionRepository, ConnectionRepositorySpecSuite}
+import org.hyperledger.identus.connect.core.repository.ConnectionRepository
+import org.hyperledger.identus.connect.core.repository.ConnectionRepositorySpecSuite
 import org.hyperledger.identus.shared.db.DbConfig
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import zio.*

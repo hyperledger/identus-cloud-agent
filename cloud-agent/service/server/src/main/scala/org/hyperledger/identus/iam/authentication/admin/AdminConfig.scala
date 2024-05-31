@@ -1,7 +1,8 @@
 package org.hyperledger.identus.iam.authentication.admin
 
 import org.hyperledger.identus.agent.server.config.AppConfig
-import zio.{URLayer, ZLayer}
+import zio.URLayer
+import zio.ZLayer
 
 final case class AdminConfig(token: String)
 

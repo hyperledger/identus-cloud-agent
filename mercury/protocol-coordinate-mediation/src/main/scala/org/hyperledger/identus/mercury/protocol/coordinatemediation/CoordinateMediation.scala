@@ -1,9 +1,8 @@
 package org.hyperledger.identus.mercury.protocol.coordinatemediation
 
-import org.hyperledger.identus.mercury.model.PIURI
-
 import io.circe._
 import io.circe.generic.semiauto._
+import org.hyperledger.identus.mercury.model.PIURI
 
 final case class MediateRequest(
     id: String = java.util.UUID.randomUUID.toString(),

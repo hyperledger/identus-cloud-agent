@@ -2,7 +2,11 @@ package org.hyperledger.identus.event.notification
 
 import org.hyperledger.identus.event.notification.EventNotificationServiceError.EventSendingFailed
 import zio.concurrent.ConcurrentMap
-import zio.{IO, Queue, URLayer, ZIO, ZLayer}
+import zio.IO
+import zio.Queue
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
 
 class EventNotificationServiceImpl(queueMap: ConcurrentMap[String, Queue[Event[_]]], queueCapacity: Int)
     extends EventNotificationService:

@@ -3,7 +3,6 @@ package org.hyperledger.identus.mercury.protocol.presentproof
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.syntax._
-
 import org.hyperledger.identus.mercury.model._
 
 final case class RequestPresentation(

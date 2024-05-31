@@ -5,7 +5,8 @@ import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaErro
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
-import zio.{IO, ZIO}
+import zio.IO
+import zio.ZIO
 
 class SchemaSerDes[S](jsonSchemaSchemaStr: String) {
 

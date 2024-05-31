@@ -1,9 +1,10 @@
 package org.hyperledger.identus.pollux.credentialschema
 
 import org.hyperledger.identus.api.http.*
-import org.hyperledger.identus.api.http.EndpointOutputs.*
 import org.hyperledger.identus.api.http.codec.OrderCodec.*
-import org.hyperledger.identus.api.http.model.{Order, PaginationInput}
+import org.hyperledger.identus.api.http.model.Order
+import org.hyperledger.identus.api.http.model.PaginationInput
+import org.hyperledger.identus.api.http.EndpointOutputs.*
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials

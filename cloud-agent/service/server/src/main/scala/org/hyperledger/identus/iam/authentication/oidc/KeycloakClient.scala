@@ -1,6 +1,7 @@
 package org.hyperledger.identus.iam.authentication.oidc
 
-import org.keycloak.authorization.client.{AuthzClient, Configuration as KeycloakAuthzConfig}
+import org.keycloak.authorization.client.AuthzClient
+import org.keycloak.authorization.client.Configuration as KeycloakAuthzConfig
 import org.keycloak.representations.idm.authorization.AuthorizationRequest
 import zio.*
 import zio.http.*

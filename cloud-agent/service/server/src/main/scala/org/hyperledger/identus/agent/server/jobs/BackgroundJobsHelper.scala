@@ -1,29 +1,35 @@
 package org.hyperledger.identus.agent.server.jobs
 
 import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
-import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
-import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import org.hyperledger.identus.castor.core.model.did.{LongFormPrismDID, PrismDID, VerificationRelationship}
-import org.hyperledger.identus.castor.core.service.DIDService
-import org.hyperledger.identus.pollux.vc.jwt.{
-  DIDResolutionFailed,
-  DIDResolutionSucceeded,
-  DidResolver as JwtDidResolver
-}
-import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.{AgentPeerService, DidAgent}
-import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, EdSigner, Issuer as JwtIssuer}
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{ZIO, ZLayer}
-import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
-import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey}
+import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
+import org.hyperledger.identus.agent.walletapi.model.PublicationState
+import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
+import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
+import org.hyperledger.identus.castor.core.model.did.LongFormPrismDID
+import org.hyperledger.identus.castor.core.model.did.PrismDID
+import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.service.DIDService
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.AgentPeerService
+import org.hyperledger.identus.mercury.DidAgent
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.sdjwt.SDJWT.*
+import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.pollux.vc.jwt.DIDResolutionFailed
+import org.hyperledger.identus.pollux.vc.jwt.DIDResolutionSucceeded
+import org.hyperledger.identus.pollux.vc.jwt.DidResolver as JwtDidResolver
+import org.hyperledger.identus.pollux.vc.jwt.ES256KSigner
+import org.hyperledger.identus.pollux.vc.jwt.EdSigner
+import org.hyperledger.identus.pollux.vc.jwt.Issuer as JwtIssuer
+import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
+import org.hyperledger.identus.shared.crypto.Ed25519PublicKey
+import org.hyperledger.identus.shared.crypto.KmpEd25519KeyOps
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import zio.ZIO
+import zio.ZLayer
 
 import java.util.Base64
-import org.hyperledger.identus.shared.crypto.KmpEd25519KeyOps
 trait BackgroundJobsHelper {
 
   def getLongForm(

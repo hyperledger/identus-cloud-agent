@@ -5,8 +5,8 @@ import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
 import org.hyperledger.identus.agent.walletapi.storage.DIDSecretStorage
-import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.castor.core.model.did.PrismDID
+import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.shared.crypto.jwk.FromJWK
 import org.hyperledger.identus.shared.crypto.jwk.JWK
 import org.hyperledger.identus.shared.db.ContextAwareTask

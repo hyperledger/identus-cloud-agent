@@ -6,17 +6,20 @@ import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.castor.core.service.DIDService
-import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
+import org.hyperledger.identus.mercury.model.AttachmentDescriptor
+import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.presentation.{ClaimFormat, Ldp, Options, PresentationDefinition}
-import org.hyperledger.identus.pollux.core.repository.{
-  CredentialDefinitionRepositoryInMemory,
-  CredentialRepositoryInMemory,
-  CredentialStatusListRepositoryInMemory
-}
+import org.hyperledger.identus.pollux.core.model.presentation.ClaimFormat
+import org.hyperledger.identus.pollux.core.model.presentation.Ldp
+import org.hyperledger.identus.pollux.core.model.presentation.Options
+import org.hyperledger.identus.pollux.core.model.presentation.PresentationDefinition
+import org.hyperledger.identus.pollux.core.repository.CredentialDefinitionRepositoryInMemory
+import org.hyperledger.identus.pollux.core.repository.CredentialRepositoryInMemory
+import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepositoryInMemory
 import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.util.UUID

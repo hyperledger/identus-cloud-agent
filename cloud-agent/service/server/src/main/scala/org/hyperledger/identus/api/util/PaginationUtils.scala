@@ -1,6 +1,7 @@
 package org.hyperledger.identus.api.util
 
-import org.hyperledger.identus.api.http.model.{CollectionStats, Pagination}
+import org.hyperledger.identus.api.http.model.CollectionStats
+import org.hyperledger.identus.api.http.model.Pagination
 
 import scala.util.chaining.scalaUtilChainingOps
 

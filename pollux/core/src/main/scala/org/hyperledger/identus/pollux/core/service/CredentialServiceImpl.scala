@@ -1,49 +1,54 @@
 package org.hyperledger.identus.pollux.core.service
 
 import com.nimbusds.jose.jwk.OctetKeyPair
-import io.circe.Json
 import io.circe.syntax.*
-import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
+import io.circe.Json
+import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
+import org.hyperledger.identus.agent.walletapi.model.PublicationState
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
-import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
+import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
+import org.hyperledger.identus.castor.core.model.did.EllipticCurve
+import org.hyperledger.identus.castor.core.model.did.PrismDID
+import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.*
-import org.hyperledger.identus.pollux.anoncreds.{
-  AnoncredCreateCredentialDefinition,
-  AnoncredCredential,
-  AnoncredCredentialOffer,
-  AnoncredLib
-}
+import org.hyperledger.identus.pollux.anoncreds.AnoncredCreateCredentialDefinition
+import org.hyperledger.identus.pollux.anoncreds.AnoncredCredential
+import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialOffer
+import org.hyperledger.identus.pollux.anoncreds.AnoncredLib
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
-import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
-import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer, *}
-import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
+import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
+import org.hyperledger.identus.pollux.core.repository.CredentialRepository
+import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
+import org.hyperledger.identus.pollux.sdjwt
+import org.hyperledger.identus.pollux.sdjwt.*
+import org.hyperledger.identus.pollux.vc.jwt.{Issuer as JwtIssuer, *}
+import org.hyperledger.identus.pollux.vc.jwt.ES256KSigner
+import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
+import org.hyperledger.identus.shared.crypto.Ed25519PublicKey
+import org.hyperledger.identus.shared.http.DataUrlResolver
+import org.hyperledger.identus.shared.http.GenericUriResolver
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.prelude.ZValidation
-import org.hyperledger.identus.castor.core.model.did.EllipticCurve
 
 import java.net.URI
 import java.rmi.UnexpectedException
-import java.time.{Instant, ZoneId}
+import java.time.temporal.ChronoUnit
+import java.time.Instant
+import java.time.ZoneId
 import java.util.UUID
 import scala.language.implicitConversions
-import org.hyperledger.identus.pollux.sdjwt
-import org.hyperledger.identus.pollux.sdjwt.*
-import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey}
-
-import java.time.temporal.ChronoUnit
 
 object CredentialServiceImpl {
   val layer: URLayer[

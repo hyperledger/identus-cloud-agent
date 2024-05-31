@@ -2,7 +2,8 @@ package org.hyperledger.identus.pollux.core.model
 
 import io.circe._
 import io.circe.generic.semiauto._
-import org.hyperledger.identus.pollux.core.model.presentation.{Options, PresentationDefinition}
+import org.hyperledger.identus.pollux.core.model.presentation.Options
+import org.hyperledger.identus.pollux.core.model.presentation.PresentationDefinition
 
 final case class CredentialOfferAttachment(options: Options, presentation_definition: PresentationDefinition)
 

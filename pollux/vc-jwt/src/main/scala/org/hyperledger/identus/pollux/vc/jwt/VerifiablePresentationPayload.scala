@@ -7,13 +7,15 @@ import io.circe.parser.decode
 import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.shared.http.UriResolver
-import pdi.jwt.{JwtCirce, JwtOptions}
+import pdi.jwt.JwtCirce
+import pdi.jwt.JwtOptions
 import zio.*
 import zio.prelude.*
 
 import java.security.PublicKey
 import java.time.temporal.TemporalAmount
-import java.time.{Clock, Instant}
+import java.time.Clock
+import java.time.Instant
 import scala.util.Try
 
 sealed trait VerifiablePresentationPayload

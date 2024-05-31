@@ -1,18 +1,20 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
+import cats.implicits.*
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.circe.*
 import io.circe.syntax.*
-import cats.implicits.*
-import java.time.{Instant, ZoneOffset}
-import zio.*
-import org.hyperledger.identus.shared.utils.Json as JsonUtils
+import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
 import org.hyperledger.identus.shared.utils.Base64Utils
+import org.hyperledger.identus.shared.utils.Json as JsonUtils
 import scodec.bits.ByteVector
-import scala.util.Try
+import zio.*
+
 import java.security.*
 import java.security.spec.X509EncodedKeySpec
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
+import java.time.Instant
+import java.time.ZoneOffset
+import scala.util.Try
 
 sealed trait Proof {
   val id: Option[String] = None

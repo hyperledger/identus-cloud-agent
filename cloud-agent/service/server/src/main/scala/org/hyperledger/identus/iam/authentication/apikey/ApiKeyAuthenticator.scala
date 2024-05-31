@@ -1,11 +1,13 @@
 package org.hyperledger.identus.iam.authentication.apikey
 
 import org.hyperledger.identus.agent.walletapi.model.Entity
+import org.hyperledger.identus.iam.authentication.AuthenticationError
 import org.hyperledger.identus.iam.authentication.AuthenticationError.*
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
+import org.hyperledger.identus.iam.authentication.Credentials
 import org.hyperledger.identus.iam.authentication.EntityAuthorizer
-import org.hyperledger.identus.iam.authentication.{AuthenticationError, Credentials}
-import zio.{IO, ZIO}
+import zio.IO
+import zio.ZIO
 
 import java.util.UUID
 

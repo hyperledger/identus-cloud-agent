@@ -3,11 +3,15 @@ package org.hyperledger.identus.iam.wallet.http.model
 import org.hyperledger.identus.agent.walletapi.model.Wallet
 import org.hyperledger.identus.api.http.Annotation
 import sttp.tapir.*
-import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import sttp.tapir.Schema.annotations.description
+import sttp.tapir.Schema.annotations.encodedExample
+import zio.json.DeriveJsonDecoder
+import zio.json.DeriveJsonEncoder
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 
-import java.util.UUID
 import java.time.Instant
+import java.util.UUID
 
 final case class WalletDetail(
     @description(WalletDetail.annotations.id.description)

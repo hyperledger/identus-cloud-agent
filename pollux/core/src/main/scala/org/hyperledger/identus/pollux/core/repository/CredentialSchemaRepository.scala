@@ -4,7 +4,8 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.*
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchCapability
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{RIO, Task}
+import zio.RIO
+import zio.Task
 
 import java.util.UUID
 

@@ -3,10 +3,16 @@ package org.hyperledger.identus.presentproof.controller.http
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.presentproof.controller.http.RequestPresentationInput.annotations
-import sttp.tapir.Schema.annotations.{description, encodedExample}
-import sttp.tapir.{Schema, Validator}
 import sttp.tapir.json.zio.*
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import sttp.tapir.Schema
+import sttp.tapir.Schema.annotations.description
+import sttp.tapir.Schema.annotations.encodedExample
+import sttp.tapir.Validator
+import zio.json.DeriveJsonDecoder
+import zio.json.DeriveJsonEncoder
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
+
 import java.util.UUID
 
 final case class RequestPresentationInput(

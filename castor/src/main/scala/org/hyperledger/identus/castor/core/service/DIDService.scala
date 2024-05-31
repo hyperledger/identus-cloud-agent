@@ -1,28 +1,29 @@
 package org.hyperledger.identus.castor.core.service
 
-import org.hyperledger.identus.castor.core.model.ProtoModelHelper
-import org.hyperledger.identus.castor.core.model.did.{
-  CanonicalPrismDID,
-  DIDData,
-  DIDMetadata,
-  InternalPublicKey,
-  LongFormPrismDID,
-  PrismDID,
-  PublicKey,
-  ScheduleDIDOperationOutcome,
-  ScheduledDIDOperationDetail,
-  SignedPrismDIDOperation
-}
-import org.hyperledger.identus.castor.core.model.error.OperationValidationError
-import org.hyperledger.identus.castor.core.model.error.{DIDOperationError, DIDResolutionError}
-import org.hyperledger.identus.castor.core.util.DIDOperationValidator
+import io.iohk.atala.prism.protos.node_api
 import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeService
+import io.iohk.atala.prism.protos.node_models
 import io.iohk.atala.prism.protos.node_models.OperationOutput.OperationMaybe
-import io.iohk.atala.prism.protos.{node_api, node_models}
+import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
+import org.hyperledger.identus.castor.core.model.did.DIDData
+import org.hyperledger.identus.castor.core.model.did.DIDMetadata
+import org.hyperledger.identus.castor.core.model.did.InternalPublicKey
+import org.hyperledger.identus.castor.core.model.did.LongFormPrismDID
+import org.hyperledger.identus.castor.core.model.did.PrismDID
+import org.hyperledger.identus.castor.core.model.did.PublicKey
+import org.hyperledger.identus.castor.core.model.did.ScheduleDIDOperationOutcome
+import org.hyperledger.identus.castor.core.model.did.ScheduledDIDOperationDetail
+import org.hyperledger.identus.castor.core.model.did.SignedPrismDIDOperation
+import org.hyperledger.identus.castor.core.model.error.DIDOperationError
+import org.hyperledger.identus.castor.core.model.error.DIDResolutionError
+import org.hyperledger.identus.castor.core.model.error.OperationValidationError
+import org.hyperledger.identus.castor.core.model.ProtoModelHelper
+import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.shared.models.HexString
+import zio.*
+
 import java.time.Instant
 import scala.collection.immutable.ArraySeq
-import zio.*
 
 trait DIDService {
   def scheduleOperation(operation: SignedPrismDIDOperation): IO[DIDOperationError, ScheduleDIDOperationOutcome]

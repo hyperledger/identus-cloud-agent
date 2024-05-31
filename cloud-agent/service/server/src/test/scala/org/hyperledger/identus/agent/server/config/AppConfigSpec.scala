@@ -1,7 +1,7 @@
 package org.hyperledger.identus.agent.server.config
 
-import org.hyperledger.identus.agent.server.SystemModule
 import monocle.syntax.all.*
+import org.hyperledger.identus.agent.server.SystemModule
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

@@ -15,7 +15,9 @@ import io.iohk.atala.prism.apollo.utils.KMMX25519PublicKey
 import zio.*
 
 import scala.jdk.CollectionConverters.*
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 final case class KmpSecp256k1PublicKey(publicKey: KMMECSecp256k1PublicKey) extends Secp256k1PublicKey {
 

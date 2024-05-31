@@ -5,17 +5,17 @@ import doobie.implicits.*
 import doobie.postgres.implicits.*
 import org.hyperledger.identus.agent.walletapi.model.*
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.castor.core.model.did.{
-  EllipticCurve,
-  InternalKeyPurpose,
-  PrismDID,
-  ScheduledDIDOperationStatus,
-  VerificationRelationship
-}
+import org.hyperledger.identus.castor.core.model.did.EllipticCurve
+import org.hyperledger.identus.castor.core.model.did.InternalKeyPurpose
+import org.hyperledger.identus.castor.core.model.did.PrismDID
+import org.hyperledger.identus.castor.core.model.did.ScheduledDIDOperationStatus
+import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits.{*, given}
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.db.Implicits.given
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 import zio.interop.catz.*
 

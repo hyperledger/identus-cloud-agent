@@ -1,6 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.didexchange.v1
 
-import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, PIURI}
+import org.hyperledger.identus.mercury.model.AttachmentDescriptor
+import org.hyperledger.identus.mercury.model.PIURI
 
 final case class Thread(thid: String, pthid: String)
 

@@ -3,11 +3,9 @@ package org.hyperledger.identus.pollux.sql
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.*
 import doobie.util.transactor.Transactor
-import org.hyperledger.identus.pollux.core.model.{
-  CredentialSchemaAndTrustedIssuersConstraint,
-  VerificationPolicy,
-  VerificationPolicyConstraint
-}
+import org.hyperledger.identus.pollux.core.model.CredentialSchemaAndTrustedIssuersConstraint
+import org.hyperledger.identus.pollux.core.model.VerificationPolicy
+import org.hyperledger.identus.pollux.core.model.VerificationPolicyConstraint
 import org.hyperledger.identus.pollux.core.repository.VerificationPolicyRepository
 import org.hyperledger.identus.pollux.sql.model.db.VerificationPolicySql
 import org.hyperledger.identus.pollux.sql.repository.JdbcVerificationPolicyRepository

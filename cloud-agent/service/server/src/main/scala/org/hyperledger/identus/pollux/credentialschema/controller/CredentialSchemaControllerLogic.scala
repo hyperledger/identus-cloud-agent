@@ -1,10 +1,11 @@
 package org.hyperledger.identus.pollux.credentialschema.controller
 
+import org.hyperledger.identus.api.http.model.CollectionStats
+import org.hyperledger.identus.api.http.model.Pagination
 import org.hyperledger.identus.api.http.RequestContext
-import org.hyperledger.identus.api.http.model.{CollectionStats, Pagination}
+import org.hyperledger.identus.api.util.PaginationUtils
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponsePage
 import sttp.model.Uri
-import org.hyperledger.identus.api.util.PaginationUtils
 
 case class CredentialSchemaControllerLogic(
     ctx: RequestContext,

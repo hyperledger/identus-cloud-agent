@@ -1,9 +1,12 @@
 package org.hyperledger.identus.castor.core.util
 
-import io.lemonlabs.uri.{Uri, Url, Urn, QueryString}
 import io.lemonlabs.uri.config.UriConfig
-import io.lemonlabs.uri.encoding.PercentEncoder
 import io.lemonlabs.uri.decoding.UriDecodeException
+import io.lemonlabs.uri.encoding.PercentEncoder
+import io.lemonlabs.uri.QueryString
+import io.lemonlabs.uri.Uri
+import io.lemonlabs.uri.Url
+import io.lemonlabs.uri.Urn
 
 // TODO: unify with the logic used in Node
 // https://github.com/input-output-hk/atala-prism/blob/ba7b3e3ef307f6bd06734af2bf8fed9b119ee98e/prism-backend/common/src/main/scala/io/iohk/atala/prism/utils/UriUtils.scala

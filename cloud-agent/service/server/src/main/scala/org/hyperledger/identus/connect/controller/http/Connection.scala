@@ -2,16 +2,23 @@ package org.hyperledger.identus.connect.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.connect.controller.http.Connection.annotations
+import org.hyperledger.identus.connect.controller.http.Connection.annotations.goalcode
 import org.hyperledger.identus.connect.core.model
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.Role
 import sttp.model.Uri
-import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
-import sttp.tapir.{Schema, Validator}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import sttp.tapir.Schema
+import sttp.tapir.Schema.annotations.description
+import sttp.tapir.Schema.annotations.encodedExample
+import sttp.tapir.Schema.annotations.validate
+import sttp.tapir.Validator
+import zio.json.DeriveJsonDecoder
+import zio.json.DeriveJsonEncoder
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 
-import java.time.{OffsetDateTime, ZoneOffset}
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
-import org.hyperledger.identus.connect.controller.http.Connection.annotations.goalcode
 
 case class Connection(
     @description(annotations.connectionId.description)

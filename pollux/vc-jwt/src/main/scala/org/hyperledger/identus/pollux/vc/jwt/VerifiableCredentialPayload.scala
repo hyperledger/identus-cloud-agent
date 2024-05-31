@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
+import com.nimbusds.jwt.SignedJWT
 import io.circe
 import io.circe.*
 import io.circe.generic.auto.*
@@ -7,7 +8,9 @@ import io.circe.parser.decode
 import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitString
-import org.hyperledger.identus.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
+import org.hyperledger.identus.pollux.vc.jwt.schema.SchemaResolver
+import org.hyperledger.identus.pollux.vc.jwt.schema.SchemaValidator
+import org.hyperledger.identus.shared.crypto.{PublicKey => ApolloPublicKey}
 import org.hyperledger.identus.shared.http.UriResolver
 import pdi.jwt.*
 import zio.*
@@ -15,11 +18,12 @@ import zio.prelude.*
 
 import java.security.PublicKey
 import java.time.temporal.TemporalAmount
-import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
-import scala.util.Try
-import com.nimbusds.jwt.SignedJWT
+import java.time.Clock
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import scala.util.Failure
-import org.hyperledger.identus.shared.crypto.{PublicKey => ApolloPublicKey}
+import scala.util.Try
 opaque type DID = String
 object DID {
   def apply(value: String): DID = value

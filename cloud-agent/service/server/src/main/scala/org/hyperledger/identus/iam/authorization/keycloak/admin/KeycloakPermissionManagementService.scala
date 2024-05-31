@@ -10,7 +10,8 @@ import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error
 import org.hyperledger.identus.shared.models.WalletAdministrationContext
 import org.hyperledger.identus.shared.models.WalletId
 import org.keycloak.authorization.client.AuthzClient
-import org.keycloak.representations.idm.authorization.{ResourceRepresentation, UmaPermissionRepresentation}
+import org.keycloak.representations.idm.authorization.ResourceRepresentation
+import org.keycloak.representations.idm.authorization.UmaPermissionRepresentation
 import zio.*
 
 import java.util.UUID

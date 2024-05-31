@@ -6,10 +6,10 @@ import org.hyperledger.identus.agent.walletapi.model.WalletSeed
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.TooManyPermittedWallet
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.api.http.model.CollectionStats
 import org.hyperledger.identus.api.http.model.PaginationInput
+import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.api.util.PaginationUtils
 import org.hyperledger.identus.iam.authentication.oidc.KeycloakEntity
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement

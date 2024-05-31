@@ -1,7 +1,8 @@
 package org.hyperledger.identus.iam.authorization.keycloak.admin
 
 import org.hyperledger.identus.iam.authentication.oidc.KeycloakConfig
-import org.hyperledger.identus.sharedtest.containers.{KeycloakContainerCustom, KeycloakTestContainerSupport}
+import org.hyperledger.identus.sharedtest.containers.KeycloakContainerCustom
+import org.hyperledger.identus.sharedtest.containers.KeycloakTestContainerSupport
 import zio.*
 import zio.ZIO.*
 

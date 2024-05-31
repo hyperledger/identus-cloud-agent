@@ -1,6 +1,8 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import io.circe.{Decoder, Encoder, HCursor}
+import io.circe.Decoder
+import io.circe.Encoder
+import io.circe.HCursor
 
 import java.time.Instant
 

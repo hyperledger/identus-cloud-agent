@@ -1,9 +1,10 @@
 package org.hyperledger.identus.system.controller
 
-import org.hyperledger.identus.agent.server.buildinfo.BuildInfo
-import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
-import org.hyperledger.identus.system.controller.http.HealthInfo
 import io.micrometer.prometheus.PrometheusMeterRegistry
+import org.hyperledger.identus.agent.server.buildinfo.BuildInfo
+import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.system.controller.http.HealthInfo
 import zio.*
 
 class SystemControllerImpl(

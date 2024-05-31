@@ -5,12 +5,12 @@ import org.hyperledger.identus.agent.walletapi.model.WalletSeed
 import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageError
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletAdministrationContext
 import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.util.UUID
 import scala.language.implicitConversions
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
 
 sealed trait WalletManagementServiceError {
   final def toThrowable: Throwable = this

@@ -3,9 +3,10 @@ package org.hyperledger.identus.agent.walletapi.sql
 import io.getquill.*
 import io.getquill.doobie.DoobieContext
 import io.getquill.idiom.*
-import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError
-import zio.{IO, ZIO}
+import org.hyperledger.identus.agent.walletapi.model.Entity
+import zio.IO
+import zio.ZIO
 
 import java.time.Instant
 import java.util.UUID

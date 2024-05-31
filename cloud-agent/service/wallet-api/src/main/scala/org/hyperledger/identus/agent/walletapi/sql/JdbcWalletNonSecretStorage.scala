@@ -1,5 +1,6 @@
 package org.hyperledger.identus.agent.walletapi.sql
 
+import cats.data.NonEmptyList
 import cats.implicits.*
 import doobie.*
 import doobie.implicits.*
@@ -12,7 +13,8 @@ import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageErr
 import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageError.TooManyWebhook
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits.{*, given}
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.db.Implicits.given
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.models.WalletId
 import zio.*
@@ -20,7 +22,6 @@ import zio.*
 import java.net.URL
 import java.time.Instant
 import java.util.UUID
-import cats.data.NonEmptyList
 
 class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletNonSecretStorage {
 

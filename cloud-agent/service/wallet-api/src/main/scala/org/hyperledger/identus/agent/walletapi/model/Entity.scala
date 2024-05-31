@@ -1,10 +1,11 @@
 package org.hyperledger.identus.agent.walletapi.model
 
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
-import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.time.Instant
 import java.util.UUID
 
 enum EntityRole {

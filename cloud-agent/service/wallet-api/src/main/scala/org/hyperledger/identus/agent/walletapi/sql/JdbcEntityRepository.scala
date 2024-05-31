@@ -2,14 +2,12 @@ package org.hyperledger.identus.agent.walletapi.sql
 
 import doobie.*
 import doobie.implicits.*
-import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.{
-  EntityAlreadyExists,
-  EntityNotFound,
-  EntityStorageError,
-  EntityWalletNotFound
-}
+import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.EntityAlreadyExists
+import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.EntityNotFound
+import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.EntityStorageError
+import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.EntityWalletNotFound
+import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.postgresql.util.PSQLException
 import zio.*
 import zio.interop.catz.*

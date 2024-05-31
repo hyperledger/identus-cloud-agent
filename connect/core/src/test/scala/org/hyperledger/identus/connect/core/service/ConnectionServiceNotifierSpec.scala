@@ -5,13 +5,15 @@ import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
 import org.hyperledger.identus.connect.core.repository.ConnectionRepositoryInMemory
 import org.hyperledger.identus.event.notification.*
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
+import org.hyperledger.identus.mercury.protocol.connection.ConnectionRequest
+import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
-import zio.ZIO.*
 import zio.mock.Expectation
 import zio.test.*
+import zio.ZIO.*
 
 import java.time.Instant
 import java.util.UUID

@@ -1,10 +1,11 @@
 package org.hyperledger.identus.system.controller
 
-import org.hyperledger.identus.LogUtils.*
 import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.system.controller.SystemEndpoints.*
+import org.hyperledger.identus.LogUtils.*
 import sttp.tapir.ztapir.*
-import zio.{URIO, ZIO}
+import zio.URIO
+import zio.ZIO
 
 class SystemServerEndpoints(systemController: SystemController) {
 

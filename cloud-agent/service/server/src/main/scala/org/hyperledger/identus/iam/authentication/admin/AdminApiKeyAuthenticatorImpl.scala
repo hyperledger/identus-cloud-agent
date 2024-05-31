@@ -2,7 +2,10 @@ package org.hyperledger.identus.iam.authentication.admin
 
 import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.hyperledger.identus.iam.authentication.AuthenticationError
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.IO
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
 
 case class AdminApiKeyAuthenticatorImpl(adminConfig: AdminConfig) extends AdminApiKeyAuthenticator {
   override def isEnabled: Boolean = true

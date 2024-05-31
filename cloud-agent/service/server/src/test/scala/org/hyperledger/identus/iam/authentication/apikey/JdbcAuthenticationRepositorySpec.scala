@@ -3,12 +3,13 @@ package org.hyperledger.identus.iam.authentication.apikey
 import org.hyperledger.identus.container.util.MigrationAspects.migrate
 import org.hyperledger.identus.iam.authentication.apikey.AuthenticationMethodType.ApiKey
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import zio.Runtime.removeDefaultLoggers
-import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.*
+import zio.test.TestAspect
 import zio.test.TestAspect.*
-import zio.test.{TestAspect, ZIOSpecDefault}
+import zio.test.ZIOSpecDefault
+import zio.Runtime.removeDefaultLoggers
+import zio.ZIO
 
 object JdbcAuthenticationRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 

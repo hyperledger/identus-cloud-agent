@@ -1,17 +1,22 @@
 package org.hyperledger.identus.castor.controller.http
 
 import io.circe.Json
-import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.api.http.codec.CirceJsonInterop
+import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.castor.controller.http.Service.annotations
-import org.hyperledger.identus.castor.core.model.ProtoModelHelper
-import org.hyperledger.identus.castor.core.model.did as castorDomain
 import org.hyperledger.identus.castor.core.model.did.w3c
+import org.hyperledger.identus.castor.core.model.did as castorDomain
+import org.hyperledger.identus.castor.core.model.ProtoModelHelper
 import org.hyperledger.identus.shared.utils.Traverse.*
-import scala.language.implicitConversions
 import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import sttp.tapir.Schema.annotations.description
+import sttp.tapir.Schema.annotations.encodedExample
+import zio.json.DeriveJsonDecoder
+import zio.json.DeriveJsonEncoder
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
+
+import scala.language.implicitConversions
 
 @description("A service that should appear in the DID document. https://www.w3.org/TR/did-core/#services")
 final case class Service(

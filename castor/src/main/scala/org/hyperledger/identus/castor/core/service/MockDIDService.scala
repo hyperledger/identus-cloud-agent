@@ -5,9 +5,15 @@ import org.hyperledger.identus.castor.core.model.error
 import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
 import org.hyperledger.identus.shared.models.Base64UrlString
-import zio.mock.{Expectation, Mock, Proxy}
+import zio.mock
+import zio.mock.Expectation
+import zio.mock.Mock
+import zio.mock.Proxy
 import zio.test.Assertion
-import zio.{IO, URLayer, ZIO, ZLayer, mock}
+import zio.IO
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
 
 import scala.collection.immutable.ArraySeq
 

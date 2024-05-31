@@ -1,9 +1,9 @@
 package org.hyperledger.identus.iam.wallet.http
 
+import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.api.http.EndpointOutputs
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.api.http.RequestContext
-import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.iam.authentication.admin.AdminApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.admin.AdminApiKeySecurityLogic.adminApiKeyHeader
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials

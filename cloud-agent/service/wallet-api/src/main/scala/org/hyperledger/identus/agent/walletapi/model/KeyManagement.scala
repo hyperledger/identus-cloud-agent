@@ -3,9 +3,9 @@ package org.hyperledger.identus.agent.walletapi.model
 import org.hyperledger.identus.castor.core.model.did.EllipticCurve
 import org.hyperledger.identus.castor.core.model.did.InternalKeyPurpose
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
-import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.crypto.DerivationPath
 import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
+import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.crypto.X25519KeyPair
 
 import scala.collection.immutable.ArraySeq

@@ -7,9 +7,9 @@ import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.models.Base64UrlString
 import org.hyperledger.identus.shared.models.HexString
 
+import java.time.format.DateTimeFormatter
 import java.time.Instant
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 object W3CModelHelper extends W3CModelHelper
 

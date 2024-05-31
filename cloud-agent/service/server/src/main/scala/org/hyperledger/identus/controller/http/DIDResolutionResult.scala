@@ -1,7 +1,10 @@
 package org.hyperledger.identus.castor.controller.http
 
 import sttp.tapir.Schema
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
+import zio.json.DeriveJsonDecoder
+import zio.json.DeriveJsonEncoder
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 
 final case class DIDResolutionResult(
     `@context`: Context,

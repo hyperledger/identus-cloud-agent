@@ -2,10 +2,13 @@ package org.hyperledger.identus.iam.authentication
 
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.iam.authentication.admin.{AdminApiKeyAuthenticator, AdminApiKeyCredentials}
-import org.hyperledger.identus.iam.authentication.apikey.{ApiKeyAuthenticator, ApiKeyCredentials}
+import org.hyperledger.identus.iam.authentication.admin.AdminApiKeyAuthenticator
+import org.hyperledger.identus.iam.authentication.admin.AdminApiKeyCredentials
+import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticator
+import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
+import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
+import org.hyperledger.identus.iam.authentication.oidc.KeycloakAuthenticator
 import org.hyperledger.identus.iam.authentication.oidc.KeycloakEntity
-import org.hyperledger.identus.iam.authentication.oidc.{KeycloakAuthenticator, JwtCredentials}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.models.WalletAdministrationContext
 import zio.*

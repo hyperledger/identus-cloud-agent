@@ -1,17 +1,19 @@
 package org.hyperledger.identus.credential.status.controller
 
-import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.codec.DidCommIDCodec.given
 import org.hyperledger.identus.api.http.EndpointOutputs.*
+import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.credential.status.controller.http.StatusListCredential
+import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
+import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
+import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
+import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
+import org.hyperledger.identus.pollux.core.model.DidCommID
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
-import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
-import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
+
 import java.util.UUID
-import org.hyperledger.identus.pollux.core.model.DidCommID
-import org.hyperledger.identus.api.http.codec.DidCommIDCodec.given
-import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
-import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 object CredentialStatusEndpoints {
 
   val getCredentialStatusListEndpoint: PublicEndpoint[

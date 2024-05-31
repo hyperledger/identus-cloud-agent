@@ -1,13 +1,20 @@
 package org.hyperledger.identus.connect.core.service
 
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.*
+import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
+import org.hyperledger.identus.mercury.protocol.connection.ConnectionRequest
+import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.mock.{Mock, Proxy}
-import zio.{UIO, URIO, URLayer, ZIO, ZLayer, mock}
+import zio.mock
+import zio.mock.Mock
+import zio.mock.Proxy
+import zio.UIO
+import zio.URIO
+import zio.URLayer
+import zio.ZIO
+import zio.ZLayer
 
 import java.time.Duration
 import java.util.UUID

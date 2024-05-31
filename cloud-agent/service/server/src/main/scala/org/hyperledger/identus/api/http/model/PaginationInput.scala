@@ -1,8 +1,10 @@
 package org.hyperledger.identus.api.http.model
 
-import sttp.tapir.EndpointIO.annotations.{description, query}
+import sttp.tapir.EndpointIO.annotations.description
+import sttp.tapir.EndpointIO.annotations.query
+import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.validateEach
-import sttp.tapir.{Schema, Validator}
+import sttp.tapir.Validator
 
 case class PaginationInput(
     @query

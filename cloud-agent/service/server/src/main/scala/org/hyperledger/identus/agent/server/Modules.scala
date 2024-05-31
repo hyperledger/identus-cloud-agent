@@ -3,24 +3,23 @@ package org.hyperledger.identus.agent.server
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
 import io.grpc.ManagedChannelBuilder
+import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.config.SecretStorageBackend
 import org.hyperledger.identus.agent.server.config.ValidatedVaultConfig
 import org.hyperledger.identus.agent.walletapi.service.EntityService
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
-import org.hyperledger.identus.agent.walletapi.sql.{
-  JdbcDIDSecretStorage,
-  JdbcGenericSecretStorage,
-  JdbcWalletSecretStorage
-}
-import org.hyperledger.identus.agent.walletapi.storage.{DIDSecretStorage, GenericSecretStorage, WalletSecretStorage}
+import org.hyperledger.identus.agent.walletapi.sql.JdbcDIDSecretStorage
+import org.hyperledger.identus.agent.walletapi.sql.JdbcGenericSecretStorage
+import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletSecretStorage
+import org.hyperledger.identus.agent.walletapi.storage.DIDSecretStorage
+import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
+import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
 import org.hyperledger.identus.agent.walletapi.vault.*
-import org.hyperledger.identus.agent.walletapi.vault.{
-  VaultDIDSecretStorage,
-  VaultKVClient,
-  VaultKVClientImpl,
-  VaultWalletSecretStorage
-}
+import org.hyperledger.identus.agent.walletapi.vault.VaultDIDSecretStorage
+import org.hyperledger.identus.agent.walletapi.vault.VaultKVClient
+import org.hyperledger.identus.agent.walletapi.vault.VaultKVClientImpl
+import org.hyperledger.identus.agent.walletapi.vault.VaultWalletSecretStorage
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.iam.authentication.admin.AdminApiKeyAuthenticator
 import org.hyperledger.identus.iam.authentication.admin.AdminApiKeyAuthenticatorImpl
@@ -36,10 +35,12 @@ import org.hyperledger.identus.iam.authentication.oidc.KeycloakConfig
 import org.hyperledger.identus.iam.authentication.oidc.KeycloakEntity
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement
 import org.hyperledger.identus.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
-import org.hyperledger.identus.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
-import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
+import org.hyperledger.identus.pollux.vc.jwt.DidResolver as JwtDidResolver
+import org.hyperledger.identus.pollux.vc.jwt.PrismDidResolver
 import org.hyperledger.identus.shared.crypto.Apollo
-import org.hyperledger.identus.shared.db.{ContextAwareTask, DbConfig, TransactorLayer}
+import org.hyperledger.identus.shared.db.ContextAwareTask
+import org.hyperledger.identus.shared.db.DbConfig
+import org.hyperledger.identus.shared.db.TransactorLayer
 import org.keycloak.authorization.client.AuthzClient
 import zio.*
 import zio.config.typesafe.TypesafeConfigProvider

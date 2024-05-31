@@ -1,13 +1,14 @@
 package org.hyperledger.identus.castor.core.model.did
 
-import org.hyperledger.identus.castor.core.model.ProtoModelHelper
-import org.hyperledger.identus.shared.crypto.Sha256Hash
 import io.iohk.atala.prism.protos.node_models
 import io.iohk.atala.prism.protos.node_models.AtalaOperation.Operation
+import org.hyperledger.identus.castor.core.model.ProtoModelHelper
+import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.models.Base64UrlString
 import org.hyperledger.identus.shared.models.HexString
-import scala.util.Try
+
 import scala.util.matching.Regex
+import scala.util.Try
 
 /** Represents a [Did] used in PRISM with prism-specific method and keys as [PrismDid]
   */

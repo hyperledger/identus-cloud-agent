@@ -1,11 +1,12 @@
 package org.hyperledger.identus.mercury.model
 
+import io.circe._
+import io.circe.generic.semiauto.deriveDecoder
+import io.circe.generic.semiauto.deriveEncoder
+
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-
 import scala.jdk.CollectionConverters._
-import io.circe._
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 
 type PIURI = String //type URI or URL?
 case class Message(

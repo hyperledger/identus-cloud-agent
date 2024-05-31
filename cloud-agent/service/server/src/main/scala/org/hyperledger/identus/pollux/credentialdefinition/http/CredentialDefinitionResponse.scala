@@ -6,12 +6,12 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponse.annotations
 import sttp.model.Uri
 import sttp.model.Uri.*
+import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.default
 import sttp.tapir.Schema.annotations.description
 import sttp.tapir.Schema.annotations.encodedExample
 import sttp.tapir.Schema.annotations.encodedName
-import sttp.tapir.json.zio.schemaForZioJsonValue
 import zio.json.*
 import zio.json.ast.Json
 

@@ -5,8 +5,8 @@ import doobie.*
 import doobie.free.connection
 import doobie.implicits.*
 import doobie.postgres.*
-import doobie.postgres.implicits.*
 import doobie.postgres.circe.json.implicits._
+import doobie.postgres.implicits.*
 import io.circe
 import io.circe.*
 import io.circe.parser.*
@@ -23,6 +23,7 @@ import zio.interop.catz.*
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
+
 import java.time.Instant
 // TODO: replace with actual implementation
 class JdbcPresentationRepository(

@@ -1,17 +1,17 @@
 package org.hyperledger.identus.castor.controller
 
-import org.hyperledger.identus.api.http.EndpointOutputs.FailureVariant
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.{EndpointOutputs, ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.EndpointOutputs
+import org.hyperledger.identus.api.http.EndpointOutputs.FailureVariant
+import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.castor.controller.http.CreateManagedDIDResponse
+import org.hyperledger.identus.castor.controller.http.CreateManagedDidRequest
+import org.hyperledger.identus.castor.controller.http.DIDInput
 import org.hyperledger.identus.castor.controller.http.DIDOperationResponse
+import org.hyperledger.identus.castor.controller.http.ManagedDID
+import org.hyperledger.identus.castor.controller.http.ManagedDIDPage
 import org.hyperledger.identus.castor.controller.http.UpdateManagedDIDRequest
-import org.hyperledger.identus.castor.controller.http.{
-  CreateManagedDIDResponse,
-  CreateManagedDidRequest,
-  DIDInput,
-  ManagedDID,
-  ManagedDIDPage
-}
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials

@@ -2,18 +2,19 @@ package org.hyperledger.identus.agent.walletapi.storage
 
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.service.{WalletManagementService, WalletManagementServiceImpl}
-import org.hyperledger.identus.agent.walletapi.sql.{
-  JdbcGenericSecretStorage,
-  JdbcWalletNonSecretStorage,
-  JdbcWalletSecretStorage
-}
-import org.hyperledger.identus.agent.walletapi.vault.{VaultGenericSecretStorage, VaultWalletSecretStorage}
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceImpl
+import org.hyperledger.identus.agent.walletapi.sql.JdbcGenericSecretStorage
+import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletSecretStorage
+import org.hyperledger.identus.agent.walletapi.vault.VaultGenericSecretStorage
+import org.hyperledger.identus.agent.walletapi.vault.VaultWalletSecretStorage
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.models.WalletAdministrationContext
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
+import org.hyperledger.identus.test.container.DBTestUtils
+import org.hyperledger.identus.test.container.VaultTestContainerSupport
 import zio.*
 import zio.json.ast.Json
 import zio.test.*

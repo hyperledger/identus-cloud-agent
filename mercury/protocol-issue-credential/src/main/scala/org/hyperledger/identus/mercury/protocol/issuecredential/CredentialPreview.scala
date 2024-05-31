@@ -1,7 +1,8 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
 import io.circe.generic.semiauto.*
-import io.circe.{Decoder, Encoder}
+import io.circe.Decoder
+import io.circe.Encoder
 
 /** @see
   *   https://github.com/decentralized-identity/waci-didcomm/blob/main/issue_credential/README.md#preview-credential

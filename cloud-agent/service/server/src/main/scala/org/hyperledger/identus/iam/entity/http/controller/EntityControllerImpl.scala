@@ -1,15 +1,20 @@
 package org.hyperledger.identus.iam.entity.http.controller
 
-import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError
+import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.hyperledger.identus.agent.walletapi.service.EntityService
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
-import org.hyperledger.identus.iam.authentication.AuthenticationError
-import org.hyperledger.identus.iam.entity.http.model.{CreateEntityRequest, EntityResponse, EntityResponsePage}
-import zio.ZIO.succeed
-import zio.{IO, URLayer, ZLayer}
+import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticator
+import org.hyperledger.identus.iam.authentication.AuthenticationError
+import org.hyperledger.identus.iam.entity.http.model.CreateEntityRequest
+import org.hyperledger.identus.iam.entity.http.model.EntityResponse
+import org.hyperledger.identus.iam.entity.http.model.EntityResponsePage
+import zio.IO
+import zio.URLayer
+import zio.ZIO.succeed
+import zio.ZLayer
 
 import java.util.UUID
 

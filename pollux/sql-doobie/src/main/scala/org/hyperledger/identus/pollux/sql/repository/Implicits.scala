@@ -1,7 +1,9 @@
 package org.hyperledger.identus.pollux.sql.repository
 
-import doobie.util.{Get, Put}
-import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
+import doobie.util.Get
+import doobie.util.Put
+import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
+import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
 import org.hyperledger.identus.shared.models.WalletId

@@ -7,10 +7,11 @@ import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.pollux.core.service.ResourceURIDereferencerImpl
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
-import zio.Config.OffsetDateTime
 import zio.test.*
+import zio.Config.OffsetDateTime
 
 import java.time.Instant
 

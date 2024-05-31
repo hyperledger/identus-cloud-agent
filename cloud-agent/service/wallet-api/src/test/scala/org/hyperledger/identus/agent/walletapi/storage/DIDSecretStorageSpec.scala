@@ -3,14 +3,14 @@ package org.hyperledger.identus.agent.walletapi.storage
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
 import org.hyperledger.identus.agent.walletapi.model.PublicationState
 import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.service.{WalletManagementService, WalletManagementServiceImpl}
-import org.hyperledger.identus.agent.walletapi.sql.{
-  JdbcDIDNonSecretStorage,
-  JdbcDIDSecretStorage,
-  JdbcWalletNonSecretStorage,
-  JdbcWalletSecretStorage
-}
-import org.hyperledger.identus.agent.walletapi.vault.{VaultDIDSecretStorage, VaultWalletSecretStorage}
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceImpl
+import org.hyperledger.identus.agent.walletapi.sql.JdbcDIDNonSecretStorage
+import org.hyperledger.identus.agent.walletapi.sql.JdbcDIDSecretStorage
+import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletSecretStorage
+import org.hyperledger.identus.agent.walletapi.vault.VaultDIDSecretStorage
+import org.hyperledger.identus.agent.walletapi.vault.VaultWalletSecretStorage
 import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
 import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.shared.crypto.Apollo
@@ -20,7 +20,8 @@ import org.hyperledger.identus.shared.crypto.X25519KeyPair
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.models.WalletAdministrationContext
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
+import org.hyperledger.identus.test.container.DBTestUtils
+import org.hyperledger.identus.test.container.VaultTestContainerSupport
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

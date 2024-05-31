@@ -3,19 +3,19 @@ package org.hyperledger.identus.pollux.core.model.schema
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.*
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
-import org.hyperledger.identus.pollux.core.model.schema.`type`.{
-  AnoncredSchemaType,
-  CredentialJsonSchemaType,
-  CredentialSchemaType
-}
-import org.hyperledger.identus.pollux.core.model.schema.validator.{JsonSchemaValidator, JsonSchemaValidatorImpl}
+import org.hyperledger.identus.pollux.core.model.schema.`type`.AnoncredSchemaType
+import org.hyperledger.identus.pollux.core.model.schema.`type`.CredentialJsonSchemaType
+import org.hyperledger.identus.pollux.core.model.schema.`type`.CredentialSchemaType
+import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaValidator
+import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaValidatorImpl
 import org.hyperledger.identus.pollux.core.service.URIDereferencer
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
 
 import java.net.URI
-import java.time.{OffsetDateTime, ZoneOffset}
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 type Schema = zio.json.ast.Json

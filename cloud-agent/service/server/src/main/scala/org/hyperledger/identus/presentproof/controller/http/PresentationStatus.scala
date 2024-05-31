@@ -4,9 +4,15 @@ import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.mercury.model.Base64
 import org.hyperledger.identus.pollux.core.model.PresentationRecord
 import org.hyperledger.identus.presentproof.controller.http.PresentationStatus.annotations
-import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
-import sttp.tapir.{Schema, Validator}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import sttp.tapir.Schema
+import sttp.tapir.Schema.annotations.description
+import sttp.tapir.Schema.annotations.encodedExample
+import sttp.tapir.Schema.annotations.validate
+import sttp.tapir.Validator
+import zio.json.DeriveJsonDecoder
+import zio.json.DeriveJsonEncoder
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 
 final case class PresentationStatus(
     @description(annotations.presentationId.description)

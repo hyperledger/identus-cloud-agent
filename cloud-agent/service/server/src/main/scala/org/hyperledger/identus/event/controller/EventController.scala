@@ -2,10 +2,10 @@ package org.hyperledger.identus.event.controller
 
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.api.http.model.CollectionStats
 import org.hyperledger.identus.api.http.model.PaginationInput
+import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.api.util.PaginationUtils
 import org.hyperledger.identus.event.controller.http.CreateWebhookNotification
 import org.hyperledger.identus.event.controller.http.WebhookNotification
@@ -16,8 +16,8 @@ import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 import java.net.URI
-import scala.language.implicitConversions
 import java.util.UUID
+import scala.language.implicitConversions
 
 trait EventController {
   def createWebhookNotification(

@@ -1,14 +1,19 @@
 package org.hyperledger.identus.pollux.credentialschema
 
-import org.hyperledger.identus.LogUtils.*
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
+import org.hyperledger.identus.api.http.model.Order
+import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.api.http.RequestContext
-import org.hyperledger.identus.api.http.model.{Order, PaginationInput}
-import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
-import org.hyperledger.identus.pollux.credentialschema.SchemaRegistryEndpoints.*
+import org.hyperledger.identus.iam.authentication.Authenticator
+import org.hyperledger.identus.iam.authentication.Authorizer
+import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
+import org.hyperledger.identus.iam.authentication.SecurityLogic
 import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaController
-import org.hyperledger.identus.pollux.credentialschema.http.{CredentialSchemaInput, FilterInput}
+import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaInput
+import org.hyperledger.identus.pollux.credentialschema.http.FilterInput
+import org.hyperledger.identus.pollux.credentialschema.SchemaRegistryEndpoints.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.LogUtils.*
 import sttp.tapir.ztapir.*
 import zio.*
 

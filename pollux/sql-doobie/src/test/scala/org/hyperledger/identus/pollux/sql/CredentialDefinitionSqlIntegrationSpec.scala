@@ -4,10 +4,12 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.*
 import doobie.util.transactor.Transactor
 import io.getquill.*
-import org.hyperledger.identus.pollux.sql.model.db.{CredentialDefinition, CredentialDefinitionSql}
+import org.hyperledger.identus.pollux.sql.model.db.CredentialDefinition
+import org.hyperledger.identus.pollux.sql.model.db.CredentialDefinitionSql
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.MigrationAspects.*
 import zio.*
@@ -16,7 +18,8 @@ import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
 
-import java.time.{OffsetDateTime, ZoneOffset}
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import scala.collection.mutable
 import scala.io.Source

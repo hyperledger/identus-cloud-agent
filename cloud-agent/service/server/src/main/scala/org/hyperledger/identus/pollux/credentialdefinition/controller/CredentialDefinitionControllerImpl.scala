@@ -1,23 +1,25 @@
 package org.hyperledger.identus.pollux.credentialdefinition.controller
 
-import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
+import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
+import org.hyperledger.identus.agent.walletapi.model.PublicationState
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.api.http.*
-import org.hyperledger.identus.api.http.model.{CollectionStats, Order, Pagination}
-import org.hyperledger.identus.castor.core.model.did.{LongFormPrismDID, PrismDID}
+import org.hyperledger.identus.api.http.model.CollectionStats
+import org.hyperledger.identus.api.http.model.Order
+import org.hyperledger.identus.api.http.model.Pagination
+import org.hyperledger.identus.castor.core.model.did.LongFormPrismDID
+import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.FilteredEntries
 import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService
 import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error.*
 import org.hyperledger.identus.pollux.credentialdefinition
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController.domainToHttpErrorIO
+import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionInput
 import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionInput.toDomain
+import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponse
 import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponse.fromDomain
-import org.hyperledger.identus.pollux.credentialdefinition.http.{
-  CredentialDefinitionInput,
-  CredentialDefinitionResponse,
-  CredentialDefinitionResponsePage,
-  FilterInput
-}
+import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponsePage
+import org.hyperledger.identus.pollux.credentialdefinition.http.FilterInput
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.json.ast.Json

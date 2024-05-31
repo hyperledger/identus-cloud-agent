@@ -9,7 +9,8 @@ import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import org.hyperledger.identus.connect.core.model.*
-import org.hyperledger.identus.connect.core.model.ConnectionRecord.{ProtocolState, Role}
+import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
+import org.hyperledger.identus.connect.core.model.ConnectionRecord.Role
 import org.hyperledger.identus.connect.core.repository.ConnectionRepository
 import org.hyperledger.identus.mercury.protocol.connection.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
@@ -20,8 +21,8 @@ import zio.*
 import zio.interop.catz.*
 
 import java.time.Instant
-import java.util as ju
 import java.util.UUID
+import java.util as ju
 
 class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task]) extends ConnectionRepository {
 

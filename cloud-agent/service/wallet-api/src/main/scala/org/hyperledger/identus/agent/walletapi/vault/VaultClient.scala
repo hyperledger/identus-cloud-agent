@@ -1,11 +1,11 @@
 package org.hyperledger.identus.agent.walletapi.vault
 
-import io.github.jopenlibs.vault.Vault
-import io.github.jopenlibs.vault.VaultConfig
-import io.github.jopenlibs.vault.VaultException
 import io.github.jopenlibs.vault.api.Logical
 import io.github.jopenlibs.vault.api.LogicalUtilities
 import io.github.jopenlibs.vault.response.LogicalResponse
+import io.github.jopenlibs.vault.Vault
+import io.github.jopenlibs.vault.VaultConfig
+import io.github.jopenlibs.vault.VaultException
 import zio.*
 import zio.http.*
 import zio.json.*

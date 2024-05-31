@@ -1,11 +1,12 @@
 package org.hyperledger.identus.pollux.sdjwt
 
 import sdjwtwrapper.*
-import scala.util.Try
-import scala.util.Failure
-import scala.util.Success
 import zio.json.*
 import zio.json.ast.Json
+
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 object SDJWT {
 

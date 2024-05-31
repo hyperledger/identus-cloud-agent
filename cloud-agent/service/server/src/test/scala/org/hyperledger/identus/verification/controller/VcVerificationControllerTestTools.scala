@@ -5,15 +5,18 @@ import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.castor.core.service.MockDIDService
-import org.hyperledger.identus.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
+import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
+import org.hyperledger.identus.iam.authentication.DefaultEntityAuthenticator
 import org.hyperledger.identus.pollux.core.service.*
-import org.hyperledger.identus.pollux.core.service.verification.{VcVerificationService, VcVerificationServiceImpl}
+import org.hyperledger.identus.pollux.core.service.verification.VcVerificationService
+import org.hyperledger.identus.pollux.core.service.verification.VcVerificationServiceImpl
 import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
 import org.hyperledger.identus.shared.models.WalletId.*
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import sttp.client3.UriContext
 import sttp.client3.testing.SttpBackendStub
+import sttp.client3.UriContext
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter

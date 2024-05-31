@@ -1,8 +1,8 @@
 package org.hyperledger.identus.api.http.codec
 
+import org.hyperledger.identus.pollux.core.model.DidCommID
 import sttp.tapir._
 import sttp.tapir.Codec.PlainCodec
-import org.hyperledger.identus.pollux.core.model.DidCommID
 import sttp.tapir.DecodeResult.*
 
 object DidCommIDCodec {

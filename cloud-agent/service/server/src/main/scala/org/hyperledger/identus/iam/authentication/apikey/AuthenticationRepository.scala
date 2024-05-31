@@ -1,11 +1,11 @@
 package org.hyperledger.identus.iam.authentication.apikey
 
+import io.getquill.*
 import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.doobie.DoobieContext
-import io.getquill.*
-import zio.IO
 import zio.*
 import zio.interop.catz.*
+import zio.IO
 
 import java.time.OffsetDateTime
 import java.util.UUID

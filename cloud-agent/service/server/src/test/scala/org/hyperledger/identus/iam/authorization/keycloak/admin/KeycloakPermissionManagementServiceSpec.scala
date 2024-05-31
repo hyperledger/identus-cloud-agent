@@ -1,33 +1,34 @@
 package org.hyperledger.identus.iam.authorization.keycloak.admin
 
 import org.hyperledger.identus.agent.walletapi.model.Wallet
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceImpl
-import org.hyperledger.identus.agent.walletapi.service.{WalletManagementService, WalletManagementServiceError}
 import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage
 import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletSecretStorage
+import org.hyperledger.identus.iam.authentication.oidc.KeycloakAuthenticator
+import org.hyperledger.identus.iam.authentication.oidc.KeycloakAuthenticatorImpl
+import org.hyperledger.identus.iam.authentication.oidc.KeycloakClient
+import org.hyperledger.identus.iam.authentication.oidc.KeycloakClientImpl
+import org.hyperledger.identus.iam.authentication.oidc.KeycloakEntity
 import org.hyperledger.identus.iam.authentication.AuthenticationError.ResourceNotPermitted
-import org.hyperledger.identus.iam.authentication.oidc.{
-  KeycloakAuthenticator,
-  KeycloakAuthenticatorImpl,
-  KeycloakClient,
-  KeycloakClientImpl,
-  KeycloakEntity
-}
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.UnexpectedError
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.WalletNotFoundById
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
+import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.sharedtest.containers.KeycloakContainerCustom
+import org.hyperledger.identus.sharedtest.containers.KeycloakTestContainerSupport
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import org.hyperledger.identus.sharedtest.containers.{KeycloakContainerCustom, KeycloakTestContainerSupport}
 import org.hyperledger.identus.test.container.DBTestUtils
 import zio.*
-import zio.ZIO.*
 import zio.http.Client
 import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
+import zio.ZIO.*
 
 import java.util.UUID
 

@@ -1,14 +1,13 @@
 package org.hyperledger.identus.connect.controller
 
-import org.hyperledger.identus.api.http.EndpointOutputs.*
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
-import org.hyperledger.identus.connect.controller.http.{
-  AcceptConnectionInvitationRequest,
-  Connection,
-  ConnectionsPage,
-  CreateConnectionRequest
-}
+import org.hyperledger.identus.api.http.EndpointOutputs.*
+import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.connect.controller.http.AcceptConnectionInvitationRequest
+import org.hyperledger.identus.connect.controller.http.Connection
+import org.hyperledger.identus.connect.controller.http.ConnectionsPage
+import org.hyperledger.identus.connect.controller.http.CreateConnectionRequest
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials

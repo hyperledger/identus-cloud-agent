@@ -1,18 +1,21 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import org.hyperledger.identus.pollux.core.model.CredentialStatusList
-import org.hyperledger.identus.pollux.vc.jwt.{Issuer, StatusPurpose, revocation}
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio.*
+import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
+import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{
-  DecodingError,
-  EncodingError,
-  IndexOutOfBounds,
-  InvalidSize
-}
-import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
-import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021}
+import org.hyperledger.identus.pollux.core.model.CredentialStatusList
+import org.hyperledger.identus.pollux.vc.jwt.revocation
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitString
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.DecodingError
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.EncodingError
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.IndexOutOfBounds
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.InvalidSize
+import org.hyperledger.identus.pollux.vc.jwt.revocation.VCStatusList2021
+import org.hyperledger.identus.pollux.vc.jwt.Issuer
+import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
+import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.WalletId
+import zio.*
 
 import java.time.Instant
 import java.util.UUID

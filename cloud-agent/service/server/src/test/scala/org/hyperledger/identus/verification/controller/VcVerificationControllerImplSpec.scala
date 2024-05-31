@@ -3,20 +3,24 @@ package org.hyperledger.identus.verification.controller
 import io.circe.*
 import io.circe.syntax.*
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
+import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
+import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.verification.controller.http.*
+import sttp.client3.basicRequest
 import sttp.client3.ziojson.*
-import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
+import sttp.client3.DeserializationException
+import sttp.client3.Response
+import sttp.client3.UriContext
 import sttp.model.StatusCode
 import zio.*
-import zio.Config.OffsetDateTime
 import zio.json.EncoderOps
 import zio.test.*
 import zio.test.Assertion.*
+import zio.Config.OffsetDateTime
 
 import java.time.Instant
 

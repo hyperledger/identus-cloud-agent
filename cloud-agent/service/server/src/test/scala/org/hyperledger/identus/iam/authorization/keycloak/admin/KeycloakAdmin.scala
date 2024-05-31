@@ -1,7 +1,10 @@
 package org.hyperledger.identus.iam.authorization.keycloak.admin
 
 import org.keycloak.admin.client.Keycloak
-import zio.{RLayer, Task, ZIO, ZLayer}
+import zio.RLayer
+import zio.Task
+import zio.ZIO
+import zio.ZLayer
 
 import scala.util.Try
 

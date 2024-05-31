@@ -1,13 +1,12 @@
 package org.hyperledger.identus.issue.controller
 
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
-import org.hyperledger.identus.issue.controller.http.{
-  AcceptCredentialOfferRequest,
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecord,
-  IssueCredentialRecordPage
-}
+import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.issue.controller.http.AcceptCredentialOfferRequest
+import org.hyperledger.identus.issue.controller.http.CreateIssueCredentialRecordRequest
+import org.hyperledger.identus.issue.controller.http.IssueCredentialRecord
+import org.hyperledger.identus.issue.controller.http.IssueCredentialRecordPage
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*

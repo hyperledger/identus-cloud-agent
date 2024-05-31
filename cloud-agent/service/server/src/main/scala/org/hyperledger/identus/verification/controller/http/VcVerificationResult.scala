@@ -2,7 +2,10 @@ package org.hyperledger.identus.verification.controller.http
 
 import org.hyperledger.identus.pollux.core.service.verification.VcVerificationResult as ServiceVcVerificationResult
 import sttp.tapir.Schema
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import zio.json.DeriveJsonDecoder
+import zio.json.DeriveJsonEncoder
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 
 final case class VcVerificationResult(
     verification: VcVerification,

@@ -1,11 +1,11 @@
 package org.hyperledger.identus.agent.walletapi.service.handler
 
+import org.hyperledger.identus.agent.walletapi.model.error.CreateManagedDIDError
 import org.hyperledger.identus.agent.walletapi.model.CreateDIDKey
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDTemplate
 import org.hyperledger.identus.agent.walletapi.model.PublicationState
 import org.hyperledger.identus.agent.walletapi.model.WalletSeed
-import org.hyperledger.identus.agent.walletapi.model.error.CreateManagedDIDError
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.agent.walletapi.storage.DIDSecretStorage
 import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage

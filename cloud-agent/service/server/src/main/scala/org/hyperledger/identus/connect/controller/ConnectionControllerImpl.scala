@@ -3,13 +3,12 @@ package org.hyperledger.identus.connect.controller
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
-import org.hyperledger.identus.connect.controller.http.{
-  AcceptConnectionInvitationRequest,
-  Connection,
-  ConnectionsPage,
-  CreateConnectionRequest
-}
+import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.connect.controller.http.AcceptConnectionInvitationRequest
+import org.hyperledger.identus.connect.controller.http.Connection
+import org.hyperledger.identus.connect.controller.http.ConnectionsPage
+import org.hyperledger.identus.connect.controller.http.CreateConnectionRequest
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.shared.models.WalletAccessContext

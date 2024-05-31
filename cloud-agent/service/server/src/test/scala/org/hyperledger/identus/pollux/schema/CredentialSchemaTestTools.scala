@@ -3,31 +3,33 @@ package org.hyperledger.identus.pollux.schema
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.hyperledger.identus.agent.server.http.CustomServerInterceptors
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
-import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
+import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
+import org.hyperledger.identus.agent.walletapi.model.PublicationState
+import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
+import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
 import org.hyperledger.identus.iam.authentication.DefaultEntityAuthenticator
 import org.hyperledger.identus.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import org.hyperledger.identus.pollux.core.repository.CredentialSchemaRepository
-import org.hyperledger.identus.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}
+import org.hyperledger.identus.pollux.core.service.CredentialSchemaService
+import org.hyperledger.identus.pollux.core.service.CredentialSchemaServiceImpl
+import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaController
+import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaControllerImpl
+import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaInput
+import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponse
+import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponsePage
 import org.hyperledger.identus.pollux.credentialschema.SchemaRegistryServerEndpoints
-import org.hyperledger.identus.pollux.credentialschema.controller.{
-  CredentialSchemaController,
-  CredentialSchemaControllerImpl
-}
-import org.hyperledger.identus.pollux.credentialschema.http.{
-  CredentialSchemaInput,
-  CredentialSchemaResponse,
-  CredentialSchemaResponsePage
-}
 import org.hyperledger.identus.pollux.sql.repository.JdbcCredentialSchemaRepository
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
+import sttp.client3.basicRequest
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
-import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
+import sttp.client3.DeserializationException
+import sttp.client3.Response
+import sttp.client3.UriContext
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
@@ -35,9 +37,12 @@ import sttp.tapir.ztapir.RIOMonadError
 import zio.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
-import zio.json.{DecoderOps, EncoderOps}
+import zio.json.DecoderOps
+import zio.json.EncoderOps
 import zio.mock.Expectation
-import zio.test.{Assertion, Gen, ZIOSpecDefault}
+import zio.test.Assertion
+import zio.test.Gen
+import zio.test.ZIOSpecDefault
 
 import java.time.OffsetDateTime
 

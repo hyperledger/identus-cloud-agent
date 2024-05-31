@@ -7,10 +7,8 @@ import org.hyperledger.identus.connect.controller.http.Connection
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.event.notification.Event
 import org.hyperledger.identus.issue.controller.http.IssueCredentialRecord
-import org.hyperledger.identus.pollux.core.model.{
-  IssueCredentialRecord as PolluxIssueCredentialRecord,
-  PresentationRecord as PolluxPresentationRecord
-}
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord as PolluxIssueCredentialRecord
+import org.hyperledger.identus.pollux.core.model.PresentationRecord as PolluxPresentationRecord
 import org.hyperledger.identus.presentproof.controller.http.PresentationStatus
 import org.hyperledger.identus.shared.models.WalletId
 import zio.*

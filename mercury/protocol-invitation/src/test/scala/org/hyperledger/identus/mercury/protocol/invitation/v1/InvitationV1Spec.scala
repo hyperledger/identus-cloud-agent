@@ -1,11 +1,11 @@
 package org.hyperledger.identus.mercury.protocol.invitation.v1
 
-import munit.*
+import io.circe.parser._
 import io.circe.syntax._
 import io.circe.Json
-import io.circe.parser._
-import org.hyperledger.identus.mercury.protocol.invitation._
+import munit.*
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor
+import org.hyperledger.identus.mercury.protocol.invitation._
 
 class InvitationV1Spec extends ZSuite {
 

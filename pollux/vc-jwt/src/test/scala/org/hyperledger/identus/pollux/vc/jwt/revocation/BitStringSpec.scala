@@ -1,6 +1,7 @@
 package org.hyperledger.identus.pollux.vc.jwt.revocation
 
-import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{IndexOutOfBounds, InvalidSize}
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.IndexOutOfBounds
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.InvalidSize
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

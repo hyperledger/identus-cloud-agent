@@ -1,6 +1,5 @@
 package org.hyperledger.identus.iam.wallet.http
 
-import org.hyperledger.identus.LogUtils.*
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.iam.authentication.Authenticator
@@ -9,6 +8,7 @@ import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
 import org.hyperledger.identus.iam.authentication.SecurityLogic
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementController
 import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.LogUtils.*
 import sttp.tapir.ztapir.*
 import zio.*
 

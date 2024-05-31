@@ -1,13 +1,14 @@
 package org.hyperledger.identus.agent.walletapi.service.handler
 
+import org.hyperledger.identus.agent.walletapi.model.error.*
+import org.hyperledger.identus.agent.walletapi.model.error.given
+import org.hyperledger.identus.agent.walletapi.model.error.UpdateManagedDIDError
 import org.hyperledger.identus.agent.walletapi.model.DIDUpdateLineage
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDKeyMeta
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
 import org.hyperledger.identus.agent.walletapi.model.UpdateDIDKey
 import org.hyperledger.identus.agent.walletapi.model.UpdateManagedDIDAction
 import org.hyperledger.identus.agent.walletapi.model.WalletSeed
-import org.hyperledger.identus.agent.walletapi.model.error.UpdateManagedDIDError
-import org.hyperledger.identus.agent.walletapi.model.error.{*, given}
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.agent.walletapi.storage.DIDSecretStorage
 import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
@@ -20,8 +21,9 @@ import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
 import org.hyperledger.identus.shared.crypto.X25519KeyPair
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import scala.collection.immutable.ArraySeq
 import zio.*
+
+import scala.collection.immutable.ArraySeq
 
 private[walletapi] class DIDUpdateHandler(
     apollo: Apollo,

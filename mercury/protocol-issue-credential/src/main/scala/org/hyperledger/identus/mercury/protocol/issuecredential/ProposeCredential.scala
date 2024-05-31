@@ -3,9 +3,10 @@ package org.hyperledger.identus.mercury.protocol.issuecredential
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.syntax._
-
+import org.hyperledger.identus.mercury.model.AttachmentDescriptor
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.model.Message
 import org.hyperledger.identus.mercury.model.PIURI
-import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Message, DidId}
 
 /** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
   * @see

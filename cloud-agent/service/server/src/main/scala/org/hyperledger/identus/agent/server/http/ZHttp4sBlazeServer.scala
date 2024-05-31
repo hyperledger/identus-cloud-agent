@@ -7,8 +7,8 @@ import org.http4s.server.Router
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.system.controller.SystemEndpoints
 import sttp.tapir.*
-import sttp.tapir.server.http4s.Http4sServerOptions
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
+import sttp.tapir.server.http4s.Http4sServerOptions
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
 import sttp.tapir.ztapir.ZServerEndpoint
 import zio.*

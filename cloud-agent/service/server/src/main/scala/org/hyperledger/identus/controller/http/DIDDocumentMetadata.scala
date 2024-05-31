@@ -1,11 +1,15 @@
 package org.hyperledger.identus.castor.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
+import org.hyperledger.identus.castor.controller.http.DIDDocumentMetadata.annotations
 import org.hyperledger.identus.castor.core.model.did.w3c
 import sttp.tapir.Schema
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
-import sttp.tapir.Schema.annotations.{description, encodedExample}
-import org.hyperledger.identus.castor.controller.http.DIDDocumentMetadata.annotations
+import sttp.tapir.Schema.annotations.description
+import sttp.tapir.Schema.annotations.encodedExample
+import zio.json.DeriveJsonDecoder
+import zio.json.DeriveJsonEncoder
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 
 @description("[DID document metadata](https://www.w3.org/TR/did-core/#did-document-metadata)")
 final case class DIDDocumentMetadata(

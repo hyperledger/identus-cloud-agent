@@ -1,8 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.outofbandlogin
 
+import org.hyperledger.identus.mercury
+
 import java.net.URI
 import java.net.URL
-import org.hyperledger.identus.mercury
 
 object Utils {
 

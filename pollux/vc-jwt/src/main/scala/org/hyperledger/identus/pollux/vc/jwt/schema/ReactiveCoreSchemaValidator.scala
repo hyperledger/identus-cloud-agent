@@ -3,10 +3,12 @@ package org.hyperledger.identus.pollux.vc.jwt.schema
 import io.circe
 import io.circe.generic.auto.*
 import io.circe.syntax.*
-import io.circe.{Encoder, Json}
-import net.reactivecore.cjs.{DocumentValidator, Loader}
-import zio.NonEmptyChunk
+import io.circe.Encoder
+import io.circe.Json
+import net.reactivecore.cjs.DocumentValidator
+import net.reactivecore.cjs.Loader
 import zio.prelude.*
+import zio.NonEmptyChunk
 
 class ReactiveCoreSchemaValidator(documentValidator: DocumentValidator) extends SchemaValidator {
   override def validate(payloadToValidate: Json): Validation[String, Json] =

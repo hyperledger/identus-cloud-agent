@@ -1,6 +1,7 @@
 package org.hyperledger.identus.sharedtest.containers
 
-import com.dimafeng.testcontainers.{JdbcDatabaseContainer, PostgreSQLContainer}
+import com.dimafeng.testcontainers.JdbcDatabaseContainer
+import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 
 class PostgreSQLContainerCustom(

@@ -3,10 +3,10 @@ package org.hyperledger.identus.connect.sql.repository
 import doobie.*
 import doobie.implicits.*
 import doobie.util.transactor.Transactor
+import org.flywaydb.core.Flyway
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.DbConfig
 import org.hyperledger.identus.shared.db.Implicits.*
-import org.flywaydb.core.Flyway
 import zio.*
 import zio.interop.catz.*
 

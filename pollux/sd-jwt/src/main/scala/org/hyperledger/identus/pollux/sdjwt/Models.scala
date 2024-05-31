@@ -1,12 +1,13 @@
 package org.hyperledger.identus.pollux.sdjwt
 
-import sdjwtwrapper.*
-import org.hyperledger.identus.shared.crypto.*
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
-import org.bouncycastle.crypto.util.PrivateKeyInfoFactory
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
+import org.bouncycastle.crypto.util.PrivateKeyInfoFactory
 import org.bouncycastle.crypto.util.SubjectPublicKeyInfoFactory
+import org.hyperledger.identus.shared.crypto.*
+import sdjwtwrapper.*
 import zio.json.*
+
 import java.util.Base64
 
 opaque type IssuerPublicKey = String

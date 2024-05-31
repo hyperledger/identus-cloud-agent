@@ -1,8 +1,10 @@
 package org.hyperledger.identus.pollux.core.model
 
-import zio.{Clock, Random}
+import zio.Clock
+import zio.Random
 
-import java.time.{OffsetDateTime, ZoneOffset}
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 case class VerificationPolicy(

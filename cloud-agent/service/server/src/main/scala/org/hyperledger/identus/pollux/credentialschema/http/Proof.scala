@@ -1,11 +1,15 @@
 package org.hyperledger.identus.pollux.credentialschema.http
 
-import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.{description, encodedExample}
-import sttp.tapir.generic.auto.*
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
-import org.hyperledger.identus.pollux.credentialschema.http.Proof.annotations
 import org.hyperledger.identus.api.http.*
+import org.hyperledger.identus.pollux.credentialschema.http.Proof.annotations
+import sttp.tapir.generic.auto.*
+import sttp.tapir.Schema
+import sttp.tapir.Schema.annotations.description
+import sttp.tapir.Schema.annotations.encodedExample
+import zio.json.DeriveJsonDecoder
+import zio.json.DeriveJsonEncoder
+import zio.json.JsonDecoder
+import zio.json.JsonEncoder
 
 import java.time.OffsetDateTime
 

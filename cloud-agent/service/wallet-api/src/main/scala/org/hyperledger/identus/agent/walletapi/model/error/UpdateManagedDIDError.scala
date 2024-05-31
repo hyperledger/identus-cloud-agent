@@ -1,8 +1,10 @@
 package org.hyperledger.identus.agent.walletapi.model.error
 
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
+import org.hyperledger.identus.castor.core.model.error.DIDOperationError
+import org.hyperledger.identus.castor.core.model.error.DIDResolutionError
+import org.hyperledger.identus.castor.core.model.error.OperationValidationError
 import org.hyperledger.identus.castor.core.model.error as castor
-import org.hyperledger.identus.castor.core.model.error.{OperationValidationError, DIDOperationError, DIDResolutionError}
 
 sealed trait UpdateManagedDIDError
 
