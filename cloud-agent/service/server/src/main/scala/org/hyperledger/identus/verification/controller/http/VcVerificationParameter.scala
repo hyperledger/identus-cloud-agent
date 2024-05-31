@@ -1,10 +1,16 @@
 package org.hyperledger.identus.verification.controller.http
 
 import sttp.tapir.Schema
+import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.time.OffsetDateTime
 
+/** Base trait for verification parameters.
+  *
+  * @param parameterType
+  *   The type of the parameter.
+  */
 sealed trait VcVerificationParameter(val parameterType: String)
 
 object VcVerificationParameter {
@@ -31,7 +37,16 @@ object VcVerificationParameter {
 
 }
 
-case class DidParameter(did: String) extends VcVerificationParameter("DidParameter")
+/** Parameter for DID-based verifications.
+  *
+  * @param did
+  *   The DID (Decentralized Identifier) to use for verification.
+  */
+case class DidParameter(
+    @description("The DID (Decentralized Identifier) to use for verification.")
+    @encodedExample("did:prism:issuer")
+    did: String
+) extends VcVerificationParameter("DidParameter")
 
 object DidParameter {
   given encoder: JsonEncoder[DidParameter] =
@@ -43,7 +58,16 @@ object DidParameter {
   given schema: Schema[DidParameter] = Schema.derived
 }
 
-case class DateTimeParameter(dateTime: OffsetDateTime) extends VcVerificationParameter("DateTimeParameter")
+/** Parameter for date-time based verifications.
+  *
+  * @param dateTime
+  *   The date and time to use for verification.
+  */
+case class DateTimeParameter(
+    @description("The date and time to use for verification.")
+    @encodedExample("2022-03-10T12:00:00Z")
+    dateTime: OffsetDateTime
+) extends VcVerificationParameter("DateTimeParameter")
 
 object DateTimeParameter {
   given encoder: JsonEncoder[DateTimeParameter] =
