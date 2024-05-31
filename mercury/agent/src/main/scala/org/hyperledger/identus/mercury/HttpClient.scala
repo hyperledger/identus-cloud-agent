@@ -1,6 +1,6 @@
 package org.hyperledger.identus.mercury
 
-import zio._
+import zio.*
 
 opaque type Header = (String, String)
 object Header:

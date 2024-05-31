@@ -1,6 +1,7 @@
 package org.hyperledger.identus.shared.models
 
 import org.hyperledger.identus.shared.utils.BytesOps
+
 import scala.util.Try
 
 opaque type HexString = String

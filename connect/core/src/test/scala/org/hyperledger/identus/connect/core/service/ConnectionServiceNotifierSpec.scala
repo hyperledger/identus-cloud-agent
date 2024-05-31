@@ -9,9 +9,9 @@ import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, C
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
-import zio.ZIO.*
 import zio.mock.Expectation
 import zio.test.*
+import zio.ZIO.*
 
 import java.time.Instant
 import java.util.UUID

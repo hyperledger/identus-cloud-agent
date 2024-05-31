@@ -1,16 +1,13 @@
 package org.hyperledger.identus.iam.authentication.oidc
 
-import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.agent.walletapi.model.EntityRole
-import org.hyperledger.identus.iam.authentication.AuthenticationError
-import org.hyperledger.identus.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
-import org.hyperledger.identus.iam.authentication.AuthenticationError.InvalidCredentials
-import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
-import org.hyperledger.identus.iam.authentication.Credentials
+import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, EntityRole}
+import org.hyperledger.identus.iam.authentication.{AuthenticationError, AuthenticatorWithAuthZ, Credentials}
+import org.hyperledger.identus.iam.authentication.AuthenticationError.{
+  AuthenticationMethodNotEnabled,
+  InvalidCredentials
+}
 import org.hyperledger.identus.shared.utils.Traverse.*
-import pdi.jwt.JwtCirce
-import pdi.jwt.JwtClaim
-import pdi.jwt.JwtOptions
+import pdi.jwt.{JwtCirce, JwtClaim, JwtOptions}
 import zio.*
 import zio.json.ast.Json
 

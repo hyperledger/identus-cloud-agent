@@ -5,8 +5,8 @@ import zio.{IO, UIO, ZIO}
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.util
-import java.util.Base64
 import java.util.zip.{GZIPInputStream, GZIPOutputStream}
+import java.util.Base64
 
 class BitString private (val bitSet: util.BitSet, val size: Int) {
   def setRevokedInPlace(index: Int, value: Boolean): IO[IndexOutOfBounds, Unit] =

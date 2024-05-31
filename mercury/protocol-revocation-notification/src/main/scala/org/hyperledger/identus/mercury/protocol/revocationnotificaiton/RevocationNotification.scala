@@ -1,10 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.revocationnotificaiton
 
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.syntax._
-
-import org.hyperledger.identus.mercury.model.{PIURI, Message, DidId}
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
+import org.hyperledger.identus.mercury.model.{DidId, Message, PIURI}
 
 final case class RevocationNotification(
     id: String = java.util.UUID.randomUUID.toString(),

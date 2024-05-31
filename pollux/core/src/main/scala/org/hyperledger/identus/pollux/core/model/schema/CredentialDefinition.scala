@@ -5,8 +5,7 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.*
 import zio.*
 import zio.json.*
 
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 import scala.util.Try
 

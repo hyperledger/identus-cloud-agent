@@ -3,8 +3,8 @@ package org.hyperledger.identus.pollux.core.service
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.*
-import zio.{IO, ZIO}
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import zio.{IO, ZIO}
 
 import java.util.UUID
 trait CredentialSchemaService {

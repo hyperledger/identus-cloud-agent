@@ -1,7 +1,7 @@
 package org.hyperledger.identus.issue.controller
 
-import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.issue.controller.http.{
   AcceptCredentialOfferRequest,
   CreateIssueCredentialRecordRequest,

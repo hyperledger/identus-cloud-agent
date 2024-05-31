@@ -6,11 +6,14 @@ import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDDetail
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
-import org.hyperledger.identus.event.notification.EventNotificationConfig
-import org.hyperledger.identus.event.notification.{Event, EventConsumer, EventNotificationService}
+import org.hyperledger.identus.event.notification.{
+  Event,
+  EventConsumer,
+  EventNotificationConfig,
+  EventNotificationService
+}
 import org.hyperledger.identus.pollux.core.model.{IssueCredentialRecord, PresentationRecord}
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.http.*
 import zio.json.*

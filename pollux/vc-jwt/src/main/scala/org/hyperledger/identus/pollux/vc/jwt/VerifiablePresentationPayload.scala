@@ -12,8 +12,8 @@ import zio.*
 import zio.prelude.*
 
 import java.security.PublicKey
-import java.time.temporal.TemporalAmount
 import java.time.{Clock, Instant}
+import java.time.temporal.TemporalAmount
 import scala.util.Try
 
 sealed trait VerifiablePresentationPayload

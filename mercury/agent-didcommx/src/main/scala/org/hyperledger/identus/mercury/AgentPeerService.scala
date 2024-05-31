@@ -1,12 +1,12 @@
 package org.hyperledger.identus.mercury
 
-import zio._
-
-import org.hyperledger.identus.mercury.model.*
 import com.nimbusds.jose.jwk.OctetKeyPair
+import org.didcommx.didcomm.common.*
+import org.didcommx.didcomm.secret.*
 import org.didcommx.peerdid.core.PeerDIDUtils
-import org.didcommx.didcomm.common._
-import org.didcommx.didcomm.secret._
+import org.hyperledger.identus.mercury.model.*
+import zio.*
+
 import scala.jdk.CollectionConverters.*
 
 case class AgentPeerService(

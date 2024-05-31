@@ -9,14 +9,14 @@ import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.verification.controller.http.*
+import sttp.client3.{basicRequest, DeserializationException, Response, UriContext}
 import sttp.client3.ziojson.*
-import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
 import sttp.model.StatusCode
 import zio.*
-import zio.Config.OffsetDateTime
 import zio.json.EncoderOps
 import zio.test.*
 import zio.test.Assertion.*
+import zio.Config.OffsetDateTime
 
 import java.time.Instant
 
@@ -77,6 +77,7 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
             signedJwtCredential.value,
             List(
               ParameterizableVcVerification(VcVerification.SignatureVerification, None),
+              ParameterizableVcVerification(VcVerification.SemanticCheckOfClaims, None),
               ParameterizableVcVerification(VcVerification.NotBeforeCheck, Some(DateTimeParameter(currentTime))),
               ParameterizableVcVerification(VcVerification.ExpirationCheck, Some(DateTimeParameter(currentTime)))
             )
@@ -107,6 +108,7 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
                 signedJwtCredential.value,
                 List(
                   VcVerificationResult(VcVerification.SignatureVerification, false),
+                  VcVerificationResult(VcVerification.SemanticCheckOfClaims, true),
                   VcVerificationResult(VcVerification.NotBeforeCheck, true),
                   VcVerificationResult(VcVerification.ExpirationCheck, true)
                 )

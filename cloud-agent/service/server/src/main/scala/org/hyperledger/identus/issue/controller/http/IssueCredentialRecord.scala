@@ -4,9 +4,9 @@ import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.issue.controller.http.IssueCredentialRecord.annotations
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord as PolluxIssueCredentialRecord
-import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
-import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.{Schema, Validator}
+import sttp.tapir.json.zio.schemaForZioJsonValue
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import zio.json.*
 import zio.json.ast.Json
 
