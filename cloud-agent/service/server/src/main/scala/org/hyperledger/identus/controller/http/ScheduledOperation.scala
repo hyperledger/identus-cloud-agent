@@ -5,7 +5,7 @@ import org.hyperledger.identus.castor.core.model.did.ScheduleDIDOperationOutcome
 import org.hyperledger.identus.shared.models.HexString
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 final case class DIDOperationResponse(
     scheduledOperation: DidOperationSubmission

@@ -1,6 +1,7 @@
 package org.hyperledger.identus.shared.models
 
 import org.hyperledger.identus.shared.utils.Base64Utils
+
 import scala.util.Try
 
 opaque type Base64UrlString = String

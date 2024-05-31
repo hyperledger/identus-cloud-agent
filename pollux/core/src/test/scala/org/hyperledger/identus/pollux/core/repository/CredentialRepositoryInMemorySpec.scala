@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import zio._
-import zio.test._
+import zio.*
+import zio.test.*
 
 /** core/testOnly org.hyperledger.identus.pollux.core.repository.CredentialRepositoryInMemorySpec */
 object CredentialRepositoryInMemorySpec extends ZIOSpecDefault {

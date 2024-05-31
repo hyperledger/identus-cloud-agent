@@ -8,8 +8,7 @@ import org.hyperledger.identus.pollux.core.repository.VerificationPolicyReposito
 import org.hyperledger.identus.pollux.sql.model.db
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.time.{OffsetDateTime, ZoneOffset}
@@ -70,8 +69,8 @@ object JdbcVerificationPolicyRepository {
 }
 
 class JdbcVerificationPolicyRepository(xa: Transactor[ContextAwareTask]) extends VerificationPolicyRepository {
-  import VerificationPolicyExtensions.*
   import org.hyperledger.identus.pollux.sql.model.db.VerificationPolicySql
+  import VerificationPolicyExtensions.*
 
   override def create(
       verificationPolicy: model.VerificationPolicy

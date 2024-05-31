@@ -1,6 +1,8 @@
 package org.hyperledger.identus.castor.core.service
 
-import org.hyperledger.identus.castor.core.model.ProtoModelHelper
+import io.iohk.atala.prism.protos.{node_api, node_models}
+import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeService
+import io.iohk.atala.prism.protos.node_models.OperationOutput.OperationMaybe
 import org.hyperledger.identus.castor.core.model.did.{
   CanonicalPrismDID,
   DIDData,
@@ -13,16 +15,14 @@ import org.hyperledger.identus.castor.core.model.did.{
   ScheduledDIDOperationDetail,
   SignedPrismDIDOperation
 }
-import org.hyperledger.identus.castor.core.model.error.OperationValidationError
-import org.hyperledger.identus.castor.core.model.error.{DIDOperationError, DIDResolutionError}
+import org.hyperledger.identus.castor.core.model.error.{DIDOperationError, DIDResolutionError, OperationValidationError}
+import org.hyperledger.identus.castor.core.model.ProtoModelHelper
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
-import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeService
-import io.iohk.atala.prism.protos.node_models.OperationOutput.OperationMaybe
-import io.iohk.atala.prism.protos.{node_api, node_models}
 import org.hyperledger.identus.shared.models.HexString
+import zio.*
+
 import java.time.Instant
 import scala.collection.immutable.ArraySeq
-import zio.*
 
 trait DIDService {
   def scheduleOperation(operation: SignedPrismDIDOperation): IO[DIDOperationError, ScheduleDIDOperationOutcome]

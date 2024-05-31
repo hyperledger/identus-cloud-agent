@@ -2,12 +2,13 @@ package org.hyperledger.identus.agent.walletapi.storage
 
 import org.hyperledger.identus.agent.walletapi.model.Wallet
 import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageError.TooManyWebhook
-import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageError.DuplicatedWalletId
-import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageError.DuplicatedWalletSeed
+import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageError.{
+  DuplicatedWalletId,
+  DuplicatedWalletSeed,
+  TooManyWebhook
+}
 import org.hyperledger.identus.event.notification.EventNotificationConfig
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.DBTestUtils
 import zio.*

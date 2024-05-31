@@ -5,10 +5,10 @@ import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.event.notification.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{URLayer, ZIO, ZLayer, IO}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
 

@@ -1,16 +1,17 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
-import com.nimbusds.jose.jwk.gen.ECKeyGenerator
 import com.nimbusds.jose.jwk.{Curve, ECKey}
+import com.nimbusds.jose.jwk.gen.ECKeyGenerator
 import io.circe.*
 import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
+import org.hyperledger.identus.shared.http.*
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
-import org.hyperledger.identus.shared.http.*
+
 import java.security.Security
 import java.time.Instant
 

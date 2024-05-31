@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.syntax.*
 import io.circe.{Json, JsonObject}
+import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{

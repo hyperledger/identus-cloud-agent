@@ -2,12 +2,12 @@ package org.hyperledger.identus.pollux.core.model.schema
 
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.*
-import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.`type`.{
   AnoncredSchemaType,
   CredentialJsonSchemaType,
   CredentialSchemaType
 }
+import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.validator.{JsonSchemaValidator, JsonSchemaValidatorImpl}
 import org.hyperledger.identus.pollux.core.service.URIDereferencer
 import zio.*

@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury
 
-import org.hyperledger.identus.mercury.model._
-import org.hyperledger.identus.mercury.protocol.outofbandlogin._
+import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.protocol.outofbandlogin.*
 
 object OutOfBandLoginPrograms {
 

@@ -4,12 +4,12 @@ import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError.*
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio.{Exit, ZIO, ZLayer}
 import zio.test.*
 import zio.test.Assertion.*
-import zio.{Exit, ZIO, ZLayer}
 
 import java.time.Instant
 import java.util.UUID

@@ -1,7 +1,7 @@
 package org.hyperledger.identus.agent.walletapi.service
 
-import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError
+import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.hyperledger.identus.agent.walletapi.sql.EntityRepository
 import zio.{IO, URLayer, ZIO, ZLayer}
 

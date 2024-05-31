@@ -1,7 +1,8 @@
 package org.hyperledger.identus.mercury.model
 
-import io.circe._
-import io.circe.generic.semiauto._
+import io.circe.*
+import io.circe.generic.semiauto.*
+
 import scala.util.Try
 
 final case class DidId(value: String)

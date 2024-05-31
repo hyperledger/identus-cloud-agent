@@ -2,8 +2,8 @@ package org.hyperledger.identus
 
 import zio.*
 import zio.http.*
-import zio.http.ZClient.Config
 import zio.http.netty.NettyConfig
+import zio.http.ZClient.Config
 
 import java.net.URI
 import java.time
