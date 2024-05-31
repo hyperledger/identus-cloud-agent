@@ -25,7 +25,9 @@ import java.util.UUID
 sealed trait OID4VCIIssuerMetadataServiceError(
     val statusCode: StatusCode,
     val userFacingMessage: String
-) extends Failure
+) extends Failure {
+  override val namespace: String = "OID4VCIIssuerMetadataServiceError"
+}
 
 object OID4VCIIssuerMetadataServiceError {
   final case class IssuerIdNotFound(issuerId: UUID)
