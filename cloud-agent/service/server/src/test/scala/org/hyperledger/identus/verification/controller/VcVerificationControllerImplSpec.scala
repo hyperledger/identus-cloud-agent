@@ -77,6 +77,7 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
             signedJwtCredential.value,
             List(
               ParameterizableVcVerification(VcVerification.SignatureVerification, None),
+              ParameterizableVcVerification(VcVerification.SemanticCheckOfClaims, None),
               ParameterizableVcVerification(VcVerification.NotBeforeCheck, Some(DateTimeParameter(currentTime))),
               ParameterizableVcVerification(VcVerification.ExpirationCheck, Some(DateTimeParameter(currentTime)))
             )
@@ -107,6 +108,7 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
                 signedJwtCredential.value,
                 List(
                   VcVerificationResult(VcVerification.SignatureVerification, false),
+                  VcVerificationResult(VcVerification.SemanticCheckOfClaims, true),
                   VcVerificationResult(VcVerification.NotBeforeCheck, true),
                   VcVerificationResult(VcVerification.ExpirationCheck, true)
                 )

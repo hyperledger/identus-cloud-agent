@@ -216,7 +216,7 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
       .as(
         VcVerificationResult(
           credential = credential,
-          verification = VcVerification.SubjectVerification,
+          verification = VcVerification.SemanticCheckOfClaims,
           success = true
         )
       )
@@ -224,7 +224,7 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
         ZIO.succeed(
           VcVerificationResult(
             credential = credential,
-            verification = VcVerification.SubjectVerification,
+            verification = VcVerification.SemanticCheckOfClaims,
             success = false
           )
         )
