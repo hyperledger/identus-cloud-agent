@@ -12,8 +12,8 @@ import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
 import org.hyperledger.identus.issue.controller.http.IssueCredentialRecordPage
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord
-import org.hyperledger.identus.pollux.core.service._
-import org.hyperledger.identus.pollux.vc.jwt._
+import org.hyperledger.identus.pollux.core.service.*
+import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import sttp.client3.{DeserializationException, Response, UriContext}
 import sttp.client3.testing.SttpBackendStub
@@ -21,9 +21,9 @@ import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
-import zio._
+import zio.*
 import zio.config.typesafe.TypesafeConfigProvider
-import zio.test._
+import zio.test.*
 
 trait IssueControllerTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>

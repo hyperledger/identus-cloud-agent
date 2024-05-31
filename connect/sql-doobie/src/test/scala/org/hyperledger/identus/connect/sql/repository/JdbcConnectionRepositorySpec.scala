@@ -4,8 +4,8 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.hyperledger.identus.connect.core.repository.{ConnectionRepository, ConnectionRepositorySpecSuite}
 import org.hyperledger.identus.shared.db.DbConfig
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import zio._
-import zio.test._
+import zio.*
+import zio.test.*
 
 object JdbcConnectionRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 

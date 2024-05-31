@@ -1,10 +1,10 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import org.hyperledger.identus.pollux.core.model._
-import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError._
+import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
+import zio.*
 
 import java.util.UUID
 

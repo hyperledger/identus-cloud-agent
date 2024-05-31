@@ -3,7 +3,7 @@ package org.hyperledger.identus.resolvers
 import org.didcommx.didcomm.common.{VerificationMaterial, VerificationMaterialFormat, VerificationMethodType}
 import org.didcommx.didcomm.diddoc.{DIDCommService, DIDDoc, VerificationMethod}
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 object MediatorDidDoc {
   val did = "did:example:mediator"

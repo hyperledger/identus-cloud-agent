@@ -4,7 +4,7 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.container.util.MigrationAspects.migrate
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
-import org.hyperledger.identus.pollux.credentialschema._
+import org.hyperledger.identus.pollux.credentialschema.*
 import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaController
 import org.hyperledger.identus.pollux.credentialschema.http.{
   CredentialSchemaInput,
@@ -13,13 +13,13 @@ import org.hyperledger.identus.pollux.credentialschema.http.{
 }
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import sttp.client3.{basicRequest, DeserializationException, Response, UriContext}
-import sttp.client3.ziojson._
+import sttp.client3.ziojson.*
 import sttp.model.{StatusCode, Uri}
-import zio._
+import zio.*
 import zio.json.EncoderOps
-import zio.test._
-import zio.test.Assertion._
-import zio.test.TestAspect._
+import zio.test.*
+import zio.test.Assertion.*
+import zio.test.TestAspect.*
 
 object CredentialSchemaLookupAndPaginationSpec
     extends ZIOSpecDefault

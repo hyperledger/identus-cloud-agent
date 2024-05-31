@@ -1,20 +1,20 @@
 package org.hyperledger.identus.pollux.core.service
 
 import io.circe.parser.decode
-import io.circe.syntax._
+import io.circe.syntax.*
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64, DidId}
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, IssueCredentialIssuedFormat}
-import org.hyperledger.identus.mercury.protocol.presentproof._
-import org.hyperledger.identus.pollux.anoncreds._
-import org.hyperledger.identus.pollux.core.model._
+import org.hyperledger.identus.mercury.protocol.presentproof.*
+import org.hyperledger.identus.pollux.anoncreds.*
+import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
-import org.hyperledger.identus.pollux.core.model.error.PresentationError._
+import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
 import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.Input
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord._
-import org.hyperledger.identus.pollux.core.model.PresentationRecord._
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
+import org.hyperledger.identus.pollux.core.model.PresentationRecord.*
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import org.hyperledger.identus.pollux.core.service.serdes.{
   AnoncredCredentialProofV1,
@@ -22,16 +22,16 @@ import org.hyperledger.identus.pollux.core.service.serdes.{
   AnoncredPresentationRequestV1,
   AnoncredPresentationV1
 }
-import org.hyperledger.identus.pollux.vc.jwt._
+import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
 import java.time.{Instant, OffsetDateTime}
-import java.util.{Base64 => JBase64, UUID}
+import java.util.{Base64 as JBase64, UUID}
 
 object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSpecHelper {
 

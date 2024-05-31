@@ -1,15 +1,15 @@
 package org.hyperledger.identus.pollux.core.service.verification
 
-import io.circe._
-import io.circe.syntax._
+import io.circe.*
+import io.circe.syntax.*
 import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.pollux.core.service.ResourceURIDereferencerImpl
-import org.hyperledger.identus.pollux.vc.jwt._
-import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits._
+import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
-import zio.test._
+import zio.*
+import zio.test.*
 import zio.Config.OffsetDateTime
 
 import java.time.Instant

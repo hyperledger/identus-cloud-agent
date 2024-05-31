@@ -1,15 +1,15 @@
 package org.hyperledger.identus.pollux.sql.repository
 
-import doobie._
+import doobie.*
 import doobie.util.transactor.Transactor
 import org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.pollux.core.model.{CredentialSchemaAndTrustedIssuersConstraint, VerificationPolicy}
 import org.hyperledger.identus.pollux.core.repository.VerificationPolicyRepository
 import org.hyperledger.identus.pollux.sql.model.db
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits._
+import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
+import zio.*
 
 import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID

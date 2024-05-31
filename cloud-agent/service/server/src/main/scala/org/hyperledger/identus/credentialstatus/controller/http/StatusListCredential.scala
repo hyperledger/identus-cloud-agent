@@ -8,8 +8,8 @@ import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio._
-import zio.json._
+import zio.*
+import zio.json.*
 import zio.json.ast.Json
 
 import java.time.Instant

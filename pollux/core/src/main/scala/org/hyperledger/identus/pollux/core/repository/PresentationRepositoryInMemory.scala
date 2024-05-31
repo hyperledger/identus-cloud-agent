@@ -1,11 +1,11 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import org.hyperledger.identus.mercury.protocol.presentproof._
-import org.hyperledger.identus.pollux.core.model._
-import org.hyperledger.identus.pollux.core.model.error.PresentationError._
+import org.hyperledger.identus.mercury.protocol.presentproof.*
+import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
 import org.hyperledger.identus.pollux.core.model.PresentationRecord.ProtocolState
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
+import zio.*
 
 import java.time.Instant
 

@@ -1,10 +1,10 @@
 package org.hyperledger.identus.pollux.core.model.schema.validator
 
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
-import com.networknt.schema._
+import com.networknt.schema.*
 import com.networknt.schema.SpecVersion.VersionFlag
-import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError._
-import zio._
+import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError.*
+import zio.*
 import zio.json.ast.Json
 
 object JsonSchemaUtils {

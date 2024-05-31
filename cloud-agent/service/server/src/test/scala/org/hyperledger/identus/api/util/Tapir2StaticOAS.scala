@@ -18,7 +18,7 @@ import org.hyperledger.identus.pollux.credentialschema.controller.{
 import org.hyperledger.identus.presentproof.controller.PresentProofController
 import org.hyperledger.identus.system.controller.SystemController
 import org.hyperledger.identus.verification.controller.VcVerificationController
-import org.scalatestplus.mockito.MockitoSugar._
+import org.scalatestplus.mockito.MockitoSugar.*
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 

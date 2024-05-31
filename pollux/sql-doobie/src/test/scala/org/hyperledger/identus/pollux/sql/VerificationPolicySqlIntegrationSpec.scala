@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.sql
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import doobie._
+import doobie.*
 import doobie.util.transactor.Transactor
 import org.hyperledger.identus.pollux.core.model.{
   CredentialSchemaAndTrustedIssuersConstraint,
@@ -12,14 +12,14 @@ import org.hyperledger.identus.pollux.core.repository.VerificationPolicyReposito
 import org.hyperledger.identus.pollux.sql.model.db.VerificationPolicySql
 import org.hyperledger.identus.pollux.sql.repository.JdbcVerificationPolicyRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits._
+import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import org.hyperledger.identus.test.container.MigrationAspects._
-import zio._
-import zio.test._
-import zio.test.Assertion._
-import zio.test.TestAspect._
+import org.hyperledger.identus.test.container.MigrationAspects.*
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
+import zio.test.TestAspect.*
 
 object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 

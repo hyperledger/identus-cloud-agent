@@ -11,7 +11,7 @@ import org.hyperledger.identus.castor.core.model.did.w3c.{
   ServiceRepr
 }
 import org.hyperledger.identus.castor.core.service.DIDService
-import zio._
+import zio.*
 
 import java.time.Instant
 import scala.annotation.unused

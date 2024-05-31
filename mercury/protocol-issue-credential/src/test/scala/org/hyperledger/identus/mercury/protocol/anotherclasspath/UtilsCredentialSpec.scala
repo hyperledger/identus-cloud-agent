@@ -1,9 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.anotherclasspath
 
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.syntax._
-import munit._
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
+import munit.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.issuecredential.{
   CredentialPreview,

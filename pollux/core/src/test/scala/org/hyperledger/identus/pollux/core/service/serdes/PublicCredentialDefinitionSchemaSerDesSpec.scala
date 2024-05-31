@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.service.serdes
 
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 object PublicCredentialDefinitionSchemaSerDesSpec extends ZIOSpecDefault {
   val json: String =

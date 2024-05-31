@@ -2,13 +2,13 @@ package org.hyperledger.identus.agent.server.jobs
 
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
-import org.hyperledger.identus.mercury._
+import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.protocol.revocationnotificaiton.RevocationNotification
 import org.hyperledger.identus.pollux.core.service.{CredentialService, CredentialStatusListService}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{VCStatusList2021, VCStatusList2021Error}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
-import zio._
+import zio.*
 import zio.metrics.Metric
 
 object StatusListJobs extends BackgroundJobsHelper {

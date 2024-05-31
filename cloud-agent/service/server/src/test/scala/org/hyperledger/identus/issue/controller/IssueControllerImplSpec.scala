@@ -23,13 +23,13 @@ import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, I
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.service.MockCredentialService
 import sttp.client3.{basicRequest, DeserializationException, UriContext}
-import sttp.client3.ziojson._
+import sttp.client3.ziojson.*
 import sttp.model.StatusCode
-import zio._
+import zio.*
 import zio.json.EncoderOps
 import zio.mock.Expectation
-import zio.test._
-import zio.test.Assertion._
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.time.Instant
 import java.util.UUID

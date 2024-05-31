@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.service.serdes
 
 import org.hyperledger.identus.pollux.core.model.schema.validator.SchemaSerDes
-import zio._
-import zio.json._
+import zio.*
+import zio.json.*
 
 case class AnoncredCredentialProofV1(
     credential: String,

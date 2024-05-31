@@ -1,13 +1,13 @@
 package org.hyperledger.identus.iam.entity.http
 
-import org.hyperledger.identus.api.http._
+import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.EndpointOutputs._
+import org.hyperledger.identus.api.http.EndpointOutputs.*
 import org.hyperledger.identus.iam.authentication.admin.AdminApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.admin.AdminApiKeySecurityLogic.adminApiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import org.hyperledger.identus.iam.entity.http.model._
+import org.hyperledger.identus.iam.entity.http.model.*
 import sttp.apispec.Tag
 import sttp.model.StatusCode
 import sttp.tapir.{endpoint, extractFromRequest, path, query, statusCode, stringToPath, Endpoint, EndpointInput}

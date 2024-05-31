@@ -1,34 +1,34 @@
 package org.hyperledger.identus.pollux.core.service
 
-import cats._
-import cats.implicits._
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
-import org.hyperledger.identus.mercury.model._
+import cats.*
+import cats.implicits.*
+import io.circe.*
+import io.circe.parser.*
+import io.circe.syntax.*
+import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialIssuedFormat
-import org.hyperledger.identus.mercury.protocol.presentproof._
-import org.hyperledger.identus.pollux.anoncreds._
-import org.hyperledger.identus.pollux.core.model._
+import org.hyperledger.identus.mercury.protocol.presentproof.*
+import org.hyperledger.identus.pollux.anoncreds.*
+import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
-import org.hyperledger.identus.pollux.core.model.error.PresentationError._
-import org.hyperledger.identus.pollux.core.model.presentation.{SdJwtPresentationPayload, _}
+import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
+import org.hyperledger.identus.pollux.core.model.presentation.{SdJwtPresentationPayload, *}
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, PresentationRepository}
-import org.hyperledger.identus.pollux.core.service.serdes._
+import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.pollux.sdjwt.{CredentialJson, PresentationJson, SDJWT}
-import org.hyperledger.identus.pollux.vc.jwt._
+import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
-import zio._
-import zio.json._
+import zio.*
+import zio.json.*
 
-import java.{util => ju}
 import java.net.URI
 import java.rmi.UnexpectedException
 import java.time.Instant
-import java.util.{Base64 => JBase64, UUID}
-import scala.util.chaining._
+import java.util.{Base64 as JBase64, UUID}
+import java.util as ju
+import scala.util.chaining.*
 import scala.util.Try
 
 private class PresentationServiceImpl(

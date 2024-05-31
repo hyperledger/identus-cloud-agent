@@ -3,12 +3,12 @@ package org.hyperledger.identus.agent.walletapi.vault
 import io.github.jopenlibs.vault.{Vault, VaultConfig, VaultException}
 import io.github.jopenlibs.vault.api.{Logical, LogicalUtilities}
 import io.github.jopenlibs.vault.response.LogicalResponse
-import zio._
-import zio.http._
-import zio.json._
+import zio.*
+import zio.http.*
+import zio.json.*
 
 import java.nio.charset.StandardCharsets
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 trait VaultKVClient {
   def get[T: KVCodec](path: String): Task[Option[T]]

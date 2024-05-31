@@ -21,8 +21,8 @@ import org.hyperledger.identus.castor.controller.http.{
 }
 import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.utils.Traverse._
-import zio._
+import org.hyperledger.identus.shared.utils.Traverse.*
+import zio.*
 
 import scala.language.implicitConversions
 

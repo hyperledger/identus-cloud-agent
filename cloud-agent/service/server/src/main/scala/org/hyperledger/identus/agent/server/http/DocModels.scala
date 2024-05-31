@@ -10,7 +10,7 @@ import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionR
 import org.hyperledger.identus.pollux.credentialschema.{SchemaRegistryEndpoints, VerificationPolicyEndpoints}
 import org.hyperledger.identus.system.controller.SystemEndpoints
 import sttp.apispec.{SecurityScheme, Tag}
-import sttp.apispec.openapi._
+import sttp.apispec.openapi.*
 import sttp.model.headers.AuthenticationScheme
 
 import scala.collection.immutable.ListMap

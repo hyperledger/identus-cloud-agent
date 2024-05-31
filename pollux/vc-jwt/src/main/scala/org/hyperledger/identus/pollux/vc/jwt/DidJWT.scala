@@ -5,11 +5,11 @@ import com.nimbusds.jose.crypto.{ECDSASigner, Ed25519Signer}
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey, OctetKeyPair}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
-import io.circe._
+import io.circe.*
 import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import zio._
+import zio.*
 
-import java.security._
+import java.security.*
 import java.util.Base64
 
 opaque type JWT = String

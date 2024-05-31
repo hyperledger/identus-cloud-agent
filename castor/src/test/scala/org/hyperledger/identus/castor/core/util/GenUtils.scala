@@ -1,11 +1,11 @@
 package org.hyperledger.identus.castor.core.util
 
 import io.circe.Json
-import org.hyperledger.identus.castor.core.model.did._
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.{UriOrJsonEndpoint, UriValue}
 import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.models.Base64UrlString
-import zio._
+import zio.*
 import zio.test.Gen
 
 import scala.language.implicitConversions

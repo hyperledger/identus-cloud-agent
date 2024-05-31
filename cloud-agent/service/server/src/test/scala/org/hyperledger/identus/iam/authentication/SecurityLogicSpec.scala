@@ -3,9 +3,9 @@ package org.hyperledger.identus.iam.authentication
 import org.hyperledger.identus.agent.walletapi.model.{Entity, EntityRole}
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.AuthenticationError.InvalidCredentials
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.util.UUID
 

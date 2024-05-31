@@ -2,9 +2,9 @@ package org.hyperledger.identus.pollux.sdjwt
 
 import org.bouncycastle.crypto.params.{Ed25519PrivateKeyParameters, Ed25519PublicKeyParameters}
 import org.bouncycastle.crypto.util.{PrivateKeyInfoFactory, SubjectPublicKeyInfoFactory}
-import org.hyperledger.identus.shared.crypto._
-import sdjwtwrapper._
-import zio.json._
+import org.hyperledger.identus.shared.crypto.*
+import sdjwtwrapper.*
+import zio.json.*
 
 import java.util.Base64
 

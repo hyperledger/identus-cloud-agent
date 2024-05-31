@@ -4,9 +4,9 @@ import io.circe.Json
 import org.hyperledger.identus.api.http.codec.CirceJsonInterop
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.castor.controller.http.Service.annotations
-import org.hyperledger.identus.castor.core.model.{did => castorDomain, ProtoModelHelper}
+import org.hyperledger.identus.castor.core.model.{did as castorDomain, ProtoModelHelper}
 import org.hyperledger.identus.castor.core.model.did.w3c
-import org.hyperledger.identus.shared.utils.Traverse._
+import org.hyperledger.identus.shared.utils.Traverse.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}

@@ -1,17 +1,17 @@
 package org.hyperledger.identus.connect.core.service
 
-import io.circe.syntax._
+import io.circe.syntax.*
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.InvalidStateForOperation
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
-import org.hyperledger.identus.connect.core.model.ConnectionRecord._
+import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.repository.ConnectionRepositoryInMemory
 import org.hyperledger.identus.mercury.model.{DidId, Message}
 import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.time.Instant
 import java.util.UUID

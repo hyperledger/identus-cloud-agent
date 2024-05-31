@@ -1,6 +1,6 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import io.circe._
+import io.circe.*
 import org.hyperledger.identus.shared.utils.Base64Utils
 import scodec.bits.ByteVector
 

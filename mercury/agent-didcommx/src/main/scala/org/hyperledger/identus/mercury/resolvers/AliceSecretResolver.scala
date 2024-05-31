@@ -3,7 +3,7 @@ package org.hyperledger.identus.mercury.resolvers
 import org.didcommx.didcomm.common.{VerificationMaterial, VerificationMaterialFormat, VerificationMethodType}
 import org.didcommx.didcomm.secret.{Secret, SecretResolverInMemory}
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 object AliceSecretResolver {
   val jwkKey1 =

@@ -19,7 +19,7 @@ import org.hyperledger.identus.castor.core.model.error.{DIDOperationError, DIDRe
 import org.hyperledger.identus.castor.core.model.ProtoModelHelper
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.shared.models.HexString
-import zio._
+import zio.*
 
 import java.time.Instant
 import scala.collection.immutable.ArraySeq

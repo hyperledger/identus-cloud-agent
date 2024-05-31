@@ -2,12 +2,12 @@ package org.hyperledger.identus.pollux.credentialdefinition.controller
 
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import org.hyperledger.identus.api.http._
+import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{CollectionStats, Order, Pagination}
 import org.hyperledger.identus.castor.core.model.did.{LongFormPrismDID, PrismDID}
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.FilteredEntries
 import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService
-import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error._
+import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error.*
 import org.hyperledger.identus.pollux.credentialdefinition
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController.domainToHttpErrorIO
 import org.hyperledger.identus.pollux.credentialdefinition.http.{
@@ -19,7 +19,7 @@ import org.hyperledger.identus.pollux.credentialdefinition.http.{
 import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionInput.toDomain
 import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponse.fromDomain
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
+import zio.*
 import zio.json.ast.Json
 
 import java.util.UUID

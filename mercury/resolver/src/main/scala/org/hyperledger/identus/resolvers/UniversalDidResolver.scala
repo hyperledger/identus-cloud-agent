@@ -1,12 +1,12 @@
 package org.hyperledger.identus.resolvers
 
-import org.didcommx.didcomm.diddoc._
+import org.didcommx.didcomm.diddoc.*
 import org.hyperledger.identus.mercury.model.DidId
-import zio._
+import zio.*
 
 import java.util.Optional
-import scala.jdk.CollectionConverters._
-import scala.jdk.OptionConverters._
+import scala.jdk.CollectionConverters.*
+import scala.jdk.OptionConverters.*
 
 trait DIDResolver {
   def resolveDID(did: DidId): Task[DIDDoc] // TODO return Task[DIDDocument]

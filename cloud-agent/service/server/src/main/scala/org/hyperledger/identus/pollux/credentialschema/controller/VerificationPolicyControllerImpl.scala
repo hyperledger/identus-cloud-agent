@@ -1,10 +1,10 @@
 package org.hyperledger.identus.pollux.credentialschema.controller
 
-import org.hyperledger.identus.api.http._
+import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{CollectionStats, Order, Pagination}
 import org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError
-import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError._
+import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError.*
 import org.hyperledger.identus.pollux.core.model.CredentialSchemaAndTrustedIssuersConstraint
 import org.hyperledger.identus.pollux.core.service.VerificationPolicyService
 import org.hyperledger.identus.pollux.credentialschema.http.{
@@ -12,10 +12,10 @@ import org.hyperledger.identus.pollux.credentialschema.http.{
   VerificationPolicyResponse,
   VerificationPolicyResponsePage
 }
-import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyResponse._
+import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyResponse.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
-import zio.ZIO._
+import zio.*
+import zio.ZIO.*
 
 import java.util.UUID
 

@@ -1,10 +1,10 @@
 package org.hyperledger.identus.iam.authentication.apikey
 
-import doobie._
-import doobie.implicits._
+import doobie.*
+import doobie.implicits.*
 import org.postgresql.util.PSQLException
-import zio._
-import zio.interop.catz._
+import zio.*
+import zio.interop.catz.*
 
 import java.time.OffsetDateTime
 import java.util.UUID

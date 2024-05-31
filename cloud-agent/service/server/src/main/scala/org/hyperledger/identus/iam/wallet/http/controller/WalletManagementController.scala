@@ -16,7 +16,7 @@ import org.hyperledger.identus.iam.wallet.http.model.{
 }
 import org.hyperledger.identus.shared.models.{HexString, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.shared.models.WalletAdministrationContext.Admin
-import zio._
+import zio.*
 
 import java.util.UUID
 import scala.language.implicitConversions

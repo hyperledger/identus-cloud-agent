@@ -17,9 +17,9 @@ import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.DBTestUtils
-import zio._
-import zio.test.{ZIOSpecDefault, _}
-import zio.test.Assertion._
+import zio.*
+import zio.test.{ZIOSpecDefault, *}
+import zio.test.Assertion.*
 
 import java.net.{URI, URL}
 

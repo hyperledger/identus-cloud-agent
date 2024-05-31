@@ -18,7 +18,7 @@ import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import sttp.apispec.Tag
 import sttp.model.StatusCode
-import sttp.tapir._
+import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
 
 object DIDRegistrarEndpoints {

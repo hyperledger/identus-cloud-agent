@@ -6,9 +6,9 @@ import org.hyperledger.identus.agent.walletapi.vault.VaultWalletSecretStorage
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 object WalletSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupport, VaultTestContainerSupport {
 

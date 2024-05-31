@@ -3,7 +3,7 @@ package org.hyperledger.identus.pollux.credentialdefinition
 import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Entity}
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.container.util.MigrationAspects._
+import org.hyperledger.identus.container.util.MigrationAspects.*
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
 import org.hyperledger.identus.pollux.core.service.serdes.{
@@ -17,14 +17,14 @@ import org.hyperledger.identus.pollux.credentialdefinition.http.{
   CredentialDefinitionResponse
 }
 import sttp.client3.basicRequest
-import sttp.client3.ziojson._
+import sttp.client3.ziojson.*
 import sttp.model.StatusCode
-import zio._
-import zio.json._
-import zio.test._
-import zio.test.Assertion._
-import zio.test.TestAspect._
-import zio.ZIO._
+import zio.*
+import zio.json.*
+import zio.test.*
+import zio.test.Assertion.*
+import zio.test.TestAspect.*
+import zio.ZIO.*
 
 import java.util.UUID
 

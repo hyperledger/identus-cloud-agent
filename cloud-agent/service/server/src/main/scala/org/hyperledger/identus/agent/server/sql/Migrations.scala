@@ -1,13 +1,13 @@
 package org.hyperledger.identus.agent.server.sql
 
-import doobie._
-import doobie.implicits._
+import doobie.*
+import doobie.implicits.*
 import doobie.util.transactor.Transactor
 import org.flywaydb.core.Flyway
 import org.hyperledger.identus.shared.db.{ContextAwareTask, DbConfig}
-import org.hyperledger.identus.shared.db.Implicits._
-import zio._
-import zio.interop.catz._
+import org.hyperledger.identus.shared.db.Implicits.*
+import zio.*
+import zio.interop.catz.*
 
 final case class Migrations(config: DbConfig) {
 

@@ -6,11 +6,11 @@ import org.hyperledger.identus.pollux.core.model.schema.`type`.{AnoncredSchemaTy
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError.JsonValidationErrors
 import org.hyperledger.identus.pollux.core.model.schema.AnoncredSchemaTypeSpec.test
-import zio.json._
+import zio.json.*
 import zio.json.ast.Json
-import zio.json.ast.Json._
+import zio.json.ast.Json.*
 import zio.test.{assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
-import zio.test.Assertion._
+import zio.test.Assertion.*
 import zio.Scope
 
 import java.time.OffsetDateTime

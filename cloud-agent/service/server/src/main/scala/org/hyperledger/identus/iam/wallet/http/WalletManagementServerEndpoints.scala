@@ -5,9 +5,9 @@ import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementController
 import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.LogUtils._
-import sttp.tapir.ztapir._
-import zio._
+import org.hyperledger.identus.LogUtils.*
+import sttp.tapir.ztapir.*
+import zio.*
 
 class WalletManagementServerEndpoints(
     controller: WalletManagementController,

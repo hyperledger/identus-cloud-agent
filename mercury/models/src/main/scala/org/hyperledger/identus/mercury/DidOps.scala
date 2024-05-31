@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury
 
-import org.hyperledger.identus.mercury.model._
-import zio._
+import org.hyperledger.identus.mercury.model.*
+import zio.*
 
 import java.util.Base64
 import scala.util.{Failure, Success, Try}

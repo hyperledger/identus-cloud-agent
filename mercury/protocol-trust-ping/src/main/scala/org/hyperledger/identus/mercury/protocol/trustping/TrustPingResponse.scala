@@ -1,6 +1,6 @@
 package org.hyperledger.identus.mercury.protocol.trustping
 
-import io.circe._
+import io.circe.*
 import org.hyperledger.identus.mercury.model.{DidId, Message, PIURI}
 
 final case class TrustPingResponse(

@@ -6,9 +6,9 @@ import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, De
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.verification.controller
 import org.hyperledger.identus.verification.controller.VcVerificationEndpoints.verify
-import org.hyperledger.identus.LogUtils._
-import sttp.tapir.ztapir._
-import zio._
+import org.hyperledger.identus.LogUtils.*
+import sttp.tapir.ztapir.*
+import zio.*
 
 class VcVerificationServerEndpoints(
     vcVerificationController: VcVerificationController,

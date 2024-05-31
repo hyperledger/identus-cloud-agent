@@ -1,9 +1,9 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
 import io.circe
-import io.circe._
-import io.circe.generic.auto._
-import io.circe.syntax._
+import io.circe.*
+import io.circe.generic.auto.*
+import io.circe.syntax.*
 
 import scala.annotation.unused
 

@@ -17,7 +17,7 @@ import org.hyperledger.identus.pollux.core.service.serdes.{
   ProofKeyCredentialDefinitionSchemaSerDesV1,
   PublicCredentialDefinitionSerDesV1
 }
-import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error._
+import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error.*
 import zio.{IO, URLayer, ZIO, ZLayer}
 import zio.ZIO.getOrFailWith
 

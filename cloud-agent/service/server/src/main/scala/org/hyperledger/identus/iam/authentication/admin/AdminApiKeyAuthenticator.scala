@@ -7,7 +7,7 @@ import org.hyperledger.identus.iam.authentication.{
   Credentials,
   EntityAuthorizer
 }
-import zio._
+import zio.*
 
 trait AdminApiKeyAuthenticator extends AuthenticatorWithAuthZ[Entity], EntityAuthorizer {
 

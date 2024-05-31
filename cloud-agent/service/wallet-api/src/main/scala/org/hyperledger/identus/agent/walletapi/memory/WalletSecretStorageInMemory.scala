@@ -3,7 +3,7 @@ package org.hyperledger.identus.agent.walletapi.memory
 import org.hyperledger.identus.agent.walletapi.model.WalletSeed
 import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
+import zio.*
 
 class WalletSecretStorageInMemory(storeRef: Ref[Map[WalletId, WalletSeed]]) extends WalletSecretStorage {
 

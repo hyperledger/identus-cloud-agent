@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.coordinatemediation
 
-import io.circe._
-import io.circe.generic.semiauto._
+import io.circe.*
+import io.circe.generic.semiauto.*
 import org.hyperledger.identus.mercury.model.PIURI
 
 final case class MediateRequest(

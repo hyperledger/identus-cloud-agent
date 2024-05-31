@@ -1,8 +1,8 @@
 package org.hyperledger.identus.castor.core.model.did
 
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 object ServiceEndpointSpec extends ZIOSpecDefault {
 

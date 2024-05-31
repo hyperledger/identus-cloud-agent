@@ -19,8 +19,8 @@ import org.hyperledger.identus.castor.core.model.did.{
 }
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
-import zio._
-import zio.test._
+import zio.*
+import zio.test.*
 
 import java.time.Instant
 import scala.collection.immutable.ArraySeq

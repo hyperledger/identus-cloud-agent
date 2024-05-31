@@ -8,12 +8,12 @@ import org.keycloak.representations.idm.{
   RoleRepresentation,
   UserRepresentation
 }
-import zio._
+import zio.*
 import zio.test.TestAspect.beforeAll
 import zio.test.TestAspectAtLeastR
 
 import java.util.UUID
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 type KeycloakAdminClient = Keycloak
 

@@ -5,7 +5,7 @@ import org.hyperledger.identus.iam.authentication.oidc.KeycloakEntity
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error
 import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
-import zio._
+import zio.*
 
 class DefaultPermissionManagementService(
     entityPermission: PermissionManagement.Service[Entity],

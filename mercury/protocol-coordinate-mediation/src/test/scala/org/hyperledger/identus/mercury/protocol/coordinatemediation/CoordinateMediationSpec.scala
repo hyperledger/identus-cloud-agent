@@ -1,8 +1,8 @@
 package org.hyperledger.identus.mercury.protocol.coordinatemediation
 
-import io.circe._
-import io.circe.parser._
-import munit._
+import io.circe.*
+import io.circe.parser.*
+import munit.*
 
 class CoordinateMediationSpec extends ZSuite {
   val mediateDenyExample = """{

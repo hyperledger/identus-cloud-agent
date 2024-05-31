@@ -11,9 +11,9 @@ import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.DBTestUtils
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.net.URI
 

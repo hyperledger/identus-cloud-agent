@@ -7,15 +7,15 @@ import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
-import org.hyperledger.identus.connect.core.model.ConnectionRecord._
+import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.service.ConnectionService
-import org.hyperledger.identus.mercury._
+import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
-import zio._
-import zio.metrics._
+import zio.*
+import zio.metrics.*
 
 object ConnectBackgroundJobs extends BackgroundJobsHelper {
 

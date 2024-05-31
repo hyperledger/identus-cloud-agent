@@ -16,7 +16,7 @@ import org.hyperledger.identus.iam.wallet.http.model.{
 }
 import sttp.apispec.Tag
 import sttp.model.StatusCode
-import sttp.tapir._
+import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
 
 import java.util.UUID

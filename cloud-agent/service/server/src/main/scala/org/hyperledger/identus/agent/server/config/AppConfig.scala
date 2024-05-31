@@ -2,10 +2,10 @@ package org.hyperledger.identus.agent.server.config
 
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.iam.authentication.AuthenticationConfig
-import org.hyperledger.identus.pollux.vc.jwt._
+import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.db.DbConfig
-import zio.config._
-import zio.config.magnolia._
+import zio.config.*
+import zio.config.magnolia.*
 import zio.Config
 
 import java.net.URL

@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.parser._
-import io.circe.syntax._
+import io.circe.parser.*
+import io.circe.syntax.*
 import io.circe.Decoder
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64, JsonData, JwsData, LinkData}
 

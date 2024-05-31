@@ -1,6 +1,6 @@
 package org.hyperledger.identus.castor.core.service
 
-import org.hyperledger.identus.castor.core.model.did._
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.error
 import org.hyperledger.identus.shared.crypto.{Apollo, Secp256k1KeyPair}
 import org.hyperledger.identus.shared.models.Base64UrlString

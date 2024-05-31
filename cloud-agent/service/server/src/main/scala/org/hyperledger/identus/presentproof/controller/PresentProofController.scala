@@ -3,7 +3,7 @@ package org.hyperledger.identus.presentproof.controller
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
-import org.hyperledger.identus.presentproof.controller.http._
+import org.hyperledger.identus.presentproof.controller.http.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.ZIO
 

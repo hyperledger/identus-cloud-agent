@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.model.schema.validator
 
 import com.fasterxml.jackson.databind.JsonNode
-import zio._
+import zio.*
 
 trait JsonSchemaValidator {
   def validate(claims: String): IO[JsonSchemaError, Unit]

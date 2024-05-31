@@ -1,23 +1,23 @@
 package org.hyperledger.identus.pollux.anoncreds
 
 import uniffi.anoncreds_wrapper.{
-  Credential => UniffiCredential,
-  CredentialDefinition => UniffiCredentialDefinition,
-  CredentialDefinitionPrivate => UniffiCredentialDefinitionPrivate,
-  CredentialKeyCorrectnessProof => UniffiCredentialKeyCorrectnessProof,
-  CredentialOffer => UniffiCredentialOffer,
-  CredentialRequest => UniffiCredentialRequest,
-  CredentialRequestMetadata => UniffiCredentialRequestMetadata,
-  CredentialRequests => UniffiCredentialRequests,
-  LinkSecret => UniffiLinkSecret,
+  Credential as UniffiCredential,
+  CredentialDefinition as UniffiCredentialDefinition,
+  CredentialDefinitionPrivate as UniffiCredentialDefinitionPrivate,
+  CredentialKeyCorrectnessProof as UniffiCredentialKeyCorrectnessProof,
+  CredentialOffer as UniffiCredentialOffer,
+  CredentialRequest as UniffiCredentialRequest,
+  CredentialRequestMetadata as UniffiCredentialRequestMetadata,
+  CredentialRequests as UniffiCredentialRequests,
+  LinkSecret as UniffiLinkSecret,
   Nonce,
-  Presentation => UniffiPresentation,
-  PresentationRequest => UniffiPresentationRequest,
-  Schema => UniffiSchema
+  Presentation as UniffiPresentation,
+  PresentationRequest as UniffiPresentationRequest,
+  Schema as UniffiSchema
 }
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 type AttributeNames = Set[String]
 type IssuerId = String
 

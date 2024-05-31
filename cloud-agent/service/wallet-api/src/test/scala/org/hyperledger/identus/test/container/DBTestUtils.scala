@@ -3,7 +3,7 @@ package org.hyperledger.identus.test.container
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.flywaydb.core.api.output.MigrateResult
 import org.flywaydb.core.Flyway
-import zio._
+import zio.*
 
 object DBTestUtils {
   def runMigrationAgentDB: RIO[PostgreSQLContainer, MigrateResult] = runMigrationPgContainer(

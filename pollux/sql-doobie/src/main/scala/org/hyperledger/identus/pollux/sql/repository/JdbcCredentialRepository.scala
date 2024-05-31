@@ -1,27 +1,27 @@
 package org.hyperledger.identus.pollux.sql.repository
 
 import cats.data.NonEmptyList
-import doobie._
+import doobie.*
 import doobie.free.connection
-import doobie.implicits._
-import doobie.postgres.implicits._
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
-import org.hyperledger.identus.castor.core.model.did._
+import doobie.implicits.*
+import doobie.postgres.implicits.*
+import io.circe.*
+import io.circe.parser.*
+import io.circe.syntax.*
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
-import org.hyperledger.identus.pollux.core.model._
+import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError
-import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError._
+import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError.*
 import org.hyperledger.identus.pollux.core.repository.CredentialRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits._
+import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.postgresql.util.PSQLException
-import zio._
-import zio.interop.catz._
-import zio.json._
+import zio.*
+import zio.interop.catz.*
+import zio.json.*
 
 import java.time.Instant
 import java.util.UUID

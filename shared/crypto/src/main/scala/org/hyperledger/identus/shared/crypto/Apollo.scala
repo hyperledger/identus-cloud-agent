@@ -9,11 +9,11 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.jce.spec.ECNamedCurveSpec
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.hyperledger.identus.shared.models.HexString
-import zio._
+import zio.*
 
 import java.security.{KeyFactory, PublicKey}
 import java.security.interfaces.EdECPublicKey
-import java.security.spec._
+import java.security.spec.*
 import scala.util.Try
 
 trait Apollo {

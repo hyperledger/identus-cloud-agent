@@ -1,7 +1,7 @@
 package org.hyperledger.identus.api.http
 
 import sttp.model.StatusCode
-import sttp.tapir.{oneOfVariantValueMatcher, _}
+import sttp.tapir.{oneOfVariantValueMatcher, *}
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.EndpointOutput.OneOfVariant
 

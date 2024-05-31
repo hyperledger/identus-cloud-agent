@@ -1,8 +1,8 @@
 package org.hyperledger.identus.mercury.protocol.trustping
 
-import io.circe._
+import io.circe.*
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe.syntax._
+import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.{DidId, Message, PIURI}
 
 /** https://identity.foundation/didcomm-messaging/spec/#trust-ping-protocol-20 */

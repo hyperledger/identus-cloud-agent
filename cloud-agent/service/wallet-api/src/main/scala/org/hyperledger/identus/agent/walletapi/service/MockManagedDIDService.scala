@@ -1,7 +1,7 @@
 package org.hyperledger.identus.agent.walletapi.service
 
-import org.hyperledger.identus.agent.walletapi.model._
-import org.hyperledger.identus.agent.walletapi.model.error._
+import org.hyperledger.identus.agent.walletapi.model.*
+import org.hyperledger.identus.agent.walletapi.model.error.*
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.castor.core.model.did.{
   CanonicalPrismDID,
@@ -12,11 +12,11 @@ import org.hyperledger.identus.castor.core.model.did.{
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
-import zio.{mock, _}
-import zio.mock._
+import zio.{mock, *}
+import zio.mock.*
 import zio.test.Assertion
 
-import java.security.{PrivateKey => JavaPrivateKey, PublicKey => JavaPublicKey}
+import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 
 object MockManagedDIDService extends Mock[ManagedDIDService] {
 

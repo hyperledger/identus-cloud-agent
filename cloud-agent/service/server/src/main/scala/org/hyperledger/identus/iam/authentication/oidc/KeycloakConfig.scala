@@ -1,7 +1,7 @@
 package org.hyperledger.identus.iam.authentication.oidc
 
 import org.hyperledger.identus.agent.server.config.AppConfig
-import zio._
+import zio.*
 
 import java.net.URL
 

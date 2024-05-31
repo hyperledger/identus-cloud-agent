@@ -15,9 +15,9 @@ import org.hyperledger.identus.shared.crypto.{Apollo, ApolloSpecHelper, Ed25519K
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 object DIDSecretStorageSpec
     extends ZIOSpecDefault,

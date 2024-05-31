@@ -17,7 +17,7 @@ import org.hyperledger.identus.pollux.sdjwt.PresentationJson
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
-import zio.json._
+import zio.json.*
 
 import java.time.Instant
 import java.util.UUID

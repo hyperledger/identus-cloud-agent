@@ -25,15 +25,15 @@ import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import sttp.client3.{basicRequest, DeserializationException, Response, UriContext}
 import sttp.client3.testing.SttpBackendStub
-import sttp.client3.ziojson._
+import sttp.client3.ziojson.*
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
-import zio._
+import zio.*
 import zio.json.{DecoderOps, EncoderOps}
 import zio.json.ast.Json
-import zio.json.ast.Json._
+import zio.json.ast.Json.*
 import zio.mock.Expectation
 import zio.test.{Assertion, Gen, ZIOSpecDefault}
 

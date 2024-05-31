@@ -2,12 +2,12 @@ package org.hyperledger.identus.pollux.core.model.schema
 
 import org.hyperledger.identus.pollux.core.model.schema.`type`.AnoncredSchemaType
 import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
-import zio._
-import zio.json._
+import zio.*
+import zio.json.*
 import zio.json.ast.Json
-import zio.json.ast.Json._
-import zio.test.{assertZIO, _}
-import zio.test.Assertion._
+import zio.json.ast.Json.*
+import zio.test.{assertZIO, *}
+import zio.test.Assertion.*
 
 import scala.util.Random
 

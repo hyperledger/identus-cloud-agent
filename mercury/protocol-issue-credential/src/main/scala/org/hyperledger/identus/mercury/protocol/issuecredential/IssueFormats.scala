@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
 import io.circe.{Decoder, Encoder}
-import io.circe.generic.semiauto._
+import io.circe.generic.semiauto.*
 
 /*
 Issue Credential Formats:

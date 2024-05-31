@@ -1,12 +1,12 @@
 package org.hyperledger.identus.castor.core.util
 
-import org.hyperledger.identus.castor.core.model.did._
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.error.OperationValidationError
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator.Config
 import org.hyperledger.identus.shared.models.Base64UrlString
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions

@@ -1,7 +1,7 @@
 package org.hyperledger.identus.castor.core.model.did.w3c
 
 import io.circe.Json
-import org.hyperledger.identus.castor.core.model.did._
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.models.{Base64UrlString, HexString}

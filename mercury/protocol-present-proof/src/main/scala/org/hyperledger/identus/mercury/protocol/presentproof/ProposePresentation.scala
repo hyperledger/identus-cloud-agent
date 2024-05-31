@@ -1,9 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.presentproof
 
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.syntax._
-import org.hyperledger.identus.mercury.model._
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
+import org.hyperledger.identus.mercury.model.*
 
 /** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
   * @see

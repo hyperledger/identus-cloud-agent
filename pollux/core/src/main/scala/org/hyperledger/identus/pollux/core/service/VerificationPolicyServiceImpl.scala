@@ -4,7 +4,7 @@ import org.hyperledger.identus.pollux.core.model.{VerificationPolicy, Verificati
 import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError
 import org.hyperledger.identus.pollux.core.repository.VerificationPolicyRepository
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
+import zio.*
 
 import java.util.UUID
 

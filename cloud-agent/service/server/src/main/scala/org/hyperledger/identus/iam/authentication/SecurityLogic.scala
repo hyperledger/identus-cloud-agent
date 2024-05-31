@@ -7,7 +7,7 @@ import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
-import zio._
+import zio.*
 
 object SecurityLogic {
 

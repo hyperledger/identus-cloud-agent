@@ -1,16 +1,16 @@
 package org.hyperledger.identus.agent.walletapi.service
 
-import org.hyperledger.identus.agent.walletapi.model._
+import org.hyperledger.identus.agent.walletapi.model.*
 import org.hyperledger.identus.agent.walletapi.model.error.{
   CreateManagedDIDError,
   DIDSecretStorageError,
   PublishManagedDIDError,
   UpdateManagedDIDError
 }
-import org.hyperledger.identus.agent.walletapi.sql._
-import org.hyperledger.identus.agent.walletapi.storage._
+import org.hyperledger.identus.agent.walletapi.sql.*
+import org.hyperledger.identus.agent.walletapi.storage.*
 import org.hyperledger.identus.agent.walletapi.vault.{VaultDIDSecretStorage, VaultWalletSecretStorage}
-import org.hyperledger.identus.castor.core.model.did._
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.error
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
@@ -18,9 +18,9 @@ import org.hyperledger.identus.shared.crypto.{ApolloSpecHelper, Ed25519KeyPair, 
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import scala.collection.immutable.ArraySeq
 

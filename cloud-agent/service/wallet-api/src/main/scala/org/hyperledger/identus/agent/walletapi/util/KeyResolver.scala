@@ -10,7 +10,7 @@ import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DID
 import org.hyperledger.identus.castor.core.model.did.{EllipticCurve, PrismDID}
 import org.hyperledger.identus.shared.crypto.{Apollo, Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
+import zio.*
 
 class KeyResolver(
     apollo: Apollo,

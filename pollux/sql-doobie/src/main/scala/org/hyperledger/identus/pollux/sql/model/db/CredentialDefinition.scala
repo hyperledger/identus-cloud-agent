@@ -1,9 +1,9 @@
 package org.hyperledger.identus.pollux.sql.model.db
 
-import io.getquill._
+import io.getquill.*
 import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.doobie.DoobieContext
-import io.getquill.idiom._
+import io.getquill.idiom.*
 import org.hyperledger.identus.pollux.core.model.schema.{CorrectnessProof, Definition}
 import org.hyperledger.identus.shared.models.WalletId
 

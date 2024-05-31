@@ -5,14 +5,14 @@ import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
 import org.hyperledger.identus.iam.authentication.oidc.{KeycloakClient, KeycloakEntity}
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error._
+import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.*
 import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
 import org.keycloak.authorization.client.AuthzClient
 import org.keycloak.representations.idm.authorization.{ResourceRepresentation, UmaPermissionRepresentation}
-import zio._
+import zio.*
 
 import java.util.UUID
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.util.Try
 
 case class KeycloakPermissionManagementService(

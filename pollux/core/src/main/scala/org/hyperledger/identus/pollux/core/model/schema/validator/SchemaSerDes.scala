@@ -1,11 +1,11 @@
 package org.hyperledger.identus.pollux.core.model.schema.validator
 
 import com.networknt.schema.JsonSchema
-import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError._
+import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError.*
 import zio.{IO, ZIO}
-import zio.json._
+import zio.json.*
 import zio.json.ast.Json
-import zio.json.ast.Json._
+import zio.json.ast.Json.*
 
 class SchemaSerDes[S](jsonSchemaSchemaStr: String) {
 

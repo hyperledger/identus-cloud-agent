@@ -3,7 +3,7 @@ package org.hyperledger.identus.agent.walletapi.vault
 import org.hyperledger.identus.agent.walletapi.model.WalletSeed
 import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
+import zio.*
 
 class VaultWalletSecretStorage(vaultKV: VaultKVClient) extends WalletSecretStorage {
 

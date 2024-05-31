@@ -4,7 +4,7 @@ import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate, validateEach}
-import zio.json._
+import zio.json.*
 
 import java.time.Instant
 import java.util.UUID

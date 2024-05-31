@@ -1,18 +1,18 @@
 package org.hyperledger.identus.agent.server.http
 
 import io.micrometer.prometheus.PrometheusMeterRegistry
-import org.http4s._
+import org.http4s.*
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Router
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.system.controller.SystemEndpoints
-import sttp.tapir._
+import sttp.tapir.*
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.server.http4s.Http4sServerOptions
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
 import sttp.tapir.ztapir.ZServerEndpoint
-import zio._
-import zio.interop.catz._
+import zio.*
+import zio.interop.catz.*
 
 class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNamespace: String) {
 

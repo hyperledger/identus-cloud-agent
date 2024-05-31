@@ -4,9 +4,9 @@ import com.google.protobuf.ByteString
 import io.iohk.atala.prism.protos.node_models
 import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.models.Base64UrlString
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 object PrismDIDSpec extends ZIOSpecDefault {
 

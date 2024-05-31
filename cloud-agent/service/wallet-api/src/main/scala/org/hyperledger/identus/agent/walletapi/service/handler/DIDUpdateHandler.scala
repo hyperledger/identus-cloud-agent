@@ -8,7 +8,7 @@ import org.hyperledger.identus.agent.walletapi.model.{
   UpdateManagedDIDAction,
   WalletSeed
 }
-import org.hyperledger.identus.agent.walletapi.model.error.{UpdateManagedDIDError, _}
+import org.hyperledger.identus.agent.walletapi.model.error.{UpdateManagedDIDError, *}
 import org.hyperledger.identus.agent.walletapi.model.error.given
 import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.agent.walletapi.util.OperationFactory
@@ -20,7 +20,7 @@ import org.hyperledger.identus.castor.core.model.did.{
 import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation.Update
 import org.hyperledger.identus.shared.crypto.{Apollo, Ed25519KeyPair, X25519KeyPair}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
+import zio.*
 
 import scala.collection.immutable.ArraySeq
 

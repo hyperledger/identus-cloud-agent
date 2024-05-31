@@ -9,7 +9,7 @@ import org.hyperledger.identus.connect.controller.http.{
   CreateConnectionRequest
 }
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
+import zio.*
 
 import java.util.UUID
 

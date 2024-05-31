@@ -12,9 +12,9 @@ import org.hyperledger.identus.presentproof.controller.PresentProofEndpoints.{
   updatePresentation
 }
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.LogUtils._
-import sttp.tapir.ztapir._
-import zio._
+import org.hyperledger.identus.LogUtils.*
+import sttp.tapir.ztapir.*
+import zio.*
 
 import java.util.UUID
 

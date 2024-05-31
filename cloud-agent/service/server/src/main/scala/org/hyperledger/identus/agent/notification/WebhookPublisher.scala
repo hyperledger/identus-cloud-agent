@@ -1,6 +1,6 @@
 package org.hyperledger.identus.agent.notification
 
-import org.hyperledger.identus.agent.notification.JsonEventEncoders._
+import org.hyperledger.identus.agent.notification.JsonEventEncoders.*
 import org.hyperledger.identus.agent.notification.WebhookPublisherError.UnexpectedError
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDDetail
@@ -14,9 +14,9 @@ import org.hyperledger.identus.event.notification.{
 }
 import org.hyperledger.identus.pollux.core.model.{IssueCredentialRecord, PresentationRecord}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
-import zio.http._
-import zio.json._
+import zio.*
+import zio.http.*
+import zio.json.*
 
 class WebhookPublisher(
     appConfig: AppConfig,

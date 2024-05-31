@@ -4,10 +4,10 @@ import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemo
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.pollux.anoncreds.AnoncredLinkSecret
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import org.hyperledger.identus.shared.models.WalletId._
-import zio._
-import zio.test._
-import zio.test.TestAspect._
+import org.hyperledger.identus.shared.models.WalletId.*
+import zio.*
+import zio.test.*
+import zio.test.TestAspect.*
 
 object LinkSecretServiceImplSpec extends ZIOSpecDefault {
   protected val defaultWalletLayer = ZLayer.succeed(WalletAccessContext(WalletId.default))

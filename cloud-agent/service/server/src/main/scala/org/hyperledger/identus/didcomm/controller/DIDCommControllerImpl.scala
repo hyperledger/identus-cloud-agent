@@ -8,19 +8,19 @@ import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.didcomm.controller.http.DIDCommMessage
-import org.hyperledger.identus.didcomm.controller.DIDCommControllerError._
-import org.hyperledger.identus.mercury._
-import org.hyperledger.identus.mercury.model._
+import org.hyperledger.identus.didcomm.controller.DIDCommControllerError.*
+import org.hyperledger.identus.mercury.*
+import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import org.hyperledger.identus.mercury.protocol.issuecredential._
-import org.hyperledger.identus.mercury.protocol.presentproof._
+import org.hyperledger.identus.mercury.protocol.issuecredential.*
+import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.mercury.protocol.revocationnotificaiton.RevocationNotification
-import org.hyperledger.identus.mercury.DidOps._
+import org.hyperledger.identus.mercury.DidOps.*
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.shared.models.{Failure, StatusCode, WalletAccessContext}
-import zio._
-import zio.json._
+import zio.*
+import zio.json.*
 
 import java.util.UUID
 import scala.language.implicitConversions

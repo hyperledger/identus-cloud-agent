@@ -5,7 +5,7 @@ import org.hyperledger.identus.iam.authentication.admin.{AdminApiKeyAuthenticato
 import org.hyperledger.identus.iam.authentication.apikey.{ApiKeyAuthenticator, ApiKeyCredentials}
 import org.hyperledger.identus.iam.authentication.oidc.{JwtCredentials, KeycloakAuthenticator, KeycloakEntity}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
-import zio._
+import zio.*
 
 case class DefaultAuthenticator(
     adminApiKeyAuthenticator: AdminApiKeyAuthenticator,

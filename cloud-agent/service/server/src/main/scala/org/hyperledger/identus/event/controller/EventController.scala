@@ -12,7 +12,7 @@ import org.hyperledger.identus.event.controller.http.{
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementController
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
+import zio.*
 
 import java.net.URI
 import java.util.UUID

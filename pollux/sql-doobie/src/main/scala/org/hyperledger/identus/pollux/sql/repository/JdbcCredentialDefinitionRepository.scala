@@ -1,19 +1,19 @@
 package org.hyperledger.identus.pollux.sql.repository
 
-import doobie._
-import doobie.implicits._
+import doobie.*
+import doobie.implicits.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.repository.{CredentialDefinitionRepository, Repository}
-import org.hyperledger.identus.pollux.core.repository.Repository._
+import org.hyperledger.identus.pollux.core.repository.Repository.*
 import org.hyperledger.identus.pollux.sql.model.db.{
-  CredentialDefinition => CredentialDefinitionRow,
+  CredentialDefinition as CredentialDefinitionRow,
   CredentialDefinitionSql
 }
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits._
+import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
-import zio.interop.catz._
+import zio.*
+import zio.interop.catz.*
 
 import java.util.UUID
 

@@ -6,7 +6,7 @@ import org.hyperledger.identus.iam.authentication.AuthenticationError.Authentica
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.PermissionNotAvailable
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
-import zio._
+import zio.*
 
 import java.util.UUID
 

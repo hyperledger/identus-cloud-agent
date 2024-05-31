@@ -5,7 +5,7 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.FilteredEntries
 import org.hyperledger.identus.pollux.core.repository.CredentialSchemaRepository
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchQuery
-import org.hyperledger.identus.pollux.core.service.CredentialSchemaService.Error._
+import org.hyperledger.identus.pollux.core.service.CredentialSchemaService.Error.*
 import zio.{IO, URLayer, ZLayer}
 import zio.ZIO.{fail, getOrFailWith, succeed}
 

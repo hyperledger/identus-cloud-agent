@@ -16,13 +16,13 @@ import org.hyperledger.identus.sharedtest.containers.{
 import org.hyperledger.identus.test.container.DBTestUtils
 import org.keycloak.authorization.client.AuthzClient
 import org.keycloak.representations.idm.authorization.{ResourceRepresentation, UmaPermissionRepresentation}
-import zio._
+import zio.*
 import zio.http.Client
-import zio.test._
-import zio.test.Assertion._
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.net.URI
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 object KeycloakAuthenticatorSpec
     extends ZIOSpecDefault,

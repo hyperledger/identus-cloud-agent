@@ -1,9 +1,9 @@
 package org.hyperledger.identus.agent.walletapi.sql
 
-import doobie._
-import doobie.implicits._
-import doobie.postgres.implicits._
-import org.hyperledger.identus.agent.walletapi.model._
+import doobie.*
+import doobie.implicits.*
+import doobie.postgres.implicits.*
+import org.hyperledger.identus.agent.walletapi.model.*
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.castor.core.model.did.{
   EllipticCurve,
@@ -14,11 +14,11 @@ import org.hyperledger.identus.castor.core.model.did.{
 }
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits._
+import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.db.Implicits.given
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
-import zio.interop.catz._
+import zio.*
+import zio.interop.catz.*
 
 import java.time.Instant
 import scala.collection.immutable.ArraySeq

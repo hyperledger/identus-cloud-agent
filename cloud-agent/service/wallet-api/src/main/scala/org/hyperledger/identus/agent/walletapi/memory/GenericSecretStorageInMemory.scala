@@ -2,7 +2,7 @@ package org.hyperledger.identus.agent.walletapi.memory
 
 import org.hyperledger.identus.agent.walletapi.storage.{GenericSecret, GenericSecretStorage}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
+import zio.*
 import zio.json.ast.Json
 
 class GenericSecretStorageInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[String, Json]]]])

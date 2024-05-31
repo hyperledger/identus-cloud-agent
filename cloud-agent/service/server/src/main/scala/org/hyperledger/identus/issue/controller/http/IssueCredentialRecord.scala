@@ -3,11 +3,11 @@ package org.hyperledger.identus.issue.controller.http
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.issue.controller.http.IssueCredentialRecord.annotations
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64}
-import org.hyperledger.identus.pollux.core.model.{IssueCredentialRecord => PolluxIssueCredentialRecord}
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord as PolluxIssueCredentialRecord
 import sttp.tapir.{Schema, Validator}
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
-import zio.json._
+import zio.json.*
 import zio.json.ast.Json
 
 import java.nio.charset.StandardCharsets

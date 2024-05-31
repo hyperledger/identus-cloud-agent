@@ -1,8 +1,8 @@
 package org.hyperledger.identus.agent.server.http
 
-import org.hyperledger.identus.mercury._
-import zio._
-import zio.http.{Header => _, _}
+import org.hyperledger.identus.mercury.*
+import zio.*
+import zio.http.{Header as _, *}
 
 object ZioHttpClient {
   val layer: URLayer[Client, ZioHttpClient] = ZLayer.fromFunction(new ZioHttpClient(_))

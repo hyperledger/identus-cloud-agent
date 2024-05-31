@@ -11,7 +11,7 @@ import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.event.notification.{Event, EventNotificationService}
 import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
+import zio.*
 
 class ManagedDIDServiceWithEventNotificationImpl(
     didService: DIDService,

@@ -13,7 +13,7 @@ import org.hyperledger.identus.agent.walletapi.util.OperationFactory
 import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
 import org.hyperledger.identus.shared.crypto.{Apollo, Ed25519KeyPair, X25519KeyPair}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
+import zio.*
 
 private[walletapi] class DIDCreateHandler(
     apollo: Apollo,

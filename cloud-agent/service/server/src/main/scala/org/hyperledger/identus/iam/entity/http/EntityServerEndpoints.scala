@@ -13,9 +13,9 @@ import org.hyperledger.identus.iam.entity.http.model.{
   UpdateEntityNameRequest,
   UpdateEntityWalletIdRequest
 }
-import org.hyperledger.identus.iam.entity.http.EntityEndpoints._
-import org.hyperledger.identus.LogUtils._
-import sttp.tapir.ztapir._
+import org.hyperledger.identus.iam.entity.http.EntityEndpoints.*
+import org.hyperledger.identus.LogUtils.*
+import sttp.tapir.ztapir.*
 import zio.{IO, URIO, ZIO}
 
 import java.util.UUID

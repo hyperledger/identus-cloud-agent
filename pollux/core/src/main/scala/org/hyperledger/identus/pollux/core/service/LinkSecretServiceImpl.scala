@@ -4,7 +4,7 @@ import org.hyperledger.identus.agent.walletapi.storage.{GenericSecret, GenericSe
 import org.hyperledger.identus.pollux.anoncreds.{AnoncredLinkSecret, AnoncredLinkSecretWithId}
 import org.hyperledger.identus.pollux.core.model.error.LinkSecretError
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
+import zio.*
 import zio.json.ast.Json
 
 import scala.util.Try

@@ -1,7 +1,7 @@
 package org.hyperledger.identus.agent.walletapi.sql
 
-import doobie._
-import doobie.implicits._
+import doobie.*
+import doobie.implicits.*
 import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError
 import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.{
   EntityAlreadyExists,
@@ -11,8 +11,8 @@ import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.{
 }
 import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.postgresql.util.PSQLException
-import zio._
-import zio.interop.catz._
+import zio.*
+import zio.interop.catz.*
 
 import java.util.UUID
 

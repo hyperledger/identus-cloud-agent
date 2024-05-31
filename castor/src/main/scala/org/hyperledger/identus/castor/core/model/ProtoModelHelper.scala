@@ -26,8 +26,8 @@ import org.hyperledger.identus.castor.core.model.did.{
 }
 import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 import org.hyperledger.identus.shared.models.Base64UrlString
-import org.hyperledger.identus.shared.utils.Traverse._
-import zio._
+import org.hyperledger.identus.shared.utils.Traverse.*
+import zio.*
 
 import java.time.Instant
 import scala.language.implicitConversions

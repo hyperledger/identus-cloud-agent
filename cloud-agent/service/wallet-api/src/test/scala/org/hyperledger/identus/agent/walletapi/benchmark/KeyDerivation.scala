@@ -4,8 +4,8 @@ import org.hyperledger.identus.agent.walletapi.vault.{KVCodec, VaultKVClient}
 import org.hyperledger.identus.shared.crypto.{Apollo, DerivationPath, Secp256k1PrivateKey}
 import org.hyperledger.identus.shared.models.{Base64UrlString, HexString}
 import org.hyperledger.identus.test.container.VaultTestContainerSupport
-import zio._
-import zio.test._
+import zio.*
+import zio.test.*
 
 import scala.util.Try
 

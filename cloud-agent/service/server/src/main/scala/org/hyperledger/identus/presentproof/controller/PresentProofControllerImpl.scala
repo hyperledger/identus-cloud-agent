@@ -11,11 +11,11 @@ import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, P
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.core.service.PresentationService
-import org.hyperledger.identus.presentproof.controller.http._
+import org.hyperledger.identus.presentproof.controller.http.*
 import org.hyperledger.identus.presentproof.controller.PresentProofController.toDidCommID
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{URLayer, ZIO, ZLayer, _}
-import zio.json._
+import zio.{URLayer, ZIO, ZLayer, *}
+import zio.json.*
 import zio.json.ast.Json
 
 import java.util.UUID

@@ -13,15 +13,15 @@ import org.hyperledger.identus.agent.walletapi.sql.{
   JdbcWalletNonSecretStorage,
   JdbcWalletSecretStorage
 }
-import org.hyperledger.identus.container.util.MigrationAspects._
+import org.hyperledger.identus.container.util.MigrationAspects.*
 import org.hyperledger.identus.iam.authentication.AuthenticationError
 import org.hyperledger.identus.iam.authentication.AuthenticationError.InvalidCredentials
 import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import zio.{Scope, ULayer, ZIO, ZLayer}
-import zio.test.{assert, Spec, TestEnvironment, ZIOSpecDefault, _}
-import zio.test.Assertion._
+import zio.test.{assert, Spec, TestEnvironment, ZIOSpecDefault, *}
+import zio.test.Assertion.*
 import zio.test.TestAspect.sequential
 import zio.Runtime.removeDefaultLoggers
 

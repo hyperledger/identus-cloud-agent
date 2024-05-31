@@ -5,7 +5,7 @@ import org.hyperledger.identus.agent.walletapi.service.EntityService
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.{ServiceError, WalletNotFoundById}
 import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
-import zio._
+import zio.*
 
 import scala.language.implicitConversions
 

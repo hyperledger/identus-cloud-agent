@@ -2,14 +2,14 @@ package org.hyperledger.identus.presentproof.controller
 
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.EndpointOutputs._
+import org.hyperledger.identus.api.http.EndpointOutputs.*
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import org.hyperledger.identus.presentproof.controller.http._
+import org.hyperledger.identus.presentproof.controller.http.*
 import sttp.model.StatusCode
-import sttp.tapir._
+import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
 
 import java.util.UUID

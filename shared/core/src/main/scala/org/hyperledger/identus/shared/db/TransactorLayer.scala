@@ -6,8 +6,8 @@ import cats.effect.Async
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import doobie.util.transactor.Transactor
-import zio._
-import zio.interop.catz._
+import zio.*
+import zio.interop.catz.*
 
 object TransactorLayer {
 

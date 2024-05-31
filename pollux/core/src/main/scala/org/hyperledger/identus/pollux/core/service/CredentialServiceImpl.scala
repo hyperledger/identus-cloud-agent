@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.service
 
 import com.nimbusds.jose.jwk.OctetKeyPair
-import io.circe.syntax._
+import io.circe.syntax.*
 import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
@@ -13,32 +13,32 @@ import org.hyperledger.identus.castor.core.model.did.{
   VerificationRelationship
 }
 import org.hyperledger.identus.castor.core.service.DIDService
-import org.hyperledger.identus.mercury.model._
-import org.hyperledger.identus.mercury.protocol.issuecredential._
-import org.hyperledger.identus.pollux.{sdjwt, _}
+import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.protocol.issuecredential.*
+import org.hyperledger.identus.pollux.{sdjwt, *}
 import org.hyperledger.identus.pollux.anoncreds.{
   AnoncredCreateCredentialDefinition,
   AnoncredCredential,
   AnoncredCredentialOffer,
   AnoncredLib
 }
-import org.hyperledger.identus.pollux.core.model._
+import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError._
-import org.hyperledger.identus.pollux.core.model.presentation._
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
-import org.hyperledger.identus.pollux.sdjwt._
-import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, _}
-import org.hyperledger.identus.pollux.vc.jwt.{Issuer => JwtIssuer}
+import org.hyperledger.identus.pollux.sdjwt.*
+import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, *}
+import org.hyperledger.identus.pollux.vc.jwt.Issuer as JwtIssuer
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey}
 import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
-import zio._
+import zio.*
 import zio.prelude.ZValidation
 
 import java.net.URI

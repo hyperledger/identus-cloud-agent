@@ -1,6 +1,6 @@
 package org.hyperledger.identus.mercury.protocol.routing
 
-import io.circe._
+import io.circe.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
 
 type ForwardAttachment = AttachmentDescriptor

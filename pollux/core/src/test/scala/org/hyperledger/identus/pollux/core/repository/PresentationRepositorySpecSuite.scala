@@ -2,13 +2,13 @@ package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
-import org.hyperledger.identus.pollux.core.model._
-import org.hyperledger.identus.pollux.core.model.PresentationRecord._
+import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.pollux.core.model.PresentationRecord.*
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofV1, AnoncredCredentialProofsV1}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.{ZIO, ZLayer}
-import zio.test._
-import zio.test.Assertion._
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.time.Instant
 import java.util.UUID

@@ -13,7 +13,7 @@ import org.hyperledger.identus.connect.controller.http.{
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
+import zio.*
 
 import java.util.UUID
 import scala.language.implicitConversions

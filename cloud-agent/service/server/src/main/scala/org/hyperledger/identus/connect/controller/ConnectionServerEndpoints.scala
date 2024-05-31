@@ -4,11 +4,11 @@ import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.connect.controller.http.{AcceptConnectionInvitationRequest, CreateConnectionRequest}
-import org.hyperledger.identus.connect.controller.ConnectionEndpoints._
+import org.hyperledger.identus.connect.controller.ConnectionEndpoints.*
 import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
-import org.hyperledger.identus.LogUtils._
-import sttp.tapir.ztapir._
-import zio._
+import org.hyperledger.identus.LogUtils.*
+import sttp.tapir.ztapir.*
+import zio.*
 
 import java.util.UUID
 

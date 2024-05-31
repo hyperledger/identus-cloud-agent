@@ -1,11 +1,11 @@
 package org.hyperledger.identus.resolvers
-import io.circe.parser._
+import io.circe.parser.*
 import io.circe.Json
-import munit._
-import org.didcommx.peerdid._
-import zio._
+import munit.*
+import org.didcommx.peerdid.*
+import zio.*
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 class PeerDidResolverSpec extends ZSuite {
 

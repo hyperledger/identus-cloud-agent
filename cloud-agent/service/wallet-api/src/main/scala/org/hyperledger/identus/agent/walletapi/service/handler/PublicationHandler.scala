@@ -12,7 +12,7 @@ import org.hyperledger.identus.castor.core.model.error.DIDOperationError
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
+import zio.*
 
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions

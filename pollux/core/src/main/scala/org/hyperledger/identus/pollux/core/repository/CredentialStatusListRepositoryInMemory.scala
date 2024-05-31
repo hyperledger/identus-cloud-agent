@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
-import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, _}
+import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, *}
 import org.hyperledger.identus.pollux.vc.jwt.{revocation, Issuer, StatusPurpose}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{
@@ -11,7 +11,7 @@ import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{
   InvalidSize
 }
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
+import zio.*
 
 import java.time.Instant
 import java.util.UUID

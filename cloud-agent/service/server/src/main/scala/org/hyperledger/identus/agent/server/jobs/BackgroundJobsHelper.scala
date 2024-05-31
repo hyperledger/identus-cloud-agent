@@ -9,9 +9,9 @@ import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.{AgentPeerService, DidAgent}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
-import org.hyperledger.identus.pollux.sdjwt.SDJWT._
-import org.hyperledger.identus.pollux.vc.jwt.{DIDResolutionFailed, DIDResolutionSucceeded, ES256KSigner, EdSigner, _}
-import org.hyperledger.identus.pollux.vc.jwt.{DidResolver => JwtDidResolver, Issuer => JwtIssuer}
+import org.hyperledger.identus.pollux.sdjwt.SDJWT.*
+import org.hyperledger.identus.pollux.vc.jwt.{DIDResolutionFailed, DIDResolutionSucceeded, ES256KSigner, EdSigner, *}
+import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, Issuer as JwtIssuer}
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, KmpEd25519KeyOps}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{ZIO, ZLayer}

@@ -1,8 +1,8 @@
 package org.hyperledger.identus.mercury.protocol.presentproof
 
 import io.circe.{Decoder, Encoder}
-import io.circe.generic.semiauto._
-import io.circe.syntax._
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
 
 /** @param attach_id

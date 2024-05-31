@@ -2,7 +2,7 @@ package org.hyperledger.identus.mercury.protocol.connection
 
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe.syntax._
+import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 

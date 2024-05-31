@@ -5,8 +5,8 @@ import org.hyperledger.identus.pollux.core.service.URIDereferencerError.{
   ResourceNotFound,
   UnexpectedError
 }
-import zio._
-import zio.http._
+import zio.*
+import zio.http.*
 
 import java.net.URI
 import java.nio.charset.StandardCharsets

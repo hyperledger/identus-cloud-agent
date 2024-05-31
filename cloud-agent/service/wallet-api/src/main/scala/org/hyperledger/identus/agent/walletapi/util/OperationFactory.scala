@@ -1,8 +1,8 @@
 package org.hyperledger.identus.agent.walletapi.util
 
-import org.hyperledger.identus.agent.walletapi.model._
+import org.hyperledger.identus.agent.walletapi.model.*
 import org.hyperledger.identus.agent.walletapi.model.error.{CreateManagedDIDError, UpdateManagedDIDError}
-import org.hyperledger.identus.castor.core.model.did._
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.shared.crypto.{
   Apollo,
   Ed25519KeyPair,
@@ -13,7 +13,7 @@ import org.hyperledger.identus.shared.crypto.{
   X25519PublicKey
 }
 import org.hyperledger.identus.shared.models.Base64UrlString
-import zio._
+import zio.*
 
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions

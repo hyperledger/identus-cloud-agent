@@ -6,11 +6,11 @@ import org.hyperledger.identus.api.http.model.{Order, PaginationInput}
 import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import org.hyperledger.identus.pollux.credentialschema.controller.VerificationPolicyController
 import org.hyperledger.identus.pollux.credentialschema.http.{VerificationPolicyInput, VerificationPolicyResponse}
-import org.hyperledger.identus.pollux.credentialschema.VerificationPolicyEndpoints._
+import org.hyperledger.identus.pollux.credentialschema.VerificationPolicyEndpoints.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.LogUtils._
-import sttp.tapir.ztapir._
-import zio._
+import org.hyperledger.identus.LogUtils.*
+import sttp.tapir.ztapir.*
+import zio.*
 
 import java.util.UUID
 

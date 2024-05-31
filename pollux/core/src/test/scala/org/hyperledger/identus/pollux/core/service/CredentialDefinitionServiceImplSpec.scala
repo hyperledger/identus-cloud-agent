@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.service
 
-import zio._
-import zio.test._
-import zio.test.TestAspect._
+import zio.*
+import zio.test.*
+import zio.test.TestAspect.*
 
 import java.time.OffsetDateTime
 

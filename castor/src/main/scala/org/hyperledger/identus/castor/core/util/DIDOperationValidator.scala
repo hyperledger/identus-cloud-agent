@@ -1,11 +1,11 @@
 package org.hyperledger.identus.castor.core.util
 
-import org.hyperledger.identus.castor.core.model.did._
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.error.OperationValidationError
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator.Config
-import org.hyperledger.identus.castor.core.util.Prelude._
+import org.hyperledger.identus.castor.core.util.Prelude.*
 import org.hyperledger.identus.shared.crypto.Apollo
-import zio._
+import zio.*
 
 import scala.collection.immutable.ArraySeq
 

@@ -17,7 +17,7 @@ import org.hyperledger.identus.agent.walletapi.vault.{
   VaultKVClient,
   VaultKVClientImpl,
   VaultWalletSecretStorage,
-  _
+  *
 }
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.iam.authentication.admin.{
@@ -40,11 +40,11 @@ import org.hyperledger.identus.iam.authentication.oidc.{
 }
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement
 import org.hyperledger.identus.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
-import org.hyperledger.identus.pollux.vc.jwt.{DidResolver => JwtDidResolver, PrismDidResolver}
+import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, PrismDidResolver}
 import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.db.{ContextAwareTask, DbConfig, TransactorLayer}
 import org.keycloak.authorization.client.AuthzClient
-import zio._
+import zio.*
 import zio.config.typesafe.TypesafeConfigProvider
 import zio.http.Client
 

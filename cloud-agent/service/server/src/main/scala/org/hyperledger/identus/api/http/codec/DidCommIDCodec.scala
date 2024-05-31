@@ -1,9 +1,9 @@
 package org.hyperledger.identus.api.http.codec
 
 import org.hyperledger.identus.pollux.core.model.DidCommID
-import sttp.tapir._
+import sttp.tapir.*
 import sttp.tapir.Codec.PlainCodec
-import sttp.tapir.DecodeResult._
+import sttp.tapir.DecodeResult.*
 
 object DidCommIDCodec {
   given didCommIDCodec: PlainCodec[DidCommID] =

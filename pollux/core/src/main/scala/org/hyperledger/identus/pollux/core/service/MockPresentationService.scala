@@ -16,7 +16,7 @@ import org.hyperledger.identus.pollux.sdjwt.PresentationJson
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{mock, IO, URLayer, ZIO, ZLayer}
-import zio.json._
+import zio.json.*
 import zio.mock.{Mock, Proxy}
 
 import java.time.Instant

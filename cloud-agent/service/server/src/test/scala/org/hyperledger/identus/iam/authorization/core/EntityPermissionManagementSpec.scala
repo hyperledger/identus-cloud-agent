@@ -17,9 +17,9 @@ import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
 import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.DBTestUtils
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 object EntityPermissionManagementSpec extends ZIOSpecDefault, PostgresTestContainerSupport, ApolloSpecHelper {
 

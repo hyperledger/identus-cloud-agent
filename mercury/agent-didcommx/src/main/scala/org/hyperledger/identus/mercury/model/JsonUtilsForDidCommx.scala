@@ -1,9 +1,9 @@
 package org.hyperledger.identus.mercury.model
 
-import io.circe._
-import io.circe.parser._
+import io.circe.*
+import io.circe.parser.*
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 object JsonUtilsForDidCommx {
   private type JsonValue = Boolean | JsonNumber | String | Json.Null.type

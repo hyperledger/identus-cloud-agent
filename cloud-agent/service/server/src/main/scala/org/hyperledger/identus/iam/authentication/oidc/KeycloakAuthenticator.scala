@@ -6,9 +6,9 @@ import org.hyperledger.identus.iam.authentication.AuthenticationError.{
   AuthenticationMethodNotEnabled,
   InvalidCredentials
 }
-import org.hyperledger.identus.shared.utils.Traverse._
+import org.hyperledger.identus.shared.utils.Traverse.*
 import pdi.jwt.{JwtCirce, JwtClaim, JwtOptions}
-import zio._
+import zio.*
 import zio.json.ast.Json
 
 import java.util.UUID

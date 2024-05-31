@@ -2,19 +2,19 @@ package org.hyperledger.identus.pollux.schema
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.container.util.MigrationAspects._
+import org.hyperledger.identus.container.util.MigrationAspects.*
 import org.hyperledger.identus.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}
 import org.hyperledger.identus.pollux.sql.repository.JdbcCredentialSchemaRepository
-import zio._
-import zio.json._
+import zio.*
+import zio.json.*
 import zio.json.ast.Json
-import zio.json.ast.Json._
-import zio.test._
-import zio.test.Assertion._
-import zio.test.TestAspect._
-import zio.ZIO._
+import zio.json.ast.Json.*
+import zio.test.*
+import zio.test.Assertion.*
+import zio.test.TestAspect.*
+import zio.ZIO.*
 
 import java.util.UUID
 

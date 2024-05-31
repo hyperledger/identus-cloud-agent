@@ -13,7 +13,7 @@ import org.hyperledger.identus.castor.core.model.did.w3c.{
   DIDResolutionErrorRepr
 }
 import org.hyperledger.identus.castor.core.service.DIDService
-import zio._
+import zio.*
 
 import scala.language.implicitConversions
 

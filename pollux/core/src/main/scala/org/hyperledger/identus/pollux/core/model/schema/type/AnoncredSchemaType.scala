@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.model.schema.`type`
 
-import com.networknt.schema._
+import com.networknt.schema.*
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
-import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1._
+import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1.*
 import org.hyperledger.identus.pollux.core.model.schema.validator.{
   JsonSchemaError,
   JsonSchemaUtils,
@@ -10,8 +10,8 @@ import org.hyperledger.identus.pollux.core.model.schema.validator.{
   SchemaSerDes
 }
 import org.hyperledger.identus.pollux.core.model.schema.Schema
-import zio._
-import zio.json._
+import zio.*
+import zio.json.*
 
 object AnoncredSchemaType extends CredentialSchemaType {
 

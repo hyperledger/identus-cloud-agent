@@ -1,15 +1,15 @@
 package org.hyperledger.identus.pollux.credentialschema.http
 
-import org.hyperledger.identus.api.http._
+import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponse.annotations
 import sttp.model.Uri
-import sttp.model.Uri._
+import sttp.model.Uri.*
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{default, description, encodedExample, encodedName}
-import zio.json._
+import zio.json.*
 import zio.json.ast.Json
 
 import java.time.OffsetDateTime

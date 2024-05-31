@@ -1,11 +1,11 @@
 package org.hyperledger.identus.mercury
 
-import org.didcommx.didcomm.model._
+import org.didcommx.didcomm.model.*
 import org.didcommx.didcomm.DIDComm
-import org.hyperledger.identus.mercury.model._
+import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.model.given
 import org.hyperledger.identus.resolvers.UniversalDidResolver
-import zio._
+import zio.*
 
 import scala.language.implicitConversions
 

@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.credentialdefinition.http
 
-import org.hyperledger.identus.api.http._
+import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.pollux.credentialdefinition.http.Proof.annotations
-import sttp.tapir.generic.auto._
+import sttp.tapir.generic.auto.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}

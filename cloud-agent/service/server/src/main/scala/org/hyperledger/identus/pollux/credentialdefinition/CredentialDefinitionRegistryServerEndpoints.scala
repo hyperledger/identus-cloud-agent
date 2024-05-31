@@ -7,10 +7,10 @@ import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, De
 import org.hyperledger.identus.pollux.credentialdefinition
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController
 import org.hyperledger.identus.pollux.credentialdefinition.http.{CredentialDefinitionInput, FilterInput}
-import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryEndpoints._
-import org.hyperledger.identus.LogUtils._
-import sttp.tapir.ztapir._
-import zio._
+import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryEndpoints.*
+import org.hyperledger.identus.LogUtils.*
+import sttp.tapir.ztapir.*
+import zio.*
 
 import java.util.UUID
 

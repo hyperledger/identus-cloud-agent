@@ -1,11 +1,11 @@
 package org.hyperledger.identus.castor.controller.http
 
-import org.hyperledger.identus.agent.walletapi.{model => walletDomain}
 import org.hyperledger.identus.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDDetail, PublicationState}
+import org.hyperledger.identus.agent.walletapi.model as walletDomain
 import org.hyperledger.identus.api.http.Annotation
-import org.hyperledger.identus.castor.core.model.{did => castorDomain}
 import org.hyperledger.identus.castor.core.model.did.{EllipticCurve, PrismDID, VerificationRelationship}
-import org.hyperledger.identus.shared.utils.Traverse._
+import org.hyperledger.identus.castor.core.model.did as castorDomain
+import org.hyperledger.identus.shared.utils.Traverse.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}

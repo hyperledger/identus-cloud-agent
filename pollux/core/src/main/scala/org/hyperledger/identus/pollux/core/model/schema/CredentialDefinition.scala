@@ -1,9 +1,9 @@
 package org.hyperledger.identus.pollux.core.model.schema
 
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError._
-import zio._
-import zio.json._
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.*
+import zio.*
+import zio.json.*
 
 import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID

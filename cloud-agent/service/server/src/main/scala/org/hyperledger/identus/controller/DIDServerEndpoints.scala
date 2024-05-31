@@ -1,8 +1,8 @@
 package org.hyperledger.identus.castor.controller
 
-import org.hyperledger.identus.LogUtils._
-import sttp.tapir.ztapir._
-import zio._
+import org.hyperledger.identus.LogUtils.*
+import sttp.tapir.ztapir.*
+import zio.*
 
 class DIDServerEndpoints(didController: DIDController) {
 

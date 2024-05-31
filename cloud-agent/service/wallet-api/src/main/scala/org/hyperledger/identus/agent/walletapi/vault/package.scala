@@ -4,9 +4,9 @@ import com.nimbusds.jose.jwk.OctetKeyPair
 import org.hyperledger.identus.agent.walletapi.model.WalletSeed
 import org.hyperledger.identus.shared.crypto.jwk.JWK
 import org.hyperledger.identus.shared.models.{HexString, WalletId}
-import zio.json._
+import zio.json.*
 import zio.json.ast.Json
-import zio.json.ast.Json._
+import zio.json.ast.Json.*
 
 import scala.util.{Failure, Try}
 

@@ -4,7 +4,7 @@ import org.hyperledger.identus.agent.walletapi.model.Wallet
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.postgresql.util.PSQLException
-import zio._
+import zio.*
 
 import java.util.UUID
 

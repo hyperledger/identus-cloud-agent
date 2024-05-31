@@ -1,12 +1,12 @@
 package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
-import org.hyperledger.identus.pollux.core.model._
+import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.repository.CredentialDefinitionRepositoryInMemory
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import org.hyperledger.identus.shared.models.WalletId._
-import zio._
+import org.hyperledger.identus.shared.models.WalletId.*
+import zio.*
 
 import java.time.OffsetDateTime
 

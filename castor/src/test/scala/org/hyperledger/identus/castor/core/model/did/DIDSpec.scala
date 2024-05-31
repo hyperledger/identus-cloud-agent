@@ -1,9 +1,9 @@
 package org.hyperledger.identus.castor.core.model.did
 
 import org.hyperledger.identus.castor.core.util.GenUtils
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 object DIDSpec extends ZIOSpecDefault {
 

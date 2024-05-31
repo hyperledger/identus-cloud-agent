@@ -25,12 +25,12 @@ import org.hyperledger.identus.sharedtest.containers.{
   PostgresTestContainerSupport
 }
 import org.hyperledger.identus.test.container.DBTestUtils
-import zio._
+import zio.*
 import zio.http.Client
-import zio.test._
-import zio.test.Assertion._
-import zio.test.TestAspect._
-import zio.ZIO._
+import zio.test.*
+import zio.test.Assertion.*
+import zio.test.TestAspect.*
+import zio.ZIO.*
 
 import java.util.UUID
 

@@ -7,9 +7,9 @@ import io.iohk.atala.prism.protos.node_models
 import org.hyperledger.identus.castor.core.model.did.{ServiceEndpoint, ServiceType}
 import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.{UriOrJsonEndpoint, UriValue}
 import org.hyperledger.identus.castor.core.util.GenUtils
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.time.Instant
 import scala.language.implicitConversions

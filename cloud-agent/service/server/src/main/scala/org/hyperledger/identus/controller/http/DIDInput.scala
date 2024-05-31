@@ -1,6 +1,6 @@
 package org.hyperledger.identus.castor.controller.http
 
-import sttp.tapir._
+import sttp.tapir.*
 
 object DIDInput {
 

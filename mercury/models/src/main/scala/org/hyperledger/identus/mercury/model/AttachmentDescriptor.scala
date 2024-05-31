@@ -1,11 +1,11 @@
 package org.hyperledger.identus.mercury.model
 
-import cats.syntax.functor._
+import cats.syntax.functor.*
 import io.circe.{Decoder, Encoder, Json, JsonObject}
-import io.circe.generic.semiauto._
-import io.circe.syntax._
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
 
-import java.util.{Base64 => JBase64}
+import java.util.Base64 as JBase64
 
 /** @see
   *   data in attachments https://identity.foundation/didcomm-messaging/spec/#attachments

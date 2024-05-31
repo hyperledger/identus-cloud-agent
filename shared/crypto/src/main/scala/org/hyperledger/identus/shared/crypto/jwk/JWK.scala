@@ -2,8 +2,8 @@ package org.hyperledger.identus.shared.crypto.jwk
 
 import com.nimbusds.jose.jwk.{Curve, OctetKeyPair}
 import com.nimbusds.jose.util.Base64URL
-import org.hyperledger.identus.shared.crypto._
-import zio.json._
+import org.hyperledger.identus.shared.crypto.*
+import zio.json.*
 import zio.json.ast.Json
 
 import scala.language.implicitConversions

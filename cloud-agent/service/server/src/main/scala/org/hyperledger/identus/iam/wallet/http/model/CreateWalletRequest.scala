@@ -1,7 +1,7 @@
 package org.hyperledger.identus.iam.wallet.http.model
 
 import org.hyperledger.identus.api.http.Annotation
-import sttp.tapir._
+import sttp.tapir.*
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 

@@ -1,6 +1,6 @@
 package org.hyperledger.identus.pollux.anoncreds
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
 /** @see

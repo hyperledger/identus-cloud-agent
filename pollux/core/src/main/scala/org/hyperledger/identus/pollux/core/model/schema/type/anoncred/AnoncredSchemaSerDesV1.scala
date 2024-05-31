@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred
 
 import org.hyperledger.identus.pollux.core.model.schema.validator.SchemaSerDes
-import zio._
-import zio.json._
+import zio.*
+import zio.json.*
 
 case class AnoncredSchemaSerDesV1(
     name: String,

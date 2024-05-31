@@ -13,10 +13,10 @@ import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
-import zio._
+import zio.*
 import zio.json.ast.Json
-import zio.test._
-import zio.test.Assertion._
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.util.UUID
 import scala.util.Try

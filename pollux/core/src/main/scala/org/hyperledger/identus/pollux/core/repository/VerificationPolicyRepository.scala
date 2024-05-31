@@ -2,7 +2,7 @@ package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.pollux.core.model.VerificationPolicy
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
+import zio.*
 
 import java.util.UUID
 

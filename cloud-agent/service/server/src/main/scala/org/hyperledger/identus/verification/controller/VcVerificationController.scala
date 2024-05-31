@@ -3,7 +3,7 @@ package org.hyperledger.identus.verification.controller
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.pollux.core.service.verification.VcVerificationServiceError
 import org.hyperledger.identus.verification.controller
-import zio._
+import zio.*
 
 trait VcVerificationController {
 

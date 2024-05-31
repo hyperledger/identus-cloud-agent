@@ -1,10 +1,10 @@
 package org.hyperledger.identus.agent.server.config
 
-import monocle.syntax.all._
+import monocle.syntax.all.*
 import org.hyperledger.identus.agent.server.SystemModule
-import zio._
-import zio.test.{ZIOSpecDefault, _}
-import zio.test.Assertion._
+import zio.*
+import zio.test.{ZIOSpecDefault, *}
+import zio.test.Assertion.*
 
 object AppConfigSpec extends ZIOSpecDefault {
 

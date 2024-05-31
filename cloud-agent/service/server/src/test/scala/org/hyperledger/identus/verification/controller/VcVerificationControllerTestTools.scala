@@ -6,11 +6,11 @@ import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
-import org.hyperledger.identus.pollux.core.service._
+import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.core.service.verification.{VcVerificationService, VcVerificationServiceImpl}
-import org.hyperledger.identus.pollux.vc.jwt._
+import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import org.hyperledger.identus.shared.models.WalletId._
+import org.hyperledger.identus.shared.models.WalletId.*
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.UriContext
@@ -18,8 +18,8 @@ import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
-import zio._
-import zio.test._
+import zio.*
+import zio.test.*
 
 trait VcVerificationControllerTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>

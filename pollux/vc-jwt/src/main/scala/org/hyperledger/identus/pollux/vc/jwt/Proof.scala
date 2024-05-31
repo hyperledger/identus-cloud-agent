@@ -1,15 +1,15 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import cats.implicits._
+import cats.implicits.*
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
-import io.circe._
-import io.circe.syntax._
+import io.circe.*
+import io.circe.syntax.*
 import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import org.hyperledger.identus.shared.utils.{Base64Utils, Json => JsonUtils}
+import org.hyperledger.identus.shared.utils.{Base64Utils, Json as JsonUtils}
 import scodec.bits.ByteVector
-import zio._
+import zio.*
 
-import java.security._
+import java.security.*
 import java.security.spec.X509EncodedKeySpec
 import java.time.{Instant, ZoneOffset}
 import scala.util.Try

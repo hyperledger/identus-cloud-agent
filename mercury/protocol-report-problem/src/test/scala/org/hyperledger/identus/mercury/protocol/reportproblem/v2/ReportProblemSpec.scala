@@ -1,11 +1,11 @@
 package org.hyperledger.identus.mercury.protocol.reportproblem.v2
 
-import io.circe.{Json, _}
-import io.circe.parser._
-import io.circe.syntax._
-import munit._
+import io.circe.{Json, *}
+import io.circe.parser.*
+import io.circe.syntax.*
+import munit.*
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.reportproblem.v2._
+import org.hyperledger.identus.mercury.protocol.reportproblem.v2.*
 class ReportProblemSpec extends ZSuite {
 
   test("ReportProblem") {

@@ -5,7 +5,7 @@ import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.castor.controller.http.{DIDInput, DIDResolutionResult}
 import sttp.apispec.Tag
 import sttp.model.StatusCode
-import sttp.tapir._
+import sttp.tapir.*
 
 object DIDEndpoints {
 

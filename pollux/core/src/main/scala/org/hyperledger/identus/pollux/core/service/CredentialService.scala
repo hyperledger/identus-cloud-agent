@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.service
 
 import io.circe.{Json, JsonObject}
-import io.circe.syntax._
+import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{
@@ -10,9 +10,9 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{
   OfferCredential,
   RequestCredential
 }
-import org.hyperledger.identus.pollux.core.model._
+import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError._
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{IO, ZIO}
 

@@ -7,17 +7,17 @@ import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
-import org.hyperledger.identus.mercury.protocol.issuecredential._
-import org.hyperledger.identus.pollux.core.model._
+import org.hyperledger.identus.mercury.protocol.issuecredential.*
+import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.presentation.{ClaimFormat, Ldp, Options, PresentationDefinition}
 import org.hyperledger.identus.pollux.core.repository.{
   CredentialDefinitionRepositoryInMemory,
   CredentialRepositoryInMemory,
   CredentialStatusListRepositoryInMemory
 }
-import org.hyperledger.identus.pollux.vc.jwt._
+import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
+import zio.*
 
 import java.util.UUID
 

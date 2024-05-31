@@ -3,7 +3,7 @@ package org.hyperledger.identus.agent.server
 import org.hyperledger.identus.agent.notification.WebhookPublisher
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
-import org.hyperledger.identus.agent.server.jobs._
+import org.hyperledger.identus.agent.server.jobs.*
 import org.hyperledger.identus.agent.walletapi.model.{Entity, Wallet, WalletSeed}
 import org.hyperledger.identus.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
@@ -25,15 +25,15 @@ import org.hyperledger.identus.pollux.credentialschema.{
   SchemaRegistryServerEndpoints,
   VerificationPolicyServerEndpoints
 }
-import org.hyperledger.identus.pollux.vc.jwt.{DidResolver => JwtDidResolver}
+import org.hyperledger.identus.pollux.vc.jwt.DidResolver as JwtDidResolver
 import org.hyperledger.identus.presentproof.controller.PresentProofServerEndpoints
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.models.{HexString, WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import org.hyperledger.identus.system.controller.SystemServerEndpoints
 import org.hyperledger.identus.verification.controller.VcVerificationServerEndpoints
-import zio._
-import zio.metrics._
+import zio.*
+import zio.metrics.*
 
 object CloudAgentApp {
 

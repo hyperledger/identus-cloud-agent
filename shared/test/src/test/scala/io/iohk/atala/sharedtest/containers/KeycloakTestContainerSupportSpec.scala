@@ -1,10 +1,10 @@
 package org.hyperledger.identus.sharedtest.containers
 
-import zio.test._
-import zio.test.TestAspect._
+import zio.test.*
+import zio.test.TestAspect.*
 import zio.ZIO
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.util.Try
 object KeycloakTestContainerSupportSpec extends ZIOSpecDefault with KeycloakTestContainerSupport {
 

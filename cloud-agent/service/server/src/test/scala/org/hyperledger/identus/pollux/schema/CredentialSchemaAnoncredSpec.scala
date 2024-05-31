@@ -2,24 +2,24 @@ package org.hyperledger.identus.pollux.schema
 
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.container.util.MigrationAspects._
+import org.hyperledger.identus.container.util.MigrationAspects.*
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
 import org.hyperledger.identus.pollux.core.model.schema.`type`.{AnoncredSchemaType, CredentialJsonSchemaType}
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
-import org.hyperledger.identus.pollux.credentialschema._
+import org.hyperledger.identus.pollux.credentialschema.*
 import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaController
 import org.hyperledger.identus.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse}
 import sttp.client3.basicRequest
-import sttp.client3.ziojson.{asJsonAlways, _}
+import sttp.client3.ziojson.{asJsonAlways, *}
 import sttp.model.StatusCode
-import zio._
-import zio.json._
+import zio.*
+import zio.json.*
 import zio.json.ast.Json
-import zio.json.ast.Json._
-import zio.test._
-import zio.test.Assertion._
-import zio.test.TestAspect._
-import zio.ZIO._
+import zio.json.ast.Json.*
+import zio.test.*
+import zio.test.Assertion.*
+import zio.test.TestAspect.*
+import zio.ZIO.*
 
 import java.util.UUID
 

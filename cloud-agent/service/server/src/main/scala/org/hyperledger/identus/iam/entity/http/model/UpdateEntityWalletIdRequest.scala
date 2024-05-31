@@ -4,7 +4,7 @@ import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.iam.entity.http.model.UpdateEntityWalletIdRequest.annotations
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate, validateEach}
-import sttp.tapir.Validator._
+import sttp.tapir.Validator.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID

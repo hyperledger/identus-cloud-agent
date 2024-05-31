@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury.model
 
-import io.circe._
-import io.circe.parser._
+import io.circe.*
+import io.circe.parser.*
 
 import java.util.Base64
 

@@ -11,7 +11,7 @@ import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
-import zio._
+import zio.*
 import zio.metrics.connectors.micrometer
 import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics

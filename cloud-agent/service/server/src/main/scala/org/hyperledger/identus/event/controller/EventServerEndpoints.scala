@@ -3,9 +3,9 @@ package org.hyperledger.identus.event.controller
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.LogUtils._
-import sttp.tapir.ztapir._
-import zio._
+import org.hyperledger.identus.LogUtils.*
+import sttp.tapir.ztapir.*
+import zio.*
 
 class EventServerEndpoints(
     eventController: EventController,

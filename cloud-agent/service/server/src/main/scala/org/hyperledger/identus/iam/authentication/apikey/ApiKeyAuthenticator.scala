@@ -7,7 +7,7 @@ import org.hyperledger.identus.iam.authentication.{
   Credentials,
   EntityAuthorizer
 }
-import org.hyperledger.identus.iam.authentication.AuthenticationError._
+import org.hyperledger.identus.iam.authentication.AuthenticationError.*
 import zio.{IO, ZIO}
 
 import java.util.UUID

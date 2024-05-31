@@ -1,13 +1,13 @@
 package org.hyperledger.identus.issue.controller
 
-import io.circe._
+import io.circe.*
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.DidCommID
-import org.hyperledger.identus.pollux.vc.jwt.{W3cCredentialPayload, _}
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import org.hyperledger.identus.pollux.vc.jwt.{W3cCredentialPayload, *}
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import java.time.Instant
 

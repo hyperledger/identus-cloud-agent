@@ -10,7 +10,7 @@ import org.hyperledger.identus.issue.controller.http.{
 }
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio._
+import zio.*
 
 trait IssueController {
   def createCredentialOffer(request: CreateIssueCredentialRecordRequest)(implicit

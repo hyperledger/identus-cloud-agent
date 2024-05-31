@@ -7,13 +7,13 @@ import org.hyperledger.identus.container.util.MigrationAspects.migrate
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController
 import sttp.client3.{basicRequest, DeserializationException}
-import sttp.client3.ziojson._
+import sttp.client3.ziojson.*
 import sttp.model.StatusCode
-import zio._
-import zio.test._
-import zio.test.Assertion._
-import zio.test.TestAspect._
-import zio.ZIO._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
+import zio.test.TestAspect.*
+import zio.ZIO.*
 
 object CredentialDefinitionFailureSpec extends ZIOSpecDefault with CredentialDefinitionTestTools:
   def spec = (suite("credential-definition-registry bad request spec")(

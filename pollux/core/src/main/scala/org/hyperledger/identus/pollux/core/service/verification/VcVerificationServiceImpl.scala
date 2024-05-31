@@ -3,7 +3,7 @@ package org.hyperledger.identus.pollux.core.service.verification
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.service.URIDereferencer
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver, JWT, JWTVerification, JwtCredential}
-import zio.{IO, _}
+import zio.{IO, *}
 
 import java.time.OffsetDateTime
 

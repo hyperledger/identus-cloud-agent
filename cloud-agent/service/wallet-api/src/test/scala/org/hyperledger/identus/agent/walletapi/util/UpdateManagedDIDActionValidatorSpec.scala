@@ -3,9 +3,9 @@ package org.hyperledger.identus.agent.walletapi.util
 import org.hyperledger.identus.agent.walletapi.model.{DIDPublicKeyTemplate, UpdateManagedDIDAction}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.castor.core.model.did.{EllipticCurve, VerificationRelationship}
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import scala.language.implicitConversions
 

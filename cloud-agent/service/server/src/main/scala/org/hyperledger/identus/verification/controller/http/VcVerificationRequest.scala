@@ -1,10 +1,10 @@
 package org.hyperledger.identus.verification.controller.http
 
 import org.hyperledger.identus.api.http.{Annotation, ErrorResponse}
-import org.hyperledger.identus.pollux.core.service.verification.{VcVerificationRequest => ServiceVcVerificationRequest}
+import org.hyperledger.identus.pollux.core.service.verification.VcVerificationRequest as ServiceVcVerificationRequest
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.{IO, _}
+import zio.{IO, *}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.time.OffsetDateTime

@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.sdjwt
 
-import zio.json._
+import zio.json.*
 import zio.json.ast.{Json, JsonCursor}
-import zio.json.ast.Json._
+import zio.json.ast.Json.*
 
 private[sdjwt] object QueryUtils {
 

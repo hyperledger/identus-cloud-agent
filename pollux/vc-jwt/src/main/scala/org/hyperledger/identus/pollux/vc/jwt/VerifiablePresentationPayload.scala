@@ -1,15 +1,15 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
 import io.circe
-import io.circe._
-import io.circe.generic.auto._
+import io.circe.*
+import io.circe.generic.auto.*
 import io.circe.parser.decode
-import io.circe.syntax._
+import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.shared.http.UriResolver
 import pdi.jwt.{JwtCirce, JwtOptions}
-import zio._
-import zio.prelude._
+import zio.*
+import zio.prelude.*
 
 import java.security.PublicKey
 import java.time.{Clock, Instant}

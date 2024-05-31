@@ -1,6 +1,6 @@
 package org.hyperledger.identus.pollux.sql.model.db
 
-import io.getquill._
+import io.getquill.*
 import io.getquill.doobie.DoobieContext
 import org.hyperledger.identus.shared.models.WalletId
 

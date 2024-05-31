@@ -1,7 +1,7 @@
 package org.hyperledger.identus
 
-import zio._
-import zio.http._
+import zio.*
+import zio.http.*
 import zio.http.netty.NettyConfig
 import zio.http.ZClient.Config
 

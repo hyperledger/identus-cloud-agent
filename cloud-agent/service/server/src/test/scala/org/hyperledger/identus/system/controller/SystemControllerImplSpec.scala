@@ -3,11 +3,11 @@ package org.hyperledger.identus.system.controller
 import org.hyperledger.identus.agent.server.buildinfo.BuildInfo
 import org.hyperledger.identus.system.controller.http.HealthInfo
 import sttp.client3.{asString, basicRequest, DeserializationException, UriContext}
-import sttp.client3.ziojson._
+import sttp.client3.ziojson.*
 import sttp.model.StatusCode
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 object SystemControllerImplSpec extends ZIOSpecDefault with SystemControllerTestTools {
 

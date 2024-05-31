@@ -1,6 +1,6 @@
 package org.hyperledger.identus.pollux.core.service.verification
 
-import zio._
+import zio.*
 
 trait VcVerificationService {
   def verify(request: List[VcVerificationRequest]): IO[VcVerificationServiceError, List[VcVerificationResult]]

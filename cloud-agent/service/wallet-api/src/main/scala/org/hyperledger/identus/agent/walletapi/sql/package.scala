@@ -1,12 +1,12 @@
 package org.hyperledger.identus.agent.walletapi
 
 import com.nimbusds.jose.jwk.OctetKeyPair
-import doobie._
-import doobie.postgres.implicits._
+import doobie.*
+import doobie.postgres.implicits.*
 import doobie.util.invariant.InvalidEnum
-import io.circe._
-import io.circe.parser._
-import io.circe.syntax._
+import io.circe.*
+import io.circe.parser.*
+import io.circe.syntax.*
 import io.iohk.atala.prism.protos.node_models
 import org.hyperledger.identus.agent.walletapi.model.{KeyManagementMode, ManagedDIDState, PublicationState, Wallet}
 import org.hyperledger.identus.castor.core.model.did.{
@@ -17,13 +17,13 @@ import org.hyperledger.identus.castor.core.model.did.{
   ScheduledDIDOperationStatus,
   VerificationRelationship
 }
-import org.hyperledger.identus.castor.core.model.ProtoModelHelper._
+import org.hyperledger.identus.castor.core.model.ProtoModelHelper.*
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.crypto.jwk.JWK
 import org.hyperledger.identus.shared.models.WalletId
-import zio.json._
+import zio.json.*
 import zio.json.ast.Json
-import zio.json.ast.Json._
+import zio.json.ast.Json.*
 
 import java.net.{URI, URL}
 import java.time.Instant

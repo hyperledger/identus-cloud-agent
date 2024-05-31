@@ -4,7 +4,7 @@ import org.hyperledger.identus.agent.walletapi.model.{Wallet, WalletSeed}
 import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageError
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
-import zio._
+import zio.*
 
 import java.util.UUID
 import scala.language.implicitConversions

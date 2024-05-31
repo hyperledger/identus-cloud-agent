@@ -25,9 +25,9 @@ import io.iohk.atala.prism.protos.node_api.{
 import org.hyperledger.identus.castor.core.model.did.{DIDData, PrismDID, PrismDIDOperation}
 import org.hyperledger.identus.castor.core.model.error.DIDResolutionError
 import org.hyperledger.identus.castor.core.util.{DIDOperationValidator, GenUtils}
-import zio._
-import zio.test._
-import zio.test.Assertion._
+import zio.*
+import zio.test.*
+import zio.test.Assertion.*
 
 import scala.concurrent.Future
 

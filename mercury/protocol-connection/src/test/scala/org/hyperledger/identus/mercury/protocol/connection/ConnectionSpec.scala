@@ -1,8 +1,8 @@
 package org.hyperledger.identus.mercury.protocol.connection
 
-import io.circe._
-import io.circe.parser._
-import munit._
+import io.circe.*
+import io.circe.parser.*
+import munit.*
 import org.hyperledger.identus.mercury.model.{DidId, Message}
 
 /** protocolConnection/testOnly org.hyperledger.identus.mercury.protocol.connection.CoordinateMediationSpec */

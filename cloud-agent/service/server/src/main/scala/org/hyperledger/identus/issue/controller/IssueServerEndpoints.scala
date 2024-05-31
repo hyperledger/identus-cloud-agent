@@ -5,11 +5,11 @@ import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import org.hyperledger.identus.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest}
-import org.hyperledger.identus.issue.controller.IssueEndpoints._
+import org.hyperledger.identus.issue.controller.IssueEndpoints.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.LogUtils._
-import sttp.tapir.ztapir._
-import zio._
+import org.hyperledger.identus.LogUtils.*
+import sttp.tapir.ztapir.*
+import zio.*
 
 class IssueServerEndpoints(
     issueController: IssueController,

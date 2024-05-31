@@ -2,7 +2,7 @@ package org.hyperledger.identus.system.controller
 
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.system.controller.http.HealthInfo
-import zio._
+import zio.*
 
 trait SystemController {
 

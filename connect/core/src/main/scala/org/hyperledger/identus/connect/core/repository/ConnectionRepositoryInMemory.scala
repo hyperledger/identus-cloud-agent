@@ -4,7 +4,7 @@ import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio._
+import zio.*
 
 import java.time.Instant
 import java.util.UUID
