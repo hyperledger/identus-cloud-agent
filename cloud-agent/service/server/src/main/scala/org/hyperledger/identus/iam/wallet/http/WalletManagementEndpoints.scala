@@ -1,22 +1,22 @@
 package org.hyperledger.identus.iam.wallet.http
 
+import org.hyperledger.identus.api.http.{EndpointOutputs, ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.EndpointOutputs
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.iam.authentication.admin.AdminApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.admin.AdminApiKeySecurityLogic.adminApiKeyHeader
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import org.hyperledger.identus.iam.wallet.http.model.CreateWalletRequest
-import org.hyperledger.identus.iam.wallet.http.model.CreateWalletUmaPermissionRequest
-import org.hyperledger.identus.iam.wallet.http.model.WalletDetail
-import org.hyperledger.identus.iam.wallet.http.model.WalletDetailPage
+import org.hyperledger.identus.iam.wallet.http.model.{
+  CreateWalletRequest,
+  CreateWalletUmaPermissionRequest,
+  WalletDetail,
+  WalletDetailPage
+}
 import sttp.apispec.Tag
 import sttp.model.StatusCode
-import sttp.tapir.*
+import sttp.tapir._
 import sttp.tapir.json.zio.jsonBody
 
 import java.util.UUID

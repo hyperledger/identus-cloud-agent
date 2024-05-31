@@ -1,16 +1,13 @@
 package org.hyperledger.identus.iam.authentication
 
-import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.agent.walletapi.model.EntityRole
+import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Entity, EntityRole}
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.iam.authentication.admin.AdminApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import zio.*
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
+import zio._
 
 object SecurityLogic {
 

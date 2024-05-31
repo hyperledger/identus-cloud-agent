@@ -1,28 +1,27 @@
 package org.hyperledger.identus.connect.sql.repository
 
 import cats.data.NonEmptyList
-import doobie.*
+import doobie._
 import doobie.free.connection
-import doobie.implicits.*
-import doobie.postgres.implicits.*
-import io.circe.*
-import io.circe.parser.*
-import io.circe.syntax.*
-import org.hyperledger.identus.connect.core.model.*
-import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
-import org.hyperledger.identus.connect.core.model.ConnectionRecord.Role
+import doobie.implicits._
+import doobie.postgres.implicits._
+import io.circe._
+import io.circe.parser._
+import io.circe.syntax._
+import org.hyperledger.identus.connect.core.model._
+import org.hyperledger.identus.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import org.hyperledger.identus.connect.core.repository.ConnectionRepository
-import org.hyperledger.identus.mercury.protocol.connection.*
+import org.hyperledger.identus.mercury.protocol.connection._
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.db.Implicits._
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.*
-import zio.interop.catz.*
+import zio._
+import zio.interop.catz._
 
+import java.{util => ju}
 import java.time.Instant
 import java.util.UUID
-import java.util as ju
 
 class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task]) extends ConnectionRepository {
 

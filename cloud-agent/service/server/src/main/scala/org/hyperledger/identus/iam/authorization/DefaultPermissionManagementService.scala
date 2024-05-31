@@ -1,13 +1,11 @@
 package org.hyperledger.identus.iam.authorization
 
-import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.agent.walletapi.model.Entity
+import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Entity}
 import org.hyperledger.identus.iam.authentication.oidc.KeycloakEntity
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.*
+import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
+import zio._
 
 class DefaultPermissionManagementService(
     entityPermission: PermissionManagement.Service[Entity],

@@ -1,44 +1,37 @@
 package org.hyperledger.identus.pollux.core.service
 
 import io.circe.parser.decode
-import io.circe.syntax.*
+import io.circe.syntax._
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
-import org.hyperledger.identus.mercury.model.AttachmentDescriptor
-import org.hyperledger.identus.mercury.model.Base64
-import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredential
-import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialIssuedFormat
-import org.hyperledger.identus.mercury.protocol.presentproof.*
-import org.hyperledger.identus.pollux.anoncreds.*
-import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64, DidId}
+import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, IssueCredentialIssuedFormat}
+import org.hyperledger.identus.mercury.protocol.presentproof._
+import org.hyperledger.identus.pollux.anoncreds._
+import org.hyperledger.identus.pollux.core.model._
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
-import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
+import org.hyperledger.identus.pollux.core.model.error.PresentationError._
 import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.Input
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
-import org.hyperledger.identus.pollux.core.model.PresentationRecord.*
-import org.hyperledger.identus.pollux.core.repository.CredentialRepository
-import org.hyperledger.identus.pollux.core.repository.PresentationRepository
-import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofV1
-import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
-import org.hyperledger.identus.pollux.core.service.serdes.AnoncredPresentationRequestV1
-import org.hyperledger.identus.pollux.core.service.serdes.AnoncredPresentationV1
-import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.*
-import zio.test.*
-import zio.test.Assertion.*
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord._
+import org.hyperledger.identus.pollux.core.model.PresentationRecord._
+import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, PresentationRepository}
+import org.hyperledger.identus.pollux.core.service.serdes.{
+  AnoncredCredentialProofV1,
+  AnoncredCredentialProofsV1,
+  AnoncredPresentationRequestV1,
+  AnoncredPresentationV1
+}
+import org.hyperledger.identus.pollux.vc.jwt._
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio._
+import zio.test._
+import zio.test.Assertion._
 
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.time.Instant
-import java.time.OffsetDateTime
-import java.util.Base64 as JBase64
-import java.util.UUID
+import java.nio.file.{Files, Path, Paths}
+import java.time.{Instant, OffsetDateTime}
+import java.util.{Base64 => JBase64, UUID}
 
 object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSpecHelper {
 

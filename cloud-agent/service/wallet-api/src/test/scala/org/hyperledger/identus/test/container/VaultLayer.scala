@@ -1,8 +1,7 @@
 package org.hyperledger.identus.test.container
 
-import org.hyperledger.identus.sharedtest.containers.VaultContainerCustom
-import org.hyperledger.identus.sharedtest.containers.VaultTestContainer
-import zio.*
+import org.hyperledger.identus.sharedtest.containers.{VaultContainerCustom, VaultTestContainer}
+import zio._
 
 object VaultLayer {
 

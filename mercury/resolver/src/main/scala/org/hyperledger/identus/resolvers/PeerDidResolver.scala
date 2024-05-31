@@ -1,18 +1,14 @@
 package org.hyperledger.identus.resolvers
 
-import io.circe.parser.*
-import io.circe.Decoder
-import io.circe.HCursor
-import io.circe.Json
+import io.circe.{Decoder, HCursor, Json}
+import io.circe.parser._
 import org.didcommx.didcomm.common._
-import org.didcommx.didcomm.diddoc.DIDCommService
-import org.didcommx.didcomm.diddoc.DIDDoc
-import org.didcommx.didcomm.diddoc.VerificationMethod
+import org.didcommx.didcomm.diddoc.{DIDCommService, DIDDoc, VerificationMethod}
 import org.didcommx.peerdid.PeerDIDResolver.resolvePeerDID
 import org.didcommx.peerdid.VerificationMaterialFormatPeerDID
-import zio.*
+import zio._
 
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 trait PeerDidResolver {
   def resolve(did: String): UIO[String]

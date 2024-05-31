@@ -5,13 +5,9 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.FilteredEntries
 import org.hyperledger.identus.pollux.core.repository.CredentialSchemaRepository
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchQuery
-import org.hyperledger.identus.pollux.core.service.CredentialSchemaService.Error.*
-import zio.IO
-import zio.URLayer
-import zio.ZIO.fail
-import zio.ZIO.getOrFailWith
-import zio.ZIO.succeed
-import zio.ZLayer
+import org.hyperledger.identus.pollux.core.service.CredentialSchemaService.Error._
+import zio.{IO, URLayer, ZLayer}
+import zio.ZIO.{fail, getOrFailWith, succeed}
 
 import java.util.UUID
 

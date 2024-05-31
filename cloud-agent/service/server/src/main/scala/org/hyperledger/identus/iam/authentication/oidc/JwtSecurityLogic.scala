@@ -1,6 +1,6 @@
 package org.hyperledger.identus.iam.authentication.oidc
 
-import sttp.tapir.ztapir.*
+import sttp.tapir.ztapir._
 import sttp.tapir.EndpointInput.Auth
 import sttp.tapir.EndpointInput.AuthType.Http
 

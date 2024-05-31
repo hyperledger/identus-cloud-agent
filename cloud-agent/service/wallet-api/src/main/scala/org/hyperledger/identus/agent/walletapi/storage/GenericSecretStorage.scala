@@ -1,7 +1,7 @@
 package org.hyperledger.identus.agent.walletapi.storage
 
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.*
+import zio._
 import zio.json.ast.Json
 
 import scala.util.Try

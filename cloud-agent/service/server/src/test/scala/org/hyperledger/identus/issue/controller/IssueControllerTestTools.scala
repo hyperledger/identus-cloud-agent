@@ -9,24 +9,21 @@ import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.core.service.ConnectionService
-import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
-import org.hyperledger.identus.iam.authentication.DefaultEntityAuthenticator
+import org.hyperledger.identus.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
 import org.hyperledger.identus.issue.controller.http.IssueCredentialRecordPage
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord
-import org.hyperledger.identus.pollux.core.service.*
-import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.pollux.core.service._
+import org.hyperledger.identus.pollux.vc.jwt._
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
+import sttp.client3.{DeserializationException, Response, UriContext}
 import sttp.client3.testing.SttpBackendStub
-import sttp.client3.DeserializationException
-import sttp.client3.Response
-import sttp.client3.UriContext
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
-import zio.*
+import zio._
 import zio.config.typesafe.TypesafeConfigProvider
-import zio.test.*
+import zio.test._
 
 trait IssueControllerTestTools extends PostgresTestContainerSupport {
   self: ZIOSpecDefault =>

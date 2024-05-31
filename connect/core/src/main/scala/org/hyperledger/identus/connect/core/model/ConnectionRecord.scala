@@ -1,9 +1,7 @@
 package org.hyperledger.identus.connect.core.model
 
-import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
-import org.hyperledger.identus.connect.core.model.ConnectionRecord.Role
-import org.hyperledger.identus.mercury.protocol.connection.ConnectionRequest
-import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
+import org.hyperledger.identus.connect.core.model.ConnectionRecord.{ProtocolState, Role}
+import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 
 import java.time.temporal.ChronoUnit

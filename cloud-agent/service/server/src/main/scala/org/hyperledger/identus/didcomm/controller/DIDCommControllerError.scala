@@ -1,8 +1,7 @@
 package org.hyperledger.identus.didcomm.controller
 
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.shared.models.Failure
-import org.hyperledger.identus.shared.models.StatusCode
+import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 
 sealed trait DIDCommControllerError(
     val statusCode: StatusCode,

@@ -1,12 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.invitation.v2
+import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
-import io.circe.syntax.*
-import io.circe.Decoder
-import io.circe.Encoder
-import org.hyperledger.identus.mercury.model.AttachmentDescriptor
+import io.circe.syntax._
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, PIURI}
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
-import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.model.PIURI
 
 /** Out-Of-Band invitation
   * @see

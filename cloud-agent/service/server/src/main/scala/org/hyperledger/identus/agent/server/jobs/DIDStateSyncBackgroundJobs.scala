@@ -1,7 +1,7 @@
 package org.hyperledger.identus.agent.server.jobs
 
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import zio.*
+import zio._
 
 object DIDStateSyncBackgroundJobs {
 

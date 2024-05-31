@@ -4,9 +4,7 @@ import org.hyperledger.identus.mercury.model._
 import zio._
 
 import java.util.Base64
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /** Represents all possible DIDComm operations */
 trait DidOps {

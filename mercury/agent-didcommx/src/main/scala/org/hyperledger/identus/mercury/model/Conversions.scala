@@ -1,13 +1,12 @@
 package org.hyperledger.identus.mercury.model
 
-import io.circe.*
+import io.circe._
+import org.didcommx.didcomm.message.{Attachment => XAttachment, MessageBuilder}
 import org.didcommx.didcomm.message.Attachment.Data
-import org.didcommx.didcomm.message.Attachment as XAttachment
-import org.didcommx.didcomm.message.MessageBuilder
-import org.didcommx.didcomm.model.*
-import org.hyperledger.identus.mercury.model.*
+import org.didcommx.didcomm.model._
+import org.hyperledger.identus.mercury.model._
 
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
 
 given Conversion[PackEncryptedResult, EncryptedMessage] with {

@@ -1,21 +1,19 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
 import io.circe
-import io.circe.*
-import io.circe.generic.auto.*
+import io.circe._
+import io.circe.generic.auto._
 import io.circe.parser.decode
-import io.circe.syntax.*
+import io.circe.syntax._
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.shared.http.UriResolver
-import pdi.jwt.JwtCirce
-import pdi.jwt.JwtOptions
-import zio.*
-import zio.prelude.*
+import pdi.jwt.{JwtCirce, JwtOptions}
+import zio._
+import zio.prelude._
 
 import java.security.PublicKey
+import java.time.{Clock, Instant}
 import java.time.temporal.TemporalAmount
-import java.time.Clock
-import java.time.Instant
 import scala.util.Try
 
 sealed trait VerifiablePresentationPayload

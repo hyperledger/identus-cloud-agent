@@ -1,11 +1,10 @@
 package org.hyperledger.identus.api.util
 
-import org.hyperledger.identus.api.http.model.CollectionStats
-import org.hyperledger.identus.api.http.model.Pagination
+import org.hyperledger.identus.api.http.model.{CollectionStats, Pagination}
 import sttp.model.Uri
-import zio.*
-import zio.test.*
-import zio.test.Assertion.*
+import zio._
+import zio.test._
+import zio.test.Assertion._
 
 object PaginationUtilsSpec extends ZIOSpecDefault {
 

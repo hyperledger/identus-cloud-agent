@@ -1,7 +1,7 @@
 package org.hyperledger.identus.connect.core.repository
 
-import zio.*
-import zio.test.*
+import zio._
+import zio.test._
 
 object ConnectionRepositoryInMemorySpec extends ZIOSpecDefault {
 

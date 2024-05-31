@@ -3,11 +3,8 @@ package org.hyperledger.identus.event.controller.http
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.description
-import sttp.tapir.Schema.annotations.encodedExample
-import sttp.tapir.Schema.annotations.validate
-import sttp.tapir.Schema.annotations.validateEach
-import zio.json.*
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate, validateEach}
+import zio.json._
 
 import java.time.Instant
 import java.util.UUID

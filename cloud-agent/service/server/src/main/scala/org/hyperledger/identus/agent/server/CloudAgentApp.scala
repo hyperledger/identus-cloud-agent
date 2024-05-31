@@ -2,18 +2,12 @@ package org.hyperledger.identus.agent.server
 
 import org.hyperledger.identus.agent.notification.WebhookPublisher
 import org.hyperledger.identus.agent.server.config.AppConfig
-import org.hyperledger.identus.agent.server.http.ZHttp4sBlazeServer
-import org.hyperledger.identus.agent.server.http.ZHttpEndpoints
-import org.hyperledger.identus.agent.server.jobs.*
-import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.model.WalletSeed
-import org.hyperledger.identus.agent.walletapi.service.EntityService
-import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
+import org.hyperledger.identus.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
+import org.hyperledger.identus.agent.server.jobs._
+import org.hyperledger.identus.agent.walletapi.model.{Entity, Wallet, WalletSeed}
+import org.hyperledger.identus.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.castor.controller.DIDRegistrarServerEndpoints
-import org.hyperledger.identus.castor.controller.DIDServerEndpoints
+import org.hyperledger.identus.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEndpoints}
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.controller.ConnectionServerEndpoints
 import org.hyperledger.identus.connect.core.service.ConnectionService
@@ -24,25 +18,22 @@ import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticator
 import org.hyperledger.identus.iam.entity.http.EntityServerEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementServerEndpoints
 import org.hyperledger.identus.issue.controller.IssueServerEndpoints
-import org.hyperledger.identus.mercury.DidOps
-import org.hyperledger.identus.mercury.HttpClient
-import org.hyperledger.identus.pollux.core.service.CredentialService
-import org.hyperledger.identus.pollux.core.service.PresentationService
+import org.hyperledger.identus.mercury.{DidOps, HttpClient}
+import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
-import org.hyperledger.identus.pollux.credentialschema.SchemaRegistryServerEndpoints
-import org.hyperledger.identus.pollux.credentialschema.VerificationPolicyServerEndpoints
-import org.hyperledger.identus.pollux.vc.jwt.DidResolver as JwtDidResolver
+import org.hyperledger.identus.pollux.credentialschema.{
+  SchemaRegistryServerEndpoints,
+  VerificationPolicyServerEndpoints
+}
+import org.hyperledger.identus.pollux.vc.jwt.{DidResolver => JwtDidResolver}
 import org.hyperledger.identus.presentproof.controller.PresentProofServerEndpoints
 import org.hyperledger.identus.resolvers.DIDResolver
-import org.hyperledger.identus.shared.models.HexString
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{HexString, WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import org.hyperledger.identus.system.controller.SystemServerEndpoints
 import org.hyperledger.identus.verification.controller.VcVerificationServerEndpoints
-import zio.*
-import zio.metrics.*
+import zio._
+import zio.metrics._
 
 object CloudAgentApp {
 

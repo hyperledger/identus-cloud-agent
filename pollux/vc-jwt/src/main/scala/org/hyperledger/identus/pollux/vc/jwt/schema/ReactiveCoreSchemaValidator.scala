@@ -1,13 +1,11 @@
 package org.hyperledger.identus.pollux.vc.jwt.schema
 
 import io.circe
-import io.circe.generic.auto.*
-import io.circe.syntax.*
-import io.circe.Encoder
-import io.circe.Json
-import net.reactivecore.cjs.DocumentValidator
-import net.reactivecore.cjs.Loader
-import zio.prelude.*
+import io.circe.{Encoder, Json}
+import io.circe.generic.auto._
+import io.circe.syntax._
+import net.reactivecore.cjs.{DocumentValidator, Loader}
+import zio.prelude._
 import zio.NonEmptyChunk
 
 class ReactiveCoreSchemaValidator(documentValidator: DocumentValidator) extends SchemaValidator {

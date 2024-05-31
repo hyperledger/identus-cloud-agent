@@ -1,11 +1,11 @@
 package org.hyperledger.identus.pollux.sdjwt
 
-import org.hyperledger.identus.pollux.sdjwt.*
-import org.hyperledger.identus.shared.crypto.*
-import zio.*
-import zio.json.*
-import zio.test.*
-import zio.test.Assertion.*
+import org.hyperledger.identus.pollux.sdjwt._
+import org.hyperledger.identus.shared.crypto._
+import zio._
+import zio.json._
+import zio.test._
+import zio.test.Assertion._
 
 def ISSUER_KEY = IssuerPrivateKey.fromEcPem(
   """-----BEGIN PRIVATE KEY-----

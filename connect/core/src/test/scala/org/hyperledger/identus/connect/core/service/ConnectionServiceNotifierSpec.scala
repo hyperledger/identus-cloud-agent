@@ -3,17 +3,15 @@ package org.hyperledger.identus.connect.core.service
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
 import org.hyperledger.identus.connect.core.repository.ConnectionRepositoryInMemory
-import org.hyperledger.identus.event.notification.*
+import org.hyperledger.identus.event.notification._
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.connection.ConnectionRequest
-import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
+import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.*
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio._
 import zio.mock.Expectation
-import zio.test.*
-import zio.ZIO.*
+import zio.test._
+import zio.ZIO._
 
 import java.time.Instant
 import java.util.UUID

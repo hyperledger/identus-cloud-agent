@@ -2,8 +2,8 @@ package org.hyperledger.identus.test.container
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainer.postgresContainer
-import zio.*
-import zio.ZIO.*
+import zio._
+import zio.ZIO._
 
 object PostgresLayer {
 

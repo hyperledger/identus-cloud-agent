@@ -4,10 +4,10 @@ import com.nimbusds.jose.jwk.OctetKeyPair
 import org.didcommx.didcomm.common._
 import org.didcommx.didcomm.secret._
 import org.didcommx.peerdid.core.PeerDIDUtils
-import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.model._
 import zio._
 
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 case class AgentPeerService(
     val id: DidId,

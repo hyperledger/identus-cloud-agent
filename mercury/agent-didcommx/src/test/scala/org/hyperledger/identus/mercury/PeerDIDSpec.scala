@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury
 
 import com.nimbusds.jose.jwk.OctetKeyPair
-import munit.*
+import munit._
 import org.hyperledger.identus.mercury.model.DidId
 
 class PeerDIDSpec extends ZSuite {

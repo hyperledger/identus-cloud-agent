@@ -1,32 +1,33 @@
 package org.hyperledger.identus.pollux.credentialdefinition
 
-import org.hyperledger.identus.api.http.*
-import org.hyperledger.identus.api.http.codec.OrderCodec.*
-import org.hyperledger.identus.api.http.model.Order
-import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.EndpointOutputs.*
+import org.hyperledger.identus.api.http._
+import org.hyperledger.identus.api.http.codec.OrderCodec._
+import org.hyperledger.identus.api.http.model.{Order, PaginationInput}
+import org.hyperledger.identus.api.http.EndpointOutputs._
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionInput
-import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponse
-import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponsePage
-import org.hyperledger.identus.pollux.credentialdefinition.http.FilterInput
-import sttp.apispec.ExternalDocumentation
-import sttp.apispec.Tag
+import org.hyperledger.identus.pollux.credentialdefinition.http.{
+  CredentialDefinitionInput,
+  CredentialDefinitionResponse,
+  CredentialDefinitionResponsePage,
+  FilterInput
+}
+import sttp.apispec.{ExternalDocumentation, Tag}
 import sttp.model.StatusCode
-import sttp.tapir.endpoint
-import sttp.tapir.extractFromRequest
-import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.json.zio.schemaForZioJsonValue
-import sttp.tapir.path
-import sttp.tapir.query
-import sttp.tapir.statusCode
-import sttp.tapir.stringToPath
-import sttp.tapir.Endpoint
-import sttp.tapir.EndpointInput
-import sttp.tapir.PublicEndpoint
+import sttp.tapir.{
+  endpoint,
+  extractFromRequest,
+  path,
+  query,
+  statusCode,
+  stringToPath,
+  Endpoint,
+  EndpointInput,
+  PublicEndpoint
+}
+import sttp.tapir.json.zio.{jsonBody, schemaForZioJsonValue}
 
 import java.util.UUID
 

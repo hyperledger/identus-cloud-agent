@@ -1,19 +1,14 @@
 package org.hyperledger.identus.connect.core.repository
 
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
-import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
+import org.hyperledger.identus.connect.core.model.ConnectionRecord._
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.connection.ConnectionRequest
-import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
+import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.test.*
-import zio.Cause
-import zio.Exit
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio.{Cause, Exit, ZIO, ZLayer}
+import zio.test._
 import zio.Exit.Failure
-import zio.ZIO
-import zio.ZLayer
 
 import java.time.temporal.ChronoUnit
 import java.time.Instant

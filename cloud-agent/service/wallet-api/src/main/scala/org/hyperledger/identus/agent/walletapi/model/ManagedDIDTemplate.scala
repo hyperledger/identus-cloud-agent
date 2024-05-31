@@ -1,10 +1,12 @@
 package org.hyperledger.identus.agent.walletapi.model
 
-import org.hyperledger.identus.castor.core.model.did.EllipticCurve
-import org.hyperledger.identus.castor.core.model.did.Service
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint
-import org.hyperledger.identus.castor.core.model.did.ServiceType
-import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.model.did.{
+  EllipticCurve,
+  Service,
+  ServiceEndpoint,
+  ServiceType,
+  VerificationRelationship
+}
 
 final case class ManagedDIDTemplate(
     publicKeys: Seq[DIDPublicKeyTemplate],

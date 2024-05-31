@@ -1,11 +1,7 @@
 package org.hyperledger.identus.resolvers
 
-import org.didcommx.didcomm.common.VerificationMaterial
-import org.didcommx.didcomm.common.VerificationMaterialFormat
-import org.didcommx.didcomm.common.VerificationMethodType
-import org.didcommx.didcomm.diddoc.DIDCommService
-import org.didcommx.didcomm.diddoc.DIDDoc
-import org.didcommx.didcomm.diddoc.VerificationMethod
+import org.didcommx.didcomm.common.{VerificationMaterial, VerificationMaterialFormat, VerificationMethodType}
+import org.didcommx.didcomm.diddoc.{DIDCommService, DIDDoc, VerificationMethod}
 
 import scala.jdk.CollectionConverters._
 

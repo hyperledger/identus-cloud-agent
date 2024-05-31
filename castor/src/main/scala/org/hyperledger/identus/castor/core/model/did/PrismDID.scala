@@ -4,8 +4,7 @@ import io.iohk.atala.prism.protos.node_models
 import io.iohk.atala.prism.protos.node_models.AtalaOperation.Operation
 import org.hyperledger.identus.castor.core.model.ProtoModelHelper
 import org.hyperledger.identus.shared.crypto.Sha256Hash
-import org.hyperledger.identus.shared.models.Base64UrlString
-import org.hyperledger.identus.shared.models.HexString
+import org.hyperledger.identus.shared.models.{Base64UrlString, HexString}
 
 import scala.util.matching.Regex
 import scala.util.Try

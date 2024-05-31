@@ -2,19 +2,13 @@ package org.hyperledger.identus.pollux.core.service
 
 import io.circe.Json
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
-import org.hyperledger.identus.event.notification.*
+import org.hyperledger.identus.event.notification._
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredential
-import org.hyperledger.identus.mercury.protocol.issuecredential.OfferCredential
-import org.hyperledger.identus.mercury.protocol.issuecredential.RequestCredential
+import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
+import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.DidCommID
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.IO
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
 

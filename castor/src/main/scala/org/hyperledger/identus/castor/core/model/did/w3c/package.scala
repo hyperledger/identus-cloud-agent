@@ -2,7 +2,7 @@ package org.hyperledger.identus.castor.core.model.did
 
 import org.hyperledger.identus.castor.core.model.error.DIDResolutionError
 import org.hyperledger.identus.castor.core.service.DIDService
-import zio.*
+import zio._
 
 package object w3c {
 

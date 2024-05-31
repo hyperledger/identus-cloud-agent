@@ -2,21 +2,16 @@ package org.hyperledger.identus.issue.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.issue.controller.http.IssueCredentialRecord.annotations
-import org.hyperledger.identus.mercury.model.AttachmentDescriptor
-import org.hyperledger.identus.mercury.model.Base64
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord as PolluxIssueCredentialRecord
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64}
+import org.hyperledger.identus.pollux.core.model.{IssueCredentialRecord => PolluxIssueCredentialRecord}
+import sttp.tapir.{Schema, Validator}
 import sttp.tapir.json.zio.schemaForZioJsonValue
-import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.description
-import sttp.tapir.Schema.annotations.encodedExample
-import sttp.tapir.Schema.annotations.validate
-import sttp.tapir.Validator
-import zio.json.*
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
+import zio.json._
 import zio.json.ast.Json
 
 import java.nio.charset.StandardCharsets
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import java.time.{OffsetDateTime, ZoneOffset}
 
 final case class IssueCredentialRecord(
     @description(annotations.recordId.description)

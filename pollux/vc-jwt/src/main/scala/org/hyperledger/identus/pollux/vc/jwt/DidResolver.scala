@@ -1,15 +1,17 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
 import io.circe.Json
-import org.hyperledger.identus.castor.core.model.did.w3c.makeW3CResolver
-import org.hyperledger.identus.castor.core.model.did.w3c.DIDDocumentRepr
-import org.hyperledger.identus.castor.core.model.did.w3c.DIDResolutionErrorRepr
-import org.hyperledger.identus.castor.core.model.did.w3c.PublicKeyJwk
-import org.hyperledger.identus.castor.core.model.did.w3c.PublicKeyRepr
-import org.hyperledger.identus.castor.core.model.did.w3c.PublicKeyReprOrRef
-import org.hyperledger.identus.castor.core.model.did.w3c.ServiceRepr
+import org.hyperledger.identus.castor.core.model.did.w3c.{
+  makeW3CResolver,
+  DIDDocumentRepr,
+  DIDResolutionErrorRepr,
+  PublicKeyJwk,
+  PublicKeyRepr,
+  PublicKeyReprOrRef,
+  ServiceRepr
+}
 import org.hyperledger.identus.castor.core.service.DIDService
-import zio.*
+import zio._
 
 import java.time.Instant
 import scala.annotation.unused

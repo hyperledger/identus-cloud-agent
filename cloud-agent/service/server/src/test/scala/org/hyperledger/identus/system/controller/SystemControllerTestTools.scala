@@ -1,20 +1,17 @@
 package org.hyperledger.identus.system.controller
 
-import io.micrometer.prometheus.PrometheusConfig
-import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.http.CustomServerInterceptors
 import org.hyperledger.identus.agent.server.SystemModule.configLayer
 import org.hyperledger.identus.system.controller.http.HealthInfo
+import sttp.client3.{DeserializationException, Response, UriContext}
 import sttp.client3.testing.SttpBackendStub
-import sttp.client3.DeserializationException
-import sttp.client3.Response
-import sttp.client3.UriContext
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
-import zio.*
+import zio._
 import zio.metrics.connectors.micrometer
 import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics

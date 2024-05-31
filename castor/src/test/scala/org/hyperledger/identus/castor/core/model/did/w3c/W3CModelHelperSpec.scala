@@ -1,15 +1,17 @@
 package org.hyperledger.identus.castor.core.model.did.w3c
 
-import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
-import org.hyperledger.identus.castor.core.model.did.DIDData
-import org.hyperledger.identus.castor.core.model.did.InternalKeyPurpose
-import org.hyperledger.identus.castor.core.model.did.PrismDID
-import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
-import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.model.did.{
+  CanonicalPrismDID,
+  DIDData,
+  InternalKeyPurpose,
+  PrismDID,
+  PrismDIDOperation,
+  VerificationRelationship
+}
 import org.hyperledger.identus.castor.core.util.GenUtils
-import zio.*
-import zio.test.*
-import zio.test.Assertion.*
+import zio._
+import zio.test._
+import zio.test.Assertion._
 
 object W3CModelHelperSpec extends ZIOSpecDefault {
 

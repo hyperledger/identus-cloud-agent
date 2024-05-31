@@ -1,20 +1,15 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
+import com.nimbusds.jose.{JWSAlgorithm, JWSHeader}
+import com.nimbusds.jose.crypto.{ECDSASigner, Ed25519Signer}
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
-import com.nimbusds.jose.crypto.ECDSASigner
-import com.nimbusds.jose.crypto.Ed25519Signer
-import com.nimbusds.jose.jwk.Curve
-import com.nimbusds.jose.jwk.ECKey
-import com.nimbusds.jose.jwk.OctetKeyPair
-import com.nimbusds.jose.JWSAlgorithm
-import com.nimbusds.jose.JWSHeader
-import com.nimbusds.jwt.JWTClaimsSet
-import com.nimbusds.jwt.SignedJWT
-import io.circe.*
+import com.nimbusds.jose.jwk.{Curve, ECKey, OctetKeyPair}
+import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
+import io.circe._
 import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import zio.*
+import zio._
 
-import java.security.*
+import java.security._
 import java.util.Base64
 
 opaque type JWT = String

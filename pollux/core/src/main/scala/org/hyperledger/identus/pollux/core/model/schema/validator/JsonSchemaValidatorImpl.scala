@@ -1,10 +1,10 @@
 package org.hyperledger.identus.pollux.core.model.schema.validator
 
-import com.networknt.schema.*
+import com.networknt.schema._
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.*
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError._
 import org.hyperledger.identus.pollux.core.model.schema.Schema
-import zio.*
+import zio._
 
 case class JsonSchemaValidatorImpl(schemaValidator: JsonSchema) extends JsonSchemaValidator {
   override def validate(jsonString: String): IO[JsonSchemaError, Unit] = {

@@ -1,9 +1,9 @@
 package org.hyperledger.identus.pollux.sdjwt
 
-import zio.*
-import zio.json.*
-import zio.test.*
-import zio.test.Assertion.*
+import zio._
+import zio.json._
+import zio.test._
+import zio.test.Assertion._
 
 object ValidClaimsSpec extends ZIOSpecDefault {
 

@@ -1,9 +1,9 @@
 package org.hyperledger.identus.shared.crypto
 
 import org.hyperledger.identus.shared.models.HexString
-import zio.*
-import zio.test.*
-import zio.test.Assertion.*
+import zio._
+import zio.test._
+import zio.test.Assertion._
 
 object ApolloSpec extends ZIOSpecDefault {
 

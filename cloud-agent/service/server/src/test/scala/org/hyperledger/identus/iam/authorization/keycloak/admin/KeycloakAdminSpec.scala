@@ -1,12 +1,11 @@
 package org.hyperledger.identus.iam.authorization.keycloak.admin
 
-import org.hyperledger.identus.sharedtest.containers.KeycloakContainerCustom
-import org.hyperledger.identus.sharedtest.containers.KeycloakTestContainerSupport
-import zio.*
-import zio.test.*
+import org.hyperledger.identus.sharedtest.containers.{KeycloakContainerCustom, KeycloakTestContainerSupport}
+import zio._
+import zio.test._
 import zio.test.Assertion.equalTo
-import zio.test.TestAspect.*
-import zio.ZIO.*
+import zio.test.TestAspect._
+import zio.ZIO._
 
 import scala.util.Try
 

@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.service.URIDereferencerError.ResourceNotFound
-import zio.*
+import zio._
 
 import java.net.URI
 

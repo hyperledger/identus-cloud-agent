@@ -1,18 +1,18 @@
 package org.hyperledger.identus.agent.walletapi.util
 
-import org.hyperledger.identus.agent.walletapi.model.DIDPublicKeyTemplate
-import org.hyperledger.identus.agent.walletapi.model.ManagedDIDTemplate
+import org.hyperledger.identus.agent.walletapi.model.{DIDPublicKeyTemplate, ManagedDIDTemplate}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import org.hyperledger.identus.castor.core.model.did.EllipticCurve
-import org.hyperledger.identus.castor.core.model.did.Service
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriValue
-import org.hyperledger.identus.castor.core.model.did.ServiceType
-import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
-import zio.*
-import zio.test.*
-import zio.test.Assertion.*
+import org.hyperledger.identus.castor.core.model.did.{
+  EllipticCurve,
+  Service,
+  ServiceEndpoint,
+  ServiceType,
+  VerificationRelationship
+}
+import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.{UriOrJsonEndpoint, UriValue}
+import zio._
+import zio.test._
+import zio.test.Assertion._
 
 import scala.language.implicitConversions
 

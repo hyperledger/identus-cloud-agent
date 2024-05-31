@@ -1,14 +1,11 @@
 package org.hyperledger.identus.castor.controller
 
-import org.hyperledger.identus.api.http.codec.DIDCodec.didJsonLD
-import org.hyperledger.identus.api.http.codec.DIDCodec.didResolutionJsonLD
-import org.hyperledger.identus.api.http.codec.DIDCodec.emptyDidJsonLD
+import org.hyperledger.identus.api.http.codec.DIDCodec.{didJsonLD, didResolutionJsonLD, emptyDidJsonLD}
 import org.hyperledger.identus.api.http.RequestContext
-import org.hyperledger.identus.castor.controller.http.DIDInput
-import org.hyperledger.identus.castor.controller.http.DIDResolutionResult
+import org.hyperledger.identus.castor.controller.http.{DIDInput, DIDResolutionResult}
 import sttp.apispec.Tag
 import sttp.model.StatusCode
-import sttp.tapir.*
+import sttp.tapir._
 
 object DIDEndpoints {
 

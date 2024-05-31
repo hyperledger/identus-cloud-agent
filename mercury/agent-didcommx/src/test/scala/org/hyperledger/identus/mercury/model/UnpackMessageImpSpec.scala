@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury.model
 
 import io.circe.JsonObject
-import munit.*
+import munit._
 
 import scala.language.implicitConversions
 

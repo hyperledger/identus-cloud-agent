@@ -1,11 +1,10 @@
 package org.hyperledger.identus.system.controller
 
-import org.hyperledger.identus.api.http.EndpointOutputs.*
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.EndpointOutputs._
 import org.hyperledger.identus.system.controller.http.HealthInfo
 import sttp.apispec.Tag
-import sttp.tapir.*
+import sttp.tapir._
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.ztapir.stringBody
 

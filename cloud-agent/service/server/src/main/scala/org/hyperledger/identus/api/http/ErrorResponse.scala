@@ -3,12 +3,10 @@ package org.hyperledger.identus.api.http
 import org.hyperledger.identus.api.http.ErrorResponse.annotations
 import org.hyperledger.identus.shared.models.Failure
 import sttp.model.StatusCode
-import sttp.tapir.generic.auto.*
+import sttp.tapir.generic.auto._
 import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.description
-import sttp.tapir.Schema.annotations.encodedExample
-import zio.json.DeriveJsonDecoder
-import zio.json.DeriveJsonEncoder
+import sttp.tapir.Schema.annotations.{description, encodedExample}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 import zio.ZIO
 
 import java.util.UUID

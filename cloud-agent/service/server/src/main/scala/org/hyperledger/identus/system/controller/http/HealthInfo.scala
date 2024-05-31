@@ -3,12 +3,8 @@ package org.hyperledger.identus.system.controller.http
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.system.controller.http.HealthInfo.annotations
 import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.description
-import sttp.tapir.Schema.annotations.encodedExample
-import zio.json.DeriveJsonDecoder
-import zio.json.DeriveJsonEncoder
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
+import sttp.tapir.Schema.annotations.{description, encodedExample}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 /** A class to represent response detailing health of service including version
   *

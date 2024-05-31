@@ -1,12 +1,11 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.parser.*
-import io.circe.syntax.*
+import io.circe.parser._
+import io.circe.syntax._
 import io.circe.Json
-import munit.*
-import org.hyperledger.identus.mercury.model.AttachmentDescriptor
+import munit._
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
-import org.hyperledger.identus.mercury.model.DidId
 
 class ProposeCredentialSpec extends ZSuite {
 

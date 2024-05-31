@@ -2,7 +2,7 @@ package org.hyperledger.identus.pollux.anoncreds
 
 import org.scalatest.flatspec.AnyFlatSpec
 
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 /** polluxAnoncredsTest/Test/testOnly org.hyperledger.identus.pollux.anoncreds.PoCNewLib
   */

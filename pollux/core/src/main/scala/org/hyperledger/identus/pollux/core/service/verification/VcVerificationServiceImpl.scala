@@ -2,12 +2,8 @@ package org.hyperledger.identus.pollux.core.service.verification
 
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.service.URIDereferencer
-import org.hyperledger.identus.pollux.vc.jwt.DidResolver
-import org.hyperledger.identus.pollux.vc.jwt.JWT
-import org.hyperledger.identus.pollux.vc.jwt.JWTVerification
-import org.hyperledger.identus.pollux.vc.jwt.JwtCredential
-import zio.*
-import zio.IO
+import org.hyperledger.identus.pollux.vc.jwt.{DidResolver, JWT, JWTVerification, JwtCredential}
+import zio.{IO, _}
 
 import java.time.OffsetDateTime
 

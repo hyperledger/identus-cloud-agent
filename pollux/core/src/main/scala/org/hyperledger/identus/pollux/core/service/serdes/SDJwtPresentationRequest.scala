@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.service.serdes
 
 import org.hyperledger.identus.pollux.core.model.presentation.Options
-import zio.json.*
+import zio.json._
 
 case class SDJwtPresentation(options: Options, claims: ast.Json.Obj)
 

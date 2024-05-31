@@ -1,17 +1,14 @@
 package org.hyperledger.identus.agent.walletapi.vault
 
-import io.github.jopenlibs.vault.api.Logical
-import io.github.jopenlibs.vault.api.LogicalUtilities
+import io.github.jopenlibs.vault.{Vault, VaultConfig, VaultException}
+import io.github.jopenlibs.vault.api.{Logical, LogicalUtilities}
 import io.github.jopenlibs.vault.response.LogicalResponse
-import io.github.jopenlibs.vault.Vault
-import io.github.jopenlibs.vault.VaultConfig
-import io.github.jopenlibs.vault.VaultException
-import zio.*
-import zio.http.*
-import zio.json.*
+import zio._
+import zio.http._
+import zio.json._
 
 import java.nio.charset.StandardCharsets
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 trait VaultKVClient {
   def get[T: KVCodec](path: String): Task[Option[T]]

@@ -2,10 +2,8 @@ package org.hyperledger.identus.test.container
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.flywaydb.core.Flyway
-import zio.test.TestAspect
-import zio.test.TestAspect.before
-import zio.test.TestAspect.beforeAll
-import zio.test.TestAspectAtLeastR
+import zio.test.{TestAspect, TestAspectAtLeastR}
+import zio.test.TestAspect.{before, beforeAll}
 import zio.ZIO
 
 object MigrationAspects {

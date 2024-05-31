@@ -1,26 +1,18 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.event.notification.EventNotificationService
-import org.hyperledger.identus.event.notification.EventNotificationServiceImpl
+import org.hyperledger.identus.event.notification.{EventNotificationService, EventNotificationServiceImpl}
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.presentproof.PresentCredentialRequestFormat
-import org.hyperledger.identus.mercury.protocol.presentproof.Presentation
-import org.hyperledger.identus.mercury.protocol.presentproof.RequestPresentation
-import org.hyperledger.identus.pollux.core.model.CredentialFormat
-import org.hyperledger.identus.pollux.core.model.DidCommID
-import org.hyperledger.identus.pollux.core.model.PresentationRecord
+import org.hyperledger.identus.mercury.protocol.presentproof.{
+  PresentCredentialRequestFormat,
+  Presentation,
+  RequestPresentation
+}
+import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.PresentationRecord.ProtocolState
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio.{Scope, ZIO, ZLayer}
 import zio.mock.Expectation
-import zio.test.assertTrue
-import zio.test.Assertion
-import zio.test.Spec
-import zio.test.TestEnvironment
-import zio.test.ZIOSpecDefault
-import zio.Scope
-import zio.ZIO
-import zio.ZLayer
+import zio.test.{assertTrue, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
 
 import java.time.Instant
 

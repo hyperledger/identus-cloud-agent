@@ -1,19 +1,16 @@
 package org.hyperledger.identus.agent.server.http
 
-import org.hyperledger.identus.castor.controller.DIDEndpoints
-import org.hyperledger.identus.castor.controller.DIDRegistrarEndpoints
+import org.hyperledger.identus.castor.controller.{DIDEndpoints, DIDRegistrarEndpoints}
 import org.hyperledger.identus.connect.controller.ConnectionEndpoints
 import org.hyperledger.identus.event.controller.EventEndpoints
 import org.hyperledger.identus.iam.entity.http.EntityEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementEndpoints
 import org.hyperledger.identus.issue.controller.IssueEndpoints
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryEndpoints
-import org.hyperledger.identus.pollux.credentialschema.SchemaRegistryEndpoints
-import org.hyperledger.identus.pollux.credentialschema.VerificationPolicyEndpoints
+import org.hyperledger.identus.pollux.credentialschema.{SchemaRegistryEndpoints, VerificationPolicyEndpoints}
 import org.hyperledger.identus.system.controller.SystemEndpoints
-import sttp.apispec.openapi.*
-import sttp.apispec.SecurityScheme
-import sttp.apispec.Tag
+import sttp.apispec.{SecurityScheme, Tag}
+import sttp.apispec.openapi._
 import sttp.model.headers.AuthenticationScheme
 
 import scala.collection.immutable.ListMap

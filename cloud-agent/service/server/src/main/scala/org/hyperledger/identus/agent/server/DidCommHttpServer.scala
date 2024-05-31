@@ -3,7 +3,7 @@ package org.hyperledger.identus.agent.server
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.http.ZHttp4sBlazeServer
 import org.hyperledger.identus.didcomm.controller.DIDCommServerEndpoints
-import zio.*
+import zio._
 
 object DidCommHttpServer {
 

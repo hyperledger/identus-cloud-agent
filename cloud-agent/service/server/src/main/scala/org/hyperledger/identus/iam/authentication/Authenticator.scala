@@ -1,15 +1,9 @@
 package org.hyperledger.identus.iam.authentication
 
-import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.agent.walletapi.model.EntityRole
+import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Entity, EntityRole}
 import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.IO
-import zio.ZIO
-import zio.ZLayer
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
+import zio.{IO, ZIO, ZLayer}
 
 trait Credentials
 

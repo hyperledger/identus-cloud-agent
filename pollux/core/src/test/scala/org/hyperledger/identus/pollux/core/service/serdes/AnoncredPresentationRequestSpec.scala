@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.service.serdes
 
-import zio.*
-import zio.test.*
-import zio.test.Assertion.*
+import zio._
+import zio.test._
+import zio.test.Assertion._
 
 object AnoncredPresentationRequestSpec extends ZIOSpecDefault {
   val json: String =

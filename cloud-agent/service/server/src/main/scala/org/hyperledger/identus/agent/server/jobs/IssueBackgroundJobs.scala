@@ -3,16 +3,16 @@ package org.hyperledger.identus.agent.server.jobs
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.jobs.BackgroundJobError.ErrorResponseReceivedFromPeerAgent
 import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
-import org.hyperledger.identus.castor.core.model.did.*
-import org.hyperledger.identus.mercury.*
-import org.hyperledger.identus.mercury.protocol.issuecredential.*
-import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.castor.core.model.did._
+import org.hyperledger.identus.mercury._
+import org.hyperledger.identus.mercury.protocol.issuecredential._
+import org.hyperledger.identus.pollux.core.model._
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.service.CredentialService
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
-import zio.*
-import zio.metrics.*
+import zio._
+import zio.metrics._
 
 object IssueBackgroundJobs extends BackgroundJobsHelper {
 

@@ -1,19 +1,16 @@
 package org.hyperledger.identus.agent.walletapi.service
 
-import org.hyperledger.identus.agent.walletapi.model.*
-import org.hyperledger.identus.agent.walletapi.model.error.*
+import org.hyperledger.identus.agent.walletapi.model._
+import org.hyperledger.identus.agent.walletapi.model.error._
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.castor.core.model.did.*
-import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.castor.core.model.did._
+import org.hyperledger.identus.mercury.model._
 import org.hyperledger.identus.mercury.PeerDID
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
-import org.hyperledger.identus.shared.crypto.X25519KeyPair
+import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.*
+import zio._
 
-import java.security.PrivateKey as JavaPrivateKey
-import java.security.PublicKey as JavaPublicKey
+import java.security.{PrivateKey => JavaPrivateKey, PublicKey => JavaPublicKey}
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.

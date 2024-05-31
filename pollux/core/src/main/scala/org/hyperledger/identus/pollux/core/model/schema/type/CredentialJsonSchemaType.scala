@@ -1,10 +1,9 @@
 package org.hyperledger.identus.pollux.core.model.schema.`type`
 
-import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
-import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaValidatorImpl
+import org.hyperledger.identus.pollux.core.model.schema.validator.{JsonSchemaError, JsonSchemaValidatorImpl}
 import org.hyperledger.identus.pollux.core.model.schema.Schema
-import zio.*
-import zio.json.*
+import zio._
+import zio.json._
 
 object CredentialJsonSchemaType extends CredentialSchemaType {
   val VC_JSON_SCHEMA_URI = "https://w3c-ccg.github.io/vc-json-schemas/schema/2.0/schema.json"

@@ -1,7 +1,6 @@
 package org.hyperledger.identus.sharedtest.containers
 
-import com.dimafeng.testcontainers.SingleContainer
-import com.dimafeng.testcontainers.VaultContainer
+import com.dimafeng.testcontainers.{SingleContainer, VaultContainer}
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.vault.{VaultContainer => JavaVaultContainer}
 

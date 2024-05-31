@@ -2,9 +2,8 @@ package org.hyperledger.identus.api.http.codec
 
 import org.hyperledger.identus.api.http.model.Order
 import org.hyperledger.identus.api.http.model.Order.Direction
-import sttp.tapir.Codec
+import sttp.tapir.{Codec, DecodeResult}
 import sttp.tapir.Codec.PlainCodec
-import sttp.tapir.DecodeResult
 
 import java.util.Base64
 

@@ -1,21 +1,19 @@
 package org.hyperledger.identus.agent.walletapi.service.handler
 
+import org.hyperledger.identus.agent.walletapi.model.{
+  CreateDIDKey,
+  ManagedDIDState,
+  ManagedDIDTemplate,
+  PublicationState,
+  WalletSeed
+}
 import org.hyperledger.identus.agent.walletapi.model.error.CreateManagedDIDError
-import org.hyperledger.identus.agent.walletapi.model.CreateDIDKey
-import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
-import org.hyperledger.identus.agent.walletapi.model.ManagedDIDTemplate
-import org.hyperledger.identus.agent.walletapi.model.PublicationState
-import org.hyperledger.identus.agent.walletapi.model.WalletSeed
-import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.DIDSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
+import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.agent.walletapi.util.OperationFactory
 import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
-import org.hyperledger.identus.shared.crypto.Apollo
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import org.hyperledger.identus.shared.crypto.X25519KeyPair
+import org.hyperledger.identus.shared.crypto.{Apollo, Ed25519KeyPair, X25519KeyPair}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.*
+import zio._
 
 private[walletapi] class DIDCreateHandler(
     apollo: Apollo,

@@ -1,17 +1,16 @@
 package org.hyperledger.identus.issue.controller
 
+import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.EndpointOutputs.*
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.api.http.EndpointOutputs._
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import org.hyperledger.identus.issue.controller.http.*
+import org.hyperledger.identus.issue.controller.http._
 import sttp.apispec.Tag
 import sttp.model.StatusCode
-import sttp.tapir.*
+import sttp.tapir._
 import sttp.tapir.json.zio.jsonBody
 
 object IssueEndpoints {

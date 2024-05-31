@@ -3,12 +3,8 @@ package org.hyperledger.identus.pollux.credentialschema.http
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponsePage.annotations
 import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.description
-import sttp.tapir.Schema.annotations.encodedExample
-import zio.json.DeriveJsonDecoder
-import zio.json.DeriveJsonEncoder
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
+import sttp.tapir.Schema.annotations.{description, encodedExample}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class CredentialSchemaResponsePage(
     @description(annotations.contents.description)

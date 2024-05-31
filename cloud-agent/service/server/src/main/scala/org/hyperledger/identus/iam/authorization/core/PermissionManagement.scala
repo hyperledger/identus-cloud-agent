@@ -1,14 +1,15 @@
 package org.hyperledger.identus.iam.authorization.core
 
 import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.EntityAlreadyExists
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.EntityNotFound
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.EntityStorageError
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.EntityWalletNotFound
+import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.{
+  EntityAlreadyExists,
+  EntityNotFound,
+  EntityStorageError,
+  EntityWalletNotFound
+}
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.*
+import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
+import zio._
 
 import java.util.UUID
 

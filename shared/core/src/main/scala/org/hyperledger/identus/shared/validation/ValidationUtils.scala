@@ -1,6 +1,6 @@
 package org.hyperledger.identus.shared.validation
 
-import zio.prelude.*
+import zio.prelude._
 
 object ValidationUtils {
 

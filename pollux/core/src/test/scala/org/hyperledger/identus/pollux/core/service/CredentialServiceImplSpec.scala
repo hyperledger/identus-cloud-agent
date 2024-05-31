@@ -1,30 +1,27 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.syntax.*
+import io.circe.syntax._
 import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
-import org.hyperledger.identus.castor.core.model.did.*
+import org.hyperledger.identus.castor.core.model.did._
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship.AssertionMethod
 import org.hyperledger.identus.castor.core.service.MockDIDService
-import org.hyperledger.identus.mercury.model.{Base64 => MyBase64, *}
-import org.hyperledger.identus.mercury.protocol.issuecredential.*
+import org.hyperledger.identus.mercury.model.{Base64 => MyBase64, _}
+import org.hyperledger.identus.mercury.protocol.issuecredential._
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredential
-import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.pollux.core.model._
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError._
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.*
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio._
 import zio.mock.MockSpecDefault
-import zio.test.*
-import zio.test.Assertion.*
+import zio.test._
+import zio.test.Assertion._
 
 import java.nio.charset.StandardCharsets
-import java.util.Base64
-import java.util.UUID
+import java.util.{Base64, UUID}
 
 object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceSpecHelper {
 

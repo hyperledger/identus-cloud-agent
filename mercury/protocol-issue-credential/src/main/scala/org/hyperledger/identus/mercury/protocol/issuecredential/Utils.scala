@@ -3,11 +3,7 @@ package org.hyperledger.identus.mercury.protocol.issuecredential
 import io.circe.parser._
 import io.circe.syntax._
 import io.circe.Decoder
-import org.hyperledger.identus.mercury.model.AttachmentDescriptor
-import org.hyperledger.identus.mercury.model.Base64
-import org.hyperledger.identus.mercury.model.JsonData
-import org.hyperledger.identus.mercury.model.JwsData
-import org.hyperledger.identus.mercury.model.LinkData
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64, JsonData, JwsData, LinkData}
 
 private[this] trait ReadAttachmentsUtils {
 

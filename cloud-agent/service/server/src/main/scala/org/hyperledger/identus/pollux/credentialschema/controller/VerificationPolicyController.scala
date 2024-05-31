@@ -1,14 +1,14 @@
 package org.hyperledger.identus.pollux.credentialschema.controller
 
-import org.hyperledger.identus.api.http.model.Order
-import org.hyperledger.identus.api.http.model.Pagination
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
-import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyInput
-import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyResponse
-import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyResponsePage
+import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.{Order, Pagination}
+import org.hyperledger.identus.pollux.credentialschema.http.{
+  VerificationPolicyInput,
+  VerificationPolicyResponse,
+  VerificationPolicyResponsePage
+}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.*
+import zio._
 
 import java.util.UUID
 

@@ -1,8 +1,7 @@
 package org.hyperledger.identus.event.notification
 
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.*
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio._
 
 import java.net.URL
 import java.time.temporal.ChronoUnit

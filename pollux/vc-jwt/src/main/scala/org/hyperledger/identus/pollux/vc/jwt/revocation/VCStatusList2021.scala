@@ -1,12 +1,10 @@
 package org.hyperledger.identus.pollux.vc.jwt.revocation
 
-import io.circe.syntax.*
-import io.circe.Json
-import io.circe.JsonObject
-import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.pollux.vc.jwt.revocation.VCStatusList2021Error.DecodingError
-import org.hyperledger.identus.pollux.vc.jwt.revocation.VCStatusList2021Error.EncodingError
-import zio.*
+import io.circe.{Json, JsonObject}
+import io.circe.syntax._
+import org.hyperledger.identus.pollux.vc.jwt._
+import org.hyperledger.identus.pollux.vc.jwt.revocation.VCStatusList2021Error.{DecodingError, EncodingError}
+import zio._
 
 import java.time.Instant
 

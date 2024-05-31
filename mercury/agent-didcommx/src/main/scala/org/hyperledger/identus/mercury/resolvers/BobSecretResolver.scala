@@ -1,10 +1,7 @@
 package org.hyperledger.identus.mercury.resolvers
 
-import org.didcommx.didcomm.common.VerificationMaterial
-import org.didcommx.didcomm.common.VerificationMaterialFormat
-import org.didcommx.didcomm.common.VerificationMethodType
-import org.didcommx.didcomm.secret.Secret
-import org.didcommx.didcomm.secret.SecretResolverInMemory
+import org.didcommx.didcomm.common.{VerificationMaterial, VerificationMaterialFormat, VerificationMethodType}
+import org.didcommx.didcomm.secret.{Secret, SecretResolverInMemory}
 
 import scala.jdk.CollectionConverters._
 

@@ -1,10 +1,12 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.pollux.core.service.URIDereferencerError.ConnectionError
-import org.hyperledger.identus.pollux.core.service.URIDereferencerError.ResourceNotFound
-import org.hyperledger.identus.pollux.core.service.URIDereferencerError.UnexpectedError
-import zio.*
-import zio.http.*
+import org.hyperledger.identus.pollux.core.service.URIDereferencerError.{
+  ConnectionError,
+  ResourceNotFound,
+  UnexpectedError
+}
+import zio._
+import zio.http._
 
 import java.net.URI
 import java.nio.charset.StandardCharsets

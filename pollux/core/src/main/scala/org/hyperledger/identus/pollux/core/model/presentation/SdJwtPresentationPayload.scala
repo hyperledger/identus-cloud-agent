@@ -2,7 +2,7 @@ package org.hyperledger.identus.pollux.core.model.presentation
 
 import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.sdjwt.PresentationJson
-import zio.json.*
+import zio.json._
 
 case class SdJwtPresentationPayload(
     claimsToDisclose: ast.Json.Obj,

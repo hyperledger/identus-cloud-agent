@@ -1,6 +1,6 @@
 package org.hyperledger.identus.pollux.sdjwt
 
-import zio.json.*
+import zio.json._
 
 import java.util.Base64
 

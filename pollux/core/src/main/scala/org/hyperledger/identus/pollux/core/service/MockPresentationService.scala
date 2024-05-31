@@ -1,31 +1,23 @@
 package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.presentproof.Presentation
-import org.hyperledger.identus.mercury.protocol.presentproof.ProofType
-import org.hyperledger.identus.mercury.protocol.presentproof.ProposePresentation
-import org.hyperledger.identus.mercury.protocol.presentproof.RequestPresentation
+import org.hyperledger.identus.mercury.protocol.presentproof.{
+  Presentation,
+  ProofType,
+  ProposePresentation,
+  RequestPresentation
+}
 import org.hyperledger.identus.pollux.anoncreds.AnoncredPresentation
+import org.hyperledger.identus.pollux.core.model.{DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
-import org.hyperledger.identus.pollux.core.model.presentation.Options
-import org.hyperledger.identus.pollux.core.model.presentation.SdJwtPresentationPayload
-import org.hyperledger.identus.pollux.core.model.DidCommID
-import org.hyperledger.identus.pollux.core.model.PresentationRecord
-import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
-import org.hyperledger.identus.pollux.core.service.serdes.AnoncredPresentationRequestV1
+import org.hyperledger.identus.pollux.core.model.presentation.{Options, SdJwtPresentationPayload}
+import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
 import org.hyperledger.identus.pollux.sdjwt.PresentationJson
-import org.hyperledger.identus.pollux.vc.jwt.Issuer
-import org.hyperledger.identus.pollux.vc.jwt.PresentationPayload
-import org.hyperledger.identus.pollux.vc.jwt.W3cCredentialPayload
+import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.json.*
-import zio.mock
-import zio.mock.Mock
-import zio.mock.Proxy
-import zio.IO
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
+import zio.{mock, IO, URLayer, ZIO, ZLayer}
+import zio.json._
+import zio.mock.{Mock, Proxy}
 
 import java.time.Instant
 import java.util.UUID

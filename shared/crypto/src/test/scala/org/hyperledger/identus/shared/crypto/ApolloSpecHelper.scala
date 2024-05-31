@@ -1,6 +1,6 @@
 package org.hyperledger.identus.shared.crypto
 
-import zio.*
+import zio._
 
 trait ApolloSpecHelper {
   protected val apollo: Apollo = Apollo.default

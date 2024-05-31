@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.service.serdes
 
 import org.hyperledger.identus.pollux.core.model.schema.validator.SchemaSerDes
-import zio.*
-import zio.json.*
+import zio._
+import zio.json._
 
 case class AnoncredPresentationRequestV1(
     requested_attributes: Map[String, AnoncredRequestedAttributeV1],

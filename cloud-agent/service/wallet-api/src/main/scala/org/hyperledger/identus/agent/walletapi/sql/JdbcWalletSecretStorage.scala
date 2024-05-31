@@ -1,17 +1,16 @@
 package org.hyperledger.identus.agent.walletapi.sql
 
-import doobie.*
-import doobie.implicits.*
-import doobie.postgres.implicits.*
+import doobie._
+import doobie.implicits._
+import doobie.postgres.implicits._
 import doobie.util.transactor.Transactor
 import org.hyperledger.identus.agent.walletapi.model.WalletSeed
 import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.db.Implicits._
 import org.hyperledger.identus.shared.db.Implicits.given
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.*
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio._
 
 import java.time.Instant
 

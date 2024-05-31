@@ -1,31 +1,28 @@
 package org.hyperledger.identus.iam.authentication.oidc
 
-import org.hyperledger.identus.agent.walletapi.model.EntityRole
-import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceImpl
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletSecretStorage
+import org.hyperledger.identus.agent.walletapi.model.{EntityRole, Wallet}
+import org.hyperledger.identus.agent.walletapi.service.{WalletManagementService, WalletManagementServiceImpl}
+import org.hyperledger.identus.agent.walletapi.sql.{JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
 import org.hyperledger.identus.iam.authentication.AuthenticationError
 import org.hyperledger.identus.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
-import org.hyperledger.identus.sharedtest.containers.KeycloakAdminClient
-import org.hyperledger.identus.sharedtest.containers.KeycloakContainerCustom
-import org.hyperledger.identus.sharedtest.containers.KeycloakTestContainerSupport
-import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
+import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
+import org.hyperledger.identus.sharedtest.containers.{
+  KeycloakAdminClient,
+  KeycloakContainerCustom,
+  KeycloakTestContainerSupport,
+  PostgresTestContainerSupport
+}
 import org.hyperledger.identus.test.container.DBTestUtils
 import org.keycloak.authorization.client.AuthzClient
-import org.keycloak.representations.idm.authorization.ResourceRepresentation
-import org.keycloak.representations.idm.authorization.UmaPermissionRepresentation
-import zio.*
+import org.keycloak.representations.idm.authorization.{ResourceRepresentation, UmaPermissionRepresentation}
+import zio._
 import zio.http.Client
-import zio.test.*
-import zio.test.Assertion.*
+import zio.test._
+import zio.test.Assertion._
 
 import java.net.URI
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 object KeycloakAuthenticatorSpec
     extends ZIOSpecDefault,

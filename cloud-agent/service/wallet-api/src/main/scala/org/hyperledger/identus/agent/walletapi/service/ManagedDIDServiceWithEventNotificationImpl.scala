@@ -2,19 +2,16 @@ package org.hyperledger.identus.agent.walletapi.service
 
 import org.hyperledger.identus.agent.walletapi.model.error.CommonWalletStorageError
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDDetail
-import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.DIDSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
+import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.castor.core.model.error
 import org.hyperledger.identus.castor.core.model.error.DIDOperationError
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
-import org.hyperledger.identus.event.notification.Event
-import org.hyperledger.identus.event.notification.EventNotificationService
+import org.hyperledger.identus.event.notification.{Event, EventNotificationService}
 import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.*
+import zio._
 
 class ManagedDIDServiceWithEventNotificationImpl(
     didService: DIDService,

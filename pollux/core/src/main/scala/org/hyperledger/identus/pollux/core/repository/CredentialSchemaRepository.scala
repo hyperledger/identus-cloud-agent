@@ -1,11 +1,10 @@
 package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
-import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.*
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema._
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchCapability
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.RIO
-import zio.Task
+import zio.{RIO, Task}
 
 import java.util.UUID
 

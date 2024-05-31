@@ -1,12 +1,11 @@
 package org.hyperledger.identus.pollux.credentialdefinition.http
 
-import org.hyperledger.identus.api.http.*
+import org.hyperledger.identus.api.http._
 import org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.credentialdefinition.http.FilterInput.annotations
-import sttp.tapir.EndpointIO.annotations.example
-import sttp.tapir.EndpointIO.annotations.query
-import sttp.tapir.Validator.*
+import sttp.tapir.EndpointIO.annotations.{example, query}
+import sttp.tapir.Validator._
 
 case class FilterInput(
     @query

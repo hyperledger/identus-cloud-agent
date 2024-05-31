@@ -1,31 +1,23 @@
 package org.hyperledger.identus.agent.walletapi.service
 
-import org.hyperledger.identus.agent.walletapi.model.*
-import org.hyperledger.identus.agent.walletapi.model.error.*
+import org.hyperledger.identus.agent.walletapi.model._
+import org.hyperledger.identus.agent.walletapi.model.error._
 import org.hyperledger.identus.agent.walletapi.model.error.given
-import org.hyperledger.identus.agent.walletapi.service.handler.DIDCreateHandler
-import org.hyperledger.identus.agent.walletapi.service.handler.DIDUpdateHandler
-import org.hyperledger.identus.agent.walletapi.service.handler.PublicationHandler
+import org.hyperledger.identus.agent.walletapi.service.handler.{DIDCreateHandler, DIDUpdateHandler, PublicationHandler}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
-import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.DIDSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
-import org.hyperledger.identus.agent.walletapi.util.*
-import org.hyperledger.identus.castor.core.model.did.*
+import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage, WalletSecretStorage}
+import org.hyperledger.identus.agent.walletapi.util._
+import org.hyperledger.identus.castor.core.model.did._
 import org.hyperledger.identus.castor.core.model.error.DIDOperationError
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.PeerDID
-import org.hyperledger.identus.shared.crypto.Apollo
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
-import org.hyperledger.identus.shared.crypto.X25519KeyPair
+import org.hyperledger.identus.shared.crypto.{Apollo, Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.*
+import zio._
 
-import java.security.PrivateKey as JavaPrivateKey
-import java.security.PublicKey as JavaPublicKey
+import java.security.{PrivateKey => JavaPrivateKey, PublicKey => JavaPublicKey}
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions
 

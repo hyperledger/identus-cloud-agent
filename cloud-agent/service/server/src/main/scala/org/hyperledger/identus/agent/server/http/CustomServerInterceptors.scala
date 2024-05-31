@@ -2,12 +2,11 @@ package org.hyperledger.identus.agent.server.http
 
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.shared.models.StatusCode
-import org.log4s.*
-import sttp.tapir.*
+import org.log4s._
+import sttp.tapir._
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.server.interceptor.*
-import sttp.tapir.server.interceptor.decodefailure.DecodeFailureHandler
-import sttp.tapir.server.interceptor.decodefailure.DefaultDecodeFailureHandler
+import sttp.tapir.server.interceptor._
+import sttp.tapir.server.interceptor.decodefailure.{DecodeFailureHandler, DefaultDecodeFailureHandler}
 import sttp.tapir.server.interceptor.decodefailure.DefaultDecodeFailureHandler.FailureMessages
 import sttp.tapir.server.interceptor.exception.ExceptionHandler
 import sttp.tapir.server.interceptor.reject.RejectHandler

@@ -1,6 +1,6 @@
 package org.hyperledger.identus.resolvers
 
-import munit.*
+import munit._
 
 /** resolver/testOnly org.hyperledger.identus.resolvers.DidValidatorSpec
   */

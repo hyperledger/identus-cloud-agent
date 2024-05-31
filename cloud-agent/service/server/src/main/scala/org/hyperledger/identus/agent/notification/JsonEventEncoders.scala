@@ -2,17 +2,19 @@ package org.hyperledger.identus.agent.notification
 
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDDetail
 import org.hyperledger.identus.castor.controller.http.ManagedDID
-import org.hyperledger.identus.castor.controller.http.ManagedDID.*
+import org.hyperledger.identus.castor.controller.http.ManagedDID._
 import org.hyperledger.identus.connect.controller.http.Connection
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.event.notification.Event
 import org.hyperledger.identus.issue.controller.http.IssueCredentialRecord
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord as PolluxIssueCredentialRecord
-import org.hyperledger.identus.pollux.core.model.PresentationRecord as PolluxPresentationRecord
+import org.hyperledger.identus.pollux.core.model.{
+  IssueCredentialRecord => PolluxIssueCredentialRecord,
+  PresentationRecord => PolluxPresentationRecord
+}
 import org.hyperledger.identus.presentproof.controller.http.PresentationStatus
 import org.hyperledger.identus.shared.models.WalletId
-import zio.*
-import zio.json.*
+import zio._
+import zio.json._
 
 import java.util.UUID
 

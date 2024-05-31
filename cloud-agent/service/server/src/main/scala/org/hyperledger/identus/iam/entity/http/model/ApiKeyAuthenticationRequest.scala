@@ -2,17 +2,10 @@ package org.hyperledger.identus.iam.entity.http.model
 
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.iam.entity.http.model.ApiKeyAuthenticationRequest.annotations
-import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.description
-import sttp.tapir.Schema.annotations.encodedExample
-import sttp.tapir.Schema.annotations.validate
-import sttp.tapir.Schema.annotations.validateEach
-import sttp.tapir.Validator
-import sttp.tapir.Validator.*
-import zio.json.DeriveJsonDecoder
-import zio.json.DeriveJsonEncoder
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
+import sttp.tapir.{Schema, Validator}
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate, validateEach}
+import sttp.tapir.Validator._
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID
 

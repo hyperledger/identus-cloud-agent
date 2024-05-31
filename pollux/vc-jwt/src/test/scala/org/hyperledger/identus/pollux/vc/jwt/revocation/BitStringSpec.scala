@@ -1,10 +1,9 @@
 package org.hyperledger.identus.pollux.vc.jwt.revocation
 
-import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.IndexOutOfBounds
-import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.InvalidSize
-import zio.*
-import zio.test.*
-import zio.test.Assertion.*
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{IndexOutOfBounds, InvalidSize}
+import zio._
+import zio.test._
+import zio.test.Assertion._
 
 object BitStringSpec extends ZIOSpecDefault {
 

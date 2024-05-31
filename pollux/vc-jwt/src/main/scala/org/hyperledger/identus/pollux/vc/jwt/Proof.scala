@@ -1,19 +1,17 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import cats.implicits.*
+import cats.implicits._
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
-import io.circe.*
-import io.circe.syntax.*
+import io.circe._
+import io.circe.syntax._
 import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import org.hyperledger.identus.shared.utils.Base64Utils
-import org.hyperledger.identus.shared.utils.Json as JsonUtils
+import org.hyperledger.identus.shared.utils.{Base64Utils, Json => JsonUtils}
 import scodec.bits.ByteVector
-import zio.*
+import zio._
 
-import java.security.*
+import java.security._
 import java.security.spec.X509EncodedKeySpec
-import java.time.Instant
-import java.time.ZoneOffset
+import java.time.{Instant, ZoneOffset}
 import scala.util.Try
 
 sealed trait Proof {

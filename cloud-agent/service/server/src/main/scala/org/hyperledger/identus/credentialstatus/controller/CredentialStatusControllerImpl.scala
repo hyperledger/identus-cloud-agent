@@ -1,12 +1,11 @@
 package org.hyperledger.identus.credential.status.controller
 
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.credential.status.controller.http.StatusListCredential
 import org.hyperledger.identus.pollux.core.model.DidCommID
 import org.hyperledger.identus.pollux.core.service.CredentialStatusListService
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.*
+import zio._
 
 import java.util.UUID
 

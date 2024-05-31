@@ -1,18 +1,17 @@
 package org.hyperledger.identus.pollux.credentialschema
 
-import org.hyperledger.identus.api.http.*
-import org.hyperledger.identus.api.http.codec.OrderCodec.*
-import org.hyperledger.identus.api.http.model.Order
-import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.EndpointOutputs.*
+import org.hyperledger.identus.api.http._
+import org.hyperledger.identus.api.http.codec.OrderCodec._
+import org.hyperledger.identus.api.http.model.{Order, PaginationInput}
+import org.hyperledger.identus.api.http.EndpointOutputs._
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import org.hyperledger.identus.pollux.credentialschema.http.*
+import org.hyperledger.identus.pollux.credentialschema.http._
 import sttp.apispec.Tag
 import sttp.model.StatusCode
-import sttp.tapir.*
+import sttp.tapir._
 import sttp.tapir.json.zio.jsonBody
 
 import java.util.UUID

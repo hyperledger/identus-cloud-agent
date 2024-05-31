@@ -4,9 +4,7 @@ import com.dimafeng.testcontainers.SingleContainer
 import dasniko.testcontainers.keycloak.ExtendableKeycloakContainer
 import org.hyperledger.identus.sharedtest.containers.KeycloakTestContainer.keycloakContainer
 import org.testcontainers.utility.DockerImageName
-import zio.TaskLayer
-import zio.ZIO
-import zio.ZLayer
+import zio.{TaskLayer, ZIO, ZLayer}
 
 final class KeycloakContainerCustom(
     dockerImageNameOverride: DockerImageName,

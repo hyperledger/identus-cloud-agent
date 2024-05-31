@@ -5,8 +5,7 @@ import io.circe.parser._
 import org.hyperledger.identus.mercury.protocol.invitation.v2._
 
 import java.{util => ju}
-import java.net.URI
-import java.net.URL
+import java.net.{URI, URL}
 
 object OutOfBand {
 

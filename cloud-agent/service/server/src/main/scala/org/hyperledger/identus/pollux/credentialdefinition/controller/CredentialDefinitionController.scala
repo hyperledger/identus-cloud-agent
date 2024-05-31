@@ -1,16 +1,17 @@
 package org.hyperledger.identus.pollux.credentialdefinition.controller
 
-import org.hyperledger.identus.api.http.*
-import org.hyperledger.identus.api.http.model.Order
-import org.hyperledger.identus.api.http.model.Pagination
+import org.hyperledger.identus.api.http._
+import org.hyperledger.identus.api.http.model.{Order, Pagination}
 import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService
-import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error.*
-import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionInput
-import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponse
-import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponsePage
-import org.hyperledger.identus.pollux.credentialdefinition.http.FilterInput
+import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error._
+import org.hyperledger.identus.pollux.credentialdefinition.http.{
+  CredentialDefinitionInput,
+  CredentialDefinitionResponse,
+  CredentialDefinitionResponsePage,
+  FilterInput
+}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.*
+import zio._
 
 import java.util.UUID
 import scala.language.implicitConversions

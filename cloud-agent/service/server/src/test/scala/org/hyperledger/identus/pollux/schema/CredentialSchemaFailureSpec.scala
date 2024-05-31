@@ -6,15 +6,14 @@ import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.container.util.MigrationAspects.migrate
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
-import org.hyperledger.identus.pollux.credentialschema.*
+import org.hyperledger.identus.pollux.credentialschema._
 import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaController
-import sttp.client3.basicRequest
-import sttp.client3.ziojson.*
-import sttp.client3.DeserializationException
+import sttp.client3.{basicRequest, DeserializationException}
+import sttp.client3.ziojson._
 import sttp.model.StatusCode
-import zio.*
-import zio.test.*
-import zio.test.Assertion.*
+import zio._
+import zio.test._
+import zio.test.Assertion._
 
 object CredentialSchemaFailureSpec extends ZIOSpecDefault with CredentialSchemaTestTools:
 

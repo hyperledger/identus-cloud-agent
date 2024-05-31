@@ -2,15 +2,9 @@ package org.hyperledger.identus.issue.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.issue.controller.http.AcceptCredentialOfferRequest.annotations
-import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.description
-import sttp.tapir.Schema.annotations.encodedExample
-import sttp.tapir.Schema.annotations.validate
-import sttp.tapir.Validator
-import zio.json.DeriveJsonDecoder
-import zio.json.DeriveJsonEncoder
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
+import sttp.tapir.{Schema, Validator}
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 /** A request to accept a credential offer received from an issuer.
   *

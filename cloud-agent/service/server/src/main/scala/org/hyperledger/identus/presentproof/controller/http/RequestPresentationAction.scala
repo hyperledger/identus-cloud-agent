@@ -1,18 +1,12 @@
 package org.hyperledger.identus.presentproof.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
-import org.hyperledger.identus.pollux.core.service.serdes.*
+import org.hyperledger.identus.pollux.core.service.serdes._
 import org.hyperledger.identus.presentproof.controller.http.RequestPresentationAction.annotations
-import sttp.tapir.json.zio.*
-import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.description
-import sttp.tapir.Schema.annotations.encodedExample
-import sttp.tapir.Schema.annotations.validate
-import sttp.tapir.Validator
-import zio.json.DeriveJsonDecoder
-import zio.json.DeriveJsonEncoder
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
+import sttp.tapir.{Schema, Validator}
+import sttp.tapir.json.zio._
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 final case class RequestPresentationAction(
     @description(annotations.action.description)

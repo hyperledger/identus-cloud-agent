@@ -7,10 +7,9 @@ import org.hyperledger.identus.pollux.core.model.CredentialStatusList
 import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.description
-import sttp.tapir.Schema.annotations.encodedExample
-import zio.*
-import zio.json.*
+import sttp.tapir.Schema.annotations.{description, encodedExample}
+import zio._
+import zio.json._
 import zio.json.ast.Json
 
 import java.time.Instant

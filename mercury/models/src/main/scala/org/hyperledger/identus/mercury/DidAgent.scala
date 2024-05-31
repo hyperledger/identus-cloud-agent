@@ -1,6 +1,6 @@
 package org.hyperledger.identus.mercury
 
-import com.nimbusds.jose.jwk.*
+import com.nimbusds.jose.jwk._
 import org.hyperledger.identus.mercury.model.DidId
 
 /** Represente a Decentralized Identifier with secrets keys */

@@ -1,7 +1,7 @@
 package org.hyperledger.identus.sharedtest.containers
 
-import zio.test.*
-import zio.test.TestAspect.*
+import zio.test._
+import zio.test.TestAspect._
 import zio.ZIO
 
 import scala.jdk.CollectionConverters._

@@ -1,28 +1,22 @@
 package org.hyperledger.identus.presentproof.controller
 
 import org.hyperledger.identus.agent.server.ControllerHelper
+import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.presentproof.ProofType
+import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.presentation.Options
-import org.hyperledger.identus.pollux.core.model.CredentialFormat
-import org.hyperledger.identus.pollux.core.model.DidCommID
-import org.hyperledger.identus.pollux.core.model.PresentationRecord
 import org.hyperledger.identus.pollux.core.service.PresentationService
-import org.hyperledger.identus.presentproof.controller.http.*
+import org.hyperledger.identus.presentproof.controller.http._
 import org.hyperledger.identus.presentproof.controller.PresentProofController.toDidCommID
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.*
-import zio.json.*
+import zio.{URLayer, ZIO, ZLayer, _}
+import zio.json._
 import zio.json.ast.Json
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
 
 import java.util.UUID
 

@@ -1,8 +1,7 @@
 package org.hyperledger.identus.connect.core.model.error
 
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
-import org.hyperledger.identus.shared.models.Failure
-import org.hyperledger.identus.shared.models.StatusCode
+import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 import zio.NonEmptyChunk
 
 import java.util.UUID

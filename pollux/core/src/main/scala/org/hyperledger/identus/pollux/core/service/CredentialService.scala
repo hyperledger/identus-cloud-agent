@@ -1,20 +1,20 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.syntax.*
-import io.circe.Json
-import io.circe.JsonObject
+import io.circe.{Json, JsonObject}
+import io.circe.syntax._
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.issuecredential.Attribute
-import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredential
-import org.hyperledger.identus.mercury.protocol.issuecredential.OfferCredential
-import org.hyperledger.identus.mercury.protocol.issuecredential.RequestCredential
-import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.mercury.protocol.issuecredential.{
+  Attribute,
+  IssueCredential,
+  OfferCredential,
+  RequestCredential
+}
+import org.hyperledger.identus.pollux.core.model._
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError._
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.IO
-import zio.ZIO
+import zio.{IO, ZIO}
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID

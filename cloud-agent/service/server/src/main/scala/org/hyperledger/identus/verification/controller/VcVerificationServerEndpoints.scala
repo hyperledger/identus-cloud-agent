@@ -2,16 +2,13 @@ package org.hyperledger.identus.verification.controller
 
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.api.http.RequestContext
-import org.hyperledger.identus.iam.authentication.Authenticator
-import org.hyperledger.identus.iam.authentication.Authorizer
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
-import org.hyperledger.identus.iam.authentication.SecurityLogic
+import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.verification.controller
 import org.hyperledger.identus.verification.controller.VcVerificationEndpoints.verify
-import org.hyperledger.identus.LogUtils.*
-import sttp.tapir.ztapir.*
-import zio.*
+import org.hyperledger.identus.LogUtils._
+import sttp.tapir.ztapir._
+import zio._
 
 class VcVerificationServerEndpoints(
     vcVerificationController: VcVerificationController,

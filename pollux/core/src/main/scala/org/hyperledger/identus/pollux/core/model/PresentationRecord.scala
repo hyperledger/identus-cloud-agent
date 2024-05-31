@@ -1,9 +1,7 @@
 package org.hyperledger.identus.pollux.core.model
 
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.presentproof.Presentation
-import org.hyperledger.identus.mercury.protocol.presentproof.ProposePresentation
-import org.hyperledger.identus.mercury.protocol.presentproof.RequestPresentation
+import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
 
 import java.time.temporal.ChronoUnit
 import java.time.Instant

@@ -1,7 +1,7 @@
 package org.hyperledger.identus.iam.authentication.apikey
 
 import org.hyperledger.identus.agent.server.config.AppConfig
-import zio.*
+import zio._
 
 case class ApiKeyConfig(salt: String, enabled: Boolean, authenticateAsDefaultUser: Boolean, autoProvisioning: Boolean)
 

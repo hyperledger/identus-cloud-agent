@@ -1,17 +1,19 @@
 package org.hyperledger.identus.sharedtest.containers
 
 import org.keycloak.admin.client.Keycloak
-import org.keycloak.representations.idm.ClientRepresentation
-import org.keycloak.representations.idm.CredentialRepresentation
-import org.keycloak.representations.idm.RealmRepresentation
-import org.keycloak.representations.idm.RoleRepresentation
-import org.keycloak.representations.idm.UserRepresentation
-import zio.*
+import org.keycloak.representations.idm.{
+  ClientRepresentation,
+  CredentialRepresentation,
+  RealmRepresentation,
+  RoleRepresentation,
+  UserRepresentation
+}
+import zio._
 import zio.test.TestAspect.beforeAll
 import zio.test.TestAspectAtLeastR
 
 import java.util.UUID
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 type KeycloakAdminClient = Keycloak
 

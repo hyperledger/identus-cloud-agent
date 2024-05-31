@@ -1,25 +1,22 @@
 package org.hyperledger.identus.pollux.sql
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import doobie.*
+import doobie._
 import doobie.util.transactor.Transactor
-import io.getquill.*
-import org.hyperledger.identus.pollux.sql.model.db.CredentialSchema
-import org.hyperledger.identus.pollux.sql.model.db.CredentialSchemaSql
+import io.getquill._
+import org.hyperledger.identus.pollux.sql.model.db.{CredentialSchema, CredentialSchemaSql}
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.db.Implicits._
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import org.hyperledger.identus.test.container.MigrationAspects.*
-import zio.*
+import org.hyperledger.identus.test.container.MigrationAspects._
+import zio._
 import zio.json.ast.Json
-import zio.test.*
-import zio.test.Assertion.*
-import zio.test.TestAspect.*
+import zio.test._
+import zio.test.Assertion._
+import zio.test.TestAspect._
 
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 import scala.collection.mutable
 import scala.io.Source

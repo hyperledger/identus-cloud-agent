@@ -1,12 +1,10 @@
 package org.hyperledger.identus.api.http.codec
 
-import org.hyperledger.identus.castor.controller.http.DIDDocument
-import org.hyperledger.identus.castor.controller.http.DIDResolutionResult
+import org.hyperledger.identus.castor.controller.http.{DIDDocument, DIDResolutionResult}
 import sttp.model.MediaType
-import sttp.tapir.*
+import sttp.tapir._
 import sttp.tapir.DecodeResult.Error
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
+import zio.json.{JsonDecoder, JsonEncoder}
 
 object DIDCodec {
 

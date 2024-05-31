@@ -1,13 +1,12 @@
 package org.hyperledger.identus.shared.db
 
-import doobie.*
-import doobie.postgres.implicits.*
+import doobie._
+import doobie.postgres.implicits._
 import doobie.syntax.ConnectionIOOps
 import doobie.util.transactor.Transactor
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.*
-import zio.interop.catz.*
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio._
+import zio.interop.catz._
 
 import java.util.UUID
 

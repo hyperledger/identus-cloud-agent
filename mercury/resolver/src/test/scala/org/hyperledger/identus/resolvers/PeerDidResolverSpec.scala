@@ -1,9 +1,9 @@
 package org.hyperledger.identus.resolvers
-import io.circe.parser.*
+import io.circe.parser._
 import io.circe.Json
-import munit.*
+import munit._
 import org.didcommx.peerdid._
-import zio.*
+import zio._
 
 import scala.jdk.CollectionConverters._
 

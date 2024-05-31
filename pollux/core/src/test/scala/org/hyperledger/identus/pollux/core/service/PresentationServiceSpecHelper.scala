@@ -1,21 +1,18 @@
 package org.hyperledger.identus.pollux.core.service
 
-import com.nimbusds.jose.jwk.*
+import com.nimbusds.jose.jwk._
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
-import org.hyperledger.identus.mercury.model.AttachmentDescriptor
-import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.presentproof.*
-import org.hyperledger.identus.mercury.AgentPeerService
-import org.hyperledger.identus.mercury.PeerDID
-import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.mercury.{AgentPeerService, PeerDID}
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
+import org.hyperledger.identus.mercury.protocol.presentproof._
+import org.hyperledger.identus.pollux.core.model._
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
-import org.hyperledger.identus.pollux.core.repository.*
-import org.hyperledger.identus.pollux.core.service.serdes.*
-import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.pollux.core.repository._
+import org.hyperledger.identus.pollux.core.service.serdes._
+import org.hyperledger.identus.pollux.vc.jwt._
 import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.*
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio._
 
 import java.time.Instant
 import java.util.UUID

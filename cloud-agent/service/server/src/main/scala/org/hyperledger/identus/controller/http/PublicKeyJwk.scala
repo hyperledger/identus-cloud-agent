@@ -2,10 +2,7 @@ package org.hyperledger.identus.castor.controller.http
 
 import org.hyperledger.identus.castor.core.model.did.w3c
 import sttp.tapir.Schema
-import zio.json.DeriveJsonDecoder
-import zio.json.DeriveJsonEncoder
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 final case class PublicKeyJwk(
     crv: Option[String] = None,

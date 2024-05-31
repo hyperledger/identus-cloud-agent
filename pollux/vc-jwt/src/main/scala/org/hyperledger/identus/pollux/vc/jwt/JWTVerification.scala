@@ -1,31 +1,26 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
+import com.nimbusds.jose.crypto.{ECDSAVerifier, Ed25519Verifier}
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
-import com.nimbusds.jose.crypto.ECDSAVerifier
-import com.nimbusds.jose.crypto.Ed25519Verifier
-import com.nimbusds.jose.jwk.*
+import com.nimbusds.jose.jwk._
 import com.nimbusds.jose.util.Base64URL
 import com.nimbusds.jose.JWSVerifier
 import com.nimbusds.jwt.SignedJWT
 import io.circe
-import io.circe.generic.auto.*
+import io.circe.generic.auto._
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.crypto.util.SubjectPublicKeyInfoFactory
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.shared.crypto.Ed25519PublicKey
-import pdi.jwt.*
-import zio.*
-import zio.prelude.*
+import pdi.jwt._
+import zio._
+import zio.prelude._
 
-import java.security.interfaces.ECPublicKey
-import java.security.interfaces.EdECPublicKey
+import java.security.{KeyFactory, PublicKey}
+import java.security.interfaces.{ECPublicKey, EdECPublicKey}
 import java.security.spec.X509EncodedKeySpec
-import java.security.KeyFactory
-import java.security.PublicKey
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object JWTVerification {
   // JWT algo <-> publicKey type mapping reference

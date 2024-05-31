@@ -1,20 +1,21 @@
 package org.hyperledger.identus.mercury.protocol.anotherclasspath
 
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
-import munit.*
-import org.hyperledger.identus.mercury.model.AttachmentDescriptor
-import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.issuecredential.CredentialPreview
-import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredential
-import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialIssuedFormat
-import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialOfferFormat
-import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialProposeFormat
-import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialRequestFormat
-import org.hyperledger.identus.mercury.protocol.issuecredential.OfferCredential
-import org.hyperledger.identus.mercury.protocol.issuecredential.ProposeCredential
-import org.hyperledger.identus.mercury.protocol.issuecredential.RequestCredential
+import io.circe._
+import io.circe.generic.semiauto._
+import io.circe.syntax._
+import munit._
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
+import org.hyperledger.identus.mercury.protocol.issuecredential.{
+  CredentialPreview,
+  IssueCredential,
+  IssueCredentialIssuedFormat,
+  IssueCredentialOfferFormat,
+  IssueCredentialProposeFormat,
+  IssueCredentialRequestFormat,
+  OfferCredential,
+  ProposeCredential,
+  RequestCredential
+}
 
 private[this] case class TestCredentialType(a: String, b: Int, x: Long, name: String, dob: String)
 private[this] object TestCredentialType {

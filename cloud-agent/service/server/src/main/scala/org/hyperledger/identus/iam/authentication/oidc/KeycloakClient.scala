@@ -1,15 +1,14 @@
 package org.hyperledger.identus.iam.authentication.oidc
 
-import org.keycloak.authorization.client.AuthzClient
-import org.keycloak.authorization.client.Configuration as KeycloakAuthzConfig
+import org.keycloak.authorization.client.{AuthzClient, Configuration => KeycloakAuthzConfig}
 import org.keycloak.representations.idm.authorization.AuthorizationRequest
-import zio.*
-import zio.http.*
-import zio.json.*
+import zio._
+import zio.http._
+import zio.json._
 
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 final case class TokenIntrospection(active: Boolean, sub: Option[String])
 

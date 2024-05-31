@@ -1,7 +1,6 @@
 package org.hyperledger.identus.iam.authentication.admin
 
-import org.hyperledger.identus.iam.authentication.AuthenticationError
-import org.hyperledger.identus.iam.authentication.Credentials
+import org.hyperledger.identus.iam.authentication.{AuthenticationError, Credentials}
 
 case class AdminApiKeyAuthenticationError(message: String) extends AuthenticationError
 

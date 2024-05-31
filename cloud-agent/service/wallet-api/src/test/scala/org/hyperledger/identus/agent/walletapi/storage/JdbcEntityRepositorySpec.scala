@@ -1,19 +1,18 @@
 package org.hyperledger.identus.agent.walletapi.storage
 
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.EntityAlreadyExists
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.EntityNotFound
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.EntityWalletNotFound
-import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.sql.EntityRepository
-import org.hyperledger.identus.agent.walletapi.sql.JdbcEntityRepository
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage
+import org.hyperledger.identus.agent.walletapi.model.{Entity, Wallet}
+import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.{
+  EntityAlreadyExists,
+  EntityNotFound,
+  EntityWalletNotFound
+}
+import org.hyperledger.identus.agent.walletapi.sql.{EntityRepository, JdbcEntityRepository, JdbcWalletNonSecretStorage}
 import org.hyperledger.identus.shared.models.WalletId
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.DBTestUtils
-import zio.*
-import zio.test.*
-import zio.test.Assertion.*
+import zio._
+import zio.test._
+import zio.test.Assertion._
 
 import java.util.UUID
 

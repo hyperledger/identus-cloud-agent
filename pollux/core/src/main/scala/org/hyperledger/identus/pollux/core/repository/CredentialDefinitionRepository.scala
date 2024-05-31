@@ -3,8 +3,7 @@ package org.hyperledger.identus.pollux.core.repository
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchCapability
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.RIO
-import zio.Task
+import zio.{RIO, Task}
 
 import java.util.UUID
 

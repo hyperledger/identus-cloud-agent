@@ -1,18 +1,19 @@
 package org.hyperledger.identus.agent.walletapi.util
 
-import org.hyperledger.identus.agent.walletapi.model.*
-import org.hyperledger.identus.agent.walletapi.model.error.CreateManagedDIDError
-import org.hyperledger.identus.agent.walletapi.model.error.UpdateManagedDIDError
-import org.hyperledger.identus.castor.core.model.did.*
-import org.hyperledger.identus.shared.crypto.Apollo
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import org.hyperledger.identus.shared.crypto.Ed25519PublicKey
-import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
-import org.hyperledger.identus.shared.crypto.Secp256k1PublicKey
-import org.hyperledger.identus.shared.crypto.X25519KeyPair
-import org.hyperledger.identus.shared.crypto.X25519PublicKey
+import org.hyperledger.identus.agent.walletapi.model._
+import org.hyperledger.identus.agent.walletapi.model.error.{CreateManagedDIDError, UpdateManagedDIDError}
+import org.hyperledger.identus.castor.core.model.did._
+import org.hyperledger.identus.shared.crypto.{
+  Apollo,
+  Ed25519KeyPair,
+  Ed25519PublicKey,
+  Secp256k1KeyPair,
+  Secp256k1PublicKey,
+  X25519KeyPair,
+  X25519PublicKey
+}
 import org.hyperledger.identus.shared.models.Base64UrlString
-import zio.*
+import zio._
 
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions

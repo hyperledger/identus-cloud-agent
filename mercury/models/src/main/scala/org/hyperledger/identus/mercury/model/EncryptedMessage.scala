@@ -3,7 +3,6 @@ package org.hyperledger.identus.mercury.model
 import io.circe._
 import io.circe.parser._
 
-// import org.didcommx.didcomm.model.PackEncryptedResult //FIXME REMOVE
 import java.util.Base64
 
 trait EncryptedMessage { // (private val msg: PackEncryptedResult) {

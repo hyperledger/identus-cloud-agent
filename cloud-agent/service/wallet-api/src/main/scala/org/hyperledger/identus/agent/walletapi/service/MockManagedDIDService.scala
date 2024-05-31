@@ -1,24 +1,22 @@
 package org.hyperledger.identus.agent.walletapi.service
 
-import org.hyperledger.identus.agent.walletapi.model.*
-import org.hyperledger.identus.agent.walletapi.model.error.*
+import org.hyperledger.identus.agent.walletapi.model._
+import org.hyperledger.identus.agent.walletapi.model.error._
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
-import org.hyperledger.identus.castor.core.model.did.LongFormPrismDID
-import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
-import org.hyperledger.identus.castor.core.model.did.ScheduleDIDOperationOutcome
+import org.hyperledger.identus.castor.core.model.did.{
+  CanonicalPrismDID,
+  LongFormPrismDID,
+  PrismDIDOperation,
+  ScheduleDIDOperationOutcome
+}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.PeerDID
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
-import org.hyperledger.identus.shared.crypto.X25519KeyPair
-import zio.*
-import zio.mock
-import zio.mock.*
+import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
+import zio.{mock, _}
+import zio.mock._
 import zio.test.Assertion
 
-import java.security.PrivateKey as JavaPrivateKey
-import java.security.PublicKey as JavaPublicKey
+import java.security.{PrivateKey => JavaPrivateKey, PublicKey => JavaPublicKey}
 
 object MockManagedDIDService extends Mock[ManagedDIDService] {
 

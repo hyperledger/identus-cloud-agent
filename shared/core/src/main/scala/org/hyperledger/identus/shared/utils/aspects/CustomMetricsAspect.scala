@@ -1,12 +1,10 @@
 package org.hyperledger.identus.shared.utils.aspects
 
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
-import zio.*
-import zio.metrics.*
+import zio._
+import zio.metrics._
 
-import java.time.Clock
-import java.time.Duration
-import java.time.Instant
+import java.time.{Clock, Duration, Instant}
 import scala.collection.mutable.{Map => MutMap}
 
 object CustomMetricsAspect {

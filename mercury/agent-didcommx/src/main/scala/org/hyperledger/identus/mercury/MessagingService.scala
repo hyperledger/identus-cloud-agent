@@ -1,14 +1,13 @@
 package org.hyperledger.identus.mercury
 
-import io.circe._
-import io.circe.JsonObject
+import io.circe.{JsonObject, _}
 import org.hyperledger.identus.mercury.error._
 import org.hyperledger.identus.mercury.model._
 import org.hyperledger.identus.mercury.protocol.routing._
 import org.hyperledger.identus.resolvers.DIDResolver
 import zio._
 
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 type HttpOrDID = String //TODO
 case class ServiceEndpoint(uri: HttpOrDID, accept: Option[Seq[String]], routingKeys: Option[Seq[String]])

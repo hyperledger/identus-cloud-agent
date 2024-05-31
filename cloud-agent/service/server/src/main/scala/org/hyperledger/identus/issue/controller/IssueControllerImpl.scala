@@ -4,38 +4,30 @@ import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.ControllerHelper
 import org.hyperledger.identus.agent.walletapi.model.error.GetManagedDIDError
 import org.hyperledger.identus.agent.walletapi.model.PublicationState
-import org.hyperledger.identus.agent.walletapi.model.PublicationState.Created
-import org.hyperledger.identus.agent.walletapi.model.PublicationState.PublicationPending
-import org.hyperledger.identus.agent.walletapi.model.PublicationState.Published
+import org.hyperledger.identus.agent.walletapi.model.PublicationState.{Created, PublicationPending, Published}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import org.hyperledger.identus.api.http.model.CollectionStats
-import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.util.PaginationUtils
-import org.hyperledger.identus.castor.core.model.did.PrismDID
-import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.model.error.DIDResolutionError
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.service.ConnectionService
-import org.hyperledger.identus.issue.controller.http.AcceptCredentialOfferRequest
-import org.hyperledger.identus.issue.controller.http.CreateIssueCredentialRecordRequest
-import org.hyperledger.identus.issue.controller.http.IssueCredentialRecord
-import org.hyperledger.identus.issue.controller.http.IssueCredentialRecordPage
+import org.hyperledger.identus.issue.controller.http.{
+  AcceptCredentialOfferRequest,
+  CreateIssueCredentialRecordRequest,
+  IssueCredentialRecord,
+  IssueCredentialRecordPage
+}
 import org.hyperledger.identus.issue.controller.IssueController.toHttpError
+import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.CredentialFormat
-import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
-import org.hyperledger.identus.pollux.core.model.CredentialFormat.JWT
-import org.hyperledger.identus.pollux.core.model.CredentialFormat.SDJWT
-import org.hyperledger.identus.pollux.core.model.DidCommID
+import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import org.hyperledger.identus.pollux.core.service.CredentialService
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.URLayer
-import zio.ZIO
-import zio.ZLayer
+import zio.{URLayer, ZIO, ZLayer}
 
 class IssueControllerImpl(
     credentialService: CredentialService,

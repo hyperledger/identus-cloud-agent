@@ -1,19 +1,18 @@
 package org.hyperledger.identus.event.controller
 
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError
-import org.hyperledger.identus.api.http.model.CollectionStats
-import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.agent.walletapi.service.{WalletManagementService, WalletManagementServiceError}
+import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.util.PaginationUtils
-import org.hyperledger.identus.event.controller.http.CreateWebhookNotification
-import org.hyperledger.identus.event.controller.http.WebhookNotification
-import org.hyperledger.identus.event.controller.http.WebhookNotificationPage
+import org.hyperledger.identus.event.controller.http.{
+  CreateWebhookNotification,
+  WebhookNotification,
+  WebhookNotificationPage
+}
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementController
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.*
+import zio._
 
 import java.net.URI
 import java.util.UUID

@@ -1,30 +1,26 @@
 package org.hyperledger.identus.agent.walletapi.service
 
-import org.hyperledger.identus.agent.walletapi.model.*
-import org.hyperledger.identus.agent.walletapi.model.error.CreateManagedDIDError
-import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError
-import org.hyperledger.identus.agent.walletapi.model.error.PublishManagedDIDError
-import org.hyperledger.identus.agent.walletapi.model.error.UpdateManagedDIDError
-import org.hyperledger.identus.agent.walletapi.sql.*
-import org.hyperledger.identus.agent.walletapi.storage.*
-import org.hyperledger.identus.agent.walletapi.vault.VaultDIDSecretStorage
-import org.hyperledger.identus.agent.walletapi.vault.VaultWalletSecretStorage
-import org.hyperledger.identus.castor.core.model.did.*
+import org.hyperledger.identus.agent.walletapi.model._
+import org.hyperledger.identus.agent.walletapi.model.error.{
+  CreateManagedDIDError,
+  DIDSecretStorageError,
+  PublishManagedDIDError,
+  UpdateManagedDIDError
+}
+import org.hyperledger.identus.agent.walletapi.sql._
+import org.hyperledger.identus.agent.walletapi.storage._
+import org.hyperledger.identus.agent.walletapi.vault.{VaultDIDSecretStorage, VaultWalletSecretStorage}
+import org.hyperledger.identus.castor.core.model.did._
 import org.hyperledger.identus.castor.core.model.error
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
-import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
-import org.hyperledger.identus.shared.crypto.X25519KeyPair
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.crypto.{ApolloSpecHelper, Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import org.hyperledger.identus.test.container.DBTestUtils
-import org.hyperledger.identus.test.container.VaultTestContainerSupport
-import zio.*
-import zio.test.*
-import zio.test.Assertion.*
+import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
+import zio._
+import zio.test._
+import zio.test.Assertion._
 
 import scala.collection.immutable.ArraySeq
 

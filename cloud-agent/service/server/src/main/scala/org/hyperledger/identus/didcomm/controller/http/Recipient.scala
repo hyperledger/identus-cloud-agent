@@ -1,10 +1,7 @@
 package org.hyperledger.identus.didcomm.controller.http
 
 import sttp.tapir.Schema
-import zio.json.DeriveJsonDecoder
-import zio.json.DeriveJsonEncoder
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class Recipient(encrypted_key: String, header: Header)
 

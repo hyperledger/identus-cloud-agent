@@ -1,49 +1,44 @@
 package org.hyperledger.identus.agent.server.jobs
 
-import cats.syntax.all.*
-import io.circe.parser.*
-import io.circe.syntax.*
+import cats.syntax.all._
+import io.circe.parser._
+import io.circe.syntax._
 import org.hyperledger.identus.agent.server.config.AppConfig
-import org.hyperledger.identus.agent.server.jobs.BackgroundJobError.ErrorResponseReceivedFromPeerAgent
-import org.hyperledger.identus.agent.server.jobs.BackgroundJobError.InvalidState
-import org.hyperledger.identus.agent.server.jobs.BackgroundJobError.NotImplemented
+import org.hyperledger.identus.agent.server.jobs.BackgroundJobError.{
+  ErrorResponseReceivedFromPeerAgent,
+  InvalidState,
+  NotImplemented
+}
 import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.castor.core.model.did.*
+import org.hyperledger.identus.castor.core.model.did._
 import org.hyperledger.identus.castor.core.service.DIDService
-import org.hyperledger.identus.mercury.*
-import org.hyperledger.identus.mercury.model.*
-import org.hyperledger.identus.mercury.protocol.presentproof.*
-import org.hyperledger.identus.mercury.protocol.reportproblem.v2.*
-import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.PresentationError
-import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
+import org.hyperledger.identus.mercury._
+import org.hyperledger.identus.mercury.model._
+import org.hyperledger.identus.mercury.protocol.presentproof._
+import org.hyperledger.identus.mercury.protocol.reportproblem.v2._
+import org.hyperledger.identus.pollux.core.model._
+import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
+import org.hyperledger.identus.pollux.core.model.error.PresentationError._
 import org.hyperledger.identus.pollux.core.model.presentation.SdJwtPresentationPayload
+import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
-import org.hyperledger.identus.pollux.core.service.CredentialService
-import org.hyperledger.identus.pollux.core.service.PresentationService
-import org.hyperledger.identus.pollux.sdjwt.IssuerPublicKey
-import org.hyperledger.identus.pollux.sdjwt.SDJWT
-import org.hyperledger.identus.pollux.vc.jwt.DidResolver as JwtDidResolver
-import org.hyperledger.identus.pollux.vc.jwt.JWT
-import org.hyperledger.identus.pollux.vc.jwt.JwtPresentation
+import org.hyperledger.identus.pollux.sdjwt.{IssuerPublicKey, SDJWT}
+import org.hyperledger.identus.pollux.vc.jwt.{DidResolver => JwtDidResolver, JWT, JwtPresentation}
 import org.hyperledger.identus.resolvers.DIDResolver
-import org.hyperledger.identus.shared.http.*
+import org.hyperledger.identus.shared.http._
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
-import zio.*
-import zio.json.*
+import zio._
+import zio.json._
 import zio.json.ast.Json
-import zio.metrics.*
+import zio.metrics._
 import zio.prelude.Validation
-import zio.prelude.ZValidation.*
+import zio.prelude.ZValidation._
 
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneId
+import java.time.{Clock, Instant, ZoneId}
 
 object PresentBackgroundJobs extends BackgroundJobsHelper {
 

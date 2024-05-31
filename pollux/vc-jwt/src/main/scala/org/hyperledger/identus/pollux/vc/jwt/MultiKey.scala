@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import io.circe.*
-import io.circe.syntax.*
+import io.circe._
+import io.circe.syntax._
 
 case class MultiKey(
     publicKeyMultibase: Option[MultiBaseString] = None,

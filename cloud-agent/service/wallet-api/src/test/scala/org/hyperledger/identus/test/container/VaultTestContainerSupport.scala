@@ -1,9 +1,8 @@
 package org.hyperledger.identus.test.container
 
-import org.hyperledger.identus.agent.walletapi.vault.VaultKVClient
-import org.hyperledger.identus.agent.walletapi.vault.VaultKVClientImpl
+import org.hyperledger.identus.agent.walletapi.vault.{VaultKVClient, VaultKVClientImpl}
 import org.hyperledger.identus.sharedtest.containers.VaultContainerCustom
-import zio.*
+import zio._
 import zio.http.Client
 
 trait VaultTestContainerSupport {

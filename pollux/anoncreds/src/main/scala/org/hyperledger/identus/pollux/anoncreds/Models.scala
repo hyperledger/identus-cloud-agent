@@ -1,24 +1,23 @@
 package org.hyperledger.identus.pollux.anoncreds
 
-import uniffi.anoncreds_wrapper.Credential as UniffiCredential
-import uniffi.anoncreds_wrapper.CredentialDefinition as UniffiCredentialDefinition
-import uniffi.anoncreds_wrapper.CredentialDefinitionPrivate as UniffiCredentialDefinitionPrivate
-import uniffi.anoncreds_wrapper.CredentialKeyCorrectnessProof as UniffiCredentialKeyCorrectnessProof
-import uniffi.anoncreds_wrapper.CredentialOffer as UniffiCredentialOffer
-import uniffi.anoncreds_wrapper.CredentialRequest as UniffiCredentialRequest
-import uniffi.anoncreds_wrapper.CredentialRequestMetadata as UniffiCredentialRequestMetadata
-import uniffi.anoncreds_wrapper.CredentialRequests as UniffiCredentialRequests
-import uniffi.anoncreds_wrapper.LinkSecret as UniffiLinkSecret
-import uniffi.anoncreds_wrapper.Nonce
-import uniffi.anoncreds_wrapper.Presentation as UniffiPresentation
-import uniffi.anoncreds_wrapper.PresentationRequest as UniffiPresentationRequest
-import uniffi.anoncreds_wrapper.Schema as UniffiSchema
-import zio.json.DeriveJsonDecoder
-import zio.json.DeriveJsonEncoder
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
+import uniffi.anoncreds_wrapper.{
+  Credential => UniffiCredential,
+  CredentialDefinition => UniffiCredentialDefinition,
+  CredentialDefinitionPrivate => UniffiCredentialDefinitionPrivate,
+  CredentialKeyCorrectnessProof => UniffiCredentialKeyCorrectnessProof,
+  CredentialOffer => UniffiCredentialOffer,
+  CredentialRequest => UniffiCredentialRequest,
+  CredentialRequestMetadata => UniffiCredentialRequestMetadata,
+  CredentialRequests => UniffiCredentialRequests,
+  LinkSecret => UniffiLinkSecret,
+  Nonce,
+  Presentation => UniffiPresentation,
+  PresentationRequest => UniffiPresentationRequest,
+  Schema => UniffiSchema
+}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 type AttributeNames = Set[String]
 type IssuerId = String
 

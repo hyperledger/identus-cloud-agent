@@ -1,16 +1,13 @@
 package org.hyperledger.identus.pollux.credentialschema.http
 
-import org.hyperledger.identus.api.http.*
+import org.hyperledger.identus.api.http._
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.Input
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponse.annotations
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.description
-import sttp.tapir.Schema.annotations.encodedExample
-import sttp.tapir.Schema.annotations.validate
-import sttp.tapir.Schema.annotations.validateEach
-import sttp.tapir.Validator.*
-import zio.json.*
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate, validateEach}
+import sttp.tapir.Validator._
+import zio.json._
 import zio.json.ast.Json
 
 case class CredentialSchemaInput(

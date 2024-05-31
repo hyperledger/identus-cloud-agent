@@ -1,17 +1,14 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.event.notification.EventNotificationService
-import org.hyperledger.identus.event.notification.EventNotificationServiceImpl
-import org.hyperledger.identus.mercury.protocol.issuecredential.*
-import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.event.notification.{EventNotificationService, EventNotificationServiceImpl}
+import org.hyperledger.identus.mercury.protocol.issuecredential._
+import org.hyperledger.identus.pollux.core.model._
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.*
-import zio.mock.Expectation
-import zio.mock.MockSpecDefault
-import zio.test.*
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio._
+import zio.mock.{Expectation, MockSpecDefault}
+import zio.test._
 
 import java.time.Instant
 

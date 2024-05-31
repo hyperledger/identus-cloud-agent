@@ -1,34 +1,29 @@
 package org.hyperledger.identus.iam.authentication.apikey
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.service.EntityService
-import org.hyperledger.identus.agent.walletapi.service.EntityServiceImpl
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceImpl
-import org.hyperledger.identus.agent.walletapi.sql.JdbcEntityRepository
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletSecretStorage
-import org.hyperledger.identus.container.util.MigrationAspects.*
+import org.hyperledger.identus.agent.walletapi.model.{Entity, Wallet}
+import org.hyperledger.identus.agent.walletapi.service.{
+  EntityService,
+  EntityServiceImpl,
+  WalletManagementService,
+  WalletManagementServiceImpl
+}
+import org.hyperledger.identus.agent.walletapi.sql.{
+  JdbcEntityRepository,
+  JdbcWalletNonSecretStorage,
+  JdbcWalletSecretStorage
+}
+import org.hyperledger.identus.container.util.MigrationAspects._
 import org.hyperledger.identus.iam.authentication.AuthenticationError
 import org.hyperledger.identus.iam.authentication.AuthenticationError.InvalidCredentials
 import org.hyperledger.identus.shared.crypto.Apollo
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import zio.test.*
-import zio.test.assert
-import zio.test.Assertion.*
-import zio.test.Spec
+import zio.{Scope, ULayer, ZIO, ZLayer}
+import zio.test.{assert, Spec, TestEnvironment, ZIOSpecDefault, _}
+import zio.test.Assertion._
 import zio.test.TestAspect.sequential
-import zio.test.TestEnvironment
-import zio.test.ZIOSpecDefault
 import zio.Runtime.removeDefaultLoggers
-import zio.Scope
-import zio.ULayer
-import zio.ZIO
-import zio.ZLayer
 
 object ApiKeyAuthenticatorSpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 

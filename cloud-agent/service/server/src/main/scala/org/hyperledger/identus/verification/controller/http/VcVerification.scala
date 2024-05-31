@@ -2,12 +2,10 @@ package org.hyperledger.identus.verification.controller.http
 
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.pollux.core.service
-import org.hyperledger.identus.pollux.core.service.verification.VcVerification as ServiceVcVerification
+import org.hyperledger.identus.pollux.core.service.verification.{VcVerification => ServiceVcVerification}
 import sttp.tapir.Schema
-import zio.*
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
-import zio.IO
+import zio.{IO, _}
+import zio.json.{JsonDecoder, JsonEncoder}
 
 enum VcVerification {
   case SignatureVerification

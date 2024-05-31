@@ -1,22 +1,21 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.mercury.model.*
-import org.hyperledger.identus.mercury.protocol.presentproof.*
+import org.hyperledger.identus.mercury.model._
+import org.hyperledger.identus.mercury.protocol.presentproof._
 import org.hyperledger.identus.pollux.anoncreds.AnoncredPresentation
-import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.pollux.core.model._
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
-import org.hyperledger.identus.pollux.core.model.presentation.*
-import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
-import org.hyperledger.identus.pollux.core.service.serdes.AnoncredPresentationRequestV1
+import org.hyperledger.identus.pollux.core.model.presentation._
+import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
 import org.hyperledger.identus.pollux.sdjwt.PresentationJson
-import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.pollux.vc.jwt._
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.*
+import zio._
 import zio.json.ast
 
+import java.{util => ju}
 import java.time.Instant
 import java.util.UUID
-import java.util as ju
 
 trait PresentationService {
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]

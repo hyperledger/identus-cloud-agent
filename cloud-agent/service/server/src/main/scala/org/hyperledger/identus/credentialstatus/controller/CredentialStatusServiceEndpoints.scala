@@ -1,18 +1,14 @@
 package org.hyperledger.identus.credential.status.controller
 
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
-import org.hyperledger.identus.credential.status.controller.CredentialStatusEndpoints.*
-import org.hyperledger.identus.iam.authentication.Authenticator
-import org.hyperledger.identus.iam.authentication.Authorizer
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
-import org.hyperledger.identus.iam.authentication.SecurityLogic
+import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.credential.status.controller.CredentialStatusEndpoints._
+import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import org.hyperledger.identus.pollux.core.model.DidCommID
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import sttp.model.StatusCode
-import sttp.tapir.ztapir.*
-import zio.*
+import sttp.tapir.ztapir._
+import zio._
 
 import java.util.UUID
 
