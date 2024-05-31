@@ -2,7 +2,10 @@ package org.hyperledger.identus.castor.core.model
 
 import com.google.protobuf.ByteString
 import io.circe.Json
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
+import io.iohk.atala.prism.protos.common_models.OperationStatus
+import io.iohk.atala.prism.protos.node_models.KeyUsage
+import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
 import org.hyperledger.identus.castor.core.model.did.{
   DIDData,
   EllipticCurve,
@@ -21,15 +24,13 @@ import org.hyperledger.identus.castor.core.model.did.{
   UpdateDIDAction,
   VerificationRelationship
 }
-import io.iohk.atala.prism.protos.common_models.OperationStatus
-import io.iohk.atala.prism.protos.node_models.KeyUsage
-import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
-import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
+import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 import org.hyperledger.identus.shared.models.Base64UrlString
 import org.hyperledger.identus.shared.utils.Traverse.*
+import zio.*
+
 import java.time.Instant
 import scala.language.implicitConversions
-import zio.*
 
 object ProtoModelHelper extends ProtoModelHelper
 

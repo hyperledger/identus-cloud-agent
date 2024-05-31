@@ -13,8 +13,7 @@ import org.hyperledger.identus.pollux.sql.model.db.VerificationPolicySql
 import org.hyperledger.identus.pollux.sql.repository.JdbcVerificationPolicyRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.MigrationAspects.*
 import zio.*

@@ -1,14 +1,11 @@
 package org.hyperledger.identus.castor.core.model
 
 import com.google.protobuf.timestamp.Timestamp
-import io.circe.Json
-import io.circe.JsonObject
+import io.circe.{Json, JsonObject}
 import io.iohk.atala.prism.protos.common_models.Ledger
 import io.iohk.atala.prism.protos.node_models
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriValue
-import org.hyperledger.identus.castor.core.model.did.ServiceType
+import org.hyperledger.identus.castor.core.model.did.{ServiceEndpoint, ServiceType}
+import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.{UriOrJsonEndpoint, UriValue}
 import org.hyperledger.identus.castor.core.util.GenUtils
 import zio.*
 import zio.test.*

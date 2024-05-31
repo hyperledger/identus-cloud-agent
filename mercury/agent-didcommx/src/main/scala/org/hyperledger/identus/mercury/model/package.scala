@@ -1,8 +1,8 @@
 package org.hyperledger.identus.mercury.model
 
-import scala.jdk.CollectionConverters.*
+import org.didcommx.didcomm.model.*
 
-import org.didcommx.didcomm.model._
+import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
 final case class EncryptedMessageImp(private val msg: PackEncryptedResult) extends EncryptedMessage {

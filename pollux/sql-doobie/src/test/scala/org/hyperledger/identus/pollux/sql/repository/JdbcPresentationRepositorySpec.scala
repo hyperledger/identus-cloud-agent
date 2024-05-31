@@ -1,11 +1,11 @@
 package org.hyperledger.identus.pollux.sql.repository
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import org.hyperledger.identus.pollux.core.repository._
+import org.hyperledger.identus.pollux.core.repository.*
 import org.hyperledger.identus.shared.db.DbConfig
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import zio._
-import zio.test._
+import zio.*
+import zio.test.*
 
 object JdbcPresentationRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSupport {
 

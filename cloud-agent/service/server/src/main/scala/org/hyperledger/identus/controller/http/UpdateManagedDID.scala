@@ -6,7 +6,8 @@ import org.hyperledger.identus.castor.core.model.did as castorDomain
 import org.hyperledger.identus.shared.utils.Traverse.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+
 import scala.language.implicitConversions
 
 final case class UpdateManagedDIDRequest(

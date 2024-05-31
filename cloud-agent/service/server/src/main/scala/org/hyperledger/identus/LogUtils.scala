@@ -1,8 +1,8 @@
 package org.hyperledger.identus
 
-import zio.*
 import org.hyperledger.identus.api.http.RequestContext
 import sttp.model.Header
+import zio.*
 
 object LogUtils {
   inline val headerName = "X-Request-ID"

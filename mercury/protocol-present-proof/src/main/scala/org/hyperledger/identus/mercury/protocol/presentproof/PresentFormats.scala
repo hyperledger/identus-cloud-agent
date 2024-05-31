@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.presentproof
 
-import io.circe.generic.semiauto.*
 import io.circe.{Decoder, Encoder}
+import io.circe.generic.semiauto.*
 
 /*
 Present Credential Formats:

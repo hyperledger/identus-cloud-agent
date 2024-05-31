@@ -2,8 +2,8 @@ package org.hyperledger.identus.agent.walletapi.model
 
 import org.hyperledger.identus.shared.models.WalletId
 
-import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.time.Instant
 
 final case class Wallet(
     id: WalletId,

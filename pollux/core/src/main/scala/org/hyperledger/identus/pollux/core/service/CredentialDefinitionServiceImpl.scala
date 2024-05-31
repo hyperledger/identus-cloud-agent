@@ -5,21 +5,21 @@ import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.pollux.anoncreds.{AnoncredLib, AnoncredSchemaDef}
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{SchemaError, URISyntaxError}
-import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
-import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.{Filter, FilteredEntries}
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
+import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
+import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.{Filter, FilteredEntries}
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
 import org.hyperledger.identus.pollux.core.repository.CredentialDefinitionRepository
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchQuery
-import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error.*
 import org.hyperledger.identus.pollux.core.service.serdes.{
   PrivateCredentialDefinitionSchemaSerDesV1,
   ProofKeyCredentialDefinitionSchemaSerDesV1,
   PublicCredentialDefinitionSerDesV1
 }
-import zio.ZIO.getOrFailWith
+import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error.*
 import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.ZIO.getOrFailWith
 
 import java.net.URI
 import java.util.UUID

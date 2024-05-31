@@ -1,16 +1,13 @@
 package org.hyperledger.identus.issue.controller
 
-import org.hyperledger.identus.LogUtils.*
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.iam.authentication.Authenticator
-import org.hyperledger.identus.iam.authentication.Authorizer
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
-import org.hyperledger.identus.iam.authentication.SecurityLogic
-import org.hyperledger.identus.issue.controller.IssueEndpoints.*
+import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import org.hyperledger.identus.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest}
+import org.hyperledger.identus.issue.controller.IssueEndpoints.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.LogUtils.*
 import sttp.tapir.ztapir.*
 import zio.*
 

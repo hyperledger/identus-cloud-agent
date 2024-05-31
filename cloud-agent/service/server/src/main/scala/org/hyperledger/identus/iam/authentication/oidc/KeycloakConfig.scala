@@ -1,7 +1,8 @@
 package org.hyperledger.identus.iam.authentication.oidc
 
-import zio.*
 import org.hyperledger.identus.agent.server.config.AppConfig
+import zio.*
+
 import java.net.URL
 
 final case class KeycloakConfig(

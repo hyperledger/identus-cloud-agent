@@ -6,9 +6,8 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.Filtere
 import org.hyperledger.identus.pollux.core.repository.CredentialSchemaRepository
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchQuery
 import org.hyperledger.identus.pollux.core.service.CredentialSchemaService.Error.*
+import zio.{IO, URLayer, ZLayer}
 import zio.ZIO.{fail, getOrFailWith, succeed}
-import zio.{URLayer, ZLayer}
-import zio.IO
 
 import java.util.UUID
 

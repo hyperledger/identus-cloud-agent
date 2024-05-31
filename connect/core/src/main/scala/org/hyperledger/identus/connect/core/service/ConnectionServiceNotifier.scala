@@ -1,8 +1,8 @@
 package org.hyperledger.identus.connect.core.service
 
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.*
+import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.event.notification.{Event, EventNotificationService}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}

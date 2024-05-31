@@ -6,8 +6,8 @@ import org.log4s.*
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.server.interceptor.*
-import sttp.tapir.server.interceptor.decodefailure.DefaultDecodeFailureHandler.FailureMessages
 import sttp.tapir.server.interceptor.decodefailure.{DecodeFailureHandler, DefaultDecodeFailureHandler}
+import sttp.tapir.server.interceptor.decodefailure.DefaultDecodeFailureHandler.FailureMessages
 import sttp.tapir.server.interceptor.exception.ExceptionHandler
 import sttp.tapir.server.interceptor.reject.RejectHandler
 import sttp.tapir.server.model.ValuedEndpointOutput

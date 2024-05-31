@@ -1,11 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.syntax._
-
-import org.hyperledger.identus.mercury.model.PIURI
-import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Message, DidId}
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
 
 final case class RequestCredential(
     id: String = java.util.UUID.randomUUID.toString(),

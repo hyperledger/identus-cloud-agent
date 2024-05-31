@@ -14,7 +14,8 @@ import org.hyperledger.identus.castor.core.model.did.{
 }
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits.{*, given}
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.db.Implicits.given
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.interop.catz.*
