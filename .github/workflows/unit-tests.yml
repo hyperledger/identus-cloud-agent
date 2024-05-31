@@ -15,7 +15,7 @@ on:
 jobs:
   build-and-unit-tests:
     name: "Build and unit tests"
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     if: ${{ !contains(github.event.pull_request.title, '[skip ci]') }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
