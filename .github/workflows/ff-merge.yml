@@ -7,7 +7,7 @@ name: Fast-forward merge
 # This workflow helps to merge multiple commits from PR to main branch of the repository
 # without loosing of PGP signature.
 #
-# Related GitHub discussions: 
+# Related GitHub discussions:
 # https://github.com/community/community/discussions/10410
 # https://github.com/orgs/community/discussions/5524
 
@@ -29,5 +29,5 @@ jobs:
         uses: endre-spotlab/fast-forward-js-action@2.1
         with:
           GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-          success_message: 'Success! Fast forwarded ***target_base*** to ***source_head***! ```git checkout target_base && git merge source_head --ff-only``` '
-          failure_message: 'Failed! Cannot do fast forward!'
+          success_message: "Success! Fast forwarded ***target_base*** to ***source_head***! ```git checkout target_base && git merge source_head --ff-only``` "
+          failure_message: "Failed! Cannot do fast forward!"
