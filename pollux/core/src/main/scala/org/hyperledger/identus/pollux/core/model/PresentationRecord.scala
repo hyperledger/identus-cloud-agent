@@ -7,6 +7,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 type AnoncredCredentialProofs = zio.json.ast.Json
+type SdJwtCredentialToDisclose = zio.json.ast.Json.Obj
 
 final case class PresentationRecord(
     id: DidCommID,
@@ -25,6 +26,8 @@ final case class PresentationRecord(
     credentialsToUse: Option[List[String]],
     anoncredCredentialsToUseJsonSchemaId: Option[String],
     anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
+    sdJwtClaimsToUseJsonSchemaId: Option[String],
+    sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
     metaRetries: Int,
     metaNextRetry: Option[Instant],
     metaLastFailure: Option[String],

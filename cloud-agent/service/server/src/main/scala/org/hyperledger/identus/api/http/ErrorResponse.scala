@@ -10,6 +10,7 @@ import zio.ZIO
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder}
 
 import java.util.UUID
+import scala.language.implicitConversions
 import scala.util.matching.Regex
 
 private val INSTANCE_URI_PREFIX = "error:instance:"
@@ -40,16 +41,18 @@ object ErrorResponse {
   given schema: Schema[ErrorResponse] = Schema.derived
 
   private val CamelCaseSplitRegex: Regex = "(([A-Z]?[a-z]+)|([A-Z]))".r
-  given failureToErrorResponseConversion[R, A]: Conversion[ZIO[R, Failure, A], ZIO[R, ErrorResponse, A]] = { effect =>
-    effect.mapError { failure =>
-      val simpleName = failure.getClass.getSimpleName
-      ErrorResponse(
-        failure.statusCode.code,
-        s"error:ConnectionServiceError:$simpleName",
-        CamelCaseSplitRegex.findAllIn(simpleName).mkString(" "),
-        Some(failure.userFacingMessage)
-      )
-    }
+  given failureToErrorResponseConversionZIO[R, A]: Conversion[ZIO[R, Failure, A], ZIO[R, ErrorResponse, A]] = {
+    effect => effect.mapError { failure => failure }
+  }
+
+  given failureToErrorResponseConversion[R, A]: Conversion[Failure, ErrorResponse] = { failure =>
+    val simpleName = failure.getClass.getSimpleName
+    ErrorResponse(
+      failure.statusCode.code,
+      s"error:${failure.namespace}:$simpleName",
+      CamelCaseSplitRegex.findAllIn(simpleName).mkString(" "),
+      Some(failure.userFacingMessage)
+    )
   }
 
   object annotations {

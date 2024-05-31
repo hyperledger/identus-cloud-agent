@@ -19,7 +19,7 @@ import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
 import scala.util.Try
 import com.nimbusds.jwt.SignedJWT
 import scala.util.Failure
-
+import org.hyperledger.identus.shared.crypto.{PublicKey => ApolloPublicKey}
 opaque type DID = String
 object DID {
   def apply(value: String): DID = value
@@ -30,6 +30,8 @@ object DID {
 }
 
 case class Issuer(did: DID, signer: Signer, publicKey: PublicKey)
+
+case class ApolloIssuer(did: DID, signer: Signer, publicKey: ApolloPublicKey)
 
 sealed trait VerifiableCredentialPayload
 
@@ -667,7 +669,7 @@ object CredentialVerification {
 
       // Verify proof
       verified <- proof match
-        case EddsaJcs2022Proof(proofValue, verificationMethod, maybeCreated) =>
+        case EcdsaJcs2019Proof(proofValue, verificationMethod, maybeCreated) =>
           val publicKeyMultiBaseEffect = uriResolver
             .resolve(verificationMethod)
             .mapError(_.toThrowable)
@@ -679,7 +681,7 @@ object CredentialVerification {
           for {
             publicKeyMultiBase <- publicKeyMultiBaseEffect
             statusListCredJsonWithoutProof = vcStatusListCredJson.hcursor.downField("proof").delete.top.get
-            verified <- EddsaJcs2022ProofGenerator
+            verified <- EcdsaJcs2019ProofGenerator
               .verifyProof(statusListCredJsonWithoutProof, proofValue, publicKeyMultiBase)
               .mapError(_.getMessage)
           } yield verified
@@ -900,7 +902,7 @@ object W3CCredential {
     for {
       proof <- issuer.signer.generateProofForJson(jsonCred, issuer.publicKey)
       jsonProof <- proof match
-        case a: EddsaJcs2022Proof => ZIO.succeed(a.asJson.dropNullValues)
+        case a: EcdsaJcs2019Proof => ZIO.succeed(a.asJson.dropNullValues)
       verifiableCredentialWithProof = jsonCred.deepMerge(Map("proof" -> jsonProof).asJson)
     } yield verifiableCredentialWithProof
 

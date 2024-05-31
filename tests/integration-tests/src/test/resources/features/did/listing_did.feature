@@ -1,3 +1,4 @@
+@did @list
 Feature: DID listing
 
 Scenario: Listing multiple PRISM DIDs

@@ -1,4 +1,4 @@
-@credential_schema
+@jwt @schema
 Feature: Credential schemas
 
   Background:

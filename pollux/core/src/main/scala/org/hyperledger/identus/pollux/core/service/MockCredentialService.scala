@@ -30,6 +30,21 @@ object MockCredentialService extends Mock[CredentialService] {
         CredentialServiceError,
         IssueCredentialRecord
       ]
+  object CreateSDJWTIssueCredentialRecord
+      extends Effect[
+        (
+            DidId,
+            DidId,
+            DidCommID,
+            Option[String],
+            Json,
+            Option[Double],
+            Option[Boolean],
+            CanonicalPrismDID
+        ),
+        CredentialServiceError,
+        IssueCredentialRecord
+      ]
 
   object CreateAnonCredsIssueCredentialRecord
       extends Effect[
@@ -51,10 +66,12 @@ object MockCredentialService extends Mock[CredentialService] {
   object AcceptCredentialOffer
       extends Effect[(DidCommID, Option[String]), CredentialServiceError, IssueCredentialRecord]
   object GenerateJWTCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
+  object GenerateSDJWTCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object GenerateAnonCredsCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object ReceiveCredentialRequest extends Effect[RequestCredential, CredentialServiceError, IssueCredentialRecord]
   object AcceptCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object GenerateJWTCredential extends Effect[(DidCommID, String), CredentialServiceError, IssueCredentialRecord]
+  object GenerateSDJWTCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object GenerateAnonCredsCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object ReceiveCredentialIssue extends Effect[IssueCredential, CredentialServiceError, IssueCredentialRecord]
   object MarkOfferSent extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
@@ -82,6 +99,28 @@ object MockCredentialService extends Mock[CredentialService] {
       ): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(
           CreateJWTIssueCredentialRecord,
+          pairwiseIssuerDID,
+          pairwiseHolderDID,
+          thid,
+          maybeSchemaId,
+          claims,
+          validityPeriod,
+          automaticIssuance,
+          issuingDID
+        )
+
+      override def createSDJWTIssueCredentialRecord(
+          pairwiseIssuerDID: DidId,
+          pairwiseHolderDID: DidId,
+          thid: DidCommID,
+          maybeSchemaId: Option[String],
+          claims: Json,
+          validityPeriod: Option[Double],
+          automaticIssuance: Option[Boolean],
+          issuingDID: CanonicalPrismDID
+      ): IO[CredentialServiceError, IssueCredentialRecord] =
+        proxy(
+          CreateSDJWTIssueCredentialRecord,
           pairwiseIssuerDID,
           pairwiseHolderDID,
           thid,
@@ -128,6 +167,11 @@ object MockCredentialService extends Mock[CredentialService] {
       ): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(GenerateJWTCredentialRequest, recordId)
 
+      override def generateSDJWTCredentialRequest(
+          recordId: DidCommID
+      ): IO[CredentialServiceError, IssueCredentialRecord] =
+        proxy(GenerateSDJWTCredentialRequest, recordId)
+
       override def generateAnonCredsCredentialRequest(
           recordId: DidCommID
       ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
@@ -146,6 +190,11 @@ object MockCredentialService extends Mock[CredentialService] {
           statusListRegistryUrl: String,
       ): IO[CredentialServiceError, IssueCredentialRecord] =
         proxy(GenerateJWTCredential, recordId, statusListRegistryUrl)
+
+      override def generateSDJWTCredential(
+          recordId: DidCommID
+      ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+        proxy(GenerateSDJWTCredential, recordId)
 
       override def generateAnonCredsCredential(
           recordId: DidCommID

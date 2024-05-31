@@ -5,6 +5,7 @@ import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.presentproof.controller.http.RequestPresentationAction.annotations
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import sttp.tapir.{Schema, Validator}
+import sttp.tapir.json.zio.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 final case class RequestPresentationAction(
@@ -18,6 +19,12 @@ final case class RequestPresentationAction(
     @description(annotations.anoncredProof.description)
     @encodedExample(annotations.anoncredProof.example)
     anoncredPresentationRequest: Option[AnoncredCredentialProofsV1],
+    @description(annotations.claims.description)
+    @encodedExample(annotations.claims.example)
+    claims: Option[zio.json.ast.Json.Obj],
+    @description(annotations.credentialFormat.description)
+    @encodedExample(annotations.credentialFormat.example)
+    credentialFormat: Option[String],
 )
 
 object RequestPresentationAction {
@@ -54,6 +61,33 @@ object RequestPresentationAction {
             "The unique identifier of the issue credential record - and hence VC - to use as the prover accepts the presentation request. Only applicable on the prover side when the action is `request-accept`.",
           example = "id"
         )
+
+    object claims
+        extends Annotation[Option[zio.json.ast.Json]](
+          description = """
+            |The set of claims to be disclosed from the  issued credential.
+            |The JSON object should comply with the schema applicable for this offer (i.e. 'schemaId' or 'credentialDefinitionId').
+            |""".stripMargin,
+          example = Some(
+            zio.json.ast.Json.Obj(
+              "firstname" -> zio.json.ast.Json.Str("Alice"),
+              "lastname" -> zio.json.ast.Json.Str("Wonderland"),
+            )
+          )
+        )
+
+    object credentialFormat
+        extends Annotation[Option[String]](
+          description = "The credential format (default to 'JWT')",
+          example = Some("JWT"),
+          validator = Validator.enumeration(
+            List(
+              Some("JWT"),
+              Some("SDJWT"),
+              Some("AnonCreds")
+            )
+          )
+        )
   }
 
   given RequestPresentationActionEncoder: JsonEncoder[RequestPresentationAction] =
@@ -62,12 +96,12 @@ object RequestPresentationAction {
   given RequestPresentationActionDecoder: JsonDecoder[RequestPresentationAction] =
     DeriveJsonDecoder.gen[RequestPresentationAction]
 
-  given RequestPresentationActionSchema: Schema[RequestPresentationAction] = Schema.derived
-
   import AnoncredCredentialProofsV1.given
 
   given Schema[AnoncredCredentialProofsV1] = Schema.derived
 
   given Schema[AnoncredCredentialProofV1] = Schema.derived
+
+  given RequestPresentationActionSchema: Schema[RequestPresentationAction] = Schema.derived
 
 }

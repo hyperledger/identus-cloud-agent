@@ -25,7 +25,4 @@ package object error {
       )
       with TransportError
 
-  case class ParseResponse(cause: Throwable)
-      extends RuntimeException(s"Error when sending message: ${cause.getMessage}", cause)
-      with TransportError
 }
