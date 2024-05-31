@@ -24,7 +24,7 @@ on:
 
 jobs:
   trigger-deployment:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Parse input parameters
         id: parse-params
