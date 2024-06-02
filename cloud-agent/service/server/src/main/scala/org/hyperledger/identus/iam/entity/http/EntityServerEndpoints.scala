@@ -1,16 +1,11 @@
 package org.hyperledger.identus.iam.entity.http
 
-import org.hyperledger.identus.LogUtils.*
-import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.agent.walletapi.model.EntityRole
-import org.hyperledger.identus.api.http.model.PaginationInput
+import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, EntityRole}
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
-import org.hyperledger.identus.iam.authentication.Authenticator
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
-import org.hyperledger.identus.iam.authentication.SecurityLogic
-import org.hyperledger.identus.iam.authentication.admin.{AdminApiKeyCredentials}
+import org.hyperledger.identus.api.http.model.PaginationInput
+import org.hyperledger.identus.iam.authentication.{Authenticator, DefaultAuthenticator, SecurityLogic}
+import org.hyperledger.identus.iam.authentication.admin.AdminApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
-import org.hyperledger.identus.iam.entity.http.EntityEndpoints.*
 import org.hyperledger.identus.iam.entity.http.controller.EntityController
 import org.hyperledger.identus.iam.entity.http.model.{
   ApiKeyAuthenticationRequest,
@@ -18,6 +13,8 @@ import org.hyperledger.identus.iam.entity.http.model.{
   UpdateEntityNameRequest,
   UpdateEntityWalletIdRequest
 }
+import org.hyperledger.identus.iam.entity.http.EntityEndpoints.*
+import org.hyperledger.identus.LogUtils.*
 import sttp.tapir.ztapir.*
 import zio.{IO, URIO, ZIO}
 

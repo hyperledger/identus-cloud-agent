@@ -1,10 +1,10 @@
 package org.hyperledger.identus.pollux.credentialschema.controller
 
-import org.hyperledger.identus.api.http.model.{Order, Pagination}
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.{Order, Pagination}
 import org.hyperledger.identus.pollux.credentialschema.http.{
-  VerificationPolicyResponse,
   VerificationPolicyInput,
+  VerificationPolicyResponse,
   VerificationPolicyResponsePage
 }
 import org.hyperledger.identus.shared.models.WalletAccessContext

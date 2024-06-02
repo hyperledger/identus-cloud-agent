@@ -1,8 +1,8 @@
 package org.hyperledger.identus.castor.core.model.did
 
 import com.google.protobuf.ByteString
-import org.hyperledger.identus.shared.crypto.Sha256Hash
 import io.iohk.atala.prism.protos.node_models
+import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.models.Base64UrlString
 import zio.*
 import zio.test.*

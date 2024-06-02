@@ -1,18 +1,22 @@
 package org.hyperledger.identus.agent.server.jobs
 
-import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.KeyNotFoundError
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
+import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
+import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.castor.core.model.did.{LongFormPrismDID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.service.DIDService
-import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.{AgentPeerService, DidAgent}
-import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer}
+import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.pollux.core.model.error.PresentationError
+import org.hyperledger.identus.pollux.sdjwt.SDJWT.*
+import org.hyperledger.identus.pollux.vc.jwt.{DIDResolutionFailed, DIDResolutionSucceeded, ES256KSigner, EdSigner, *}
+import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, Issuer as JwtIssuer}
+import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, KmpEd25519KeyOps}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{ZIO, ZLayer}
-import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
 
+import java.util.Base64
 trait BackgroundJobsHelper {
 
   def getLongForm(
@@ -84,6 +88,86 @@ trait BackgroundJobsHelper {
       _ <- ZIO.logInfo(s"PeerDID record successfully loaded in DIDComm receiver endpoint: $peerDIDRecord")
       walletAccessContext = WalletAccessContext(peerDIDRecord.walletId)
     } yield walletAccessContext
+  }
+
+  def getEd25519SigningKeyPair(
+      jwtIssuerDID: PrismDID,
+      verificationRelationship: VerificationRelationship
+  ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, Throwable, Ed25519KeyPair] = {
+    for {
+      managedDIDService <- ZIO.service[ManagedDIDService]
+      didService <- ZIO.service[DIDService]
+      issuingKeyId <- didService
+        .resolveDID(jwtIssuerDID)
+        .mapError(e => RuntimeException(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
+        .someOrFail(RuntimeException(s"Issuing DID resolution result is not found"))
+        .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
+        .someOrFail(
+          RuntimeException(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
+        )
+      ed25519keyPair <- managedDIDService
+        .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
+        .map(_.collect { case keyPair: Ed25519KeyPair => keyPair })
+        .mapError(e => RuntimeException(s"Error occurred while getting issuer key-pair: ${e.toString}"))
+        .someOrFail(
+          RuntimeException(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
+        )
+    } yield ed25519keyPair
+  }
+
+  /** @param jwtIssuerDID
+    *   This can holder prism did / issuer prism did
+    * @param verificationRelationship
+    *   Holder it Authentication and Issuer it is AssertionMethod
+    * @return
+    *   JwtIssuer
+    * @see
+    *   org.hyperledger.identus.pollux.vc.jwt.Issuer
+    */
+  def getSDJwtIssuer(
+      jwtIssuerDID: PrismDID,
+      verificationRelationship: VerificationRelationship
+  ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, Throwable, JwtIssuer] = {
+    for {
+      ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
+    } yield {
+      JwtIssuer(
+        org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
+        EdSigner(ed25519keyPair),
+        Ed25519PublicKey.toJavaEd25519PublicKey(ed25519keyPair.publicKey.getEncoded)
+      )
+    }
+  }
+
+  def resolveToEd25519PublicKey(did: String): ZIO[JwtDidResolver, PresentationError, Ed25519PublicKey] = {
+    for {
+      didResolverService <- ZIO.service[JwtDidResolver]
+      didResolutionResult <- didResolverService.resolve(did)
+      publicKeyBase64 <- didResolutionResult match {
+        case failed: DIDResolutionFailed =>
+          ZIO.fail(
+            PresentationError.UnexpectedError(
+              s"DIDResolutionFailed for $did: ${failed.error.toString}"
+            )
+          )
+        case succeeded: DIDResolutionSucceeded =>
+          succeeded.didDocument.verificationMethod
+            .find(vm => succeeded.didDocument.assertionMethod.contains(vm.id))
+            .flatMap(_.publicKeyJwk.flatMap(_.x))
+            .toRight(
+              PresentationError.UnexpectedError(
+                s"Did Document is missing the required publicKey: $did"
+              )
+            )
+            .fold(ZIO.fail(_), ZIO.succeed(_))
+      }
+      ed25519PublicKey <- ZIO
+        .fromTry {
+          val decodedKey = Base64.getUrlDecoder.decode(publicKeyBase64)
+          KmpEd25519KeyOps.publicKeyFromEncoded(decodedKey)
+        }
+        .mapError(t => PresentationError.UnexpectedError(t.getMessage))
+    } yield ed25519PublicKey
   }
 
 }

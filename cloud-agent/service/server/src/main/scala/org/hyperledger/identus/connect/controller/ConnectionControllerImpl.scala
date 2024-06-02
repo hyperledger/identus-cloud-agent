@@ -2,8 +2,8 @@ package org.hyperledger.identus.connect.controller
 
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.connect.controller.http.{
   AcceptConnectionInvitationRequest,
   Connection,

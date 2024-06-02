@@ -9,13 +9,15 @@ import org.hyperledger.identus.mercury.protocol.presentproof.{
   RequestPresentation
 }
 import org.hyperledger.identus.pollux.anoncreds.AnoncredPresentation
-import org.hyperledger.identus.pollux.core.model.error.PresentationError
-import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.core.model.{DidCommID, PresentationRecord}
+import org.hyperledger.identus.pollux.core.model.error.PresentationError
+import org.hyperledger.identus.pollux.core.model.presentation.{Options, SdJwtPresentationPayload}
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
+import org.hyperledger.identus.pollux.sdjwt.PresentationJson
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.json.*
 
 import java.time.Instant
 import java.util.UUID
@@ -43,6 +45,27 @@ class PresentationServiceNotifier(
         connectionId,
         proofTypes,
         options
+      )
+    )
+
+  override def createSDJWTPresentationRecord(
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: DidId,
+      thid: DidCommID,
+      connectionId: Option[String],
+      proofTypes: Seq[ProofType],
+      claimsToDisclose: ast.Json.Obj,
+      options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options]
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+    notifyOnSuccess(
+      svc.createSDJWTPresentationRecord(
+        pairwiseVerifierDID,
+        pairwiseProverDID,
+        thid,
+        connectionId,
+        proofTypes,
+        claimsToDisclose,
+        options,
       )
     )
 
@@ -137,6 +160,13 @@ class PresentationServiceNotifier(
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(svc.acceptPresentation(recordId))
 
+  def acceptSDJWTRequestPresentation(
+      recordId: DidCommID,
+      credentialsToUse: Seq[String],
+      claimsToDisclose: Option[ast.Json.Obj]
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+    notifyOnSuccess(svc.acceptSDJWTRequestPresentation(recordId, credentialsToUse, claimsToDisclose))
+
   override def rejectPresentation(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
@@ -171,6 +201,19 @@ class PresentationServiceNotifier(
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, PresentationPayload] =
     svc.createJwtPresentationPayloadFromRecord(record, issuer, issuanceDate)
+
+  override def createSDJwtPresentationPayloadFromRecord(
+      record: DidCommID,
+      issuer: Issuer
+  ): ZIO[WalletAccessContext, PresentationError, SdJwtPresentationPayload] =
+    svc.createSDJwtPresentationPayloadFromRecord(record, issuer)
+
+  override def createSDJwtPresentation(
+      record: DidCommID,
+      requestPresentation: RequestPresentation,
+      issuer: Issuer
+  ): ZIO[WalletAccessContext, PresentationError, Presentation] =
+    svc.createSDJwtPresentation(record, requestPresentation, issuer)
 
   override def createAnoncredPresentationPayloadFromRecord(
       record: DidCommID,

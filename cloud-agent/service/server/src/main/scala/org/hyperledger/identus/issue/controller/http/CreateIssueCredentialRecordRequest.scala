@@ -2,9 +2,9 @@ package org.hyperledger.identus.issue.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.issue.controller.http.CreateIssueCredentialRecordRequest.annotations
-import sttp.tapir.Schema.annotations.{description, encodedExample}
-import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.{Schema, Validator}
+import sttp.tapir.json.zio.schemaForZioJsonValue
+import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID

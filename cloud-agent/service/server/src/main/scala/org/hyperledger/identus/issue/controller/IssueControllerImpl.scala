@@ -1,31 +1,31 @@
 package org.hyperledger.identus.issue.controller
 
-import org.hyperledger.identus.agent.server.ControllerHelper
 import org.hyperledger.identus.agent.server.config.AppConfig
+import org.hyperledger.identus.agent.server.ControllerHelper
+import org.hyperledger.identus.agent.walletapi.model.error.GetManagedDIDError
 import org.hyperledger.identus.agent.walletapi.model.PublicationState
 import org.hyperledger.identus.agent.walletapi.model.PublicationState.{Created, PublicationPending, Published}
-import org.hyperledger.identus.agent.walletapi.model.error.GetManagedDIDError
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.util.PaginationUtils
 import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.model.error.DIDResolutionError
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.service.ConnectionService
-import org.hyperledger.identus.issue.controller.IssueController.toHttpError
 import org.hyperledger.identus.issue.controller.http.{
   AcceptCredentialOfferRequest,
   CreateIssueCredentialRecordRequest,
   IssueCredentialRecord,
   IssueCredentialRecordPage
 }
-import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT}
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
+import org.hyperledger.identus.issue.controller.IssueController.toHttpError
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
-import org.hyperledger.identus.pollux.core.service.CredentialService
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
+import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
+import org.hyperledger.identus.pollux.core.service.CredentialService
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}
 
@@ -61,6 +61,25 @@ class IssueControllerImpl(
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
               record <- credentialService
                 .createJWTIssueCredentialRecord(
+                  pairwiseIssuerDID = didIdPair.myDID,
+                  pairwiseHolderDID = didIdPair.theirDid,
+                  thid = DidCommID(),
+                  maybeSchemaId = request.schemaId,
+                  claims = jsonClaims,
+                  validityPeriod = request.validityPeriod,
+                  automaticIssuance = request.automaticIssuance.orElse(Some(true)),
+                  issuingDID = issuingDID.asCanonical
+                )
+            } yield record
+          case SDJWT =>
+            for {
+              issuingDID <- ZIO
+                .fromOption(request.issuingDID)
+                .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
+                .flatMap(extractPrismDIDFromString)
+              _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
+              record <- credentialService
+                .createSDJWTIssueCredentialRecord(
                   pairwiseIssuerDID = didIdPair.myDID,
                   pairwiseHolderDID = didIdPair.theirDid,
                   thid = DidCommID(),
@@ -175,15 +194,31 @@ class IssueControllerImpl(
   ): ZIO[WalletAccessContext, ErrorResponse, Unit] = {
     val result = for {
       maybeDIDState <- managedDIDService.getManagedDIDState(prismDID.asCanonical)
-      mayBeResolveDID <- didService
-        .resolveDID(prismDID)
-      maybeDidData = mayBeResolveDID.map(_._2)
-      maybeMetadata = mayBeResolveDID.map(_._1)
-      _ <- ZIO.when(role == Role.Holder)(
+      initialResolveDID <- didService.resolveDID(prismDID)
+      oInitialDidData = initialResolveDID.map(_._2)
+      mayBeResolveWithLongFormOrShortForm <-
+        if (oInitialDidData.isEmpty) {
+          for {
+            oLongFormDid <- getLongFormPrismDID(prismDID, allowUnpublished).provideSomeLayer(
+              ZLayer.succeed(managedDIDService)
+            )
+            longFormDid <- ZIO
+              .fromOption(oLongFormDid)
+              .orElseFail(
+                ErrorResponse.badRequest(detail = Some(s"Longform of PrismDid Cannot be found: $oLongFormDid"))
+              )
+            resolvedDID <- didService.resolveDID(longFormDid)
+          } yield resolvedDID
+        } else {
+          ZIO.succeed(initialResolveDID)
+        }
+      maybeDidData = mayBeResolveWithLongFormOrShortForm.map(_._2)
+      maybeMetadata = mayBeResolveWithLongFormOrShortForm.map(_._1)
+      _ <- ZIO.when(role == Role.Holder) {
         ZIO
           .fromOption(maybeDidData.flatMap(_.publicKeys.find(_.purpose == VerificationRelationship.Authentication)))
           .orElseFail(ErrorResponse.badRequest(detail = Some(s"Authentication key not found for the $prismDID")))
-      )
+      }
       _ <- ZIO.when(role == Role.Issuer)(
         ZIO
           .fromOption(maybeDidData.flatMap(_.publicKeys.find(_.purpose == VerificationRelationship.AssertionMethod)))

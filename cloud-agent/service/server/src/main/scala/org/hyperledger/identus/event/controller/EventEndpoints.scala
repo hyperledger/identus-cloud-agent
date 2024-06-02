@@ -1,12 +1,12 @@
 package org.hyperledger.identus.event.controller
 
-import org.hyperledger.identus.api.http.EndpointOutputs
+import org.hyperledger.identus.api.http.{EndpointOutputs, ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.EndpointOutputs.FailureVariant
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
-import org.hyperledger.identus.event.controller.http.CreateWebhookNotification
-import org.hyperledger.identus.event.controller.http.WebhookNotification
-import org.hyperledger.identus.event.controller.http.WebhookNotificationPage
+import org.hyperledger.identus.event.controller.http.{
+  CreateWebhookNotification,
+  WebhookNotification,
+  WebhookNotificationPage
+}
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials

@@ -6,9 +6,9 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.PresentationRecord.*
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofV1, AnoncredCredentialProofsV1}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio.{ZIO, ZLayer}
 import zio.test.*
 import zio.test.Assertion.*
-import zio.{ZIO, ZLayer}
 
 import java.time.Instant
 import java.util.UUID
@@ -33,6 +33,8 @@ object PresentationRepositorySpecSuite {
     credentialsToUse = None,
     anoncredCredentialsToUseJsonSchemaId = None,
     anoncredCredentialsToUse = None,
+    sdJwtClaimsToUseJsonSchemaId = None,
+    sdJwtClaimsToDisclose = None,
     metaRetries = maxRetries,
     metaNextRetry = Some(Instant.now()),
     metaLastFailure = None,

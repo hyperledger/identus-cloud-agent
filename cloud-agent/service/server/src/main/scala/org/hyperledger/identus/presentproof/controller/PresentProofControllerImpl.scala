@@ -1,20 +1,22 @@
 package org.hyperledger.identus.presentproof.controller
 
 import org.hyperledger.identus.agent.server.ControllerHelper
-import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.presentproof.ProofType
+import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.presentation.Options
-import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.service.PresentationService
-import org.hyperledger.identus.presentproof.controller.PresentProofController.toDidCommID
 import org.hyperledger.identus.presentproof.controller.http.*
+import org.hyperledger.identus.presentproof.controller.PresentProofController.toDidCommID
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{URLayer, ZIO, ZLayer}
+import zio.{URLayer, ZIO, ZLayer, *}
+import zio.json.*
+import zio.json.ast.Json
 
 import java.util.UUID
 
@@ -47,6 +49,34 @@ class PresentProofControllerImpl(
                 },
                 options = request.options.map(x => Options(x.challenge, x.domain))
               )
+          case CredentialFormat.SDJWT =>
+            request.claims match {
+              case Some(claims) =>
+                for {
+                  s <- presentationService.createSDJWTPresentationRecord(
+                    pairwiseVerifierDID = didIdPair.myDID,
+                    pairwiseProverDID = didIdPair.theirDid,
+                    thid = DidCommID(),
+                    connectionId = Some(request.connectionId.toString),
+                    proofTypes = request.proofs.map { e =>
+                      ProofType(
+                        schema = e.schemaId,
+                        requiredFields = None,
+                        trustIssuers = Some(e.trustIssuers.map(DidId(_)))
+                      )
+                    },
+                    claimsToDisclose = claims,
+                    options = request.options.map(o => Options(o.challenge, o.domain))
+                  )
+                } yield s
+
+              case None =>
+                ZIO.fail(
+                  PresentationError.MissingAnoncredPresentationRequest(
+                    "presentation request is missing claims to be disclosed"
+                  )
+                )
+            }
           case CredentialFormat.AnonCreds =>
             request.anoncredPresentationRequest match {
               case Some(presentationRequest) =>
@@ -111,9 +141,18 @@ class PresentProofControllerImpl(
       record <- requestPresentationAction.action match {
         case "request-accept" =>
           (requestPresentationAction.proofId, requestPresentationAction.anoncredPresentationRequest) match
-            case (Some(proofs), None) =>
-              presentationService.acceptRequestPresentation(recordId = didCommId, credentialsToUse = proofs)
-            case (None, Some(proofs)) =>
+            case (Some(proofs), None) => //// TODO based on CredentialFormat
+              val credentialFormat =
+                requestPresentationAction.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+              credentialFormat match
+                case CredentialFormat.SDJWT =>
+                  presentationService.acceptSDJWTRequestPresentation(
+                    recordId = didCommId,
+                    credentialsToUse = proofs,
+                    claimsToDisclose = requestPresentationAction.claims
+                  )
+                case _ => presentationService.acceptRequestPresentation(recordId = didCommId, credentialsToUse = proofs)
+            case (None, Some(proofs)) => // TODO based on CredentialFormat Not sure why this was done like this
               presentationService.acceptAnoncredRequestPresentation(
                 recordId = didCommId,
                 credentialsToUse = proofs

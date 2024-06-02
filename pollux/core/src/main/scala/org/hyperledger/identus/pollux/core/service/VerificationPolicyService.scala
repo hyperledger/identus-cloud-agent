@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError
 import org.hyperledger.identus.pollux.core.model.{VerificationPolicy, VerificationPolicyConstraint}
+import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 

@@ -1,16 +1,17 @@
 package org.hyperledger.identus.credential.status.controller.http
 
-import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
 import org.hyperledger.identus.api.http.Annotation
-import sttp.tapir.Schema.annotations.{description, encodedExample}
 import org.hyperledger.identus.credential.status.controller.http.StatusListCredential.annotations
-import sttp.tapir.Schema
-import zio.json.*
-import org.hyperledger.identus.pollux.core.model.CredentialStatusList
 import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError
+import org.hyperledger.identus.pollux.core.model.CredentialStatusList
+import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
 import sttp.tapir.json.zio.schemaForZioJsonValue
-import zio.json.ast.Json
+import sttp.tapir.Schema
+import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.*
+import zio.json.*
+import zio.json.ast.Json
+
 import java.time.Instant
 
 case class StatusListCredential(

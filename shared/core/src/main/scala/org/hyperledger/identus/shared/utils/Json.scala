@@ -1,13 +1,14 @@
 package org.hyperledger.identus.shared.utils
 
-import com.apicatalog.jsonld.JsonLd
 import com.apicatalog.jsonld.document.JsonDocument
 import com.apicatalog.jsonld.http.media.MediaType
+import com.apicatalog.jsonld.JsonLd
 import com.apicatalog.rdf.Rdf
 import io.setl.rdf.normalization.RdfNormalize
 import org.erdtman.jcs.JsonCanonicalizer
 
 import java.io.{ByteArrayInputStream, StringWriter}
+import java.io.IOException
 import java.nio.charset.StandardCharsets
 import scala.util.Try
 
@@ -20,11 +21,10 @@ object Json {
     * @return
     *   canonicalized JSON string
     */
-
-  def canonicalizeToJcs(jsonStr: String): Either[Throwable, String] = {
-    val canonicalizer = Try { new JsonCanonicalizer(jsonStr) }
-    canonicalizer.map(_.getEncodedString).toEither
-  }
+  def canonicalizeToJcs(jsonStr: String): Either[IOException, String] =
+    try {
+      Right(new JsonCanonicalizer(jsonStr).getEncodedString)
+    } catch case exception: IOException => Left(exception)
 
   /** Canonicalizes a JSON-LD string to RDF according to the Universal RDF Dataset Normalization Algorithm 2015
     *

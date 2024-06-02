@@ -1,30 +1,27 @@
 package org.hyperledger.identus.agent.server
 
-import org.hyperledger.identus.agent.server.config.AppConfig
-import org.hyperledger.identus.agent.server.config.SecretStorageBackend
-import org.hyperledger.identus.agent.walletapi.service.EntityServiceImpl
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceImpl
-import org.hyperledger.identus.agent.walletapi.sql.JdbcEntityRepository
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
-import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticatorImpl
-import org.hyperledger.identus.iam.authentication.apikey.JdbcAuthenticationRepository
+import org.hyperledger.identus.agent.server.config.{AppConfig, SecretStorageBackend}
+import org.hyperledger.identus.agent.walletapi.service.{
+  EntityServiceImpl,
+  WalletManagementService,
+  WalletManagementServiceImpl
+}
+import org.hyperledger.identus.agent.walletapi.sql.{
+  JdbcEntityRepository,
+  JdbcWalletNonSecretStorage,
+  JdbcWalletSecretStorage
+}
+import org.hyperledger.identus.agent.walletapi.storage.{WalletNonSecretStorage, WalletSecretStorage}
+import org.hyperledger.identus.iam.authentication.apikey.{ApiKeyAuthenticatorImpl, JdbcAuthenticationRepository}
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.DBTestUtils
 import zio.*
-import zio.test.*
+import zio.test.{ZIOSpecDefault, *}
 import zio.test.Assertion.*
-import zio.test.ZIOSpecDefault
 
-import java.net.URI
-import java.net.URL
+import java.net.{URI, URL}
 
 object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupport, ApolloSpecHelper {
 

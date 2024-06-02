@@ -4,17 +4,17 @@ import doobie.*
 import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
-import org.hyperledger.identus.pollux.vc.jwt.{Issuer, StatusPurpose}
-import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, BitStringError, VCStatusList2021}
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
+import org.hyperledger.identus.pollux.vc.jwt.{Issuer, StatusPurpose}
+import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, BitStringError, VCStatusList2021}
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.*
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
-import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.*
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.interop.catz.*
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 
 import java.time.Instant
 import java.util.UUID

@@ -10,14 +10,14 @@ import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService
 import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error.*
 import org.hyperledger.identus.pollux.credentialdefinition
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController.domainToHttpErrorIO
-import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionInput.toDomain
-import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponse.fromDomain
 import org.hyperledger.identus.pollux.credentialdefinition.http.{
   CredentialDefinitionInput,
   CredentialDefinitionResponse,
   CredentialDefinitionResponsePage,
   FilterInput
 }
+import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionInput.toDomain
+import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponse.fromDomain
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.json.ast.Json

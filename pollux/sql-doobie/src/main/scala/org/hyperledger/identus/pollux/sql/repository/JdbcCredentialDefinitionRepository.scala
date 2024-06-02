@@ -3,11 +3,11 @@ package org.hyperledger.identus.pollux.sql.repository
 import doobie.*
 import doobie.implicits.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
-import org.hyperledger.identus.pollux.core.repository.Repository.*
 import org.hyperledger.identus.pollux.core.repository.{CredentialDefinitionRepository, Repository}
+import org.hyperledger.identus.pollux.core.repository.Repository.*
 import org.hyperledger.identus.pollux.sql.model.db.{
-  CredentialDefinitionSql,
-  CredentialDefinition as CredentialDefinitionRow
+  CredentialDefinition as CredentialDefinitionRow,
+  CredentialDefinitionSql
 }
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*

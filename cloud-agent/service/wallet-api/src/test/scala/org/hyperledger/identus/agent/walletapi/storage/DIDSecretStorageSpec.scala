@@ -1,8 +1,6 @@
 package org.hyperledger.identus.agent.walletapi.storage
 
-import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
-import org.hyperledger.identus.agent.walletapi.model.PublicationState
-import org.hyperledger.identus.agent.walletapi.model.Wallet
+import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState, Wallet}
 import org.hyperledger.identus.agent.walletapi.service.{WalletManagementService, WalletManagementServiceImpl}
 import org.hyperledger.identus.agent.walletapi.sql.{
   JdbcDIDNonSecretStorage,
@@ -13,12 +11,8 @@ import org.hyperledger.identus.agent.walletapi.sql.{
 import org.hyperledger.identus.agent.walletapi.vault.{VaultDIDSecretStorage, VaultWalletSecretStorage}
 import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
 import org.hyperledger.identus.mercury.PeerDID
-import org.hyperledger.identus.shared.crypto.Apollo
-import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import org.hyperledger.identus.shared.crypto.X25519KeyPair
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.crypto.{Apollo, ApolloSpecHelper, Ed25519KeyPair, X25519KeyPair}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*

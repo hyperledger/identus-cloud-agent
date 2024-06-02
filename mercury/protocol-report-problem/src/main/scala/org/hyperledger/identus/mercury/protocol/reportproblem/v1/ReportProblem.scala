@@ -1,7 +1,6 @@
 package org.hyperledger.identus.mercury.protocol.reportproblem.v1
 
-import org.hyperledger.identus.mercury.model.Message
-import org.hyperledger.identus.mercury.model.PIURI
+import org.hyperledger.identus.mercury.model.{Message, PIURI}
 
 /** ReportProblem
   *

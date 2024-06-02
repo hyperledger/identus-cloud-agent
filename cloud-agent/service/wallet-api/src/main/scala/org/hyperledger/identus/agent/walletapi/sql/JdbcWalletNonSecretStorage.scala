@@ -1,5 +1,6 @@
 package org.hyperledger.identus.agent.walletapi.sql
 
+import cats.data.NonEmptyList
 import cats.implicits.*
 import doobie.*
 import doobie.implicits.*
@@ -7,20 +8,18 @@ import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor
 import org.hyperledger.identus.agent.walletapi.model.Wallet
 import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage.MAX_WEBHOOK_PER_WALLET
-import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageError
+import org.hyperledger.identus.agent.walletapi.storage.{WalletNonSecretStorage, WalletNonSecretStorageError}
 import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageError.TooManyWebhook
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits.{*, given}
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.db.Implicits.given
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.net.URL
 import java.time.Instant
 import java.util.UUID
-import cats.data.NonEmptyList
 
 class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletNonSecretStorage {
 

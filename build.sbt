@@ -44,7 +44,7 @@ inThisBuild(
 )
 
 lazy val V = new {
-  val munit = "1.0.0-RC1" // "0.7.29"
+  val munit = "1.0.0" // "0.7.29"
   val munitZio = "0.2.0"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
@@ -92,7 +92,7 @@ lazy val V = new {
   val vaultDriver = "6.2.0"
   val micrometer = "1.11.11"
 
-  val nimbusJwt = "10.0.0"
+  val nimbusJwt = "9.37.3"
   val keycloak = "23.0.7" // scala-steward:off //TODO 24.0.3 // update all quay.io/keycloak/keycloak
 
 }
@@ -132,9 +132,7 @@ lazy val D = new {
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.5.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
 
-  // Customized version of numbus jose jwt
-  // from https://github.com/goncalo-frade-iohk/Nimbus-JWT_Fork/commit/8a6665c25979e771afae29ce8c965c8b0312fefb
-  val nimbusJwt: ModuleID = "io.iohk.atala" % "nimbus-jose-jwt" % V.nimbusJwt
+  val nimbusJwt: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % V.nimbusJwt
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
   val scalaPbRuntime: ModuleID =
@@ -166,6 +164,7 @@ lazy val D = new {
   val mockito: ModuleID = "org.scalatestplus" %% "mockito-4-11" % V.mockito % Test
   val monocle: ModuleID = "dev.optics" %% "monocle-core" % V.monocle % Test
   val monocleMacro: ModuleID = "dev.optics" %% "monocle-macro" % V.monocle % Test
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % Test
 
   val apollo = "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo
 
@@ -321,12 +320,10 @@ lazy val D_Pollux_VC_JWT = new {
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
 
-  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % Test
-
   // Dependency Modules
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
   val baseDependencies: Seq[ModuleID] =
-    zioDependencies :+ D.jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ scalaTest
+    zioDependencies :+ D.jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ D.scalaTest
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
@@ -425,6 +422,7 @@ publish / skip := true
 
 val commonSetttings = Seq(
   testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+  libraryDependencies ++= Seq(D.zioTest, D.zioTestSbt, D.zioTestMagnolia),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
   resolvers += "jitpack" at "https://jitpack.io",
@@ -735,7 +733,7 @@ lazy val polluxCore = project
   .dependsOn(shared)
   .dependsOn(agentWalletAPI)
   .dependsOn(polluxVcJWT)
-  .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds)
+  .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds, polluxSDJWT)
 
 lazy val polluxDoobie = project
   .in(file("pollux/sql-doobie"))
@@ -767,8 +765,17 @@ lazy val polluxAnoncreds = project
 
 lazy val polluxAnoncredsTest = project
   .in(file("pollux/anoncredsTest"))
-  .settings(libraryDependencies ++= Seq("org.scalatest" %% "scalatest" % "3.2.15" % Test))
+  .settings(libraryDependencies += D.scalaTest)
   .dependsOn(polluxAnoncreds % "compile->test")
+
+lazy val polluxSDJWT = project
+  .in(file("pollux/sd-jwt"))
+  .settings(commonSetttings)
+  .settings(
+    name := "pollux-sd-jwt",
+    libraryDependencies += "io.iohk.atala" % "sd-jwt-kmp-jvm" % "0.1.2"
+  )
+  .dependsOn(sharedCrypto)
 
 // #####################
 // #####  connect  #####
@@ -910,6 +917,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   polluxDoobie,
   polluxAnoncreds,
   polluxAnoncredsTest,
+  polluxSDJWT,
   connectCore,
   connectDoobie,
   agentWalletAPI,

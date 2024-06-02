@@ -11,8 +11,8 @@ import java.util.UUID
 
 case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends AuthenticationRepository {
 
-  import AuthenticationRepositorySql.*
   import AuthenticationRepositoryError.*
+  import AuthenticationRepositorySql.*
   override def insert(
       entityId: UUID,
       amt: AuthenticationMethodType,

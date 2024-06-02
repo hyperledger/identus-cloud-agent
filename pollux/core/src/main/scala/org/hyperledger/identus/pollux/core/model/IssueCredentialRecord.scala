@@ -12,8 +12,8 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
 
-import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.time.Instant
 import java.util.UUID
 
 final case class IssueCredentialRecord(
@@ -44,18 +44,21 @@ final case class IssueCredentialRecord(
     offerCredentialData.map { data =>
       credentialFormat.match
         case CredentialFormat.JWT       => (IssueCredentialOfferFormat.JWT, data)
+        case CredentialFormat.SDJWT     => (IssueCredentialOfferFormat.SDJWT, data)
         case CredentialFormat.AnonCreds => (IssueCredentialOfferFormat.Anoncred, data)
     }
   def requestCredentialFormatAndData: Option[(IssueCredentialRequestFormat, RequestCredential)] =
     requestCredentialData.map { data =>
       credentialFormat.match
         case CredentialFormat.JWT       => (IssueCredentialRequestFormat.JWT, data)
+        case CredentialFormat.SDJWT     => (IssueCredentialRequestFormat.SDJWT, data)
         case CredentialFormat.AnonCreds => (IssueCredentialRequestFormat.Anoncred, data)
     }
   def issuedCredentialFormatAndData: Option[(IssueCredentialIssuedFormat, IssueCredential)] =
     issueCredentialData.map { data =>
       credentialFormat.match
         case CredentialFormat.JWT       => (IssueCredentialIssuedFormat.JWT, data)
+        case CredentialFormat.SDJWT     => (IssueCredentialIssuedFormat.SDJWT, data)
         case CredentialFormat.AnonCreds => (IssueCredentialIssuedFormat.Anoncred, data)
     }
 

@@ -1,8 +1,9 @@
 package org.hyperledger.identus.pollux.sql.model
 
 import io.getquill.MappedEncoding
-import java.util.UUID
 import org.hyperledger.identus.shared.models.WalletId
+
+import java.util.UUID
 
 package object db {
 

@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
+import com.nimbusds.jwt.SignedJWT
 import io.circe
 import io.circe.*
 import io.circe.generic.auto.*
@@ -8,22 +9,23 @@ import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitString
 import org.hyperledger.identus.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
+import org.hyperledger.identus.shared.crypto.PublicKey as ApolloPublicKey
 import org.hyperledger.identus.shared.http.UriResolver
 import pdi.jwt.*
 import zio.*
 import zio.prelude.*
-
 import java.security.PublicKey
-import java.time.temporal.TemporalAmount
 import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
-import scala.util.Try
 import com.nimbusds.jwt.SignedJWT
 import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
 import org.hyperledger.identus.shared.utils.Base64Utils
-
 import scala.util.Failure
+import scala.util.Try
+import java.time.temporal.TemporalAmount
+import scala.util.{Failure, Try}
 
 opaque type DID = String
+
 object DID {
   def apply(value: String): DID = value
 
@@ -33,6 +35,8 @@ object DID {
 }
 
 case class Issuer(did: DID, signer: Signer, publicKey: PublicKey)
+
+case class ApolloIssuer(did: DID, signer: Signer, publicKey: ApolloPublicKey)
 
 sealed trait VerifiableCredentialPayload
 
@@ -669,11 +673,9 @@ object CredentialVerification {
         .fromEither(vcStatusListCredJson.hcursor.downField("proof").as[Proof])
         .mapError(err => s"Could not extract proof from status list credential: $err")
 
-
-
       // Verify proof
       verified <- proof match
-        case EddsaJcs2022Proof(proofValue, verificationMethod, maybeCreated) =>
+        case EcdsaJcs2019Proof(proofValue, verificationMethod, maybeCreated) =>
           val publicKeyMultiBaseEffect = uriResolver
             .resolve(verificationMethod)
             .mapError(_.toThrowable)
@@ -684,12 +686,12 @@ object CredentialVerification {
 
           for {
             publicKeyMultiBase <- publicKeyMultiBaseEffect
-            verified <- EddsaJcs2022ProofGenerator
+
+            verified <- EcdsaJcs2019ProofGenerator
               .verifyProof(statusListCredJsonWithoutProof, proofValue, publicKeyMultiBase)
               .mapError(_.getMessage)
           } yield verified
 
-        // Note: add other proof types here when available
         case EcdsaSecp256k1Signature2019Proof(jws, verificationMethod, _, _, _, _) =>
           val jwkEffect = uriResolver
             .resolve(verificationMethod)
@@ -702,7 +704,7 @@ object CredentialVerification {
             }
             .mapError(_.getMessage)
 
-           for {
+          for {
             jwk <- jwkEffect
             x <- ZIO.fromOption(jwk.x).orElseFail("Missing x coordinate in public key")
             y <- ZIO.fromOption(jwk.y).orElseFail("Missing y coordinate in public key")
@@ -720,6 +722,7 @@ object CredentialVerification {
               .verifyProof(statusListCredJsonWithoutProof, jws, ecPublicKey)
               .mapError(_.getMessage)
           } yield verified
+        // Note: add other proof types here when available
 
         case _ => ZIO.fail(s"Unsupported proof type - ${proof.`type`}")
 
@@ -936,8 +939,9 @@ object W3CCredential {
     for {
       proof <- issuer.signer.generateProofForJson(jsonCred, issuer.publicKey)
       jsonProof <- proof match
-        case a: EddsaJcs2022Proof                => ZIO.succeed(a.asJson.dropNullValues)
+        case a: EcdsaJcs2019Proof                => ZIO.succeed(a.asJson.dropNullValues)
         case b: EcdsaSecp256k1Signature2019Proof => ZIO.succeed(b.asJson.dropNullValues)
+        case c: EddsaJcs2022Proof                => ZIO.succeed(c.asJson.dropNullValues)
       verifiableCredentialWithProof = jsonCred.deepMerge(Map("proof" -> jsonProof).asJson)
     } yield verifiableCredentialWithProof
 

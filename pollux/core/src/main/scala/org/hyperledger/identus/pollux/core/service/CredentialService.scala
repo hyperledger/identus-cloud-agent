@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.syntax.*
 import io.circe.{Json, JsonObject}
+import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{
@@ -22,6 +22,17 @@ import java.util.UUID
 trait CredentialService {
 
   def createJWTIssueCredentialRecord(
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: DidId,
+      thid: DidCommID,
+      maybeSchemaId: Option[String],
+      claims: io.circe.Json,
+      validityPeriod: Option[Double] = None,
+      automaticIssuance: Option[Boolean],
+      issuingDID: CanonicalPrismDID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+
+  def createSDJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       thid: DidCommID,
@@ -84,6 +95,10 @@ trait CredentialService {
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
+  def generateSDJWTCredentialRequest(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+
   def generateAnonCredsCredentialRequest(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
@@ -99,6 +114,10 @@ trait CredentialService {
   def generateJWTCredential(
       recordId: DidCommID,
       statusListRegistryUrl: String,
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+
+  def generateSDJWTCredential(
+      recordId: DidCommID,
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def generateAnonCredsCredential(
@@ -145,6 +164,27 @@ object CredentialService {
   }
 
   def convertAttributesToJsonClaims(
+      attributes: Seq[Attribute]
+  ): IO[CredentialServiceError, JsonObject] = {
+    for {
+      claims <- ZIO.foldLeft(attributes)(JsonObject()) { case (jsonObject, attr) =>
+        attr.media_type match
+          case None =>
+            ZIO.succeed(jsonObject.add(attr.name, attr.value.asJson))
+
+          case Some("application/json") =>
+            val jsonBytes = java.util.Base64.getUrlDecoder.decode(attr.value.getBytes(StandardCharsets.UTF_8))
+            io.circe.parser.parse(new String(jsonBytes, StandardCharsets.UTF_8)) match
+              case Right(value) => ZIO.succeed(jsonObject.add(attr.name, value))
+              case Left(error)  => ZIO.fail(UnsupportedVCClaimsValue(error.message))
+
+          case Some(media_type) =>
+            ZIO.fail(UnsupportedVCClaimsMediaType(media_type))
+      }
+    } yield claims
+  }
+
+  def convertAttributesToMapClaims(
       attributes: Seq[Attribute]
   ): IO[CredentialServiceError, JsonObject] = {
     for {

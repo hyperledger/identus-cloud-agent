@@ -2,13 +2,11 @@ package org.hyperledger.identus.iam.authorization.keycloak.admin
 
 import org.hyperledger.identus.agent.walletapi.model.Wallet
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
-import org.hyperledger.identus.iam.authentication.oidc.KeycloakClient
-import org.hyperledger.identus.iam.authentication.oidc.KeycloakEntity
+import org.hyperledger.identus.iam.authentication.oidc.{KeycloakClient, KeycloakEntity}
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.*
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
 import org.keycloak.authorization.client.AuthzClient
 import org.keycloak.representations.idm.authorization.{ResourceRepresentation, UmaPermissionRepresentation}
 import zio.*

@@ -1,18 +1,17 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import org.hyperledger.identus.pollux.core.model.CredentialStatusList
-import org.hyperledger.identus.pollux.vc.jwt.{Issuer, StatusPurpose, revocation}
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio.*
-import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
+import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, *}
+import org.hyperledger.identus.pollux.vc.jwt.{revocation, Issuer, StatusPurpose}
+import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{
   DecodingError,
   EncodingError,
   IndexOutOfBounds,
   InvalidSize
 }
-import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
-import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio.*
 
 import java.time.Instant
 import java.util.UUID

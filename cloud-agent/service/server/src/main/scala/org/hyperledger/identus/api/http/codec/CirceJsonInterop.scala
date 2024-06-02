@@ -1,10 +1,10 @@
 package org.hyperledger.identus.api.http.codec
 
 import io.circe.Json as CirceJson
-import sttp.tapir.Schema
 import sttp.tapir.json.zio.*
-import zio.json.ast.Json as ZioJson
+import sttp.tapir.Schema
 import zio.json.*
+import zio.json.ast.Json as ZioJson
 
 object CirceJsonInterop {
 

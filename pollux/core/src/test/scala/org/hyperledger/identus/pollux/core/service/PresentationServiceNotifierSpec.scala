@@ -7,15 +7,14 @@ import org.hyperledger.identus.mercury.protocol.presentproof.{
   Presentation,
   RequestPresentation
 }
-import org.hyperledger.identus.pollux.core.model.PresentationRecord.ProtocolState
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
-import zio.mock.Expectation
-import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
+import org.hyperledger.identus.pollux.core.model.PresentationRecord.ProtocolState
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.{Scope, ZIO, ZLayer}
+import zio.mock.Expectation
+import zio.test.{assertTrue, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
 
 import java.time.Instant
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
 
 object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationServiceSpecHelper {
 
@@ -30,6 +29,8 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
     DidId(""),
     ProtocolState.RequestPending,
     CredentialFormat.JWT,
+    None,
+    None,
     None,
     None,
     None,
