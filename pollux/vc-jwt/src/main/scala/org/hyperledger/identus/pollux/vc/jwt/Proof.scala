@@ -4,14 +4,22 @@ import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import io.circe.*
 import io.circe.syntax.*
 import cats.implicits.*
+import com.nimbusds.jose.{JWSAlgorithm, JWSHeader, JWSObject, Payload}
+
 import java.time.{Instant, ZoneOffset}
 import zio.*
 import org.hyperledger.identus.shared.utils.Json as JsonUtils
 import org.hyperledger.identus.shared.utils.Base64Utils
 import scodec.bits.ByteVector
+
 import scala.util.Try
 import java.security.*
 import java.security.spec.X509EncodedKeySpec
+import com.nimbusds.jose.crypto.ECDSASigner
+import com.nimbusds.jwt.SignedJWT
+import scala.jdk.CollectionConverters.*
+
+import java.security.interfaces.ECPublicKey
 
 sealed trait Proof {
   val id: Option[String] = None
@@ -31,7 +39,7 @@ object Proof {
       val decoders: List[Decoder[Proof]] = List(
         Decoder[EddsaJcs2022Proof].widen,
         Decoder[EcdsaSecp256k1Signature2019Proof].widen
-          // Note: Add another proof types here when available
+        // Note: Add another proof types here when available
       )
 
       decoders.foldLeft(
@@ -113,6 +121,55 @@ object EddsaJcs2022ProofGenerator {
     verifier.verify(signature)
   }
 }
+
+object EcdsaSecp256k1Signature2019ProofGenerator {
+  def generateProof(payload: Json, signer: ECDSASigner, pk: ECPublicKey): Task[EcdsaSecp256k1Signature2019Proof] = {
+    for {
+      dataToSign <- ZIO.fromEither(JsonUtils.canonicalizeJsonLDoRdf(payload.spaces2))
+      created = Instant.now()
+      header = new JWSHeader.Builder(JWSAlgorithm.ES256K)
+        .customParam("b64", false)
+        .criticalParams(Set("b64").asJava)
+        .build()
+      payload = Payload(dataToSign)
+      jwsObject = JWSObject(header, payload)
+      _ = jwsObject.sign(signer)
+      jws = jwsObject.serialize(true)
+      x = pk.getW.getAffineX.toByteArray
+      y = pk.getW.getAffineY.toByteArray
+      jwk = JsonWebKey(
+        kty = "EC",
+        crv = Some("secp256k1"),
+        x = Some(Base64Utils.encodeURL(x)),
+        y = Some(Base64Utils.encodeURL(y)),
+      )
+      ecdaSecp256k1VerificationKey2019 = EcdsaSecp256k1VerificationKey2019(
+        publicKeyJwk = jwk
+      )
+      verificationMethodUrl = Base64Utils.createDataUrl(
+        ecdaSecp256k1VerificationKey2019.asJson.dropNullValues.noSpaces.getBytes,
+        "application/json"
+      )
+    } yield EcdsaSecp256k1Signature2019Proof(
+      jws = jws,
+      verificationMethod = verificationMethodUrl,
+      created = Some(created),
+    )
+  }
+
+  def verifyProof(payload: Json, jws: String, pk: ECPublicKey): Task[Boolean] = {
+    for {
+      dataToVerify <- ZIO.fromEither(JsonUtils.canonicalizeJsonLDoRdf(payload.spaces2))
+      verifier = JWTVerification.toECDSAVerifier(pk)
+      signedJws = SignedJWT.parse(jws)
+      header = signedJws.getHeader
+      signature = signedJws.getSignature
+      isValid = verifier.verify(header, dataToVerify, signature)
+    } yield isValid
+  }
+
+}
+
 case class EddsaJcs2022Proof(proofValue: String, verificationMethod: String, maybeCreated: Option[Instant])
     extends Proof {
   override val created: Option[Instant] = maybeCreated
@@ -167,10 +224,10 @@ object EddsaJcs2022Proof {
 case class EcdsaSecp256k1Signature2019Proof(
     jws: String,
     verificationMethod: String,
-    override val created: Option[Instant],
-    override val challenge: Option[String],
-    override val domain: Option[String],
-    override val nonce: Option[String]
+    override val created: Option[Instant] = None,
+    override val challenge: Option[String] = None,
+    override val domain: Option[String] = None,
+    override val nonce: Option[String] = None
 ) extends Proof {
   override val `type`: String = "EcdsaSecp256k1Signature2019"
   override val proofPurpose: String = "assertionMethod"

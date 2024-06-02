@@ -18,6 +18,9 @@ import java.time.temporal.TemporalAmount
 import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
 import scala.util.Try
 import com.nimbusds.jwt.SignedJWT
+import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
+import org.hyperledger.identus.shared.utils.Base64Utils
+
 import scala.util.Failure
 
 opaque type DID = String
@@ -661,9 +664,12 @@ object CredentialVerification {
       vcStatusListCredJson <- ZIO
         .fromEither(io.circe.parser.parse(statusListString))
         .mapError(err => s"Could not parse status list credential as Json string: $err")
+      statusListCredJsonWithoutProof = vcStatusListCredJson.hcursor.downField("proof").delete.top.get
       proof <- ZIO
         .fromEither(vcStatusListCredJson.hcursor.downField("proof").as[Proof])
         .mapError(err => s"Could not extract proof from status list credential: $err")
+
+
 
       // Verify proof
       verified <- proof match
@@ -678,13 +684,43 @@ object CredentialVerification {
 
           for {
             publicKeyMultiBase <- publicKeyMultiBaseEffect
-            statusListCredJsonWithoutProof = vcStatusListCredJson.hcursor.downField("proof").delete.top.get
             verified <- EddsaJcs2022ProofGenerator
               .verifyProof(statusListCredJsonWithoutProof, proofValue, publicKeyMultiBase)
               .mapError(_.getMessage)
           } yield verified
 
         // Note: add other proof types here when available
+        case EcdsaSecp256k1Signature2019Proof(jws, verificationMethod, _, _, _, _) =>
+          val jwkEffect = uriResolver
+            .resolve(verificationMethod)
+            .mapError(_.toThrowable)
+            .flatMap { jsonResponse =>
+              ZIO
+                .fromEither(io.circe.parser.decode[EcdsaSecp256k1VerificationKey2019](jsonResponse))
+                .map(_.publicKeyJwk)
+                .mapError(_.getCause)
+            }
+            .mapError(_.getMessage)
+
+           for {
+            jwk <- jwkEffect
+            x <- ZIO.fromOption(jwk.x).orElseFail("Missing x coordinate in public key")
+            y <- ZIO.fromOption(jwk.y).orElseFail("Missing y coordinate in public key")
+            _ <- jwk.crv.fold(ZIO.fail("Missing crv in public key")) { crv =>
+              if crv != "secp256k1" then ZIO.fail(s"Curve must be secp256k1, got $crv")
+              else ZIO.unit
+            }
+            xBytes = Base64Utils.decodeURL(x)
+            yBytes = Base64Utils.decodeURL(y)
+            ecPublicKey <- ZIO
+              .fromTry(KmpSecp256k1KeyOps.publicKeyFromCoordinate(xBytes, yBytes))
+              .map(_.toJavaPublicKey)
+              .mapError(_.getMessage)
+            verified <- EcdsaSecp256k1Signature2019ProofGenerator
+              .verifyProof(statusListCredJsonWithoutProof, jws, ecPublicKey)
+              .mapError(_.getMessage)
+          } yield verified
+
         case _ => ZIO.fail(s"Unsupported proof type - ${proof.`type`}")
 
       proofVerificationValidation =
@@ -900,7 +936,8 @@ object W3CCredential {
     for {
       proof <- issuer.signer.generateProofForJson(jsonCred, issuer.publicKey)
       jsonProof <- proof match
-        case a: EddsaJcs2022Proof => ZIO.succeed(a.asJson.dropNullValues)
+        case a: EddsaJcs2022Proof                => ZIO.succeed(a.asJson.dropNullValues)
+        case b: EcdsaSecp256k1Signature2019Proof => ZIO.succeed(b.asJson.dropNullValues)
       verifiableCredentialWithProof = jsonCred.deepMerge(Map("proof" -> jsonProof).asJson)
     } yield verifiableCredentialWithProof
 

@@ -6,9 +6,13 @@ import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import io.circe.*
+import org.bouncycastle.jce.ECNamedCurveTable
+import org.bouncycastle.jce.spec.ECNamedCurveSpec
+import scala.jdk.CollectionConverters.*
 import zio.*
 
 import java.security.*
+import java.security.interfaces.ECPublicKey
 
 opaque type JWT = String
 
@@ -38,7 +42,14 @@ class ES256KSigner(privateKey: PrivateKey) extends Signer {
   }
 
   override def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof] = {
-    EddsaJcs2022ProofGenerator.generateProof(payload, privateKey, pk)
+    val err = Throwable("Public key must be secp256k1 EC public key")
+    pk match
+      case pk: ECPublicKey =>
+        getCurveName(pk).fold(ZIO.fail(err)) { curveName =>
+          if curveName != "secp256k1" then ZIO.fail(Throwable(err.getMessage + s", but got $curveName"))
+          else EcdsaSecp256k1Signature2019ProofGenerator.generateProof(payload, signer, pk)
+        }
+      case _ => ZIO.fail(err)
   }
 
   override def encode(claim: Json): JWT = {
@@ -50,6 +61,21 @@ class ES256KSigner(privateKey: PrivateKey) extends Signer {
     signedJwt.sign(signer)
     JWT(signedJwt.serialize())
   }
+}
+
+def getCurveName(publicKey: ECPublicKey): Option[String] = {
+  val params = publicKey.getParams
+
+  val maybeCurveName = ECNamedCurveTable.getNames.asScala.find {
+    case name: String =>
+      val spec = ECNamedCurveTable.getParameterSpec(name)
+      val curveSpec =
+        new ECNamedCurveSpec(spec.getName, spec.getCurve, spec.getG, spec.getN, spec.getH, spec.getSeed)
+      curveSpec.getCurve.equals(params.getCurve)
+    case _ => false
+  }
+  maybeCurveName.fold(Option.empty[String]) { case name: String => Some(name) }
+
 }
 
 def toJWKFormat(holderJwk: ECKey): JsonWebKey = {
