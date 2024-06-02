@@ -97,7 +97,6 @@ class CredentialStatusListRepositoryInMemory(
       emptyJwtCredential <- VCStatusList2021
         .build(
           vcId = s"$statusListRegistryUrl/credential-status/$id",
-          slId = "",
           revocationData = bitString,
           jwtIssuer = jwtIssuer
         )

@@ -29,7 +29,7 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
       for {
         issuer <- generateIssuer()
         bitString <- BitString.getInstance()
-        statusList <- VCStatusList2021.build(VC_ID, s"$VC_ID#list", issuer, bitString)
+        statusList <- VCStatusList2021.build(VC_ID, issuer, bitString)
         json <- statusList.toJsonWithEmbeddedProof
       } yield {
         assertTrue(json.hcursor.downField("proof").focus.isDefined)
@@ -39,7 +39,7 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
       for {
         issuer <- generateIssuer()
         bitString <- BitString.getInstance()
-        statusList <- VCStatusList2021.build(VC_ID, s"$VC_ID#list", issuer, bitString)
+        statusList <- VCStatusList2021.build(VC_ID, issuer, bitString)
         encodedJwtVC <- statusList.encoded
         jwtVCPayload <- ZIO.fromTry(JwtCredential.decodeJwt(encodedJwtVC, issuer.publicKey))
         credentialSubjectKeys <- ZIO.fromOption(jwtVCPayload.credentialSubject.hcursor.keys)
@@ -51,7 +51,7 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
       for {
         issuer <- generateIssuer()
         bitString <- BitString.getInstance()
-        statusList <- VCStatusList2021.build(VC_ID, s"$VC_ID#list", issuer, bitString)
+        statusList <- VCStatusList2021.build(VC_ID, issuer, bitString)
         encodedJwtVC <- statusList.encoded
         valid <- ZIO.succeed(JwtCredential.validateEncodedJwt(encodedJwtVC, issuer.publicKey))
       } yield {
@@ -63,7 +63,7 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
         issuer <- generateIssuer()
         bitString <- BitString.getInstance()
         _ <- bitString.setRevokedInPlace(1234, true)
-        statusList <- VCStatusList2021.build(VC_ID, s"$VC_ID#list", issuer, bitString)
+        statusList <- VCStatusList2021.build(VC_ID, issuer, bitString)
         encodedJwtVC <- statusList.encoded
         decodedStatusList <- VCStatusList2021.decode(encodedJwtVC, issuer)
         decodedBS <- decodedStatusList.getBitString
