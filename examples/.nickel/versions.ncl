@@ -1,6 +1,6 @@
 {
   # identus
-  agent = "1.33.1-SNAPSHOT",
+  agent = "1.34.0-SNAPSHOT",
   node = "2.4.0",
   # 3rd party
   caddy = "2.7.6-alpine",
