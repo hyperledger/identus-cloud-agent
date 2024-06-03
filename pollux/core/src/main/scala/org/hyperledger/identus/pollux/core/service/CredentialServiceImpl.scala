@@ -1361,15 +1361,21 @@ private class CredentialServiceImpl(
       preview = offerCredentialData.body.credential_preview
       claims <- CredentialService.convertAttributesToJsonClaims(preview.body.attributes)
       sdJwtPrivateKey = sdjwt.IssuerPrivateKey(ed25519KeyPair.privateKey)
-      didDocResult <- didResolver.resolve(jwtPresentation.iss) map {
-        case failed: DIDResolutionFailed       => CredentialServiceError.UnexpectedError(failed.error.toString)
-        case succeeded: DIDResolutionSucceeded => succeeded.didDocument.authentication.map(x => x)
+      didDocResult <- didResolver.resolve(jwtPresentation.iss) flatMap {
+        case failed: DIDResolutionFailed =>
+          ZIO.fail(CredentialServiceError.UnexpectedError(failed.error.toString))
+        case succeeded: DIDResolutionSucceeded => ZIO.succeed(succeeded.didDocument.authentication)
       }
       now = Instant.now.getEpochSecond
       exp = claims("exp").flatMap(_.asNumber).flatMap(_.toLong)
-      expInSeconds = exp.getOrElse(Instant.now.plus(expirationTime).getEpochSecond)
+      expInSeconds <- ZIO.fromEither(exp match {
+        case Some(e) if e > now => Right(e)
+        case Some(e) =>
+          Left(CredentialServiceError.UnsupportedVCClaimsValue(s"Error: Expiration Time Not valid or expired :$e"))
+        case _ => Right(Instant.now.plus(expirationTime).getEpochSecond)
+      })
       claimsUpdated = claims
-        .add("iss", issuingDID.did.toString.asJson)
+        .add("iss", issuingDID.did.toString.asJson) // This is issuer did
         .add("sub", jwtPresentation.iss.asJson) // This is subject did
         .add("iat", now.asJson)
         .add("exp", expInSeconds.asJson)
