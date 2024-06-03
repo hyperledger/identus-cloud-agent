@@ -100,7 +100,7 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
       result = Expectation.value(record.copy(protocolState = ProtocolState.RequestRejected))
     )
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("PresentationServiceWithEventNotificationImpl")(
       test("Happy flow generates relevant events on the verifier side") {
         for {

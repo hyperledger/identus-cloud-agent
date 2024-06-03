@@ -10,7 +10,7 @@ object MigrationAspects {
   def migrate(schema: String, paths: String*): TestAspectAtLeastR[PostgreSQLContainer] = {
     val migration = for {
       pg <- ZIO.service[PostgreSQLContainer]
-      _ <- runMigration(pg.jdbcUrl, pg.username, pg.password, schema, paths: _*)
+      _ <- runMigration(pg.jdbcUrl, pg.username, pg.password, schema, paths*)
     } yield ()
 
     beforeAll(migration.orDie)
@@ -19,7 +19,7 @@ object MigrationAspects {
   def migrateEach(schema: String, paths: String*): TestAspectAtLeastR[PostgreSQLContainer] = {
     val migration = for {
       pg <- ZIO.service[PostgreSQLContainer]
-      _ <- runMigration(pg.jdbcUrl, pg.username, pg.password, schema, paths: _*)
+      _ <- runMigration(pg.jdbcUrl, pg.username, pg.password, schema, paths*)
     } yield ()
 
     before(migration.orDie)
@@ -37,7 +37,7 @@ object MigrationAspects {
         .configure()
         .dataSource(url, username, password)
         .schemas(schema)
-        .locations(locations: _*)
+        .locations(locations*)
         .load()
         .migrate()
     }

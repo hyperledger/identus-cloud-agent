@@ -36,7 +36,7 @@ trait VcVerificationControllerTestTools extends PostgresTestContainerSupport {
 
   val didResolverLayer = ZLayer.fromZIO(ZIO.succeed(makeResolver(Map.empty)))
 
-  private[this] def makeResolver(lookup: Map[String, DIDDocument]): DidResolver = (didUrl: String) => {
+  private def makeResolver(lookup: Map[String, DIDDocument]): DidResolver = (didUrl: String) => {
     lookup
       .get(didUrl)
       .fold(
