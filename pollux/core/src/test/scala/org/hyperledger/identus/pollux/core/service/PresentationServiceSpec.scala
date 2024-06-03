@@ -225,7 +225,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         for {
           repo <- ZIO.service[CredentialRepository]
           aIssueCredentialRecord = issueCredentialRecord(CredentialFormat.JWT)
-          _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
+          _ <- repo.create(aIssueCredentialRecord)
           rawCredentialData =
             """{"base64":"ZXlKaGJHY2lPaUpGVXpJMU5rc2lMQ0owZVhBaU9pSktWMVFpZlEuZXlKcFlYUWlPakUyTnprek1qYzROaklzSW1GMVpDSTZJbVJ2YldGcGJpSXNJbTV2Ym1ObElqb2lZMlk1T1RJMk56Z3RPREV3TmkwME1EZzVMV0UxWXprdE5tTmhObU0wWkRBMU1HVTBJaXdpZG5BaU9uc2lRR052Ym5SbGVIUWlPbHNpYUhSMGNITTZMeTkzZDNjdWR6TXViM0puTHpJd01UZ3ZjSEpsYzJWdWRHRjBhVzl1Y3k5Mk1TSmRMQ0owZVhCbElqcGJJbFpsY21sbWFXRmliR1ZRY21WelpXNTBZWFJwYjI0aVhYMHNJbWx6Y3lJNkltUnBaRHB3Y21semJUcGhaR0psT1RJNE9XUXdZelZtWWpVMlptWmhOVEF6T0Rka01UZ3dOR0ZpTkdFeE5UYzJOVEkzWXprME5tRTFNalV5T0RFM1ptRTRaVGhoTW1OalpXUXdPa056YzBKRGMyZENSVzFKUzBSWE1XaGpNMUpzWTJsb2NHSnRVbXhsUTJ0UlFWVktVRU5uYkZSYVYwNTNUV3BWTW1GNlJWTkpSUzFNYVVkTU0xRklaRlZ1VG10d1dXSkthSE5VYTIxWVVGaEpVM0ZXZWpjMll6RlZPWGhvVURseWNFZHBSSEZXTlRselJYcEtWbEpEYWxJMGEwMHdaMGg0YkhWUU5tVk5Ta2wwZHpJMk4yWllWbEpoTUhoRE5XaEthVU5uTVhSWldFNHdXbGhKYjJGWE5XdGFXR2R3UlVGU1ExUjNiMHBWTWxacVkwUkpNVTV0YzNoRmFVSlFhVFJvYVRrd1FqTldTbnBhUzFkSGVWbGlSVFZLYkhveGVVVnhiR010TFc1T1ZsQmpXVlJmWVRaU2IyYzJiR1ZtWWtKTmVWWlZVVzh3WlVwRVRrbENPRnBpYWkxdWFrTlRUR05PZFhVek1URlZWM1JOVVhWWkluMC5CcmFpbEVXa2VlSXhWbjY3dnpkVHZGTXpBMV9oNzFoaDZsODBHRFBpbkRaVVB4ajAxSC0tUC1QZDIxTk9wRDd3am51SDkxdUNBOFZMUW9fS2FnVjlnQQo="}"""
           _ <- repo.updateWithIssuedRawCredential(
@@ -466,7 +466,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         for {
           repo <- ZIO.service[CredentialRepository]
           aIssueCredentialRecord = issueCredentialRecord(CredentialFormat.JWT)
-          _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
+          _ <- repo.create(aIssueCredentialRecord)
           rawCredentialData =
             """{"base64":"ZXlKaGJHY2lPaUpGVXpJMU5rc2lMQ0owZVhBaU9pSktWMVFpZlEuZXlKcFlYUWlPakUyTnprek1qYzROaklzSW1GMVpDSTZJbVJ2YldGcGJpSXNJbTV2Ym1ObElqb2lZMlk1T1RJMk56Z3RPREV3TmkwME1EZzVMV0UxWXprdE5tTmhObU0wWkRBMU1HVTBJaXdpZG5BaU9uc2lRR052Ym5SbGVIUWlPbHNpYUhSMGNITTZMeTkzZDNjdWR6TXViM0puTHpJd01UZ3ZjSEpsYzJWdWRHRjBhVzl1Y3k5Mk1TSmRMQ0owZVhCbElqcGJJbFpsY21sbWFXRmliR1ZRY21WelpXNTBZWFJwYjI0aVhYMHNJbWx6Y3lJNkltUnBaRHB3Y21semJUcGhaR0psT1RJNE9XUXdZelZtWWpVMlptWmhOVEF6T0Rka01UZ3dOR0ZpTkdFeE5UYzJOVEkzWXprME5tRTFNalV5T0RFM1ptRTRaVGhoTW1OalpXUXdPa056YzBKRGMyZENSVzFKUzBSWE1XaGpNMUpzWTJsb2NHSnRVbXhsUTJ0UlFWVktVRU5uYkZSYVYwNTNUV3BWTW1GNlJWTkpSUzFNYVVkTU0xRklaRlZ1VG10d1dXSkthSE5VYTIxWVVGaEpVM0ZXZWpjMll6RlZPWGhvVURseWNFZHBSSEZXTlRselJYcEtWbEpEYWxJMGEwMHdaMGg0YkhWUU5tVk5Ta2wwZHpJMk4yWllWbEpoTUhoRE5XaEthVU5uTVhSWldFNHdXbGhKYjJGWE5XdGFXR2R3UlVGU1ExUjNiMHBWTWxacVkwUkpNVTV0YzNoRmFVSlFhVFJvYVRrd1FqTldTbnBhUzFkSGVWbGlSVFZLYkhveGVVVnhiR010TFc1T1ZsQmpXVlJmWVRaU2IyYzJiR1ZtWWtKTmVWWlZVVzh3WlVwRVRrbENPRnBpYWkxdWFrTlRUR05PZFhVek1URlZWM1JOVVhWWkluMC5CcmFpbEVXa2VlSXhWbjY3dnpkVHZGTXpBMV9oNzFoaDZsODBHRFBpbkRaVVB4ajAxSC0tUC1QZDIxTk9wRDd3am51SDkxdUNBOFZMUW9fS2FnVjlnQQo="}"""
           _ <- repo.updateWithIssuedRawCredential(
@@ -497,7 +497,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         for {
           repo <- ZIO.service[CredentialRepository]
           aIssueCredentialRecord = issueCredentialRecord(CredentialFormat.AnonCreds)
-          _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
+          _ <- repo.create(aIssueCredentialRecord)
           rawCredentialData =
             """{"base64":"ZXlKaGJHY2lPaUpGVXpJMU5rc2lMQ0owZVhBaU9pSktWMVFpZlEuZXlKcFlYUWlPakUyTnprek1qYzROaklzSW1GMVpDSTZJbVJ2YldGcGJpSXNJbTV2Ym1ObElqb2lZMlk1T1RJMk56Z3RPREV3TmkwME1EZzVMV0UxWXprdE5tTmhObU0wWkRBMU1HVTBJaXdpZG5BaU9uc2lRR052Ym5SbGVIUWlPbHNpYUhSMGNITTZMeTkzZDNjdWR6TXViM0puTHpJd01UZ3ZjSEpsYzJWdWRHRjBhVzl1Y3k5Mk1TSmRMQ0owZVhCbElqcGJJbFpsY21sbWFXRmliR1ZRY21WelpXNTBZWFJwYjI0aVhYMHNJbWx6Y3lJNkltUnBaRHB3Y21semJUcGhaR0psT1RJNE9XUXdZelZtWWpVMlptWmhOVEF6T0Rka01UZ3dOR0ZpTkdFeE5UYzJOVEkzWXprME5tRTFNalV5T0RFM1ptRTRaVGhoTW1OalpXUXdPa056YzBKRGMyZENSVzFKUzBSWE1XaGpNMUpzWTJsb2NHSnRVbXhsUTJ0UlFWVktVRU5uYkZSYVYwNTNUV3BWTW1GNlJWTkpSUzFNYVVkTU0xRklaRlZ1VG10d1dXSkthSE5VYTIxWVVGaEpVM0ZXZWpjMll6RlZPWGhvVURseWNFZHBSSEZXTlRselJYcEtWbEpEYWxJMGEwMHdaMGg0YkhWUU5tVk5Ta2wwZHpJMk4yWllWbEpoTUhoRE5XaEthVU5uTVhSWldFNHdXbGhKYjJGWE5XdGFXR2R3UlVGU1ExUjNiMHBWTWxacVkwUkpNVTV0YzNoRmFVSlFhVFJvYVRrd1FqTldTbnBhUzFkSGVWbGlSVFZLYkhveGVVVnhiR010TFc1T1ZsQmpXVlJmWVRaU2IyYzJiR1ZtWWtKTmVWWlZVVzh3WlVwRVRrbENPRnBpYWkxdWFrTlRUR05PZFhVek1URlZWM1JOVVhWWkluMC5CcmFpbEVXa2VlSXhWbjY3dnpkVHZGTXpBMV9oNzFoaDZsODBHRFBpbkRaVVB4ajAxSC0tUC1QZDIxTk9wRDd3am51SDkxdUNBOFZMUW9fS2FnVjlnQQo="}"""
           _ <- repo.updateWithIssuedRawCredential(
@@ -556,7 +556,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         for {
           repo <- ZIO.service[CredentialRepository]
           aIssueCredentialRecord = issueCredentialRecord(CredentialFormat.JWT)
-          _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
+          _ <- repo.create(aIssueCredentialRecord)
           rawCredentialData =
             """{"base64":"ZXlKaGJHY2lPaUpGVXpJMU5rc2lMQ0owZVhBaU9pSktWMVFpZlEuZXlKcFlYUWlPakUyTnprek1qYzROaklzSW1GMVpDSTZJbVJ2YldGcGJpSXNJbTV2Ym1ObElqb2lZMlk1T1RJMk56Z3RPREV3TmkwME1EZzVMV0UxWXprdE5tTmhObU0wWkRBMU1HVTBJaXdpZG5BaU9uc2lRR052Ym5SbGVIUWlPbHNpYUhSMGNITTZMeTkzZDNjdWR6TXViM0puTHpJd01UZ3ZjSEpsYzJWdWRHRjBhVzl1Y3k5Mk1TSmRMQ0owZVhCbElqcGJJbFpsY21sbWFXRmliR1ZRY21WelpXNTBZWFJwYjI0aVhYMHNJbWx6Y3lJNkltUnBaRHB3Y21semJUcGhaR0psT1RJNE9XUXdZelZtWWpVMlptWmhOVEF6T0Rka01UZ3dOR0ZpTkdFeE5UYzJOVEkzWXprME5tRTFNalV5T0RFM1ptRTRaVGhoTW1OalpXUXdPa056YzBKRGMyZENSVzFKUzBSWE1XaGpNMUpzWTJsb2NHSnRVbXhsUTJ0UlFWVktVRU5uYkZSYVYwNTNUV3BWTW1GNlJWTkpSUzFNYVVkTU0xRklaRlZ1VG10d1dXSkthSE5VYTIxWVVGaEpVM0ZXZWpjMll6RlZPWGhvVURseWNFZHBSSEZXTlRselJYcEtWbEpEYWxJMGEwMHdaMGg0YkhWUU5tVk5Ta2wwZHpJMk4yWllWbEpoTUhoRE5XaEthVU5uTVhSWldFNHdXbGhKYjJGWE5XdGFXR2R3UlVGU1ExUjNiMHBWTWxacVkwUkpNVTV0YzNoRmFVSlFhVFJvYVRrd1FqTldTbnBhUzFkSGVWbGlSVFZLYkhveGVVVnhiR010TFc1T1ZsQmpXVlJmWVRaU2IyYzJiR1ZtWWtKTmVWWlZVVzh3WlVwRVRrbENPRnBpYWkxdWFrTlRUR05PZFhVek1URlZWM1JOVVhWWkluMC5CcmFpbEVXa2VlSXhWbjY3dnpkVHZGTXpBMV9oNzFoaDZsODBHRFBpbkRaVVB4ajAxSC0tUC1QZDIxTk9wRDd3am51SDkxdUNBOFZMUW9fS2FnVjlnQQo="}"""
           _ <- repo.updateWithIssuedRawCredential(
@@ -870,7 +870,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
         )
-      _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
+      _ <- repo.create(aIssueCredentialRecord)
       svc <- ZIO.service[PresentationService]
       aRecord <- svc.createAnoncredRecord(
         credentialDefinitionId = credentialDefinitionId

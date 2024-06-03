@@ -110,7 +110,7 @@ private class CredentialServiceImpl(
   ): ZIO[WalletAccessContext, CredentialServiceError, (Seq[IssueCredentialRecord], Int)] = {
     for {
       records <- credentialRepository
-        .getIssueCredentialRecords(ignoreWithZeroRetries = ignoreWithZeroRetries, offset = offset, limit = limit)
+        .findAll(ignoreWithZeroRetries = ignoreWithZeroRetries, offset = offset, limit = limit)
         .mapError(RepositoryError.apply)
     } yield records
   }
@@ -121,7 +121,7 @@ private class CredentialServiceImpl(
   ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]] =
     for {
       record <- credentialRepository
-        .getIssueCredentialRecordByThreadId(thid, ignoreWithZeroRetries)
+        .findByThreadId(thid, ignoreWithZeroRetries)
         .mapError(RepositoryError.apply)
     } yield record
 
@@ -130,7 +130,7 @@ private class CredentialServiceImpl(
   ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]] = {
     for {
       record <- credentialRepository
-        .getIssueCredentialRecord(recordId)
+        .findById(recordId)
         .mapError(RepositoryError.apply)
     } yield record
   }
@@ -190,7 +190,7 @@ private class CredentialServiceImpl(
         )
       )
       count <- credentialRepository
-        .createIssueCredentialRecord(record)
+        .create(record)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
@@ -255,7 +255,7 @@ private class CredentialServiceImpl(
         )
       )
       count <- credentialRepository
-        .createIssueCredentialRecord(record)
+        .create(record)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
@@ -318,7 +318,7 @@ private class CredentialServiceImpl(
         )
       )
       count <- credentialRepository
-        .createIssueCredentialRecord(record)
+        .create(record)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
@@ -335,7 +335,7 @@ private class CredentialServiceImpl(
   ): ZIO[WalletAccessContext, CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
-        .getIssueCredentialRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+        .findByStates(ignoreWithZeroRetries, limit, states: _*)
         .mapError(RepositoryError.apply)
     } yield records
   }
@@ -347,7 +347,7 @@ private class CredentialServiceImpl(
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
-        .getIssueCredentialRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+        .findByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
         .mapError(RepositoryError.apply)
     } yield records
   }
@@ -396,7 +396,7 @@ private class CredentialServiceImpl(
         )
       )
       count <- credentialRepository
-        .createIssueCredentialRecord(record)
+        .create(record)
         .flatMap {
           case 1 => ZIO.succeed(())
           case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
@@ -479,7 +479,7 @@ private class CredentialServiceImpl(
           } yield count
         case (CredentialFormat.AnonCreds, None) =>
           credentialRepository
-            .updateCredentialRecordProtocolState(recordId, ProtocolState.OfferReceived, ProtocolState.RequestPending)
+            .updateProtocolState(recordId, ProtocolState.OfferReceived, ProtocolState.RequestPending)
             .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
             s"${record.id}_issuance_flow_holder_req_pending_to_generated"
           )
@@ -493,7 +493,7 @@ private class CredentialServiceImpl(
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- credentialRepository
-        .getIssueCredentialRecord(record.id)
+        .findById(record.id)
         .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(recordId))
@@ -649,7 +649,7 @@ private class CredentialServiceImpl(
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- credentialRepository
-        .getIssueCredentialRecord(record.id)
+        .findById(record.id)
         .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(recordId))
@@ -688,7 +688,7 @@ private class CredentialServiceImpl(
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- credentialRepository
-        .getIssueCredentialRecord(record.id)
+        .findById(record.id)
         .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(recordId))
@@ -732,7 +732,7 @@ private class CredentialServiceImpl(
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- credentialRepository
-        .getIssueCredentialRecord(record.id)
+        .findById(record.id)
         .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(recordId))
@@ -785,7 +785,7 @@ private class CredentialServiceImpl(
         }
         .mapError(RepositoryError.apply)
       record <- credentialRepository
-        .getIssueCredentialRecord(record.id)
+        .findById(record.id)
         .mapError(RepositoryError.apply)
         .someOrFail(RecordIdNotFound(record.id))
     } yield record
@@ -809,7 +809,7 @@ private class CredentialServiceImpl(
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- credentialRepository
-        .getIssueCredentialRecord(record.id)
+        .findById(record.id)
         .mapError(RepositoryError.apply)
         .someOrFail(RecordIdNotFound(record.id))
     } yield record
@@ -865,7 +865,7 @@ private class CredentialServiceImpl(
       result
     }
     record <- credentialRepository
-      .getIssueCredentialRecord(record.id)
+      .findById(record.id)
       .mapError(RepositoryError.apply)
       .someOrFail(RecordIdNotFound(record.id))
   } yield record
@@ -962,7 +962,7 @@ private class CredentialServiceImpl(
         case 1 => ZIO.succeed(())
         case n => ZIO.fail(RecordIdNotFound(record.id))
       record <- credentialRepository
-        .getIssueCredentialRecord(record.id)
+        .findById(record.id)
         .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(record.id))
@@ -1002,7 +1002,7 @@ private class CredentialServiceImpl(
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       maybeRecord <- credentialRepository
-        .getIssueCredentialRecord(recordId)
+        .findById(recordId)
         .mapError(RepositoryError.apply)
       record <- ZIO
         .fromOption(maybeRecord)
@@ -1024,7 +1024,7 @@ private class CredentialServiceImpl(
         .fromOption(thid)
         .mapError(_ => UnexpectedError("No `thid` found in credential request"))
       maybeRecord <- credentialRepository
-        .getIssueCredentialRecordByThreadId(thid, ignoreWithZeroRetries)
+        .findByThreadId(thid, ignoreWithZeroRetries)
         .mapError(RepositoryError.apply)
       record <- ZIO
         .fromOption(maybeRecord)
@@ -1214,12 +1214,12 @@ private class CredentialServiceImpl(
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- credentialRepository
-        .updateCredentialRecordProtocolState(id, from, to)
+        .updateProtocolState(id, from, to)
         .mapError(RepositoryError.apply)
         .flatMap {
           case 0 =>
             credentialRepository
-              .getIssueCredentialRecord(id)
+              .findById(id)
               .mapError(RepositoryError.apply)
               .flatMap {
                 case None => ZIO.fail(RecordIdNotFound(id))
@@ -1235,7 +1235,7 @@ private class CredentialServiceImpl(
               }
           case 1 =>
             credentialRepository
-              .getIssueCredentialRecord(id)
+              .findById(id)
               .mapError(RepositoryError.apply)
               .flatMap {
                 case None => ZIO.fail(RecordIdNotFound(id))
@@ -1284,7 +1284,7 @@ private class CredentialServiceImpl(
       jwtPresentation <- validateRequestCredentialDataProof(maybeOfferOptions, requestJwt).tapBoth(
         error =>
           ZIO.logErrorCause("JWT Presentation Validation Failed!!", Cause.fail(error)) *> credentialRepository
-            .updateCredentialRecordProtocolState(
+            .updateProtocolState(
               record.id,
               ProtocolState.CredentialPending,
               ProtocolState.ProblemReportPending
@@ -1345,7 +1345,7 @@ private class CredentialServiceImpl(
       jwtPresentation <- validateRequestCredentialDataProof(maybeOfferOptions, requestJwt).tapBoth(
         error =>
           ZIO.logErrorCause("JWT Presentation Validation Failed!!", Cause.fail(error)) *> credentialRepository
-            .updateCredentialRecordProtocolState(
+            .updateProtocolState(
               record.id,
               ProtocolState.CredentialPending,
               ProtocolState.ProblemReportPending

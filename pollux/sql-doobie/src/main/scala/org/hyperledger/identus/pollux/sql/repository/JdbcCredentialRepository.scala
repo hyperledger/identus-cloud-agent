@@ -56,7 +56,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
 
-  override def createIssueCredentialRecord(record: IssueCredentialRecord): RIO[WalletAccessContext, Int] = {
+  override def create(record: IssueCredentialRecord): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
         |   id,
@@ -117,7 +117,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       }
   }
 
-  override def getIssueCredentialRecords(
+  override def findAll(
       ignoreWithZeroRetries: Boolean,
       offset: Option[Int],
       limit: Option[Int]
@@ -227,7 +227,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
           .to[Seq]
         cxnIO
   }
-  override def getIssueCredentialRecordsByStates(
+  override def findByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
@@ -235,14 +235,14 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
     getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transactWallet(xa)
   }
 
-  override def getIssueCredentialRecordsByStatesForAllWallets(
+  override def findByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): Task[Seq[IssueCredentialRecord]] = {
     getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transact(xb)
   }
-  override def getIssueCredentialRecord(
+  override def findById(
       recordId: DidCommID
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
     val cxnIO = sql"""
@@ -279,7 +279,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       .transactWallet(xa)
   }
 
-  override def getIssueCredentialRecordByThreadId(
+  override def findByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean,
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
@@ -321,7 +321,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       .transactWallet(xa)
   }
 
-  override def updateCredentialRecordProtocolState(
+  override def updateProtocolState(
       recordId: DidCommID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
@@ -422,7 +422,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       .transactWallet(xa)
   }
 
-  override def getValidIssuedCredentials(
+  override def findValidIssuedCredentials(
       recordIds: Seq[DidCommID]
   ): RIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]] = {
     val idAsStrings = recordIds.map(_.toString)
@@ -448,7 +448,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
   }
 
-  override def getValidAnoncredIssuedCredentials(
+  override def findValidAnonCredsIssuedCredentials(
       recordIds: Seq[DidCommID]
   ): RIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]] = {
     val idAsStrings = recordIds.map(_.toString)
@@ -479,7 +479,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
   }
 
-  override def deleteIssueCredentialRecord(recordId: DidCommID): RIO[WalletAccessContext, Int] = {
+  override def deleteById(recordId: DidCommID): RIO[WalletAccessContext, Int] = {
     val cxnIO = sql"""
       | DELETE
       | FROM public.issue_credential_records

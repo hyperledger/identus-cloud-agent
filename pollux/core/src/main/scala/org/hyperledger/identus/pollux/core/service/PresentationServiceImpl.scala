@@ -88,7 +88,7 @@ private class PresentationServiceImpl(
         .fromOption(record.requestPresentationData)
         .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
       issuedValidCredentials <- credentialRepository
-        .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
         .mapError(RepositoryError.apply)
       signedCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw)
       issuedCredentials <- ZIO.fromEither(
@@ -131,7 +131,7 @@ private class PresentationServiceImpl(
         .fromOption(record.requestPresentationData)
         .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
       issuedValidCredentials <- credentialRepository
-        .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
         .mapError(RepositoryError.apply)
       signedCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw)
 
@@ -209,7 +209,7 @@ private class PresentationServiceImpl(
         .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
       issuedValidCredentials <-
         credentialRepository
-          .getValidAnoncredIssuedCredentials(
+          .findValidAnonCredsIssuedCredentials(
             anoncredCredentialProof.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential))
           )
           .mapError(RepositoryError.apply)
@@ -765,7 +765,7 @@ private class PresentationServiceImpl(
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       issuedCredentials <- credentialRepository
-        .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
         .mapError(RepositoryError.apply)
       validatedCredentialsFormat <- validateCredentialsFormat(record, issuedCredentials)
       _ <- validateCredentials(
@@ -789,7 +789,7 @@ private class PresentationServiceImpl(
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       issuedCredentials <- credentialRepository
-        .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
         .mapError(RepositoryError.apply)
       validatedCredentialsFormat <- validateCredentialsFormat(record, issuedCredentials)
       _ <- validateCredentials(
@@ -834,7 +834,7 @@ private class PresentationServiceImpl(
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       issuedCredentials <-
         credentialRepository
-          .getValidAnoncredIssuedCredentials(
+          .findValidAnonCredsIssuedCredentials(
             credentialsToUse.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential))
           )
           .mapError(RepositoryError.apply)

@@ -29,7 +29,7 @@ class CredentialRepositoryInMemory(
         }(ZIO.succeed)
     } yield walletRef
 
-  override def createIssueCredentialRecord(record: IssueCredentialRecord): RIO[WalletAccessContext, Int] = {
+  override def create(record: IssueCredentialRecord): RIO[WalletAccessContext, Int] = {
     for {
       storeRef <- walletStoreRef
       _ <- for {
@@ -43,7 +43,7 @@ class CredentialRepositoryInMemory(
     } yield 1
   }
 
-  override def getIssueCredentialRecord(
+  override def findById(
       recordId: DidCommID
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
     for {
@@ -53,7 +53,7 @@ class CredentialRepositoryInMemory(
     } yield record
   }
 
-  override def getIssueCredentialRecords(
+  override def findAll(
       ignoreWithZeroRetries: Boolean,
       offset: Option[Int],
       limit: Option[Int]
@@ -66,7 +66,7 @@ class CredentialRepositoryInMemory(
     } yield paginated -> store.values.size
   }
 
-  override def updateCredentialRecordProtocolState(
+  override def updateProtocolState(
       recordId: DidCommID,
       from: ProtocolState,
       to: ProtocolState
@@ -104,7 +104,7 @@ class CredentialRepositoryInMemory(
   ): RIO[WalletAccessContext, Int] = {
     for {
       storeRef <- walletStoreRef
-      maybeRecord <- getIssueCredentialRecord(recordId)
+      maybeRecord <- findById(recordId)
       count <- maybeRecord
         .map(record =>
           for {
@@ -129,7 +129,7 @@ class CredentialRepositoryInMemory(
     } yield count
   }
 
-  override def getValidIssuedCredentials(
+  override def findValidIssuedCredentials(
       recordId: Seq[DidCommID]
   ): RIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]] = {
     for {
@@ -141,7 +141,7 @@ class CredentialRepositoryInMemory(
       .toSeq
   }
 
-  override def getValidAnoncredIssuedCredentials(
+  override def findValidAnonCredsIssuedCredentials(
       recordId: Seq[DidCommID]
   ): RIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]] = {
     for {
@@ -169,10 +169,10 @@ class CredentialRepositoryInMemory(
       .toSeq
   }
 
-  override def deleteIssueCredentialRecord(recordId: DidCommID): RIO[WalletAccessContext, Int] = {
+  override def deleteById(recordId: DidCommID): RIO[WalletAccessContext, Int] = {
     for {
       storeRef <- walletStoreRef
-      maybeRecord <- getIssueCredentialRecord(recordId)
+      maybeRecord <- findById(recordId)
       count <- maybeRecord
         .map(record =>
           for {
@@ -190,7 +190,7 @@ class CredentialRepositoryInMemory(
   ): RIO[WalletAccessContext, Int] = {
     for {
       storeRef <- walletStoreRef
-      maybeRecord <- getIssueCredentialRecord(recordId)
+      maybeRecord <- findById(recordId)
       count <- maybeRecord
         .map(record =>
           for {
@@ -212,7 +212,7 @@ class CredentialRepositoryInMemory(
     } yield count
   }
 
-  override def getIssueCredentialRecordsByStates(
+  override def findByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
@@ -227,7 +227,7 @@ class CredentialRepositoryInMemory(
       .toSeq
   }
 
-  override def getIssueCredentialRecordsByStatesForAllWallets(
+  override def findByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
@@ -247,7 +247,7 @@ class CredentialRepositoryInMemory(
     }
   }
 
-  override def getIssueCredentialRecordByThreadId(
+  override def findByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean,
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
@@ -265,7 +265,7 @@ class CredentialRepositoryInMemory(
   ): RIO[WalletAccessContext, Int] = {
     for {
       storeRef <- walletStoreRef
-      maybeRecord <- getIssueCredentialRecord(recordId)
+      maybeRecord <- findById(recordId)
       count <- maybeRecord
         .map(record =>
           for {
@@ -294,7 +294,7 @@ class CredentialRepositoryInMemory(
   ): RIO[WalletAccessContext, Int] = {
     for {
       storeRef <- walletStoreRef
-      maybeRecord <- getIssueCredentialRecord(recordId)
+      maybeRecord <- findById(recordId)
       count <- maybeRecord
         .map(record =>
           for {
@@ -324,7 +324,7 @@ class CredentialRepositoryInMemory(
   ): RIO[WalletAccessContext, RuntimeFlags] = {
     for {
       storeRef <- walletStoreRef
-      maybeRecord <- getIssueCredentialRecord(recordId)
+      maybeRecord <- findById(recordId)
       count <- maybeRecord
         .map(record =>
           for {
@@ -352,7 +352,7 @@ class CredentialRepositoryInMemory(
       failReason: Option[String]
   ): RIO[WalletAccessContext, Int] = for {
     storeRef <- walletStoreRef
-    maybeRecord <- getIssueCredentialRecord(recordId)
+    maybeRecord <- findById(recordId)
     count <- maybeRecord
       .map(record =>
         for {
