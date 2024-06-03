@@ -172,13 +172,13 @@ class PresentationServiceNotifier(
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(svc.rejectPresentation(recordId))
 
-  private[this] def notifyOnSuccess[R](effect: ZIO[R, PresentationError, PresentationRecord]) =
+  private def notifyOnSuccess[R](effect: ZIO[R, PresentationError, PresentationRecord]) =
     for {
       record <- effect
       _ <- notify(record)
     } yield record
 
-  private[this] def notify(record: PresentationRecord) = {
+  private def notify(record: PresentationRecord) = {
     val result = for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       producer <- eventNotificationService.producer[PresentationRecord]("Presentation")
@@ -235,14 +235,14 @@ class PresentationServiceNotifier(
       limit: Int,
       state: PresentationRecord.ProtocolState*
   ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] =
-    svc.getPresentationRecordsByStates(ignoreWithZeroRetries, limit, state: _*)
+    svc.getPresentationRecordsByStates(ignoreWithZeroRetries, limit, state*)
 
   override def getPresentationRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       state: PresentationRecord.ProtocolState*
   ): IO[PresentationError, Seq[PresentationRecord]] =
-    svc.getPresentationRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, state: _*)
+    svc.getPresentationRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, state*)
 
   override def getPresentationRecord(
       recordId: DidCommID

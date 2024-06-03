@@ -5,7 +5,7 @@ import io.circe.syntax.*
 import io.circe.Decoder
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64, JsonData, JwsData, LinkData}
 
-private[this] trait ReadAttachmentsUtils {
+private trait ReadAttachmentsUtils {
 
   def attachments: Seq[AttachmentDescriptor]
 

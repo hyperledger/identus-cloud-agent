@@ -11,7 +11,7 @@ import zio.interop.catz.*
 import java.util.UUID
 
 trait ContextAware
-type ContextAwareTask[T] = Task[T] with ContextAware
+type ContextAwareTask[T] = Task[T] & ContextAware
 
 object Errors {
   final case class UnexpectedAffectedRow(count: Int) extends RuntimeException(s"Unexpected affected row count: $count")

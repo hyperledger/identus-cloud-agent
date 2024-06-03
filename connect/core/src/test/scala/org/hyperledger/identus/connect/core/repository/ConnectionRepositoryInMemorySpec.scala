@@ -5,7 +5,7 @@ import zio.test.*
 
 object ConnectionRepositoryInMemorySpec extends ZIOSpecDefault {
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("In Memory Connection Repository test suite")(
       ConnectionRepositorySpecSuite.testSuite,
       ConnectionRepositorySpecSuite.multitenantTestSuite

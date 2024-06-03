@@ -21,7 +21,7 @@ trait BaseEntity {
 case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, updatedAt: Instant) extends BaseEntity {
   def withUpdatedAt(updatedAt: Instant = Instant.now()): Entity = copy(updatedAt = updatedAt)
   def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): Entity =
-    copy(createdAt = createdAt.truncatedTo(unit), updatedAt.truncatedTo(unit))
+    copy(createdAt = createdAt.truncatedTo(unit), updatedAt = updatedAt.truncatedTo(unit))
 
   def role: Either[String, EntityRole] =
     if (this == Entity.Admin) Right(EntityRole.Admin)

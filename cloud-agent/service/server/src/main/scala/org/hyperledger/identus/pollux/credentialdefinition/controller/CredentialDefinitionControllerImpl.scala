@@ -93,7 +93,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
     } yield CredentialDefinitionControllerLogic(rc, pagination, page, stats).result
   }
 
-  private[this] def validatePrismDID(author: String) =
+  private def validatePrismDID(author: String) =
     for {
       authorDID <- ZIO
         .fromEither(PrismDID.fromString(author))
@@ -101,7 +101,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
       longFormPrismDID <- getLongForm(authorDID, true)
     } yield longFormPrismDID
 
-  private[this] def getLongForm(
+  private def getLongForm(
       did: PrismDID,
       allowUnpublishedIssuingDID: Boolean = false
   ): ZIO[WalletAccessContext, ErrorResponse, LongFormPrismDID] = {

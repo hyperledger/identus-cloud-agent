@@ -29,7 +29,7 @@ import scala.util.Using
 
 object Tapir2StaticOAS extends ZIOAppDefault {
 
-  @main override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = {
+  @main override def run: ZIO[Any & ZIOAppArgs & Scope, Any, Any] = {
     val effect = for {
       args <- getArgs
       _ <- ZIO.when(args.length != 2)(ZIO.fail("Usage: Tapir2StaticOAS <output file> <server url>"))

@@ -108,7 +108,7 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
     None,
     ConnectionRecord.Role.Inviter,
     ConnectionRecord.ProtocolState.ConnectionResponseSent,
-    Invitation(from = DidId("did:peer:INVITER"), Invitation.Body(None, None, Nil)),
+    Invitation(from = DidId("did:peer:INVITER"), body = Invitation.Body(None, None, Nil)),
     None,
     Some(connectionResponse),
     5,
