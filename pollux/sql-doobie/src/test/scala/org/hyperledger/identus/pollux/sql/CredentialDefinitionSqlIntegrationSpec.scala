@@ -55,13 +55,13 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault with Postgr
       Gen.fromIterable(Vocabulary.verifiableCredentialClaims)
     val credentialDefinitionAttributes = Gen.setOfBounded(1, 4)(credentialDefinitionAttribute).map(_.toList)
     val jsonCredentialDefinition =
-      credentialDefinitionAttributes.map(attributes => Json.Arr(attributes.map(Json.Str(_)): _*))
+      credentialDefinitionAttributes.map(attributes => Json.Arr(attributes.map(Json.Str(_))*))
 
     val keyCorrectnessProofAttribute =
       Gen.fromIterable(Vocabulary.verifiableCredentialClaims)
     val keyCorrectnessProofAttributes = Gen.setOfBounded(1, 4)(credentialDefinitionAttribute).map(_.toList)
     val jsonCorrectnessProof =
-      credentialDefinitionAttributes.map(attributes => Json.Arr(attributes.map(Json.Str(_)): _*))
+      credentialDefinitionAttributes.map(attributes => Json.Arr(attributes.map(Json.Str(_))*))
 
     val credentialDefinitionAuthor =
       Gen.int(1000000, 9999999).map(i => s"did:prism:4fb06243213500578f59588de3e1dd9b266ec1b61e43b0ff86ad0712f$i")

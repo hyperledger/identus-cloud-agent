@@ -44,7 +44,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
       .load(AppConfig.config)
   )
 
-  private[this] def makeResolver(lookup: Map[String, DIDDocument]): DidResolver = (didUrl: String) => {
+  private def makeResolver(lookup: Map[String, DIDDocument]): DidResolver = (didUrl: String) => {
     lookup
       .get(didUrl)
       .fold(

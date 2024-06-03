@@ -45,7 +45,7 @@ object SecurityLogic {
       authenticator: Authenticator[E],
       authorizer: Authorizer[E]
   ): IO[ErrorResponse, WalletAccessContext] =
-    authenticate[E](credentials, others: _*)(authenticator)
+    authenticate[E](credentials, others*)(authenticator)
       .flatMap {
         case Left(entity)  => authorizeWalletAccess(entity)(EntityAuthorizer)
         case Right(entity) => authorizeWalletAccess(entity)(authorizer)
@@ -79,7 +79,7 @@ object SecurityLogic {
   def authorizeRole[E <: BaseEntity](credentials: Credentials, others: Credentials*)(
       authenticator: Authenticator[E],
   )(permittedRole: EntityRole): IO[ErrorResponse, BaseEntity] = {
-    authenticate[E](credentials, others: _*)(authenticator)
+    authenticate[E](credentials, others*)(authenticator)
       .flatMap { ee =>
         val entity = ee.fold(identity, identity)
         for {

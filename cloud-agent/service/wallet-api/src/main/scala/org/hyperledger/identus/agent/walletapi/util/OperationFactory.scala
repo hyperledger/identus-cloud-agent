@@ -196,7 +196,7 @@ class OperationFactory(apollo: Apollo) {
   }
 
   private def deriveSecp256k1KeyPair(seed: Array[Byte], path: ManagedDIDHdKeyPath): UIO[Secp256k1KeyPair] =
-    apollo.secp256k1.deriveKeyPair(seed)(path.derivationPath: _*)
+    apollo.secp256k1.deriveKeyPair(seed)(path.derivationPath*)
 
   private def toPublicKeyData(publicKey: Secp256k1PublicKey | Ed25519PublicKey | X25519PublicKey): PublicKeyData =
     publicKey match {

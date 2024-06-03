@@ -119,7 +119,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): URIO[WalletAccessContext, Seq[ConnectionRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*)
       .transactWallet(xa)
       .orDie
   }
@@ -129,7 +129,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): UIO[Seq[ConnectionRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*)
       .transact(xb)
       .orDie
   }
@@ -143,7 +143,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       case Nil =>
         connection.pure(Nil)
       case head +: tail =>
-        val nel = NonEmptyList.of(head, tail: _*)
+        val nel = NonEmptyList.of(head, tail*)
         val inClauseFragment = Fragments.in(fr"protocol_state", nel)
         val conditionFragment = Fragments.whereAndOpt(
           Some(inClauseFragment),

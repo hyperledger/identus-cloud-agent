@@ -42,12 +42,12 @@ class DIDCommControllerImpl(
     } yield ()
   }
 
-  private[this] def validateContentType(contentType: Option[String]) = {
+  private def validateContentType(contentType: Option[String]) = {
     if (contentType.contains(MediaTypes.contentTypeEncrypted)) ZIO.unit
     else ZIO.fail(InvalidContentType(contentType))
   }
 
-  private[this] def handleMessage(msg: DIDCommMessage) = {
+  private def handleMessage(msg: DIDCommMessage) = {
     ZIO.logAnnotate("request-id", UUID.randomUUID.toString) {
       for {
         msgAndContext <- unpackMessage(msg)
@@ -70,7 +70,7 @@ class DIDCommControllerImpl(
     revocationNotification orElse
     handleUnknownMessage
 
-  private[this] def unpackMessage(msg: DIDCommMessage): IO[DIDCommControllerError, (Message, WalletAccessContext)] =
+  private def unpackMessage(msg: DIDCommMessage): IO[DIDCommControllerError, (Message, WalletAccessContext)] =
     for {
       recipientDid <- ZIO
         .fromOption(msg.recipients.headOption.map(_.header.kid.split("#")(0)))
@@ -92,7 +92,7 @@ class DIDCommControllerImpl(
   /*
    * Connect
    */
-  private[this] val handleConnect: PartialFunction[Message, ZIO[
+  private val handleConnect: PartialFunction[Message, ZIO[
     WalletAccessContext,
     DIDCommMessageParsingError | ConnectionServiceError,
     Unit
@@ -122,7 +122,7 @@ class DIDCommControllerImpl(
   /*
    * Issue Credential
    */
-  private[this] val handleIssueCredential
+  private val handleIssueCredential
       : PartialFunction[Message, ZIO[WalletAccessContext, CredentialServiceError, Unit]] = {
     case msg if msg.piuri == OfferCredential.`type` =>
       for {
@@ -147,7 +147,7 @@ class DIDCommControllerImpl(
   /*
    * Present Proof
    */
-  private[this] val handlePresentProof: PartialFunction[Message, ZIO[WalletAccessContext, PresentationError, Unit]] = {
+  private val handlePresentProof: PartialFunction[Message, ZIO[WalletAccessContext, PresentationError, Unit]] = {
     case msg if msg.piuri == ProposePresentation.`type` =>
       for {
         proposePresentation <- ZIO.succeed(ProposePresentation.readFromMessage(msg))
@@ -168,7 +168,7 @@ class DIDCommControllerImpl(
       } yield ()
   }
 
-  private[this] val revocationNotification: PartialFunction[Message, ZIO[Any, Throwable, Unit]] = {
+  private val revocationNotification: PartialFunction[Message, ZIO[Any, Throwable, Unit]] = {
     case msg if msg.piuri == RevocationNotification.`type` =>
       for {
         revocationNotification <- ZIO.attempt(RevocationNotification.readFromMessage(msg))
@@ -179,7 +179,7 @@ class DIDCommControllerImpl(
   /*
    * Unknown Message
    */
-  private[this] val handleUnknownMessage: PartialFunction[Message, UIO[String]] = { case _ =>
+  private val handleUnknownMessage: PartialFunction[Message, UIO[String]] = { case _ =>
     ZIO.succeed("Unknown Message Type")
   }
 }

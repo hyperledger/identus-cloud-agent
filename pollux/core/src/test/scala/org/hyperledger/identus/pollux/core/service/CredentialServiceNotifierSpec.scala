@@ -86,7 +86,7 @@ object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServ
         result = Expectation.value(issueCredentialRecord.copy(protocolState = ProtocolState.CredentialReceived))
       )
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = {
+  override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("CredentialServiceWithEventNotificationImpl")(
       test("Happy flow generates relevant events on issuer side") {
         for {

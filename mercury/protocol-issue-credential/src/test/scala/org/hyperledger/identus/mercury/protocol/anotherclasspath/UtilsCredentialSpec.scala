@@ -17,8 +17,8 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{
   RequestCredential
 }
 
-private[this] case class TestCredentialType(a: String, b: Int, x: Long, name: String, dob: String)
-private[this] object TestCredentialType {
+private case class TestCredentialType(a: String, b: Int, x: Long, name: String, dob: String)
+private object TestCredentialType {
   given Encoder[TestCredentialType] = deriveEncoder[TestCredentialType]
   given Decoder[TestCredentialType] = deriveDecoder[TestCredentialType]
 }
