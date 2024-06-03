@@ -69,11 +69,7 @@ class ES256KSigner(privateKey: PrivateKey) extends Signer {
 
 class EdSigner(ed25519KeyPair: Ed25519KeyPair) extends Signer {
   lazy val signer: Ed25519Signer = {
-    val d = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519KeyPair.privateKey.getEncoded)
-    val x = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519KeyPair.publicKey.getEncoded)
-    val okpJson = s"""{"kty":"OKP","crv":"Ed25519","d":"$d","x":"$x"}"""
-    val octetKeyPair = OctetKeyPair.parse(okpJson)
-    val ed25519Signer = Ed25519Signer(octetKeyPair)
+    val ed25519Signer = Ed25519Signer(ed25519KeyPair.toOctetKeyPair)
     ed25519Signer
   }
 

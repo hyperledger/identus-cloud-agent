@@ -604,11 +604,7 @@ class CredentialServiceImpl(
     for {
       ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
     } yield {
-
-      val d = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519keyPair.privateKey.getEncoded)
-      val x = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519keyPair.publicKey.getEncoded)
-      val okpJson = s"""{"kty":"OKP","crv":"Ed25519","d":"$d","x":"$x"}"""
-      val octetKeyPair = OctetKeyPair.parse(okpJson)
+      val octetKeyPair = ed25519keyPair.toOctetKeyPair
       JwtIssuer(
         org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
         EdSigner(ed25519keyPair),
@@ -1323,6 +1319,7 @@ class CredentialServiceImpl(
   // Issuer Generating the credential
   override def generateSDJWTCredential(
       recordId: DidCommID,
+      expirationTime: Duration,
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
@@ -1361,17 +1358,24 @@ class CredentialServiceImpl(
       preview = offerCredentialData.body.credential_preview
       claims <- CredentialService.convertAttributesToJsonClaims(preview.body.attributes)
       sdJwtPrivateKey = sdjwt.IssuerPrivateKey(ed25519KeyPair.privateKey)
-      didDocResult <- didResolver.resolve(jwtPresentation.iss) map {
-        case failed: DIDResolutionFailed       => CredentialServiceError.UnexpectedError(failed.error.toString)
-        case succeeded: DIDResolutionSucceeded => succeeded.didDocument.authentication.map(x => x)
+      didDocResult <- didResolver.resolve(jwtPresentation.iss) flatMap {
+        case failed: DIDResolutionFailed =>
+          ZIO.fail(CredentialServiceError.UnexpectedError(failed.error.toString))
+        case succeeded: DIDResolutionSucceeded => ZIO.succeed(succeeded.didDocument.authentication)
       }
       now = Instant.now.getEpochSecond
-      in30Days = Instant.now.plus(30, ChronoUnit.DAYS).getEpochSecond // FIXME hardcode 30days
+      exp = claims("exp").flatMap(_.asNumber).flatMap(_.toLong)
+      expInSeconds <- ZIO.fromEither(exp match {
+        case Some(e) if e > now => Right(e)
+        case Some(e) =>
+          Left(CredentialServiceError.UnsupportedVCClaimsValue(s"Error: Expiration Time Not valid or expired :$e"))
+        case _ => Right(Instant.now.plus(expirationTime).getEpochSecond)
+      })
       claimsUpdated = claims
-        .add("iss", issuingDID.did.toString.asJson)
+        .add("iss", issuingDID.did.toString.asJson) // This is issuer did
         .add("sub", jwtPresentation.iss.asJson) // This is subject did
         .add("iat", now.asJson)
-        .add("exp", in30Days.asJson)
+        .add("exp", expInSeconds.asJson)
       credential = SDJWT.issueCredential(
         sdJwtPrivateKey,
         claimsUpdated.asJson.noSpaces,
