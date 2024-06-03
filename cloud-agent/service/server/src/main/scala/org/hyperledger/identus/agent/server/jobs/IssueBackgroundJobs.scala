@@ -634,8 +634,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
 
   }
 
-  private def handleCredentialErrors
-      : PartialFunction[Throwable | CredentialServiceError, CredentialServiceError] = {
+  private def handleCredentialErrors: PartialFunction[Throwable | CredentialServiceError, CredentialServiceError] = {
     case e: CredentialServiceError => e
     case t: Throwable              => CredentialServiceError.UnexpectedError(t.getMessage())
   }
