@@ -29,7 +29,7 @@ class CredentialRepositoryInMemory(
         }(ZIO.succeed)
     } yield walletRef
 
-  override def create(record: IssueCredentialRecord): RIO[WalletAccessContext, Int] = {
+  override def create(record: IssueCredentialRecord): RIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       _ <- for {
@@ -40,7 +40,7 @@ class CredentialRepositoryInMemory(
           case Some(value) => ZIO.fail(UniqueConstraintViolation("Unique Constraint Violation on 'thid'"))
       } yield ()
       _ <- storeRef.update(r => r + (record.id -> record))
-    } yield 1
+    } yield ()
   }
 
   override def getById(
@@ -81,28 +81,26 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       from: ProtocolState,
       to: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): RIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
-      maybeRecord = store.find((id, record) => id == recordId && record.protocolState == from).map(_._2)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  protocolState = to,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
-                )
+      maybeRecord = store.find((id, record) => id == recordId).map(_._2)
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      _ <-
+        if (record.protocolState != from) ZIO.unit
+        else
+          storeRef.update(r =>
+            r.updated(
+              recordId,
+              record.copy(
+                protocolState = to,
+                metaRetries = maxRetries,
+                metaLastFailure = None,
               )
             )
-          } yield 1
-        )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+          )
+    } yield ()
   }
 
   override def updateWithIssuedRawCredential(
@@ -112,32 +110,27 @@ class CredentialRepositoryInMemory(
       schemaUri: Option[String],
       credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): RIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       maybeRecord <- findById(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  updatedAt = Some(Instant.now),
-                  schemaUri = schemaUri,
-                  credentialDefinitionUri = credentialDefinitionUri,
-                  issueCredentialData = Some(issue),
-                  issuedCredentialRaw = Some(issuedRawCredential),
-                  protocolState = protocolState,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
-                )
-              )
-            )
-          } yield 1
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      _ <- storeRef.update(r =>
+        r.updated(
+          recordId,
+          record.copy(
+            updatedAt = Some(Instant.now),
+            schemaUri = schemaUri,
+            credentialDefinitionUri = credentialDefinitionUri,
+            issueCredentialData = Some(issue),
+            issuedCredentialRaw = Some(issuedRawCredential),
+            protocolState = protocolState,
+            metaRetries = maxRetries,
+            metaLastFailure = None,
+          )
         )
-        .getOrElse(ZIO.succeed(1))
-    } yield count
+      )
+    } yield ()
   }
 
   override def findValidIssuedCredentials(
@@ -180,47 +173,37 @@ class CredentialRepositoryInMemory(
       .toSeq
   }
 
-  override def deleteById(recordId: DidCommID): RIO[WalletAccessContext, Int] = {
+  override def deleteById(recordId: DidCommID): RIO[WalletAccessContext, Unit] = {
     for {
-      storeRef <- walletStoreRef
       maybeRecord <- findById(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r => r.removed(recordId))
-          } yield 1
-        )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      storeRef <- walletStoreRef
+      _ <- storeRef.update(r => r.removed(recordId))
+    } yield ()
   }
 
   override def updateWithIssueCredential(
       recordId: DidCommID,
       issue: IssueCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): RIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       maybeRecord <- findById(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  updatedAt = Some(Instant.now),
-                  issueCredentialData = Some(issue),
-                  protocolState = protocolState,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
-                )
-              )
-            )
-          } yield 1
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      _ <- storeRef.update(r =>
+        r.updated(
+          recordId,
+          record.copy(
+            updatedAt = Some(Instant.now),
+            issueCredentialData = Some(issue),
+            protocolState = protocolState,
+            metaRetries = maxRetries,
+            metaLastFailure = None,
+          )
         )
-        .getOrElse(ZIO.succeed(1))
-    } yield count
+      )
+    } yield ()
   }
 
   override def findByStates(
@@ -273,58 +256,48 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       subjectId: String,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): RIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       maybeRecord <- findById(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  updatedAt = Some(Instant.now),
-                  protocolState = protocolState,
-                  subjectId = Some(subjectId),
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
-                )
-              )
-            )
-          } yield 1
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      _ <- storeRef.update(r =>
+        r.updated(
+          recordId,
+          record.copy(
+            updatedAt = Some(Instant.now),
+            protocolState = protocolState,
+            subjectId = Some(subjectId),
+            metaRetries = maxRetries,
+            metaLastFailure = None,
+          )
         )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+      )
+    } yield ()
   }
 
   override def updateWithJWTRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): RIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       maybeRecord <- findById(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  updatedAt = Some(Instant.now),
-                  requestCredentialData = Some(request),
-                  protocolState = protocolState,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
-                )
-              )
-            )
-          } yield 1
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      _ <- storeRef.update(r =>
+        r.updated(
+          recordId,
+          record.copy(
+            updatedAt = Some(Instant.now),
+            requestCredentialData = Some(request),
+            protocolState = protocolState,
+            metaRetries = maxRetries,
+            metaLastFailure = None,
+          )
         )
-        .getOrElse(ZIO.succeed(1))
-    } yield count
+      )
+    } yield ()
   }
 
   override def updateWithAnonCredsRequestCredential(
@@ -332,57 +305,47 @@ class CredentialRepositoryInMemory(
       request: RequestCredential,
       metadata: AnoncredCredentialRequestMetadata,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, RuntimeFlags] = {
+  ): RIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       maybeRecord <- findById(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  updatedAt = Some(Instant.now),
-                  requestCredentialData = Some(request),
-                  anonCredsRequestMetadata = Some(metadata),
-                  protocolState = protocolState,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
-                )
-              )
-            )
-          } yield 1
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+      _ <- storeRef.update(r =>
+        r.updated(
+          recordId,
+          record.copy(
+            updatedAt = Some(Instant.now),
+            requestCredentialData = Some(request),
+            anonCredsRequestMetadata = Some(metadata),
+            protocolState = protocolState,
+            metaRetries = maxRetries,
+            metaLastFailure = None,
+          )
         )
-        .getOrElse(ZIO.succeed(1))
-    } yield count
+      )
+    } yield ()
   }
 
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]
-  ): RIO[WalletAccessContext, Int] = for {
+  ): RIO[WalletAccessContext, Unit] = for {
     storeRef <- walletStoreRef
     maybeRecord <- findById(recordId)
-    count <- maybeRecord
-      .map(record =>
-        for {
-          _ <- storeRef.update(r =>
-            r.updated(
-              recordId,
-              record.copy(
-                metaRetries = math.max(0, record.metaRetries - 1),
-                metaNextRetry =
-                  if (record.metaRetries - 1 <= 0) None
-                  else Some(Instant.now().plusSeconds(60)), // TODO exponention time
-                metaLastFailure = failReason
-              )
-            )
-          )
-        } yield 1
+    record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+    _ <- storeRef.update(r =>
+      r.updated(
+        recordId,
+        record.copy(
+          metaRetries = math.max(0, record.metaRetries - 1),
+          metaNextRetry =
+            if (record.metaRetries - 1 <= 0) None
+            else Some(Instant.now().plusSeconds(60)), // TODO exponention time
+          metaLastFailure = failReason
+        )
       )
-      .getOrElse(ZIO.succeed(0))
-  } yield count
+    )
+  } yield ()
 
 }
 

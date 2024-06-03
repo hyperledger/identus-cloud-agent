@@ -56,7 +56,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
 
-  override def create(record: IssueCredentialRecord): RIO[WalletAccessContext, Int] = {
+  override def create(record: IssueCredentialRecord): RIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
         |   id,
@@ -332,7 +332,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       recordId: DidCommID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): RIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
@@ -354,7 +354,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       recordId: DidCommID,
       subjectId: String,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): RIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
@@ -373,7 +373,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): RIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
@@ -393,7 +393,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       request: RequestCredential,
       metadata: AnoncredCredentialRequestMetadata,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): RIO[WalletAccessContext, Unit] = {
     val cxnIO =
       sql"""
            | UPDATE public.issue_credential_records
@@ -414,7 +414,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       recordId: DidCommID,
       issue: IssueCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): RIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
@@ -486,7 +486,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
   }
 
-  override def deleteById(recordId: DidCommID): RIO[WalletAccessContext, Int] = {
+  override def deleteById(recordId: DidCommID): RIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
       | DELETE
       | FROM public.issue_credential_records
@@ -504,7 +504,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       schemaUri: Option[String],
       credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): RIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
@@ -525,7 +525,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]
-  ): RIO[WalletAccessContext, Int] = {
+  ): RIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET

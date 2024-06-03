@@ -10,7 +10,7 @@ import zio.*
 trait CredentialRepository {
   def create(
       record: IssueCredentialRecord
-  ): RIO[WalletAccessContext, Int]
+  ): RIO[WalletAccessContext, Unit]
 
   def findAll(
       ignoreWithZeroRetries: Boolean,
@@ -47,32 +47,32 @@ trait CredentialRepository {
       recordId: DidCommID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
-  ): RIO[WalletAccessContext, Int]
+  ): RIO[WalletAccessContext, Unit]
 
   def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int]
+  ): RIO[WalletAccessContext, Unit]
 
   def updateWithJWTRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int]
+  ): RIO[WalletAccessContext, Unit]
 
   def updateWithAnonCredsRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
       metadata: AnoncredCredentialRequestMetadata,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int]
+  ): RIO[WalletAccessContext, Unit]
 
   def updateWithIssueCredential(
       recordId: DidCommID,
       issue: IssueCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int]
+  ): RIO[WalletAccessContext, Unit]
 
   def updateWithIssuedRawCredential(
       recordId: DidCommID,
@@ -81,11 +81,11 @@ trait CredentialRepository {
       schemaUri: Option[String],
       credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int]
+  ): RIO[WalletAccessContext, Unit]
 
   def deleteById(
       recordId: DidCommID
-  ): RIO[WalletAccessContext, Int]
+  ): RIO[WalletAccessContext, Unit]
 
   def findValidIssuedCredentials(
       recordId: Seq[DidCommID]
@@ -98,6 +98,6 @@ trait CredentialRepository {
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]
-  ): RIO[WalletAccessContext, Int]
+  ): RIO[WalletAccessContext, Unit]
 
 }

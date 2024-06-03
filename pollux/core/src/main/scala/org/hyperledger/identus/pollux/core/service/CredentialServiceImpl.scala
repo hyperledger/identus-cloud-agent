@@ -1,6 +1,5 @@
 package org.hyperledger.identus.pollux.core.service
 
-import com.nimbusds.jose.jwk.OctetKeyPair
 import io.circe.syntax.*
 import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
@@ -8,14 +7,13 @@ import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.core.model.did.{
   CanonicalPrismDID,
-  EllipticCurve,
   PrismDID,
   VerificationRelationship
 }
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
-import org.hyperledger.identus.pollux.{sdjwt, *}
+import org.hyperledger.identus.pollux.*
 import org.hyperledger.identus.pollux.anoncreds.{
   AnoncredCreateCredentialDefinition,
   AnoncredCredential,
@@ -32,8 +30,7 @@ import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
 import org.hyperledger.identus.pollux.sdjwt.*
-import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, *}
-import org.hyperledger.identus.pollux.vc.jwt.Issuer as JwtIssuer
+import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer, *}
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey}
 import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
 import org.hyperledger.identus.shared.models.WalletAccessContext
@@ -42,7 +39,6 @@ import zio.*
 import zio.prelude.ZValidation
 
 import java.net.URI
-import java.rmi.UnexpectedException
 import java.time.{Instant, ZoneId}
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -191,10 +187,6 @@ private class CredentialServiceImpl(
       )
       count <- credentialRepository
         .create(record)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
         .mapError(RepositoryError.apply) @@ CustomMetricsAspect
         .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
     } yield record
@@ -256,10 +248,6 @@ private class CredentialServiceImpl(
       )
       count <- credentialRepository
         .create(record)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
         .mapError(RepositoryError.apply) @@ CustomMetricsAspect
         .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
     } yield record
@@ -319,10 +307,6 @@ private class CredentialServiceImpl(
       )
       count <- credentialRepository
         .create(record)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
         .mapError(RepositoryError.apply) @@ CustomMetricsAspect
         .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
     } yield record
@@ -397,10 +381,6 @@ private class CredentialServiceImpl(
       )
       count <- credentialRepository
         .create(record)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
         .mapError(RepositoryError.apply)
     } yield record
   }
@@ -489,9 +469,6 @@ private class CredentialServiceImpl(
               s"Invalid subjectId input for $format offer acceptance: $maybeSubjectId"
             )
           )
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- credentialRepository
         .findById(record.id)
         .mapError(RepositoryError.apply)
@@ -608,10 +585,6 @@ private class CredentialServiceImpl(
       ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
     } yield {
 
-      val d = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519keyPair.privateKey.getEncoded)
-      val x = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519keyPair.publicKey.getEncoded)
-      val okpJson = s"""{"kty":"OKP","crv":"Ed25519","d":"$d","x":"$x"}"""
-      val octetKeyPair = OctetKeyPair.parse(okpJson)
       JwtIssuer(
         org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
         EdSigner(ed25519keyPair),
@@ -645,9 +618,6 @@ private class CredentialServiceImpl(
         s"${record.id}_issuance_flow_holder_req_pending_to_generated",
         "issuance_flow_holder_req_pending_to_generated_ms_gauge"
       ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- credentialRepository
         .findById(record.id)
         .mapError(RepositoryError.apply)
@@ -684,9 +654,6 @@ private class CredentialServiceImpl(
         s"${record.id}_issuance_flow_holder_req_pending_to_generated",
         "issuance_flow_holder_req_pending_to_generated_ms_gauge"
       ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- credentialRepository
         .findById(record.id)
         .mapError(RepositoryError.apply)
@@ -728,9 +695,6 @@ private class CredentialServiceImpl(
         s"${record.id}_issuance_flow_holder_req_pending_to_generated",
         "issuance_flow_holder_req_pending_to_generated_ms_gauge"
       ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- credentialRepository
         .findById(record.id)
         .mapError(RepositoryError.apply)
@@ -779,10 +743,6 @@ private class CredentialServiceImpl(
       )
       _ <- credentialRepository
         .updateWithJWTRequestCredential(record.id, request, ProtocolState.RequestReceived)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
         .mapError(RepositoryError.apply)
       record <- credentialRepository
         .findById(record.id)
@@ -805,9 +765,6 @@ private class CredentialServiceImpl(
         .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
         s"${record.id}_issuance_flow_issuer_credential_pending_to_generated"
       )
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(recordId))
       record <- credentialRepository
         .findById(record.id)
         .mapError(RepositoryError.apply)
@@ -886,10 +843,6 @@ private class CredentialServiceImpl(
         credDefId,
         ProtocolState.CredentialReceived
       )
-      .flatMap {
-        case 1 => ZIO.succeed(())
-        case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-      }
       .mapError(RepositoryError.apply)
   }
 
@@ -949,18 +902,11 @@ private class CredentialServiceImpl(
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
       count <- credentialRepository
-        .updateWithIssueCredential(
-          record.id,
-          issueCredential,
-          IssueCredentialRecord.ProtocolState.CredentialGenerated
-        )
+        .updateWithIssueCredential(record.id, issueCredential, IssueCredentialRecord.ProtocolState.CredentialGenerated)
         .mapError(RepositoryError.apply) @@ CustomMetricsAspect.endRecordingTime(
         s"${record.id}_issuance_flow_issuer_credential_pending_to_generated",
         "issuance_flow_issuer_credential_pending_to_generated_ms_gauge"
       ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_issuer_credential_generated_to_sent")
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case n => ZIO.fail(RecordIdNotFound(record.id))
       record <- credentialRepository
         .findById(record.id)
         .mapError(RepositoryError.apply)
@@ -991,10 +937,6 @@ private class CredentialServiceImpl(
     credentialRepository
       .updateAfterFail(recordId, failReason)
       .mapError(RepositoryError.apply)
-      .flatMap {
-        case 1 => ZIO.unit
-        case n => ZIO.fail(UnexpectedError(s"Invalid number of records updated: $n"))
-      }
 
   private[this] def getRecordWithState(
       recordId: DidCommID,
@@ -1213,43 +1155,14 @@ private class CredentialServiceImpl(
       to: IssueCredentialRecord.ProtocolState
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
-      record <- credentialRepository
-        .updateProtocolState(id, from, to)
-        .mapError(RepositoryError.apply)
-        .flatMap {
-          case 0 =>
-            credentialRepository
-              .findById(id)
-              .mapError(RepositoryError.apply)
-              .flatMap {
-                case None => ZIO.fail(RecordIdNotFound(id))
-                case Some(record) if record.protocolState == to => // Not update by is alredy on the desirable state
-                  ZIO.succeed(record)
-                case Some(record) =>
-                  ZIO.fail(
-                    OperationNotExecuted(
-                      id,
-                      s"CredentialRecord was not updated because have the ProtocolState ${record.protocolState}"
-                    )
-                  )
-              }
-          case 1 =>
-            credentialRepository
-              .findById(id)
-              .mapError(RepositoryError.apply)
-              .flatMap {
-                case None => ZIO.fail(RecordIdNotFound(id))
-                case Some(record) =>
-                  ZIO
-                    .logError(
-                      s"The CredentialRecord ($id) is expected to be on the ProtocolState '$to' after updating it"
-                    )
-                    .when(record.protocolState != to)
-                    .as(record)
-              }
-          case n => ZIO.fail(UnexpectedError(s"Invalid row count result: $n"))
-        }
-    } yield record
+      record <- credentialRepository.getById(id).mapError(RepositoryError.apply)
+      updatedRecord <- record.protocolState match
+        case currentState if currentState == to => ZIO.succeed(record) // Idempotent behaviour
+        case currentState if currentState == from =>
+          val res = credentialRepository.updateProtocolState(id, from, to) *> credentialRepository.getById(id)
+          res.mapError(RepositoryError.apply)
+        case _ => ZIO.fail(OperationNotExecuted(id, s"Invalid record protocol state: ${record.protocolState}"))
+    } yield updatedRecord
   }
 
   override def generateJWTCredential(
@@ -1284,11 +1197,7 @@ private class CredentialServiceImpl(
       jwtPresentation <- validateRequestCredentialDataProof(maybeOfferOptions, requestJwt).tapBoth(
         error =>
           ZIO.logErrorCause("JWT Presentation Validation Failed!!", Cause.fail(error)) *> credentialRepository
-            .updateProtocolState(
-              record.id,
-              ProtocolState.CredentialPending,
-              ProtocolState.ProblemReportPending
-            )
+            .updateProtocolState(record.id, ProtocolState.CredentialPending, ProtocolState.ProblemReportPending)
             .mapError(t => RepositoryError(t)),
         payload => ZIO.logInfo("JWT Presentation Validation Successful!")
       )
@@ -1345,11 +1254,7 @@ private class CredentialServiceImpl(
       jwtPresentation <- validateRequestCredentialDataProof(maybeOfferOptions, requestJwt).tapBoth(
         error =>
           ZIO.logErrorCause("JWT Presentation Validation Failed!!", Cause.fail(error)) *> credentialRepository
-            .updateProtocolState(
-              record.id,
-              ProtocolState.CredentialPending,
-              ProtocolState.ProblemReportPending
-            )
+            .updateProtocolState(record.id, ProtocolState.CredentialPending, ProtocolState.ProblemReportPending)
             .mapError(t => RepositoryError(t)),
         payload => ZIO.logInfo("JWT Presentation Validation Successful!")
       )
