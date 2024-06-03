@@ -1,3 +1,19 @@
+# [1.35.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.34.0...cloud-agent-v1.35.0) (2024-06-03)
+
+
+### Bug Fixes
+
+*  SemanticCheckOfClaims In Verification API ([#1124](https://github.com/hyperledger/identus-cloud-agent/issues/1124)) ([7cb4192](https://github.com/hyperledger/identus-cloud-agent/commit/7cb4192d41a779e2ba4de815b2e8ec469636e485))
+*  update the jose dependency and switch back to the official library ([#1117](https://github.com/hyperledger/identus-cloud-agent/issues/1117)) ([3608aaf](https://github.com/hyperledger/identus-cloud-agent/commit/3608aafd980472cb63e5164339681fb079190dba))
+* Changing .chart.name reference, adding name override ([#1129](https://github.com/hyperledger/identus-cloud-agent/issues/1129)) ([650ae3b](https://github.com/hyperledger/identus-cloud-agent/commit/650ae3ba94ae322fc745eb07658f1663b3e7e321))
+* VC Verification API Doc ([#1118](https://github.com/hyperledger/identus-cloud-agent/issues/1118)) ([d70d4b7](https://github.com/hyperledger/identus-cloud-agent/commit/d70d4b74cb9f21d72e735f9650b746565068f282))
+
+
+### Features
+
+* **agent:** ATL-6839 migrate DIDComm endpoint to tapir ([#1116](https://github.com/hyperledger/identus-cloud-agent/issues/1116)) ([2f4f7c3](https://github.com/hyperledger/identus-cloud-agent/commit/2f4f7c395523763c3c7066781017430523317841))
+* integrate SD JWT ([#1016](https://github.com/hyperledger/identus-cloud-agent/issues/1016)) ([9d7948f](https://github.com/hyperledger/identus-cloud-agent/commit/9d7948fc8208edf9f8c1712a0cd6902474f0814d))
+
 # [1.34.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.33.1...cloud-agent-v1.34.0) (2024-05-27)
 
 
