@@ -1,3 +1,5 @@
+nameOverride: ""
+fullnameOverride: ""
 ingress:
   enabled: true
   applicationUrls:

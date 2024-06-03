@@ -1,3 +1,35 @@
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "cloud-agent.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "cloud-agent.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "cloud-agent.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
 {{- define "cors" }}
     {{- if .Values.ingress.cors.enabled }}
     - name: cors
@@ -21,7 +53,7 @@
         {{- end }}
 {{- end -}}
 {{- define "labels.common" -}}
-app.kubernetes.io/part-of: {{ .Chart.Name }}
+app.kubernetes.io/part-of: {{ include "cloud-agent.fullname" . }}
 {{- end -}}
 {{- define "headers.security" }}
     - name: response-rewrite
