@@ -4,7 +4,6 @@ import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.{Exit, ZIO, ZLayer}
@@ -66,7 +65,7 @@ object CredentialRepositorySpecSuite {
         bRecord = issueCredentialRecord(CredentialFormat.JWT).copy(thid = thid)
         _ <- repo.create(aRecord)
         res <- repo.create(bRecord).exit
-      } yield assert(res)(fails(isSubtype[UniqueConstraintViolation](anything)))
+      } yield assert(res)(dies(anything))
     },
     test("createIssueCredentialRecord correctly read and write on non-null issuingDID") {
       for {
@@ -320,10 +319,11 @@ object CredentialRepositorySpecSuite {
         aRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.create(aRecord)
         record <- repo.getById(aRecord.id)
-        _ <- repo.updateProtocolState(aRecord.id, ProtocolState.RequestPending, ProtocolState.RequestSent)
+        res <- repo.updateProtocolState(aRecord.id, ProtocolState.RequestPending, ProtocolState.RequestSent).exit
         updatedRecord <- repo.getById(aRecord.id)
       } yield {
         assertTrue(record.protocolState == ProtocolState.OfferPending) &&
+        assert(res)(dies(anything)) &&
         assertTrue(updatedRecord.protocolState == ProtocolState.OfferPending)
       }
     },

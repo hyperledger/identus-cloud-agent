@@ -12,13 +12,10 @@ import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError
-import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError.*
 import org.hyperledger.identus.pollux.core.repository.CredentialRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.postgresql.util.PSQLException
 import zio.*
 import zio.interop.catz.*
 import zio.json.*
@@ -56,7 +53,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
 
-  override def create(record: IssueCredentialRecord): RIO[WalletAccessContext, Unit] = {
+  override def create(record: IssueCredentialRecord): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
         |   id,
@@ -111,10 +108,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
-      .mapError {
-        case e: PSQLException => CredentialRepositoryError.fromPSQLException(e.getSQLState, e.getMessage)
-        case e                => e
-      }
+      .ensureOneAffectedRowOrDie
   }
 
   override def findAll(
@@ -348,6 +342,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
   def updateWithSubjectId(
@@ -367,6 +362,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateWithJWTRequestCredential(
@@ -386,6 +382,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateWithAnonCredsRequestCredential(
@@ -408,6 +405,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateWithIssueCredential(
@@ -427,6 +425,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
   override def findValidIssuedCredentials(
@@ -495,6 +494,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateWithIssuedRawCredential(
@@ -520,6 +520,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
   def updateAfterFail(
@@ -535,7 +536,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         | WHERE
         |   id = $recordId
         """.stripMargin.update
-    cxnIO.run.transactWallet(xa)
+    cxnIO.run
+      .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 }
 

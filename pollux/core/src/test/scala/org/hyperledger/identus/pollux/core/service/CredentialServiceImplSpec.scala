@@ -228,10 +228,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           aRecord <- svc.createJWTIssueCredentialRecord(thid = thid)
           bRecord <- svc.createJWTIssueCredentialRecord(thid = thid).exit
         } yield {
-          assertTrue(bRecord match
-            case Exit.Failure(Cause.Fail(_: RepositoryError, _)) => true
-            case _                                               => false
-          )
+          assert(bRecord)(dies(anything))
         }
       },
       test("getCredentialRecords returns the created records") {
@@ -307,10 +304,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           _ <- holderSvc.receiveCredentialOffer(offer)
           exit <- holderSvc.receiveCredentialOffer(offer).exit
         } yield {
-          assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: RepositoryError, _)) => true
-            case _                                               => false
-          )
+          assert(exit)(dies(anything))
         }
       },
       test("acceptCredentialOffer updates the record's protocol state") {

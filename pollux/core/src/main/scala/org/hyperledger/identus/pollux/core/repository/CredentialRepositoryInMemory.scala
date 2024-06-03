@@ -29,7 +29,7 @@ class CredentialRepositoryInMemory(
         }(ZIO.succeed)
     } yield walletRef
 
-  override def create(record: IssueCredentialRecord): RIO[WalletAccessContext, Unit] = {
+  override def create(record: IssueCredentialRecord): URIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       _ <- for {
@@ -37,7 +37,7 @@ class CredentialRepositoryInMemory(
         maybeRecord = store.values.find(_.thid == record.thid)
         _ <- maybeRecord match
           case None        => ZIO.unit
-          case Some(value) => ZIO.fail(UniqueConstraintViolation("Unique Constraint Violation on 'thid'"))
+          case Some(value) => ZIO.die(UniqueConstraintViolation("Unique Constraint Violation on 'thid'"))
       } yield ()
       _ <- storeRef.update(r => r + (record.id -> record))
     } yield ()
@@ -83,12 +83,10 @@ class CredentialRepositoryInMemory(
       to: ProtocolState
   ): RIO[WalletAccessContext, Unit] = {
     for {
+      record <- getById(recordId)
       storeRef <- walletStoreRef
-      store <- storeRef.get
-      maybeRecord = store.find((id, record) => id == recordId).map(_._2)
-      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
       _ <-
-        if (record.protocolState != from) ZIO.unit
+        if (record.protocolState != from) ZIO.die(RuntimeException(s"Invalid protocol state: $from"))
         else
           storeRef.update(r =>
             r.updated(
