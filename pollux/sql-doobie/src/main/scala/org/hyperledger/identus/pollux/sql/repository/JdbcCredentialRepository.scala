@@ -242,6 +242,13 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   ): Task[Seq[IssueCredentialRecord]] = {
     getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transact(xb)
   }
+
+  override def getById(recordId: DidCommID): RIO[WalletAccessContext, IssueCredentialRecord] =
+    for {
+      maybeRecord <- findById(recordId)
+      record <- ZIO.fromOption(maybeRecord).orDieWith(_ => RuntimeException(s"Record not found: $recordId"))
+    } yield record
+
   override def findById(
       recordId: DidCommID
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {

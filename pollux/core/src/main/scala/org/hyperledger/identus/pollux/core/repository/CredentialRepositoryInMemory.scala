@@ -43,6 +43,17 @@ class CredentialRepositoryInMemory(
     } yield 1
   }
 
+  override def getById(
+      recordId: DidCommID
+  ): RIO[WalletAccessContext, IssueCredentialRecord] = {
+    for {
+      storeRef <- walletStoreRef
+      store <- storeRef.get
+      maybeRecord = store.get(recordId)
+      record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
+    } yield record
+  }
+
   override def findById(
       recordId: DidCommID
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {

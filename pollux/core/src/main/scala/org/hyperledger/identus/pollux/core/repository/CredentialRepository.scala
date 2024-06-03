@@ -18,6 +18,10 @@ trait CredentialRepository {
       limit: Option[Int] = None
   ): RIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)]
 
+  def getById(
+      recordId: DidCommID
+  ): RIO[WalletAccessContext, IssueCredentialRecord]
+
   def findById(
       recordId: DidCommID
   ): RIO[WalletAccessContext, Option[IssueCredentialRecord]]
