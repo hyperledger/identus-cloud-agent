@@ -61,13 +61,13 @@ in
                 version = V.hurl,
                 hurlDir = "./bootstrap",
                 variables = {
-                  HURL_KEYCLOAK_BASE_URL = "http://external-keycloak-%{args.name}:8080",
-                  HURL_KEYCLOAK_ADMIN_USER = "admin",
-                  HURL_KEYCLOAK_ADMIN_PASSWORD = "admin",
-                  HURL_KEYCLOAK_REALM = args.realm,
-                  HURL_ALICE_USERNAME = "alice",
-                  HURL_ALICE_PASSWORD = "1234",
-                  HURL_ALICE_WALLET_CLIENT_ID = "alice-wallet",
+                  HURL_keycloak_base_url = "http://external-keycloak-%{args.name}:8080",
+                  HURL_keycloak_admin_user = "admin",
+                  HURL_keycloak_admin_password = "admin",
+                  HURL_keycloak_realm = args.realm,
+                  HURL_alice_username = "alice",
+                  HURL_alice_password = "1234",
+                  HURL_alice_wallet_client_id = "alice-wallet",
                 }
               },
         }
