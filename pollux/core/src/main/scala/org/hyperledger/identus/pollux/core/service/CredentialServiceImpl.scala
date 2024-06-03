@@ -8,7 +8,6 @@ import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.core.model.did.{
   CanonicalPrismDID,
-  EllipticCurve,
   PrismDID,
   VerificationRelationship
 }
@@ -611,7 +610,7 @@ private class CredentialServiceImpl(
       val d = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519keyPair.privateKey.getEncoded)
       val x = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519keyPair.publicKey.getEncoded)
       val okpJson = s"""{"kty":"OKP","crv":"Ed25519","d":"$d","x":"$x"}"""
-      val octetKeyPair = OctetKeyPair.parse(okpJson)
+      OctetKeyPair.parse(okpJson)
       JwtIssuer(
         org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
         EdSigner(ed25519keyPair),

@@ -8,18 +8,14 @@ import com.nimbusds.jose.JWSVerifier
 import com.nimbusds.jwt.SignedJWT
 import io.circe
 import io.circe.generic.auto.*
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
-import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
-import org.bouncycastle.crypto.util.SubjectPublicKeyInfoFactory
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.shared.crypto.Ed25519PublicKey
 import pdi.jwt.*
 import zio.*
 import zio.prelude.*
 
-import java.security.{KeyFactory, PublicKey}
+import java.security.PublicKey
 import java.security.interfaces.{ECPublicKey, EdECPublicKey}
-import java.security.spec.X509EncodedKeySpec
 import scala.util.{Failure, Success, Try}
 
 object JWTVerification {
