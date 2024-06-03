@@ -25,7 +25,7 @@ trait ControllerHelper {
 
   protected case class DidIdPair(myDID: DidId, theirDid: DidId)
 
-  private[this] def extractDidIdPairFromEstablishedConnection(
+  private def extractDidIdPairFromEstablishedConnection(
       record: ConnectionRecord
   ): IO[InvalidStateForOperation, DidIdPair] = {
     (record.protocolState, record.connectionResponse, record.role) match {

@@ -103,7 +103,7 @@ private[castor] trait W3CModelHelper {
             case UriOrJsonEndpoint.Uri(uri)   => Json.fromString(uri.value)
             case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json)
           }
-          Json.arr(uris: _*)
+          Json.arr(uris*)
       }
     }
   }

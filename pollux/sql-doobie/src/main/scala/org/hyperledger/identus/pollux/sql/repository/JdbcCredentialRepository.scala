@@ -189,7 +189,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         connection.pure(Nil)
       case head +: tail =>
         val conditionFragment = {
-          val nel = NonEmptyList.of(head, tail: _*)
+          val nel = NonEmptyList.of(head, tail*)
           val inClauseFragment = Fragments.in(fr"protocol_state", nel)
           if (!ignoreWithZeroRetries) inClauseFragment
           else Fragments.and(inClauseFragment, fr"meta_retries > 0")
@@ -232,7 +232,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): RIO[WalletAccessContext, Seq[IssueCredentialRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transactWallet(xa)
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*).transactWallet(xa)
   }
 
   override def getIssueCredentialRecordsByStatesForAllWallets(
@@ -240,7 +240,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): Task[Seq[IssueCredentialRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transact(xb)
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*).transact(xb)
   }
   override def getIssueCredentialRecord(
       recordId: DidCommID
@@ -426,7 +426,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       recordIds: Seq[DidCommID]
   ): RIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]] = {
     val idAsStrings = recordIds.map(_.toString)
-    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail: _*)
+    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail*)
     val inClauseFragment = Fragments.in(fr"id", nel)
 
     val cxnIO = sql"""
@@ -452,7 +452,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       recordIds: Seq[DidCommID]
   ): RIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]] = {
     val idAsStrings = recordIds.map(_.toString)
-    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail: _*)
+    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail*)
     val inClauseFragment = Fragments.in(fr"id", nel)
 
     val cxnIO = sql"""

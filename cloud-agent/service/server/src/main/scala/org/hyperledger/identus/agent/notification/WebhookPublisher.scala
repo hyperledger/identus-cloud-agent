@@ -56,7 +56,7 @@ class WebhookPublisher(
     } yield ()
   }
 
-  private[this] def pollAndNotify[A](consumer: EventConsumer[A])(implicit encoder: JsonEncoder[A]) = {
+  private def pollAndNotify[A](consumer: EventConsumer[A])(implicit encoder: JsonEncoder[A]) = {
     for {
       _ <- ZIO.log(s"Polling $parallelism event(s)")
       events <- consumer.poll(parallelism).mapError(e => UnexpectedError(e.toString))
@@ -80,7 +80,7 @@ class WebhookPublisher(
     } yield ()
   }
 
-  private[this] def generateNotifyWebhookTasks[A](
+  private def generateNotifyWebhookTasks[A](
       event: Event[A],
       webhooks: Seq[EventNotificationConfig]
   )(implicit encoder: JsonEncoder[A]): Seq[ZIO[Client, UnexpectedError, Unit]] = {
@@ -94,7 +94,7 @@ class WebhookPublisher(
       .map { case (url, headers) => notifyWebhook(event, url.toString, headers) }
   }
 
-  private[this] def notifyWebhook[A](event: Event[A], url: String, headers: Headers)(implicit
+  private def notifyWebhook[A](event: Event[A], url: String, headers: Headers)(implicit
       encoder: JsonEncoder[A]
   ): ZIO[Client, UnexpectedError, Unit] = {
     val result = for {
