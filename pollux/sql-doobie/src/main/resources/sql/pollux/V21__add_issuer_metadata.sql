@@ -1,6 +1,8 @@
 CREATE TABLE public.issuer_metadata (
     id UUID PRIMARY KEY,
     authorization_server VARCHAR(500) NOT NULL,
+    authorization_server_client_id VARCHAR(100) NOT NULL,
+    authorization_server_client_secret VARCHAR(100) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
     wallet_id UUID NOT NULL

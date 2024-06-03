@@ -2,36 +2,33 @@ package org.hyperledger.identus.oid4vci.http
 
 import org.hyperledger.identus.api.http.EndpointOutputs.statusCodeMatcher
 import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.iam.authentication.AuthenticationError
 import sttp.model.StatusCode
 import sttp.tapir.{oneOfVariantValueMatcher, Schema}
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.Schema.annotations.encodedName
 import zio.json.{jsonField, DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
-// According to OIDC spec and RFC6750, the following errors are expected to be returned by the authorization server
-// https://www.rfc-editor.org/rfc/rfc6750.html#section-3.1
-object AuthorizationErrors {
+import scala.util.Try
 
-  val invalidRequest = oneOfVariantValueMatcher(
-    StatusCode.BadRequest,
-    jsonBody[CredentialErrorResponse].description(
-      """The request is missing a required parameter, includes an unsupported parameter or parameter value, repeats the same parameter, uses more than one method for including an access token, or is otherwise malformed.""".stripMargin
-    )
-  )(statusCodeMatcher(StatusCode.BadRequest))
+type ExtendedErrorResponse = ErrorResponse | CredentialErrorResponse
 
-  val invalidToken = oneOfVariantValueMatcher(
-    StatusCode.Unauthorized,
-    jsonBody[CredentialErrorResponse].description(
-      "The access token provided is expired, revoked, malformed, or invalid for other reason"
-    )
-  )(statusCodeMatcher(StatusCode.Unauthorized))
-
-  val insufficientScope = oneOfVariantValueMatcher(
-    StatusCode.Forbidden,
-    jsonBody[CredentialErrorResponse].description(
-      "The request requires higher privileges than provided by the access token"
-    )
-  )(statusCodeMatcher(StatusCode.Forbidden))
+object ExtendedErrorResponse {
+  given schema: Schema[ExtendedErrorResponse] = Schema.schemaForEither[ErrorResponse, CredentialErrorResponse].as
+  given encoder: JsonEncoder[ExtendedErrorResponse] =
+    ErrorResponse.encoder
+      .orElseEither(CredentialErrorResponse.encoder)
+      .contramap {
+        case response: ErrorResponse           => Left(response)
+        case response: CredentialErrorResponse => Right(response)
+      }
+  given decoder: JsonDecoder[ExtendedErrorResponse] =
+    ErrorResponse.decoder
+      .orElseEither(CredentialErrorResponse.decoder)
+      .map {
+        case Left(response)  => response
+        case Right(response) => response
+      }
 }
 
 case class CredentialErrorResponse(
@@ -51,6 +48,15 @@ object CredentialErrorResponse {
   given schema: Schema[CredentialErrorResponse] = Schema.derived
   given encoder: JsonEncoder[CredentialErrorResponse] = DeriveJsonEncoder.gen
   given decoder: JsonDecoder[CredentialErrorResponse] = DeriveJsonDecoder.gen
+
+  given Conversion[AuthenticationError, CredentialErrorResponse] = ae => {
+    import AuthenticationError.*
+    val error = ae match {
+      case _: InvalidCredentials => CredentialErrorCode.invalid_token
+      case _                     => CredentialErrorCode.invalid_request
+    }
+    CredentialErrorResponse(error, Some(ae.message))
+  }
 }
 
 enum CredentialErrorCode {
@@ -66,8 +72,11 @@ enum CredentialErrorCode {
 
 object CredentialErrorCode {
   given schema: Schema[CredentialErrorCode] = Schema.derivedEnumeration.defaultStringBased
-  given encoder: JsonEncoder[CredentialErrorCode] = DeriveJsonEncoder.gen
-  given decoder: JsonDecoder[CredentialErrorCode] = DeriveJsonDecoder.gen
+  given encoder: JsonEncoder[CredentialErrorCode] = JsonEncoder.string.contramap(_.toString())
+  given decoder: JsonDecoder[CredentialErrorCode] =
+    JsonDecoder.string.mapOrFail(s =>
+      Try(CredentialErrorCode.valueOf(s)).toOption.toRight(s"Unknown CredentialErrorCode: $s")
+    )
 
   implicit class CredentialErrorCodeOps(val credentialErrorCode: CredentialErrorCode) extends AnyVal {
     def toHttpStatusCode: StatusCode = CredentialErrorCode.toHttpStatusCode(credentialErrorCode)

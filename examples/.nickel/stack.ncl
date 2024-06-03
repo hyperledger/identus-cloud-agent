@@ -68,6 +68,8 @@ in
                   HURL_alice_username = "alice",
                   HURL_alice_password = "1234",
                   HURL_alice_wallet_client_id = "alice-wallet",
+                  HURL_agent_client_id = "cloud-agent",
+                  HURL_agent_client_secret = "secret",
                 }
               },
         }
@@ -115,7 +117,6 @@ in
         }
       in
       {
-        version = "3",
         configs = _caddy.makeCaddyConfig caddyArgs,
         volumes = {
           pg_data_node = {},

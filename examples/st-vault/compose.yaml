@@ -128,7 +128,6 @@ services:
     image: hashicorp/vault:1.15.6
     ports:
     - 8200:8200
-version: '3'
 volumes:
   pg_data_issuer: {}
   pg_data_node: {}
