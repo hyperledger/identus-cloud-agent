@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.model.presentation
 
-import io.circe.Json
 import io.circe.parser.*
 import io.circe.syntax.*
+import io.circe.Json
 import munit.*
 
 class PresentationAttachmentSpec extends ZSuite {

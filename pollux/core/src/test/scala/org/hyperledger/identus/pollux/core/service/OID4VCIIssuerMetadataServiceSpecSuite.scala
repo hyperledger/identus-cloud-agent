@@ -1,14 +1,15 @@
 package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
-import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.CredentialConfigurationNotFound
-import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.InvalidSchemaId
-import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.IssuerIdNotFound
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.{
+  CredentialConfigurationNotFound,
+  InvalidSchemaId,
+  IssuerIdNotFound
+}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio.{ZIO, ZLayer}
 import zio.test.*
 import zio.test.Assertion.*
-import zio.{ZIO, ZLayer}
 
 import java.net.URI
 

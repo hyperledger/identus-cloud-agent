@@ -1,7 +1,7 @@
 package org.hyperledger.identus.api.util
 
-import org.hyperledger.identus.agent.server.AgentHttpServer
 import org.hyperledger.identus.agent.server.http.DocModels
+import org.hyperledger.identus.agent.server.AgentHttpServer
 import org.hyperledger.identus.castor.controller.{DIDController, DIDRegistrarController}
 import org.hyperledger.identus.connect.controller.ConnectionController
 import org.hyperledger.identus.credential.status.controller.CredentialStatusController

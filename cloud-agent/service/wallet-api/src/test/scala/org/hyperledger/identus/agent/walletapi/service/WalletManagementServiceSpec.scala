@@ -1,20 +1,17 @@
 package org.hyperledger.identus.agent.walletapi.service
 
-import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.model.WalletSeed
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.DuplicatedWalletSeed
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.TooManyPermittedWallet
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletSecretStorage
+import org.hyperledger.identus.agent.walletapi.model.{Wallet, WalletSeed}
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.{
+  DuplicatedWalletSeed,
+  TooManyPermittedWallet
+}
+import org.hyperledger.identus.agent.walletapi.sql.{JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
 import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
 import org.hyperledger.identus.agent.walletapi.vault.VaultWalletSecretStorage
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import org.hyperledger.identus.test.container.DBTestUtils
-import org.hyperledger.identus.test.container.VaultTestContainerSupport
+import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

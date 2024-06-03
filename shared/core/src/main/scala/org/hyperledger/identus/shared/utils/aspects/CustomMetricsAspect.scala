@@ -1,10 +1,11 @@
 package org.hyperledger.identus.shared.utils.aspects
 
-import zio.*
-import scala.collection.mutable.{Map => MutMap}
-import zio.metrics.*
-import java.time.{Instant, Clock, Duration}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
+import zio.*
+import zio.metrics.*
+
+import java.time.{Clock, Duration, Instant}
+import scala.collection.mutable.Map as MutMap
 
 object CustomMetricsAspect {
   private val checkpoints: MutMap[String, Instant] = MutMap.empty

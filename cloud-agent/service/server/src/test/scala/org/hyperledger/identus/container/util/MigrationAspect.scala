@@ -2,9 +2,9 @@ package org.hyperledger.identus.container.util
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.flywaydb.core.Flyway
-import zio.ZIO
-import zio.test.TestAspect.{beforeAll, before}
 import zio.test.{TestAspect, TestAspectAtLeastR}
+import zio.test.TestAspect.{before, beforeAll}
+import zio.ZIO
 
 object MigrationAspects {
   def migrate(schema: String, paths: String*): TestAspectAtLeastR[PostgreSQLContainer] = {

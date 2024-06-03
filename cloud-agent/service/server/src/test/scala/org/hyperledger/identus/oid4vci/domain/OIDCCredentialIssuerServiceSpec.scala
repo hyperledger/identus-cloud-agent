@@ -16,10 +16,10 @@ import org.hyperledger.identus.pollux.core.repository.{
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.vc.jwt.PrismDidResolver
 import org.hyperledger.identus.shared.models.WalletId
+import zio.{URLayer, ZIO, ZLayer}
 import zio.mock.MockSpecDefault
 import zio.test.*
 import zio.test.Assertion.*
-import zio.{URLayer, ZIO, ZLayer}
 
 object OIDCCredentialIssuerServiceSpec extends MockSpecDefault with CredentialServiceSpecHelper {
 

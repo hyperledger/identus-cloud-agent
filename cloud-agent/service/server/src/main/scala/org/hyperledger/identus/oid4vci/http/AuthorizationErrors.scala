@@ -3,10 +3,10 @@ package org.hyperledger.identus.oid4vci.http
 import org.hyperledger.identus.api.http.EndpointOutputs.statusCodeMatcher
 import org.hyperledger.identus.api.http.ErrorResponse
 import sttp.model.StatusCode
-import sttp.tapir.Schema.annotations.encodedName
+import sttp.tapir.{oneOfVariantValueMatcher, Schema}
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{Schema, oneOfVariantValueMatcher}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder, jsonField}
+import sttp.tapir.Schema.annotations.encodedName
+import zio.json.{jsonField, DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 // According to OIDC spec and RFC6750, the following errors are expected to be returned by the authorization server
 // https://www.rfc-editor.org/rfc/rfc6750.html#section-3.1

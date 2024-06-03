@@ -3,10 +3,10 @@ package org.hyperledger.identus.pollux.credentialschema.http
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.Input
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponse.annotations
+import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate, validateEach}
 import sttp.tapir.Validator.*
-import sttp.tapir.json.zio.schemaForZioJsonValue
 import zio.json.*
 import zio.json.ast.Json
 

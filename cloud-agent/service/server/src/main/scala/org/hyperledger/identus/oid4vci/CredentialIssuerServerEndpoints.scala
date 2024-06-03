@@ -1,11 +1,11 @@
 package org.hyperledger.identus.oid4vci
 
-import org.hyperledger.identus.LogUtils.*
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import org.hyperledger.identus.oid4vci.controller.CredentialIssuerController
 import org.hyperledger.identus.oid4vci.http.{CredentialErrorResponse, NonceResponse}
+import org.hyperledger.identus.LogUtils.*
 import sttp.tapir.ztapir.*
 import zio.*
 

@@ -1,7 +1,6 @@
 package org.hyperledger.identus.pollux.anoncreds
 
 import uniffi.anoncreds_wrapper.{
-  Nonce,
   Credential as UniffiCredential,
   CredentialDefinition as UniffiCredentialDefinition,
   CredentialDefinitionPrivate as UniffiCredentialDefinitionPrivate,
@@ -11,6 +10,7 @@ import uniffi.anoncreds_wrapper.{
   CredentialRequestMetadata as UniffiCredentialRequestMetadata,
   CredentialRequests as UniffiCredentialRequests,
   LinkSecret as UniffiLinkSecret,
+  Nonce,
   Presentation as UniffiPresentation,
   PresentationRequest as UniffiPresentationRequest,
   Schema as UniffiSchema

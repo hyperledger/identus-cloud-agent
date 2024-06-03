@@ -4,7 +4,7 @@ import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.castor.controller.http.DIDResolutionMetadata.annotations
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 @description("[DID resolution metadata](https://www.w3.org/TR/did-core/#did-resolution-metadata)")
 final case class DIDResolutionMetadata(

@@ -1,8 +1,8 @@
 package org.hyperledger.identus.sharedtest.containers
 
 import com.dimafeng.testcontainers.{SingleContainer, VaultContainer}
-import org.testcontainers.vault.{VaultContainer => JavaVaultContainer}
 import org.testcontainers.utility.DockerImageName
+import org.testcontainers.vault.VaultContainer as JavaVaultContainer
 
 /** See PostgreSQLContainerCustom for explanation */
 class VaultContainerCustom(

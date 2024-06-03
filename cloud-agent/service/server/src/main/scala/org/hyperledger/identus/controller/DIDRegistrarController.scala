@@ -1,26 +1,30 @@
 package org.hyperledger.identus.castor.controller
 
+import org.hyperledger.identus.agent.walletapi.model.error.{
+  CreateManagedDIDError,
+  GetManagedDIDError,
+  PublishManagedDIDError,
+  UpdateManagedDIDError
+}
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDDetail
-import org.hyperledger.identus.agent.walletapi.model.error.CreateManagedDIDError
-import org.hyperledger.identus.agent.walletapi.model.error.GetManagedDIDError
-import org.hyperledger.identus.agent.walletapi.model.error.PublishManagedDIDError
-import org.hyperledger.identus.agent.walletapi.model.error.UpdateManagedDIDError
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import org.hyperledger.identus.api.http.model.CollectionStats
-import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.util.PaginationUtils
-import org.hyperledger.identus.castor.controller.http.CreateManagedDIDResponse
-import org.hyperledger.identus.castor.controller.http.CreateManagedDidRequest
-import org.hyperledger.identus.castor.controller.http.DIDOperationResponse
-import org.hyperledger.identus.castor.controller.http.ManagedDID
-import org.hyperledger.identus.castor.controller.http.ManagedDIDPage
-import org.hyperledger.identus.castor.controller.http.UpdateManagedDIDRequest
+import org.hyperledger.identus.castor.controller.http.{
+  CreateManagedDIDResponse,
+  CreateManagedDidRequest,
+  DIDOperationResponse,
+  ManagedDID,
+  ManagedDIDPage,
+  UpdateManagedDIDRequest
+}
 import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.Traverse.*
-import scala.language.implicitConversions
 import zio.*
+
+import scala.language.implicitConversions
 
 trait DIDRegistrarController {
   def listManagedDid(paginationInput: PaginationInput)(implicit

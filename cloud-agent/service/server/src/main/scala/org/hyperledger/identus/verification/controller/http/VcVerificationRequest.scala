@@ -4,8 +4,10 @@ import org.hyperledger.identus.api.http.{Annotation, ErrorResponse}
 import org.hyperledger.identus.pollux.core.service.verification.VcVerificationRequest as ServiceVcVerificationRequest
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import zio.{IO, *}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder, *}
+import zio.json.ast.Json
+import zio.json.ast.Json.*
 
 import java.time.OffsetDateTime
 
@@ -29,8 +31,9 @@ object VcVerificationRequest {
         )
 
     object parameterizableVcVerifications
-        extends Annotation[List[ParameterizableVcVerification]](
-          description = "The list of Verifications to verify. All verifications run if Verifications left empty",
+        extends Annotation[String](
+          description =
+            "The list of verifications to perform on the credential. If the list is empty, all available verifications will be performed.",
           example = List(
             ParameterizableVcVerification(VcVerification.SignatureVerification, None),
             ParameterizableVcVerification(VcVerification.IssuerIdentification, Some(DidParameter("did:prism:issuer"))),
@@ -50,7 +53,7 @@ object VcVerificationRequest {
             ParameterizableVcVerification(VcVerification.AlgorithmVerification, None),
             ParameterizableVcVerification(VcVerification.SchemaCheck, None),
             ParameterizableVcVerification(VcVerification.SemanticCheckOfClaims, None)
-          )
+          ).toJson
         )
   }
 

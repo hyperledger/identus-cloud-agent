@@ -4,8 +4,7 @@ import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialConfiguration
 import sttp.tapir.Schema
 import zio.json.*
 
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import java.time.{OffsetDateTime, ZoneOffset}
 import scala.language.implicitConversions
 
 final case class CreateCredentialConfigurationRequest(

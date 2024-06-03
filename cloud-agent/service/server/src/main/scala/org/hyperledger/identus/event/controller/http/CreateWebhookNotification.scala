@@ -3,7 +3,7 @@ package org.hyperledger.identus.event.controller.http
 import org.hyperledger.identus.api.http.Annotation
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder, JsonDecoder}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 final case class CreateWebhookNotification(
     @description(CreateWebhookNotification.annotations.url.description)

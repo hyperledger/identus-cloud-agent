@@ -24,12 +24,13 @@ import org.hyperledger.identus.connect.controller.ConnectionControllerImpl
 import org.hyperledger.identus.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
 import org.hyperledger.identus.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
 import org.hyperledger.identus.credential.status.controller.CredentialStatusControllerImpl
+import org.hyperledger.identus.didcomm.controller.DIDCommControllerImpl
 import org.hyperledger.identus.event.controller.EventControllerImpl
 import org.hyperledger.identus.event.notification.EventNotificationServiceImpl
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
 import org.hyperledger.identus.iam.authentication.apikey.JdbcAuthenticationRepository
-import org.hyperledger.identus.iam.authorization.DefaultPermissionManagementService
+import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
 import org.hyperledger.identus.iam.authorization.core.EntityPermissionManagementService
+import org.hyperledger.identus.iam.authorization.DefaultPermissionManagementService
 import org.hyperledger.identus.iam.entity.http.controller.{EntityController, EntityControllerImpl}
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementControllerImpl
 import org.hyperledger.identus.issue.controller.IssueControllerImpl
@@ -45,12 +46,12 @@ import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaControllerImpl,
   VerificationPolicyControllerImpl
 }
-import org.hyperledger.identus.pollux.sql.repository.JdbcOID4VCIIssuerMetadataRepository
 import org.hyperledger.identus.pollux.sql.repository.{
   JdbcCredentialDefinitionRepository,
   JdbcCredentialRepository,
   JdbcCredentialSchemaRepository,
   JdbcCredentialStatusListRepository,
+  JdbcOID4VCIIssuerMetadataRepository,
   JdbcPresentationRepository,
   JdbcVerificationPolicyRepository,
   Migrations as PolluxMigrations
@@ -59,11 +60,10 @@ import org.hyperledger.identus.presentproof.controller.PresentProofControllerImp
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.system.controller.SystemControllerImpl
 import org.hyperledger.identus.verification.controller.VcVerificationControllerImpl
-import org.hyperledger.identus.didcomm.controller.DIDCommControllerImpl
 import zio.*
 import zio.logging.*
-import zio.logging.LogFormat.*
 import zio.logging.backend.SLF4J
+import zio.logging.LogFormat.*
 import zio.metrics.connectors.micrometer
 import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics

@@ -1,14 +1,12 @@
 package org.hyperledger.identus.pollux.core.repository
 
+import org.hyperledger.identus.pollux.core.model.oid4vci.{CredentialConfiguration, CredentialIssuer}
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
-import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialConfiguration
-import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialIssuer
 import org.hyperledger.identus.shared.db.Errors.UnexpectedAffectedRow
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio.{ZIO, ZLayer}
 import zio.test.*
 import zio.test.Assertion.*
-import zio.{ZIO, ZLayer}
 
 import java.net.URI
 import java.time.Instant

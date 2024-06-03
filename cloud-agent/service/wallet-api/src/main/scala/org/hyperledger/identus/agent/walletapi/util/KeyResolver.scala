@@ -1,18 +1,14 @@
 package org.hyperledger.identus.agent.walletapi.util
 
-import org.hyperledger.identus.agent.walletapi.model.ManagedDIDHdKeyPath
-import org.hyperledger.identus.agent.walletapi.model.ManagedDIDKeyMeta
-import org.hyperledger.identus.agent.walletapi.model.ManagedDIDRandKeyMeta
-import org.hyperledger.identus.agent.walletapi.model.WalletSeed
-import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.DIDSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
-import org.hyperledger.identus.castor.core.model.did.EllipticCurve
-import org.hyperledger.identus.castor.core.model.did.PrismDID
-import org.hyperledger.identus.shared.crypto.Apollo
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
-import org.hyperledger.identus.shared.crypto.X25519KeyPair
+import org.hyperledger.identus.agent.walletapi.model.{
+  ManagedDIDHdKeyPath,
+  ManagedDIDKeyMeta,
+  ManagedDIDRandKeyMeta,
+  WalletSeed
+}
+import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage, WalletSecretStorage}
+import org.hyperledger.identus.castor.core.model.did.{EllipticCurve, PrismDID}
+import org.hyperledger.identus.shared.crypto.{Apollo, Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 

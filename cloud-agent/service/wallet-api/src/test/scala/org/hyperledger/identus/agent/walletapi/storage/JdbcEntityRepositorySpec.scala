@@ -1,11 +1,11 @@
 package org.hyperledger.identus.agent.walletapi.storage
 
+import org.hyperledger.identus.agent.walletapi.model.{Entity, Wallet}
 import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.{
   EntityAlreadyExists,
   EntityNotFound,
   EntityWalletNotFound
 }
-import org.hyperledger.identus.agent.walletapi.model.{Entity, Wallet}
 import org.hyperledger.identus.agent.walletapi.sql.{EntityRepository, JdbcEntityRepository, JdbcWalletNonSecretStorage}
 import org.hyperledger.identus.shared.models.WalletId
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport

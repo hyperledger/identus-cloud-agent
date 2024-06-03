@@ -1,7 +1,7 @@
 package org.hyperledger.identus.oid4vci.http
 
-import sttp.tapir.Schema
 import sttp.tapir.json.zio.schemaForZioJsonValue
+import sttp.tapir.Schema
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class CredentialOfferRequest(

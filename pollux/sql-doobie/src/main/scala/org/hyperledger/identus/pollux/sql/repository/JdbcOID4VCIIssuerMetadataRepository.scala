@@ -4,8 +4,7 @@ import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor
-import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialConfiguration
-import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialIssuer
+import org.hyperledger.identus.pollux.core.model.oid4vci.{CredentialConfiguration, CredentialIssuer}
 import org.hyperledger.identus.pollux.core.repository.OID4VCIIssuerMetadataRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*

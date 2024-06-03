@@ -1,7 +1,6 @@
 package org.hyperledger.identus.pollux.core.model.schema.validator
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.networknt.schema.*
 import com.networknt.schema.SpecVersion.VersionFlag
 import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError.*
