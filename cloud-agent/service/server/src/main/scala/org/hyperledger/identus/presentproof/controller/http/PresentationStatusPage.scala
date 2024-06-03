@@ -8,7 +8,9 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 final case class PresentationStatusPage(
     @description(annotations.contents.description)
-    @encodedExample(annotations.contents.example)
+    @encodedExample( // This is a hammer - to be improved in the future
+      JsonEncoder[Seq[PresentationStatus]].encodeJson(annotations.contents.example)
+    )
     contents: Seq[PresentationStatus],
     @description(annotations.self.description)
     @encodedExample(annotations.self.example)
