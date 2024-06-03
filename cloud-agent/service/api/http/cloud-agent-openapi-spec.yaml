@@ -1925,7 +1925,8 @@ paths:
       tags:
       - Present Proof
       summary: Gets the list of proof presentation records.
-      description: list of presentation statuses
+      description: Get the list of proof presentation records and its status that
+        the Agent have at moment
       operationId: getAllPresentation
       parameters:
       - name: offset
@@ -1946,6 +1947,7 @@ paths:
           format: int32
       - name: thid
         in: query
+        description: Filter by the DID Comm message's 'thid' of presentProof
         required: false
         schema:
           type: string
@@ -4327,7 +4329,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2024-05-27T18:32:07.650296597Z'
+          example: '2024-06-03T11:49:38.476120401+01:00'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -4627,7 +4629,11 @@ components:
           items:
             $ref: '#/components/schemas/PresentationStatus'
           description: A sequence of Presentation objects.
-          example: []
+          example:
+          - PresentationStatus(938bfc23-f78d-4734-9bf3-6dccf300856f,04112f4d-e894-4bff-a706-85b3e7190a2c,Verifier,RequestSent,List(),List(),Some(e0d81be9-47ca-4e0b-b8a7-325e8c3abc2f),5)
+          - PresentationStatus(d22158b0-c650-48ea-be85-2920a845ef26,04112f4d-e894-4bff-a706-85b3e7190a2c,Prover,RequestReceived,List(),List(),None,5)
+          - PresentationStatus(fd3f5e54-fae9-4f72-9413-ec66aab83a57,6b42fd91-4c98-40ae-a371-a1fd1a39e05e,Prover,PresentationPending,List(),List(),None,5)
+          - PresentationStatus(e56dd3e0-79d0-45f4-ba6c-ff857211b07b,6b42fd91-4c98-40ae-a371-a1fd1a39e05e,Verifier,PresentationVerified,List(),List({"claimsToDisclose":{"emailAddress":{},"givenName":{}},"presentation":"{\"protected\":\"eyJhbGciOiJFZERTQSJ9\",\"payload\":\"eyJfc2QiOlsiMGl4d0tIV0dzbzFvZThFR0hQd2tGYW9EZE1TRFQ3SmgyNkZGSm1ZbGRnRSIsIjQ4VlFXZS1tcjBibHMyOWpicHFKeDNxX2dYY0k5N3dHcEpsZnRoNXQwMGciLCI0Wk9xanFNZVNUVHRKQTNJRExsc3ZXN0dTNzRIemNxY3N2NVFoZk1valE4IiwiUjhGRE0ydXB1V09mNmVJMVA5ckNPdG12c3puVWFFYXpncVNuN0JfeTE0MCIsIlU5MmpfUHlpcHN2TERNQTlDaVRWbnl3bUFzYTM4S2lDWm5TeVhyUE5mNG8iLCJldFB1Mmc5ajdRd01rZ3g5VnpEX1RnNTNUV3UydVpadk1KeHRnNEJ1WGJBIiwidGV3RG1LWklNcS10bUNrMkpqZU0wajNYbU1aUUFLN01heENVNlF4dm9OMCJdLCJfc2RfYWxnIjoic2hhLTI1NiIsImlzcyI6ImRpZDpwcmlzbToxMmEzOWI1YWEwZTcxODI3ZmMxYzYwMjg1ZDVlZWJjMTk0Yjg2NzFhYTJmY2QxZDM2NDBkMGYwMTBlMzliZmVlIiwiaWF0IjoxNzE3NDEwMzgzLCJleHAiOjE3MjAwMDIzODN9\",\"signature\":\"953FfSRU_0Y2q0ERrFPzbXJ_hkF0YQe5efwESaZwtXDCn8aanD3MUstp3lzqGZkhvcWRdtCCpIxzhy0zgKwLBg\",\"disclosures\":[\"WyI0SHF6MDZCeG5fRlJMb2hWX2lWNXp3IiwgImdpdmVuTmFtZSIsICJBbGljZSJd\",\"WyJLUnNYYU01c3NXZTl4UEhqQnNjT213IiwgImVtYWlsQWRkcmVzcyIsICJhbGljZUB3b25kZXJsYW5kLmNvbSJd\"],\"kb_jwt\":null}"}),Some(e0d81be9-47ca-4e0b-b8a7-325e8c3abc2f),5)
         self:
           type: string
           description: The reference to the presentation collection itself.
@@ -4642,12 +4648,16 @@ components:
           example: 1
         next:
           type: string
-          description: URL of the next page (if available)
-          example: ''
+          description: An optional string field containing the URL of the next page
+            of results. If the API response does not contain any more pages, this
+            field should be set to None.
+          example: /present-proof/presentations?offset=20&limit=10
         previous:
           type: string
-          description: URL of the previous page (if available)
-          example: ''
+          description: An optional string field containing the URL of the previous
+            page of results. If the API response is the first page of results, this
+            field should be set to None.
+          example: /present-proof/presentations?offset=0&limit=10
     Proof:
       required:
       - type
@@ -4838,6 +4848,12 @@ components:
             applicable on the prover side when the action is `request-accept`.
         anoncredPresentationRequest:
           $ref: '#/components/schemas/AnoncredCredentialProofsV1'
+        claims:
+          $ref: '#/components/schemas/Obj'
+        credentialFormat:
+          type: string
+          description: The credential format (default to 'JWT')
+          example: JWT
     RequestPresentationInput:
       required:
       - connectionId
@@ -4860,6 +4876,8 @@ components:
           example: []
         anoncredPresentationRequest:
           $ref: '#/components/schemas/AnoncredPresentationRequestV1'
+        claims:
+          $ref: '#/components/schemas/Obj'
         credentialFormat:
           type: string
           description: The credential format (default to 'JWT')
@@ -4930,7 +4948,7 @@ components:
           type: string
           description: Issuance timestamp of status list credential
           format: date-time
-          example: '2024-05-27T18:32:07.694793558Z'
+          example: '2024-06-03T10:49:38.511689795Z'
         credentialSubject:
           $ref: '#/components/schemas/CredentialSubject'
         proof:
