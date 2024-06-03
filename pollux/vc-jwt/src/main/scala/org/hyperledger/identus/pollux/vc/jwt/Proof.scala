@@ -250,7 +250,8 @@ object EddsaJcs2022ProofGenerator {
 }
 
 case class EcdsaJcs2019Proof(proofValue: String, verificationMethod: String, maybeCreated: Option[Instant])
-    extends Proof with DataIntegrityProof {
+    extends Proof
+    with DataIntegrityProof {
   override val created: Option[Instant] = maybeCreated
   override val `type`: String = "DataIntegrityProof"
   override val proofPurpose: String = "assertionMethod"
@@ -258,7 +259,8 @@ case class EcdsaJcs2019Proof(proofValue: String, verificationMethod: String, may
 }
 
 case class EddsaJcs2022Proof(proofValue: String, verificationMethod: String, maybeCreated: Option[Instant])
-    extends Proof with DataIntegrityProof{
+    extends Proof
+    with DataIntegrityProof {
   override val created: Option[Instant] = maybeCreated
   override val `type`: String = "DataIntegrityProof"
   override val proofPurpose: String = "assertionMethod"
@@ -319,7 +321,8 @@ object EcdsaSecp256k1Signature2019Proof {
 }
 
 object EcdsaJcs2019Proof {
-  given proofEncoder: Encoder[EcdsaJcs2019Proof] = DataIntegrityProofCodecs.proofEncoder[EcdsaJcs2019Proof]("ecdsa-jcs-2019")
+  given proofEncoder: Encoder[EcdsaJcs2019Proof] =
+    DataIntegrityProofCodecs.proofEncoder[EcdsaJcs2019Proof]("ecdsa-jcs-2019")
 
   given proofDecoder: Decoder[EcdsaJcs2019Proof] = DataIntegrityProofCodecs.proofDecoder[EcdsaJcs2019Proof](
     (proofValue, verificationMethod, created) => EcdsaJcs2019Proof(proofValue, verificationMethod, created),
@@ -328,7 +331,8 @@ object EcdsaJcs2019Proof {
 }
 
 object EddsaJcs2022Proof {
-  given proofEncoder: Encoder[EddsaJcs2022Proof] = DataIntegrityProofCodecs.proofEncoder[EddsaJcs2022Proof]("eddsa-jcs-2022")
+  given proofEncoder: Encoder[EddsaJcs2022Proof] =
+    DataIntegrityProofCodecs.proofEncoder[EddsaJcs2022Proof]("eddsa-jcs-2022")
 
   given proofDecoder: Decoder[EddsaJcs2022Proof] = DataIntegrityProofCodecs.proofDecoder[EddsaJcs2022Proof](
     (proofValue, verificationMethod, created) => EddsaJcs2022Proof(proofValue, verificationMethod, created),

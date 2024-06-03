@@ -8,13 +8,13 @@ import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import io.circe.*
 import org.bouncycastle.jce.spec.ECNamedCurveSpec
 import org.bouncycastle.jce.ECNamedCurveTable
+import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
 import zio.*
+
 import java.security.*
 import java.security.interfaces.ECPublicKey
-import scala.jdk.CollectionConverters.*
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
 import java.util.Base64
-
+import scala.jdk.CollectionConverters.*
 
 opaque type JWT = String
 

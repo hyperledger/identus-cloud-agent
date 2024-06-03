@@ -2,6 +2,7 @@ package org.hyperledger.identus.pollux.vc.jwt
 
 import io.circe.*
 import io.circe.syntax.*
+
 import java.time.Instant
 import java.time.ZoneOffset
 
