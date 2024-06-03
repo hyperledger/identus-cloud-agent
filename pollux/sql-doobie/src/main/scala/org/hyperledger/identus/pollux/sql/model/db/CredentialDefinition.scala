@@ -7,8 +7,8 @@ import io.getquill.idiom.*
 import org.hyperledger.identus.pollux.core.model.schema.{CorrectnessProof, Definition}
 import org.hyperledger.identus.shared.models.WalletId
 
-import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
+import java.time.OffsetDateTime
 import java.util.UUID
 
 case class CredentialDefinition(

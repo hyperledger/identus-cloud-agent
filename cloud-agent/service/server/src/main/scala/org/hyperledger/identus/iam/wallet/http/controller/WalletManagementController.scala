@@ -1,26 +1,21 @@
 package org.hyperledger.identus.iam.wallet.http.controller
 
-import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.model.WalletSeed
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError
+import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Wallet, WalletSeed}
+import org.hyperledger.identus.agent.walletapi.service.{WalletManagementService, WalletManagementServiceError}
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.TooManyPermittedWallet
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
-import org.hyperledger.identus.api.http.model.CollectionStats
-import org.hyperledger.identus.api.http.model.PaginationInput
+import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.util.PaginationUtils
 import org.hyperledger.identus.iam.authentication.oidc.KeycloakEntity
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement
-import org.hyperledger.identus.iam.wallet.http.model.CreateWalletRequest
-import org.hyperledger.identus.iam.wallet.http.model.CreateWalletUmaPermissionRequest
-import org.hyperledger.identus.iam.wallet.http.model.WalletDetail
-import org.hyperledger.identus.iam.wallet.http.model.WalletDetailPage
-import org.hyperledger.identus.shared.models.HexString
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.iam.wallet.http.model.{
+  CreateWalletRequest,
+  CreateWalletUmaPermissionRequest,
+  WalletDetail,
+  WalletDetailPage
+}
+import org.hyperledger.identus.shared.models.{HexString, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.shared.models.WalletAdministrationContext.Admin
-import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.util.UUID

@@ -20,8 +20,8 @@ import zio.*
 import zio.interop.catz.*
 
 import java.time.Instant
-import java.util as ju
 import java.util.UUID
+import java.util as ju
 
 class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task]) extends ConnectionRepository {
 

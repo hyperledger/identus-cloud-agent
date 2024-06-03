@@ -1,11 +1,11 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.Json
 import io.circe.parser.*
 import io.circe.syntax.*
-import org.hyperledger.identus.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
-import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
+import io.circe.Json
 import munit.*
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
+import org.hyperledger.identus.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
 class RequestCredentialSpec extends ZSuite {
 
   test("Holder RequestCredential") {

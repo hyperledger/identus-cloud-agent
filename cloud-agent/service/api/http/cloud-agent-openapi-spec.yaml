@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Identus Cloud Agent API Reference
-  version: 1.34.0
+  version: 1.35.0
   description: |2
 
     The Identus Cloud Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
@@ -2139,11 +2139,11 @@ paths:
     post:
       tags:
       - Verifiable Credentials Verification
-      summary: As a Verifier, verify a set of credentials
-      description: As a Verifier, verify a set of credentials
+      summary: Verify a set of credentials as a Verifier
+      description: Endpoint to verify a set of verifiable credentials as a Verifier.
       operationId: verify
       requestBody:
-        description: List of VC to verify
+        description: List of verifiable credentials to verify
         content:
           application/json:
             schema:
@@ -2153,7 +2153,7 @@ paths:
         required: false
       responses:
         '200':
-          description: List of VC verification outcome
+          description: List of verifiable credentials verification outcomes
           content:
             application/json:
               schema:
@@ -4108,7 +4108,9 @@ components:
       properties:
         dateTime:
           type: string
+          description: The date and time to use for verification.
           format: date-time
+          example: '2022-03-10T12:00:00Z'
         parameterType:
           type: string
     DidOperationSubmission:
@@ -4133,6 +4135,8 @@ components:
       properties:
         did:
           type: string
+          description: The DID (Decentralized Identifier) to use for verification.
+          example: did:prism:issuer
         parameterType:
           type: string
     EntityResponse:
@@ -4329,7 +4333,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2024-06-03T11:49:38.476120401+01:00'
+          example: '2024-06-03T11:26:32.560032217Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -4948,7 +4952,7 @@ components:
           type: string
           description: Issuance timestamp of status list credential
           format: date-time
-          example: '2024-06-03T10:49:38.511689795Z'
+          example: '2024-06-03T11:26:32.595943763Z'
         credentialSubject:
           $ref: '#/components/schemas/CredentialSubject'
         proof:
@@ -5051,6 +5055,7 @@ components:
         both be empty.
     VcVerification:
       type: string
+      description: The type of verification to perform.
       enum:
       - AlgorithmVerification
       - AudienceCheck
@@ -5065,6 +5070,7 @@ components:
       - SignatureVerification
       - SubjectVerification
     VcVerificationParameter:
+      description: Optional parameter for the verification.
       oneOf:
       - $ref: '#/components/schemas/DateTimeParameter'
       - $ref: '#/components/schemas/DidParameter'
@@ -5086,21 +5092,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ParameterizableVcVerification'
-          description: The list of Verifications to verify. All verifications run
-            if Verifications left empty
+          description: The list of verifications to perform on the credential. If
+            the list is empty, all available verifications will be performed.
           example:
-          - ParameterizableVcVerification(SignatureVerification,None)
-          - ParameterizableVcVerification(IssuerIdentification,Some(DidParameter(did:prism:issuer)))
-          - ParameterizableVcVerification(ExpirationCheck,Some(DateTimeParameter(2022-03-10T12:00Z)))
-          - ParameterizableVcVerification(NotBeforeCheck,Some(DateTimeParameter(2022-03-10T12:00Z)))
-          - ParameterizableVcVerification(AudienceCheck,Some(DidParameter(did:prism:holder)))
-          - ParameterizableVcVerification(SubjectVerification,None)
-          - ParameterizableVcVerification(IntegrityOfClaims,None)
-          - ParameterizableVcVerification(ComplianceWithStandards,None)
-          - ParameterizableVcVerification(RevocationCheck,None)
-          - ParameterizableVcVerification(AlgorithmVerification,None)
-          - ParameterizableVcVerification(SchemaCheck,None)
-          - ParameterizableVcVerification(SemanticCheckOfClaims,None)
+          - verification: SignatureVerification
+          - verification: IssuerIdentification
+            parameter:
+              did: did:prism:issuer
+          - verification: ExpirationCheck
+            parameter:
+              dateTime: '2022-03-10T12:00:00Z'
+          - verification: NotBeforeCheck
+            parameter:
+              dateTime: '2022-03-10T12:00:00Z'
+          - verification: AudienceCheck
+            parameter:
+              did: did:prism:holder
+          - verification: SubjectVerification
+          - verification: IntegrityOfClaims
+          - verification: ComplianceWithStandards
+          - verification: RevocationCheck
+          - verification: AlgorithmVerification
+          - verification: SchemaCheck
+          - verification: SemanticCheckOfClaims
     VcVerificationResponse:
       required:
       - credential
@@ -5108,26 +5122,39 @@ components:
       properties:
         credential:
           type: string
-          description: Encoded Verifiable Credential to verify
+          description: Encoded Verifiable Credential that was verified.
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         result:
           type: array
           items:
             $ref: '#/components/schemas/VcVerificationResult'
-          description: The list executed Verifications
+          description: The list of verification results for each verification performed
+            on the credential.
           example:
-          - VcVerificationResult(SignatureVerification,true)
-          - VcVerificationResult(IssuerIdentification,true)
-          - VcVerificationResult(ExpirationCheck,true)
-          - VcVerificationResult(NotBeforeCheck,true)
-          - VcVerificationResult(AudienceCheck,true)
-          - VcVerificationResult(SubjectVerification,true)
-          - VcVerificationResult(IntegrityOfClaims,true)
-          - VcVerificationResult(ComplianceWithStandards,true)
-          - VcVerificationResult(RevocationCheck,true)
-          - VcVerificationResult(AlgorithmVerification,true)
-          - VcVerificationResult(SchemaCheck,true)
-          - VcVerificationResult(SemanticCheckOfClaims,true)
+          - verification: SignatureVerification
+            success: true
+          - verification: IssuerIdentification
+            success: true
+          - verification: ExpirationCheck
+            success: true
+          - verification: NotBeforeCheck
+            success: true
+          - verification: AudienceCheck
+            success: true
+          - verification: SubjectVerification
+            success: true
+          - verification: IntegrityOfClaims
+            success: true
+          - verification: ComplianceWithStandards
+            success: true
+          - verification: RevocationCheck
+            success: true
+          - verification: AlgorithmVerification
+            success: true
+          - verification: SchemaCheck
+            success: true
+          - verification: SemanticCheckOfClaims
+            success: true
     VcVerificationResult:
       required:
       - verification
@@ -5138,6 +5165,7 @@ components:
           $ref: '#/components/schemas/VcVerification'
         success:
           type: boolean
+          description: Indicates whether the verification was successful.
     VerificationMethod:
       required:
       - id

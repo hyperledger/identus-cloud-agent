@@ -1,18 +1,18 @@
 package org.hyperledger.identus.agent.server
 
-import org.hyperledger.identus.agent.walletapi.model.PublicationState.Published
-import org.hyperledger.identus.agent.walletapi.model.error.GetManagedDIDError
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
+import org.hyperledger.identus.agent.walletapi.model.error.GetManagedDIDError
+import org.hyperledger.identus.agent.walletapi.model.PublicationState.Published
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.castor.core.model.did.{LongFormPrismDID, PrismDID}
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
-import org.hyperledger.identus.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.{
   InvalidStateForOperation,
   RecordIdNotFound
 }
+import org.hyperledger.identus.connect.core.model.ConnectionRecord
+import org.hyperledger.identus.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.shared.models.WalletAccessContext

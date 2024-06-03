@@ -19,11 +19,11 @@ import org.hyperledger.identus.issue.controller.http.{
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord}
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.service.MockCredentialService
+import sttp.client3.{basicRequest, DeserializationException, UriContext}
 import sttp.client3.ziojson.*
-import sttp.client3.{DeserializationException, UriContext, basicRequest}
 import sttp.model.StatusCode
 import zio.*
 import zio.json.EncoderOps

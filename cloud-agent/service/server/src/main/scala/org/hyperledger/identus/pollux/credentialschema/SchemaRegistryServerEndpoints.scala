@@ -1,14 +1,14 @@
 package org.hyperledger.identus.pollux.credentialschema
 
-import org.hyperledger.identus.LogUtils.*
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.api.http.model.{Order, PaginationInput}
+import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
-import org.hyperledger.identus.pollux.credentialschema.SchemaRegistryEndpoints.*
 import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaController
 import org.hyperledger.identus.pollux.credentialschema.http.{CredentialSchemaInput, FilterInput}
+import org.hyperledger.identus.pollux.credentialschema.SchemaRegistryEndpoints.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.LogUtils.*
 import sttp.tapir.ztapir.*
 import zio.*
 

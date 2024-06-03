@@ -1,8 +1,8 @@
 package org.hyperledger.identus.shared.db
 
-import cats.effect.Async
 import cats.effect.kernel.Resource
 import cats.effect.std.Dispatcher
+import cats.effect.Async
 import com.zaxxer.hikari.HikariConfig
 import doobie.hikari.HikariTransactor
 import doobie.util.transactor.Transactor

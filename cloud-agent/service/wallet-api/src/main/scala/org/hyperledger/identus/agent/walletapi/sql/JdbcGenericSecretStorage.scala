@@ -3,8 +3,7 @@ package org.hyperledger.identus.agent.walletapi.sql
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
-import org.hyperledger.identus.agent.walletapi.storage.GenericSecret
-import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
+import org.hyperledger.identus.agent.walletapi.storage.{GenericSecret, GenericSecretStorage}
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.WalletAccessContext

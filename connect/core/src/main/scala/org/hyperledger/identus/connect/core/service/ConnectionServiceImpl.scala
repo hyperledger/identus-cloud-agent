@@ -1,17 +1,17 @@
 package org.hyperledger.identus.connect.core.service
 
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
-import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
+import org.hyperledger.identus.*
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.*
+import org.hyperledger.identus.connect.core.model.ConnectionRecord
+import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.repository.ConnectionRepository
-import org.hyperledger.identus.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.utils.Base64Utils
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
+import org.hyperledger.identus.shared.utils.Base64Utils
 import org.hyperledger.identus.shared.validation.ValidationUtils
 import zio.*
 import zio.prelude.*

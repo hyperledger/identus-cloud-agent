@@ -1,10 +1,10 @@
 package org.hyperledger.identus.mercury.model
 
 import io.circe.*
-import org.hyperledger.identus.mercury.model.*
+import org.didcommx.didcomm.message.{Attachment as XAttachment, MessageBuilder}
 import org.didcommx.didcomm.message.Attachment.Data
-import org.didcommx.didcomm.message.{MessageBuilder, Attachment as XAttachment}
 import org.didcommx.didcomm.model.*
+import org.hyperledger.identus.mercury.model.*
 
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions

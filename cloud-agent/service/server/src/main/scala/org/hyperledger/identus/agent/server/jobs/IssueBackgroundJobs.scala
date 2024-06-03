@@ -9,8 +9,8 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.service.CredentialService
-import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
+import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
 import zio.metrics.*
 
@@ -495,7 +495,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               credentialService <- ZIO.service[CredentialService]
               config <- ZIO.service[AppConfig]
               _ <- credentialService
-                .generateSDJWTCredential(id)
+                .generateSDJWTCredential(id, config.pollux.credentialSdJwtExpirationTime)
                 .provideSomeLayer(ZLayer.succeed(walletAccessContext))
             } yield ()).mapError(e => (walletAccessContext, e))
           } yield result

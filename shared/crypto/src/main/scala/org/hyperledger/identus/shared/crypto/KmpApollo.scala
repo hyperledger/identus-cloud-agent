@@ -4,14 +4,16 @@ import io.iohk.atala.prism.apollo.derivation
 import io.iohk.atala.prism.apollo.derivation.MnemonicHelper
 import io.iohk.atala.prism.apollo.secp256k1.Secp256k1Lib
 import io.iohk.atala.prism.apollo.securerandom.SecureRandom
-import io.iohk.atala.prism.apollo.utils.KMMECSecp256k1PrivateKey
-import io.iohk.atala.prism.apollo.utils.KMMECSecp256k1PublicKey
-import io.iohk.atala.prism.apollo.utils.KMMEdKeyPair
-import io.iohk.atala.prism.apollo.utils.KMMEdPrivateKey
-import io.iohk.atala.prism.apollo.utils.KMMEdPublicKey
-import io.iohk.atala.prism.apollo.utils.KMMX25519KeyPair
-import io.iohk.atala.prism.apollo.utils.KMMX25519PrivateKey
-import io.iohk.atala.prism.apollo.utils.KMMX25519PublicKey
+import io.iohk.atala.prism.apollo.utils.{
+  KMMECSecp256k1PrivateKey,
+  KMMECSecp256k1PublicKey,
+  KMMEdKeyPair,
+  KMMEdPrivateKey,
+  KMMEdPublicKey,
+  KMMX25519KeyPair,
+  KMMX25519PrivateKey,
+  KMMX25519PublicKey
+}
 import zio.*
 
 import scala.jdk.CollectionConverters.*

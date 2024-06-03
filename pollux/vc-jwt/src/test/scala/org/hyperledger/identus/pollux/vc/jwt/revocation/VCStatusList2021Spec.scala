@@ -1,9 +1,9 @@
 package org.hyperledger.identus.pollux.vc.jwt.revocation
 
 import org.hyperledger.identus.pollux.vc.jwt.{DID, ES256KSigner, Issuer, JwtCredential}
-import zio.test.{Spec, ZIOSpecDefault, assertTrue}
-import zio.{UIO, ZIO}
 import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
+import zio.{UIO, ZIO}
+import zio.test.{assertTrue, Spec, ZIOSpecDefault}
 
 object VCStatusList2021Spec extends ZIOSpecDefault {
 

@@ -1,15 +1,14 @@
 package org.hyperledger.identus.mercury
 
-import org.didcommx.peerdid.*
-
 import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.jwk.gen.*
-import io.circe._
-import io.circe.syntax._
-import io.circe.generic.semiauto._
-import scala.jdk.CollectionConverters.*
-
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
+import org.didcommx.peerdid.*
 import org.hyperledger.identus.mercury.model.DidId
+
+import scala.jdk.CollectionConverters.*
 
 final case class PeerDID(
     did: DidId,

@@ -1,21 +1,18 @@
 package org.hyperledger.identus.presentproof.controller
 
-import org.hyperledger.identus.LogUtils.*
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.iam.authentication.Authenticator
-import org.hyperledger.identus.iam.authentication.Authorizer
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
-import org.hyperledger.identus.iam.authentication.SecurityLogic
+import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
+import org.hyperledger.identus.presentproof.controller.http.{RequestPresentationAction, RequestPresentationInput}
 import org.hyperledger.identus.presentproof.controller.PresentProofEndpoints.{
   getAllPresentations,
   getPresentation,
   requestPresentation,
   updatePresentation
 }
-import org.hyperledger.identus.presentproof.controller.http.{RequestPresentationAction, RequestPresentationInput}
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.LogUtils.*
 import sttp.tapir.ztapir.*
 import zio.*
 

@@ -9,14 +9,12 @@ import org.hyperledger.identus.castor.core.model.did.{
   PrismDIDOperation,
   ScheduleDIDOperationOutcome
 }
-import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
-import org.hyperledger.identus.shared.crypto.X25519KeyPair
+import org.hyperledger.identus.mercury.PeerDID
+import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
+import zio.{mock, *}
 import zio.mock.*
 import zio.test.Assertion
-import zio.{mock, *}
 
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 

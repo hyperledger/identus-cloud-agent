@@ -7,9 +7,9 @@ import org.hyperledger.identus.mercury.protocol.revocationnotificaiton.Revocatio
 import org.hyperledger.identus.pollux.core.service.{CredentialService, CredentialStatusListService}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{VCStatusList2021, VCStatusList2021Error}
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
 import zio.metrics.Metric
-import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 
 object StatusListJobs extends BackgroundJobsHelper {
 

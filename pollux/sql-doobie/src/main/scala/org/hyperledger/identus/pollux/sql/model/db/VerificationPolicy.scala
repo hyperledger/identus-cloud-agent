@@ -3,9 +3,9 @@ package org.hyperledger.identus.pollux.sql.model.db
 import io.getquill.*
 import io.getquill.doobie.DoobieContext
 import org.hyperledger.identus.shared.models.WalletId
-import java.util.UUID
 
 import java.time.OffsetDateTime
+import java.util.UUID
 
 case class VerificationPolicy(
     id: UUID,

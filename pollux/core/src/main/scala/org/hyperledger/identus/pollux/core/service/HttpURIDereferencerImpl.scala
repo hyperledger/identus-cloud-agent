@@ -7,6 +7,7 @@ import org.hyperledger.identus.pollux.core.service.URIDereferencerError.{
 }
 import zio.*
 import zio.http.*
+
 import java.net.URI
 import java.nio.charset.StandardCharsets
 

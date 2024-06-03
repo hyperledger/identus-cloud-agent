@@ -44,7 +44,7 @@ inThisBuild(
 )
 
 lazy val V = new {
-  val munit = "1.0.0-RC1" // "0.7.29"
+  val munit = "1.0.0" // "0.7.29"
   val munitZio = "0.2.0"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
@@ -92,7 +92,7 @@ lazy val V = new {
   val vaultDriver = "6.2.0"
   val micrometer = "1.11.11"
 
-  val nimbusJwt = "10.0.0"
+  val nimbusJwt = "9.37.3"
   val keycloak = "23.0.7" // scala-steward:off //TODO 24.0.3 // update all quay.io/keycloak/keycloak
 
 }
@@ -129,9 +129,7 @@ lazy val D = new {
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.5.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
 
-  // Customized version of numbus jose jwt
-  // from https://github.com/goncalo-frade-iohk/Nimbus-JWT_Fork/commit/8a6665c25979e771afae29ce8c965c8b0312fefb
-  val nimbusJwt: ModuleID = "io.iohk.atala" % "nimbus-jose-jwt" % V.nimbusJwt
+  val nimbusJwt: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % V.nimbusJwt
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
   val scalaPbRuntime: ModuleID =

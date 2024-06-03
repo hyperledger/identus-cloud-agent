@@ -1,10 +1,10 @@
 package org.hyperledger.identus.mercury
 
-import zio.*
+import io.circe.syntax.*
 import org.hyperledger.identus.mercury.protocol.invitation.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation.Body
-import io.circe.syntax.*
+import zio.*
 
 object InvitationPrograms {
 
