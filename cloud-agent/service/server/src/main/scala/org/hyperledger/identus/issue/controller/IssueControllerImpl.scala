@@ -157,7 +157,7 @@ class IssueControllerImpl(
   )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
     val result: ZIO[WalletAccessContext, CredentialServiceError | ErrorResponse, Option[IssueCredentialRecord]] = for {
       id <- extractDidCommIdFromString(recordId)
-      outcome <- credentialService.getIssueCredentialRecord(id)
+      outcome <- credentialService.findById(id)
     } yield (outcome map IssueCredentialRecord.fromDomain)
     mapIssueErrors(result) someOrFail toHttpError(
       CredentialServiceError.RecordIdNotFound(DidCommID(recordId))

@@ -8,7 +8,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{IO, URIO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
 
@@ -181,10 +181,10 @@ class CredentialServiceNotifier(
   ): ZIO[WalletAccessContext, CredentialServiceError, Unit] =
     svc.reportProcessingFailure(recordId, failReason)
 
-  override def getIssueCredentialRecord(
+  override def findById(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]] =
-    svc.getIssueCredentialRecord(recordId)
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] =
+    svc.findById(recordId)
 
   override def getIssueCredentialRecordByThreadId(
       thid: DidCommID,

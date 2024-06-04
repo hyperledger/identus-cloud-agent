@@ -38,9 +38,7 @@ object StatusListJobs extends BackgroundJobsHelper {
           updateBitStringEffects = statusListWithCreds.credentials.map { cred =>
             if cred.isCanceled then {
               val sendMessageEffect = for {
-                maybeIssueCredentialRecord <- credentialService
-                  .getIssueCredentialRecord(cred.issueCredentialRecordId)
-                  .mapError(_.toThrowable)
+                maybeIssueCredentialRecord <- credentialService.findById(cred.issueCredentialRecordId)
                 issueCredentialRecord <- ZIO
                   .fromOption(maybeIssueCredentialRecord)
                   .mapError(_ =>

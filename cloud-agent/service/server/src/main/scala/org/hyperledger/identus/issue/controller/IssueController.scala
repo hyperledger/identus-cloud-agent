@@ -38,8 +38,6 @@ trait IssueController {
 object IssueController {
   def toHttpError(error: CredentialServiceError): ErrorResponse =
     error match
-      case CredentialServiceError.RepositoryError(cause) =>
-        ErrorResponse.internalServerError(title = "RepositoryError", detail = Some(cause.toString))
       case CredentialServiceError.LinkSecretError(cause) =>
         ErrorResponse.internalServerError(title = "LinkSecretError", detail = Some(cause.toString))
       case CredentialServiceError.RecordIdNotFound(recordId) =>

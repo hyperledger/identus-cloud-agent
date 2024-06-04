@@ -266,7 +266,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           svc <- ZIO.service[CredentialService]
           aRecord <- svc.createJWTIssueCredentialRecord()
           bRecord <- svc.createJWTIssueCredentialRecord()
-          record <- svc.getIssueCredentialRecord(bRecord.id)
+          record <- svc.findById(bRecord.id)
         } yield assertTrue(record.contains(bRecord))
       },
       test("getCredentialRecord returns nothing for an unknown 'recordId'") {
@@ -274,7 +274,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           svc <- ZIO.service[CredentialService]
           aRecord <- svc.createJWTIssueCredentialRecord()
           bRecord <- svc.createJWTIssueCredentialRecord()
-          record <- svc.getIssueCredentialRecord(DidCommID())
+          record <- svc.findById(DidCommID())
         } yield assertTrue(record.isEmpty)
       },
       test("receiveCredentialOffer successfully creates a record") {
@@ -616,10 +616,10 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           svc <- ZIO.service[CredentialService]
           record1 <- svc.createJWTIssueCredentialRecord().provide(wallet1)
           record2 <- svc.createJWTIssueCredentialRecord().provide(wallet2)
-          ownRecord1 <- svc.getIssueCredentialRecord(record1.id).provide(wallet1)
-          ownRecord2 <- svc.getIssueCredentialRecord(record2.id).provide(wallet2)
-          crossRecord1 <- svc.getIssueCredentialRecord(record1.id).provide(wallet2)
-          crossRecord2 <- svc.getIssueCredentialRecord(record2.id).provide(wallet1)
+          ownRecord1 <- svc.findById(record1.id).provide(wallet1)
+          ownRecord2 <- svc.findById(record2.id).provide(wallet2)
+          crossRecord1 <- svc.findById(record1.id).provide(wallet2)
+          crossRecord2 <- svc.findById(record2.id).provide(wallet1)
         } yield assert(ownRecord1)(isSome(equalTo(record1))) &&
           assert(ownRecord2)(isSome(equalTo(record2))) &&
           assert(crossRecord1)(isNone) &&

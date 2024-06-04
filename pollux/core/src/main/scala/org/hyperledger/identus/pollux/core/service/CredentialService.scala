@@ -14,7 +14,7 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{IO, ZIO}
+import zio.{IO, URIO, ZIO}
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID
@@ -73,9 +73,9 @@ trait CredentialService {
       states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
 
-  def getIssueCredentialRecord(
+  def findById(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]]
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]]
 
   def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
@@ -128,11 +128,17 @@ trait CredentialService {
       issueCredential: IssueCredential
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def markOfferSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  def markOfferSent(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def markRequestSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  def markRequestSent(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
-  def markCredentialSent(recordId: DidCommID): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  def markCredentialSent(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def reportProcessingFailure(
       recordId: DidCommID,

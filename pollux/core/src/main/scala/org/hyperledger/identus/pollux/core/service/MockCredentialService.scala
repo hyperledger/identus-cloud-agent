@@ -7,7 +7,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{mock, IO, URLayer, ZIO, ZLayer}
+import zio.{IO, URIO, URLayer, ZIO, ZLayer, mock}
 import zio.mock.{Mock, Proxy}
 
 import java.util.UUID
@@ -241,9 +241,9 @@ object MockCredentialService extends Mock[CredentialService] {
       ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] =
         ???
 
-      override def getIssueCredentialRecord(
+      override def findById(
           recordId: DidCommID
-      ): IO[CredentialServiceError, Option[IssueCredentialRecord]] =
+      ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] =
         ???
 
       override def getIssueCredentialRecordByThreadId(

@@ -115,9 +115,9 @@ private class CredentialServiceImpl(
         .findByThreadId(thid, ignoreWithZeroRetries)
     } yield record
 
-  override def getIssueCredentialRecord(
+  override def findById(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]] = {
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
     for {
       record <- credentialRepository.findById(recordId)
     } yield record

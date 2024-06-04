@@ -16,13 +16,6 @@ object IssueControllerSpec extends ZIOSpecDefault {
   override def spec = suite("IssueControllerSpec")(httpErrorSpec)
 
   private val httpErrorSpec = suite("testHttpErrors")(
-    test("return internal server error if repository error") {
-      val cse = CredentialServiceError.RepositoryError(new Throwable("test throw"))
-      val httpError = IssueController.toHttpError(cse)
-      val errorResponse =
-        ErrorResponse.internalServerError(title = "RepositoryError", detail = Some(cse.cause.toString))
-      assert(httpError)(equalTo(errorResponse.copy(instance = httpError.instance)))
-    },
     test("return not found error if record id not found") {
       val cse = CredentialServiceError.RecordIdNotFound(DidCommID("12345"))
       val httpError = IssueController.toHttpError(cse)

@@ -84,7 +84,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         .attempt(DidCommID(credentialRecordId))
         .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid DidCommID"))
       vcSubjectId <- credentialService
-        .getIssueCredentialRecord(credentialRecordUuid)
+        .findById(credentialRecordUuid)
         .someOrFail(CredentialServiceError.RecordIdNotFound(credentialRecordUuid))
         .map(_.subjectId)
         .someOrFail(
@@ -121,7 +121,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         .attempt(DidCommID(credentialRecordId))
         .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid DidCommID"))
       vcSubjectId <- credentialService
-        .getIssueCredentialRecord(credentialRecordUuid)
+        .findById(credentialRecordUuid)
         .someOrFail(CredentialServiceError.RecordIdNotFound(credentialRecordUuid))
         .map(_.subjectId)
         .someOrFail(
