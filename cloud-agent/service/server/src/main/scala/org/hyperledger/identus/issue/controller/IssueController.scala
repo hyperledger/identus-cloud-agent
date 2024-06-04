@@ -56,8 +56,6 @@ object IssueController {
         ErrorResponse.badRequest(title = "Create Credential Payload From Record Error", detail = Some(msg.getMessage))
       case CredentialServiceError.CredentialRequestValidationError(msg) =>
         ErrorResponse.badRequest(title = "Create Request Validation Error", detail = Some(msg))
-      case CredentialServiceError.CredentialIdNotDefined(msg) =>
-        ErrorResponse.badRequest(title = "Credential ID not defined one request", detail = Some(msg.toString))
       case CredentialServiceError.CredentialSchemaError(e) =>
         ErrorResponse.badRequest(title = "Credential Schema Error", detail = Some(e.message))
       case CredentialServiceError.UnsupportedVCClaimsValue(error) =>
@@ -72,7 +70,5 @@ object IssueController {
         ErrorResponse.badRequest(detail =
           Some(s"Credential Definition (id: $credentialDefinitionId) private part not found")
         )
-      case CredentialServiceError.CredentialDefinitionIdUndefined =>
-        ErrorResponse.badRequest(detail = Some(s"Credential Definition id undefined"))
 
 }

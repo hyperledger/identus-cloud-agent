@@ -67,51 +67,6 @@ object IssueControllerSpec extends ZIOSpecDefault {
       val errorResponse = ErrorResponse.badRequest(title = "Create Request Validation Error", detail = Some("message"))
       assert(httpError)(equalTo(errorResponse.copy(instance = httpError.instance)))
     },
-    test("return bad request error if credential id not defined error") {
-      val w3cCredentialPayload = W3cCredentialPayload(
-        `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
-        maybeId = Some("http://example.edu/credentials/3732"),
-        `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-        issuer = DID("https://example.edu/issuers/565049"),
-        issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
-        maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
-        maybeCredentialSchema = Some(
-          CredentialSchema(
-            id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-            `type` = "JsonSchemaValidator2018"
-          )
-        ),
-        credentialSubject = Json.obj(
-          "userName" -> Json.fromString("Bob"),
-          "age" -> Json.fromInt(42),
-          "email" -> Json.fromString("email")
-        ),
-        maybeCredentialStatus = Some(
-          CredentialStatus(
-            id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-            `type` = "StatusList2021Entry",
-            statusPurpose = StatusPurpose.Revocation,
-            statusListIndex = 0,
-            statusListCredential = "https://example.com/credentials/status/3"
-          )
-        ),
-        maybeRefreshService = Some(
-          RefreshService(
-            id = "https://example.edu/refresh/3732",
-            `type` = "ManualRefreshService2018"
-          )
-        ),
-        maybeEvidence = Option.empty,
-        maybeTermsOfUse = Option.empty
-      )
-      val cse = CredentialServiceError.CredentialIdNotDefined(w3cCredentialPayload)
-      val httpError = IssueController.toHttpError(cse)
-      val errorResponse = ErrorResponse.badRequest(
-        title = "Credential ID not defined one request",
-        detail = Some(w3cCredentialPayload.toString)
-      )
-      assert(httpError)(equalTo(errorResponse.copy(instance = httpError.instance)))
-    },
   )
 
 }
