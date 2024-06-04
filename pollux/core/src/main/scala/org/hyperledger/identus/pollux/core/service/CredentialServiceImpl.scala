@@ -705,9 +705,7 @@ private class CredentialServiceImpl(
         .dereference(new URI(credentialOffer.getCredDefId))
         .mapError(err => UnexpectedError(err.toString))
       credentialDefinition = anoncreds.AnoncredCredentialDefinition(credDefContent)
-      linkSecret <- linkSecretService
-        .fetchOrCreate()
-        .mapError(e => CredentialServiceError.LinkSecretError.apply(e.cause))
+      linkSecret <- linkSecretService.fetchOrCreate()
       createCredentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition, credentialOffer)
     } yield createCredentialRequest
   }
@@ -835,9 +833,7 @@ private class CredentialServiceImpl(
       metadata <- ZIO
         .fromOption(record.anonCredsRequestMetadata)
         .mapError(_ => CredentialServiceError.UnexpectedError(s"No request metadata Id found un record: ${record.id}"))
-      linkSecret <- linkSecretService
-        .fetchOrCreate()
-        .mapError(e => CredentialServiceError.LinkSecretError.apply(e.cause))
+      linkSecret <- linkSecretService.fetchOrCreate()
       credential <- ZIO
         .attempt(
           AnoncredLib.processCredential(

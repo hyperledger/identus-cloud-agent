@@ -8,8 +8,6 @@ import java.util.UUID
 sealed trait CredentialServiceError
 
 object CredentialServiceError {
-  // To be removed one LinkSecretService is ADR compliant
-  final case class LinkSecretError(cause: Throwable) extends CredentialServiceError
   final case class RecordIdNotFound(recordId: DidCommID) extends CredentialServiceError
   final case class OperationNotExecuted(recordId: DidCommID, info: String) extends CredentialServiceError
   final case class ThreadIdNotFound(thid: DidCommID) extends CredentialServiceError

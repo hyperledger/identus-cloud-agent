@@ -696,7 +696,6 @@ private class PresentationServiceImpl(
         linkSecretService
           .fetchOrCreate()
           .map(_.secret)
-          .mapError(t => AnoncredPresentationCreationError(t.cause))
       credentialRequest =
         verifiableCredentials.map(verifiableCredential =>
           AnoncredCredentialRequests(
