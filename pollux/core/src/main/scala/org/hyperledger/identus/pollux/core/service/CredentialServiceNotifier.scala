@@ -8,6 +8,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import zio.{Duration, IO, URLayer, ZIO, ZLayer}
 import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
@@ -151,9 +152,10 @@ class CredentialServiceNotifier(
     notifyOnSuccess(svc.generateJWTCredential(recordId, statusListRegistryUrl))
 
   override def generateSDJWTCredential(
-      recordId: DidCommID
+      recordId: DidCommID,
+      expirationTime: Duration,
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-    notifyOnSuccess(svc.generateSDJWTCredential(recordId))
+    notifyOnSuccess(svc.generateSDJWTCredential(recordId, expirationTime))
 
   override def generateAnonCredsCredential(
       recordId: DidCommID

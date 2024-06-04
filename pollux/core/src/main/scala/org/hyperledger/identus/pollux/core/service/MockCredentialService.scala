@@ -7,6 +7,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import zio.{mock, Duration, IO, URLayer, ZIO, ZLayer}
 import zio.{mock, IO, URLayer, ZIO, ZLayer}
 import zio.mock.{Mock, Proxy}
 
@@ -70,7 +71,7 @@ object MockCredentialService extends Mock[CredentialService] {
   object ReceiveCredentialRequest extends Effect[RequestCredential, CredentialServiceError, IssueCredentialRecord]
   object AcceptCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object GenerateJWTCredential extends Effect[(DidCommID, String), CredentialServiceError, IssueCredentialRecord]
-  object GenerateSDJWTCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
+  object GenerateSDJWTCredential extends Effect[(DidCommID, Duration), CredentialServiceError, IssueCredentialRecord]
   object GenerateAnonCredsCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object ReceiveCredentialIssue extends Effect[IssueCredential, CredentialServiceError, IssueCredentialRecord]
   object MarkOfferSent extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
@@ -191,9 +192,10 @@ object MockCredentialService extends Mock[CredentialService] {
         proxy(GenerateJWTCredential, recordId, statusListRegistryUrl)
 
       override def generateSDJWTCredential(
-          recordId: DidCommID
+          recordId: DidCommID,
+          expirationTime: Duration,
       ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-        proxy(GenerateSDJWTCredential, recordId)
+        proxy(GenerateSDJWTCredential, recordId, expirationTime)
 
       override def generateAnonCredsCredential(
           recordId: DidCommID
