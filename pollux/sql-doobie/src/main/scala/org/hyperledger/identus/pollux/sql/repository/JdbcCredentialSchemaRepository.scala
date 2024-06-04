@@ -17,57 +17,64 @@ import java.util.UUID
 case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task])
     extends CredentialSchemaRepository {
   import CredentialSchemaSql.*
-  override def create(cs: CredentialSchema): RIO[WalletAccessContext, CredentialSchema] = {
+  override def create(cs: CredentialSchema): URIO[WalletAccessContext, CredentialSchema] = {
     ZIO.serviceWithZIO[WalletAccessContext](ctx =>
       CredentialSchemaSql
         .insert(CredentialSchemaRow.fromModel(cs, ctx.walletId))
         .transactWallet(xa)
+        .orDie
         .map(CredentialSchemaRow.toModel)
     )
   }
 
-  override def getByGuid(guid: UUID): Task[Option[CredentialSchema]] = {
+  override def findByGuid(guid: UUID): UIO[Option[CredentialSchema]] = {
     CredentialSchemaSql
       .findByGUID(guid)
       .transact(xb)
+      .orDie
       .map(
         _.headOption
           .map(CredentialSchemaRow.toModel)
       )
   }
 
-  override def update(cs: CredentialSchema): RIO[WalletAccessContext, Option[CredentialSchema]] = {
+  override def update(cs: CredentialSchema): URIO[WalletAccessContext, Option[CredentialSchema]] = {
     ZIO.serviceWithZIO[WalletAccessContext](ctx =>
       CredentialSchemaSql
         .update(CredentialSchemaRow.fromModel(cs, ctx.walletId))
         .transactWallet(xa)
+        .orDie
         .map(Option.apply)
         .map(_.map(CredentialSchemaRow.toModel))
     )
   }
 
-  def getAllVersions(id: UUID, author: String): RIO[WalletAccessContext, Seq[String]] = {
+  def getAllVersions(id: UUID, author: String): URIO[WalletAccessContext, List[String]] = {
     CredentialSchemaSql
       .getAllVersions(id, author)
       .transactWallet(xa)
+      .orDie
   }
 
-  override def delete(guid: UUID): RIO[WalletAccessContext, Option[CredentialSchema]] = {
+  override def delete(guid: UUID): URIO[WalletAccessContext, Option[CredentialSchema]] = {
     CredentialSchemaSql
       .delete(guid)
       .transactWallet(xa)
+      .orDie
       .map(Option.apply)
       .map(_.map(CredentialSchemaRow.toModel))
   }
 
-  def deleteAll(): RIO[WalletAccessContext, Long] = {
+  def deleteAll(): URIO[WalletAccessContext, Unit] = {
     CredentialSchemaSql.deleteAll
       .transactWallet(xa)
+      .orDie
+      .flatMap(count => ZIO.unit)
   }
 
   override def search(
       query: SearchQuery[CredentialSchema.Filter]
-  ): RIO[WalletAccessContext, SearchResult[CredentialSchema]] = {
+  ): URIO[WalletAccessContext, SearchResult[CredentialSchema]] = {
     for {
       filteredRows <- CredentialSchemaSql
         .lookup(
@@ -79,6 +86,7 @@ case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: 
           limit = query.limit
         )
         .transactWallet(xa)
+        .orDie
       entries = filteredRows.map(CredentialSchemaRow.toModel)
 
       filteredRowsCount <- CredentialSchemaSql
@@ -89,8 +97,8 @@ case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: 
           tagOpt = query.filter.tags
         )
         .transactWallet(xa)
-
-      totalRowsCount <- CredentialSchemaSql.totalCount.transactWallet(xa)
+        .orDie
+      totalRowsCount <- CredentialSchemaSql.totalCount.transactWallet(xa).orDie
     } yield SearchResult(entries, filteredRowsCount, totalRowsCount)
   }
 }
