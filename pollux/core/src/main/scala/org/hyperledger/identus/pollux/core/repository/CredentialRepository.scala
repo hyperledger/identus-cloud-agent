@@ -30,49 +30,49 @@ trait CredentialRepository {
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): RIO[WalletAccessContext, Seq[IssueCredentialRecord]]
+  ): URIO[WalletAccessContext, Seq[IssueCredentialRecord]]
 
   def findByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): Task[Seq[IssueCredentialRecord]]
+  ): UIO[Seq[IssueCredentialRecord]]
 
   def findByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean,
-  ): RIO[WalletAccessContext, Option[IssueCredentialRecord]]
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]]
 
   def updateProtocolState(
       recordId: DidCommID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
-  ): RIO[WalletAccessContext, Unit]
+  ): URIO[WalletAccessContext, Unit]
 
   def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Unit]
+  ): URIO[WalletAccessContext, Unit]
 
   def updateWithJWTRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Unit]
+  ): URIO[WalletAccessContext, Unit]
 
   def updateWithAnonCredsRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
       metadata: AnoncredCredentialRequestMetadata,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Unit]
+  ): URIO[WalletAccessContext, Unit]
 
   def updateWithIssueCredential(
       recordId: DidCommID,
       issue: IssueCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Unit]
+  ): URIO[WalletAccessContext, Unit]
 
   def updateWithIssuedRawCredential(
       recordId: DidCommID,
@@ -81,23 +81,23 @@ trait CredentialRepository {
       schemaUri: Option[String],
       credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Unit]
+  ): URIO[WalletAccessContext, Unit]
 
   def deleteById(
       recordId: DidCommID
-  ): RIO[WalletAccessContext, Unit]
+  ): URIO[WalletAccessContext, Unit]
 
   def findValidIssuedCredentials(
       recordId: Seq[DidCommID]
-  ): RIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]]
+  ): URIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]]
 
   def findValidAnonCredsIssuedCredentials(
       recordIds: Seq[DidCommID]
-  ): RIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]]
+  ): URIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]]
 
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]
-  ): RIO[WalletAccessContext, Unit]
+  ): URIO[WalletAccessContext, Unit]
 
 }

@@ -81,7 +81,7 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       from: ProtocolState,
       to: ProtocolState
-  ): RIO[WalletAccessContext, Unit] = {
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       record <- getById(recordId)
       storeRef <- walletStoreRef
@@ -108,7 +108,7 @@ class CredentialRepositoryInMemory(
       schemaUri: Option[String],
       credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Unit] = {
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       maybeRecord <- findById(recordId)
@@ -133,7 +133,7 @@ class CredentialRepositoryInMemory(
 
   override def findValidIssuedCredentials(
       recordId: Seq[DidCommID]
-  ): RIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]] = {
+  ): URIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -145,7 +145,7 @@ class CredentialRepositoryInMemory(
 
   override def findValidAnonCredsIssuedCredentials(
       recordId: Seq[DidCommID]
-  ): RIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]] = {
+  ): URIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -171,7 +171,7 @@ class CredentialRepositoryInMemory(
       .toSeq
   }
 
-  override def deleteById(recordId: DidCommID): RIO[WalletAccessContext, Unit] = {
+  override def deleteById(recordId: DidCommID): URIO[WalletAccessContext, Unit] = {
     for {
       maybeRecord <- findById(recordId)
       record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
@@ -184,7 +184,7 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       issue: IssueCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Unit] = {
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       maybeRecord <- findById(recordId)
@@ -208,7 +208,7 @@ class CredentialRepositoryInMemory(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
-  ): RIO[WalletAccessContext, Seq[IssueCredentialRecord]] = {
+  ): URIO[WalletAccessContext, Seq[IssueCredentialRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -223,7 +223,7 @@ class CredentialRepositoryInMemory(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
-  ): Task[Seq[IssueCredentialRecord]] = {
+  ): UIO[Seq[IssueCredentialRecord]] = {
     for {
       refs <- walletRefs.get
       stores <- ZIO.foreach(refs.values.toList)(_.get)
@@ -242,7 +242,7 @@ class CredentialRepositoryInMemory(
   override def findByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean,
-  ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -254,7 +254,7 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       subjectId: String,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Unit] = {
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       maybeRecord <- findById(recordId)
@@ -278,7 +278,7 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Unit] = {
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       maybeRecord <- findById(recordId)
@@ -303,7 +303,7 @@ class CredentialRepositoryInMemory(
       request: RequestCredential,
       metadata: AnoncredCredentialRequestMetadata,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Unit] = {
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       maybeRecord <- findById(recordId)
@@ -327,7 +327,7 @@ class CredentialRepositoryInMemory(
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]
-  ): RIO[WalletAccessContext, Unit] = for {
+  ): URIO[WalletAccessContext, Unit] = for {
     storeRef <- walletStoreRef
     maybeRecord <- findById(recordId)
     record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie

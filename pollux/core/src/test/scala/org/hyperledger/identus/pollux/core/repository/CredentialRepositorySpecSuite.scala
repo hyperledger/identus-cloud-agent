@@ -215,17 +215,8 @@ object CredentialRepositorySpecSuite {
         _ <- repo.create(cRecord)
         _ <- repo.updateProtocolState(aRecord.id, ProtocolState.OfferPending, ProtocolState.OfferSent)
         _ <- repo.updateProtocolState(cRecord.id, ProtocolState.OfferPending, ProtocolState.CredentialGenerated)
-        pendingRecords <- repo.findByStates(
-          ignoreWithZeroRetries = true,
-          limit = 10,
-          ProtocolState.OfferPending
-        )
-        otherRecords <- repo.findByStates(
-          ignoreWithZeroRetries = true,
-          limit = 10,
-          ProtocolState.OfferSent,
-          ProtocolState.CredentialGenerated
-        )
+        pendingRecords <- repo.findByStates(ignoreWithZeroRetries = true, limit = 10, ProtocolState.OfferPending)
+        otherRecords <- repo.findByStates(ignoreWithZeroRetries = true, limit = 10, ProtocolState.OfferSent, ProtocolState.CredentialGenerated)
       } yield {
         assertTrue(pendingRecords.size == 1) &&
         assertTrue(pendingRecords.contains(bRecord)) &&
@@ -259,22 +250,8 @@ object CredentialRepositorySpecSuite {
         _ <- repo.create(bRecord)
         _ <- repo.create(cRecord)
         _ <- repo.create(dRecord)
-        _ <- repo.updateWithIssuedRawCredential(
-          aRecord.id,
-          IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
-          "RAW_CREDENTIAL_DATA",
-          None,
-          None,
-          ProtocolState.CredentialReceived
-        )
-        _ <- repo.updateWithIssuedRawCredential(
-          dRecord.id,
-          IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
-          "RAW_CREDENTIAL_DATA",
-          None,
-          None,
-          ProtocolState.CredentialReceived
-        )
+        _ <- repo.updateWithIssuedRawCredential(aRecord.id, IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage), "RAW_CREDENTIAL_DATA", None, None, ProtocolState.CredentialReceived)
+        _ <- repo.updateWithIssuedRawCredential(dRecord.id, IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage), "RAW_CREDENTIAL_DATA", None, None, ProtocolState.CredentialReceived)
         records <- repo.findValidIssuedCredentials(Seq(aRecord.id, bRecord.id, dRecord.id))
       } yield {
         assertTrue(records.size == 2) &&
@@ -362,14 +339,7 @@ object CredentialRepositorySpecSuite {
         _ <- repo.create(aRecord)
         record <- repo.findById(aRecord.id)
         issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
-        _ <- repo.updateWithIssuedRawCredential(
-          aRecord.id,
-          issueCredential,
-          "RAW_CREDENTIAL_DATA",
-          Some("schemaUri"),
-          Some("credentialDefinitionUri"),
-          ProtocolState.CredentialReceived
-        )
+        _ <- repo.updateWithIssuedRawCredential(aRecord.id, issueCredential, "RAW_CREDENTIAL_DATA", Some("schemaUri"), Some("credentialDefinitionUri"), ProtocolState.CredentialReceived)
         updatedRecord <- repo.findById(aRecord.id)
       } yield {
         assertTrue(record.get.issueCredentialData.isEmpty) &&
@@ -495,12 +465,7 @@ object CredentialRepositorySpecSuite {
         _ <- repo
           .updateProtocolState(record2.id, ProtocolState.OfferPending, ProtocolState.CredentialGenerated)
           .provide(wallet2)
-        allRecords <- repo.findByStatesForAllWallets(
-          ignoreWithZeroRetries = true,
-          limit = 10,
-          ProtocolState.OfferSent,
-          ProtocolState.CredentialGenerated
-        )
+        allRecords <- repo.findByStatesForAllWallets(ignoreWithZeroRetries = true, limit = 10, ProtocolState.OfferSent, ProtocolState.CredentialGenerated)
       } yield assertTrue(allRecords.size == 2) &&
         assertTrue(allRecords.exists(_.id == record1.id)) &&
         assertTrue(allRecords.exists(_.id == record2.id))
