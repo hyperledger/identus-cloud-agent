@@ -14,8 +14,8 @@ import pdi.jwt.*
 import zio.*
 import zio.prelude.*
 
-import java.security.PublicKey
 import java.security.interfaces.{ECPublicKey, EdECPublicKey}
+import java.security.PublicKey
 import scala.util.{Failure, Success, Try}
 
 object JWTVerification {
