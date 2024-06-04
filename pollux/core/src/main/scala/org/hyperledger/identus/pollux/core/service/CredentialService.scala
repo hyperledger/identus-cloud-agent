@@ -14,7 +14,7 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{IO, ZIO}
+import zio.{Duration, IO, ZIO}
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID
@@ -118,6 +118,7 @@ trait CredentialService {
 
   def generateSDJWTCredential(
       recordId: DidCommID,
+      expirationTime: Duration,
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
   def generateAnonCredsCredential(

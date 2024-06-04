@@ -68,6 +68,7 @@ object ValidatedVaultConfig {
 
 final case class PolluxConfig(
     database: DatabaseConfig,
+    credentialSdJwtExpirationTime: Duration,
     statusListRegistry: StatusListRegistryConfig,
     issueBgJobRecordsLimit: Int,
     issueBgJobRecurrenceDelay: Duration,
