@@ -3,7 +3,6 @@ package org.hyperledger.identus.pollux.core.repository
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
@@ -37,7 +36,7 @@ class CredentialRepositoryInMemory(
         maybeRecord = store.values.find(_.thid == record.thid)
         _ <- maybeRecord match
           case None        => ZIO.unit
-          case Some(value) => ZIO.die(UniqueConstraintViolation("Unique Constraint Violation on 'thid'"))
+          case Some(value) => ZIO.die(RuntimeException("Unique Constraint Violation on 'thid'"))
       } yield ()
       _ <- storeRef.update(r => r + (record.id -> record))
     } yield ()
