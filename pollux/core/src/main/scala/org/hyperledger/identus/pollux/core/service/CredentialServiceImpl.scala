@@ -1271,27 +1271,21 @@ private class CredentialServiceImpl(
       jwtIssuer: JwtIssuer
   ): ZIO[WalletAccessContext, CredentialServiceError, CredentialStatus] = {
     val effect = for {
-      lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet.mapError(RepositoryError.apply)
+      lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet
       currentStatusList <- lastStatusList
         .fold(credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl))(
           ZIO.succeed(_)
         )
-        .mapError(RepositoryError.apply)
       size = currentStatusList.size
       lastUsedIndex = currentStatusList.lastUsedIndex
       statusListToBeUsed <-
         if lastUsedIndex < size then ZIO.succeed(currentStatusList)
-        else
-          credentialStatusListRepository
-            .createNewForTheWallet(jwtIssuer, statusListRegistryUrl)
-            .mapError(RepositoryError.apply)
-      _ <- credentialStatusListRepository
-        .allocateSpaceForCredential(
-          issueCredentialRecordId = record.id,
-          credentialStatusListId = statusListToBeUsed.id,
-          statusListIndex = statusListToBeUsed.lastUsedIndex + 1
-        )
-        .mapError(RepositoryError.apply)
+        else credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl)
+      _ <- credentialStatusListRepository.allocateSpaceForCredential(
+        issueCredentialRecordId = record.id,
+        credentialStatusListId = statusListToBeUsed.id,
+        statusListIndex = statusListToBeUsed.lastUsedIndex + 1
+      )
     } yield CredentialStatus(
       id = s"$statusListRegistryUrl/credential-status/${statusListToBeUsed.id}#${statusListToBeUsed.lastUsedIndex + 1}",
       `type` = "StatusList2021Entry",
