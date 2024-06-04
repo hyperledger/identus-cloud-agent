@@ -5,11 +5,7 @@ import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
-import org.hyperledger.identus.castor.core.model.did.{
-  CanonicalPrismDID,
-  PrismDID,
-  VerificationRelationship
-}
+import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
@@ -186,8 +182,7 @@ private class CredentialServiceImpl(
         )
       )
       count <- credentialRepository
-        .create(record)
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect
+        .create(record) @@ CustomMetricsAspect
         .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
     } yield record
   }
@@ -247,8 +242,7 @@ private class CredentialServiceImpl(
         )
       )
       count <- credentialRepository
-        .create(record)
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect
+        .create(record) @@ CustomMetricsAspect
         .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
     } yield record
 
@@ -306,8 +300,7 @@ private class CredentialServiceImpl(
         )
       )
       count <- credentialRepository
-        .create(record)
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect
+        .create(record) @@ CustomMetricsAspect
         .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
     } yield record
   }
@@ -379,9 +372,7 @@ private class CredentialServiceImpl(
           metaLastFailure = None,
         )
       )
-      count <- credentialRepository
-        .create(record)
-        .mapError(RepositoryError.apply)
+      count <- credentialRepository.create(record)
     } yield record
   }
 

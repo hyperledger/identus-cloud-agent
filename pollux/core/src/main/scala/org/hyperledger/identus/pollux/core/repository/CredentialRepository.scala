@@ -10,7 +10,7 @@ import zio.*
 trait CredentialRepository {
   def create(
       record: IssueCredentialRecord
-  ): RIO[WalletAccessContext, Unit]
+  ): URIO[WalletAccessContext, Unit]
 
   def findAll(
       ignoreWithZeroRetries: Boolean,
