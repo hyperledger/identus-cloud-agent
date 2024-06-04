@@ -16,15 +16,15 @@ trait CredentialRepository {
       ignoreWithZeroRetries: Boolean,
       offset: Option[Int] = None,
       limit: Option[Int] = None
-  ): RIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)]
+  ): URIO[WalletAccessContext, (Seq[IssueCredentialRecord], RuntimeFlags)]
 
   def getById(
       recordId: DidCommID
-  ): RIO[WalletAccessContext, IssueCredentialRecord]
+  ): URIO[WalletAccessContext, IssueCredentialRecord]
 
   def findById(
       recordId: DidCommID
-  ): RIO[WalletAccessContext, Option[IssueCredentialRecord]]
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]]
 
   def findByStates(
       ignoreWithZeroRetries: Boolean,

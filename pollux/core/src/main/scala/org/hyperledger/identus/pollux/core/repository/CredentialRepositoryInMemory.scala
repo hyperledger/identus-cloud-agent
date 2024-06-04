@@ -45,7 +45,7 @@ class CredentialRepositoryInMemory(
 
   override def getById(
       recordId: DidCommID
-  ): RIO[WalletAccessContext, IssueCredentialRecord] = {
+  ): URIO[WalletAccessContext, IssueCredentialRecord] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -56,7 +56,7 @@ class CredentialRepositoryInMemory(
 
   override def findById(
       recordId: DidCommID
-  ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -68,7 +68,7 @@ class CredentialRepositoryInMemory(
       ignoreWithZeroRetries: Boolean,
       offset: Option[Int],
       limit: Option[Int]
-  ): RIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)] = {
+  ): URIO[WalletAccessContext, (Seq[IssueCredentialRecord], RuntimeFlags)] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get

@@ -103,7 +103,6 @@ private class CredentialServiceImpl(
     for {
       records <- credentialRepository
         .findAll(ignoreWithZeroRetries = ignoreWithZeroRetries, offset = offset, limit = limit)
-        .mapError(RepositoryError.apply)
     } yield records
   }
 
@@ -121,9 +120,7 @@ private class CredentialServiceImpl(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]] = {
     for {
-      record <- credentialRepository
-        .findById(recordId)
-        .mapError(RepositoryError.apply)
+      record <- credentialRepository.findById(recordId)
     } yield record
   }
 
@@ -462,7 +459,6 @@ private class CredentialServiceImpl(
           )
       record <- credentialRepository
         .findById(record.id)
-        .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(recordId))
           case Some(value) => ZIO.succeed(value)
@@ -611,7 +607,6 @@ private class CredentialServiceImpl(
       ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
       record <- credentialRepository
         .findById(record.id)
-        .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(recordId))
           case Some(value) => ZIO.succeed(value)
@@ -647,7 +642,6 @@ private class CredentialServiceImpl(
       ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
       record <- credentialRepository
         .findById(record.id)
-        .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(recordId))
           case Some(value) => ZIO.succeed(value)
@@ -688,7 +682,6 @@ private class CredentialServiceImpl(
       ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
       record <- credentialRepository
         .findById(record.id)
-        .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(recordId))
           case Some(value) => ZIO.succeed(value)
@@ -737,7 +730,6 @@ private class CredentialServiceImpl(
         .mapError(RepositoryError.apply)
       record <- credentialRepository
         .findById(record.id)
-        .mapError(RepositoryError.apply)
         .someOrFail(RecordIdNotFound(record.id))
     } yield record
   }
@@ -758,7 +750,6 @@ private class CredentialServiceImpl(
       )
       record <- credentialRepository
         .findById(record.id)
-        .mapError(RepositoryError.apply)
         .someOrFail(RecordIdNotFound(record.id))
     } yield record
   }
@@ -814,7 +805,6 @@ private class CredentialServiceImpl(
     }
     record <- credentialRepository
       .findById(record.id)
-      .mapError(RepositoryError.apply)
       .someOrFail(RecordIdNotFound(record.id))
   } yield record
 
@@ -900,7 +890,6 @@ private class CredentialServiceImpl(
       ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_issuer_credential_generated_to_sent")
       record <- credentialRepository
         .findById(record.id)
-        .mapError(RepositoryError.apply)
         .flatMap {
           case None        => ZIO.fail(RecordIdNotFound(record.id))
           case Some(value) => ZIO.succeed(value)
@@ -936,7 +925,6 @@ private class CredentialServiceImpl(
     for {
       maybeRecord <- credentialRepository
         .findById(recordId)
-        .mapError(RepositoryError.apply)
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => RecordIdNotFound(recordId))
@@ -1146,7 +1134,7 @@ private class CredentialServiceImpl(
       to: IssueCredentialRecord.ProtocolState
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
     for {
-      record <- credentialRepository.getById(id).mapError(RepositoryError.apply)
+      record <- credentialRepository.getById(id)
       updatedRecord <- record.protocolState match
         case currentState if currentState == to => ZIO.succeed(record) // Idempotent behaviour
         case currentState if currentState == from =>

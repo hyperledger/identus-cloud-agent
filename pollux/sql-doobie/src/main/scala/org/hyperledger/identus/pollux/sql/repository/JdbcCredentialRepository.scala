@@ -115,7 +115,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       ignoreWithZeroRetries: Boolean,
       offset: Option[Int],
       limit: Option[Int]
-  ): RIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)] = {
+  ): URIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)] = {
     val conditionFragment = Fragments.whereAndOpt(
       Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
     )
@@ -170,7 +170,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       records <- cxnIO
     } yield (records, totalCount)
 
-    effect.transactWallet(xa)
+    effect
+      .transactWallet(xa)
+      .orDie
   }
 
   private def getRecordsByStates(
@@ -237,7 +239,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
     getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transact(xb)
   }
 
-  override def getById(recordId: DidCommID): RIO[WalletAccessContext, IssueCredentialRecord] =
+  override def getById(recordId: DidCommID): URIO[WalletAccessContext, IssueCredentialRecord] =
     for {
       maybeRecord <- findById(recordId)
       record <- ZIO.fromOption(maybeRecord).orDieWith(_ => RuntimeException(s"Record not found: $recordId"))
@@ -245,7 +247,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
   override def findById(
       recordId: DidCommID
-  ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -278,6 +280,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO
       .transactWallet(xa)
+      .orDie
   }
 
   override def findByThreadId(
