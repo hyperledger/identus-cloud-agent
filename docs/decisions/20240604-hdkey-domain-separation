@@ -1,0 +1,62 @@
+# HDKey determinstic key and domain derivation when using different algorithms
+
+- Status: in-progress 
+- Deciders: Javi, Yurii, Jesus, Matt, Ezequiel
+- Date: 2024-06-04
+- Tags: Domain separation, Deterministic wallets
+
+
+## Context and Problem Statement
+
+The main question to answer is: How can we add ed25519 HDKey deterministic wallet implementation on top of existing secp256k1 HDKey implementation and make it imposssible for the users to generate the same keys using the same seed?
+
+For broader context, we are now introducing ed25519 HDKey deterministic wallet with Cardanos bip32 implementation for ed25519 and this will work together with our existing standard bip32 implementation which is used by secp256k1.
+
+This deterministic keys are going to be used by the issuer to issue credentials with both algorithms and it is important to mention, right now the Bip32 is deriving using the following paths.
+
+Currently in Bip32 (secp256k1), the path looks like this m/0'/0'/0' and we are just incrementing the accountIndex whenever it is needed.
+There is a risk now where user's could potentially be creating the same keys using different key curves and find a colision. 
+
+
+## Decision Drivers
+
+A desired solution should
+
+- Ensure there's enough domain separation between the 2 types of keys so that they could never be generating the same keys.
+- This solution or any solition we build to change or improve derivationPaths will require to have backwards compatibility so any user could still import the keys with the old paths.
+- The proposed solution must also be future proof and secure enough to use.
+- Go through a proper security audit and require some i+d to we are not going to have any risk.
+
+## Considered Options
+
+We have considered several approaches, initially changing the derive hashing function to just include the text "ed25519", we also explored changing the derivationPath to ensure the rotation and domain separation
+
+## Decision Outcome
+
+After a careful analysis we concluded the following points:
+- Changing the hashing function would prevent other implementations from being able to restore the same derived keys, as the hashing would not be standard.
+- Defining a proper derivation path would allow us to rotate and add domain separation
+- DerivationPath is not something we cannot recover or move from, in case we wanted to improve derivation paths, we MUST keep backwards compatibility and always allow user's to restore those keys with the correct derivationPath if they required to do so.
+- The derive function is literally not the same, meaning that for secp256k1, we are using standard bip32 derivation but for ed25519 we are using Cardano's implementation of Deterministic keys which is another implementation, so some very potential domain separation is also happening there because the code is slightly different.
+
+## Proposed solution
+- We are not going to change derivationPaths in secp256k1, derivationPaths will continue to be m/0'/0'/0'
+- But now we are going to have meaningful derivationPath variables instead
+m/A'/B'/C'
+
+A is going to be the keyCurve
+B is going to be the accountIndex (usually 0)
+C is going to be the addressIndex (the number we usually increment during the derivations)
+
+m/0'/0'/0' -> would imply to derive a secp256k1 on accountIndex 0 and addressIndex 0
+m/1'/0'/0' -> would imply to derive a ed25519 on accountIndex 0 and addressIndex 0
+
+### Positive Consequences
+
+- We are able to introduce domain separation and ensure the keys cannot clash on the different key curves, we feel confortable to introduce ed25519 Deterministic keys into production
+
+### Negative Consequences
+
+- Not being able to solve this issue may put many things at risk, cryptographic agility and sd+jwt implementation as secp256k1 key curve for ECDSA is not widely supported on JWT, SDJWT and many other places.
+
+ 
