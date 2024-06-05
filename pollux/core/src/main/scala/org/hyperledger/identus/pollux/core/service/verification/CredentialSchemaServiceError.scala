@@ -1,0 +1,33 @@
+package org.hyperledger.identus.pollux.core.service.verification
+
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.*
+import org.hyperledger.identus.shared.models.{Failure, StatusCode}
+
+import java.util.UUID
+
+sealed trait CredentialSchemaServiceError(
+    val statusCode: StatusCode,
+    val userFacingMessage: String
+) extends Failure {
+  override val namespace = "CredentialSchema"
+}
+
+final case class GuidNotFoundError(guid: UUID)
+    extends CredentialSchemaServiceError(
+      StatusCode.NotFound,
+      s"Credential Schema record cannot be found by `guid`=$guid"
+    )
+
+final case class UpdateError(id: UUID, version: String, author: String, message: String)
+    extends CredentialSchemaServiceError(
+      StatusCode.BadRequest,
+      s"Credential schema update error: id=$id, version=$version, author=$author, msg=$message"
+    )
+
+final case class CredentialSchemaValidationError(cause: CredentialSchemaError)
+    extends CredentialSchemaServiceError(
+      StatusCode.BadRequest,
+      s"Credential Schema Validation Error=${cause.message}"
+    )
