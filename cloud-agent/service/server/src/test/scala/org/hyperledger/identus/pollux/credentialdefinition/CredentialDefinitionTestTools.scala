@@ -128,7 +128,7 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
 }
 
 trait CredentialDefinitionGen {
-  self: ZIOSpecDefault with CredentialDefinitionTestTools =>
+  self: ZIOSpecDefault & CredentialDefinitionTestTools =>
   object Generator {
     val credentialDefinitionName = Gen.alphaNumericStringBounded(4, 12)
     val majorVersion = Gen.int(1, 9)

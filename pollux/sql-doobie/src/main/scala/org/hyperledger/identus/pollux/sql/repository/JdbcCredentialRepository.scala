@@ -185,7 +185,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         connection.pure(Nil)
       case head +: tail =>
         val conditionFragment = {
-          val nel = NonEmptyList.of(head, tail: _*)
+          val nel = NonEmptyList.of(head, tail*)
           val inClauseFragment = Fragments.in(fr"protocol_state", nel)
           if (!ignoreWithZeroRetries) inClauseFragment
           else Fragments.and(inClauseFragment, fr"meta_retries > 0")
@@ -228,7 +228,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): URIO[WalletAccessContext, Seq[IssueCredentialRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*)
       .transactWallet(xa)
       .orDie
   }
@@ -238,7 +238,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): UIO[Seq[IssueCredentialRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*)
       .transact(xb)
       .orDie
   }
@@ -440,7 +440,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       recordIds: Seq[DidCommID]
   ): URIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]] = {
     val idAsStrings = recordIds.map(_.toString)
-    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail: _*)
+    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail*)
     val inClauseFragment = Fragments.in(fr"id", nel)
 
     val cxnIO = sql"""
@@ -467,7 +467,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       recordIds: Seq[DidCommID]
   ): URIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]] = {
     val idAsStrings = recordIds.map(_.toString)
-    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail: _*)
+    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail*)
     val inClauseFragment = Fragments.in(fr"id", nel)
 
     val cxnIO = sql"""

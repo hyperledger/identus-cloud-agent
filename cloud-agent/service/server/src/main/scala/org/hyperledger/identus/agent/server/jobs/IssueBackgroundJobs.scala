@@ -42,7 +42,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
     .counterInt(key)
     .fromConst(1)
 
-  private[this] def performIssueCredentialExchange(record: IssueCredentialRecord) = {
+  private def performIssueCredentialExchange(record: IssueCredentialRecord) = {
     import IssueCredentialRecord.*
     import IssueCredentialRecord.ProtocolState.*
 
@@ -495,7 +495,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               credentialService <- ZIO.service[CredentialService]
               config <- ZIO.service[AppConfig]
               _ <- credentialService
-                .generateSDJWTCredential(id)
+                .generateSDJWTCredential(id, config.pollux.credentialSdJwtExpirationTime)
                 .provideSomeLayer(ZLayer.succeed(walletAccessContext))
             } yield ()).mapError(e => (walletAccessContext, e))
           } yield result
@@ -634,8 +634,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
 
   }
 
-  private[this] def handleCredentialErrors
-      : PartialFunction[Throwable | CredentialServiceError, CredentialServiceError] = {
+  private def handleCredentialErrors: PartialFunction[Throwable | CredentialServiceError, CredentialServiceError] = {
     case e: CredentialServiceError => e
     case t: Throwable              => CredentialServiceError.UnexpectedError(t.getMessage())
   }

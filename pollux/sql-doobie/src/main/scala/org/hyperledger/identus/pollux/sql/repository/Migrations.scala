@@ -35,7 +35,7 @@ final case class Migrations(config: DbConfig) {
 
 object Migrations {
   val layer: URLayer[DbConfig, Migrations] =
-    ZLayer.fromFunction(Migrations.apply _)
+    ZLayer.fromFunction(Migrations.apply)
 
   /** Fail if the RLS is not enabled from a sample table */
   def validateRLS: RIO[Transactor[ContextAwareTask], Unit] = {

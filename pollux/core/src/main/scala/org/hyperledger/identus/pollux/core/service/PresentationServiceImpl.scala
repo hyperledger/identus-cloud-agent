@@ -424,7 +424,7 @@ private class PresentationServiceImpl(
   ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] = {
     for {
       records <- presentationRepository
-        .getPresentationRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+        .getPresentationRecordsByStates(ignoreWithZeroRetries, limit, states*)
         .mapError(RepositoryError.apply)
     } yield records
   }
@@ -436,7 +436,7 @@ private class PresentationServiceImpl(
   ): IO[PresentationError, Seq[PresentationRecord]] = {
     for {
       records <- presentationRepository
-        .getPresentationRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+        .getPresentationRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states*)
         .mapError(RepositoryError.apply)
     } yield records
   }
@@ -1001,7 +1001,7 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  private[this] def getRecordWithState(
+  private def getRecordWithState(
       recordId: DidCommID,
       state: ProtocolState
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
@@ -1159,7 +1159,7 @@ private class PresentationServiceImpl(
         case n => ZIO.fail(UnexpectedError(s"Invalid number of records updated: $n"))
       }
 
-  private[this] def getRecordFromThreadId(
+  private def getRecordFromThreadId(
       thid: Option[String]
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
@@ -1176,14 +1176,14 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  private[this] def toJWTAttachment(options: Options): AttachmentDescriptor = {
+  private def toJWTAttachment(options: Options): AttachmentDescriptor = {
     AttachmentDescriptor.buildJsonAttachment(
       payload = PresentationAttachment.build(Some(options)),
       format = Some(PresentCredentialRequestFormat.JWT.name)
     )
   }
 
-  private[this] def toSDJWTAttachment(
+  private def toSDJWTAttachment(
       options: Options,
       claimsToDsiclose: ast.Json.Obj
   ): AttachmentDescriptor = {
@@ -1194,7 +1194,7 @@ private class PresentationServiceImpl(
     )
   }
 
-  private[this] def toAnoncredAttachment(
+  private def toAnoncredAttachment(
       presentationRequest: AnoncredPresentationRequestV1
   ): AttachmentDescriptor = {
     AttachmentDescriptor.buildBase64Attachment(
@@ -1204,7 +1204,7 @@ private class PresentationServiceImpl(
     )
   }
 
-  private[this] def createDidCommRequestPresentation(
+  private def createDidCommRequestPresentation(
       proofTypes: Seq[ProofType],
       thid: DidCommID,
       pairwiseVerifierDID: DidId,
@@ -1223,7 +1223,7 @@ private class PresentationServiceImpl(
     )
   }
 
-  private[this] def createDidCommRequestPresentationFromProposal(
+  private def createDidCommRequestPresentationFromProposal(
       proposePresentation: ProposePresentation
   ): RequestPresentation = {
     // TODO to review what is needed
@@ -1238,7 +1238,7 @@ private class PresentationServiceImpl(
     )
   }
 
-  private[this] def updatePresentationRecordProtocolState(
+  private def updatePresentationRecordProtocolState(
       id: DidCommID,
       from: PresentationRecord.ProtocolState,
       to: PresentationRecord.ProtocolState

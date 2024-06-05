@@ -14,7 +14,7 @@ object ApolloSpec extends ZIOSpecDefault {
       secp256k1OpsSpec,
       bip32Spec,
     )
-    suite("Apollo - KMP implementation")(tests: _*).provideLayer(Apollo.layer)
+    suite("Apollo - KMP implementation")(tests*).provideLayer(Apollo.layer)
   }
 
   private val secp256k1PublicKeySpec = suite("Secp256k1PublicKey")(
@@ -224,7 +224,7 @@ object ApolloSpec extends ZIOSpecDefault {
         val seed = HexString.fromStringUnsafe(seedHex).toByteArray
         for {
           apollo <- ZIO.service[Apollo]
-          keyPair <- apollo.secp256k1.deriveKeyPair(seed)(path: _*)
+          keyPair <- apollo.secp256k1.deriveKeyPair(seed)(path*)
         } yield assert(keyPair.privateKey.getEncoded)(
           equalTo(HexString.fromStringUnsafe(expectedPrivateKeyHex).toByteArray)
         )

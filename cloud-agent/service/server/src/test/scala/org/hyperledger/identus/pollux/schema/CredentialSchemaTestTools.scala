@@ -122,7 +122,7 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
 }
 
 trait CredentialSchemaGen {
-  self: ZIOSpecDefault with CredentialSchemaTestTools =>
+  self: ZIOSpecDefault & CredentialSchemaTestTools =>
   object Generator {
     val schemaName = Gen.alphaNumericStringBounded(4, 12)
     val majorVersion = Gen.int(1, 9)

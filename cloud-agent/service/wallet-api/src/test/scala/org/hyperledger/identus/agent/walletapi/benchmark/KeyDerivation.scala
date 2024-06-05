@@ -58,7 +58,7 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
           .foreachPar(1 to 50_000) { i =>
             Live.live {
               apollo.secp256k1
-                .deriveKeyPair(seed)(derivationPath(keyIndex = i): _*)
+                .deriveKeyPair(seed)(derivationPath(keyIndex = i)*)
                 .timed
                 .map(_._1)
             }
@@ -97,7 +97,7 @@ object KeyDerivation extends ZIOSpecDefault, VaultTestContainerSupport {
       apollo <- ZIO.service[Apollo]
       _ <- ZIO
         .foreach(1 to n) { i =>
-          apollo.secp256k1.deriveKeyPair(seed)(derivationPath(keyIndex = i): _*)
+          apollo.secp256k1.deriveKeyPair(seed)(derivationPath(keyIndex = i)*)
         }
     } yield ()
   }
