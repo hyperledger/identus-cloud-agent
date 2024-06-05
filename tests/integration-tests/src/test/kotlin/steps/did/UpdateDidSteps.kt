@@ -22,7 +22,7 @@ class UpdateDidSteps {
         val didKey = ManagedDIDKeyTemplate(
             id = newDidKeyId,
             purpose = purpose,
-            curve = curve
+            curve = curve,
         )
         val updatePrismDidAction = UpdateManagedDIDRequestAction(
             actionType = ActionType.ADD_KEY,
@@ -101,11 +101,11 @@ class UpdateDidSteps {
             actor.attemptsTo(
                 Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
             )
-            val didKey = "${actor.recall<String>("shortFormDid")}#${newDidKeyId}"
+            val didKey = "${actor.recall<String>("shortFormDid")}#$newDidKeyId"
             val didDocument = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!
             val foundVerificationMethod = didDocument.verificationMethod!!.map { it.id }.any { it == didKey }
 
-            foundVerificationMethod && when(purpose) {
+            foundVerificationMethod && when (purpose) {
                 Purpose.ASSERTION_METHOD -> didDocument.assertionMethod!!.any { it == didKey }
                 Purpose.AUTHENTICATION -> didDocument.authentication!!.any { it == didKey }
                 Purpose.CAPABILITY_DELEGATION -> didDocument.capabilityDelegation!!.any { it == didKey }

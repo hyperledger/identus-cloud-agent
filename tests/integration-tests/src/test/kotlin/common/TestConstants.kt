@@ -1,7 +1,6 @@
 package common
 
 import org.hyperledger.identus.client.models.*
-import java.time.Duration
 
 object TestConstants {
     val TESTS_CONFIG = System.getProperty("TESTS_CONFIG") ?: "/configs/basic.conf"
