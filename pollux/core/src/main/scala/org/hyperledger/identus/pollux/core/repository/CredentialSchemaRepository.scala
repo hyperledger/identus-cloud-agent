@@ -15,11 +15,11 @@ trait CredentialSchemaRepository
 
   def findByGuid(guid: UUID): UIO[Option[CredentialSchema]]
 
-  def update(cs: CredentialSchema): URIO[WalletAccessContext, Option[CredentialSchema]]
+  def update(cs: CredentialSchema): URIO[WalletAccessContext, CredentialSchema]
 
   def getAllVersions(id: UUID, author: String): URIO[WalletAccessContext, List[String]]
 
-  def delete(guid: UUID): URIO[WalletAccessContext, Option[CredentialSchema]]
+  def delete(guid: UUID): URIO[WalletAccessContext, CredentialSchema]
 
   def deleteAll(): URIO[WalletAccessContext, Unit]
 }

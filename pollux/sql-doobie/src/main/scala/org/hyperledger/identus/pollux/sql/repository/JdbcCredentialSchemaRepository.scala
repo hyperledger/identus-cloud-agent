@@ -38,14 +38,13 @@ case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: 
       )
   }
 
-  override def update(cs: CredentialSchema): URIO[WalletAccessContext, Option[CredentialSchema]] = {
+  override def update(cs: CredentialSchema): URIO[WalletAccessContext, CredentialSchema] = {
     ZIO.serviceWithZIO[WalletAccessContext](ctx =>
       CredentialSchemaSql
         .update(CredentialSchemaRow.fromModel(cs, ctx.walletId))
         .transactWallet(xa)
         .orDie
-        .map(Option.apply)
-        .map(_.map(CredentialSchemaRow.toModel))
+        .map(CredentialSchemaRow.toModel)
     )
   }
 
@@ -56,13 +55,12 @@ case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: 
       .orDie
   }
 
-  override def delete(guid: UUID): URIO[WalletAccessContext, Option[CredentialSchema]] = {
+  override def delete(guid: UUID): URIO[WalletAccessContext, CredentialSchema] = {
     CredentialSchemaSql
       .delete(guid)
       .transactWallet(xa)
       .orDie
-      .map(Option.apply)
-      .map(_.map(CredentialSchemaRow.toModel))
+      .map(CredentialSchemaRow.toModel)
   }
 
   def deleteAll(): URIO[WalletAccessContext, Unit] = {

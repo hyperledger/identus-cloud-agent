@@ -77,10 +77,7 @@ class CredentialSchemaServiceImpl(
     } yield updated
   }
   override def delete(guid: UUID): Result[CredentialSchema] = {
-    for {
-      deleted_row_opt <- credentialSchemaRepository.delete(guid)
-      deleted_row <- ZIO.fromOption(deleted_row_opt).mapError(_ => GuidNotFoundError(guid))
-    } yield deleted_row
+    credentialSchemaRepository.delete(guid)
   }
 
   override def lookup(
