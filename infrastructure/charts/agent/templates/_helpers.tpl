@@ -40,6 +40,7 @@ Create chart name and version as used by the chart label.
       {{- end }}
     {{- end }}
 {{- end -}}
+
 {{- define "consumer-restriction" }}
     - name: consumer-restriction
       enable: {{ .Values.ingress.auth.consumer_restriction }}
@@ -52,9 +53,12 @@ Create chart name and version as used by the chart label.
           -  {{ regexReplaceAll "-" $.Release.Name "_" }}_{{ regexReplaceAll "-" . "_" | lower }}
         {{- end }}
 {{- end -}}
+
 {{- define "labels.common" -}}
-app.kubernetes.io/part-of: {{ include "cloud-agent.fullname" . }}
-{{- end -}}
+{{- $fullname := include "cloud-agent.fullname" $ -}}
+app.kubernetes.io/part-of: {{ $fullname }}
+{{- end }}
+
 {{- define "headers.security" }}
     - name: response-rewrite
       enable: true
@@ -69,6 +73,7 @@ app.kubernetes.io/part-of: {{ include "cloud-agent.fullname" . }}
             Cache-Control: "no-cache, no-store"
           remove: ["Server"]
 {{- end -}}
+
 {{- define "headers.requestId" }}
     - name: request-id
       enable: true
