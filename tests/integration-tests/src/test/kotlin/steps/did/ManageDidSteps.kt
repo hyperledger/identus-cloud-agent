@@ -74,7 +74,7 @@ class ManageDidSteps {
         val longFormDid = managedDid.longFormDid!!
         actor.attemptsTo(
             Get("/dids/$longFormDid"),
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK)
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
         )
 
         val resolvedDid = SerenityRest.lastResponse().get<DIDResolutionResult>()
@@ -96,31 +96,31 @@ class ManageDidSteps {
         when (purpose) {
             Purpose.ASSERTION_METHOD -> {
                 actor.attemptsTo(
-                    Ensure.that(resolvedDid.didDocument!!.assertionMethod!!.size).isEqualTo(1)
+                    Ensure.that(resolvedDid.didDocument!!.assertionMethod!!.size).isEqualTo(1),
                 )
             }
 
             Purpose.AUTHENTICATION -> {
                 actor.attemptsTo(
-                    Ensure.that(didDocument.authentication!!.size).isEqualTo(1)
+                    Ensure.that(didDocument.authentication!!.size).isEqualTo(1),
                 )
             }
 
             Purpose.CAPABILITY_DELEGATION -> {
                 actor.attemptsTo(
-                    Ensure.that(didDocument.capabilityDelegation!!.size).isEqualTo(1)
+                    Ensure.that(didDocument.capabilityDelegation!!.size).isEqualTo(1),
                 )
             }
 
             Purpose.CAPABILITY_INVOCATION -> {
                 actor.attemptsTo(
-                    Ensure.that(didDocument.capabilityInvocation!!.size).isEqualTo(1)
+                    Ensure.that(didDocument.capabilityInvocation!!.size).isEqualTo(1),
                 )
             }
 
             Purpose.KEY_AGREEMENT -> {
                 actor.attemptsTo(
-                    Ensure.that(resolvedDid.didDocument!!.keyAgreement!!.size).isEqualTo(1)
+                    Ensure.that(resolvedDid.didDocument!!.keyAgreement!!.size).isEqualTo(1),
                 )
             }
         }
