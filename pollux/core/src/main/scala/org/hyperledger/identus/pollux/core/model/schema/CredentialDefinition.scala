@@ -86,7 +86,7 @@ object CredentialDefinition {
       definition: Definition,
       proofSchemaId: String,
       proof: CorrectnessProof
-  ): ZIO[Any, Nothing, CredentialDefinition] = {
+  ): UIO[CredentialDefinition] = {
     for {
       id <- zio.Random.nextUUID
       cs <- make(id, in, definitionSchemaId, definition, proofSchemaId, proof)
@@ -100,7 +100,7 @@ object CredentialDefinition {
       definition: Definition,
       keyCorrectnessProofSchemaId: String,
       keyCorrectnessProof: CorrectnessProof
-  ): ZIO[Any, Nothing, CredentialDefinition] = {
+  ): UIO[CredentialDefinition] = {
     for {
       ts <- zio.Clock.currentDateTime.map(
         _.atZoneSameInstant(ZoneOffset.UTC).toOffsetDateTime

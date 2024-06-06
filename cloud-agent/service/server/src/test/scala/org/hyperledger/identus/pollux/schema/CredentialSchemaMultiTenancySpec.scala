@@ -105,10 +105,10 @@ object CredentialSchemaMultiTenancySpec extends ZIOSpecDefault with CredentialSc
           .exit
 
         aliceCannotUpdateBobsVCSchema = assert(notFoundSchemaAError)(
-          fails(isSubtype[CredentialSchemaService.Error.NotFoundError](anything))
+          fails(isSubtype[CredentialSchemaService.GuidNotFoundError](anything))
         )
         bobCannotUpdateAlicesVCSchema = assert(notFoundSchemaBError)(
-          fails(isSubtype[CredentialSchemaService.Error.NotFoundError](anything))
+          fails(isSubtype[CredentialSchemaService.GuidNotFoundError](anything))
         )
 
         fetchedSchemaAbyB <- service.getByGUID(updatedSchemaA.guid).provideLayer(Bob.wacLayer)

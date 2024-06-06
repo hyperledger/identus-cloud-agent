@@ -12,7 +12,7 @@ import org.hyperledger.identus.pollux.credentialschema.http.{
   CredentialSchemaResponsePage
 }
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import sttp.client3.{basicRequest, DeserializationException, Response, UriContext}
+import sttp.client3.{basicRequest, Response, UriContext}
 import sttp.client3.ziojson.*
 import sttp.model.{StatusCode, Uri}
 import zio.*
