@@ -45,15 +45,3 @@ trait CredentialSchemaController {
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponsePage]
 }
-
-object CredentialSchemaController {
-  def domainToHttpError(
-      error: CredentialSchemaServiceError
-  ): ErrorResponse = error
-
-  implicit def domainToHttpErrorIO[R, T](
-      domainIO: ZIO[R, CredentialSchemaServiceError, T]
-  ): ZIO[R, ErrorResponse, T] = {
-    domainIO.mapError(domainToHttpError)
-  }
-}
