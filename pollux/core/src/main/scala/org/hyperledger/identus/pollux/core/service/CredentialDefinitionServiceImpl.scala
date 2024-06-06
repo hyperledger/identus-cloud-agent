@@ -84,9 +84,9 @@ class CredentialDefinitionServiceImpl(
         )
     } yield createdCredentialDefinition
   }.mapError {
-    case u: URIDereferencerError              => CredentialDefinitionValidationError(URISyntaxError(u.error))
-    case j: JsonSchemaError                   => CredentialDefinitionValidationError(SchemaError(j))
-    case t: Throwable                         => RepositoryError(t)
+    case u: URIDereferencerError => CredentialDefinitionValidationError(URISyntaxError(u.userFacingMessage))
+    case j: JsonSchemaError      => CredentialDefinitionValidationError(SchemaError(j))
+    case t: Throwable            => RepositoryError(t)
     case e: CredentialDefinitionCreationError => e
   }
 

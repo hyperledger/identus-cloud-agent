@@ -14,4 +14,5 @@ object StatusCode {
   val UnprocessableContent: StatusCode = StatusCode(422)
 
   val InternalServerError: StatusCode = StatusCode(500)
+  val BadGateway: StatusCode = StatusCode(502)
 }

@@ -725,7 +725,7 @@ private class PresentationServiceImpl(
   private def resolveSchema(schemaUri: String): IO[UnexpectedError, (String, AnoncredSchemaDef)] = {
     for {
       uri <- ZIO.attempt(new URI(schemaUri)).mapError(e => UnexpectedError(e.getMessage))
-      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
+      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.userFacingMessage))
       anoncredSchema <-
         AnoncredSchemaSerDesV1.schemaSerDes
           .deserialize(content)
@@ -745,7 +745,7 @@ private class PresentationServiceImpl(
   ): IO[UnexpectedError, (String, AnoncredCredentialDefinition)] = {
     for {
       uri <- ZIO.attempt(new URI(credentialDefinitionUri)).mapError(e => UnexpectedError(e.getMessage))
-      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
+      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.userFacingMessage))
       _ <-
         PublicCredentialDefinitionSerDesV1.schemaSerDes
           .validate(content)
