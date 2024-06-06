@@ -6,8 +6,9 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.InvalidCredentialOffer
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{mock, Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
+import zio.{Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer, mock}
 import zio.mock.{Mock, Proxy}
 
 import java.util.UUID
@@ -61,7 +62,7 @@ object MockCredentialService extends Mock[CredentialService] {
         IssueCredentialRecord
       ]
 
-  object ReceiveCredentialOffer extends Effect[OfferCredential, CredentialServiceError, IssueCredentialRecord]
+  object ReceiveCredentialOffer extends Effect[OfferCredential, InvalidCredentialOffer, IssueCredentialRecord]
   object AcceptCredentialOffer
       extends Effect[(DidCommID, Option[String]), CredentialServiceError, IssueCredentialRecord]
   object GenerateJWTCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
@@ -152,7 +153,7 @@ object MockCredentialService extends Mock[CredentialService] {
           credentialDefinitionId
         )
 
-      override def receiveCredentialOffer(offer: OfferCredential): IO[CredentialServiceError, IssueCredentialRecord] =
+      override def receiveCredentialOffer(offer: OfferCredential): IO[InvalidCredentialOffer, IssueCredentialRecord] =
         proxy(ReceiveCredentialOffer, offer)
 
       override def acceptCredentialOffer(

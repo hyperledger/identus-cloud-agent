@@ -19,12 +19,7 @@ import org.hyperledger.identus.pollux.anoncreds.{
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{
-  CredentialDefinitionPrivatePartNotFound,
-  CredentialDefinitionServiceError,
-  InvalidCredentialOffer,
-  UnsupportedDidFormat
-}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.*
 import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.model.schema.{CredentialDefinition, CredentialSchema}
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
@@ -298,7 +293,7 @@ private class CredentialServiceImpl(
 
   override def receiveCredentialOffer(
       offer: OfferCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError | CredentialServiceErrorNew, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, InvalidCredentialOffer, IssueCredentialRecord] = {
     for {
       attachment <- ZIO
         .fromOption(offer.attachments.headOption)
@@ -383,7 +378,7 @@ private class CredentialServiceImpl(
   private[this] def validateClaimsAgainstSchemaIfAny(
       claims: Json,
       maybeSchemaId: Option[String]
-  ) = maybeSchemaId match
+  ): UIO[Unit] = maybeSchemaId match
     case Some(schemaId) =>
       CredentialSchema
         .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriDereferencer)
@@ -900,16 +895,12 @@ private class CredentialServiceImpl(
   private def getRecordWithState(
       recordId: DidCommID,
       state: ProtocolState
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord] = {
     for {
-      maybeRecord <- credentialRepository
-        .findById(recordId)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
+      record <- credentialRepository.getById(recordId)
       _ <- record.protocolState match {
         case s if s == state => ZIO.unit
-        case state           => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
+        case s               => ZIO.fail(RecordNotFound(recordId, Some(s)))
       }
     } yield record
   }

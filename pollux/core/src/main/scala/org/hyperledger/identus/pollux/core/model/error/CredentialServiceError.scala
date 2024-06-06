@@ -1,6 +1,7 @@
 package org.hyperledger.identus.pollux.core.model.error
 
 import org.hyperledger.identus.pollux.core.model.DidCommID
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
 import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 
 import java.util.UUID
@@ -54,5 +55,11 @@ object CredentialServiceErrorNew {
       extends CredentialServiceErrorNew(
         StatusCode.NotFound,
         s"There is no private part matching the credential definition: guid=$guid"
+      )
+
+  final case class RecordNotFound(recordId: DidCommID, state: Option[ProtocolState])
+      extends CredentialServiceErrorNew(
+        StatusCode.NotFound,
+        s"The requested record was not found: recordId=$recordId, state=$state"
       )
 }

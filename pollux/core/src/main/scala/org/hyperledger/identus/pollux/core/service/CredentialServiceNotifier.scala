@@ -7,8 +7,9 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.InvalidCredentialOffer
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
+import zio.{Duration, UIO, URIO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
 
@@ -95,7 +96,7 @@ class CredentialServiceNotifier(
 
   override def receiveCredentialOffer(
       offer: OfferCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, InvalidCredentialOffer, IssueCredentialRecord] =
     notifyOnSuccess(svc.receiveCredentialOffer(offer))
 
   override def acceptCredentialOffer(
@@ -161,8 +162,8 @@ class CredentialServiceNotifier(
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(svc.generateAnonCredsCredential(recordId))
 
-  private def notifyOnSuccess[R](
-      effect: ZIO[R, CredentialServiceError | CredentialServiceErrorNew, IssueCredentialRecord]
+  private def notifyOnSuccess[R, E](
+      effect: ZIO[R, E, IssueCredentialRecord]
   ) =
     for {
       record <- effect
