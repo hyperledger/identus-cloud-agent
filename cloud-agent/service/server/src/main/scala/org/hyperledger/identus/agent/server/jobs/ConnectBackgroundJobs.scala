@@ -34,7 +34,7 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
     } yield ()
   }
 
-  private[this] def performExchange(
+  private def performExchange(
       record: ConnectionRecord
   ): URIO[
     DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & DIDNonSecretStorage & AppConfig,

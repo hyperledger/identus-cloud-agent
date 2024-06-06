@@ -81,9 +81,9 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Chart.Name }}-realm-import
+  name: {{ include "cloud-agent.fullname" . }}-realm-import
 data:
-  {{ .Chart.Name }}.json: |
+  {{ include "cloud-agent.fullname" . }}.json: |
     {
       "realm": {{ .Values.server.keycloak.realm | quote }},
       "enabled": true

@@ -24,7 +24,7 @@ object JdbcConnectionRepositorySpec extends ZIOSpecDefault, PostgresTestContaine
     systemTransactorLayer
   )
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     (suite("JDBC Connection Repository test suite")(
       ConnectionRepositorySpecSuite.testSuite,
       ConnectionRepositorySpecSuite.multitenantTestSuite

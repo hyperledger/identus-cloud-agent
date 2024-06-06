@@ -36,7 +36,7 @@ trait VcVerificationServiceSpecHelper {
   protected val emptyDidResolverLayer: ZLayer[Any, Nothing, PrismDidResolver] = MockDIDService.empty ++
     MockManagedDIDService.empty >>> ZLayer.fromFunction(PrismDidResolver(_))
 
-  protected val vcVerificationServiceLayer: ZLayer[Any, Nothing, VcVerificationService with WalletAccessContext] =
+  protected val vcVerificationServiceLayer: ZLayer[Any, Nothing, VcVerificationService & WalletAccessContext] =
     emptyDidResolverLayer ++ ResourceURIDereferencerImpl.layer >>>
       VcVerificationServiceImpl.layer ++ defaultWalletLayer
 

@@ -257,7 +257,7 @@ class JdbcPresentationRepository(
       case Nil =>
         connection.pure(Nil)
       case head +: tail =>
-        val nel = NonEmptyList.of(head, tail: _*)
+        val nel = NonEmptyList.of(head, tail*)
         val inClauseFragment = Fragments.in(fr"protocol_state", nel)
         val conditionFragment = Fragments.whereAndOpt(
           Some(inClauseFragment),
@@ -300,14 +300,14 @@ class JdbcPresentationRepository(
       limit: Int,
       states: PresentationRecord.ProtocolState*
   ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transactWallet(xa)
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*).transactWallet(xa)
   }
   override def getPresentationRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: PresentationRecord.ProtocolState*
   ): Task[Seq[PresentationRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transact(xb)
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*).transact(xb)
   }
 
   override def getPresentationRecord(recordId: DidCommID): RIO[WalletAccessContext, Option[PresentationRecord]] = {

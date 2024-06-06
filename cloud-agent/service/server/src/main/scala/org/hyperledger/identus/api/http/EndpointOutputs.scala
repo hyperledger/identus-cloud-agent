@@ -15,7 +15,7 @@ object EndpointOutputs {
   def basicFailuresWith(extraFailures: OneOfVariant[ErrorResponse]*) = {
     oneOf(
       FailureVariant.badRequest,
-      (FailureVariant.internalServerError +: extraFailures): _*
+      (FailureVariant.internalServerError +: extraFailures)*
     )
   }
 

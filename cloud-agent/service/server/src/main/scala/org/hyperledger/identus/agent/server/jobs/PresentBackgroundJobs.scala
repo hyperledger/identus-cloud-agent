@@ -67,7 +67,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
     .counterInt(key)
     .fromConst(1)
 
-  private[this] def createPrismDIDIssuerFromPresentationCredentials(
+  private def createPrismDIDIssuerFromPresentationCredentials(
       presentationId: DidCommID,
       credentialsToUse: Seq[String]
   ) =
@@ -104,7 +104,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
   // Holder / Prover Get the Holder/Prover PrismDID from the IssuedCredential
   // When holder accepts offer he provides the subjectdid
-  private[this] def getPrismDIDForHolderFromCredentials(
+  private def getPrismDIDForHolderFromCredentials(
       presentationId: DidCommID,
       credentialsToUse: Seq[String]
   ) =
@@ -139,7 +139,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       jwtIssuer <- getSDJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
     } yield jwtIssuer
 
-  private[this] def performPresentProofExchange(record: PresentationRecord): URIO[
+  private def performPresentProofExchange(record: PresentationRecord): URIO[
     AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService &
       DIDNonSecretStorage & DIDService & ManagedDIDService,
     Unit
@@ -1093,7 +1093,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
   }
 
-  private[this] def handlePresentationErrors: PartialFunction[
+  private def handlePresentationErrors: PartialFunction[
     Throwable | CredentialServiceError | PresentationError | BackgroundJobError,
     PresentationError | CredentialServiceError | BackgroundJobError
   ] = {

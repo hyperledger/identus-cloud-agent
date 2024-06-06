@@ -44,7 +44,7 @@ object PublicCredentialDefinitionSchemaSerDesSpec extends ZIOSpecDefault {
       |}
       |""".stripMargin
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("PublicCredentialDefinitionSerDes")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("PublicCredentialDefinitionSerDes")(
     test("should validate a correct schema") {
       assertZIO(PublicCredentialDefinitionSerDesV1.schemaSerDes.validate(json))(isUnit)
     },

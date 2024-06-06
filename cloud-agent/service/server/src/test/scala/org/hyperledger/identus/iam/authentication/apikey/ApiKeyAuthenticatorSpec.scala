@@ -63,7 +63,7 @@ object ApiKeyAuthenticatorSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         pgContainerLayer
       )
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = {
+  override def spec: Spec[TestEnvironment & Scope, Any] = {
     val testSuite = suite("ApiKeyAuthenticatorSpec")(
       authenticationDisabledSpec,
       authenticationEnabledSingleTenantSpec,
