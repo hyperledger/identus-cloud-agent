@@ -7,7 +7,6 @@ import org.hyperledger.identus.api.http.model.{CollectionStats, Order, Paginatio
 import org.hyperledger.identus.castor.core.model.did.{LongFormPrismDID, PrismDID}
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.FilteredEntries
 import org.hyperledger.identus.pollux.core.service.CredentialSchemaService
-import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaController.domainToHttpErrorIO
 import org.hyperledger.identus.pollux.credentialschema.http.{
   CredentialSchemaInput,
   CredentialSchemaResponse,
@@ -21,6 +20,7 @@ import zio.*
 import zio.json.ast.Json
 
 import java.util.UUID
+import scala.language.implicitConversions
 
 class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDIDService: ManagedDIDService)
     extends CredentialSchemaController {

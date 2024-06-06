@@ -6,9 +6,8 @@ import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{CollectionStats, Order, Pagination}
 import org.hyperledger.identus.castor.core.model.did.{LongFormPrismDID, PrismDID}
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.FilteredEntries
-import org.hyperledger.identus.pollux.core.service.{CredentialDefinitionService, CredentialDefinitionServiceError}
+import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService
 import org.hyperledger.identus.pollux.credentialdefinition
-import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController.domainToHttpErrorIO
 import org.hyperledger.identus.pollux.credentialdefinition.http.{
   CredentialDefinitionInput,
   CredentialDefinitionResponse,
@@ -22,6 +21,7 @@ import zio.*
 import zio.json.ast.Json
 
 import java.util.UUID
+import scala.language.implicitConversions
 
 class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, managedDIDService: ManagedDIDService)
     extends CredentialDefinitionController {
@@ -30,15 +30,12 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
   )(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponse] = {
-    (for {
+    for {
       _ <- validatePrismDID(in.author)
       result <- service
         .create(toDomain(in))
         .map(cs => fromDomain(cs).withBaseUri(rc.request.uri))
-    } yield result).mapError {
-      case e: ErrorResponse                    => e
-      case e: CredentialDefinitionServiceError => CredentialDefinitionController.domainToHttpError(e)
-    }
+    } yield result
   }
 
   override def getCredentialDefinitionByGuid(
