@@ -207,7 +207,9 @@ private class PresentationServiceImpl(
         .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
       issuedValidCredentials <-
         credentialRepository
-          .findValidAnonCredsIssuedCredentials(anoncredCredentialProof.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential)))
+          .findValidAnonCredsIssuedCredentials(
+            anoncredCredentialProof.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential))
+          )
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
           issuedValidCredentials.nonEmpty,
@@ -826,7 +828,9 @@ private class PresentationServiceImpl(
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       issuedCredentials <-
         credentialRepository
-          .findValidAnonCredsIssuedCredentials(credentialsToUse.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential)))
+          .findValidAnonCredsIssuedCredentials(
+            credentialsToUse.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential))
+          )
       _ <- validateFullCredentialsFormat(
         record,
         issuedCredentials
