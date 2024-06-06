@@ -18,7 +18,7 @@ import org.hyperledger.identus.pollux.core.service.serdes.{
   PublicCredentialDefinitionSerDesV1
 }
 import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error.*
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.*
 import zio.ZIO.getOrFailWith
 
 import java.net.URI
@@ -101,7 +101,9 @@ class CredentialDefinitionServiceImpl(
       deleted_row_opt <- credentialDefinitionRepository
         .delete(guid)
         .mapError(RepositoryError.apply)
-      deleted_row <- getOrFailWith(NotFoundError.byGuid(guid))(deleted_row_opt)
+      deleted_row <- deleted_row_opt match
+        case None        => ZIO.fail(GuidNotFoundError(guid))
+        case Some(value) => ZIO.succeed(value)
     } yield deleted_row
 
   override def lookup(filter: CredentialDefinition.Filter, skip: Int, limit: Int): Result[FilteredEntries] = {
@@ -114,9 +116,10 @@ class CredentialDefinitionServiceImpl(
     credentialDefinitionRepository
       .getByGuid(guid)
       .mapError[CredentialDefinitionService.Error](t => RepositoryError(t))
-      .flatMap(
-        getOrFailWith(NotFoundError.byGuid(guid))(_)
-      )
+      .flatMap {
+        case None        => ZIO.fail(GuidNotFoundError(guid))
+        case Some(value) => ZIO.succeed(value)
+      }
   }
 }
 

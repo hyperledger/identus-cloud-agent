@@ -9,7 +9,7 @@ import zio.{IO, ZIO}
 import java.util.UUID
 
 trait CredentialDefinitionService {
-  type Result[T] = ZIO[WalletAccessContext, CredentialDefinitionService.Error, T]
+  private[service] type Result[T] = ZIO[WalletAccessContext, CredentialDefinitionService.Error, T]
 
   /** @param in
     *   CredentialDefinition form for creating the instance
@@ -38,15 +38,22 @@ object CredentialDefinitionService {
 
     final case class RepositoryError(cause: Throwable) extends Error
 
-    final case class NotFoundError(guid: Option[UUID] = None, id: Option[UUID] = None, message: String) extends Error
-
-    object NotFoundError {
-      def byGuid(guid: UUID): NotFoundError =
-        NotFoundError(guid = Option(guid), message = s"Credential Definition record cannot be found by `guid`=$guid")
-
-      def byId(id: UUID): NotFoundError =
-        NotFoundError(id = Option(id), message = s"Credential Definition record cannot be found by `id`=$id")
+    final case class GuidNotFoundError(guid: UUID) extends Error {
+      def message = s"Credential Definition record cannot be found by `guid`=$guid"
     }
+    final case class IdNotFoundError(id: UUID) extends Error {
+      def message = s"Credential Definition record cannot be found by `id`=$id"
+    }
+
+    // final case class NotFoundError(guid: Option[UUID] = None, id: Option[UUID] = None, message: String) extends Error
+
+    // object NotFoundError {
+    //   def byGuid(guid: UUID): NotFoundError =
+    //     NotFoundError(guid = Option(guid), message = s"Credential Definition record cannot be found by `guid`=$guid")
+
+    //   def byId(id: UUID): NotFoundError =
+    //     NotFoundError(id = Option(id), message = s"Credential Definition record cannot be found by `id`=$id")
+    // }
 
     final case class UpdateError(id: UUID, version: String, author: String, message: String) extends Error
 

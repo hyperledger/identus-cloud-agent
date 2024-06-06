@@ -50,8 +50,10 @@ object CredentialDefinitionController {
     error match {
       case RepositoryError(cause: Throwable) =>
         ErrorResponse.internalServerError("RepositoryError", detail = Option(cause.toString))
-      case NotFoundError(_, _, message) =>
-        ErrorResponse.notFound(detail = Option(message))
+      case error: GuidNotFoundError =>
+        ErrorResponse.notFound(detail = Option(error.message))
+      case error: IdNotFoundError =>
+        ErrorResponse.notFound(detail = Option(error.message))
       case UpdateError(id, version, author, message) =>
         ErrorResponse.badRequest(
           title = "CredentialDefinitionUpdateError",
