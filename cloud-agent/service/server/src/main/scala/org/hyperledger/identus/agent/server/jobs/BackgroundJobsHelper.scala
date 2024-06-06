@@ -13,6 +13,9 @@ import org.hyperledger.identus.pollux.sdjwt.SDJWT.*
 import org.hyperledger.identus.pollux.vc.jwt.{DIDResolutionFailed, DIDResolutionSucceeded, ES256KSigner, EdSigner, *}
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, Issuer as JwtIssuer}
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, KmpEd25519KeyOps}
+import org.hyperledger.identus.shared.crypto.KmpEd25519KeyOps
+import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
+import org.hyperledger.identus.shared.crypto.X25519KeyPair
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{ZIO, ZLayer}
 
@@ -22,7 +25,7 @@ trait BackgroundJobsHelper {
   def getLongForm(
       did: PrismDID,
       allowUnpublishedIssuingDID: Boolean = false
-  ): ZIO[ManagedDIDService & WalletAccessContext, Throwable, LongFormPrismDID] = {
+  ): ZIO[ManagedDIDService & WalletAccessContext, RuntimeException, LongFormPrismDID] = {
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
       didState <- managedDIDService
@@ -40,7 +43,7 @@ trait BackgroundJobsHelper {
   def createJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
-  ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, Throwable, JwtIssuer] = {
+  ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, RuntimeException, JwtIssuer] = {
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
       didService <- ZIO.service[DIDService]
@@ -53,18 +56,34 @@ trait BackgroundJobsHelper {
         .someOrFail(
           RuntimeException(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
         )
-      ecKeyPair <- managedDIDService
-        .javaKeyPairWithDID(jwtIssuerDID.asCanonical, issuingKeyId)
-        .mapError(e => RuntimeException(s"Error occurred while getting issuer key-pair: ${e.toString}"))
-        .someOrFail(
-          RuntimeException(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
-        )
-      (privateKey, publicKey) = ecKeyPair
-      jwtIssuer = JwtIssuer(
-        org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
-        ES256KSigner(privateKey),
-        publicKey
-      )
+      jwtIssuer <- managedDIDService
+        .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
+        .flatMap {
+          case None =>
+            ZIO.fail(
+              RuntimeException(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
+            )
+          case Some(Ed25519KeyPair(publicKey, privateKey)) =>
+            ZIO.fail(
+              RuntimeException(
+                s"Issuer key-pair '$issuingKeyId' is of the type Ed25519. It's not supported by this feature in this version"
+              )
+            )
+          case Some(X25519KeyPair(publicKey, privateKey)) =>
+            ZIO.fail(
+              RuntimeException(
+                s"Issuer key-pair '$issuingKeyId' is of the type X25519. It's not supported by this feature in this version"
+              )
+            )
+          case Some(Secp256k1KeyPair(publicKey, privateKey)) =>
+            ZIO.succeed(
+              JwtIssuer(
+                org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
+                ES256KSigner(privateKey.toJavaPrivateKey),
+                publicKey.toJavaPublicKey
+              )
+            )
+        }
     } yield jwtIssuer
   }
 
@@ -93,7 +112,7 @@ trait BackgroundJobsHelper {
   def getEd25519SigningKeyPair(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
-  ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, Throwable, Ed25519KeyPair] = {
+  ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, RuntimeException, Ed25519KeyPair] = {
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
       didService <- ZIO.service[DIDService]
@@ -108,7 +127,6 @@ trait BackgroundJobsHelper {
       ed25519keyPair <- managedDIDService
         .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
         .map(_.collect { case keyPair: Ed25519KeyPair => keyPair })
-        .mapError(e => RuntimeException(s"Error occurred while getting issuer key-pair: ${e.toString}"))
         .someOrFail(
           RuntimeException(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
         )
@@ -127,7 +145,7 @@ trait BackgroundJobsHelper {
   def getSDJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
-  ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, Throwable, JwtIssuer] = {
+  ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, RuntimeException, JwtIssuer] = {
     for {
       ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
     } yield {

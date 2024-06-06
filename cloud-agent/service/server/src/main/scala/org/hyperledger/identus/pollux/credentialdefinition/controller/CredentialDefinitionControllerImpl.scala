@@ -97,7 +97,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
     for {
       authorDID <- ZIO
         .fromEither(PrismDID.fromString(author))
-        .mapError(_ => ErrorResponse.badRequest(detail = Some(s"Unable to parse as a Prism DID: ${author}")))
+        .mapError(ex => ErrorResponse.badRequest(detail = Some(s"Unable to parse Prism DID from '${author}' due: $ex")))
       longFormPrismDID <- getLongForm(authorDID, true)
     } yield longFormPrismDID
 
@@ -110,7 +110,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
         .getManagedDIDState(did.asCanonical)
         .mapError(e =>
           ErrorResponse.internalServerError(detail =
-            Some(s"Error occurred while getting did from wallet: ${e.toString}")
+            Some(s"Error occurred while getting DID from wallet: ${e.toString}")
           )
         )
         .someOrFail(ErrorResponse.notFound(detail = Some(s"Issuer DID does not exist in the wallet: $did")))
