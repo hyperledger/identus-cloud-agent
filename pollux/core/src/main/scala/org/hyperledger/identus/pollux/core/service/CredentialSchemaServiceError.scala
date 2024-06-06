@@ -1,4 +1,4 @@
-package org.hyperledger.identus.pollux.core.service.verification
+package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
@@ -14,13 +14,13 @@ sealed trait CredentialSchemaServiceError(
   override val namespace = "CredentialSchema"
 }
 
-final case class GuidNotFoundError(guid: UUID)
+final case class CredentialSchemaGuidNotFoundError(guid: UUID)
     extends CredentialSchemaServiceError(
       StatusCode.NotFound,
       s"Credential Schema record cannot be found by `guid`=$guid"
     )
 
-final case class UpdateError(id: UUID, version: String, author: String, message: String)
+final case class CredentialSchemaUpdateError(id: UUID, version: String, author: String, message: String)
     extends CredentialSchemaServiceError(
       StatusCode.BadRequest,
       s"Credential schema update error: id=$id, version=$version, author=$author, msg=$message"

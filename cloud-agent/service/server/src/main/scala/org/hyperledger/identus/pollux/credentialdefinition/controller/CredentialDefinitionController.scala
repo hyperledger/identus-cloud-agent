@@ -2,8 +2,7 @@ package org.hyperledger.identus.pollux.credentialdefinition.controller
 
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{Order, Pagination}
-import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService
-import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error.*
+import org.hyperledger.identus.pollux.core.service.CredentialDefinitionServiceError
 import org.hyperledger.identus.pollux.credentialdefinition.http.{
   CredentialDefinitionInput,
   CredentialDefinitionResponse,
@@ -45,31 +44,12 @@ trait CredentialDefinitionController {
 
 object CredentialDefinitionController {
   def domainToHttpError(
-      error: CredentialDefinitionService.Error
-  ): ErrorResponse = {
-    error match {
-      case RepositoryError(cause: Throwable) =>
-        ErrorResponse.internalServerError("RepositoryError", detail = Option(cause.toString))
-      case error: GuidNotFoundError =>
-        ErrorResponse.notFound(detail = Option(error.message))
-      case error: IdNotFoundError =>
-        ErrorResponse.notFound(detail = Option(error.message))
-      case UpdateError(id, version, author, message) =>
-        ErrorResponse.badRequest(
-          title = "CredentialDefinitionUpdateError",
-          detail = Option(s"Credential definition update error: id=$id, version=$version, author=$author, msg=$message")
-        )
-      case CredentialDefinitionCreationError(msg: String) =>
-        ErrorResponse.badRequest(detail = Option(msg))
-      case UnexpectedError(msg: String) =>
-        ErrorResponse.internalServerError(detail = Option(msg))
-      case CredentialDefinitionValidationError(cause) =>
-        ErrorResponse.badRequest(detail = Some(cause.userFacingMessage))
-    }
-  }
+      error: CredentialDefinitionServiceError
+  ): ErrorResponse =
+    error
 
   implicit def domainToHttpErrorIO[R, T](
-      domainIO: ZIO[R, CredentialDefinitionService.Error, T]
+      domainIO: ZIO[R, CredentialDefinitionServiceError, T]
   ): ZIO[R, ErrorResponse, T] = {
     domainIO.mapError(domainToHttpError)
   }

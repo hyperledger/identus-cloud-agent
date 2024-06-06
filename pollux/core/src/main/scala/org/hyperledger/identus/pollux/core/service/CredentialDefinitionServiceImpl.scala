@@ -4,7 +4,11 @@ import org.hyperledger.identus.agent.walletapi.storage
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.pollux.anoncreds.{AnoncredLib, AnoncredSchemaDef}
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{CredentialSchemaParsingError, InvalidURI}
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{
+  CredentialSchemaParsingError,
+  CredentialSchemaValidationError,
+  InvalidURI
+}
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
@@ -17,9 +21,7 @@ import org.hyperledger.identus.pollux.core.service.serdes.{
   ProofKeyCredentialDefinitionSchemaSerDesV1,
   PublicCredentialDefinitionSerDesV1
 }
-import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error.*
 import zio.*
-import zio.ZIO.getOrFailWith
 
 import java.net.URI
 import java.util.UUID
@@ -79,9 +81,7 @@ class CredentialDefinitionServiceImpl(
           ProofKeyCredentialDefinitionSchemaSerDesV1.version,
           proofKeyCredentialDefinitionJson
         )
-      createdCredentialDefinition <- credentialDefinitionRepository
-        .create(cd)
-        .mapError(t => CredentialDefinitionCreationError(t.getMessage))
+      createdCredentialDefinition <- credentialDefinitionRepository.create(cd)
       _ <- genericSecretStorage
         .set(
           createdCredentialDefinition.guid,
@@ -91,20 +91,16 @@ class CredentialDefinitionServiceImpl(
           CredentialDefinitionCreationError(s"An error occurred while storing the CredDef secret: ${t.getMessage}")
         )
     } yield createdCredentialDefinition
-  }.mapError {
-    case e: JsonSchemaError                   => CredentialDefinitionParsingError(e.error)
-    case e: CredentialDefinitionService.Error => e
+  }.mapError { case e: JsonSchemaError =>
+    CredentialDefinitionValidationError(CredentialSchemaValidationError(e))
   }
 
   override def delete(guid: UUID): Result[CredentialDefinition] =
     for {
-      deleted_row_opt <- credentialDefinitionRepository
-        .delete(guid)
-        .mapError(RepositoryError.apply)
-      deleted_row <- deleted_row_opt match
-        case None        => ZIO.fail(GuidNotFoundError(guid))
-        case Some(value) => ZIO.succeed(value)
-    } yield deleted_row
+      existingOpt <- credentialDefinitionRepository.findByGuid(guid)
+      _ <- ZIO.fromOption(existingOpt).mapError(_ => CredentialDefinitionGuidNotFoundError(guid))
+      result <- credentialDefinitionRepository.delete(guid)
+    } yield result
 
   override def lookup(filter: CredentialDefinition.Filter, skip: Int, limit: Int): Result[FilteredEntries] = {
     credentialDefinitionRepository
@@ -112,14 +108,11 @@ class CredentialDefinitionServiceImpl(
       .map(sr => FilteredEntries(sr.entries, sr.count.toInt, sr.totalCount.toInt))
   }
 
-  override def getByGUID(guid: UUID): IO[CredentialDefinitionService.Error, CredentialDefinition] = {
-    credentialDefinitionRepository
-      .getByGuid(guid)
-      .mapError[CredentialDefinitionService.Error](t => RepositoryError(t))
-      .flatMap {
-        case None        => ZIO.fail(GuidNotFoundError(guid))
-        case Some(value) => ZIO.succeed(value)
-      }
+  override def getByGUID(guid: UUID): IO[CredentialDefinitionServiceError, CredentialDefinition] = {
+    for {
+      resultOpt <- credentialDefinitionRepository.findByGuid(guid)
+      result <- ZIO.fromOption(resultOpt).mapError(_ => CredentialDefinitionGuidNotFoundError(guid))
+    } yield result
   }
 }
 

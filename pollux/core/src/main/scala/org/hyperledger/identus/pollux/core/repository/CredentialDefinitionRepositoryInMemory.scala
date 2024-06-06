@@ -25,21 +25,20 @@ class CredentialDefinitionRepositoryInMemory(
         }(ZIO.succeed)
     } yield walletRef
 
-  override def create(record: CredentialDefinition): RIO[WalletAccessContext, CredentialDefinition] = {
+  override def create(record: CredentialDefinition): URIO[WalletAccessContext, CredentialDefinition] = {
     for {
       storeRef <- walletStoreRef
       _ <- for {
         store <- storeRef.get
-        maybeRecord = store.values.find(_.id == record.guid)
-        _ <- maybeRecord match
-          case None        => ZIO.unit
-          case Some(value) => ZIO.fail(RuntimeException("Unique Constraint Violation on 'id'"))
+        maybeRecord = store.values
+          .find(_.id == record.guid)
+          .foreach(_ => throw RuntimeException("Unique Constraint Violation on 'id'"))
       } yield ()
       _ <- storeRef.update(r => r + (record.guid -> record))
     } yield record
   }
 
-  override def getByGuid(guid: UUID): Task[Option[CredentialDefinition]] = {
+  override def findByGuid(guid: UUID): UIO[Option[CredentialDefinition]] = {
     for {
       storeRefs <- walletRefs.get
       storeRefOption <- ZIO.filter(storeRefs.values)(storeRef => storeRef.get.map(_.contains(guid))).map(_.headOption)
@@ -50,21 +49,19 @@ class CredentialDefinitionRepositoryInMemory(
     } yield record
   }
 
-  override def update(cs: CredentialDefinition): RIO[WalletAccessContext, Option[CredentialDefinition]] = {
+  override def update(cs: CredentialDefinition): URIO[WalletAccessContext, CredentialDefinition] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
-      maybeExisting = store.get(cs.id)
-      _ <- maybeExisting match {
-        case Some(existing) =>
-          val updatedStore = store.updated(cs.id, cs)
-          storeRef.set(updatedStore)
-        case None => ZIO.unit
+      existing = store.getOrElse(cs.id, throw new IllegalStateException("Entity doesn't exists"))
+      _ <- {
+        val updatedStore = store.updated(cs.id, cs)
+        storeRef.set(updatedStore)
       }
-    } yield maybeExisting
+    } yield existing
   }
 
-  override def getAllVersions(id: UUID, author: String): RIO[WalletAccessContext, Seq[String]] = {
+  override def getAllVersions(id: UUID, author: String): URIO[WalletAccessContext, Seq[String]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -74,25 +71,21 @@ class CredentialDefinitionRepositoryInMemory(
       .toSeq
   }
 
-  override def delete(guid: UUID): RIO[WalletAccessContext, Option[CredentialDefinition]] = {
+  override def delete(guid: UUID): URIO[WalletAccessContext, CredentialDefinition] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
-      maybeRecord = store.get(guid)
-      _ <- maybeRecord match {
-        case Some(record) => storeRef.update(r => r - record.id)
-        case None         => ZIO.unit
-      }
-    } yield maybeRecord
+      record = store.getOrElse(guid, throw new IllegalStateException("Entity doesn't exists"))
+      _ <- storeRef.update(r => r - record.id)
+    } yield record
   }
 
-  override def deleteAll(): RIO[WalletAccessContext, Long] = {
+  override def deleteAll(): URIO[WalletAccessContext, Unit] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
-      deleted = store.size
       _ <- storeRef.update(Map.empty)
-    } yield deleted.toLong
+    } yield ZIO.unit
   }
 
   override def search(

@@ -114,7 +114,7 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
               _.detail,
               isSome(
                 equalTo(
-                  "Credential Schema Validation Error=UnsupportedCredentialSchemaType(WrongSchema)"
+                  "Credential Schema Validation Error=Unsupported credential schema type: WrongSchema"
                 )
               )
             )
