@@ -138,7 +138,7 @@ private class CredentialServiceImpl(
         case Some(schemaId) =>
           CredentialSchema
             .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriDereferencer)
-            .mapError(e => CredentialSchemaError(e))
+            .orDieAsUnmanagedFailure
         case None =>
           ZIO.unit
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
@@ -198,7 +198,7 @@ private class CredentialServiceImpl(
         case Some(schemaId) =>
           CredentialSchema
             .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriDereferencer)
-            .mapError(e => CredentialSchemaError(e))
+            .orDieAsUnmanagedFailure
         case None =>
           ZIO.unit
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
@@ -258,7 +258,7 @@ private class CredentialServiceImpl(
         .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
       _ <- CredentialSchema
         .validateAnonCredsClaims(credentialDefinition.schemaId, claims.noSpaces, uriDereferencer)
-        .mapError(e => CredentialSchemaError(e))
+        .orDieAsUnmanagedFailure
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
       offer <- createAnonCredsDidCommOfferCredential(
         pairwiseIssuerDID = pairwiseIssuerDID,

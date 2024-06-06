@@ -41,7 +41,7 @@ object URIDereferencerError {
         s"An error occurred while processing the URI's underlying server response: cause=[$cause]"
       )
 
-  final case class UnexpectedResponseReceived(status: Int, content: Option[String] = None)
+  final case class UnexpectedUpstreamResponseReceived(status: Int, content: Option[String] = None)
       extends URIDereferencerError(
         StatusCode.BadGateway,
         s"An unexpected response was received from the URI's underlying server: status=[$status], content=[${content.getOrElse("n/a")}]"

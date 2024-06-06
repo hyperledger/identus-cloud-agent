@@ -26,9 +26,9 @@ class HttpURIDereferencerImpl(client: Client) extends URIDereferencer {
             .runCollect
             .map(c => new String(c.toArray, StandardCharsets.UTF_8))
             .orDie
-            .flatMap(errorMessage => ZIO.fail(UnexpectedResponseReceived(status.code, Some(errorMessage))))
+            .flatMap(errorMessage => ZIO.fail(UnexpectedUpstreamResponseReceived(status.code, Some(errorMessage))))
         case status =>
-          ZIO.fail(UnexpectedResponseReceived(status.code))
+          ZIO.fail(UnexpectedUpstreamResponseReceived(status.code))
       }
     } yield body
     program.provideSomeLayer(zio.Scope.default)
