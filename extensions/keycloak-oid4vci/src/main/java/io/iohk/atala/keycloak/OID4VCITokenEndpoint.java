@@ -34,12 +34,10 @@ public class OID4VCITokenEndpoint extends TokenEndpoint {
 
         if (code && issuerState != null) {
             Response originalResponse = super.createTokenResponse(user, userSession, clientSessionCtx, scopeParam, true, clientPolicyContextGenerator);
-
-            logger.warn("TokenEndpoint issuer_state: " + issuerState);
-            logger.warn("TokenEndpoint userSession ID: " + userSession.getId());
-
-            NonceResponse nonceResponse = identusClient.syncTokenDetails(issuerState);
             AccessTokenResponse responseEntity = (AccessTokenResponse) originalResponse.getEntity();
+
+            String token = responseEntity.getToken();
+            NonceResponse nonceResponse = identusClient.getNonce(token, issuerState);
             responseEntity.setOtherClaims(OID4VCIConstants.C_NONCE, nonceResponse.getNonce());
             responseEntity.setOtherClaims(OID4VCIConstants.C_NONCE_EXPIRE, nonceResponse.getNonceExpiresIn());
             return Response.fromResponse(originalResponse)

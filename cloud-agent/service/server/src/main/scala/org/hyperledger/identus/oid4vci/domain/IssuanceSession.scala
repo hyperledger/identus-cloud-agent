@@ -6,6 +6,7 @@ import java.util.UUID
 
 case class IssuanceSession(
     id: UUID,
+    issuerId: UUID,
     nonce: String,
     issuerState: String,
     schemaId: Option[String],

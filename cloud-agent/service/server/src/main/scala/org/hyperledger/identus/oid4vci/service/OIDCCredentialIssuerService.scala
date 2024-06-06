@@ -44,7 +44,7 @@ trait OIDCCredentialIssuerService {
       claims: zio.json.ast.Json,
   ): ZIO[WalletAccessContext, Error, CredentialOffer]
 
-  def getIssuanceSessionNonce(issuerState: String): ZIO[WalletAccessContext, Error, String]
+  def getIssuanceSessionByIssuerState(issuerState: String): IO[Error, IssuanceSession]
 
   def getIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession]
 }
@@ -151,12 +151,12 @@ case class OIDCCredentialIssuerServiceImpl(
       .mapError(e => ServiceError(s"Failed to issue JWT: ${e.getMessage}"))
   }
 
-  override def getIssuanceSessionNonce(
+  override def getIssuanceSessionByIssuerState(
       issuerState: String
-  ): ZIO[WalletAccessContext, OIDCCredentialIssuerService.Error, String] =
+  ): IO[OIDCCredentialIssuerService.Error, IssuanceSession] =
     issuanceSessionStorage
       .getByIssuerState(issuerState)
-      .mapBoth(e => ServiceError(s"Failed to get issuance session: ${e.message}"), _.map(_.nonce))
+      .mapError(e => ServiceError(s"Failed to get issuance session: ${e.message}"))
       .someOrFail(ServiceError(s"The IssuanceSession with the issuerState $issuerState does not exist"))
 
   override def createCredentialOffer(
@@ -168,7 +168,7 @@ case class OIDCCredentialIssuerServiceImpl(
   ): ZIO[WalletAccessContext, OIDCCredentialIssuerService.Error, CredentialOffer] =
     // TODO: validate claims with credential schema
     for {
-      session <- buildNewIssuanceSession(issuingDID, claims)
+      session <- buildNewIssuanceSession(issuerId, issuingDID, claims)
       _ <- issuanceSessionStorage
         .start(session)
         .mapError(e => ServiceError(s"Failed to start issuance session: ${e.message}"))
@@ -190,6 +190,7 @@ case class OIDCCredentialIssuerServiceImpl(
   }
 
   private def buildNewIssuanceSession(
+      issuerId: UUID,
       issuerDid: PrismDID,
       claims: zio.json.ast.Json
   ): UIO[IssuanceSession] = {
@@ -199,6 +200,7 @@ case class OIDCCredentialIssuerServiceImpl(
       issuerState <- ZIO.random.flatMap(_.nextUUID)
     } yield IssuanceSession(
       id = id,
+      issuerId = issuerId,
       nonce = nonce.toString,
       issuerState = issuerState.toString,
       claims = claims,

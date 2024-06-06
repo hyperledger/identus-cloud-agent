@@ -57,7 +57,7 @@ object OID4VCIIssuerMetadataServiceError {
 
 trait OID4VCIIssuerMetadataService {
   def getCredentialIssuer(issuerId: UUID): IO[IssuerIdNotFound, CredentialIssuer]
-  def createCredentialIssuer(authorizationServer: URL): URIO[WalletAccessContext, CredentialIssuer]
+  def createCredentialIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, CredentialIssuer]
   def getCredentialIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]]
   def updateCredentialIssuer(
       issuerId: UUID,
@@ -86,10 +86,8 @@ trait OID4VCIIssuerMetadataService {
 class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataRepository, uriDereferencer: URIDereferencer)
     extends OID4VCIIssuerMetadataService {
 
-  override def createCredentialIssuer(authorizationServer: URL): URIO[WalletAccessContext, CredentialIssuer] = {
-    val issuer = CredentialIssuer(authorizationServer)
+  override def createCredentialIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, CredentialIssuer] =
     repository.createIssuer(issuer).as(issuer)
-  }
 
   override def getCredentialIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]] =
     repository.findWalletIssuers

@@ -9,7 +9,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jboss.logging.Logger;
 import org.keycloak.util.JsonSerialization;
-import org.yaml.snakeyaml.error.MissingEnvironmentVariableException;
 
 import java.io.IOException;
 import java.util.function.Supplier;
@@ -34,9 +33,10 @@ public class IdentusClient {
         return HttpClientBuilder.create().build();
     }
 
-    public NonceResponse syncTokenDetails(String issuerState) {
+    public NonceResponse getNonce(String token, String issuerState) {
         try (CloseableHttpClient client = httpClient.get()) {
-            HttpPost post = new HttpPost(identusUrl + "/oid4vci/issuers/08877304-a111-4fe4-a84c-8666610b1665/nonces"); // TODO: use real issuer URL
+            HttpPost post = new HttpPost(identusUrl + "/oid4vci/nonces");
+            post.setHeader("Authorization", "Bearer " + token);
             post.setEntity(new StringEntity(JsonSerialization.writeValueAsString(new NonceRequest(issuerState)), ContentType.APPLICATION_JSON));
             return NonceResponse.fromResponse(client.execute(post));
         } catch (IOException e) {

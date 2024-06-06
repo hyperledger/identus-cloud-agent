@@ -261,7 +261,6 @@ services:
     - pg_data_node:/var/lib/postgresql/data
     - ../.shared/postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
     - ../.shared/postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
-version: '3'
 volumes:
   pg_data_holder: {}
   pg_data_issuer: {}

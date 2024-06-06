@@ -8,7 +8,7 @@ import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.oid4vci.http.*
 import org.hyperledger.identus.oid4vci.http.CredentialErrorCode.*
 import org.hyperledger.identus.oid4vci.service.OIDCCredentialIssuerService
-import org.hyperledger.identus.oid4vci.CredentialIssuerEndpoints.ExtendedErrorResponse
+import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialIssuer as PolluxCredentialIssuer
 import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataService
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
@@ -32,9 +32,8 @@ trait CredentialIssuerController {
 
   def getNonce(
       ctx: RequestContext,
-      issuerId: UUID,
       request: NonceRequest
-  ): ZIO[WalletAccessContext, ErrorResponse, NonceResponse]
+  ): IO[ErrorResponse, NonceResponse]
 
   def createCredentialIssuer(
       ctx: RequestContext,
@@ -83,44 +82,34 @@ trait CredentialIssuerController {
 object CredentialIssuerController {
   object Errors {
     def badRequestInvalidDID(didRef: String, details: String): ExtendedErrorResponse =
-      Right(
-        CredentialErrorResponse(
-          error = invalid_request,
-          errorDescription = Some(s"Invalid DID input: $didRef. Error: $details")
-        )
+      CredentialErrorResponse(
+        error = invalid_request,
+        errorDescription = Some(s"Invalid DID input: $didRef. Error: $details")
       )
 
     def badRequestDIDResolutionFailed(didRef: String, details: String): ExtendedErrorResponse =
-      Right(
-        CredentialErrorResponse(
-          error = invalid_request,
-          errorDescription = Some(s"Failed to resolve DID: $didRef. Error: $details")
-        )
+      CredentialErrorResponse(
+        error = invalid_request,
+        errorDescription = Some(s"Failed to resolve DID: $didRef. Error: $details")
       )
 
     def badRequestInvalidProof(jwt: String, details: String): ExtendedErrorResponse =
-      Right(
-        CredentialErrorResponse(error = invalid_proof, errorDescription = Some(s"Invalid proof: $jwt. Error: $details"))
-      )
+      CredentialErrorResponse(error = invalid_proof, errorDescription = Some(s"Invalid proof: $jwt. Error: $details"))
 
     def badRequestUnsupportedCredentialFormat(format: CredentialFormat): ExtendedErrorResponse =
-      Right(
-        CredentialErrorResponse(
-          error = unsupported_credential_format,
-          errorDescription = Some(s"Unsupported credential format: $format")
-        )
+      CredentialErrorResponse(
+        error = unsupported_credential_format,
+        errorDescription = Some(s"Unsupported credential format: $format")
       )
 
     def badRequestUnsupportedCredentialType(details: String): ExtendedErrorResponse =
-      Right(
-        CredentialErrorResponse(
-          error = unsupported_credential_type,
-          errorDescription = Some(s"Unsupported credential type. Error: $details")
-        )
+      CredentialErrorResponse(
+        error = unsupported_credential_type,
+        errorDescription = Some(s"Unsupported credential type. Error: $details")
       )
 
     def serverError(details: Option[String]): ExtendedErrorResponse =
-      Left(internalServerError("InternalServerError", details))
+      internalServerError("InternalServerError", details)
   }
 }
 
@@ -227,12 +216,11 @@ case class CredentialIssuerControllerImpl(
 
   override def getNonce(
       ctx: RequestContext,
-      issuerId: UUID,
       request: NonceRequest
-  ): ZIO[WalletAccessContext, ErrorResponse, NonceResponse] = {
+  ): IO[ErrorResponse, NonceResponse] = {
     credentialIssuerService
-      .getIssuanceSessionNonce(request.issuerState)
-      .map(nonce => NonceResponse(nonce))
+      .getIssuanceSessionByIssuerState(request.issuerState)
+      .map(session => NonceResponse(session.nonce))
       .mapError(ue =>
         internalServerError(detail = Some(s"Unexpected error while creating credential offer: ${ue.message}"))
       )
@@ -243,8 +231,15 @@ case class CredentialIssuerControllerImpl(
       request: CreateCredentialIssuerRequest
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuer] =
     for {
-      authServerUrl <- parseURL(request.authorizationServer)
-      issuer <- issuerMetadataService.createCredentialIssuer(authServerUrl)
+      authServerUrl <- parseURL(request.authorizationServer.url)
+      id = request.id.getOrElse(UUID.randomUUID())
+      issuerToCreate = PolluxCredentialIssuer(
+        id,
+        authServerUrl,
+        request.authorizationServer.clientId,
+        request.authorizationServer.clientSecret
+      )
+      issuer <- issuerMetadataService.createCredentialIssuer(issuerToCreate)
     } yield issuer
 
   override def getCredentialIssuers(

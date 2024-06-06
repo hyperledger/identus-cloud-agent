@@ -24,6 +24,8 @@ class JdbcOID4VCIIssuerMetadataRepository(xa: Transactor[ContextAwareTask], xb: 
       |SELECT
       |  id,
       |  authorization_server,
+      |  authorization_server_client_id,
+      |  authorization_server_client_secret,
       |  created_at,
       |  updated_at
       |FROM public.issuer_metadata
@@ -42,6 +44,8 @@ class JdbcOID4VCIIssuerMetadataRepository(xa: Transactor[ContextAwareTask], xb: 
       |SELECT
       |  id,
       |  authorization_server,
+      |  authorization_server_client_id,
+      |  authorization_server_client_secret,
       |  created_at,
       |  updated_at
       |FROM public.issuer_metadata
@@ -59,12 +63,16 @@ class JdbcOID4VCIIssuerMetadataRepository(xa: Transactor[ContextAwareTask], xb: 
         |INSERT INTO public.issuer_metadata (
         |  id,
         |  authorization_server,
+        |  authorization_server_client_id,
+        |  authorization_server_client_secret,
         |  created_at,
         |  updated_at,
         |  wallet_id
         |) VALUES (
         |  ${issuer.id},
         |  ${issuer.authorizationServer},
+        |  ${issuer.authorizationServerClientId},
+        |  ${issuer.authorizationServerClientSecret},
         |  ${issuer.createdAt},
         |  ${issuer.updatedAt},
         |  current_setting('app.current_wallet_id')::UUID

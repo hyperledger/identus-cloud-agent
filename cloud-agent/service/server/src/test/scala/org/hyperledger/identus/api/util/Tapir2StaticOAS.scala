@@ -6,7 +6,7 @@ import org.hyperledger.identus.castor.controller.{DIDController, DIDRegistrarCon
 import org.hyperledger.identus.connect.controller.ConnectionController
 import org.hyperledger.identus.credential.status.controller.CredentialStatusController
 import org.hyperledger.identus.event.controller.EventController
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
+import org.hyperledger.identus.iam.authentication.{DefaultAuthenticator, Oid4vciAuthenticatorFactory}
 import org.hyperledger.identus.iam.entity.http.controller.EntityController
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementController
 import org.hyperledger.identus.issue.controller.IssueController
@@ -57,7 +57,8 @@ object Tapir2StaticOAS extends ZIOAppDefault {
         ZLayer.succeed(mock[WalletManagementController]) ++
         ZLayer.succeed(mock[DefaultAuthenticator]) ++
         ZLayer.succeed(mock[EventController]) ++
-        ZLayer.succeed(mock[CredentialIssuerController])
+        ZLayer.succeed(mock[CredentialIssuerController]) ++
+        ZLayer.succeed(mock[Oid4vciAuthenticatorFactory])
     )
   }
 

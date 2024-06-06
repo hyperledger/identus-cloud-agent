@@ -27,8 +27,8 @@ import org.hyperledger.identus.credential.status.controller.CredentialStatusCont
 import org.hyperledger.identus.didcomm.controller.DIDCommControllerImpl
 import org.hyperledger.identus.event.controller.EventControllerImpl
 import org.hyperledger.identus.event.notification.EventNotificationServiceImpl
+import org.hyperledger.identus.iam.authentication.{DefaultAuthenticator, Oid4vciAuthenticatorFactory}
 import org.hyperledger.identus.iam.authentication.apikey.JdbcAuthenticationRepository
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
 import org.hyperledger.identus.iam.authorization.core.EntityPermissionManagementService
 import org.hyperledger.identus.iam.authorization.DefaultPermissionManagementService
 import org.hyperledger.identus.iam.entity.http.controller.{EntityController, EntityControllerImpl}
@@ -195,6 +195,7 @@ object MainApp extends ZIOAppDefault {
           DefaultAuthenticator.layer,
           DefaultPermissionManagementService.layer,
           EntityPermissionManagementService.layer,
+          Oid4vciAuthenticatorFactory.layer,
           // grpc
           GrpcModule.prismNodeStubLayer,
           // storage
