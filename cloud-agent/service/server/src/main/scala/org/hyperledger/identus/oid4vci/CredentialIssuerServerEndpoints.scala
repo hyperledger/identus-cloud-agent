@@ -1,32 +1,44 @@
 package org.hyperledger.identus.oid4vci
 
-import org.hyperledger.identus.LogUtils.*
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
+import org.hyperledger.identus.iam.authentication.{
+  AuthenticationError,
+  Authenticator,
+  Authorizer,
+  DefaultAuthenticator,
+  Oid4vciAuthenticatorFactory,
+  SecurityLogic
+}
 import org.hyperledger.identus.oid4vci.controller.CredentialIssuerController
+import org.hyperledger.identus.oid4vci.http.{CredentialErrorResponse, ExtendedErrorResponse, NonceResponse}
 import org.hyperledger.identus.oid4vci.http.{CredentialErrorResponse, NonceResponse}
+import org.hyperledger.identus.LogUtils.*
 import sttp.tapir.ztapir.*
 import zio.*
+
+import scala.language.implicitConversions
 
 case class CredentialIssuerServerEndpoints(
     credentialIssuerController: CredentialIssuerController,
     authenticator: Authenticator[BaseEntity],
     authorizer: Authorizer[BaseEntity],
+    oid4vciAuthenticatorFactory: Oid4vciAuthenticatorFactory
 ) {
   val credentialServerEndpoint: ZServerEndpoint[Any, Any] =
     CredentialIssuerEndpoints.credentialEndpoint
-      .zServerSecurityLogic(
-        SecurityLogic // TODO: add OIDC client authenticator
-          .authenticate(_)(authenticator)
-          .mapError(Left[ErrorResponse, CredentialErrorResponse])
-      )
-      .serverLogic { wac =>
+      .zServerSecurityLogic(ZIO.succeed)
+      .serverLogic { jwt =>
         { case (rc, issuerId, request) =>
-          ZIO.succeed(request).debug("credentialRequest") *>
-            credentialIssuerController
-              .issueCredential(rc, issuerId, request)
-              .logTrace(rc)
+          oid4vciAuthenticatorFactory
+            .make(issuerId)
+            .flatMap(_.authenticate(jwt))
+            .mapError[CredentialErrorResponse](identity)
+            .flatMap { entity => // FIXME: this entity should be checked
+              credentialIssuerController
+                .issueCredential(rc, issuerId, request)
+                .logTrace(rc)
+            }
         }
       }
 
@@ -44,16 +56,18 @@ case class CredentialIssuerServerEndpoints(
 
   val nonceServerEndpoint: ZServerEndpoint[Any, Any] =
     CredentialIssuerEndpoints.nonceEndpoint
-      .zServerSecurityLogic(
-        // FIXME: how can authorization server authorize itself?
-        SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer)
-      )
-      .serverLogic { wac =>
-        { case (rc, id, request) =>
-          credentialIssuerController
-            .getNonce(rc, id, request)
-            .provideSomeLayer(ZLayer.succeed(wac))
-            .logTrace(rc)
+      .zServerSecurityLogic(ZIO.succeed)
+      .serverLogic { jwt =>
+        { case (rc, request) =>
+          oid4vciAuthenticatorFactory
+            .make(request.issuerState)
+            .flatMap(_.authenticate(jwt))
+            .mapError(AuthenticationError.toErrorResponse)
+            .flatMap { entity =>
+              credentialIssuerController
+                .getNonce(rc, request)
+                .logTrace(rc)
+            }
         }
       }
 
@@ -162,11 +176,20 @@ case class CredentialIssuerServerEndpoints(
 }
 
 object CredentialIssuerServerEndpoints {
-  def all: URIO[DefaultAuthenticator & CredentialIssuerController, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[
+    DefaultAuthenticator & Oid4vciAuthenticatorFactory & CredentialIssuerController,
+    List[ZServerEndpoint[Any, Any]]
+  ] = {
     for {
       authenticator <- ZIO.service[DefaultAuthenticator]
       credentialIssuerController <- ZIO.service[CredentialIssuerController]
-      oidcEndpoints = CredentialIssuerServerEndpoints(credentialIssuerController, authenticator, authenticator)
+      oid4vciAuthenticatorFactory <- ZIO.service[Oid4vciAuthenticatorFactory]
+      oidcEndpoints = CredentialIssuerServerEndpoints(
+        credentialIssuerController,
+        authenticator,
+        authenticator,
+        oid4vciAuthenticatorFactory
+      )
     } yield oidcEndpoints.all
   }
 }

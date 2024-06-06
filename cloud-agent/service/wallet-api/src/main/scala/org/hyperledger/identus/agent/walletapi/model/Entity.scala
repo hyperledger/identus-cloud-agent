@@ -10,6 +10,7 @@ import java.util.UUID
 enum EntityRole {
   case Admin extends EntityRole
   case Tenant extends EntityRole
+  case ExternalParty extends EntityRole
 }
 
 trait BaseEntity {

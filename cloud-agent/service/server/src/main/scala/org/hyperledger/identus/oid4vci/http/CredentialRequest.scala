@@ -181,6 +181,7 @@ object LdpProof {
 enum CredentialFormat {
   case jwt_vc_json
   case anoncreds
+  case `vc+sd-jwt`
 }
 
 object CredentialFormat {
@@ -193,11 +194,13 @@ object CredentialFormat {
   given Conversion[PolluxCredentialFormat, CredentialFormat] = {
     case PolluxCredentialFormat.JWT       => CredentialFormat.jwt_vc_json
     case PolluxCredentialFormat.AnonCreds => CredentialFormat.anoncreds
+    case PolluxCredentialFormat.SDJWT     => CredentialFormat.`vc+sd-jwt`
   }
 
   given Conversion[CredentialFormat, PolluxCredentialFormat] = {
     case CredentialFormat.jwt_vc_json => PolluxCredentialFormat.JWT
     case CredentialFormat.anoncreds   => PolluxCredentialFormat.AnonCreds
+    case CredentialFormat.`vc+sd-jwt` => PolluxCredentialFormat.SDJWT
   }
 }
 

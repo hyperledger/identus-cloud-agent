@@ -26,6 +26,17 @@ authorization: Bearer {{ admin_access_token }}
 }
 HTTP 201
 
+# Create agent client
+POST {{ keycloak_base_url }}/admin/realms/{{ keycloak_realm }}/clients
+Authorization: Bearer {{ admin_access_token }}
+{
+  "id": "{{ agent_client_id }}",
+  "authorizationServicesEnabled": true,
+  "serviceAccountsEnabled": true,
+  "secret": "{{ agent_client_secret }}"
+}
+HTTP 201
+
 # Create Alice
 POST {{ keycloak_base_url }}/admin/realms/{{ keycloak_realm }}/users
 Authorization: Bearer {{ admin_access_token }}

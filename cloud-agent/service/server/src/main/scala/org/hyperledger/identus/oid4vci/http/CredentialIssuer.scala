@@ -6,12 +6,23 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID
 
-case class CreateCredentialIssuerRequest(authorizationServer: String)
+case class CreateCredentialIssuerRequest(
+    id: Option[UUID],
+    authorizationServer: AuthorizationServer,
+)
 
 object CreateCredentialIssuerRequest {
   given schema: Schema[CreateCredentialIssuerRequest] = Schema.derived
   given encoder: JsonEncoder[CreateCredentialIssuerRequest] = DeriveJsonEncoder.gen
   given decoder: JsonDecoder[CreateCredentialIssuerRequest] = DeriveJsonDecoder.gen
+}
+
+case class AuthorizationServer(url: String, clientId: String, clientSecret: String)
+
+object AuthorizationServer {
+  given schema: Schema[AuthorizationServer] = Schema.derived
+  given encoder: JsonEncoder[AuthorizationServer] = DeriveJsonEncoder.gen
+  given decoder: JsonDecoder[AuthorizationServer] = DeriveJsonDecoder.gen
 }
 
 case class CredentialIssuer(id: UUID, authorizationServer: String)

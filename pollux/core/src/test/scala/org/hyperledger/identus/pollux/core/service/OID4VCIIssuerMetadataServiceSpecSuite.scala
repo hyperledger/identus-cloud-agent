@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.core.service
 
+import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialIssuer
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
 import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.CredentialConfigurationNotFound
 import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.InvalidSchemaId
@@ -10,9 +11,15 @@ import zio.test.*
 import zio.test.Assertion.*
 import zio.{ZIO, ZLayer}
 
-import java.net.URI
+import java.net.{URI, URL}
 
 object OID4VCIIssuerMetadataServiceSpecSuite {
+
+  private def makeCredentialIssuer(authorizationServer: URL): CredentialIssuer = CredentialIssuer(
+    authorizationServer = authorizationServer,
+    clientId = "client",
+    clientSecret = "secret"
+  )
 
   val testSuite = suite("OID4VCIssuerMetadataService")(
     test("get credential issuer successfully") {
@@ -20,8 +27,8 @@ object OID4VCIIssuerMetadataServiceSpecSuite {
         service <- ZIO.service[OID4VCIIssuerMetadataService]
         authServer1 = URI.create("http://example-1.com").toURL()
         authServer2 = URI.create("http://example-2.com").toURL()
-        issuer1 <- service.createCredentialIssuer(authServer1)
-        issuer2 <- service.createCredentialIssuer(authServer2)
+        issuer1 <- service.createCredentialIssuer(makeCredentialIssuer(authServer1))
+        issuer2 <- service.createCredentialIssuer(makeCredentialIssuer(authServer2))
         getIssuer1 <- service.getCredentialIssuer(issuer1.id)
         getIssuer2 <- service.getCredentialIssuer(issuer2.id)
         getIssuers <- service.getCredentialIssuers
@@ -42,7 +49,7 @@ object OID4VCIIssuerMetadataServiceSpecSuite {
       for {
         service <- ZIO.service[OID4VCIIssuerMetadataService]
         authServer = URI.create("http://example-1.com").toURL()
-        issuer <- service.createCredentialIssuer(authServer)
+        issuer <- service.createCredentialIssuer(makeCredentialIssuer(authServer))
         updatedAuthServer = URI.create("http://example-2.com").toURL()
         _ <- service.updateCredentialIssuer(issuer.id, authorizationServer = Some(updatedAuthServer))
         updatedIssuer <- service.getCredentialIssuer(issuer.id)
@@ -59,7 +66,7 @@ object OID4VCIIssuerMetadataServiceSpecSuite {
       for {
         service <- ZIO.service[OID4VCIIssuerMetadataService]
         authServer = URI.create("http://example-1.com").toURL()
-        issuer <- service.createCredentialIssuer(authServer)
+        issuer <- service.createCredentialIssuer(makeCredentialIssuer(authServer))
         _ <- service
           .createCredentialConfiguration(
             issuer.id,
@@ -76,7 +83,7 @@ object OID4VCIIssuerMetadataServiceSpecSuite {
       for {
         service <- ZIO.service[OID4VCIIssuerMetadataService]
         authServer = URI.create("http://example-1.com").toURL()
-        issuer <- service.createCredentialIssuer(authServer)
+        issuer <- service.createCredentialIssuer(makeCredentialIssuer(authServer))
         createCredConfig = (schemaId: String) =>
           service
             .createCredentialConfiguration(

@@ -82,6 +82,8 @@ services:
     - /hurl/*.hurl
     - --test
     environment:
+      HURL_agent_client_id: cloud-agent
+      HURL_agent_client_secret: secret
       HURL_alice_password: '1234'
       HURL_alice_username: alice
       HURL_alice_wallet_client_id: alice-wallet
@@ -144,7 +146,6 @@ services:
     - pg_data_node:/var/lib/postgresql/data
     - ../.shared/postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
     - ../.shared/postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
-version: '3'
 volumes:
   pg_data_issuer: {}
   pg_data_node: {}

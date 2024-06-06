@@ -60,7 +60,7 @@ final class AccessToken private (token: String, claims: JwtClaim, rolesClaimPath
 }
 
 object AccessToken {
-  def fromString(token: String, rolesClaimPath: Seq[String]): Either[String, AccessToken] =
+  def fromString(token: String, rolesClaimPath: Seq[String] = Nil): Either[String, AccessToken] =
     JwtCirce
       .decode(token, JwtOptions(false, false, false))
       .map(claims => AccessToken(token, claims, rolesClaimPath))

@@ -6,6 +6,7 @@ import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityL
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import org.hyperledger.identus.oid4vci.http.*
+import org.hyperledger.identus.oid4vci.http.ExtendedErrorResponse.given
 import sttp.apispec.Tag
 import sttp.model.StatusCode
 import sttp.tapir.*
@@ -27,8 +28,6 @@ object CredentialIssuerEndpoints {
 
   val tag = Tag(tagName, Some(tagDescription))
 
-  type ExtendedErrorResponse = Either[ErrorResponse, CredentialErrorResponse]
-
   private val issuerIdPathSegment = path[UUID]("issuerId")
     .description("An issuer identifier in the oid4vci protocol")
     .example(UUID.fromString("f47ac10b-58cc-4372-a567-0e02b2c3d479"))
@@ -40,24 +39,26 @@ object CredentialIssuerEndpoints {
   private val baseEndpoint = endpoint
     .tag(tagName)
     .in(extractFromRequest[RequestContext](RequestContext.apply))
-    .in("oid4vci" / "issuers")
+    .in("oid4vci")
 
-  private val baseIssuerPrivateEndpoint = baseEndpoint
+  private val baseIssuerEndpoint = baseEndpoint.in("issuers")
+
+  private val baseIssuerPrivateEndpoint = baseIssuerEndpoint
     .securityIn(apiKeyHeader)
     .securityIn(jwtAuthHeader)
 
-  val credentialEndpointErrorOutput = oneOf[Either[ErrorResponse, CredentialErrorResponse]](
-    oneOfVariantValueMatcher(StatusCode.BadRequest, jsonBody[Either[ErrorResponse, CredentialErrorResponse]]) {
-      case Right(CredentialErrorResponse(code, _, _, _)) if code.toHttpStatusCode == StatusCode.BadRequest => true
+  val credentialEndpointErrorOutput = oneOf[ExtendedErrorResponse](
+    oneOfVariantValueMatcher(StatusCode.BadRequest, jsonBody[ExtendedErrorResponse]) {
+      case CredentialErrorResponse(code, _, _, _) if code.toHttpStatusCode == StatusCode.BadRequest => true
     },
-    oneOfVariantValueMatcher(StatusCode.Unauthorized, jsonBody[Either[ErrorResponse, CredentialErrorResponse]]) {
-      case Right(CredentialErrorResponse(code, _, _, _)) if code.toHttpStatusCode == StatusCode.Unauthorized => true
+    oneOfVariantValueMatcher(StatusCode.Unauthorized, jsonBody[ExtendedErrorResponse]) {
+      case CredentialErrorResponse(code, _, _, _) if code.toHttpStatusCode == StatusCode.Unauthorized => true
     },
-    oneOfVariantValueMatcher(StatusCode.Forbidden, jsonBody[Either[ErrorResponse, CredentialErrorResponse]]) {
-      case Right(CredentialErrorResponse(code, _, _, _)) if code.toHttpStatusCode == StatusCode.Forbidden => true
+    oneOfVariantValueMatcher(StatusCode.Forbidden, jsonBody[ExtendedErrorResponse]) {
+      case CredentialErrorResponse(code, _, _, _) if code.toHttpStatusCode == StatusCode.Forbidden => true
     },
-    oneOfVariantValueMatcher(StatusCode.InternalServerError, jsonBody[Either[ErrorResponse, CredentialErrorResponse]]) {
-      case Left(ErrorResponse(status, _, _, _, _)) if status == StatusCode.InternalServerError.code => true
+    oneOfVariantValueMatcher(StatusCode.InternalServerError, jsonBody[ExtendedErrorResponse]) {
+      case ErrorResponse(status, _, _, _, _) if status == StatusCode.InternalServerError.code => true
     }
   )
 
@@ -67,7 +68,7 @@ object CredentialIssuerEndpoints {
     ExtendedErrorResponse,
     CredentialResponse,
     Any
-  ] = baseEndpoint.post
+  ] = baseIssuerEndpoint.post
     .in(issuerIdPathSegment / "credentials")
     .in(jsonBody[CredentialRequest])
     .securityIn(jwtAuthHeader)
@@ -79,7 +80,7 @@ object CredentialIssuerEndpoints {
     .name("issueCredential")
     .summary("Credential Endpoint")
     .description(
-      """OIDC for VC [Credential Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-endpoint)""".stripMargin
+      """OID for VCI [Credential Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-endpoint)""".stripMargin
     )
 
   val createCredentialOfferEndpoint: Endpoint[
@@ -104,14 +105,15 @@ object CredentialIssuerEndpoints {
     )
 
   val nonceEndpoint: Endpoint[
-    (ApiKeyCredentials, JwtCredentials),
-    (RequestContext, UUID, NonceRequest),
+    JwtCredentials,
+    (RequestContext, NonceRequest),
     ErrorResponse,
     NonceResponse,
     Any
-  ] = baseIssuerPrivateEndpoint.post
-    .in(issuerIdPathSegment / "nonces")
+  ] = baseEndpoint.post
+    .in("nonces")
     .in(jsonBody[NonceRequest])
+    .securityIn(jwtAuthHeader)
     .out(
       statusCode(StatusCode.Ok).description("Nonce issued successfully"),
     )
@@ -241,7 +243,7 @@ object CredentialIssuerEndpoints {
     ErrorResponse,
     IssuerMetadata,
     Any
-  ] = baseEndpoint.get
+  ] = baseIssuerEndpoint.get
     .in(issuerIdPathSegment / ".well-known" / "openid-credential-issuer")
     .out(
       statusCode(StatusCode.Ok).description("Issuer Metadata successfully retrieved")

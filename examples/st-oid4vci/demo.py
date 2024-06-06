@@ -95,7 +95,13 @@ def prepare_issuer():
     # prepare issuer
     credential_issuer = requests.post(
         f"{AGENT_URL}/oid4vci/issuers",
-        json={"authorizationServer": AUTHORIZATION_SERVER},
+        json={
+            "authorizationServer": {
+                "url": "http://external-keycloak-issuer:8080/realms/students",
+                "clientId": "cloud-agent",
+                "clientSecret": "secret",
+            }
+        },
     ).json()
     issuer_id = credential_issuer["id"]
     global CREDENTIAL_ISSUER
@@ -136,6 +142,9 @@ def holder_get_issuer_metadata(credential_issuer: str):
     response = requests.get(metadata_url).json()
     response["credential_endpoint"] = override_host(response["credential_endpoint"])
     response["credential_issuer"] = override_host(response["credential_issuer"])
+    response["authorization_servers"] = [
+        AUTHORIZATION_SERVER for s in response["authorization_servers"]
+    ]
     return response
 
 
