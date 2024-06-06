@@ -3,12 +3,12 @@ package org.hyperledger.identus.pollux.core.service
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{Failure, StatusCode, WalletAccessContext}
 import zio.{IO, ZIO}
 
 import java.util.UUID
 trait CredentialSchemaService {
-  type Result[T] = ZIO[WalletAccessContext, CredentialSchemaService.Error, T]
+  private[service] type Result[T] = ZIO[WalletAccessContext, CredentialSchemaService.Error, T]
 
   /** @param in
     *   CredentialSchema form for creating the instance
@@ -32,26 +32,28 @@ trait CredentialSchemaService {
 }
 
 object CredentialSchemaService {
-  sealed trait Error
-
-  object Error {
-    def apply(throwable: Throwable): Error = RepositoryError(throwable)
-
-    final case class RepositoryError(cause: Throwable) extends Error
-
-    final case class NotFoundError(guid: Option[UUID] = None, id: Option[UUID] = None, message: String) extends Error
-
-    object NotFoundError {
-      def byGuid(guid: UUID): NotFoundError =
-        NotFoundError(guid = Option(guid), message = s"Credential schema record cannot be found by `guid`=$guid")
-      def byId(id: UUID): NotFoundError =
-        NotFoundError(id = Option(id), message = s"Credential schema record cannot be found by `id`=$id")
-    }
-
-    final case class UpdateError(id: UUID, version: String, author: String, message: String) extends Error
-
-    final case class UnexpectedError(msg: String) extends Error
-
-    final case class CredentialSchemaValidationError(cause: CredentialSchemaError) extends Error
+  sealed trait Error(
+      val statusCode: StatusCode,
+      val userFacingMessage: String
+  ) extends Failure {
+    override val namespace = "CredentialSchema"
   }
+
+  final case class GuidNotFoundError(guid: UUID)
+      extends Error(
+        StatusCode.NotFound,
+        s"Credential Schema record cannot be found by `guid`=$guid"
+      )
+
+  final case class UpdateError(id: UUID, version: String, author: String, message: String)
+      extends Error(
+        StatusCode.BadRequest,
+        s"Credential schema update error: id=$id, version=$version, author=$author, msg=$message"
+      )
+
+  final case class CredentialSchemaValidationError(cause: CredentialSchemaError)
+      extends Error(
+        StatusCode.BadRequest,
+        s"Credential Schema Validation Error=$cause"
+      )
 }
