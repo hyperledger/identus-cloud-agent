@@ -108,7 +108,6 @@ class CredentialDefinitionServiceImpl(
   override def lookup(filter: CredentialDefinition.Filter, skip: Int, limit: Int): Result[FilteredEntries] = {
     credentialDefinitionRepository
       .search(SearchQuery(filter, skip, limit))
-      .mapError(t => RepositoryError(t))
       .map(sr => FilteredEntries(sr.entries, sr.count.toInt, sr.totalCount.toInt))
   }
 

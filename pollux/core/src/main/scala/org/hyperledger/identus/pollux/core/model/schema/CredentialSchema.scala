@@ -65,13 +65,13 @@ object CredentialSchema {
   def makeGUID(author: String, id: UUID, version: String) =
     UUID.nameUUIDFromBytes(makeLongId(author, id, version).getBytes)
 
-  def make(in: Input): ZIO[Any, Nothing, CredentialSchema] = {
+  def make(in: Input): UIO[CredentialSchema] = {
     for {
       id <- zio.Random.nextUUID
       cs <- make(id, in)
     } yield cs
   }
-  def make(id: UUID, in: Input): ZIO[Any, Nothing, CredentialSchema] = {
+  def make(id: UUID, in: Input): UIO[CredentialSchema] = {
     for {
       ts <- zio.Clock.currentDateTime.map(
         _.atZoneSameInstant(ZoneOffset.UTC).toOffsetDateTime

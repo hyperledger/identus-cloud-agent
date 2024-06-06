@@ -13,10 +13,10 @@ case class CredentialSchemaControllerLogic(
     stats: CollectionStats
 ) {
 
-  def composeNextUri(uri: Uri): Option[Uri] =
+  private def composeNextUri(uri: Uri): Option[Uri] =
     PaginationUtils.composeNextUri(uri, page.contents, pagination, stats)
 
-  def composePreviousUri(uri: Uri): Option[Uri] =
+  private def composePreviousUri(uri: Uri): Option[Uri] =
     PaginationUtils.composePreviousUri(uri, page.contents, pagination, stats)
 
   def result: CredentialSchemaResponsePage = {

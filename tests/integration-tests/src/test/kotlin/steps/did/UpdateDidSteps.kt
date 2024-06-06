@@ -12,15 +12,23 @@ import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
 import org.hyperledger.identus.client.models.*
+import java.util.UUID
 
 class UpdateDidSteps {
 
-    @When("{actor} updates PRISM DID by adding new keys")
-    fun actorUpdatesPrismDidByAddingNewKeys(actor: Actor) {
+    @When("{actor} updates PRISM DID by adding new key with {curve} curve and {purpose} purpose")
+    fun actorUpdatesPrismDidByAddingNewKeys(actor: Actor, curve: Curve, purpose: Purpose) {
+        val newDidKeyId = UUID.randomUUID().toString()
+        val didKey = ManagedDIDKeyTemplate(
+            id = newDidKeyId,
+            purpose = purpose,
+            curve = curve,
+        )
         val updatePrismDidAction = UpdateManagedDIDRequestAction(
             actionType = ActionType.ADD_KEY,
-            addKey = TestConstants.PRISM_DID_UPDATE_NEW_AUTH_KEY,
+            addKey = didKey,
         )
+        actor.remember("newDidKeyId", newDidKeyId)
         actor.remember("updatePrismDidAction", updatePrismDidAction)
     }
 
@@ -83,21 +91,26 @@ class UpdateDidSteps {
         )
     }
 
-    @Then("{actor} sees PRISM DID was successfully updated with new keys")
-    fun actorSeesDidSuccessfullyUpdatedWithNewKeys(actor: Actor) {
+    @Then("{actor} sees PRISM DID was successfully updated with new keys of {purpose} purpose")
+    fun actorSeesDidSuccessfullyUpdatedWithNewKeys(actor: Actor, purpose: Purpose) {
+        val newDidKeyId = actor.recall<String>("newDidKeyId")
+        var i = 0
         Wait.until(
             errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!",
         ) {
             actor.attemptsTo(
                 Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
             )
-            val authUris = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.authentication!!
-            val verificationMethods = SerenityRest.lastResponse()
-                .get<DIDResolutionResult>().didDocument!!.verificationMethod!!.map { it.id }
-            authUris.any {
-                it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_UPDATE_NEW_AUTH_KEY.id}"
-            } && verificationMethods.any {
-                it == "${actor.recall<String>("shortFormDid")}#${TestConstants.PRISM_DID_AUTH_KEY.id}"
+            val didKey = "${actor.recall<String>("shortFormDid")}#$newDidKeyId"
+            val didDocument = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!
+            val foundVerificationMethod = didDocument.verificationMethod!!.map { it.id }.any { it == didKey }
+
+            foundVerificationMethod && when (purpose) {
+                Purpose.ASSERTION_METHOD -> didDocument.assertionMethod!!.any { it == didKey }
+                Purpose.AUTHENTICATION -> didDocument.authentication!!.any { it == didKey }
+                Purpose.CAPABILITY_DELEGATION -> didDocument.capabilityDelegation!!.any { it == didKey }
+                Purpose.CAPABILITY_INVOCATION -> didDocument.capabilityInvocation!!.any { it == didKey }
+                Purpose.KEY_AGREEMENT -> didDocument.keyAgreement!!.any { it == didKey }
             }
         }
     }
