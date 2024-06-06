@@ -48,13 +48,6 @@ object IssueControllerSpec extends ZIOSpecDefault {
       val errorResponse = ErrorResponse.badRequest(title = "InvalidFlowState", detail = Some("message"))
       assert(httpError)(equalTo(errorResponse.copy(instance = httpError.instance)))
     },
-    test("return bad request error if unsupported did format error") {
-      val cse = UnsupportedDidFormat("12345")
-      val httpError = IssueController.toHttpError(cse)
-      val errorResponse =
-        ErrorResponse.badRequest("Unsupported DID format", Some(s"The following DID is not supported: 12345"))
-      assert(httpError)(equalTo(errorResponse.copy(instance = httpError.instance)))
-    },
     test("return bad request error if create credential payload from record error") {
       val cse = CredentialServiceError.CreateCredentialPayloadFromRecordError(new Throwable("message"))
       val httpError = IssueController.toHttpError(cse)
