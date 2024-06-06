@@ -2,8 +2,7 @@ package org.hyperledger.identus.pollux.credentialschema.controller
 
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{Order, Pagination}
-import org.hyperledger.identus.pollux.core.service.CredentialSchemaService
-import org.hyperledger.identus.pollux.core.service.CredentialSchemaService.*
+import org.hyperledger.identus.pollux.core.service.CredentialSchemaServiceError
 import org.hyperledger.identus.pollux.credentialschema.http.{
   CredentialSchemaInput,
   CredentialSchemaResponse,
@@ -49,11 +48,11 @@ trait CredentialSchemaController {
 
 object CredentialSchemaController {
   def domainToHttpError(
-      error: CredentialSchemaService.Error
+      error: CredentialSchemaServiceError
   ): ErrorResponse = error
 
   implicit def domainToHttpErrorIO[R, T](
-      domainIO: ZIO[R, CredentialSchemaService.Error, T]
+      domainIO: ZIO[R, CredentialSchemaServiceError, T]
   ): ZIO[R, ErrorResponse, T] = {
     domainIO.mapError(domainToHttpError)
   }
