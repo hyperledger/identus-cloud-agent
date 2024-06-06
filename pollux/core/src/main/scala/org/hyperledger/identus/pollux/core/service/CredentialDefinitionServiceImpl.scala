@@ -4,7 +4,7 @@ import org.hyperledger.identus.agent.walletapi.storage
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.pollux.anoncreds.{AnoncredLib, AnoncredSchemaDef}
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{SchemaError, URISyntaxError}
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{CredentialSchemaParsingError, InvalidURI}
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
@@ -33,9 +33,12 @@ class CredentialDefinitionServiceImpl(
 
   override def create(in: CredentialDefinition.Input): Result[CredentialDefinition] = {
     for {
-      uri <- ZIO.attempt(new URI(in.schemaId))
-      content <- uriDereferencer.dereference(uri)
-      anoncredSchema <- AnoncredSchemaSerDesV1.schemaSerDes.deserialize(content)
+      uri <- ZIO.attempt(new URI(in.schemaId)).mapError(error => InvalidURI(in.schemaId)).orDieAsUnmanagedFailure
+      content <- uriDereferencer.dereference(uri).orDieAsUnmanagedFailure
+      anoncredSchema <- AnoncredSchemaSerDesV1.schemaSerDes
+        .deserialize(content)
+        .mapError(error => CredentialSchemaParsingError(error.error))
+        .orDieAsUnmanagedFailure
       anoncredLibSchema =
         AnoncredSchemaDef(
           in.schemaId,
@@ -55,7 +58,7 @@ class CredentialDefinitionServiceImpl(
               )
             ).toEither
           )
-          .mapError((t: Throwable) => CredentialDefinitionCreationError(t.getMessage))
+          .mapError(t => CredentialDefinitionCreationError(t.getMessage))
       publicCredentialDefinitionJson <-
         PublicCredentialDefinitionSerDesV1.schemaSerDes.deserializeAsJson(
           anoncredLibCredentialDefinition.cd.data
@@ -76,18 +79,21 @@ class CredentialDefinitionServiceImpl(
           ProofKeyCredentialDefinitionSchemaSerDesV1.version,
           proofKeyCredentialDefinitionJson
         )
-      createdCredentialDefinition <- credentialDefinitionRepository.create(cd)
+      createdCredentialDefinition <- credentialDefinitionRepository
+        .create(cd)
+        .mapError(t => CredentialDefinitionCreationError(t.getMessage))
       _ <- genericSecretStorage
         .set(
           createdCredentialDefinition.guid,
           CredentialDefinitionSecret(privateCredentialDefinitionJson)
         )
+        .mapError(t =>
+          CredentialDefinitionCreationError(s"An error occurred while storing the CredDef secret: ${t.getMessage}")
+        )
     } yield createdCredentialDefinition
   }.mapError {
-    case u: URIDereferencerError => CredentialDefinitionValidationError(URISyntaxError(u.userFacingMessage))
-    case j: JsonSchemaError      => CredentialDefinitionValidationError(SchemaError(j))
-    case t: Throwable            => RepositoryError(t)
-    case e: CredentialDefinitionCreationError => e
+    case e: JsonSchemaError                   => CredentialDefinitionParsingError(e.error)
+    case e: CredentialDefinitionService.Error => e
   }
 
   override def delete(guid: UUID): Result[CredentialDefinition] =

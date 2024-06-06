@@ -62,7 +62,7 @@ object CredentialDefinitionController {
       case UnexpectedError(msg: String) =>
         ErrorResponse.internalServerError(detail = Option(msg))
       case CredentialDefinitionValidationError(cause) =>
-        ErrorResponse.badRequest(detail = Some(cause.message))
+        ErrorResponse.badRequest(detail = Some(cause.userFacingMessage))
     }
   }
 

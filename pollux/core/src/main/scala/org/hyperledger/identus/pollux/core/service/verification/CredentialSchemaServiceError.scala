@@ -29,5 +29,5 @@ final case class UpdateError(id: UUID, version: String, author: String, message:
 final case class CredentialSchemaValidationError(cause: CredentialSchemaError)
     extends CredentialSchemaServiceError(
       StatusCode.BadRequest,
-      s"Credential Schema Validation Error=${cause.message}"
+      s"Credential Schema Validation Error=${cause.userFacingMessage}"
     )

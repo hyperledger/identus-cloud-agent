@@ -55,7 +55,7 @@ object IssueController {
       case CredentialServiceError.CredentialRequestValidationError(msg) =>
         ErrorResponse.badRequest(title = "Create Request Validation Error", detail = Some(msg))
       case CredentialServiceError.CredentialSchemaError(e) =>
-        ErrorResponse.badRequest(title = "Credential Schema Error", detail = Some(e.message))
+        ErrorResponse.badRequest(title = "Credential Schema Error", detail = Some(e.userFacingMessage))
       case CredentialServiceError.UnsupportedVCClaimsValue(error) =>
         ErrorResponse.badRequest(detail = Some(error))
       case CredentialServiceError.UnsupportedVCClaimsMediaType(media_type) =>

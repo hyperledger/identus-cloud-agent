@@ -55,5 +55,7 @@ object CredentialDefinitionService {
     final case class CredentialDefinitionValidationError(cause: CredentialSchemaError) extends Error
 
     final case class CredentialDefinitionCreationError(msg: String) extends Error
+    
+    final case class CredentialDefinitionParsingError(msg: String) extends Error
   }
 }

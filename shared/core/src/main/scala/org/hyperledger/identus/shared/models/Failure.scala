@@ -1,10 +1,22 @@
 package org.hyperledger.identus.shared.models
 
+import zio.{IO, URIO}
+
 trait Failure {
   val namespace: String
   val statusCode: StatusCode
   val userFacingMessage: String
 }
+
+object Failure {
+  extension [E](effect: IO[Failure, E]) {
+    def orDieAsUnmanagedFailure: URIO[Any, E] = {
+      effect.orDieWith(f => UnmanagedFailureException(f))
+    }
+  }
+}
+
+case class UnmanagedFailureException(val failure: Failure) extends Throwable
 
 sealed class StatusCode(val code: Int)
 
