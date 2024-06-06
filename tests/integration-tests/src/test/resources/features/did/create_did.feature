@@ -4,6 +4,7 @@ Feature: Create and publish DID
 Scenario Outline: Create PRISM DID
   When Issuer creates PRISM DID with <curve> key having <purpose> purpose
   Then He sees PRISM DID was created successfully
+  And He sees PRISM DID data was stored correctly with <curve> and <purpose>
 Examples:
   | curve   | purpose         |
   | secp256k1 | authentication  |
