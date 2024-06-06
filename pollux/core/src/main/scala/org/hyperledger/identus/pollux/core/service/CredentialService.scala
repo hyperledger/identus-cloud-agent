@@ -14,7 +14,7 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{Duration, IO, URIO, ZIO}
+import zio.{Duration, IO, UIO, URIO, ZIO}
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID
@@ -59,19 +59,19 @@ trait CredentialService {
       ignoreWithZeroRetries: Boolean,
       offset: Option[Int] = None,
       limit: Option[Int] = None
-  ): ZIO[WalletAccessContext, CredentialServiceError, (Seq[IssueCredentialRecord], Int)]
+  ): URIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)]
 
   def getIssueCredentialRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): ZIO[WalletAccessContext, CredentialServiceError, Seq[IssueCredentialRecord]]
+  ): URIO[WalletAccessContext, Seq[IssueCredentialRecord]]
 
   def getIssueCredentialRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): IO[CredentialServiceError, Seq[IssueCredentialRecord]]
+  ): UIO[Seq[IssueCredentialRecord]]
 
   def findById(
       recordId: DidCommID
@@ -80,7 +80,7 @@ trait CredentialService {
   def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean
-  ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]]
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]]
 
   def receiveCredentialOffer(
       offer: OfferCredential
@@ -151,7 +151,7 @@ trait CredentialService {
 object CredentialService {
   def convertJsonClaimsToAttributes(
       claims: io.circe.Json
-  ): IO[CredentialServiceError, Seq[Attribute]] = {
+  ): UIO[Seq[Attribute]] = {
     for {
       fields <- ZIO.succeed(claims.asObject.map(_.toMap).getOrElse(Map.empty).toList)
       res <- ZIO.foreach(fields) {

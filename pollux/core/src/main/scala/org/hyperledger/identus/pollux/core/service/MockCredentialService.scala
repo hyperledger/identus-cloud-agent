@@ -7,7 +7,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{mock, Duration, IO, URIO, URLayer, ZIO, ZLayer}
+import zio.{mock, Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
 import zio.mock.{Mock, Proxy}
 
 import java.util.UUID
@@ -225,21 +225,21 @@ object MockCredentialService extends Mock[CredentialService] {
           ignoreWithZeroRetries: Boolean,
           offset: Option[Int] = None,
           limit: Option[Int] = None
-      ): IO[CredentialServiceError, (Seq[IssueCredentialRecord], Int)] =
+      ): URIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)] =
         ???
 
       override def getIssueCredentialRecordsByStates(
           ignoreWithZeroRetries: Boolean,
           limit: Int,
           states: IssueCredentialRecord.ProtocolState*
-      ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] =
+      ): URIO[WalletAccessContext, Seq[IssueCredentialRecord]] =
         ???
 
       override def getIssueCredentialRecordsByStatesForAllWallets(
           ignoreWithZeroRetries: Boolean,
           limit: Int,
           states: IssueCredentialRecord.ProtocolState*
-      ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] =
+      ): UIO[Seq[IssueCredentialRecord]] =
         ???
 
       override def findById(
@@ -250,7 +250,7 @@ object MockCredentialService extends Mock[CredentialService] {
       override def getIssueCredentialRecordByThreadId(
           thid: DidCommID,
           ignoreWithZeroRetries: Boolean
-      ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = ???
+      ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] = ???
     }
   }
 }

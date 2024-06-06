@@ -31,7 +31,6 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
           IssueCredentialRecord.ProtocolState.CredentialPending,
           IssueCredentialRecord.ProtocolState.CredentialGenerated
         )
-        .mapError(err => Throwable(s"Error occurred while getting Issue Credential records: $err"))
       _ <- ZIO
         .foreachPar(records)(performIssueCredentialExchange)
         .withParallelism(config.pollux.issueBgJobProcessingParallelism)

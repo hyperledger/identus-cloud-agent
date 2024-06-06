@@ -14,7 +14,8 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.UnsupportedDidFormat
+import org.hyperledger.identus.shared.models.{UnmanagedFailureException, WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.MockSpecDefault
 import zio.test.*
@@ -215,8 +216,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
               .exit
           } yield {
             assertTrue(record match
-              case Exit.Failure(Cause.Fail(_: CredentialServiceError, _)) => true
-              case _                                                      => false
+              case Exit.Failure(Cause.Die(_: UnmanagedFailureException, _)) => true
+              case _                                                        => false
             )
           }
         }

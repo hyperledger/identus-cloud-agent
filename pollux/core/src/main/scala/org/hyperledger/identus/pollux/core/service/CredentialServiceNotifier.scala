@@ -6,9 +6,9 @@ import org.hyperledger.identus.event.notification.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
+import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{Duration, IO, URIO, URLayer, ZIO, ZLayer}
+import zio.{Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
 
@@ -161,7 +161,9 @@ class CredentialServiceNotifier(
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(svc.generateAnonCredsCredential(recordId))
 
-  private def notifyOnSuccess[R](effect: ZIO[R, CredentialServiceError, IssueCredentialRecord]) =
+  private def notifyOnSuccess[R](
+      effect: ZIO[R, CredentialServiceError | CredentialServiceErrorNew, IssueCredentialRecord]
+  ) =
     for {
       record <- effect
       _ <- notify(record)
@@ -190,28 +192,28 @@ class CredentialServiceNotifier(
   override def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean
-  ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]] =
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] =
     svc.getIssueCredentialRecordByThreadId(thid, ignoreWithZeroRetries)
 
   override def getIssueCredentialRecords(
       ignoreWithZeroRetries: Boolean,
       offset: Option[Int] = None,
       limit: Option[Int] = None
-  ): ZIO[WalletAccessContext, CredentialServiceError, (Seq[IssueCredentialRecord], Int)] =
+  ): URIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)] =
     svc.getIssueCredentialRecords(ignoreWithZeroRetries, offset, limit)
 
   override def getIssueCredentialRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): ZIO[WalletAccessContext, CredentialServiceError, Seq[IssueCredentialRecord]] =
+  ): URIO[WalletAccessContext, Seq[IssueCredentialRecord]] =
     svc.getIssueCredentialRecordsByStates(ignoreWithZeroRetries, limit, states*)
 
   override def getIssueCredentialRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] =
+  ): UIO[Seq[IssueCredentialRecord]] =
     svc.getIssueCredentialRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states*)
 }
 

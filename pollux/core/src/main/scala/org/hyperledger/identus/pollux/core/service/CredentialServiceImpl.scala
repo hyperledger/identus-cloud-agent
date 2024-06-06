@@ -17,10 +17,16 @@ import org.hyperledger.identus.pollux.anoncreds.{
   AnoncredLib
 }
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
+import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{
+  CredentialDefinitionPrivatePartNotFound,
+  CredentialDefinitionServiceError,
+  InvalidCredentialOffer,
+  UnsupportedDidFormat
+}
 import org.hyperledger.identus.pollux.core.model.presentation.*
-import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
+import org.hyperledger.identus.pollux.core.model.schema.{CredentialDefinition, CredentialSchema}
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
@@ -36,7 +42,6 @@ import zio.prelude.ZValidation
 
 import java.net.URI
 import java.time.{Instant, ZoneId}
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import scala.language.implicitConversions
 
@@ -99,29 +104,19 @@ private class CredentialServiceImpl(
       ignoreWithZeroRetries: Boolean,
       offset: Option[Int],
       limit: Option[Int]
-  ): ZIO[WalletAccessContext, CredentialServiceError, (Seq[IssueCredentialRecord], Int)] = {
-    for {
-      records <- credentialRepository
-        .findAll(ignoreWithZeroRetries = ignoreWithZeroRetries, offset = offset, limit = limit)
-    } yield records
-  }
+  ): URIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)] =
+    credentialRepository.findAll(ignoreWithZeroRetries = ignoreWithZeroRetries, offset = offset, limit = limit)
 
   override def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean
-  ): ZIO[WalletAccessContext, CredentialServiceError, Option[IssueCredentialRecord]] =
-    for {
-      record <- credentialRepository
-        .findByThreadId(thid, ignoreWithZeroRetries)
-    } yield record
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] =
+    credentialRepository.findByThreadId(thid, ignoreWithZeroRetries)
 
   override def findById(
       recordId: DidCommID
-  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
-    for {
-      record <- credentialRepository.findById(recordId)
-    } yield record
-  }
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] =
+    credentialRepository.findById(recordId)
 
   override def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
@@ -132,15 +127,9 @@ private class CredentialServiceImpl(
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
       issuingDID: CanonicalPrismDID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, Nothing, IssueCredentialRecord] = {
     for {
-      _ <- maybeSchemaId match
-        case Some(schemaId) =>
-          CredentialSchema
-            .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriDereferencer)
-            .orDieAsUnmanagedFailure
-        case None =>
-          ZIO.unit
+      _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaId)
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
       offer <- createJWTDidCommOfferCredential(
         pairwiseIssuerDID = pairwiseIssuerDID,
@@ -183,7 +172,7 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  def createSDJWTIssueCredentialRecord(
+  override def createSDJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       thid: DidCommID,
@@ -192,15 +181,9 @@ private class CredentialServiceImpl(
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       issuingDID: CanonicalPrismDID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, Nothing, IssueCredentialRecord] =
     for {
-      _ <- maybeSchemaId match
-        case Some(schemaId) =>
-          CredentialSchema
-            .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriDereferencer)
-            .orDieAsUnmanagedFailure
-        case None =>
-          ZIO.unit
+      _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaId)
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
       offer <- createSDJWTDidCommOfferCredential(
         pairwiseIssuerDID = pairwiseIssuerDID,
@@ -251,11 +234,9 @@ private class CredentialServiceImpl(
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean]
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, Nothing, IssueCredentialRecord] = {
     for {
-      credentialDefinition <- credentialDefinitionService
-        .getByGUID(credentialDefinitionGUID)
-        .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
+      credentialDefinition <- getCredentialDefinition(credentialDefinitionGUID)
       _ <- CredentialSchema
         .validateAnonCredsClaims(credentialDefinition.schemaId, claims.noSpaces, uriDereferencer)
         .orDieAsUnmanagedFailure
@@ -305,39 +286,33 @@ private class CredentialServiceImpl(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): ZIO[WalletAccessContext, CredentialServiceError, Seq[IssueCredentialRecord]] = {
-    for {
-      records <- credentialRepository
-        .findByStates(ignoreWithZeroRetries, limit, states*)
-    } yield records
-  }
+  ): URIO[WalletAccessContext, Seq[IssueCredentialRecord]] =
+    credentialRepository.findByStates(ignoreWithZeroRetries, limit, states*)
 
   override def getIssueCredentialRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
-    for {
-      records <- credentialRepository
-        .findByStatesForAllWallets(ignoreWithZeroRetries, limit, states*)
-    } yield records
-  }
+  ): UIO[Seq[IssueCredentialRecord]] =
+    credentialRepository.findByStatesForAllWallets(ignoreWithZeroRetries, limit, states*)
 
   override def receiveCredentialOffer(
       offer: OfferCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError | CredentialServiceErrorNew, IssueCredentialRecord] = {
     for {
       attachment <- ZIO
         .fromOption(offer.attachments.headOption)
-        .mapError(_ => CredentialServiceError.UnexpectedError("Missing attachment in credential offer"))
+        .mapError(_ => InvalidCredentialOffer("No attachment found"))
 
-      format <- ZIO.fromOption(attachment.format).mapError(_ => MissingCredentialFormat)
+      format <- ZIO
+        .fromOption(attachment.format)
+        .mapError(_ => InvalidCredentialOffer("No attachment format found"))
 
       credentialFormat <- format match
         case value if value == IssueCredentialOfferFormat.JWT.name      => ZIO.succeed(CredentialFormat.JWT)
         case value if value == IssueCredentialOfferFormat.SDJWT.name    => ZIO.succeed(CredentialFormat.SDJWT)
         case value if value == IssueCredentialOfferFormat.Anoncred.name => ZIO.succeed(CredentialFormat.AnonCreds)
-        case value                                                      => ZIO.fail(UnsupportedCredentialFormat(value))
+        case value => ZIO.fail(InvalidCredentialOffer(s"Unsupported credential format: $value"))
 
       _ <- validateCredentialOfferAttachment(credentialFormat, attachment)
       record <- ZIO.succeed(
@@ -373,7 +348,7 @@ private class CredentialServiceImpl(
   private def validateCredentialOfferAttachment(
       credentialFormat: CredentialFormat,
       attachment: AttachmentDescriptor
-  ) = for {
+  ): IO[InvalidCredentialOffer, Unit] = for {
     _ <- credentialFormat match
       case CredentialFormat.JWT | CredentialFormat.SDJWT =>
         attachment.data match
@@ -381,19 +356,10 @@ private class CredentialServiceImpl(
             ZIO
               .attempt(json.asJson.hcursor.downField("json").as[CredentialOfferAttachment])
               .mapError(e =>
-                CredentialServiceError
-                  .UnexpectedError(s"Unexpected error parsing credential offer attachment: ${e.toString}")
+                InvalidCredentialOffer(s"An error occurred when parsing the offer attachment: ${e.toString}")
               )
-          case Base64(base64) => // TODO
-            ZIO.fail(
-              CredentialServiceError
-                .UnexpectedError(s"A Base64 attachment it's not yet implemented for credential offer")
-            )
           case _ =>
-            ZIO.fail(
-              CredentialServiceError
-                .UnexpectedError(s"A JSON attachment is expected in the credential offer")
-            )
+            ZIO.fail(InvalidCredentialOffer(s"Only JSON attachments are supported in JWT offers"))
       case CredentialFormat.AnonCreds =>
         attachment.data match
           case Base64(value) =>
@@ -401,30 +367,59 @@ private class CredentialServiceImpl(
               _ <- ZIO
                 .attempt(AnoncredCredentialOffer(value))
                 .mapError(e =>
-                  CredentialServiceError.UnexpectedError(
-                    s"Unexpected error parsing credential offer attachment: ${e.toString}"
-                  )
+                  InvalidCredentialOffer(s"An error occurred when parsing the offer attachment: ${e.toString}")
                 )
             } yield ()
           case _ =>
-            ZIO.fail(
-              CredentialServiceError
-                .UnexpectedError(s"A Base64 attachment is expected in the credential offer")
-            )
+            ZIO.fail(InvalidCredentialOffer(s"Only Base64 attachments are supported in AnonCreds offers"))
   } yield ()
+
+  private[this] def validatePrismDID(
+      did: String
+  ): IO[UnsupportedDidFormat, PrismDID] = ZIO
+    .fromEither(PrismDID.fromString(did))
+    .mapError(_ => UnsupportedDidFormat(did))
+
+  private[this] def validateClaimsAgainstSchemaIfAny(
+      claims: Json,
+      maybeSchemaId: Option[String]
+  ) = maybeSchemaId match
+    case Some(schemaId) =>
+      CredentialSchema
+        .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriDereferencer)
+        .orDieAsUnmanagedFailure
+    case None =>
+      ZIO.unit
+
+  private[this] def getCredentialDefinition(
+      guid: UUID
+  ): UIO[CredentialDefinition] = credentialDefinitionService
+    .getByGUID(guid)
+    .mapError(e => CredentialDefinitionServiceError(e.toString))
+    .orDieAsUnmanagedFailure
+
+  private[this] def getCredentialDefinitionPrivatePart(
+      guid: UUID
+  ): URIO[WalletAccessContext, CredentialDefinitionSecret] = for {
+    maybeCredentialDefinitionSecret <- genericSecretStorage
+      .get[UUID, CredentialDefinitionSecret](guid)
+      .orDie
+    credentialDefinitionSecret <- ZIO
+      .fromOption(maybeCredentialDefinitionSecret)
+      .mapError(_ => CredentialDefinitionPrivatePartNotFound(guid))
+      .orDieAsUnmanagedFailure
+  } yield credentialDefinitionSecret
 
   override def acceptCredentialOffer(
       recordId: DidCommID,
       maybeSubjectId: Option[String]
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError | CredentialServiceErrorNew, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.OfferReceived)
       count <- (record.credentialFormat, maybeSubjectId) match
         case (CredentialFormat.JWT, Some(subjectId)) =>
           for {
-            _ <- ZIO
-              .fromEither(PrismDID.fromString(subjectId))
-              .mapError(_ => CredentialServiceError.UnsupportedDidFormat(subjectId))
+            _ <- validatePrismDID(subjectId)
             count <- credentialRepository
               .updateWithSubjectId(recordId, subjectId, ProtocolState.RequestPending)
               @@ CustomMetricsAspect.startRecordingTime(
@@ -433,9 +428,7 @@ private class CredentialServiceImpl(
           } yield count
         case (CredentialFormat.SDJWT, Some(subjectId)) =>
           for {
-            _ <- ZIO
-              .fromEither(PrismDID.fromString(subjectId))
-              .mapError(_ => CredentialServiceError.UnsupportedDidFormat(subjectId))
+            _ <- validatePrismDID(subjectId)
             count <- credentialRepository
               .updateWithSubjectId(recordId, subjectId, ProtocolState.RequestPending)
               @@ CustomMetricsAspect.startRecordingTime(
@@ -579,15 +572,13 @@ private class CredentialServiceImpl(
 
   override def generateJWTCredentialRequest(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError | CredentialServiceErrorNew, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestPending)
       subjectId <- ZIO
         .fromOption(record.subjectId)
         .mapError(_ => CredentialServiceError.UnexpectedError(s"Subject Id not found in record: ${recordId.value}"))
-      subjectDID <- ZIO
-        .fromEither(PrismDID.fromString(subjectId))
-        .mapError(_ => CredentialServiceError.UnsupportedDidFormat(subjectId))
+      subjectDID <- validatePrismDID(subjectId)
       longFormPrismDID <- getLongForm(subjectDID, true).mapError(err => UnexpectedError(err.getMessage))
       jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
       presentationPayload <- createPresentationPayload(record, jwtIssuer)
@@ -614,15 +605,13 @@ private class CredentialServiceImpl(
   // Holder requesting the credential
   override def generateSDJWTCredentialRequest(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, CredentialServiceError | CredentialServiceErrorNew, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestPending)
       subjectId <- ZIO
         .fromOption(record.subjectId)
         .mapError(_ => CredentialServiceError.UnexpectedError(s"Subject Id not found in record: ${recordId.value}"))
-      subjectDID <- ZIO
-        .fromEither(PrismDID.fromString(subjectId))
-        .mapError(_ => CredentialServiceError.UnsupportedDidFormat(subjectId))
+      subjectDID <- validatePrismDID(subjectId)
       longFormPrismDID <- getLongForm(subjectDID, true).mapError(err => UnexpectedError(err.getMessage))
       jwtIssuer <- getSDJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
       presentationPayload <- createPresentationPayload(record, jwtIssuer)
@@ -954,7 +943,7 @@ private class CredentialServiceImpl(
       thid: DidCommID,
       challenge: String,
       domain: String
-  ) = {
+  ): UIO[OfferCredential] = {
     for {
       credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = maybeSchemaId, attributes = claims))
       body = OfferCredential.Body(
@@ -1026,7 +1015,7 @@ private class CredentialServiceImpl(
       credentialDefinitionId: String,
       claims: Seq[Attribute],
       thid: DidCommID
-  ) = {
+  ): URIO[WalletAccessContext, OfferCredential] = {
     for {
       credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = Some(schemaUri), attributes = claims))
       body = OfferCredential.Body(
@@ -1051,19 +1040,15 @@ private class CredentialServiceImpl(
     )
   }
 
-  private def createAnonCredsCredentialOffer(credentialDefinitionGUID: UUID, credentialDefinitionId: String) =
+  private def createAnonCredsCredentialOffer(
+      credentialDefinitionGUID: UUID,
+      credentialDefinitionId: String
+  ): URIO[WalletAccessContext, AnoncredCredentialOffer] =
     for {
-      credentialDefinition <- credentialDefinitionService
-        .getByGUID(credentialDefinitionGUID)
-        .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
+      credentialDefinition <- getCredentialDefinition(credentialDefinitionGUID)
       cd = anoncreds.AnoncredCredentialDefinition(credentialDefinition.definition.toString)
       kcp = anoncreds.AnoncredCredentialKeyCorrectnessProof(credentialDefinition.keyCorrectnessProof.toString)
-      maybeCredentialDefinitionSecret <- genericSecretStorage
-        .get[UUID, CredentialDefinitionSecret](credentialDefinition.guid)
-        .orDie
-      credentialDefinitionSecret <- ZIO
-        .fromOption(maybeCredentialDefinitionSecret)
-        .mapError(_ => CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinition.guid))
+      credentialDefinitionSecret <- getCredentialDefinitionPrivatePart(credentialDefinition.guid)
       cdp = anoncreds.AnoncredCredentialDefinitionPrivate(credentialDefinitionSecret.json.toString)
       createCredentialDefinition = AnoncredCreateCredentialDefinition(cd, cdp, kcp)
       offer = AnoncredLib.createOffer(createCredentialDefinition, credentialDefinitionId)
@@ -1334,9 +1319,7 @@ private class CredentialServiceImpl(
       credentialDefinitionId <- ZIO
         .fromOption(record.credentialDefinitionId)
         .mapError(_ => CredentialServiceError.UnexpectedError(s"No cred def Id found un record: ${record.id}"))
-      credentialDefinition <- credentialDefinitionService
-        .getByGUID(credentialDefinitionId)
-        .mapError(e => CredentialServiceError.UnexpectedError(e.toString))
+      credentialDefinition <- getCredentialDefinition(credentialDefinitionId)
       cd = anoncreds.AnoncredCredentialDefinition(credentialDefinition.definition.toString)
       offerCredential <- ZIO
         .fromOption(record.offerCredentialData)
@@ -1371,12 +1354,7 @@ private class CredentialServiceImpl(
       attrValues = offerCredential.body.credential_preview.body.attributes.map { attr =>
         (attr.name, attr.value)
       }
-      maybeCredentialDefinitionSecret <- genericSecretStorage
-        .get[UUID, CredentialDefinitionSecret](credentialDefinition.guid)
-        .orDie
-      credentialDefinitionSecret <- ZIO
-        .fromOption(maybeCredentialDefinitionSecret)
-        .mapError(_ => CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinition.guid))
+      credentialDefinitionSecret <- getCredentialDefinitionPrivatePart(credentialDefinition.guid)
       cdp = anoncreds.AnoncredCredentialDefinitionPrivate(credentialDefinitionSecret.json.toString)
       credential =
         AnoncredLib.createCredential(

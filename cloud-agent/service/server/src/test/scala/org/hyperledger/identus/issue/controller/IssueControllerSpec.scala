@@ -4,6 +4,7 @@ import io.circe.*
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.DidCommID
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.UnsupportedDidFormat
 import org.hyperledger.identus.pollux.vc.jwt.{W3cCredentialPayload, *}
 import zio.*
 import zio.test.*
@@ -48,7 +49,7 @@ object IssueControllerSpec extends ZIOSpecDefault {
       assert(httpError)(equalTo(errorResponse.copy(instance = httpError.instance)))
     },
     test("return bad request error if unsupported did format error") {
-      val cse = CredentialServiceError.UnsupportedDidFormat("12345")
+      val cse = UnsupportedDidFormat("12345")
       val httpError = IssueController.toHttpError(cse)
       val errorResponse =
         ErrorResponse.badRequest("Unsupported DID format", Some(s"The following DID is not supported: 12345"))

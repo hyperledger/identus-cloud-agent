@@ -48,8 +48,6 @@ object IssueController {
         ErrorResponse.internalServerError(detail = Some(msg))
       case CredentialServiceError.InvalidFlowStateError(msg) =>
         ErrorResponse.badRequest(title = "InvalidFlowState", detail = Some(msg))
-      case CredentialServiceError.UnsupportedDidFormat(did) =>
-        ErrorResponse.badRequest("Unsupported DID format", Some(s"The following DID is not supported: ${did}"))
       case CredentialServiceError.CreateCredentialPayloadFromRecordError(msg) =>
         ErrorResponse.badRequest(title = "Create Credential Payload From Record Error", detail = Some(msg.getMessage))
       case CredentialServiceError.CredentialRequestValidationError(msg) =>
@@ -64,9 +62,5 @@ object IssueController {
         ErrorResponse.badRequest(detail = Some(s"Unsupported format in claim: $format"))
       case CredentialServiceError.MissingCredentialFormat =>
         ErrorResponse.badRequest(detail = Some(s"Missing credential format in claim"))
-      case CredentialServiceError.CredentialDefinitionPrivatePartNotFound(credentialDefinitionId) =>
-        ErrorResponse.badRequest(detail =
-          Some(s"Credential Definition (id: $credentialDefinitionId) private part not found")
-        )
 
 }
