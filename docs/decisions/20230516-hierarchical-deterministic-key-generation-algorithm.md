@@ -16,8 +16,8 @@ Current ADR is based on the Research Spike [Evaluation of Using a Single Mnemoni
 - Tony Rose (Atala Head of Product)
 
 Reviewed in 2024 by Atala engineers:
-- Jesus Diaz Vico 
-- Ezequiel Postan 
+- Jesus Diaz Vico
+- Ezequiel Postan
 - Pat Losoponkul
 - Gonçalo Frade
 - Yurii Shynbuiev
