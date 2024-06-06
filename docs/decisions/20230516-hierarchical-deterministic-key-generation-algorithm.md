@@ -2,7 +2,8 @@
 
 - Status: accepted
 - Deciders: Jesus Diaz Vico, Ezequiel Postan, Pat Losoponkul, Yurii Shynbuiev
-- Date: 2024-06-06
+- Date: 2023-05-16
+- Revision-date: 2024-06-06
 - Tags: key management, hierarchical deterministic, key derivation
 
 Technical Story:
@@ -14,7 +15,7 @@ Current ADR is based on the Research Spike [Evaluation of Using a Single Mnemoni
 - Ezequiel Postan (Atala Semantics team)
 - Tony Rose (Atala Head of Product)
 
-Updated in 2024 by:
+Reviewed in 2024 by Atala engineers:
 - Jesus Diaz Vico 
 - Ezequiel Postan 
 - Pat Losoponkul
@@ -73,7 +74,7 @@ Implement the HD key derivation algorithm according to the research spike for al
 The derivation path contains the following segments/layers:
 
 ```
-m/wallet-purpose`/did-method`/did-index`/key-purpose`/key-index`
+m/wallet-purpose'/did-method'/did-index'/key-purpose'/key-index'
 ```
 
 `wallet purpose` is used to distinguish the wallet purpose for the identity wallet and is a constant for the Identus platform `0x1D`, which looks like ID
