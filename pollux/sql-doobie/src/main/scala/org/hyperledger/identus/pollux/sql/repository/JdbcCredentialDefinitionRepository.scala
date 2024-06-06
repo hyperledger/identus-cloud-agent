@@ -21,52 +21,57 @@ case class JdbcCredentialDefinitionRepository(xa: Transactor[ContextAwareTask], 
     extends CredentialDefinitionRepository {
   import CredentialDefinitionSql.*
 
-  override def create(cd: CredentialDefinition): RIO[WalletAccessContext, CredentialDefinition] = {
+  override def create(cd: CredentialDefinition): URIO[WalletAccessContext, CredentialDefinition] = {
     ZIO.serviceWithZIO[WalletAccessContext](ctx =>
       CredentialDefinitionSql
         .insert(CredentialDefinitionRow.fromModel(cd, ctx.walletId))
         .transactWallet(xa)
+        .orDie
         .map(CredentialDefinitionRow.toModel)
     )
   }
 
-  override def getByGuid(guid: UUID): Task[Option[CredentialDefinition]] = {
+  override def findByGuid(guid: UUID): UIO[Option[CredentialDefinition]] = {
     CredentialDefinitionSql
       .findByGUID(guid)
       .transact(xb)
+      .orDie
       .map(
         _.headOption
           .map(CredentialDefinitionRow.toModel)
       )
   }
 
-  override def update(cd: CredentialDefinition): RIO[WalletAccessContext, Option[CredentialDefinition]] = {
+  override def update(cd: CredentialDefinition): URIO[WalletAccessContext, CredentialDefinition] = {
     ZIO.serviceWithZIO[WalletAccessContext](ctx =>
       CredentialDefinitionSql
         .update(CredentialDefinitionRow.fromModel(cd, ctx.walletId))
         .transactWallet(xa)
-        .map(Option.apply)
-        .map(_.map(CredentialDefinitionRow.toModel))
+        .orDie
+        .map(CredentialDefinitionRow.toModel)
     )
   }
 
-  def getAllVersions(id: UUID, author: String): RIO[WalletAccessContext, Seq[String]] = {
+  def getAllVersions(id: UUID, author: String): URIO[WalletAccessContext, Seq[String]] = {
     CredentialDefinitionSql
       .getAllVersions(id, author)
       .transactWallet(xa)
+      .orDie
   }
 
-  override def delete(guid: UUID): RIO[WalletAccessContext, Option[CredentialDefinition]] = {
+  override def delete(guid: UUID): URIO[WalletAccessContext, CredentialDefinition] = {
     CredentialDefinitionSql
       .delete(guid)
       .transactWallet(xa)
-      .map(Option.apply)
-      .map(_.map(CredentialDefinitionRow.toModel))
+      .orDie
+      .map(CredentialDefinitionRow.toModel)
   }
 
-  def deleteAll(): RIO[WalletAccessContext, Long] = {
+  def deleteAll(): URIO[WalletAccessContext, Unit] = {
     CredentialDefinitionSql.deleteAll
       .transactWallet(xa)
+      .orDie
+      .flatMap(count => ZIO.unit)
   }
 
   override def search(

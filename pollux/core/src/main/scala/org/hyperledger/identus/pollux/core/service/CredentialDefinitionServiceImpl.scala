@@ -17,9 +17,7 @@ import org.hyperledger.identus.pollux.core.service.serdes.{
   ProofKeyCredentialDefinitionSchemaSerDesV1,
   PublicCredentialDefinitionSerDesV1
 }
-import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error.*
 import zio.*
-import zio.ZIO.getOrFailWith
 
 import java.net.URI
 import java.util.UUID
@@ -81,7 +79,7 @@ class CredentialDefinitionServiceImpl(
           ProofKeyCredentialDefinitionSchemaSerDesV1.version,
           proofKeyCredentialDefinitionJson
         )
-      createdCredentialDefinition <- credentialDefinitionRepository.create(cd).orDie
+      createdCredentialDefinition <- credentialDefinitionRepository.create(cd)
       _ <- genericSecretStorage
         .set(
           createdCredentialDefinition.guid,
@@ -97,13 +95,10 @@ class CredentialDefinitionServiceImpl(
 
   override def delete(guid: UUID): Result[CredentialDefinition] =
     for {
-      deleted_row_opt <- credentialDefinitionRepository
-        .delete(guid)
-        .mapError(RepositoryError.apply)
-      deleted_row <- deleted_row_opt match
-        case None        => ZIO.fail(GuidNotFoundError(guid))
-        case Some(value) => ZIO.succeed(value)
-    } yield deleted_row
+      existingOpt <- credentialDefinitionRepository.findByGuid(guid)
+      _ <- ZIO.fromOption(existingOpt).mapError(_ => CredentialDefinitionGuidNotFoundError(guid))
+      result <- credentialDefinitionRepository.delete(guid)
+    } yield result
 
   override def lookup(filter: CredentialDefinition.Filter, skip: Int, limit: Int): Result[FilteredEntries] = {
     credentialDefinitionRepository
@@ -111,14 +106,11 @@ class CredentialDefinitionServiceImpl(
       .map(sr => FilteredEntries(sr.entries, sr.count.toInt, sr.totalCount.toInt))
   }
 
-  override def getByGUID(guid: UUID): IO[CredentialDefinitionService.Error, CredentialDefinition] = {
-    credentialDefinitionRepository
-      .getByGuid(guid)
-      .mapError[CredentialDefinitionService.Error](t => RepositoryError(t))
-      .flatMap {
-        case None        => ZIO.fail(GuidNotFoundError(guid))
-        case Some(value) => ZIO.succeed(value)
-      }
+  override def getByGUID(guid: UUID): IO[CredentialDefinitionServiceError, CredentialDefinition] = {
+    for {
+      resultOpt <- credentialDefinitionRepository.findByGuid(guid)
+      result <- ZIO.fromOption(resultOpt).mapError(_ => CredentialDefinitionGuidNotFoundError(guid))
+    } yield result
   }
 }
 
