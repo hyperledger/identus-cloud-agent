@@ -58,7 +58,7 @@ class ManagedDIDServiceImpl private[walletapi] (
   def javaKeyPairWithDID(
       did: CanonicalPrismDID,
       keyId: String
-  ): ZIO[WalletAccessContext, GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]] = {
+  ): URIO[WalletAccessContext, Option[(JavaPrivateKey, JavaPublicKey)]] = {
     findDIDKeyPair(did, keyId)
       .flatMap {
         case None                            => ZIO.none
@@ -75,7 +75,7 @@ class ManagedDIDServiceImpl private[walletapi] (
   override def findDIDKeyPair(
       did: CanonicalPrismDID,
       keyId: String
-  ): ZIO[WalletAccessContext, GetKeyError, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]] =
+  ): URIO[WalletAccessContext, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]] =
     nonSecretStorage
       .getManagedDIDState(did)
       .flatMap {

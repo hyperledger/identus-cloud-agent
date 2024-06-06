@@ -552,7 +552,6 @@ class CredentialServiceImpl(
         )
       ecKeyPair <- managedDIDService
         .javaKeyPairWithDID(jwtIssuerDID.asCanonical, issuingKeyId)
-        .mapError(e => UnexpectedError(s"Error occurred while getting issuer key-pair: ${e.toString}"))
         .someOrFail(
           UnexpectedError(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
         )
@@ -581,7 +580,6 @@ class CredentialServiceImpl(
       ed25519keyPair <- managedDIDService
         .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
         .map(_.collect { case keyPair: Ed25519KeyPair => keyPair })
-        .mapError(e => UnexpectedError(s"Error occurred while getting issuer key-pair: ${e.toString}"))
         .someOrFail(
           UnexpectedError(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
         )
