@@ -1,3 +1,11 @@
+## [1.35.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.35.0...cloud-agent-v1.35.1) (2024-06-05)
+
+
+### Bug Fixes
+
+* Add expiration time for cloud-agent ([#1132](https://github.com/hyperledger/identus-cloud-agent/issues/1132)) ([f719120](https://github.com/hyperledger/identus-cloud-agent/commit/f719120211a83e96e6e4e282cc70e9f860d9298d))
+* Chart refactor ([#1143](https://github.com/hyperledger/identus-cloud-agent/issues/1143)) ([f309a0e](https://github.com/hyperledger/identus-cloud-agent/commit/f309a0e7c2101c2567498b060ee71a6964d3b9e6))
+
 # [1.35.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.34.0...cloud-agent-v1.35.0) (2024-06-03)
 
 

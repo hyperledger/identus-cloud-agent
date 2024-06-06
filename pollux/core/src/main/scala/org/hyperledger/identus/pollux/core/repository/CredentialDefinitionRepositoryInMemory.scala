@@ -98,7 +98,7 @@ class CredentialDefinitionRepositoryInMemory(
 
   override def search(
       query: Repository.SearchQuery[CredentialDefinition.Filter]
-  ): RIO[WalletAccessContext, Repository.SearchResult[CredentialDefinition]] = {
+  ): URIO[WalletAccessContext, Repository.SearchResult[CredentialDefinition]] = {
     walletStoreRef.flatMap { storeRef =>
       storeRef.get.map { store =>
         val filtered = store.values.filter { credDef =>

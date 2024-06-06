@@ -5,9 +5,9 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.FilteredEntries
 import org.hyperledger.identus.pollux.core.repository.CredentialSchemaRepository
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchQuery
-import org.hyperledger.identus.pollux.core.service.CredentialSchemaService.Error.*
+import org.hyperledger.identus.pollux.core.service.CredentialSchemaService.*
+import zio.*
 import zio.{IO, URLayer, ZLayer}
-import zio.ZIO.{fail, getOrFailWith, succeed}
 
 import java.util.UUID
 
@@ -18,21 +18,17 @@ class CredentialSchemaServiceImpl(
     for {
       credentialSchema <- CredentialSchema.make(in)
       _ <- CredentialSchema.validateCredentialSchema(credentialSchema)
-      createdCredentialSchema <- credentialSchemaRepository
-        .create(credentialSchema)
+      createdCredentialSchema <- credentialSchemaRepository.create(credentialSchema)
     } yield createdCredentialSchema
-  }.mapError {
-    case e: CredentialSchemaError => CredentialSchemaValidationError(e)
-    case t: Throwable             => RepositoryError(t)
+  }.mapError { (e: CredentialSchemaError) =>
+    CredentialSchemaValidationError(e)
   }
 
   override def getByGUID(guid: UUID): IO[CredentialSchemaService.Error, CredentialSchema] = {
-    credentialSchemaRepository
-      .getByGuid(guid)
-      .mapError[CredentialSchemaService.Error](t => RepositoryError(t))
-      .flatMap(
-        getOrFailWith(NotFoundError.byGuid(guid))(_)
-      )
+    for {
+      resultOpt <- credentialSchemaRepository.findByGuid(guid)
+      result <- ZIO.fromOption(resultOpt).mapError(_ => GuidNotFoundError(guid))
+    } yield result
   }
 
   def getBy(
@@ -44,58 +40,44 @@ class CredentialSchemaServiceImpl(
   }
 
   override def update(
-      id: UUID,
+      guid: UUID,
       in: CredentialSchema.Input
   ): Result[CredentialSchema] = {
     for {
-      cs <- CredentialSchema.make(id, in)
+      cs <- CredentialSchema.make(guid, in)
       _ <- CredentialSchema.validateCredentialSchema(cs).mapError(CredentialSchemaValidationError.apply)
-      existingVersions <- credentialSchemaRepository
-        .getAllVersions(id, in.author)
-        .mapError[CredentialSchemaService.Error](RepositoryError.apply)
-      _ <- existingVersions.headOption match {
-        case None =>
-          fail(NotFoundError.byId(id))
-        case _ =>
-          succeed(cs)
-      }
+      existingVersions <- credentialSchemaRepository.getAllVersions(guid, in.author)
+      _ <- ZIO.fromOption(existingVersions.headOption).mapError(_ => GuidNotFoundError(guid))
       _ <- existingVersions.find(_ > in.version) match {
         case Some(higherVersion) =>
-          fail(
+          ZIO.fail(
             UpdateError(
-              id,
+              guid,
               in.version,
               in.author,
               s"Higher version is found: $higherVersion"
             )
           )
         case None =>
-          succeed(cs)
+          ZIO.succeed(cs)
       }
       _ <- existingVersions.find(_ == in.version) match {
         case Some(existingVersion) =>
-          fail(
+          ZIO.fail(
             UpdateError(
-              id,
+              guid,
               in.version,
               in.author,
               s"The version already exists: $existingVersion"
             )
           )
-        case None => succeed(cs)
+        case None => ZIO.succeed(cs)
       }
-      updated <- credentialSchemaRepository
-        .create(cs)
-        .mapError[CredentialSchemaService.Error](RepositoryError.apply)
+      updated <- credentialSchemaRepository.create(cs)
     } yield updated
   }
   override def delete(guid: UUID): Result[CredentialSchema] = {
-    for {
-      deleted_row_opt <- credentialSchemaRepository
-        .delete(guid)
-        .mapError(RepositoryError.apply)
-      deleted_row <- getOrFailWith(NotFoundError.byGuid(guid))(deleted_row_opt)
-    } yield deleted_row
+    credentialSchemaRepository.delete(guid)
   }
 
   override def lookup(
@@ -105,7 +87,6 @@ class CredentialSchemaServiceImpl(
   ): Result[CredentialSchema.FilteredEntries] = {
     credentialSchemaRepository
       .search(SearchQuery(filter, skip, limit))
-      .mapError(t => RepositoryError(t))
       .map(sr => FilteredEntries(sr.entries, sr.count.toInt, sr.totalCount.toInt))
   }
 }

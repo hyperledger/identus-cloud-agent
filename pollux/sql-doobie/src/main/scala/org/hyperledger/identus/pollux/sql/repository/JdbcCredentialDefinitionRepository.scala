@@ -71,7 +71,7 @@ case class JdbcCredentialDefinitionRepository(xa: Transactor[ContextAwareTask], 
 
   override def search(
       query: SearchQuery[CredentialDefinition.Filter]
-  ): RIO[WalletAccessContext, SearchResult[CredentialDefinition]] = {
+  ): URIO[WalletAccessContext, SearchResult[CredentialDefinition]] = {
     for {
       filteredRows <- CredentialDefinitionSql
         .lookup(
@@ -83,6 +83,7 @@ case class JdbcCredentialDefinitionRepository(xa: Transactor[ContextAwareTask], 
           limit = query.limit
         )
         .transactWallet(xa)
+        .orDie
       entries = filteredRows.map(CredentialDefinitionRow.toModel)
 
       filteredRowsCount <- CredentialDefinitionSql
@@ -93,8 +94,9 @@ case class JdbcCredentialDefinitionRepository(xa: Transactor[ContextAwareTask], 
           tagOpt = query.filter.tag
         )
         .transactWallet(xa)
+        .orDie
 
-      totalRowsCount <- CredentialDefinitionSql.totalCount.transactWallet(xa)
+      totalRowsCount <- CredentialDefinitionSql.totalCount.transactWallet(xa).orDie
     } yield SearchResult(entries, filteredRowsCount, totalRowsCount)
   }
 }
