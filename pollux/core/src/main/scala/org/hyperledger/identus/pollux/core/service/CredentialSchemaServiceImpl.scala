@@ -5,9 +5,7 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.FilteredEntries
 import org.hyperledger.identus.pollux.core.repository.CredentialSchemaRepository
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchQuery
-import org.hyperledger.identus.pollux.core.service.CredentialSchemaService.*
 import zio.*
-import zio.{IO, URLayer, ZLayer}
 
 import java.util.UUID
 
@@ -24,10 +22,10 @@ class CredentialSchemaServiceImpl(
     CredentialSchemaValidationError(e)
   }
 
-  override def getByGUID(guid: UUID): IO[CredentialSchemaService.Error, CredentialSchema] = {
+  override def getByGUID(guid: UUID): IO[CredentialSchemaServiceError, CredentialSchema] = {
     for {
       resultOpt <- credentialSchemaRepository.findByGuid(guid)
-      result <- ZIO.fromOption(resultOpt).mapError(_ => GuidNotFoundError(guid))
+      result <- ZIO.fromOption(resultOpt).mapError(_ => CredentialSchemaGuidNotFoundError(guid))
     } yield result
   }
 
@@ -47,11 +45,11 @@ class CredentialSchemaServiceImpl(
       cs <- CredentialSchema.make(guid, in)
       _ <- CredentialSchema.validateCredentialSchema(cs).mapError(CredentialSchemaValidationError.apply)
       existingVersions <- credentialSchemaRepository.getAllVersions(guid, in.author)
-      _ <- ZIO.fromOption(existingVersions.headOption).mapError(_ => GuidNotFoundError(guid))
+      _ <- ZIO.fromOption(existingVersions.headOption).mapError(_ => CredentialSchemaGuidNotFoundError(guid))
       _ <- existingVersions.find(_ > in.version) match {
         case Some(higherVersion) =>
           ZIO.fail(
-            UpdateError(
+            CredentialSchemaUpdateError(
               guid,
               in.version,
               in.author,
@@ -64,7 +62,7 @@ class CredentialSchemaServiceImpl(
       _ <- existingVersions.find(_ == in.version) match {
         case Some(existingVersion) =>
           ZIO.fail(
-            UpdateError(
+            CredentialSchemaUpdateError(
               guid,
               in.version,
               in.author,
@@ -76,9 +74,13 @@ class CredentialSchemaServiceImpl(
       updated <- credentialSchemaRepository.create(cs)
     } yield updated
   }
-  override def delete(guid: UUID): Result[CredentialSchema] = {
-    credentialSchemaRepository.delete(guid)
-  }
+
+  override def delete(guid: UUID): Result[CredentialSchema] =
+    for {
+      existingOpt <- credentialSchemaRepository.findByGuid(guid)
+      _ <- ZIO.fromOption(existingOpt).mapError(_ => CredentialSchemaGuidNotFoundError(guid))
+      result <- credentialSchemaRepository.delete(guid)
+    } yield result
 
   override def lookup(
       filter: CredentialSchema.Filter,
