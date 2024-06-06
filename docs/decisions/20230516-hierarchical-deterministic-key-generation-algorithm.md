@@ -73,9 +73,7 @@ The current decision doesn't have backward compatibility with the PRISM v1.4, bu
 Implement the HD key derivation algorithm according to the research spike for all the components of the Identus Platform.
 The derivation path contains the following segments/layers:
 
-```
 m/wallet-purpose'/did-method'/did-index'/key-purpose'/key-index'
-```
 
 `wallet purpose` is used to distinguish the wallet purpose for the identity wallet and is a constant for the Identus platform `0x1D`, which looks like ID
 
