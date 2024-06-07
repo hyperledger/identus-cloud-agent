@@ -100,10 +100,17 @@ object OID4VCIIssuerMetadataRepositorySpecSuite {
         authServer2 = URI.create("http://example-2.com").toURL()
         issuer = makeCredentialIssuer(authorizationServer = authServer1)
         _ <- repo.createIssuer(issuer)
-        _ <- repo.updateIssuer(issuer.id, authorizationServer = Some(authServer2))
+        _ <- repo.updateIssuer(
+          issuerId = issuer.id,
+          authorizationServer = Some(authServer2),
+          authorizationServerClientId = Some("client-2"),
+          authorizationServerClientSecret = Some("secret-2")
+        )
         updatedIssuer <- repo.findIssuerById(issuer.id).some
       } yield assert(updatedIssuer.id)(equalTo(issuer.id)) &&
         assert(updatedIssuer.authorizationServer)(equalTo(authServer2)) &&
+        assert(updatedIssuer.authorizationServerClientId)(equalTo("client-2")) &&
+        assert(updatedIssuer.authorizationServerClientSecret)(equalTo("secret-2")) &&
         assert(updatedIssuer.updatedAt)(not(equalTo(issuer.createdAt)))
     },
     test("update credential issuer with empty patch successfully") {

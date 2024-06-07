@@ -61,7 +61,9 @@ trait OID4VCIIssuerMetadataService {
   def getCredentialIssuers: URIO[WalletAccessContext, Seq[CredentialIssuer]]
   def updateCredentialIssuer(
       issuerId: UUID,
-      authorizationServer: Option[URL] = None
+      authorizationServer: Option[URL] = None,
+      authorizationServerClientId: Option[String] = None,
+      authorizationServerClientSecret: Option[String] = None
   ): ZIO[WalletAccessContext, IssuerIdNotFound, CredentialIssuer]
   def deleteCredentialIssuer(issuerId: UUID): ZIO[WalletAccessContext, IssuerIdNotFound, Unit]
   def createCredentialConfiguration(
@@ -99,11 +101,18 @@ class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataReposito
 
   override def updateCredentialIssuer(
       issuerId: UUID,
-      authorizationServer: Option[URL]
+      authorizationServer: Option[URL],
+      authorizationServerClientId: Option[String],
+      authorizationServerClientSecret: Option[String]
   ): ZIO[WalletAccessContext, IssuerIdNotFound, CredentialIssuer] =
     for {
       _ <- repository
-        .updateIssuer(issuerId, authorizationServer = authorizationServer)
+        .updateIssuer(
+          issuerId = issuerId,
+          authorizationServer = authorizationServer,
+          authorizationServerClientId = authorizationServerClientId,
+          authorizationServerClientSecret = authorizationServerClientSecret
+        )
         .catchSomeDefect { case _: UnexpectedAffectedRow =>
           ZIO.fail(IssuerIdNotFound(issuerId))
         }

@@ -25,9 +25,17 @@ object AuthorizationServer {
   given decoder: JsonDecoder[AuthorizationServer] = DeriveJsonDecoder.gen
 }
 
-case class CredentialIssuer(id: UUID, authorizationServer: String)
+case class CredentialIssuer(id: UUID, authorizationServerUrl: String)
 
-case class PatchCredentialIssuerRequest(authorizationServer: Option[String] = None)
+case class PatchAuthorizationServer(url: Option[String], clientId: Option[String], clientSecret: Option[String])
+
+object PatchAuthorizationServer {
+  given schema: Schema[PatchAuthorizationServer] = Schema.derived
+  given encoder: JsonEncoder[PatchAuthorizationServer] = DeriveJsonEncoder.gen
+  given decoder: JsonDecoder[PatchAuthorizationServer] = DeriveJsonDecoder.gen
+}
+
+case class PatchCredentialIssuerRequest(authorizationServer: Option[PatchAuthorizationServer] = None)
 
 object PatchCredentialIssuerRequest {
   given schema: Schema[PatchCredentialIssuerRequest] = Schema.derived

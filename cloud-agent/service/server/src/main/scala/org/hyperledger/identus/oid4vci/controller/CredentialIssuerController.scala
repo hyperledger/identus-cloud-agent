@@ -264,12 +264,17 @@ case class CredentialIssuerControllerImpl(
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuer] =
     for {
       maybeAuthServerUrl <- ZIO
-        .succeed(request.authorizationServer)
+        .succeed(request.authorizationServer.flatMap(_.url))
         .flatMap {
           case Some(url) => parseURL(url).asSome
           case None      => ZIO.none
         }
-      issuer <- issuerMetadataService.updateCredentialIssuer(issuerId, maybeAuthServerUrl)
+      issuer <- issuerMetadataService.updateCredentialIssuer(
+        issuerId,
+        maybeAuthServerUrl,
+        request.authorizationServer.flatMap(_.clientId),
+        request.authorizationServer.flatMap(_.clientSecret)
+      )
     } yield issuer: CredentialIssuer
 
   override def deleteCredentialIssuer(
