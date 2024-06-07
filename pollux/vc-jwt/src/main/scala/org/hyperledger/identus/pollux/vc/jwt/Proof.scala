@@ -7,19 +7,15 @@ import com.nimbusds.jose.crypto.ECDSASigner
 import com.nimbusds.jwt.SignedJWT
 import io.circe.*
 import io.circe.syntax.*
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
+import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, KmpEd25519KeyOps}
 import org.hyperledger.identus.shared.utils.{Base64Utils, Json as JsonUtils}
-import org.hyperledger.identus.shared.utils.Base64Utils
-import org.hyperledger.identus.shared.utils.Json as JsonUtils
 import scodec.bits.ByteVector
 import zio.*
 
 import java.security.*
 import java.security.interfaces.ECPublicKey
-import java.security.spec.X509EncodedKeySpec
 import java.time.{Instant, ZoneOffset}
 import scala.jdk.CollectionConverters.*
-import scala.util.Try
 
 sealed trait Proof {
   val id: Option[String] = None
@@ -43,7 +39,6 @@ object Proof {
       val decoders: List[Decoder[Proof]] = List(
         Decoder[EddsaJcs2022Proof].widen,
         Decoder[EcdsaSecp256k1Signature2019Proof].widen,
-        Decoder[EcdsaJcs2019Proof].widen
         // Note: Add another proof types here when available
       )
       decoders.foldLeft(
@@ -55,84 +50,13 @@ object Proof {
   }
 }
 
-object EcdsaJcs2019ProofGenerator {
-  private val provider = BouncyCastleProviderSingleton.getInstance
-  def generateProof(payload: Json, sk: PrivateKey, pk: PublicKey): Task[EcdsaJcs2019Proof] = {
-    for {
-      canonicalizedJsonString <- ZIO.fromEither(JsonUtils.canonicalizeToJcs(payload.spaces2))
-      canonicalizedJson <- ZIO.fromEither(parser.parse(canonicalizedJsonString))
-      dataToSign = canonicalizedJson.noSpaces.getBytes
-      signature = sign(sk, dataToSign)
-      base58BtsEncodedSignature = MultiBaseString(
-        header = MultiBaseString.Header.Base58Btc,
-        data = ByteVector.view(signature).toBase58
-      ).toMultiBaseString
-      created = Instant.now()
-      multiKey = MultiKey(publicKeyMultibase =
-        Some(MultiBaseString(header = MultiBaseString.Header.Base64Url, data = Base64Utils.encodeURL(pk.getEncoded)))
-      )
-      verificationMethod = Base64Utils.createDataUrl(
-        multiKey.asJson.dropNullValues.noSpaces.getBytes,
-        "application/json"
-      )
-    } yield EcdsaJcs2019Proof(
-      proofValue = base58BtsEncodedSignature,
-      maybeCreated = Some(created),
-      verificationMethod = verificationMethod
-    )
-  }
-
-  def verifyProof(payload: Json, proofValue: String, pk: MultiKey): Task[Boolean] = {
-
-    val res = for {
-      canonicalizedJsonString <- ZIO
-        .fromEither(JsonUtils.canonicalizeToJcs(payload.spaces2))
-        .mapError(_.getMessage)
-      canonicalizedJson <- ZIO
-        .fromEither(parser.parse(canonicalizedJsonString))
-        .mapError(_.getMessage)
-      dataToVerify = canonicalizedJson.noSpaces.getBytes
-      signature <- ZIO.fromEither(MultiBaseString.fromString(proofValue).flatMap(_.getBytes))
-      publicKeyBytes <- ZIO.fromEither(
-        pk.publicKeyMultibase.toRight("No public key provided inside MultiKey").flatMap(_.getBytes)
-      )
-      javaPublicKey <- ZIO.fromEither(recoverPublicKey(publicKeyBytes))
-      isValid = verify(javaPublicKey, signature, dataToVerify)
-
-    } yield isValid
-
-    res.mapError(e => Throwable(e))
-  }
-
-  private def sign(privateKey: PrivateKey, data: Array[Byte]): Array[Byte] = {
-
-    val signer = Signature.getInstance("SHA256withECDSA", provider)
-    signer.initSign(privateKey)
-    signer.update(data)
-    signer.sign()
-  }
-
-  private def recoverPublicKey(pkBytes: Array[Byte]): Either[String, PublicKey] = {
-    val keyFactory = KeyFactory.getInstance("EC", provider)
-    val x509KeySpec = X509EncodedKeySpec(pkBytes)
-    Try(keyFactory.generatePublic(x509KeySpec)).toEither.left.map(_.getMessage)
-  }
-
-  private def verify(publicKey: PublicKey, signature: Array[Byte], data: Array[Byte]): Boolean = {
-    val verifier = Signature.getInstance("SHA256withECDSA", provider)
-    verifier.initVerify(publicKey)
-    verifier.update(data)
-    verifier.verify(signature)
-  }
-}
-
 object EcdsaSecp256k1Signature2019ProofGenerator {
   def generateProof(payload: Json, signer: ECDSASigner, pk: ECPublicKey): Task[EcdsaSecp256k1Signature2019Proof] = {
     for {
       dataToSign <- ZIO.fromEither(JsonUtils.canonicalizeJsonLDoRdf(payload.spaces2))
       created = Instant.now()
       header = new JWSHeader.Builder(JWSAlgorithm.ES256K)
-        .customParam("b64", false)
+        .base64URLEncodePayload(false)
         .criticalParams(Set("b64").asJava)
         .build()
       payload = Payload(dataToSign)
@@ -144,6 +68,7 @@ object EcdsaSecp256k1Signature2019ProofGenerator {
       jwk = JsonWebKey(
         kty = "EC",
         crv = Some("secp256k1"),
+        key_ops = Vector("verify"),
         x = Some(Base64Utils.encodeURL(x)),
         y = Some(Base64Utils.encodeURL(y)),
       )
@@ -168,13 +93,49 @@ object EcdsaSecp256k1Signature2019ProofGenerator {
       signedJws = SignedJWT.parse(jws)
       header = signedJws.getHeader
       signature = signedJws.getSignature
-      isValid = verifier.verify(header, dataToVerify, signature)
+      payload = Payload(dataToVerify)
+      jwsObject = new SignedJWT(header.toBase64URL, payload.toBase64URL, signature)
+      isValid = jwsObject.verify(verifier)
     } yield isValid
   }
 }
 
 object EddsaJcs2022ProofGenerator {
   private val provider = BouncyCastleProviderSingleton.getInstance
+  private val ed25519MultiBaseHeader: Array[Byte] = Array(-19, 1) // 0xed01
+
+  private def pkToMultiKey(pk: Ed25519PublicKey): MultiKey = {
+    val encoded = pk.getEncoded
+    val withHeader = ed25519MultiBaseHeader ++ encoded
+    val base58Encoded = ByteVector.view(withHeader).toBase58
+    MultiKey(publicKeyMultibase =
+      Some(
+        MultiBaseString(
+          header = MultiBaseString.Header.Base58Btc,
+          data = base58Encoded
+        )
+      )
+    )
+  }
+
+  private def multiKeytoPk(multiKey: MultiKey): Either[String, Ed25519PublicKey] = {
+    for {
+      multiBaseStr <- multiKey.publicKeyMultibase.toRight("No public key provided inside MultiKey")
+      bytesWithHeader <- multiBaseStr.getBytes
+      pkBytes <- Either.cond(
+        bytesWithHeader.take(2).sameElements(ed25519MultiBaseHeader),
+        bytesWithHeader.drop(2),
+        "Invalid multiBaseString header for ed25519"
+      )
+      maybePk <- Either.cond(
+        pkBytes.length == 32,
+        KmpEd25519KeyOps.publicKeyFromEncoded(pkBytes),
+        "Invalid public key length, must be 32"
+      )
+      pk <- maybePk.toEither.left.map(_.getMessage)
+
+    } yield pk
+  }
 
   def generateProof(payload: Json, ed25519KeyPair: Ed25519KeyPair): Task[EddsaJcs2022Proof] = {
     for {
@@ -187,14 +148,7 @@ object EddsaJcs2022ProofGenerator {
         data = ByteVector.view(signature).toBase58
       ).toMultiBaseString
       created = Instant.now()
-      multiKey = MultiKey(publicKeyMultibase =
-        Some(
-          MultiBaseString(
-            header = MultiBaseString.Header.Base64Url,
-            data = Base64Utils.encodeURL(ed25519KeyPair.publicKey.getEncoded)
-          )
-        )
-      )
+      multiKey = pkToMultiKey(ed25519KeyPair.publicKey)
       verificationMethod = Base64Utils.createDataUrl(
         multiKey.asJson.dropNullValues.noSpaces.getBytes,
         "application/json"
@@ -212,50 +166,26 @@ object EddsaJcs2022ProofGenerator {
       .mapError(ioError => ParsingFailure("Error Parsing canonicalized", ioError))
     canonicalizedJson <- ZIO
       .fromEither(parser.parse(canonicalizedJsonString))
-    // .mapError(_.getMessage)
     dataToVerify = canonicalizedJson.noSpaces.getBytes
     signature <- ZIO
       .fromEither(MultiBaseString.fromString(proofValue).flatMap(_.getBytes))
       .mapError(error =>
         // TODO fix RuntimeException
-        ParsingFailure("Error Parsing MultiBaseString", new RuntimeException("Error Parsing MultiBaseString"))
+        ParsingFailure(error, new RuntimeException(error))
       )
-    publicKeyBytes <- ZIO
-      .fromEither(pk.publicKeyMultibase.toRight("No public key provided inside MultiKey").flatMap(_.getBytes))
+    kmmPk <- ZIO
+      .fromEither(multiKeytoPk(pk))
       .mapError(error =>
         // TODO fix RuntimeException
         ParsingFailure("Error Parsing MultiBaseString", new RuntimeException("Error Parsing MultiBaseString"))
       )
-    javaPublicKey <- ZIO
-      .fromEither(recoverPublicKey(publicKeyBytes))
-      .mapError(error =>
-        // TODO fix RuntimeException
-        ParsingFailure("Error recoverPublicKey", new RuntimeException("Error recoverPublicKey"))
-      )
-    isValid = verify(javaPublicKey, signature, dataToVerify)
+
+    isValid = verify(kmmPk, signature, dataToVerify)
   } yield isValid
 
-  private def recoverPublicKey(pkBytes: Array[Byte]): Either[String, PublicKey] = {
-    val keyFactory = KeyFactory.getInstance("Ed25519", provider)
-    val x509KeySpec = X509EncodedKeySpec(pkBytes)
-    Try(keyFactory.generatePublic(x509KeySpec)).toEither.left.map(_.getMessage)
+  private def verify(publicKey: Ed25519PublicKey, signature: Array[Byte], data: Array[Byte]): Boolean = {
+    publicKey.verify(data, signature).isSuccess
   }
-
-  private def verify(publicKey: PublicKey, signature: Array[Byte], data: Array[Byte]): Boolean = {
-    val verifier = Signature.getInstance("Ed25519", provider)
-    verifier.initVerify(publicKey)
-    verifier.update(data)
-    verifier.verify(signature)
-  }
-}
-
-case class EcdsaJcs2019Proof(proofValue: String, verificationMethod: String, maybeCreated: Option[Instant])
-    extends Proof
-    with DataIntegrityProof {
-  override val created: Option[Instant] = maybeCreated
-  override val `type`: String = "DataIntegrityProof"
-  override val proofPurpose: String = "assertionMethod"
-  val cryptoSuite: String = "ecdsa-jcs-2019"
 }
 
 case class EddsaJcs2022Proof(proofValue: String, verificationMethod: String, maybeCreated: Option[Instant])
@@ -265,6 +195,16 @@ case class EddsaJcs2022Proof(proofValue: String, verificationMethod: String, may
   override val `type`: String = "DataIntegrityProof"
   override val proofPurpose: String = "assertionMethod"
   val cryptoSuite: String = "eddsa-jcs-2022"
+}
+
+object EddsaJcs2022Proof {
+  given proofEncoder: Encoder[EddsaJcs2022Proof] =
+    DataIntegrityProofCodecs.proofEncoder[EddsaJcs2022Proof]("eddsa-jcs-2022")
+
+  given proofDecoder: Decoder[EddsaJcs2022Proof] = DataIntegrityProofCodecs.proofDecoder[EddsaJcs2022Proof](
+    (proofValue, verificationMethod, created) => EddsaJcs2022Proof(proofValue, verificationMethod, created),
+    "eddsa-jcs-2022"
+  )
 }
 
 case class EcdsaSecp256k1Signature2019Proof(
@@ -318,26 +258,6 @@ object EcdsaSecp256k1Signature2019Proof {
           nonce = nonce
         )
       }
-}
-
-object EcdsaJcs2019Proof {
-  given proofEncoder: Encoder[EcdsaJcs2019Proof] =
-    DataIntegrityProofCodecs.proofEncoder[EcdsaJcs2019Proof]("ecdsa-jcs-2019")
-
-  given proofDecoder: Decoder[EcdsaJcs2019Proof] = DataIntegrityProofCodecs.proofDecoder[EcdsaJcs2019Proof](
-    (proofValue, verificationMethod, created) => EcdsaJcs2019Proof(proofValue, verificationMethod, created),
-    "ecdsa-jcs-2019"
-  )
-}
-
-object EddsaJcs2022Proof {
-  given proofEncoder: Encoder[EddsaJcs2022Proof] =
-    DataIntegrityProofCodecs.proofEncoder[EddsaJcs2022Proof]("eddsa-jcs-2022")
-
-  given proofDecoder: Decoder[EddsaJcs2022Proof] = DataIntegrityProofCodecs.proofDecoder[EddsaJcs2022Proof](
-    (proofValue, verificationMethod, created) => EddsaJcs2022Proof(proofValue, verificationMethod, created),
-    "eddsa-jcs-2022"
-  )
 }
 
 object DataIntegrityProofCodecs {

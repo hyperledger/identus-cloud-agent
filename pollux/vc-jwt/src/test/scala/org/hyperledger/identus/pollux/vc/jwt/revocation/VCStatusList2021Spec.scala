@@ -44,7 +44,7 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
         jwtVCPayload <- ZIO.fromTry(JwtCredential.decodeJwt(encodedJwtVC, issuer.publicKey))
         credentialSubjectKeys <- ZIO.fromOption(jwtVCPayload.credentialSubject.hcursor.keys)
       } yield {
-        assertTrue(credentialSubjectKeys.toSet == Set("id", "type", "statusPurpose", "encodedList"))
+        assertTrue(credentialSubjectKeys.toSet == Set("type", "statusPurpose", "encodedList"))
       }
     },
     test("Generated VC is valid") {

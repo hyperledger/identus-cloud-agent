@@ -26,7 +26,7 @@ object EcdsaSecp256k1VerificationKey2019 {
           ("type", key.`type`.asJson),
           ("id", key.id.asJson),
           ("controller", key.controller.asJson),
-          ("publicKeyJwk", key.publicKeyJwk.asJson.dropNullValues.dropEmptyValues),
+          ("publicKeyJwk", key.publicKeyJwk.asJson.dropNullValues),
           ("expires", key.expires.map(_.atOffset(ZoneOffset.UTC)).asJson)
         )
 

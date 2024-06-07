@@ -675,19 +675,18 @@ object CredentialVerification {
 
       // Verify proof
       verified <- proof match
-        case EcdsaJcs2019Proof(proofValue, verificationMethod, maybeCreated) =>
+        case EddsaJcs2022Proof(proofValue, verificationMethod, maybeCreated) =>
           val publicKeyMultiBaseEffect = uriResolver
             .resolve(verificationMethod)
             .mapError(_.toThrowable)
             .flatMap { jsonResponse =>
-              ZIO.fromEither(io.circe.parser.decode[MultiKey](jsonResponse)).mapError(_.getCause)
+              ZIO.fromEither(io.circe.parser.decode[MultiKey](jsonResponse)).mapError(_.fillInStackTrace)
             }
             .mapError(_.getMessage)
 
           for {
             publicKeyMultiBase <- publicKeyMultiBaseEffect
-
-            verified <- EcdsaJcs2019ProofGenerator
+            verified <- EddsaJcs2022ProofGenerator
               .verifyProof(statusListCredJsonWithoutProof, proofValue, publicKeyMultiBase)
               .mapError(_.getMessage)
           } yield verified
@@ -700,7 +699,7 @@ object CredentialVerification {
               ZIO
                 .fromEither(io.circe.parser.decode[EcdsaSecp256k1VerificationKey2019](jsonResponse))
                 .map(_.publicKeyJwk)
-                .mapError(_.getCause)
+                .mapError(_.fillInStackTrace)
             }
             .mapError(_.getMessage)
 
@@ -939,7 +938,6 @@ object W3CCredential {
     for {
       proof <- issuer.signer.generateProofForJson(jsonCred, issuer.publicKey)
       jsonProof <- proof match
-        case a: EcdsaJcs2019Proof                => ZIO.succeed(a.asJson.dropNullValues)
         case b: EcdsaSecp256k1Signature2019Proof => ZIO.succeed(b.asJson.dropNullValues)
         case c: EddsaJcs2022Proof                => ZIO.succeed(c.asJson.dropNullValues)
       verifiableCredentialWithProof = jsonCred.deepMerge(Map("proof" -> jsonProof).asJson)

@@ -65,20 +65,6 @@ class ES256KSigner(privateKey: PrivateKey) extends Signer {
   }
 }
 
-def getCurveName(publicKey: ECPublicKey): Option[String] = {
-  val params = publicKey.getParams
-
-  val maybeCurveName = ECNamedCurveTable.getNames.asScala.find {
-    case name: String =>
-      val spec = ECNamedCurveTable.getParameterSpec(name)
-      val curveSpec =
-        new ECNamedCurveSpec(spec.getName, spec.getCurve, spec.getG, spec.getN, spec.getH, spec.getSeed)
-      curveSpec.getCurve.equals(params.getCurve)
-    case _ => false
-  }
-  maybeCurveName.fold(Option.empty[String]) { case name: String => Some(name) }
-}
-
 class EdSigner(ed25519KeyPair: Ed25519KeyPair) extends Signer {
   lazy val signer: Ed25519Signer = {
     val d = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519KeyPair.privateKey.getEncoded)
@@ -103,6 +89,21 @@ class EdSigner(ed25519KeyPair: Ed25519KeyPair) extends Signer {
     JWT(signedJwt.serialize())
   }
 }
+
+def getCurveName(publicKey: ECPublicKey): Option[String] = {
+  val params = publicKey.getParams
+
+  val maybeCurveName = ECNamedCurveTable.getNames.asScala.find {
+    case name: String =>
+      val spec = ECNamedCurveTable.getParameterSpec(name)
+      val curveSpec =
+        new ECNamedCurveSpec(spec.getName, spec.getCurve, spec.getG, spec.getN, spec.getH, spec.getSeed)
+      curveSpec.getCurve.equals(params.getCurve)
+    case _ => false
+  }
+  maybeCurveName.fold(Option.empty[String]) { case name: String => Some(name) }
+}
+
 
 def toJWKFormat(holderJwk: ECKey): JsonWebKey = {
   JsonWebKey(
