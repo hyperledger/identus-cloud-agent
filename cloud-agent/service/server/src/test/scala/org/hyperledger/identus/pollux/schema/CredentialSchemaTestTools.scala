@@ -113,16 +113,16 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
     backend
   }
 
-  def deleteAllCredentialSchemas: RIO[CredentialSchemaRepository & WalletAccessContext, Long] = {
+  def deleteAllCredentialSchemas: RIO[CredentialSchemaRepository & WalletAccessContext, Unit] = {
     for {
       repository <- ZIO.service[CredentialSchemaRepository]
-      count <- repository.deleteAll()
-    } yield count
+      result <- repository.deleteAll()
+    } yield result
   }
 }
 
 trait CredentialSchemaGen {
-  self: ZIOSpecDefault with CredentialSchemaTestTools =>
+  self: ZIOSpecDefault & CredentialSchemaTestTools =>
   object Generator {
     val schemaName = Gen.alphaNumericStringBounded(4, 12)
     val majorVersion = Gen.int(1, 9)

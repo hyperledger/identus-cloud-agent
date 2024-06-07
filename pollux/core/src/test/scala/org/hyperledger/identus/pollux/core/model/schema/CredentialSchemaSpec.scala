@@ -48,7 +48,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
     )
   }
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("CredentialSchemaTest")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("CredentialSchemaTest")(
     suite("resolveCredentialSchemaType")(
       test("should return AnoncredSchemaType for a supported schema type") {
 

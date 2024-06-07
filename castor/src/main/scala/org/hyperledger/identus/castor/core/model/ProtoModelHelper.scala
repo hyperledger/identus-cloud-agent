@@ -192,7 +192,7 @@ private[castor] trait ProtoModelHelper {
         case ServiceType.Single(name) => name.value
         case ts: ServiceType.Multiple =>
           val names = ts.values.map(_.value).map(Json.fromString)
-          Json.arr(names: _*).noSpaces
+          Json.arr(names*).noSpaces
       }
     }
   }
@@ -210,7 +210,7 @@ private[castor] trait ProtoModelHelper {
             case UriOrJsonEndpoint.Uri(uri)   => Json.fromString(uri.value)
             case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json)
           }
-          Json.arr(uris: _*).noSpaces
+          Json.arr(uris*).noSpaces
       }
     }
   }
@@ -250,10 +250,10 @@ private[castor] trait ProtoModelHelper {
       Clock.instant.map { now =>
         didData
           .withPublicKeys(didData.publicKeys.filter { publicKey =>
-            publicKey.revokedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime isAfter now)
+            publicKey.revokedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime `isAfter` now)
           })
           .withServices(didData.services.filter { service =>
-            service.deletedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime isAfter now)
+            service.deletedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime `isAfter` now)
           })
       }
     }
@@ -370,7 +370,7 @@ private[castor] trait ProtoModelHelper {
             case Nil          => Left("the service type cannot be an empty JSON array")
           }
           .filterOrElse(
-            _ => s == io.circe.Json.arr(jsonArr: _*).noSpaces,
+            _ => s == io.circe.Json.arr(jsonArr*).noSpaces,
             "the service type is a valid JSON array of strings, but not conform to the ABNF"
           )
       }

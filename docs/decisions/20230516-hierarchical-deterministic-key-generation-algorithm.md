@@ -3,6 +3,7 @@
 - Status: accepted
 - Deciders: Jesus Diaz Vico, Ezequiel Postan, Pat Losoponkul, Yurii Shynbuiev
 - Date: 2023-05-16
+- Revision-date: 2024-06-06
 - Tags: key management, hierarchical deterministic, key derivation
 
 Technical Story:
@@ -13,6 +14,13 @@ Current ADR is based on the Research Spike [Evaluation of Using a Single Mnemoni
 - Christos KK Loverdos (Atala Technical Director)
 - Ezequiel Postan (Atala Semantics team)
 - Tony Rose (Atala Head of Product)
+
+Reviewed in 2024 by Atala engineers:
+- Jesus Diaz Vico
+- Ezequiel Postan
+- Pat Losoponkul
+- Gonçalo Frade
+- Yurii Shynbuiev
 
 The document covers motivation, the overview of BIP32-based HD wallets, and the main concept and implementation details.
 
@@ -25,6 +33,8 @@ HD key derivation can be used for both `managed` and `unmanaged` solutions. In b
 In the case of a `managed` solution, the keys are created by the `Agent` or `SDK` and stored in the `secured storage` that is managed by the Identus platform.
 
 In the case of an `unmanaged` solution, the key material is created by the tools (for instance, `identus-cli`) following similar rules, and is stored on the client side in the `secret storage` managed by the client.
+
+We are going to be using different derivation implementations for secp256k1 and ed25519.
 
 ## Out of the Scope
 
@@ -56,15 +66,14 @@ The current decision doesn't have backward compatibility with the PRISM v1.4, bu
 - Compliance with BIP32 specification
 - Key material migration between the wallets
 - Key material recovery in case of disaster
+- We must use different derivation standards bip32 with secp256k1 and ed25519-bip32
 
 ## Considered Option
 
 Implement the HD key derivation algorithm according to the research spike for all the components of the Identus Platform.
 The derivation path contains the following segments/layers:
 
-```
-m/wallet-purpose`/did-method`/did-index`/key-purpose`/key-index`
-```
+m/wallet-purpose'/did-method'/did-index'/key-purpose'/key-index'
 
 `wallet purpose` is used to distinguish the wallet purpose for the identity wallet and is a constant for the Identus platform `0x1D`, which looks like ID
 
@@ -86,7 +95,10 @@ m/wallet-purpose`/did-method`/did-index`/key-purpose`/key-index`
 
 `key-index` - the index of the key pair
 
-Secp256k1 elliptic curve is used to generate the key material (private and public keys)
+In order to generate key material (private and public keys):
+- Secp256k1 ellipstic curve will be used with standard bip32 derivation
+- Curve25519 (Ed25519) will be used with the standard bip32 implementation for [ed25519](https://ieeexplore.ieee.org/document/7966967)
+- Future implementations will require their own implementations of the derive function, and very potentially at some point we may want to rework bip32 implementation to make it more agnostic, because a high percentage of the code is going to be the same.
 
 `Seed` entropy must be used for the HD algorithm is 256 bits which corresponds to 24 words mnemonic
 
@@ -97,7 +109,7 @@ The PRIMS platform uses HD key derivation algorithm for `managed` and `unmanaged
 ### Positive Consequences
 
 - deterministic key material derivation among all components of the Identus platform
-- BIP32 compliance
+- BIP32 compliance (for both secp256k1 and ed25519 with their corresponding implementations)
 - key material migration capability
 - key material recovery capability
 

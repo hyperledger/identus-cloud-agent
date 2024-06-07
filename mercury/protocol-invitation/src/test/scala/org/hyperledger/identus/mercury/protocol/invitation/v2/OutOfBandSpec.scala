@@ -13,7 +13,7 @@ class OutOfBandSpec extends FunSuite {
 
     val ret = OutOfBand.parseInvitation(link)
 
-    assert(ret.isInstanceOf[Right[_, Invitation]])
+    assert(ret.isInstanceOf[Right[?, Invitation]])
 
     val expected = Invitation(
       "421dbbc8-57ca-4341-aa3a-f5b4215c568f",

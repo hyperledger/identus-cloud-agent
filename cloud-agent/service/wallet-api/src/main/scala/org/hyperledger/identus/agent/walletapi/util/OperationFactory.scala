@@ -5,11 +5,9 @@ import org.hyperledger.identus.agent.walletapi.model.error.{CreateManagedDIDErro
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.shared.crypto.{
   Apollo,
-  Ed25519KeyPair,
   Ed25519PublicKey,
   Secp256k1KeyPair,
   Secp256k1PublicKey,
-  X25519KeyPair,
   X25519PublicKey
 }
 import org.hyperledger.identus.shared.models.Base64UrlString
@@ -196,7 +194,7 @@ class OperationFactory(apollo: Apollo) {
   }
 
   private def deriveSecp256k1KeyPair(seed: Array[Byte], path: ManagedDIDHdKeyPath): UIO[Secp256k1KeyPair] =
-    apollo.secp256k1.deriveKeyPair(seed)(path.derivationPath: _*)
+    apollo.secp256k1.deriveKeyPair(seed)(path.derivationPath*)
 
   private def toPublicKeyData(publicKey: Secp256k1PublicKey | Ed25519PublicKey | X25519PublicKey): PublicKeyData =
     publicKey match {

@@ -162,13 +162,13 @@ class CredentialServiceNotifier(
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(svc.generateAnonCredsCredential(recordId))
 
-  private[this] def notifyOnSuccess[R](effect: ZIO[R, CredentialServiceError, IssueCredentialRecord]) =
+  private def notifyOnSuccess[R](effect: ZIO[R, CredentialServiceError, IssueCredentialRecord]) =
     for {
       record <- effect
       _ <- notify(record)
     } yield record
 
-  private[this] def notify(record: IssueCredentialRecord) = {
+  private def notify(record: IssueCredentialRecord) = {
     val result = for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       producer <- eventNotificationService.producer[IssueCredentialRecord]("Issue")
@@ -206,14 +206,14 @@ class CredentialServiceNotifier(
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): ZIO[WalletAccessContext, CredentialServiceError, Seq[IssueCredentialRecord]] =
-    svc.getIssueCredentialRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+    svc.getIssueCredentialRecordsByStates(ignoreWithZeroRetries, limit, states*)
 
   override def getIssueCredentialRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] =
-    svc.getIssueCredentialRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+    svc.getIssueCredentialRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states*)
 }
 
 object CredentialServiceNotifier {

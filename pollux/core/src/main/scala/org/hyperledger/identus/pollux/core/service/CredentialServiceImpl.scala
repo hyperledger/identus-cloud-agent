@@ -6,12 +6,8 @@ import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
-import org.hyperledger.identus.castor.core.model.did.{
-  CanonicalPrismDID,
-  EllipticCurve,
-  PrismDID,
-  VerificationRelationship
-}
+import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
+import org.hyperledger.identus.castor.core.model.did.EllipticCurve
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
@@ -335,7 +331,7 @@ private class CredentialServiceImpl(
   ): ZIO[WalletAccessContext, CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
-        .getIssueCredentialRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+        .getIssueCredentialRecordsByStates(ignoreWithZeroRetries, limit, states*)
         .mapError(RepositoryError.apply)
     } yield records
   }
@@ -347,7 +343,7 @@ private class CredentialServiceImpl(
   ): IO[CredentialServiceError, Seq[IssueCredentialRecord]] = {
     for {
       records <- credentialRepository
-        .getIssueCredentialRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+        .getIssueCredentialRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states*)
         .mapError(RepositoryError.apply)
     } yield records
   }
@@ -405,7 +401,7 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  private[this] def validateCredentialOfferAttachment(
+  private def validateCredentialOfferAttachment(
       credentialFormat: CredentialFormat,
       attachment: AttachmentDescriptor
   ) = for {
@@ -502,7 +498,7 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  private[this] def createPresentationPayload(
+  private def createPresentationPayload(
       record: IssueCredentialRecord,
       subject: JwtIssuer
   ): ZIO[WalletAccessContext, CredentialServiceError, PresentationPayload] = {
@@ -522,7 +518,7 @@ private class CredentialServiceImpl(
     }
   }
 
-  private[this] def getLongForm(
+  private def getLongForm(
       did: PrismDID,
       allowUnpublishedIssuingDID: Boolean = false
   ) = {
@@ -539,7 +535,7 @@ private class CredentialServiceImpl(
     } yield longFormPrismDID
   }
 
-  private[this] def createJwtIssuer(
+  private def createJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
   ) = {
@@ -549,13 +545,16 @@ private class CredentialServiceImpl(
         .resolveDID(jwtIssuerDID)
         .mapError(e => UnexpectedError(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
         .someOrFail(UnexpectedError(s"Issuing DID resolution result is not found"))
-        .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
+        .map { case (_, didData) =>
+          didData.publicKeys
+            .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.SECP256K1)
+            .map(_.id)
+        }
         .someOrFail(
           UnexpectedError(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
         )
       ecKeyPair <- managedDIDService
         .javaKeyPairWithDID(jwtIssuerDID.asCanonical, issuingKeyId)
-        .mapError(e => UnexpectedError(s"Error occurred while getting issuer key-pair: ${e.toString}"))
         .someOrFail(
           UnexpectedError(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
         )
@@ -568,7 +567,7 @@ private class CredentialServiceImpl(
     } yield jwtIssuer
   }
 
-  private[this] def getEd25519SigningKeyPair(
+  private def getEd25519SigningKeyPair(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
   ) = {
@@ -577,14 +576,17 @@ private class CredentialServiceImpl(
         .resolveDID(jwtIssuerDID)
         .mapError(e => UnexpectedError(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
         .someOrFail(UnexpectedError(s"Issuing DID resolution result is not found"))
-        .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
+        .map { case (_, didData) =>
+          didData.publicKeys
+            .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.ED25519)
+            .map(_.id)
+        }
         .someOrFail(
           UnexpectedError(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
         )
       ed25519keyPair <- managedDIDService
         .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
         .map(_.collect { case keyPair: Ed25519KeyPair => keyPair })
-        .mapError(e => UnexpectedError(s"Error occurred while getting issuer key-pair: ${e.toString}"))
         .someOrFail(
           UnexpectedError(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
         )
@@ -600,7 +602,7 @@ private class CredentialServiceImpl(
     * @see
     *   org.hyperledger.identus.pollux.vc.jwt.Issuer
     */
-  private[this] def getSDJwtIssuer(
+  private def getSDJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
   ): ZIO[WalletAccessContext, UnexpectedError, JwtIssuer] = {
@@ -737,7 +739,7 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  private[this] def createAnonCredsRequestCredential(offerCredential: OfferCredential) = {
+  private def createAnonCredsRequestCredential(offerCredential: OfferCredential) = {
     for {
       attachmentData <- ZIO
         .fromOption(
@@ -889,7 +891,7 @@ private class CredentialServiceImpl(
       .mapError(RepositoryError.apply)
   }
 
-  private[this] def processAnonCredsCredential(
+  private def processAnonCredsCredential(
       record: IssueCredentialRecord,
       credentialBytes: Array[Byte]
   ): ZIO[WalletAccessContext, CredentialServiceError, anoncreds.AnoncredCredential] = {
@@ -939,7 +941,7 @@ private class CredentialServiceImpl(
       "issuance_flow_holder_req_generated_to_sent_ms_gauge"
     )
 
-  private[this] def markCredentialGenerated(
+  private def markCredentialGenerated(
       record: IssueCredentialRecord,
       issueCredential: IssueCredential
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
@@ -992,7 +994,7 @@ private class CredentialServiceImpl(
         case n => ZIO.fail(UnexpectedError(s"Invalid number of records updated: $n"))
       }
 
-  private[this] def getRecordWithState(
+  private def getRecordWithState(
       recordId: DidCommID,
       state: ProtocolState
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
@@ -1010,7 +1012,7 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  private[this] def getRecordFromThreadIdWithState(
+  private def getRecordFromThreadIdWithState(
       thid: Option[DidCommID],
       ignoreWithZeroRetries: Boolean,
       states: ProtocolState*
@@ -1032,7 +1034,7 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  private[this] def createJWTDidCommOfferCredential(
+  private def createJWTDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       maybeSchemaId: Option[String],
@@ -1068,7 +1070,7 @@ private class CredentialServiceImpl(
     )
   }
 
-  private[this] def createSDJWTDidCommOfferCredential(
+  private def createSDJWTDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       maybeSchemaId: Option[String],
@@ -1104,7 +1106,7 @@ private class CredentialServiceImpl(
     )
   }
 
-  private[this] def createAnonCredsDidCommOfferCredential(
+  private def createAnonCredsDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       schemaUri: String,
@@ -1137,7 +1139,7 @@ private class CredentialServiceImpl(
     )
   }
 
-  private[this] def createAnonCredsCredentialOffer(credentialDefinitionGUID: UUID, credentialDefinitionId: String) =
+  private def createAnonCredsCredentialOffer(credentialDefinitionGUID: UUID, credentialDefinitionId: String) =
     for {
       credentialDefinition <- credentialDefinitionService
         .getByGUID(credentialDefinitionGUID)
@@ -1155,7 +1157,7 @@ private class CredentialServiceImpl(
       offer = AnoncredLib.createOffer(createCredentialDefinition, credentialDefinitionId)
     } yield offer
 
-  private[this] def createDidCommRequestCredential(
+  private def createDidCommRequestCredential(
       format: IssueCredentialOfferFormat,
       offer: OfferCredential,
       signedPresentation: JWT
@@ -1180,7 +1182,7 @@ private class CredentialServiceImpl(
     )
   }
 
-  private[this] def createDidCommIssueCredential(request: RequestCredential): IssueCredential = {
+  private def createDidCommIssueCredential(request: RequestCredential): IssueCredential = {
     IssueCredential(
       body = IssueCredential.Body(
         goal_code = request.body.goal_code,
@@ -1203,7 +1205,7 @@ private class CredentialServiceImpl(
     *
     * TODO: this should be improved to behave exactly like atomic operation.
     */
-  private[this] def updateCredentialRecordProtocolState(
+  private def updateCredentialRecordProtocolState(
       id: DidCommID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
@@ -1395,7 +1397,7 @@ private class CredentialServiceImpl(
 
   }
 
-  private[this] def allocateNewCredentialInStatusListForWallet(
+  private def allocateNewCredentialInStatusListForWallet(
       record: IssueCredentialRecord,
       statusListRegistryUrl: String,
       jwtIssuer: JwtIssuer
@@ -1461,7 +1463,7 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  private[this] def createAnonCredsCredential(record: IssueCredentialRecord) = {
+  private def createAnonCredsCredential(record: IssueCredentialRecord) = {
     for {
       credentialDefinitionId <- ZIO
         .fromOption(record.credentialDefinitionId)
@@ -1521,7 +1523,7 @@ private class CredentialServiceImpl(
     } yield credential
   }
 
-  private[this] def getOptionsFromOfferCredentialData(record: IssueCredentialRecord) = {
+  private def getOptionsFromOfferCredentialData(record: IssueCredentialRecord) = {
     for {
       offer <- ZIO
         .fromOption(record.offerCredentialData)
@@ -1538,7 +1540,7 @@ private class CredentialServiceImpl(
     } yield maybeOptions
   }
 
-  private[this] def getJwtFromRequestCredentialData(record: IssueCredentialRecord) = {
+  private def getJwtFromRequestCredentialData(record: IssueCredentialRecord) = {
     for {
       request <- ZIO
         .fromOption(record.requestCredentialData)
@@ -1556,7 +1558,7 @@ private class CredentialServiceImpl(
     } yield jwt
   }
 
-  private[this] def validateRequestCredentialDataProof(maybeOptions: Option[Options], jwt: JWT) = {
+  private def validateRequestCredentialDataProof(maybeOptions: Option[Options], jwt: JWT) = {
     for {
       _ <- maybeOptions match
         case None => ZIO.unit

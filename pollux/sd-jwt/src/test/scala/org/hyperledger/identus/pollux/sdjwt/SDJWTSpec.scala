@@ -280,7 +280,7 @@ object SDJWTSpec extends ZIOSpecDefault {
     test("get iss field from PresentationJson") {
       val ed25519KeyPair = KmpEd25519KeyOps.generateKeyPair
       val issuerKey = IssuerPrivateKey(ed25519KeyPair.privateKey)
-      val issuerPublicKey = IssuerPublicKey(ed25519KeyPair.publicKey)
+      IssuerPublicKey(ed25519KeyPair.publicKey)
 
       val credential = SDJWT.issueCredential(issuerKey, CLAIMS)
       val presentation = SDJWT.createPresentation(credential, CLAIMS_PRESENTED)

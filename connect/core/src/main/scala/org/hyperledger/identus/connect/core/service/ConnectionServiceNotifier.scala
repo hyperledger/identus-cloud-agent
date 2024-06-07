@@ -73,13 +73,13 @@ class ConnectionServiceNotifier(
   ] =
     notifyOnSuccess(svc.receiveConnectionResponse(response))
 
-  private[this] def notifyOnSuccess[E](effect: ZIO[WalletAccessContext, E, ConnectionRecord]) =
+  private def notifyOnSuccess[E](effect: ZIO[WalletAccessContext, E, ConnectionRecord]) =
     for {
       record <- effect
       _ <- notify(record)
     } yield record
 
-  private[this] def notify(record: ConnectionRecord) = {
+  private def notify(record: ConnectionRecord) = {
     val result = for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       producer <- eventNotificationService.producer[ConnectionRecord]("Connect")
@@ -115,14 +115,14 @@ class ConnectionServiceNotifier(
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
-    svc.findRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+    svc.findRecordsByStates(ignoreWithZeroRetries, limit, states*)
 
   override def findRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): UIO[Seq[ConnectionRecord]] =
-    svc.findRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+    svc.findRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states*)
 }
 
 object ConnectionServiceNotifier {

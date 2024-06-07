@@ -7,7 +7,7 @@ import zio.json.ast.Json.*
 private[sdjwt] object QueryUtils {
 
   type AUX = Bool | Str | Num | Json.Null | None.type
-  def getCursors(queryJson: Json, cursor: JsonCursor[_, _]): Seq[(JsonCursor[_, ast.Json], AUX)] = {
+  def getCursors(queryJson: Json, cursor: JsonCursor[?, ?]): Seq[(JsonCursor[?, ast.Json], AUX)] = {
     queryJson match
       case Obj(fields) if fields.isEmpty => Seq((cursor, None)) // especial case for SD-JDT lib
       case value: Bool                   => Seq((cursor, value))
