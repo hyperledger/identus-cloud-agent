@@ -7,6 +7,7 @@ import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, Publicati
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
+import org.hyperledger.identus.castor.core.model.did.EllipticCurve
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
@@ -545,7 +546,9 @@ class CredentialServiceImpl(
         .mapError(e => UnexpectedError(s"Error occurred while resolving Issuing DID during VC creation: ${e.toString}"))
         .someOrFail(UnexpectedError(s"Issuing DID resolution result is not found"))
         .map { case (_, didData) =>
-          didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id)
+          didData.publicKeys
+            .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.SECP256K1)
+            .map(_.id)
         }
         .someOrFail(
           UnexpectedError(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
@@ -573,7 +576,11 @@ class CredentialServiceImpl(
         .resolveDID(jwtIssuerDID)
         .mapError(e => UnexpectedError(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
         .someOrFail(UnexpectedError(s"Issuing DID resolution result is not found"))
-        .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
+        .map { case (_, didData) =>
+          didData.publicKeys
+            .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.ED25519)
+            .map(_.id)
+        }
         .someOrFail(
           UnexpectedError(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
         )
