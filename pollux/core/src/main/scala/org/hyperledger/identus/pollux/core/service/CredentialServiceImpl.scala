@@ -126,14 +126,15 @@ private class CredentialServiceImpl(
     for {
       _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaId)
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
-      offer <- createJWTDidCommOfferCredential(
+      offer <- createDidCommOfferCredential(
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
         maybeSchemaId = maybeSchemaId,
         claims = attributes,
         thid = thid,
         UUID.randomUUID().toString,
-        "domain"
+        "domain",
+        IssueCredentialOfferFormat.JWT
       )
       record <- ZIO.succeed(
         IssueCredentialRecord(
@@ -180,14 +181,15 @@ private class CredentialServiceImpl(
     for {
       _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaId)
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
-      offer <- createSDJWTDidCommOfferCredential(
+      offer <- createDidCommOfferCredential(
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
         maybeSchemaId = maybeSchemaId,
         claims = attributes,
         thid = thid,
         UUID.randomUUID().toString,
-        "domain"
+        "domain",
+        IssueCredentialOfferFormat.SDJWT
       )
       record <- ZIO.succeed(
         IssueCredentialRecord(
@@ -808,7 +810,7 @@ private class CredentialServiceImpl(
   private def markCredentialGenerated(
       record: IssueCredentialRecord,
       issueCredential: IssueCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): URIO[WalletAccessContext, IssueCredentialRecord] = {
     for {
       count <- credentialRepository
         .updateWithIssueCredential(record.id, issueCredential, IssueCredentialRecord.ProtocolState.CredentialGenerated)
@@ -816,13 +818,7 @@ private class CredentialServiceImpl(
           s"${record.id}_issuance_flow_issuer_credential_pending_to_generated",
           "issuance_flow_issuer_credential_pending_to_generated_ms_gauge"
         ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_issuer_credential_generated_to_sent")
-      record <- credentialRepository
-        .findById(record.id)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(record.id))
-          case Some(value) => ZIO.succeed(value)
-        }
-
+      record <- credentialRepository.getById(record.id)
     } yield record
   }
 
@@ -841,9 +837,8 @@ private class CredentialServiceImpl(
   override def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[String]
-  ): ZIO[WalletAccessContext, CredentialServiceError, Unit] =
-    credentialRepository
-      .updateAfterFail(recordId, failReason)
+  ): URIO[WalletAccessContext, Unit] =
+    credentialRepository.updateAfterFail(recordId, failReason)
 
   private def getRecordWithState(
       recordId: DidCommID,
@@ -874,14 +869,15 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  private def createJWTDidCommOfferCredential(
+  private def createDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,
       maybeSchemaId: Option[String],
       claims: Seq[Attribute],
       thid: DidCommID,
       challenge: String,
-      domain: String
+      domain: String,
+      offerFormat: IssueCredentialOfferFormat
   ): UIO[OfferCredential] = {
     for {
       credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = maybeSchemaId, attributes = claims))
@@ -893,45 +889,9 @@ private class CredentialServiceImpl(
         Seq(
           AttachmentDescriptor.buildJsonAttachment(
             mediaType = Some("application/json"),
-            format = Some(IssueCredentialOfferFormat.JWT.name),
+            format = Some(offerFormat.name),
             payload = PresentationAttachment(
               Some(Options(challenge, domain)),
-              PresentationDefinition(format = Some(ClaimFormat(jwt = Some(Jwt(alg = Seq("ES256K"), proof_type = Nil)))))
-            )
-          )
-        )
-      )
-    } yield OfferCredential(
-      body = body,
-      attachments = attachments,
-      from = pairwiseIssuerDID,
-      to = pairwiseHolderDID,
-      thid = Some(thid.value)
-    )
-  }
-
-  private def createSDJWTDidCommOfferCredential(
-      pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
-      maybeSchemaId: Option[String],
-      claims: Seq[Attribute],
-      thid: DidCommID,
-      challenge: String,
-      domain: String
-  ) = {
-    for {
-      credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = maybeSchemaId, attributes = claims))
-      body = OfferCredential.Body(
-        goal_code = Some("Offer Credential"),
-        credential_preview = credentialPreview,
-      )
-      attachments <- ZIO.succeed(
-        Seq(
-          AttachmentDescriptor.buildJsonAttachment(
-            mediaType = Some("application/json"),
-            format = Some(IssueCredentialOfferFormat.SDJWT.name),
-            payload = PresentationAttachment(
-              Some(Options(challenge, domain)), // TODO holder binding ATL-7183
               PresentationDefinition(format = Some(ClaimFormat(jwt = Some(Jwt(alg = Seq("ES256K"), proof_type = Nil)))))
             )
           )

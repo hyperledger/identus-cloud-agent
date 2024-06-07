@@ -145,7 +145,7 @@ trait CredentialService {
   def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[String]
-  ): ZIO[WalletAccessContext, CredentialServiceError, Unit]
+  ): URIO[WalletAccessContext, Unit]
 
 }
 
