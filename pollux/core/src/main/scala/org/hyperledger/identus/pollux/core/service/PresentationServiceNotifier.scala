@@ -244,15 +244,15 @@ class PresentationServiceNotifier(
   ): IO[PresentationError, Seq[PresentationRecord]] =
     svc.getPresentationRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, state*)
 
-  override def getPresentationRecord(
+  override def findPresentationRecord(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]] =
-    svc.getPresentationRecord(recordId)
+    svc.findPresentationRecord(recordId)
 
-  override def getPresentationRecordByThreadId(
+  override def findPresentationRecordByThreadId(
       thid: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]] =
-    svc.getPresentationRecordByThreadId(thid)
+    svc.findPresentationRecordByThreadId(thid)
 
   override def receiveProposePresentation(
       request: ProposePresentation
