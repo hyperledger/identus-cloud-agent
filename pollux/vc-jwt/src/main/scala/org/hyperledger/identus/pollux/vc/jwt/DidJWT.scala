@@ -10,6 +10,7 @@ import org.bouncycastle.jce.spec.ECNamedCurveSpec
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
 import zio.*
+
 import java.security.*
 import java.security.interfaces.ECPublicKey
 import java.util.Base64
@@ -98,7 +99,6 @@ def getCurveName(publicKey: ECPublicKey): Option[String] = {
   }
   maybeCurveName.fold(Option.empty[String]) { case name: String => Some(name) }
 }
-
 
 def toJWKFormat(holderJwk: ECKey): JsonWebKey = {
   JsonWebKey(
