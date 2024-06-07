@@ -6,12 +6,7 @@ import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
-import org.hyperledger.identus.castor.core.model.did.{
-  CanonicalPrismDID,
-  EllipticCurve,
-  PrismDID,
-  VerificationRelationship
-}
+import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
@@ -555,7 +550,6 @@ private class CredentialServiceImpl(
         )
       ecKeyPair <- managedDIDService
         .javaKeyPairWithDID(jwtIssuerDID.asCanonical, issuingKeyId)
-        .mapError(e => UnexpectedError(s"Error occurred while getting issuer key-pair: ${e.toString}"))
         .someOrFail(
           UnexpectedError(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
         )
@@ -584,7 +578,6 @@ private class CredentialServiceImpl(
       ed25519keyPair <- managedDIDService
         .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
         .map(_.collect { case keyPair: Ed25519KeyPair => keyPair })
-        .mapError(e => UnexpectedError(s"Error occurred while getting issuer key-pair: ${e.toString}"))
         .someOrFail(
           UnexpectedError(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
         )

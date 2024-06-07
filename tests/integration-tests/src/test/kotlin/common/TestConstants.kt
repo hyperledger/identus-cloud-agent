@@ -1,7 +1,6 @@
 package common
 
 import org.hyperledger.identus.client.models.*
-import java.time.Duration
 
 object TestConstants {
     val TESTS_CONFIG = System.getProperty("TESTS_CONFIG") ?: "/configs/basic.conf"
@@ -19,9 +18,7 @@ object TestConstants {
         ),
     )
 
-    val DID_UPDATE_PUBLISH_MAX_WAIT_5_MIN = Duration.ofSeconds(60L)
     val PRISM_DID_AUTH_KEY = ManagedDIDKeyTemplate("auth-1", Purpose.AUTHENTICATION)
-    val PRISM_DID_UPDATE_NEW_AUTH_KEY = ManagedDIDKeyTemplate("auth-42", Purpose.AUTHENTICATION)
     val PRISM_DID_SERVICE_FOR_UPDATE = Service(
         "https://update.com",
         listOf("LinkedDomains"),

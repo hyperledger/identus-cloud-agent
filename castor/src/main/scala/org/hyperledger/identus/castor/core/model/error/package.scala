@@ -4,7 +4,9 @@ package object error {
 
   sealed trait DIDOperationError
   object DIDOperationError {
-    final case class DLTProxyError(cause: Throwable) extends DIDOperationError
+    final case class DLTProxyError(msg: String, cause: Throwable) extends DIDOperationError {
+      def getMessage = msg + ": " + cause.getMessage()
+    }
     final case class UnexpectedDLTResult(msg: String) extends DIDOperationError
     final case class ValidationError(cause: OperationValidationError) extends DIDOperationError
   }
@@ -12,7 +14,9 @@ package object error {
   sealed trait DIDResolutionError
 
   object DIDResolutionError {
-    final case class DLTProxyError(cause: Throwable) extends DIDResolutionError
+    final case class DLTProxyError(msg: String, cause: Throwable) extends DIDResolutionError {
+      def getMessage = msg + ": " + cause.getMessage()
+    }
     final case class UnexpectedDLTResult(msg: String) extends DIDResolutionError
     final case class ValidationError(cause: OperationValidationError) extends DIDResolutionError
   }
