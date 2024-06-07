@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.Json
 import io.circe.syntax.*
+import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship.AssertionMethod
@@ -10,11 +10,11 @@ import org.hyperledger.identus.mercury.model.{Base64 as MyBase64, *}
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredential
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{RecordNotFound, UnsupportedDidFormat}
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.shared.models.{UnmanagedFailureException, WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.MockSpecDefault
@@ -430,7 +430,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
         } yield {
           assertTrue(exit match
             case Exit.Failure(Cause.Fail(_: RecordNotFound, _)) => true
-            case _                                                     => false
+            case _                                              => false
           )
         }
       },

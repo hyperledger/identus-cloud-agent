@@ -9,7 +9,7 @@ import org.hyperledger.identus.pollux.core.model.schema.AnoncredSchemaTypeSpec.t
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
-import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertZIO}
+import zio.test.{assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
 import zio.test.Assertion.*
 import zio.Scope
 

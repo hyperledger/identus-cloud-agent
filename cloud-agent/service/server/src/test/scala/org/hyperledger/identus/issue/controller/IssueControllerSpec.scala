@@ -3,8 +3,8 @@ package org.hyperledger.identus.issue.controller
 import io.circe.*
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.DidCommID
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.UnsupportedDidFormat
+import org.hyperledger.identus.pollux.core.model.DidCommID
 import org.hyperledger.identus.pollux.vc.jwt.{W3cCredentialPayload, *}
 import zio.*
 import zio.test.*

@@ -8,7 +8,7 @@ import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialReco
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.InvalidCredentialOffer
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer, mock}
+import zio.{mock, Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
 import zio.mock.{Mock, Proxy}
 
 import java.util.UUID
