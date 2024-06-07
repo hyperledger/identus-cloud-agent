@@ -616,12 +616,6 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _ <- credentialService
                 .reportProcessingFailure(record.id, Some(e.toString))
                 .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-                .tapError(err =>
-                  ZIO.logErrorCause(
-                    s"Issue Credential - failed to report processing failure: ${record.id}",
-                    Cause.fail(err)
-                  )
-                )
             } yield ()
 
         }

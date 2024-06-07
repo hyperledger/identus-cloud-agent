@@ -4,12 +4,12 @@ import io.circe.Json
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
+import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.*
-import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import zio.{mock, Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
 import zio.mock.{Mock, Proxy}
-import zio.{Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer, mock}
 
 import java.util.UUID
 
@@ -92,7 +92,7 @@ object MockCredentialService extends Mock[CredentialService] {
   object MarkCredentialPublicationPending extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkCredentialPublicationQueued extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkCredentialPublished extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
-  object ReportProcessingFailure extends Effect[(DidCommID, Option[String]), CredentialServiceError, Unit]
+  object ReportProcessingFailure extends Effect[(DidCommID, Option[String]), Nothing, Unit]
 
   override val compose: URLayer[mock.Proxy, CredentialService] = ZLayer {
     for {
@@ -237,7 +237,7 @@ object MockCredentialService extends Mock[CredentialService] {
       override def reportProcessingFailure(
           recordId: DidCommID,
           failReason: Option[String]
-      ): IO[CredentialServiceError, Unit] =
+      ): URIO[WalletAccessContext, Unit] =
         proxy(ReportProcessingFailure, recordId, failReason)
 
       override def getIssueCredentialRecords(

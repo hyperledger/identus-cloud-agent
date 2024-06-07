@@ -182,7 +182,7 @@ class CredentialServiceNotifier(
   override def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[_root_.java.lang.String]
-  ): ZIO[WalletAccessContext, CredentialServiceError, Unit] =
+  ): URIO[WalletAccessContext, Unit] =
     svc.reportProcessingFailure(recordId, failReason)
 
   override def findById(
