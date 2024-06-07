@@ -132,11 +132,11 @@ trait CredentialService {
 
   def markOfferSent(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord]
 
   def markRequestSent(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord]
 
   def markCredentialSent(
       recordId: DidCommID

@@ -101,15 +101,21 @@ object CredentialServiceErrorNew {
       )
 
   final case class InvalidCredentialRequest(cause: String)
-    extends CredentialServiceErrorNew(
-      StatusCode.BadRequest,
-      s"The credential request message is invalid: cause[$cause]"
-    )
+      extends CredentialServiceErrorNew(
+        StatusCode.BadRequest,
+        s"The credential request message is invalid: cause[$cause]"
+      )
 
   final case class InvalidCredentialIssue(cause: String)
-    extends CredentialServiceErrorNew(
-      StatusCode.BadRequest,
-      s"The credential issue message is invalid: cause[$cause]"
-    )
+      extends CredentialServiceErrorNew(
+        StatusCode.BadRequest,
+        s"The credential issue message is invalid: cause[$cause]"
+      )
+
+  final case class InvalidStateForOperation(state: ProtocolState)
+      extends CredentialServiceErrorNew(
+        StatusCode.UnprocessableContent,
+        s"The current record state not valid for the requested operation: cause[$state]"
+      )
 
 }

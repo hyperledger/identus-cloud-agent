@@ -1,25 +1,30 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.Json
 import io.circe.syntax.*
+import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
-import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, LongFormPrismDID, PrismDID, VerificationRelationship}
+import org.hyperledger.identus.castor.core.model.did.{
+  CanonicalPrismDID,
+  LongFormPrismDID,
+  PrismDID,
+  VerificationRelationship
+}
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.*
 import org.hyperledger.identus.pollux.anoncreds.*
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
+import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.*
-import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
 import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.model.schema.{CredentialDefinition, CredentialSchema}
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
+import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
 import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer, *}
@@ -781,7 +786,7 @@ private class CredentialServiceImpl(
 
   override def markOfferSent(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord] =
     updateCredentialRecordProtocolState(
       recordId,
       IssueCredentialRecord.ProtocolState.OfferPending,
@@ -790,7 +795,7 @@ private class CredentialServiceImpl(
 
   override def markRequestSent(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord] =
     updateCredentialRecordProtocolState(
       recordId,
       IssueCredentialRecord.ProtocolState.RequestGenerated,
@@ -823,7 +828,7 @@ private class CredentialServiceImpl(
 
   override def markCredentialSent(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord] =
     updateCredentialRecordProtocolState(
       recordId,
       IssueCredentialRecord.ProtocolState.CredentialGenerated,
@@ -1040,14 +1045,14 @@ private class CredentialServiceImpl(
       id: DidCommID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord] = {
     for {
       record <- credentialRepository.getById(id)
       updatedRecord <- record.protocolState match
         case currentState if currentState == to => ZIO.succeed(record) // Idempotent behaviour
         case currentState if currentState == from =>
           credentialRepository.updateProtocolState(id, from, to) *> credentialRepository.getById(id)
-        case _ => ZIO.fail(OperationNotExecuted(id, s"Invalid record protocol state: ${record.protocolState}"))
+        case _ => ZIO.fail(InvalidStateForOperation(record.protocolState))
     } yield updatedRecord
   }
 

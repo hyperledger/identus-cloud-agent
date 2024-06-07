@@ -91,7 +91,7 @@ class CredentialServiceNotifier(
 
   override def markOfferSent(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord] =
     notifyOnSuccess(svc.markOfferSent(recordId))
 
   override def receiveCredentialOffer(
@@ -122,7 +122,7 @@ class CredentialServiceNotifier(
 
   override def markRequestSent(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord] =
     notifyOnSuccess(svc.markRequestSent(recordId))
 
   override def receiveCredentialRequest(

@@ -4,12 +4,12 @@ import io.circe.Json
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
-import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{InvalidCredentialIssue, InvalidCredentialOffer, InvalidCredentialRequest, RecordNotFound, RecordNotFoundForThreadIdAndStates, UnsupportedDidFormat}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.*
+import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer, mock}
 import zio.mock.{Mock, Proxy}
+import zio.{Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer, mock}
 
 import java.util.UUID
 
@@ -80,10 +80,15 @@ object MockCredentialService extends Mock[CredentialService] {
   object GenerateJWTCredential extends Effect[(DidCommID, String), CredentialServiceError, IssueCredentialRecord]
   object GenerateSDJWTCredential extends Effect[(DidCommID, Duration), CredentialServiceError, IssueCredentialRecord]
   object GenerateAnonCredsCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
-  object ReceiveCredentialIssue extends Effect[IssueCredential, InvalidCredentialIssue | RecordNotFoundForThreadIdAndStates, IssueCredentialRecord]
-  object MarkOfferSent extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
-  object MarkRequestSent extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
-  object MarkCredentialSent extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
+  object ReceiveCredentialIssue
+      extends Effect[
+        IssueCredential,
+        InvalidCredentialIssue | RecordNotFoundForThreadIdAndStates,
+        IssueCredentialRecord
+      ]
+  object MarkOfferSent extends Effect[DidCommID, InvalidStateForOperation, IssueCredentialRecord]
+  object MarkRequestSent extends Effect[DidCommID, InvalidStateForOperation, IssueCredentialRecord]
+  object MarkCredentialSent extends Effect[DidCommID, InvalidStateForOperation, IssueCredentialRecord]
   object MarkCredentialPublicationPending extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkCredentialPublicationQueued extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkCredentialPublished extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
@@ -214,13 +219,19 @@ object MockCredentialService extends Mock[CredentialService] {
       ): IO[InvalidCredentialIssue | RecordNotFoundForThreadIdAndStates, IssueCredentialRecord] =
         proxy(ReceiveCredentialIssue, issueCredential)
 
-      override def markOfferSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
+      override def markOfferSent(
+          recordId: DidCommID
+      ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord] =
         proxy(MarkOfferSent, recordId)
 
-      override def markRequestSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
+      override def markRequestSent(
+          recordId: DidCommID
+      ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord] =
         proxy(MarkRequestSent, recordId)
 
-      override def markCredentialSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
+      override def markCredentialSent(
+          recordId: DidCommID
+      ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord] =
         proxy(MarkCredentialSent, recordId)
 
       override def reportProcessingFailure(
