@@ -12,14 +12,18 @@ import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.sdjwt.SDJWT.*
 import org.hyperledger.identus.pollux.vc.jwt.{DIDResolutionFailed, DIDResolutionSucceeded, ES256KSigner, EdSigner, *}
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, Issuer as JwtIssuer}
-import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, KmpEd25519KeyOps}
-import org.hyperledger.identus.shared.crypto.KmpEd25519KeyOps
-import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
-import org.hyperledger.identus.shared.crypto.X25519KeyPair
+import org.hyperledger.identus.shared.crypto.{
+  Ed25519KeyPair,
+  Ed25519PublicKey,
+  KmpEd25519KeyOps,
+  Secp256k1KeyPair,
+  X25519KeyPair
+}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{ZIO, ZLayer}
 
 import java.util.Base64
+
 trait BackgroundJobsHelper {
 
   def getLongForm(

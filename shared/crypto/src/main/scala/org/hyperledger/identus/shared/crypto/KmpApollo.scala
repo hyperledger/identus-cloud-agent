@@ -1,10 +1,10 @@
 package org.hyperledger.identus.shared.crypto
 
-import io.iohk.atala.prism.apollo.derivation
-import io.iohk.atala.prism.apollo.derivation.MnemonicHelper
-import io.iohk.atala.prism.apollo.secp256k1.Secp256k1Lib
-import io.iohk.atala.prism.apollo.securerandom.SecureRandom
-import io.iohk.atala.prism.apollo.utils.{
+import org.hyperledger.identus.apollo.derivation
+import org.hyperledger.identus.apollo.derivation.MnemonicHelper
+import org.hyperledger.identus.apollo.secp256k1.Secp256k1Lib
+import org.hyperledger.identus.apollo.securerandom.SecureRandom
+import org.hyperledger.identus.apollo.utils.{
   KMMECSecp256k1PrivateKey,
   KMMECSecp256k1PublicKey,
   KMMEdKeyPair,

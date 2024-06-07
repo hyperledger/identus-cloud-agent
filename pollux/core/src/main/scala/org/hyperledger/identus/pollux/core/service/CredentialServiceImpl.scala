@@ -1,6 +1,5 @@
 package org.hyperledger.identus.pollux.core.service
 
-import com.nimbusds.jose.jwk.OctetKeyPair
 import io.circe.syntax.*
 import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
@@ -39,7 +38,6 @@ import zio.prelude.ZValidation
 import java.net.URI
 import java.rmi.UnexpectedException
 import java.time.{Instant, ZoneId}
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import scala.language.implicitConversions
 
@@ -600,7 +598,6 @@ private class CredentialServiceImpl(
     for {
       ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
     } yield {
-      val octetKeyPair = ed25519keyPair.toOctetKeyPair
       JwtIssuer(
         org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
         EdSigner(ed25519keyPair),
