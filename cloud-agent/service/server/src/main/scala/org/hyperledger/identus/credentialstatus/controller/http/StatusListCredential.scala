@@ -38,9 +38,6 @@ case class StatusListCredential(
 )
 
 case class CredentialSubject(
-    @description(annotations.credentialSubject.id.description)
-    @encodedExample(annotations.credentialSubject.id.example)
-    id: String,
     @description(annotations.credentialSubject.`type`.description)
     @encodedExample(annotations.credentialSubject.`type`.example)
     `type`: String,
