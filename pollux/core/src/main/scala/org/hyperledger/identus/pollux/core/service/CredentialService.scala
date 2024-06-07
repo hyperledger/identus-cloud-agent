@@ -13,11 +13,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{
-  InvalidCredentialOffer,
-  RecordNotFound,
-  UnsupportedDidFormat
-}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{Duration, IO, UIO, URIO, ZIO}
 
@@ -106,15 +102,15 @@ trait CredentialService {
 
   def generateAnonCredsCredentialRequest(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord]
 
   def receiveCredentialRequest(
       request: RequestCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, InvalidCredentialRequest | RecordNotFoundForThreadIdAndStates, IssueCredentialRecord]
 
   def acceptCredentialRequest(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord]
 
   def generateJWTCredential(
       recordId: DidCommID,
@@ -132,7 +128,7 @@ trait CredentialService {
 
   def receiveCredentialIssue(
       issueCredential: IssueCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, InvalidCredentialIssue | RecordNotFoundForThreadIdAndStates, IssueCredentialRecord]
 
   def markOfferSent(
       recordId: DidCommID

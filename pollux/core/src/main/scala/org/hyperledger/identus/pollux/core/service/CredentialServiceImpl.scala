@@ -1,30 +1,25 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.syntax.*
 import io.circe.Json
+import io.circe.syntax.*
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
-import org.hyperledger.identus.castor.core.model.did.{
-  CanonicalPrismDID,
-  LongFormPrismDID,
-  PrismDID,
-  VerificationRelationship
-}
+import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, LongFormPrismDID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.*
 import org.hyperledger.identus.pollux.anoncreds.*
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
+import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.*
+import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
 import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.model.schema.{CredentialDefinition, CredentialSchema}
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
-import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
 import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer, *}
@@ -668,79 +663,76 @@ private class CredentialServiceImpl(
 
   override def acceptCredentialRequest(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       request <- ZIO
         .fromOption(record.requestCredentialData)
-        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
+        .orDieWith(_ => RuntimeException(s"No 'requestCredentialData' found in record: ${recordId.value}"))
       issue = createDidCommIssueCredential(request)
       count <- credentialRepository
         .updateWithIssueCredential(recordId, issue, ProtocolState.CredentialPending)
         @@ CustomMetricsAspect.startRecordingTime(
           s"${record.id}_issuance_flow_issuer_credential_pending_to_generated"
         )
-      record <- credentialRepository
-        .findById(record.id)
-        .someOrFail(RecordIdNotFound(record.id))
+      record <- credentialRepository.getById(record.id)
     } yield record
   }
 
   override def receiveCredentialIssue(
       issueCredential: IssueCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = for {
-    thid <- ZIO
-      .fromOption(issueCredential.thid.map(DidCommID(_)))
-      .mapError(_ => InvalidCredentialIssue("No 'thid' found"))
-    record <- getRecordWithThreadIdAndStates(
-      thid,
-      ignoreWithZeroRetries = true,
-      ProtocolState.RequestPending,
-      ProtocolState.RequestSent
-    )
-    attachment <- ZIO
-      .fromOption(issueCredential.attachments.headOption)
-      .mapError(_ => CredentialServiceError.UnexpectedError("Missing attachment in credential issued credential"))
+  ): ZIO[WalletAccessContext, InvalidCredentialIssue | RecordNotFoundForThreadIdAndStates, IssueCredentialRecord] =
+    for {
+      thid <- ZIO
+        .fromOption(issueCredential.thid.map(DidCommID(_)))
+        .mapError(_ => InvalidCredentialIssue("No 'thid' found"))
+      record <- getRecordWithThreadIdAndStates(
+        thid,
+        ignoreWithZeroRetries = true,
+        ProtocolState.RequestPending,
+        ProtocolState.RequestSent
+      )
+      attachment <- ZIO
+        .fromOption(issueCredential.attachments.headOption)
+        .mapError(_ => InvalidCredentialIssue("No attachment found"))
 
-    _ <- {
-      val result = attachment match {
-        case AttachmentDescriptor(
-              id,
-              media_type,
-              Base64(v),
-              Some(IssueCredentialIssuedFormat.Anoncred.name),
-              _,
-              _,
-              _,
-              _
-            ) =>
-          for {
-            processedCredential <- processAnonCredsCredential(record, java.util.Base64.getUrlDecoder.decode(v))
-            attachment = AttachmentDescriptor.buildBase64Attachment(
-              id = id,
-              mediaType = media_type,
-              format = Some(IssueCredentialIssuedFormat.Anoncred.name),
-              payload = processedCredential.data.getBytes
-            )
-            processedIssuedCredential = issueCredential.copy(attachments = Seq(attachment))
-            result <-
-              updateWithCredential(
-                processedIssuedCredential,
-                record,
-                attachment,
-                Some(processedCredential.getSchemaId),
-                Some(processedCredential.getCredDefId)
+      _ <- {
+        val result = attachment match {
+          case AttachmentDescriptor(
+                id,
+                media_type,
+                Base64(v),
+                Some(IssueCredentialIssuedFormat.Anoncred.name),
+                _,
+                _,
+                _,
+                _
+              ) =>
+            for {
+              processedCredential <- processAnonCredsCredential(record, java.util.Base64.getUrlDecoder.decode(v))
+              attachment = AttachmentDescriptor.buildBase64Attachment(
+                id = id,
+                mediaType = media_type,
+                format = Some(IssueCredentialIssuedFormat.Anoncred.name),
+                payload = processedCredential.data.getBytes
               )
-          } yield result
-        case attachment =>
-          updateWithCredential(issueCredential, record, attachment, None, None)
+              processedIssuedCredential = issueCredential.copy(attachments = Seq(attachment))
+              result <-
+                updateWithCredential(
+                  processedIssuedCredential,
+                  record,
+                  attachment,
+                  Some(processedCredential.getSchemaId),
+                  Some(processedCredential.getCredDefId)
+                )
+            } yield result
+          case attachment =>
+            updateWithCredential(issueCredential, record, attachment, None, None)
+        }
+        result
       }
-      result
-    }
-    record <- credentialRepository
-      .findById(record.id)
-      .someOrFail(RecordIdNotFound(record.id))
-  } yield record
+      record <- credentialRepository.getById(record.id)
+    } yield record
 
   private def updateWithCredential(
       issueCredential: IssueCredential,
@@ -763,16 +755,16 @@ private class CredentialServiceImpl(
   private def processAnonCredsCredential(
       record: IssueCredentialRecord,
       credentialBytes: Array[Byte]
-  ): ZIO[WalletAccessContext, CredentialServiceError, anoncreds.AnoncredCredential] = {
+  ): URIO[WalletAccessContext, anoncreds.AnoncredCredential] = {
     for {
       credential <- ZIO.succeed(anoncreds.AnoncredCredential(new String(credentialBytes)))
       credDefContent <- uriDereferencer
         .dereference(new URI(credential.getCredDefId))
-        .mapError(err => UnexpectedError(err.toString))
+        .orDieAsUnmanagedFailure
       credentialDefinition = anoncreds.AnoncredCredentialDefinition(credDefContent)
       metadata <- ZIO
         .fromOption(record.anonCredsRequestMetadata)
-        .mapError(_ => CredentialServiceError.UnexpectedError(s"No request metadata Id found un record: ${record.id}"))
+        .orDieWith(_ => RuntimeException(s"No AnonCreds request metadata found in record: ${record.id.value}"))
       linkSecret <- linkSecretService.fetchOrCreate()
       credential <- ZIO
         .attempt(
@@ -783,7 +775,7 @@ private class CredentialServiceImpl(
             credentialDefinition
           )
         )
-        .mapError(error => UnexpectedError(s"AnonCreds credential processing error: ${error.getMessage}"))
+        .orDieWith(error => RuntimeException(s"AnonCreds credential processing error: ${error.getMessage}"))
     } yield credential
   }
 

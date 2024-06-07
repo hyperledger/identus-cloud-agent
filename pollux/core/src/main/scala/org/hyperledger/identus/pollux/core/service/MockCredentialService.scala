@@ -6,13 +6,9 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{
-  InvalidCredentialOffer,
-  RecordNotFound,
-  UnsupportedDidFormat
-}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{InvalidCredentialIssue, InvalidCredentialOffer, InvalidCredentialRequest, RecordNotFound, RecordNotFoundForThreadIdAndStates, UnsupportedDidFormat}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{mock, Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
+import zio.{Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer, mock}
 import zio.mock.{Mock, Proxy}
 
 import java.util.UUID
@@ -73,13 +69,18 @@ object MockCredentialService extends Mock[CredentialService] {
       extends Effect[DidCommID, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord]
   object GenerateSDJWTCredentialRequest
       extends Effect[DidCommID, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord]
-  object GenerateAnonCredsCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
-  object ReceiveCredentialRequest extends Effect[RequestCredential, CredentialServiceError, IssueCredentialRecord]
-  object AcceptCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
+  object GenerateAnonCredsCredentialRequest extends Effect[DidCommID, RecordNotFound, IssueCredentialRecord]
+  object ReceiveCredentialRequest
+      extends Effect[
+        RequestCredential,
+        InvalidCredentialRequest | RecordNotFoundForThreadIdAndStates,
+        IssueCredentialRecord
+      ]
+  object AcceptCredentialRequest extends Effect[DidCommID, RecordNotFound, IssueCredentialRecord]
   object GenerateJWTCredential extends Effect[(DidCommID, String), CredentialServiceError, IssueCredentialRecord]
   object GenerateSDJWTCredential extends Effect[(DidCommID, Duration), CredentialServiceError, IssueCredentialRecord]
   object GenerateAnonCredsCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
-  object ReceiveCredentialIssue extends Effect[IssueCredential, CredentialServiceError, IssueCredentialRecord]
+  object ReceiveCredentialIssue extends Effect[IssueCredential, InvalidCredentialIssue | RecordNotFoundForThreadIdAndStates, IssueCredentialRecord]
   object MarkOfferSent extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkRequestSent extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkCredentialSent extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
@@ -180,15 +181,15 @@ object MockCredentialService extends Mock[CredentialService] {
 
       override def generateAnonCredsCredentialRequest(
           recordId: DidCommID
-      ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+      ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord] =
         proxy(GenerateAnonCredsCredentialRequest, recordId)
 
       override def receiveCredentialRequest(
           request: RequestCredential
-      ): IO[CredentialServiceError, IssueCredentialRecord] =
+      ): IO[InvalidCredentialRequest | RecordNotFoundForThreadIdAndStates, IssueCredentialRecord] =
         proxy(ReceiveCredentialRequest, request)
 
-      override def acceptCredentialRequest(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =
+      override def acceptCredentialRequest(recordId: DidCommID): IO[RecordNotFound, IssueCredentialRecord] =
         proxy(AcceptCredentialRequest, recordId)
 
       override def generateJWTCredential(
@@ -210,7 +211,7 @@ object MockCredentialService extends Mock[CredentialService] {
 
       override def receiveCredentialIssue(
           issueCredential: IssueCredential
-      ): IO[CredentialServiceError, IssueCredentialRecord] =
+      ): IO[InvalidCredentialIssue | RecordNotFoundForThreadIdAndStates, IssueCredentialRecord] =
         proxy(ReceiveCredentialIssue, issueCredential)
 
       override def markOfferSent(recordId: DidCommID): IO[CredentialServiceError, IssueCredentialRecord] =

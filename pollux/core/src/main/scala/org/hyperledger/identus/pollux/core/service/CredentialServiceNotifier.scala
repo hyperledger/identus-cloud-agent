@@ -7,11 +7,7 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{
-  InvalidCredentialOffer,
-  RecordNotFound,
-  UnsupportedDidFormat
-}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{Duration, UIO, URIO, URLayer, ZIO, ZLayer}
 
@@ -121,7 +117,7 @@ class CredentialServiceNotifier(
 
   override def generateAnonCredsCredentialRequest(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord] =
     notifyOnSuccess(svc.generateAnonCredsCredentialRequest(recordId))
 
   override def markRequestSent(
@@ -131,12 +127,12 @@ class CredentialServiceNotifier(
 
   override def receiveCredentialRequest(
       request: RequestCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, InvalidCredentialRequest | RecordNotFoundForThreadIdAndStates, IssueCredentialRecord] =
     notifyOnSuccess(svc.receiveCredentialRequest(request))
 
   override def acceptCredentialRequest(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord] =
     notifyOnSuccess(svc.acceptCredentialRequest(recordId))
 
   override def markCredentialSent(
@@ -146,7 +142,7 @@ class CredentialServiceNotifier(
 
   override def receiveCredentialIssue(
       issueCredential: IssueCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, InvalidCredentialIssue | RecordNotFoundForThreadIdAndStates, IssueCredentialRecord] =
     notifyOnSuccess(svc.receiveCredentialIssue(issueCredential))
 
   override def generateJWTCredential(
