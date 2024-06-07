@@ -5,7 +5,12 @@ import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
-import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
+import org.hyperledger.identus.castor.core.model.did.{
+  CanonicalPrismDID,
+  LongFormPrismDID,
+  PrismDID,
+  VerificationRelationship
+}
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
@@ -408,20 +413,11 @@ private class CredentialServiceImpl(
   override def acceptCredentialOffer(
       recordId: DidCommID,
       maybeSubjectId: Option[String]
-  ): ZIO[WalletAccessContext, CredentialServiceError | CredentialServiceErrorNew, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.OfferReceived)
       count <- (record.credentialFormat, maybeSubjectId) match
-        case (CredentialFormat.JWT, Some(subjectId)) =>
-          for {
-            _ <- validatePrismDID(subjectId)
-            count <- credentialRepository
-              .updateWithSubjectId(recordId, subjectId, ProtocolState.RequestPending)
-              @@ CustomMetricsAspect.startRecordingTime(
-                s"${record.id}_issuance_flow_holder_req_pending_to_generated"
-              )
-          } yield count
-        case (CredentialFormat.SDJWT, Some(subjectId)) =>
+        case (CredentialFormat.JWT | CredentialFormat.SDJWT, Some(subjectId)) =>
           for {
             _ <- validatePrismDID(subjectId)
             count <- credentialRepository
@@ -436,25 +432,16 @@ private class CredentialServiceImpl(
             @@ CustomMetricsAspect.startRecordingTime(
               s"${record.id}_issuance_flow_holder_req_pending_to_generated"
             )
-        case (format, _) =>
-          ZIO.fail(
-            CredentialServiceError.UnexpectedError(
-              s"Invalid subjectId input for $format offer acceptance: $maybeSubjectId"
-            )
-          )
-      record <- credentialRepository
-        .findById(record.id)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(recordId))
-          case Some(value) => ZIO.succeed(value)
-        }
+        case (format, maybeSubjectId) =>
+          ZIO.dieMessage(s"Invalid subjectId input for $format offer acceptance: $maybeSubjectId")
+      record <- credentialRepository.getById(record.id)
     } yield record
   }
 
   private def createPresentationPayload(
       record: IssueCredentialRecord,
       subject: JwtIssuer
-  ): ZIO[WalletAccessContext, CredentialServiceError, PresentationPayload] = {
+  ): URIO[WalletAccessContext, PresentationPayload] = {
     for {
       maybeOptions <- getOptionsFromOfferCredentialData(record)
     } yield {
@@ -1356,20 +1343,20 @@ private class CredentialServiceImpl(
     } yield credential
   }
 
-  private def getOptionsFromOfferCredentialData(record: IssueCredentialRecord) = {
+  private def getOptionsFromOfferCredentialData(record: IssueCredentialRecord): UIO[Option[Options]] = {
     for {
       offer <- ZIO
         .fromOption(record.offerCredentialData)
-        .mapError(_ => CredentialServiceError.UnexpectedError(s"Offer data not found in record: ${record.id}"))
+        .orElse(ZIO.dieMessage(s"Offer data not found in record: ${record.id}"))
       attachmentDescriptor <- ZIO
         .fromOption(offer.attachments.headOption)
-        .mapError(_ => UnexpectedError(s"Attachments not found in record: ${record.id}"))
+        .orElse(ZIO.dieMessage(s"Attachments not found in record: ${record.id}"))
       json <- attachmentDescriptor.data match
         case JsonData(json) => ZIO.succeed(json.asJson)
-        case _              => ZIO.fail(UnexpectedError(s"Attachment doesn't contain JsonData: ${record.id}"))
+        case _              => ZIO.dieMessage(s"Attachment doesn't contain JsonData: ${record.id}")
       maybeOptions <- ZIO
         .fromEither(json.as[PresentationAttachment].map(_.options))
-        .mapError(df => UnexpectedError(df.getMessage))
+        .flatMapError(df => ZIO.dieMessage(df.getMessage))
     } yield maybeOptions
   }
 

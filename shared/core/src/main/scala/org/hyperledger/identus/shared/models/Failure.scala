@@ -9,8 +9,8 @@ trait Failure {
 }
 
 object Failure {
-  extension [E](effect: IO[Failure, E]) {
-    def orDieAsUnmanagedFailure: URIO[Any, E] = {
+  extension [R, E](effect: IO[Failure, E]) {
+    def orDieAsUnmanagedFailure: URIO[R, E] = {
       effect.orDieWith(f => UnmanagedFailureException(f))
     }
   }

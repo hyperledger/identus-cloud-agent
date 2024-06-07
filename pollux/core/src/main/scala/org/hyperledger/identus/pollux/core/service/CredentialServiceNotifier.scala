@@ -7,7 +7,11 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.InvalidCredentialOffer
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{
+  InvalidCredentialOffer,
+  RecordNotFound,
+  UnsupportedDidFormat
+}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{Duration, UIO, URIO, URLayer, ZIO, ZLayer}
 
@@ -102,7 +106,7 @@ class CredentialServiceNotifier(
   override def acceptCredentialOffer(
       recordId: DidCommID,
       subjectId: Option[String]
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
     notifyOnSuccess(svc.acceptCredentialOffer(recordId, subjectId))
 
   override def generateJWTCredentialRequest(

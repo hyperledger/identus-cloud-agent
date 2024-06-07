@@ -6,9 +6,9 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.InvalidCredentialOffer
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{InvalidCredentialOffer, RecordNotFound, UnsupportedDidFormat}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{mock, Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
+import zio.{Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer, mock}
 import zio.mock.{Mock, Proxy}
 
 import java.util.UUID
@@ -64,7 +64,7 @@ object MockCredentialService extends Mock[CredentialService] {
 
   object ReceiveCredentialOffer extends Effect[OfferCredential, InvalidCredentialOffer, IssueCredentialRecord]
   object AcceptCredentialOffer
-      extends Effect[(DidCommID, Option[String]), CredentialServiceError, IssueCredentialRecord]
+      extends Effect[(DidCommID, Option[String]), RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord]
   object GenerateJWTCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object GenerateSDJWTCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object GenerateAnonCredsCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
@@ -159,7 +159,7 @@ object MockCredentialService extends Mock[CredentialService] {
       override def acceptCredentialOffer(
           recordId: DidCommID,
           subjectId: Option[String]
-      ): IO[CredentialServiceError, IssueCredentialRecord] =
+      ): IO[RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
         proxy(AcceptCredentialOffer, recordId, subjectId)
 
       override def generateJWTCredentialRequest(
