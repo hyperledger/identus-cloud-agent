@@ -27,12 +27,12 @@ trait ManagedDIDService {
   def javaKeyPairWithDID(
       did: CanonicalPrismDID,
       keyId: String
-  ): ZIO[WalletAccessContext, GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]]
+  ): URIO[WalletAccessContext, Option[(JavaPrivateKey, JavaPublicKey)]]
 
   def findDIDKeyPair(
       did: CanonicalPrismDID,
       keyId: String
-  ): ZIO[WalletAccessContext, GetKeyError, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]]
+  ): URIO[WalletAccessContext, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]]
 
   def getManagedDIDState(did: CanonicalPrismDID): ZIO[WalletAccessContext, GetManagedDIDError, Option[ManagedDIDState]]
 
@@ -60,9 +60,13 @@ trait ManagedDIDService {
   ): ZIO[WalletAccessContext, UpdateManagedDIDError, ScheduleDIDOperationOutcome]
 
   /** PeerDID related methods */
-  def createAndStorePeerDID(serviceEndpoint: java.net.URL): URIO[WalletAccessContext, PeerDID]
+  def createAndStorePeerDID(
+      serviceEndpoint: java.net.URL
+  ): URIO[WalletAccessContext, PeerDID]
 
-  def getPeerDID(didId: DidId): ZIO[WalletAccessContext, DIDSecretStorageError.KeyNotFoundError, PeerDID]
+  def getPeerDID(
+      didId: DidId
+  ): ZIO[WalletAccessContext, DIDSecretStorageError.KeyNotFoundError, PeerDID]
 
 }
 

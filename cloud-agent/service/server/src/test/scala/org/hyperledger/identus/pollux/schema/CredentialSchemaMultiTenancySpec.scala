@@ -5,7 +5,11 @@ import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.hyperledger.identus.container.util.MigrationAspects.*
 import org.hyperledger.identus.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
-import org.hyperledger.identus.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}
+import org.hyperledger.identus.pollux.core.service.{
+  CredentialSchemaGuidNotFoundError,
+  CredentialSchemaService,
+  CredentialSchemaServiceImpl
+}
 import org.hyperledger.identus.pollux.sql.repository.JdbcCredentialSchemaRepository
 import zio.*
 import zio.json.*
@@ -105,10 +109,10 @@ object CredentialSchemaMultiTenancySpec extends ZIOSpecDefault with CredentialSc
           .exit
 
         aliceCannotUpdateBobsVCSchema = assert(notFoundSchemaAError)(
-          fails(isSubtype[CredentialSchemaService.Error.NotFoundError](anything))
+          fails(isSubtype[CredentialSchemaGuidNotFoundError](anything))
         )
         bobCannotUpdateAlicesVCSchema = assert(notFoundSchemaBError)(
-          fails(isSubtype[CredentialSchemaService.Error.NotFoundError](anything))
+          fails(isSubtype[CredentialSchemaGuidNotFoundError](anything))
         )
 
         fetchedSchemaAbyB <- service.getByGUID(updatedSchemaA.guid).provideLayer(Bob.wacLayer)

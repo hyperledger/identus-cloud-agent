@@ -108,7 +108,17 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
         for {
           response <- createResponse[ErrorResponse]("WrongSchema")
         } yield assert(response.body)(
-          isRight(hasField("detail", _.detail, isSome(equalTo("Unsupported VC Schema type WrongSchema"))))
+          isRight(
+            hasField(
+              "detail",
+              _.detail,
+              isSome(
+                equalTo(
+                  "Credential Schema Validation Error=Unsupported VC Schema type WrongSchema"
+                )
+              )
+            )
+          )
         )
       }
     )
@@ -121,7 +131,7 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
           response <- createResponse[ErrorResponse](CredentialJsonSchemaType.`type`)
         } yield assert(response.body)(
           isRight(
-            hasField("detail", _.detail, isSome(containsString("required property '$schema' not found;")))
+            hasField("detail", _.detail, isSome(containsString("required property '$schema' not found")))
           )
         )
       }

@@ -119,11 +119,11 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
     backend
   }
 
-  def deleteAllCredentialDefinitions: RIO[CredentialDefinitionRepository & WalletAccessContext, Long] = {
+  def deleteAllCredentialDefinitions: RIO[CredentialDefinitionRepository & WalletAccessContext, Unit] = {
     for {
       repository <- ZIO.service[CredentialDefinitionRepository]
-      count <- repository.deleteAll()
-    } yield count
+      result <- repository.deleteAll()
+    } yield result
   }
 }
 
