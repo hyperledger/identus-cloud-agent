@@ -2,7 +2,6 @@ package org.hyperledger.identus.pollux.credentialschema.controller
 
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{Order, Pagination}
-import org.hyperledger.identus.pollux.core.service.CredentialSchemaServiceError
 import org.hyperledger.identus.pollux.credentialschema.http.{
   CredentialSchemaInput,
   CredentialSchemaResponse,

@@ -9,7 +9,6 @@ import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialReco
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{Duration, IO, URLayer, ZIO, ZLayer}
-import zio.{IO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
 

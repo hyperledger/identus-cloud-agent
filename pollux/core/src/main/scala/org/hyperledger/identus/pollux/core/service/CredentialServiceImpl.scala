@@ -1,12 +1,12 @@
 package org.hyperledger.identus.pollux.core.service
 
-import com.nimbusds.jose.jwk.OctetKeyPair
 import io.circe.syntax.*
 import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
+import org.hyperledger.identus.castor.core.model.did.EllipticCurve
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
@@ -39,7 +39,6 @@ import zio.prelude.ZValidation
 import java.net.URI
 import java.rmi.UnexpectedException
 import java.time.{Instant, ZoneId}
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import scala.language.implicitConversions
 
@@ -544,7 +543,11 @@ private class CredentialServiceImpl(
         .resolveDID(jwtIssuerDID)
         .mapError(e => UnexpectedError(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
         .someOrFail(UnexpectedError(s"Issuing DID resolution result is not found"))
-        .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
+        .map { case (_, didData) =>
+          didData.publicKeys
+            .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.SECP256K1)
+            .map(_.id)
+        }
         .someOrFail(
           UnexpectedError(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
         )
@@ -571,7 +574,11 @@ private class CredentialServiceImpl(
         .resolveDID(jwtIssuerDID)
         .mapError(e => UnexpectedError(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
         .someOrFail(UnexpectedError(s"Issuing DID resolution result is not found"))
-        .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
+        .map { case (_, didData) =>
+          didData.publicKeys
+            .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.ED25519)
+            .map(_.id)
+        }
         .someOrFail(
           UnexpectedError(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
         )
@@ -600,7 +607,6 @@ private class CredentialServiceImpl(
     for {
       ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
     } yield {
-      val octetKeyPair = ed25519keyPair.toOctetKeyPair
       JwtIssuer(
         org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
         EdSigner(ed25519keyPair),
