@@ -4,9 +4,8 @@ import org.hyperledger.identus.api.http.{Annotation, ErrorResponse}
 import org.hyperledger.identus.pollux.core.service.verification.VcVerificationRequest as ServiceVcVerificationRequest
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.{IO, *}
+import zio.*
 import zio.json.*
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import zio.json.ast.Json
 import zio.json.ast.Json.*
 
