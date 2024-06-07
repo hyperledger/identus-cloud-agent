@@ -72,7 +72,7 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
     walletIds match
       case Nil => ZIO.succeed(Nil)
       case head +: tail =>
-        val nel = NonEmptyList.of(head, tail: _*)
+        val nel = NonEmptyList.of(head, tail*)
         val conditionFragment = Fragments.in(fr"wallet_id", nel)
         val cxnIO =
           sql"""

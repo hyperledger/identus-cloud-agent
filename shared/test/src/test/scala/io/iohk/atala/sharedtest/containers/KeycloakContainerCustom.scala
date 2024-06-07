@@ -9,9 +9,9 @@ import zio.{TaskLayer, ZIO, ZLayer}
 final class KeycloakContainerCustom(
     dockerImageNameOverride: DockerImageName,
     isOnGithubRunner: Boolean = false
-) extends SingleContainer[ExtendableKeycloakContainer[_]] {
+) extends SingleContainer[ExtendableKeycloakContainer[?]] {
 
-  private val keycloakContainer: ExtendableKeycloakContainer[_] = new ExtendableKeycloakContainer(
+  private val keycloakContainer: ExtendableKeycloakContainer[?] = new ExtendableKeycloakContainer(
     dockerImageNameOverride.toString
   ) {
     override def getHost: String = {
@@ -25,7 +25,7 @@ final class KeycloakContainerCustom(
     }
   }
 
-  override val container: ExtendableKeycloakContainer[_] = keycloakContainer
+  override val container: ExtendableKeycloakContainer[?] = keycloakContainer
 }
 
 object KeycloakContainerCustom {

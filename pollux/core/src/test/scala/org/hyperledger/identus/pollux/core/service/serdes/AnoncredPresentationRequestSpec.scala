@@ -43,7 +43,7 @@ object AnoncredPresentationRequestSpec extends ZIOSpecDefault {
       |}
       |""".stripMargin
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("AnoncredPresentationRequestSerDes")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("AnoncredPresentationRequestSerDes")(
     test("should validate a correct schema") {
       assertZIO(AnoncredPresentationRequestV1.schemaSerDes.validate(json))(isUnit)
     },

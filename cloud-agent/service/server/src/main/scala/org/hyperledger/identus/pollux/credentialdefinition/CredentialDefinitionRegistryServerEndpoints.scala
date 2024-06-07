@@ -19,8 +19,6 @@ class CredentialDefinitionRegistryServerEndpoints(
     authenticator: Authenticator[BaseEntity],
     authorizer: Authorizer[BaseEntity]
 ) {
-  def throwableToInternalServerError(throwable: Throwable) =
-    ZIO.fail[ErrorResponse](ErrorResponse.internalServerError(detail = Option(throwable.getMessage)))
 
   val createCredentialDefinitionServerEndpoint: ZServerEndpoint[Any, Any] =
     createCredentialDefinitionEndpoint
@@ -53,12 +51,7 @@ class CredentialDefinitionRegistryServerEndpoints(
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic {
         case wac => {
-          case (
-                ctx: RequestContext,
-                filter: FilterInput,
-                paginationInput: PaginationInput,
-                order: Option[Order]
-              ) =>
+          case (ctx: RequestContext, filter: FilterInput, paginationInput: PaginationInput, order: Option[Order]) =>
             credentialDefinitionController
               .lookupCredentialDefinitions(
                 filter,

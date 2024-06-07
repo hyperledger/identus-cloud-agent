@@ -3,14 +3,13 @@ package org.hyperledger.identus.pollux.vc.jwt
 import com.nimbusds.jose.{JWSAlgorithm, JWSHeader}
 import com.nimbusds.jose.crypto.{ECDSASigner, Ed25519Signer}
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
-import com.nimbusds.jose.jwk.{Curve, ECKey, OctetKeyPair}
+import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import io.circe.*
 import org.bouncycastle.jce.spec.ECNamedCurveSpec
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
 import zio.*
-
 import java.security.*
 import java.security.interfaces.ECPublicKey
 import java.util.Base64
@@ -67,11 +66,7 @@ class ES256KSigner(privateKey: PrivateKey) extends Signer {
 
 class EdSigner(ed25519KeyPair: Ed25519KeyPair) extends Signer {
   lazy val signer: Ed25519Signer = {
-    val d = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519KeyPair.privateKey.getEncoded)
-    val x = java.util.Base64.getUrlEncoder.withoutPadding().encodeToString(ed25519KeyPair.publicKey.getEncoded)
-    val okpJson = s"""{"kty":"OKP","crv":"Ed25519","d":"$d","x":"$x"}"""
-    val octetKeyPair = OctetKeyPair.parse(okpJson)
-    val ed25519Signer = Ed25519Signer(octetKeyPair)
+    val ed25519Signer = Ed25519Signer(ed25519KeyPair.toOctetKeyPair)
     ed25519Signer
   }
 

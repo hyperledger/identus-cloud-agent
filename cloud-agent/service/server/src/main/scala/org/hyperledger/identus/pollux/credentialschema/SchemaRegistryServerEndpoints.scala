@@ -61,21 +61,15 @@ class SchemaRegistryServerEndpoints(
     lookupSchemasByQueryEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
-        {
-          case (
-                ctx: RequestContext,
-                filter: FilterInput,
-                paginationInput: PaginationInput,
-                order: Option[Order]
-              ) =>
-            credentialSchemaController
-              .lookupSchemas(
-                filter,
-                paginationInput.toPagination,
-                order
-              )(ctx)
-              .provideSomeLayer(ZLayer.succeed(wac))
-              .logTrace(ctx)
+        { case (ctx: RequestContext, filter: FilterInput, paginationInput: PaginationInput, order: Option[Order]) =>
+          credentialSchemaController
+            .lookupSchemas(
+              filter,
+              paginationInput.toPagination,
+              order
+            )(ctx)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
         }
       }
 

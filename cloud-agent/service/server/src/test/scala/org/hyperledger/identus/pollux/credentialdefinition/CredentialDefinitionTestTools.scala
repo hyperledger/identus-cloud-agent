@@ -119,16 +119,16 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
     backend
   }
 
-  def deleteAllCredentialDefinitions: RIO[CredentialDefinitionRepository & WalletAccessContext, Long] = {
+  def deleteAllCredentialDefinitions: RIO[CredentialDefinitionRepository & WalletAccessContext, Unit] = {
     for {
       repository <- ZIO.service[CredentialDefinitionRepository]
-      count <- repository.deleteAll()
-    } yield count
+      result <- repository.deleteAll()
+    } yield result
   }
 }
 
 trait CredentialDefinitionGen {
-  self: ZIOSpecDefault with CredentialDefinitionTestTools =>
+  self: ZIOSpecDefault & CredentialDefinitionTestTools =>
   object Generator {
     val credentialDefinitionName = Gen.alphaNumericStringBounded(4, 12)
     val majorVersion = Gen.int(1, 9)
