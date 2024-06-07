@@ -42,8 +42,6 @@ object IssueController {
         ErrorResponse.notFound(detail = Some(s"Record Id not found: $recordId"))
       case CredentialServiceError.OperationNotExecuted(recordId, info) =>
         ErrorResponse.internalServerError(title = "Operation Not Executed", detail = Some(s"${recordId}-${info}"))
-      case CredentialServiceError.ThreadIdNotFound(thid) =>
-        ErrorResponse.notFound(detail = Some(s"Thread Id not found: $thid"))
       case CredentialServiceError.UnexpectedError(msg) =>
         ErrorResponse.internalServerError(detail = Some(msg))
       case CredentialServiceError.InvalidFlowStateError(msg) =>

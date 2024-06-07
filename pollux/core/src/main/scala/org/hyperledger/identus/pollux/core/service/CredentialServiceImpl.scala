@@ -15,12 +15,7 @@ import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.*
-import org.hyperledger.identus.pollux.anoncreds.{
-  AnoncredCreateCredentialDefinition,
-  AnoncredCredential,
-  AnoncredCredentialOffer,
-  AnoncredLib
-}
+import org.hyperledger.identus.pollux.anoncreds.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
@@ -33,7 +28,7 @@ import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolS
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
 import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer, *}
-import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey}
+import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, Secp256k1KeyPair}
 import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
@@ -461,39 +456,49 @@ private class CredentialServiceImpl(
   private def getLongForm(
       did: PrismDID,
       allowUnpublishedIssuingDID: Boolean = false
-  ) = {
+  ): URIO[WalletAccessContext, LongFormPrismDID] = {
     for {
-      didState <- managedDIDService
+      maybeDidState <- managedDIDService
         .getManagedDIDState(did.asCanonical)
-        .mapError(e => RuntimeException(s"Error occurred while getting did from wallet: ${e.toString}"))
-        .someOrFail(RuntimeException(s"Issuer DID does not exist in the wallet: $did"))
-        .flatMap {
-          case s @ ManagedDIDState(_, _, PublicationState.Published(_)) => ZIO.succeed(s)
-          case s => ZIO.cond(allowUnpublishedIssuingDID, s, RuntimeException(s"Issuer DID must be published: $did"))
-        }
+        .orDieWith(e => RuntimeException(s"Error occurred while getting DID from wallet: ${e.toString}"))
+      didState <- ZIO
+        .fromOption(maybeDidState)
+        .mapError(_ => DIDNotFoundInWallet(did))
+        .orDieAsUnmanagedFailure
+      _ <- (didState match
+        case s @ ManagedDIDState(_, _, PublicationState.Published(_)) => ZIO.succeed(s)
+        case s => ZIO.cond(allowUnpublishedIssuingDID, s, DIDNotPublished(did, s.publicationState))
+      ).orDieAsUnmanagedFailure
       longFormPrismDID = PrismDID.buildLongFormFromOperation(didState.createOperation)
     } yield longFormPrismDID
   }
 
-  private def createJwtIssuer(
+  private[this] def getKeyId(did: PrismDID, verificationRelationship: VerificationRelationship): UIO[String] = {
+    for {
+      maybeDidData <- didService
+        .resolveDID(did)
+        .orDieWith(e => RuntimeException(s"Error occurred while resolving the DID: ${e.toString}"))
+      didData <- ZIO
+        .fromOption(maybeDidData)
+        .mapError(_ => DIDNotResolved(did))
+        .orDieAsUnmanagedFailure
+      keyId <- ZIO
+        .fromOption(didData._2.publicKeys.find(_.purpose == verificationRelationship).map(_.id))
+        .mapError(_ => KeyNotFoundInDID(did, verificationRelationship))
+        .orDieAsUnmanagedFailure
+    } yield keyId
+  }
+
+  private def getJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
-  ) = {
+  ): URIO[WalletAccessContext, JwtIssuer] = {
     for {
-      // Automatically infer keyId to use by resolving DID and choose the corresponding VerificationRelationship
-      issuingKeyId <- didService
-        .resolveDID(jwtIssuerDID)
-        .mapError(e => UnexpectedError(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
-        .someOrFail(UnexpectedError(s"Issuing DID resolution result is not found"))
-        .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
-        .someOrFail(
-          UnexpectedError(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
-        )
+      issuingKeyId <- getKeyId(jwtIssuerDID, verificationRelationship)
       ecKeyPair <- managedDIDService
         .javaKeyPairWithDID(jwtIssuerDID.asCanonical, issuingKeyId)
-        .someOrFail(
-          UnexpectedError(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
-        )
+        .someOrFail(KeyPairNotFoundInWallet(jwtIssuerDID, issuingKeyId, "Secp256k1"))
+        .orDieAsUnmanagedFailure
       (privateKey, publicKey) = ecKeyPair
       jwtIssuer = JwtIssuer(
         org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
@@ -506,22 +511,14 @@ private class CredentialServiceImpl(
   private def getEd25519SigningKeyPair(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
-  ) = {
+  ): URIO[WalletAccessContext, Ed25519KeyPair] = {
     for {
-      issuingKeyId <- didService
-        .resolveDID(jwtIssuerDID)
-        .mapError(e => UnexpectedError(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
-        .someOrFail(UnexpectedError(s"Issuing DID resolution result is not found"))
-        .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
-        .someOrFail(
-          UnexpectedError(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
-        )
+      issuingKeyId <- getKeyId(jwtIssuerDID, verificationRelationship)
       ed25519keyPair <- managedDIDService
         .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
         .map(_.collect { case keyPair: Ed25519KeyPair => keyPair })
-        .someOrFail(
-          UnexpectedError(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
-        )
+        .someOrFail(KeyPairNotFoundInWallet(jwtIssuerDID, issuingKeyId, "Ed25519"))
+        .orDieAsUnmanagedFailure
     } yield ed25519keyPair
   }
 
@@ -537,7 +534,7 @@ private class CredentialServiceImpl(
   private def getSDJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
-  ): ZIO[WalletAccessContext, UnexpectedError, JwtIssuer] = {
+  ): URIO[WalletAccessContext, JwtIssuer] = {
     for {
       ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
     } yield {
@@ -550,22 +547,26 @@ private class CredentialServiceImpl(
     }
   }
 
-  override def generateJWTCredentialRequest(
-      recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError | CredentialServiceErrorNew, IssueCredentialRecord] = {
+  private[this] def generateCredentialRequest(
+      recordId: DidCommID,
+      getIssuer: (
+          did: LongFormPrismDID,
+          verificationRelation: VerificationRelationship
+      ) => URIO[WalletAccessContext, JwtIssuer]
+  ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestPending)
       subjectId <- ZIO
         .fromOption(record.subjectId)
-        .mapError(_ => CredentialServiceError.UnexpectedError(s"Subject Id not found in record: ${recordId.value}"))
-      subjectDID <- validatePrismDID(subjectId)
-      longFormPrismDID <- getLongForm(subjectDID, true).mapError(err => UnexpectedError(err.getMessage))
-      jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
-      presentationPayload <- createPresentationPayload(record, jwtIssuer)
-      signedPayload = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, jwtIssuer)
+        .orDieWith(_ => RuntimeException(s"No 'subjectId' found in record: ${recordId.value}"))
       formatAndOffer <- ZIO
         .fromOption(record.offerCredentialFormatAndData)
-        .mapError(_ => InvalidFlowStateError(s"No offer found for this record: $recordId"))
+        .orDieWith(_ => RuntimeException(s"No 'offer' found in record: ${recordId.value}"))
+      subjectDID <- validatePrismDID(subjectId)
+      longFormPrismDID <- getLongForm(subjectDID, true)
+      jwtIssuer <- getIssuer(longFormPrismDID, VerificationRelationship.Authentication)
+      presentationPayload <- createPresentationPayload(record, jwtIssuer)
+      signedPayload = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, jwtIssuer)
       request = createDidCommRequestCredential(formatAndOffer._1, formatAndOffer._2, signedPayload)
       count <- credentialRepository
         .updateWithJWTRequestCredential(recordId, request, ProtocolState.RequestGenerated)
@@ -573,56 +574,28 @@ private class CredentialServiceImpl(
           s"${record.id}_issuance_flow_holder_req_pending_to_generated",
           "issuance_flow_holder_req_pending_to_generated_ms_gauge"
         ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
-      record <- credentialRepository
-        .findById(record.id)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(recordId))
-          case Some(value) => ZIO.succeed(value)
-        }
+      record <- credentialRepository.getById(record.id)
     } yield record
   }
 
-  // Holder requesting the credential
+  override def generateJWTCredentialRequest(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
+    generateCredentialRequest(recordId, getJwtIssuer)
+
   override def generateSDJWTCredentialRequest(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError | CredentialServiceErrorNew, IssueCredentialRecord] = {
-    for {
-      record <- getRecordWithState(recordId, ProtocolState.RequestPending)
-      subjectId <- ZIO
-        .fromOption(record.subjectId)
-        .mapError(_ => CredentialServiceError.UnexpectedError(s"Subject Id not found in record: ${recordId.value}"))
-      subjectDID <- validatePrismDID(subjectId)
-      longFormPrismDID <- getLongForm(subjectDID, true).mapError(err => UnexpectedError(err.getMessage))
-      jwtIssuer <- getSDJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
-      presentationPayload <- createPresentationPayload(record, jwtIssuer)
-      signedPayload = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, jwtIssuer)
-      formatAndOffer <- ZIO
-        .fromOption(record.offerCredentialFormatAndData)
-        .mapError(_ => InvalidFlowStateError(s"No offer found for this record: $recordId"))
-      request = createDidCommRequestCredential(formatAndOffer._1, formatAndOffer._2, signedPayload)
-      count <- credentialRepository
-        .updateWithJWTRequestCredential(recordId, request, ProtocolState.RequestGenerated)
-        @@ CustomMetricsAspect.endRecordingTime(
-          s"${record.id}_issuance_flow_holder_req_pending_to_generated",
-          "issuance_flow_holder_req_pending_to_generated_ms_gauge"
-        ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
-      record <- credentialRepository
-        .findById(record.id)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(recordId))
-          case Some(value) => ZIO.succeed(value)
-        }
-    } yield record
-  }
+  ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
+    generateCredentialRequest(recordId, getSDJwtIssuer)
 
   override def generateAnonCredsCredentialRequest(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestPending)
       offerCredential <- ZIO
         .fromOption(record.offerCredentialData)
-        .mapError(_ => InvalidFlowStateError(s"No offer found for this record: ${record.id}"))
+        .orDieWith(_ => RuntimeException(s"No 'offer' found in record: ${recordId.value}"))
       body = RequestCredential.Body(goal_code = Some("Request Credential"))
       createCredentialRequest <- createAnonCredsRequestCredential(offerCredential)
       attachments = Seq(
@@ -646,16 +619,13 @@ private class CredentialServiceImpl(
           s"${record.id}_issuance_flow_holder_req_pending_to_generated",
           "issuance_flow_holder_req_pending_to_generated_ms_gauge"
         ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
-      record <- credentialRepository
-        .findById(record.id)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(recordId))
-          case Some(value) => ZIO.succeed(value)
-        }
+      record <- credentialRepository.getById(record.id)
     } yield record
   }
 
-  private def createAnonCredsRequestCredential(offerCredential: OfferCredential) = {
+  private def createAnonCredsRequestCredential(
+      offerCredential: OfferCredential
+  ): URIO[WalletAccessContext, AnoncredCreateCrendentialRequest] = {
     for {
       attachmentData <- ZIO
         .fromOption(
@@ -667,12 +637,11 @@ private class CredentialServiceImpl(
               case _             => None
             }
         )
-        .mapError(_ => InvalidFlowStateError(s"No AnonCreds offer attachment found"))
+        .orDieWith(_ => RuntimeException(s"No AnonCreds attachment found in the offer"))
       credentialOffer = anoncreds.AnoncredCredentialOffer(attachmentData)
-      _ <- ZIO.logInfo(s"Cred def ID => ${credentialOffer.getCredDefId}")
       credDefContent <- uriDereferencer
         .dereference(new URI(credentialOffer.getCredDefId))
-        .mapError(err => UnexpectedError(err.toString))
+        .orDieAsUnmanagedFailure
       credentialDefinition = anoncreds.AnoncredCredentialDefinition(credDefContent)
       linkSecret <- linkSecretService.fetchOrCreate()
       createCredentialRequest = AnoncredLib.createCredentialRequest(linkSecret, credentialDefinition, credentialOffer)
@@ -681,19 +650,19 @@ private class CredentialServiceImpl(
 
   override def receiveCredentialRequest(
       request: RequestCredential
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, InvalidCredentialRequest | RecordNotFoundForThreadIdAndStates, IssueCredentialRecord] = {
     for {
-      record <- getRecordFromThreadIdWithState(
-        request.thid.map(DidCommID(_)),
+      thid <- ZIO
+        .fromOption(request.thid.map(DidCommID(_)))
+        .mapError(_ => InvalidCredentialRequest("No 'thid' found"))
+      record <- getRecordWithThreadIdAndStates(
+        thid,
         ignoreWithZeroRetries = true,
         ProtocolState.OfferPending,
         ProtocolState.OfferSent
       )
-      _ <- credentialRepository
-        .updateWithJWTRequestCredential(record.id, request, ProtocolState.RequestReceived)
-      record <- credentialRepository
-        .findById(record.id)
-        .someOrFail(RecordIdNotFound(record.id))
+      _ <- credentialRepository.updateWithJWTRequestCredential(record.id, request, ProtocolState.RequestReceived)
+      record <- credentialRepository.getById(record.id)
     } yield record
   }
 
@@ -720,9 +689,11 @@ private class CredentialServiceImpl(
   override def receiveCredentialIssue(
       issueCredential: IssueCredential
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = for {
-    // TODO Move this type of generic/reusable code to a helper trait
-    record <- getRecordFromThreadIdWithState(
-      issueCredential.thid.map(DidCommID(_)),
+    thid <- ZIO
+      .fromOption(issueCredential.thid.map(DidCommID(_)))
+      .mapError(_ => InvalidCredentialIssue("No 'thid' found"))
+    record <- getRecordWithThreadIdAndStates(
+      thid,
       ignoreWithZeroRetries = true,
       ProtocolState.RequestPending,
       ProtocolState.RequestSent
@@ -890,23 +861,18 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  private def getRecordFromThreadIdWithState(
-      thid: Option[DidCommID],
+  private def getRecordWithThreadIdAndStates(
+      thid: DidCommID,
       ignoreWithZeroRetries: Boolean,
       states: ProtocolState*
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, RecordNotFoundForThreadIdAndStates, IssueCredentialRecord] = {
     for {
-      thid <- ZIO
-        .fromOption(thid)
-        .mapError(_ => UnexpectedError("No `thid` found in credential request"))
-      maybeRecord <- credentialRepository
+      record <- credentialRepository
         .findByThreadId(thid, ignoreWithZeroRetries)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => ThreadIdNotFound(thid))
+        .someOrFail(RecordNotFoundForThreadIdAndStates(thid, states*))
       _ <- record.protocolState match {
         case s if states.contains(s) => ZIO.unit
-        case state                   => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
+        case state                   => ZIO.fail(RecordNotFoundForThreadIdAndStates(thid, states*))
       }
     } yield record
   }
@@ -1107,8 +1073,8 @@ private class CredentialServiceImpl(
         .mapError(_ =>
           CredentialServiceError.UnexpectedError(s"Issue credential data not found in record: ${recordId.value}")
         )
-      longFormPrismDID <- getLongForm(issuingDID, true).mapError(err => UnexpectedError(err.getMessage))
-      jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.AssertionMethod)
+      longFormPrismDID <- getLongForm(issuingDID, true)
+      jwtIssuer <- getJwtIssuer(longFormPrismDID, VerificationRelationship.AssertionMethod)
       offerCredentialData <- ZIO
         .fromOption(record.offerCredentialData)
         .mapError(_ =>
@@ -1174,7 +1140,7 @@ private class CredentialServiceImpl(
         .mapError(_ =>
           CredentialServiceError.UnexpectedError(s"Issue credential data not found in record: ${recordId.value}")
         )
-      longFormPrismDID <- getLongForm(issuingDID, true).mapError(err => UnexpectedError(err.getMessage))
+      longFormPrismDID <- getLongForm(issuingDID, true)
       maybeOfferOptions <- getOptionsFromOfferCredentialData(record)
       requestJwt <- getJwtFromRequestCredentialData(record)
 

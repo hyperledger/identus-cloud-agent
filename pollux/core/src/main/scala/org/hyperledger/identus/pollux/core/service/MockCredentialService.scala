@@ -6,9 +6,13 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{InvalidCredentialOffer, RecordNotFound, UnsupportedDidFormat}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{
+  InvalidCredentialOffer,
+  RecordNotFound,
+  UnsupportedDidFormat
+}
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer, mock}
+import zio.{mock, Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
 import zio.mock.{Mock, Proxy}
 
 import java.util.UUID
@@ -65,8 +69,10 @@ object MockCredentialService extends Mock[CredentialService] {
   object ReceiveCredentialOffer extends Effect[OfferCredential, InvalidCredentialOffer, IssueCredentialRecord]
   object AcceptCredentialOffer
       extends Effect[(DidCommID, Option[String]), RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord]
-  object GenerateJWTCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
-  object GenerateSDJWTCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
+  object GenerateJWTCredentialRequest
+      extends Effect[DidCommID, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord]
+  object GenerateSDJWTCredentialRequest
+      extends Effect[DidCommID, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord]
   object GenerateAnonCredsCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object ReceiveCredentialRequest extends Effect[RequestCredential, CredentialServiceError, IssueCredentialRecord]
   object AcceptCredentialRequest extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
@@ -164,12 +170,12 @@ object MockCredentialService extends Mock[CredentialService] {
 
       override def generateJWTCredentialRequest(
           recordId: DidCommID
-      ): IO[CredentialServiceError, IssueCredentialRecord] =
+      ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
         proxy(GenerateJWTCredentialRequest, recordId)
 
       override def generateSDJWTCredentialRequest(
           recordId: DidCommID
-      ): IO[CredentialServiceError, IssueCredentialRecord] =
+      ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
         proxy(GenerateSDJWTCredentialRequest, recordId)
 
       override def generateAnonCredsCredentialRequest(

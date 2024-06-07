@@ -30,12 +30,6 @@ object IssueControllerSpec extends ZIOSpecDefault {
         ErrorResponse.internalServerError(title = "Operation Not Executed", detail = Some(s"12345-info"))
       assert(httpError)(equalTo(errorResponse.copy(instance = httpError.instance)))
     },
-    test("return not found error if thread Id not found") {
-      val cse = CredentialServiceError.ThreadIdNotFound(DidCommID("12345"))
-      val httpError = IssueController.toHttpError(cse)
-      val errorResponse = ErrorResponse.notFound(detail = Some(s"Thread Id not found: 12345"))
-      assert(httpError)(equalTo(errorResponse.copy(instance = httpError.instance)))
-    },
     test("return internal server error if unexpected error") {
       val cse = CredentialServiceError.UnexpectedError("message")
       val httpError = IssueController.toHttpError(cse)

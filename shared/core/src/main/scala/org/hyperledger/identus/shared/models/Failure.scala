@@ -1,6 +1,6 @@
 package org.hyperledger.identus.shared.models
 
-import zio.{IO, URIO}
+import zio.{URIO, ZIO}
 
 trait Failure {
   val namespace: String
@@ -9,7 +9,7 @@ trait Failure {
 }
 
 object Failure {
-  extension [R, E](effect: IO[Failure, E]) {
+  extension [R, E](effect: ZIO[R, Failure, E]) {
     def orDieAsUnmanagedFailure: URIO[R, E] = {
       effect.orDieWith(f => UnmanagedFailureException(f))
     }

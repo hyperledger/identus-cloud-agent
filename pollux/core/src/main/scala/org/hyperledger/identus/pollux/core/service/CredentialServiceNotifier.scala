@@ -111,12 +111,12 @@ class CredentialServiceNotifier(
 
   override def generateJWTCredentialRequest(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
     notifyOnSuccess(svc.generateJWTCredentialRequest(recordId))
 
   override def generateSDJWTCredentialRequest(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
     notifyOnSuccess(svc.generateSDJWTCredentialRequest(recordId))
 
   override def generateAnonCredsCredentialRequest(

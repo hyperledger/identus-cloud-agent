@@ -12,7 +12,11 @@ import org.hyperledger.identus.pollux.anoncreds.AnoncredCredential
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{RecordNotFound, UnsupportedDidFormat}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.{
+  RecordNotFound,
+  RecordNotFoundForThreadIdAndStates,
+  UnsupportedDidFormat
+}
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.shared.models.{UnmanagedFailureException, WalletAccessContext, WalletId}
@@ -386,8 +390,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- issuerSvc.receiveCredentialRequest(request).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
-            case _                                                     => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFoundForThreadIdAndStates, _)) => true
+            case _                                                                  => false
           )
         }
       },
@@ -400,8 +404,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- issuerSvc.receiveCredentialRequest(request).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: ThreadIdNotFound, _)) => true
-            case _                                                => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFoundForThreadIdAndStates, _)) => true
+            case _                                                                  => false
           )
         }
       },
@@ -464,8 +468,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- holderSvc.receiveCredentialIssue(issue).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
-            case _                                                     => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFoundForThreadIdAndStates, _)) => true
+            case _                                                                  => false
           )
         }
       }.provideSomeLayer(holderDidServiceExpectations.toLayer ++ holderManagedDIDServiceExpectations.toLayer),
@@ -482,8 +486,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- holderSvc.receiveCredentialIssue(issue).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: ThreadIdNotFound, _)) => true
-            case _                                                => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFoundForThreadIdAndStates, _)) => true
+            case _                                                                  => false
           )
         }
       }.provideSomeLayer(holderDidServiceExpectations.toLayer ++ holderManagedDIDServiceExpectations.toLayer),
