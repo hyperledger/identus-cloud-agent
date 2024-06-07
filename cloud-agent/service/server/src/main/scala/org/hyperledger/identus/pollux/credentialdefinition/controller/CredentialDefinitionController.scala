@@ -41,16 +41,3 @@ trait CredentialDefinitionController {
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponsePage]
 
 }
-
-object CredentialDefinitionController {
-  def domainToHttpError(
-      error: CredentialDefinitionServiceError
-  ): ErrorResponse =
-    error
-
-  implicit def domainToHttpErrorIO[R, T](
-      domainIO: ZIO[R, CredentialDefinitionServiceError, T]
-  ): ZIO[R, ErrorResponse, T] = {
-    domainIO.mapError(domainToHttpError)
-  }
-}

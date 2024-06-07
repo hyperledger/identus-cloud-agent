@@ -25,10 +25,10 @@ package object w3c {
         }
         .mapBoth(
           {
-            case DLTProxyError(_) =>
-              DIDResolutionErrorRepr.InternalError("Error occurred while connecting to Prism Node")
-            case UnexpectedDLTResult(_) =>
-              DIDResolutionErrorRepr.InternalError("Unexpected result obtained from Prism Node")
+            case ex: DLTProxyError =>
+              DIDResolutionErrorRepr.InternalError(s"Error occurred while connecting to Prism Node: ${ex.getMessage}")
+            case UnexpectedDLTResult(msg) =>
+              DIDResolutionErrorRepr.InternalError(s"Unexpected result obtained from Prism Node: $msg")
             case ValidationError(e) => DIDResolutionErrorRepr.InvalidDID(e.toString)
           },
           _.toRight(DIDResolutionErrorRepr.NotFound)
