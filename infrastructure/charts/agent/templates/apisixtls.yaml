@@ -5,7 +5,7 @@ metadata:
   name: "{{ include "cloud-agent.fullname" . }}-base-path-tls"
   namespace: "{{ .Release.Namespace }}"
   labels:
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4}}
 spec:
   hosts:
   {{- range .Values.ingress.applicationUrls }}
