@@ -83,11 +83,11 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "cloud-agent.fullname" . }}-realm-import
+  name: {{ include "cloud-agent.name" . }}-realm-import
   labels:
     {{- include "labels.common" . | nindent 4}}
 data:
-  {{ include "cloud-agent.fullname" . }}.json: |
+  {{ include "cloud-agent.name" . }}.json: |
     {
       "realm": {{ .Values.server.keycloak.realm | quote }},
       "enabled": true
