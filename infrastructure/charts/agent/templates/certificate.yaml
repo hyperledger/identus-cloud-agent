@@ -5,7 +5,7 @@ metadata:
   name: "{{ include "cloud-agent.fullname" . }}-base-path-cert"
   namespace: "{{ .Release.Namespace }}"
   labels:
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4}}
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:

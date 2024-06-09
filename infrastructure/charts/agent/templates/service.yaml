@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ include "cloud-agent.fullname" . }}-server
     app.kubernetes.io/service: {{ include "cloud-agent.fullname" . }}-server-main
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   selector:
     app.kubernetes.io/name: {{ include "cloud-agent.fullname" . }}-server
@@ -27,7 +27,7 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ include "cloud-agent.fullname" . }}-server
     app.kubernetes.io/service: {{ include "cloud-agent.fullname" . }}-server-didcomm
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   selector:
     app.kubernetes.io/name: {{ include "cloud-agent.fullname" . }}-server
@@ -41,17 +41,17 @@ spec:
 ---
 
 {{- if .Values.ingress.enabled }}
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name:  agent-domain-name-fake-service
+  name: agent-domain-name-fake-service
   namespace: "{{ .Release.Namespace }}"
   annotations:
     external-dns.alpha.kubernetes.io/hostname: "{{ join ", " .Values.ingress.applicationUrls }}"
   labels:
     app.kubernetes.io/name: {{ include "cloud-agent.fullname" . }}-server
     app.kubernetes.io/service: agent-server-domain-name-fake
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   type: ExternalName
   externalName: {{ .Values.ingress.platformIngressUrl }}

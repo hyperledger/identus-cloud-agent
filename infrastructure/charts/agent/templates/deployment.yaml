@@ -4,7 +4,7 @@ metadata:
   name: {{ include "cloud-agent.fullname" . }}-server
   namespace: "{{ .Release.Namespace }}"
   labels:
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
@@ -14,14 +14,14 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: {{ include "cloud-agent.fullname" . }}-server
-        {{ template "labels.common" . }}
+        {{- include "labels.common" . | nindent 8 }}
     spec:
       imagePullSecrets:
       - name: atala-prism-dev-deployments-github-docker-registry-key
       initContainers:
       - name: wait-postgress-ready
         image: busybox
-        command: ['sh', '-c', "until nc -z {{ .Values.database.postgres.managingTeam }}-{{ include "cloud-agent.fullname" . }}-postgres-cluster.{{.Release.Namespace}} 5432; do echo waiting for postgress-operator; sleep 2; done;"]
+        command: ['sh', '-c', "until nc -z {{ .Values.database.postgres.managingTeam }}-{{ include "cloud-agent.fullname" . }}-postgres-cluster.{{ .Release.Namespace }} 5432; do echo waiting for postgress-operator; sleep 2; done;"]
       {{- if .Values.server.keycloak.enabled }}
       - name: wait-keycloak-ready
         image: badouralix/curl-jq:ubuntu
@@ -78,7 +78,7 @@ spec:
                 key: salt
                 optional: false
           - name: POLLUX_DB_HOST
-            value: "{{ .Values.database.postgres.managingTeam }}-{{ include "cloud-agent.fullname" . }}-postgres-cluster.{{.Release.Namespace}}"
+            value: "{{ .Values.database.postgres.managingTeam }}-{{ include "cloud-agent.fullname" . }}-postgres-cluster.{{ .Release.Namespace }}"
           - name: POLLUX_DB_PORT
             value: "5432"
           - name: POLLUX_DB_NAME
@@ -108,7 +108,7 @@ spec:
                 key: password
                 optional: false
           - name: CONNECT_DB_HOST
-            value: "{{ .Values.database.postgres.managingTeam }}-{{ include "cloud-agent.fullname" . }}-postgres-cluster.{{.Release.Namespace}}"
+            value: "{{ .Values.database.postgres.managingTeam }}-{{ include "cloud-agent.fullname" . }}-postgres-cluster.{{ .Release.Namespace }}"
           - name: CONNECT_DB_PORT
             value: "5432"
           - name: CONNECT_DB_NAME
@@ -138,7 +138,7 @@ spec:
                 key: password
                 optional: false
           - name: AGENT_DB_HOST
-            value: "{{ .Values.database.postgres.managingTeam }}-{{ include "cloud-agent.fullname" . }}-postgres-cluster.{{.Release.Namespace}}"
+            value: "{{ .Values.database.postgres.managingTeam }}-{{ include "cloud-agent.fullname" . }}-postgres-cluster.{{ .Release.Namespace }}"
           - name: AGENT_DB_PORT
             value: "5432"
           - name: AGENT_DB_NAME
