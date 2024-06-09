@@ -1,3 +1,21 @@
+# [1.36.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.35.1...cloud-agent-v1.36.0) (2024-06-09)
+
+
+### Bug Fixes
+
+* Credential Defintion Error Handling Part 2 ([#1155](https://github.com/hyperledger/identus-cloud-agent/issues/1155)) ([2df5306](https://github.com/hyperledger/identus-cloud-agent/commit/2df530695522789bed6624bae8bd07433c05ddda))
+* Credential Defintion Error Handling Part 2 ([#1156](https://github.com/hyperledger/identus-cloud-agent/issues/1156)) ([5755504](https://github.com/hyperledger/identus-cloud-agent/commit/57555047cd56ae31bbf14601fe8b5d96f838e033))
+* Helm chart refactor ([#1160](https://github.com/hyperledger/identus-cloud-agent/issues/1160)) ([4b59112](https://github.com/hyperledger/identus-cloud-agent/commit/4b59112af649a00e17d6e5e0e927f5b972629ec9))
+* pick right key type when creating corresponding issuer ([#1157](https://github.com/hyperledger/identus-cloud-agent/issues/1157)) ([22f0448](https://github.com/hyperledger/identus-cloud-agent/commit/22f0448ca878b385eada89d805c8f993c52173a2))
+* Schema Error Handling ([#1138](https://github.com/hyperledger/identus-cloud-agent/issues/1138)) ([a9da840](https://github.com/hyperledger/identus-cloud-agent/commit/a9da84098bd56eeb9d64e7b2bdd78d5596cf35c5))
+* Update the Holder to send the presentation only, No claims to disclose is needed separately  ([#1158](https://github.com/hyperledger/identus-cloud-agent/issues/1158)) ([9eaa5d4](https://github.com/hyperledger/identus-cloud-agent/commit/9eaa5d444665dbda00038a9032b890afcfa4bc15))
+
+
+### Features
+
+* improve ZIO failures and defects in credential definition ([#1133](https://github.com/hyperledger/identus-cloud-agent/issues/1133)) ([d6dfb72](https://github.com/hyperledger/identus-cloud-agent/commit/d6dfb72e298127b3e9d3a4c6577f62f4c8a1970a))
+* Remove double Error logs in DIDController ([#1140](https://github.com/hyperledger/identus-cloud-agent/issues/1140)) ([888ebb4](https://github.com/hyperledger/identus-cloud-agent/commit/888ebb4b484224d9c73674cffdf7d00777cfb4dc))
+
 ## [1.35.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.35.0...cloud-agent-v1.35.1) (2024-06-05)
 
 
