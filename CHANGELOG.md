@@ -1,3 +1,10 @@
+## [1.36.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.36.0...cloud-agent-v1.36.1) (2024-06-09)
+
+
+### Bug Fixes
+
+* Helm chart refactor vol2 ([#1162](https://github.com/hyperledger/identus-cloud-agent/issues/1162)) ([72fc6d1](https://github.com/hyperledger/identus-cloud-agent/commit/72fc6d1a61a4a1a5c0b1c81d3b0742538c8b9bc7))
+
 # [1.36.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.35.1...cloud-agent-v1.36.0) (2024-06-09)
 
 
