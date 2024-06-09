@@ -1,9 +1,10 @@
-# https://github.com/omegion/vault-unseal/blob/master/examples/kubernetes/cronjob.yaml
 {{- if .Values.server.useVault }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: vault-unseal-cronjob
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   schedule: "*/30 * * * *"
   successfulJobsHistoryLimit: 3
