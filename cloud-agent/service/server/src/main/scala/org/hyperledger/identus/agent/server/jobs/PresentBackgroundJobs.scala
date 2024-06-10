@@ -24,7 +24,7 @@ import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
 import org.hyperledger.identus.pollux.core.model.presentation.SdJwtPresentationPayload
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
-import org.hyperledger.identus.pollux.sdjwt.{IssuerPublicKey, PresentationJson, SDJWT}
+import org.hyperledger.identus.pollux.sdjwt.{IssuerPublicKey, PresentationCompact, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, JWT, JwtPresentation}
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.http.*
@@ -839,7 +839,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                       case Base64(data) =>
                         val base64Decoded = new String(java.util.Base64.getDecoder.decode(data))
                         val verifiedClaims = for {
-                          presentation <- ZIO.succeed(PresentationJson(base64Decoded))
+                          presentation <- ZIO.succeed(PresentationCompact.unsafeFromCompact(base64Decoded))
                           iss <- ZIO.fromEither(presentation.iss)
                           ed25519PublicKey <- resolveToEd25519PublicKey(iss)
                           ret = SDJWT.getVerifiedClaims(

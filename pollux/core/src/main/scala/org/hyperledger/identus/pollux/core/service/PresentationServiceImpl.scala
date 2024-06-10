@@ -112,7 +112,7 @@ private class PresentationServiceImpl(
   override def createSDJwtPresentationPayloadFromRecord(
       recordId: DidCommID,
       prover: Issuer
-  ): ZIO[WalletAccessContext, PresentationError, PresentationJson] = {
+  ): ZIO[WalletAccessContext, PresentationError, PresentationCompact] = {
 
     for {
       maybeRecord <- presentationRepository
@@ -153,7 +153,7 @@ private class PresentationServiceImpl(
       )
       presentationPayload <- ZIO.succeed(presentationCompact)
 
-    } yield presentationJson
+    } yield presentationCompact
   }
 
   override def createSDJwtPresentation(
@@ -172,7 +172,7 @@ private class PresentationServiceImpl(
           attachments = Seq(
             AttachmentDescriptor
               .buildBase64Attachment(
-                payload = presentationPayload.value.getBytes,
+                payload = presentationPayload.compact.getBytes,
                 mediaType = Some(PresentCredentialFormat.SDJWT.name)
               )
           ),
