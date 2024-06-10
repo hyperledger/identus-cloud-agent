@@ -1,7 +1,6 @@
 package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
@@ -33,7 +32,7 @@ class CredentialDefinitionRepositoryInMemory(
         store <- storeRef.get
         maybeRecord = store.values
           .find(_.id == record.guid)
-          .foreach(_ => throw UniqueConstraintViolation("Unique Constraint Violation on 'id'"))
+          .foreach(_ => throw RuntimeException("Unique Constraint Violation on 'id'"))
       } yield ()
       _ <- storeRef.update(r => r + (record.guid -> record))
     } yield record

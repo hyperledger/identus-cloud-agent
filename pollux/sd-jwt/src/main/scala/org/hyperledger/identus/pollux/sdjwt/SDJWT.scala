@@ -129,7 +129,6 @@ object SDJWT {
   def getVerifiedClaims(
       key: IssuerPublicKey,
       presentation: PresentationJson,
-      claims: String
   ): ClaimsValidationResult = {
     Try {
       val verifier = SdjwtVerifierWrapper(

@@ -15,7 +15,7 @@ class CredentialStatusListServiceImpl(
 
   def findById(id: UUID): IO[CredentialStatusListServiceError, CredentialStatusList] =
     for {
-      maybeStatusList <- credentialStatusListRepository.findById(id).mapError(RepositoryError.apply)
+      maybeStatusList <- credentialStatusListRepository.findById(id)
       statuslist <- ZIO
         .getOrFailWith(RecordIdNotFound(id))(
           maybeStatusList
@@ -26,14 +26,14 @@ class CredentialStatusListServiceImpl(
       id: DidCommID
   ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit] = {
     for {
-      revoked <- credentialStatusListRepository.revokeByIssueCredentialRecordId(id).mapError(RepositoryError.apply)
+      revoked <- credentialStatusListRepository.revokeByIssueCredentialRecordId(id)
       _ <- if (revoked) ZIO.unit else ZIO.fail(IssueCredentialRecordNotFound(id))
     } yield ()
 
   }
 
   def getCredentialsAndItsStatuses: IO[CredentialStatusListServiceError, Seq[CredentialStatusListWithCreds]] = {
-    credentialStatusListRepository.getCredentialStatusListsWithCreds.mapError(RepositoryError.apply)
+    credentialStatusListRepository.getCredentialStatusListsWithCreds
   }
 
   def updateStatusListCredential(
@@ -42,7 +42,6 @@ class CredentialStatusListServiceImpl(
   ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit] = {
     credentialStatusListRepository
       .updateStatusListCredential(id, statusListCredential)
-      .mapError(RepositoryError.apply)
   }
 
   def markAsProcessedMany(
@@ -50,7 +49,6 @@ class CredentialStatusListServiceImpl(
   ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit] = {
     credentialStatusListRepository
       .markAsProcessedMany(credsInStatusListIds)
-      .mapError(RepositoryError.apply)
   }
 
 }

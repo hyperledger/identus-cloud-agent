@@ -30,6 +30,22 @@ Create chart name and version as used by the chart label.
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
+{{/*
+Common labels
+*/}}
+{{- define "labels.common" -}}
+helm.sh/chart: {{ include "cloud-agent.chart" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/part-of: {{ include "cloud-agent.fullname" . }}
+{{- end }}
+
+
+
+
+
 {{- define "cors" }}
     {{- if .Values.ingress.cors.enabled }}
     - name: cors
@@ -54,10 +70,6 @@ Create chart name and version as used by the chart label.
         {{- end }}
 {{- end -}}
 
-{{- define "labels.common" -}}
-{{- $fullname := include "cloud-agent.fullname" $ -}}
-app.kubernetes.io/part-of: {{ $fullname }}
-{{- end }}
 
 {{- define "headers.security" }}
     - name: response-rewrite
