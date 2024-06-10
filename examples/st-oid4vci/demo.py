@@ -20,7 +20,10 @@ AUTHORIZATION_SERVER = "http://localhost:9980/realms/students"
 ALICE_CLIENT_ID = "alice-wallet"
 
 HOLDER_LONG_FORM_DID = "did:prism:73196107e806b084d44339c847a3ae8dd279562f23895583f62cc91a2ee5b8fe:CnsKeRI8CghtYXN0ZXItMBABSi4KCXNlY3AyNTZrMRIhArrplJNfQYxthryRU87XdODy-YWUh5mqrvIfAdoZFeJBEjkKBWtleS0wEAJKLgoJc2VjcDI1NmsxEiEC8rsFplfYvRLazdWWi3LNR1gaAQXb-adVhZacJT4ntwE"
-HOLDER_ASSERTION_PRIVATE_KEY_HEX = "2902637d412190fb08f5d0e0b2efc1eefae8060ae151e7951b69afbecbdd452e"
+HOLDER_ASSERTION_PRIVATE_KEY_HEX = (
+    "2902637d412190fb08f5d0e0b2efc1eefae8060ae151e7951b69afbecbdd452e"
+)
+
 
 def prepare_mock_server():
     # reset mock server
