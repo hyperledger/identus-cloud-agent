@@ -116,7 +116,7 @@ private class CredentialServiceImpl(
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
       issuingDID: CanonicalPrismDID
-  ): ZIO[WalletAccessContext, Nothing, IssueCredentialRecord] = {
+  ): URIO[WalletAccessContext, IssueCredentialRecord] = {
     for {
       _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaId)
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
@@ -171,7 +171,7 @@ private class CredentialServiceImpl(
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       issuingDID: CanonicalPrismDID
-  ): ZIO[WalletAccessContext, Nothing, IssueCredentialRecord] =
+  ): URIO[WalletAccessContext, IssueCredentialRecord] =
     for {
       _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaId)
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
@@ -225,7 +225,7 @@ private class CredentialServiceImpl(
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean]
-  ): ZIO[WalletAccessContext, Nothing, IssueCredentialRecord] = {
+  ): URIO[WalletAccessContext, IssueCredentialRecord] = {
     for {
       credentialDefinition <- getCredentialDefinition(credentialDefinitionGUID)
       _ <- CredentialSchema

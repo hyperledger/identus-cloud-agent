@@ -4,12 +4,7 @@ import io.circe.{Json, JsonObject}
 import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.issuecredential.{
-  Attribute,
-  IssueCredential,
-  OfferCredential,
-  RequestCredential
-}
+import org.hyperledger.identus.mercury.protocol.issuecredential.{Attribute, IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.*
@@ -30,7 +25,7 @@ trait CredentialService {
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       issuingDID: CanonicalPrismDID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  ): URIO[WalletAccessContext, IssueCredentialRecord]
 
   def createSDJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
@@ -41,7 +36,7 @@ trait CredentialService {
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       issuingDID: CanonicalPrismDID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  ): URIO[WalletAccessContext, IssueCredentialRecord]
 
   def createAnonCredsIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
@@ -52,7 +47,7 @@ trait CredentialService {
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean]
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  ): URIO[WalletAccessContext, IssueCredentialRecord]
 
   /** Return a list of records as well as a count of all filtered items */
   def getIssueCredentialRecords(
@@ -114,16 +109,16 @@ trait CredentialService {
   def generateJWTCredential(
       recordId: DidCommID,
       statusListRegistryUrl: String,
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, RecordNotFound | CredentialRequestValidationFailed, IssueCredentialRecord]
 
   def generateSDJWTCredential(
       recordId: DidCommID,
       expirationTime: Duration,
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed, IssueCredentialRecord]
 
   def generateAnonCredsCredential(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord]
 
   def receiveCredentialIssue(
       issueCredential: IssueCredential

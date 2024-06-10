@@ -27,7 +27,7 @@ object MockCredentialService extends Mock[CredentialService] {
             Option[Boolean],
             CanonicalPrismDID
         ),
-        CredentialServiceError,
+        Nothing,
         IssueCredentialRecord
       ]
   object CreateSDJWTIssueCredentialRecord
@@ -42,7 +42,7 @@ object MockCredentialService extends Mock[CredentialService] {
             Option[Boolean],
             CanonicalPrismDID
         ),
-        CredentialServiceError,
+        Nothing,
         IssueCredentialRecord
       ]
 
@@ -58,7 +58,7 @@ object MockCredentialService extends Mock[CredentialService] {
             Option[Boolean],
             String
         ),
-        CredentialServiceError,
+        Nothing,
         IssueCredentialRecord
       ]
 
@@ -77,9 +77,11 @@ object MockCredentialService extends Mock[CredentialService] {
         IssueCredentialRecord
       ]
   object AcceptCredentialRequest extends Effect[DidCommID, RecordNotFound, IssueCredentialRecord]
-  object GenerateJWTCredential extends Effect[(DidCommID, String), CredentialServiceError, IssueCredentialRecord]
-  object GenerateSDJWTCredential extends Effect[(DidCommID, Duration), CredentialServiceError, IssueCredentialRecord]
-  object GenerateAnonCredsCredential extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
+  object GenerateJWTCredential
+      extends Effect[(DidCommID, String), RecordNotFound | CredentialRequestValidationFailed, IssueCredentialRecord]
+  object GenerateSDJWTCredential
+      extends Effect[(DidCommID, Duration), RecordNotFound | ExpirationDateHasPassed, IssueCredentialRecord]
+  object GenerateAnonCredsCredential extends Effect[DidCommID, RecordNotFound, IssueCredentialRecord]
   object ReceiveCredentialIssue
       extends Effect[
         IssueCredential,
@@ -108,7 +110,7 @@ object MockCredentialService extends Mock[CredentialService] {
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
           issuingDID: CanonicalPrismDID
-      ): IO[CredentialServiceError, IssueCredentialRecord] =
+      ): URIO[WalletAccessContext, IssueCredentialRecord] =
         proxy(
           CreateJWTIssueCredentialRecord,
           pairwiseIssuerDID,
@@ -130,7 +132,7 @@ object MockCredentialService extends Mock[CredentialService] {
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
           issuingDID: CanonicalPrismDID
-      ): IO[CredentialServiceError, IssueCredentialRecord] =
+      ): URIO[WalletAccessContext, IssueCredentialRecord] =
         proxy(
           CreateSDJWTIssueCredentialRecord,
           pairwiseIssuerDID,
@@ -152,7 +154,7 @@ object MockCredentialService extends Mock[CredentialService] {
           claims: Json,
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean]
-      ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+      ): URIO[WalletAccessContext, IssueCredentialRecord] =
         proxy(
           CreateAnonCredsIssueCredentialRecord,
           pairwiseIssuerDID,
@@ -200,18 +202,18 @@ object MockCredentialService extends Mock[CredentialService] {
       override def generateJWTCredential(
           recordId: DidCommID,
           statusListRegistryUrl: String,
-      ): IO[CredentialServiceError, IssueCredentialRecord] =
+      ): ZIO[WalletAccessContext, RecordNotFound | CredentialRequestValidationFailed, IssueCredentialRecord] =
         proxy(GenerateJWTCredential, recordId, statusListRegistryUrl)
 
       override def generateSDJWTCredential(
           recordId: DidCommID,
           expirationTime: Duration,
-      ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+      ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed, IssueCredentialRecord] =
         proxy(GenerateSDJWTCredential, recordId, expirationTime)
 
       override def generateAnonCredsCredential(
           recordId: DidCommID
-      ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+      ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord] =
         proxy(GenerateAnonCredsCredential, recordId)
 
       override def receiveCredentialIssue(

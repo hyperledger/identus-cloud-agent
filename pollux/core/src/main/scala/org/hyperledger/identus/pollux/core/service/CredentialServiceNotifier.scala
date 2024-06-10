@@ -29,7 +29,7 @@ class CredentialServiceNotifier(
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
       issuingDID: CanonicalPrismDID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): URIO[WalletAccessContext, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createJWTIssueCredentialRecord(
         pairwiseIssuerDID,
@@ -52,7 +52,7 @@ class CredentialServiceNotifier(
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
       issuingDID: CanonicalPrismDID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): URIO[WalletAccessContext, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createSDJWTIssueCredentialRecord(
         pairwiseIssuerDID,
@@ -75,7 +75,7 @@ class CredentialServiceNotifier(
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean]
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): URIO[WalletAccessContext, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createAnonCredsIssueCredentialRecord(
         pairwiseIssuerDID,
@@ -148,18 +148,18 @@ class CredentialServiceNotifier(
   override def generateJWTCredential(
       recordId: DidCommID,
       statusListRegistryUrl: String
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, RecordNotFound | CredentialRequestValidationFailed, IssueCredentialRecord] =
     notifyOnSuccess(svc.generateJWTCredential(recordId, statusListRegistryUrl))
 
   override def generateSDJWTCredential(
       recordId: DidCommID,
       expirationTime: Duration,
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed, IssueCredentialRecord] =
     notifyOnSuccess(svc.generateSDJWTCredential(recordId, expirationTime))
 
   override def generateAnonCredsCredential(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord] =
     notifyOnSuccess(svc.generateAnonCredsCredential(recordId))
 
   private def notifyOnSuccess[R, E](
