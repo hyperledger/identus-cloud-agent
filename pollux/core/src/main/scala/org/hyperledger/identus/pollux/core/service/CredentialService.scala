@@ -77,6 +77,10 @@ trait CredentialService {
       recordId: DidCommID
   ): URIO[WalletAccessContext, Option[IssueCredentialRecord]]
 
+  def getById(
+      recordId: DidCommID
+  ): URIO[WalletAccessContext, IssueCredentialRecord]
+
   def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean

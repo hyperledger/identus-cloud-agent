@@ -190,6 +190,10 @@ class CredentialServiceNotifier(
   ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] =
     svc.findById(recordId)
 
+  override def getById(
+      recordId: DidCommID
+  ): URIO[WalletAccessContext, IssueCredentialRecord] = svc.getById(recordId)
+
   override def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean

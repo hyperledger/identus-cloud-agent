@@ -107,6 +107,11 @@ private class CredentialServiceImpl(
   ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] =
     credentialRepository.findById(recordId)
 
+  override def getById(
+      recordId: DidCommID
+  ): URIO[WalletAccessContext, IssueCredentialRecord] =
+    credentialRepository.getById(recordId)
+
   override def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: DidId,

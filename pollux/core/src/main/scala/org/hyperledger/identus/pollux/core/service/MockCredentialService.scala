@@ -268,6 +268,8 @@ object MockCredentialService extends Mock[CredentialService] {
       ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] =
         ???
 
+      override def getById(recordId: DidCommID): URIO[WalletAccessContext, IssueCredentialRecord] = ???
+
       override def getIssueCredentialRecordByThreadId(
           thid: DidCommID,
           ignoreWithZeroRetries: Boolean
