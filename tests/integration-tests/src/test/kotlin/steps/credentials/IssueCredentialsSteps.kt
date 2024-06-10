@@ -238,7 +238,7 @@ class IssueCredentialsSteps {
     @Then("{actor} should see that credential issuance has failed")
     fun issuerShouldSeeThatCredentialIssuanceHasFailed(issuer: Actor) {
         issuer.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_UNPROCESSABLE_ENTITY),
         )
     }
 }
