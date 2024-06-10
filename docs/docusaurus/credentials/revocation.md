@@ -59,11 +59,11 @@ To verify the revocation status of the credential, one must follow these steps:
 Status list credential integrity can be verified using the embedded proof.
 
 We currently support 2 types of proofs:
- * `DataIntegrityProof` via crypto suite `eddsa-jcs-2022`. The exact steps on how to create a verify this proof are in the [Data Integrity EdDSA Cryptosuites v1.0](https://www.w3.org/TR/vc-di-eddsa/#eddsa-jcs-2022)
-   * Used for Ed25519 EC curves, meaning if the proof was created using Ed25519 private key
- * `EcdsaSecp256k1Signature2019`, the description of this cryptosuite can be found [here](https://w3c-ccg.github.io/lds-ecdsa-secp256k1-2019/)
-   * Used for secp256k1 EC curves, meaning if the proof was created using secp256k1 private key
-   * This proof type uses RDF canonicalization algorithm as a data normalization before singing and verifying, the variant of this algorithm used is `URDNA2015`
+* `DataIntegrityProof` via crypto suite `eddsa-jcs-2022`. The exact steps on how to create a verify this proof are in the [Data Integrity EdDSA Cryptosuites v1.0](https://www.w3.org/TR/vc-di-eddsa/#eddsa-jcs-2022)
+  * Used for Ed25519 EC curves, meaning if the proof was created using Ed25519 private key
+* `EcdsaSecp256k1Signature2019`, the description of this cryptosuite can be found [here](https://w3c-ccg.github.io/lds-ecdsa-secp256k1-2019/)
+  * Used for secp256k1 EC curves, meaning if the proof was created using secp256k1 private key
+  * This proof type uses RDF canonicalization algorithm as a data normalization before singing and verifying, the variant of this algorithm used is `URDNA2015`
 
 #### Example of status list credential with `DataIntegrityProof`
 
