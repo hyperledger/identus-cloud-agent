@@ -20,12 +20,6 @@ final case class CredentialDefinitionGuidNotFoundError(guid: UUID)
       s"Credential Definition record cannot be found by `guid`=$guid"
     )
 
-final case class CredentialDefinitionUpdateError(id: UUID, version: String, author: String, message: String)
-    extends CredentialDefinitionServiceError(
-      StatusCode.BadRequest,
-      s"Credential Definition update error: id=$id, version=$version, author=$author, msg=$message"
-    )
-
 final case class CredentialDefinitionCreationError(msg: String)
     extends CredentialDefinitionServiceError(
       StatusCode.BadRequest,
@@ -34,6 +28,6 @@ final case class CredentialDefinitionCreationError(msg: String)
 
 final case class CredentialDefinitionValidationError(cause: CredentialSchemaError)
     extends CredentialDefinitionServiceError(
-      StatusCode.BadRequest,
-      s"Credential Definition Validation Error=${cause.message}"
+      cause.statusCode,
+      s"Credential Schema Validation Error=${cause.userFacingMessage}"
     )

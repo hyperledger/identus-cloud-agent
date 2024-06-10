@@ -88,8 +88,7 @@ private class PresentationServiceImpl(
         .fromOption(record.requestPresentationData)
         .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
       issuedValidCredentials <- credentialRepository
-        .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
-        .mapError(RepositoryError.apply)
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
       signedCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw)
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
@@ -131,8 +130,7 @@ private class PresentationServiceImpl(
         .fromOption(record.requestPresentationData)
         .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
       issuedValidCredentials <- credentialRepository
-        .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
-        .mapError(RepositoryError.apply)
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
       signedCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw)
 
       issuedCredentials <- ZIO.fromEither(
@@ -209,10 +207,9 @@ private class PresentationServiceImpl(
         .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
       issuedValidCredentials <-
         credentialRepository
-          .getValidAnoncredIssuedCredentials(
+          .findValidAnonCredsIssuedCredentials(
             anoncredCredentialProof.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential))
           )
-          .mapError(RepositoryError.apply)
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
           issuedValidCredentials.nonEmpty,
@@ -701,7 +698,6 @@ private class PresentationServiceImpl(
         linkSecretService
           .fetchOrCreate()
           .map(_.secret)
-          .mapError(t => AnoncredPresentationCreationError(t.cause))
       credentialRequest =
         verifiableCredentials.map(verifiableCredential =>
           AnoncredCredentialRequests(
@@ -729,7 +725,7 @@ private class PresentationServiceImpl(
   private def resolveSchema(schemaUri: String): IO[UnexpectedError, (String, AnoncredSchemaDef)] = {
     for {
       uri <- ZIO.attempt(new URI(schemaUri)).mapError(e => UnexpectedError(e.getMessage))
-      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
+      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.userFacingMessage))
       anoncredSchema <-
         AnoncredSchemaSerDesV1.schemaSerDes
           .deserialize(content)
@@ -749,7 +745,7 @@ private class PresentationServiceImpl(
   ): IO[UnexpectedError, (String, AnoncredCredentialDefinition)] = {
     for {
       uri <- ZIO.attempt(new URI(credentialDefinitionUri)).mapError(e => UnexpectedError(e.getMessage))
-      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
+      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.userFacingMessage))
       _ <-
         PublicCredentialDefinitionSerDesV1.schemaSerDes
           .validate(content)
@@ -765,8 +761,7 @@ private class PresentationServiceImpl(
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       issuedCredentials <- credentialRepository
-        .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
-        .mapError(RepositoryError.apply)
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
       validatedCredentialsFormat <- validateCredentialsFormat(record, issuedCredentials)
       _ <- validateCredentials(
         s"No matching issued credentials found in prover db from the given: $credentialsToUse",
@@ -789,8 +784,7 @@ private class PresentationServiceImpl(
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       issuedCredentials <- credentialRepository
-        .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
-        .mapError(RepositoryError.apply)
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
       validatedCredentialsFormat <- validateCredentialsFormat(record, issuedCredentials)
       _ <- validateCredentials(
         s"No matching issued credentials found in prover db from the given: $credentialsToUse",
@@ -834,10 +828,9 @@ private class PresentationServiceImpl(
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       issuedCredentials <-
         credentialRepository
-          .getValidAnoncredIssuedCredentials(
+          .findValidAnonCredsIssuedCredentials(
             credentialsToUse.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential))
           )
-          .mapError(RepositoryError.apply)
       _ <- validateFullCredentialsFormat(
         record,
         issuedCredentials

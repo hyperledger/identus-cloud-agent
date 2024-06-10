@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.model.schema
 
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.SchemaError
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.CredentialSchemaValidationError
 import org.hyperledger.identus.pollux.core.model.schema.`type`.{AnoncredSchemaType, CredentialJsonSchemaType}
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError.JsonValidationErrors
@@ -67,7 +67,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
         assertZIO(result.exit)(
           fails(
             isSubtype[CredentialSchemaError.UnsupportedCredentialSchemaType](
-              hasField("message", _.message, equalTo(s"Unsupported VC Schema type $schemaType"))
+              hasField("message", _.userFacingMessage, equalTo(s"Unsupported credential schema type: $schemaType"))
             )
           )
         )
@@ -338,7 +338,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
         assertZIO(CredentialSchema.validateCredentialSchema(credentialSchema).exit)(
           fails(
             isSubtype[CredentialSchemaError.UnsupportedCredentialSchemaType](
-              hasField("message", _.message, equalTo(s"Unsupported VC Schema type $schemaType"))
+              hasField("message", _.userFacingMessage, equalTo(s"Unsupported credential schema type: $schemaType"))
             )
           )
         )
@@ -348,7 +348,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
 
   def failsWithJsonValidationErrors(errorMessages: Iterable[String]) = {
     fails(
-      isSubtype[SchemaError](
+      isSubtype[CredentialSchemaValidationError](
         hasField(
           "schemaError",
           _.schemaError,
