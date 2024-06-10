@@ -5,6 +5,7 @@ import time
 import urllib
 
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import serialization
 
 
 MOCKSERVER_URL = "http://localhost:7777"
@@ -18,6 +19,8 @@ AUTHORIZATION_SERVER = "http://localhost:9980/realms/students"
 
 ALICE_CLIENT_ID = "alice-wallet"
 
+HOLDER_LONG_FORM_DID = "did:prism:73196107e806b084d44339c847a3ae8dd279562f23895583f62cc91a2ee5b8fe:CnsKeRI8CghtYXN0ZXItMBABSi4KCXNlY3AyNTZrMRIhArrplJNfQYxthryRU87XdODy-YWUh5mqrvIfAdoZFeJBEjkKBWtleS0wEAJKLgoJc2VjcDI1NmsxEiEC8rsFplfYvRLazdWWi3LNR1gaAQXb-adVhZacJT4ntwE"
+HOLDER_ASSERTION_PRIVATE_KEY_HEX = "2902637d412190fb08f5d0e0b2efc1eefae8060ae151e7951b69afbecbdd452e"
 
 def prepare_mock_server():
     # reset mock server
@@ -152,6 +155,7 @@ def holder_get_issuer_as_metadata(authorization_server: str):
     metadata_url = f"{authorization_server}/.well-known/openid-configuration"
     response = requests.get(metadata_url)
     metadata = response.json()
+    print(f"Metadata: {metadata}")
     return metadata
 
 
@@ -221,11 +225,15 @@ def holder_get_credential(credential_endpoint: str, token_response):
     c_nonce = token_response["c_nonce"]
 
     # generate proof
-    private_key = ec.generate_private_key(ec.SECP256K1())
+    private_key_bytes = bytes.fromhex(HOLDER_ASSERTION_PRIVATE_KEY_HEX)
+    private_key = ec.derive_private_key(
+        int.from_bytes(private_key_bytes, "big"), ec.SECP256K1()
+    )
+    public_key = private_key.public_key()
     jwt_proof = jwt.encode(
         headers={
             "typ": "openid4vci-proof+jwt",
-            "kid": "did:prism:0000000000000000000000000000000000000000000000000000000000000000#key-1",  # TODO: use actual DID
+            "kid": HOLDER_LONG_FORM_DID,
         },
         payload={
             "iss": ALICE_CLIENT_ID,

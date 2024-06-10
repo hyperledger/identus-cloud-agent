@@ -5,11 +5,13 @@ import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.ErrorResponse.{badRequest, internalServerError}
 import org.hyperledger.identus.api.util.PaginationUtils
 import org.hyperledger.identus.castor.core.model.did.PrismDID
+import org.hyperledger.identus.oid4vci.domain.Openid4VCIProofJwtOps
 import org.hyperledger.identus.oid4vci.http.*
 import org.hyperledger.identus.oid4vci.http.CredentialErrorCode.*
 import org.hyperledger.identus.oid4vci.service.OIDCCredentialIssuerService
 import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialIssuer as PolluxCredentialIssuer
 import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataService
+import org.hyperledger.identus.pollux.vc.jwt.JWT
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
 
@@ -117,7 +119,8 @@ case class CredentialIssuerControllerImpl(
     credentialIssuerService: OIDCCredentialIssuerService,
     issuerMetadataService: OID4VCIIssuerMetadataService,
     agentBaseUrl: URL
-) extends CredentialIssuerController {
+) extends CredentialIssuerController
+    with Openid4VCIProofJwtOps {
 
   import CredentialIssuerController.Errors.*
   import OIDCCredentialIssuerService.Errors.*
@@ -159,14 +162,15 @@ case class CredentialIssuerControllerImpl(
       case Some(JwtProof(proofType, jwt)) =>
         for {
           _ <- ZIO
-            .ifZIO(credentialIssuerService.verifyJwtProof(jwt))(
+            .ifZIO(credentialIssuerService.verifyJwtProof(JWT(jwt)))(
               ZIO.unit,
               ZIO.fail(OIDCCredentialIssuerService.Errors.InvalidProof("Invalid proof"))
             )
             .mapError { case InvalidProof(message) =>
               badRequestInvalidProof(jwt, message)
             }
-          nonce = "todo - extract jwt nonce" // TODO: validate proof and extract nonce
+          nonce <- getNonceFromJwt(JWT(jwt))
+            .mapError(throwable => badRequestInvalidProof(jwt, throwable.getMessage))
           session <- credentialIssuerService
             .getIssuanceSessionByNonce(nonce)
             .mapError(_ => badRequestInvalidProof(jwt, "nonce is not associated to the issuance session"))
