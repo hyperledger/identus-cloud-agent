@@ -12,8 +12,6 @@ sealed trait CredentialServiceError
 
 object CredentialServiceError {
   final case class RecordIdNotFound(recordId: DidCommID) extends CredentialServiceError
-  final case class OperationNotExecuted(recordId: DidCommID, info: String) extends CredentialServiceError
-  final case class InvalidFlowStateError(msg: String) extends CredentialServiceError
   final case class UnexpectedError(msg: String) extends CredentialServiceError
   final case class UnsupportedCredentialFormat(vcFormat: String) extends CredentialServiceError
   object MissingCredentialFormat extends CredentialServiceError
@@ -21,8 +19,6 @@ object CredentialServiceError {
   final case class CredentialRequestValidationError(error: String) extends CredentialServiceError
   final case class CredentialSchemaError(cause: org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError)
       extends CredentialServiceError
-  final case class UnsupportedVCClaimsValue(error: String) extends CredentialServiceError
-  final case class UnsupportedVCClaimsMediaType(media_type: String) extends CredentialServiceError
 }
 
 sealed trait CredentialServiceErrorNew(
@@ -116,6 +112,30 @@ object CredentialServiceErrorNew {
       extends CredentialServiceErrorNew(
         StatusCode.UnprocessableContent,
         s"The current record state not valid for the requested operation: cause[$state]"
+      )
+
+  final case class VCClaimsValueParsingError(cause: String)
+      extends CredentialServiceErrorNew(
+        StatusCode.UnprocessableContent,
+        s"The VC claims value could not be parsed: cause[$cause]"
+      )
+
+  final case class UnsupportedVCClaimsMediaType(mediaType: String)
+      extends CredentialServiceErrorNew(
+        StatusCode.UnprocessableContent,
+        s"The VC claims media type is not supported: mediaType=$mediaType"
+      )
+
+  final case class ExpirationDateHasPassed(expirationDate: Long)
+      extends CredentialServiceErrorNew(
+        StatusCode.UnprocessableContent,
+        s"The expiration date has passed: expirationDate=$expirationDate"
+      )
+
+  final case class CredentialRequestValidationFailed(errors: String*)
+      extends CredentialServiceErrorNew(
+        StatusCode.UnprocessableContent,
+        s"The credential request validation failed: errors=${errors.mkString("[", "], [", "]")}"
       )
 
 }

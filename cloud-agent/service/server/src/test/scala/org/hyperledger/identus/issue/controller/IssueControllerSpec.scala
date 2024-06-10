@@ -23,23 +23,10 @@ object IssueControllerSpec extends ZIOSpecDefault {
       val errorResponse = ErrorResponse.notFound(detail = Some(s"Record Id not found: 12345"))
       assert(httpError)(equalTo(errorResponse.copy(instance = httpError.instance)))
     },
-    test("return internal server error if operation not executed") {
-      val cse = CredentialServiceError.OperationNotExecuted(DidCommID("12345"), "info")
-      val httpError = IssueController.toHttpError(cse)
-      val errorResponse =
-        ErrorResponse.internalServerError(title = "Operation Not Executed", detail = Some(s"12345-info"))
-      assert(httpError)(equalTo(errorResponse.copy(instance = httpError.instance)))
-    },
     test("return internal server error if unexpected error") {
       val cse = CredentialServiceError.UnexpectedError("message")
       val httpError = IssueController.toHttpError(cse)
       val errorResponse = ErrorResponse.internalServerError(detail = Some("message"))
-      assert(httpError)(equalTo(errorResponse.copy(instance = httpError.instance)))
-    },
-    test("return bad request error if invalid flow state error") {
-      val cse = CredentialServiceError.InvalidFlowStateError("message")
-      val httpError = IssueController.toHttpError(cse)
-      val errorResponse = ErrorResponse.badRequest(title = "InvalidFlowState", detail = Some("message"))
       assert(httpError)(equalTo(errorResponse.copy(instance = httpError.instance)))
     },
     test("return bad request error if create credential payload from record error") {

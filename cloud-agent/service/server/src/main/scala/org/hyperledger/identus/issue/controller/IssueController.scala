@@ -40,22 +40,14 @@ object IssueController {
     error match
       case CredentialServiceError.RecordIdNotFound(recordId) =>
         ErrorResponse.notFound(detail = Some(s"Record Id not found: $recordId"))
-      case CredentialServiceError.OperationNotExecuted(recordId, info) =>
-        ErrorResponse.internalServerError(title = "Operation Not Executed", detail = Some(s"${recordId}-${info}"))
       case CredentialServiceError.UnexpectedError(msg) =>
         ErrorResponse.internalServerError(detail = Some(msg))
-      case CredentialServiceError.InvalidFlowStateError(msg) =>
-        ErrorResponse.badRequest(title = "InvalidFlowState", detail = Some(msg))
       case CredentialServiceError.CreateCredentialPayloadFromRecordError(msg) =>
         ErrorResponse.badRequest(title = "Create Credential Payload From Record Error", detail = Some(msg.getMessage))
       case CredentialServiceError.CredentialRequestValidationError(msg) =>
         ErrorResponse.badRequest(title = "Create Request Validation Error", detail = Some(msg))
       case CredentialServiceError.CredentialSchemaError(e) =>
         ErrorResponse.badRequest(title = "Credential Schema Error", detail = Some(e.userFacingMessage))
-      case CredentialServiceError.UnsupportedVCClaimsValue(error) =>
-        ErrorResponse.badRequest(detail = Some(error))
-      case CredentialServiceError.UnsupportedVCClaimsMediaType(media_type) =>
-        ErrorResponse.badRequest(detail = Some(s"Unsupported media_type for claim: $media_type"))
       case CredentialServiceError.UnsupportedCredentialFormat(format) =>
         ErrorResponse.badRequest(detail = Some(s"Unsupported format in claim: $format"))
       case CredentialServiceError.MissingCredentialFormat =>

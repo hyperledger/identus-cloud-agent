@@ -5,21 +5,14 @@ import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
-import org.hyperledger.identus.castor.core.model.did.{
-  CanonicalPrismDID,
-  LongFormPrismDID,
-  PrismDID,
-  VerificationRelationship
-}
-import org.hyperledger.identus.castor.core.model.did.EllipticCurve
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.*
 import org.hyperledger.identus.pollux.anoncreds.*
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.*
 import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.model.schema.{CredentialDefinition, CredentialSchema}
@@ -961,7 +954,7 @@ private class CredentialServiceImpl(
       offer = AnoncredLib.createOffer(createCredentialDefinition, credentialDefinitionId)
     } yield offer
 
-  private def createDidCommRequestCredential(
+  private[this] def createDidCommRequestCredential(
       format: IssueCredentialOfferFormat,
       offer: OfferCredential,
       signedPresentation: JWT
@@ -1027,38 +1020,32 @@ private class CredentialServiceImpl(
   override def generateJWTCredential(
       recordId: DidCommID,
       statusListRegistryUrl: String,
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, RecordNotFound | CredentialRequestValidationFailed, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
       issuingDID <- ZIO
         .fromOption(record.issuingDID)
-        .mapError(_ => CredentialServiceError.UnexpectedError(s"Issuing Id not found in record: ${recordId.value}"))
+        .orElse(ZIO.dieMessage(s"Issuing DID not found in record: ${recordId.value}"))
       issue <- ZIO
         .fromOption(record.issueCredentialData)
-        .mapError(_ =>
-          CredentialServiceError.UnexpectedError(s"Issue credential data not found in record: ${recordId.value}")
-        )
+        .orElse(ZIO.dieMessage(s"Issue credential data not found in record: ${recordId.value}"))
       longFormPrismDID <- getLongForm(issuingDID, true)
-      jwtIssuer <- getJwtIssuer(longFormPrismDID, VerificationRelationship.AssertionMethod)
-      offerCredentialData <- ZIO
-        .fromOption(record.offerCredentialData)
-        .mapError(_ =>
-          CredentialServiceError.CreateCredentialPayloadFromRecordError(
-            new Throwable("Could not extract claims from \"requestCredential\" DIDComm message")
-          )
-        )
-      preview = offerCredentialData.body.credential_preview
-      claims <- CredentialService.convertAttributesToJsonClaims(preview.body.attributes)
       maybeOfferOptions <- getOptionsFromOfferCredentialData(record)
       requestJwt <- getJwtFromRequestCredentialData(record)
+      offerCredentialData <- ZIO
+        .fromOption(record.offerCredentialData)
+        .orElse(ZIO.dieMessage(s"Offer credential data not found in record: ${recordId.value}"))
+      preview = offerCredentialData.body.credential_preview
+      claims <- CredentialService.convertAttributesToJsonClaims(preview.body.attributes).orDieAsUnmanagedFailure
+      jwtIssuer <- getJwtIssuer(longFormPrismDID, VerificationRelationship.AssertionMethod)
+      jwtPresentation <- validateRequestCredentialDataProof(maybeOfferOptions, requestJwt)
+        .tapError(error =>
+          credentialRepository
+            .updateProtocolState(record.id, ProtocolState.CredentialPending, ProtocolState.ProblemReportPending)
+        )
+        .orDieAsUnmanagedFailure
 
-      // domain/challenge validation + JWT verification
-      jwtPresentation <- validateRequestCredentialDataProof(maybeOfferOptions, requestJwt).tapBoth(
-        error =>
-          ZIO.logErrorCause("JWT Presentation Validation Failed!!", Cause.fail(error)) *> credentialRepository
-            .updateProtocolState(record.id, ProtocolState.CredentialPending, ProtocolState.ProblemReportPending),
-        payload => ZIO.logInfo("JWT Presentation Validation Successful!")
-      )
+      // Custom for JWT
       issuanceDate = Instant.now()
       credentialStatus <- allocateNewCredentialInStatusListForWallet(record, statusListRegistryUrl, jwtIssuer)
       // TODO: get schema when schema registry is available if schema ID is provided
@@ -1087,58 +1074,53 @@ private class CredentialServiceImpl(
         thid = issue.thid,
         credentials = Seq(IssueCredentialIssuedFormat.JWT -> signedJwtCredential.value.getBytes)
       )
+      // End custom
+
       record <- markCredentialGenerated(record, issueCredential)
     } yield record
   }
-  // Issuer Generating the credential
+
   override def generateSDJWTCredential(
       recordId: DidCommID,
       expirationTime: Duration,
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
       issuingDID <- ZIO
         .fromOption(record.issuingDID)
-        .mapError(_ => CredentialServiceError.UnexpectedError(s"Issuing Id not found in record: ${recordId.value}"))
+        .orElse(ZIO.dieMessage(s"Issuing DID not found in record: ${recordId.value}"))
       issue <- ZIO
         .fromOption(record.issueCredentialData)
-        .mapError(_ =>
-          CredentialServiceError.UnexpectedError(s"Issue credential data not found in record: ${recordId.value}")
-        )
+        .orElse(ZIO.dieMessage(s"Issue credential data not found in record: ${recordId.value}"))
       longFormPrismDID <- getLongForm(issuingDID, true)
       maybeOfferOptions <- getOptionsFromOfferCredentialData(record)
       requestJwt <- getJwtFromRequestCredentialData(record)
-
-      // domain/challenge validation + JWT verification
-      jwtPresentation <- validateRequestCredentialDataProof(maybeOfferOptions, requestJwt).tapBoth(
-        error =>
-          ZIO.logErrorCause("JWT Presentation Validation Failed!!", Cause.fail(error)) *> credentialRepository
-            .updateProtocolState(record.id, ProtocolState.CredentialPending, ProtocolState.ProblemReportPending),
-        payload => ZIO.logInfo("JWT Presentation Validation Successful!")
-      )
-      ed25519KeyPair <- getEd25519SigningKeyPair(longFormPrismDID, VerificationRelationship.AssertionMethod)
       offerCredentialData <- ZIO
         .fromOption(record.offerCredentialData)
-        .mapError(_ =>
-          CredentialServiceError.CreateCredentialPayloadFromRecordError(
-            new Throwable("Could not extract claims from \"requestCredential\" DIDComm message")
-          )
-        )
+        .orElse(ZIO.dieMessage(s"Offer credential data not found in record: ${recordId.value}"))
       preview = offerCredentialData.body.credential_preview
-      claims <- CredentialService.convertAttributesToJsonClaims(preview.body.attributes)
+      claims <- CredentialService.convertAttributesToJsonClaims(preview.body.attributes).orDieAsUnmanagedFailure
+      jwtPresentation <- validateRequestCredentialDataProof(maybeOfferOptions, requestJwt)
+        .tapError(error =>
+          credentialRepository
+            .updateProtocolState(record.id, ProtocolState.CredentialPending, ProtocolState.ProblemReportPending)
+        )
+        .orDieAsUnmanagedFailure
+
+      // Custom for SD JWT
+      ed25519KeyPair <- getEd25519SigningKeyPair(longFormPrismDID, VerificationRelationship.AssertionMethod)
       sdJwtPrivateKey = sdjwt.IssuerPrivateKey(ed25519KeyPair.privateKey)
       didDocResult <- didResolver.resolve(jwtPresentation.iss) flatMap {
         case failed: DIDResolutionFailed =>
-          ZIO.fail(CredentialServiceError.UnexpectedError(failed.error.toString))
+          ZIO.dieMessage(s"Error occurred while resolving the DID: ${failed.error.toString}")
         case succeeded: DIDResolutionSucceeded => ZIO.succeed(succeeded.didDocument.authentication)
       }
       now = Instant.now.getEpochSecond
       exp = claims("exp").flatMap(_.asNumber).flatMap(_.toLong)
       expInSeconds <- ZIO.fromEither(exp match {
         case Some(e) if e > now => Right(e)
-        case Some(e) =>
-          Left(CredentialServiceError.UnsupportedVCClaimsValue(s"Error: Expiration Time Not valid or expired :$e"))
-        case _ => Right(Instant.now.plus(expirationTime).getEpochSecond)
+        case Some(e)            => Left(ExpirationDateHasPassed(e))
+        case _                  => Right(Instant.now.plus(expirationTime).getEpochSecond)
       })
       claimsUpdated = claims
         .add("iss", issuingDID.did.toString.asJson) // This is issuer did
@@ -1156,6 +1138,8 @@ private class CredentialServiceImpl(
         thid = issue.thid,
         credentials = Seq(IssueCredentialIssuedFormat.SDJWT -> credential.value.getBytes)
       )
+      // End custom
+
       record <- markCredentialGenerated(record, issueCredential)
     } yield record
 
@@ -1165,7 +1149,7 @@ private class CredentialServiceImpl(
       record: IssueCredentialRecord,
       statusListRegistryUrl: String,
       jwtIssuer: JwtIssuer
-  ): ZIO[WalletAccessContext, CredentialServiceError, CredentialStatus] = {
+  ): URIO[WalletAccessContext, CredentialStatus] = {
     val effect = for {
       lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet
       currentStatusList <- lastStatusList
@@ -1194,12 +1178,12 @@ private class CredentialServiceImpl(
 
   override def generateAnonCredsCredential(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] = {
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
       requestCredential <- ZIO
         .fromOption(record.requestCredentialData)
-        .mapError(_ => InvalidFlowStateError(s"No request found for this record: ${record.id}"))
+        .orElse(ZIO.dieMessage(s"No request credential data found in record: ${record.id}"))
       body = IssueCredential.Body(goal_code = Some("Issue Credential"))
       attachments <- createAnonCredsCredential(record).map { credential =>
         Seq(
@@ -1221,16 +1205,18 @@ private class CredentialServiceImpl(
     } yield record
   }
 
-  private def createAnonCredsCredential(record: IssueCredentialRecord) = {
+  private def createAnonCredsCredential(
+      record: IssueCredentialRecord
+  ): URIO[WalletAccessContext, AnoncredCredential] = {
     for {
       credentialDefinitionId <- ZIO
         .fromOption(record.credentialDefinitionId)
-        .mapError(_ => CredentialServiceError.UnexpectedError(s"No cred def Id found un record: ${record.id}"))
+        .orElse(ZIO.dieMessage(s"No credential definition Id found in record: ${record.id}"))
       credentialDefinition <- getCredentialDefinition(credentialDefinitionId)
       cd = anoncreds.AnoncredCredentialDefinition(credentialDefinition.definition.toString)
       offerCredential <- ZIO
         .fromOption(record.offerCredentialData)
-        .mapError(_ => InvalidFlowStateError(s"No offer found for this record: ${record.id}"))
+        .orElse(ZIO.dieMessage(s"No offer credential data found in record: ${record.id}"))
       offerCredentialAttachmentData <- ZIO
         .fromOption(
           offerCredential.attachments
@@ -1241,11 +1227,11 @@ private class CredentialServiceImpl(
               case _             => None
             }
         )
-        .mapError(_ => InvalidFlowStateError(s"No AnonCreds offer attachment found"))
+        .orElse(ZIO.dieMessage(s"No 'AnonCreds' offer credential attachment found in record: ${record.id}"))
       credentialOffer = anoncreds.AnoncredCredentialOffer(offerCredentialAttachmentData)
       requestCredential <- ZIO
         .fromOption(record.requestCredentialData)
-        .mapError(_ => InvalidFlowStateError(s"No request found for this record: ${record.id}"))
+        .orElse(ZIO.dieMessage(s"No request credential data found in record: ${record.id}"))
       requestCredentialAttachmentData <- ZIO
         .fromOption(
           requestCredential.attachments
@@ -1256,7 +1242,7 @@ private class CredentialServiceImpl(
               case _             => None
             }
         )
-        .mapError(_ => InvalidFlowStateError(s"No AnonCreds request attachment found"))
+        .orElse(ZIO.dieMessage(s"No 'AnonCreds' request credential attachment found in record: ${record.id}"))
       credentialRequest = anoncreds.AnoncredCredentialRequest(requestCredentialAttachmentData)
       attrValues = offerCredential.body.credential_preview.body.attributes.map { attr =>
         (attr.name, attr.value)
@@ -1291,25 +1277,28 @@ private class CredentialServiceImpl(
     } yield maybeOptions
   }
 
-  private def getJwtFromRequestCredentialData(record: IssueCredentialRecord) = {
+  private def getJwtFromRequestCredentialData(record: IssueCredentialRecord): UIO[JWT] = {
     for {
       request <- ZIO
         .fromOption(record.requestCredentialData)
-        .mapError(_ => CredentialServiceError.UnexpectedError(s"Request data not found in record: ${record.id}"))
+        .orElse(ZIO.dieMessage(s"Request data not found in record: ${record.id}"))
       attachmentDescriptor <- ZIO
         .fromOption(request.attachments.headOption)
-        .mapError(_ => UnexpectedError(s"Attachments not found in record: ${record.id}"))
+        .orElse(ZIO.dieMessage(s"Attachment not found in record: ${record.id}"))
       jwt <- attachmentDescriptor.data match
         case Base64(b64) =>
           ZIO.succeed {
             val base64Decoded = new String(java.util.Base64.getDecoder.decode(b64))
             JWT(base64Decoded)
           }
-        case _ => ZIO.fail(UnexpectedError(s"Attachment doesn't contain Base64Data: ${record.id}"))
+        case _ => ZIO.dieMessage(s"Attachment does not contain Base64Data: ${record.id}")
     } yield jwt
   }
 
-  private def validateRequestCredentialDataProof(maybeOptions: Option[Options], jwt: JWT) = {
+  private def validateRequestCredentialDataProof(
+      maybeOptions: Option[Options],
+      jwt: JWT
+  ): IO[CredentialRequestValidationFailed, JwtPresentationPayload] = {
     for {
       _ <- maybeOptions match
         case None => ZIO.unit
@@ -1317,7 +1306,7 @@ private class CredentialServiceImpl(
           JwtPresentation.validatePresentation(jwt, options.domain, options.challenge) match
             case ZValidation.Success(log, value) => ZIO.unit
             case ZValidation.Failure(log, error) =>
-              ZIO.fail(CredentialRequestValidationError("JWT presentation domain/validation validation failed"))
+              ZIO.fail(CredentialRequestValidationFailed("domain/challenge proof validation failed"))
 
       clock = java.time.Clock.system(ZoneId.systemDefault)
 
@@ -1336,16 +1325,16 @@ private class CredentialServiceImpl(
             leeway = Duration.Zero
           )
         )(didResolver, genericUriResolver)(clock)
-        .mapError(errors => CredentialRequestValidationError(s"JWT presentation verification failed: $errors"))
+        .mapError(errors => CredentialRequestValidationFailed(errors*))
 
       result <- verificationResult match
         case ZValidation.Success(log, value) => ZIO.unit
         case ZValidation.Failure(log, error) =>
-          ZIO.fail(CredentialRequestValidationError(s"JWT presentation verification failed: $error"))
+          ZIO.fail(CredentialRequestValidationFailed(s"JWT presentation verification failed: $error"))
 
       jwtPresentation <- ZIO
         .fromTry(JwtPresentation.decodeJwt(jwt))
-        .mapError(t => CredentialRequestValidationError(s"JWT presentation decoding failed: ${t.getMessage()}"))
+        .mapError(t => CredentialRequestValidationFailed(s"JWT presentation decoding failed: ${t.getMessage}"))
     } yield jwtPresentation
   }
 

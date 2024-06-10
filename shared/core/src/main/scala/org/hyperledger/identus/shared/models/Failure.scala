@@ -16,7 +16,9 @@ object Failure {
   }
 }
 
-case class UnmanagedFailureException(val failure: Failure) extends Throwable
+case class UnmanagedFailureException(val failure: Failure) extends Throwable {
+  override def getMessage: String = failure.toString
+}
 
 sealed class StatusCode(val code: Int)
 

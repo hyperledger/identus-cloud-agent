@@ -12,7 +12,6 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{
 }
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{Duration, IO, UIO, URIO, ZIO}
@@ -173,7 +172,7 @@ object CredentialService {
 
   def convertAttributesToJsonClaims(
       attributes: Seq[Attribute]
-  ): IO[CredentialServiceError, JsonObject] = {
+  ): IO[CredentialServiceErrorNew, JsonObject] = {
     for {
       claims <- ZIO.foldLeft(attributes)(JsonObject()) { case (jsonObject, attr) =>
         attr.media_type match
@@ -184,28 +183,7 @@ object CredentialService {
             val jsonBytes = java.util.Base64.getUrlDecoder.decode(attr.value.getBytes(StandardCharsets.UTF_8))
             io.circe.parser.parse(new String(jsonBytes, StandardCharsets.UTF_8)) match
               case Right(value) => ZIO.succeed(jsonObject.add(attr.name, value))
-              case Left(error)  => ZIO.fail(UnsupportedVCClaimsValue(error.message))
-
-          case Some(media_type) =>
-            ZIO.fail(UnsupportedVCClaimsMediaType(media_type))
-      }
-    } yield claims
-  }
-
-  def convertAttributesToMapClaims(
-      attributes: Seq[Attribute]
-  ): IO[CredentialServiceError, JsonObject] = {
-    for {
-      claims <- ZIO.foldLeft(attributes)(JsonObject()) { case (jsonObject, attr) =>
-        attr.media_type match
-          case None =>
-            ZIO.succeed(jsonObject.add(attr.name, attr.value.asJson))
-
-          case Some("application/json") =>
-            val jsonBytes = java.util.Base64.getUrlDecoder.decode(attr.value.getBytes(StandardCharsets.UTF_8))
-            io.circe.parser.parse(new String(jsonBytes, StandardCharsets.UTF_8)) match
-              case Right(value) => ZIO.succeed(jsonObject.add(attr.name, value))
-              case Left(error)  => ZIO.fail(UnsupportedVCClaimsValue(error.message))
+              case Left(error)  => ZIO.fail(VCClaimsValueParsingError(error.message))
 
           case Some(media_type) =>
             ZIO.fail(UnsupportedVCClaimsMediaType(media_type))
