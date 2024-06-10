@@ -1387,7 +1387,7 @@ private class CredentialServiceImpl(
         fromDID = issue.from,
         toDID = issue.to,
         thid = issue.thid,
-        credentials = Seq(IssueCredentialIssuedFormat.SDJWT -> credential.value.getBytes)
+        credentials = Seq(IssueCredentialIssuedFormat.SDJWT -> credential.compact.getBytes)
       )
       record <- markCredentialGenerated(record, issueCredential)
     } yield record

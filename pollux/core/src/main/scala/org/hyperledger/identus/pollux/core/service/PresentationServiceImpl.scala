@@ -16,7 +16,7 @@ import org.hyperledger.identus.pollux.core.model.presentation.{SdJwtPresentation
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import org.hyperledger.identus.pollux.core.service.serdes.*
-import org.hyperledger.identus.pollux.sdjwt.{CredentialJson, PresentationJson, SDJWT}
+import org.hyperledger.identus.pollux.sdjwt.{CredentialCompact, PresentationCompact, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
@@ -144,20 +144,14 @@ private class PresentationServiceImpl(
           )
         )
       )
-      // return presentationJson
-      presentationJson <- createSDJwtPresentationPayloadFromCredential(
+
+      presentationCompact <- createSDJwtPresentationPayloadFromCredential(
         issuedCredentials,
         sdJwtClaimsToDisclose,
         requestPresentation,
         prover
       )
-      presentationPayload <- ZIO.succeed(
-        SdJwtPresentationPayload(
-          claimsToDisclose = sdJwtClaimsToDisclose,
-          presentation = presentationJson,
-          options = None
-        )
-      )
+      presentationPayload <- ZIO.succeed(presentationCompact)
 
     } yield presentationJson
   }
@@ -514,14 +508,16 @@ private class PresentationServiceImpl(
       claimsToDisclose: SdJwtCredentialToDisclose,
       requestPresentation: RequestPresentation,
       prover: Issuer
-  ): IO[PresentationError, PresentationJson] = {
+  ): IO[PresentationError, PresentationCompact] = {
 
     val verifiableCredentials: Either[
       PresentationError.PresentationDecodingError,
-      Seq[CredentialJson]
+      Seq[CredentialCompact]
     ] = issuedCredentials.map { signedCredential =>
       decode[org.hyperledger.identus.mercury.model.Base64](signedCredential)
-        .flatMap(x => Right(CredentialJson(new String(java.util.Base64.getDecoder.decode(x.base64)))))
+        .flatMap(x =>
+          Right(CredentialCompact.unsafeFromCompact(new String(java.util.Base64.getDecoder.decode(x.base64))))
+        )
         .left
         .map(err => PresentationDecodingError(s"JsonData decoding error: $err"))
     }.sequence

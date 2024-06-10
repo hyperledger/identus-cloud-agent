@@ -842,21 +842,23 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                           presentation <- ZIO.succeed(PresentationJson(base64Decoded))
                           iss <- ZIO.fromEither(presentation.iss)
                           ed25519PublicKey <- resolveToEd25519PublicKey(iss)
-                          verifiedClaims = SDJWT.getVerifiedClaims(
+                          ret = SDJWT.getVerifiedClaims(
                             IssuerPublicKey(ed25519PublicKey),
                             presentation
                           )
-                          _ <- ZIO.logInfo(s"ClaimsValidationResult: $verifiedClaims")
-                          result: SDJWT.ClaimsValidationResult =
-                            verifiedClaims match {
-                              case validClaims: SDJWT.ValidClaims =>
-                                validClaims.verifyDiscoseClaims(
-                                  Json.Obj()
-                                )
-                              case validAnyMatch: SDJWT.ValidAnyMatch.type => validAnyMatch
-                              case invalid: SDJWT.Invalid                  => invalid
-                            }
-                        } yield result
+                          _ <- ZIO.logInfo(s"ClaimsValidationResult: $ret")
+                          // FIXME REMOVE cleanup
+                          // _ <- ZIO.logInfo(s"ClaimsValidationResult: ${sdJwtPresentationPayload.claimsToDisclose}")
+                          // result: SDJWT.ClaimsValidationResult =
+                          //   verifiedClaims match {
+                          //     case validClaims: SDJWT.ValidClaims =>
+                          //       validClaims.claims // This is all claims
+                          //     // TODO
+                          //     // .verifyDiscoseClaims(sdJwtPresentationPayload.claimsToDisclose.asObject.getOrElse(Json.Obj()))
+                          //     case validAnyMatch: SDJWT.ValidAnyMatch.type => validAnyMatch
+                          //     case invalid: SDJWT.Invalid                  => invalid
+                          //   }
+                        } yield ret
                         verifiedClaims
                           .mapError(error =>
                             UnexpectedError(
