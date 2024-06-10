@@ -1,17 +1,49 @@
 package org.hyperledger.identus.pollux.core.model.error
 
 import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
+import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 
-sealed trait CredentialSchemaError {
-  def message: String
+sealed trait CredentialSchemaError(
+    val statusCode: StatusCode,
+    val userFacingMessage: String
+) extends Failure {
+  override val namespace: String = "CredentialSchema"
 }
 
 object CredentialSchemaError {
-  case class SchemaError(schemaError: JsonSchemaError) extends CredentialSchemaError {
-    def message: String = schemaError.error
-  }
-  case class URISyntaxError(message: String) extends CredentialSchemaError
-  case class CredentialSchemaParsingError(message: String) extends CredentialSchemaError
-  case class UnsupportedCredentialSchemaType(message: String) extends CredentialSchemaError
-  case class UnexpectedError(message: String) extends CredentialSchemaError
+  final case class InvalidURI(uri: String)
+      extends CredentialSchemaError(
+        StatusCode.BadRequest,
+        s"The URI to dereference is invalid: uri=[$uri]"
+      )
+
+  final case class CredentialSchemaParsingError(cause: String)
+      extends CredentialSchemaError(
+        StatusCode.BadRequest,
+        s"Failed to parse the schema content as Json: cause[$cause]"
+      )
+
+  final case class CredentialSchemaValidationError(schemaError: JsonSchemaError)
+      extends CredentialSchemaError(
+        StatusCode.UnprocessableContent,
+        s"The credential schema validation failed: schemaError[${schemaError.error}]"
+      )
+
+  final case class VCClaimsParsingError(cause: String)
+      extends CredentialSchemaError(
+        StatusCode.BadRequest,
+        s"Failed to parse the VC claims as Json: cause[$cause]"
+      )
+
+  final case class VCClaimValidationError(name: String, cause: String)
+      extends CredentialSchemaError(
+        StatusCode.UnprocessableContent,
+        s"The VC claim validation failed: claim=$name, cause=[$cause]"
+      )
+
+  final case class UnsupportedCredentialSchemaType(`type`: String)
+      extends CredentialSchemaError(
+        StatusCode.BadRequest,
+        s"Unsupported credential schema type: ${`type`}"
+      )
 }

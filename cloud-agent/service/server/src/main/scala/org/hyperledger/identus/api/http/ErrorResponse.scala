@@ -41,8 +41,12 @@ object ErrorResponse {
   given schema: Schema[ErrorResponse] = Schema.derived
 
   private val CamelCaseSplitRegex: Regex = "(([A-Z]?[a-z]+)|([A-Z]))".r
-  given failureToErrorResponseConversionZIO[R, A]: Conversion[ZIO[R, Failure, A], ZIO[R, ErrorResponse, A]] = {
-    effect => effect.mapError { failure => failure }
+  given failureToErrorResponseConversionZIO[R, A]
+      : Conversion[ZIO[R, Failure | ErrorResponse, A], ZIO[R, ErrorResponse, A]] = { effect =>
+    effect.mapError {
+      case failure: Failure => failure
+      case e: ErrorResponse => e
+    }
   }
 
   given failureToErrorResponseConversion[R, A]: Conversion[Failure, ErrorResponse] = { failure =>

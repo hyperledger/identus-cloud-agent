@@ -21,7 +21,6 @@ import org.hyperledger.identus.mercury.protocol.reportproblem.v2.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
-import org.hyperledger.identus.pollux.core.model.presentation.SdJwtPresentationPayload
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
 import org.hyperledger.identus.pollux.sdjwt.{IssuerPublicKey, PresentationJson, SDJWT}
@@ -84,12 +83,10 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         .attempt(DidCommID(credentialRecordId))
         .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid DidCommID"))
       vcSubjectId <- credentialService
-        .getIssueCredentialRecord(credentialRecordUuid)
-        .someOrFail(CredentialServiceError.RecordIdNotFound(credentialRecordUuid))
+        .findById(credentialRecordUuid)
+        .someOrFail(CredentialServiceError.RecordNotFound(credentialRecordUuid))
         .map(_.subjectId)
-        .someOrFail(
-          CredentialServiceError.UnexpectedError(s"VC SubjectId not found in credential record: $credentialRecordUuid")
-        )
+        .someOrElseZIO(ZIO.dieMessage(s"VC SubjectId not found in credential record: $credentialRecordUuid"))
       proverDID <- ZIO
         .fromEither(PrismDID.fromString(vcSubjectId))
         .mapError(e =>
@@ -121,12 +118,10 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         .attempt(DidCommID(credentialRecordId))
         .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid DidCommID"))
       vcSubjectId <- credentialService
-        .getIssueCredentialRecord(credentialRecordUuid)
-        .someOrFail(CredentialServiceError.RecordIdNotFound(credentialRecordUuid))
+        .findById(credentialRecordUuid)
+        .someOrFail(CredentialServiceError.RecordNotFound(credentialRecordUuid))
         .map(_.subjectId)
-        .someOrFail(
-          CredentialServiceError.UnexpectedError(s"VC SubjectId not found in credential record: $credentialRecordUuid")
-        )
+        .someOrElseZIO(ZIO.dieMessage(s"VC SubjectId not found in credential record: $credentialRecordUuid"))
       proverDID <- ZIO
         .fromEither(PrismDID.fromString(vcSubjectId))
         .mapError(e =>
