@@ -1,24 +1,29 @@
 package org.hyperledger.identus.issue.controller
 
-import org.hyperledger.identus.agent.server.ControllerHelper
 import org.hyperledger.identus.agent.server.config.AppConfig
+import org.hyperledger.identus.agent.server.ControllerHelper
+import org.hyperledger.identus.agent.walletapi.model.error.GetManagedDIDError
 import org.hyperledger.identus.agent.walletapi.model.PublicationState
 import org.hyperledger.identus.agent.walletapi.model.PublicationState.{Created, PublicationPending, Published}
-import org.hyperledger.identus.agent.walletapi.model.error.GetManagedDIDError
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.util.PaginationUtils
 import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.model.error.DIDResolutionError
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.service.ConnectionService
-import org.hyperledger.identus.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest, IssueCredentialRecord, IssueCredentialRecordPage}
+import org.hyperledger.identus.issue.controller.http.{
+  AcceptCredentialOfferRequest,
+  CreateIssueCredentialRecordRequest,
+  IssueCredentialRecord,
+  IssueCredentialRecordPage
+}
+import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
 import org.hyperledger.identus.pollux.core.service.CredentialService
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}
@@ -154,7 +159,7 @@ class IssueControllerImpl(
       outcome <- credentialService.findById(id)
     } yield (outcome map IssueCredentialRecord.fromDomain)
     mapIssueErrors(result) someOrFail CredentialServiceError.RecordNotFound(DidCommID(recordId))
-     // TODO - Tech Debt - Review if this is safe. Currently is because DidCommID is opaque type => string with no validation
+    // TODO - Tech Debt - Review if this is safe. Currently is because DidCommID is opaque type => string with no validation
   }
 
   override def acceptCredentialOffer(recordId: String, request: AcceptCredentialOfferRequest)(implicit
