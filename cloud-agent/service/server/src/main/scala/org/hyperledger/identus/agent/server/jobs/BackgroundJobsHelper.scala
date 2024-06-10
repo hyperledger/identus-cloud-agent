@@ -5,6 +5,7 @@ import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.castor.core.model.did.{LongFormPrismDID, PrismDID, VerificationRelationship}
+import org.hyperledger.identus.castor.core.model.did.EllipticCurve
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.{AgentPeerService, DidAgent}
 import org.hyperledger.identus.mercury.model.DidId
@@ -12,14 +13,18 @@ import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.sdjwt.SDJWT.*
 import org.hyperledger.identus.pollux.vc.jwt.{DIDResolutionFailed, DIDResolutionSucceeded, ES256KSigner, EdSigner, *}
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, Issuer as JwtIssuer}
-import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, KmpEd25519KeyOps}
-import org.hyperledger.identus.shared.crypto.KmpEd25519KeyOps
-import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
-import org.hyperledger.identus.shared.crypto.X25519KeyPair
+import org.hyperledger.identus.shared.crypto.{
+  Ed25519KeyPair,
+  Ed25519PublicKey,
+  KmpEd25519KeyOps,
+  Secp256k1KeyPair,
+  X25519KeyPair
+}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{ZIO, ZLayer}
 
 import java.util.Base64
+
 trait BackgroundJobsHelper {
 
   def getLongForm(
@@ -52,7 +57,11 @@ trait BackgroundJobsHelper {
         .resolveDID(jwtIssuerDID)
         .mapError(e => RuntimeException(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
         .someOrFail(RuntimeException(s"Issuing DID resolution result is not found"))
-        .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
+        .map { case (_, didData) =>
+          didData.publicKeys
+            .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.SECP256K1)
+            .map(_.id)
+        }
         .someOrFail(
           RuntimeException(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
         )
@@ -120,7 +129,11 @@ trait BackgroundJobsHelper {
         .resolveDID(jwtIssuerDID)
         .mapError(e => RuntimeException(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
         .someOrFail(RuntimeException(s"Issuing DID resolution result is not found"))
-        .map { case (_, didData) => didData.publicKeys.find(_.purpose == verificationRelationship).map(_.id) }
+        .map { case (_, didData) =>
+          didData.publicKeys
+            .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.ED25519)
+            .map(_.id)
+        }
         .someOrFail(
           RuntimeException(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
         )

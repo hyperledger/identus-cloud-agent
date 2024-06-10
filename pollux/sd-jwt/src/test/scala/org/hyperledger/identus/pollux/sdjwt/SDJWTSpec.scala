@@ -119,7 +119,8 @@ object SDJWTSpec extends ZIOSpecDefault {
     test("getVerifiedClaims presentation") {
       val credential = SDJWT.issueCredential(ISSUER_KEY, CLAIMS)
       val presentation = SDJWT.createPresentation(credential, CLAIMS_QUERY)
-      val ret = SDJWT.getVerifiedClaims(ISSUER_KEY_PUBLIC, presentation, CLAIMS_PRESENTED)
+      println(presentation)
+      val ret = SDJWT.getVerifiedClaims(ISSUER_KEY_PUBLIC, presentation)
       assertTrue(
         """{"iss":"did:example:issuer","iat":1683000000,"exp":1883000000,"address":{"country":"DE"}}"""
           .fromJson[ast.Json.Obj]
@@ -129,8 +130,9 @@ object SDJWTSpec extends ZIOSpecDefault {
     },
     test("issue credential without sub & iat and getVerifiedClaims") {
       val credential = SDJWT.issueCredential(ISSUER_KEY, CLAIMS_WITHOUT_SUB_IAT)
+      // verfier asking to disclose
       val presentation = SDJWT.createPresentation(credential, CLAIMS_QUERY)
-      val ret = SDJWT.getVerifiedClaims(ISSUER_KEY_PUBLIC, presentation, CLAIMS_PRESENTED)
+      val ret = SDJWT.getVerifiedClaims(ISSUER_KEY_PUBLIC, presentation)
       assertTrue(
         """{"iss":"did:example:issuer","exp":1883000000,"address":{"country":"DE"}}"""
           .fromJson[ast.Json.Obj]
@@ -215,6 +217,7 @@ object SDJWTSpec extends ZIOSpecDefault {
       val issuerPublicKey = IssuerPublicKey(ed25519KeyPair.publicKey)
 
       val credential = SDJWT.issueCredential(issuerKey, CLAIMS)
+      // verifer addres
       val presentation = SDJWT.createPresentation(credential, CLAIMS_PRESENTED)
       val ret = SDJWT.verifyAndComparePresentation(issuerPublicKey, presentation, CLAIMS_PRESENTED)
       assertTrue(ret == SDJWT.ValidAnyMatch)

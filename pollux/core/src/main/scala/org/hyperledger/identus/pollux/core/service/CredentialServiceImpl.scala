@@ -11,6 +11,7 @@ import org.hyperledger.identus.castor.core.model.did.{
   PrismDID,
   VerificationRelationship
 }
+import org.hyperledger.identus.castor.core.model.did.EllipticCurve
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
@@ -475,7 +476,11 @@ private class CredentialServiceImpl(
     } yield longFormPrismDID
   }
 
-  private[this] def getKeyId(did: PrismDID, verificationRelationship: VerificationRelationship): UIO[String] = {
+  private[this] def getKeyId(
+      did: PrismDID,
+      verificationRelationship: VerificationRelationship,
+      ellipticCurve: EllipticCurve
+  ): UIO[String] = {
     for {
       maybeDidData <- didService
         .resolveDID(did)
@@ -485,7 +490,11 @@ private class CredentialServiceImpl(
         .mapError(_ => DIDNotResolved(did))
         .orDieAsUnmanagedFailure
       keyId <- ZIO
-        .fromOption(didData._2.publicKeys.find(_.purpose == verificationRelationship).map(_.id))
+        .fromOption(
+          didData._2.publicKeys
+            .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == ellipticCurve)
+            .map(_.id)
+        )
         .mapError(_ => KeyNotFoundInDID(did, verificationRelationship))
         .orDieAsUnmanagedFailure
     } yield keyId
@@ -496,7 +505,7 @@ private class CredentialServiceImpl(
       verificationRelationship: VerificationRelationship
   ): URIO[WalletAccessContext, JwtIssuer] = {
     for {
-      issuingKeyId <- getKeyId(jwtIssuerDID, verificationRelationship)
+      issuingKeyId <- getKeyId(jwtIssuerDID, verificationRelationship, EllipticCurve.SECP256K1)
       ecKeyPair <- managedDIDService
         .javaKeyPairWithDID(jwtIssuerDID.asCanonical, issuingKeyId)
         .someOrFail(KeyPairNotFoundInWallet(jwtIssuerDID, issuingKeyId, "Secp256k1"))
@@ -515,7 +524,7 @@ private class CredentialServiceImpl(
       verificationRelationship: VerificationRelationship
   ): URIO[WalletAccessContext, Ed25519KeyPair] = {
     for {
-      issuingKeyId <- getKeyId(jwtIssuerDID, verificationRelationship)
+      issuingKeyId <- getKeyId(jwtIssuerDID, verificationRelationship, EllipticCurve.ED25519)
       ed25519keyPair <- managedDIDService
         .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
         .map(_.collect { case keyPair: Ed25519KeyPair => keyPair })
@@ -540,7 +549,6 @@ private class CredentialServiceImpl(
     for {
       ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
     } yield {
-      val octetKeyPair = ed25519keyPair.toOctetKeyPair
       JwtIssuer(
         org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
         EdSigner(ed25519keyPair),

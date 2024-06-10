@@ -24,7 +24,7 @@ import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
 import org.hyperledger.identus.pollux.core.model.presentation.SdJwtPresentationPayload
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
-import org.hyperledger.identus.pollux.sdjwt.{IssuerPublicKey, SDJWT}
+import org.hyperledger.identus.pollux.sdjwt.{IssuerPublicKey, PresentationJson, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, JWT, JwtPresentation}
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.http.*
@@ -839,21 +839,19 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                       case Base64(data) =>
                         val base64Decoded = new String(java.util.Base64.getDecoder.decode(data))
                         val verifiedClaims = for {
-                          sdJwtPresentationPayload <- ZIO.fromEither(base64Decoded.fromJson[SdJwtPresentationPayload])
-                          iss <- ZIO.fromEither(sdJwtPresentationPayload.presentation.iss)
+                          presentation <- ZIO.succeed(PresentationJson(base64Decoded))
+                          iss <- ZIO.fromEither(presentation.iss)
                           ed25519PublicKey <- resolveToEd25519PublicKey(iss)
                           verifiedClaims = SDJWT.getVerifiedClaims(
                             IssuerPublicKey(ed25519PublicKey),
-                            sdJwtPresentationPayload.presentation,
-                            sdJwtPresentationPayload.claimsToDisclose.toJson
+                            presentation
                           )
                           _ <- ZIO.logInfo(s"ClaimsValidationResult: $verifiedClaims")
-                          _ <- ZIO.logInfo(s"ClaimsValidationResult: ${sdJwtPresentationPayload.claimsToDisclose}")
                           result: SDJWT.ClaimsValidationResult =
                             verifiedClaims match {
                               case validClaims: SDJWT.ValidClaims =>
                                 validClaims.verifyDiscoseClaims(
-                                  sdJwtPresentationPayload.claimsToDisclose.asObject.getOrElse(Json.Obj())
+                                  Json.Obj()
                                 )
                               case validAnyMatch: SDJWT.ValidAnyMatch.type => validAnyMatch
                               case invalid: SDJWT.Invalid                  => invalid
