@@ -4,10 +4,15 @@ import io.circe.{Json, JsonObject}
 import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.issuecredential.{Attribute, IssueCredential, OfferCredential, RequestCredential}
+import org.hyperledger.identus.mercury.protocol.issuecredential.{
+  Attribute,
+  IssueCredential,
+  OfferCredential,
+  RequestCredential
+}
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, CredentialServiceErrorNew}
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceErrorNew.*
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{Duration, IO, UIO, URIO, ZIO}
 
@@ -167,7 +172,7 @@ object CredentialService {
 
   def convertAttributesToJsonClaims(
       attributes: Seq[Attribute]
-  ): IO[CredentialServiceErrorNew, JsonObject] = {
+  ): IO[CredentialServiceError, JsonObject] = {
     for {
       claims <- ZIO.foldLeft(attributes)(JsonObject()) { case (jsonObject, attr) =>
         attr.media_type match
