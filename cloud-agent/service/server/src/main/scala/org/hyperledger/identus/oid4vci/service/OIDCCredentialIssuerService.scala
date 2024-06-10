@@ -7,7 +7,8 @@ import org.hyperledger.identus.oid4vci.domain.IssuanceSession
 import org.hyperledger.identus.oid4vci.http.*
 import org.hyperledger.identus.oid4vci.storage.IssuanceSessionStorage
 import org.hyperledger.identus.pollux.core.service.CredentialService
-import org.hyperledger.identus.pollux.vc.jwt.{DID, Issuer, JWT, JwtCredential, W3cCredentialPayload}
+import org.hyperledger.identus.pollux.vc.jwt.{DID, Issuer, JWT, JWTVerification, JwtCredential, W3cCredentialPayload}
+import org.hyperledger.identus.pollux.vc.jwt.DidResolver
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
@@ -24,7 +25,7 @@ trait OIDCCredentialIssuerService {
   import OIDCCredentialIssuerService.Error
   import OIDCCredentialIssuerService.Errors.*
 
-  def verifyJwtProof(jwt: String): IO[InvalidProof, Boolean]
+  def verifyJwtProof(jwt: JWT): IO[InvalidProof, Boolean]
 
   def validateCredentialDefinition(
       credentialDefinition: CredentialDefinition
@@ -71,13 +72,25 @@ object OIDCCredentialIssuerService {
 case class OIDCCredentialIssuerServiceImpl(
     didNonSecretStorage: DIDNonSecretStorage,
     credentialService: CredentialService,
-    issuanceSessionStorage: IssuanceSessionStorage
+    issuanceSessionStorage: IssuanceSessionStorage,
+    didResolver: DidResolver
 ) extends OIDCCredentialIssuerService {
 
   import OIDCCredentialIssuerService.Error
   import OIDCCredentialIssuerService.Errors.*
-  override def verifyJwtProof(jwt: String): IO[InvalidProof, Boolean] = {
-    ZIO.succeed(true) // TODO: implement
+
+  override def verifyJwtProof(jwt: JWT): IO[InvalidProof, Boolean] = {
+    for {
+      verifiedJwtSignature <- JWTVerification
+        .validateEncodedJwtWithKeyId(
+          jwt,
+          proofPurpose = Some(VerificationRelationship.AssertionMethod),
+          didResolver = didResolver
+        )
+        .mapError(InvalidProof.apply)
+      _ <- verifiedJwtSignature.toZIO.mapError(InvalidProof.apply)
+      _ <- ZIO.succeed(println(s"JWT proof is verified: ${jwt.value}"))
+    } yield true
   }
 
   override def validateCredentialDefinition(
@@ -213,8 +226,8 @@ case class OIDCCredentialIssuerServiceImpl(
 
 object OIDCCredentialIssuerServiceImpl {
   val layer: URLayer[
-    DIDNonSecretStorage & CredentialService & IssuanceSessionStorage,
+    DIDNonSecretStorage & CredentialService & IssuanceSessionStorage & DidResolver,
     OIDCCredentialIssuerService
   ] =
-    ZLayer.fromFunction(OIDCCredentialIssuerServiceImpl(_, _, _))
+    ZLayer.fromFunction(OIDCCredentialIssuerServiceImpl(_, _, _, _))
 }

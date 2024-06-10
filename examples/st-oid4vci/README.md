@@ -11,8 +11,8 @@
 
 Example of the script to install the required packages in a virtual environment:
 ```shell
-python -m venv {path-to-the-project-dir}/open-enterprise-agent/examples/st-oid4vci/python-env
-source {path-to-the-project-dir}/open-enterprise-agent/examples/st-oid4vci/python-env/bin/activate
+python -m venv {path-to-the-project-dir}/identus-cloud-agent/examples/st-oid4vci/python-env
+source {path-to-the-project-dir}/identus-cloud-agent/examples/st-oid4vci/python-env/bin/activate
 pip install requests pyjwt cryptography
 ```
 
