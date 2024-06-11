@@ -14,6 +14,10 @@ trait CredentialStatusListRepository {
       id: UUID
   ): UIO[Option[CredentialStatusList]]
 
+  def getById(
+      id: UUID
+  ): UIO[CredentialStatusList]
+
   def createNewForTheWallet(
       jwtIssuer: Issuer,
       statusListRegistryUrl: String

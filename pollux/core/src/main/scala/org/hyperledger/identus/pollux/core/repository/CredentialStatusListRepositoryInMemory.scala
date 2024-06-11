@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
-import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, *}
+import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.vc.jwt.{revocation, Issuer, StatusPurpose}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{
@@ -66,6 +66,13 @@ class CredentialStatusListRepositoryInMemory(
     stores <- ZIO.foreach(refs.values.toList)(_.get)
     found = stores.flatMap(_.values).find(_.id == id)
   } yield found
+
+  def getById(id: UUID): UIO[CredentialStatusList] = for {
+    refs <- walletToStatusListRefs.get
+    stores <- ZIO.foreach(refs.values.toList)(_.get)
+    maybeRecord = stores.flatMap(_.values).find(_.id == id)
+    record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $id"))(maybeRecord).orDie
+  } yield record
 
   def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]] = for {
     storageRef <- walletToStatusListStorageRefs
