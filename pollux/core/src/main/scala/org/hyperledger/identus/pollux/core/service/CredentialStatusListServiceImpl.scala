@@ -1,7 +1,10 @@
 package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, CredentialStatusListWithCreds, DidCommID}
-import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError.StatusListNotFound
+import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError.{
+  StatusListNotFound,
+  StatusListNotFoundForIssueCredentialRecord
+}
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
@@ -25,9 +28,10 @@ class CredentialStatusListServiceImpl(
 
   def revokeByIssueCredentialRecordId(
       id: DidCommID
-  ): URIO[WalletAccessContext, Unit] =
+  ): ZIO[WalletAccessContext, StatusListNotFoundForIssueCredentialRecord, Unit] =
     for {
-      // TODO validate IssueCredentialRecord id exists and fail with NotFound if not
+      exists <- credentialStatusListRepository.existsForIssueCredentialRecordId(id)
+      _ <- if (exists) ZIO.unit else ZIO.fail(StatusListNotFoundForIssueCredentialRecord(id))
       _ <- credentialStatusListRepository.revokeByIssueCredentialRecordId(id)
     } yield ()
 

@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.core.model.error
 
+import org.hyperledger.identus.pollux.core.model.DidCommID
 import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 
 import java.util.UUID
@@ -16,5 +17,11 @@ object CredentialStatusListServiceError {
       extends CredentialStatusListServiceError(
         StatusCode.NotFound,
         s"There is no credential status record matching the provided identifier: id=$id"
+      )
+
+  final case class StatusListNotFoundForIssueCredentialRecord(id: DidCommID)
+      extends CredentialStatusListServiceError(
+        StatusCode.NotFound,
+        s"There is no credential status record matching the provided issue credential record identifier: id=${id.value}"
       )
 }

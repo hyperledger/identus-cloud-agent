@@ -67,6 +67,12 @@ class CredentialStatusListRepositoryInMemory(
     found = stores.flatMap(_.values).find(_.id == id)
   } yield found
 
+  override def existsForIssueCredentialRecordId(id: DidCommID): UIO[Boolean] = for {
+    refs <- statusListToCredInStatusListRefs.get
+    stores <- ZIO.foreach(refs.values)(_.get)
+    exists = stores.flatMap(_.values).exists(_.issueCredentialRecordId == id)
+  } yield exists
+
   def getById(id: UUID): UIO[CredentialStatusList] = for {
     refs <- walletToStatusListRefs.get
     stores <- ZIO.foreach(refs.values.toList)(_.get)

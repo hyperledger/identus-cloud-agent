@@ -52,6 +52,22 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       record <- ZIO.fromOption(maybeRecord).orDieWith(_ => RuntimeException(s"Record not found: $id"))
     } yield record
 
+  def existsForIssueCredentialRecordId(id: DidCommID): UIO[Boolean] = {
+    val cxnIO =
+      sql"""
+           | SELECT COUNT(*)
+           |  FROM public.credentials_in_status_list
+           |  WHERE issue_credential_record_id = $id
+           |""".stripMargin
+        .query[Int]
+        .unique
+
+    cxnIO
+      .map(_ > 0)
+      .transact(xb)
+      .orDie
+  }
+
   def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]] = {
 
     val cxnIO =
