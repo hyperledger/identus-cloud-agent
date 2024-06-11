@@ -10,7 +10,7 @@ let ExternalKeycloakStackConfig = {
   name | String,
   port | Number,
   realm | String,
-  build | String,
+  build | Dyn,
   extraEnvs
     | { _ | String }
     | default

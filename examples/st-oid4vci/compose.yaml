@@ -95,7 +95,9 @@ services:
     volumes:
     - ./bootstrap:/hurl
   external-keycloak-issuer:
-    build: ../../../identus-keycloak-plugins
+    build:
+      context: .
+      dockerfile: Dockerfile-keycloak
     command:
     - start-dev
     - --features=preview
