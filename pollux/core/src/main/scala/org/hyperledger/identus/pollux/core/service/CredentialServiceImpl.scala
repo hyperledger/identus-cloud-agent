@@ -744,7 +744,7 @@ private class CredentialServiceImpl(
             .find(_.format.contains(IssueCredentialOfferFormat.Anoncred.name))
             .map(_.data)
             .flatMap {
-              case Base64(value) => Some(new String(java.util.Base64.getDecoder.decode(value)))
+              case Base64(value) => Some(new String(java.util.Base64.getUrlDecoder.decode(value)))
               case _             => None
             }
         )
@@ -1548,7 +1548,7 @@ private class CredentialServiceImpl(
       jwt <- attachmentDescriptor.data match
         case Base64(b64) =>
           ZIO.succeed {
-            val base64Decoded = new String(java.util.Base64.getDecoder.decode(b64))
+            val base64Decoded = new String(java.util.Base64.getUrlDecoder.decode(b64))
             JWT(base64Decoded)
           }
         case _ => ZIO.fail(UnexpectedError(s"Attachment doesn't contain Base64Data: ${record.id}"))

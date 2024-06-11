@@ -686,7 +686,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                     didResolverService <- ZIO.service[JwtDidResolver]
                     credentialsClaimsValidationResult <- p.attachments.head.data match {
                       case Base64(data) =>
-                        val base64Decoded = new String(java.util.Base64.getDecoder.decode(data))
+                        val base64Decoded = new String(java.util.Base64.getUrlDecoder.decode(data))
                         val maybePresentationOptions: Either[PresentationError, Option[
                           org.hyperledger.identus.pollux.core.model.presentation.Options
                         ]] =
@@ -836,7 +836,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                     didResolverService <- ZIO.service[JwtDidResolver]
                     credentialsClaimsValidationResult <- p.attachments.head.data match {
                       case Base64(data) =>
-                        val base64Decoded = new String(java.util.Base64.getDecoder.decode(data))
+                        val base64Decoded = new String(java.util.Base64.getUrlDecoder.decode(data))
                         val verifiedClaims = for {
                           presentation <- ZIO.succeed(PresentationCompact.unsafeFromCompact(base64Decoded))
                           iss <- ZIO.fromEither(presentation.iss)

@@ -514,9 +514,12 @@ private class PresentationServiceImpl(
       PresentationError.PresentationDecodingError,
       Seq[CredentialCompact]
     ] = issuedCredentials.map { signedCredential =>
+      println("******signedCredential***********")
+      println(signedCredential)
+      println("*******signedCredential**********")
       decode[org.hyperledger.identus.mercury.model.Base64](signedCredential)
         .flatMap(x =>
-          Right(CredentialCompact.unsafeFromCompact(new String(java.util.Base64.getDecoder.decode(x.base64))))
+          Right(CredentialCompact.unsafeFromCompact(new String(java.util.Base64.getUrlDecoder.decode(x.base64))))
         )
         .left
         .map(err => PresentationDecodingError(s"JsonData decoding error: $err"))
@@ -525,6 +528,9 @@ private class PresentationServiceImpl(
     import io.circe.parser.decode
     import io.circe.syntax._
     import java.util.Base64
+    println("*****************")
+    println(requestPresentation.attachments.head)
+    println("*****************")
 
     val result: Either[PresentationDecodingError, SDJwtPresentation] =
       requestPresentation.attachments.headOption
@@ -574,7 +580,7 @@ private class PresentationServiceImpl(
     ] =
       issuedCredentials.map { signedCredential =>
         decode[org.hyperledger.identus.mercury.model.Base64](signedCredential)
-          .flatMap(x => Right(new String(java.util.Base64.getDecoder.decode(x.base64))))
+          .flatMap(x => Right(new String(java.util.Base64.getUrlDecoder.decode(x.base64))))
           .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
           .left
           .map(err => PresentationDecodingError(s"JsonData decoding error: $err"))
