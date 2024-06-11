@@ -12,11 +12,11 @@ import org.hyperledger.identus.pollux.anoncreds.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
-import org.hyperledger.identus.pollux.core.model.presentation.{SdJwtPresentationPayload, *}
+import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import org.hyperledger.identus.pollux.core.service.serdes.*
-import org.hyperledger.identus.pollux.sdjwt.{CredentialJson, PresentationJson, SDJWT}
+import org.hyperledger.identus.pollux.sdjwt.{CredentialCompact, PresentationCompact, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
@@ -108,10 +108,10 @@ private class PresentationServiceImpl(
     } yield presentationPayload
   }
 
-  override def createSDJwtPresentationPayloadFromRecord(
+  override def createPresentationFromRecord(
       recordId: DidCommID,
       prover: Issuer
-  ): ZIO[WalletAccessContext, PresentationError, PresentationJson] = {
+  ): ZIO[WalletAccessContext, PresentationError, PresentationCompact] = {
 
     for {
       maybeRecord <- presentationRepository
@@ -142,22 +142,16 @@ private class PresentationServiceImpl(
           )
         )
       )
-      // return presentationJson
-      presentationJson <- createSDJwtPresentationPayloadFromCredential(
+
+      presentationCompact <- createPresentationFromRecord(
         issuedCredentials,
         sdJwtClaimsToDisclose,
         requestPresentation,
         prover
       )
-      presentationPayload <- ZIO.succeed(
-        SdJwtPresentationPayload(
-          claimsToDisclose = sdJwtClaimsToDisclose,
-          presentation = presentationJson,
-          options = None
-        )
-      )
+      presentationPayload <- ZIO.succeed(presentationCompact)
 
-    } yield presentationJson
+    } yield presentationCompact
   }
 
   override def createSDJwtPresentation(
@@ -166,7 +160,7 @@ private class PresentationServiceImpl(
       prover: Issuer,
   ): ZIO[WalletAccessContext, PresentationError, Presentation] = {
     for {
-      presentationPayload <- createSDJwtPresentationPayloadFromRecord(recordId, prover)
+      presentationPayload <- createPresentationFromRecord(recordId, prover)
       presentation <- ZIO.succeed(
         Presentation(
           body = Presentation.Body(
@@ -176,7 +170,7 @@ private class PresentationServiceImpl(
           attachments = Seq(
             AttachmentDescriptor
               .buildBase64Attachment(
-                payload = presentationPayload.value.getBytes,
+                payload = presentationPayload.compact.getBytes,
                 mediaType = Some(PresentCredentialFormat.SDJWT.name)
               )
           ),
@@ -506,19 +500,24 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  private def createSDJwtPresentationPayloadFromCredential(
+  private def createPresentationFromRecord(
       issuedCredentials: Seq[String],
       claimsToDisclose: SdJwtCredentialToDisclose,
       requestPresentation: RequestPresentation,
       prover: Issuer
-  ): IO[PresentationError, PresentationJson] = {
+  ): IO[PresentationError, PresentationCompact] = {
 
     val verifiableCredentials: Either[
       PresentationError.PresentationDecodingError,
-      Seq[CredentialJson]
+      Seq[CredentialCompact]
     ] = issuedCredentials.map { signedCredential =>
+      println("******signedCredential***********")
+      println(signedCredential)
+      println("*******signedCredential**********")
       decode[org.hyperledger.identus.mercury.model.Base64](signedCredential)
-        .flatMap(x => Right(CredentialJson(new String(java.util.Base64.getDecoder.decode(x.base64)))))
+        .flatMap(x =>
+          Right(CredentialCompact.unsafeFromCompact(new String(java.util.Base64.getUrlDecoder.decode(x.base64))))
+        )
         .left
         .map(err => PresentationDecodingError(s"JsonData decoding error: $err"))
     }.sequence
@@ -526,6 +525,9 @@ private class PresentationServiceImpl(
     import io.circe.parser.decode
     import io.circe.syntax._
     import java.util.Base64
+    println("*****************")
+    println(requestPresentation.attachments.head)
+    println("*****************")
 
     val result: Either[PresentationDecodingError, SDJwtPresentation] =
       requestPresentation.attachments.headOption
@@ -575,7 +577,7 @@ private class PresentationServiceImpl(
     ] =
       issuedCredentials.map { signedCredential =>
         decode[org.hyperledger.identus.mercury.model.Base64](signedCredential)
-          .flatMap(x => Right(new String(java.util.Base64.getDecoder.decode(x.base64))))
+          .flatMap(x => Right(new String(java.util.Base64.getUrlDecoder.decode(x.base64))))
           .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
           .left
           .map(err => PresentationDecodingError(s"JsonData decoding error: $err"))
