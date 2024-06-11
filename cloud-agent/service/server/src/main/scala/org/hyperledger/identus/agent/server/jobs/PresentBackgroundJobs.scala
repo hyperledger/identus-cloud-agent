@@ -21,7 +21,6 @@ import org.hyperledger.identus.mercury.protocol.reportproblem.v2.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
-import org.hyperledger.identus.pollux.core.model.presentation.SdJwtPresentationPayload
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
 import org.hyperledger.identus.pollux.sdjwt.{IssuerPublicKey, PresentationCompact, SDJWT}
@@ -847,17 +846,6 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                             presentation
                           )
                           _ <- ZIO.logInfo(s"ClaimsValidationResult: $ret")
-                          // FIXME REMOVE cleanup
-                          // _ <- ZIO.logInfo(s"ClaimsValidationResult: ${sdJwtPresentationPayload.claimsToDisclose}")
-                          // result: SDJWT.ClaimsValidationResult =
-                          //   verifiedClaims match {
-                          //     case validClaims: SDJWT.ValidClaims =>
-                          //       validClaims.claims // This is all claims
-                          //     // TODO
-                          //     // .verifyDiscoseClaims(sdJwtPresentationPayload.claimsToDisclose.asObject.getOrElse(Json.Obj()))
-                          //     case validAnyMatch: SDJWT.ValidAnyMatch.type => validAnyMatch
-                          //     case invalid: SDJWT.Invalid                  => invalid
-                          //   }
                         } yield ret
                         verifiedClaims
                           .mapError(error =>

@@ -12,7 +12,7 @@ import org.hyperledger.identus.pollux.anoncreds.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
-import org.hyperledger.identus.pollux.core.model.presentation.{SdJwtPresentationPayload, *}
+import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import org.hyperledger.identus.pollux.core.service.serdes.*
@@ -109,7 +109,7 @@ private class PresentationServiceImpl(
     } yield presentationPayload
   }
 
-  override def createSDJwtPresentationPayloadFromRecord(
+  override def createPresentationFromRecord(
       recordId: DidCommID,
       prover: Issuer
   ): ZIO[WalletAccessContext, PresentationError, PresentationCompact] = {
@@ -145,7 +145,7 @@ private class PresentationServiceImpl(
         )
       )
 
-      presentationCompact <- createSDJwtPresentationPayloadFromCredential(
+      presentationCompact <- createPresentationFromRecord(
         issuedCredentials,
         sdJwtClaimsToDisclose,
         requestPresentation,
@@ -162,7 +162,7 @@ private class PresentationServiceImpl(
       prover: Issuer,
   ): ZIO[WalletAccessContext, PresentationError, Presentation] = {
     for {
-      presentationPayload <- createSDJwtPresentationPayloadFromRecord(recordId, prover)
+      presentationPayload <- createPresentationFromRecord(recordId, prover)
       presentation <- ZIO.succeed(
         Presentation(
           body = Presentation.Body(
@@ -503,7 +503,7 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  private def createSDJwtPresentationPayloadFromCredential(
+  private def createPresentationFromRecord(
       issuedCredentials: Seq[String],
       claimsToDisclose: SdJwtCredentialToDisclose,
       requestPresentation: RequestPresentation,

@@ -57,7 +57,7 @@ trait PresentationService {
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, PresentationPayload]
 
-  def createSDJwtPresentationPayloadFromRecord(
+  def createPresentationFromRecord(
       record: DidCommID,
       issuer: Issuer,
   ): ZIO[WalletAccessContext, PresentationError, PresentationCompact]

@@ -10,7 +10,7 @@ import org.hyperledger.identus.mercury.protocol.presentproof.{
 import org.hyperledger.identus.pollux.anoncreds.AnoncredPresentation
 import org.hyperledger.identus.pollux.core.model.{DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
-import org.hyperledger.identus.pollux.core.model.presentation.{Options, SdJwtPresentationPayload}
+import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
 import org.hyperledger.identus.pollux.sdjwt.PresentationCompact
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
@@ -208,7 +208,7 @@ object MockPresentationService extends Mock[PresentationService] {
           issuanceDate: Instant
       ): IO[PresentationError, PresentationPayload] = ???
 
-      override def createSDJwtPresentationPayloadFromRecord(
+      override def createPresentationFromRecord(
           record: DidCommID,
           issuer: Issuer,
       ): IO[PresentationError, PresentationCompact] = ???
