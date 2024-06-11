@@ -83,12 +83,10 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         .attempt(DidCommID(credentialRecordId))
         .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid DidCommID"))
       vcSubjectId <- credentialService
-        .getIssueCredentialRecord(credentialRecordUuid)
-        .someOrFail(CredentialServiceError.RecordIdNotFound(credentialRecordUuid))
+        .findById(credentialRecordUuid)
+        .someOrFail(CredentialServiceError.RecordNotFound(credentialRecordUuid))
         .map(_.subjectId)
-        .someOrFail(
-          CredentialServiceError.UnexpectedError(s"VC SubjectId not found in credential record: $credentialRecordUuid")
-        )
+        .someOrElseZIO(ZIO.dieMessage(s"VC SubjectId not found in credential record: $credentialRecordUuid"))
       proverDID <- ZIO
         .fromEither(PrismDID.fromString(vcSubjectId))
         .mapError(e =>
@@ -120,12 +118,10 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         .attempt(DidCommID(credentialRecordId))
         .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid DidCommID"))
       vcSubjectId <- credentialService
-        .getIssueCredentialRecord(credentialRecordUuid)
-        .someOrFail(CredentialServiceError.RecordIdNotFound(credentialRecordUuid))
+        .findById(credentialRecordUuid)
+        .someOrFail(CredentialServiceError.RecordNotFound(credentialRecordUuid))
         .map(_.subjectId)
-        .someOrFail(
-          CredentialServiceError.UnexpectedError(s"VC SubjectId not found in credential record: $credentialRecordUuid")
-        )
+        .someOrElseZIO(ZIO.dieMessage(s"VC SubjectId not found in credential record: $credentialRecordUuid"))
       proverDID <- ZIO
         .fromEither(PrismDID.fromString(vcSubjectId))
         .mapError(e =>

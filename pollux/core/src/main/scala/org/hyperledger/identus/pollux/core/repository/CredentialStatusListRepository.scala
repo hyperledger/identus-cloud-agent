@@ -8,33 +8,35 @@ import zio.*
 import java.util.UUID
 
 trait CredentialStatusListRepository {
-  def getLatestOfTheWallet: RIO[WalletAccessContext, Option[CredentialStatusList]]
+  def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]]
 
-  def findById(id: UUID): Task[Option[CredentialStatusList]]
+  def findById(
+      id: UUID
+  ): UIO[Option[CredentialStatusList]]
 
   def createNewForTheWallet(
       jwtIssuer: Issuer,
       statusListRegistryUrl: String
-  ): RIO[WalletAccessContext, CredentialStatusList]
+  ): URIO[WalletAccessContext, CredentialStatusList]
 
   def allocateSpaceForCredential(
       issueCredentialRecordId: DidCommID,
       credentialStatusListId: UUID,
       statusListIndex: Int
-  ): RIO[WalletAccessContext, Unit]
+  ): URIO[WalletAccessContext, Unit]
 
   def revokeByIssueCredentialRecordId(
       issueCredentialRecordId: DidCommID
-  ): RIO[WalletAccessContext, Boolean]
+  ): URIO[WalletAccessContext, Boolean]
 
-  def getCredentialStatusListsWithCreds: Task[List[CredentialStatusListWithCreds]]
+  def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]]
 
   def updateStatusListCredential(
       credentialStatusListId: UUID,
       statusListCredential: String
-  ): RIO[WalletAccessContext, Unit]
+  ): URIO[WalletAccessContext, Unit]
 
   def markAsProcessedMany(
       credsInStatusListIds: Seq[UUID]
-  ): RIO[WalletAccessContext, Unit]
+  ): URIO[WalletAccessContext, Unit]
 }
