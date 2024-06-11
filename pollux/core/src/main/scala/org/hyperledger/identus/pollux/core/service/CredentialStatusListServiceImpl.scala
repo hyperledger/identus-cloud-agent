@@ -1,8 +1,7 @@
 package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, CredentialStatusListWithCreds, DidCommID}
-import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError.*
+import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError.StatusListNotFound
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
@@ -13,43 +12,38 @@ class CredentialStatusListServiceImpl(
     credentialStatusListRepository: CredentialStatusListRepository,
 ) extends CredentialStatusListService {
 
-  def findById(id: UUID): IO[CredentialStatusListServiceError, CredentialStatusList] =
+  def getById(id: UUID): IO[StatusListNotFound, CredentialStatusList] =
     for {
       maybeStatusList <- credentialStatusListRepository.findById(id)
-      statuslist <- ZIO
-        .getOrFailWith(RecordIdNotFound(id))(
-          maybeStatusList
-        )
-    } yield statuslist
+      statusList <- ZIO
+        .fromOption(maybeStatusList)
+        .mapError(_ => StatusListNotFound(id))
+    } yield statusList
+
+  def findById(id: UUID): UIO[Option[CredentialStatusList]] =
+    credentialStatusListRepository.findById(id)
 
   def revokeByIssueCredentialRecordId(
       id: DidCommID
-  ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit] = {
+  ): URIO[WalletAccessContext, Unit] =
     for {
-      revoked <- credentialStatusListRepository.revokeByIssueCredentialRecordId(id)
-      _ <- if (revoked) ZIO.unit else ZIO.fail(IssueCredentialRecordNotFound(id))
+      // TODO validate IssueCredentialRecord id exists and fail with NotFound if not
+      _ <- credentialStatusListRepository.revokeByIssueCredentialRecordId(id)
     } yield ()
 
-  }
-
-  def getCredentialsAndItsStatuses: IO[CredentialStatusListServiceError, Seq[CredentialStatusListWithCreds]] = {
+  def getCredentialsAndItsStatuses: UIO[Seq[CredentialStatusListWithCreds]] =
     credentialStatusListRepository.getCredentialStatusListsWithCreds
-  }
 
   def updateStatusListCredential(
       id: UUID,
       statusListCredential: String
-  ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit] = {
-    credentialStatusListRepository
-      .updateStatusListCredential(id, statusListCredential)
-  }
+  ): URIO[WalletAccessContext, Unit] =
+    credentialStatusListRepository.updateStatusListCredential(id, statusListCredential)
 
   def markAsProcessedMany(
       credsInStatusListIds: Seq[UUID]
-  ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit] = {
-    credentialStatusListRepository
-      .markAsProcessedMany(credsInStatusListIds)
-  }
+  ): URIO[WalletAccessContext, Unit] =
+    credentialStatusListRepository.markAsProcessedMany(credsInStatusListIds)
 
 }
 

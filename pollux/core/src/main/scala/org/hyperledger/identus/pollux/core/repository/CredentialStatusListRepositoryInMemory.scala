@@ -166,8 +166,7 @@ class CredentialStatusListRepositoryInMemory(
 
   def revokeByIssueCredentialRecordId(
       issueCredentialRecordId: DidCommID
-  ): URIO[WalletAccessContext, Boolean] = {
-    var isUpdated = false
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       statusListsRefs <- walletToStatusListStorageRefs
       statusLists <- statusListsRefs.get
@@ -180,14 +179,13 @@ class CredentialStatusListRepositoryInMemory(
           maybeFound.fold(credInStatusListsMap) { case (id, value) =>
             if (!value.isCanceled) {
               credInStatusListsMap.updated(id, value.copy(isCanceled = true, updatedAt = Some(Instant.now())))
-              isUpdated = true
               credInStatusListsMap
             } else credInStatusListsMap
           }
 
         }
       )
-    } yield isUpdated
+    } yield ()
   }
 
   def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]] = {

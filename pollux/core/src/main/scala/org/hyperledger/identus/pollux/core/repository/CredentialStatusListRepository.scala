@@ -31,7 +31,7 @@ trait CredentialStatusListRepository {
 
   def revokeByIssueCredentialRecordId(
       issueCredentialRecordId: DidCommID
-  ): URIO[WalletAccessContext, Boolean]
+  ): URIO[WalletAccessContext, Unit]
 
   def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]]
 

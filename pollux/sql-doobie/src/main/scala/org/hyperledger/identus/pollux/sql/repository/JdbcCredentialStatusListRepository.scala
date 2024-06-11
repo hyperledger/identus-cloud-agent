@@ -183,8 +183,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
 
   def revokeByIssueCredentialRecordId(
       issueCredentialRecordId: DidCommID
-  ): URIO[WalletAccessContext, Boolean] = {
-
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       walletId <- ZIO.service[WalletAccessContext].map(_.walletId)
       updateQuery =
@@ -198,13 +197,10 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
              | AND cisl.is_canceled = false;
              |""".stripMargin.update.run
 
-      revoked <- updateQuery
-        .transactWallet(xa)
-        .map(_ > 0)
-        .orDie
-
-    } yield revoked
-
+    } yield updateQuery
+      .transactWallet(xa)
+      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]] = {

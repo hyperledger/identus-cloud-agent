@@ -1,9 +1,9 @@
-package org.hyperledger.identus.credential.status.controller
+package org.hyperledger.identus.credentialstatus.controller
 
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.codec.DidCommIDCodec.given
 import org.hyperledger.identus.api.http.EndpointOutputs.*
-import org.hyperledger.identus.credential.status.controller.http.StatusListCredential
+import org.hyperledger.identus.credentialstatus.controller.http.StatusListCredential
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials

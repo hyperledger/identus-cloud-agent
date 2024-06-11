@@ -1,23 +1,33 @@
 package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, CredentialStatusListWithCreds, DidCommID}
-import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError
+import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError.StatusListNotFound
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 import java.util.UUID
 
 trait CredentialStatusListService {
-  def findById(id: UUID): IO[CredentialStatusListServiceError, CredentialStatusList]
+  def getById(
+      id: UUID
+  ): IO[StatusListNotFound, CredentialStatusList]
 
-  def revokeByIssueCredentialRecordId(id: DidCommID): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit]
+  def findById(
+      id: UUID
+  ): UIO[Option[CredentialStatusList]]
 
-  def getCredentialsAndItsStatuses: IO[CredentialStatusListServiceError, Seq[CredentialStatusListWithCreds]]
+  def revokeByIssueCredentialRecordId(
+      id: DidCommID
+  ): URIO[WalletAccessContext, Unit]
+
+  def getCredentialsAndItsStatuses: UIO[Seq[CredentialStatusListWithCreds]]
 
   def updateStatusListCredential(
       id: UUID,
       statusListCredential: String
-  ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit]
+  ): URIO[WalletAccessContext, Unit]
 
-  def markAsProcessedMany(ids: Seq[UUID]): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit]
+  def markAsProcessedMany(
+      ids: Seq[UUID]
+  ): URIO[WalletAccessContext, Unit]
 }

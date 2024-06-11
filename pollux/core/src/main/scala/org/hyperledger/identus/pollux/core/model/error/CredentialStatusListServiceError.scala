@@ -1,23 +1,20 @@
 package org.hyperledger.identus.pollux.core.model.error
 
-import org.hyperledger.identus.pollux.core.model.DidCommID
+import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 
 import java.util.UUID
 
-sealed trait CredentialStatusListServiceError {
-  def toThrowable: Throwable = this match
-    case CredentialStatusListServiceError.RepositoryError(cause) => cause
-    case CredentialStatusListServiceError.RecordIdNotFound(id) =>
-      new Exception(s"Credential status list with id: $id not found")
-    case CredentialStatusListServiceError.IssueCredentialRecordNotFound(id) =>
-      new Exception(s"Issue credential record with id: $id not found")
-    case CredentialStatusListServiceError.JsonCredentialParsingError(cause) => cause
-
+sealed trait CredentialStatusListServiceError(
+    val statusCode: StatusCode,
+    val userFacingMessage: String
+) extends Failure {
+  override val namespace: String = "CredentialStatusListError"
 }
 
 object CredentialStatusListServiceError {
-  final case class RepositoryError(cause: Throwable) extends CredentialStatusListServiceError
-  final case class RecordIdNotFound(id: UUID) extends CredentialStatusListServiceError
-  final case class IssueCredentialRecordNotFound(id: DidCommID) extends CredentialStatusListServiceError
-  final case class JsonCredentialParsingError(cause: Throwable) extends CredentialStatusListServiceError
+  final case class StatusListNotFound(id: UUID)
+      extends CredentialStatusListServiceError(
+        StatusCode.NotFound,
+        s"There is no credential status record matching the provided identifier: id=$id"
+      )
 }
