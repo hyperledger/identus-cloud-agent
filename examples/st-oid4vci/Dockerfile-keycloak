@@ -1,4 +1,4 @@
-FROM ghcr.io/patlo-iog/identus-keycloak-plugins:0.1.2-snapshot.docker-dist.1 AS dist
+FROM ghcr.io/hyperledger/identus-keycloak-plugins:0.1.0 AS dist
 
 FROM quay.io/keycloak/keycloak:23.0.7
 COPY --from=dist /opt/keycloak/providers/*.jar /opt/keycloak/providers/*.jar
