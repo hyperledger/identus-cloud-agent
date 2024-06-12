@@ -23,7 +23,7 @@ import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.connect.controller.ConnectionControllerImpl
 import org.hyperledger.identus.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
 import org.hyperledger.identus.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
-import org.hyperledger.identus.credential.status.controller.CredentialStatusControllerImpl
+import org.hyperledger.identus.credentialstatus.controller.CredentialStatusControllerImpl
 import org.hyperledger.identus.didcomm.controller.DIDCommControllerImpl
 import org.hyperledger.identus.event.controller.EventControllerImpl
 import org.hyperledger.identus.event.notification.EventNotificationServiceImpl

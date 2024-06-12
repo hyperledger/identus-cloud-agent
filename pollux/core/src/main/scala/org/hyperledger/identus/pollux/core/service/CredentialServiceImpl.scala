@@ -109,8 +109,13 @@ private class CredentialServiceImpl(
 
   override def getById(
       recordId: DidCommID
-  ): URIO[WalletAccessContext, IssueCredentialRecord] =
-    credentialRepository.getById(recordId)
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord] =
+    for {
+      maybeRecord <- credentialRepository.findById(recordId)
+      record <- ZIO
+        .fromOption(maybeRecord)
+        .mapError(_ => RecordNotFound(recordId))
+    } yield record
 
   override def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
