@@ -95,7 +95,6 @@ services:
     volumes:
     - ./bootstrap:/hurl
   external-keycloak-issuer:
-    build: ../../extensions/keycloak-oid4vci
     command:
     - start-dev
     - --features=preview
@@ -106,6 +105,7 @@ services:
       IDENTUS_URL: http://caddy-issuer:8080/prism-agent
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+    image: ghcr.io/hyperledger/identus-keycloak-plugins:0.1.0
     ports:
     - 9980:8080
     restart: always

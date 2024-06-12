@@ -10,7 +10,6 @@ let ExternalKeycloakStackConfig = {
   name | String,
   port | Number,
   realm | String,
-  build | String,
   extraEnvs
     | { _ | String }
     | default
@@ -51,9 +50,9 @@ in
               |> std.record.remove "image"
             )
             & {
+              image = "ghcr.io/hyperledger/identus-keycloak-plugins:%{V.identusKeycloak}",
               ports = ["%{std.to_string args.port}:8080"],
-              environment = args.extraEnvs,
-              build = args.build
+              environment = args.extraEnvs
             },
           "external-keycloak-init-%{args.name}" =
             _bootstrap.makeHurlBootstrapService
