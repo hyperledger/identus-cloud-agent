@@ -43,7 +43,7 @@ class RevokeCredentialSteps {
         )
         holder.attemptsTo(
             Patch.to("/credential-status/revoke-credential/${receivedCredential.recordId}"),
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_NOT_FOUND),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_UNPROCESSABLE_ENTITY),
         )
     }
 
