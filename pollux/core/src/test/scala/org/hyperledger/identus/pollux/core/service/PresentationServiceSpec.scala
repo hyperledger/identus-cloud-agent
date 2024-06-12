@@ -210,7 +210,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           svc <- ZIO.service[PresentationService]
           _ <- svc.createJwtRecord()
           bRecord <- svc.createJwtRecord()
-          record <- svc.getPresentationRecord(bRecord.id)
+          record <- svc.findPresentationRecord(bRecord.id)
         } yield assertTrue(record.contains(bRecord))
       },
       test("getPresentationRecord returns nothing for an unknown 'recordId'") {
@@ -218,7 +218,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           svc <- ZIO.service[PresentationService]
           _ <- svc.createJwtRecord()
           _ <- svc.createJwtRecord()
-          record <- svc.getPresentationRecord(DidCommID())
+          record <- svc.findPresentationRecord(DidCommID())
         } yield assertTrue(record.isEmpty)
       },
       test("createJwtPresentationPayloadFromRecord returns jwt presentation payload") {
@@ -747,11 +747,6 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           p = proposePresentation(aRecord.thid.value)
           aRecordReceived <- svc.receiveProposePresentation(p)
           repo <- ZIO.service[PresentationRepository]
-          _ <- repo.updatePresentationRecordProtocolState(
-            aRecord.id,
-            PresentationRecord.ProtocolState.ProposalPending,
-            PresentationRecord.ProtocolState.ProposalReceived
-          )
           _ <- svc.acceptProposePresentation(aRecord.id)
         } yield {
           assertTrue(aRecordReceived.id == aRecord.id) &&
@@ -916,10 +911,10 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           svc <- ZIO.service[PresentationService]
           record1 <- svc.createJwtRecord().provide(wallet1)
           record2 <- svc.createJwtRecord().provide(wallet2)
-          ownRecord1 <- svc.getPresentationRecord(record1.id).provide(wallet1)
-          ownRecord2 <- svc.getPresentationRecord(record2.id).provide(wallet2)
-          crossRecord1 <- svc.getPresentationRecord(record1.id).provide(wallet2)
-          crossRecord2 <- svc.getPresentationRecord(record2.id).provide(wallet1)
+          ownRecord1 <- svc.findPresentationRecord(record1.id).provide(wallet1)
+          ownRecord2 <- svc.findPresentationRecord(record2.id).provide(wallet2)
+          crossRecord1 <- svc.findPresentationRecord(record1.id).provide(wallet2)
+          crossRecord2 <- svc.findPresentationRecord(record2.id).provide(wallet1)
         } yield assert(ownRecord1)(isSome(equalTo(record1))) &&
           assert(ownRecord2)(isSome(equalTo(record2))) &&
           assert(crossRecord1)(isNone) &&
