@@ -79,7 +79,7 @@ trait CredentialService {
 
   def getById(
       recordId: DidCommID
-  ): URIO[WalletAccessContext, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord]
 
   def getIssueCredentialRecordByThreadId(
       thid: DidCommID,
