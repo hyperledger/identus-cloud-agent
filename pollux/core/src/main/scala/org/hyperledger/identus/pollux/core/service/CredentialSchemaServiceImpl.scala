@@ -1,6 +1,12 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
+import org.hyperledger.identus.pollux.core.model.error.{
+  CredentialSchemaError,
+  CredentialSchemaGuidNotFoundError,
+  CredentialSchemaServiceError,
+  CredentialSchemaUpdateError,
+  CredentialSchemaValidationError
+}
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.FilteredEntries
 import org.hyperledger.identus.pollux.core.repository.CredentialSchemaRepository

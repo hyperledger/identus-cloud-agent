@@ -409,7 +409,7 @@ private class PresentationServiceImpl(
                     .mapError(error => InvalidAnoncredPresentationRequest(error.error))
                 case _ => ZIO.fail(InvalidAnoncredPresentationRequest("Expecting Base64-encoded data"))
             case Some(unsupportedFormat) => ZIO.fail(PresentationError.UnsupportedCredentialFormat(unsupportedFormat))
-        case _ => ZIO.fail(PresentationError.UnexpectedError("Presentation with multi attachments"))
+        case _ => ZIO.fail(PresentationError.RequestPresentationHasMultipleAttachment(request.id))
       }
       record <- ZIO.succeed(
         PresentationRecord(
@@ -658,14 +658,14 @@ private class PresentationServiceImpl(
     } yield presentation
   }
 
-  private def resolveSchema(schemaUri: String): IO[UnexpectedError, (String, AnoncredSchemaDef)] = {
+  private def resolveSchema(schemaUri: String): IO[PresentationError, (String, AnoncredSchemaDef)] = {
     for {
-      uri <- ZIO.attempt(new URI(schemaUri)).mapError(e => UnexpectedError(e.getMessage))
-      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.userFacingMessage))
+      uri <- ZIO.attempt(new URI(schemaUri)).mapError(e => InvalidSchemaURIError(schemaUri, e))
+      content <- uriDereferencer.dereference(uri).mapError(e => SchemaURIDereferencingError(e))
       anoncredSchema <-
         AnoncredSchemaSerDesV1.schemaSerDes
           .deserialize(content)
-          .mapError(error => UnexpectedError(s"AnonCreds Schema parsing error: $error"))
+          .mapError(error => AnoncredPresentationParsingError(error))
       anoncredLibSchema =
         AnoncredSchemaDef(
           schemaUri,
@@ -678,14 +678,16 @@ private class PresentationServiceImpl(
 
   private def resolveCredentialDefinition(
       credentialDefinitionUri: String
-  ): IO[UnexpectedError, (String, AnoncredCredentialDefinition)] = {
+  ): IO[PresentationError, (String, AnoncredCredentialDefinition)] = {
     for {
-      uri <- ZIO.attempt(new URI(credentialDefinitionUri)).mapError(e => UnexpectedError(e.getMessage))
-      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.userFacingMessage))
+      uri <- ZIO
+        .attempt(new URI(credentialDefinitionUri))
+        .mapError(e => InvalidCredentialDefinitionURIError(credentialDefinitionUri, e))
+      content <- uriDereferencer.dereference(uri).mapError(e => CredentialDefinitionURIDereferencingError(e))
       _ <-
         PublicCredentialDefinitionSerDesV1.schemaSerDes
           .validate(content)
-          .mapError(error => UnexpectedError(s"AnonCreds Schema parsing error: $error"))
+          .mapError(error => AnoncredPresentationParsingError(error))
       anoncredCredentialDefinition = AnoncredCredentialDefinition(content)
     } yield (credentialDefinitionUri, anoncredCredentialDefinition)
   }
@@ -760,11 +762,7 @@ private class PresentationServiceImpl(
         .fromEither(
           AnoncredCredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
         )
-        .mapError(error =>
-          PresentationError.UnexpectedError(
-            s"Unable to serialize credentialsToUse. credentialsToUse:$credentialsToUse, error:$error"
-          )
-        )
+        .mapError(error => PresentationError.AnoncredCredentialProofParsingError(error))
       count <- presentationRepository
         .updateAnoncredPresentationWithCredentialsToUse(
           recordId,
@@ -847,7 +845,12 @@ private class PresentationServiceImpl(
       presentation: Presentation
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
-      record <- getRecordFromThreadId(presentation.thid)
+      thid <-
+        ZIO
+          .fromOption(presentation.thid)
+          .map(DidCommID(_))
+          .mapError(_ => NoThreadIdFoundInRecord(presentation.id))
+      record <- getRecordFromThreadId(thid)
       _ <- presentationRepository
         .updateWithPresentation(record.id, presentation, ProtocolState.PresentationReceived) @@ CustomMetricsAspect
         .startRecordingTime(
@@ -877,7 +880,12 @@ private class PresentationServiceImpl(
       proposePresentation: ProposePresentation
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
-      record <- getRecordFromThreadId(proposePresentation.thid)
+      thid <-
+        ZIO
+          .fromOption(proposePresentation.thid)
+          .map(DidCommID(_))
+          .mapError(_ => NoThreadIdFoundInRecord(proposePresentation.id))
+      record <- getRecordFromThreadId(thid)
       _ <- presentationRepository
         .updateWithProposePresentation(record.id, proposePresentation, ProtocolState.ProposalReceived)
       record <- getRecord(record.id)
@@ -990,7 +998,7 @@ private class PresentationServiceImpl(
       deserializedPresentation <-
         AnoncredPresentationV1.schemaSerDes
           .deserialize(serializedPresentation.data)
-          .mapError(error => PresentationError.UnexpectedError(error.error))
+          .mapError(error => AnoncredPresentationParsingError(error))
       schemaIds = deserializedPresentation.identifiers.map(_.schema_id)
       schemaMap <-
         ZIO
@@ -1044,18 +1052,14 @@ private class PresentationServiceImpl(
     } yield result
 
   private def getRecordFromThreadId(
-      thid: Option[String]
+      thid: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
-      thidID <- ZIO
-        .fromOption(thid)
-        .map(DidCommID(_))
-        .mapError(_ => UnexpectedError("No `thid` found in Presentation request"))
       maybeRecord <- presentationRepository
-        .findPresentationRecordByThreadId(thidID)
+        .findPresentationRecordByThreadId(thid)
       record <- ZIO
         .fromOption(maybeRecord)
-        .mapError(_ => ThreadIdNotFound(thidID))
+        .mapError(_ => ThreadIdNotFound(thid))
     } yield record
   }
 

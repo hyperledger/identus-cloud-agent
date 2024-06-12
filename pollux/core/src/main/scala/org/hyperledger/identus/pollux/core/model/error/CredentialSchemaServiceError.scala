@@ -1,4 +1,4 @@
-package org.hyperledger.identus.pollux.core.service
+package org.hyperledger.identus.pollux.core.model.error
 
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
