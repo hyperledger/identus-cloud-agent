@@ -46,12 +46,6 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       .orDie
   }
 
-  override def getById(id: UUID): UIO[CredentialStatusList] =
-    for {
-      maybeRecord <- findById(id)
-      record <- ZIO.fromOption(maybeRecord).orDieWith(_ => RuntimeException(s"Record not found: $id"))
-    } yield record
-
   def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]] = {
 
     val cxnIO =

@@ -73,13 +73,6 @@ class CredentialStatusListRepositoryInMemory(
     exists = stores.flatMap(_.values).exists(_.issueCredentialRecordId == id)
   } yield exists
 
-  def getById(id: UUID): UIO[CredentialStatusList] = for {
-    refs <- walletToStatusListRefs.get
-    stores <- ZIO.foreach(refs.values.toList)(_.get)
-    maybeRecord = stores.flatMap(_.values).find(_.id == id)
-    record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $id"))(maybeRecord).orDie
-  } yield record
-
   def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]] = for {
     storageRef <- walletToStatusListStorageRefs
     storage <- storageRef.get

@@ -18,6 +18,9 @@ class CredentialStatusListServiceImpl(
     credentialStatusListRepository: CredentialStatusListRepository,
 ) extends CredentialStatusListService {
 
+  def getCredentialsAndItsStatuses: UIO[Seq[CredentialStatusListWithCreds]] =
+    credentialStatusListRepository.getCredentialStatusListsWithCreds
+
   def getById(id: UUID): IO[StatusListNotFound, CredentialStatusList] =
     for {
       maybeStatusList <- credentialStatusListRepository.findById(id)
@@ -25,9 +28,6 @@ class CredentialStatusListServiceImpl(
         .fromOption(maybeStatusList)
         .mapError(_ => StatusListNotFound(id))
     } yield statusList
-
-  def findById(id: UUID): UIO[Option[CredentialStatusList]] =
-    credentialStatusListRepository.findById(id)
 
   def revokeByIssueCredentialRecordId(
       id: DidCommID
@@ -39,9 +39,6 @@ class CredentialStatusListServiceImpl(
       _ <- if (exists) ZIO.unit else ZIO.fail(StatusListNotFoundForIssueCredentialRecord(id))
       _ <- credentialStatusListRepository.revokeByIssueCredentialRecordId(id)
     } yield ()
-
-  def getCredentialsAndItsStatuses: UIO[Seq[CredentialStatusListWithCreds]] =
-    credentialStatusListRepository.getCredentialStatusListsWithCreds
 
   def updateStatusListCredential(
       id: UUID,

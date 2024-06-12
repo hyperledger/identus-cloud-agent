@@ -17,10 +17,6 @@ trait CredentialStatusListService {
       id: UUID
   ): IO[StatusListNotFound, CredentialStatusList]
 
-  def findById(
-      id: UUID
-  ): UIO[Option[CredentialStatusList]]
-
   def revokeByIssueCredentialRecordId(
       id: DidCommID
   ): ZIO[WalletAccessContext, StatusListNotFoundForIssueCredentialRecord | InvalidRoleForOperation, Unit]

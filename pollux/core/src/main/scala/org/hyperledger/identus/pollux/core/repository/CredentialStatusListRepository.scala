@@ -8,15 +8,13 @@ import zio.*
 import java.util.UUID
 
 trait CredentialStatusListRepository {
-  def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]]
+  def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]]
 
   def findById(
       id: UUID
   ): UIO[Option[CredentialStatusList]]
 
-  def getById(
-      id: UUID
-  ): UIO[CredentialStatusList]
+  def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]]
 
   def existsForIssueCredentialRecordId(
       id: DidCommID
@@ -36,8 +34,6 @@ trait CredentialStatusListRepository {
   def revokeByIssueCredentialRecordId(
       issueCredentialRecordId: DidCommID
   ): URIO[WalletAccessContext, Unit]
-
-  def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]]
 
   def updateStatusListCredential(
       credentialStatusListId: UUID,
