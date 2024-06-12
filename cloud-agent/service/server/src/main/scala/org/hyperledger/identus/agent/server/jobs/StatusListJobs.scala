@@ -107,7 +107,14 @@ object StatusListJobs extends BackgroundJobsHelper {
             .updateStatusListCredential(statusListWithCreds.id, vcStatusListCredJsonString)
         } yield ()
 
-        effect.provideSomeLayer(ZLayer.succeed(walletAccessContext))
+        effect
+          .catchAll(e =>
+            ZIO.logErrorCause(s"Error processing status list record: ${statusListWithCreds.id} ", Cause.fail(e))
+          )
+          .catchAllDefect(d =>
+            ZIO.logErrorCause(s"Defect processing status list record: ${statusListWithCreds.id}", Cause.fail(d))
+          )
+          .provideSomeLayer(ZLayer.succeed(walletAccessContext))
 
       }
       config <- ZIO.service[AppConfig]
