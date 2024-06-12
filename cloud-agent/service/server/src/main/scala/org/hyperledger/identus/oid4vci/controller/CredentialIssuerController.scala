@@ -177,6 +177,13 @@ case class CredentialIssuerControllerImpl(
           session <- credentialIssuerService
             .getIssuanceSessionByNonce(nonce)
             .mapError(_ => badRequestInvalidProof(jwt, "nonce is not associated to the issuance session"))
+          subjectDid <- getSubjectDIDFromJwt(JWT(jwt))
+            .mapError(throwable => badRequestInvalidProof(jwt, throwable.getMessage))
+          sessionWithSubjectDid <- credentialIssuerService
+            .updateIssuanceSession(session.withSubjectDid(subjectDid))
+            .mapError(ue =>
+              serverError(Some(s"Unexpected error while updating issuance session with subject DID: ${ue.message}"))
+            )
           credentialDefinition <- ZIO
             .fromOption(maybeCredentialDefinition)
             .mapError(_ => badRequestUnsupportedCredentialType("No credential definition provided"))
@@ -188,6 +195,8 @@ case class CredentialIssuerControllerImpl(
           credential <- credentialIssuerService
             .issueJwtCredential(
               session.issuingDid,
+              session.subjectDid,
+              session.claims,
               maybeCredentialIdentifier,
               validatedCredentialDefinition
             )

@@ -1,13 +1,15 @@
 package org.hyperledger.identus.oid4vci.service
 
+import io.circe.parser.parse
 import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
+import org.hyperledger.identus.castor.core.model.did.{DID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.oid4vci.domain.IssuanceSession
 import org.hyperledger.identus.oid4vci.http.*
 import org.hyperledger.identus.oid4vci.storage.IssuanceSessionStorage
 import org.hyperledger.identus.pollux.core.service.CredentialService
-import org.hyperledger.identus.pollux.vc.jwt.{DID, Issuer, JWT, JWTVerification, JwtCredential, W3cCredentialPayload}
+import org.hyperledger.identus.pollux.vc.jwt.{Issuer, JWT, JWTVerification, JwtCredential, W3cCredentialPayload}
+import org.hyperledger.identus.pollux.vc.jwt.DID as PolluxDID
 import org.hyperledger.identus.pollux.vc.jwt.DidResolver
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
@@ -32,7 +34,9 @@ trait OIDCCredentialIssuerService {
   ): IO[UnexpectedError, CredentialDefinition]
 
   def issueJwtCredential(
-      prismDID: PrismDID,
+      issuingDID: PrismDID,
+      subjectDID: Option[DID],
+      claims: zio.json.ast.Json,
       credentialIdentifier: Option[String],
       credentialDefinition: CredentialDefinition,
   ): IO[Error, JWT]
@@ -48,6 +52,8 @@ trait OIDCCredentialIssuerService {
   def getIssuanceSessionByIssuerState(issuerState: String): IO[Error, IssuanceSession]
 
   def getIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession]
+
+  def updateIssuanceSession(issuanceSession: IssuanceSession): IO[Error, IssuanceSession]
 }
 
 object OIDCCredentialIssuerService {
@@ -100,31 +106,41 @@ case class OIDCCredentialIssuerServiceImpl(
   }
 
   override def issueJwtCredential(
-      prismDID: PrismDID,
+      issuingDID: PrismDID,
+      subjectDID: Option[DID],
+      claims: zio.json.ast.Json,
       credentialIdentifier: Option[String],
       credentialDefinition: CredentialDefinition
   ): IO[OIDCCredentialIssuerService.Error, JWT] = {
     for {
       wac <- didNonSecretStorage
-        .getPrismDidWalletId(prismDID)
+        .getPrismDidWalletId(issuingDID)
         .flatMap(ZIO.fromOption)
-        .mapError(_ => ServiceError(s"Failed to get wallet ID for DID: $prismDID"))
+        .mapError(_ => ServiceError(s"Failed to get wallet ID for DID: $issuingDID"))
         .map(WalletAccessContext.apply)
 
       jwtIssuer <- credentialService
-        .createJwtIssuer(prismDID, VerificationRelationship.AssertionMethod)
-        .mapError(_ => ServiceError(s"Failed to create JWT issuer for DID: $prismDID"))
+        .createJwtIssuer(issuingDID, VerificationRelationship.AssertionMethod)
+        .mapError(_ => ServiceError(s"Failed to create JWT issuer for DID: $issuingDID"))
         .provideSomeLayer(ZLayer.succeed(wac))
 
-      jwtVC <- buildJwtVerifiableCredential(jwtIssuer.did, credentialIdentifier, credentialDefinition)
+      jwtVC <- buildJwtVerifiableCredential(
+        jwtIssuer.did,
+        subjectDID,
+        credentialIdentifier,
+        credentialDefinition,
+        claims
+      )
       jwt <- issueJwtVC(jwtIssuer, jwtVC)
     } yield jwt
   }
 
   def buildJwtVerifiableCredential(
-      issuerDid: DID,
+      issuerDid: PolluxDID,
+      subjectDid: Option[DID],
       credentialIdentifier: Option[String],
-      credentialDefinition: CredentialDefinition
+      credentialDefinition: CredentialDefinition,
+      claims: zio.json.ast.Json
   ): IO[Error, W3cCredentialPayload] = {
     val credential = W3cCredentialPayload(
       `@context` = Set(
@@ -139,7 +155,7 @@ case class OIDCCredentialIssuerServiceImpl(
       issuanceDate = Instant.now(),
       maybeExpirationDate = None, // TODO: Add expiration date
       maybeCredentialSchema = None, // TODO: Add schema from schema registry
-      credentialSubject = buildCredentialSubject(credentialDefinition.credentialSubject),
+      credentialSubject = buildCredentialSubject(subjectDid, claims),
       maybeCredentialStatus = None, // TODO: Add credential status
       maybeRefreshService = None, // TODO: Add refresh service
       maybeEvidence = None, // TODO: Add evidence
@@ -149,13 +165,12 @@ case class OIDCCredentialIssuerServiceImpl(
     ZIO.succeed(credential) // TODO: there might be other calls to fill the VC claims from the session, etc
   }
 
-  def buildCredentialSubject(credentialSubjectOption: Option[CredentialSubject]): Json = {
-    val claimsOpt = credentialSubjectOption.map(credentialSubject =>
-      credentialSubject.map { case (claim, descriptor) =>
-        claim -> Json.fromString("lorem ipsum") // TODO: Add real data (e.g. from the user record, etc
-      }.toSeq
-    )
-    claimsOpt.fold(Json.obj())(claims => Json.obj(claims: _*))
+  private def simpleZioToCirce(json: zio.json.ast.Json): Json =
+    parse(json.toString).toOption.get
+
+  private def buildCredentialSubject(subjectDid: Option[DID], claims: zio.json.ast.Json): Json = {
+    val subjectClaims = simpleZioToCirce(claims)
+    subjectDid.fold(subjectClaims)(did => Json.obj("id" -> Json.fromString(did.toString)) deepMerge subjectClaims)
   }
 
   def issueJwtVC(issuer: Issuer, payload: W3cCredentialPayload): IO[Error, JWT] = {
@@ -200,6 +215,12 @@ case class OIDCCredentialIssuerServiceImpl(
       .getByNonce(nonce)
       .mapError(e => ServiceError(s"Failed to get issuance session: ${e.message}"))
       .someOrFail(ServiceError(s"The IssuanceSession with the nonce $nonce does not exist"))
+  }
+
+  override def updateIssuanceSession(issuanceSession: IssuanceSession): IO[Error, IssuanceSession] = {
+    issuanceSessionStorage
+      .update(issuanceSession)
+      .mapError(e => ServiceError(s"Failed to update issuance session: ${e.message}"))
   }
 
   private def buildNewIssuanceSession(
