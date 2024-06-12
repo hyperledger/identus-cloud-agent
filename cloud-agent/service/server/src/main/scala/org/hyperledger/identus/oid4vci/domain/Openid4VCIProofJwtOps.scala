@@ -1,7 +1,7 @@
 package org.hyperledger.identus.oid4vci.domain
 
 import com.nimbusds.jose.{JOSEObjectType, JWSAlgorithm, JWSHeader, JWSObject, JWSSigner, Payload}
-import org.hyperledger.identus.castor.core.model.did.LongFormPrismDID
+import org.hyperledger.identus.castor.core.model.did.{DID, LongFormPrismDID, PrismDID}
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver, JWT}
 import org.hyperledger.identus.pollux.vc.jwt.JwtSignerImplicits.*
 import org.hyperledger.identus.shared.crypto.Secp256k1PrivateKey
@@ -62,5 +62,12 @@ trait Openid4VCIProofJwtOps {
       nonce = payload.get("nonce").asInstanceOf[String]
       _ <- ZIO.fail(new Exception("Nonce not found in JWT payload")) when (nonce == null || nonce.isEmpty)
     } yield nonce
+  }
+
+  def getSubjectDIDFromJwt(jwt: JWT): Task[DID] = {
+    for {
+      keyId <- getKeyIdFromJwt(jwt)
+      did <- ZIO.fromEither(DID.fromString(keyId)).mapError(e => new Exception(e))
+    } yield did
   }
 }

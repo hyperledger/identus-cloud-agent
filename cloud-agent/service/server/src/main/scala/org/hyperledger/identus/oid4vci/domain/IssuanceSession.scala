@@ -13,4 +13,7 @@ case class IssuanceSession(
     claims: zio.json.ast.Json,
     subjectDid: Option[DID],
     issuingDid: PrismDID,
-)
+) {
+  def withSchemaId(schemaId: String): IssuanceSession = copy(schemaId = Some(schemaId))
+  def withSubjectDid(subjectDid: DID): IssuanceSession = copy(subjectDid = Some(subjectDid))
+}

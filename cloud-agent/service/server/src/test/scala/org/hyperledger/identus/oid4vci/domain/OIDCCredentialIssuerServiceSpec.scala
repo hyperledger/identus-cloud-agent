@@ -1,13 +1,11 @@
 package org.hyperledger.identus.oid4vci.domain
 
 import com.nimbusds.jose.*
-import com.nimbusds.jose.crypto.*
 import com.nimbusds.jose.jwk.*
-import com.nimbusds.jose.jwk.gen.*
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, MockDIDNonSecretStorage}
-import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
+import org.hyperledger.identus.castor.core.model.did.{DID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.service.{DIDService, MockDIDService}
 import org.hyperledger.identus.oid4vci.http.{ClaimDescriptor, CredentialDefinition, Localization}
 import org.hyperledger.identus.oid4vci.service.{OIDCCredentialIssuerService, OIDCCredentialIssuerServiceImpl}
@@ -18,18 +16,17 @@ import org.hyperledger.identus.pollux.core.repository.{
   CredentialStatusListRepositoryInMemory
 }
 import org.hyperledger.identus.pollux.core.service.*
-import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, PrismDidResolver}
-import org.hyperledger.identus.pollux.vc.jwt.JWT
+import org.hyperledger.identus.pollux.vc.jwt.PrismDidResolver
 import org.hyperledger.identus.shared.models.WalletId
-import zio.{URLayer, ZIO, ZLayer}
+import zio.{Clock, Random, URLayer, ZIO, ZLayer}
+import zio.json.*
+import zio.json.ast.Json
 import zio.mock.MockSpecDefault
 import zio.test.*
 import zio.test.Assertion.*
-import zio.Clock
-import zio.Random
 
 import java.util.UUID
-import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 object OIDCCredentialIssuerServiceSpec
     extends MockSpecDefault
@@ -127,9 +124,25 @@ object OIDCCredentialIssuerServiceSpec
               )
             )
           )
-          jwt <- oidcCredentialIssuerService.issueJwtCredential(issuerDidData.id, None, credentialDefinition)
+          subjectDID <- ZIO.fromEither(DID.fromString("did:work:MDP8AsFhHzhwUvGNuYkX7T"))
+          jwt <- oidcCredentialIssuerService
+            .issueJwtCredential(
+              issuerDidData.id,
+              Some(subjectDID),
+              Json("name" -> Json.Str("Alice")),
+              None,
+              credentialDefinition
+            )
           _ <- zio.Console.printLine(jwt)
-        } yield assert(jwt.toString)(isNonEmptyString)
+          jwtObject <- ZIO.fromTry(Try(JWSObject.parse(jwt.value)))
+          payload <- ZIO.fromEither(Json.decoder.decodeJson(jwtObject.getPayload.toString).flatMap(_.as[Json.Obj]))
+          vc <- ZIO.fromEither(payload.get("vc").get.as[Json.Obj])
+          credentialSubject <- ZIO.fromEither(vc.get("credentialSubject").get.as[Json.Obj])
+          name <- ZIO.fromEither(credentialSubject.get("name").get.as[String])
+        } yield assert(jwt.value)(isNonEmptyString) &&
+          // assert(jwtObject.getHeader.getKeyID)(equalTo(issuerDidData.id.toString)) && //TODO: add key ID to the header
+          assert(jwtObject.getHeader.getAlgorithm)(equalTo(JWSAlgorithm.ES256K)) &&
+          assert(name)(equalTo("Alice"))
       }.provideSomeLayer(
         issuerDidServiceExpectations.toLayer ++
           issuerManagedDIDServiceExpectations.toLayer ++
