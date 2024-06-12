@@ -33,7 +33,7 @@ class CredentialStatusListServiceImpl(
       id: DidCommID
   ): ZIO[WalletAccessContext, StatusListNotFoundForIssueCredentialRecord | InvalidRoleForOperation, Unit] =
     for {
-      record <- credentialService.getById(id).mapError(e => StatusListNotFoundForIssueCredentialRecord(e.recordId))
+      record <- credentialService.getById(id).orDieAsUnmanagedFailure
       _ <- if (record.role == Role.Issuer) ZIO.unit else ZIO.fail(InvalidRoleForOperation(record.role))
       exists <- credentialStatusListRepository.existsForIssueCredentialRecordId(id)
       _ <- if (exists) ZIO.unit else ZIO.fail(StatusListNotFoundForIssueCredentialRecord(id))
