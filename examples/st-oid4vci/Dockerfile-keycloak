@@ -1,6 +1,0 @@
-FROM ghcr.io/hyperledger/identus-keycloak-plugins:0.1.0 AS dist
-
-FROM quay.io/keycloak/keycloak:23.0.7
-COPY --from=dist /opt/keycloak/providers/*.jar /opt/keycloak/providers/*.jar
-RUN /opt/keycloak/bin/kc.sh build
-ENTRYPOINT [ "/opt/keycloak/bin/kc.sh" ]

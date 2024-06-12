@@ -21,10 +21,6 @@ in
           name = "issuer",
           port = 9980,
           realm = "students",
-          build = {
-            context = ".",
-            dockerfile = "Dockerfile-keycloak"
-          },
           extraEnvs = { IDENTUS_URL = "http://caddy-issuer:8080/prism-agent" }
         }
     ),
