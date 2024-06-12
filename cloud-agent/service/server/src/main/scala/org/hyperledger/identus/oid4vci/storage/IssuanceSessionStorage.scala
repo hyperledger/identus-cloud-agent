@@ -9,6 +9,7 @@ trait IssuanceSessionStorage {
   def start(issuanceSession: IssuanceSession): IO[IssuanceSessionStorage.Error, IssuanceSession]
   def getByNonce(nonce: String): IO[IssuanceSessionStorage.Error, Option[IssuanceSession]]
   def getByIssuerState(issuerState: String): IO[IssuanceSessionStorage.Error, Option[IssuanceSession]]
+  def update(issuanceSession: IssuanceSession): IO[IssuanceSessionStorage.Error, IssuanceSession]
 }
 
 object IssuanceSessionStorage {
@@ -54,6 +55,14 @@ case class InMemoryIssuanceSessionService() extends IssuanceSessionStorage {
       case Some(issuanceSession) => ZIO.succeed(Some(issuanceSession))
       case None                  => ZIO.succeed(None)
     }
+  }
+
+  override def update(issuanceSession: IssuanceSession): IO[IssuanceSessionStorage.Error, IssuanceSession] = {
+    issuanceSessions
+      .put(issuanceSession.nonce, issuanceSession)
+      .fold(ZIO.fail(IssuanceSessionStorage.Errors.IssuanceSessionNotFound(issuanceSession.nonce)))(_ =>
+        ZIO.succeed(issuanceSession)
+      )
   }
 }
 
