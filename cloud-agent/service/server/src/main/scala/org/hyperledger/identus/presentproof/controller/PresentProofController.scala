@@ -37,8 +37,6 @@ trait PresentProofController {
 object PresentProofController {
   def toHttpError(error: PresentationError): ErrorResponse =
     error match
-      case PresentationError.RepositoryError(cause) =>
-        ErrorResponse.internalServerError(title = "RepositoryError", detail = Some(cause.toString))
       case PresentationError.RecordIdNotFound(recordId) =>
         ErrorResponse.notFound(detail = Some(s"Record Id not found: $recordId"))
       case PresentationError.ThreadIdNotFound(thid) =>
@@ -66,8 +64,6 @@ object PresentProofController {
         ErrorResponse.internalServerError(detail = Some("Issued credential not found"))
       case PresentationError.PresentationDecodingError(_) =>
         ErrorResponse.internalServerError(detail = Some("Presentation decoding error"))
-      case PresentationError.PresentationNotFoundError(_) =>
-        ErrorResponse.notFound(detail = Some("Presentation no found"))
       case PresentationError.HolderBindingError(msg) =>
         ErrorResponse.internalServerError(detail = Some(s"Holder binding error: $msg"))
       case PresentationError.MissingCredential =>
