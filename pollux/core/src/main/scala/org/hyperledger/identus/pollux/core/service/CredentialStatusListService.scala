@@ -1,7 +1,9 @@
 package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, CredentialStatusListWithCreds, DidCommID}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError.{
+  InvalidRoleForOperation,
   StatusListNotFound,
   StatusListNotFoundForIssueCredentialRecord
 }
@@ -21,7 +23,7 @@ trait CredentialStatusListService {
 
   def revokeByIssueCredentialRecordId(
       id: DidCommID
-  ): ZIO[WalletAccessContext, StatusListNotFoundForIssueCredentialRecord, Unit]
+  ): ZIO[WalletAccessContext, StatusListNotFoundForIssueCredentialRecord | InvalidRoleForOperation, Unit]
 
   def getCredentialsAndItsStatuses: UIO[Seq[CredentialStatusListWithCreds]]
 

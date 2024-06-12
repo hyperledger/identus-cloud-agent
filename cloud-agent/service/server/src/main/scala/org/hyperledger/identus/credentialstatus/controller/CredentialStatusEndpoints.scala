@@ -52,7 +52,7 @@ object CredentialStatusEndpoints {
         "credential-status" / "revoke-credential" / path[DidCommID]("id").description("Revoke a credential by its ID")
       )
       .out(statusCode(sttp.model.StatusCode.Ok))
-      .errorOut(basicFailuresAndNotFound)
+      .errorOut(basicFailuresWith(FailureVariant.unprocessableEntity, FailureVariant.notFound))
       .summary("Revoke a credential by its ID")
       .description("Marks credential to be ready for revocation, it will be revoked automatically")
       .tag("Credential status list")

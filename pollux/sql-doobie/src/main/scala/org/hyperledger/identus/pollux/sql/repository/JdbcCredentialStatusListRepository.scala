@@ -52,22 +52,6 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       record <- ZIO.fromOption(maybeRecord).orDieWith(_ => RuntimeException(s"Record not found: $id"))
     } yield record
 
-  def existsForIssueCredentialRecordId(id: DidCommID): UIO[Boolean] = {
-    val cxnIO =
-      sql"""
-           | SELECT COUNT(*)
-           |  FROM public.credentials_in_status_list
-           |  WHERE issue_credential_record_id = $id
-           |""".stripMargin
-        .query[Int]
-        .unique
-
-    cxnIO
-      .map(_ > 0)
-      .transact(xb)
-      .orDie
-  }
-
   def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]] = {
 
     val cxnIO =
@@ -197,6 +181,22 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
 
   }
 
+  def existsForIssueCredentialRecordId(id: DidCommID): URIO[WalletAccessContext, Boolean] = {
+    val cxnIO =
+      sql"""
+           | SELECT COUNT(*)
+           |  FROM public.credentials_in_status_list
+           |  WHERE issue_credential_record_id = $id
+           |""".stripMargin
+        .query[Int]
+        .unique
+
+    cxnIO
+      .map(_ > 0)
+      .transactWallet(xa)
+      .orDie
+  }
+
   def revokeByIssueCredentialRecordId(
       issueCredentialRecordId: DidCommID
   ): URIO[WalletAccessContext, Unit] = {
@@ -212,11 +212,10 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
              | AND cisl.issue_credential_record_id = $issueCredentialRecordId
              | AND cisl.is_canceled = false;
              |""".stripMargin.update.run
-
-    } yield updateQuery
-      .transactWallet(xa)
-      .orDie
-      .ensureOneAffectedRowOrDie
+      _ <- updateQuery
+        .transactWallet(xa)
+        .ensureOneAffectedRowOrDie
+    } yield ()
   }
 
   def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]] = {

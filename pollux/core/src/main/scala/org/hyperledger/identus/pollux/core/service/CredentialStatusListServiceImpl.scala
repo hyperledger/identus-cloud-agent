@@ -2,9 +2,11 @@ package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, CredentialStatusListWithCreds, DidCommID}
 import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError.{
+  InvalidRoleForOperation,
   StatusListNotFound,
   StatusListNotFoundForIssueCredentialRecord
 }
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
@@ -12,6 +14,7 @@ import zio.*
 import java.util.UUID
 
 class CredentialStatusListServiceImpl(
+    credentialService: CredentialService,
     credentialStatusListRepository: CredentialStatusListRepository,
 ) extends CredentialStatusListService {
 
@@ -28,8 +31,10 @@ class CredentialStatusListServiceImpl(
 
   def revokeByIssueCredentialRecordId(
       id: DidCommID
-  ): ZIO[WalletAccessContext, StatusListNotFoundForIssueCredentialRecord, Unit] =
+  ): ZIO[WalletAccessContext, StatusListNotFoundForIssueCredentialRecord | InvalidRoleForOperation, Unit] =
     for {
+      record <- credentialService.getById(id).mapError(e => StatusListNotFoundForIssueCredentialRecord(e.recordId))
+      _ <- if (record.role == Role.Issuer) ZIO.unit else ZIO.fail(InvalidRoleForOperation(record.role))
       exists <- credentialStatusListRepository.existsForIssueCredentialRecordId(id)
       _ <- if (exists) ZIO.unit else ZIO.fail(StatusListNotFoundForIssueCredentialRecord(id))
       _ <- credentialStatusListRepository.revokeByIssueCredentialRecordId(id)
@@ -52,6 +57,6 @@ class CredentialStatusListServiceImpl(
 }
 
 object CredentialStatusListServiceImpl {
-  val layer: URLayer[CredentialStatusListRepository, CredentialStatusListService] =
-    ZLayer.fromFunction(CredentialStatusListServiceImpl(_))
+  val layer: URLayer[CredentialService & CredentialStatusListRepository, CredentialStatusListService] =
+    ZLayer.fromFunction(CredentialStatusListServiceImpl(_, _))
 }

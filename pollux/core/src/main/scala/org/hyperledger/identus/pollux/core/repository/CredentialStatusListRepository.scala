@@ -20,7 +20,7 @@ trait CredentialStatusListRepository {
 
   def existsForIssueCredentialRecordId(
       id: DidCommID
-  ): UIO[Boolean]
+  ): URIO[WalletAccessContext, Boolean]
 
   def createNewForTheWallet(
       jwtIssuer: Issuer,
