@@ -485,7 +485,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                   presentation <-
                     for {
                       presentation <- presentationService
-                        .createSDJwtPresentation(id, requestPresentation, prover)
+                        .createSDJwtPresentation(id, requestPresentation)
                         .provideSomeLayer(ZLayer.succeed(walletAccessContext))
                     } yield presentation
                   _ <- presentationService

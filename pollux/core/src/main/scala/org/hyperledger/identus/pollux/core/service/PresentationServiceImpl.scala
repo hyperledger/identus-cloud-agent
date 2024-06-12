@@ -24,7 +24,6 @@ import zio.*
 import zio.json.*
 
 import java.net.URI
-import java.rmi.UnexpectedException
 import java.time.Instant
 import java.util.{Base64 as JBase64, UUID}
 import java.util as ju
@@ -95,8 +94,7 @@ private class PresentationServiceImpl(
   }
 
   override def createPresentationFromRecord(
-      recordId: DidCommID,
-      prover: Issuer
+      recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationCompact] = {
 
     for {
@@ -136,11 +134,10 @@ private class PresentationServiceImpl(
 
   override def createSDJwtPresentation(
       recordId: DidCommID,
-      requestPresentation: RequestPresentation,
-      prover: Issuer,
+      requestPresentation: RequestPresentation
   ): ZIO[WalletAccessContext, PresentationError, Presentation] = {
     for {
-      presentationPayload <- createPresentationFromRecord(recordId, prover)
+      presentationPayload <- createPresentationFromRecord(recordId)
       presentation <- ZIO.succeed(
         Presentation(
           body = Presentation.Body(
