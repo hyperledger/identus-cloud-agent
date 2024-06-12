@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
-import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, *}
+import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.vc.jwt.{revocation, Issuer, StatusPurpose}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{
@@ -66,6 +66,12 @@ class CredentialStatusListRepositoryInMemory(
     stores <- ZIO.foreach(refs.values.toList)(_.get)
     found = stores.flatMap(_.values).find(_.id == id)
   } yield found
+
+  override def existsForIssueCredentialRecordId(id: DidCommID): UIO[Boolean] = for {
+    refs <- statusListToCredInStatusListRefs.get
+    stores <- ZIO.foreach(refs.values)(_.get)
+    exists = stores.flatMap(_.values).exists(_.issueCredentialRecordId == id)
+  } yield exists
 
   def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]] = for {
     storageRef <- walletToStatusListStorageRefs
@@ -159,8 +165,7 @@ class CredentialStatusListRepositoryInMemory(
 
   def revokeByIssueCredentialRecordId(
       issueCredentialRecordId: DidCommID
-  ): URIO[WalletAccessContext, Boolean] = {
-    var isUpdated = false
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       statusListsRefs <- walletToStatusListStorageRefs
       statusLists <- statusListsRefs.get
@@ -173,14 +178,13 @@ class CredentialStatusListRepositoryInMemory(
           maybeFound.fold(credInStatusListsMap) { case (id, value) =>
             if (!value.isCanceled) {
               credInStatusListsMap.updated(id, value.copy(isCanceled = true, updatedAt = Some(Instant.now())))
-              isUpdated = true
               credInStatusListsMap
             } else credInStatusListsMap
           }
 
         }
       )
-    } yield isUpdated
+    } yield ()
   }
 
   def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]] = {

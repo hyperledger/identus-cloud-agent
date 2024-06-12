@@ -4,7 +4,7 @@ import org.hyperledger.identus.agent.server.http.DocModels
 import org.hyperledger.identus.agent.server.AgentHttpServer
 import org.hyperledger.identus.castor.controller.{DIDController, DIDRegistrarController}
 import org.hyperledger.identus.connect.controller.ConnectionController
-import org.hyperledger.identus.credential.status.controller.CredentialStatusController
+import org.hyperledger.identus.credentialstatus.controller.CredentialStatusController
 import org.hyperledger.identus.event.controller.EventController
 import org.hyperledger.identus.iam.authentication.{DefaultAuthenticator, Oid4vciAuthenticatorFactory}
 import org.hyperledger.identus.iam.entity.http.controller.EntityController
