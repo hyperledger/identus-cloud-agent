@@ -37,7 +37,7 @@ class JdbcPresentationRepository(
       recordId: DidCommID,
       credentialsToUse: Option[Seq[String]],
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records
         | SET
@@ -53,6 +53,8 @@ class JdbcPresentationRepository(
 
     cxnIO.run
       .transactWallet(xa)
+      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateSDJWTPresentationWithCredentialsToUse(
@@ -60,7 +62,7 @@ class JdbcPresentationRepository(
       credentialsToUse: Option[Seq[String]],
       sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO =
       sql"""
            | UPDATE public.presentation_records
@@ -78,6 +80,8 @@ class JdbcPresentationRepository(
 
     cxnIO.run
       .transactWallet(xa)
+      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   def updateAnoncredPresentationWithCredentialsToUse(
@@ -85,7 +89,7 @@ class JdbcPresentationRepository(
       anoncredCredentialsToUseJsonSchemaId: Option[String],
       anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO =
       sql"""
            | UPDATE public.presentation_records
@@ -103,6 +107,8 @@ class JdbcPresentationRepository(
 
     cxnIO.run
       .transactWallet(xa)
+      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs
@@ -156,7 +162,7 @@ class JdbcPresentationRepository(
     Get[String].map(decode[ProposePresentation](_).getOrElse(???))
   given proposePresentationPut: Put[ProposePresentation] = Put[String].contramap(_.asJson.toString)
 
-  override def createPresentationRecord(record: PresentationRecord): RIO[WalletAccessContext, Int] = {
+  override def createPresentationRecord(record: PresentationRecord): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | INSERT INTO public.presentation_records(
         |   id,
@@ -205,11 +211,13 @@ class JdbcPresentationRepository(
 
     cxnIO.run
       .transactWallet(xa)
+      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   override def getPresentationRecords(
       ignoreWithZeroRetries: Boolean
-  ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
+  ): URIO[WalletAccessContext, Seq[PresentationRecord]] = {
     val conditionFragment = Fragments.whereAndOpt(
       Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
     )
@@ -246,6 +254,7 @@ class JdbcPresentationRepository(
 
     cxnIO
       .transactWallet(xa)
+      .orDie
   }
 
   private def getRecordsByStates(
@@ -299,18 +308,18 @@ class JdbcPresentationRepository(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: PresentationRecord.ProtocolState*
-  ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states*).transactWallet(xa)
+  ): URIO[WalletAccessContext, Seq[PresentationRecord]] = {
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*).transactWallet(xa).orDie
   }
   override def getPresentationRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: PresentationRecord.ProtocolState*
-  ): Task[Seq[PresentationRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states*).transact(xb)
+  ): UIO[Seq[PresentationRecord]] = {
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*).transact(xb).orDie
   }
 
-  override def getPresentationRecord(recordId: DidCommID): RIO[WalletAccessContext, Option[PresentationRecord]] = {
+  override def findPresentationRecord(recordId: DidCommID): URIO[WalletAccessContext, Option[PresentationRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -342,11 +351,12 @@ class JdbcPresentationRepository(
 
     cxnIO
       .transactWallet(xa)
+      .orDie
   }
 
-  override def getPresentationRecordByThreadId(
+  override def findPresentationRecordByThreadId(
       thid: DidCommID
-  ): RIO[WalletAccessContext, Option[PresentationRecord]] = {
+  ): URIO[WalletAccessContext, Option[PresentationRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -378,13 +388,14 @@ class JdbcPresentationRepository(
 
     cxnIO
       .transactWallet(xa)
+      .orDie
   }
 
   override def updatePresentationRecordProtocolState(
       recordId: DidCommID,
       from: PresentationRecord.ProtocolState,
       to: PresentationRecord.ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records
         | SET
@@ -400,13 +411,15 @@ class JdbcPresentationRepository(
 
     cxnIO.run
       .transactWallet(xa)
+      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateWithRequestPresentation(
       recordId: DidCommID,
       request: RequestPresentation,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records
         | SET
@@ -422,13 +435,15 @@ class JdbcPresentationRepository(
 
     cxnIO.run
       .transactWallet(xa)
+      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateWithProposePresentation(
       recordId: DidCommID,
       propose: ProposePresentation,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records
         | SET
@@ -444,13 +459,15 @@ class JdbcPresentationRepository(
 
     cxnIO.run
       .transactWallet(xa)
+      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateWithPresentation(
       recordId: DidCommID,
       presentation: Presentation,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records
         | SET
@@ -466,12 +483,14 @@ class JdbcPresentationRepository(
 
     cxnIO.run
       .transactWallet(xa)
+      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records
         | SET
@@ -481,7 +500,10 @@ class JdbcPresentationRepository(
         | WHERE
         |   id = $recordId
         """.stripMargin.update
-    cxnIO.run.transactWallet(xa)
+    cxnIO.run
+      .transactWallet(xa)
+      .orDie
+      .ensureOneAffectedRowOrDie
   }
 
 }

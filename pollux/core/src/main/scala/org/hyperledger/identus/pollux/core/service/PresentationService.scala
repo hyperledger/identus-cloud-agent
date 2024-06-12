@@ -93,11 +93,11 @@ trait PresentationService {
       state: PresentationRecord.ProtocolState*
   ): IO[PresentationError, Seq[PresentationRecord]]
 
-  def getPresentationRecord(
+  def findPresentationRecord(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]]
 
-  def getPresentationRecordByThreadId(
+  def findPresentationRecordByThreadId(
       thid: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]]
 
