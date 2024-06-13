@@ -5,8 +5,7 @@ import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDI
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
 
-import java.net.URI
-import java.net.URL
+import java.net.{URI, URL}
 
 given didCommIDGet: Get[DidCommID] = Get[String].map(DidCommID(_))
 given didCommIDPut: Put[DidCommID] = Put[String].contramap(_.value)

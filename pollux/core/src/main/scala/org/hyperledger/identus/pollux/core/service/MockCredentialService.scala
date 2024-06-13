@@ -274,7 +274,7 @@ object MockCredentialService extends Mock[CredentialService] {
       override def getIssueCredentialRecordByThreadId(
           thid: DidCommID,
           ignoreWithZeroRetries: Boolean
-      ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = ???
+      ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] = ???
 
       override def getJwtIssuer(
           jwtIssuerDID: PrismDID,

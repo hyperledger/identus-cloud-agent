@@ -12,7 +12,6 @@ import org.hyperledger.identus.iam.authentication.{
 }
 import org.hyperledger.identus.oid4vci.controller.CredentialIssuerController
 import org.hyperledger.identus.oid4vci.http.{CredentialErrorResponse, ExtendedErrorResponse, NonceResponse}
-import org.hyperledger.identus.oid4vci.http.{CredentialErrorResponse, NonceResponse}
 import org.hyperledger.identus.LogUtils.*
 import sttp.tapir.ztapir.*
 import zio.*

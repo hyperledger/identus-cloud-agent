@@ -4,10 +4,10 @@ import org.hyperledger.identus.api.http.EndpointOutputs.statusCodeMatcher
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.iam.authentication.AuthenticationError
 import sttp.model.StatusCode
-import sttp.tapir.Schema.annotations.encodedName
+import sttp.tapir.{oneOfVariantValueMatcher, Schema}
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.{Schema, oneOfVariantValueMatcher}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder, jsonField}
+import sttp.tapir.Schema.annotations.encodedName
+import zio.json.{jsonField, DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import scala.util.Try
 

@@ -1,27 +1,21 @@
 package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{CredentialSchemaParsingError, InvalidURI}
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.CredentialSchemaParsingError
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.SchemaError
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.URISyntaxError
 import org.hyperledger.identus.pollux.core.model.oid4vci.{CredentialConfiguration, CredentialIssuer}
-import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialConfiguration
-import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialIssuer
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
 import org.hyperledger.identus.pollux.core.repository.OID4VCIIssuerMetadataRepository
-import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.CredentialConfigurationNotFound
-import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.InvalidSchemaId
-import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.IssuerIdNotFound
-import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.UnsupportedCredentialFormat
+import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.{
+  CredentialConfigurationNotFound,
+  InvalidSchemaId,
+  IssuerIdNotFound,
+  UnsupportedCredentialFormat
+}
 import org.hyperledger.identus.shared.db.Errors.UnexpectedAffectedRow
-import org.hyperledger.identus.shared.models.Failure
-import org.hyperledger.identus.shared.models.StatusCode
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{Failure, StatusCode, WalletAccessContext}
 import zio.*
 
-import java.net.URI
-import java.net.URL
+import java.net.{URI, URL}
 import java.util.UUID
 
 sealed trait OID4VCIIssuerMetadataServiceError(

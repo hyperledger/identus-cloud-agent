@@ -46,12 +46,12 @@ import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaControllerImpl,
   VerificationPolicyControllerImpl
 }
-import org.hyperledger.identus.pollux.sql.repository.JdbcOID4VCIIssuerMetadataRepository
 import org.hyperledger.identus.pollux.sql.repository.{
   JdbcCredentialDefinitionRepository,
   JdbcCredentialRepository,
   JdbcCredentialSchemaRepository,
   JdbcCredentialStatusListRepository,
+  JdbcOID4VCIIssuerMetadataRepository,
   JdbcPresentationRepository,
   JdbcVerificationPolicyRepository,
   Migrations as PolluxMigrations

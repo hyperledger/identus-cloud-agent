@@ -3,8 +3,8 @@ package org.hyperledger.identus.pollux.core.model.oid4vci
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
 
 import java.net.URI
-import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.time.Instant
 
 final case class CredentialConfiguration(
     configurationId: String,

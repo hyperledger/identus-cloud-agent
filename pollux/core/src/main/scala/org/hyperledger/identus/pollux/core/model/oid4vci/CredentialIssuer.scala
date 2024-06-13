@@ -1,9 +1,9 @@
 package org.hyperledger.identus.pollux.core.model.oid4vci
 
 import java.net.URL
+import java.time.temporal.ChronoUnit
 import java.time.Instant
 import java.util.UUID
-import java.time.temporal.ChronoUnit
 
 case class CredentialIssuer(
     id: UUID,

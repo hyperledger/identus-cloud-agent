@@ -11,9 +11,7 @@ package object error {
     final case class ValidationError(cause: OperationValidationError) extends DIDOperationError
   }
 
-  sealed trait DIDResolutionError {
-    def message: String
-  }
+  sealed trait DIDResolutionError
 
   object DIDResolutionError {
     final case class DLTProxyError(msg: String, cause: Throwable) extends DIDResolutionError {
