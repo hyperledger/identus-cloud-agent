@@ -33,11 +33,11 @@ object OIDCCredentialIssuerServiceSpec
     with Openid4VCIProofJwtOps {
 
   val layers: URLayer[
-    DIDService & ManagedDIDService & DIDNonSecretStorage,
+    DIDService & ManagedDIDService & DIDNonSecretStorage & OID4VCIIssuerMetadataService,
     CredentialService & CredentialDefinitionService & OIDCCredentialIssuerService
   ] =
     ZLayer.makeSome[
-      DIDService & ManagedDIDService & DIDNonSecretStorage,
+      DIDService & ManagedDIDService & DIDNonSecretStorage & OID4VCIIssuerMetadataService,
       CredentialService & CredentialDefinitionService & OIDCCredentialIssuerService
     ](
       InMemoryIssuanceSessionService.layer,
@@ -93,7 +93,8 @@ object OIDCCredentialIssuerServiceSpec
     }.provideSomeLayer(
       holderDidServiceExpectations.toLayer ++
         MockManagedDIDService.empty ++
-        MockDIDNonSecretStorage.empty >+> layers
+        MockDIDNonSecretStorage.empty ++
+        MockOID4VCIIssuerMetadataService.empty >+> layers
     )
   )
 
@@ -134,7 +135,8 @@ object OIDCCredentialIssuerServiceSpec
       }.provideSomeLayer(
         issuerDidServiceExpectations.toLayer ++
           issuerManagedDIDServiceExpectations.toLayer ++
-          getIssuerPrismDidWalletIdExpectation.toLayer >+> layers
+          getIssuerPrismDidWalletIdExpectation.toLayer ++
+          MockOID4VCIIssuerMetadataService.empty >+> layers
       )
     )
 }
