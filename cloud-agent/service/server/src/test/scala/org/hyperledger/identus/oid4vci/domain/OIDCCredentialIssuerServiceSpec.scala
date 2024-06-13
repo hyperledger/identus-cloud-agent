@@ -189,7 +189,7 @@ object OIDCCredentialIssuerServiceSpec
       ),
       test("reject credential-offer when created with invalid claims") {
         val wac = ZLayer.succeed(WalletAccessContext(WalletId.random))
-        val claims = Json("credentialSubject" -> Json.Obj("emailAddress" -> Json.Str("alice@example.com")))
+        val claims = Json("credentialSubject" -> Json.Obj("foo" -> Json.Str("bar")))
         for {
           oidcCredentialIssuerService <- ZIO.service[OIDCCredentialIssuerService]
           exit <- oidcCredentialIssuerService
@@ -202,7 +202,7 @@ object OIDCCredentialIssuerServiceSpec
             )
             .provide(wac)
             .exit
-        } yield assert(exit)(fails(anything))
+        } yield assert(exit)(failsWithA[OIDCCredentialIssuerService.Errors.CredentialSchemaError])
       }.provide(
         MockDIDService.empty,
         MockManagedDIDService.empty,
