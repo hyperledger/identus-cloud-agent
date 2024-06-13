@@ -168,7 +168,7 @@ object OIDCCredentialIssuerServiceSpec
         )
         for {
           oidcCredentialIssuerService <- ZIO.service[OIDCCredentialIssuerService]
-          exit <- oidcCredentialIssuerService
+          offer <- oidcCredentialIssuerService
             .createCredentialOffer(
               URI("http://example.com").toURL(),
               UUID.randomUUID(),
@@ -177,8 +177,9 @@ object OIDCCredentialIssuerServiceSpec
               claims,
             )
             .provide(wac)
-            .exit
-        } yield assert(exit)(succeeds(anything))
+          issuerState = offer.grants.get.authorization_code.issuer_state.get
+          session <- oidcCredentialIssuerService.getIssuanceSessionByIssuerState(issuerState)
+        } yield assert(session.claims)(equalTo(claims))
       }.provide(
         MockDIDService.empty,
         MockManagedDIDService.empty,
