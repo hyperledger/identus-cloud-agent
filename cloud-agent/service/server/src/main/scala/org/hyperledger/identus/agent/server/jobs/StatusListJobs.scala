@@ -19,8 +19,8 @@ object StatusListJobs extends BackgroundJobsHelper {
       credentialService <- ZIO.service[CredentialService]
       credentialStatusListsWithCreds <- credentialStatusListService.getCredentialsAndItsStatuses
         @@ Metric
-        .gauge("revocation_status_list_sync_get_status_lists_w_creds_ms_gauge")
-        .trackDurationWith(_.toMetricsSeconds)
+          .gauge("revocation_status_list_sync_get_status_lists_w_creds_ms_gauge")
+          .trackDurationWith(_.toMetricsSeconds)
 
       updatedVcStatusListsCredsEffects = credentialStatusListsWithCreds.map { statusListWithCreds =>
         val vcStatusListCredString = statusListWithCreds.statusListCredential
@@ -94,8 +94,8 @@ object StatusListJobs extends BackgroundJobsHelper {
           _ <- credentialStatusListService
             .markAsProcessedMany(unprocessedEntityIds)
             @@ Metric
-            .gauge("revocation_status_list_sync_mark_as_processed_many_ms_gauge")
-            .trackDurationWith(_.toMetricsSeconds)
+              .gauge("revocation_status_list_sync_mark_as_processed_many_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
 
           updatedVcStatusListCred <- vcStatusListCred.updateBitString(bitString).mapError {
             case VCStatusList2021Error.EncodingError(msg: String) => new Throwable(msg)
