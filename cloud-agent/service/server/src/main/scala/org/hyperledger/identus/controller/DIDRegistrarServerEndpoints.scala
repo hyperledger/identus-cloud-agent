@@ -19,7 +19,7 @@ class DIDRegistrarServerEndpoints(
       .serverLogic { wac =>
         { case (rc, paginationInput) =>
           didRegistrarController
-            .listManagedDid(paginationInput)(rc)
+            .listManagedDid(paginationInput)(using rc)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
@@ -31,7 +31,7 @@ class DIDRegistrarServerEndpoints(
       .serverLogic { wac =>
         { case (rc, createManagedDidRequest) =>
           didRegistrarController
-            .createManagedDid(createManagedDidRequest)(rc)
+            .createManagedDid(createManagedDidRequest)(using rc)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
@@ -43,7 +43,7 @@ class DIDRegistrarServerEndpoints(
       .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
-            .getManagedDid(did)(rc)
+            .getManagedDid(did)(using rc)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
@@ -55,7 +55,7 @@ class DIDRegistrarServerEndpoints(
       .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
-            .publishManagedDid(did)(rc)
+            .publishManagedDid(did)(using rc)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
@@ -67,7 +67,7 @@ class DIDRegistrarServerEndpoints(
       .serverLogic { wac =>
         { case (rc, did, updateRequest) =>
           didRegistrarController
-            .updateManagedDid(did, updateRequest)(rc)
+            .updateManagedDid(did, updateRequest)(using rc)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
@@ -79,7 +79,7 @@ class DIDRegistrarServerEndpoints(
       .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
-            .deactivateManagedDid(did)(rc)
+            .deactivateManagedDid(did)(using rc)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
