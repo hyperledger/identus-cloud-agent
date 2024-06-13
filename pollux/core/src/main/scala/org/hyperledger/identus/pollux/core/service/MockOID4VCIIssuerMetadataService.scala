@@ -1,12 +1,10 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialConfiguration
-import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialIssuer
+import org.hyperledger.identus.pollux.core.model.oid4vci.{CredentialConfiguration, CredentialIssuer}
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
-import zio.mock.{Expectation, Mock, Proxy}
-import zio.test.Assertion
+import zio.mock.{Mock, Proxy}
 
 import java.net.URL
 import java.util.UUID

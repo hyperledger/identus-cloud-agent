@@ -53,7 +53,7 @@ object OIDCCredentialIssuerServiceSpec
     )
 
   override def spec = suite("CredentialServiceImpl")(
-    OIDCCredentialIssuerServiceSpec,
+    oid4vciCredentialIssuerServiceSpec,
     validateProofSpec
   )
 
@@ -98,7 +98,7 @@ object OIDCCredentialIssuerServiceSpec
     )
   )
 
-  private val OIDCCredentialIssuerServiceSpec =
+  private val oid4vciCredentialIssuerServiceSpec =
     suite("Simple JWT credential issuance")(
       test("should issue a JWT credential") {
         for {
