@@ -276,10 +276,10 @@ object MockCredentialService extends Mock[CredentialService] {
           ignoreWithZeroRetries: Boolean
       ): IO[CredentialServiceError, Option[IssueCredentialRecord]] = ???
 
-      override def createJwtIssuer(
+      override def getJwtIssuer(
           jwtIssuerDID: PrismDID,
           verificationRelationship: VerificationRelationship
-      ): ZIO[WalletAccessContext, CredentialServiceError, Issuer] = ???
+      ): URIO[WalletAccessContext, Issuer] = ???
     }
   }
 }

@@ -86,7 +86,7 @@ object OIDCCredentialIssuerService {
 
     case class CredentialSchemaError(cause: org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError)
         extends Error {
-      override def message: String = cause.message
+      override def message: String = cause.userFacingMessage
     }
 
     case class ServiceError(message: String) extends Error
@@ -143,8 +143,7 @@ case class OIDCCredentialIssuerServiceImpl(
         .map(WalletAccessContext.apply)
 
       jwtIssuer <- credentialService
-        .createJwtIssuer(issuingDID, VerificationRelationship.AssertionMethod)
-        .mapError(_ => ServiceError(s"Failed to create JWT issuer for DID: $issuingDID"))
+        .getJwtIssuer(issuingDID, VerificationRelationship.AssertionMethod)
         .provideSomeLayer(ZLayer.succeed(wac))
 
       jwtVC <- buildJwtVerifiableCredential(

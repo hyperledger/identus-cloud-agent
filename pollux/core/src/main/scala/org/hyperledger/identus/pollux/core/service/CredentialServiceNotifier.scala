@@ -223,11 +223,11 @@ class CredentialServiceNotifier(
   ): UIO[Seq[IssueCredentialRecord]] =
     svc.getIssueCredentialRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states*)
 
-  override def createJwtIssuer(
+  override def getJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
-  ): ZIO[WalletAccessContext, CredentialServiceError, Issuer] =
-    svc.createJwtIssuer(jwtIssuerDID, verificationRelationship)
+  ): URIO[WalletAccessContext, Issuer] =
+    svc.getJwtIssuer(jwtIssuerDID, verificationRelationship)
 }
 
 object CredentialServiceNotifier {

@@ -1,12 +1,14 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.pollux.core.model.CredentialFormat
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{CredentialSchemaParsingError, InvalidURI}
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.CredentialSchemaParsingError
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.SchemaError
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.URISyntaxError
+import org.hyperledger.identus.pollux.core.model.oid4vci.{CredentialConfiguration, CredentialIssuer}
 import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialConfiguration
 import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialIssuer
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
+import org.hyperledger.identus.pollux.core.model.CredentialFormat
 import org.hyperledger.identus.pollux.core.repository.OID4VCIIssuerMetadataRepository
 import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.CredentialConfigurationNotFound
 import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.InvalidSchemaId
@@ -45,7 +47,7 @@ object OID4VCIIssuerMetadataServiceError {
   final case class InvalidSchemaId(schemaId: String, msg: String)
       extends OID4VCIIssuerMetadataServiceError(
         StatusCode.BadRequest,
-        s"The schemaId $schemaId is not a valid URI syntax: $msg"
+        s"Invalid schemaId $schemaId. $msg"
       )
 
   final case class UnsupportedCredentialFormat(format: CredentialFormat)
@@ -141,10 +143,8 @@ class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataReposito
       _ <- CredentialSchema
         .validSchemaValidator(schemaUri.toString(), uriDereferencer)
         .catchAll {
-          case e: URISyntaxError => ZIO.fail(InvalidSchemaId(schemaId, e.message))
-          case _: CredentialSchemaParsingError | _: SchemaError =>
-            ZIO.fail(InvalidSchemaId(schemaId, "The schema URI does not contain a valid schema response"))
-          case e => ZIO.dieMessage(s"Unexpected error when resolving schema $schemaId: $e")
+          case e: InvalidURI                   => ZIO.fail(InvalidSchemaId(schemaId, e.userFacingMessage))
+          case e: CredentialSchemaParsingError => ZIO.fail(InvalidSchemaId(schemaId, e.cause))
         }
       now <- ZIO.clockWith(_.instant)
       config = CredentialConfiguration(

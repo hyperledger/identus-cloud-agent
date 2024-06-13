@@ -151,10 +151,10 @@ trait CredentialService {
       failReason: Option[String]
   ): URIO[WalletAccessContext, Unit]
 
-  def createJwtIssuer(
+  def getJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
-  ): ZIO[WalletAccessContext, CredentialServiceError, Issuer]
+  ): URIO[WalletAccessContext, Issuer]
 
 }
 
