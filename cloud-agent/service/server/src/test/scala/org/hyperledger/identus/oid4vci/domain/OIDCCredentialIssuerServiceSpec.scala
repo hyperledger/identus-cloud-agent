@@ -1,7 +1,6 @@
 package org.hyperledger.identus.oid4vci.domain
 
 import com.nimbusds.jose.*
-import com.nimbusds.jose.jwk.*
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, MockDIDNonSecretStorage}
@@ -10,6 +9,8 @@ import org.hyperledger.identus.castor.core.service.{DIDService, MockDIDService}
 import org.hyperledger.identus.oid4vci.http.{ClaimDescriptor, CredentialDefinition, Localization}
 import org.hyperledger.identus.oid4vci.service.{OIDCCredentialIssuerService, OIDCCredentialIssuerServiceImpl}
 import org.hyperledger.identus.oid4vci.storage.InMemoryIssuanceSessionService
+import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialConfiguration
+import org.hyperledger.identus.pollux.core.model.CredentialFormat
 import org.hyperledger.identus.pollux.core.repository.{
   CredentialRepository,
   CredentialRepositoryInMemory,
@@ -17,7 +18,7 @@ import org.hyperledger.identus.pollux.core.repository.{
 }
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.vc.jwt.PrismDidResolver
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.{Clock, Random, URLayer, ZIO, ZLayer}
 import zio.json.*
 import zio.json.ast.Json
@@ -25,6 +26,8 @@ import zio.mock.MockSpecDefault
 import zio.test.*
 import zio.test.Assertion.*
 
+import java.net.URI
+import java.time.Instant
 import java.util.UUID
 import scala.util.Try
 
@@ -34,11 +37,11 @@ object OIDCCredentialIssuerServiceSpec
     with Openid4VCIProofJwtOps {
 
   val layers: URLayer[
-    DIDService & ManagedDIDService & DIDNonSecretStorage,
+    DIDService & ManagedDIDService & DIDNonSecretStorage & OID4VCIIssuerMetadataService,
     CredentialService & CredentialDefinitionService & OIDCCredentialIssuerService
   ] =
     ZLayer.makeSome[
-      DIDService & ManagedDIDService & DIDNonSecretStorage,
+      DIDService & ManagedDIDService & DIDNonSecretStorage & OID4VCIIssuerMetadataService,
       CredentialService & CredentialDefinitionService & OIDCCredentialIssuerService
     ](
       InMemoryIssuanceSessionService.layer,
@@ -54,11 +57,11 @@ object OIDCCredentialIssuerServiceSpec
     )
 
   override def spec = suite("CredentialServiceImpl")(
-    OIDCCredentialIssuerServiceSpec,
+    oid4vciCredentialIssuerServiceSpec,
     validateProofSpec
   )
 
-  private val (issuerOp, issuerKp, issuerDidMetadata, issuerDidData) =
+  private val (_, issuerKp, issuerDidMetadata, issuerDidData) =
     MockDIDService.createDID(VerificationRelationship.AssertionMethod)
 
   private val (holderOp, holderKp, holderDidMetadata, holderDidData) =
@@ -67,27 +70,27 @@ object OIDCCredentialIssuerServiceSpec
   private val holderDidServiceExpectations =
     MockDIDService.resolveDIDExpectation(holderDidMetadata, holderDidData)
 
-  private val holderManagedDIDServiceExpectations =
-    MockManagedDIDService.javaKeyPairWithDIDExpectation(holderKp)
-
   private val issuerDidServiceExpectations =
     MockDIDService.resolveDIDExpectation(issuerDidMetadata, issuerDidData)
 
   private val issuerManagedDIDServiceExpectations =
     MockManagedDIDService.javaKeyPairWithDIDExpectation(issuerKp)
 
-  private val getIssuerPrismDidWalletIdExpectation =
+  private val getIssuerPrismDidWalletIdExpectations =
     MockDIDNonSecretStorage.getPrismDidWalletIdExpectation(issuerDidData.id, WalletId.default)
 
+  private val getCredentialConfigurationExpectations =
+    MockOID4VCIIssuerMetadataService.getCredentialConfigurationByIdExpectations(
+      CredentialConfiguration(
+        configurationId = "DrivingLicense",
+        format = CredentialFormat.JWT,
+        schemaId = URI("resource:///vc-schema-example.json"),
+        createdAt = Instant.EPOCH
+      )
+    )
+
   private def buildJwtProof(nonce: String, aud: UUID, iat: Int) = {
-    import org.bouncycastle.util.encoders.Hex
-
     val longFormDid = PrismDID.buildLongFormFromOperation(holderOp)
-
-    val encodedKey = Hex.toHexString(holderKp.privateKey.getEncoded)
-    println(s"Private Key: $encodedKey")
-    println("Long Form DID: " + longFormDid.toString)
-
     makeJwtProof(longFormDid, nonce, aud, iat, holderKp.privateKey)
   }
 
@@ -101,15 +104,16 @@ object OIDCCredentialIssuerServiceSpec
         jwt = buildJwtProof(nonce, aud, iat)
         result <- credentialIssuer.verifyJwtProof(jwt)
       } yield assert(result)(equalTo(true))
-    }.provideSomeLayer(
-      holderDidServiceExpectations.toLayer ++
-        MockManagedDIDService.empty ++
-        // holderManagedDIDServiceExpectations.toLayer ++
-        MockDIDNonSecretStorage.empty >+> layers
+    }.provide(
+      holderDidServiceExpectations.toLayer,
+      MockManagedDIDService.empty,
+      MockDIDNonSecretStorage.empty,
+      MockOID4VCIIssuerMetadataService.empty,
+      layers
     )
   )
 
-  private val OIDCCredentialIssuerServiceSpec =
+  private val oid4vciCredentialIssuerServiceSpec =
     suite("Simple JWT credential issuance")(
       test("should issue a JWT credential") {
         for {
@@ -143,10 +147,68 @@ object OIDCCredentialIssuerServiceSpec
           // assert(jwtObject.getHeader.getKeyID)(equalTo(issuerDidData.id.toString)) && //TODO: add key ID to the header
           assert(jwtObject.getHeader.getAlgorithm)(equalTo(JWSAlgorithm.ES256K)) &&
           assert(name)(equalTo("Alice"))
-      }.provideSomeLayer(
-        issuerDidServiceExpectations.toLayer ++
-          issuerManagedDIDServiceExpectations.toLayer ++
-          getIssuerPrismDidWalletIdExpectation.toLayer >+> layers
+      }.provide(
+        issuerDidServiceExpectations.toLayer,
+        issuerManagedDIDServiceExpectations.toLayer,
+        getIssuerPrismDidWalletIdExpectations.toLayer,
+        MockOID4VCIIssuerMetadataService.empty,
+        layers
+      ),
+      test("create credential-offer with valid claims") {
+        val wac = ZLayer.succeed(WalletAccessContext(WalletId.random))
+        val claims = Json(
+          "credentialSubject" -> Json.Obj(
+            "emailAddress" -> Json.Str("alice@example.com"),
+            "givenName" -> Json.Str("Alice"),
+            "familyName" -> Json.Str("Wonderland"),
+            "dateOfIssuance" -> Json.Str("2000-01-01T10:00:00Z"),
+            "drivingLicenseID" -> Json.Str("12345"),
+            "drivingClass" -> Json.Num(5),
+          )
+        )
+        for {
+          oidcCredentialIssuerService <- ZIO.service[OIDCCredentialIssuerService]
+          offer <- oidcCredentialIssuerService
+            .createCredentialOffer(
+              URI("http://example.com").toURL(),
+              UUID.randomUUID(),
+              "DrivingLicense",
+              issuerDidData.id,
+              claims,
+            )
+            .provide(wac)
+          issuerState = offer.grants.get.authorization_code.issuer_state.get
+          session <- oidcCredentialIssuerService.getIssuanceSessionByIssuerState(issuerState)
+        } yield assert(session.claims)(equalTo(claims))
+      }.provide(
+        MockDIDService.empty,
+        MockManagedDIDService.empty,
+        MockDIDNonSecretStorage.empty,
+        getCredentialConfigurationExpectations.toLayer,
+        layers
+      ),
+      test("reject credential-offer when created with invalid claims") {
+        val wac = ZLayer.succeed(WalletAccessContext(WalletId.random))
+        val claims = Json("credentialSubject" -> Json.Obj("foo" -> Json.Str("bar")))
+        for {
+          oidcCredentialIssuerService <- ZIO.service[OIDCCredentialIssuerService]
+          exit <- oidcCredentialIssuerService
+            .createCredentialOffer(
+              URI("http://example.com").toURL(),
+              UUID.randomUUID(),
+              "DrivingLicense",
+              issuerDidData.id,
+              claims,
+            )
+            .provide(wac)
+            .exit
+        } yield assert(exit)(failsWithA[OIDCCredentialIssuerService.Errors.CredentialSchemaError])
+      }.provide(
+        MockDIDService.empty,
+        MockManagedDIDService.empty,
+        MockDIDNonSecretStorage.empty,
+        getCredentialConfigurationExpectations.toLayer,
+        layers
       )
     )
 }

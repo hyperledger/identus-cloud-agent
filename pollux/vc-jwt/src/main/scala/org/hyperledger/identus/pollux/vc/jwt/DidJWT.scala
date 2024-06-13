@@ -1,18 +1,12 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
 import com.nimbusds.jose.{JOSEObjectType, JWSAlgorithm, JWSHeader}
-import com.nimbusds.jose.crypto.{ECDSASigner, ECDSAVerifier, Ed25519Signer}
+import com.nimbusds.jose.crypto.{ECDSASigner, Ed25519Signer}
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey, OctetKeyPair}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import io.circe.*
-import org.hyperledger.identus.shared.crypto.{
-  Ed25519KeyPair,
-  Ed25519PrivateKey,
-  Ed25519PublicKey,
-  Secp256k1PrivateKey,
-  Secp256k1PublicKey
-}
+import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1PrivateKey}
 import zio.*
 
 import java.security.*
