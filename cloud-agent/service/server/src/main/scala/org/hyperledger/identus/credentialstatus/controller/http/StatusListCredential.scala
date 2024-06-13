@@ -1,7 +1,7 @@
-package org.hyperledger.identus.credential.status.controller.http
+package org.hyperledger.identus.credentialstatus.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
-import org.hyperledger.identus.credential.status.controller.http.StatusListCredential.annotations
+import org.hyperledger.identus.credentialstatus.controller.http.StatusListCredential.annotations
 import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError
 import org.hyperledger.identus.pollux.core.model.CredentialStatusList
 import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
@@ -53,14 +53,9 @@ object StatusListCredential {
 
   def fromCredentialStatusListEntry(
       domain: CredentialStatusList
-  ): IO[CredentialStatusListServiceError, StatusListCredential] = {
-
-    val res = ZIO
-      .fromEither(domain.statusListCredential.fromJson[StatusListCredential])
-      .mapError(err => CredentialStatusListServiceError.JsonCredentialParsingError(new Throwable(err)))
-
-    res
-  }
+  ): UIO[StatusListCredential] = ZIO
+    .fromEither(domain.statusListCredential.fromJson[StatusListCredential])
+    .orDieWith(err => RuntimeException(s"An error occurred when parsing the status list credential: $err"))
 
   object annotations {
     object `@context`

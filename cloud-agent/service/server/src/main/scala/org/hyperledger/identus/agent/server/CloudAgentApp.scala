@@ -11,7 +11,7 @@ import org.hyperledger.identus.castor.controller.{DIDRegistrarServerEndpoints, D
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.controller.ConnectionServerEndpoints
 import org.hyperledger.identus.connect.core.service.ConnectionService
-import org.hyperledger.identus.credential.status.controller.CredentialStatusServiceEndpoints
+import org.hyperledger.identus.credentialstatus.controller.CredentialStatusServiceEndpoints
 import org.hyperledger.identus.event.controller.EventServerEndpoints
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticator
