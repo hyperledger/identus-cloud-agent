@@ -18,8 +18,7 @@ import org.hyperledger.identus.pollux.core.repository.{
 }
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.vc.jwt.PrismDidResolver
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.{Clock, Random, URLayer, ZIO, ZLayer}
 import zio.json.*
 import zio.json.ast.Json

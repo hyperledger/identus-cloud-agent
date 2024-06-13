@@ -4,8 +4,7 @@ import org.hyperledger.identus.pollux.core.model.oid4vci.{CredentialConfiguratio
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
-import zio.mock.{Mock, Proxy}
-import zio.mock.Expectation
+import zio.mock.{Expectation, Mock, Proxy}
 import zio.test.Assertion
 
 import java.net.URL
