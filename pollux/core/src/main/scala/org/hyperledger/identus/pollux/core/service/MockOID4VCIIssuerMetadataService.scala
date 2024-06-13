@@ -5,6 +5,8 @@ import org.hyperledger.identus.pollux.core.model.CredentialFormat
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.mock.{Mock, Proxy}
+import zio.mock.Expectation
+import zio.test.Assertion
 
 import java.net.URL
 import java.util.UUID
@@ -58,7 +60,7 @@ object MockOID4VCIIssuerMetadataService extends Mock[OID4VCIIssuerMetadataServic
             issuerId: UUID,
             configurationId: String
         ): ZIO[WalletAccessContext, CredentialConfigurationNotFound, CredentialConfiguration] =
-          ZIO.die(NotImplementedError())
+          proxy(GetCredentialConfigurationById, issuerId, configurationId)
 
         override def deleteCredentialConfiguration(
             issuerId: UUID,
@@ -67,4 +69,12 @@ object MockOID4VCIIssuerMetadataService extends Mock[OID4VCIIssuerMetadataServic
       }
     }
   }
+
+  def getCredentialConfigurationByIdExpectations(
+      configuration: CredentialConfiguration
+  ): Expectation[OID4VCIIssuerMetadataService] =
+    GetCredentialConfigurationById(
+      assertion = Assertion.anything,
+      result = Expectation.value(configuration)
+    )
 }
