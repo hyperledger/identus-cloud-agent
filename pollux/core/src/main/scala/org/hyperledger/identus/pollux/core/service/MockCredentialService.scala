@@ -65,7 +65,11 @@ object MockCredentialService extends Mock[CredentialService] {
 
   object ReceiveCredentialOffer extends Effect[OfferCredential, InvalidCredentialOffer, IssueCredentialRecord]
   object AcceptCredentialOffer
-      extends Effect[(DidCommID, Option[String]), RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord]
+      extends Effect[
+        (DidCommID, Option[String], Option[String]),
+        RecordNotFound | UnsupportedDidFormat,
+        IssueCredentialRecord
+      ]
   object GenerateJWTCredentialRequest
       extends Effect[DidCommID, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord]
   object GenerateSDJWTCredentialRequest
@@ -173,9 +177,10 @@ object MockCredentialService extends Mock[CredentialService] {
 
       override def acceptCredentialOffer(
           recordId: DidCommID,
-          subjectId: Option[String]
+          subjectId: Option[String],
+          keyId: Option[String]
       ): IO[RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
-        proxy(AcceptCredentialOffer, recordId, subjectId)
+        proxy(AcceptCredentialOffer, recordId, subjectId, keyId)
 
       override def generateJWTCredentialRequest(
           recordId: DidCommID

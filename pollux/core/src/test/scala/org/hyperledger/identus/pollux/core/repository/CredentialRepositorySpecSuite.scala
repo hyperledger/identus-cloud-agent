@@ -27,6 +27,7 @@ object CredentialRepositorySpecSuite {
     credentialFormat = credentialFormat,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,
+    keyId = None,
     validityPeriod = None,
     automaticIssuance = None,
     protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
@@ -283,7 +284,8 @@ object CredentialRepositorySpecSuite {
               dRecord.id,
               Some("RAW_CREDENTIAL_DATA"),
               CredentialFormat.JWT,
-              aRecord.subjectId
+              aRecord.subjectId,
+              aRecord.keyId
             )
           )
         )
@@ -293,7 +295,8 @@ object CredentialRepositorySpecSuite {
               dRecord.id,
               Some("RAW_CREDENTIAL_DATA"),
               CredentialFormat.AnonCreds,
-              aRecord.subjectId
+              aRecord.subjectId,
+              aRecord.keyId
             )
           )
         )
@@ -466,7 +469,7 @@ object CredentialRepositorySpecSuite {
         record1 = issueCredentialRecord(CredentialFormat.JWT)
         record2 = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.create(record1).provide(wallet1)
-        res <- repo.updateWithSubjectId(record2.id, "my-id", newState).provide(wallet2).exit
+        res <- repo.updateWithSubjectId(record2.id, "my-id", Some("my-key-id"), newState).provide(wallet2).exit
       } yield assert(res)(dies(isSubtype[RuntimeException](anything)))
     },
     test("unable to delete IssueCredentialRecord outside of the wallet") {

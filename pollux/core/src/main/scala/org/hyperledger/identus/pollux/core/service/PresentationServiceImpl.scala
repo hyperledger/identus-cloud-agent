@@ -293,7 +293,7 @@ private class PresentationServiceImpl(
       connectionId,
       CredentialFormat.SDJWT,
       proofTypes,
-      attachments = options.map(o => Seq(toSDJWTAttachment(o, claimsToDisclose))).getOrElse(Seq.empty)
+      attachments = Seq(toSDJWTAttachment(options, claimsToDisclose))
     )
   }
 
@@ -826,7 +826,9 @@ private class PresentationServiceImpl(
       issuedCredentials: Seq[ValidFullIssuedCredentialRecord]
   ) = validateCredentialsFormat(
     record,
-    issuedCredentials.map(cred => ValidIssuedCredentialRecord(cred.id, None, cred.credentialFormat, cred.subjectId))
+    issuedCredentials.map(cred =>
+      ValidIssuedCredentialRecord(cred.id, None, cred.credentialFormat, cred.subjectId, cred.keyId)
+    )
   )
 
   override def acceptPresentation(
@@ -1071,7 +1073,7 @@ private class PresentationServiceImpl(
   }
 
   private def toSDJWTAttachment(
-      options: Options,
+      options: Option[Options],
       claimsToDsiclose: ast.Json.Obj
   ): AttachmentDescriptor = {
     AttachmentDescriptor.buildBase64Attachment(

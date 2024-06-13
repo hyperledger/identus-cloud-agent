@@ -66,6 +66,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   credential_format,
         |   role,
         |   subject_id,
+        |   key_id,
         |   validity_period,
         |   automatic_issuance,
         |   protocol_state,
@@ -90,6 +91,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   ${record.credentialFormat},
         |   ${record.role},
         |   ${record.subjectId},
+        |   ${record.keyId},
         |   ${record.validityPeriod},
         |   ${record.automaticIssuance},
         |   ${record.protocolState},
@@ -132,6 +134,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
            |   credential_format,
            |   role,
            |   subject_id,
+           |   key_id,
            |   validity_period,
            |   automatic_issuance,
            |   protocol_state,
@@ -202,6 +205,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
             |   credential_format,
             |   role,
             |   subject_id,
+            |   key_id,
             |   validity_period,
             |   automatic_issuance,
             |   protocol_state,
@@ -264,6 +268,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   credential_format,
         |   role,
         |   subject_id,
+        |   key_id,
         |   validity_period,
         |   automatic_issuance,
         |   protocol_state,
@@ -307,6 +312,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   credential_format,
         |   role,
         |   subject_id,
+        |   key_id,
         |   validity_period,
         |   automatic_issuance,
         |   protocol_state,
@@ -356,6 +362,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
+      keyId: Option[String] = None,
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
@@ -363,6 +370,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         | SET
         |   protocol_state = $protocolState,
         |   subject_id = ${Some(subjectId)},
+        |   key_id = ${keyId},
         |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
@@ -448,7 +456,8 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   id,
         |   issued_credential_raw,
         |   credential_format,
-        |   subject_id
+        |   subject_id,
+        |   key_id
         | FROM public.issue_credential_records
         | WHERE
         |   issued_credential_raw IS NOT NULL

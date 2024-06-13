@@ -117,11 +117,13 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       credentialRecordUuid <- ZIO
         .attempt(DidCommID(credentialRecordId))
         .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid DidCommID"))
-      vcSubjectId <- credentialService
+      credentialRecord <- credentialService
         .findById(credentialRecordUuid)
         .someOrFail(CredentialServiceError.RecordNotFound(credentialRecordUuid))
-        .map(_.subjectId)
-        .someOrElseZIO(ZIO.dieMessage(s"VC SubjectId not found in credential record: $credentialRecordUuid"))
+      vcSubjectId <- ZIO
+        .fromOption(credentialRecord.subjectId)
+        .orDieWith(_ => RuntimeException(s"VC SubjectId not found in credential record: $credentialRecordUuid"))
+
       proverDID <- ZIO
         .fromEither(PrismDID.fromString(vcSubjectId))
         .mapError(e =>
@@ -131,7 +133,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
             )
         )
       longFormPrismDID <- getLongForm(proverDID, true)
-      jwtIssuer <- getSDJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
+      jwtIssuer <- getSDJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication, credentialRecord.keyId)
     } yield jwtIssuer
 
   private def performPresentProofExchange(record: PresentationRecord): URIO[

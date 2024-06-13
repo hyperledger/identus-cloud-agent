@@ -124,4 +124,10 @@ object CredentialServiceError {
         s"The credential request validation failed: errors=${errors.mkString("[", "], [", "]")}"
       )
 
+  final case class VCJwtHeaderParsingError(cause: String)
+      extends CredentialServiceError(
+        StatusCode.UnprocessableContent,
+        s"The VC Jwt Header value could not be parsed: cause[$cause]"
+      )
+  
 }

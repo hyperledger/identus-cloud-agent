@@ -93,7 +93,8 @@ trait CredentialService {
 
   def acceptCredentialOffer(
       recordId: DidCommID,
-      subjectId: Option[String]
+      subjectId: Option[String],
+      keyId: Option[String]
   ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord]
 
   def generateJWTCredentialRequest(
@@ -124,7 +125,7 @@ trait CredentialService {
   def generateSDJWTCredential(
       recordId: DidCommID,
       expirationTime: Duration,
-  ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed | VCJwtHeaderParsingError, IssueCredentialRecord]
 
   def generateAnonCredsCredential(
       recordId: DidCommID

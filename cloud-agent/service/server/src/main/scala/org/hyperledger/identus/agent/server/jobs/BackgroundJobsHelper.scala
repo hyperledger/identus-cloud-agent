@@ -161,14 +161,15 @@ trait BackgroundJobsHelper {
     */
   def getSDJwtIssuer(
       jwtIssuerDID: PrismDID,
-      verificationRelationship: VerificationRelationship
+      verificationRelationship: VerificationRelationship,
+      keyId: Option[String]
   ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, RuntimeException, JwtIssuer] = {
     for {
       ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
     } yield {
       JwtIssuer(
         org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
-        EdSigner(ed25519keyPair),
+        EdSigner(ed25519keyPair, keyId),
         Ed25519PublicKey.toJavaEd25519PublicKey(ed25519keyPair.publicKey.getEncoded)
       )
     }
