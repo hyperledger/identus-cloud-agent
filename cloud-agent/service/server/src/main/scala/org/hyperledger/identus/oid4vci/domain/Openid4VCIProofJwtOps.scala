@@ -1,12 +1,11 @@
 package org.hyperledger.identus.oid4vci.domain
 
 import com.nimbusds.jose.{JOSEObjectType, JWSAlgorithm, JWSHeader, JWSObject, JWSSigner, Payload}
-import org.hyperledger.identus.castor.core.model.did.{DID, LongFormPrismDID, PrismDID}
-import org.hyperledger.identus.pollux.vc.jwt.{DidResolver, JWT}
+import org.hyperledger.identus.castor.core.model.did.{DID, LongFormPrismDID}
+import org.hyperledger.identus.pollux.vc.jwt.JWT
 import org.hyperledger.identus.pollux.vc.jwt.JwtSignerImplicits.*
 import org.hyperledger.identus.shared.crypto.Secp256k1PrivateKey
-import zio.Task
-import zio.ZIO
+import zio.{Task, ZIO}
 
 import java.util.UUID
 import scala.jdk.CollectionConverters.*

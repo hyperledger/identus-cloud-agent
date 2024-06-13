@@ -7,10 +7,22 @@ import org.hyperledger.identus.castor.core.model.did.{DID, PrismDID, Verificatio
 import org.hyperledger.identus.oid4vci.domain.IssuanceSession
 import org.hyperledger.identus.oid4vci.http.*
 import org.hyperledger.identus.oid4vci.storage.IssuanceSessionStorage
-import org.hyperledger.identus.pollux.core.service.CredentialService
-import org.hyperledger.identus.pollux.vc.jwt.{Issuer, JWT, JWTVerification, JwtCredential, W3cCredentialPayload}
-import org.hyperledger.identus.pollux.vc.jwt.DID as PolluxDID
-import org.hyperledger.identus.pollux.vc.jwt.DidResolver
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
+import org.hyperledger.identus.pollux.core.service.{
+  CredentialService,
+  OID4VCIIssuerMetadataService,
+  OID4VCIIssuerMetadataServiceError,
+  URIDereferencer
+}
+import org.hyperledger.identus.pollux.vc.jwt.{
+  DID as PolluxDID,
+  DidResolver,
+  Issuer,
+  JWT,
+  JWTVerification,
+  JwtCredential,
+  W3cCredentialPayload
+}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
@@ -67,6 +79,16 @@ object OIDCCredentialIssuerService {
 
     case class DIDResolutionError(message: String) extends Error
 
+    case class CredentialConfigurationNotFound(issuerId: UUID, credentialConfigurationId: String) extends Error {
+      override def message: String =
+        s"Credential configuration with id $credentialConfigurationId not found for issuer $issuerId"
+    }
+
+    case class CredentialSchemaError(cause: org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError)
+        extends Error {
+      override def message: String = cause.message
+    }
+
     case class ServiceError(message: String) extends Error
 
     case class UnexpectedError(cause: Throwable) extends Error {
@@ -78,8 +100,10 @@ object OIDCCredentialIssuerService {
 case class OIDCCredentialIssuerServiceImpl(
     didNonSecretStorage: DIDNonSecretStorage,
     credentialService: CredentialService,
+    issuerMetadataService: OID4VCIIssuerMetadataService,
     issuanceSessionStorage: IssuanceSessionStorage,
-    didResolver: DidResolver
+    didResolver: DidResolver,
+    uriDereferencer: URIDereferencer,
 ) extends OIDCCredentialIssuerService {
 
   import OIDCCredentialIssuerService.Error
@@ -95,7 +119,6 @@ case class OIDCCredentialIssuerServiceImpl(
         )
         .mapError(InvalidProof.apply)
       _ <- verifiedJwtSignature.toZIO.mapError(InvalidProof.apply)
-      _ <- ZIO.succeed(println(s"JWT proof is verified: ${jwt.value}"))
     } yield true
   }
 
@@ -111,7 +134,7 @@ case class OIDCCredentialIssuerServiceImpl(
       claims: zio.json.ast.Json,
       credentialIdentifier: Option[String],
       credentialDefinition: CredentialDefinition
-  ): IO[OIDCCredentialIssuerService.Error, JWT] = {
+  ): IO[Error, JWT] = {
     for {
       wac <- didNonSecretStorage
         .getPrismDidWalletId(issuingDID)
@@ -181,7 +204,7 @@ case class OIDCCredentialIssuerServiceImpl(
 
   override def getIssuanceSessionByIssuerState(
       issuerState: String
-  ): IO[OIDCCredentialIssuerService.Error, IssuanceSession] =
+  ): IO[Error, IssuanceSession] =
     issuanceSessionStorage
       .getByIssuerState(issuerState)
       .mapError(e => ServiceError(s"Failed to get issuance session: ${e.message}"))
@@ -193,9 +216,17 @@ case class OIDCCredentialIssuerServiceImpl(
       credentialConfigurationId: String,
       issuingDID: PrismDID,
       claims: zio.json.ast.Json
-  ): ZIO[WalletAccessContext, OIDCCredentialIssuerService.Error, CredentialOffer] =
-    // TODO: validate claims with credential schema
+  ): ZIO[WalletAccessContext, Error, CredentialOffer] =
     for {
+      schemaId <- issuerMetadataService
+        .getCredentialConfigurationById(issuerId, credentialConfigurationId)
+        .mapError { case _: OID4VCIIssuerMetadataServiceError.CredentialConfigurationNotFound =>
+          CredentialConfigurationNotFound(issuerId, credentialConfigurationId)
+        }
+        .map(_.schemaId)
+      _ <- CredentialSchema
+        .validateJWTCredentialSubject(schemaId.toString(), simpleZioToCirce(claims).noSpaces, uriDereferencer)
+        .mapError(e => CredentialSchemaError(e))
       session <- buildNewIssuanceSession(issuerId, issuingDID, claims)
       _ <- issuanceSessionStorage
         .start(session)
@@ -247,8 +278,9 @@ case class OIDCCredentialIssuerServiceImpl(
 
 object OIDCCredentialIssuerServiceImpl {
   val layer: URLayer[
-    DIDNonSecretStorage & CredentialService & IssuanceSessionStorage & DidResolver,
+    DIDNonSecretStorage & CredentialService & IssuanceSessionStorage & DidResolver & URIDereferencer &
+      OID4VCIIssuerMetadataService,
     OIDCCredentialIssuerService
   ] =
-    ZLayer.fromFunction(OIDCCredentialIssuerServiceImpl(_, _, _, _))
+    ZLayer.fromFunction(OIDCCredentialIssuerServiceImpl(_, _, _, _, _, _))
 }

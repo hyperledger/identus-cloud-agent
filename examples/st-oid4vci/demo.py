@@ -87,6 +87,7 @@ def prepare_issuer():
                 "type": "object",
                 "properties": {
                     "firstName": {"type": "string"},
+                    "degree": {"type": "string"},
                     "grade": {"type": "number"},
                 },
                 "required": ["firstName", "grade"],
@@ -269,7 +270,7 @@ if __name__ == "__main__":
 
     # step 1: Issuer create CredentialOffer
     credential_offer_uri = issuer_create_credential_offer(
-        {"degree": "ChemicalEngineering", "gpa": "3.00"}
+        {"firstName": "Alice", "degree": "ChemicalEngineering", "grade": 3.2}
     )
 
     # step 2: Issuer present QR code container CredentialOffer URI

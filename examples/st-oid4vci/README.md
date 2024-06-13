@@ -25,10 +25,9 @@ sbt docker:publishLocal
 ### 1. Spin up the agent stack with pre-configured Keycloak
 
 ```bash
-docker-compose up --build
+docker-compose up
 ```
 
-This builds a custom Keycloak image with OID4VCI plugin.
 The Keycloak UI is available at `http://localhost:9980` and the admin username is `admin` with password `admin`.
 
 ### 2. Run the issuance demo script
