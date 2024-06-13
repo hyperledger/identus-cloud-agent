@@ -95,7 +95,6 @@ case class OIDCCredentialIssuerServiceImpl(
         )
         .mapError(InvalidProof.apply)
       _ <- verifiedJwtSignature.toZIO.mapError(InvalidProof.apply)
-      _ <- ZIO.succeed(println(s"JWT proof is verified: ${jwt.value}"))
     } yield true
   }
 

@@ -80,14 +80,7 @@ object OIDCCredentialIssuerServiceSpec
     MockDIDNonSecretStorage.getPrismDidWalletIdExpectation(issuerDidData.id, WalletId.default)
 
   private def buildJwtProof(nonce: String, aud: UUID, iat: Int) = {
-    import org.bouncycastle.util.encoders.Hex
-
     val longFormDid = PrismDID.buildLongFormFromOperation(holderOp)
-
-    val encodedKey = Hex.toHexString(holderKp.privateKey.getEncoded)
-    println(s"Private Key: $encodedKey")
-    println("Long Form DID: " + longFormDid.toString)
-
     makeJwtProof(longFormDid, nonce, aud, iat, holderKp.privateKey)
   }
 
