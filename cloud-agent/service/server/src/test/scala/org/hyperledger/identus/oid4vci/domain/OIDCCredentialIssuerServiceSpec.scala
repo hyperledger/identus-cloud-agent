@@ -1,7 +1,6 @@
 package org.hyperledger.identus.oid4vci.domain
 
 import com.nimbusds.jose.*
-import com.nimbusds.jose.jwk.*
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, MockDIDNonSecretStorage}
@@ -58,7 +57,7 @@ object OIDCCredentialIssuerServiceSpec
     validateProofSpec
   )
 
-  private val (issuerOp, issuerKp, issuerDidMetadata, issuerDidData) =
+  private val (_, issuerKp, issuerDidMetadata, issuerDidData) =
     MockDIDService.createDID(VerificationRelationship.AssertionMethod)
 
   private val (holderOp, holderKp, holderDidMetadata, holderDidData) =
@@ -66,9 +65,6 @@ object OIDCCredentialIssuerServiceSpec
 
   private val holderDidServiceExpectations =
     MockDIDService.resolveDIDExpectation(holderDidMetadata, holderDidData)
-
-  private val holderManagedDIDServiceExpectations =
-    MockManagedDIDService.javaKeyPairWithDIDExpectation(holderKp)
 
   private val issuerDidServiceExpectations =
     MockDIDService.resolveDIDExpectation(issuerDidMetadata, issuerDidData)
@@ -97,7 +93,6 @@ object OIDCCredentialIssuerServiceSpec
     }.provideSomeLayer(
       holderDidServiceExpectations.toLayer ++
         MockManagedDIDService.empty ++
-        // holderManagedDIDServiceExpectations.toLayer ++
         MockDIDNonSecretStorage.empty >+> layers
     )
   )
