@@ -5,8 +5,7 @@ import org.hyperledger.identus.castor.core.model.did.{DID, LongFormPrismDID, Pri
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver, JWT}
 import org.hyperledger.identus.pollux.vc.jwt.JwtSignerImplicits.*
 import org.hyperledger.identus.shared.crypto.Secp256k1PrivateKey
-import zio.Task
-import zio.ZIO
+import zio.{Task, ZIO}
 
 import java.util.UUID
 import scala.jdk.CollectionConverters.*

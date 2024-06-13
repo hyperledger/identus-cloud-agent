@@ -8,9 +8,15 @@ import org.hyperledger.identus.oid4vci.domain.IssuanceSession
 import org.hyperledger.identus.oid4vci.http.*
 import org.hyperledger.identus.oid4vci.storage.IssuanceSessionStorage
 import org.hyperledger.identus.pollux.core.service.CredentialService
-import org.hyperledger.identus.pollux.vc.jwt.{Issuer, JWT, JWTVerification, JwtCredential, W3cCredentialPayload}
-import org.hyperledger.identus.pollux.vc.jwt.DID as PolluxDID
-import org.hyperledger.identus.pollux.vc.jwt.DidResolver
+import org.hyperledger.identus.pollux.vc.jwt.{
+  DID as PolluxDID,
+  DidResolver,
+  Issuer,
+  JWT,
+  JWTVerification,
+  JwtCredential,
+  W3cCredentialPayload
+}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 

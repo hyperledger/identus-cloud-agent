@@ -11,8 +11,7 @@ import io.circe.generic.auto.*
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.crypto.util.SubjectPublicKeyInfoFactory
-import org.hyperledger.identus.castor.core.model.did.PrismDID
-import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
 import org.hyperledger.identus.shared.crypto.Ed25519PublicKey
 import pdi.jwt.*
 import zio.*
