@@ -47,10 +47,7 @@ class ES256KSigner(privateKey: PrivateKey) extends Signer {
     val err = Throwable("Public key must be secp256k1 EC public key")
     pk match
       case pk: ECPublicKey =>
-        getCurveName(pk).fold(ZIO.fail(err)) { curveName =>
-          if curveName != "secp256k1" then ZIO.fail(Throwable(err.getMessage + s", but got $curveName"))
-          else EcdsaSecp256k1Signature2019ProofGenerator.generateProof(payload, signer, pk)
-        }
+        EcdsaSecp256k1Signature2019ProofGenerator.generateProof(payload, signer, pk)
       case _ => ZIO.fail(err)
   }
 
@@ -84,20 +81,6 @@ class EdSigner(ed25519KeyPair: Ed25519KeyPair) extends Signer {
     signedJwt.sign(signer)
     JWT(signedJwt.serialize())
   }
-}
-
-def getCurveName(publicKey: ECPublicKey): Option[String] = {
-  val params = publicKey.getParams
-
-  val maybeCurveName = ECNamedCurveTable.getNames.asScala.find {
-    case name: String =>
-      val spec = ECNamedCurveTable.getParameterSpec(name)
-      val curveSpec =
-        new ECNamedCurveSpec(spec.getName, spec.getCurve, spec.getG, spec.getN, spec.getH, spec.getSeed)
-      curveSpec.getCurve.equals(params.getCurve)
-    case _ => false
-  }
-  maybeCurveName.fold(Option.empty[String]) { case name: String => Some(name) }
 }
 
 def toJWKFormat(holderJwk: ECKey): JsonWebKey = {

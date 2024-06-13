@@ -17,7 +17,6 @@ object StatusListJobs extends BackgroundJobsHelper {
     for {
       credentialStatusListService <- ZIO.service[CredentialStatusListService]
       credentialService <- ZIO.service[CredentialService]
-      _ <- ZIO.logInfo("syncing revocation status lists with credentials")
       credentialStatusListsWithCreds <- credentialStatusListService.getCredentialsAndItsStatuses
         .mapError(_.toThrowable) @@ Metric
         .gauge("revocation_sØtatus_list_sync_get_status_lists_w_creds_ms_gauge")
