@@ -11,11 +11,11 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredential
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.{
   RecordNotFound,
   RecordNotFoundForThreadIdAndStates,
-  UnsupportedDidFormat
+  UnsupportedDidFormat,
+  *
 }
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}

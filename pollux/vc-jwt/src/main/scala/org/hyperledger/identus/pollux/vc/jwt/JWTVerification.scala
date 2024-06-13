@@ -8,7 +8,6 @@ import com.nimbusds.jose.JWSVerifier
 import com.nimbusds.jwt.SignedJWT
 import io.circe
 import io.circe.generic.auto.*
-import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
 import org.hyperledger.identus.shared.crypto.Ed25519PublicKey
 import pdi.jwt.*

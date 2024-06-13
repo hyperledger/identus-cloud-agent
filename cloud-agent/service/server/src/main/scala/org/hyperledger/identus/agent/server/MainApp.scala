@@ -27,8 +27,6 @@ import org.hyperledger.identus.credentialstatus.controller.CredentialStatusContr
 import org.hyperledger.identus.didcomm.controller.DIDCommControllerImpl
 import org.hyperledger.identus.event.controller.EventControllerImpl
 import org.hyperledger.identus.event.notification.EventNotificationServiceImpl
-import org.hyperledger.identus.iam.authentication.apikey.JdbcAuthenticationRepository
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
 import org.hyperledger.identus.iam.authentication.{DefaultAuthenticator, Oid4vciAuthenticatorFactory}
 import org.hyperledger.identus.iam.authentication.apikey.JdbcAuthenticationRepository
 import org.hyperledger.identus.iam.authorization.core.EntityPermissionManagementService
