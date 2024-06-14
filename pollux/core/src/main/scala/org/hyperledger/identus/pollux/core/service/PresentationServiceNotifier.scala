@@ -11,9 +11,9 @@ import org.hyperledger.identus.mercury.protocol.presentproof.{
 import org.hyperledger.identus.pollux.anoncreds.AnoncredPresentation
 import org.hyperledger.identus.pollux.core.model.{DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
-import org.hyperledger.identus.pollux.core.model.presentation.{Options, SdJwtPresentationPayload}
+import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
-import org.hyperledger.identus.pollux.sdjwt.PresentationJson
+import org.hyperledger.identus.pollux.sdjwt.PresentationCompact
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{IO, URLayer, ZIO, ZLayer}
@@ -202,18 +202,16 @@ class PresentationServiceNotifier(
   ): ZIO[WalletAccessContext, PresentationError, PresentationPayload] =
     svc.createJwtPresentationPayloadFromRecord(record, issuer, issuanceDate)
 
-  override def createSDJwtPresentationPayloadFromRecord(
-      record: DidCommID,
-      issuer: Issuer
-  ): ZIO[WalletAccessContext, PresentationError, PresentationJson] =
-    svc.createSDJwtPresentationPayloadFromRecord(record, issuer)
+  override def createPresentationFromRecord(
+      record: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationCompact] =
+    svc.createPresentationFromRecord(record)
 
   override def createSDJwtPresentation(
       record: DidCommID,
-      requestPresentation: RequestPresentation,
-      issuer: Issuer
+      requestPresentation: RequestPresentation
   ): ZIO[WalletAccessContext, PresentationError, Presentation] =
-    svc.createSDJwtPresentation(record, requestPresentation, issuer)
+    svc.createSDJwtPresentation(record, requestPresentation)
 
   override def createAnoncredPresentationPayloadFromRecord(
       record: DidCommID,
@@ -244,15 +242,15 @@ class PresentationServiceNotifier(
   ): IO[PresentationError, Seq[PresentationRecord]] =
     svc.getPresentationRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, state*)
 
-  override def getPresentationRecord(
+  override def findPresentationRecord(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]] =
-    svc.getPresentationRecord(recordId)
+    svc.findPresentationRecord(recordId)
 
-  override def getPresentationRecordByThreadId(
+  override def findPresentationRecordByThreadId(
       thid: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]] =
-    svc.getPresentationRecordByThreadId(thid)
+    svc.findPresentationRecordByThreadId(thid)
 
   override def receiveProposePresentation(
       request: ProposePresentation

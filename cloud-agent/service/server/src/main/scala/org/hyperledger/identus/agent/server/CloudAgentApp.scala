@@ -11,7 +11,7 @@ import org.hyperledger.identus.castor.controller.{DIDRegistrarServerEndpoints, D
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.controller.ConnectionServerEndpoints
 import org.hyperledger.identus.connect.core.service.ConnectionService
-import org.hyperledger.identus.credential.status.controller.CredentialStatusServiceEndpoints
+import org.hyperledger.identus.credentialstatus.controller.CredentialStatusServiceEndpoints
 import org.hyperledger.identus.event.controller.EventServerEndpoints
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticator
@@ -19,6 +19,7 @@ import org.hyperledger.identus.iam.entity.http.EntityServerEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementServerEndpoints
 import org.hyperledger.identus.issue.controller.IssueServerEndpoints
 import org.hyperledger.identus.mercury.{DidOps, HttpClient}
+import org.hyperledger.identus.oid4vci.CredentialIssuerServerEndpoints
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
 import org.hyperledger.identus.pollux.credentialschema.{
@@ -135,6 +136,7 @@ object AgentHttpServer {
     allEntityEndpoints <- EntityServerEndpoints.all
     allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
     allEventEndpoints <- EventServerEndpoints.all
+    allOIDCEndpoints <- CredentialIssuerServerEndpoints.all
   } yield allCredentialDefinitionRegistryEndpoints ++
     allSchemaRegistryEndpoints ++
     allVerificationPolicyEndpoints ++
@@ -148,7 +150,8 @@ object AgentHttpServer {
     allSystemEndpoints ++
     allEntityEndpoints ++
     allWalletManagementEndpoints ++
-    allEventEndpoints
+    allEventEndpoints ++
+    allOIDCEndpoints
   def run =
     for {
       allEndpoints <- agentRESTServiceEndpoints

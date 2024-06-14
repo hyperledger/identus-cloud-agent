@@ -43,7 +43,7 @@ object PresentationStatus {
       case Some(p) =>
         p.attachments.head.data match {
           case Base64(data) =>
-            val base64Decoded = new String(java.util.Base64.getDecoder.decode(data))
+            val base64Decoded = new String(java.util.Base64.getUrlDecoder.decode(data))
             Seq(base64Decoded)
           case any => ???
         }

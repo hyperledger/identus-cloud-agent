@@ -1,12 +1,12 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import com.nimbusds.jose.{JWSAlgorithm, JWSHeader}
+import com.nimbusds.jose.{JOSEObjectType, JWSAlgorithm, JWSHeader}
 import com.nimbusds.jose.crypto.{ECDSASigner, Ed25519Signer}
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import io.circe.*
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
+import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1PrivateKey}
 import zio.*
 
 import java.security.*
@@ -18,6 +18,19 @@ object JWT {
 
   extension (jwt: JWT) {
     def value: String = jwt
+  }
+}
+
+object JwtSignerImplicits {
+  import com.nimbusds.jose.JWSSigner
+
+  implicit class JwtSignerProviderSecp256k1(secp256k1PrivateKey: Secp256k1PrivateKey) {
+    def asJwtSigner: JWSSigner = {
+      val ecdsaSigner = ECDSASigner(secp256k1PrivateKey.toJavaPrivateKey, Curve.SECP256K1)
+      val bouncyCastleProvider = BouncyCastleProviderSingleton.getInstance
+      ecdsaSigner.getJCAContext.setProvider(bouncyCastleProvider)
+      ecdsaSigner
+    }
   }
 }
 
@@ -45,7 +58,7 @@ class ES256KSigner(privateKey: PrivateKey) extends Signer {
   override def encode(claim: Json): JWT = {
     val claimSet = JWTClaimsSet.parse(claim.noSpaces)
     val signedJwt = SignedJWT(
-      new JWSHeader.Builder(JWSAlgorithm.ES256K).build(),
+      new JWSHeader.Builder(JWSAlgorithm.ES256K).`type`(JOSEObjectType.JWT).build(),
       claimSet
     )
     signedJwt.sign(signer)

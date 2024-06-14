@@ -35,7 +35,7 @@ class DIDCommControllerImpl(
     appConfig: AppConfig
 ) extends DIDCommController {
 
-  override def handleDIDCommMessage(msg: DIDCommMessage)(implicit rc: RequestContext): IO[ErrorResponse, Unit] = {
+  override def handleDIDCommMessage(msg: DIDCommMessage)(using rc: RequestContext): IO[ErrorResponse, Unit] = {
     for {
       _ <- validateContentType(rc.request.contentType)
       _ <- handleMessage(msg)
@@ -53,10 +53,8 @@ class DIDCommControllerImpl(
         msgAndContext <- unpackMessage(msg)
         _ <- processMessage(msgAndContext._1)
           .catchAll {
-            case t: Throwable                  => ZIO.die(t) // Convert any 'Throwable' failure to a defect
             case f: Failure                    => ZIO.fail(f)
             case _: DIDCommMessageParsingError => ZIO.fail(UnexpectedError(StatusCode.BadRequest))
-            case _: CredentialServiceError     => ZIO.fail(UnexpectedError(StatusCode.UnprocessableContent))
             case _: PresentationError          => ZIO.fail(UnexpectedError(StatusCode.UnprocessableContent))
           }
           .provideSomeLayer(ZLayer.succeed(msgAndContext._2))
@@ -126,19 +124,25 @@ class DIDCommControllerImpl(
       : PartialFunction[Message, ZIO[WalletAccessContext, CredentialServiceError, Unit]] = {
     case msg if msg.piuri == OfferCredential.`type` =>
       for {
-        offerFromIssuer <- ZIO.succeed(OfferCredential.readFromMessage(msg))
+        offerFromIssuer <- ZIO
+          .fromEither(OfferCredential.readFromMessage(msg))
+          .mapError(CredentialServiceError.InvalidCredentialOffer(_))
         _ <- ZIO.logInfo("As an Holder in issue-credential got OfferCredential: " + offerFromIssuer)
         _ <- credentialService.receiveCredentialOffer(offerFromIssuer)
       } yield ()
     case msg if msg.piuri == RequestCredential.`type` =>
       for {
-        requestCredential <- ZIO.succeed(RequestCredential.readFromMessage(msg))
+        requestCredential <- ZIO
+          .fromEither(RequestCredential.readFromMessage(msg))
+          .mapError(CredentialServiceError.InvalidCredentialRequest(_))
         _ <- ZIO.logInfo("As an Issuer in issue-credential got RequestCredential: " + requestCredential)
         _ <- credentialService.receiveCredentialRequest(requestCredential)
       } yield ()
     case msg if msg.piuri == IssueCredential.`type` =>
       for {
-        issueCredential <- ZIO.succeed(IssueCredential.readFromMessage(msg))
+        issueCredential <- ZIO
+          .fromEither(IssueCredential.readFromMessage(msg))
+          .mapError(CredentialServiceError.InvalidCredentialIssue(_))
         _ <- ZIO.logInfo("As an Holder in issue-credential got IssueCredential: " + issueCredential)
         _ <- credentialService.receiveCredentialIssue(issueCredential)
       } yield ()
@@ -168,10 +172,12 @@ class DIDCommControllerImpl(
       } yield ()
   }
 
-  private val revocationNotification: PartialFunction[Message, ZIO[Any, Throwable, Unit]] = {
+  private val revocationNotification: PartialFunction[Message, ZIO[Any, DIDCommMessageParsingError, Unit]] = {
     case msg if msg.piuri == RevocationNotification.`type` =>
       for {
-        revocationNotification <- ZIO.attempt(RevocationNotification.readFromMessage(msg))
+        revocationNotification <- ZIO
+          .fromEither(RevocationNotification.readFromMessage(msg))
+          .mapError(DIDCommMessageParsingError(_))
         _ <- ZIO.logInfo("Got RevocationNotification: " + revocationNotification)
       } yield ()
   }

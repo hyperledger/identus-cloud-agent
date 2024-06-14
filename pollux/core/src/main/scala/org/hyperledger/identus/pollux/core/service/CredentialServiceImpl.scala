@@ -72,7 +72,7 @@ object CredentialServiceImpl {
   private val VC_JSON_SCHEMA_TYPE = "CredentialSchema2022"
 }
 
-private class CredentialServiceImpl(
+class CredentialServiceImpl(
     credentialRepository: CredentialRepository,
     credentialStatusListRepository: CredentialStatusListRepository,
     didResolver: DidResolver,
@@ -109,8 +109,13 @@ private class CredentialServiceImpl(
 
   override def getById(
       recordId: DidCommID
-  ): URIO[WalletAccessContext, IssueCredentialRecord] =
-    credentialRepository.getById(recordId)
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord] =
+    for {
+      maybeRecord <- credentialRepository.findById(recordId)
+      record <- ZIO
+        .fromOption(maybeRecord)
+        .mapError(_ => RecordNotFound(recordId))
+    } yield record
 
   override def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
@@ -391,7 +396,6 @@ private class CredentialServiceImpl(
       guid: UUID
   ): UIO[CredentialDefinition] = credentialDefinitionService
     .getByGUID(guid)
-    .mapError(e => CredentialDefinitionServiceError(e.toString))
     .orDieAsUnmanagedFailure
 
   private[this] def getCredentialDefinitionPrivatePart(
@@ -498,7 +502,7 @@ private class CredentialServiceImpl(
     } yield keyId
   }
 
-  private def getJwtIssuer(
+  override def getJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
   ): URIO[WalletAccessContext, JwtIssuer] = {
@@ -641,7 +645,7 @@ private class CredentialServiceImpl(
             .find(_.format.contains(IssueCredentialOfferFormat.Anoncred.name))
             .map(_.data)
             .flatMap {
-              case Base64(value) => Some(new String(java.util.Base64.getDecoder.decode(value)))
+              case Base64(value) => Some(new String(java.util.Base64.getUrlDecoder.decode(value)))
               case _             => None
             }
         )
@@ -1141,7 +1145,7 @@ private class CredentialServiceImpl(
         fromDID = issue.from,
         toDID = issue.to,
         thid = issue.thid,
-        credentials = Seq(IssueCredentialIssuedFormat.SDJWT -> credential.value.getBytes)
+        credentials = Seq(IssueCredentialIssuedFormat.SDJWT -> credential.compact.getBytes)
       )
       // End custom
 
@@ -1293,7 +1297,7 @@ private class CredentialServiceImpl(
       jwt <- attachmentDescriptor.data match
         case Base64(b64) =>
           ZIO.succeed {
-            val base64Decoded = new String(java.util.Base64.getDecoder.decode(b64))
+            val base64Decoded = new String(java.util.Base64.getUrlDecoder.decode(b64))
             JWT(base64Decoded)
           }
         case _ => ZIO.dieMessage(s"Attachment does not contain Base64Data: ${record.id}")

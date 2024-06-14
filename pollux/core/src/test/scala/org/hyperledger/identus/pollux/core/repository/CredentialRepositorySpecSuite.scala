@@ -255,9 +255,12 @@ object CredentialRepositorySpecSuite {
         _ <- repo.create(bRecord)
         _ <- repo.create(cRecord)
         _ <- repo.create(dRecord)
+        issueCredential <- ZIO.fromEither(
+          IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+        )
         _ <- repo.updateWithIssuedRawCredential(
           aRecord.id,
-          IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
+          issueCredential,
           "RAW_CREDENTIAL_DATA",
           None,
           None,
@@ -265,7 +268,7 @@ object CredentialRepositorySpecSuite {
         )
         _ <- repo.updateWithIssuedRawCredential(
           dRecord.id,
-          IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
+          issueCredential,
           "RAW_CREDENTIAL_DATA",
           None,
           None,
@@ -343,7 +346,9 @@ object CredentialRepositorySpecSuite {
         aRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.create(aRecord)
         record <- repo.findById(aRecord.id)
-        issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+        issueCredential <- ZIO.fromEither(
+          IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+        )
         _ <- repo.updateWithIssueCredential(aRecord.id, issueCredential, ProtocolState.CredentialPending)
         updatedRecord <- repo.findById(aRecord.id)
       } yield {
@@ -357,7 +362,9 @@ object CredentialRepositorySpecSuite {
         aRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.create(aRecord)
         record <- repo.findById(aRecord.id)
-        issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+        issueCredential <- ZIO.fromEither(
+          IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+        )
         _ <- repo.updateWithIssuedRawCredential(
           aRecord.id,
           issueCredential,

@@ -18,9 +18,9 @@ object StatusListJobs extends BackgroundJobsHelper {
       credentialStatusListService <- ZIO.service[CredentialStatusListService]
       credentialService <- ZIO.service[CredentialService]
       credentialStatusListsWithCreds <- credentialStatusListService.getCredentialsAndItsStatuses
-        .mapError(_.toThrowable) @@ Metric
-        .gauge("revocation_status_list_sync_get_status_lists_w_creds_ms_gauge")
-        .trackDurationWith(_.toMetricsSeconds)
+        @@ Metric
+          .gauge("revocation_status_list_sync_get_status_lists_w_creds_ms_gauge")
+          .trackDurationWith(_.toMetricsSeconds)
 
       updatedVcStatusListsCredsEffects = credentialStatusListsWithCreds.map { statusListWithCreds =>
         val vcStatusListCredString = statusListWithCreds.statusListCredential
@@ -93,9 +93,9 @@ object StatusListJobs extends BackgroundJobsHelper {
           }
           _ <- credentialStatusListService
             .markAsProcessedMany(unprocessedEntityIds)
-            .mapError(_.toThrowable) @@ Metric
-            .gauge("revocation_status_list_sync_mark_as_processed_many_ms_gauge")
-            .trackDurationWith(_.toMetricsSeconds)
+            @@ Metric
+              .gauge("revocation_status_list_sync_mark_as_processed_many_ms_gauge")
+              .trackDurationWith(_.toMetricsSeconds)
 
           updatedVcStatusListCred <- vcStatusListCred.updateBitString(bitString).mapError {
             case VCStatusList2021Error.EncodingError(msg: String) => new Throwable(msg)
@@ -105,10 +105,16 @@ object StatusListJobs extends BackgroundJobsHelper {
             .map(_.spaces2)
           _ <- credentialStatusListService
             .updateStatusListCredential(statusListWithCreds.id, vcStatusListCredJsonString)
-            .mapError(_.toThrowable)
         } yield ()
 
-        effect.provideSomeLayer(ZLayer.succeed(walletAccessContext))
+        effect
+          .catchAll(e =>
+            ZIO.logErrorCause(s"Error processing status list record: ${statusListWithCreds.id} ", Cause.fail(e))
+          )
+          .catchAllDefect(d =>
+            ZIO.logErrorCause(s"Defect processing status list record: ${statusListWithCreds.id}", Cause.fail(d))
+          )
+          .provideSomeLayer(ZLayer.succeed(walletAccessContext))
 
       }
       config <- ZIO.service[AppConfig]

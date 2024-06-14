@@ -13,6 +13,10 @@ import java.util.UUID
 trait ContextAware
 type ContextAwareTask[T] = Task[T] & ContextAware
 
+object Errors {
+  final case class UnexpectedAffectedRow(count: Int) extends RuntimeException(s"Unexpected affected row count: $count")
+}
+
 object Implicits {
 
   given walletIdGet: Get[WalletId] = Get[UUID].map(WalletId.fromUUID)
@@ -43,10 +47,10 @@ object Implicits {
 
   }
 
-  extension [Int](ma: RIO[WalletAccessContext, Int]) {
+  extension (ma: RIO[WalletAccessContext, Int]) {
     def ensureOneAffectedRowOrDie: URIO[WalletAccessContext, Unit] = ma.flatMap {
       case 1     => ZIO.unit
-      case count => ZIO.fail(RuntimeException(s"Unexpected affected row count: $count"))
+      case count => ZIO.fail(Errors.UnexpectedAffectedRow(count))
     }.orDie
   }
 

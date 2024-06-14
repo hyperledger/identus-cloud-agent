@@ -19,6 +19,7 @@ import zio.json.*
 import zio.json.ast.Json
 
 import java.util.UUID
+import scala.language.implicitConversions
 
 class PresentProofControllerImpl(
     presentationService: PresentationService,
@@ -95,11 +96,7 @@ class PresentProofControllerImpl(
             }
         }
     } yield PresentationStatus.fromDomain(record)
-
-    result.mapError {
-      case e: ConnectionServiceError => e.asInstanceOf[ErrorResponse] // use implicit conversion
-      case e: PresentationError      => PresentProofController.toHttpError(e)
-    }
+    result
   }
 
   override def getPresentations(paginationInput: PaginationInput, thid: Option[String])(implicit
@@ -108,12 +105,12 @@ class PresentProofControllerImpl(
     val result = for {
       records <- thid match
         case None       => presentationService.getPresentationRecords(ignoreWithZeroRetries = false)
-        case Some(thid) => presentationService.getPresentationRecordByThreadId(DidCommID(thid)).map(_.toSeq)
+        case Some(thid) => presentationService.findPresentationRecordByThreadId(DidCommID(thid)).map(_.toSeq)
     } yield PresentationStatusPage(
       records.map(PresentationStatus.fromDomain)
     )
 
-    result.mapError(PresentProofController.toHttpError)
+    result
   }
 
   override def getPresentation(
@@ -121,16 +118,12 @@ class PresentProofControllerImpl(
   )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
     val result: ZIO[WalletAccessContext, ErrorResponse | PresentationError, PresentationStatus] = for {
       presentationId <- toDidCommID(id.toString)
-      maybeRecord <- presentationService.getPresentationRecord(presentationId)
+      maybeRecord <- presentationService.findPresentationRecord(presentationId)
       record <- ZIO
         .fromOption(maybeRecord)
         .mapError(_ => ErrorResponse.notFound(detail = Some(s"Presentation record not found: $id")))
     } yield PresentationStatus.fromDomain(record)
-
-    result.mapError {
-      case e: ErrorResponse     => e
-      case e: PresentationError => PresentProofController.toHttpError(e)
-    }
+    result
   }
 
   override def updatePresentation(id: UUID, requestPresentationAction: RequestPresentationAction)(implicit
@@ -173,10 +166,7 @@ class PresentProofControllerImpl(
       }
     } yield PresentationStatus.fromDomain(record)
 
-    result.mapError {
-      case e: ErrorResponse     => e
-      case e: PresentationError => PresentProofController.toHttpError(e)
-    }
+    result
   }
 }
 
