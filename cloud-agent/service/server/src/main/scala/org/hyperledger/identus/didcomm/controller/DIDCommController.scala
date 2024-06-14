@@ -5,5 +5,5 @@ import org.hyperledger.identus.didcomm.controller.http.DIDCommMessage
 import zio.IO
 
 trait DIDCommController {
-  def handleDIDCommMessage(msg: DIDCommMessage)(implicit rc: RequestContext): IO[ErrorResponse, Unit]
+  def handleDIDCommMessage(msg: DIDCommMessage)(using rc: RequestContext): IO[ErrorResponse, Unit]
 }
