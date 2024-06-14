@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.core.service
 
+import org.hyperledger.identus.pollux.core.model.error.CredentialDefinitionServiceError
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.*
 import org.hyperledger.identus.shared.models.WalletAccessContext

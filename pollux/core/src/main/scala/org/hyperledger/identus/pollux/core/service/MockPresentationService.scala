@@ -209,14 +209,12 @@ object MockPresentationService extends Mock[PresentationService] {
       ): IO[PresentationError, PresentationPayload] = ???
 
       override def createPresentationFromRecord(
-          record: DidCommID,
-          issuer: Issuer,
+          record: DidCommID
       ): IO[PresentationError, PresentationCompact] = ???
 
       def createSDJwtPresentation(
           recordId: DidCommID,
-          requestPresentation: RequestPresentation,
-          prover: Issuer,
+          requestPresentation: RequestPresentation
       ): ZIO[WalletAccessContext, PresentationError, Presentation] = ???
 
       override def createAnoncredPresentationPayloadFromRecord(

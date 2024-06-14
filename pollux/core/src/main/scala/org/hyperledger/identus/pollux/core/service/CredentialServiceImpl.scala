@@ -396,7 +396,6 @@ private class CredentialServiceImpl(
       guid: UUID
   ): UIO[CredentialDefinition] = credentialDefinitionService
     .getByGUID(guid)
-    .mapError(e => CredentialDefinitionServiceError(e.toString))
     .orDieAsUnmanagedFailure
 
   private[this] def getCredentialDefinitionPrivatePart(
