@@ -6,7 +6,7 @@ import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.EndpointOutput.OneOfVariant
 
 object EndpointOutputs {
-  private def statusCodeMatcher(
+  def statusCodeMatcher(
       statusCode: StatusCode
   ): PartialFunction[Any, Boolean] = {
     case ErrorResponse(status, _, _, _, _) if status == statusCode.code => true

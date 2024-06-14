@@ -3,7 +3,13 @@ package org.hyperledger.identus.pollux.core.service
 import org.hyperledger.identus.agent.walletapi.storage
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.pollux.anoncreds.{AnoncredLib, AnoncredSchemaDef}
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
+import org.hyperledger.identus.pollux.core.model.error.{
+  CredentialDefinitionCreationError,
+  CredentialDefinitionGuidNotFoundError,
+  CredentialDefinitionServiceError,
+  CredentialDefinitionValidationError,
+  CredentialSchemaError
+}
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{
   CredentialSchemaParsingError,
   CredentialSchemaValidationError,

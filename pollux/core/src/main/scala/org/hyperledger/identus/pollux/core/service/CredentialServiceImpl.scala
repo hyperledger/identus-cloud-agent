@@ -72,7 +72,7 @@ object CredentialServiceImpl {
   private val VC_JSON_SCHEMA_TYPE = "CredentialSchema2022"
 }
 
-private class CredentialServiceImpl(
+class CredentialServiceImpl(
     credentialRepository: CredentialRepository,
     credentialStatusListRepository: CredentialStatusListRepository,
     didResolver: DidResolver,
@@ -109,8 +109,13 @@ private class CredentialServiceImpl(
 
   override def getById(
       recordId: DidCommID
-  ): URIO[WalletAccessContext, IssueCredentialRecord] =
-    credentialRepository.getById(recordId)
+  ): ZIO[WalletAccessContext, RecordNotFound, IssueCredentialRecord] =
+    for {
+      maybeRecord <- credentialRepository.findById(recordId)
+      record <- ZIO
+        .fromOption(maybeRecord)
+        .mapError(_ => RecordNotFound(recordId))
+    } yield record
 
   override def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
@@ -391,7 +396,6 @@ private class CredentialServiceImpl(
       guid: UUID
   ): UIO[CredentialDefinition] = credentialDefinitionService
     .getByGUID(guid)
-    .mapError(e => CredentialDefinitionServiceError(e.toString))
     .orDieAsUnmanagedFailure
 
   private[this] def getCredentialDefinitionPrivatePart(
@@ -498,7 +502,7 @@ private class CredentialServiceImpl(
     } yield keyId
   }
 
-  private def getJwtIssuer(
+  override def getJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship
   ): URIO[WalletAccessContext, JwtIssuer] = {

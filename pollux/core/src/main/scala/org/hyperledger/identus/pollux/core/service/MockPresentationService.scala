@@ -209,14 +209,12 @@ object MockPresentationService extends Mock[PresentationService] {
       ): IO[PresentationError, PresentationPayload] = ???
 
       override def createPresentationFromRecord(
-          record: DidCommID,
-          issuer: Issuer,
+          record: DidCommID
       ): IO[PresentationError, PresentationCompact] = ???
 
       def createSDJwtPresentation(
           recordId: DidCommID,
-          requestPresentation: RequestPresentation,
-          prover: Issuer,
+          requestPresentation: RequestPresentation
       ): ZIO[WalletAccessContext, PresentationError, Presentation] = ???
 
       override def createAnoncredPresentationPayloadFromRecord(
@@ -244,9 +242,11 @@ object MockPresentationService extends Mock[PresentationService] {
           state: PresentationRecord.ProtocolState*
       ): IO[PresentationError, Seq[PresentationRecord]] = ???
 
-      override def getPresentationRecord(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = ???
+      override def findPresentationRecord(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = ???
 
-      override def getPresentationRecordByThreadId(thid: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
+      override def findPresentationRecordByThreadId(
+          thid: DidCommID
+      ): IO[PresentationError, Option[PresentationRecord]] =
         ???
 
       override def receiveProposePresentation(request: ProposePresentation): IO[PresentationError, PresentationRecord] =

@@ -12,6 +12,7 @@ import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, BitStringErr
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.*
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.db.Implicits.given
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.interop.catz.*
@@ -44,7 +45,6 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
     cxnIO
       .transact(xb)
       .orDie
-
   }
 
   def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]] = {
@@ -176,10 +176,25 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
 
   }
 
+  def existsForIssueCredentialRecordId(id: DidCommID): URIO[WalletAccessContext, Boolean] = {
+    val cxnIO =
+      sql"""
+           | SELECT COUNT(*)
+           |  FROM public.credentials_in_status_list
+           |  WHERE issue_credential_record_id = $id
+           |""".stripMargin
+        .query[Int]
+        .unique
+
+    cxnIO
+      .map(_ > 0)
+      .transactWallet(xa)
+      .orDie
+  }
+
   def revokeByIssueCredentialRecordId(
       issueCredentialRecordId: DidCommID
-  ): URIO[WalletAccessContext, Boolean] = {
-
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       walletId <- ZIO.service[WalletAccessContext].map(_.walletId)
       updateQuery =
@@ -192,14 +207,10 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
              | AND cisl.issue_credential_record_id = $issueCredentialRecordId
              | AND cisl.is_canceled = false;
              |""".stripMargin.update.run
-
-      revoked <- updateQuery
+      _ <- updateQuery
         .transactWallet(xa)
-        .map(_ > 0)
-        .orDie
-
-    } yield revoked
-
+        .ensureOneAffectedRowOrDie
+    } yield ()
   }
 
   def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]] = {

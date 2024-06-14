@@ -203,17 +203,15 @@ class PresentationServiceNotifier(
     svc.createJwtPresentationPayloadFromRecord(record, issuer, issuanceDate)
 
   override def createPresentationFromRecord(
-      record: DidCommID,
-      issuer: Issuer
+      record: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationCompact] =
-    svc.createPresentationFromRecord(record, issuer)
+    svc.createPresentationFromRecord(record)
 
   override def createSDJwtPresentation(
       record: DidCommID,
-      requestPresentation: RequestPresentation,
-      issuer: Issuer
+      requestPresentation: RequestPresentation
   ): ZIO[WalletAccessContext, PresentationError, Presentation] =
-    svc.createSDJwtPresentation(record, requestPresentation, issuer)
+    svc.createSDJwtPresentation(record, requestPresentation)
 
   override def createAnoncredPresentationPayloadFromRecord(
       record: DidCommID,
@@ -244,15 +242,15 @@ class PresentationServiceNotifier(
   ): IO[PresentationError, Seq[PresentationRecord]] =
     svc.getPresentationRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, state*)
 
-  override def getPresentationRecord(
+  override def findPresentationRecord(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]] =
-    svc.getPresentationRecord(recordId)
+    svc.findPresentationRecord(recordId)
 
-  override def getPresentationRecordByThreadId(
+  override def findPresentationRecordByThreadId(
       thid: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]] =
-    svc.getPresentationRecordByThreadId(thid)
+    svc.findPresentationRecordByThreadId(thid)
 
   override def receiveProposePresentation(
       request: ProposePresentation

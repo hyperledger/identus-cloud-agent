@@ -58,14 +58,12 @@ trait PresentationService {
   ): ZIO[WalletAccessContext, PresentationError, PresentationPayload]
 
   def createPresentationFromRecord(
-      record: DidCommID,
-      issuer: Issuer,
+      record: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationCompact]
 
   def createSDJwtPresentation(
       recordId: DidCommID,
-      requestPresentation: RequestPresentation,
-      prover: Issuer,
+      requestPresentation: RequestPresentation
   ): ZIO[WalletAccessContext, PresentationError, Presentation]
 
   def createAnoncredPresentationPayloadFromRecord(
@@ -93,11 +91,11 @@ trait PresentationService {
       state: PresentationRecord.ProtocolState*
   ): IO[PresentationError, Seq[PresentationRecord]]
 
-  def getPresentationRecord(
+  def findPresentationRecord(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]]
 
-  def getPresentationRecordByThreadId(
+  def findPresentationRecordByThreadId(
       thid: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]]
 
