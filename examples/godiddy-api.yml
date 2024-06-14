@@ -68,44 +68,48 @@ paths:
               value: application/ld+json;profile="https://w3id.org/did-resolution"
               description: Media type of a DID resolution result (JSON-LD representation).
       responses:
-        '200':
+        "200":
           description: successfully resolved!
           content:
             application/did+json:
               schema:
                 type: object
                 description: The DID document (JSON representation).
-                example: {
-                  "id": "did:sov:WRfXPg8dantKVubE3HX8pw",
-                  "verificationMethod": [
-                    {
-                      "id": "did:sov:WRfXPg8dantKVubE3HX8pw#key-1",
-                      "type": "Ed25519VerificationKey2018",
-                      "publicKeyBase58": "H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV"
-                    }
-                  ]
-                }
+                example:
+                  {
+                    "id": "did:sov:WRfXPg8dantKVubE3HX8pw",
+                    "verificationMethod":
+                      [
+                        {
+                          "id": "did:sov:WRfXPg8dantKVubE3HX8pw#key-1",
+                          "type": "Ed25519VerificationKey2018",
+                          "publicKeyBase58": "H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV",
+                        },
+                      ],
+                  }
             application/did+ld+json:
               schema:
                 type: object
                 description: The DID document (JSON-LD representation).
-                example: {
-                  "@context": "https://www.w3.org/ns/did/v1",
-                  "id": "did:sov:WRfXPg8dantKVubE3HX8pw",
-                  "verificationMethod": [
-                    {
-                      "id": "did:sov:WRfXPg8dantKVubE3HX8pw#key-1",
-                      "type": "Ed25519VerificationKey2018",
-                      "publicKeyBase58": "H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV"
-                    }
-                  ]
-                }
+                example:
+                  {
+                    "@context": "https://www.w3.org/ns/did/v1",
+                    "id": "did:sov:WRfXPg8dantKVubE3HX8pw",
+                    "verificationMethod":
+                      [
+                        {
+                          "id": "did:sov:WRfXPg8dantKVubE3HX8pw#key-1",
+                          "type": "Ed25519VerificationKey2018",
+                          "publicKeyBase58": "H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV",
+                        },
+                      ],
+                  }
             application/ld+json;profile="https://w3id.org/did-resolution":
               schema:
-                $ref: '#/components/schemas/UniversalResolver.ResolutionResult'
-        '400':
+                $ref: "#/components/schemas/UniversalResolver.ResolutionResult"
+        "400":
           description: invalid input!
-        '410':
+        "410":
           description: successfully resolved (deactivated)!
           content:
             application/did+json:
@@ -118,8 +122,8 @@ paths:
                 description: The deactivated DID document (JSON-LD representation).
             application/ld+json;profile="https://w3id.org/did-resolution":
               schema:
-                $ref: '#/components/schemas/UniversalResolver.ResolutionResult'
-        '500':
+                $ref: "#/components/schemas/UniversalResolver.ResolutionResult"
+        "500":
           description: error!
   /universal-resolver/properties:
     get:
@@ -131,7 +135,7 @@ paths:
       tags:
         - Universal Resolver
       responses:
-        '200':
+        "200":
           description: Success.
           content:
             application/did+json:
@@ -141,13 +145,12 @@ paths:
   /universal-resolver/methods:
     get:
       summary: Retrieve supported DID methods.
-      description:
-        <p>This endpoint returns a list of DID methods supported by the DID Resolver.</p>
+      description: <p>This endpoint returns a list of DID methods supported by the DID Resolver.</p>
       operationId: universalResolverGetMethods
       tags:
         - Universal Resolver
       responses:
-        '200':
+        "200":
           description: Success.
           content:
             application/did+json:
@@ -156,7 +159,7 @@ paths:
                 items:
                   type: string
                 description: The list of supported DID methods.
-                example: ["btcr","sov","v1","key"]
+                example: ["btcr", "sov", "v1", "key"]
   /universal-resolver/testIdentifiers:
     get:
       summary: Retrieve a map of test identifiers.
@@ -167,14 +170,22 @@ paths:
       tags:
         - Universal Resolver
       responses:
-        '200':
+        "200":
           description: Success.
           content:
             application/did+json:
               schema:
                 type: object
                 description: A map of test identifiers, grouped by DID method.
-                example: { "btcr": ["did:btcr:xz35-jznz-q9yu-ply", "did:btcr:xkrn-xz7q-qsye-28p"], "sov": ["did:sov:WRfXPg8dantKVubE3HX8pw"] }
+                example:
+                  {
+                    "btcr":
+                      [
+                        "did:btcr:xz35-jznz-q9yu-ply",
+                        "did:btcr:xkrn-xz7q-qsye-28p",
+                      ],
+                    "sov": ["did:sov:WRfXPg8dantKVubE3HX8pw"],
+                  }
   /universal-registrar/create:
     post:
       summary: Create a DID.
@@ -201,40 +212,40 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UniversalRegistrar.CreateRequest'
+              $ref: "#/components/schemas/UniversalRegistrar.CreateRequest"
       responses:
-        '200':
+        "200":
           description:
             The request was successful, but the DID may not be fully created yet, as indicated by the
             "didState.state" and "jobId" output fields. Additional state information plus metadata are available in the response body.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UniversalRegistrar.CreateState'
-        '201':
+                $ref: "#/components/schemas/UniversalRegistrar.CreateState"
+        "201":
           description:
             The DID has been successfully created, as indicated by the "didState.state" output field.
             Additional state information (including the created DID) plus metadata are available in the response body.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UniversalRegistrar.CreateState'
-        '400':
+                $ref: "#/components/schemas/UniversalRegistrar.CreateState"
+        "400":
           description:
             A problem with the input fields has occurred. Additional state information plus metadata may be
             available in the response body.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UniversalRegistrar.CreateState'
-        '500':
+                $ref: "#/components/schemas/UniversalRegistrar.CreateState"
+        "500":
           description:
             An internal error has occurred. Additional state information plus metadata may be
             available in the response body.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UniversalRegistrar.CreateState'
+                $ref: "#/components/schemas/UniversalRegistrar.CreateState"
   /universal-registrar/update:
     post:
       summary: Update a DID.
@@ -261,32 +272,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UniversalRegistrar.UpdateRequest'
+              $ref: "#/components/schemas/UniversalRegistrar.UpdateRequest"
       responses:
-        '200':
+        "200":
           description:
             The request was successful, and the DID may or may not be fully updated yet, as indicated by the
             "didState.state" and "jobId" output fields. Additional state information plus metadata are available in the response body.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UniversalRegistrar.UpdateState'
-        '400':
+                $ref: "#/components/schemas/UniversalRegistrar.UpdateState"
+        "400":
           description:
             A problem with the input fields has occurred. Additional state information plus metadata may be
             available in the response body.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UniversalRegistrar.UpdateState'
-        '500':
+                $ref: "#/components/schemas/UniversalRegistrar.UpdateState"
+        "500":
           description:
             An internal error has occurred. Additional state information plus metadata may be
             available in the response body.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UniversalRegistrar.UpdateState'
+                $ref: "#/components/schemas/UniversalRegistrar.UpdateState"
   /universal-registrar/deactivate:
     post:
       summary: Deactivate a DID.
@@ -313,32 +324,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UniversalRegistrar.DeactivateRequest'
+              $ref: "#/components/schemas/UniversalRegistrar.DeactivateRequest"
       responses:
-        '200':
+        "200":
           description:
             The request was successful, and the DID may or may not be fully deactivated yet, as indicated by the
             "didState.state" and "jobId" output fields. Additional state information plus metadata are available in the response body.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UniversalRegistrar.DeactivateState'
-        '400':
+                $ref: "#/components/schemas/UniversalRegistrar.DeactivateState"
+        "400":
           description:
             A problem with the input fields has occurred. Additional state information plus metadata may be
             available in the response body.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UniversalRegistrar.DeactivateState'
-        '500':
+                $ref: "#/components/schemas/UniversalRegistrar.DeactivateState"
+        "500":
           description:
             An internal error has occurred. Additional state information plus metadata may be
             available in the response body.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UniversalRegistrar.DeactivateState'
+                $ref: "#/components/schemas/UniversalRegistrar.DeactivateState"
   /universal-registrar/properties:
     get:
       summary: Retrieve configuration properties.
@@ -349,7 +360,7 @@ paths:
       tags:
         - Universal Registrar
       responses:
-        '200':
+        "200":
           description: Success.
           content:
             application/did+json:
@@ -359,13 +370,12 @@ paths:
   /universal-registrar/methods:
     get:
       summary: Retrieve supported DID methods.
-      description:
-        <p>This endpoint returns a list of DID methods supported by the DID Registrar.</p>
+      description: <p>This endpoint returns a list of DID methods supported by the DID Registrar.</p>
       operationId: universalRegistrarGetMethods
       tags:
         - Universal Registrar
       responses:
-        '200':
+        "200":
           description: Success.
           content:
             application/did+json:
@@ -374,7 +384,7 @@ paths:
                 items:
                   type: string
                 description: The list of supported DID methods.
-                example: ["btcr","sov","v1","key"]
+                example: ["btcr", "sov", "v1", "key"]
   /wallet-service/keys:
     get:
       summary: Get key(s)
@@ -419,48 +429,51 @@ paths:
           description: The limit (total number) of keys to retrieve.
           example: 1
       responses:
-        '200':
+        "200":
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/WalletService.Key'
+                  $ref: "#/components/schemas/WalletService.Key"
                 description: The list of key(s).
-                example: [
-                  {
-                    "id": "f25bed83-570c-45a4-b2fa-07a0df2a25d5",
-                    "timestamp": 1633531154167,
-                    "controller": "did:key:z6MkhES5w7ViszdQZBfKmzgFM8XVXy6DxVgBZzQCJdrcBuGz",
-                    "url": "did:key:z6MkhES5w7ViszdQZBfKmzgFM8XVXy6DxVgBZzQCJdrcBuGz#z6MkhES5w7ViszdQZBfKmzgFM8XVXy6DxVgBZzQCJdrcBuGz",
-                    "type": "Ed25519",
-                    "purpose": "['authentication','assertionMethod','capabilityDelegation','capabilityInvocation']",
-                    "key": {
-                      "kty": "OKP",
-                      "crv": "Ed25519",
-                      "x": "KUnc6ztOeq1mR4UHxY2vmtJQZDk_VikOBTyPvrAu-c8"
+                example:
+                  [
+                    {
+                      "id": "f25bed83-570c-45a4-b2fa-07a0df2a25d5",
+                      "timestamp": 1633531154167,
+                      "controller": "did:key:z6MkhES5w7ViszdQZBfKmzgFM8XVXy6DxVgBZzQCJdrcBuGz",
+                      "url": "did:key:z6MkhES5w7ViszdQZBfKmzgFM8XVXy6DxVgBZzQCJdrcBuGz#z6MkhES5w7ViszdQZBfKmzgFM8XVXy6DxVgBZzQCJdrcBuGz",
+                      "type": "Ed25519",
+                      "purpose": "['authentication','assertionMethod','capabilityDelegation','capabilityInvocation']",
+                      "key":
+                        {
+                          "kty": "OKP",
+                          "crv": "Ed25519",
+                          "x": "KUnc6ztOeq1mR4UHxY2vmtJQZDk_VikOBTyPvrAu-c8",
+                        },
+                      "keyMetadata": null,
                     },
-                    "keyMetadata": null
-                  },
-                  {
-                    "id": "618acb93-0c7d-4a0e-bb78-32745e436404",
-                    "timestamp": 1633531154259,
-                    "controller": "did:key:z6MkhES5w7ViszdQZBfKmzgFM8XVXy6DxVgBZzQCJdrcBuGz",
-                    "url": "did:key:z6MkhES5w7ViszdQZBfKmzgFM8XVXy6DxVgBZzQCJdrcBuGz#z6LStgSrgnA1qWUdiEBcMEduv29jX1n8zmbgw1hcaewouhQV",
-                    "type": "X25519",
-                    "purpose": "['keyAgreement']",
-                    "key": {
-                      "kty": "OKP",
-                      "crv": "X25519",
-                      "x": "_Khr2RW7e-QAHqVx5RjDSshHomTjNDBCLeaJSQklgHI"
+                    {
+                      "id": "618acb93-0c7d-4a0e-bb78-32745e436404",
+                      "timestamp": 1633531154259,
+                      "controller": "did:key:z6MkhES5w7ViszdQZBfKmzgFM8XVXy6DxVgBZzQCJdrcBuGz",
+                      "url": "did:key:z6MkhES5w7ViszdQZBfKmzgFM8XVXy6DxVgBZzQCJdrcBuGz#z6LStgSrgnA1qWUdiEBcMEduv29jX1n8zmbgw1hcaewouhQV",
+                      "type": "X25519",
+                      "purpose": "['keyAgreement']",
+                      "key":
+                        {
+                          "kty": "OKP",
+                          "crv": "X25519",
+                          "x": "_Khr2RW7e-QAHqVx5RjDSshHomTjNDBCLeaJSQklgHI",
+                        },
+                      "keyMetadata": null,
                     },
-                    "keyMetadata": null
-                  }
-                ]
+                  ]
           description: The request was successful, and the list of public key(s) has been retrieved.
-        '400':
+        "400":
           description: A problem with the input fields has occurred.
-        '500':
+        "500":
           description: An internal error has occurred.
     post:
       summary: Import key
@@ -475,22 +488,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WalletService.Key'
+              $ref: "#/components/schemas/WalletService.Key"
         description: The new key to import.
       responses:
-        '201':
+        "201":
           description: The request was successful, and the new key has been imported.
-        '400':
+        "400":
           description: A problem with the input fields has occurred.
-        '409':
+        "409":
           description: This key already exists in the wallet service.
-        '500':
+        "500":
           description: An internal error has occurred.
   /wallet-service/keys/{id}:
     get:
       summary: Get key
-      description:
-        <p>This endpoint returns a private/public key with a given internal identifier from the wallet service.</p>
+      description: <p>This endpoint returns a private/public key with a given internal identifier from the wallet service.</p>
       operationId: getKey
       tags:
         - Wallet Service
@@ -511,17 +523,17 @@ paths:
           description: An optional flag to indicate whether private key data should be included in the response.
           example: true
       responses:
-        '200':
+        "200":
           description: The request was successful, and the key has been retrieved.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WalletService.Key'
-        '400':
+                $ref: "#/components/schemas/WalletService.Key"
+        "400":
           description: A problem with the input fields has occurred.
-        '404':
+        "404":
           description: No key was found with the given identifier.
-        '500':
+        "500":
           description: An internal error has occurred.
     delete:
       summary: Delete key
@@ -543,19 +555,18 @@ paths:
           description: The internal identifier of the key to delete.
           example: "386fd0bf-6bf2-4063-a1b0-42927caf1886"
       responses:
-        '204':
+        "204":
           description: The request was successful, and the key has been deleted.
-        '400':
+        "400":
           description: A problem with the input fields has occurred.
-        '404':
+        "404":
           description: No key was found with the given identifier.
-        '500':
+        "500":
           description: An internal error has occurred.
   /wallet-service/keys/sign:
     post:
       summary: Sign with key
-      description:
-        <p>This endpoint signs an arbitrary unsigned payload using a private key from the wallet service.</p>
+      description: <p>This endpoint signs an arbitrary unsigned payload using a private key from the wallet service.</p>
       operationId: signWithKey
       tags:
         - Wallet Service
@@ -588,24 +599,23 @@ paths:
               format: byte
         description: The payload to sign.
       responses:
-        '200':
+        "200":
           content:
             application/octet-stream:
               schema:
                 type: string
                 format: byte
           description: The request was successful, and the payload has been signed.
-        '400':
+        "400":
           description: A problem with the input fields has occurred.
-        '404':
+        "404":
           description: No key was found with the given identifier.
-        '500':
+        "500":
           description: An internal error has occurred.
   /wallet-service/keys/verify:
     post:
       summary: Verify with key
-      description:
-        <p>This endpoint verifies an arbitrary signed payload using a public key from the wallet service.</p>
+      description: <p>This endpoint verifies an arbitrary signed payload using a public key from the wallet service.</p>
       operationId: verifyWithKey
       tags:
         - Wallet Service
@@ -632,23 +642,22 @@ paths:
               format: byte
         description: The payload to verify.
       responses:
-        '200':
+        "200":
           content:
             application/json:
               schema:
                 type: object
           description: The request was successful, and the payload has been verified.
-        '400':
+        "400":
           description: A problem with the input fields has occurred.
-        '404':
+        "404":
           description: No key was found with the given identifier.
-        '500':
+        "500":
           description: An internal error has occurred.
   /wallet-service/controllers:
     get:
       summary: Get controller(s)
-      description:
-        <p>This endpoint returns a list of controllers from the wallet that match the input parameters.</p>
+      description: <p>This endpoint returns a list of controllers from the wallet that match the input parameters.</p>
       operationId: getControllers
       parameters:
         - in: query
@@ -671,7 +680,7 @@ paths:
           description: The limit (total number) of controllers to retrieve.
           example: 1
       responses:
-        '200':
+        "200":
           content:
             application/json:
               schema:
@@ -679,18 +688,19 @@ paths:
                 items:
                   type: string
                 description: The list of controller(s).
-                example: [
-                  "did:key:z6MkhES5w7ViszdQZBfKmzgFM8XVXy6DxVgBZzQCJdrcBuGz",
-                  "did:key:z6MkiD3mSCJZFefR9GXY3bwa6cdxkLyUJ6a7HRFnU3YPNDp2",
-                  "did:sov:danube:C7EGTrTaUruV98HPoEFP9n",
-                  "did:v1:test:nym:z6MknvTVgWvRUHt5wcFQzRSbTReN95cKwo3EAbd1vEmUzUtt"
-                ]
+                example:
+                  [
+                    "did:key:z6MkhES5w7ViszdQZBfKmzgFM8XVXy6DxVgBZzQCJdrcBuGz",
+                    "did:key:z6MkiD3mSCJZFefR9GXY3bwa6cdxkLyUJ6a7HRFnU3YPNDp2",
+                    "did:sov:danube:C7EGTrTaUruV98HPoEFP9n",
+                    "did:v1:test:nym:z6MknvTVgWvRUHt5wcFQzRSbTReN95cKwo3EAbd1vEmUzUtt",
+                  ]
           description: The request was successful, and the list of controller(s) has been retrieved.
-        '400':
+        "400":
           description: A problem with the input fields has occurred.
-        '404':
+        "404":
           description: No controllers were found that match the input parameters.
-        '500':
+        "500":
           description: An internal error has occurred.
   /version-service/didrecords:
     get:
@@ -758,20 +768,20 @@ paths:
             type: integer
           description: Maximum number of items to return.
       responses:
-        '200':
+        "200":
           description: DID record(s) successfully retrieved!
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/VersionService.DidRecord'
+                  $ref: "#/components/schemas/VersionService.DidRecord"
                 description: The DID record(s).
-        '400':
+        "400":
           description: invalid input!
-        '404':
+        "404":
           description: DID record(s) not found!
-        '500':
+        "500":
           description: error!
   /version-service/didrecords/findInIdentifier:
     get:
@@ -798,20 +808,20 @@ paths:
             type: integer
           description: Maximum number of items to return.
       responses:
-        '200':
+        "200":
           description: DID Record(s) successfully retrieved!
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/VersionService.DidRecord'
+                  $ref: "#/components/schemas/VersionService.DidRecord"
                 description: The DID Record(s).
-        '400':
+        "400":
           description: invalid input!
-        '404':
+        "404":
           description: DID record(s) not found!
-        '500':
+        "500":
           description: error!
   /version-service/didrecords/methods:
     get:
@@ -820,7 +830,7 @@ paths:
       tags:
         - Version Service
       responses:
-        '200':
+        "200":
           description: DID Method list is successfully retrieved!
           content:
             application/json:
@@ -828,7 +838,7 @@ paths:
                 type: array
                 items:
                   type: string
-        '500':
+        "500":
           description: error!
   /version-service/didrecords/count:
     get:
@@ -840,7 +850,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Number of the DID Records for given method is retrieved!
           content:
             application/json:
@@ -848,7 +858,7 @@ paths:
                 type: integer
                 format: int64
                 description: The matching did record count for the given method.
-        '500':
+        "500":
           description: error!
   /version-service/diddocuments:
     get:
@@ -882,20 +892,20 @@ paths:
             type: integer
           description: Maximum number of items to return.
       responses:
-        '200':
+        "200":
           description: DID document(s) successfully retrieved!
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/VersionService.DidDocument'
+                  $ref: "#/components/schemas/VersionService.DidDocument"
                 description: The DID document(s).
-        '400':
+        "400":
           description: invalid input!
-        '404':
+        "404":
           description: DID document(s) not found!
-        '500':
+        "500":
           description: error!
   /version-service/diddocuments/count:
     get:
@@ -915,7 +925,7 @@ paths:
           schema:
             type: object
       responses:
-        '200':
+        "200":
           description: DID document(s) successfully retrieved!
           content:
             application/json:
@@ -923,11 +933,11 @@ paths:
                 type: integer
                 format: int64
                 description: The matching did document count.
-        '400':
+        "400":
           description: invalid input!
-        '404':
+        "404":
           description: DID document(s) not found!
-        '500':
+        "500":
           description: error!
   /version-service/diddocuments/search:
     get:
@@ -957,20 +967,20 @@ paths:
             type: integer
           description: Maximum number of items to return.
       responses:
-        '200':
+        "200":
           description: DID document(s) successfully retrieved!
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/VersionService.DidDocument'
+                  $ref: "#/components/schemas/VersionService.DidDocument"
                 description: The DID document(s).
-        '400':
+        "400":
           description: invalid input!
-        '404':
+        "404":
           description: DID document(s) not found!
-        '500':
+        "500":
           description: error!
   /version-service/diddocuments/metadata/count:
     get:
@@ -990,7 +1000,7 @@ paths:
           schema:
             type: object
       responses:
-        '200':
+        "200":
           description: DID document(s) successfully retrieved!
           content:
             application/json:
@@ -998,11 +1008,11 @@ paths:
                 type: integer
                 format: int64
                 description: The matching did document metadata count.
-        '400':
+        "400":
           description: invalid input!
-        '404':
+        "404":
           description: DID document(s) not found!
-        '500':
+        "500":
           description: error!
   /version-service/diddocuments/metadata/search:
     get:
@@ -1037,20 +1047,20 @@ paths:
             type: boolean
           description: Sort descending according to record time, ignored in full-text search.
       responses:
-        '200':
+        "200":
           description: DID document(s) successfully retrieved!
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/VersionService.DidDocument'
+                  $ref: "#/components/schemas/VersionService.DidDocument"
                 description: The DID document(s).
-        '400':
+        "400":
           description: invalid input!
-        '404':
+        "404":
           description: DID document(s) not found!
-        '500':
+        "500":
           description: error!
 components:
   schemas:
@@ -1061,17 +1071,19 @@ components:
       properties:
         didDocument:
           type: object
-          example: {
-            "@context": "https://www.w3.org/ns/did/v1",
-            "id": "did:sov:WRfXPg8dantKVubE3HX8pw",
-            "verificationMethod": [
-              {
-                "id": "did:sov:WRfXPg8dantKVubE3HX8pw#key-1",
-                "type": "Ed25519VerificationKey2018",
-                "publicKeyBase58": "H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV"
-              }
-            ]
-          }
+          example:
+            {
+              "@context": "https://www.w3.org/ns/did/v1",
+              "id": "did:sov:WRfXPg8dantKVubE3HX8pw",
+              "verificationMethod":
+                [
+                  {
+                    "id": "did:sov:WRfXPg8dantKVubE3HX8pw#key-1",
+                    "type": "Ed25519VerificationKey2018",
+                    "publicKeyBase58": "H3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV",
+                  },
+                ],
+            }
         didResolutionMetadata:
           type: object
         didDocumentMetadata:
@@ -1092,13 +1104,13 @@ components:
             This input field contains an object with various options for the DID create operation, such as the network where the DID should be created.
             See <a href="https://identity.foundation/did-registration/#options">https://identity.foundation/did-registration/#options</a>.
           type: object
-          example: {"chain": "testnet"}
+          example: { "chain": "testnet" }
         secret:
           description:
             This input field contains an object with DID controller keys and other secrets needed for performing the DID create operation.
             See <a href="https://identity.foundation/did-registration/#secret">https://identity.foundation/did-registration/#secret</a>.
           type: object
-          example: {"seed": "72WGp7NgFR1Oqdi8zlt7jQQ434XR0cNQ"}
+          example: { "seed": "72WGp7NgFR1Oqdi8zlt7jQQ434XR0cNQ" }
         didDocument:
           description:
             This input field contains either a complete DID document, or an incremental change (diff) to a DID document.
@@ -1118,8 +1130,7 @@ components:
           type: string
           example: 6d85bcd0-2ea3-4288-ab00-15afadd8a156
         did:
-          description:
-            This input field indicates the DID that is the target of the DID update operation.
+          description: This input field indicates the DID that is the target of the DID update operation.
           type: string
           example: "did:sov:WRfXPg8dantKVubE3HX8pw"
         options:
@@ -1160,8 +1171,7 @@ components:
           type: string
           example: 6d85bcd0-2ea3-4288-ab00-15afadd8a156
         did:
-          description:
-            This input field indicates the DID that is the target of the DID deactivation operation.
+          description: This input field indicates the DID that is the target of the DID deactivation operation.
           type: string
           example: "did:sov:WRfXPg8dantKVubE3HX8pw"
         options:
@@ -1185,7 +1195,7 @@ components:
           type: string
           example: 6d85bcd0-2ea3-4288-ab00-15afadd8a156
         didState:
-          $ref: '#/components/schemas/UniversalRegistrar.DidState'
+          $ref: "#/components/schemas/UniversalRegistrar.DidState"
         didRegistrationMetadata:
           type: object
         didDocumentMetadata:
@@ -1201,7 +1211,7 @@ components:
           type: string
           example: 6d85bcd0-2ea3-4288-ab00-15afadd8a156
         didState:
-          $ref: '#/components/schemas/UniversalRegistrar.DidState'
+          $ref: "#/components/schemas/UniversalRegistrar.DidState"
         didRegistrationMetadata:
           type: object
         didDocumentMetadata:
@@ -1217,7 +1227,7 @@ components:
           type: string
           example: 6d85bcd0-2ea3-4288-ab00-15afadd8a156
         didState:
-          $ref: '#/components/schemas/UniversalRegistrar.DidState'
+          $ref: "#/components/schemas/UniversalRegistrar.DidState"
         didRegistrationMetadata:
           type: object
         didDocumentMetadata:
@@ -1235,18 +1245,23 @@ components:
           example: "did:sov:WRfXPg8dantKVubE3HX8pw"
         secret:
           type: object
-          example: {
-            "verificationMethod": [{
-              "id": "did:sov:WRfXPg8dantKVubE3HX8pw#key-1",
-              "type": "JsonWebKey2020",
-              "privateKeyJwk": {
-                "kty": "OKP",
-                "d": "NzJXR3A3TmdGUjFPcWRpOHpsdDdqUVE0MzRYUjBjTlE",
-                "crv": "Ed25519",
-                "x": "jpIKKU2b77lNXKTNW2NGvw1GUMjU6v_l_tLJAH5uYz0"
-              }
-            }]
-          }
+          example:
+            {
+              "verificationMethod":
+                [
+                  {
+                    "id": "did:sov:WRfXPg8dantKVubE3HX8pw#key-1",
+                    "type": "JsonWebKey2020",
+                    "privateKeyJwk":
+                      {
+                        "kty": "OKP",
+                        "d": "NzJXR3A3TmdGUjFPcWRpOHpsdDdqUVE0MzRYUjBjTlE",
+                        "crv": "Ed25519",
+                        "x": "jpIKKU2b77lNXKTNW2NGvw1GUMjU6v_l_tLJAH5uYz0",
+                      },
+                  },
+                ],
+            }
         didDocument:
           type: object
     WalletService.Key:
@@ -1279,15 +1294,15 @@ components:
           example: "['authentication','assertionMethod','capabilityDelegation','capabilityInvocation']"
         key:
           type: object
-          example: {
-            "kty": "OKP",
-            "crv": "Ed25519",
-            "x": "KUnc6ztOeq1mR4UHxY2vmtJQZDk_VikOBTyPvrAu-c8"
-          }
+          example:
+            {
+              "kty": "OKP",
+              "crv": "Ed25519",
+              "x": "KUnc6ztOeq1mR4UHxY2vmtJQZDk_VikOBTyPvrAu-c8",
+            }
         keyMetadata:
           type: object
-          example: {
-          }
+          example: {}
     VersionService.DidRecord:
       type: object
       required:
@@ -1312,11 +1327,11 @@ components:
           example: sov
           description: DID Method name
         didDocument:
-          $ref: '#/components/schemas/VersionService.DidDocument'
+          $ref: "#/components/schemas/VersionService.DidDocument"
         didVersion:
-          $ref: '#/components/schemas/VersionService.DidVersion'
+          $ref: "#/components/schemas/VersionService.DidVersion"
         didState:
-          $ref: '#/components/schemas/VersionService.DidState'
+          $ref: "#/components/schemas/VersionService.DidState"
     VersionService.DidDocument:
       type: object
       required:

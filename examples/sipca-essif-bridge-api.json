@@ -46,9 +46,7 @@
   "paths": {
     "/verifications": {
       "post": {
-        "tags": [
-          "Verifications"
-        ],
+        "tags": ["Verifications"],
         "summary": "Create a new Verification",
         "operationId": "verificationsPost",
         "requestBody": {
@@ -77,9 +75,7 @@
     },
     "/verification-templates": {
       "post": {
-        "tags": [
-          "Verifications"
-        ],
+        "tags": ["Verifications"],
         "summary": "Create a new Verification Template",
         "operationId": "verificationTemplatesPost",
         "requestBody": {
@@ -108,9 +104,7 @@
     },
     "/schemas": {
       "post": {
-        "tags": [
-          "Schemas"
-        ],
+        "tags": ["Schemas"],
         "summary": "Create a new schema",
         "operationId": "schemaPost",
         "requestBody": {
@@ -139,9 +133,7 @@
     },
     "/presentations/verify": {
       "post": {
-        "tags": [
-          "JSON-LD Verification"
-        ],
+        "tags": ["JSON-LD Verification"],
         "operationId": "verityCredential",
         "requestBody": {
           "content": {
@@ -169,9 +161,7 @@
     },
     "/oidc/sendcredential": {
       "post": {
-        "tags": [
-          "OpenID Connect Connect"
-        ],
+        "tags": ["OpenID Connect Connect"],
         "summary": "Sends a credential",
         "operationId": "sendCredential",
         "requestBody": {
@@ -200,9 +190,7 @@
     },
     "/oidc/didauthresponse/{clientId}": {
       "post": {
-        "tags": [
-          "OpenID Connect Connect"
-        ],
+        "tags": ["OpenID Connect Connect"],
         "summary": "Processes Auth Response",
         "operationId": "didAuthResponse",
         "parameters": [
@@ -240,9 +228,7 @@
     },
     "/oidc/didauthrequest": {
       "post": {
-        "tags": [
-          "OpenID Connect Connect"
-        ],
+        "tags": ["OpenID Connect Connect"],
         "summary": "Create a new authenticate url",
         "operationId": "didAuthRequest",
         "requestBody": {
@@ -271,9 +257,7 @@
     },
     "/credentials/verify": {
       "post": {
-        "tags": [
-          "JSON-LD Verification"
-        ],
+        "tags": ["JSON-LD Verification"],
         "operationId": "verityCredential_1",
         "requestBody": {
           "content": {
@@ -394,9 +378,7 @@
     },
     "/credentials/issue": {
       "post": {
-        "tags": [
-          "JSON-LD Credentials"
-        ],
+        "tags": ["JSON-LD Credentials"],
         "operationId": "issueCredential",
         "requestBody": {
           "content": {
@@ -444,9 +426,7 @@
     },
     "/credentials-issuance": {
       "post": {
-        "tags": [
-          "Credentials Issuance"
-        ],
+        "tags": ["Credentials Issuance"],
         "summary": "Issue new credentials",
         "operationId": "issuanceCredentialPost",
         "requestBody": {
@@ -475,9 +455,7 @@
     },
     "/credential-definitions": {
       "post": {
-        "tags": [
-          "Credential Definitions"
-        ],
+        "tags": ["Credential Definitions"],
         "summary": "Create a new credentialDefinition",
         "operationId": "credentialDefinitionPost",
         "requestBody": {
@@ -506,9 +484,7 @@
     },
     "/connections": {
       "post": {
-        "tags": [
-          "Connections"
-        ],
+        "tags": ["Connections"],
         "summary": "Create a new connection invitation",
         "operationId": "connectionsPost",
         "requestBody": {
@@ -539,10 +515,7 @@
   "components": {
     "schemas": {
       "VerificationCreate": {
-        "required": [
-          "connectionId",
-          "verificationTemplateId"
-        ],
+        "required": ["connectionId", "verificationTemplateId"],
         "type": "object",
         "properties": {
           "verificationTemplateId": {
@@ -564,10 +537,7 @@
         }
       },
       "RequestedAttribute": {
-        "required": [
-          "names",
-          "restrictions"
-        ],
+        "required": ["names", "restrictions"],
         "type": "object",
         "properties": {
           "names": {
@@ -589,12 +559,7 @@
         "description": "The requested attributes"
       },
       "RequestedPredicate": {
-        "required": [
-          "name",
-          "predicateType",
-          "predicateValue",
-          "restrictions"
-        ],
+        "required": ["name", "predicateType", "predicateValue", "restrictions"],
         "type": "object",
         "properties": {
           "name": {
@@ -627,9 +592,7 @@
         "description": "The requested predicates"
       },
       "Restriction": {
-        "required": [
-          "credentialDefinitionId"
-        ],
+        "required": ["credentialDefinitionId"],
         "type": "object",
         "properties": {
           "credentialDefinitionId": {
@@ -670,12 +633,7 @@
           "state": {
             "type": "string",
             "description": "The verification state",
-            "enum": [
-              "SUCCESS",
-              "PENDING",
-              "FAILURE",
-              "ERROR"
-            ]
+            "enum": ["SUCCESS", "PENDING", "FAILURE", "ERROR"]
           },
           "createdAt": {
             "type": "string",
@@ -690,11 +648,7 @@
         }
       },
       "VerificationRequest": {
-        "required": [
-          "name",
-          "requestedAttributes",
-          "requestedPredicates"
-        ],
+        "required": ["name", "requestedAttributes", "requestedPredicates"],
         "type": "object",
         "properties": {
           "name": {
@@ -738,10 +692,7 @@
         }
       },
       "VerificationTemplateContent": {
-        "required": [
-          "requestedAttributes",
-          "requestedPredicates"
-        ],
+        "required": ["requestedAttributes", "requestedPredicates"],
         "type": "object",
         "properties": {
           "requestedAttributes": {
@@ -764,10 +715,7 @@
         }
       },
       "VerificationTemplateCreate": {
-        "required": [
-          "content",
-          "name"
-        ],
+        "required": ["content", "name"],
         "type": "object",
         "properties": {
           "name": {
@@ -780,11 +728,7 @@
         }
       },
       "VerificationTemplate": {
-        "required": [
-          "content",
-          "id",
-          "name"
-        ],
+        "required": ["content", "id", "name"],
         "type": "object",
         "properties": {
           "id": {
@@ -803,11 +747,7 @@
         }
       },
       "SchemaCreate": {
-        "required": [
-          "attributesName",
-          "name",
-          "version"
-        ],
+        "required": ["attributesName", "name", "version"],
         "type": "object",
         "properties": {
           "name": {
@@ -832,9 +772,7 @@
         }
       },
       "SchemaSummary": {
-        "required": [
-          "id"
-        ],
+        "required": ["id"],
         "type": "object",
         "properties": {
           "id": {
@@ -918,10 +856,7 @@
           "type": {
             "type": "array",
             "description": "The JSON-LD type of the credential.",
-            "example": [
-              "VerifiableCredential",
-              "UniversityDegreeCredential"
-            ],
+            "example": ["VerifiableCredential", "UniversityDegreeCredential"],
             "items": {
               "type": "string",
               "description": "The JSON-LD type of the credential.",
@@ -1005,19 +940,13 @@
         }
       },
       "VerificationResult": {
-        "required": [
-          "checks",
-          "errors",
-          "warnings"
-        ],
+        "required": ["checks", "errors", "warnings"],
         "type": "object",
         "properties": {
           "checks": {
             "type": "array",
             "description": "The checks performed",
-            "example": [
-              "proof"
-            ],
+            "example": ["proof"],
             "items": {
               "type": "string",
               "description": "The checks performed",
@@ -1050,11 +979,7 @@
         }
       },
       "AuthResponseCallback": {
-        "required": [
-          "id_token",
-          "login_challenge",
-          "state"
-        ],
+        "required": ["id_token", "login_challenge", "state"],
         "type": "object",
         "properties": {
           "id_token": {
@@ -1069,10 +994,7 @@
         }
       },
       "AuthRequestParam": {
-        "required": [
-          "clientId",
-          "credentialId"
-        ],
+        "required": ["clientId", "credentialId"],
         "type": "object",
         "properties": {
           "clientId": {
@@ -1084,9 +1006,7 @@
         }
       },
       "AuthRequestResponse": {
-        "required": [
-          "url"
-        ],
+        "required": ["url"],
         "type": "object",
         "properties": {
           "url": {
@@ -1127,10 +1047,7 @@
           "type": {
             "type": "array",
             "description": "The JSON-LD type of the credential.",
-            "example": [
-              "VerifiableCredential",
-              "UniversityDegreeCredential"
-            ],
+            "example": ["VerifiableCredential", "UniversityDegreeCredential"],
             "items": {
               "type": "string",
               "description": "The JSON-LD type of the credential.",
@@ -1204,10 +1121,7 @@
           "type": {
             "type": "array",
             "description": "The JSON-LD type of the credential.",
-            "example": [
-              "VerifiableCredential",
-              "UniversityDegreeCredential"
-            ],
+            "example": ["VerifiableCredential", "UniversityDegreeCredential"],
             "items": {
               "type": "string",
               "description": "The JSON-LD type of the credential.",
@@ -1238,10 +1152,7 @@
         }
       },
       "CredentialAttribute": {
-        "required": [
-          "name",
-          "value"
-        ],
+        "required": ["name", "value"],
         "type": "object",
         "properties": {
           "name": {
@@ -1256,11 +1167,7 @@
         "description": "A list of credential attributes"
       },
       "CredentialCreate": {
-        "required": [
-          "attributes",
-          "credentialDefinitionId",
-          "schemaId"
-        ],
+        "required": ["attributes", "credentialDefinitionId", "schemaId"],
         "type": "object",
         "properties": {
           "connectionId": {
@@ -1293,11 +1200,7 @@
         }
       },
       "CredentialIssuance": {
-        "required": [
-          "credential",
-          "issuanceId",
-          "state"
-        ],
+        "required": ["credential", "issuanceId", "state"],
         "type": "object",
         "properties": {
           "issuanceId": {
@@ -1322,11 +1225,7 @@
         }
       },
       "CredentialDefinitionCreate": {
-        "required": [
-          "schemaId",
-          "supportRevocation",
-          "tag"
-        ],
+        "required": ["schemaId", "supportRevocation", "tag"],
         "type": "object",
         "properties": {
           "schemaId": {
@@ -1347,9 +1246,7 @@
         }
       },
       "CredentialDefinitionSummary": {
-        "required": [
-          "id"
-        ],
+        "required": ["id"],
         "type": "object",
         "properties": {
           "id": {
@@ -1370,11 +1267,7 @@
         }
       },
       "ConnectionInvitationContent": {
-        "required": [
-          "invitationId",
-          "recipientKeys",
-          "serviceEndpoint"
-        ],
+        "required": ["invitationId", "recipientKeys", "serviceEndpoint"],
         "type": "object",
         "properties": {
           "invitationId": {
