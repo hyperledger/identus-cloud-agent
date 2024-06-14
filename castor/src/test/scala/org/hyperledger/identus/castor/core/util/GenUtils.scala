@@ -8,6 +8,7 @@ import org.hyperledger.identus.shared.models.Base64UrlString
 import zio.*
 import zio.test.Gen
 
+import java.net.URI
 import scala.language.implicitConversions
 
 object GenUtils {
@@ -82,6 +83,11 @@ object GenUtils {
     } yield PrismDIDOperation.Create(keys, services, contexts)
   }
 
+  val longFormPrismDIDGen: Gen[Any, LongFormPrismDID] = createOperation.map(PrismDID.buildLongFormFromOperation)
+  val canonicalPrismDIDGen: Gen[Any, CanonicalPrismDID] = createOperation.map(_.did)
+  val rawPrismDIDGen: Gen[Any, String] =
+    Gen.oneOf(longFormPrismDIDGen.map(_.toString), canonicalPrismDIDGen.map(_.toString))
+
   val didData: Gen[Any, DIDData] = {
     for {
       op <- createOperation
@@ -92,6 +98,50 @@ object GenUtils {
       internalKeys = op.publicKeys.collect { case pk: InternalPublicKey => pk },
       context = op.context
     )
+  }
+
+  val pathGen: Gen[Any, String] = for {
+    numSegments <- Gen.int(1, 5)
+    segments <- Gen.listOfN(numSegments)(Gen.alphaNumericStringBounded(1, 10))
+  } yield segments.mkString("/", "/", "")
+
+  val queryGen: Gen[Any, String] = for {
+    numParams <- Gen.int(1, 5)
+    params <- Gen
+      .listOfN(numParams)(
+        for {
+          key <- Gen.alphaNumericStringBounded(1, 10)
+          value <- Gen.alphaNumericStringBounded(1, 10)
+        } yield key -> value
+      )
+      .map(_.toMap.map { case (k, v) => s"$k=$v" })
+
+  } yield params.mkString("?", "&", "")
+
+  val fragmentGen: Gen[Any, String] = Gen.alphaNumericStringBounded(1, 10).map("#" + _)
+
+  val prismDIDUrlGen: Gen[Any, String] = for {
+    did <- rawPrismDIDGen
+    path <- Gen.option(pathGen)
+    query <- Gen.option(queryGen)
+    fragment <- Gen.option(fragmentGen)
+  } yield {
+    val pathPart = path.getOrElse("")
+    val queryPart = query.getOrElse("")
+    val fragmentPart = fragment.getOrElse("")
+    s"$did$pathPart$queryPart$fragmentPart"
+  }
+
+  def inputDIDUrlGen(input: Seq[String]): Gen[Any, String] = for {
+    did <- Gen.fromIterable(input)
+    path <- Gen.option(pathGen)
+    query <- Gen.option(queryGen)
+    fragment <- Gen.option(fragmentGen)
+  } yield {
+    val pathPart = path.getOrElse("")
+    val queryPart = query.getOrElse("")
+    val fragmentPart = fragment.getOrElse("")
+    s"$did$pathPart$queryPart$fragmentPart"
   }
 
 }
