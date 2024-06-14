@@ -134,7 +134,7 @@ private class PresentationServiceImpl(
 
     } yield presentationCompact
   }
-//This can be private remove 
+//This can be private remove
   override def createPresentationFromRecord(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationCompact] = {
