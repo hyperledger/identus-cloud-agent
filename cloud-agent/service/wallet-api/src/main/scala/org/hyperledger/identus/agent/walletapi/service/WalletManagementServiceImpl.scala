@@ -2,6 +2,7 @@ package org.hyperledger.identus.agent.walletapi.service
 
 import org.hyperledger.identus.agent.walletapi.model.{Wallet, WalletSeed}
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.{
+  DuplicatedWalletId,
   DuplicatedWalletSeed,
   TooManyPermittedWallet,
   TooManyWebhookError
@@ -25,7 +26,7 @@ class WalletManagementServiceImpl(
   override def createWallet(
       wallet: Wallet,
       seed: Option[WalletSeed]
-  ): ZIO[WalletAdministrationContext, TooManyPermittedWallet | DuplicatedWalletSeed, Wallet] =
+  ): ZIO[WalletAdministrationContext, TooManyPermittedWallet | DuplicatedWalletId | DuplicatedWalletSeed, Wallet] =
     for {
       _ <- ZIO.serviceWithZIO[WalletAdministrationContext] {
         case WalletAdministrationContext.Admin()                                                   => ZIO.unit
@@ -43,6 +44,10 @@ class WalletManagementServiceImpl(
       )(ZIO.succeed)
       _ <- nonSecretStorage.findWalletBySeed(seed.sha256Digest).flatMap {
         case Some(w) => ZIO.fail(DuplicatedWalletSeed())
+        case None    => ZIO.unit
+      }
+      _ <- nonSecretStorage.findWalletById(wallet.id).flatMap {
+        case Some(w) => ZIO.fail(DuplicatedWalletId(wallet.id))
         case None    => ZIO.unit
       }
       createdWallet <- nonSecretStorage
