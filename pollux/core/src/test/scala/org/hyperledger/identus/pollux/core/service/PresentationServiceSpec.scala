@@ -863,6 +863,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           credentialFormat = CredentialFormat.AnonCreds,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,
+          keyId = None,
           validityPeriod = None,
           automaticIssuance = None,
           protocolState = IssueCredentialRecord.ProtocolState.CredentialReceived,

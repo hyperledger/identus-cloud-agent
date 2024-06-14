@@ -240,4 +240,27 @@ object JWTVerification {
       } yield key
     Validation.fromOptionWith("Unable to parse Public Key")(maybePublicKey)
   }
+
+  def extractJwtHeader(jwt: JWT): Validation[String, JwtHeader] = {
+    import io.circe.parser._
+    import io.circe.Json
+
+    def parseHeaderUnsafe(json: Json): Either[String, JwtHeader] =
+      Try(JwtCirce.parseHeader(json.noSpaces)).toEither.left.map(_.getMessage)
+
+    def decodeJwtHeader(header: String): Validation[String, JwtHeader] = {
+      val eitherResult = for {
+        json <- parse(header).left.map(_.getMessage)
+        jwtHeader <- parseHeaderUnsafe(json)
+      } yield jwtHeader
+      Validation.fromEither(eitherResult)
+    }
+    for {
+      decodedJwt <- Validation
+        .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
+        .mapError(_.getMessage)
+      (header, _, _) = decodedJwt
+      jwtHeader <- decodeJwtHeader(header)
+    } yield jwtHeader
+  }
 }

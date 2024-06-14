@@ -138,7 +138,9 @@ class CredentialRepositoryInMemory(
       store <- storeRef.get
     } yield store.values
       .filter(rec => recordId.contains(rec.id) && rec.issuedCredentialRaw.isDefined)
-      .map(rec => ValidIssuedCredentialRecord(rec.id, rec.issuedCredentialRaw, rec.credentialFormat, rec.subjectId))
+      .map(rec =>
+        ValidIssuedCredentialRecord(rec.id, rec.issuedCredentialRaw, rec.credentialFormat, rec.subjectId, None)
+      )
       .toSeq
   }
 
@@ -164,7 +166,8 @@ class CredentialRepositoryInMemory(
           rec.credentialFormat,
           rec.schemaUri,
           rec.credentialDefinitionUri,
-          rec.subjectId
+          rec.subjectId,
+          rec.keyId,
         )
       )
       .toSeq
@@ -252,6 +255,7 @@ class CredentialRepositoryInMemory(
   override def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
+      keyId: Option[String] = None,
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit] = {
     for {

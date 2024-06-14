@@ -52,6 +52,7 @@ trait CredentialRepository {
   def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
+      keyId: Option[String],
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit]
 

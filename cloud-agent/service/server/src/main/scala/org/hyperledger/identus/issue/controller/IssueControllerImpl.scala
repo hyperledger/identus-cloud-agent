@@ -161,7 +161,7 @@ class IssueControllerImpl(
         case Some(did) => extractPrismDIDFromString(did).flatMap(validatePrismDID(_, true, Role.Holder))
         case None      => ZIO.succeed(())
       id <- extractDidCommIdFromString(recordId)
-      outcome <- credentialService.acceptCredentialOffer(id, request.subjectId)
+      outcome <- credentialService.acceptCredentialOffer(id, request.subjectId, request.keyId)
     } yield IssueCredentialRecord.fromDomain(outcome)
   }
 

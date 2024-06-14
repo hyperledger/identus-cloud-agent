@@ -27,6 +27,7 @@ final case class IssueCredentialRecord(
     credentialFormat: CredentialFormat,
     role: Role,
     subjectId: Option[String],
+    keyId: Option[String],
     validityPeriod: Option[Double] = None,
     automaticIssuance: Option[Boolean],
     protocolState: ProtocolState,
@@ -74,7 +75,8 @@ final case class ValidIssuedCredentialRecord(
     id: DidCommID,
     issuedCredentialRaw: Option[String],
     credentialFormat: CredentialFormat,
-    subjectId: Option[String]
+    subjectId: Option[String],
+    keyId: Option[String],
 )
 
 final case class ValidFullIssuedCredentialRecord(
@@ -83,7 +85,8 @@ final case class ValidFullIssuedCredentialRecord(
     credentialFormat: CredentialFormat,
     schemaUri: Option[String],
     credentialDefinitionUri: Option[String],
-    subjectId: Option[String]
+    subjectId: Option[String],
+    keyId: Option[String],
 )
 
 object IssueCredentialRecord {

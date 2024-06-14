@@ -122,36 +122,79 @@ trait BackgroundJobsHelper {
     } yield walletAccessContext
   }
 
-  def getEd25519SigningKeyPair(
-      jwtIssuerDID: PrismDID,
-      verificationRelationship: VerificationRelationship
+  def findHolderEd25519SigningKey(
+      proverDid: PrismDID,
+      verificationRelationship: VerificationRelationship,
+      keyId: String
   ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, RuntimeException, Ed25519KeyPair] = {
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
       didService <- ZIO.service[DIDService]
       issuingKeyId <- didService
-        .resolveDID(jwtIssuerDID)
+        .resolveDID(proverDid)
         .mapError(e => RuntimeException(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
         .someOrFail(RuntimeException(s"Issuing DID resolution result is not found"))
         .map { case (_, didData) =>
           didData.publicKeys
-            .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.ED25519)
+            .find(pk =>
+              pk.id == keyId
+                && pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.ED25519
+            )
             .map(_.id)
         }
         .someOrFail(
-          RuntimeException(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID")
+          RuntimeException(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $proverDid")
         )
       ed25519keyPair <- managedDIDService
-        .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
+        .findDIDKeyPair(proverDid.asCanonical, issuingKeyId)
         .map(_.collect { case keyPair: Ed25519KeyPair => keyPair })
         .someOrFail(
-          RuntimeException(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
+          RuntimeException(s"Issuer key-pair does not exist in the wallet: ${proverDid.toString}#$issuingKeyId")
+        )
+    } yield ed25519keyPair
+  }
+  def getEd25519SigningKeyPair(
+      proverDid: PrismDID,
+      verificationRelationship: VerificationRelationship,
+      keyId: Option[String] = None
+  ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, RuntimeException, Ed25519KeyPair] = {
+    for {
+      managedDIDService <- ZIO.service[ManagedDIDService]
+      didService <- ZIO.service[DIDService]
+      issuingKeyId <- didService
+        .resolveDID(proverDid)
+        .mapError(e => RuntimeException(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
+        .someOrFail(RuntimeException(s"Issuing DID resolution result is not found"))
+        .map { case (_, didData) =>
+          keyId match {
+            case Some(kid) =>
+              didData.publicKeys
+                .find(pk =>
+                  pk.id.endsWith(
+                    s"#$kid"
+                  ) && pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.ED25519
+                )
+                .map(_.id)
+            case None => // TODO Remove this None mean we cannot use the holder binding In SDJWT you will always have keyID with credentil since you did when you accept the offer with keyId
+              didData.publicKeys
+                .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.ED25519)
+                .map(_.id)
+          }
+        }
+        .someOrFail(
+          RuntimeException(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $proverDid")
+        )
+      ed25519keyPair <- managedDIDService
+        .findDIDKeyPair(proverDid.asCanonical, issuingKeyId)
+        .map(_.collect { case keyPair: Ed25519KeyPair => keyPair })
+        .someOrFail(
+          RuntimeException(s"Issuer key-pair does not exist in the wallet: ${proverDid.toString}#$issuingKeyId")
         )
     } yield ed25519keyPair
   }
 
-  /** @param jwtIssuerDID
-    *   This can holder prism did / issuer prism did
+  /** @param proverDid
+    *   This is holder prism did
     * @param verificationRelationship
     *   Holder it Authentication and Issuer it is AssertionMethod
     * @return
@@ -160,15 +203,16 @@ trait BackgroundJobsHelper {
     *   org.hyperledger.identus.pollux.vc.jwt.Issuer
     */
   def getSDJwtIssuer(
-      jwtIssuerDID: PrismDID,
-      verificationRelationship: VerificationRelationship
+      proverDid: PrismDID,
+      verificationRelationship: VerificationRelationship,
+      keyId: Option[String]
   ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, RuntimeException, JwtIssuer] = {
     for {
-      ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
+      ed25519keyPair <- getEd25519SigningKeyPair(proverDid, verificationRelationship, keyId)
     } yield {
       JwtIssuer(
-        org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
-        EdSigner(ed25519keyPair),
+        org.hyperledger.identus.pollux.vc.jwt.DID(proverDid.toString),
+        EdSigner(ed25519keyPair, keyId),
         Ed25519PublicKey.toJavaEd25519PublicKey(ed25519keyPair.publicKey.getEncoded)
       )
     }
