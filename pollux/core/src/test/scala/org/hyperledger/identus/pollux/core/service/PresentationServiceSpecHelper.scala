@@ -138,6 +138,7 @@ trait PresentationServiceSpecHelper {
     credentialFormat = credentialFormat,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,
+    keyId = None,
     validityPeriod = None,
     automaticIssuance = None,
     protocolState = IssueCredentialRecord.ProtocolState.OfferPending,

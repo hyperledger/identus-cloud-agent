@@ -165,7 +165,7 @@ case class OIDCCredentialIssuerServiceImpl(
         .map(WalletAccessContext.apply)
 
       jwtIssuer <- credentialService
-        .getJwtIssuer(issuingDID, VerificationRelationship.AssertionMethod)
+        .getJwtIssuer(issuingDID, VerificationRelationship.AssertionMethod, None)
         .provideSomeLayer(ZLayer.succeed(wac))
 
       jwtVC <- buildJwtVerifiableCredential(

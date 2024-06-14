@@ -102,9 +102,10 @@ class CredentialServiceNotifier(
 
   override def acceptCredentialOffer(
       recordId: DidCommID,
-      subjectId: Option[String]
+      subjectId: Option[String],
+      keyId: Option[String]
   ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
-    notifyOnSuccess(svc.acceptCredentialOffer(recordId, subjectId))
+    notifyOnSuccess(svc.acceptCredentialOffer(recordId, subjectId, keyId))
 
   override def generateJWTCredentialRequest(
       recordId: DidCommID
@@ -155,7 +156,11 @@ class CredentialServiceNotifier(
   override def generateSDJWTCredential(
       recordId: DidCommID,
       expirationTime: Duration,
-  ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed, IssueCredentialRecord] =
+  ): ZIO[
+    WalletAccessContext,
+    RecordNotFound | ExpirationDateHasPassed | VCJwtHeaderParsingError,
+    IssueCredentialRecord
+  ] =
     notifyOnSuccess(svc.generateSDJWTCredential(recordId, expirationTime))
 
   override def generateAnonCredsCredential(
@@ -225,9 +230,10 @@ class CredentialServiceNotifier(
 
   override def getJwtIssuer(
       jwtIssuerDID: PrismDID,
-      verificationRelationship: VerificationRelationship
+      verificationRelationship: VerificationRelationship,
+      keyId: Option[String]
   ): URIO[WalletAccessContext, Issuer] =
-    svc.getJwtIssuer(jwtIssuerDID, verificationRelationship)
+    svc.getJwtIssuer(jwtIssuerDID, verificationRelationship, keyId)
 }
 
 object CredentialServiceNotifier {
