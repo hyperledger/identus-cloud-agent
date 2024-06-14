@@ -99,19 +99,26 @@ object OfferCredential {
     )
   }
 
-  def readFromMessage(message: Message): OfferCredential = {
-    val body = message.body.asJson.as[OfferCredential.Body].toOption.get // TODO get
-    OfferCredential(
-      id = message.id,
-      `type` = message.piuri,
-      body = body,
-      attachments = message.attachments.getOrElse(Seq.empty),
-      thid = message.thid,
-      from = message.from.get, // TODO get
-      to = {
-        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
-        message.to.head
-      },
-    )
+  def readFromMessage(message: Message): Either[String, OfferCredential] = {
+    message.body.asJson.as[OfferCredential.Body] match
+      case Left(fail) => Left("Fail to parse OfferCredential's body: " + fail.getMessage)
+      case Right(body) =>
+        message.from match
+          case None => Left("OfferCredential MUST have the sender explicit")
+          case Some(from) =>
+            message.to match
+              case firstTo +: Seq() =>
+                Right(
+                  OfferCredential(
+                    id = message.id,
+                    `type` = message.piuri,
+                    body = body,
+                    attachments = message.attachments.getOrElse(Seq.empty),
+                    thid = message.thid,
+                    from = from,
+                    to = firstTo,
+                  )
+                )
+              case tos => Left(s"OfferCredential MUST have only 1 recipient instead has '${tos}'")
   }
 }
