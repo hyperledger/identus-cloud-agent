@@ -143,14 +143,14 @@ class PresentationRepositoryInMemory(
       sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit] = {
-    val result: URIO[WalletAccessContext, Unit] = {
+    val result = {
       for {
         storeRef <- walletStoreRef
         maybeRecord <- findPresentationRecord(recordId)
         result <- maybeRecord
           .map(record =>
             for {
-              result <- storeRef.update(r =>
+              _ <- storeRef.update(r =>
                 r.updated(
                   recordId,
                   record.copy(
@@ -163,7 +163,7 @@ class PresentationRepositoryInMemory(
                   )
                 )
               )
-            } yield result
+            } yield 1
           )
           .getOrElse(ZIO.succeed(0))
       } yield result

@@ -4,8 +4,12 @@ import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, Publicati
 import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.castor.core.model.did.{LongFormPrismDID, PrismDID, VerificationRelationship}
-import org.hyperledger.identus.castor.core.model.did.EllipticCurve
+import org.hyperledger.identus.castor.core.model.did.{
+  EllipticCurve,
+  LongFormPrismDID,
+  PrismDID,
+  VerificationRelationship
+}
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.{AgentPeerService, DidAgent}
 import org.hyperledger.identus.mercury.model.DidId
