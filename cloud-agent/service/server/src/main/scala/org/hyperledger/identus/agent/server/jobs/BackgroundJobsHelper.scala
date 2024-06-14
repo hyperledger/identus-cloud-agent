@@ -15,7 +15,7 @@ import org.hyperledger.identus.mercury.{AgentPeerService, DidAgent}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.sdjwt.SDJWT.*
-import org.hyperledger.identus.pollux.vc.jwt.{DIDResolutionFailed, DIDResolutionSucceeded, ES256KSigner, EdSigner, *}
+import org.hyperledger.identus.pollux.vc.jwt.{DIDResolutionFailed, DIDResolutionSucceeded, ES256KSigner, *}
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, Issuer as JwtIssuer}
 import org.hyperledger.identus.shared.crypto.{
   Ed25519KeyPair,
@@ -152,70 +152,6 @@ trait BackgroundJobsHelper {
           RuntimeException(s"Issuer key-pair does not exist in the wallet: ${proverDid.toString}#$issuingKeyId")
         )
     } yield ed25519keyPair
-  }
-  def getEd25519SigningKeyPair(
-      proverDid: PrismDID,
-      verificationRelationship: VerificationRelationship,
-      keyId: Option[String] = None
-  ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, RuntimeException, Ed25519KeyPair] = {
-    for {
-      managedDIDService <- ZIO.service[ManagedDIDService]
-      didService <- ZIO.service[DIDService]
-      issuingKeyId <- didService
-        .resolveDID(proverDid)
-        .mapError(e => RuntimeException(s"Error occured while resolving Issuing DID during VC creation: ${e.toString}"))
-        .someOrFail(RuntimeException(s"Issuing DID resolution result is not found"))
-        .map { case (_, didData) =>
-          keyId match {
-            case Some(kid) =>
-              didData.publicKeys
-                .find(pk =>
-                  pk.id.endsWith(
-                    s"#$kid"
-                  ) && pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.ED25519
-                )
-                .map(_.id)
-            case None => // TODO Remove this None mean we cannot use the holder binding In SDJWT you will always have keyID with credentil since you did when you accept the offer with keyId
-              didData.publicKeys
-                .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.ED25519)
-                .map(_.id)
-          }
-        }
-        .someOrFail(
-          RuntimeException(s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $proverDid")
-        )
-      ed25519keyPair <- managedDIDService
-        .findDIDKeyPair(proverDid.asCanonical, issuingKeyId)
-        .map(_.collect { case keyPair: Ed25519KeyPair => keyPair })
-        .someOrFail(
-          RuntimeException(s"Issuer key-pair does not exist in the wallet: ${proverDid.toString}#$issuingKeyId")
-        )
-    } yield ed25519keyPair
-  }
-
-  /** @param proverDid
-    *   This is holder prism did
-    * @param verificationRelationship
-    *   Holder it Authentication and Issuer it is AssertionMethod
-    * @return
-    *   JwtIssuer
-    * @see
-    *   org.hyperledger.identus.pollux.vc.jwt.Issuer
-    */
-  def getSDJwtIssuer(
-      proverDid: PrismDID,
-      verificationRelationship: VerificationRelationship,
-      keyId: Option[String]
-  ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, RuntimeException, JwtIssuer] = {
-    for {
-      ed25519keyPair <- getEd25519SigningKeyPair(proverDid, verificationRelationship, keyId)
-    } yield {
-      JwtIssuer(
-        org.hyperledger.identus.pollux.vc.jwt.DID(proverDid.toString),
-        EdSigner(ed25519keyPair, keyId),
-        Ed25519PublicKey.toJavaEd25519PublicKey(ed25519keyPair.publicKey.getEncoded)
-      )
-    }
   }
 
   def resolveToEd25519PublicKey(did: String): ZIO[JwtDidResolver, PresentationError, Ed25519PublicKey] = {
