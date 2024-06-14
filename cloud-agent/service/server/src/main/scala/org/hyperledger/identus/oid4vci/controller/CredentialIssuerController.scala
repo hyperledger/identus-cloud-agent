@@ -174,7 +174,8 @@ case class CredentialIssuerControllerImpl(
           session <- credentialIssuerService
             .getIssuanceSessionByNonce(nonce)
             .mapError(_ => badRequestInvalidProof(jwt, "nonce is not associated to the issuance session"))
-          subjectDid <- getSubjectDIDFromJwt(JWT(jwt))
+          subjectDid <- parseDIDUrlFromKeyId(JWT(jwt))
+            .map(_.did)
             .mapError(throwable => badRequestInvalidProof(jwt, throwable.getMessage))
           sessionWithSubjectDid <- credentialIssuerService
             .updateIssuanceSession(session.withSubjectDid(subjectDid))
@@ -191,9 +192,9 @@ case class CredentialIssuerControllerImpl(
             )
           credential <- credentialIssuerService
             .issueJwtCredential(
-              session.issuingDid,
-              session.subjectDid,
-              session.claims,
+              sessionWithSubjectDid.issuingDid,
+              sessionWithSubjectDid.subjectDid,
+              sessionWithSubjectDid.claims,
               maybeCredentialIdentifier,
               validatedCredentialDefinition
             )

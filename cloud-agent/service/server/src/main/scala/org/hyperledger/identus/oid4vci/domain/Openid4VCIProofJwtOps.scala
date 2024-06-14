@@ -1,7 +1,7 @@
 package org.hyperledger.identus.oid4vci.domain
 
 import com.nimbusds.jose.{JOSEObjectType, JWSAlgorithm, JWSHeader, JWSObject, JWSSigner, Payload}
-import org.hyperledger.identus.castor.core.model.did.{DID, LongFormPrismDID}
+import org.hyperledger.identus.castor.core.model.did.{DID, DIDUrl, LongFormPrismDID}
 import org.hyperledger.identus.pollux.vc.jwt.JWT
 import org.hyperledger.identus.pollux.vc.jwt.JwtSignerImplicits.*
 import org.hyperledger.identus.shared.crypto.Secp256k1PrivateKey
@@ -17,9 +17,9 @@ trait Openid4VCIProofJwtOps {
 
   val supportedAlgorithms: Set[String] = Set("ES256K")
 
-  private def buildHeaderFromLongFormDid(longFormDID: LongFormPrismDID) = {
-    new JWSHeader.Builder(JWSAlgorithm.ES256K)
-      .keyID(longFormDID.toString)
+  private def buildHeader(kid: String, algorithm: JWSAlgorithm) = {
+    new JWSHeader.Builder(algorithm)
+      .keyID(kid)
       .`type`(new JOSEObjectType(jwtTypeName))
       .build()
   }
@@ -35,13 +35,13 @@ trait Openid4VCIProofJwtOps {
   }
 
   def makeJwtProof(
-      longFormPrismDID: LongFormPrismDID,
+      kid: String,
       nonce: String,
       aud: UUID,
       iat: Int,
       privateKey: Secp256k1PrivateKey
   ): JWT = {
-    val header = buildHeaderFromLongFormDid(longFormPrismDID)
+    val header = buildHeader(kid, JWSAlgorithm.ES256K)
     val payload = buildPayload(nonce, aud, iat)
     JWT(makeJwtProof(header, payload, privateKey.asJwtSigner))
   }
@@ -54,6 +54,15 @@ trait Openid4VCIProofJwtOps {
     } yield keyID
   }
 
+  def getAlgorithmFromJwt(jwt: JWT): Task[String] = {
+    for {
+      jwsObject <- ZIO.fromTry(Try(JWSObject.parse(jwt.value)))
+      algorithm <- ZIO
+        .fromOption(Option(jwsObject.getHeader.getAlgorithm))
+        .mapError(_ => new Exception("Algorithm not found in JWT header"))
+    } yield algorithm.getName
+  }
+
   def getNonceFromJwt(jwt: JWT): Task[String] = {
     for {
       jwsObject <- ZIO.fromTry(Try(JWSObject.parse(jwt.value)))
@@ -63,10 +72,10 @@ trait Openid4VCIProofJwtOps {
     } yield nonce
   }
 
-  def getSubjectDIDFromJwt(jwt: JWT): Task[DID] = {
+  def parseDIDUrlFromKeyId(jwt: JWT): Task[DIDUrl] = {
     for {
       keyId <- getKeyIdFromJwt(jwt)
-      did <- ZIO.fromEither(DID.fromString(keyId)).mapError(e => new Exception(e))
-    } yield did
+      didUrl <- ZIO.fromEither(DIDUrl.fromString(keyId)).mapError(e => new Exception(e))
+    } yield didUrl
   }
 }
