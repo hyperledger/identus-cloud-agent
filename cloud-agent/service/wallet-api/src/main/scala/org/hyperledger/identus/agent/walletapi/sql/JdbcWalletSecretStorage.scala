@@ -16,7 +16,7 @@ import java.time.Instant
 
 class JdbcWalletSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletSecretStorage {
 
-  override def setWalletSeed(seed: WalletSeed): RIO[WalletAccessContext, Unit] = {
+  override def setWalletSeed(seed: WalletSeed): URIO[WalletAccessContext, Unit] = {
     val cxnIO = (now: Instant, walletId: WalletId) => sql"""
         | INSERT INTO public.wallet_seed(
         |   wallet_id,
@@ -32,11 +32,11 @@ class JdbcWalletSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletSe
     for {
       now <- Clock.instant
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      _ <- cxnIO(now, walletId).run.transactWallet(xa)
+      _ <- cxnIO(now, walletId).run.transactWallet(xa).orDie
     } yield ()
   }
 
-  override def getWalletSeed: RIO[WalletAccessContext, Option[WalletSeed]] = {
+  override def getWalletSeed: URIO[WalletAccessContext, Option[WalletSeed]] = {
     val cxnIO =
       sql"""
         | SELECT seed
@@ -54,7 +54,7 @@ class JdbcWalletSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletSe
             .fromEither(WalletSeed.fromByteArray(bytes))
             .mapError(Exception(_))
             .asSome
-      }
+      }.orDie
   }
 
 }

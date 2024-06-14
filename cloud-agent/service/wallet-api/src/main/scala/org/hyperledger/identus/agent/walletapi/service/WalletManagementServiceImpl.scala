@@ -45,7 +45,6 @@ class WalletManagementServiceImpl(
         .createWallet(wallet, seed.sha256Digest)
       _ <- secretStorage
         .setWalletSeed(seed)
-        .mapError(WalletManagementServiceError.UnexpectedStorageError.apply)
         .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
     } yield createdWallet
 

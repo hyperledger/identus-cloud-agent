@@ -42,7 +42,6 @@ private[walletapi] class DIDUpdateHandler(
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       seed <- walletSecretStorage.getWalletSeed
         .someOrElseZIO(ZIO.dieMessage(s"Wallet seed for wallet $walletId does not exist"))
-        .mapError(UpdateManagedDIDError.WalletStorageError.apply)
       keyCounter <- nonSecretStorage
         .getHdKeyCounter(did)
         .mapError(UpdateManagedDIDError.WalletStorageError.apply)
