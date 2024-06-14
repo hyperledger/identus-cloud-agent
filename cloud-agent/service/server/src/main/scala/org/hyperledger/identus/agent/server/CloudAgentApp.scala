@@ -189,9 +189,8 @@ object AgentInitialization {
       walletService <- ZIO.service[WalletManagementService]
       isDefaultWalletEnabled = config.enabled
       isDefaultWalletExist <- walletService
-        .getWallet(defaultWalletId)
+        .findWallet(defaultWalletId)
         .map(_.isDefined)
-        .mapError(_.toThrowable)
       _ <- ZIO.logInfo(s"Default wallet not enabled.").when(!isDefaultWalletEnabled)
       _ <- ZIO.logInfo(s"Default wallet already exist.").when(isDefaultWalletExist)
       _ <- createDefaultWallet.when(isDefaultWalletEnabled && !isDefaultWalletExist)
@@ -213,14 +212,14 @@ object AgentInitialization {
       _ <- ZIO.logInfo(s"Default wallet seed is not provided. New seed will be generated.").when(seed.isEmpty)
       _ <- walletService
         .createWallet(defaultWallet, seed)
-        .mapError(_.toThrowable)
+        .orDieAsUnmanagedFailure
       _ <- entityService.create(defaultEntity).mapError(e => Exception(e.message))
       _ <- apiKeyAuth.add(defaultEntity.id, config.authApiKey).mapError(e => Exception(e.message))
       _ <- config.webhookUrl.fold(ZIO.unit) { url =>
         val customHeaders = config.webhookApiKey.fold(Map.empty)(apiKey => Map("Authorization" -> s"Bearer $apiKey"))
         walletService
           .createWalletNotification(EventNotificationConfig(defaultWalletId, url, customHeaders))
-          .mapError(_.toThrowable)
+          .orDieAsUnmanagedFailure
           .provide(ZLayer.succeed(WalletAccessContext(defaultWalletId)))
       }
     } yield ()

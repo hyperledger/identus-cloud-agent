@@ -43,21 +43,6 @@ trait WalletManagementController {
 }
 
 object WalletManagementController {
-  given walletServiceErrorConversion: Conversion[WalletManagementServiceError, ErrorResponse] = {
-    case WalletManagementServiceError.UnexpectedStorageError(cause) =>
-      ErrorResponse.internalServerError(detail = Some(cause.getMessage()))
-    case WalletManagementServiceError.TooManyWebhookError(limit, actual) =>
-      ErrorResponse.conflict(detail = Some(s"Too many webhook created for a wallet. (limit $limit, actual $actual)"))
-    case WalletManagementServiceError.DuplicatedWalletId(id) =>
-      ErrorResponse.badRequest(s"Wallet id $id is not unique.")
-    case WalletManagementServiceError.DuplicatedWalletSeed(id) =>
-      ErrorResponse.badRequest(s"Wallet id $id cannot be created. The seed value is not unique.")
-    case TooManyPermittedWallet() =>
-      ErrorResponse.badRequest(
-        s"The operation is not allowed because wallet access already exists for the current user."
-      )
-  }
-
   given permissionManagementErrorConversion: Conversion[PermissionManagement.Error, ErrorResponse] = {
     case e: PermissionManagement.Error.PermissionNotFoundById => ErrorResponse.badRequest(detail = Some(e.message))
     case e: PermissionManagement.Error.ServiceError       => ErrorResponse.internalServerError(detail = Some(e.message))
@@ -85,7 +70,6 @@ class WalletManagementControllerImpl(
     for {
       pageResult <- walletService
         .listWallets(offset = paginationInput.offset, limit = paginationInput.limit)
-        .mapError[ErrorResponse](e => e)
       (items, totalCount) = pageResult
       stats = CollectionStats(totalCount = totalCount, filteredCount = totalCount)
     } yield WalletDetailPage(
@@ -102,8 +86,7 @@ class WalletManagementControllerImpl(
   )(implicit rc: RequestContext): ZIO[WalletAdministrationContext, ErrorResponse, WalletDetail] = {
     for {
       wallet <- walletService
-        .getWallet(WalletId.fromUUID(walletId))
-        .mapError[ErrorResponse](e => e)
+        .findWallet(WalletId.fromUUID(walletId))
         .someOrFail(ErrorResponse.notFound(detail = Some(s"Wallet id $walletId does not exist.")))
     } yield wallet
   }

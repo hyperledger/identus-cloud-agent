@@ -56,7 +56,7 @@ case class ApiKeyAuthenticatorImpl(
     for {
       wallet <- walletManagementService
         .createWallet(Wallet("Auto provisioned wallet", WalletId.random))
-        .mapError(cause => AuthenticationRepositoryError.UnexpectedError(cause))
+        .orDieAsUnmanagedFailure
         .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
       entityToCreate = Entity(name = "Auto provisioned entity", walletId = wallet.id.toUUID)
       entity <- entityService
