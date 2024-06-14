@@ -54,7 +54,8 @@ class JdbcWalletSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletSe
             .fromEither(WalletSeed.fromByteArray(bytes))
             .mapError(Exception(_))
             .asSome
-      }.orDie
+      }
+      .orDie
   }
 
 }

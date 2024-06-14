@@ -1,10 +1,14 @@
 package org.hyperledger.identus.event.controller
 
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
-import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.util.PaginationUtils
-import org.hyperledger.identus.event.controller.http.{CreateWebhookNotification, WebhookNotification, WebhookNotificationPage}
+import org.hyperledger.identus.event.controller.http.{
+  CreateWebhookNotification,
+  WebhookNotification,
+  WebhookNotificationPage
+}
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
