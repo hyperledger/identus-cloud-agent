@@ -8,13 +8,13 @@ import org.hyperledger.identus.oid4vci.domain.{IssuanceSession, Openid4VCIProofJ
 import org.hyperledger.identus.oid4vci.http.*
 import org.hyperledger.identus.oid4vci.storage.IssuanceSessionStorage
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
-import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.core.service.{
   CredentialService,
   OID4VCIIssuerMetadataService,
   OID4VCIIssuerMetadataServiceError,
   URIDereferencer
 }
+import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{
   DID as PolluxDID,
   DidResolver,

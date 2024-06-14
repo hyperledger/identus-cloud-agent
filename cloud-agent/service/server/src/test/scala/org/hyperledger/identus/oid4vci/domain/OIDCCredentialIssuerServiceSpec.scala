@@ -12,7 +12,11 @@ import org.hyperledger.identus.oid4vci.service.{OIDCCredentialIssuerService, OID
 import org.hyperledger.identus.oid4vci.storage.InMemoryIssuanceSessionService
 import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialConfiguration
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
-import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, CredentialRepositoryInMemory, CredentialStatusListRepositoryInMemory}
+import org.hyperledger.identus.pollux.core.repository.{
+  CredentialRepository,
+  CredentialRepositoryInMemory,
+  CredentialStatusListRepositoryInMemory
+}
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.vc.jwt.PrismDidResolver
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
