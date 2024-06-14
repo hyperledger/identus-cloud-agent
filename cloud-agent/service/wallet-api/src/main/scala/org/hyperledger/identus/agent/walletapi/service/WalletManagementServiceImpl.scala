@@ -1,7 +1,11 @@
 package org.hyperledger.identus.agent.walletapi.service
 
 import org.hyperledger.identus.agent.walletapi.model.{Wallet, WalletSeed}
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.TooManyWebhookError
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.{
+  DuplicatedWalletSeed,
+  TooManyPermittedWallet,
+  TooManyWebhookError
+}
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceImpl.MAX_WEBHOOK_PER_WALLET
 import org.hyperledger.identus.agent.walletapi.storage.{WalletNonSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.event.notification.EventNotificationConfig
@@ -21,13 +25,13 @@ class WalletManagementServiceImpl(
   override def createWallet(
       wallet: Wallet,
       seed: Option[WalletSeed]
-  ): ZIO[WalletAdministrationContext, WalletManagementServiceError, Wallet] =
+  ): ZIO[WalletAdministrationContext, TooManyPermittedWallet | DuplicatedWalletSeed, Wallet] =
     for {
       _ <- ZIO.serviceWithZIO[WalletAdministrationContext] {
         case WalletAdministrationContext.Admin()                                                   => ZIO.unit
         case WalletAdministrationContext.SelfService(permittedWallets) if permittedWallets.isEmpty => ZIO.unit
         case WalletAdministrationContext.SelfService(_) =>
-          ZIO.fail(WalletManagementServiceError.TooManyPermittedWallet())
+          ZIO.fail(TooManyPermittedWallet())
       }
       seed <- seed.fold(
         apollo.secp256k1.randomBip32Seed
@@ -38,7 +42,7 @@ class WalletManagementServiceImpl(
           }
       )(ZIO.succeed)
       _ <- nonSecretStorage.findWalletBySeed(seed.sha256Digest).flatMap {
-        case Some(w) => ZIO.fail(WalletManagementServiceError.DuplicatedWalletSeed(w.id))
+        case Some(w) => ZIO.fail(DuplicatedWalletSeed())
         case None    => ZIO.unit
       }
       createdWallet <- nonSecretStorage
@@ -48,9 +52,9 @@ class WalletManagementServiceImpl(
         .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
     } yield createdWallet
 
-  override def getWallet(
+  override def findWallet(
       walletId: WalletId
-  ): ZIO[WalletAdministrationContext, WalletManagementServiceError, Option[Wallet]] = {
+  ): URIO[WalletAdministrationContext, Option[Wallet]] = {
     ZIO
       .serviceWith[WalletAdministrationContext](_.isAuthorized(walletId))
       .flatMap {
@@ -61,7 +65,7 @@ class WalletManagementServiceImpl(
 
   override def getWallets(
       walletIds: Seq[WalletId]
-  ): ZIO[WalletAdministrationContext, WalletManagementServiceError, Seq[Wallet]] = {
+  ): URIO[WalletAdministrationContext, Seq[Wallet]] = {
     ZIO
       .serviceWith[WalletAdministrationContext](ctx => walletIds.filter(ctx.isAuthorized))
       .flatMap { filteredIds => nonSecretStorage.getWallets(filteredIds) }
@@ -70,7 +74,7 @@ class WalletManagementServiceImpl(
   override def listWallets(
       offset: Option[Int],
       limit: Option[Int]
-  ): ZIO[WalletAdministrationContext, WalletManagementServiceError, (Seq[Wallet], Int)] =
+  ): URIO[WalletAdministrationContext, (Seq[Wallet], Int)] =
     ZIO.serviceWithZIO[WalletAdministrationContext] {
       case WalletAdministrationContext.Admin() =>
         nonSecretStorage
@@ -81,21 +85,20 @@ class WalletManagementServiceImpl(
           .map(wallets => (wallets, wallets.length))
     }
 
-  override def listWalletNotifications
-      : ZIO[WalletAccessContext, WalletManagementServiceError, Seq[EventNotificationConfig]] =
+  override def listWalletNotifications: URIO[WalletAccessContext, Seq[EventNotificationConfig]] =
     nonSecretStorage.walletNotification
 
   override def createWalletNotification(
       config: EventNotificationConfig
-  ): ZIO[WalletAccessContext, WalletManagementServiceError, Unit] =
+  ): ZIO[WalletAccessContext, TooManyWebhookError, Unit] =
     for {
       count <- nonSecretStorage.countWalletNotification
       _ <-
         if (count < MAX_WEBHOOK_PER_WALLET) nonSecretStorage.createWalletNotification(config)
-        else ZIO.fail(TooManyWebhookError(MAX_WEBHOOK_PER_WALLET, count))
+        else ZIO.fail(TooManyWebhookError(config.walletId, MAX_WEBHOOK_PER_WALLET))
     } yield ()
 
-  override def deleteWalletNotification(id: UUID): ZIO[WalletAccessContext, WalletManagementServiceError, Unit] =
+  override def deleteWalletNotification(id: UUID): URIO[WalletAccessContext, Unit] =
     nonSecretStorage
       .deleteWalletNotification(id)
 

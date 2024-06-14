@@ -31,8 +31,7 @@ case class KeycloakPermissionManagementService(
   ): ZIO[WalletAdministrationContext, PermissionManagement.Error, Unit] = {
     for {
       _ <- walletManagementService
-        .getWallet(walletId)
-        .mapError(wmse => ServiceError(wmse.toThrowable.getMessage))
+        .findWallet(walletId)
         .someOrFail(WalletNotFoundById(walletId))
 
       walletResourceOpt <- findWalletResource(walletId)
@@ -114,8 +113,7 @@ case class KeycloakPermissionManagementService(
     val userId = entity.id
     for {
       _ <- walletManagementService
-        .getWallet(walletId)
-        .mapError(wmse => ServiceError(wmse.toThrowable.getMessage))
+        .findWallet(walletId)
         .someOrFail(WalletNotFoundById(walletId))
 
       walletResource <- findWalletResource(walletId)
@@ -185,7 +183,6 @@ case class KeycloakPermissionManagementService(
     val walletIds = resourceIds.flatMap(id => Try(UUID.fromString(id)).toOption).map(WalletId.fromUUID)
     walletManagementService
       .getWallets(walletIds)
-      .mapError(e => Error.UnexpectedError(e.toThrowable))
   }
 }
 

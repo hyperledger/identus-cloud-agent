@@ -64,13 +64,13 @@ object WalletManagementServiceSpec
       for {
         svc <- ZIO.service[WalletManagementService]
         createdWallet <- svc.createWallet(Wallet("wallet-1"))
-        wallet <- svc.getWallet(createdWallet.id)
+        wallet <- svc.findWallet(createdWallet.id)
       } yield assert(wallet)(isSome(equalTo(createdWallet)))
     },
     test("get non-existing wallet") {
       for {
         svc <- ZIO.service[WalletManagementService]
-        wallet <- svc.getWallet(WalletId.random)
+        wallet <- svc.findWallet(WalletId.random)
       } yield assert(wallet)(isNone)
     },
   )
@@ -191,7 +191,7 @@ object WalletManagementServiceSpec
         walletIds = Seq(wallet1, wallet2, wallet3).map(_.id)
         permittedWalletIds = Seq(wallet1, wallet2).map(_.id)
         maybeWallet3 <- svc
-          .getWallet(wallet3.id)
+          .findWallet(wallet3.id)
           .provide(ZLayer.succeed(WalletAdministrationContext.SelfService(permittedWalletIds)))
       } yield assert(maybeWallet3)(isNone)
     }
