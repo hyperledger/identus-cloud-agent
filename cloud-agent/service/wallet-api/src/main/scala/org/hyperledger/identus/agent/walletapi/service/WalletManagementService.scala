@@ -1,7 +1,12 @@
 package org.hyperledger.identus.agent.walletapi.service
 
 import org.hyperledger.identus.agent.walletapi.model.{Wallet, WalletSeed}
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.{DuplicatedWalletId, DuplicatedWalletSeed, TooManyPermittedWallet, TooManyWebhookError}
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.{
+  DuplicatedWalletId,
+  DuplicatedWalletSeed,
+  TooManyPermittedWallet,
+  TooManyWebhookError
+}
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.models.*
 import zio.*
