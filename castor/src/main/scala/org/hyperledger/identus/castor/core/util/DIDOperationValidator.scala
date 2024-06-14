@@ -83,15 +83,15 @@ private object CreateOperationValidator extends BaseOperationValidator {
       case InternalPublicKey(id, purpose, data) => (id, purpose, data)
     }
 
-  private def extractServiceIds(operation: PrismDIDOperation.Create): Seq[String] = operation.services.map(_.id)
+  private def extractServiceIds(operation: PrismDIDOperation.Create): Seq[String] =
+    operation.services.map(_.id)
 
-  private def extractServiceEndpoint(operation: PrismDIDOperation.Create): Seq[(String, ServiceEndpoint)] = {
+  private def extractServiceEndpoint(operation: PrismDIDOperation.Create): Seq[(String, ServiceEndpoint)] =
     operation.services.map { s => (s.id, s.serviceEndpoint) }
-  }
 
-  private def extractServiceType(operation: PrismDIDOperation.Create): Seq[(String, ServiceType)] = {
+  private def extractServiceType(operation: PrismDIDOperation.Create): Seq[(String, ServiceType)] =
     operation.services.map { s => (s.id, s.`type`) }
-  }
+
 }
 
 private object UpdateOperationValidator extends BaseOperationValidator {
@@ -346,16 +346,13 @@ private trait BaseOperationValidator {
   protected def validatePreviousOperationHash[T <: PrismDIDOperation](
       operation: T,
       previousOperationHashExtractor: T => ArraySeq[Byte]
-  ): Either[OperationValidationError, Unit] = {
-    val previousOperationHash = previousOperationHashExtractor(operation)
-    if (previousOperationHash.length == 32) Right(())
+  ): Either[OperationValidationError, Unit] =
+    if (previousOperationHashExtractor(operation).length == 32) Right(())
     else Left(OperationValidationError.InvalidArgument(s"previousOperationHash must have a size of 32 bytes"))
-  }
 
   /** @return true if a given uri is normalized */
-  protected def isUriNormalized(uri: String): Boolean = {
+  protected def isUriNormalized(uri: String): Boolean =
     UriUtils.normalizeUri(uri).contains(uri)
-  }
 
   protected def validateMasterKeyIsSecp256k1[T <: PrismDIDOperation](
       operation: T,

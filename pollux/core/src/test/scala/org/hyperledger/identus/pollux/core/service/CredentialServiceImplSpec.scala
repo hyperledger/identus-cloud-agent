@@ -502,7 +502,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           _ <- issuerSvc.markOfferSent(issuerRecordId)
           msg <- ZIO.fromEither(offerCreatedRecord.offerCredentialData.get.makeMessage.asJson.as[Message])
           // Holder receives offer
-          offerReceivedRecord <- holderSvc.receiveCredentialOffer(OfferCredential.readFromMessage(msg))
+          offerCredential <- ZIO.fromEither(OfferCredential.readFromMessage(msg))
+          offerReceivedRecord <- holderSvc.receiveCredentialOffer(offerCredential)
           holderRecordId = offerReceivedRecord.id
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           // Holder accepts offer
@@ -513,7 +514,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           _ <- holderSvc.markRequestSent(holderRecordId)
           msg <- ZIO.fromEither(requestGeneratedRecord.requestCredentialData.get.makeMessage.asJson.as[Message])
           // Issuer receives request
-          requestReceivedRecord <- issuerSvc.receiveCredentialRequest(RequestCredential.readFromMessage(msg))
+          requestCredential <- ZIO.fromEither(RequestCredential.readFromMessage(msg))
+          requestReceivedRecord <- issuerSvc.receiveCredentialRequest(requestCredential)
           // Issuer accepts request
           requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(issuerRecordId)
           // Issuer generates credential
@@ -525,7 +527,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           _ <- issuerSvc.markCredentialSent(issuerRecordId)
           msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.asJson.as[Message])
           // Holder receives credential
-          _ <- holderSvc.receiveCredentialIssue(IssueCredential.readFromMessage(msg))
+          issueCredential <- ZIO.fromEither(IssueCredential.readFromMessage(msg))
+          _ <- holderSvc.receiveCredentialIssue(issueCredential)
         } yield assertTrue(true)
       }.provideSomeLayer(
         (holderDidServiceExpectations ++ issuerDidServiceExpectations).toLayer
@@ -577,7 +580,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
                 ResourceURIDereferencerImpl.layerWithExtraResources >>>
                 credentialServiceLayer
             )
-          offerReceivedRecord <- holderSvc.receiveCredentialOffer(OfferCredential.readFromMessage(msg))
+          offerCredential <- ZIO.fromEither(OfferCredential.readFromMessage(msg))
+          offerReceivedRecord <- holderSvc.receiveCredentialOffer(offerCredential)
           holderRecordId = offerReceivedRecord.id
           // Holder accepts offer
           _ <- holderSvc.acceptCredentialOffer(holderRecordId, None)
@@ -587,7 +591,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           _ <- holderSvc.markRequestSent(holderRecordId)
           msg <- ZIO.fromEither(requestGeneratedRecord.requestCredentialData.get.makeMessage.asJson.as[Message])
           // Issuer receives request
-          _ <- issuerSvc.receiveCredentialRequest(RequestCredential.readFromMessage(msg))
+          requestCredential <- ZIO.fromEither(RequestCredential.readFromMessage(msg))
+          _ <- issuerSvc.receiveCredentialRequest(requestCredential)
           // Issuer accepts request
           _ <- issuerSvc.acceptCredentialRequest(issuerRecordId)
           // Issuer generates credential
@@ -595,8 +600,9 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           // Issuer sends credential
           _ <- issuerSvc.markCredentialSent(issuerRecordId)
           msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.asJson.as[Message])
-          // Holder receives credential
-          record <- holderSvc.receiveCredentialIssue(IssueCredential.readFromMessage(msg))
+          // Holder receives credential\
+          issueCredential <- ZIO.fromEither(IssueCredential.readFromMessage(msg))
+          record <- holderSvc.receiveCredentialIssue(issueCredential)
         } yield {
           assertTrue(record.issueCredentialData.isDefined) &&
           assertTrue(record.issueCredentialData.get.attachments.nonEmpty) &&

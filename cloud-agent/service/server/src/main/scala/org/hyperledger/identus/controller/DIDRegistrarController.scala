@@ -27,25 +27,25 @@ import zio.*
 import scala.language.implicitConversions
 
 trait DIDRegistrarController {
-  def listManagedDid(paginationInput: PaginationInput)(implicit
+  def listManagedDid(paginationInput: PaginationInput)(using
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, ManagedDIDPage]
 
-  def createManagedDid(request: CreateManagedDidRequest)(implicit
+  def createManagedDid(request: CreateManagedDidRequest)(using
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CreateManagedDIDResponse]
 
-  def getManagedDid(did: String)(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDID]
+  def getManagedDid(did: String)(using rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDID]
 
-  def publishManagedDid(did: String)(implicit
+  def publishManagedDid(did: String)(using
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse]
 
-  def updateManagedDid(did: String, updateRequest: UpdateManagedDIDRequest)(implicit
+  def updateManagedDid(did: String, updateRequest: UpdateManagedDIDRequest)(using
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse]
 
-  def deactivateManagedDid(did: String)(implicit
+  def deactivateManagedDid(did: String)(using
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse]
 }
@@ -55,14 +55,14 @@ object DIDRegistrarController {
     case GetManagedDIDError.OperationError(e) =>
       ErrorResponse.internalServerError(detail = Some(e.toString))
     case GetManagedDIDError.WalletStorageError(e) =>
-      ErrorResponse.internalServerError(detail = Some(e.toString))
+      ErrorResponse.internalServerError(detail = Some(e.getMessage))
   }
 
   given Conversion[CreateManagedDIDError, ErrorResponse] = {
     case CreateManagedDIDError.InvalidArgument(msg) =>
       ErrorResponse.unprocessableEntity(detail = Some(msg))
     case CreateManagedDIDError.WalletStorageError(e) =>
-      ErrorResponse.internalServerError(detail = Some(e.toString))
+      ErrorResponse.internalServerError(detail = Some(e.getMessage))
     case CreateManagedDIDError.InvalidOperation(e) =>
       ErrorResponse.unprocessableEntity(detail = Some(e.toString))
   }
@@ -71,7 +71,7 @@ object DIDRegistrarController {
     case PublishManagedDIDError.DIDNotFound(did) =>
       ErrorResponse.notFound(detail = Some(s"DID not found: $did"))
     case PublishManagedDIDError.WalletStorageError(e) =>
-      ErrorResponse.internalServerError(detail = Some(e.toString))
+      ErrorResponse.internalServerError(detail = Some(e.getMessage))
     case PublishManagedDIDError.OperationError(e) =>
       ErrorResponse.internalServerError(detail = Some(e.toString))
     case PublishManagedDIDError.CryptographyError(e) =>
@@ -99,7 +99,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
 
   override def listManagedDid(
       paginationInput: PaginationInput
-  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDIDPage] = {
+  )(using rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDIDPage] = {
     val uri = rc.request.uri
     val pagination = paginationInput.toPagination
     for {
@@ -117,7 +117,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
     )
   }
 
-  override def createManagedDid(createManagedDidRequest: CreateManagedDidRequest)(implicit
+  override def createManagedDid(createManagedDidRequest: CreateManagedDidRequest)(using
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CreateManagedDIDResponse] = {
     for {
@@ -132,7 +132,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
 
   override def getManagedDid(
       did: String
-  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDID] = {
+  )(using rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, ManagedDID] = {
     for {
       prismDID <- extractPrismDID(did)
       didDetail <- service
@@ -145,7 +145,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
 
   override def publishManagedDid(
       did: String
-  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse] = {
+  )(using rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse] = {
     for {
       prismDID <- extractPrismDID(did)
       outcome <- service
@@ -154,7 +154,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
     } yield outcome
   }
 
-  override def updateManagedDid(did: String, updateRequest: UpdateManagedDIDRequest)(implicit
+  override def updateManagedDid(did: String, updateRequest: UpdateManagedDIDRequest)(using
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse] = {
     for {
@@ -170,7 +170,7 @@ class DIDRegistrarControllerImpl(service: ManagedDIDService) extends DIDRegistra
 
   override def deactivateManagedDid(
       did: String
-  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse] = {
+  )(using rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, DIDOperationResponse] = {
     for {
       prismDID <- extractPrismDID(did)
       outcome <- service
