@@ -33,6 +33,7 @@ object SDJWT {
   }
   sealed trait Invalid extends ClaimsValidationResult
   case object InvalidSignature extends Invalid { def error = "Fail due to invalid input: InvalidSignature" }
+  case object InvalidToken extends Invalid { def error = "Fail due to invalid input: InvalidToken" }
   case object InvalidClaims extends Invalid { def error = "Fail to Verify the claims" }
   case object ClaimsDoNotMatch extends Invalid { def error = "Claims (are valid) but do not match the expected value" }
   case object InvalidClaimsIsNotJsonObj extends Invalid { def error = "The claims must be a valid json Obj" }
@@ -41,12 +42,12 @@ object SDJWT {
   def issueCredential(
       issueKey: IssuerPrivateKey,
       claims: String,
-  ): CredentialJson = issueCredential(issueKey, claims, None)
+  ): CredentialCompact = issueCredential(issueKey, claims, None)
 
   def issueCredential(
       issueKey: IssuerPrivateKey,
       claimsMap: Map[String, String],
-  ): CredentialJson = {
+  ): CredentialCompact = {
 
     given encoder: JsonEncoder[String | Int] = new JsonEncoder[String | Int] {
       override def unsafeEncode(b: String | Int, indent: Option[Int], out: zio.json.internal.Write): Unit = {
@@ -66,28 +67,28 @@ object SDJWT {
       issueKey: IssuerPrivateKey,
       claims: String,
       holderKey: HolderPublicKey,
-  ): CredentialJson = issueCredential(issueKey, claims, Some(holderKey))
+  ): CredentialCompact = issueCredential(issueKey, claims, Some(holderKey))
 
   private def issueCredential(
       issueKey: IssuerPrivateKey,
       claims: String,
       holderKey: Option[HolderPublicKey]
-  ): CredentialJson = {
+  ): CredentialCompact = {
     val issuer = new SdjwtIssuerWrapper(issueKey.value, issueKey.signAlg) // null)
     val sdjwt = issuer.issueSdJwtAllLevel(
       claims, // user_claims
       holderKey.map(_.jwt).orNull, // holder_key
       false, // add_decoy_claims
-      SdjwtSerializationFormat.JSON // COMPACT // serialization_format
+      SdjwtSerializationFormat.COMPACT // COMPACT // serialization_format
     )
-    CredentialJson(sdjwt)
+    CredentialCompact.unsafeFromCompact(sdjwt)
   }
 
   def createPresentation(
-      sdjwt: CredentialJson,
+      sdjwt: CredentialCompact,
       claimsToDisclose: String,
-  ): PresentationJson = {
-    val holder = SdjwtHolderWrapper(sdjwt.value, SdjwtSerializationFormat.JSON)
+  ): PresentationCompact = {
+    val holder = SdjwtHolderWrapper(sdjwt.compact, SdjwtSerializationFormat.COMPACT)
     val presentation = holder.createPresentation(
       claimsToDisclose,
       null, // nonce
@@ -95,7 +96,7 @@ object SDJWT {
       null, // holder_key
       null, // signAlg, // sign_alg
     )
-    PresentationJson(presentation)
+    PresentationCompact.unsafeFromCompact(presentation)
   }
 
   /** Create a presentation with challenge
@@ -109,13 +110,13 @@ object SDJWT {
     *   A presentation
     */
   def createPresentation(
-      sdjwt: CredentialJson,
+      sdjwt: CredentialCompact,
       claimsToDisclose: String,
       nonce: String,
       aud: String,
       holderKey: HolderPrivateKey
-  ): PresentationJson = {
-    val holder = SdjwtHolderWrapper(sdjwt.value, SdjwtSerializationFormat.JSON)
+  ): PresentationCompact = {
+    val holder = SdjwtHolderWrapper(sdjwt.compact, SdjwtSerializationFormat.COMPACT)
     val presentation = holder.createPresentation(
       claimsToDisclose,
       nonce, // nonce
@@ -123,26 +124,27 @@ object SDJWT {
       holderKey.value, // encodingKey("ES256"), // holder_key
       holderKey.signAlg, // null, // sign_alg
     )
-    PresentationJson(presentation)
+    PresentationCompact.unsafeFromCompact(presentation)
   }
 
   def getVerifiedClaims(
       key: IssuerPublicKey,
-      presentation: PresentationJson,
-      claims: String
+      presentation: PresentationCompact,
   ): ClaimsValidationResult = {
     Try {
       val verifier = SdjwtVerifierWrapper(
-        presentation.value, // sd_jwt_presentation
+        presentation.compact, // sd_jwt_presentation
         key.pem, // public_key
         null, // expected_aud
         null, // expected_nonce
-        SdjwtSerializationFormat.JSON // serialization_format
+        SdjwtSerializationFormat.COMPACT // serialization_format
       )
       verifier.getVerifiedClaims()
     } match {
       case Failure(ex: SdjwtException.Unspecified) if ex.getMessage() == "invalid input: InvalidSignature" =>
         InvalidSignature
+      case Failure(ex: SdjwtException.Unspecified) if ex.getMessage() == "invalid input: InvalidToken" =>
+        InvalidToken
       case Failure(ex) => InvalidError(ex.getMessage())
       case Success(claims) =>
         claims.fromJson[Json] match
@@ -155,24 +157,25 @@ object SDJWT {
 
   def getVerifiedClaims(
       key: IssuerPublicKey,
-      presentation: PresentationJson,
-      claims: String,
+      presentation: PresentationCompact,
       expectedNonce: String,
       expectedAud: String,
       // holderKey: HolderPrivateKey
   ): ClaimsValidationResult = {
     Try {
       val verifier = SdjwtVerifierWrapper(
-        presentation.value, // sd_jwt_presentation
+        presentation.compact, // sd_jwt_presentation
         key.pem, // public_key
         expectedAud, // expected_aud
         expectedNonce, // expected_nonce
-        SdjwtSerializationFormat.JSON // serialization_format
+        SdjwtSerializationFormat.COMPACT // serialization_format
       )
       verifier.getVerifiedClaims()
     } match {
       case Failure(ex: SdjwtException.Unspecified) if ex.getMessage() == "invalid input: InvalidSignature" =>
         InvalidSignature
+      case Failure(ex: SdjwtException.Unspecified) if ex.getMessage() == "invalid input: InvalidToken" =>
+        InvalidToken
       case Failure(ex) => InvalidError(ex.getMessage())
       case Success(claims) =>
         claims.fromJson[Json] match
@@ -185,21 +188,23 @@ object SDJWT {
   @deprecated("use getVerifiedClaims instaded", "ever")
   def verifyAndComparePresentation(
       key: IssuerPublicKey,
-      presentation: PresentationJson,
+      presentation: PresentationCompact,
       claims: String
   ): ClaimsValidationResult = {
     Try {
       val verifier = SdjwtVerifierWrapper(
-        presentation.value, // sd_jwt_presentation
+        presentation.compact, // sd_jwt_presentation
         key.pem, // public_key
         null, // expected_aud
         null, // expected_nonce
-        SdjwtSerializationFormat.JSON // serialization_format
+        SdjwtSerializationFormat.COMPACT // serialization_format
       )
       verifier.verify(claims)
     } match {
       case Failure(ex: SdjwtException.Unspecified) if ex.getMessage() == "invalid input: InvalidSignature" =>
         InvalidSignature
+      case Failure(ex: SdjwtException.Unspecified) if ex.getMessage() == "invalid input: InvalidToken" =>
+        InvalidToken
       case Failure(ex)    => InvalidError(ex.getMessage())
       case Success(true)  => ValidAnyMatch
       case Success(false) => InvalidClaims
@@ -220,7 +225,7 @@ object SDJWT {
   @deprecated("use getVerifiedClaims instaded", "ever")
   def verifyAndComparePresentation(
       key: IssuerPublicKey,
-      presentation: PresentationJson,
+      presentation: PresentationCompact,
       claims: String,
       expectedNonce: String,
       expectedAud: String,
@@ -228,16 +233,18 @@ object SDJWT {
   ): ClaimsValidationResult = {
     Try {
       val verifier = SdjwtVerifierWrapper(
-        presentation.value, // sd_jwt_presentation
+        presentation.compact, // sd_jwt_presentation
         key.pem, // public_key
         expectedAud, // expected_aud
         expectedNonce, // expected_nonce
-        SdjwtSerializationFormat.JSON // serialization_format
+        SdjwtSerializationFormat.COMPACT // serialization_format
       )
       verifier.verify(claims)
     } match {
       case Failure(ex: SdjwtException.Unspecified) if ex.getMessage() == "invalid input: InvalidSignature" =>
         InvalidSignature
+      case Failure(ex: SdjwtException.Unspecified) if ex.getMessage() == "invalid input: InvalidToken" =>
+        InvalidToken
       case Failure(ex)    => InvalidError(ex.getMessage())
       case Success(true)  => ValidAnyMatch
       case Success(false) => InvalidClaims

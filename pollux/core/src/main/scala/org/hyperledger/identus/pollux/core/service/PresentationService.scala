@@ -7,6 +7,7 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
+import org.hyperledger.identus.pollux.sdjwt.PresentationCompact
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
@@ -56,10 +57,10 @@ trait PresentationService {
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, PresentationPayload]
 
-  def createSDJwtPresentationPayloadFromRecord(
+  def createPresentationFromRecord(
       record: DidCommID,
       issuer: Issuer,
-  ): ZIO[WalletAccessContext, PresentationError, SdJwtPresentationPayload]
+  ): ZIO[WalletAccessContext, PresentationError, PresentationCompact]
 
   def createSDJwtPresentation(
       recordId: DidCommID,

@@ -107,19 +107,46 @@ def FAlSE_CLAIMS_PRESENTED =
 object SDJWTSpec extends ZIOSpecDefault {
 
   override def spec = suite("SDJWTRawSpec")(
+    test("CredentialCompact") {
+      val credentialExample =
+        "eyJhbGciOiJFUzI1NiJ9.eyJfc2QiOlsiMXRJNHZLQ2R3ald5aExxT0lkbTloUHYxNFo0ellEVlRiekgzUWd2S3ctTSIsIkM2alFVaDJiYzh3YTB6dHJiVFNnMUJxQkNMQ2tJSk5lU3ZuSkoyZ2NDc2MiXSwiX3NkX2FsZyI6InNoYS0yNTYiLCJpc3MiOiJkaWQ6ZXhhbXBsZTppc3N1ZXIiLCJpYXQiOjE2ODMwMDAwMDAsImV4cCI6MTg4MzAwMDAwMCwiY25mIjp7Imp3ayI6eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2IiwieCI6IlRDQUVSMTladnUzT0hGNGo0VzR2ZlNWb0hJUDFJTGlsRGxzN3ZDZUdlbWMiLCJ5IjoiWnhqaVdXYlpNUUdIVldLVlE0aGJTSWlyc1ZmdWVjQ0U2dDRqVDlGMkhaUSJ9fX0.MpRZOLNaCCs4_h7Injbp4MfiGfnieu2aMFG1cbD8KM_NyKwRnPrcMeSHkUGhDoYqTPfOFdvbLeWefWQr-u3hRw~WyJhbXZPbWxTMFJDajhwakQ0d2FpWVNBIiwgInN1YiIsICJkaWQ6ZXhhbXBsZTpob2xkZXIiXQ~WyJ1ZW9zVjRTMzVjMG1JbGFXZld5enp3IiwgInN0cmVldF9hZGRyZXNzIiwgIlNjaHVsc3RyLiAxMiJd~WyI4c3ZDaG1EcFlhUl9RSXFRVXY1OTF3IiwgImxvY2FsaXR5IiwgIlNjaHVscGZvcnRhIl0~WyJvbEw4dnV1LVgtVkR2QjR6R1pBS0p3IiwgInJlZ2lvbiIsICJTYWNoc2VuLUFuaGFsdCJd~WyJweV9tZmdZSjNrVDIwRkZDZkdMR2N3IiwgImNvdW50cnkiLCAiREUiXQ~WyJPY2RLUFNYT2VtVTNITlNqRmVkYldRIiwgImFkZHJlc3MiLCB7Il9zZCI6WyIxVlRyYzU0LVJmV3FEdnM4ay0yT2NDZmJnbWwxWWg5TTR4X3hJTHA2Qk9jIiwiMkJCSjhMR1M0UUZsYUZMNGY4UzFWUDhvaG83dzJQUkVlUHJwelRVQktMOCIsIkEwWnBkSUhrVjVrX3N4b3hMYkZoU3B3UEZFcEJUeWdoM0h2SnNzNmxRS0EiLCJzT3lnSmQwMWE2dzV1YUszMVJEUXF1dTk5VTJ2TENxWHNyd2lodHBvTklJIl19XQ~"
+      val c = CredentialCompact.unsafeFromCompact(credentialExample)
+
+      assertTrue(c.jwtHeader == "eyJhbGciOiJFUzI1NiJ9") &&
+      assertTrue(
+        c.jwtPayload ==
+          "eyJfc2QiOlsiMXRJNHZLQ2R3ald5aExxT0lkbTloUHYxNFo0ellEVlRiekgzUWd2S3ctTSIsIkM2alFVaDJiYzh3YTB6dHJiVFNnMUJxQkNMQ2tJSk5lU3ZuSkoyZ2NDc2MiXSwiX3NkX2FsZyI6InNoYS0yNTYiLCJpc3MiOiJkaWQ6ZXhhbXBsZTppc3N1ZXIiLCJpYXQiOjE2ODMwMDAwMDAsImV4cCI6MTg4MzAwMDAwMCwiY25mIjp7Imp3ayI6eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2IiwieCI6IlRDQUVSMTladnUzT0hGNGo0VzR2ZlNWb0hJUDFJTGlsRGxzN3ZDZUdlbWMiLCJ5IjoiWnhqaVdXYlpNUUdIVldLVlE0aGJTSWlyc1ZmdWVjQ0U2dDRqVDlGMkhaUSJ9fX0"
+      ) &&
+      assertTrue(
+        c.jwtSignature == "MpRZOLNaCCs4_h7Injbp4MfiGfnieu2aMFG1cbD8KM_NyKwRnPrcMeSHkUGhDoYqTPfOFdvbLeWefWQr-u3hRw"
+      ) &&
+      assertTrue(
+        c.kbJWT.isEmpty
+      ) &&
+      assertTrue(
+        Seq(
+          "WyJhbXZPbWxTMFJDajhwakQ0d2FpWVNBIiwgInN1YiIsICJkaWQ6ZXhhbXBsZTpob2xkZXIiXQ",
+          "WyJ1ZW9zVjRTMzVjMG1JbGFXZld5enp3IiwgInN0cmVldF9hZGRyZXNzIiwgIlNjaHVsc3RyLiAxMiJd",
+          "WyI4c3ZDaG1EcFlhUl9RSXFRVXY1OTF3IiwgImxvY2FsaXR5IiwgIlNjaHVscGZvcnRhIl0",
+          "WyJvbEw4dnV1LVgtVkR2QjR6R1pBS0p3IiwgInJlZ2lvbiIsICJTYWNoc2VuLUFuaGFsdCJd",
+          "WyJweV9tZmdZSjNrVDIwRkZDZkdMR2N3IiwgImNvdW50cnkiLCAiREUiXQ",
+          "WyJPY2RLUFNYT2VtVTNITlNqRmVkYldRIiwgImFkZHJlc3MiLCB7Il9zZCI6WyIxVlRyYzU0LVJmV3FEdnM4ay0yT2NDZmJnbWwxWWg5TTR4X3hJTHA2Qk9jIiwiMkJCSjhMR1M0UUZsYUZMNGY4UzFWUDhvaG83dzJQUkVlUHJwelRVQktMOCIsIkEwWnBkSUhrVjVrX3N4b3hMYkZoU3B3UEZFcEJUeWdoM0h2SnNzNmxRS0EiLCJzT3lnSmQwMWE2dzV1YUszMVJEUXF1dTk5VTJ2TENxWHNyd2lodHBvTklJIl19XQ",
+        ) == c.disclosures
+      )
+    },
     test("issue credential") {
       val credential = SDJWT.issueCredential(ISSUER_KEY, CLAIMS, HOLDER_KEY_JWK_PUBLIC)
-      assertTrue(!credential.value.isEmpty())
+      assertTrue(!credential.compact.isEmpty())
     },
     test("make presentation") {
       val credential = SDJWT.issueCredential(ISSUER_KEY, CLAIMS)
       val presentation = SDJWT.createPresentation(credential, CLAIMS_PRESENTED)
-      assertTrue(!presentation.value.isEmpty())
+      assertTrue(!presentation.compact.isEmpty())
     },
     test("getVerifiedClaims presentation") {
       val credential = SDJWT.issueCredential(ISSUER_KEY, CLAIMS)
       val presentation = SDJWT.createPresentation(credential, CLAIMS_QUERY)
-      val ret = SDJWT.getVerifiedClaims(ISSUER_KEY_PUBLIC, presentation, CLAIMS_PRESENTED)
+      val ret = SDJWT.getVerifiedClaims(ISSUER_KEY_PUBLIC, presentation)
       assertTrue(
         """{"iss":"did:example:issuer","iat":1683000000,"exp":1883000000,"address":{"country":"DE"}}"""
           .fromJson[ast.Json.Obj]
@@ -129,8 +156,9 @@ object SDJWTSpec extends ZIOSpecDefault {
     },
     test("issue credential without sub & iat and getVerifiedClaims") {
       val credential = SDJWT.issueCredential(ISSUER_KEY, CLAIMS_WITHOUT_SUB_IAT)
+      // verfier asking to disclose
       val presentation = SDJWT.createPresentation(credential, CLAIMS_QUERY)
-      val ret = SDJWT.getVerifiedClaims(ISSUER_KEY_PUBLIC, presentation, CLAIMS_PRESENTED)
+      val ret = SDJWT.getVerifiedClaims(ISSUER_KEY_PUBLIC, presentation)
       assertTrue(
         """{"iss":"did:example:issuer","exp":1883000000,"address":{"country":"DE"}}"""
           .fromJson[ast.Json.Obj]
@@ -161,8 +189,8 @@ object SDJWTSpec extends ZIOSpecDefault {
         "did:example:verifier",
         HOLDER_KEY
       )
-      assert(presentation.value)(isNonEmptyString)
-      // Assertion { TestArrow.make[PresentationJson, String] { a => TestTrace.succeed(a.value) } >>> isEmptyString.arrow }
+      assert(presentation.compact)(isNonEmptyString)
+      // Assertion { TestArrow.make[PresentationCompact, String] { a => TestTrace.succeed(a.value) } >>> isEmptyString.arrow }
     },
     test("verify presentation with holder presentation challenge") {
       val credential = SDJWT.issueCredential(ISSUER_KEY, CLAIMS, HOLDER_KEY_JWK_PUBLIC)
@@ -215,6 +243,7 @@ object SDJWTSpec extends ZIOSpecDefault {
       val issuerPublicKey = IssuerPublicKey(ed25519KeyPair.publicKey)
 
       val credential = SDJWT.issueCredential(issuerKey, CLAIMS)
+      // verifer addres
       val presentation = SDJWT.createPresentation(credential, CLAIMS_PRESENTED)
       val ret = SDJWT.verifyAndComparePresentation(issuerPublicKey, presentation, CLAIMS_PRESENTED)
       assertTrue(ret == SDJWT.ValidAnyMatch)
@@ -277,7 +306,7 @@ object SDJWTSpec extends ZIOSpecDefault {
       assertTrue(ret == SDJWT.InvalidSignature)
     },
     // methods
-    test("get iss field from PresentationJson") {
+    test("get iss field from PresentationCompact") {
       val ed25519KeyPair = KmpEd25519KeyOps.generateKeyPair
       val issuerKey = IssuerPrivateKey(ed25519KeyPair.privateKey)
       IssuerPublicKey(ed25519KeyPair.publicKey)

@@ -4,14 +4,14 @@ metadata:
   name: agent-server-tapir-service
   namespace: "{{ .Release.Namespace }}"
   labels:
-    app.kubernetes.io/name: {{ include "cloud-agent.fullname" . }}-server
-    app.kubernetes.io/service: {{ include "cloud-agent.fullname" . }}-server-main
-    {{ template "labels.common" . }}
+    app.kubernetes.io/name: {{ include "cloud-agent.name" . }}-server
+    app.kubernetes.io/service: {{ include "cloud-agent.name" . }}-server-main
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   selector:
-    app.kubernetes.io/name: {{ include "cloud-agent.fullname" . }}-server
+    app.kubernetes.io/name: {{ include "cloud-agent.name" . }}-server
   ports:
-    - name: {{ include "cloud-agent.fullname" . }}-server-main
+    - name: {{ include "cloud-agent.name" . }}-server-main
       protocol: "TCP"
       port: 8085
       targetPort: 8085
@@ -25,14 +25,14 @@ metadata:
   name: agent-server-didcomm-service
   namespace: "{{ .Release.Namespace }}"
   labels:
-    app.kubernetes.io/name: {{ include "cloud-agent.fullname" . }}-server
-    app.kubernetes.io/service: {{ include "cloud-agent.fullname" . }}-server-didcomm
-    {{ template "labels.common" . }}
+    app.kubernetes.io/name: {{ include "cloud-agent.name" . }}-server
+    app.kubernetes.io/service: {{ include "cloud-agent.name" . }}-server-didcomm
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   selector:
-    app.kubernetes.io/name: {{ include "cloud-agent.fullname" . }}-server
+    app.kubernetes.io/name: {{ include "cloud-agent.name" . }}-server
   ports:
-    - name: {{ include "cloud-agent.fullname" . }}-server-didcomm
+    - name: {{ include "cloud-agent.name" . }}-server-didcomm
       protocol: "TCP"
       port: 8090
       targetPort: 8090
@@ -41,17 +41,17 @@ spec:
 ---
 
 {{- if .Values.ingress.enabled }}
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name:  agent-domain-name-fake-service
+  name: agent-domain-name-fake-service
   namespace: "{{ .Release.Namespace }}"
   annotations:
     external-dns.alpha.kubernetes.io/hostname: "{{ join ", " .Values.ingress.applicationUrls }}"
   labels:
-    app.kubernetes.io/name: {{ include "cloud-agent.fullname" . }}-server
+    app.kubernetes.io/name: {{ include "cloud-agent.name" . }}-server
     app.kubernetes.io/service: agent-server-domain-name-fake
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   type: ExternalName
   externalName: {{ .Values.ingress.platformIngressUrl }}
