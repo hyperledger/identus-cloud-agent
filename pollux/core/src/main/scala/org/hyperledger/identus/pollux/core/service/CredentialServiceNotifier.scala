@@ -156,7 +156,11 @@ class CredentialServiceNotifier(
   override def generateSDJWTCredential(
       recordId: DidCommID,
       expirationTime: Duration,
-  ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed | VCJwtHeaderParsingError, IssueCredentialRecord] =
+  ): ZIO[
+    WalletAccessContext,
+    RecordNotFound | ExpirationDateHasPassed | VCJwtHeaderParsingError,
+    IssueCredentialRecord
+  ] =
     notifyOnSuccess(svc.generateSDJWTCredential(recordId, expirationTime))
 
   override def generateAnonCredsCredential(
@@ -226,9 +230,10 @@ class CredentialServiceNotifier(
 
   override def getJwtIssuer(
       jwtIssuerDID: PrismDID,
-      verificationRelationship: VerificationRelationship
+      verificationRelationship: VerificationRelationship,
+      keyId: Option[String]
   ): URIO[WalletAccessContext, Issuer] =
-    svc.getJwtIssuer(jwtIssuerDID, verificationRelationship)
+    svc.getJwtIssuer(jwtIssuerDID, verificationRelationship, keyId)
 }
 
 object CredentialServiceNotifier {

@@ -154,7 +154,8 @@ trait CredentialService {
 
   def getJwtIssuer(
       jwtIssuerDID: PrismDID,
-      verificationRelationship: VerificationRelationship
+      verificationRelationship: VerificationRelationship,
+      keyId: Option[String]
   ): URIO[WalletAccessContext, Issuer]
 }
 
