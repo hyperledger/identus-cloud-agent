@@ -237,7 +237,7 @@ def holder_get_credential(credential_endpoint: str, token_response):
     jwt_proof = jwt.encode(
         headers={
             "typ": "openid4vci-proof+jwt",
-            "kid": HOLDER_LONG_FORM_DID,
+            "kid": HOLDER_LONG_FORM_DID + "#key-0",
         },
         payload={
             "iss": ALICE_CLIENT_ID,
