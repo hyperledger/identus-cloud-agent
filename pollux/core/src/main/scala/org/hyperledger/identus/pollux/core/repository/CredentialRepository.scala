@@ -8,60 +8,71 @@ import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 trait CredentialRepository {
-  def createIssueCredentialRecord(record: IssueCredentialRecord): RIO[WalletAccessContext, Int]
-  def getIssueCredentialRecords(
+  def create(
+      record: IssueCredentialRecord
+  ): URIO[WalletAccessContext, Unit]
+
+  def findAll(
       ignoreWithZeroRetries: Boolean,
       offset: Option[Int] = None,
       limit: Option[Int] = None
-  ): RIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)]
-  def getIssueCredentialRecord(recordId: DidCommID): RIO[WalletAccessContext, Option[IssueCredentialRecord]]
-  def getIssueCredentialRecordsByStates(
+  ): URIO[WalletAccessContext, (Seq[IssueCredentialRecord], RuntimeFlags)]
+
+  def getById(
+      recordId: DidCommID
+  ): URIO[WalletAccessContext, IssueCredentialRecord]
+
+  def findById(
+      recordId: DidCommID
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]]
+
+  def findByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): RIO[WalletAccessContext, Seq[IssueCredentialRecord]]
+  ): URIO[WalletAccessContext, Seq[IssueCredentialRecord]]
 
-  def getIssueCredentialRecordsByStatesForAllWallets(
+  def findByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): Task[Seq[IssueCredentialRecord]]
+  ): UIO[Seq[IssueCredentialRecord]]
 
-  def getIssueCredentialRecordByThreadId(
+  def findByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean,
-  ): RIO[WalletAccessContext, Option[IssueCredentialRecord]]
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]]
 
-  def updateCredentialRecordProtocolState(
+  def updateProtocolState(
       recordId: DidCommID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
-  ): RIO[WalletAccessContext, Int]
+  ): URIO[WalletAccessContext, Unit]
 
   def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int]
+  ): URIO[WalletAccessContext, Unit]
 
   def updateWithJWTRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int]
+  ): URIO[WalletAccessContext, Unit]
 
   def updateWithAnonCredsRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
       metadata: AnoncredCredentialRequestMetadata,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int]
+  ): URIO[WalletAccessContext, Unit]
 
   def updateWithIssueCredential(
       recordId: DidCommID,
       issue: IssueCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int]
+  ): URIO[WalletAccessContext, Unit]
 
   def updateWithIssuedRawCredential(
       recordId: DidCommID,
@@ -70,19 +81,23 @@ trait CredentialRepository {
       schemaUri: Option[String],
       credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int]
+  ): URIO[WalletAccessContext, Unit]
 
-  def deleteIssueCredentialRecord(recordId: DidCommID): RIO[WalletAccessContext, Int]
+  def deleteById(
+      recordId: DidCommID
+  ): URIO[WalletAccessContext, Unit]
 
-  def getValidIssuedCredentials(recordId: Seq[DidCommID]): RIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]]
+  def findValidIssuedCredentials(
+      recordId: Seq[DidCommID]
+  ): URIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]]
 
-  def getValidAnoncredIssuedCredentials(
+  def findValidAnonCredsIssuedCredentials(
       recordIds: Seq[DidCommID]
-  ): RIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]]
+  ): URIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]]
 
   def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[String]
-  ): RIO[WalletAccessContext, Int]
+  ): URIO[WalletAccessContext, Unit]
 
 }

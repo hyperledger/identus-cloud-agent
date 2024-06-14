@@ -11,10 +11,15 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredential
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.{
+  RecordNotFound,
+  RecordNotFoundForThreadIdAndStates,
+  UnsupportedDidFormat,
+  *
+}
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{UnmanagedFailureException, WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.MockSpecDefault
 import zio.test.*
@@ -215,8 +220,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
               .exit
           } yield {
             assertTrue(record match
-              case Exit.Failure(Cause.Fail(_: CredentialServiceError, _)) => true
-              case _                                                      => false
+              case Exit.Failure(Cause.Die(_: UnmanagedFailureException, _)) => true
+              case _                                                        => false
             )
           }
         }
@@ -228,10 +233,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           aRecord <- svc.createJWTIssueCredentialRecord(thid = thid)
           bRecord <- svc.createJWTIssueCredentialRecord(thid = thid).exit
         } yield {
-          assertTrue(bRecord match
-            case Exit.Failure(Cause.Fail(_: RepositoryError, _)) => true
-            case _                                               => false
-          )
+          assert(bRecord)(dies(anything))
         }
       },
       test("getCredentialRecords returns the created records") {
@@ -269,7 +271,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           svc <- ZIO.service[CredentialService]
           aRecord <- svc.createJWTIssueCredentialRecord()
           bRecord <- svc.createJWTIssueCredentialRecord()
-          record <- svc.getIssueCredentialRecord(bRecord.id)
+          record <- svc.findById(bRecord.id)
         } yield assertTrue(record.contains(bRecord))
       },
       test("getCredentialRecord returns nothing for an unknown 'recordId'") {
@@ -277,7 +279,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           svc <- ZIO.service[CredentialService]
           aRecord <- svc.createJWTIssueCredentialRecord()
           bRecord <- svc.createJWTIssueCredentialRecord()
-          record <- svc.getIssueCredentialRecord(DidCommID())
+          record <- svc.findById(DidCommID())
         } yield assertTrue(record.isEmpty)
       },
       test("receiveCredentialOffer successfully creates a record") {
@@ -307,10 +309,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           _ <- holderSvc.receiveCredentialOffer(offer)
           exit <- holderSvc.receiveCredentialOffer(offer).exit
         } yield {
-          assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: RepositoryError, _)) => true
-            case _                                               => false
-          )
+          assert(exit)(dies(anything))
         }
       },
       test("acceptCredentialOffer updates the record's protocol state") {
@@ -350,8 +349,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId)).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
-            case _                                                     => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFound, _)) => true
+            case _                                              => false
           )
         }
       },
@@ -391,8 +390,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- issuerSvc.receiveCredentialRequest(request).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
-            case _                                                     => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFoundForThreadIdAndStates, _)) => true
+            case _                                                                  => false
           )
         }
       },
@@ -405,8 +404,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- issuerSvc.receiveCredentialRequest(request).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: ThreadIdNotFound, _)) => true
-            case _                                                => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFoundForThreadIdAndStates, _)) => true
+            case _                                                                  => false
           )
         }
       },
@@ -434,8 +433,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- issuerSvc.acceptCredentialRequest(requestReceivedRecord.id).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
-            case _                                                     => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFound, _)) => true
+            case _                                              => false
           )
         }
       },
@@ -469,8 +468,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- holderSvc.receiveCredentialIssue(issue).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
-            case _                                                     => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFoundForThreadIdAndStates, _)) => true
+            case _                                                                  => false
           )
         }
       }.provideSomeLayer(holderDidServiceExpectations.toLayer ++ holderManagedDIDServiceExpectations.toLayer),
@@ -487,8 +486,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- holderSvc.receiveCredentialIssue(issue).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: ThreadIdNotFound, _)) => true
-            case _                                                => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFoundForThreadIdAndStates, _)) => true
+            case _                                                                  => false
           )
         }
       }.provideSomeLayer(holderDidServiceExpectations.toLayer ++ holderManagedDIDServiceExpectations.toLayer),
@@ -622,10 +621,10 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           svc <- ZIO.service[CredentialService]
           record1 <- svc.createJWTIssueCredentialRecord().provide(wallet1)
           record2 <- svc.createJWTIssueCredentialRecord().provide(wallet2)
-          ownRecord1 <- svc.getIssueCredentialRecord(record1.id).provide(wallet1)
-          ownRecord2 <- svc.getIssueCredentialRecord(record2.id).provide(wallet2)
-          crossRecord1 <- svc.getIssueCredentialRecord(record1.id).provide(wallet2)
-          crossRecord2 <- svc.getIssueCredentialRecord(record2.id).provide(wallet1)
+          ownRecord1 <- svc.findById(record1.id).provide(wallet1)
+          ownRecord2 <- svc.findById(record2.id).provide(wallet2)
+          crossRecord1 <- svc.findById(record1.id).provide(wallet2)
+          crossRecord2 <- svc.findById(record2.id).provide(wallet1)
         } yield assert(ownRecord1)(isSome(equalTo(record1))) &&
           assert(ownRecord2)(isSome(equalTo(record2))) &&
           assert(crossRecord1)(isNone) &&

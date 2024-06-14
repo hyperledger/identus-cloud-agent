@@ -1,8 +1,12 @@
 package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, CredentialStatusListWithCreds, DidCommID}
-import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError.*
+import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError.{
+  InvalidRoleForOperation,
+  StatusListNotFound,
+  StatusListNotFoundForIssueCredentialRecord
+}
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
@@ -10,52 +14,46 @@ import zio.*
 import java.util.UUID
 
 class CredentialStatusListServiceImpl(
+    credentialService: CredentialService,
     credentialStatusListRepository: CredentialStatusListRepository,
 ) extends CredentialStatusListService {
 
-  def findById(id: UUID): IO[CredentialStatusListServiceError, CredentialStatusList] =
+  def getCredentialsAndItsStatuses: UIO[Seq[CredentialStatusListWithCreds]] =
+    credentialStatusListRepository.getCredentialStatusListsWithCreds
+
+  def getById(id: UUID): IO[StatusListNotFound, CredentialStatusList] =
     for {
-      maybeStatusList <- credentialStatusListRepository.findById(id).mapError(RepositoryError.apply)
-      statuslist <- ZIO
-        .getOrFailWith(RecordIdNotFound(id))(
-          maybeStatusList
-        )
-    } yield statuslist
+      maybeStatusList <- credentialStatusListRepository.findById(id)
+      statusList <- ZIO
+        .fromOption(maybeStatusList)
+        .mapError(_ => StatusListNotFound(id))
+    } yield statusList
 
   def revokeByIssueCredentialRecordId(
       id: DidCommID
-  ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit] = {
+  ): ZIO[WalletAccessContext, StatusListNotFoundForIssueCredentialRecord | InvalidRoleForOperation, Unit] =
     for {
-      revoked <- credentialStatusListRepository.revokeByIssueCredentialRecordId(id).mapError(RepositoryError.apply)
-      _ <- if (revoked) ZIO.unit else ZIO.fail(IssueCredentialRecordNotFound(id))
+      record <- credentialService.getById(id).orDieAsUnmanagedFailure
+      _ <- if (record.role == Role.Issuer) ZIO.unit else ZIO.fail(InvalidRoleForOperation(record.role))
+      exists <- credentialStatusListRepository.existsForIssueCredentialRecordId(id)
+      _ <- if (exists) ZIO.unit else ZIO.fail(StatusListNotFoundForIssueCredentialRecord(id))
+      _ <- credentialStatusListRepository.revokeByIssueCredentialRecordId(id)
     } yield ()
-
-  }
-
-  def getCredentialsAndItsStatuses: IO[CredentialStatusListServiceError, Seq[CredentialStatusListWithCreds]] = {
-    credentialStatusListRepository.getCredentialStatusListsWithCreds.mapError(RepositoryError.apply)
-  }
 
   def updateStatusListCredential(
       id: UUID,
       statusListCredential: String
-  ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit] = {
-    credentialStatusListRepository
-      .updateStatusListCredential(id, statusListCredential)
-      .mapError(RepositoryError.apply)
-  }
+  ): URIO[WalletAccessContext, Unit] =
+    credentialStatusListRepository.updateStatusListCredential(id, statusListCredential)
 
   def markAsProcessedMany(
       credsInStatusListIds: Seq[UUID]
-  ): ZIO[WalletAccessContext, CredentialStatusListServiceError, Unit] = {
-    credentialStatusListRepository
-      .markAsProcessedMany(credsInStatusListIds)
-      .mapError(RepositoryError.apply)
-  }
+  ): URIO[WalletAccessContext, Unit] =
+    credentialStatusListRepository.markAsProcessedMany(credsInStatusListIds)
 
 }
 
 object CredentialStatusListServiceImpl {
-  val layer: URLayer[CredentialStatusListRepository, CredentialStatusListService] =
-    ZLayer.fromFunction(CredentialStatusListServiceImpl(_))
+  val layer: URLayer[CredentialService & CredentialStatusListRepository, CredentialStatusListService] =
+    ZLayer.fromFunction(CredentialStatusListServiceImpl(_, _))
 }

@@ -87,35 +87,3 @@ object HolderPrivateKey {
     fromEdPem(data)
   }
 }
-
-opaque type CredentialJson = String
-object CredentialJson {
-  given decoder: JsonDecoder[CredentialJson] = JsonDecoder.string.map(CredentialJson(_))
-  given encoder: JsonEncoder[CredentialJson] = JsonEncoder.string.contramap[CredentialJson](_.value)
-
-  def apply(value: String): CredentialJson = value
-  extension (c: CredentialJson)
-    def value: String = c
-    def payload: Either[String, String] = ModelsExtensionMethods.payload(c)
-    def iss: Either[String, String] = ModelsExtensionMethods.iss(c)
-    def sub: Either[String, String] = ModelsExtensionMethods.sub(c)
-    def iat: Either[String, BigDecimal] = ModelsExtensionMethods.iat(c)
-    def exp: Either[String, BigDecimal] = ModelsExtensionMethods.exp(c)
-
-}
-
-opaque type PresentationJson = String
-object PresentationJson {
-  given decoder: JsonDecoder[PresentationJson] = JsonDecoder.string.map(PresentationJson(_))
-  given encoder: JsonEncoder[PresentationJson] = JsonEncoder.string.contramap[PresentationJson](_.value)
-
-  def apply(value: String): PresentationJson = value
-  extension (c: PresentationJson)
-    def value: String = c
-    def payload: Either[String, String] = ModelsExtensionMethods.payload(c)
-    def iss: Either[String, String] = ModelsExtensionMethods.iss(c)
-    def sub: Either[String, String] = ModelsExtensionMethods.sub(c)
-    def iat: Either[String, BigDecimal] = ModelsExtensionMethods.iat(c)
-    def exp: Either[String, BigDecimal] = ModelsExtensionMethods.exp(c)
-
-}

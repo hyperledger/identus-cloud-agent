@@ -1,4 +1,4 @@
-package org.hyperledger.identus.pollux.core.service
+package org.hyperledger.identus.pollux.core.model.error
 
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
@@ -29,5 +29,5 @@ final case class CredentialSchemaUpdateError(id: UUID, version: String, author: 
 final case class CredentialSchemaValidationError(cause: CredentialSchemaError)
     extends CredentialSchemaServiceError(
       StatusCode.BadRequest,
-      s"Credential Schema Validation Error=${cause.message}"
+      s"Credential Schema Validation Error=${cause.userFacingMessage}"
     )

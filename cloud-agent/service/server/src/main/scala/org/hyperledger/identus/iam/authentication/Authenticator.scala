@@ -51,8 +51,8 @@ trait Authorizer[E <: BaseEntity] {
       .mapError(msg =>
         AuthenticationError.UnexpectedError(s"Unable to retrieve entity role for entity id ${entity.id}. $msg")
       )
-      .filterOrFail(_ != EntityRole.Admin)(
-        AuthenticationError.InvalidRole("Admin role is not allowed to access the tenant's wallet.")
+      .filterOrFail(_ == EntityRole.Tenant)(
+        AuthenticationError.InvalidRole("Only Tenant role is allowed to access the tenant's wallet.")
       )
       .flatMap(_ => authorizeWalletAccessLogic(entity))
 

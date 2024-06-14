@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
-import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, *}
+import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.vc.jwt.{revocation, Issuer, StatusPurpose}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{
@@ -35,7 +35,7 @@ class CredentialStatusListRepositoryInMemory(
         }(ZIO.succeed)
     } yield walletRef
 
-  private def allStatusListsStorageRefs: Task[Ref[Map[UUID, CredentialStatusList]]] =
+  private def allStatusListsStorageRefs: UIO[Ref[Map[UUID, CredentialStatusList]]] =
     for {
       refs <- walletToStatusListRefs.get
       allRefs = refs.values.toList
@@ -49,7 +49,7 @@ class CredentialStatusListRepositoryInMemory(
 
   private def statusListToCredInStatusListStorageRefs(
       statusListId: UUID
-  ): Task[Ref[Map[UUID, CredentialInStatusList]]] =
+  ): UIO[Ref[Map[UUID, CredentialInStatusList]]] =
     for {
       refs <- statusListToCredInStatusListRefs.get
       maybeStatusListIdRef = refs.get(statusListId)
@@ -61,13 +61,19 @@ class CredentialStatusListRepositoryInMemory(
       }(ZIO.succeed)
     } yield statusListIdRef
 
-  def findById(id: UUID): Task[Option[CredentialStatusList]] = for {
+  def findById(id: UUID): UIO[Option[CredentialStatusList]] = for {
     refs <- walletToStatusListRefs.get
     stores <- ZIO.foreach(refs.values.toList)(_.get)
     found = stores.flatMap(_.values).find(_.id == id)
   } yield found
 
-  def getLatestOfTheWallet: RIO[WalletAccessContext, Option[CredentialStatusList]] = for {
+  override def existsForIssueCredentialRecordId(id: DidCommID): UIO[Boolean] = for {
+    refs <- statusListToCredInStatusListRefs.get
+    stores <- ZIO.foreach(refs.values)(_.get)
+    exists = stores.flatMap(_.values).exists(_.issueCredentialRecordId == id)
+  } yield exists
+
+  def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]] = for {
     storageRef <- walletToStatusListStorageRefs
     storage <- storageRef.get
     latest = storage.toSeq
@@ -79,7 +85,7 @@ class CredentialStatusListRepositoryInMemory(
   def createNewForTheWallet(
       jwtIssuer: Issuer,
       statusListRegistryUrl: String
-  ): RIO[WalletAccessContext, CredentialStatusList] = {
+  ): URIO[WalletAccessContext, CredentialStatusList] = {
 
     val id = UUID.randomUUID()
     val issued = Instant.now()
@@ -106,7 +112,7 @@ class CredentialStatusListRepositoryInMemory(
     } yield credentialWithEmbeddedProof.spaces2
 
     for {
-      credential <- embeddedProofCredential
+      credential <- embeddedProofCredential.orDie
       storageRef <- walletToStatusListStorageRefs
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       newCredentialStatusList = CredentialStatusList(
@@ -130,7 +136,7 @@ class CredentialStatusListRepositoryInMemory(
       issueCredentialRecordId: DidCommID,
       credentialStatusListId: UUID,
       statusListIndex: Int
-  ): RIO[WalletAccessContext, Unit] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val newCredentialInStatusList = CredentialInStatusList(
       id = UUID.randomUUID(),
       issueCredentialRecordId = issueCredentialRecordId,
@@ -159,8 +165,7 @@ class CredentialStatusListRepositoryInMemory(
 
   def revokeByIssueCredentialRecordId(
       issueCredentialRecordId: DidCommID
-  ): RIO[WalletAccessContext, Boolean] = {
-    var isUpdated = false
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       statusListsRefs <- walletToStatusListStorageRefs
       statusLists <- statusListsRefs.get
@@ -173,17 +178,16 @@ class CredentialStatusListRepositoryInMemory(
           maybeFound.fold(credInStatusListsMap) { case (id, value) =>
             if (!value.isCanceled) {
               credInStatusListsMap.updated(id, value.copy(isCanceled = true, updatedAt = Some(Instant.now())))
-              isUpdated = true
               credInStatusListsMap
             } else credInStatusListsMap
           }
 
         }
       )
-    } yield isUpdated
+    } yield ()
   }
 
-  def getCredentialStatusListsWithCreds: Task[List[CredentialStatusListWithCreds]] = {
+  def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]] = {
     for {
       statusListsRefs <- allStatusListsStorageRefs
       statusLists <- statusListsRefs.get
@@ -219,7 +223,7 @@ class CredentialStatusListRepositoryInMemory(
   def updateStatusListCredential(
       credentialStatusListId: UUID,
       statusListCredential: String
-  ): RIO[WalletAccessContext, Unit] = {
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       statusListsRefs <- walletToStatusListStorageRefs
       _ <- statusListsRefs.update { statusLists =>
@@ -235,7 +239,7 @@ class CredentialStatusListRepositoryInMemory(
 
   def markAsProcessedMany(
       credsInStatusListIds: Seq[UUID]
-  ): RIO[WalletAccessContext, Unit] = for {
+  ): URIO[WalletAccessContext, Unit] = for {
     statusListsRefs <- walletToStatusListStorageRefs
     statusLists <- statusListsRefs.get
     credInStatusListsRefs <- ZIO

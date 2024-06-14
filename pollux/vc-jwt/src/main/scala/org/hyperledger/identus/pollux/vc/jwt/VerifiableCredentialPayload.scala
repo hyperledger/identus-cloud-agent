@@ -19,6 +19,9 @@ import java.security.PublicKey
 import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
 import java.time.temporal.TemporalAmount
 import scala.util.{Failure, Try}
+
+//TODO: I think we should remove this code and use the DID form the castor library
+
 opaque type DID = String
 object DID {
   def apply(value: String): DID = value
