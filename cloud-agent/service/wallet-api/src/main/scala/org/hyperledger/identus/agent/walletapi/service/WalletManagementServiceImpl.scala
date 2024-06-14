@@ -1,6 +1,8 @@
 package org.hyperledger.identus.agent.walletapi.service
 
 import org.hyperledger.identus.agent.walletapi.model.{Wallet, WalletSeed}
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.TooManyWebhookError
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceImpl.MAX_WEBHOOK_PER_WALLET
 import org.hyperledger.identus.agent.walletapi.storage.{WalletNonSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.crypto.Apollo
@@ -35,9 +37,12 @@ class WalletManagementServiceImpl(
               .orDieWith(msg => Exception(s"Wallet seed generation failed: $msg"))
           }
       )(ZIO.succeed)
+      _ <- nonSecretStorage.findWalletBySeed(seed.sha256Digest).flatMap {
+        case Some(w) => ZIO.fail(WalletManagementServiceError.DuplicatedWalletSeed(w.id))
+        case None    => ZIO.unit
+      }
       createdWallet <- nonSecretStorage
         .createWallet(wallet, seed.sha256Digest)
-        .mapError[WalletManagementServiceError](e => e)
       _ <- secretStorage
         .setWalletSeed(seed)
         .mapError(WalletManagementServiceError.UnexpectedStorageError.apply)
@@ -50,7 +55,7 @@ class WalletManagementServiceImpl(
     ZIO
       .serviceWith[WalletAdministrationContext](_.isAuthorized(walletId))
       .flatMap {
-        case true  => nonSecretStorage.getWallet(walletId).mapError(e => e)
+        case true  => nonSecretStorage.findWalletById(walletId)
         case false => ZIO.none
       }
   }
@@ -60,7 +65,7 @@ class WalletManagementServiceImpl(
   ): ZIO[WalletAdministrationContext, WalletManagementServiceError, Seq[Wallet]] = {
     ZIO
       .serviceWith[WalletAdministrationContext](ctx => walletIds.filter(ctx.isAuthorized))
-      .flatMap { filteredIds => nonSecretStorage.getWallets(filteredIds).mapError(e => e) }
+      .flatMap { filteredIds => nonSecretStorage.getWallets(filteredIds) }
   }
 
   override def listWallets(
@@ -71,34 +76,34 @@ class WalletManagementServiceImpl(
       case WalletAdministrationContext.Admin() =>
         nonSecretStorage
           .listWallet(offset = offset, limit = limit)
-          .mapError(e => e)
       case WalletAdministrationContext.SelfService(permittedWallets) =>
         nonSecretStorage
           .getWallets(permittedWallets)
           .map(wallets => (wallets, wallets.length))
-          .mapError(e => e)
     }
 
   override def listWalletNotifications
       : ZIO[WalletAccessContext, WalletManagementServiceError, Seq[EventNotificationConfig]] =
     nonSecretStorage.walletNotification
-      .mapError(e => e)
 
   override def createWalletNotification(
       config: EventNotificationConfig
-  ): ZIO[WalletAccessContext, WalletManagementServiceError, EventNotificationConfig] =
-    nonSecretStorage
-      .createWalletNotification(config)
-      .mapError(e => e)
+  ): ZIO[WalletAccessContext, WalletManagementServiceError, Unit] =
+    for {
+      count <- nonSecretStorage.countWalletNotification
+      _ <-
+        if (count < MAX_WEBHOOK_PER_WALLET) nonSecretStorage.createWalletNotification(config)
+        else ZIO.fail(TooManyWebhookError(MAX_WEBHOOK_PER_WALLET, count))
+    } yield ()
 
   override def deleteWalletNotification(id: UUID): ZIO[WalletAccessContext, WalletManagementServiceError, Unit] =
     nonSecretStorage
       .deleteWalletNotification(id)
-      .mapError(e => e)
 
 }
 
 object WalletManagementServiceImpl {
+  val MAX_WEBHOOK_PER_WALLET = 1
   val layer: URLayer[Apollo & WalletNonSecretStorage & WalletSecretStorage, WalletManagementService] = {
     ZLayer.fromFunction(WalletManagementServiceImpl(_, _, _))
   }

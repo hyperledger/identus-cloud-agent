@@ -1,7 +1,6 @@
 package org.hyperledger.identus.agent.walletapi.service
 
 import org.hyperledger.identus.agent.walletapi.model.{Wallet, WalletSeed}
-import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageError
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
 import zio.*
@@ -19,13 +18,6 @@ object WalletManagementServiceError {
   final case class DuplicatedWalletId(id: WalletId) extends WalletManagementServiceError
   final case class DuplicatedWalletSeed(id: WalletId) extends WalletManagementServiceError
   final case class TooManyPermittedWallet() extends WalletManagementServiceError
-
-  given Conversion[WalletNonSecretStorageError, WalletManagementServiceError] = {
-    case WalletNonSecretStorageError.TooManyWebhook(limit, actual) => TooManyWebhookError(limit, actual)
-    case WalletNonSecretStorageError.DuplicatedWalletId(id)        => DuplicatedWalletId(id)
-    case WalletNonSecretStorageError.DuplicatedWalletSeed(id)      => DuplicatedWalletSeed(id)
-    case WalletNonSecretStorageError.UnexpectedError(cause)        => UnexpectedStorageError(cause)
-  }
 
   given Conversion[WalletManagementServiceError, Throwable] = {
     case UnexpectedStorageError(cause) => Exception(cause)
@@ -59,7 +51,7 @@ trait WalletManagementService {
 
   def createWalletNotification(
       config: EventNotificationConfig
-  ): ZIO[WalletAccessContext, WalletManagementServiceError, EventNotificationConfig]
+  ): ZIO[WalletAccessContext, WalletManagementServiceError, Unit]
 
   def deleteWalletNotification(id: UUID): ZIO[WalletAccessContext, WalletManagementServiceError, Unit]
 }
