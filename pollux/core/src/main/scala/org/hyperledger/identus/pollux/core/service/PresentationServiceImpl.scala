@@ -550,7 +550,6 @@ private class PresentationServiceImpl(
           )
         case _ => SDJWT.createPresentation(vc, sdJwtClaimsToDisclose.toJson)
       }
-      // presentationPayload = SDJWT.createPresentation(vc, sdJwtClaimsToDisclose.toJson)
     } yield presentationPayload
   }
 
