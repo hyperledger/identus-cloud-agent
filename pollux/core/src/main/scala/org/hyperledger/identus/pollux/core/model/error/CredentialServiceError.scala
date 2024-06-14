@@ -129,5 +129,5 @@ object CredentialServiceError {
         StatusCode.UnprocessableContent,
         s"The VC Jwt Header value could not be parsed: cause[$cause]"
       )
-  
+
 }
