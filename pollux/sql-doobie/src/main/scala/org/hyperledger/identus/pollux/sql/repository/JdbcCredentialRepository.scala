@@ -19,7 +19,7 @@ import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.interop.catz.*
 import zio.json.*
-
+import org.hyperledger.identus.shared.models.KeyId
 import java.time.Instant
 import java.util.UUID
 
@@ -53,6 +53,8 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
 
+  given keyIdGet: Get[KeyId] = Get[String].map(KeyId(_))
+  given keyIdPut: Put[KeyId] = Put[String].contramap(_.value)
   override def create(record: IssueCredentialRecord): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
@@ -362,7 +364,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
-      keyId: Option[String] = None,
+      keyId: Option[KeyId] = None,
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""

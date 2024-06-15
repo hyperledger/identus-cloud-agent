@@ -5,6 +5,7 @@ import org.hyperledger.identus.issue.controller.http.AcceptCredentialOfferReques
 import sttp.tapir.{Schema, Validator}
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import org.hyperledger.identus.shared.models.KeyId
 
 /** A request to accept a credential offer received from an issuer.
   *

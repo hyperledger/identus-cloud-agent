@@ -29,7 +29,7 @@ import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.json.*
 import zio.prelude.ZValidation
-
+import org.hyperledger.identus.shared.models.KeyId
 import java.net.URI
 import java.time.{Instant, ZoneId}
 import java.util.UUID
@@ -418,7 +418,7 @@ class CredentialServiceImpl(
   override def acceptCredentialOffer(
       recordId: DidCommID,
       maybeSubjectId: Option[String],
-      keyId: Option[String]
+      keyId: Option[KeyId]
   ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.OfferReceived)
@@ -511,7 +511,7 @@ class CredentialServiceImpl(
   override def getJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship,
-      keyId: Option[String] = None
+      keyId: Option[KeyId] = None
   ): URIO[WalletAccessContext, JwtIssuer] = {
     for {
       issuingKeyId <- getKeyId(jwtIssuerDID, verificationRelationship, EllipticCurve.SECP256K1)
@@ -556,7 +556,7 @@ class CredentialServiceImpl(
   private def getSDJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship,
-      keyId: Option[String]
+      keyId: Option[KeyId]
   ): URIO[WalletAccessContext, JwtIssuer] = {
     for {
       ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
@@ -574,7 +574,7 @@ class CredentialServiceImpl(
       getIssuer: (
           did: LongFormPrismDID,
           verificationRelation: VerificationRelationship,
-          keyId: Option[String]
+          keyId: Option[KeyId]
       ) => URIO[WalletAccessContext, JwtIssuer]
   ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] = {
     for {

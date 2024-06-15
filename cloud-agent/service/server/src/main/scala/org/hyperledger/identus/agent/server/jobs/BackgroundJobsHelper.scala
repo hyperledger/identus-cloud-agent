@@ -26,7 +26,7 @@ import org.hyperledger.identus.shared.crypto.{
 }
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{ZIO, ZLayer}
-
+import org.hyperledger.identus.shared.models.KeyId
 import java.util.Base64
 
 trait BackgroundJobsHelper {
@@ -125,7 +125,7 @@ trait BackgroundJobsHelper {
   def findHolderEd25519SigningKey(
       proverDid: PrismDID,
       verificationRelationship: VerificationRelationship,
-      keyId: String
+      keyId: KeyId
   ): ZIO[DIDService & ManagedDIDService & WalletAccessContext, RuntimeException, Ed25519KeyPair] = {
     for {
       managedDIDService <- ZIO.service[ManagedDIDService]
@@ -137,7 +137,7 @@ trait BackgroundJobsHelper {
         .map { case (_, didData) =>
           didData.publicKeys
             .find(pk =>
-              pk.id == keyId
+             pk.id == keyId.value
                 && pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.ED25519
             )
             .map(_.id)

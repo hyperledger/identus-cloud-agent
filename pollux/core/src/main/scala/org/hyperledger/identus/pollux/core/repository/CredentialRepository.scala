@@ -6,6 +6,7 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
+import org.hyperledger.identus.shared.models.KeyId
 
 trait CredentialRepository {
   def create(
@@ -52,7 +53,7 @@ trait CredentialRepository {
   def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
-      keyId: Option[String],
+      keyId: Option[KeyId],
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit]
 

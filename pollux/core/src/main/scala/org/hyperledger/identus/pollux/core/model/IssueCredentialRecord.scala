@@ -15,6 +15,7 @@ import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
 import java.time.temporal.ChronoUnit
 import java.time.Instant
 import java.util.UUID
+import org.hyperledger.identus.shared.models.KeyId
 
 final case class IssueCredentialRecord(
     id: DidCommID,
@@ -27,7 +28,7 @@ final case class IssueCredentialRecord(
     credentialFormat: CredentialFormat,
     role: Role,
     subjectId: Option[String],
-    keyId: Option[String],
+    keyId: Option[KeyId],
     validityPeriod: Option[Double] = None,
     automaticIssuance: Option[Boolean],
     protocolState: ProtocolState,
@@ -76,7 +77,7 @@ final case class ValidIssuedCredentialRecord(
     issuedCredentialRaw: Option[String],
     credentialFormat: CredentialFormat,
     subjectId: Option[String],
-    keyId: Option[String],
+    keyId: Option[KeyId],
 )
 
 final case class ValidFullIssuedCredentialRecord(
@@ -86,7 +87,7 @@ final case class ValidFullIssuedCredentialRecord(
     schemaUri: Option[String],
     credentialDefinitionUri: Option[String],
     subjectId: Option[String],
-    keyId: Option[String],
+    keyId: Option[KeyId],
 )
 
 object IssueCredentialRecord {
