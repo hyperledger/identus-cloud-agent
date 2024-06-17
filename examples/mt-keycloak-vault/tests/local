@@ -1,0 +1,15 @@
+keycloak_admin_password=admin
+keycloak_admin_user=admin
+keycloak_base_url=http://localhost:8080/keycloak
+keycloak_realm=identus
+
+agent_url=http://localhost:8080
+
+issuer_password=1234
+issuer_username=alice
+
+holder_password=1234
+holder_username=bob
+
+verifier_password=1234
+verifier_username=john

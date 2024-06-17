@@ -1,9 +1,226 @@
 apiVersion: v1
 entries:
+  cloud-agent:
+    - apiVersion: v2
+      appVersion: 1.36.1
+      created: "2024-06-09T15:50:01.018809549Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying cloud-agent
+      digest: 9de584933f4bef5dd1505c04740bf4ed0ac8959f74183a96e0251e2f3a23379e
+      name: cloud-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/cloud-agent-1.36.1.tgz
+      version: 1.36.1
+    - apiVersion: v2
+      appVersion: 1.36.0
+      created: "2024-06-09T15:50:01.009485865Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying cloud-agent
+      digest: d0d6de58c0ee97cec83bf56f7bb4c28db4c69ea5517df3c344a608c04a96e880
+      name: cloud-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/cloud-agent-1.36.0.tgz
+      version: 1.36.0
+    - apiVersion: v2
+      appVersion: 1.35.1
+      created: "2024-06-09T15:50:00.999383131Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying cloud-agent
+      digest: 21924235a9b9cc2d7a6b3867dd6ad1acb4ffce5c03d84ccdcf054a51d232232a
+      name: cloud-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/cloud-agent-1.35.1.tgz
+      version: 1.35.1
+    - apiVersion: v2
+      appVersion: 1.35.0
+      created: "2024-06-09T15:50:00.989043321Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying cloud-agent
+      digest: 4928b33e9b4d76b0de62fd19cc089f852ceb578d8e185d4f51d939ad9abe9a4c
+      name: cloud-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/cloud-agent-1.35.0.tgz
+      version: 1.35.0
+    - apiVersion: v2
+      appVersion: 1.34.0
+      created: "2024-06-09T15:50:00.979060956Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying cloud-agent
+      digest: 71b7bb2f87ee85a02d0cc863474492bdcbeeae15df41e639d7ee16872804ac8c
+      name: cloud-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/cloud-agent-1.34.0.tgz
+      version: 1.34.0
   prism-agent:
     - apiVersion: v2
+      appVersion: 1.33.1
+      created: "2024-06-09T15:50:01.249494985Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: 7a5cd35e421283fc34bb01934126d97463692417edff278d98cc73a2157fc0ca
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.33.1.tgz
+      version: 1.33.1
+    - apiVersion: v2
+      appVersion: 1.33.0
+      created: "2024-06-09T15:50:01.239665056Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: 10a66e6d49cb02321d1eafd4bfe784e0fef6edeccb1c678abcc3befd731c0f3a
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.33.0.tgz
+      version: 1.33.0
+    - apiVersion: v2
+      appVersion: 1.32.1
+      created: "2024-06-09T15:50:01.228671731Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: c10e1f30eae30d047d36207c6e2a956bb5bbc7865bf34082fe10745d1492a715
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.32.1.tgz
+      version: 1.32.1
+    - apiVersion: v2
+      appVersion: 1.32.0
+      created: "2024-06-09T15:50:01.218598783Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: d2a8c642c0908616d49d1f1a18815b86b46446aca0c9e3b3d90ccca9bd8fc830
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.32.0.tgz
+      version: 1.32.0
+    - apiVersion: v2
+      appVersion: 1.31.0
+      created: "2024-06-09T15:50:01.207836077Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: 2b70776d21bbaa35d252b5a84f821f27e28918592ac689fea01888087d889df3
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.31.0.tgz
+      version: 1.31.0
+    - apiVersion: v2
+      appVersion: 1.30.1
+      created: "2024-06-09T15:50:01.198075227Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: 8ef2ce679bd5f0605309f08f5cefa46a1a7c4eebe066d160dbdfe6a9a39e9dc2
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.30.1.tgz
+      version: 1.30.1
+    - apiVersion: v2
+      appVersion: 1.30.0
+      created: "2024-06-09T15:50:01.18715575Z"
+      dependencies:
+        - name: vault
+          repository: https://helm.releases.hashicorp.com
+          version: 0.24.1
+        - condition: keycloak.enabled
+          name: keycloak
+          repository: https://charts.bitnami.com/bitnami
+          version: 17.2.0
+      description: A Helm chart for deploying prism-agent
+      digest: 7ec6e27fb040e4184a025ec99a4ba0f22484b02309223814e1f7646ecaf477d6
+      name: prism-agent
+      type: application
+      urls:
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.30.0.tgz
+      version: 1.30.0
+    - apiVersion: v2
       appVersion: 1.29.0
-      created: "2024-02-28T18:50:42.383183395Z"
+      created: "2024-06-09T15:50:01.176906011Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -17,11 +234,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.29.0.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.29.0.tgz
       version: 1.29.0
     - apiVersion: v2
       appVersion: 1.28.0
-      created: "2024-02-28T18:50:42.371546077Z"
+      created: "2024-06-09T15:50:01.167236391Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -35,11 +252,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.28.0.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.28.0.tgz
       version: 1.28.0
     - apiVersion: v2
       appVersion: 1.27.0
-      created: "2024-02-28T18:50:42.357381613Z"
+      created: "2024-06-09T15:50:01.155956102Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -53,11 +270,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.27.0.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.27.0.tgz
       version: 1.27.0
     - apiVersion: v2
       appVersion: 1.26.0
-      created: "2024-02-28T18:50:42.34651412Z"
+      created: "2024-06-09T15:50:01.146170646Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -71,11 +288,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.26.0.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.26.0.tgz
       version: 1.26.0
     - apiVersion: v2
       appVersion: 1.25.0
-      created: "2024-02-28T18:50:42.332246853Z"
+      created: "2024-06-09T15:50:01.13532275Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -89,11 +306,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.25.0.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.25.0.tgz
       version: 1.25.0
     - apiVersion: v2
       appVersion: 1.24.0
-      created: "2024-02-28T18:50:42.321721059Z"
+      created: "2024-06-09T15:50:01.12495793Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -107,11 +324,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.24.0.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.24.0.tgz
       version: 1.24.0
     - apiVersion: v2
       appVersion: 1.23.0
-      created: "2024-02-28T18:50:42.308676663Z"
+      created: "2024-06-09T15:50:01.11528283Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -125,11 +342,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.23.0.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.23.0.tgz
       version: 1.23.0
     - apiVersion: v2
       appVersion: 1.22.0
-      created: "2024-02-28T18:50:42.299105544Z"
+      created: "2024-06-09T15:50:01.10400928Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -143,11 +360,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.22.0.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.22.0.tgz
       version: 1.22.0
     - apiVersion: v2
       appVersion: 1.21.1
-      created: "2024-02-28T18:50:42.288397224Z"
+      created: "2024-06-09T15:50:01.094006799Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -161,11 +378,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.21.1.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.21.1.tgz
       version: 1.21.1
     - apiVersion: v2
       appVersion: 1.21.0
-      created: "2024-02-28T18:50:42.278212868Z"
+      created: "2024-06-09T15:50:01.083539206Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -179,11 +396,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.21.0.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.21.0.tgz
       version: 1.21.0
     - apiVersion: v2
       appVersion: 1.20.1
-      created: "2024-02-28T18:50:42.267764579Z"
+      created: "2024-06-09T15:50:01.073696687Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -197,11 +414,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.20.1.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.20.1.tgz
       version: 1.20.1
     - apiVersion: v2
       appVersion: 1.20.0
-      created: "2024-02-28T18:50:42.257666093Z"
+      created: "2024-06-09T15:50:01.063690308Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -215,11 +432,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.20.0.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.20.0.tgz
       version: 1.20.0
     - apiVersion: v2
       appVersion: 1.19.1
-      created: "2024-02-28T18:50:42.247988985Z"
+      created: "2024-06-09T15:50:01.053819009Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -233,11 +450,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.19.1.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.19.1.tgz
       version: 1.19.1
     - apiVersion: v2
       appVersion: 1.19.0
-      created: "2024-02-28T18:50:42.237170675Z"
+      created: "2024-06-09T15:50:01.043691298Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -251,11 +468,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.19.0.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.19.0.tgz
       version: 1.19.0
     - apiVersion: v2
       appVersion: 1.18.0
-      created: "2024-02-28T18:50:42.227551256Z"
+      created: "2024-06-09T15:50:01.034097449Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -265,11 +482,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.18.0.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.18.0.tgz
       version: 1.18.0
     - apiVersion: v2
       appVersion: 1.17.0
-      created: "2024-02-28T18:50:42.224382914Z"
+      created: "2024-06-09T15:50:01.031352175Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -279,11 +496,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.17.0.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.17.0.tgz
       version: 1.17.0
     - apiVersion: v2
       appVersion: 1.16.4
-      created: "2024-02-28T18:50:42.221096049Z"
+      created: "2024-06-09T15:50:01.027992485Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -293,11 +510,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.16.4.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.16.4.tgz
       version: 1.16.4
     - apiVersion: v2
       appVersion: 1.16.3
-      created: "2024-02-28T18:50:42.218085809Z"
+      created: "2024-06-09T15:50:01.02521981Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -307,11 +524,11 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.16.3.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.16.3.tgz
       version: 1.16.3
     - apiVersion: v2
       appVersion: 1.16.2
-      created: "2024-02-28T18:50:42.215243526Z"
+      created: "2024-06-09T15:50:01.022286414Z"
       dependencies:
         - name: vault
           repository: https://helm.releases.hashicorp.com
@@ -321,6 +538,6 @@ entries:
       name: prism-agent
       type: application
       urls:
-        - https://raw.githubusercontent.com/hyperledger-labs/open-enterprise-agent/main/infrastructure/charts/prism-agent-1.16.2.tgz
+        - https://raw.githubusercontent.com/hyperledger/identus-cloud-agent/main/infrastructure/charts/prism-agent-1.16.2.tgz
       version: 1.16.2
-generated: "2024-02-28T18:50:42.211267318Z"
+generated: "2024-06-09T15:50:00.968928935Z"

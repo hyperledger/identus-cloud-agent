@@ -13,8 +13,8 @@ The PRISM DID method only allows published DID to be deactivated.
 
 ## Prerequisites
 
-1. DID Controller PRISM Agent up and running
-2. DID Controller has a DID created on PRISM Agent (see [Create DID](./create.md))
+1. DID Controller Cloud Agent up and running
+2. DID Controller has a DID created on the Cloud Agent (see [Create DID](./create.md))
 3. DID Controller has a DID published to the blockchain (see [Publish DID](./publish.md))
 
 ## Overview
@@ -25,9 +25,9 @@ The same concept also holds for PRISM DID deactivation in that the fork can occu
 Please refer to the `SECURE_DEPTH` parameter in [PRISM method - protocol parameters](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#versioning-and-protocol-parameters) for the number of confirmation blocks.
 At the time of writing, this number is 112 blocks.
 
-DID deactivation is easily performed with the PRISM Agent.
-Under the hood, PRISM Agent uses the `MASTER` keys to sign the intended operation and automatically post the operation to the blockchain.
-This example shows the DID deactivation and steps to observe the changes to the DID using PRISM Agent.
+DID deactivation is easily performed with the Cloud Agent.
+Under the hood, the Cloud Agent uses the `MASTER` keys to sign the intended operation and automatically post the operation to the blockchain.
+This example shows the DID deactivation and steps to observe the changes to the DID using the Cloud Agent.
 
 ## Endpoints
 
@@ -42,10 +42,10 @@ The example uses the following endpoints
 
 ### 1. Check the current state of the DID document
 
-Given the DID Controller has a DID on PRISM Agent and that DID is published, he can resolve the DID document using short-form DID.
+Given the DID Controller has a DID managed by the Cloud Agent and that DID is published, he can resolve the DID document using short-form DID.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
+curl --location --request GET 'http://localhost:8080/cloud-agent/dids/{didRef}' \
 --header "apikey: $API_KEY" \
 --header 'Accept: */*'
 ```
@@ -71,12 +71,12 @@ The active status comes from the last step.
 The DID deactivation can be performed by calling `POST /did-registrar/dids/{didRef}/deactivations` and replacing `{didRef}` with the DID to deactivate.
 
 ```bash
-curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids/{didRef}/deactivations' \
+curl --location --request POST 'http://localhost:8080/cloud-agent/did-registrar/dids/{didRef}/deactivations' \
 --header "apikey: $API_KEY" \
 --header 'Accept: application/json'
 ```
 
-Under the hood, PRISM Agent constructs the DID deactivate-operation from the last confirmed operation observed on the blockchain.
+Under the hood, the Cloud Agent constructs the DID deactivate-operation from the last confirmed operation observed on the blockchain.
 The DID Controller should receive a response about the scheduled operation, waiting for confirmation on the blockchain.
 If this deactivate-operation gets confirmed on the blockchain and not discarded as a fork, the DID becomes deactivated.
 

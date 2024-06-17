@@ -84,8 +84,8 @@ services:
       node-db:
         condition: service_healthy
 
-  issuer-oea:
-    image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
+  issuer-agent:
+    image: ghcr.io/hyperledger/identus-cloud-agent:${AGENT_VERSION}
     environment:
       POLLUX_DB_HOST: issuer-db
       POLLUX_DB_PORT: 5432
@@ -135,7 +135,7 @@ services:
       prism-node:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://issuer-oea:8085/_system/health"]
+      test: ["CMD", "curl", "-f", "http://issuer-agent:8085/_system/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -154,8 +154,8 @@ services:
     ports:
       - 9095:9095
 
-  verifier-oea:
-    image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
+  verifier-agent:
+    image: ghcr.io/hyperledger/identus-cloud-agent:${AGENT_VERSION}
     environment:
       POLLUX_DB_HOST: verifier-db
       POLLUX_DB_PORT: 5432
@@ -205,29 +205,29 @@ services:
       prism-node:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://verifier-oea:8085/_system/health"]
+      test: ["CMD", "curl", "-f", "http://verifier-agent:8085/_system/health"]
       interval: 30s
       timeout: 10s
       retries: 5
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  issuer-oea-postgres-exporter:
+  issuer-agent-postgres-exporter:
     image: quay.io/prometheuscommunity/postgres-exporter
     ports:
       - "9995:9187"
     environment:
       - DATA_SOURCE_NAME=postgresql://postgres:postgres@holder-db:5432/postgres?sslmode=disable
 
-  holder-oea-postgres-exporter:
+  holder-agent-postgres-exporter:
     image: quay.io/prometheuscommunity/postgres-exporter
     ports:
       - "9996:9187"
     environment:
       - DATA_SOURCE_NAME=postgresql://postgres:postgres@issuer-db:5432/postgres?sslmode=disable
 
-  holder-oea:
-    image: ghcr.io/input-output-hk/prism-agent:${PRISM_AGENT_VERSION}
+  holder-agent:
+    image: ghcr.io/hyperledger/identus-cloud-agent:${AGENT_VERSION}
     environment:
       POLLUX_DB_HOST: holder-db
       POLLUX_DB_PORT: 5432
@@ -277,7 +277,7 @@ services:
       prism-node:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://holder-oea:8085/_system/health"]
+      test: ["CMD", "curl", "-f", "http://holder-agent:8085/_system/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -304,9 +304,9 @@ services:
     ports:
       - "${PORT}:9080/tcp"
     depends_on:
-      - issuer-oea
-      - verifier-oea
-      - holder-oea
+      - issuer-agent
+      - verifier-agent
+      - holder-agent
 
 volumes:
   issuer_pg_data_db:

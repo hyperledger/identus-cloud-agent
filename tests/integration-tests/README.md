@@ -1,6 +1,6 @@
 # Integration Tests
 
-This directory contains the integration tests for the Open Enterprise Agent (OEA).
+This directory contains the integration tests for the Identus Cloud Agent (ICA).
 
 ## Main concepts
 
@@ -9,7 +9,7 @@ The integration tests are written in Kotlin, and use the following tools and lib
 1. [Serenity BDD](https://serenity-bdd.github.io/) for test execution engine
 2. [Hoplite](https://github.com/sksamuel/hoplite) for configuration management
 3. [Ktor](https://ktor.io/) for HTTP listener (async receiver for webhook messages)
-4. [PRISM Kotlin client](https://github.com/hyperledger-labs/open-enterprise-agent/packages/1919198) for OEA API models.
+4. [Identus Cloud Agent Client Kotlin](https://github.com/hyperledger/identus-cloud-agent/packages/2135556) for ICA API models.
 5. [Atala Automation](https://github.com/input-output-hk/atala-automation/) for general testing helpers.
 6. [Awaitility](http://www.awaitility.org/) for asynchronous operations waiting.
 7. [TestContainers](https://www.testcontainers.org/) for Docker containers management.
@@ -46,9 +46,9 @@ The project structure is represented below:
     │   ├── abilities -> contains the abilities of the actors
     │   ├── common -> contains the common classes (test constants and helper functions)
     │   ├── config -> contains the configuration classes (Hoplite)
-    │   ├── features -> contains the features implementation steps
     │   ├── interactions -> contains the interactions of the actors
-    │   └── runners -> contains the test runners to execute the tests
+    │   ├── models -> contains the models
+    │   ├── steps -> contains the features implementation steps
     └── resources -> contains the test resources
         ├── configs -> contains the test configuration files
         ├── containers -> contains the Docker Compose files to start the test environment
@@ -62,16 +62,16 @@ Here are some rules to follow when writing the tests:
 
 ## System under test
 
-The main idea of the framework is to test the OEA as a black box.
+The main idea of the framework is to test the ICA as a black box.
 
-The tests interact with the OEA through the API and webhook messages.
+The tests interact with the ICA through the API and webhook messages.
 
 <p align="center">
 <img src="docs/static/system_under_test.png" alt="Screenplay pattern overview" width="800"/><br>
 <em>Pic. 2. Overview of the system under test. Roles, Agents and Services communication.</em>
 </p>
 
-### OEA Roles in Tests
+### ICA Roles in Tests
 
 | Role     | Description                                           |
 |----------|-------------------------------------------------------|
@@ -80,12 +80,12 @@ The tests interact with the OEA through the API and webhook messages.
 | Verifier | Verifies the credentials presented by the holder.     |
 | Admin    | Performs specific administrative tasks                |
 
-- Each OEA can play multiple roles simultaneously after multitenancy is implemented.
-- OEAs can be created on-the-fly or use existing ones, regardless of their origin (local or cloud).
+- Each ICA can play multiple roles simultaneously after multitenancy is implemented.
+- ICAs can be created on-the-fly or use existing ones, regardless of their origin (local or cloud).
 
-### OEA Configurations
+### ICA Configurations
 
-Each OEA can use different configurations for:
+Each ICA can use different configurations for:
 
 | Configuration  | Options                                                               |
 |----------------|-----------------------------------------------------------------------|
@@ -109,7 +109,7 @@ In this section, we will describe the configuration options and their purpose.
 
 The configuration files are divided into the following sections:
 * `services`: contains the configuration for the services (PRISM Node, Keycloak, Vault) that will be started and can be consumed by `agents` if specified.
-* `agents`: contains the configuration for the agents (OEA) that will be started. By default, all agents will be destroyed after the test run is finished.
+* `agents`: contains the configuration for the agents (ICA) that will be started. By default, all agents will be destroyed after the test run is finished.
 * `roles`: contains the configuration for the roles (Issuer, Holder, Verifier, Admin). A role can be assigned to one or more agents that we set in `agents` section or already running locally or in the cloud.
 
 > You could keep services and agents running for debugging purposes
@@ -180,7 +180,7 @@ There is a special `agents` section in the configuration file to specify the age
 `TestContainers` are in use for this purpose.
 
 To configure the agent, you need to specify the following options:
-* `version`: the version of the OEA docker image to use.
+* `version`: the version of the ICA docker image to use.
 * `http_port`: the port to expose for the HTTP API.
 * `didcomm_port`: the port to expose for the DIDComm API.
 * `auth_enabled`: whether API key authentication is enabled for this agent.
@@ -198,14 +198,14 @@ Here is an example of the `agents` section that configures two agents, one with 
 # Specify agents that are required to be created before running tests
 agents = [
     {
-        version = "${OPEN_ENTERPRISE_AGENT_VERSION}"
+        version = "${AGENT_VERSION}"
         http_port = 8080
         didcomm_port = 7080
         auth_enabled = true
         prism_node = ${services.prism_node}
     },
     {
-        version = "${OPEN_ENTERPRISE_AGENT_VERSION}"
+        version = "${AGENT_VERSION}"
         http_port = 8090
         didcomm_port = 7090
         auth_enabled = true
@@ -333,7 +333,7 @@ Forwarding                    https://90e7-2001-818-dce2-c000-9c53-d0a3-15f2-ca5
 After that, you could configure your local agent as follows to provide the required URLs:
 ```yaml
     {
-        version = "${OPEN_ENTERPRISE_AGENT_VERSION}"
+        version = "${AGENT_VERSION}"
         http_port = 7080
         didcomm_port = 7070
         didcomm_service_url = "https://6908-2001-818-dce2-c000-9c53-d0a3-15f2-ca59.ngrok-free.app"
@@ -384,7 +384,7 @@ Here is an example of the agent configuration for sandbox environment:
 1. Docker and Docker Compose are installed.
 2. JDK >=17.
 3. IntelliJ IDEA with Kotlin and Cucumber plugins.
-4. `ATALA_GITHUB_ACTOR` and `ATALA_GITHUB_TOKEN` environment variables are set to download dependencies.
+4. `GITHUB_ACTOR` and `GITHUB_TOKEN` environment variables are set to download dependencies.
 
 > If you have troubles with JDK version incompatibilities in IntelliJ IDEA,
 > make sure JDK is set not only for the project itself, but also for the Gradle daemon.
@@ -394,10 +394,10 @@ Here is an example of the agent configuration for sandbox environment:
 The following variables must be set before running the tests:
 * `TESTS_CONFIG`: path to the configuration file to use, relative to `resources` directory. Default to `/configs/basic.conf`.
 * `PRISM_NODE_VERSION`: version of the PRISM Node docker image to use.
-* `OPEN_ENTERPRISE_AGENT_VERSION`: version of the OEA docker image to use.
+* `AGENT_VERSION`: version of the ICA docker image to use.
 
 ```shell
-TESTS_CONFIG=/configs/basic.conf PRISM_NODE_VERSION=2.2.1 OPEN_ENTERPRISE_AGENT_VERSION=1.19.1 ./gradlew test
+TESTS_CONFIG=/configs/basic.conf PRISM_NODE_VERSION=2.3.0 AGENT_VERSION=1.30.1 ./gradlew test
 ```
 
 > Please note: there is no need to pass environment variables if you're using already running agents.
@@ -405,6 +405,24 @@ TESTS_CONFIG=/configs/basic.conf PRISM_NODE_VERSION=2.2.1 OPEN_ENTERPRISE_AGENT_
 Additional `-Dcucumber.filter.tags` option can be used to specify the tags to include or exclude scenarios:
 ```shell
 TESTS_CONFIG=/configs/mt_keycloak.conf ./gradlew test -Dcucumber.filter.tags="@connection and @credentials"
+```
+
+### Gradle task
+
+To simplify the execution, each configuration file creates a new `gradle` task. The naming rule is `test_{fileName}`.
+
+It's possible to execute the configuration file as
+
+```shell
+PRISM_NODE_VERSION=2.3.0 AGENT_VERSION=1.30.1 ./gradlew test_basic
+```
+
+Also, it's possible to execute the integration tests to all configurations files. The task is named `regression`, it should take a lot of time to execute.
+
+Note: report is not working due constrains in Serenity BDD reporting system.
+
+```shell
+PRISM_NODE_VERSION=2.3.0 AGENT_VERSION=1.30.1 ./gradlew regression
 ```
 
 ### Running scenarios in IntelliJ IDEA
@@ -458,7 +476,7 @@ After that, follow the next steps:
 5. Change the Glue field to the root package of your project (or of your step definitions)
 6. Click Apply
 
-> Please note: you still need to set the `PRISM_NODE_VERSION` and `OPEN_ENTERPRISE_AGENT_VERSION`
+> Please note: you still need to set the `PRISM_NODE_VERSION` and `AGENT_VERSION`
 > environment variables for this option to work if you don't use already running agents!
 
 ## Analysing reports

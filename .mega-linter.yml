@@ -3,6 +3,7 @@
 
 APPLY_FIXES: all
 DEFAULT_BRANCH: main
+FAIL_IF_UPDATED_SOURCES: true
 DISABLE_LINTERS:
   - REPOSITORY_DEVSKIM
   - REPOSITORY_GITLEAKS
@@ -16,11 +17,20 @@ DISABLE_LINTERS:
   - C_CPPLINT # For pollux/lib/anoncreds/src/main/c
   - CPP_CPPLINT # For pollux/lib/anoncreds/src/main/c
   - JAVA_CHECKSTYLE # For pollux/lib/anoncreds/src/main/java
+  - GHERKIN_GHERKIN_LINT
+  - OPENAPI_SPECTRAL
+  # For python, disable all except PYTHON_BLACK linter
+  - PYTHON_PYLINT
+  - PYTHON_FLAKE8
+  - PYTHON_ISORT
+  - PYTHON_BANDIT
+  - PYTHON_MYPY
+  - PYTHON_PYRIGHT
+  - PYTHON_RUFF
 
 DISABLE_ERRORS_LINTERS:
   - KOTLIN_KTLINT
   - PROTOBUF_PROTOLINT
-  - OPENAPI_SPECTRAL
   - MARKDOWN_MARKDOWN_LINK_CHECK
 
 DISABLE: [COPYPASTE, SPELL, CREDENTIALS]
@@ -43,10 +53,12 @@ PRE_COMMANDS:
     cwd: "workspace"
 
 # Linter customisation
-MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE: "CHANGELOG.md"
-MARKDOWN_MARKDOWNLINT_FILTER_REGEX_EXCLUDE: "CHANGELOG.md"
+MARKDOWN_MARKDOWN_LINK_CHECK_FILTER_REGEX_EXCLUDE: CHANGELOG\.md|DEPENDENCIES\.md
+MARKDOWN_MARKDOWNLINT_FILTER_REGEX_EXCLUDE: CHANGELOG\.md|DEPENDENCIES\.md
+MARKDOWN_MARKDOWN_TABLE_FORMATTER_FILTER_REGEX_EXCLUDE: CHANGELOG\.md|DEPENDENCIES\.md
 SQL_SQL_LINT_ARGUMENTS: -d postgres --ignore-errors=postgres-invalid-alter-option,postgres-invalid-create-option,postgres-invalid-drop-option
-YAML_YAMLLINT_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*"
-YAML_PRETTIER_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*"
+YAML_YAMLLINT_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*|cloud-agent/service/api/http/*|examples/*"
+YAML_PRETTIER_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*|cloud-agent/service/api/http/*|examples/*"
 YAML_V8R_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*"
-JAVASCRIPT_STANDARD_FILTER_REGEX_EXCLUDE: "tests/performance-tests/atala-performance-tests-k6/src/k6chaijs.js"
+JAVASCRIPT_STANDARD_FILTER_REGEX_EXCLUDE: "tests/performance-tests/agent-performance-tests-k6/src/k6chaijs.js"
+BASH_SHELLCHECK_FILTER_REGEX_EXCLUDE: "infrastructure/*"

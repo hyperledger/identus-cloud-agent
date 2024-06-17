@@ -12,46 +12,47 @@ on:
   workflow_dispatch:
 
 env:
-  BENCHMARKING_DIR: "tests/performance-tests/atala-performance-tests-k6"
-  NODE_AUTH_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+  BENCHMARKING_DIR: "tests/performance-tests/agent-performance-tests-k6"
+  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_ACTOR: ${{ github.actor }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   run-e2e-tests:
     name: "Run performance tests"
     runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.title, '[skip ci]') }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Java and Scala
-        uses: olafurpg/setup-scala@v13
+        uses: olafurpg/setup-scala@v14
         with:
-          java-version: openjdk@1.11
+          java-version: openjdk@1.17
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.8.0
+        uses: gradle/gradle-build-action@v3
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          username: ${{ env.GITHUB_ACTOR }}
+          password: ${{ env.GITHUB_TOKEN }}
 
       - uses: KengoTODA/actions-setup-docker-compose@v1
         name: Install `docker-compose`
         with:
-          version: '2.14.2'
+          version: "2.14.2"
 
-      - name: Build local version of PRISM Agent
+      - name: Build local version of Cloud Agent
         env:
           ENV_FILE: "infrastructure/local/.env"
-          GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
         run: |
           sbt docker:publishLocal
-          PRISM_AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
-          sed -i.bak "s/PRISM_AGENT_VERSION=.*/PRISM_AGENT_VERSION=${PRISM_AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
+          AGENT_VERSION=$(cut version.sbt -d '=' -f2 | tr -d '" ')
+          sed -i.bak "s/AGENT_VERSION=.*/AGENT_VERSION=${AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
           cat "${ENV_FILE}"
 
       - name: Start services for issuer
@@ -67,7 +68,7 @@ jobs:
           NODE_REFRESH_AND_SUBMIT_PERIOD: 1s
           NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD: 1s
           NODE_WALLET_MAX_TPS: 1000
-        uses: isbang/compose-action@v1.4.1
+        uses: hoverkraft-tech/compose-action@v2.0.0
         with:
           compose-file: "./infrastructure/shared/docker-compose.yml"
           compose-flags: "--env-file ./infrastructure/local/.env -p issuer"
@@ -109,20 +110,20 @@ jobs:
           down-flags: "--volumes"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 16.x
           registry-url: "https://npm.pkg.github.com"
-          scope: 'input-output-hk'
+          scope: "input-output-hk"
 
       - name: Install dependencies
-        uses: borales/actions-yarn@v4.2.0
+        uses: borales/actions-yarn@v5
         with:
           cmd: install
           dir: ${{ env.BENCHMARKING_DIR }}
 
       - name: Compile tests to JS
-        uses: borales/actions-yarn@v4.2.0
+        uses: borales/actions-yarn@v5
         with:
           cmd: webpack
           dir: ${{ env.BENCHMARKING_DIR }}

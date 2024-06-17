@@ -3,7 +3,7 @@ import TabItem from '@theme/TabItem';
 
 # Issue Credentials
 
-In Atala PRISM, the [Issue Credentials Protocol](/docs/concepts/glossary#issue-credentials-protocol) allows you to create, retrieve, and manage issued [verifiable credentials (VCs)](/docs/concepts/glossary#verifiable-credentials) between a VC issuer and a VC holder.
+In the Identus Platform, the [Issue Credentials Protocol](/docs/concepts/glossary#issue-credentials-protocol) allows you to create, retrieve, and manage issued [verifiable credentials (VCs)](/docs/concepts/glossary#verifiable-credentials) between a VC issuer and a VC holder.
 
 ## Roles
 
@@ -12,7 +12,7 @@ In the Issue Credentials Protocol, there are two roles:
 1. The [Issuer](/docs/concepts/glossary#issuer) is responsible for creating a new credential offer, sending it to a Holder, and issuing the VC once the offer is accepted.
 2. The [Holder](/docs/concepts/glossary#holder) is responsible for accepting a credential offer from an issuer and receiving the VC.
 
-The Issuer and Holder interact with the PRISM Agent API to perform the operations defined in the protocol.
+The Issuer and Holder interact with the Identus Cloud Agent API to perform the operations defined in the protocol.
 
 
 ## Prerequisites
@@ -22,16 +22,16 @@ Before using the Issuing Credentials protocol, the following conditions must be 
 <Tabs groupId="vc-formats">
 <TabItem value="jwt" label="JWT">
 
-1. Issuer and Holder PRISM Agents up and running
-2. A connection must be established between the Issuer and Holder PRISM Agents (see [Connections](../connections/connection.md))
+1. Issuer and Holder Cloud Agents up and running
+2. A connection must be established between the Issuer and Holder Cloud Agents (see [Connections](../connections/connection.md))
 3. The Issuer must have a published PRISM DID, and the [DID document](/docs/concepts/glossary#did-document) must have at least one `assertionMethod` key for issuing credentials (see [Create DID](../dids/create.md) and [Publish DID](../dids/publish.md))
 4. The Holder must have a PRISM DID, and the DID document must have at least one `authentication` key for presenting the proof.
 
 </TabItem>
 <TabItem value="anoncreds" label="AnonCreds">
 
-1. Issuer and Holder PRISM Agents up and running
-2. A connection must be established between the Issuer and Holder PRISM Agents (see [Connections](../connections/connection.md))
+1. Issuer and Holder Cloud Agents up and running
+2. A connection must be established between the Issuer and Holder Cloud Agents (see [Connections](../connections/connection.md))
 3. The Issuer must have created an AnonCreds Credential Definition as described [here](../credentialdefinition/create.md).
 
 </TabItem>
@@ -39,7 +39,7 @@ Before using the Issuing Credentials protocol, the following conditions must be 
 
 ## Overview
 
-The protocol described is a VC issuance process between two Atala PRISM Agents, the Issuer and the Holder.
+The protocol described is a VC issuance process between two Identus Cloud Agents, the Issuer and the Holder.
 
 The protocol consists of the following main parts:
 
@@ -65,12 +65,12 @@ The VCs issued during this protocol could represent a diploma, a certificate of 
 
 
 :::info
-Please check the full [PRISM Agent API](/agent-api) specification for more detailed information.
+Please check the full [Cloud Agent API](/agent-api) specification for more detailed information.
 :::
 
 ## Issuer interactions
 
-This section describes the Issuer role's available interactions with the PRISM Agent.
+This section describes the Issuer role's available interactions with the Cloud Agent.
 
 ### Creating a Credential Offer
 
@@ -84,10 +84,10 @@ To do this, make a `POST` request to the [`/issue-credentials/credential-offers`
 2. `issuingDID`: The DID referring to the issuer to issue this credential from
 3. `connectionId`: The unique ID of the connection between the holder and the issuer to offer this credential over.
 4. `schemaId`: An optional field that, if specified, contains a valid URL to an existing VC schema.
-   The PRISM agent must be able to dereference the specified URL (i.e. fetch the VC schema content from it), in order to validate the provided claims against it.
+   The Cloud Agent must be able to dereference the specified URL (i.e. fetch the VC schema content from it), in order to validate the provided claims against it.
    When not specified, the claims fields is not validated and can be any valid JSON object.
    Please refer to the [Create VC schema](../schemas/create.md) doc for details on how to create a VC schema.
-5. `credentialFormat`: The format of the credential that will be issued - `JWT` in this case. When not specified, the default value is `JWT`. 
+5. `credentialFormat`: The format of the credential that will be issued - `JWT` in this case. When not specified, the default value is `JWT`.
 
 
 :::note
@@ -99,7 +99,7 @@ Once the request initiates, a new credential record for the issuer gets created 
 ```shell
 # Issuer POST request to create a new credential offer
 curl -X 'POST' \
-  'http://localhost:8080/prism-agent/issue-credentials/credential-offers' \
+  'http://localhost:8080/cloud-agent/issue-credentials/credential-offers' \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "apikey: $API_KEY" \
@@ -115,7 +115,7 @@ curl -X 'POST' \
           "credentialFormat": "JWT",
           "issuingDID": "did:prism:9f847f8bbb66c112f71d08ab39930d468ccbfe1e0e1d002be53d46c431212c26",
           "connectionId": "9d075518-f97e-4f11-9d10-d7348a7a0fda",
-          "schemaId": "http://localhost:8080/prism-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2"
+          "schemaId": "http://localhost:8080/cloud-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2"
         }'
 ```
 
@@ -136,7 +136,7 @@ Once the request initiates, a new credential record for the issuer gets created 
 ```shell
 # Issuer POST request to create a new credential offer
 curl -X 'POST' \
-  'http://localhost:8080/prism-agent/issue-credentials/credential-offers' \
+  'http://localhost:8080/cloud-agent/issue-credentials/credential-offers' \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "apikey: $API_KEY" \
@@ -177,7 +177,7 @@ The Issuer can then use the [`/issue-credentials/records/{recordId}/issue-creden
 # make sure you have `issuer_record_id` extracted from created credential offer
 # and the record achieved `RequestReceived` state
 curl -X POST \
-    "http://localhost:8080/prism-agent/issue-credentials/records/$issuer_record_id/issue-credential" \
+    "http://localhost:8080/cloud-agent/issue-credentials/records/$issuer_record_id/issue-credential" \
     -H "Content-Type: application/json" \
     -H "apikey: $API_KEY"
 ```
@@ -203,19 +203,19 @@ stateDiagram-v2
 
 ## Holder interactions
 
-This section describes the Holder role's available interactions with the PRISM Agent.
+This section describes the Holder role's available interactions with the Cloud Agent.
 
 ### Receiving the VC Offer
 
 The Holder will receive the offer from the Issuer via DIDComm,
 and a new credential record with a unique ID gets created in the `OfferReceived` state.
 
-This process is automatic for the PRISM Agent.
+This process is automatic for the Cloud Agent.
 
 You could check if a new credential offer is available using [`/issue-credentials/records`](/#tag/Issue-Credentials-Protocol/operation/getCredentialRecords) request and check for any records available in `OfferReceived` state:
 ```shell
 # Holder GET request to retrieve credential records
-curl "http://localhost:8090/prism-agent/issue-credentials/records" \
+curl "http://localhost:8090/cloud-agent/issue-credentials/records" \
     -H "Content-Type: application/json" \
     -H "apikey: $API_KEY"
 ```
@@ -228,12 +228,12 @@ To accept the offer, the Holder can make a `POST` request to the [`/issue-creden
 <Tabs groupId="vc-formats">
 <TabItem value="jwt" label="JWT">
 
-1. `holder_record_id`: The unique identifier of the issue credential record known by the holder PRISM Agent.
+1. `holder_record_id`: The unique identifier of the issue credential record known by the holder's Cloud Agent.
 2. `subjectId`: This field represents the unique identifier for the subject of the verifiable credential. It is a short-form PRISM [DID](/docs/concepts/glossary#decentralized-identifier) string, such as `did:prism:subjectIdentifier`.
 
 ```shell
 # Holder POST request to accept the credential offer
-curl -X POST "http://localhost:8090/prism-agent/issue-credentials/records/$holder_record_id/accept-offer" \
+curl -X POST "http://localhost:8090/cloud-agent/issue-credentials/records/$holder_record_id/accept-offer" \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "apikey: $API_KEY" \
@@ -245,11 +245,11 @@ curl -X POST "http://localhost:8090/prism-agent/issue-credentials/records/$holde
 </TabItem>
 <TabItem value="anoncreds" labal="AnonCreds">
 
-1. `holder_record_id`: The unique identifier of the issue credential record known by the holder PRISM Agent.
+1. `holder_record_id`: The unique identifier of the issue credential record known by the holder's Cloud Agent.
 
 ```shell
 # Holder POST request to accept the credential offer
-curl -X POST "http://localhost:8090/prism-agent/issue-credentials/records/$holder_record_id/accept-offer" \
+curl -X POST "http://localhost:8090/cloud-agent/issue-credentials/records/$holder_record_id/accept-offer" \
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -H "apikey: $API_KEY" \
@@ -267,7 +267,7 @@ Once the Holder has approved the offer and sent a request to the Issuer, the Hol
 The state of the Holder's record will change to `RequestSent`.
 
 After the Issuer has issued the credential, the Holder will receive the credential via DIDComm, and the state of the Holder's record will change to `CredentialReceived`.
-This process is automatic for the PRISM Agent.
+This process is automatic for the Cloud Agent.
 
 The Holder can check the achieved credential using a GET request to [`/issue-credentials/records/{recordId}/`](/agent-api/#tag/Issue-Credentials-Protocol/operation/getCredentialRecord) endpoint.
 

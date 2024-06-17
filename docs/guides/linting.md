@@ -128,18 +128,8 @@ Linter - Suggested Change: Customise
 
 
   In /github/workspace/infrastructure/dev/get-versions.sh line 8:
-  export PRISM_AGENT_VERSION=$(cd ../../prism-agent/service && sbt "project server" -Dsbt.supershell=false -error "print version")
+  export AGENT_VERSION=$(cd ../../cloud-agent/service && sbt "project server" -Dsbt.supershell=false -error "print version")
          ^-----------------^ SC2155 (warning): Declare and assign separately to avoid masking return values.
-
-
-  In /github/workspace/infrastructure/dev/get-versions.sh line 11:
-  export MERCURY_MEDIATOR_VERSION=$(cd ../../mercury/mercury-mediator && sbt "project mediator" -Dsbt.supershell=false -error "print version")
-         ^----------------------^ SC2155 (warning): Declare and assign separately to avoid masking return values.
-
-
-  In /github/workspace/infrastructure/dev/get-versions.sh line 14:
-  export IRIS_SERVICE_VERSION=$(cd ../../iris/service && sbt "project server" -Dsbt.supershell=false -error "print version")
-         ^------------------^ SC2155 (warning): Declare and assign separately to avoid masking return values.
 
   For more information:
     https://www.shellcheck.net/wiki/SC2155 -- Declare and assign separately to ...

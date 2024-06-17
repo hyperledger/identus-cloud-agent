@@ -1,3 +1,4 @@
+@verificationpolicy
 Feature: Verification Policies
 
 Scenario: Successful verification policy creation

@@ -1,240 +1,387 @@
-# [1.29.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.28.0...prism-agent-v1.29.0) (2024-02-28)
+## [1.36.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.36.0...cloud-agent-v1.36.1) (2024-06-09)
 
 
 ### Bug Fixes
 
-* correct the config environment variable name ([#905](https://github.com/hyperledger-labs/open-enterprise-agent/issues/905)) ([d86436c](https://github.com/hyperledger-labs/open-enterprise-agent/commit/d86436cbc58571b4167411643623f3ba975550ad))
+* Helm chart refactor vol2 ([#1162](https://github.com/hyperledger/identus-cloud-agent/issues/1162)) ([72fc6d1](https://github.com/hyperledger/identus-cloud-agent/commit/72fc6d1a61a4a1a5c0b1c81d3b0742538c8b9bc7))
+
+# [1.36.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.35.1...cloud-agent-v1.36.0) (2024-06-09)
+
+
+### Bug Fixes
+
+* Credential Defintion Error Handling Part 2 ([#1155](https://github.com/hyperledger/identus-cloud-agent/issues/1155)) ([2df5306](https://github.com/hyperledger/identus-cloud-agent/commit/2df530695522789bed6624bae8bd07433c05ddda))
+* Credential Defintion Error Handling Part 2 ([#1156](https://github.com/hyperledger/identus-cloud-agent/issues/1156)) ([5755504](https://github.com/hyperledger/identus-cloud-agent/commit/57555047cd56ae31bbf14601fe8b5d96f838e033))
+* Helm chart refactor ([#1160](https://github.com/hyperledger/identus-cloud-agent/issues/1160)) ([4b59112](https://github.com/hyperledger/identus-cloud-agent/commit/4b59112af649a00e17d6e5e0e927f5b972629ec9))
+* pick right key type when creating corresponding issuer ([#1157](https://github.com/hyperledger/identus-cloud-agent/issues/1157)) ([22f0448](https://github.com/hyperledger/identus-cloud-agent/commit/22f0448ca878b385eada89d805c8f993c52173a2))
+* Schema Error Handling ([#1138](https://github.com/hyperledger/identus-cloud-agent/issues/1138)) ([a9da840](https://github.com/hyperledger/identus-cloud-agent/commit/a9da84098bd56eeb9d64e7b2bdd78d5596cf35c5))
+* Update the Holder to send the presentation only, No claims to disclose is needed separately  ([#1158](https://github.com/hyperledger/identus-cloud-agent/issues/1158)) ([9eaa5d4](https://github.com/hyperledger/identus-cloud-agent/commit/9eaa5d444665dbda00038a9032b890afcfa4bc15))
 
 
 ### Features
 
-* ZKP verification ([#792](https://github.com/hyperledger-labs/open-enterprise-agent/issues/792)) ([ab1ab64](https://github.com/hyperledger-labs/open-enterprise-agent/commit/ab1ab648b10a82b39d4bdde6e2c9693c8f7506b8))
+* improve ZIO failures and defects in credential definition ([#1133](https://github.com/hyperledger/identus-cloud-agent/issues/1133)) ([d6dfb72](https://github.com/hyperledger/identus-cloud-agent/commit/d6dfb72e298127b3e9d3a4c6577f62f4c8a1970a))
+* Remove double Error logs in DIDController ([#1140](https://github.com/hyperledger/identus-cloud-agent/issues/1140)) ([888ebb4](https://github.com/hyperledger/identus-cloud-agent/commit/888ebb4b484224d9c73674cffdf7d00777cfb4dc))
 
-# [1.28.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.27.0...prism-agent-v1.28.0) (2024-02-20)
+## [1.35.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.35.0...cloud-agent-v1.35.1) (2024-06-05)
 
 
 ### Bug Fixes
 
-* **prism-agent:** increase http timeout communication channel closing… ([#901](https://github.com/hyperledger-labs/open-enterprise-agent/issues/901)) ([8d3f29d](https://github.com/hyperledger-labs/open-enterprise-agent/commit/8d3f29ddd830fe102d4bf25a0af8734730c80151))
-* re-enable logging with SLF4J and add traceId ([#869](https://github.com/hyperledger-labs/open-enterprise-agent/issues/869)) ([8f6af25](https://github.com/hyperledger-labs/open-enterprise-agent/commit/8f6af25a8eafd27d5017096da64f89188354a2ca))
-* remove oas schema format for empty repsonse body ([#902](https://github.com/hyperledger-labs/open-enterprise-agent/issues/902)) ([5f2bb08](https://github.com/hyperledger-labs/open-enterprise-agent/commit/5f2bb0872a156c9223ab56efbd47e812967ff582))
+* Add expiration time for cloud-agent ([#1132](https://github.com/hyperledger/identus-cloud-agent/issues/1132)) ([f719120](https://github.com/hyperledger/identus-cloud-agent/commit/f719120211a83e96e6e4e282cc70e9f860d9298d))
+* Chart refactor ([#1143](https://github.com/hyperledger/identus-cloud-agent/issues/1143)) ([f309a0e](https://github.com/hyperledger/identus-cloud-agent/commit/f309a0e7c2101c2567498b060ee71a6964d3b9e6))
+
+# [1.35.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.34.0...cloud-agent-v1.35.0) (2024-06-03)
+
+
+### Bug Fixes
+
+*  SemanticCheckOfClaims In Verification API ([#1124](https://github.com/hyperledger/identus-cloud-agent/issues/1124)) ([7cb4192](https://github.com/hyperledger/identus-cloud-agent/commit/7cb4192d41a779e2ba4de815b2e8ec469636e485))
+*  update the jose dependency and switch back to the official library ([#1117](https://github.com/hyperledger/identus-cloud-agent/issues/1117)) ([3608aaf](https://github.com/hyperledger/identus-cloud-agent/commit/3608aafd980472cb63e5164339681fb079190dba))
+* Changing .chart.name reference, adding name override ([#1129](https://github.com/hyperledger/identus-cloud-agent/issues/1129)) ([650ae3b](https://github.com/hyperledger/identus-cloud-agent/commit/650ae3ba94ae322fc745eb07658f1663b3e7e321))
+* VC Verification API Doc ([#1118](https://github.com/hyperledger/identus-cloud-agent/issues/1118)) ([d70d4b7](https://github.com/hyperledger/identus-cloud-agent/commit/d70d4b74cb9f21d72e735f9650b746565068f282))
 
 
 ### Features
 
-* add credential def performance test ([#865](https://github.com/hyperledger-labs/open-enterprise-agent/issues/865)) ([95064d6](https://github.com/hyperledger-labs/open-enterprise-agent/commit/95064d617dda7d45916fbdddf20a544eea4acf4a))
-* **pollux:** add Json VC schema meta validation ([#892](https://github.com/hyperledger-labs/open-enterprise-agent/issues/892)) ([19c42b1](https://github.com/hyperledger-labs/open-enterprise-agent/commit/19c42b10188d1e0242bdceb1f89b6410dcc05353))
+* **agent:** ATL-6839 migrate DIDComm endpoint to tapir ([#1116](https://github.com/hyperledger/identus-cloud-agent/issues/1116)) ([2f4f7c3](https://github.com/hyperledger/identus-cloud-agent/commit/2f4f7c395523763c3c7066781017430523317841))
+* integrate SD JWT ([#1016](https://github.com/hyperledger/identus-cloud-agent/issues/1016)) ([9d7948f](https://github.com/hyperledger/identus-cloud-agent/commit/9d7948fc8208edf9f8c1712a0cd6902474f0814d))
 
-# [1.27.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.26.0...prism-agent-v1.27.0) (2024-02-08)
-
-
-### Bug Fixes
-
-* remove hard code did:example:* ([#882](https://github.com/hyperledger-labs/open-enterprise-agent/issues/882)) ([321faf5](https://github.com/hyperledger-labs/open-enterprise-agent/commit/321faf5791b05f0c24dd6ed96f155aa65d06477d))
+# [1.34.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.33.1...cloud-agent-v1.34.0) (2024-05-27)
 
 
 ### Features
 
-* support vault AppRole authentication ([#884](https://github.com/hyperledger-labs/open-enterprise-agent/issues/884)) ([441f878](https://github.com/hyperledger-labs/open-enterprise-agent/commit/441f878f0b573f350ffed14de0df164e1e260122))
+* Rename helm chart and its resources ([#1104](https://github.com/hyperledger/identus-cloud-agent/issues/1104)) ([84c5cea](https://github.com/hyperledger/identus-cloud-agent/commit/84c5ceaf97ee491ebcb07b12f2cc78a4da1e2dc1))
 
-# [1.26.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.25.0...prism-agent-v1.26.0) (2024-02-06)
+## [1.33.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.33.0...cloud-agent-v1.33.1) (2024-05-21)
 
 
 ### Bug Fixes
 
-* **prism-agent:**  update didcomm peerdid library to support latest spec ([#877](https://github.com/hyperledger-labs/open-enterprise-agent/issues/877)) ([0c42a62](https://github.com/hyperledger-labs/open-enterprise-agent/commit/0c42a622143e35c439ae83cc3bb746515ce7401b))
+* broken link for the cloud agent packages in readme file ([#1032](https://github.com/hyperledger/identus-cloud-agent/issues/1032)) ([92d17c2](https://github.com/hyperledger/identus-cloud-agent/commit/92d17c2b5f82d0ca35313ab51bd90b6f55d2cd87))
+* expose new key types in rest api ([#1066](https://github.com/hyperledger/identus-cloud-agent/issues/1066)) ([9ce8d3a](https://github.com/hyperledger/identus-cloud-agent/commit/9ce8d3a8742f86c9a593c705e0f3aa472ff10987))
+* rename the folder to identus for vc-jwt ([#1063](https://github.com/hyperledger/identus-cloud-agent/issues/1063)) ([364a5dc](https://github.com/hyperledger/identus-cloud-agent/commit/364a5dc7eb2b9f23b18f3775c207feff02893cbe))
+
+
+### Performance Improvements
+
+* update ts client in the performance tests, cleanup `println` ([#1041](https://github.com/hyperledger/identus-cloud-agent/issues/1041)) ([7d5ceba](https://github.com/hyperledger/identus-cloud-agent/commit/7d5cebafb34191964acfdf190c743a2ba253e883))
+
+# [1.33.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.32.1...cloud-agent-v1.33.0) (2024-05-09)
+
+
+### Bug Fixes
+
+* integration test ([#1011](https://github.com/hyperledger/identus-cloud-agent/issues/1011)) ([d674f31](https://github.com/hyperledger/identus-cloud-agent/commit/d674f3162be44ba05d50b305be4838525d982706))
 
 
 ### Features
 
-* interoperable schema changes ([#870](https://github.com/hyperledger-labs/open-enterprise-agent/issues/870)) ([de49a93](https://github.com/hyperledger-labs/open-enterprise-agent/commit/de49a9328524b32d714301f2b7961d5cd85b23c3))
+* rename `prism-agent` to `cloud-agent` ([#1019](https://github.com/hyperledger/identus-cloud-agent/issues/1019)) ([74560da](https://github.com/hyperledger/identus-cloud-agent/commit/74560dabf59dac15ccd086edb7a77d9e5055621e))
 
-# [1.25.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.24.0...prism-agent-v1.25.0) (2024-01-25)
+## [1.32.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.32.0...cloud-agent-v1.32.1) (2024-05-07)
+
+
+### Bug Fixes
+
+* expose pg_admin port on the localhost interface only ([#957](https://github.com/hyperledger/identus-cloud-agent/issues/957)) ([73674b5](https://github.com/hyperledger/identus-cloud-agent/commit/73674b5da6a41c4972ac3c45005ce768608b558e))
+* Fix OneOf OpenAPI Serialization Issue ([#1010](https://github.com/hyperledger/identus-cloud-agent/issues/1010)) ([393c296](https://github.com/hyperledger/identus-cloud-agent/commit/393c29654b8d3d53071f0d2932a16ff81688ece6))
+* remove prism-crypto dependency ([#1015](https://github.com/hyperledger/identus-cloud-agent/issues/1015)) ([46e594c](https://github.com/hyperledger/identus-cloud-agent/commit/46e594c21bdb43d78f41be6c803ad8b80dc89504))
+* update open-api-spec and generator script and package.json ([#990](https://github.com/hyperledger/identus-cloud-agent/issues/990)) ([88c1b5e](https://github.com/hyperledger/identus-cloud-agent/commit/88c1b5eadf62ad0efcd4ee53b793bb08cce9667f))
+
+# [1.32.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.31.0...cloud-agent-v1.32.0) (2024-04-26)
+
+
+### Bug Fixes
+
+* add shared-crypto module and apollo wrapper for other key types ([#958](https://github.com/hyperledger/identus-cloud-agent/issues/958)) ([7eaa66c](https://github.com/hyperledger/identus-cloud-agent/commit/7eaa66c51904e58c309fd3bb0a8e8864c7902cb9))
+* Check purpose of the keys ([#968](https://github.com/hyperledger/identus-cloud-agent/issues/968)) ([4b8e48d](https://github.com/hyperledger/identus-cloud-agent/commit/4b8e48d238b751ee8526e1440e8a0515f6b62de5))
+* Integration Test ([#974](https://github.com/hyperledger/identus-cloud-agent/issues/974)) ([847eb2f](https://github.com/hyperledger/identus-cloud-agent/commit/847eb2f56ba2766ed28f6484391cbd9b3202fbe5))
+* **prism-agent:** add missing 'PresentationVerificationFailed' status to REST API response enum ([#948](https://github.com/hyperledger/identus-cloud-agent/issues/948)) ([9a38cc9](https://github.com/hyperledger/identus-cloud-agent/commit/9a38cc97c18d26f13efa1c9535de1df003547a2b))
+* use apollo for secp256k1 in shared-crypto ([#971](https://github.com/hyperledger/identus-cloud-agent/issues/971)) ([dd5e20b](https://github.com/hyperledger/identus-cloud-agent/commit/dd5e20bdedd004c2e0a81383d10b5eee3ae03788))
 
 
 ### Features
 
-* **prism-agent:** add JWT auth support for agent-admin role ([#840](https://github.com/hyperledger-labs/open-enterprise-agent/issues/840)) ([3ccd56e](https://github.com/hyperledger-labs/open-enterprise-agent/commit/3ccd56efadbbb3ea70e7ca63e9eb89564a83c02f))
-* upgrade ZIO http client to improve performance ([#850](https://github.com/hyperledger-labs/open-enterprise-agent/issues/850)) ([7aa9b4c](https://github.com/hyperledger-labs/open-enterprise-agent/commit/7aa9b4c27f92b169c72a68cd4bb8f4afb63943d4))
+* add sample maintainers.md ([#878](https://github.com/hyperledger/identus-cloud-agent/issues/878)) ([c6a41ed](https://github.com/hyperledger/identus-cloud-agent/commit/c6a41edc5466312da76283d37f12406d79449a7d))
+* **agent:** verification API integration test + documentation ATL-6775 ([#986](https://github.com/hyperledger/identus-cloud-agent/issues/986)) ([9308b21](https://github.com/hyperledger/identus-cloud-agent/commit/9308b21e46d267265c7fcdbfc88b78ddd5ae6558))
+* Align the repo with new name identus-cloud-agent ([#973](https://github.com/hyperledger/identus-cloud-agent/issues/973)) ([9fc7bb0](https://github.com/hyperledger/identus-cloud-agent/commit/9fc7bb07cac9aae1db8d389ec8831403f106d612))
+* Configurations load improvement ([#954](https://github.com/hyperledger/identus-cloud-agent/issues/954)) ([dfb7577](https://github.com/hyperledger/identus-cloud-agent/commit/dfb75778f925a615aaec815241d964014d236777))
+* **connect:** ATL-6599 Use ZIO Failures and Defects effectively + RFC-9457 in connect ([#927](https://github.com/hyperledger/identus-cloud-agent/issues/927)) ([eb898e0](https://github.com/hyperledger/identus-cloud-agent/commit/eb898e068f768507d6979a5d9bab35ef7ad4a045))
+* key management for Ed25519 and X25519 ([#966](https://github.com/hyperledger/identus-cloud-agent/issues/966)) ([a0f6819](https://github.com/hyperledger/identus-cloud-agent/commit/a0f6819bb80d87c13f903d7dc1b67cb08b4687db))
+* Vc Verification Api ([#975](https://github.com/hyperledger/identus-cloud-agent/issues/975)) ([f0a1f2c](https://github.com/hyperledger/identus-cloud-agent/commit/f0a1f2c1aaafb636cabcb84c599d9deaa90fd373))
 
-# [1.24.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.23.0...prism-agent-v1.24.0) (2023-12-21)
+# [1.31.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.30.1...prism-agent-v1.31.0) (2024-03-20)
+
+
+### Bug Fixes
+
+* add Anoncreds Integration Test ([#923](https://github.com/hyperledger/identus-cloud-agent/issues/923)) ([27a157f](https://github.com/hyperledger/identus-cloud-agent/commit/27a157fb5a83a33704230b35eca80f297eec9a85))
+* align keycloak version ([#936](https://github.com/hyperledger/identus-cloud-agent/issues/936)) ([c920fd6](https://github.com/hyperledger/identus-cloud-agent/commit/c920fd661d31b56466497e462fd0139755290b33))
+* anoncred test ([#940](https://github.com/hyperledger/identus-cloud-agent/issues/940)) ([bb5ead1](https://github.com/hyperledger/identus-cloud-agent/commit/bb5ead1de3b6d2c3fae0019d50a5310b37a2eab3))
+* **pollux:** function that allocates status list credential does not work correctly in multi threaded environment  ([#941](https://github.com/hyperledger/identus-cloud-agent/issues/941)) ([ecc3c01](https://github.com/hyperledger/identus-cloud-agent/commit/ecc3c019749a6b370771bcf62f89ea2599a521ac))
+* **pollux:** Undo edit migration for revocation status lists ([#937](https://github.com/hyperledger/identus-cloud-agent/issues/937)) ([7f7585f](https://github.com/hyperledger/identus-cloud-agent/commit/7f7585f47ee197db162c75f7d118a87b99cc7d06))
+* **prism-agent:** add validation for endpoint url ([#919](https://github.com/hyperledger/identus-cloud-agent/issues/919)) ([0402a87](https://github.com/hyperledger/identus-cloud-agent/commit/0402a8778eda839521c55a127934fba41c7b79ad))
 
 
 ### Features
 
-* add configuration for gRPC usePlainText (enable TLS for gRPC) ([#823](https://github.com/hyperledger-labs/open-enterprise-agent/issues/823)) ([b871bb5](https://github.com/hyperledger-labs/open-enterprise-agent/commit/b871bb5e8eeeb71b3f22c38609ae8f1ff424016c))
+* add revocation for JWT credentials ([#934](https://github.com/hyperledger/identus-cloud-agent/issues/934)) ([88b7fa5](https://github.com/hyperledger/identus-cloud-agent/commit/88b7fa5c6cd92002ef355311eec6e30b63ab1dd6))
+* Fix Update Schema and CredentialDef on Receive Credential ([#920](https://github.com/hyperledger/identus-cloud-agent/issues/920)) ([acbba3c](https://github.com/hyperledger/identus-cloud-agent/commit/acbba3ce92ee9e16893b4978c4a9ec4ce0757d53))
 
-# [1.23.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.22.0...prism-agent-v1.23.0) (2023-12-20)
+## [1.30.1](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.30.0...prism-agent-v1.30.1) (2024-03-06)
 
 
 ### Bug Fixes
 
-* Change resource defaults for postgres ([#827](https://github.com/hyperledger-labs/open-enterprise-agent/issues/827)) ([87809c4](https://github.com/hyperledger-labs/open-enterprise-agent/commit/87809c4b4d6a3baf0afa37a2cf7ddf6c41a80eb6))
-* correct OAS example ([#816](https://github.com/hyperledger-labs/open-enterprise-agent/issues/816)) ([b1384b3](https://github.com/hyperledger-labs/open-enterprise-agent/commit/b1384b38524060f3cfa6df39afaddcce26a5514e))
-* Swithing to startupProbe from Readiness ([#821](https://github.com/hyperledger-labs/open-enterprise-agent/issues/821)) ([22a78ec](https://github.com/hyperledger-labs/open-enterprise-agent/commit/22a78ec09ccc84b5d5c03e8f07ff3a14c654cf2b))
+* allow configurable path convention for vault secrets ([#918](https://github.com/hyperledger/identus-cloud-agent/issues/918)) ([234a272](https://github.com/hyperledger/identus-cloud-agent/commit/234a2725614b05466391894f248c7175fb62c5b6))
+* integration test ([#915](https://github.com/hyperledger/identus-cloud-agent/issues/915)) ([320ab6a](https://github.com/hyperledger/identus-cloud-agent/commit/320ab6a876606eb68f48fe7d78983b4e044b5084))
+
+# [1.30.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.29.0...prism-agent-v1.30.0) (2024-03-01)
 
 
 ### Features
 
-* complete the integration with anoncred and fixes ([#820](https://github.com/hyperledger-labs/open-enterprise-agent/issues/820)) ([15ff710](https://github.com/hyperledger-labs/open-enterprise-agent/commit/15ff710c4a68c5f282e07b23098e362825fdb3b9))
-* Liveness, and readiness probes ([#817](https://github.com/hyperledger-labs/open-enterprise-agent/issues/817)) ([6e18666](https://github.com/hyperledger-labs/open-enterprise-agent/commit/6e18666f51cca2d0f151b070c59049bcf005a450))
-* Tune postgresql - helm chart ([#822](https://github.com/hyperledger-labs/open-enterprise-agent/issues/822)) ([5fcd9fb](https://github.com/hyperledger-labs/open-enterprise-agent/commit/5fcd9fb6301a5c7b1296d60e4b6fa3385ffe6727))
+* **agent:** make the connection pool size configurable, fixes [#913](https://github.com/hyperledger/identus-cloud-agent/issues/913) ([#914](https://github.com/hyperledger/identus-cloud-agent/issues/914)) ([375fe0f](https://github.com/hyperledger/identus-cloud-agent/commit/375fe0f8ee042246aed37f40cbeb8f2042c99958))
 
-# [1.22.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.21.1...prism-agent-v1.22.0) (2023-12-14)
+# [1.29.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.28.0...prism-agent-v1.29.0) (2024-02-28)
 
 
 ### Bug Fixes
 
-* correct OAS examples ([#810](https://github.com/hyperledger-labs/open-enterprise-agent/issues/810)) ([a0720dc](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a0720dcbaf10370dcacc1b5102df13929b40dfdb))
+* correct the config environment variable name ([#905](https://github.com/hyperledger/identus-cloud-agent/issues/905)) ([d86436c](https://github.com/hyperledger/identus-cloud-agent/commit/d86436cbc58571b4167411643623f3ba975550ad))
 
 
 ### Features
 
-* Consumer restricition parametarization  ([#814](https://github.com/hyperledger-labs/open-enterprise-agent/issues/814)) ([e039576](https://github.com/hyperledger-labs/open-enterprise-agent/commit/e039576fc0e285b80b2966c032ed91b9a8f26f60))
+* ZKP verification ([#792](https://github.com/hyperledger/identus-cloud-agent/issues/792)) ([ab1ab64](https://github.com/hyperledger/identus-cloud-agent/commit/ab1ab648b10a82b39d4bdde6e2c9693c8f7506b8))
 
-## [1.21.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.21.0...prism-agent-v1.21.1) (2023-12-12)
+# [1.28.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.27.0...prism-agent-v1.28.0) (2024-02-20)
 
 
 ### Bug Fixes
 
-* Option to disable apisix key auth ([#813](https://github.com/hyperledger-labs/open-enterprise-agent/issues/813)) ([f163682](https://github.com/hyperledger-labs/open-enterprise-agent/commit/f1636824047c0d03ce0790ede54e3a12d63dd787))
-
-# [1.21.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.20.1...prism-agent-v1.21.0) (2023-12-12)
+* **prism-agent:** increase http timeout communication channel closing… ([#901](https://github.com/hyperledger/identus-cloud-agent/issues/901)) ([8d3f29d](https://github.com/hyperledger/identus-cloud-agent/commit/8d3f29ddd830fe102d4bf25a0af8734730c80151))
+* re-enable logging with SLF4J and add traceId ([#869](https://github.com/hyperledger/identus-cloud-agent/issues/869)) ([8f6af25](https://github.com/hyperledger/identus-cloud-agent/commit/8f6af25a8eafd27d5017096da64f89188354a2ca))
+* remove oas schema format for empty repsonse body ([#902](https://github.com/hyperledger/identus-cloud-agent/issues/902)) ([5f2bb08](https://github.com/hyperledger/identus-cloud-agent/commit/5f2bb0872a156c9223ab56efbd47e812967ff582))
 
 
 ### Features
 
-* env vars support through values file ([#811](https://github.com/hyperledger-labs/open-enterprise-agent/issues/811)) ([2486dde](https://github.com/hyperledger-labs/open-enterprise-agent/commit/2486dde9b0682504a02ad031b3e7498b2fa2ce17))
+* add credential def performance test ([#865](https://github.com/hyperledger/identus-cloud-agent/issues/865)) ([95064d6](https://github.com/hyperledger/identus-cloud-agent/commit/95064d617dda7d45916fbdddf20a544eea4acf4a))
+* **pollux:** add Json VC schema meta validation ([#892](https://github.com/hyperledger/identus-cloud-agent/issues/892)) ([19c42b1](https://github.com/hyperledger/identus-cloud-agent/commit/19c42b10188d1e0242bdceb1f89b6410dcc05353))
 
-## [1.20.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.20.0...prism-agent-v1.20.1) (2023-12-06)
+# [1.27.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.26.0...prism-agent-v1.27.0) (2024-02-08)
 
 
 ### Bug Fixes
 
-* tolerations and nodeAffinity for k8s ([#808](https://github.com/hyperledger-labs/open-enterprise-agent/issues/808)) ([7934fa4](https://github.com/hyperledger-labs/open-enterprise-agent/commit/7934fa402ba86af6d8430208f1844fbd6ccda1bd))
-
-# [1.20.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.19.1...prism-agent-v1.20.0) (2023-12-05)
+* remove hard code did:example:* ([#882](https://github.com/hyperledger/identus-cloud-agent/issues/882)) ([321faf5](https://github.com/hyperledger/identus-cloud-agent/commit/321faf5791b05f0c24dd6ed96f155aa65d06477d))
 
 
 ### Features
 
-* add nodeAffinity, tolerations, and resources to k8s deployment ([#804](https://github.com/hyperledger-labs/open-enterprise-agent/issues/804)) ([22407a3](https://github.com/hyperledger-labs/open-enterprise-agent/commit/22407a3103eff73d87ead9a8122f078845c11d95))
+* support vault AppRole authentication ([#884](https://github.com/hyperledger/identus-cloud-agent/issues/884)) ([441f878](https://github.com/hyperledger/identus-cloud-agent/commit/441f878f0b573f350ffed14de0df164e1e260122))
 
-## [1.19.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.19.0...prism-agent-v1.19.1) (2023-11-29)
-
-
-### Bug Fixes
-
-* change admin auth priority and improve auth error message ([#800](https://github.com/hyperledger-labs/open-enterprise-agent/issues/800)) ([32d4340](https://github.com/hyperledger-labs/open-enterprise-agent/commit/32d43401a69c339f54380bd8d5dfe2fa383cb8d7))
-
-# [1.19.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.18.0...prism-agent-v1.19.0) (2023-11-21)
+# [1.26.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.25.0...prism-agent-v1.26.0) (2024-02-06)
 
 
 ### Bug Fixes
 
-* check for active RLS on db application user ([#775](https://github.com/hyperledger-labs/open-enterprise-agent/issues/775)) ([a792f43](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a792f43eaae0ec2cd30db2ea3308deded7a1a935))
-* enable keycloak with pre-configured agent in helm chart ([#791](https://github.com/hyperledger-labs/open-enterprise-agent/issues/791)) ([9a6e512](https://github.com/hyperledger-labs/open-enterprise-agent/commit/9a6e5123e07462db66017439e8e434315af7c0f4))
-* explicitly define transitive dependencies that were unresolvable ([#790](https://github.com/hyperledger-labs/open-enterprise-agent/issues/790)) ([0647829](https://github.com/hyperledger-labs/open-enterprise-agent/commit/0647829af813913aebd0dd3d703db7e363d44369))
-* **pollux:** V16 migration is failing to add FK constraint because of type mismatch ([#782](https://github.com/hyperledger-labs/open-enterprise-agent/issues/782)) ([c87beb0](https://github.com/hyperledger-labs/open-enterprise-agent/commit/c87beb0478d4b3d54709e09597c42c23878d101e))
-* **prism-agent:** more descriptive error response for validateDID in issue flow ([#783](https://github.com/hyperledger-labs/open-enterprise-agent/issues/783)) ([b99a737](https://github.com/hyperledger-labs/open-enterprise-agent/commit/b99a73718a06f4b97d933ba2e3220593f8d4e825))
-* **prism-agent:** perform percent encoding on auth header for token introspection request ([#780](https://github.com/hyperledger-labs/open-enterprise-agent/issues/780)) ([03d43c9](https://github.com/hyperledger-labs/open-enterprise-agent/commit/03d43c98d8ab64e5b47830d95a6356f9d6dd1b82))
+* **prism-agent:**  update didcomm peerdid library to support latest spec ([#877](https://github.com/hyperledger/identus-cloud-agent/issues/877)) ([0c42a62](https://github.com/hyperledger/identus-cloud-agent/commit/0c42a622143e35c439ae83cc3bb746515ce7401b))
 
 
 ### Features
 
-* Accept goal and goalCode to create connection invitation  ([#785](https://github.com/hyperledger-labs/open-enterprise-agent/issues/785)) ([71c776b](https://github.com/hyperledger-labs/open-enterprise-agent/commit/71c776baa2caf3ca610508dba805f037fd7d6e29))
-* **docs:** ADR for revocation status list expansion strategy ([#773](https://github.com/hyperledger-labs/open-enterprise-agent/issues/773)) ([7ad6427](https://github.com/hyperledger-labs/open-enterprise-agent/commit/7ad64277acb2bffe12524c4bfb68f687689b5b2e))
-* Keycloak container support with clients and PermissionManagement service ([#755](https://github.com/hyperledger-labs/open-enterprise-agent/issues/755)) ([a1846aa](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a1846aaa84202b55d48ea8556aad8cbbb8260f4d))
-* **pollux:** Add migrations needed for JWT revocation ([#778](https://github.com/hyperledger-labs/open-enterprise-agent/issues/778)) ([471956e](https://github.com/hyperledger-labs/open-enterprise-agent/commit/471956e92893a7237cabca2fb065adb417678d37))
-* **prism-agent:** add multi-tenant wallet self-service capability ([#779](https://github.com/hyperledger-labs/open-enterprise-agent/issues/779)) ([f2e74cd](https://github.com/hyperledger-labs/open-enterprise-agent/commit/f2e74cd1957e7d76f6dccadd02b1ca5b794d02b1))
+* interoperable schema changes ([#870](https://github.com/hyperledger/identus-cloud-agent/issues/870)) ([de49a93](https://github.com/hyperledger/identus-cloud-agent/commit/de49a9328524b32d714301f2b7961d5cd85b23c3))
 
-# [1.18.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.17.0...prism-agent-v1.18.0) (2023-10-24)
-
-
-### Bug Fixes
-
-*  all performance tests run succesfully, add group thresholds ([#750](https://github.com/hyperledger-labs/open-enterprise-agent/issues/750)) ([5204838](https://github.com/hyperledger-labs/open-enterprise-agent/commit/520483836e5b572e8aeeecd28f4bbe7cc668c3d9))
+# [1.25.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.24.0...prism-agent-v1.25.0) (2024-01-25)
 
 
 ### Features
 
-*  presentation API refactor ([#765](https://github.com/hyperledger-labs/open-enterprise-agent/issues/765)) ([045d829](https://github.com/hyperledger-labs/open-enterprise-agent/commit/045d8298f8865baeb13e243ed058e8e440b3f496))
-* add new auth params ([#762](https://github.com/hyperledger-labs/open-enterprise-agent/issues/762)) ([b8bfb86](https://github.com/hyperledger-labs/open-enterprise-agent/commit/b8bfb867061c58fc12987b5405f561e8f10cb718))
-* disable cors by default ([#747](https://github.com/hyperledger-labs/open-enterprise-agent/issues/747)) ([1dd8c8b](https://github.com/hyperledger-labs/open-enterprise-agent/commit/1dd8c8b0e9b0d2593bd1c17a95bf013192a64532))
-* migrate docker image of the agent to Java 21 ([#758](https://github.com/hyperledger-labs/open-enterprise-agent/issues/758)) ([d36dbf0](https://github.com/hyperledger-labs/open-enterprise-agent/commit/d36dbf0dfbf45b64185e5b54aba0444d6e1ada88))
-* **prism-agent:** add keycloak authorization support to endpoints ([#753](https://github.com/hyperledger-labs/open-enterprise-agent/issues/753)) ([3e7534f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/3e7534ff1a75e9ecaa0c2b670c1c158890021f8d))
+* **prism-agent:** add JWT auth support for agent-admin role ([#840](https://github.com/hyperledger/identus-cloud-agent/issues/840)) ([3ccd56e](https://github.com/hyperledger/identus-cloud-agent/commit/3ccd56efadbbb3ea70e7ca63e9eb89564a83c02f))
+* upgrade ZIO http client to improve performance ([#850](https://github.com/hyperledger/identus-cloud-agent/issues/850)) ([7aa9b4c](https://github.com/hyperledger/identus-cloud-agent/commit/7aa9b4c27f92b169c72a68cd4bb8f4afb63943d4))
 
-# [1.17.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.4...prism-agent-v1.17.0) (2023-10-14)
-
-
-### Bug Fixes
-
-* change repository and name for rest api clients ([#745](https://github.com/hyperledger-labs/open-enterprise-agent/issues/745)) ([0f84e28](https://github.com/hyperledger-labs/open-enterprise-agent/commit/0f84e28c3f2800c1d73353e40620a840fbb6b93a))
-* improve performance for background jobs in multitenancy mode ([#749](https://github.com/hyperledger-labs/open-enterprise-agent/issues/749)) ([17def3f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/17def3f67c1eb687560aee844aba6ff2a0bd4137))
-* **prism-agent:** agent should read DIDComm port from config ([#757](https://github.com/hyperledger-labs/open-enterprise-agent/issues/757)) ([cda908c](https://github.com/hyperledger-labs/open-enterprise-agent/commit/cda908c87cee562e6c044aa405aa82bd510cc74e))
-* **prism-agent:** configure APISIX to return CORS headers from Prism Agent endpoints ([#746](https://github.com/hyperledger-labs/open-enterprise-agent/issues/746)) ([a579aa9](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a579aa95ea5c0c4950cb64b8b9adb1f56bb87eb2))
-* **prism-agent:** fix docker env variables interpolation issue ([#751](https://github.com/hyperledger-labs/open-enterprise-agent/issues/751)) ([110eb2d](https://github.com/hyperledger-labs/open-enterprise-agent/commit/110eb2df9590412b35997152d526c599edb8e7af))
-* **prism-agent:** return relevant errors on offer creation ([#754](https://github.com/hyperledger-labs/open-enterprise-agent/issues/754)) ([d36533f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/d36533fe538812c9e3647bcc2383700173e4b1b7))
-* prohibit tenants to use equal or revoked api keys ([#742](https://github.com/hyperledger-labs/open-enterprise-agent/issues/742)) ([4b10c3a](https://github.com/hyperledger-labs/open-enterprise-agent/commit/4b10c3af931722a683bf55062297c3dfa1e38046))
-* upgrade vault and quill versions ([#739](https://github.com/hyperledger-labs/open-enterprise-agent/issues/739)) ([c140857](https://github.com/hyperledger-labs/open-enterprise-agent/commit/c140857df97d56ab750ec186962e5fe2bb6a6717))
+# [1.24.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.23.0...prism-agent-v1.24.0) (2023-12-21)
 
 
 ### Features
 
-* **prism-agent:** check issuing DID validity when creating a VC offer + return 'metaRetries' ([#740](https://github.com/hyperledger-labs/open-enterprise-agent/issues/740)) ([f2e2fd3](https://github.com/hyperledger-labs/open-enterprise-agent/commit/f2e2fd3d0397422be40b11644f8b84ddd3c6985f))
-* **prism-agent:** implement AnonCreds issuance flow ([#693](https://github.com/hyperledger-labs/open-enterprise-agent/issues/693)) ([9165a6f](https://github.com/hyperledger-labs/open-enterprise-agent/commit/9165a6f8fc0a11bd6c19b0bfd4dd4217ea3194d9))
+* add configuration for gRPC usePlainText (enable TLS for gRPC) ([#823](https://github.com/hyperledger/identus-cloud-agent/issues/823)) ([b871bb5](https://github.com/hyperledger/identus-cloud-agent/commit/b871bb5e8eeeb71b3f22c38609ae8f1ff424016c))
 
-## [1.16.4](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.3...prism-agent-v1.16.4) (2023-09-29)
-
-
-### Bug Fixes
-
-* Integration flow ATL-5777 ([#738](https://github.com/hyperledger-labs/open-enterprise-agent/issues/738)) ([7cf927c](https://github.com/hyperledger-labs/open-enterprise-agent/commit/7cf927cc267460cc1708e424c0a63ae96689a42a))
-
-## [1.16.3](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.2...prism-agent-v1.16.3) (2023-09-28)
+# [1.23.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.22.0...prism-agent-v1.23.0) (2023-12-20)
 
 
 ### Bug Fixes
 
-* Adding labels [skip ci] ([#737](https://github.com/hyperledger-labs/open-enterprise-agent/issues/737)) ([5182098](https://github.com/hyperledger-labs/open-enterprise-agent/commit/5182098f7bc6db479ee64d7133389732a38d174a))
-
-## [1.16.2](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.1...prism-agent-v1.16.2) (2023-09-28)
-
-
-### Bug Fixes
-
-* Changing yq command [skip ci] ATL-5777 ([#736](https://github.com/hyperledger-labs/open-enterprise-agent/issues/736)) ([01bdfa7](https://github.com/hyperledger-labs/open-enterprise-agent/commit/01bdfa74056d983bc1fd494c99b1bab8496dc62f))
-* Integration flow ([#734](https://github.com/hyperledger-labs/open-enterprise-agent/issues/734)) ([c45a9eb](https://github.com/hyperledger-labs/open-enterprise-agent/commit/c45a9ebf0150245dfa5ebdc2eda94aa1e0fea8f3))
-* Renaming values.yml [skip ci] ATL-5777  ([#735](https://github.com/hyperledger-labs/open-enterprise-agent/issues/735)) ([bcd73c3](https://github.com/hyperledger-labs/open-enterprise-agent/commit/bcd73c310a1c033400f83cfa266cbe0aa304217a))
-
-## [1.16.1](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.16.0...prism-agent-v1.16.1) (2023-09-27)
-
-
-### Bug Fixes
-
-* Adding localhost environment variable in run.sh script for local development ([#728](https://github.com/hyperledger-labs/open-enterprise-agent/issues/728)) ([1a904a6](https://github.com/hyperledger-labs/open-enterprise-agent/commit/1a904a6f72676fb89f87dd2da14c01d291371f8c))
-* correct typo on sts header (dmax -> max) ([#726](https://github.com/hyperledger-labs/open-enterprise-agent/issues/726)) ([2c5bc51](https://github.com/hyperledger-labs/open-enterprise-agent/commit/2c5bc51fc66b2c62a7c8ba7e25944704c335253f))
-* **prism-agent:** introduce generic secret store for CD ([#727](https://github.com/hyperledger-labs/open-enterprise-agent/issues/727)) ([3d4aacd](https://github.com/hyperledger-labs/open-enterprise-agent/commit/3d4aacdd9a7f66f2f656d3c31b3f8202cc37c51b))
-* Separate config for integration flow ATL-5777 ([#731](https://github.com/hyperledger-labs/open-enterprise-agent/issues/731)) ([9e0e2de](https://github.com/hyperledger-labs/open-enterprise-agent/commit/9e0e2de77a25166f019f78356b2e98b60da7b3e1))
-* Separate config for integration flow ATL-5777 ([#733](https://github.com/hyperledger-labs/open-enterprise-agent/issues/733)) ([8380ccc](https://github.com/hyperledger-labs/open-enterprise-agent/commit/8380cccea0eee17c090928b1ae36b877a822177d))
-
-# [1.16.0](https://github.com/hyperledger-labs/open-enterprise-agent/compare/prism-agent-v1.15.0...prism-agent-v1.16.0) (2023-09-15)
-
-
-### Bug Fixes
-
-* change attribute for appuser to login ([#721](https://github.com/hyperledger-labs/open-enterprise-agent/issues/721)) ([a0e0a74](https://github.com/hyperledger-labs/open-enterprise-agent/commit/a0e0a7412172a7cc2010c39c8ee106319e710986))
-* entity create and update operation failures if the walletId does… ([#718](https://github.com/hyperledger-labs/open-enterprise-agent/issues/718)) ([4fe6677](https://github.com/hyperledger-labs/open-enterprise-agent/commit/4fe66773a5aad4dc2808dad036c54c4660b3a855))
-* **prism-agent:** define db app user privileges before app starts ([#722](https://github.com/hyperledger-labs/open-enterprise-agent/issues/722)) ([8039654](https://github.com/hyperledger-labs/open-enterprise-agent/commit/803965482e2634d488d2f4f364b041917be514a5))
-* **prism-agent:** incorrect present proof metric name and remove connectionID from flow metrics ([#720](https://github.com/hyperledger-labs/open-enterprise-agent/issues/720)) ([52e31b0](https://github.com/hyperledger-labs/open-enterprise-agent/commit/52e31b0721d959fa53c8c49a39288b7c50d4582d))
-* **prism-agent:** refine multi-tenant error response and validations ([#719](https://github.com/hyperledger-labs/open-enterprise-agent/issues/719)) ([1f9ede3](https://github.com/hyperledger-labs/open-enterprise-agent/commit/1f9ede395c4469bf26b167a6430ad42ea7cde301))
-* **prism-agent:** validate application config during startup ([#712](https://github.com/hyperledger-labs/open-enterprise-agent/issues/712)) ([46fd69b](https://github.com/hyperledger-labs/open-enterprise-agent/commit/46fd69bc2416c72dd457b29f06dd181cf65f52a0))
-* use postgres application user ([#717](https://github.com/hyperledger-labs/open-enterprise-agent/issues/717)) ([63403a5](https://github.com/hyperledger-labs/open-enterprise-agent/commit/63403a5d64860d4683ebaab00a86eec0578a21c0))
+* Change resource defaults for postgres ([#827](https://github.com/hyperledger/identus-cloud-agent/issues/827)) ([87809c4](https://github.com/hyperledger/identus-cloud-agent/commit/87809c4b4d6a3baf0afa37a2cf7ddf6c41a80eb6))
+* correct OAS example ([#816](https://github.com/hyperledger/identus-cloud-agent/issues/816)) ([b1384b3](https://github.com/hyperledger/identus-cloud-agent/commit/b1384b38524060f3cfa6df39afaddcce26a5514e))
+* Swithing to startupProbe from Readiness ([#821](https://github.com/hyperledger/identus-cloud-agent/issues/821)) ([22a78ec](https://github.com/hyperledger/identus-cloud-agent/commit/22a78ec09ccc84b5d5c03e8f07ff3a14c654cf2b))
 
 
 ### Features
 
-* **prism-agent:** Metrics for verification flow ([#714](https://github.com/hyperledger-labs/open-enterprise-agent/issues/714)) ([8bea26e](https://github.com/hyperledger-labs/open-enterprise-agent/commit/8bea26e955987e1543984e090bedad17a7863268))
+* complete the integration with anoncred and fixes ([#820](https://github.com/hyperledger/identus-cloud-agent/issues/820)) ([15ff710](https://github.com/hyperledger/identus-cloud-agent/commit/15ff710c4a68c5f282e07b23098e362825fdb3b9))
+* Liveness, and readiness probes ([#817](https://github.com/hyperledger/identus-cloud-agent/issues/817)) ([6e18666](https://github.com/hyperledger/identus-cloud-agent/commit/6e18666f51cca2d0f151b070c59049bcf005a450))
+* Tune postgresql - helm chart ([#822](https://github.com/hyperledger/identus-cloud-agent/issues/822)) ([5fcd9fb](https://github.com/hyperledger/identus-cloud-agent/commit/5fcd9fb6301a5c7b1296d60e4b6fa3385ffe6727))
+
+# [1.22.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.21.1...prism-agent-v1.22.0) (2023-12-14)
+
+
+### Bug Fixes
+
+* correct OAS examples ([#810](https://github.com/hyperledger/identus-cloud-agent/issues/810)) ([a0720dc](https://github.com/hyperledger/identus-cloud-agent/commit/a0720dcbaf10370dcacc1b5102df13929b40dfdb))
+
+
+### Features
+
+* Consumer restricition parametarization  ([#814](https://github.com/hyperledger/identus-cloud-agent/issues/814)) ([e039576](https://github.com/hyperledger/identus-cloud-agent/commit/e039576fc0e285b80b2966c032ed91b9a8f26f60))
+
+## [1.21.1](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.21.0...prism-agent-v1.21.1) (2023-12-12)
+
+
+### Bug Fixes
+
+* Option to disable apisix key auth ([#813](https://github.com/hyperledger/identus-cloud-agent/issues/813)) ([f163682](https://github.com/hyperledger/identus-cloud-agent/commit/f1636824047c0d03ce0790ede54e3a12d63dd787))
+
+# [1.21.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.20.1...prism-agent-v1.21.0) (2023-12-12)
+
+
+### Features
+
+* env vars support through values file ([#811](https://github.com/hyperledger/identus-cloud-agent/issues/811)) ([2486dde](https://github.com/hyperledger/identus-cloud-agent/commit/2486dde9b0682504a02ad031b3e7498b2fa2ce17))
+
+## [1.20.1](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.20.0...prism-agent-v1.20.1) (2023-12-06)
+
+
+### Bug Fixes
+
+* tolerations and nodeAffinity for k8s ([#808](https://github.com/hyperledger/identus-cloud-agent/issues/808)) ([7934fa4](https://github.com/hyperledger/identus-cloud-agent/commit/7934fa402ba86af6d8430208f1844fbd6ccda1bd))
+
+# [1.20.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.19.1...prism-agent-v1.20.0) (2023-12-05)
+
+
+### Features
+
+* add nodeAffinity, tolerations, and resources to k8s deployment ([#804](https://github.com/hyperledger/identus-cloud-agent/issues/804)) ([22407a3](https://github.com/hyperledger/identus-cloud-agent/commit/22407a3103eff73d87ead9a8122f078845c11d95))
+
+## [1.19.1](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.19.0...prism-agent-v1.19.1) (2023-11-29)
+
+
+### Bug Fixes
+
+* change admin auth priority and improve auth error message ([#800](https://github.com/hyperledger/identus-cloud-agent/issues/800)) ([32d4340](https://github.com/hyperledger/identus-cloud-agent/commit/32d43401a69c339f54380bd8d5dfe2fa383cb8d7))
+
+# [1.19.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.18.0...prism-agent-v1.19.0) (2023-11-21)
+
+
+### Bug Fixes
+
+* check for active RLS on db application user ([#775](https://github.com/hyperledger/identus-cloud-agent/issues/775)) ([a792f43](https://github.com/hyperledger/identus-cloud-agent/commit/a792f43eaae0ec2cd30db2ea3308deded7a1a935))
+* enable keycloak with pre-configured agent in helm chart ([#791](https://github.com/hyperledger/identus-cloud-agent/issues/791)) ([9a6e512](https://github.com/hyperledger/identus-cloud-agent/commit/9a6e5123e07462db66017439e8e434315af7c0f4))
+* explicitly define transitive dependencies that were unresolvable ([#790](https://github.com/hyperledger/identus-cloud-agent/issues/790)) ([0647829](https://github.com/hyperledger/identus-cloud-agent/commit/0647829af813913aebd0dd3d703db7e363d44369))
+* **pollux:** V16 migration is failing to add FK constraint because of type mismatch ([#782](https://github.com/hyperledger/identus-cloud-agent/issues/782)) ([c87beb0](https://github.com/hyperledger/identus-cloud-agent/commit/c87beb0478d4b3d54709e09597c42c23878d101e))
+* **prism-agent:** more descriptive error response for validateDID in issue flow ([#783](https://github.com/hyperledger/identus-cloud-agent/issues/783)) ([b99a737](https://github.com/hyperledger/identus-cloud-agent/commit/b99a73718a06f4b97d933ba2e3220593f8d4e825))
+* **prism-agent:** perform percent encoding on auth header for token introspection request ([#780](https://github.com/hyperledger/identus-cloud-agent/issues/780)) ([03d43c9](https://github.com/hyperledger/identus-cloud-agent/commit/03d43c98d8ab64e5b47830d95a6356f9d6dd1b82))
+
+
+### Features
+
+* Accept goal and goalCode to create connection invitation  ([#785](https://github.com/hyperledger/identus-cloud-agent/issues/785)) ([71c776b](https://github.com/hyperledger/identus-cloud-agent/commit/71c776baa2caf3ca610508dba805f037fd7d6e29))
+* **docs:** ADR for revocation status list expansion strategy ([#773](https://github.com/hyperledger/identus-cloud-agent/issues/773)) ([7ad6427](https://github.com/hyperledger/identus-cloud-agent/commit/7ad64277acb2bffe12524c4bfb68f687689b5b2e))
+* Keycloak container support with clients and PermissionManagement service ([#755](https://github.com/hyperledger/identus-cloud-agent/issues/755)) ([a1846aa](https://github.com/hyperledger/identus-cloud-agent/commit/a1846aaa84202b55d48ea8556aad8cbbb8260f4d))
+* **pollux:** Add migrations needed for JWT revocation ([#778](https://github.com/hyperledger/identus-cloud-agent/issues/778)) ([471956e](https://github.com/hyperledger/identus-cloud-agent/commit/471956e92893a7237cabca2fb065adb417678d37))
+* **prism-agent:** add multi-tenant wallet self-service capability ([#779](https://github.com/hyperledger/identus-cloud-agent/issues/779)) ([f2e74cd](https://github.com/hyperledger/identus-cloud-agent/commit/f2e74cd1957e7d76f6dccadd02b1ca5b794d02b1))
+
+# [1.18.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.17.0...prism-agent-v1.18.0) (2023-10-24)
+
+
+### Bug Fixes
+
+*  all performance tests run succesfully, add group thresholds ([#750](https://github.com/hyperledger/identus-cloud-agent/issues/750)) ([5204838](https://github.com/hyperledger/identus-cloud-agent/commit/520483836e5b572e8aeeecd28f4bbe7cc668c3d9))
+
+
+### Features
+
+*  presentation API refactor ([#765](https://github.com/hyperledger/identus-cloud-agent/issues/765)) ([045d829](https://github.com/hyperledger/identus-cloud-agent/commit/045d8298f8865baeb13e243ed058e8e440b3f496))
+* add new auth params ([#762](https://github.com/hyperledger/identus-cloud-agent/issues/762)) ([b8bfb86](https://github.com/hyperledger/identus-cloud-agent/commit/b8bfb867061c58fc12987b5405f561e8f10cb718))
+* disable cors by default ([#747](https://github.com/hyperledger/identus-cloud-agent/issues/747)) ([1dd8c8b](https://github.com/hyperledger/identus-cloud-agent/commit/1dd8c8b0e9b0d2593bd1c17a95bf013192a64532))
+* migrate docker image of the agent to Java 21 ([#758](https://github.com/hyperledger/identus-cloud-agent/issues/758)) ([d36dbf0](https://github.com/hyperledger/identus-cloud-agent/commit/d36dbf0dfbf45b64185e5b54aba0444d6e1ada88))
+* **prism-agent:** add keycloak authorization support to endpoints ([#753](https://github.com/hyperledger/identus-cloud-agent/issues/753)) ([3e7534f](https://github.com/hyperledger/identus-cloud-agent/commit/3e7534ff1a75e9ecaa0c2b670c1c158890021f8d))
+
+# [1.17.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.16.4...prism-agent-v1.17.0) (2023-10-14)
+
+
+### Bug Fixes
+
+* change repository and name for rest api clients ([#745](https://github.com/hyperledger/identus-cloud-agent/issues/745)) ([0f84e28](https://github.com/hyperledger/identus-cloud-agent/commit/0f84e28c3f2800c1d73353e40620a840fbb6b93a))
+* improve performance for background jobs in multitenancy mode ([#749](https://github.com/hyperledger/identus-cloud-agent/issues/749)) ([17def3f](https://github.com/hyperledger/identus-cloud-agent/commit/17def3f67c1eb687560aee844aba6ff2a0bd4137))
+* **prism-agent:** agent should read DIDComm port from config ([#757](https://github.com/hyperledger/identus-cloud-agent/issues/757)) ([cda908c](https://github.com/hyperledger/identus-cloud-agent/commit/cda908c87cee562e6c044aa405aa82bd510cc74e))
+* **prism-agent:** configure APISIX to return CORS headers from Prism Agent endpoints ([#746](https://github.com/hyperledger/identus-cloud-agent/issues/746)) ([a579aa9](https://github.com/hyperledger/identus-cloud-agent/commit/a579aa95ea5c0c4950cb64b8b9adb1f56bb87eb2))
+* **prism-agent:** fix docker env variables interpolation issue ([#751](https://github.com/hyperledger/identus-cloud-agent/issues/751)) ([110eb2d](https://github.com/hyperledger/identus-cloud-agent/commit/110eb2df9590412b35997152d526c599edb8e7af))
+* **prism-agent:** return relevant errors on offer creation ([#754](https://github.com/hyperledger/identus-cloud-agent/issues/754)) ([d36533f](https://github.com/hyperledger/identus-cloud-agent/commit/d36533fe538812c9e3647bcc2383700173e4b1b7))
+* prohibit tenants to use equal or revoked api keys ([#742](https://github.com/hyperledger/identus-cloud-agent/issues/742)) ([4b10c3a](https://github.com/hyperledger/identus-cloud-agent/commit/4b10c3af931722a683bf55062297c3dfa1e38046))
+* upgrade vault and quill versions ([#739](https://github.com/hyperledger/identus-cloud-agent/issues/739)) ([c140857](https://github.com/hyperledger/identus-cloud-agent/commit/c140857df97d56ab750ec186962e5fe2bb6a6717))
+
+
+### Features
+
+* **prism-agent:** check issuing DID validity when creating a VC offer + return 'metaRetries' ([#740](https://github.com/hyperledger/identus-cloud-agent/issues/740)) ([f2e2fd3](https://github.com/hyperledger/identus-cloud-agent/commit/f2e2fd3d0397422be40b11644f8b84ddd3c6985f))
+* **prism-agent:** implement AnonCreds issuance flow ([#693](https://github.com/hyperledger/identus-cloud-agent/issues/693)) ([9165a6f](https://github.com/hyperledger/identus-cloud-agent/commit/9165a6f8fc0a11bd6c19b0bfd4dd4217ea3194d9))
+
+## [1.16.4](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.16.3...prism-agent-v1.16.4) (2023-09-29)
+
+
+### Bug Fixes
+
+* Integration flow ATL-5777 ([#738](https://github.com/hyperledger/identus-cloud-agent/issues/738)) ([7cf927c](https://github.com/hyperledger/identus-cloud-agent/commit/7cf927cc267460cc1708e424c0a63ae96689a42a))
+
+## [1.16.3](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.16.2...prism-agent-v1.16.3) (2023-09-28)
+
+
+### Bug Fixes
+
+* Adding labels [skip ci] ([#737](https://github.com/hyperledger/identus-cloud-agent/issues/737)) ([5182098](https://github.com/hyperledger/identus-cloud-agent/commit/5182098f7bc6db479ee64d7133389732a38d174a))
+
+## [1.16.2](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.16.1...prism-agent-v1.16.2) (2023-09-28)
+
+
+### Bug Fixes
+
+* Changing yq command [skip ci] ATL-5777 ([#736](https://github.com/hyperledger/identus-cloud-agent/issues/736)) ([01bdfa7](https://github.com/hyperledger/identus-cloud-agent/commit/01bdfa74056d983bc1fd494c99b1bab8496dc62f))
+* Integration flow ([#734](https://github.com/hyperledger/identus-cloud-agent/issues/734)) ([c45a9eb](https://github.com/hyperledger/identus-cloud-agent/commit/c45a9ebf0150245dfa5ebdc2eda94aa1e0fea8f3))
+* Renaming values.yml [skip ci] ATL-5777  ([#735](https://github.com/hyperledger/identus-cloud-agent/issues/735)) ([bcd73c3](https://github.com/hyperledger/identus-cloud-agent/commit/bcd73c310a1c033400f83cfa266cbe0aa304217a))
+
+## [1.16.1](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.16.0...prism-agent-v1.16.1) (2023-09-27)
+
+
+### Bug Fixes
+
+* Adding localhost environment variable in run.sh script for local development ([#728](https://github.com/hyperledger/identus-cloud-agent/issues/728)) ([1a904a6](https://github.com/hyperledger/identus-cloud-agent/commit/1a904a6f72676fb89f87dd2da14c01d291371f8c))
+* correct typo on sts header (dmax -> max) ([#726](https://github.com/hyperledger/identus-cloud-agent/issues/726)) ([2c5bc51](https://github.com/hyperledger/identus-cloud-agent/commit/2c5bc51fc66b2c62a7c8ba7e25944704c335253f))
+* **prism-agent:** introduce generic secret store for CD ([#727](https://github.com/hyperledger/identus-cloud-agent/issues/727)) ([3d4aacd](https://github.com/hyperledger/identus-cloud-agent/commit/3d4aacdd9a7f66f2f656d3c31b3f8202cc37c51b))
+* Separate config for integration flow ATL-5777 ([#731](https://github.com/hyperledger/identus-cloud-agent/issues/731)) ([9e0e2de](https://github.com/hyperledger/identus-cloud-agent/commit/9e0e2de77a25166f019f78356b2e98b60da7b3e1))
+* Separate config for integration flow ATL-5777 ([#733](https://github.com/hyperledger/identus-cloud-agent/issues/733)) ([8380ccc](https://github.com/hyperledger/identus-cloud-agent/commit/8380cccea0eee17c090928b1ae36b877a822177d))
+
+# [1.16.0](https://github.com/hyperledger/identus-cloud-agent/compare/prism-agent-v1.15.0...prism-agent-v1.16.0) (2023-09-15)
+
+
+### Bug Fixes
+
+* change attribute for appuser to login ([#721](https://github.com/hyperledger/identus-cloud-agent/issues/721)) ([a0e0a74](https://github.com/hyperledger/identus-cloud-agent/commit/a0e0a7412172a7cc2010c39c8ee106319e710986))
+* entity create and update operation failures if the walletId does… ([#718](https://github.com/hyperledger/identus-cloud-agent/issues/718)) ([4fe6677](https://github.com/hyperledger/identus-cloud-agent/commit/4fe66773a5aad4dc2808dad036c54c4660b3a855))
+* **prism-agent:** define db app user privileges before app starts ([#722](https://github.com/hyperledger/identus-cloud-agent/issues/722)) ([8039654](https://github.com/hyperledger/identus-cloud-agent/commit/803965482e2634d488d2f4f364b041917be514a5))
+* **prism-agent:** incorrect present proof metric name and remove connectionID from flow metrics ([#720](https://github.com/hyperledger/identus-cloud-agent/issues/720)) ([52e31b0](https://github.com/hyperledger/identus-cloud-agent/commit/52e31b0721d959fa53c8c49a39288b7c50d4582d))
+* **prism-agent:** refine multi-tenant error response and validations ([#719](https://github.com/hyperledger/identus-cloud-agent/issues/719)) ([1f9ede3](https://github.com/hyperledger/identus-cloud-agent/commit/1f9ede395c4469bf26b167a6430ad42ea7cde301))
+* **prism-agent:** validate application config during startup ([#712](https://github.com/hyperledger/identus-cloud-agent/issues/712)) ([46fd69b](https://github.com/hyperledger/identus-cloud-agent/commit/46fd69bc2416c72dd457b29f06dd181cf65f52a0))
+* use postgres application user ([#717](https://github.com/hyperledger/identus-cloud-agent/issues/717)) ([63403a5](https://github.com/hyperledger/identus-cloud-agent/commit/63403a5d64860d4683ebaab00a86eec0578a21c0))
+
+
+### Features
+
+* **prism-agent:** Metrics for verification flow ([#714](https://github.com/hyperledger/identus-cloud-agent/issues/714)) ([8bea26e](https://github.com/hyperledger/identus-cloud-agent/commit/8bea26e955987e1543984e090bedad17a7863268))
 
 # [1.15.0](https://github.com/input-output-hk/atala-prism-building-blocks/compare/prism-agent-v1.14.2...prism-agent-v1.15.0) (2023-09-12)
 

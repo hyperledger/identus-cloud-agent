@@ -18,30 +18,35 @@ defaults:
     shell: bash
     working-directory: "tests/integration-tests"
 
+permissions:
+  checks: write
+  pull-requests: write
+
 jobs:
   run-integration-tests:
     name: "Run integration tests"
     runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.title, '[skip ci]') }}
     env:
       REPORTS_DIR: "tests/integration-tests/target/site/serenity"
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Java and Scala
-        uses: olafurpg/setup-scala@v13
+        uses: olafurpg/setup-scala@v14
         with:
-          java-version: openjdk@1.11
+          java-version: openjdk@1.17
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.8.0
+        uses: gradle/gradle-build-action@v3
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          password: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          username: hyperledger-bot
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Compose
         uses: ndeloof/install-compose-action@v0.0.1
@@ -49,38 +54,47 @@ jobs:
           version: v2.12.2 # defaults to 'latest'
           legacy: true # will also install in PATH as `docker-compose`
 
-      - name: Build local version of PRISM Agent
-        id: build_local_prism_agent
+      - name: Build local version of Cloud Agent
+        id: build_local_cloud_agent
         env:
-          PRISM_AGENT_PATH: "../.."
+          CLOUD_AGENT_PATH: "../.."
           ENV_FILE: "infrastructure/local/.env"
-          GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          GITHUB_ACTOR: hyperledger-bot
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd "${PRISM_AGENT_PATH}" || exit 129
+          cd "${CLOUD_AGENT_PATH}" || exit 129
           sbt docker:publishLocal
-          echo "open_enterprise_agent_version=$(cut -d'=' -f2 version.sbt | tr -d '" ')" >> "${GITHUB_OUTPUT}"
+          echo "agent_version=$(cut -d'=' -f2 version.sbt | tr -d '" ')" >> "${GITHUB_OUTPUT}"
           echo "prism_node_version=$(grep PRISM_NODE_VERSION infrastructure/local/.env | cut -d'=' -f2 | tr -d ' ')" >> "${GITHUB_OUTPUT}"
 
       - uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
-          java-version: '19'
+          distribution: "zulu"
+          java-version: "19"
 
       - name: Run integration tests
         env:
-          PRISM_NODE_VERSION: ${{ steps.build_local_prism_agent.outputs.prism_node_version }}
-          OPEN_ENTERPRISE_AGENT_VERSION: ${{ steps.build_local_prism_agent.outputs.open_enterprise_agent_version }}
-          ATALA_GITHUB_ACTOR: ${{ secrets.ATALA_GITHUB_ACTOR }}
-          ATALA_GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
-        continue-on-error: true
+          PRISM_NODE_VERSION: ${{ steps.build_local_cloud_agent.outputs.prism_node_version }}
+          AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.agent_version }}
+          GITHUB_ACTOR: hyperledger-bot
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        #        continue-on-error: true
         run: |
-          ./gradlew test --tests "IntegrationTestsRunner" || true
+          ./gradlew test --tests "IntegrationTestsRunner"
+
+      - name: Make report of integration tests
+        if: always()
+        env:
+          PRISM_NODE_VERSION: ${{ steps.build_local_cloud_agent.outputs.prism_node_version }}
+          AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.agent_version }}
+          GITHUB_ACTOR: hyperledger-bot
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           ./gradlew reports
 
       - name: Extract test results
         id: analyze_test_results
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' && always()
         run: |
           JSON_RESULTS="target/site/serenity/serenity-summary.json"
           CONCLUSION=failure
@@ -118,14 +132,14 @@ jobs:
           check_name: "Integration Test Results"
 
       - name: Upload artifacts
-        if: github.ref_name == 'main' || steps.analyze_test_results.outputs.conclusion == 'failure'
-        uses: actions/upload-artifact@v2
+        if: github.ref_name == 'main' || failure()
+        uses: actions/upload-artifact@v4
         with:
           name: integration-tests-result
           path: ${{ env.REPORTS_DIR }}
 
       - name: Slack Notification
-        if: github.ref_name == 'main' && steps.analyze_test_results.outputs.conclusion == 'failure'
+        if: github.ref_name == 'main' && failure()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: ${{ steps.analyze_test_results.outputs.conclusion }}
@@ -134,6 +148,6 @@ jobs:
             Failed: ${{ steps.analyze_test_results.outputs.failures }}
             Errors in tests: ${{ steps.analyze_test_results.outputs.errors }}
             Skipped (known bugs): ${{ steps.analyze_test_results.outputs.skipped }}
-          SLACK_TITLE: "Open Enterprise Agent Integration Tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
+          SLACK_TITLE: "Identus Cloud Agent Integration Tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
           SLACK_USERNAME: circleci
           SLACK_WEBHOOK: ${{ secrets.E2E_TESTS_SLACK_WEBHOOK }}

@@ -2,14 +2,14 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: "prism-agent-base-path-cert"
+  name: "{{ include "cloud-agent.name" . }}-base-path-cert"
   namespace: "{{ .Release.Namespace }}"
   labels:
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4}}
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  secretName: "prism-agent-base-path-secret"
+  secretName: "{{ include "cloud-agent.name" . }}-base-path-secret"
   duration: 2160h0m0s # 90d
   renewBefore: 360h0m0s # 15d
   issuerRef:

@@ -3,8 +3,13 @@ name: Scala Steward Workflow
 # This workflow will launch at 00:00 every Sunday
 on:
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: "0 0 * * 0"
   workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
   scala-steward:
@@ -12,22 +17,37 @@ jobs:
     name: Launch Scala Steward
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          persist-credentials: false
 
-      - uses: crazy-max/ghaction-import-gpg@v3
+      - uses: crazy-max/ghaction-import-gpg@v6
         id: import_gpg
         with:
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          git-user-signingkey: true
-          git-commit-gpgsign: true
+          gpg_private_key: ${{ secrets.HYP_BOT_GPG_PRIVATE }}
+          passphrase: ${{ secrets.HYP_BOT_GPG_PASSWORD }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_push_gpgsign: true
+
+      - name: GPG user IDs
+        run: |
+          echo "fingerprint: ${{ steps.import_gpg.outputs.fingerprint }}"
+          echo "keyid:       ${{ steps.import_gpg.outputs.keyid }}"
+          echo "name:        ${{ steps.import_gpg.outputs.name }}"
+          echo "email:       ${{ steps.import_gpg.outputs.email }}"
 
       - name: Launch Scala Steward
         uses: scala-steward-org/scala-steward-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          github-token: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           sign-commits: true
+          signing-key: ${{ steps.import_gpg.outputs.keyid }}
           author-email: ${{ steps.import_gpg.outputs.email }}
           author-name: ${{ steps.import_gpg.outputs.name }}
           branches: main
+          repo-config: .scala-steward.conf

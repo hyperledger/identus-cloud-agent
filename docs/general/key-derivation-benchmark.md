@@ -1,8 +1,8 @@
 # Key derivation benchmark
 
-This document provides a performance benchmark of a key derivation used inside the PRISM agent
+This document provides a performance benchmark of a key derivation used inside the Cloud Agent
 in comparison with a key retrieval from HashiCorp Vault. It should provide a baseline for
-future decisions in managing the key material on PRISM agent.
+future decisions in managing the key material on the agent.
 
 ## Test setup
 
@@ -18,12 +18,12 @@ __System information__
 __JVM options__
 - Xmx:4G
 
-The tests can be run by running the `io.iohk.atala.agent.walletapi.benchmark.KeyDerivation`.
+The tests can be run by running the `org.hyperledger.identus.agent.walletapi.benchmark.KeyDerivation`.
 The tests are being ignored to avoid running them on CI. When running locally,
 the ignore aspect should be removed and the test can be run by
 
 ```bash
-sbt prismAgentWalletAPI/'testOnly -- -tag benchmark'
+sbt agentWalletAPI/'testOnly -- -tag benchmark'
 ```
 
 ## Scenario

@@ -2,7 +2,6 @@
 version: "3.8"
 
 services:
-
   # Mandatory PostgreSQL database for the Open Enterprise Agent
   postgres:
     image: postgres:13
@@ -22,8 +21,8 @@ services:
   # Secret storage - hashicorp
 
   # Open Enterprise Agent
-  open-enterprise-agent:
-    image: ghcr.io/input-output-hk/prism-agent:${OPEN_ENTERPRISE_AGENT_VERSION}
+  identus-cloud-agent:
+    image: ghcr.io/hyperledger/identus-cloud-agent:${AGENT_VERSION}
     environment:
       PRISM_NODE_HOST: host.docker.internal
       PRISM_NODE_PORT:
@@ -31,8 +30,9 @@ services:
       POLLUX_DB_HOST: postgres
       CONNECT_DB_HOST: postgres
       AGENT_DB_HOST: postgres
-      VAULT_APPROLE_ROLE_ID: agent
-      VAULT_APPROLE_SECRET_ID: agent-secret
+      VAULT_TOKEN: null
+      VAULT_APPROLE_ROLE_ID: null
+      VAULT_APPROLE_SECRET_ID: null
       AUTH_HEADER: apikey
       ADMIN_AUTH_HEADER: "x-admin-api-key"
       # Configuration parameters
@@ -40,6 +40,7 @@ services:
       AGENT_HTTP_PORT:
       DIDCOMM_SERVICE_URL:
       REST_SERVICE_URL:
+      POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL:
       API_KEY_ENABLED:
       # Secret storage configuration
       SECRET_STORAGE_BACKEND:
@@ -58,7 +59,13 @@ services:
       - "${AGENT_DIDCOMM_PORT}:${AGENT_DIDCOMM_PORT}"
       - "${AGENT_HTTP_PORT}:${AGENT_HTTP_PORT}"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://open-enterprise-agent:${AGENT_HTTP_PORT}/_system/health"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://identus-cloud-agent:${AGENT_HTTP_PORT}/_system/health",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5

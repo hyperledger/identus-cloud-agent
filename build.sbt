@@ -5,14 +5,14 @@ import sbtbuildinfo.BuildInfoPlugin.autoImport.*
 
 inThisBuild(
   Seq(
-    organization := "io.iohk.atala",
-    scalaVersion := "3.3.1",
+    organization := "org.hyperledger",
+    scalaVersion := "3.3.3",
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
     versionScheme := Some("semver-spec"),
-    githubOwner := "input-output-hk",
-    githubRepository := "atala-prism-building-blocks",
+    githubOwner := "hyperledger",
+    githubRepository := "identus-cloud-agent",
     resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
     resolvers += "jitpack" at "https://jitpack.io",
   )
@@ -44,53 +44,56 @@ inThisBuild(
 )
 
 lazy val V = new {
-  val munit = "1.0.0-M8" // "0.7.29"
-  val munitZio = "0.1.1"
+  val munit = "1.0.0" // "0.7.29"
+  val munitZio = "0.2.0"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.18"
-  val zioConfig = "3.0.7"
-  val zioLogging = "2.1.16"
-  val zioJson = "0.3.0"
-  val zioHttp = "3.0.0-RC4"
-  val zioCatsInterop = "3.3.0"
-  val zioMetricsConnector = "2.1.0"
-  val zioMock = "1.0.0-RC11"
-  val mockito = "3.2.16.0"
-  val monocle = "3.1.0"
+  val zio = "2.0.22"
+  val zioConfig = "4.0.1"
+  val zioLogging = "2.1.17"
+  val zioJson = "0.6.2"
+  val zioHttp = "3.0.0-RC6"
+  val zioCatsInterop = "3.3.0" // TODO "23.1.0.2" // https://mvnrepository.com/artifact/dev.zio/zio-interop-cats
+  val zioMetricsConnector = "2.3.1"
+  val zioMock = "1.0.0-RC12"
+  val mockito = "3.2.18.0"
+  val monocle = "3.2.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
-  val circe = "0.14.6"
+  val circe = "0.14.7"
 
-  val tapir = "1.6.4"
+  val tapir = "1.6.4" // scala-steward:off // TODO "1.10.5"
+  val http4sBlaze = "0.23.15" // scala-steward:off  // TODO "0.23.16"
 
-  val typesafeConfig = "1.4.2"
+  val typesafeConfig = "1.4.3"
   val protobuf = "3.1.9"
-  val testContainersScala = "0.41.0"
-  val testContainersJavaKeycloak = "3.0.0" // scala-steward:off
+  val grpcOkHttp = "1.63.0"
 
-  val doobie = "1.0.0-RC2"
-  val quill = "4.7.3"
-  val flyway = "9.8.3"
-  val postgresDriver = "42.2.27"
-  val logback = "1.4.8"
-  val slf4j = "2.0.7"
+  val testContainersScala = "0.41.3"
+  val testContainersJavaKeycloak = "3.2.0" // scala-steward:off
 
-  val prismSdk = "1.4.1" // scala-steward:off
+  val doobie = "1.0.0-RC5"
+  val quill = "4.8.4"
+  val flyway = "9.22.3"
+  val postgresDriver = "42.7.3"
+  val logback = "1.4.14"
+  val slf4j = "2.0.13"
+
   val scalaUri = "4.0.3"
 
-  val jwtCirceVersion = "9.1.2"
-  val zioPreludeVersion = "1.0.0-RC16"
+  val jwtCirceVersion = "9.4.6"
+  val zioPreludeVersion = "1.0.0-RC24"
 
-  val bouncyCastle = "1.70"
-
-  val jsonSchemaValidator = "1.3.2"
+  val apollo = "1.3.4"
+  val jsonSchemaValidator = "1.3.2" // scala-steward:off //TODO 1.3.2 need to fix:
+  // [error] 	org.hyperledger.identus.pollux.core.model.schema.AnoncredSchemaTypeSpec
+  // [error] 	org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaSpec
 
   val vaultDriver = "6.2.0"
-  val micrometer = "1.11.2"
+  val micrometer = "1.11.11"
 
-  val nimbusJwt = "10.0.0"
-  val keycloak = "22.0.4" // scala-steward:off
+  val nimbusJwt = "9.37.3"
+  val keycloak = "23.0.7" // scala-steward:off //TODO 24.0.3 // update all quay.io/keycloak/keycloak
 
 }
 
@@ -107,6 +110,7 @@ lazy val D = new {
   val tapirPrometheusMetrics: ModuleID = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % V.tapir
   val micrometer: ModuleID = "io.micrometer" % "micrometer-registry-prometheus" % V.micrometer
   val micrometerPrometheusRegistry = "io.micrometer" % "micrometer-core" % V.micrometer
+  val scalaUri = "io.lemonlabs" %% "scala-uri" % V.scalaUri
 
   val zioConfig: ModuleID = "dev.zio" %% "zio-config" % V.zioConfig
   val zioConfigMagnolia: ModuleID = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
@@ -117,20 +121,21 @@ lazy val D = new {
   val circeParser: ModuleID = "io.circe" %% "circe-parser" % V.circe
 
   val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
+  val jsonCanonicalization: ModuleID = "io.github.erdtman" % "java-json-canonicalization" % "1.1"
+  val scodecBits: ModuleID = "org.scodec" %% "scodec-bits" % "1.1.38"
 
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
-  val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.1"
+  val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.2"
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.5.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
 
-  // Customized version of numbus jose jwt
-  // from https://github.com/goncalo-frade-iohk/Nimbus-JWT_Fork/commit/8a6665c25979e771afae29ce8c965c8b0312fefb
-  val nimbusJwt: ModuleID = "io.iohk.atala" % "nimbus-jose-jwt" % V.nimbusJwt
+  val nimbusJwt: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % V.nimbusJwt
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
   val scalaPbRuntime: ModuleID =
     "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
   val scalaPbGrpc: ModuleID = "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
+  val grpcOkHttp: ModuleID = "io.grpc" % "grpc-okhttp" % V.grpcOkHttp
 
   val testcontainersPostgres: ModuleID =
     "com.dimafeng" %% "testcontainers-scala-postgresql" % V.testContainersScala % Test
@@ -152,9 +157,13 @@ lazy val D = new {
   val zioTestSbt: ModuleID = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia: ModuleID = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
   val zioMock: ModuleID = "dev.zio" %% "zio-mock" % V.zioMock
+  val zioPrelude: ModuleID = "dev.zio" %% "zio-prelude" % V.zioPreludeVersion
   val mockito: ModuleID = "org.scalatestplus" %% "mockito-4-11" % V.mockito % Test
   val monocle: ModuleID = "dev.optics" %% "monocle-core" % V.monocle % Test
   val monocleMacro: ModuleID = "dev.optics" %% "monocle-macro" % V.monocle % Test
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % Test
+
+  val apollo = "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
@@ -167,10 +176,27 @@ lazy val D_Shared = new {
       D.typesafeConfig,
       D.scalaPbGrpc,
       D.zio,
+      D.zioHttp,
+      D.scalaUri,
       // FIXME: split shared DB stuff as subproject?
       D.doobieHikari,
       D.doobiePostgres,
-      D.zioCatsInterop
+      D.zioCatsInterop,
+      D.zioPrelude,
+      D.jsonCanonicalization,
+      D.scodecBits,
+    )
+}
+
+lazy val D_SharedCrypto = new {
+  lazy val dependencies: Seq[ModuleID] =
+    Seq(
+      D.zioJson,
+      D.apollo,
+      D.nimbusJwt,
+      D.zioTest,
+      D.zioTestSbt,
+      D.zioTestMagnolia,
     )
 }
 
@@ -206,17 +232,6 @@ lazy val D_Connect = new {
 }
 
 lazy val D_Castor = new {
-
-  val scalaUri = "io.lemonlabs" %% "scala-uri" % V.scalaUri
-
-  // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
-  // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
-  val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % V.prismSdk excludeAll
-    ExclusionRule(
-      organization = "org.bouncycastle"
-    )
-  val prismIdentity = "io.iohk.atala" % "prism-identity-jvm" % V.prismSdk
-
   // Dependency Modules
   val baseDependencies: Seq[ModuleID] =
     Seq(
@@ -227,9 +242,7 @@ lazy val D_Castor = new {
       D.zioTestMagnolia,
       D.circeCore,
       D.circeGeneric,
-      D.circeParser,
-      prismIdentity,
-      scalaUri
+      D.circeParser
     )
 
   // Project Dependencies
@@ -252,13 +265,6 @@ lazy val D_Pollux = new {
   val quillDoobie = "io.getquill" %% "quill-doobie" %
     V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
 
-  // We have to exclude bouncycastle since for some reason bitcoinj depends on bouncycastle jdk15to18
-  // (i.e. JDK 1.5 to 1.8), but we are using JDK 11
-  val prismCrypto = "io.iohk.atala" % "prism-crypto-jvm" % V.prismSdk excludeAll
-    ExclusionRule(
-      organization = "org.bouncycastle"
-    )
-
   // Dependency Modules
   val baseDependencies: Seq[ModuleID] = Seq(
     D.zio,
@@ -270,7 +276,6 @@ lazy val D_Pollux = new {
     D.zioMock,
     D.munit,
     D.munitZio,
-    prismCrypto,
     // shared,
     logback,
     slf4jApi,
@@ -294,7 +299,7 @@ lazy val D_Pollux = new {
 
 lazy val D_Pollux_VC_JWT = new {
 
-  private lazy val circeJsonSchema = ("net.reactivecore" %% "circe-json-schema" % "0.3.0")
+  private lazy val circeJsonSchema = ("net.reactivecore" %% "circe-json-schema" % "0.4.1")
     .cross(CrossVersion.for3Use2_13)
     .exclude("io.circe", "circe-core_2.13")
     .exclude("io.circe", "circe-generic_2.13")
@@ -309,13 +314,10 @@ lazy val D_Pollux_VC_JWT = new {
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
 
-  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % Test
-
   // Dependency Modules
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
-  val circeDependencies: Seq[ModuleID] = Seq(D.circeCore, D.circeGeneric, D.circeParser)
   val baseDependencies: Seq[ModuleID] =
-    circeDependencies ++ zioDependencies :+ D.jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ scalaTest
+    zioDependencies :+ D.jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ D.scalaTest
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
@@ -336,13 +338,7 @@ lazy val D_Pollux_AnonCreds = new {
   val baseDependencies: Seq[ModuleID] = Seq(D.zio, D.zioJson)
 }
 
-lazy val D_PrismAgent = new {
-
-  // Added here to make prism-crypto works.
-  // Once migrated to apollo, re-evaluate if this should be removed.
-  val bouncyBcpkix = "org.bouncycastle" % "bcpkix-jdk15on" % V.bouncyCastle
-  val bouncyBcprov = "org.bouncycastle" % "bcprov-jdk15on" % V.bouncyCastle
-
+lazy val D_CloudAgent = new {
   val logback = "ch.qos.logback" % "logback-classic" % V.logback
 
   val tapirSwaggerUiBundle = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % V.tapir
@@ -350,13 +346,13 @@ lazy val D_PrismAgent = new {
 
   val tapirZioHttpServer = "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % V.tapir
   val tapirHttp4sServerZio = "com.softwaremill.sttp.tapir" %% "tapir-http4s-server-zio" % V.tapir
-  val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % "0.23.12"
+  val http4sBlazeServer = "org.http4s" %% "http4s-blaze-server" % V.http4sBlaze
 
   val tapirRedocBundle = "com.softwaremill.sttp.tapir" %% "tapir-redoc-bundle" % V.tapir
 
   val tapirSttpStubServer =
     "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % V.tapir % Test
-  val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.3" % Test
+  val sttpClient3ZioJson = "com.softwaremill.sttp.client3" %% "zio-json" % "3.8.16" % Test
 
   val quillDoobie =
     "io.getquill" %% "quill-doobie" % V.quill exclude ("org.scala-lang.modules", "scala-java8-compat_3")
@@ -386,7 +382,6 @@ lazy val D_PrismAgent = new {
     D.micrometer,
     D.micrometerPrometheusRegistry
   )
-  val bouncyDependencies: Seq[ModuleID] = Seq(bouncyBcpkix, bouncyBcprov)
   val tapirDependencies: Seq[ModuleID] =
     Seq(
       tapirSwaggerUiBundle,
@@ -404,7 +399,7 @@ lazy val D_PrismAgent = new {
 
   // Project Dependencies
   lazy val keyManagementDependencies: Seq[ModuleID] =
-    baseDependencies ++ bouncyDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop, D.zioMock, vaultDriver)
+    baseDependencies ++ D.doobieDependencies ++ Seq(D.zioCatsInterop, D.zioMock, vaultDriver)
 
   lazy val iamDependencies: Seq[ModuleID] = Seq(keycloakAuthz, D.jwtCirce)
 
@@ -421,6 +416,7 @@ publish / skip := true
 
 val commonSetttings = Seq(
   testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+  libraryDependencies ++= Seq(D.zioTest, D.zioTestSbt, D.zioTestMagnolia),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
   resolvers += "jitpack" at "https://jitpack.io",
@@ -454,25 +450,27 @@ val commonSetttings = Seq(
 // #####  shared  ######
 // #####################
 
-lazy val shared = (project in file("shared"))
-  // .configure(publishConfigure)
+lazy val shared = (project in file("shared/core"))
   .settings(commonSetttings)
   .settings(
-    organization := "io.iohk.atala",
-    organizationName := "Input Output Global",
-    buildInfoPackage := "io.iohk.atala.shared",
     name := "shared",
     crossPaths := false,
     libraryDependencies ++= D_Shared.dependencies
   )
 
-lazy val sharedTest = (project in file("shared-test"))
+lazy val sharedCrypto = (project in file("shared/crypto"))
   .settings(commonSetttings)
   .settings(
-    organization := "io.iohk.atala",
-    organizationName := "Input Output Global",
-    buildInfoPackage := "io.iohk.atala.sharedtest",
-    name := "sharedtest",
+    name := "shared-crypto",
+    crossPaths := false,
+    libraryDependencies ++= D_SharedCrypto.dependencies
+  )
+  .dependsOn(shared)
+
+lazy val sharedTest = (project in file("shared/test"))
+  .settings(commonSetttings)
+  .settings(
+    name := "shared-test",
     crossPaths := false,
     libraryDependencies ++= D_SharedTest.dependencies
   )
@@ -487,7 +485,7 @@ lazy val sharedTest = (project in file("shared-test"))
   * This module must not depend on external libraries!
   */
 lazy val models = project
-  .in(file("mercury/mercury-library/models"))
+  .in(file("mercury/models"))
   .settings(name := "mercury-data-models")
   .settings(
     libraryDependencies ++= Seq(D.zio),
@@ -513,7 +511,7 @@ models implementation for didcommx () */
 // #################
 
 lazy val protocolConnection = project
-  .in(file("mercury/mercury-library/protocol-connection"))
+  .in(file("mercury/protocol-connection"))
   .settings(name := "mercury-protocol-connection")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -521,7 +519,7 @@ lazy val protocolConnection = project
   .dependsOn(models, protocolInvitation)
 
 lazy val protocolCoordinateMediation = project
-  .in(file("mercury/mercury-library/protocol-coordinate-mediation"))
+  .in(file("mercury/protocol-coordinate-mediation"))
   .settings(name := "mercury-protocol-coordinate-mediation")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -529,14 +527,14 @@ lazy val protocolCoordinateMediation = project
   .dependsOn(models)
 
 lazy val protocolDidExchange = project
-  .in(file("mercury/mercury-library/protocol-did-exchange"))
+  .in(file("mercury/protocol-did-exchange"))
   .settings(name := "mercury-protocol-did-exchange")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .dependsOn(models, protocolInvitation)
 
 lazy val protocolInvitation = project
-  .in(file("mercury/mercury-library/protocol-invitation"))
+  .in(file("mercury/protocol-invitation"))
   .settings(name := "mercury-protocol-invitation")
   .settings(libraryDependencies += D.zio)
   .settings(
@@ -551,13 +549,13 @@ lazy val protocolInvitation = project
   .dependsOn(models)
 
 lazy val protocolMercuryMailbox = project
-  .in(file("mercury/mercury-library/protocol-mercury-mailbox"))
+  .in(file("mercury/protocol-mercury-mailbox"))
   .settings(name := "mercury-protocol-mailbox")
   .settings(libraryDependencies += D.zio)
   .dependsOn(models, protocolInvitation, protocolRouting)
 
 lazy val protocolLogin = project
-  .in(file("mercury/mercury-library/protocol-outofband-login"))
+  .in(file("mercury/protocol-outofband-login"))
   .settings(name := "mercury-protocol-outofband-login")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies += D.zio)
@@ -566,27 +564,35 @@ lazy val protocolLogin = project
   .dependsOn(models)
 
 lazy val protocolReportProblem = project
-  .in(file("mercury/mercury-library/protocol-report-problem"))
+  .in(file("mercury/protocol-report-problem"))
   .settings(name := "mercury-protocol-report-problem")
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
 lazy val protocolRouting = project
-  .in(file("mercury/mercury-library/protocol-routing"))
+  .in(file("mercury/protocol-routing"))
   .settings(name := "mercury-protocol-routing-2-0")
   .settings(libraryDependencies += D.zio)
   .dependsOn(models)
 
 lazy val protocolIssueCredential = project
-  .in(file("mercury/mercury-library/protocol-issue-credential"))
+  .in(file("mercury/protocol-issue-credential"))
   .settings(name := "mercury-protocol-issue-credential")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
+lazy val protocolRevocationNotification = project
+  .in(file("mercury/protocol-revocation-notification"))
+  .settings(name := "mercury-protocol-revocation-notification")
+  .settings(libraryDependencies += D.zio)
+  .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
+  .settings(libraryDependencies += D.munitZio)
+  .dependsOn(models)
+
 lazy val protocolPresentProof = project
-  .in(file("mercury/mercury-library/protocol-present-proof"))
+  .in(file("mercury/protocol-present-proof"))
   .settings(name := "mercury-protocol-present-proof")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -594,12 +600,12 @@ lazy val protocolPresentProof = project
   .dependsOn(models)
 
 lazy val vc = project
-  .in(file("mercury/mercury-library/vc"))
+  .in(file("mercury/vc"))
   .settings(name := "mercury-verifiable-credentials")
   .dependsOn(protocolIssueCredential, protocolPresentProof) //TODO merge those two modules into this one
 
 lazy val protocolTrustPing = project
-  .in(file("mercury/mercury-library/protocol-trust-ping"))
+  .in(file("mercury/protocol-trust-ping"))
   .settings(name := "mercury-protocol-trust-ping")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -612,7 +618,7 @@ lazy val protocolTrustPing = project
 
 // TODO move stuff to the models module
 lazy val resolver = project // maybe merge into models
-  .in(file("mercury/mercury-library/resolver"))
+  .in(file("mercury/resolver"))
   .settings(name := "mercury-resolver")
   .settings(
     libraryDependencies ++= Seq(
@@ -631,7 +637,7 @@ lazy val resolver = project // maybe merge into models
 // ##############
 
 lazy val agent = project // maybe merge into models
-  .in(file("mercury/mercury-library/agent"))
+  .in(file("mercury/agent"))
   .settings(name := "mercury-agent-core")
   .settings(libraryDependencies ++= Seq(D.zioLog, D.zioSLF4J))
   .dependsOn(
@@ -643,6 +649,7 @@ lazy val agent = project // maybe merge into models
     protocolMercuryMailbox,
     protocolLogin,
     protocolIssueCredential,
+    protocolRevocationNotification,
     protocolPresentProof,
     vc,
     protocolConnection,
@@ -652,7 +659,7 @@ lazy val agent = project // maybe merge into models
 
 /** agents implementation with didcommx */
 lazy val agentDidcommx = project
-  .in(file("mercury/mercury-library/agent-didcommx"))
+  .in(file("mercury/agent-didcommx"))
   .settings(name := "mercury-agent-didcommx")
   .settings(libraryDependencies += D.didcommx)
   .settings(libraryDependencies += D.munitZio)
@@ -661,19 +668,19 @@ lazy val agentDidcommx = project
 // ///** TODO Demos agents and services implementation with did-scala */
 // lazy val agentDidScala =
 //   project
-//     .in(file("mercury/mercury-library/agent-did-scala"))
+//     .in(file("mercury/agent-did-scala"))
 //     .settings(name := "mercury-agent-didscala")
 //     .settings(skip / publish := true)
 //     .dependsOn(agent)
 
 // ####################
-// ###  prismNode  ####
+// ###  Prism Node ####
 // ####################
 val prismNodeClient = project
   .in(file("prism-node/client/scala-client"))
   .settings(
     name := "prism-node-client",
-    libraryDependencies ++= Seq(D.scalaPbGrpc, D.scalaPbRuntime),
+    libraryDependencies ++= Seq(D.scalaPbGrpc, D.scalaPbRuntime, D.grpcOkHttp),
     coverageEnabled := false,
     // gRPC settings
     Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"),
@@ -688,20 +695,21 @@ val prismNodeClient = project
 // #####################
 
 lazy val castorCore = project
-  .in(file("castor/lib/core"))
+  .in(file("castor"))
   .settings(commonSetttings)
   .settings(
     name := "castor-core",
     libraryDependencies ++= D_Castor.coreDependencies
   )
   .dependsOn(shared, prismNodeClient)
+  .dependsOn(sharedCrypto % "compile->compile;test->test")
 
 // #####################
 // #####  pollux  ######
 // #####################
 
 lazy val polluxVcJWT = project
-  .in(file("pollux/lib/vc-jwt"))
+  .in(file("pollux/vc-jwt"))
   .settings(commonSetttings)
   .settings(
     name := "pollux-vc-jwt",
@@ -710,19 +718,19 @@ lazy val polluxVcJWT = project
   .dependsOn(castorCore)
 
 lazy val polluxCore = project
-  .in(file("pollux/lib/core"))
+  .in(file("pollux/core"))
   .settings(commonSetttings)
   .settings(
     name := "pollux-core",
     libraryDependencies ++= D_Pollux.coreDependencies
   )
   .dependsOn(shared)
-  .dependsOn(prismAgentWalletAPI)
+  .dependsOn(agentWalletAPI)
   .dependsOn(polluxVcJWT)
-  .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds)
+  .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds, polluxSDJWT)
 
 lazy val polluxDoobie = project
-  .in(file("pollux/lib/sql-doobie"))
+  .in(file("pollux/sql-doobie"))
   .settings(commonSetttings)
   .settings(
     name := "pollux-sql-doobie",
@@ -744,21 +752,29 @@ lazy val polluxAnoncreds = project
     Compile / unmanagedResourceDirectories ++= Seq(
       baseDirectory.value / "native-lib" / "NATIVE"
     ),
-    // libraryDependencies += "io.iohk.atala.prism.anoncredskmp" % "anoncreds-kmp-jvm" % "0.3.5-M2",
     libraryDependencies ++= D_Pollux_AnonCreds.baseDependencies
   )
 
 lazy val polluxAnoncredsTest = project
-  .in(file("pollux/lib/anoncredsTest"))
-  .settings(libraryDependencies ++= Seq("org.scalatest" %% "scalatest" % "3.2.15" % Test))
+  .in(file("pollux/anoncredsTest"))
+  .settings(libraryDependencies += D.scalaTest)
   .dependsOn(polluxAnoncreds % "compile->test")
+
+lazy val polluxSDJWT = project
+  .in(file("pollux/sd-jwt"))
+  .settings(commonSetttings)
+  .settings(
+    name := "pollux-sd-jwt",
+    libraryDependencies += "io.iohk.atala" % "sd-jwt-kmp-jvm" % "0.1.2"
+  )
+  .dependsOn(sharedCrypto)
 
 // #####################
 // #####  connect  #####
 // #####################
 
 lazy val connectCore = project
-  .in(file("connect/lib/core"))
+  .in(file("connect/core"))
   .settings(commonSetttings)
   .settings(
     name := "connect-core",
@@ -769,7 +785,7 @@ lazy val connectCore = project
   .dependsOn(protocolConnection, protocolReportProblem, eventNotification)
 
 lazy val connectDoobie = project
-  .in(file("connect/lib/sql-doobie"))
+  .in(file("connect/sql-doobie"))
   .settings(commonSetttings)
   .settings(
     name := "connect-sql-doobie",
@@ -792,18 +808,18 @@ lazy val eventNotification = project
   .dependsOn(shared)
 
 // #####################
-// #### Prism Agent ####
+// #### Cloud Agent ####
 // #####################
 
-lazy val prismAgentWalletAPI = project
-  .in(file("prism-agent/service/wallet-api"))
+lazy val agentWalletAPI = project
+  .in(file("cloud-agent/service/wallet-api"))
   .settings(commonSetttings)
   .settings(
-    name := "prism-agent-wallet-api",
+    name := "cloud-agent-wallet-api",
     libraryDependencies ++=
-      D_PrismAgent.keyManagementDependencies ++
-        D_PrismAgent.iamDependencies ++
-        D_PrismAgent.postgresDependencies ++
+      D_CloudAgent.keyManagementDependencies ++
+        D_CloudAgent.iamDependencies ++
+        D_CloudAgent.postgresDependencies ++
         Seq(D.zioMock)
   )
   .dependsOn(
@@ -812,28 +828,34 @@ lazy val prismAgentWalletAPI = project
     eventNotification
   )
   .dependsOn(sharedTest % "test->test")
+  .dependsOn(sharedCrypto % "compile->compile;test->test")
 
-lazy val prismAgentServer = project
-  .in(file("prism-agent/service/server"))
+lazy val cloudAgentServer = project
+  .in(file("cloud-agent/service/server"))
   .settings(commonSetttings)
   .settings(
-    name := "prism-agent",
+    name := "identus-cloud-agent",
     fork := true,
-    libraryDependencies ++= D_PrismAgent.serverDependencies,
-    Compile / mainClass := Some("io.iohk.atala.agent.server.MainApp"),
+    libraryDependencies ++= D_CloudAgent.serverDependencies,
+    excludeDependencies ++= Seq(
+      // Exclude `protobuf-javalite` from all dependencies since we're using scalapbRuntime which already include `protobuf-java`
+      // Having both may introduce conflict on some api https://github.com/protocolbuffers/protobuf/issues/8104
+      ExclusionRule("com.google.protobuf", "protobuf-javalite")
+    ),
+    Compile / mainClass := Some("org.hyperledger.identus.agent.server.MainApp"),
     Docker / maintainer := "atala-coredid@iohk.io",
-    Docker / dockerUsername := Some("input-output-hk"),
+    Docker / dockerUsername := Some("hyperledger"), // https://github.com/hyperledger
     Docker / dockerRepository := Some("ghcr.io"),
     dockerExposedPorts := Seq(8080, 8085, 8090),
     // Official docker image for openjdk 21 with curl and bash
     dockerBaseImage := "openjdk:21-jdk",
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
-    buildInfoPackage := "io.iohk.atala.agent.server.buildinfo",
+    buildInfoPackage := "org.hyperledger.identus.agent.server.buildinfo",
     Compile / packageDoc / publishArtifact := false
   )
   .enablePlugins(JavaAppPackaging, DockerPlugin)
   .enablePlugins(BuildInfoPlugin)
-  .dependsOn(prismAgentWalletAPI % "compile->compile;test->test")
+  .dependsOn(agentWalletAPI % "compile->compile;test->test")
   .dependsOn(
     agent,
     polluxCore,
@@ -845,6 +867,7 @@ lazy val prismAgentServer = project
     eventNotification
   )
   .dependsOn(sharedTest % "test->test")
+  .dependsOn(polluxCore % "compile->compile;test->test")
 
 // ############################
 // ####  Release process  #####
@@ -856,12 +879,13 @@ releaseProcess := Seq[ReleaseStep](
   runClean,
   runTest,
   setReleaseVersion,
-  ReleaseStep(releaseStepTask(prismAgentServer / Docker / stage)),
+  ReleaseStep(releaseStepTask(cloudAgentServer / Docker / stage)),
   setNextVersion
 )
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   shared,
+  sharedCrypto,
   sharedTest,
   models,
   protocolConnection,
@@ -873,6 +897,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   protocolReportProblem,
   protocolRouting,
   protocolIssueCredential,
+  protocolRevocationNotification,
   protocolPresentProof,
   vc,
   protocolTrustPing,
@@ -885,10 +910,11 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   polluxDoobie,
   polluxAnoncreds,
   polluxAnoncredsTest,
+  polluxSDJWT,
   connectCore,
   connectDoobie,
-  prismAgentWalletAPI,
-  prismAgentServer,
+  agentWalletAPI,
+  cloudAgentServer,
   eventNotification,
 )
 

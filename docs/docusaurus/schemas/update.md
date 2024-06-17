@@ -1,6 +1,6 @@
 # Update the credential schema
 
-The PRISM platform v2.0 exposes REST API for creation, fetching, and searching the credential schema records.
+The Identus Platform exposes REST API for creation, fetching, and searching the credential schema records.
 
 The OpenAPI specification and ReDoc documentation describe the endpoint.
 
@@ -108,13 +108,13 @@ The JSON Schema changes must be defined as follows:
 1. Open your preferred REST API client, such as Postman or Insomnia, or use the client stub generated based on the
    OpenAPI specification.
 
-2. In the client, create a new PUT request to the `/prism-agent/schema-registry/schemas/{id}` endpoint, where `id` is a
+2. In the client, create a new PUT request to the `/cloud-agent/schema-registry/schemas/{id}` endpoint, where `id` is a
    locally unique credential schema id, formatted as a URL.
 
-Note that the value of the `author` field must match the short form of a PRISM DID that has been created using the same agent. An unpublished DID is sufficient. Please refer to the [Create DID](../dids/create.md) documentation page for more details on how to create a PRISM DID. 
+Note that the value of the `author` field must match the short form of a PRISM DID that has been created using the same agent. An unpublished DID is sufficient. Please refer to the [Create DID](../dids/create.md) documentation page for more details on how to create a PRISM DID.
 
 In the request body, create a JSON object:
-   
+
 ```json
 {
   "name": "driving-license",
@@ -184,7 +184,7 @@ The curl example might be the following:
 
 ```shell
 curl -X 'PUT' \
-  'http://localhost:8080/prism-agent/schema-registry/schemas/f2bfbf78-8bd6-4cc6-8b39-b3a25e01e8ea' \
+  'http://localhost:8080/cloud-agent/schema-registry/schemas/f2bfbf78-8bd6-4cc6-8b39-b3a25e01e8ea' \
   -H 'accept: application/json' \
   -H "apikey: $API_KEY" \
   -H 'Content-Type: application/json' \

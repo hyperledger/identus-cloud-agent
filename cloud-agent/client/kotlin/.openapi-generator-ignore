@@ -1,0 +1,17 @@
+settings.gradle
+build.gradle
+docs
+
+# igore broken files
+src/main/kotlin/org/hyperledger/identus/client/models/UpdateManagedDIDServiceAction.kt
+src/main/kotlin/org/hyperledger/identus/client/models/UpdateManagedDIDServiceActionType.kt
+
+src/main/kotlin/org/hyperledger/identus/client/models/Service.kt
+src/main/kotlin/org/hyperledger/identus/client/models/ServiceType.kt
+
+src/main/kotlin/org/hyperledger/identus/client/models/StatusPurpose.kt
+src/main/kotlin/org/hyperledger/identus/client/models/CredentialSubject.kt
+
+src/main/kotlin/org/hyperledger/identus/client/models/DateTimeParameter.kt
+src/main/kotlin/org/hyperledger/identus/client/models/DidParameter.kt
+src/main/kotlin/org/hyperledger/identus/client/models/VcVerificationParameter.kt

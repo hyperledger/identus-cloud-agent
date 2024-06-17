@@ -1,6 +1,6 @@
 # Create the Credential Definition
 
-The PRISM platform v2.0 exposes REST API for creation, fetching, and searching the [credential definition](/docs/concepts/glossary#credential-definition) records.
+The Cloud Agent exposes REST API for creation, fetching, and searching the [credential definition](/docs/concepts/glossary#credential-definition) records.
 
 The OpenAPI specification and ReDoc documentation describe the endpoint.
 
@@ -12,7 +12,7 @@ The following guide demonstrates how to create a birth certificate credential de
 
 ### 1. Define the Credential Definition for the Verifiable Credential
 
-Assume you are aiming to define a credential for birth certificates. This credential definition has specific properties and ties to a schema in the PRISM platform.
+Assume you are aiming to define a credential for birth certificates. This credential definition has specific properties and ties to a schema in the Cloud Agent.
 
 Here's a sample content of the credential definition:
 
@@ -23,7 +23,7 @@ Here's a sample content of the credential definition:
   "version": "1.0.0",
   "tag": "Licence",
   "author": "{{ISSUER_DID_SHORT}}",
-  "schemaId": "http://host.docker.internal:8080/prism-agent/schema-registry/schemas/{{SCHEMA_ID}}",
+  "schemaId": "http://host.docker.internal:8080/cloud-agent/schema-registry/schemas/{{SCHEMA_ID}}",
   "signatureType": "CL",
   "supportRevocation": true
 }
@@ -46,7 +46,7 @@ Please note: The `author` field value should align with the short form of a PRIS
   "version": "1.0.0",
   "tag": "Licence",
   "author": "{{ISSUER_DID_SHORT}}",
-  "schemaId": "http://host.docker.internal:8080/prism-agent/schema-registry/schemas/{{SCHEMA_ID}}",
+  "schemaId": "http://host.docker.internal:8080/cloud-agent/schema-registry/schemas/{{SCHEMA_ID}}",
   "signatureType": "CL",
   "supportRevocation": true
 }
@@ -70,7 +70,7 @@ curl -X 'POST' \
   "version": "1.0.0",
   "tag": "Licence",
   "author": "{{ISSUER_DID_SHORT}}",
-  "schemaId": "http://host.docker.internal:8080/prism-agent/schema-registry/schemas/{{SCHEMA_ID}}",
+  "schemaId": "http://host.docker.internal:8080/cloud-agent/schema-registry/schemas/{{SCHEMA_ID}}",
   "signatureType": "CL",
   "supportRevocation": true
 }
@@ -89,7 +89,7 @@ A potential response could be:
   "tag": "Licence",
   "author": "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff",
   "authored": "2023-03-14T14:41:46.713943Z",
-  "schemaId": "http://host.docker.internal:8080/prism-agent/schema-registry/schemas/{{SCHEMA_ID}}",
+  "schemaId": "http://host.docker.internal:8080/cloud-agent/schema-registry/schemas/{{SCHEMA_ID}}",
   "signatureType": "CL",
   "supportRevocation": true,
   "kind": "CredentialDefinition",
@@ -123,7 +123,7 @@ You should receive a response containing the JSON object representing the creden
   "tag": "Licence",
   "author": "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff",
   "authored": "2023-03-14T14:41:46.713943Z",
-  "schemaId": "http://host.docker.internal:8080/prism-agent/schema-registry/schemas/{{SCHEMA_ID}}",
+  "schemaId": "http://host.docker.internal:8080/cloud-agent/schema-registry/schemas/{{SCHEMA_ID}}",
   "signatureType": "CL",
   "supportRevocation": true,
   "kind": "CredentialDefinition",
@@ -131,7 +131,7 @@ You should receive a response containing the JSON object representing the creden
 }
 ```
 
-Remember, in the PRISM platform, the combination of author, id, and version uniquely identifies each credential definition. Thus, using the same agent DID as the author, you cannot establish another credential definition with identical id and version values.
+Remember, in the Cloud Agent, the combination of author, id, and version uniquely identifies each credential definition. Thus, using the same agent DID as the author, you cannot establish another credential definition with identical id and version values.
 
 ### 4. Update the Credential Definition
 

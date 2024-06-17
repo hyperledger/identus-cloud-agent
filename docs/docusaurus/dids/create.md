@@ -14,51 +14,52 @@ Once the create-operation gets constructed, deriving a DID from this operation i
 
 ## Prerequisites
 
-1. DID Controller PRISM Agent up and running
+1. DID Controller Cloud Agent up and running
 
 ## Overview
 
-For this example, a PRISM DID gets created and stored inside PRISM Agent along with the private keys. It is not automatically published.
+For this example, a PRISM DID gets created and stored inside the Cloud Agent along with the private keys. It is not automatically published.
 The Agent will keep track of private keys used for the create-operation and the content of the operation itself.
 
-PRISM Agent provides two endpoint groups to facilitate PRISM DID usage.
+The Cloud Agent provides two endpoint groups to facilitate PRISM DID usage.
 
 - `/dids/*`
 facilitate of low-level interactions between DID operations and the blockchain.
 The DID controllers will handle key management independently and use these endpoints for blockchain interaction.
 
 - `/did-registrar/*`
-Facilitates a higher-level interaction with PRISM DID, where the PRISM Agent handles key management concerns.
+Facilitates a higher-level interaction with PRISM DID, where the Cloud Agent handles key management concerns.
 
 ## Endpoints
 
 The example uses the following endpoints
 
-| Endpoint                                                                               | Description                                         | Role           |
-|----------------------------------------------------------------------------------------|-----------------------------------------------------|----------------|
-| [`GET /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/listManagedDid)    | List all DIDs stored in PRISM Agent                 | DID Controller |
-| [`POST /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/createManagedDid) | Create a new PRISM DID to be managed by PRISM Agent | DID Controller |
-| [`GET /dids/{didRef}`](/agent-api/#tag/DID/operation/getDid)                           | Resolve a DID to DID document representation        | DID Controller |
+| Endpoint                                                                               | Description                                             | Role           |
+|----------------------------------------------------------------------------------------|---------------------------------------------------------|----------------|
+| [`GET /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/listManagedDid)    | List all DIDs stored in the Cloud Agent                 | DID Controller |
+| [`POST /did-registrar/dids`](/agent-api/#tag/DID-Registrar/operation/createManagedDid) | Create a new PRISM DID to be managed by the Cloud Agent | DID Controller |
+| [`GET /dids/{didRef}`](/agent-api/#tag/DID/operation/getDid)                           | Resolve a DID to DID document representation            | DID Controller |
 
 ## DID Controller interactions
 
-### 1. Check existing DID on the PRISM Agent
+### 1. Check existing DID on the Cloud Agent
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/did-registrar/dids' \
+curl --location --request GET 'http://localhost:8080/cloud-agent/did-registrar/dids' \
   --header "apikey: $API_KEY" \
   --header 'Accept: application/json'
 ```
-The result should show an empty list, as no DIDs exist on this PRISM Agent instance.
+The result should show an empty list, as no DIDs exist on this Cloud Agent instance.
 
-### 2. Create a PRISM Agent managed DID using DID registrar endpoint
+### 2. Create the Cloud Agent managed DID using DID registrar endpoint
 
 The DID controller can create a new DID by sending a [DID document](/docs/concepts/glossary#did-document) template to the Agent.
-Since key pairs are generated and managed by PRISM Agent, DID controller only has to specify the key `id` and its purpose (e.g., `authentication`, `assertionMethod`, etc.).
-The current PRISM DID method supports a key with a single purpose, but it is extendible to support a key with multiple purposes in the future.
+Since key pairs are generated and managed by the Cloud Agent, DID controller only has to specify the key `id`,
+`purpose` (`authentication`, `assertionMethod`, etc.), and optional `curve` (`secp256k1`, `Ed25519`, `X25519`).
+If the `curve` is omitted, the agent uses the `secp256k1` curve by default.
 
 ```bash
-curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/dids' \
+curl --location --request POST 'http://localhost:8080/cloud-agent/did-registrar/dids' \
   --header 'Content-Type: application/json' \
   --header 'Accept: application/json' \
   --header "apikey: $API_KEY" \
@@ -67,7 +68,8 @@ curl --location --request POST 'http://localhost:8080/prism-agent/did-registrar/
       "publicKeys": [
         {
           "id": "auth-1",
-          "purpose": "authentication"
+          "purpose": "authentication",
+          "curve": "secp256k1"
         }
       ],
       "services": []
@@ -97,8 +99,8 @@ Check the `GET /did-registrar/dids` endpoint. The response should return a list 
         }
     ],
     "kind": "ManagedDIDPage",
-    "pageOf": "http://localhost:8080/prism-agent/did-registrar/dids",
-    "self": "http://localhost:8080/prism-agent/did-registrar/dids"
+    "pageOf": "http://localhost:8080/cloud-agent/did-registrar/dids",
+    "self": "http://localhost:8080/cloud-agent/did-registrar/dids"
 }
 ```
 
@@ -110,7 +112,7 @@ Replacing the `{didRef}` with the long-form DID, and the response should return 
 Replacing the `{didRef}` with the short-form DID, and the resolution should fail since the DID still needs to be published.
 
 ```bash
-curl --location --request GET 'http://localhost:8080/prism-agent/dids/{didRef}' \
+curl --location --request GET 'http://localhost:8080/cloud-agent/dids/{didRef}' \
 --header "apikey: $API_KEY" \
 --header 'Accept: */*'
 ```

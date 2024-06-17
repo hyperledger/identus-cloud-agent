@@ -19,13 +19,11 @@ import java.time.OffsetDateTime
 
 open class ListenToEvents(
     private val url: URL,
-    webhookPort: Int?
+    webhookPort: Int?,
 ) : Ability, HasTeardown {
 
     private val server: ApplicationEngine
-    private val gson = GsonBuilder()
-        .registerTypeAdapter(OffsetDateTime::class.java, CustomGsonObjectMapperFactory.OffsetDateTimeDeserializer())
-        .create()
+    private val gson = GsonBuilder().registerTypeAdapter(OffsetDateTime::class.java, CustomGsonObjectMapperFactory.OffsetDateTimeTypeAdapter()).create()
 
     var connectionEvents: MutableList<ConnectionEvent> = mutableListOf()
     var credentialEvents: MutableList<CredentialEvent> = mutableListOf()
@@ -41,9 +39,7 @@ open class ListenToEvents(
                     TestConstants.EVENT_TYPE_CONNECTION_UPDATED -> connectionEvents.add(gson.fromJson(eventString, ConnectionEvent::class.java))
                     TestConstants.EVENT_TYPE_ISSUE_CREDENTIAL_RECORD_UPDATED -> credentialEvents.add(gson.fromJson(eventString, CredentialEvent::class.java))
                     TestConstants.EVENT_TYPE_PRESENTATION_UPDATED -> presentationEvents.add(gson.fromJson(eventString, PresentationEvent::class.java))
-                    TestConstants.EVENT_TYPE_DID_STATUS_UPDATED -> {
-                        didEvents.add(gson.fromJson(eventString, DidEvent::class.java))
-                    }
+                    TestConstants.EVENT_TYPE_DID_STATUS_UPDATED -> didEvents.add(gson.fromJson(eventString, DidEvent::class.java))
                     else -> {
                         throw IllegalArgumentException("ERROR: unknown event type ${event.type}")
                     }
@@ -58,7 +54,7 @@ open class ListenToEvents(
             return ListenToEvents(url, webhookPort)
         }
 
-        fun `as`(actor: Actor): ListenToEvents {
+        fun with(actor: Actor): ListenToEvents {
             return actor.abilityTo(ListenToEvents::class.java)
         }
     }
@@ -68,7 +64,7 @@ open class ListenToEvents(
             Netty,
             port = webhookPort ?: url.port,
             host = "0.0.0.0",
-            module = { route(this) }
+            module = { route(this) },
         )
             .start(wait = false)
     }

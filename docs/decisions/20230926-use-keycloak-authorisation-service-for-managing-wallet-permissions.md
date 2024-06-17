@@ -10,11 +10,11 @@ Technical Story: [External IAM provider integration for Authentication and Autho
 ## Context and Problem Statement
 
 As we move forward with multi-tenancy, it's essential to give extra attention to authentication and authorisation.
-Currently, our authentication and authorisation processes are managed by a simple built-in IAM implementation within the cloud agent.
+Currently, our authentication and authorisation processes are managed by a simple built-in IAM implementation within the Cloud Agent.
 While this setup is straightforward and functional, it's a somewhat basic and proprietary approach.
 Transitioning to an industry-standard IAM system like Keycloak represents an important step towards a more robust authentication and authorisation framework.
 
-Within our multi-tenant cloud agent, we have some key concepts:
+Within our multi-tenant Cloud Agent, we have some key concepts:
 wallets (representing resources), entities (representing users), and authentication methods.
 These models are integrated into our current IAM implementation within the agent allowing a loose coupling of users and resources, as well as resource access.
 
@@ -73,13 +73,13 @@ sequenceDiagram
     actor Admin
     actor User
     participant Client
-    participant PrismAgent
+    participant CloudAgent
     participant Keycloak
 
     autonumber
 
-    Admin ->> PrismAgent: Create a new wallet
-    PrismAgent ->> Keycloak: Register a new resource
+    Admin ->> CloudAgent: Create a new wallet
+    CloudAgent ->> Keycloak: Register a new resource
     Admin ->> Keycloak: Create a new user
     Admin ->> Keycloak: Create a new user-credential
     Admin ->> Keycloak: Create a new permission
@@ -93,7 +93,7 @@ sequenceDiagram
     actor Admin
     actor User
     participant Client
-    participant PrismAgent
+    participant CloudAgent
     participant Keycloak
 
     autonumber
@@ -103,17 +103,17 @@ sequenceDiagram
     Client ->> Keycloak: Login with preconfigured flow
     Keycloak ->> Client: JWT AccessToken
     User ->> Client: Check my VC
-    Client ->> PrismAgent: Get CredentialRecord
+    Client ->> CloudAgent: Get CredentialRecord
 
     opt Bearer token is not RPT
-      PrismAgent ->> Keycloak: Get permissions
-      Keycloak ->> PrismAgent: Permitted resource(s)
+      CloudAgent ->> Keycloak: Get permissions
+      Keycloak ->> CloudAgent: Permitted resource(s)
     end
 
     alt is permitted
-        PrismAgent ->> Client: CredentialRecord
+        CloudAgent ->> Client: CredentialRecord
     else is not permitted
-        PrismAgent ->> Client: 403 Forbidden
+        CloudAgent ->> Client: 403 Forbidden
     end
 ```
 
