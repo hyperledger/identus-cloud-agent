@@ -6,10 +6,11 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.KeyId
 import zio.{Exit, ZIO, ZLayer}
 import zio.test.*
 import zio.test.Assertion.*
-import org.hyperledger.identus.shared.models.KeyId
+
 import java.time.Instant
 import java.util.UUID
 
