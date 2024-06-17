@@ -1,12 +1,10 @@
 import json
-import jwt
-import requests
 import time
 import urllib
 
+import jwt
+import requests
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives import serialization
-
 
 MOCKSERVER_URL = "http://localhost:7777"
 LOGIN_REDIRECT_URL = "http://localhost:7777/cb"

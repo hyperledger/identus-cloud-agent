@@ -4,7 +4,7 @@ name: Auto Merge Main into Feature Branch
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [ opened, synchronize, reopened, labeled ]
 
 jobs:
   auto-merge:
