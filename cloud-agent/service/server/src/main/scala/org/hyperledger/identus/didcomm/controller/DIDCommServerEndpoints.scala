@@ -10,7 +10,7 @@ class DIDCommServerEndpoints(
 ) {
   private val handleDIDCommMessageServerEndpoint: ZServerEndpoint[Any, Any] = DIDCommEndpoints.handleDIDCommMessage
     .zServerLogic { case (ctx: RequestContext, msg: DIDCommMessage) =>
-      didCommController.handleDIDCommMessage(msg)(ctx)
+      didCommController.handleDIDCommMessage(msg)(using ctx)
     }
 
   val all: List[ZServerEndpoint[Any, Any]] = List(handleDIDCommMessageServerEndpoint)

@@ -19,6 +19,7 @@ import org.hyperledger.identus.iam.entity.http.EntityServerEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementServerEndpoints
 import org.hyperledger.identus.issue.controller.IssueServerEndpoints
 import org.hyperledger.identus.mercury.{DidOps, HttpClient}
+import org.hyperledger.identus.oid4vci.CredentialIssuerServerEndpoints
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
 import org.hyperledger.identus.pollux.credentialschema.{
@@ -135,6 +136,7 @@ object AgentHttpServer {
     allEntityEndpoints <- EntityServerEndpoints.all
     allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
     allEventEndpoints <- EventServerEndpoints.all
+    allOIDCEndpoints <- CredentialIssuerServerEndpoints.all
   } yield allCredentialDefinitionRegistryEndpoints ++
     allSchemaRegistryEndpoints ++
     allVerificationPolicyEndpoints ++
@@ -148,7 +150,8 @@ object AgentHttpServer {
     allSystemEndpoints ++
     allEntityEndpoints ++
     allWalletManagementEndpoints ++
-    allEventEndpoints
+    allEventEndpoints ++
+    allOIDCEndpoints
   def run =
     for {
       allEndpoints <- agentRESTServiceEndpoints
@@ -186,9 +189,8 @@ object AgentInitialization {
       walletService <- ZIO.service[WalletManagementService]
       isDefaultWalletEnabled = config.enabled
       isDefaultWalletExist <- walletService
-        .getWallet(defaultWalletId)
+        .findWallet(defaultWalletId)
         .map(_.isDefined)
-        .mapError(_.toThrowable)
       _ <- ZIO.logInfo(s"Default wallet not enabled.").when(!isDefaultWalletEnabled)
       _ <- ZIO.logInfo(s"Default wallet already exist.").when(isDefaultWalletExist)
       _ <- createDefaultWallet.when(isDefaultWalletEnabled && !isDefaultWalletExist)
@@ -210,14 +212,14 @@ object AgentInitialization {
       _ <- ZIO.logInfo(s"Default wallet seed is not provided. New seed will be generated.").when(seed.isEmpty)
       _ <- walletService
         .createWallet(defaultWallet, seed)
-        .mapError(_.toThrowable)
+        .orDieAsUnmanagedFailure
       _ <- entityService.create(defaultEntity).mapError(e => Exception(e.message))
       _ <- apiKeyAuth.add(defaultEntity.id, config.authApiKey).mapError(e => Exception(e.message))
       _ <- config.webhookUrl.fold(ZIO.unit) { url =>
         val customHeaders = config.webhookApiKey.fold(Map.empty)(apiKey => Map("Authorization" -> s"Bearer $apiKey"))
         walletService
           .createWalletNotification(EventNotificationConfig(defaultWalletId, url, customHeaders))
-          .mapError(_.toThrowable)
+          .orDieAsUnmanagedFailure
           .provide(ZLayer.succeed(WalletAccessContext(defaultWalletId)))
       }
     } yield ()

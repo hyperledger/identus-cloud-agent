@@ -15,6 +15,7 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.repository.CredentialRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.interop.catz.*
@@ -53,6 +54,8 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
 
+  given keyIdGet: Get[KeyId] = Get[String].map(KeyId(_))
+  given keyIdPut: Put[KeyId] = Put[String].contramap(_.value)
   override def create(record: IssueCredentialRecord): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
@@ -66,6 +69,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   credential_format,
         |   role,
         |   subject_id,
+        |   key_id,
         |   validity_period,
         |   automatic_issuance,
         |   protocol_state,
@@ -90,6 +94,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   ${record.credentialFormat},
         |   ${record.role},
         |   ${record.subjectId},
+        |   ${record.keyId},
         |   ${record.validityPeriod},
         |   ${record.automaticIssuance},
         |   ${record.protocolState},
@@ -132,6 +137,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
            |   credential_format,
            |   role,
            |   subject_id,
+           |   key_id,
            |   validity_period,
            |   automatic_issuance,
            |   protocol_state,
@@ -202,6 +208,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
             |   credential_format,
             |   role,
             |   subject_id,
+            |   key_id,
             |   validity_period,
             |   automatic_issuance,
             |   protocol_state,
@@ -264,6 +271,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   credential_format,
         |   role,
         |   subject_id,
+        |   key_id,
         |   validity_period,
         |   automatic_issuance,
         |   protocol_state,
@@ -307,6 +315,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   credential_format,
         |   role,
         |   subject_id,
+        |   key_id,
         |   validity_period,
         |   automatic_issuance,
         |   protocol_state,
@@ -356,6 +365,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
+      keyId: Option[KeyId] = None,
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
@@ -363,6 +373,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         | SET
         |   protocol_state = $protocolState,
         |   subject_id = ${Some(subjectId)},
+        |   key_id = ${keyId},
         |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
@@ -448,7 +459,8 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   id,
         |   issued_credential_raw,
         |   credential_format,
-        |   subject_id
+        |   subject_id,
+        |   key_id
         | FROM public.issue_credential_records
         | WHERE
         |   issued_credential_raw IS NOT NULL

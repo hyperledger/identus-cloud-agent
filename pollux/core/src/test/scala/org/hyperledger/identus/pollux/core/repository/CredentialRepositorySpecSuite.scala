@@ -6,6 +6,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.KeyId
 import zio.{Exit, ZIO, ZLayer}
 import zio.test.*
 import zio.test.Assertion.*
@@ -27,6 +28,7 @@ object CredentialRepositorySpecSuite {
     credentialFormat = credentialFormat,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,
+    keyId = None,
     validityPeriod = None,
     automaticIssuance = None,
     protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
@@ -255,9 +257,12 @@ object CredentialRepositorySpecSuite {
         _ <- repo.create(bRecord)
         _ <- repo.create(cRecord)
         _ <- repo.create(dRecord)
+        issueCredential <- ZIO.fromEither(
+          IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+        )
         _ <- repo.updateWithIssuedRawCredential(
           aRecord.id,
-          IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
+          issueCredential,
           "RAW_CREDENTIAL_DATA",
           None,
           None,
@@ -265,7 +270,7 @@ object CredentialRepositorySpecSuite {
         )
         _ <- repo.updateWithIssuedRawCredential(
           dRecord.id,
-          IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
+          issueCredential,
           "RAW_CREDENTIAL_DATA",
           None,
           None,
@@ -280,7 +285,8 @@ object CredentialRepositorySpecSuite {
               dRecord.id,
               Some("RAW_CREDENTIAL_DATA"),
               CredentialFormat.JWT,
-              aRecord.subjectId
+              aRecord.subjectId,
+              aRecord.keyId
             )
           )
         )
@@ -290,7 +296,8 @@ object CredentialRepositorySpecSuite {
               dRecord.id,
               Some("RAW_CREDENTIAL_DATA"),
               CredentialFormat.AnonCreds,
-              aRecord.subjectId
+              aRecord.subjectId,
+              aRecord.keyId
             )
           )
         )
@@ -343,7 +350,9 @@ object CredentialRepositorySpecSuite {
         aRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.create(aRecord)
         record <- repo.findById(aRecord.id)
-        issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+        issueCredential <- ZIO.fromEither(
+          IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+        )
         _ <- repo.updateWithIssueCredential(aRecord.id, issueCredential, ProtocolState.CredentialPending)
         updatedRecord <- repo.findById(aRecord.id)
       } yield {
@@ -357,7 +366,9 @@ object CredentialRepositorySpecSuite {
         aRecord = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.create(aRecord)
         record <- repo.findById(aRecord.id)
-        issueCredential = IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+        issueCredential <- ZIO.fromEither(
+          IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+        )
         _ <- repo.updateWithIssuedRawCredential(
           aRecord.id,
           issueCredential,
@@ -459,7 +470,7 @@ object CredentialRepositorySpecSuite {
         record1 = issueCredentialRecord(CredentialFormat.JWT)
         record2 = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.create(record1).provide(wallet1)
-        res <- repo.updateWithSubjectId(record2.id, "my-id", newState).provide(wallet2).exit
+        res <- repo.updateWithSubjectId(record2.id, "my-id", Some(KeyId("my-key-id")), newState).provide(wallet2).exit
       } yield assert(res)(dies(isSubtype[RuntimeException](anything)))
     },
     test("unable to delete IssueCredentialRecord outside of the wallet") {

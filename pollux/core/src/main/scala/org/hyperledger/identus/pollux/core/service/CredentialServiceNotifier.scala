@@ -1,13 +1,15 @@
 package org.hyperledger.identus.pollux.core.service
 
 import io.circe.Json
-import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
+import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.event.notification.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.vc.jwt.Issuer
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{Duration, UIO, URIO, URLayer, ZIO, ZLayer}
 
@@ -101,9 +103,10 @@ class CredentialServiceNotifier(
 
   override def acceptCredentialOffer(
       recordId: DidCommID,
-      subjectId: Option[String]
+      subjectId: Option[String],
+      keyId: Option[KeyId]
   ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
-    notifyOnSuccess(svc.acceptCredentialOffer(recordId, subjectId))
+    notifyOnSuccess(svc.acceptCredentialOffer(recordId, subjectId, keyId))
 
   override def generateJWTCredentialRequest(
       recordId: DidCommID
@@ -154,7 +157,11 @@ class CredentialServiceNotifier(
   override def generateSDJWTCredential(
       recordId: DidCommID,
       expirationTime: Duration,
-  ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed, IssueCredentialRecord] =
+  ): ZIO[
+    WalletAccessContext,
+    RecordNotFound | ExpirationDateHasPassed | VCJwtHeaderParsingError,
+    IssueCredentialRecord
+  ] =
     notifyOnSuccess(svc.generateSDJWTCredential(recordId, expirationTime))
 
   override def generateAnonCredsCredential(
@@ -221,6 +228,13 @@ class CredentialServiceNotifier(
       states: IssueCredentialRecord.ProtocolState*
   ): UIO[Seq[IssueCredentialRecord]] =
     svc.getIssueCredentialRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states*)
+
+  override def getJwtIssuer(
+      jwtIssuerDID: PrismDID,
+      verificationRelationship: VerificationRelationship,
+      keyId: Option[KeyId]
+  ): URIO[WalletAccessContext, Issuer] =
+    svc.getJwtIssuer(jwtIssuerDID, verificationRelationship, keyId)
 }
 
 object CredentialServiceNotifier {

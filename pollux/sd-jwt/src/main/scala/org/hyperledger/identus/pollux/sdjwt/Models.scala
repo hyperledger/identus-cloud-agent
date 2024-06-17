@@ -4,7 +4,6 @@ import org.bouncycastle.crypto.params.{Ed25519PrivateKeyParameters, Ed25519Publi
 import org.bouncycastle.crypto.util.{PrivateKeyInfoFactory, SubjectPublicKeyInfoFactory}
 import org.hyperledger.identus.shared.crypto.*
 import sdjwtwrapper.*
-import zio.json.*
 
 import java.util.Base64
 

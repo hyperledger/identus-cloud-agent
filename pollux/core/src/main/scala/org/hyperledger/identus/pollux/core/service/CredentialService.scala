@@ -2,7 +2,7 @@ package org.hyperledger.identus.pollux.core.service
 
 import io.circe.{Json, JsonObject}
 import io.circe.syntax.*
-import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
+import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{
   Attribute,
@@ -13,6 +13,8 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.vc.jwt.Issuer
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{Duration, IO, UIO, URIO, ZIO}
 
@@ -92,7 +94,8 @@ trait CredentialService {
 
   def acceptCredentialOffer(
       recordId: DidCommID,
-      subjectId: Option[String]
+      subjectId: Option[String],
+      keyId: Option[KeyId]
   ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord]
 
   def generateJWTCredentialRequest(
@@ -123,7 +126,7 @@ trait CredentialService {
   def generateSDJWTCredential(
       recordId: DidCommID,
       expirationTime: Duration,
-  ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed | VCJwtHeaderParsingError, IssueCredentialRecord]
 
   def generateAnonCredsCredential(
       recordId: DidCommID
@@ -150,6 +153,11 @@ trait CredentialService {
       failReason: Option[String]
   ): URIO[WalletAccessContext, Unit]
 
+  def getJwtIssuer(
+      jwtIssuerDID: PrismDID,
+      verificationRelationship: VerificationRelationship,
+      keyId: Option[KeyId]
+  ): URIO[WalletAccessContext, Issuer]
 }
 
 object CredentialService {

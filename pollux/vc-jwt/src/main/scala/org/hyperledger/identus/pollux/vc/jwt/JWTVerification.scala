@@ -85,6 +85,17 @@ object JWTVerification {
     loadDidDocument
   }
 
+  def validateIssuerFromKeyId(
+      extractedDID: Validation[String, String]
+  )(didResolver: DidResolver): IO[String, Validation[String, DIDDocument]] = {
+    val loadDidDocument =
+      ValidationUtils
+        .foreach(extractedDID.map(validIssuerDid => resolve(validIssuerDid)(didResolver)))(identity)
+        .map(b => b.flatten)
+
+    loadDidDocument
+  }
+
   def validateEncodedJwt[T](jwt: JWT, proofPurpose: Option[VerificationRelationship] = None)(
       didResolver: DidResolver
   )(decoder: String => Validation[String, T])(issuerDidExtractor: T => String): IO[String, Validation[String, Unit]] = {
@@ -157,7 +168,7 @@ object JWTVerification {
       .reduce((v1, v2) => v1.orElse(v2))
   }
 
-  private def resolve(issuerDid: String)(didResolver: DidResolver): IO[String, Validation[String, DIDDocument]] = {
+  def resolve(issuerDid: String)(didResolver: DidResolver): IO[String, Validation[String, DIDDocument]] = {
     didResolver
       .resolve(issuerDid)
       .map(
@@ -185,14 +196,8 @@ object JWTVerification {
     // might not be in the same DID document. For now, this only performs lookup within
     // the same DID document which is what Prism DID currently support.
 
-    val dereferencedKeysToCheck: Vector[VerificationMethod] = {
-      val (referenced, embedded) = publicKeysToCheck.partitionMap[String, VerificationMethod] {
-        case uri: String            => Left(uri)
-        case pk: VerificationMethod => Right(pk)
-      }
-      val keySet = referenced.toSet
-      embedded ++ didDocument.verificationMethod.filter(pk => keySet.contains(pk.id))
-    }
+    val dereferencedKeysToCheck = dereferenceVerificationMethods(didDocument, publicKeysToCheck)
+
     Validation
       .fromPredicateWith("No PublicKey to validate against found")(
         dereferencedKeysToCheck.filter { verification =>
@@ -200,6 +205,18 @@ object JWTVerification {
           supportPublicKeys.contains(verification.`type`)
         }
       )(_.nonEmpty)
+  }
+
+  def dereferenceVerificationMethods(
+      didDocument: DIDDocument,
+      methods: Vector[VerificationMethodOrRef]
+  ): Vector[VerificationMethod] = {
+    val (referenced, embedded) = methods.partitionMap[String, VerificationMethod] {
+      case uri: String            => Left(uri)
+      case pk: VerificationMethod => Right(pk)
+    }
+    val keySet = referenced.toSet
+    embedded ++ didDocument.verificationMethod.filter(pk => keySet.contains(pk.id))
   }
 
   // TODO Implement other key types
@@ -222,5 +239,28 @@ object JWTVerification {
 
       } yield key
     Validation.fromOptionWith("Unable to parse Public Key")(maybePublicKey)
+  }
+
+  def extractJwtHeader(jwt: JWT): Validation[String, JwtHeader] = {
+    import io.circe.parser._
+    import io.circe.Json
+
+    def parseHeaderUnsafe(json: Json): Either[String, JwtHeader] =
+      Try(JwtCirce.parseHeader(json.noSpaces)).toEither.left.map(_.getMessage)
+
+    def decodeJwtHeader(header: String): Validation[String, JwtHeader] = {
+      val eitherResult = for {
+        json <- parse(header).left.map(_.getMessage)
+        jwtHeader <- parseHeaderUnsafe(json)
+      } yield jwtHeader
+      Validation.fromEither(eitherResult)
+    }
+    for {
+      decodedJwt <- Validation
+        .fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false)))
+        .mapError(_.getMessage)
+      (header, _, _) = decodedJwt
+      jwtHeader <- decodeJwtHeader(header)
+    } yield jwtHeader
   }
 }

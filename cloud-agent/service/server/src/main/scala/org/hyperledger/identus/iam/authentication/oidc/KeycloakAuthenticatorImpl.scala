@@ -81,6 +81,8 @@ class KeycloakAuthenticatorImpl(
       ctx <- role match {
         case EntityRole.Admin  => ZIO.succeed(WalletAdministrationContext.Admin())
         case EntityRole.Tenant => selfServiceCtx
+        case EntityRole.ExternalParty =>
+          ZIO.fail(AuthenticationError.InvalidRole("External party cannot access the wallet."))
       }
     } yield ctx
   }

@@ -21,9 +21,8 @@ import java.security.PublicKey
 import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
 import java.time.temporal.TemporalAmount
 import scala.util.{Failure, Try}
-import scala.util.Failure
-import scala.util.Try
 
+//TODO: We should remove this code and use the DID form the castor library
 opaque type DID = String
 
 object DID {

@@ -17,6 +17,9 @@ import java.util.UUID
 object PresentProofEndpoints {
 
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
+  private val thidInput: EndpointInput[Option[String]] =
+    query[Option[String]]("thid")
+      .description("Filter by the DID Comm message's 'thid' of presentProof")
 
   val requestPresentation: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
@@ -54,13 +57,13 @@ object PresentProofEndpoints {
       .tag("Present Proof")
       .name("getAllPresentation")
       .summary("Gets the list of proof presentation records.")
-      .description("list of presentation statuses")
+      .description("Get the list of proof presentation records and its status that the Agent have at moment")
       .securityIn(apiKeyHeader)
       .securityIn(jwtAuthHeader)
       .in("present-proof" / "presentations")
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(paginationInput)
-      .in(query[Option[String]]("thid"))
+      .in(thidInput)
       .out(statusCode(StatusCode.Ok).description("The list of proof presentation records."))
       .out(jsonBody[PresentationStatusPage])
       .errorOut(basicFailuresAndForbidden)

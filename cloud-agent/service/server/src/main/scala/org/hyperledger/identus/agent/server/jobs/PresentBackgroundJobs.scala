@@ -23,7 +23,7 @@ import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, 
 import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
-import org.hyperledger.identus.pollux.sdjwt.{IssuerPublicKey, PresentationCompact, SDJWT}
+import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, IssuerPublicKey, PresentationCompact, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, JWT, JwtPresentation}
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.http.*
@@ -100,8 +100,8 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
     } yield jwtIssuer
 
   // Holder / Prover Get the Holder/Prover PrismDID from the IssuedCredential
-  // When holder accepts offer he provides the subjectdid
-  private def getPrismDIDForHolderFromCredentials(
+  // SDJWT Only currrently When holder accepts offer he provides the subjectDid and optional keyId which is used for key binding
+  private def getHolderPrivateKeyFromCredentials(
       presentationId: DidCommID,
       credentialsToUse: Seq[String]
   ) =
@@ -117,11 +117,13 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       credentialRecordUuid <- ZIO
         .attempt(DidCommID(credentialRecordId))
         .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid DidCommID"))
-      vcSubjectId <- credentialService
+      credentialRecord <- credentialService
         .findById(credentialRecordUuid)
         .someOrFail(CredentialServiceError.RecordNotFound(credentialRecordUuid))
-        .map(_.subjectId)
-        .someOrElseZIO(ZIO.dieMessage(s"VC SubjectId not found in credential record: $credentialRecordUuid"))
+      vcSubjectId <- ZIO
+        .fromOption(credentialRecord.subjectId)
+        .orDieWith(_ => RuntimeException(s"VC SubjectId not found in credential record: $credentialRecordUuid"))
+
       proverDID <- ZIO
         .fromEither(PrismDID.fromString(vcSubjectId))
         .mapError(e =>
@@ -131,8 +133,17 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
             )
         )
       longFormPrismDID <- getLongForm(proverDID, true)
-      jwtIssuer <- getSDJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
-    } yield jwtIssuer
+
+      optionalHolderPrivateKey <- credentialRecord.keyId match
+        case Some(keyId) =>
+          findHolderEd25519SigningKey(
+            longFormPrismDID,
+            VerificationRelationship.Authentication,
+            keyId
+          ).map(ed25519keyPair => Option(HolderPrivateKey(ed25519keyPair.privateKey)))
+        case None => ZIO.succeed(None)
+
+    } yield optionalHolderPrivateKey
 
   private def performPresentProofExchange(record: PresentationRecord): URIO[
     AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService &
@@ -480,12 +491,12 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                 walletAccessContext <- buildWalletAccessContextLayer(requestPresentation.to)
                 result <- (for {
                   presentationService <- ZIO.service[PresentationService]
-                  prover <- getPrismDIDForHolderFromCredentials(id, credentialsToUse.getOrElse(Nil))
+                  optionalHolderPrivateKey <- getHolderPrivateKeyFromCredentials(id, credentialsToUse.getOrElse(Nil))
                     .provideSomeLayer(ZLayer.succeed(walletAccessContext))
                   presentation <-
                     for {
                       presentation <- presentationService
-                        .createSDJwtPresentation(id, requestPresentation, prover)
+                        .createSDJwtPresentation(id, requestPresentation, optionalHolderPrivateKey)
                         .provideSomeLayer(ZLayer.succeed(walletAccessContext))
                     } yield presentation
                   _ <- presentationService

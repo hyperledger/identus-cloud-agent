@@ -3,7 +3,7 @@ package org.hyperledger.identus.pollux.core.service.serdes
 import org.hyperledger.identus.pollux.core.model.presentation.Options
 import zio.json.*
 
-case class SDJwtPresentation(options: Options, claims: ast.Json.Obj)
+case class SDJwtPresentation(options: Option[Options], claims: ast.Json.Obj)
 
 object SDJwtPresentation {
   given JsonDecoder[Options] = DeriveJsonDecoder.gen[Options]

@@ -12,7 +12,7 @@ import org.hyperledger.identus.pollux.core.model.{DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
-import org.hyperledger.identus.pollux.sdjwt.PresentationCompact
+import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, PresentationCompact}
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{mock, IO, URLayer, ZIO, ZLayer}
@@ -209,14 +209,13 @@ object MockPresentationService extends Mock[PresentationService] {
       ): IO[PresentationError, PresentationPayload] = ???
 
       override def createPresentationFromRecord(
-          record: DidCommID,
-          issuer: Issuer,
+          record: DidCommID
       ): IO[PresentationError, PresentationCompact] = ???
 
       def createSDJwtPresentation(
           recordId: DidCommID,
           requestPresentation: RequestPresentation,
-          prover: Issuer,
+          optionalHolderPrivateKey: Option[HolderPrivateKey],
       ): ZIO[WalletAccessContext, PresentationError, Presentation] = ???
 
       override def createAnoncredPresentationPayloadFromRecord(

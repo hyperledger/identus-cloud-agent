@@ -21,6 +21,7 @@ import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import org.hyperledger.identus.pollux.core.service.CredentialService
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{URLayer, ZIO, ZLayer}
 
@@ -161,7 +162,7 @@ class IssueControllerImpl(
         case Some(did) => extractPrismDIDFromString(did).flatMap(validatePrismDID(_, true, Role.Holder))
         case None      => ZIO.succeed(())
       id <- extractDidCommIdFromString(recordId)
-      outcome <- credentialService.acceptCredentialOffer(id, request.subjectId)
+      outcome <- credentialService.acceptCredentialOffer(id, request.subjectId, request.keyId.map(KeyId(_)))
     } yield IssueCredentialRecord.fromDomain(outcome)
   }
 

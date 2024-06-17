@@ -1,12 +1,14 @@
 package org.hyperledger.identus.pollux.core.service
 
 import io.circe.Json
-import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
+import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.vc.jwt.Issuer
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{mock, Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
 import zio.mock.{Mock, Proxy}
@@ -64,7 +66,11 @@ object MockCredentialService extends Mock[CredentialService] {
 
   object ReceiveCredentialOffer extends Effect[OfferCredential, InvalidCredentialOffer, IssueCredentialRecord]
   object AcceptCredentialOffer
-      extends Effect[(DidCommID, Option[String]), RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord]
+      extends Effect[
+        (DidCommID, Option[String], Option[KeyId]),
+        RecordNotFound | UnsupportedDidFormat,
+        IssueCredentialRecord
+      ]
   object GenerateJWTCredentialRequest
       extends Effect[DidCommID, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord]
   object GenerateSDJWTCredentialRequest
@@ -172,9 +178,10 @@ object MockCredentialService extends Mock[CredentialService] {
 
       override def acceptCredentialOffer(
           recordId: DidCommID,
-          subjectId: Option[String]
+          subjectId: Option[String],
+          keyId: Option[KeyId]
       ): IO[RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
-        proxy(AcceptCredentialOffer, recordId, subjectId)
+        proxy(AcceptCredentialOffer, recordId, subjectId, keyId)
 
       override def generateJWTCredentialRequest(
           recordId: DidCommID
@@ -274,6 +281,12 @@ object MockCredentialService extends Mock[CredentialService] {
           thid: DidCommID,
           ignoreWithZeroRetries: Boolean
       ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] = ???
+
+      override def getJwtIssuer(
+          jwtIssuerDID: PrismDID,
+          verificationRelationship: VerificationRelationship,
+          keyId: Option[KeyId]
+      ): URIO[WalletAccessContext, Issuer] = ???
     }
   }
 }
