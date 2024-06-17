@@ -8,6 +8,7 @@ import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialReco
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{mock, Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
 import zio.mock.{Mock, Proxy}
@@ -66,7 +67,7 @@ object MockCredentialService extends Mock[CredentialService] {
   object ReceiveCredentialOffer extends Effect[OfferCredential, InvalidCredentialOffer, IssueCredentialRecord]
   object AcceptCredentialOffer
       extends Effect[
-        (DidCommID, Option[String], Option[String]),
+        (DidCommID, Option[String], Option[KeyId]),
         RecordNotFound | UnsupportedDidFormat,
         IssueCredentialRecord
       ]
@@ -178,7 +179,7 @@ object MockCredentialService extends Mock[CredentialService] {
       override def acceptCredentialOffer(
           recordId: DidCommID,
           subjectId: Option[String],
-          keyId: Option[String]
+          keyId: Option[KeyId]
       ): IO[RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
         proxy(AcceptCredentialOffer, recordId, subjectId, keyId)
 
@@ -284,7 +285,7 @@ object MockCredentialService extends Mock[CredentialService] {
       override def getJwtIssuer(
           jwtIssuerDID: PrismDID,
           verificationRelationship: VerificationRelationship,
-          keyId: Option[String]
+          keyId: Option[KeyId]
       ): URIO[WalletAccessContext, Issuer] = ???
     }
   }
