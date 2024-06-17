@@ -3,6 +3,7 @@ package org.hyperledger.identus.pollux.vc.jwt
 import io.circe.*
 import io.circe.generic.semiauto.*
 import io.circe.syntax.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class JsonWebKey(
     alg: Option[String] = Option.empty,
@@ -20,8 +21,12 @@ case class JsonWebKey(
 )
 
 object JsonWebKey {
-  given jsonWebKeyEncoder: Encoder[JsonWebKey] = deriveEncoder[JsonWebKey]
+  given jsonWebKeyEncoderCirce: Encoder[JsonWebKey] = deriveEncoder[JsonWebKey]
 
-  given jsonWebKeyDecoder: Decoder[JsonWebKey] = deriveDecoder[JsonWebKey]
+  given jsonWebKeyDecoderCirce: Decoder[JsonWebKey] = deriveDecoder[JsonWebKey]
+
+  given jsonWebKeyEncoderCirceZioJson: JsonEncoder[JsonWebKey] = DeriveJsonEncoder.gen[JsonWebKey]
+
+  given jsonWebKeyDecoderCirceZioJson: JsonDecoder[JsonWebKey] = DeriveJsonDecoder.gen[JsonWebKey]
 
 }
