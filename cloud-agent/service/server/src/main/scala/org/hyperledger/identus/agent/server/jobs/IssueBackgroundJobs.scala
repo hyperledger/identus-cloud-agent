@@ -605,11 +605,9 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
     aux
       .tapError(
         {
-          case walletNotFound: WalletNotFoundError =>
-            ZIO.logErrorCause(
-              s"Issue Credential- Error processing record: ${record.id}",
-              Cause.fail(walletNotFound)
-            )
+          case walletNotFound: WalletNotFoundError            => ZIO.unit
+          case CredentialServiceError.RecordNotFound(_, _)    => ZIO.unit
+          case CredentialServiceError.UnsupportedDidFormat(_) => ZIO.unit
           case ((walletAccessContext, e)) =>
             for {
               credentialService <- ZIO.service[CredentialService]
@@ -617,7 +615,6 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
                 .reportProcessingFailure(record.id, Some(e.toString))
                 .provideSomeLayer(ZLayer.succeed(walletAccessContext))
             } yield ()
-
         }
       )
       .catchAll(e => ZIO.logErrorCause(s"Issue Credential - Error processing record: ${record.id} ", Cause.fail(e)))

@@ -32,12 +32,15 @@ object CoordinateMediationPrograms {
       _ <- ZIO.log("#### Send Mediation request ####")
       link <- InvitationPrograms
         .getInvitationProgram(mediatorURL + "/oob_url")
-        .map(_.toOption) // FIXME
+        .flatMap {
+          case Left(value)  => ZIO.fail(value)
+          case Right(value) => ZIO.succeed(value)
+        }
       opsService <- ZIO.service[DidOps]
       agentService <- ZIO.service[DidAgent]
 
-      planMessage = link.map(to => replyToInvitation(agentService.id, to)).get
-      invitationFrom = link.get.from
+      planMessage = replyToInvitation(agentService.id, link)
+      invitationFrom = link.from
       _ <- ZIO.log(s"Invitation from $invitationFrom")
 
       encryptedMessage <- opsService.packEncrypted(planMessage, to = invitationFrom)
