@@ -11,11 +11,11 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{
 }
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
+import org.hyperledger.identus.shared.models.KeyId
 
 import java.time.temporal.ChronoUnit
 import java.time.Instant
 import java.util.UUID
-import org.hyperledger.identus.shared.models.KeyId
 
 final case class IssueCredentialRecord(
     id: DidCommID,

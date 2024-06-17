@@ -8,10 +8,11 @@ import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialReco
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{mock, Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
 import zio.mock.{Mock, Proxy}
-import org.hyperledger.identus.shared.models.KeyId
+
 import java.util.UUID
 
 object MockCredentialService extends Mock[CredentialService] {

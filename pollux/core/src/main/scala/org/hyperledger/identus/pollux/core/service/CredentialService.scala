@@ -14,12 +14,12 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{Duration, IO, UIO, URIO, ZIO}
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID
-import org.hyperledger.identus.shared.models.KeyId
 
 trait CredentialService {
 

@@ -5,8 +5,9 @@ import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadat
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import zio.*
 import org.hyperledger.identus.shared.models.KeyId
+import zio.*
+
 import java.time.Instant
 
 class CredentialRepositoryInMemory(

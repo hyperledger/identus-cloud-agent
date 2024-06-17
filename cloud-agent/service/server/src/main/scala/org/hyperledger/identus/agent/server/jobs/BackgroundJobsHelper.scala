@@ -24,9 +24,10 @@ import org.hyperledger.identus.shared.crypto.{
   Secp256k1KeyPair,
   X25519KeyPair
 }
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{ZIO, ZLayer}
-import org.hyperledger.identus.shared.models.KeyId
+
 import java.util.Base64
 
 trait BackgroundJobsHelper {
@@ -137,7 +138,7 @@ trait BackgroundJobsHelper {
         .map { case (_, didData) =>
           didData.publicKeys
             .find(pk =>
-             pk.id == keyId.value
+              pk.id == keyId.value
                 && pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.ED25519
             )
             .map(_.id)

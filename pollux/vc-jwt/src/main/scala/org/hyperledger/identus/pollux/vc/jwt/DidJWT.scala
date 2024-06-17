@@ -7,8 +7,9 @@ import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jwt.{JWTClaimsSet, SignedJWT}
 import io.circe.*
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1PrivateKey}
-import zio.*
 import org.hyperledger.identus.shared.models.KeyId
+import zio.*
+
 import java.security.*
 
 opaque type JWT = String
