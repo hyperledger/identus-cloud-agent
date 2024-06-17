@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: main
 
@@ -36,18 +36,14 @@ jobs:
       - name: Fetch all branches
         run: git fetch --all
 
-      - name: Set environment variable for feature branch
-        run: echo "FEATURE_BRANCH=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
-
-
       - name: Checkout the feature branch
-        run: git checkout $FEATURE_BRANCH
+        run: git checkout ${{ github.event.pull_request.head.ref }}
 
       - name: Merge main into feature branch
         run: git merge origin/main
 
       - name: Push changes
-        run: git push origin $FEATURE_BRANCH
+        run: git push origin ${{ github.event.pull_request.head.ref }}
         if: success()
 
       - name: Add comment to PR
