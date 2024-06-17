@@ -5,6 +5,7 @@ import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadat
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.KeyId
 import zio.*
 
 import java.time.Instant
@@ -255,7 +256,7 @@ class CredentialRepositoryInMemory(
   override def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
-      keyId: Option[String] = None,
+      keyId: Option[KeyId] = None,
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit] = {
     for {
