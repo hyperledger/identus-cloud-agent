@@ -36,14 +36,18 @@ jobs:
       - name: Fetch all branches
         run: git fetch --all
 
+      - name: Set environment variable for feature branch
+        run: echo "FEATURE_BRANCH=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
+
+
       - name: Checkout the feature branch
-        run: git checkout ${{ github.event.pull_request.head.ref }}
+        run: git checkout $FEATURE_BRANCH
 
       - name: Merge main into feature branch
         run: git merge origin/main
 
       - name: Push changes
-        run: git push origin ${{ github.event.pull_request.head.ref }}
+        run: git push origin $FEATURE_BRANCH
         if: success()
 
       - name: Add comment to PR
