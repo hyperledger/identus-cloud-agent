@@ -9,6 +9,7 @@ import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialReco
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{Duration, UIO, URIO, URLayer, ZIO, ZLayer}
 
@@ -103,7 +104,7 @@ class CredentialServiceNotifier(
   override def acceptCredentialOffer(
       recordId: DidCommID,
       subjectId: Option[String],
-      keyId: Option[String]
+      keyId: Option[KeyId]
   ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] =
     notifyOnSuccess(svc.acceptCredentialOffer(recordId, subjectId, keyId))
 
@@ -231,7 +232,7 @@ class CredentialServiceNotifier(
   override def getJwtIssuer(
       jwtIssuerDID: PrismDID,
       verificationRelationship: VerificationRelationship,
-      keyId: Option[String]
+      keyId: Option[KeyId]
   ): URIO[WalletAccessContext, Issuer] =
     svc.getJwtIssuer(jwtIssuerDID, verificationRelationship, keyId)
 }

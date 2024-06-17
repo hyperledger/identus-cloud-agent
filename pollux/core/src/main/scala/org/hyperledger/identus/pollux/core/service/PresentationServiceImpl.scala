@@ -18,7 +18,6 @@ import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, Pre
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.pollux.sdjwt.{CredentialCompact, HolderPrivateKey, PresentationCompact, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
