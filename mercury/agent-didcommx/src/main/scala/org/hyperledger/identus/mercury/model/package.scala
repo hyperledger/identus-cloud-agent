@@ -43,7 +43,8 @@ object UnpackMessageImp {
       pleaseAck = Option(msg.getPleaseAck())
         .flatMap {
           // https://identity.foundation/didcomm-messaging/spec/#acks
-          case java.lang.Boolean.TRUE  => Some(Seq.empty) // FIXME getPleaseAck MUST return a Array
+          case java.lang.Boolean.TRUE =>
+            Some(Seq.empty) // NOTE lib limitation the field pleaseAck MUST be a Array of string
           case java.lang.Boolean.FALSE => None
         }
     )

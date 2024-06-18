@@ -81,23 +81,29 @@ object OfferCredential {
     given Decoder[Body] = deriveDecoder[Body]
   }
 
-  def makeOfferToProposeCredential(msg: Message): OfferCredential = { // TODO change msg: Message to ProposeCredential
-    val pc: ProposeCredential = ProposeCredential.readFromMessage(msg)
-
-    OfferCredential(
-      body = OfferCredential.Body(
-        goal_code = pc.body.goal_code,
-        comment = pc.body.comment,
-        replacement_id = None,
-        multiple_available = None,
-        credential_preview = pc.body.credential_preview.get, // FIXME .get
-      ),
-      attachments = pc.attachments,
-      thid = msg.thid.orElse(Some(pc.id)),
-      from = pc.to,
-      to = pc.from,
-    )
-  }
+  def makeOfferToProposeCredential(
+      msg: Message // TODO change msg: Message to ProposeCredential
+  ): Either[String, OfferCredential] =
+    ProposeCredential.readFromMessage(msg).flatMap { pc =>
+      pc.body.credential_preview match
+        case None => Left("This method expects the ProposeCredential to have a 'credential_preview' in the body")
+        case Some(credential_preview) =>
+          Right(
+            OfferCredential(
+              body = OfferCredential.Body(
+                goal_code = pc.body.goal_code,
+                comment = pc.body.comment,
+                replacement_id = None,
+                multiple_available = None,
+                credential_preview = credential_preview,
+              ),
+              attachments = pc.attachments,
+              thid = msg.thid.orElse(Some(pc.id)),
+              from = pc.to,
+              to = pc.from,
+            )
+          )
+    }
 
   def readFromMessage(message: Message): Either[String, OfferCredential] = {
     message.body.asJson.as[OfferCredential.Body] match

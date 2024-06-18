@@ -10,7 +10,7 @@ import scala.util.{Failure, Success, Try}
 trait DidOps {
   def packSigned(msg: Message): URIO[DidAgent, SignedMesage]
   def packEncrypted(msg: Message, to: DidId): URIO[DidAgent, EncryptedMessage]
-  // FIXME theoretically DidAgent is not needed for packEncryptedAnon
+  // TODO theoretically DidAgent is not needed for packEncryptedAnon
   def packEncryptedAnon(msg: Message, to: DidId): URIO[DidAgent, EncryptedMessage]
   def unpack(str: String): URIO[DidAgent, UnpackMessage]
   def unpackBase64(dataBase64: String): RIO[DidAgent, UnpackMessage] = {
