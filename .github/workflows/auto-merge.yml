@@ -40,7 +40,11 @@ jobs:
         run: git checkout ${{ github.event.pull_request.head.ref }}
 
       - name: Merge main into feature branch
-        run: git merge origin/main
+        run: git merge --squash origin/main
+
+      - name: Commit changes
+        run: git commit -m "Merge main into ${{ github.event.pull_request.head.ref }}"
+        if: success()
 
       - name: Push changes
         run: git push origin ${{ github.event.pull_request.head.ref }}
