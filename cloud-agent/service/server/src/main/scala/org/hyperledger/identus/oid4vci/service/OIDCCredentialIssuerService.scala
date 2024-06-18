@@ -3,8 +3,8 @@ package org.hyperledger.identus.oid4vci.service
 import io.circe.parser.parse
 import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.castor.core.model.did.{DID, PrismDID, VerificationRelationship}
-import org.hyperledger.identus.oid4vci.domain.IssuanceSession
+import org.hyperledger.identus.castor.core.model.did.{DID, DIDUrl, PrismDID, VerificationRelationship}
+import org.hyperledger.identus.oid4vci.domain.{IssuanceSession, Openid4VCIProofJwtOps}
 import org.hyperledger.identus.oid4vci.http.*
 import org.hyperledger.identus.oid4vci.storage.IssuanceSessionStorage
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
@@ -14,6 +14,7 @@ import org.hyperledger.identus.pollux.core.service.{
   OID4VCIIssuerMetadataServiceError,
   URIDereferencer
 }
+import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{
   DID as PolluxDID,
   DidResolver,
@@ -27,6 +28,7 @@ import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.net.URL
+import java.security.PublicKey
 import java.time.Instant
 import java.util.UUID
 import scala.util.Try
@@ -104,21 +106,41 @@ case class OIDCCredentialIssuerServiceImpl(
     issuanceSessionStorage: IssuanceSessionStorage,
     didResolver: DidResolver,
     uriDereferencer: URIDereferencer,
-) extends OIDCCredentialIssuerService {
+) extends OIDCCredentialIssuerService
+    with Openid4VCIProofJwtOps {
 
   import OIDCCredentialIssuerService.Error
   import OIDCCredentialIssuerService.Errors.*
 
+  private def resolveVerificationMethodByKeyId(didUrl: DIDUrl): IO[DIDResolutionError, VerificationMethod] = {
+    for {
+      didDocument <- JWTVerification
+        .resolve(didUrl.did.toString)(didResolver)
+        .flatMap(_.toZIO)
+        .mapError(msg => DIDResolutionError(s"Failed to resolve DID: $msg"))
+      verificationMethodKeyOpt = didDocument.verificationMethod
+        .find(_.id == didUrl.toString)
+      assertionMethodKeyOpt = didDocument.assertionMethod
+        .filter(m => m.isInstanceOf[VerificationMethod])
+        .map(_.asInstanceOf[VerificationMethod])
+        .find(_.id == didUrl.toString)
+      verificationMethod <- ZIO
+        .fromOption(verificationMethodKeyOpt.orElse(assertionMethodKeyOpt))
+        .mapError(_ => DIDResolutionError(s"Verification method not found for keyId: ${didUrl.toString}"))
+    } yield verificationMethod
+  }
+
   override def verifyJwtProof(jwt: JWT): IO[InvalidProof, Boolean] = {
     for {
-      verifiedJwtSignature <- JWTVerification
-        .validateEncodedJwtWithKeyId(
-          jwt,
-          proofPurpose = Some(VerificationRelationship.AssertionMethod),
-          didResolver = didResolver
-        )
-        .mapError(InvalidProof.apply)
-      _ <- verifiedJwtSignature.toZIO.mapError(InvalidProof.apply)
+      algorithm <- getAlgorithmFromJwt(jwt)
+        .mapError(e => InvalidProof(e.getMessage))
+      didUrl <- parseDIDUrlFromKeyId(jwt)
+        .mapError(e => InvalidProof(e.getMessage))
+      verificationMethod <- resolveVerificationMethodByKeyId(didUrl)
+        .mapError(dre => InvalidProof(dre.message))
+      publicKey <- JWTVerification.extractPublicKey(verificationMethod).toZIO.mapError(InvalidProof.apply)
+      _ <- JWTVerification.validateEncodedJwt(jwt, publicKey).toZIO.mapError(InvalidProof.apply)
+      _ <- ZIO.succeed(println(s"JWT proof is verified: ${jwt.value}")) // TODO: remove before the release
     } yield true
   }
 
@@ -143,7 +165,7 @@ case class OIDCCredentialIssuerServiceImpl(
         .map(WalletAccessContext.apply)
 
       jwtIssuer <- credentialService
-        .getJwtIssuer(issuingDID, VerificationRelationship.AssertionMethod)
+        .getJwtIssuer(issuingDID, VerificationRelationship.AssertionMethod, None)
         .provideSomeLayer(ZLayer.succeed(wac))
 
       jwtVC <- buildJwtVerifiableCredential(

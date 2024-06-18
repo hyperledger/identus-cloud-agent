@@ -1,6 +1,7 @@
 package org.hyperledger.identus.oid4vci.domain
 
 import com.nimbusds.jose.*
+import org.bouncycastle.util.encoders.Hex
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, MockDIDNonSecretStorage}
@@ -91,7 +92,14 @@ object OIDCCredentialIssuerServiceSpec
 
   private def buildJwtProof(nonce: String, aud: UUID, iat: Int) = {
     val longFormDid = PrismDID.buildLongFormFromOperation(holderOp)
-    makeJwtProof(longFormDid, nonce, aud, iat, holderKp.privateKey)
+    val keyIndex = holderDidData.publicKeys.find(_.purpose == VerificationRelationship.AssertionMethod).get.id
+    val kid = longFormDid.toString + "#" + keyIndex
+
+    val encodedKey = Hex.toHexString(holderKp.privateKey.getEncoded)
+    println(s"Private Key: $encodedKey")
+    println("kid: " + longFormDid.toString)
+
+    makeJwtProof(kid, nonce, aud, iat, holderKp.privateKey)
   }
 
   private val validateProofSpec = suite("Validate holder's proof of possession using the LongFormPrismDID")(

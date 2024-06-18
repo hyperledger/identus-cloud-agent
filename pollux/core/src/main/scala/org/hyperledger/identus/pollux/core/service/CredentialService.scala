@@ -14,6 +14,7 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{Duration, IO, UIO, URIO, ZIO}
 
@@ -93,7 +94,8 @@ trait CredentialService {
 
   def acceptCredentialOffer(
       recordId: DidCommID,
-      subjectId: Option[String]
+      subjectId: Option[String],
+      keyId: Option[KeyId]
   ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord]
 
   def generateJWTCredentialRequest(
@@ -124,7 +126,7 @@ trait CredentialService {
   def generateSDJWTCredential(
       recordId: DidCommID,
       expirationTime: Duration,
-  ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed, IssueCredentialRecord]
+  ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed | VCJwtHeaderParsingError, IssueCredentialRecord]
 
   def generateAnonCredsCredential(
       recordId: DidCommID
@@ -153,7 +155,8 @@ trait CredentialService {
 
   def getJwtIssuer(
       jwtIssuerDID: PrismDID,
-      verificationRelationship: VerificationRelationship
+      verificationRelationship: VerificationRelationship,
+      keyId: Option[KeyId]
   ): URIO[WalletAccessContext, Issuer]
 }
 

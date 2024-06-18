@@ -76,8 +76,7 @@ trait StorageSpecHelper extends ApolloSpecHelper {
           ZIO
             .serviceWithZIO[WalletManagementService](_.createWallet(Wallet("global-wallet")))
             .map(wallet => WalletAccessContext(wallet.id))
-            .mapError(_.toThrowable)
-            .orDie
+            .orDieAsUnmanagedFailure
             .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
         )
       )

@@ -5,6 +5,7 @@ import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadat
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.KeyId
 import zio.*
 
 import java.time.Instant
@@ -138,7 +139,9 @@ class CredentialRepositoryInMemory(
       store <- storeRef.get
     } yield store.values
       .filter(rec => recordId.contains(rec.id) && rec.issuedCredentialRaw.isDefined)
-      .map(rec => ValidIssuedCredentialRecord(rec.id, rec.issuedCredentialRaw, rec.credentialFormat, rec.subjectId))
+      .map(rec =>
+        ValidIssuedCredentialRecord(rec.id, rec.issuedCredentialRaw, rec.credentialFormat, rec.subjectId, None)
+      )
       .toSeq
   }
 
@@ -164,7 +167,8 @@ class CredentialRepositoryInMemory(
           rec.credentialFormat,
           rec.schemaUri,
           rec.credentialDefinitionUri,
-          rec.subjectId
+          rec.subjectId,
+          rec.keyId,
         )
       )
       .toSeq
@@ -252,6 +256,7 @@ class CredentialRepositoryInMemory(
   override def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
+      keyId: Option[KeyId] = None,
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit] = {
     for {

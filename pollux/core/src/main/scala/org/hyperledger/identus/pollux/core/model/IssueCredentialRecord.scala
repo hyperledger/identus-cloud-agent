@@ -11,6 +11,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{
 }
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
+import org.hyperledger.identus.shared.models.KeyId
 
 import java.time.temporal.ChronoUnit
 import java.time.Instant
@@ -27,6 +28,7 @@ final case class IssueCredentialRecord(
     credentialFormat: CredentialFormat,
     role: Role,
     subjectId: Option[String],
+    keyId: Option[KeyId],
     validityPeriod: Option[Double] = None,
     automaticIssuance: Option[Boolean],
     protocolState: ProtocolState,
@@ -74,7 +76,8 @@ final case class ValidIssuedCredentialRecord(
     id: DidCommID,
     issuedCredentialRaw: Option[String],
     credentialFormat: CredentialFormat,
-    subjectId: Option[String]
+    subjectId: Option[String],
+    keyId: Option[KeyId],
 )
 
 final case class ValidFullIssuedCredentialRecord(
@@ -83,7 +86,8 @@ final case class ValidFullIssuedCredentialRecord(
     credentialFormat: CredentialFormat,
     schemaUri: Option[String],
     credentialDefinitionUri: Option[String],
-    subjectId: Option[String]
+    subjectId: Option[String],
+    keyId: Option[KeyId],
 )
 
 object IssueCredentialRecord {

@@ -10,7 +10,9 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class EntityResponsePage(
     @description(annotations.contents.description)
-    @encodedExample(annotations.contents.example)
+    @encodedExample( // This is a hammer - to be improved in the future
+      JsonEncoder[Seq[EntityResponse]].encodeJson(annotations.contents.example)
+    )
     contents: Seq[EntityResponse],
     @description(annotations.kind.description)
     @encodedExample(annotations.kind.example)

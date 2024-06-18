@@ -27,6 +27,7 @@ object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServ
     None,
     None,
     None,
+    None,
     ProtocolState.OfferPending,
     None,
     None,
@@ -124,7 +125,7 @@ object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServ
           offerReceivedRecord <- svc.receiveCredentialOffer(offerCredential())
           holderRecordId = offerReceivedRecord.id
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
-          _ <- svc.acceptCredentialOffer(holderRecordId, Some(subjectId))
+          _ <- svc.acceptCredentialOffer(holderRecordId, Some(subjectId), None)
           _ <- svc.generateJWTCredentialRequest(offerReceivedRecord.id)
           _ <- svc.markRequestSent(holderRecordId)
           _ <- svc.receiveCredentialIssue(issueCredential())

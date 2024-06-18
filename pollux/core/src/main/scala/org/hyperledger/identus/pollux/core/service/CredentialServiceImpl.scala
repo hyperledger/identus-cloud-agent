@@ -24,9 +24,11 @@ import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer, *}
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, Secp256k1KeyPair}
 import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
+import zio.json.*
 import zio.prelude.ZValidation
 
 import java.net.URI
@@ -152,6 +154,7 @@ class CredentialServiceImpl(
           credentialFormat = CredentialFormat.JWT,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,
+          keyId = None,
           validityPeriod = validityPeriod,
           automaticIssuance = automaticIssuance,
           protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
@@ -207,6 +210,7 @@ class CredentialServiceImpl(
           credentialFormat = CredentialFormat.SDJWT,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,
+          keyId = None,
           validityPeriod = validityPeriod,
           automaticIssuance = automaticIssuance,
           protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
@@ -263,6 +267,7 @@ class CredentialServiceImpl(
           credentialFormat = CredentialFormat.AnonCreds,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,
+          keyId = None,
           validityPeriod = validityPeriod,
           automaticIssuance = automaticIssuance,
           protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
@@ -328,6 +333,7 @@ class CredentialServiceImpl(
           credentialFormat = credentialFormat,
           role = Role.Holder,
           subjectId = None,
+          keyId = None,
           validityPeriod = None,
           automaticIssuance = None,
           protocolState = IssueCredentialRecord.ProtocolState.OfferReceived,
@@ -412,7 +418,8 @@ class CredentialServiceImpl(
 
   override def acceptCredentialOffer(
       recordId: DidCommID,
-      maybeSubjectId: Option[String]
+      maybeSubjectId: Option[String],
+      keyId: Option[KeyId]
   ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.OfferReceived)
@@ -421,7 +428,7 @@ class CredentialServiceImpl(
           for {
             _ <- validatePrismDID(subjectId)
             count <- credentialRepository
-              .updateWithSubjectId(recordId, subjectId, ProtocolState.RequestPending)
+              .updateWithSubjectId(recordId, subjectId, keyId, ProtocolState.RequestPending)
               @@ CustomMetricsAspect.startRecordingTime(
                 s"${record.id}_issuance_flow_holder_req_pending_to_generated"
               )
@@ -504,7 +511,8 @@ class CredentialServiceImpl(
 
   override def getJwtIssuer(
       jwtIssuerDID: PrismDID,
-      verificationRelationship: VerificationRelationship
+      verificationRelationship: VerificationRelationship,
+      keyId: Option[KeyId] = None
   ): URIO[WalletAccessContext, JwtIssuer] = {
     for {
       issuingKeyId <- getKeyId(jwtIssuerDID, verificationRelationship, EllipticCurve.SECP256K1)
@@ -515,7 +523,7 @@ class CredentialServiceImpl(
       (privateKey, publicKey) = ecKeyPair
       jwtIssuer = JwtIssuer(
         org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
-        ES256KSigner(privateKey),
+        ES256KSigner(privateKey, keyId),
         publicKey
       )
     } yield jwtIssuer
@@ -539,6 +547,8 @@ class CredentialServiceImpl(
     *   This can holder prism did / issuer prism did
     * @param verificationRelationship
     *   Holder it Authentication and Issuer it is AssertionMethod
+    * @param keyId
+    *   Optional KID parameter in case of DID has multiple keys with same purpose
     * @return
     *   JwtIssuer
     * @see
@@ -546,14 +556,15 @@ class CredentialServiceImpl(
     */
   private def getSDJwtIssuer(
       jwtIssuerDID: PrismDID,
-      verificationRelationship: VerificationRelationship
+      verificationRelationship: VerificationRelationship,
+      keyId: Option[KeyId]
   ): URIO[WalletAccessContext, JwtIssuer] = {
     for {
       ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
     } yield {
       JwtIssuer(
         org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
-        EdSigner(ed25519keyPair),
+        EdSigner(ed25519keyPair, keyId),
         Ed25519PublicKey.toJavaEd25519PublicKey(ed25519keyPair.publicKey.getEncoded)
       )
     }
@@ -563,7 +574,8 @@ class CredentialServiceImpl(
       recordId: DidCommID,
       getIssuer: (
           did: LongFormPrismDID,
-          verificationRelation: VerificationRelationship
+          verificationRelation: VerificationRelationship,
+          keyId: Option[KeyId]
       ) => URIO[WalletAccessContext, JwtIssuer]
   ): ZIO[WalletAccessContext, RecordNotFound | UnsupportedDidFormat, IssueCredentialRecord] = {
     for {
@@ -576,7 +588,7 @@ class CredentialServiceImpl(
         .orDieWith(_ => RuntimeException(s"No 'offer' found in record: ${recordId.value}"))
       subjectDID <- validatePrismDID(subjectId)
       longFormPrismDID <- getLongForm(subjectDID, true)
-      jwtIssuer <- getIssuer(longFormPrismDID, VerificationRelationship.Authentication)
+      jwtIssuer <- getIssuer(longFormPrismDID, VerificationRelationship.Authentication, record.keyId)
       presentationPayload <- createPresentationPayload(record, jwtIssuer)
       signedPayload = JwtPresentation.encodeJwt(presentationPayload.toJwtPresentationPayload, jwtIssuer)
       request = createDidCommRequestCredential(formatAndOffer._1, formatAndOffer._2, signedPayload)
@@ -1092,7 +1104,11 @@ class CredentialServiceImpl(
   override def generateSDJWTCredential(
       recordId: DidCommID,
       expirationTime: Duration,
-  ): ZIO[WalletAccessContext, RecordNotFound | ExpirationDateHasPassed, IssueCredentialRecord] = {
+  ): ZIO[
+    WalletAccessContext,
+    RecordNotFound | ExpirationDateHasPassed | VCJwtHeaderParsingError,
+    IssueCredentialRecord
+  ] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
       issuingDID <- ZIO
@@ -1115,15 +1131,32 @@ class CredentialServiceImpl(
             .updateProtocolState(record.id, ProtocolState.CredentialPending, ProtocolState.ProblemReportPending)
         )
         .orDieAsUnmanagedFailure
-
-      // Custom for SD JWT
+      jwtHeader <- JWTVerification.extractJwtHeader(requestJwt) match
+        case ZValidation.Success(log, header) => ZIO.succeed(header)
+        case ZValidation.Failure(log, failure) =>
+          ZIO.fail(VCJwtHeaderParsingError(s"Extraction of JwtHeader failed ${failure.toChunk.toString}"))
       ed25519KeyPair <- getEd25519SigningKeyPair(longFormPrismDID, VerificationRelationship.AssertionMethod)
       sdJwtPrivateKey = sdjwt.IssuerPrivateKey(ed25519KeyPair.privateKey)
-      didDocResult <- didResolver.resolve(jwtPresentation.iss) flatMap {
+      jsonWebKey <- didResolver.resolve(jwtPresentation.iss) flatMap {
         case failed: DIDResolutionFailed =>
           ZIO.dieMessage(s"Error occurred while resolving the DID: ${failed.error.toString}")
-        case succeeded: DIDResolutionSucceeded => ZIO.succeed(succeeded.didDocument.authentication)
+        case succeeded: DIDResolutionSucceeded =>
+          jwtHeader.keyId match {
+            case Some(
+                  kid
+                ) => // TODO should we check in authentication and assertion or just in verificationMethod since this cane different how did document is implemented
+              ZIO
+                .fromOption(succeeded.didDocument.verificationMethod.find(_.id.endsWith(kid)).map(_.publicKeyJwk))
+                .orElse(
+                  ZIO.dieMessage(
+                    s"Required public Key for holder binding is not found in DID document for the kid: $kid"
+                  )
+                )
+            case None =>
+              ZIO.succeed(None) // JwtHeader keyId is None, Issued credential is not bound to any holder public key
+          }
       }
+
       now = Instant.now.getEpochSecond
       exp = claims("exp").flatMap(_.asNumber).flatMap(_.toLong)
       expInSeconds <- ZIO.fromEither(exp match {
@@ -1136,19 +1169,27 @@ class CredentialServiceImpl(
         .add("sub", jwtPresentation.iss.asJson) // This is subject did
         .add("iat", now.asJson)
         .add("exp", expInSeconds.asJson)
-      credential = SDJWT.issueCredential(
-        sdJwtPrivateKey,
-        claimsUpdated.asJson.noSpaces,
-      ) // FIXME TO ADD Key of the Holder This issue is also with JWT
-
+      credential = {
+        jsonWebKey match {
+          case Some(jwk) =>
+            SDJWT.issueCredential(
+              sdJwtPrivateKey,
+              claimsUpdated.asJson.noSpaces,
+              sdjwt.HolderPublicKey.fromJWT(jwk.toJson)
+            )
+          case None =>
+            SDJWT.issueCredential(
+              sdJwtPrivateKey,
+              claimsUpdated.asJson.noSpaces,
+            )
+        }
+      }
       issueCredential = IssueCredential.build(
         fromDID = issue.from,
         toDID = issue.to,
         thid = issue.thid,
         credentials = Seq(IssueCredentialIssuedFormat.SDJWT -> credential.compact.getBytes)
       )
-      // End custom
-
       record <- markCredentialGenerated(record, issueCredential)
     } yield record
 

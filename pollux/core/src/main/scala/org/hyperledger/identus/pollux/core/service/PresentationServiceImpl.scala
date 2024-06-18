@@ -16,7 +16,7 @@ import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import org.hyperledger.identus.pollux.core.service.serdes.*
-import org.hyperledger.identus.pollux.sdjwt.{CredentialCompact, PresentationCompact, SDJWT}
+import org.hyperledger.identus.pollux.sdjwt.{CredentialCompact, HolderPrivateKey, PresentationCompact, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
@@ -93,6 +93,47 @@ private class PresentationServiceImpl(
     } yield presentationPayload
   }
 
+  private def createSDJwtPresentationFromRecord(
+      recordId: DidCommID,
+      optionalHolderPrivateKey: Option[HolderPrivateKey]
+  ): ZIO[WalletAccessContext, PresentationError, PresentationCompact] = {
+
+    for {
+      record <- getRecord(recordId)
+      credentialsToUse <- ZIO
+        .fromOption(record.credentialsToUse)
+        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
+      sdJwtClaimsToDisclose <- ZIO
+        .fromOption(record.sdJwtClaimsToDisclose)
+        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
+      requestPresentation <- ZIO
+        .fromOption(record.requestPresentationData)
+        .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
+      issuedValidCredentials <- credentialRepository
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
+      signedCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw)
+
+      issuedCredentials <- ZIO.fromEither(
+        Either.cond(
+          signedCredentials.nonEmpty,
+          signedCredentials,
+          PresentationError.IssuedCredentialNotFoundError(
+            "No matching issued credentials found in prover db"
+          )
+        )
+      )
+
+      presentationCompact <- createPresentationFromIssuedCredential(
+        issuedCredentials,
+        sdJwtClaimsToDisclose,
+        requestPresentation,
+        optionalHolderPrivateKey
+      )
+      presentationPayload <- ZIO.succeed(presentationCompact)
+
+    } yield presentationCompact
+  }
+//This can be private remove
   override def createPresentationFromRecord(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationCompact] = {
@@ -122,10 +163,11 @@ private class PresentationServiceImpl(
         )
       )
 
-      presentationCompact <- createPresentationFromRecord(
+      presentationCompact <- createPresentationFromIssuedCredential(
         issuedCredentials,
         sdJwtClaimsToDisclose,
-        requestPresentation
+        requestPresentation,
+        None
       )
       presentationPayload <- ZIO.succeed(presentationCompact)
 
@@ -134,10 +176,11 @@ private class PresentationServiceImpl(
 
   override def createSDJwtPresentation(
       recordId: DidCommID,
-      requestPresentation: RequestPresentation
+      requestPresentation: RequestPresentation,
+      optionalHolderPrivateKey: Option[HolderPrivateKey],
   ): ZIO[WalletAccessContext, PresentationError, Presentation] = {
     for {
-      presentationPayload <- createPresentationFromRecord(recordId)
+      presentationPayload <- createSDJwtPresentationFromRecord(recordId, optionalHolderPrivateKey)
       presentation <- ZIO.succeed(
         Presentation(
           body = Presentation.Body(
@@ -293,7 +336,7 @@ private class PresentationServiceImpl(
       connectionId,
       CredentialFormat.SDJWT,
       proofTypes,
-      attachments = options.map(o => Seq(toSDJWTAttachment(o, claimsToDisclose))).getOrElse(Seq.empty)
+      attachments = Seq(toSDJWTAttachment(options, claimsToDisclose))
     )
   }
 
@@ -440,10 +483,11 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  private def createPresentationFromRecord(
+  private def createPresentationFromIssuedCredential(
       issuedCredentials: Seq[String],
       claimsToDisclose: SdJwtCredentialToDisclose,
       requestPresentation: RequestPresentation,
+      optionalHolderPrivateKey: Option[HolderPrivateKey],
   ): IO[PresentationError, PresentationCompact] = {
 
     val verifiableCredentials: Either[
@@ -494,7 +538,17 @@ private class PresentationServiceImpl(
         .pipe(o => sub.map(sub => o.add("sub", ast.Json.Str(sub))).getOrElse(o)) // optional
         .pipe(o => iat.map(iat => o.add("iat", ast.Json.Num(iat))).getOrElse(o)) // optional
         .add("exp", ast.Json.Num(exp))
-      presentationPayload = SDJWT.createPresentation(vc, sdJwtClaimsToDisclose.toJson)
+      presentationPayload = (sdJwtPresentation.options, optionalHolderPrivateKey) match {
+        case (Some(options), Some(holderPrivateKey)) =>
+          SDJWT.createPresentation(
+            vc,
+            sdJwtClaimsToDisclose.toJson,
+            options.challenge,
+            options.domain,
+            holderPrivateKey
+          )
+        case _ => SDJWT.createPresentation(vc, sdJwtClaimsToDisclose.toJson)
+      }
     } yield presentationPayload
   }
 
@@ -826,7 +880,9 @@ private class PresentationServiceImpl(
       issuedCredentials: Seq[ValidFullIssuedCredentialRecord]
   ) = validateCredentialsFormat(
     record,
-    issuedCredentials.map(cred => ValidIssuedCredentialRecord(cred.id, None, cred.credentialFormat, cred.subjectId))
+    issuedCredentials.map(cred =>
+      ValidIssuedCredentialRecord(cred.id, None, cred.credentialFormat, cred.subjectId, cred.keyId)
+    )
   )
 
   override def acceptPresentation(
@@ -1071,7 +1127,7 @@ private class PresentationServiceImpl(
   }
 
   private def toSDJWTAttachment(
-      options: Options,
+      options: Option[Options],
       claimsToDsiclose: ast.Json.Obj
   ): AttachmentDescriptor = {
     AttachmentDescriptor.buildBase64Attachment(

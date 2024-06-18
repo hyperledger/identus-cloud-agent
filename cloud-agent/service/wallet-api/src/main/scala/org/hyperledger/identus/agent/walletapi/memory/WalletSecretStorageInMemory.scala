@@ -7,14 +7,14 @@ import zio.*
 
 class WalletSecretStorageInMemory(storeRef: Ref[Map[WalletId, WalletSeed]]) extends WalletSecretStorage {
 
-  override def setWalletSeed(seed: WalletSeed): RIO[WalletAccessContext, Unit] = {
+  override def setWalletSeed(seed: WalletSeed): URIO[WalletAccessContext, Unit] = {
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       _ <- storeRef.update(_.updated(walletId, seed))
     } yield ()
   }
 
-  override def getWalletSeed: RIO[WalletAccessContext, Option[WalletSeed]] = {
+  override def getWalletSeed: URIO[WalletAccessContext, Option[WalletSeed]] = {
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       seed <- storeRef.get.map(_.get(walletId))

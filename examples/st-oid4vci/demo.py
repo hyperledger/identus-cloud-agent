@@ -1,12 +1,10 @@
 import json
-import jwt
-import requests
 import time
 import urllib
 
+import jwt
+import requests
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives import serialization
-
 
 MOCKSERVER_URL = "http://localhost:7777"
 LOGIN_REDIRECT_URL = "http://localhost:7777/cb"
@@ -237,7 +235,7 @@ def holder_get_credential(credential_endpoint: str, token_response):
     jwt_proof = jwt.encode(
         headers={
             "typ": "openid4vci-proof+jwt",
-            "kid": HOLDER_LONG_FORM_DID,
+            "kid": HOLDER_LONG_FORM_DID + "#key-0",
         },
         payload={
             "iss": ALICE_CLIENT_ID,
