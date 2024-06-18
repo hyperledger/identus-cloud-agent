@@ -94,7 +94,7 @@ class UpdateDidSteps {
     @Then("{actor} sees PRISM DID was successfully updated with new keys of {purpose} purpose")
     fun actorSeesDidSuccessfullyUpdatedWithNewKeys(actor: Actor, purpose: Purpose) {
         val newDidKeyId = actor.recall<String>("newDidKeyId")
-        var i = 0
+
         Wait.until(
             errorMessage = "ERROR: DID UPDATE operation did not succeed on the ledger!",
         ) {

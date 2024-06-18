@@ -41,6 +41,10 @@ dependencies {
     testImplementation("com.sksamuel.hoplite:hoplite-hocon:2.7.5")
     // Kotlin compose
     testImplementation("org.testcontainers:testcontainers:1.19.1")
+    // Crypto
+    testImplementation("com.nimbusds:nimbus-jose-jwt:9.40")
+    testImplementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
+    testImplementation("com.google.crypto.tink:tink:1.13.0")
 }
 
 serenity {
@@ -54,7 +58,7 @@ tasks.register<Delete>("cleanTarget") {
 
 tasks.test {
     dependsOn("cleanTarget")
-    finalizedBy("reports")
+    finalizedBy("aggregate", "reports")
     testLogging.showStandardStreams = true
     systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
 }
@@ -86,7 +90,9 @@ afterEvaluate {
             systemProperty("PRISM_NODE_VERSION", System.getenv("PRISM_NODE_VERSION") ?: "")
             systemProperty("AGENT_VERSION", System.getenv("AGENT_VERSION") ?: "")
             systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
+            dependsOn("cleanTarget")
             finalizedBy("aggregate", "reports")
+            outputs.upToDateWhen {false}
         }
     }
 

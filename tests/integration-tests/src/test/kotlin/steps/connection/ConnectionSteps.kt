@@ -1,6 +1,7 @@
 package steps.connection
 
 import abilities.ListenToEvents
+import common.body
 import interactions.Get
 import interactions.Post
 import io.cucumber.java.en.Then
@@ -22,13 +23,9 @@ class ConnectionSteps {
         // Acme(Issuer) initiates a connection
         // and sends it to Bob(Holder) out-of-band, e.g. using QR-code
         val connectionLabel = "Connection with ${invitee.name}"
+
         inviter.attemptsTo(
-            Post.to("/connections")
-                .with {
-                    it.body(
-                        CreateConnectionRequest(label = connectionLabel),
-                    )
-                },
+            Post.to("/connections").body(CreateConnectionRequest(label = connectionLabel)),
         )
 
         val connection = SerenityRest.lastResponse().get<Connection>()
@@ -95,7 +92,7 @@ class ConnectionSteps {
                 it.data.thid == invitee.recall<Connection>("connection").thid
             }
             lastEvent != null &&
-                lastEvent.data.state == Connection.State.CONNECTION_RESPONSE_RECEIVED
+                    lastEvent.data.state == Connection.State.CONNECTION_RESPONSE_RECEIVED
         }
     }
 

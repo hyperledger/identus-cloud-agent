@@ -115,7 +115,7 @@ class PublishDidSteps {
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
             Ensure.that(didDocument.id).isEqualTo(actor.recall("shortFormDid")),
         )
-
+        actor.remember("didVerification", didDocument.verificationMethod)
         actor.remember("hasPublishedDid", true)
     }
 
