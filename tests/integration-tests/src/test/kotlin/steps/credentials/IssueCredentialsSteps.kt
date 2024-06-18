@@ -2,6 +2,7 @@ package steps.credentials
 
 import abilities.ListenToEvents
 import common.CredentialSchema
+import common.body
 import interactions.Post
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
@@ -50,10 +51,8 @@ class IssueCredentialsSteps {
         )
 
         issuer.attemptsTo(
-            Post.to("/issue-credentials/credential-offers")
-                .with {
-                    it.body(credentialOfferRequest)
-                },
+            Post.to("/issue-credentials/credential-offers").body(credentialOfferRequest),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED)
         )
     }
 
@@ -217,6 +216,7 @@ class IssueCredentialsSteps {
                 it.data.thid == issuer.recall<String>("thid")
             }
             issuer.remember("issuedCredential", credentialEvent!!.data)
+
             credentialEvent != null &&
                 credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT
         }

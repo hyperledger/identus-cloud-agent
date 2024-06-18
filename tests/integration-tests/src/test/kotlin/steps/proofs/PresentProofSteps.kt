@@ -1,6 +1,7 @@
 package steps.proofs
 
 import abilities.ListenToEvents
+import common.body
 import interactions.Patch
 import interactions.Post
 import io.cucumber.java.en.Then
@@ -33,14 +34,7 @@ class PresentProofSteps {
             ),
         )
         faber.attemptsTo(
-            Post.to("/present-proof/presentations")
-                .with {
-                    it.body(
-                        presentationRequest,
-                    )
-                },
-        )
-        faber.attemptsTo(
+            Post.to("/present-proof/presentations").body(presentationRequest),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
         )
         val presentationStatus = SerenityRest.lastResponse().get<PresentationStatus>()
