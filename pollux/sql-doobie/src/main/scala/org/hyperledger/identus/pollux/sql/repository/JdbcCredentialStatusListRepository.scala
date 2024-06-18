@@ -92,7 +92,6 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       emptyStatusListCredential <- VCStatusList2021
         .build(
           vcId = s"$statusListRegistryUrl/credential-status/$id",
-          slId = "",
           revocationData = bitString,
           jwtIssuer = jwtIssuer
         )

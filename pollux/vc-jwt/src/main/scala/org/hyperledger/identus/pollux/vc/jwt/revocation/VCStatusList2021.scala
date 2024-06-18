@@ -19,13 +19,10 @@ class VCStatusList2021 private (val vcPayload: W3cCredentialPayload, jwtIssuer: 
 
     val res = for {
       vcId <- ZIO.fromOption(vcPayload.maybeId).mapError(_ => DecodingError("VC id not found"))
-      slId <- ZIO
-        .fromEither(vcPayload.credentialSubject.hcursor.downField("id").as[String])
-        .mapError(x => DecodingError(x.message))
       purpose <- ZIO
         .fromEither(vcPayload.credentialSubject.hcursor.downField("statusPurpose").as[StatusPurpose])
         .mapError(x => DecodingError(x.message))
-    } yield VCStatusList2021.build(vcId, slId, jwtIssuer, bitString, purpose)
+    } yield VCStatusList2021.build(vcId, jwtIssuer, bitString, purpose)
 
     res.flatten
   }
@@ -46,7 +43,6 @@ object VCStatusList2021 {
 
   def build(
       vcId: String,
-      slId: String,
       jwtIssuer: Issuer,
       revocationData: BitString,
       purpose: StatusPurpose = StatusPurpose.Revocation
@@ -55,7 +51,6 @@ object VCStatusList2021 {
       encodedBitString <- revocationData.encoded.mapError(e => EncodingError(e.message))
     } yield {
       val claims = JsonObject()
-        .add("id", slId.asJson)
         .add("type", "StatusList2021".asJson)
         .add("statusPurpose", purpose.str.asJson)
         .add("encodedList", encodedBitString.asJson)

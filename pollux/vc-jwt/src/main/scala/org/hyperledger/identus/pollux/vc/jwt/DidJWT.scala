@@ -11,6 +11,9 @@ import org.hyperledger.identus.shared.models.KeyId
 import zio.*
 
 import java.security.*
+import java.security.interfaces.ECPublicKey
+import java.util.Base64
+import scala.jdk.CollectionConverters.*
 
 opaque type JWT = String
 
@@ -53,7 +56,11 @@ class ES256KSigner(privateKey: PrivateKey, keyId: Option[KeyId] = None) extends 
   }
 
   override def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof] = {
-    EcdsaJcs2019ProofGenerator.generateProof(payload, privateKey, pk)
+    val err = Throwable("Public key must be secp256k1 EC public key")
+    pk match
+      case pk: ECPublicKey =>
+        EcdsaSecp256k1Signature2019ProofGenerator.generateProof(payload, signer, pk)
+      case _ => ZIO.fail(err)
   }
 
   override def encode(claim: Json): JWT = {
