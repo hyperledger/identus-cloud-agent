@@ -6,7 +6,7 @@ import org.hyperledger.identus.pollux.core.model.CredentialSchemaAndTrustedIssue
 import org.hyperledger.identus.pollux.credentialschema.http
 import sttp.model.Uri
 import sttp.tapir.Schema
-import sttp.tapir.Schema.annotations.{description, encodedExample, encodedName, validate}
+import sttp.tapir.Schema.annotations.{customise, default, description, encodedExample, encodedName, validate}
 import sttp.tapir.Validator.nonEmptyString
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonEncoder}
 
@@ -107,6 +107,7 @@ case class VerificationPolicyResponse(
     constraints: Seq[VerificationPolicyConstraint]
 ) {
   def update(in: VerificationPolicyInput): VerificationPolicyResponse = {
+    <
     copy(
       id = in.id.getOrElse(UUID.randomUUID()),
       name = in.name,
@@ -136,8 +137,8 @@ object VerificationPolicyResponse {
   given encoder: zio.json.JsonEncoder[VerificationPolicyResponse] = DeriveJsonEncoder.gen[VerificationPolicyResponse]
   given decoder: zio.json.JsonDecoder[VerificationPolicyResponse] = DeriveJsonDecoder.gen[VerificationPolicyResponse]
 
-  @encodedExample(JsonEncoder[VerificationPolicyResponse].encodeJson(VerificationPolicyResponse.example))
-  given schema: Schema[VerificationPolicyResponse] = Schema.derived
+  given Schema[VerificationPolicyResponse] =
+    Schema.derived[VerificationPolicyResponse]
 
   import VerificationPolicyConstraint._
   extension (vp: model.VerificationPolicy) {
@@ -224,8 +225,7 @@ object VerificationPolicyResponse {
               schemaId = "https://example.com/driving-license-1.0",
               trustedIssuers = Seq("did:example:123456789abcdefghi")
             )
-          )
-        )
+
   }
 
   val example = VerificationPolicyResponse(
@@ -247,28 +247,18 @@ object VerificationPolicyResponse {
 }
 
 case class VerificationPolicyResponsePage(
-    @description(VerificationPolicyResponsePage.annotations.self.description)
-    @encodedExample(VerificationPolicyResponsePage.annotations.self.example)
+    @customise(_ => VerificationPolicyResponsePage.annotations.self.schema)
     self: String,
-    @description(VerificationPolicyResponsePage.annotations.kind.description)
-    @encodedExample(VerificationPolicyResponsePage.annotations.kind.example)
+    @customise(_ => VerificationPolicyResponsePage.annotations.kind.schema)
     kind: String,
-    @description(VerificationPolicyResponsePage.annotations.pageOf.description)
-    @encodedExample(VerificationPolicyResponsePage.annotations.pageOf.example)
+    @customise(_ => VerificationPolicyResponsePage.annotations.pageOf.schema)
     pageOf: String,
-    @description(VerificationPolicyResponsePage.annotations.next.description)
-    @encodedExample(VerificationPolicyResponsePage.annotations.next.example)
+    @customise(_ => VerificationPolicyResponsePage.annotations.next.schema)
     next: Option[String],
-    @description(VerificationPolicyResponsePage.annotations.previous.description)
-    @encodedExample(VerificationPolicyResponsePage.annotations.previous.example)
+    @customise(_ => VerificationPolicyResponsePage.annotations.previous.schema)
     previous: Option[String],
     @description(VerificationPolicyResponsePage.annotations.contents.description)
-    @encodedExample(
-      JsonEncoder[Seq[VerificationPolicyResponse]].encodeJson(
-        VerificationPolicyResponsePage.annotations.contents.example
-      )
-    )
-    contents: List[VerificationPolicyResponse]
+    contents: List[VerificationPolicyResponse],
 )
 
 object VerificationPolicyResponsePage {
@@ -278,9 +268,8 @@ object VerificationPolicyResponsePage {
   given decoder: zio.json.JsonDecoder[VerificationPolicyResponsePage] =
     DeriveJsonDecoder.gen[VerificationPolicyResponsePage]
 
-  @encodedExample(JsonEncoder[VerificationPolicyResponsePage].encodeJson(VerificationPolicyResponsePage.example))
   given schema: Schema[VerificationPolicyResponsePage] =
-    Schema.derived
+    Schema.derived[VerificationPolicyResponsePage]
 
   object annotations {
     object self
@@ -302,7 +291,7 @@ object VerificationPolicyResponsePage {
         )
 
     object next
-        extends Annotation[String](
+        extends AnnotationWithExample(
           description = "An optional string field containing the URL of the next page of results. " +
             "If the API response does not contain any more pages, this field should be set to None.",
           example = "/cloud-agent/verification/policies?skip=20&limit=10"
@@ -315,10 +304,10 @@ object VerificationPolicyResponsePage {
           example = "/cloud-agent/verification/policies?skip=0&limit=10"
         )
     object contents
-        extends Annotation[Seq[VerificationPolicyResponse]](
+        extends AnnotationWithExample[Seq[VerificationPolicyResponse]](
           description =
             "A sequence of VerificationPolicyResponse objects representing the list of verification policies that the paginated response contains",
-          example = Seq(VerificationPolicyResponse.example)
+          // example = Seq(VerificationPolicyResponse.example)
         )
   }
 

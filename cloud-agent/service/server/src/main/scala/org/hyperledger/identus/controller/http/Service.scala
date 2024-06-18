@@ -44,12 +44,13 @@ object Service {
           example = "LinkedDomains"
         )
 
+    import sttp.tapir.json.zio.schemaForZioJsonValue
     object serviceEndpoint
-        extends Annotation[Json](
+        extends Annotation[zio.json.ast.Json](
           description =
             "The service endpoint. Can contain multiple possible values as described in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did)",
-          example = Json.fromString("https://example.com")
-        )
+          example = zio.json.ast.Json.Str("https://example.com")
+        ) // (using sttp.tapir.json.zio.schemaForZioJsonValue)
   }
 
   given encoder: JsonEncoder[Service] = DeriveJsonEncoder.gen[Service]
