@@ -144,46 +144,6 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         case None => ZIO.succeed(None)
 
     } yield optionalHolderPrivateKey
-  // Holder / Prover Get the Holder/Prover PrismDID from the IssuedCredential
-  // When holder accepts offer he provides the subjectdid
-  private def getPrismDIDForHolderFromCredentials(
-      presentationId: DidCommID,
-      credentialsToUse: Seq[String]
-  ) =
-    for {
-      credentialService <- ZIO.service[CredentialService]
-      // Choose first credential from the list to detect the subject DID to be used in Presentation.
-      // Holder binding check implies that any credential record can be chosen to detect the DID to use in VP.
-      credentialRecordId <- ZIO
-        .fromOption(credentialsToUse.headOption)
-        .mapError(_ =>
-          PresentationError.UnexpectedError(s"No credential found in the Presentation record: $presentationId")
-        )
-      credentialRecordUuid <- ZIO
-        .attempt(DidCommID(credentialRecordId))
-        .mapError(_ => PresentationError.UnexpectedError(s"$credentialRecordId is not a valid DidCommID"))
-      credentialRecord <- credentialService
-        .findById(credentialRecordUuid)
-        .someOrFail(CredentialServiceError.RecordNotFound(credentialRecordUuid))
-      vcSubjectId <- ZIO
-        .fromOption(credentialRecord.subjectId)
-        .orDieWith(_ => RuntimeException(s"VC SubjectId not found in credential record: $credentialRecordUuid"))
-
-      proverDID <- ZIO
-        .fromEither(PrismDID.fromString(vcSubjectId))
-        .mapError(e =>
-          PresentationError
-            .UnexpectedError(
-              s"One of the credential(s) subject is not a valid Prism DID: ${vcSubjectId}"
-            )
-        )
-      longFormProverPrismDID <- getLongForm(proverDID, true)
-      jwtIssuer <- getSDJwtIssuer(
-        longFormProverPrismDID,
-        VerificationRelationship.Authentication,
-        credentialRecord.keyId
-      )
-    } yield jwtIssuer
 
   private def performPresentProofExchange(record: PresentationRecord): URIO[
     AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService &
