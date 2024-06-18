@@ -4,7 +4,7 @@ name: Auto Merge Main into Feature Branch
 
 on:
   pull_request:
-    types: [ opened, synchronize, reopened, labeled ]
+    types: [opened, synchronize, reopened, labeled]
 
 jobs:
   auto-merge:
@@ -76,4 +76,4 @@ jobs:
               repo: context.repo.repo,
               issue_number: prNumber,
               body: 'The main branch cannot be merged into the feature branch without your help :cry:'
-            });            
+            });
