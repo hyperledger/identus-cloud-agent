@@ -12,6 +12,7 @@ import java.util.UUID
 trait EntityRepository {
   def insert(entity: Entity): UIO[Entity]
   def getById(id: UUID): UIO[Entity]
+  def findById(id: UUID): UIO[Option[Entity]]
   def updateName(entityId: UUID, name: String): UIO[Unit]
   def updateWallet(entityId: UUID, walletId: UUID): UIO[Unit]
   def delete(id: UUID): UIO[Unit]

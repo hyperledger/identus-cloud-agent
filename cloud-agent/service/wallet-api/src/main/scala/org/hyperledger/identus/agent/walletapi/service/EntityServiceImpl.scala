@@ -1,61 +1,64 @@
 package org.hyperledger.identus.agent.walletapi.service
 
 import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError
+import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.{EntityNotFound, WalletNotFound}
 import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.hyperledger.identus.agent.walletapi.sql.EntityRepository
-import zio.{IO, URLayer, ZIO, ZLayer}
+import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
+import zio.{IO, UIO, URLayer, ZLayer}
 
 import java.util.UUID
 
-class EntityServiceImpl(repository: EntityRepository) extends EntityService {
-  def create(entity: Entity): IO[EntityServiceError, Entity] = {
+class EntityServiceImpl(repository: EntityRepository, walletManagementService: WalletManagementService)
+    extends EntityService {
+  def create(entity: Entity): IO[WalletNotFound, Entity] = {
     for {
-      _ <- repository.insert(entity)
-      _ <- ZIO.logInfo(s"Entity created: $entity")
+      _ <- walletManagementService
+        .findWallet(WalletId.fromUUID(entity.walletId))
+        .someOrFail(WalletNotFound(entity.walletId))
+        .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+      entity <- repository.insert(entity)
     } yield entity
-  } logError ("Entity creation failed")
 
-  def getById(entityId: UUID): IO[EntityServiceError, Entity] = {
-    for {
-      entity <- repository
-        .getById(entityId)
-        .logError(s"Entity retrieval failed for $entityId")
-    } yield entity
   }
 
-  override def getAll(offset: Option[Int], limit: Option[Int]): IO[EntityServiceError, Seq[Entity]] = {
-    for {
-      entities <- repository
-        .getAll(offset.getOrElse(0), limit.getOrElse(100))
-        .logError("Entity retrieval failed")
-    } yield entities
+  def getById(entityId: UUID): IO[EntityNotFound, Entity] = {
+    repository
+      .findById(entityId)
+      .someOrFail(EntityNotFound(entityId))
   }
 
-  def deleteById(entityId: UUID): IO[EntityServiceError, Unit] = {
+  override def getAll(offset: Option[Int], limit: Option[Int]): UIO[Seq[Entity]] = {
+    repository.getAll(offset.getOrElse(0), limit.getOrElse(100))
+  }
+
+  def deleteById(entityId: UUID): IO[EntityNotFound, Unit] = {
     for {
+      _ <- getById(entityId)
       _ <- repository.delete(entityId)
-      _ <- ZIO.logInfo(s"Entity deleted: $entityId")
-    } yield ()
-  } logError (s"Entity deletion failed for $entityId")
-
-  override def updateName(entityId: UUID, name: String): IO[EntityServiceError, Unit] = {
-    for {
-      _ <- repository
-        .updateName(entityId, name)
-        .logError(s"Entity name update failed for $entityId")
     } yield ()
   }
 
-  override def assignWallet(entityId: UUID, walletId: UUID): IO[EntityServiceError, Unit] = {
+  override def updateName(entityId: UUID, name: String): IO[EntityNotFound, Unit] = {
     for {
-      _ <- repository
-        .updateWallet(entityId, walletId)
-        .logError(s"Entity wallet assignment failed for $entityId")
+      _ <- getById(entityId)
+      _ <- repository.updateName(entityId, name)
+    } yield ()
+  }
+
+  override def assignWallet(entityId: UUID, walletId: UUID): IO[EntityNotFound | WalletNotFound, Unit] = {
+    for {
+      _ <- walletManagementService
+        .findWallet(WalletId.fromUUID(walletId))
+        .someOrFail(WalletNotFound(walletId))
+        .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+      _ <- getById(entityId)
+      _ <- repository.updateWallet(entityId, walletId)
     } yield ()
   }
 }
 
 object EntityServiceImpl {
-  val layer: URLayer[EntityRepository, EntityService] =
-    ZLayer.fromFunction(new EntityServiceImpl(_))
+  val layer: URLayer[EntityRepository & WalletManagementService, EntityService] =
+    ZLayer.fromFunction(new EntityServiceImpl(_, _))
 }

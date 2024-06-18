@@ -59,9 +59,7 @@ case class ApiKeyAuthenticatorImpl(
         .orDieAsUnmanagedFailure
         .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
       entityToCreate = Entity(name = "Auto provisioned entity", walletId = wallet.id.toUUID)
-      entity <- entityService
-        .create(entityToCreate)
-        .mapError(entityServiceError => AuthenticationRepositoryError.ServiceError(entityServiceError.message))
+      entity <- entityService.create(entityToCreate).orDieAsUnmanagedFailure
       _ <- add(entity.id, apiKey)
         .mapError(are => AuthenticationRepositoryError.ServiceError(are.message))
     } yield entity
@@ -76,9 +74,7 @@ case class ApiKeyAuthenticatorImpl(
         .mapError(cause => AuthenticationRepositoryError.UnexpectedError(cause))
       entityId <- repository
         .getEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret)
-      entity <- entityService
-        .getById(entityId)
-        .mapError(entityServiceError => AuthenticationRepositoryError.ServiceError(entityServiceError.message))
+      entity <- entityService.getById(entityId).orDieAsUnmanagedFailure
     } yield entity
   }
 

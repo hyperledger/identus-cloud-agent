@@ -2,7 +2,6 @@ package org.hyperledger.identus.agent.walletapi.sql
 
 import doobie.*
 import doobie.implicits.*
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError
 import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.hyperledger.identus.shared.db.Implicits.ensureOneAffectedRowOrDie
 import zio.*
@@ -25,6 +24,14 @@ class JdbcEntityRepository(xa: Transactor[Task]) extends EntityRepository {
       .transact(xa)
       .map(_.headOption.map(db2model))
       .someOrElseZIO(ZIO.dieMessage(s"Entity not found: id=$id"))
+      .orDie
+  }
+
+  override def findById(id: UUID): UIO[Option[Entity]] = {
+    EntityStorageSql
+      .getById(id)
+      .transact(xa)
+      .map(_.headOption.map(db2model))
       .orDie
   }
 
