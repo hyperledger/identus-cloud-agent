@@ -1,6 +1,7 @@
 package steps.common
 
 import interactions.Get
+import io.cucumber.java.DataTableType
 import io.cucumber.java.ParameterType
 import io.cucumber.java.en.Given
 import io.iohk.atala.automation.extensions.get
@@ -13,7 +14,6 @@ import org.hyperledger.identus.client.models.*
 import steps.connection.ConnectionSteps
 import steps.credentials.IssueCredentialsSteps
 import steps.did.PublishDidSteps
-import java.lang.IllegalArgumentException
 
 class CommonSteps {
     @ParameterType(".*")
@@ -29,6 +29,11 @@ class CommonSteps {
     @ParameterType(".*")
     fun purpose(value: String): Purpose {
         return Purpose.decode(value) ?: throw IllegalArgumentException("$value is not a valid Purpose value")
+    }
+
+    @DataTableType
+    fun vcVerification(cell: String): VcVerification {
+        return VcVerification.valueOf(cell)
     }
 
     @Given("{actor} has an issued credential from {actor}")

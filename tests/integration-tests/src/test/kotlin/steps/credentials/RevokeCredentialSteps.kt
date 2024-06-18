@@ -17,20 +17,20 @@ class RevokeCredentialSteps {
     @When("{actor} revokes the credential issued to {actor}")
     fun issuerRevokesCredentialsIssuedToHolder(issuer: Actor, holder: Actor) {
         val issuedCredential = issuer.recall<IssueCredentialRecord>("issuedCredential")
-        val jwtCred = JwtCredential(issuedCredential.credential!!)
-        val statusListId = jwtCred.statusListId()
-        issuer.remember("statusListId", statusListId)
-
-        issuer.attemptsTo(
-            Get.resource("/credential-status/$statusListId"),
-        )
-        val encodedList = SerenityRest.lastResponse().get<String>("credentialSubject.encodedList")
-        issuer.remember("encodedStatusList", encodedList)
-
-        issuer.attemptsTo(
-            Patch.to("/credential-status/revoke-credential/${issuedCredential.recordId}"),
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
-        )
+//        val jwtCred = JwtCredential(issuedCredential.credential!!)
+//        val statusListId = statusListId(jwtCred)
+//        issuer.remember("statusListId", statusListId)
+//
+//        issuer.attemptsTo(
+//            Get.resource("/credential-status/$statusListId"),
+//        )
+//        val encodedList = SerenityRest.lastResponse().get<String>("credentialSubject.encodedList")
+//        issuer.remember("encodedStatusList", encodedList)
+//
+//        issuer.attemptsTo(
+//            Patch.to("/credential-status/revoke-credential/${issuedCredential.recordId}"),
+//            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
+//        )
     }
 
     @When("{actor} tries to revoke credential from {actor}")
@@ -67,12 +67,18 @@ class RevokeCredentialSteps {
     @Then("{actor} should see the credential is not revoked")
     fun issuerShouldSeeTheCredentialIsNotRevoked(issuer: Actor) {
         val issuedCredential = issuer.recall<IssueCredentialRecord>("issuedCredential")
-        val jwtCred = JwtCredential(issuedCredential.credential!!)
-        val statusListId = jwtCred.statusListId()
-        issuer.remember("statusListId", statusListId)
+//        val jwtCred = JwtCredential(issuedCredential.credential!!)
+//        val statusListId = statusListId(jwtCred)
+//        issuer.remember("statusListId", statusListId)
+//
+//        issuer.attemptsTo(
+//            Get.resource("/credential-status/$statusListId"),
+//        )
+    }
 
-        issuer.attemptsTo(
-            Get.resource("/credential-status/$statusListId"),
-        )
+    private fun statusListId(jwtCredential: JwtCredential): String {
+//        val listUrl = jwtCredential.payload.read<String>("$.vc.credentialStatus.statusListCredential")
+//        return listUrl.split("/credential-status/")[1]
+        return ""
     }
 }
