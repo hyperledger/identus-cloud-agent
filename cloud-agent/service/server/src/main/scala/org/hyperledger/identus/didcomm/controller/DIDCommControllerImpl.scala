@@ -55,7 +55,6 @@ class DIDCommControllerImpl(
           .catchAll {
             case f: Failure                    => ZIO.fail(f)
             case _: DIDCommMessageParsingError => ZIO.fail(UnexpectedError(StatusCode.BadRequest))
-            case _: PresentationError          => ZIO.fail(UnexpectedError(StatusCode.UnprocessableContent))
           }
           .provideSomeLayer(ZLayer.succeed(msgAndContext._2))
       } yield ()
