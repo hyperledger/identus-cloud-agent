@@ -1,8 +1,8 @@
 package org.hyperledger.identus.mercury
 
 import io.circe.{JsonObject, *}
-import org.hyperledger.identus.mercury.error.*
 import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.model.error.*
 import org.hyperledger.identus.mercury.protocol.routing.*
 import org.hyperledger.identus.resolvers.DIDResolver
 import zio.*
