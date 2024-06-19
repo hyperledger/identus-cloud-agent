@@ -34,34 +34,32 @@ object JWTVerificationTest extends ZIOSpecDefault {
   }
 
   private val statusListCredentialString = """
-                                             |{
-                                             |  "proof" : {
-                                             |    "type" : "DataIntegrityProof",
-                                             |    "proofPurpose" : "assertionMethod",
-                                             |    "verificationMethod" : "data:application/json;base64,eyJAY29udGV4dCI6WyJodHRwczovL3czaWQub3JnL3NlY3VyaXR5L211bHRpa2V5L3YxIl0sInR5cGUiOiJNdWx0aWtleSIsInB1YmxpY0tleU11bHRpYmFzZSI6InVNRll3RUFZSEtvWkl6ajBDQVFZRks0RUVBQW9EUWdBRUNYSUZsMlIxOGFtZUxELXlrU09HS1FvQ0JWYkZNNW91bGtjMnZJckp0UzRQWkJnMkxyNEQzUFdYR2xHTXB1aHdwSk84MEFpdzFXeVVHT1hONkJqSlFBPT0ifQ==",
-                                             |    "created" : "2024-03-04T14:44:43.867542Z",
-                                             |    "proofValue" : "zAN1rKqPFt7JayDWWD4Gu7HRsNVrgqHxMhKmYT5AE1FYD5a2zaM8G4WRPBmss9M2h3J5f56sunDFbxJVuDGB8qndknijyBcqr3",
-                                             |    "cryptoSuite" : "eddsa-jcs-2022"
-                                             |  },
-                                             |  "@context" : [
-                                             |    "https://www.w3.org/2018/credentials/v1",
-                                             |    "https://w3id.org/vc/status-list/2021/v1"
-                                             |  ],
-                                             |  "type" : [
-                                             |    "VerifiableCredential",
-                                             |    "StatusList2021Credential"
-                                             |  ],
-                                             |  "id" : "http://localhost:8085/credential-status/664382dc-9e6d-4d0c-99d1-85e2c74eb5e9",
-                                             |  "issuer" : "did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a",
-                                             |  "issuanceDate" : 1709563483,
-                                             |  "credentialSubject" : {
-                                             |    "id" : "",
-                                             |    "type" : "StatusList2021",
-                                             |    "statusPurpose" : "Revocation",
-                                             |    "encodedList" : "H4sIAAAAAAAA_-3BMQ0AAAACIGf_0MbwARoAAAAAAAAAAAAAAAAAAADgbbmHB0sAQAAA"
-                                             |  }
-                                             |}
-                                             |""".stripMargin
+                                              |{
+                                              |  "proof" : {
+                                              |    "type" : "EcdsaSecp256k1Signature2019",
+                                              |    "proofPurpose" : "assertionMethod",
+                                              |    "verificationMethod" : "data:application/json;base64,eyJAY29udGV4dCI6WyJodHRwczovL3czaWQub3JnL3NlY3VyaXR5L3YxIl0sInR5cGUiOiJFY2RzYVNlY3AyNTZrMVZlcmlmaWNhdGlvbktleTIwMTkiLCJwdWJsaWNLZXlKd2siOnsiY3J2Ijoic2VjcDI1NmsxIiwia2V5X29wcyI6WyJ2ZXJpZnkiXSwia3R5IjoiRUMiLCJ4IjoiQ1hJRmwyUjE4YW1lTEQteWtTT0dLUW9DQlZiRk01b3Vsa2MydklySnRTND0iLCJ5IjoiRDJRWU5pNi1BOXoxbHhwUmpLYm9jS1NUdk5BSXNOVnNsQmpsemVnWXlVQT0ifX0=",
+                                              |    "created" : "2024-06-06T22:47:27.987035Z",
+                                              |    "jws" : "eyJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdLCJhbGciOiJFUzI1NksifQ..ERDKKRukFs3UZiBdlH-e9r3rS9n05XDaR3yh-7jtmuZhY40b1CTMELHHRRfnfTv6XJ2ROziN4dj_nU_9W8qi5Q"
+                                              |  },
+                                              |  "@context" : [
+                                              |    "https://www.w3.org/2018/credentials/v1",
+                                              |    "https://w3id.org/vc/status-list/2021/v1"
+                                              |  ],
+                                              |  "type" : [
+                                              |    "VerifiableCredential",
+                                              |    "StatusList2021Credential"
+                                              |  ],
+                                              |  "id" : "http://localhost:8085/credential-status/575092c2-7eb0-40ae-8f41-3b499f45f3dc",
+                                              |  "issuer" : "did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a",
+                                              |  "issuanceDate" : 1717714047,
+                                              |  "credentialSubject" : {
+                                              |    "type" : "StatusList2021",
+                                              |    "statusPurpose" : "Revocation",
+                                              |    "encodedList" : "H4sIAAAAAAAA_-3BMQ0AAAACIGf_0MbwARoAAAAAAAAAAAAAAAAAAADgbbmHB0sAQAAA"
+                                              |  }
+                                              |}
+                                              |""".stripMargin
 
   private def createJwtCredential(issuer: IssuerWithKey): JWT = {
     val jwtCredentialNbf = Instant.parse("2010-01-01T00:00:00Z") // ISSUANCE DATE

@@ -13,6 +13,7 @@ import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus.*
 import org.hyperledger.identus.client.models.*
+import kotlin.time.Duration.Companion.seconds
 
 class IssueCredentialsSteps {
 
@@ -208,6 +209,7 @@ class IssueCredentialsSteps {
         )
 
         Wait.until(
+            10.seconds,
             errorMessage = "Issuer was unable to issue the credential! " +
                 "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT} state.",
         ) {
