@@ -1,4 +1,4 @@
-package org.hyperledger.identus.oid4vci.domain
+package org.hyperledger.identus.oid4vci.service
 
 import com.nimbusds.jose.*
 import org.bouncycastle.util.encoders.Hex
@@ -7,6 +7,7 @@ import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockM
 import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, MockDIDNonSecretStorage}
 import org.hyperledger.identus.castor.core.model.did.{DID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.service.{DIDService, MockDIDService}
+import org.hyperledger.identus.oid4vci.domain.Openid4VCIProofJwtOps
 import org.hyperledger.identus.oid4vci.http.{ClaimDescriptor, CredentialDefinition, Localization}
 import org.hyperledger.identus.oid4vci.service.{OIDCCredentialIssuerService, OIDCCredentialIssuerServiceImpl}
 import org.hyperledger.identus.oid4vci.storage.InMemoryIssuanceSessionService
