@@ -11,6 +11,7 @@ import io.iohk.atala.automation.serenity.ensure.Ensure
 import models.JwtCredential
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
+import org.apache.http.HttpStatus.SC_BAD_REQUEST
 import org.apache.http.HttpStatus.SC_OK
 import org.hyperledger.identus.client.models.*
 import org.hyperledger.identus.client.models.VcVerification.*
@@ -27,13 +28,20 @@ class VcVerificationSteps {
         val issuerDid = issuer.recall<String>("shortFormDid")
         holder.remember("jwt", jwt)
         holder.remember("issuerDid", issuerDid)
-
     }
 
     @Given("{actor} has a JWT VC for Verification API")
     fun holderHasAJWTVCForVerificationAPI(holder: Actor) {
-        val vc = JwtVerifiableCredential.jwtVCv1()
-        val jwt = vc.sign(JWSAlgorithm.ES256K, Curve.SECP256K1)
+        val jwtCredential = VerifiableJwt.jwtVCv1()
+        val jwt = jwtCredential.sign(JWSAlgorithm.ES256K, Curve.SECP256K1)
+        holder.remember("jwt", jwt)
+        holder.remember("issuerDid", "did:prism:issuer")
+    }
+
+    @Given("{actor} has a Verifiable Schema for Verification API")
+    fun holderHasAVerifiableSchemaForVerificationAPI(holder: Actor) {
+        val jwtCredential = VerifiableJwt.schemaVCv1()
+        val jwt = jwtCredential.sign(JWSAlgorithm.ES384, Curve.SECP256K1)
         holder.remember("jwt", jwt)
         holder.remember("issuerDid", "did:prism:issuer")
     }
@@ -55,22 +63,10 @@ class VcVerificationSteps {
         holder.remember("checks", checks)
     }
 
-    @When("{actor} sends the {} JWT Credential to {actor} Verification API")
-    fun holderSendsTheProblematicJWTCredentialToVerificationAPI(
-        holder: Actor,
-        problem: JwtCredentialProblem,
-        dataTable: DataTable
-    ) {
-        // add type to datatable
-        val checks = dataTable.asMap(VcVerification::class.java, Boolean::class.java)
-        // change the expected verification to fail
-        checks.forEach {
-            if (it.key == problem.verification) {
-                checks[it.key] = false
-            }
-        }
-    }
+    @Then("{actor} should see that verification has failed with {} problem")
+    fun holderShouldSeeThatVerificationHasFailedWithProblem(holder: Actor, problem: JwtCredentialProblem) {
 
+    }
 
     @Then("{actor} should see that all checks have passed")
     fun holderShouldSeeThatVerificationHasPassed(holder: Actor) {
@@ -78,12 +74,19 @@ class VcVerificationSteps {
         analyzeResponse(holder, jwt)
     }
 
+    @Then("{actor} should see the check has failed")
+    fun holderShouldSeeTheCheckHasFailed(holder: Actor) {
+        holder.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST)
+        )
+    }
+
     private fun verifyJwt(
         verifier: Actor,
         jwt: String,
         issuerDid: String,
         verifications: Map<VcVerification, Boolean>
-    ): Map<Verification, Boolean> {
+    ) {
         val now = OffsetDateTime.now()
 
         // creates the checks based on the data table from feature file
@@ -109,18 +112,7 @@ class VcVerificationSteps {
 
         verifier.attemptsTo(
             Post.to("/verification/credential").body(payload),
-//            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
         )
-
-        SerenityRest.lastResponse().prettyPrint()
-
-        verifier.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
-        )
-
-
-
-        return checks
     }
 
     private fun analyzeResponse(holder: Actor, jwt: String) {
@@ -128,6 +120,7 @@ class VcVerificationSteps {
         val actual = SerenityRest.lastResponse().getList<VcVerificationResponse>()
 
         holder.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
             Ensure.that(actual[0].credential).isEqualTo(jwt)
         )
 

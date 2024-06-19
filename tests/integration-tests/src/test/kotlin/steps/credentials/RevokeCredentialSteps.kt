@@ -59,7 +59,6 @@ class RevokeCredentialSteps {
                 Get.resource("/credential-status/$statusListId"),
             )
             val actualEncodedList: String = SerenityRest.lastResponse().jsonPath().get("credentialSubject.encodedList")
-            println("actual encoded $actualEncodedList | before encoded $encodedStatusList")
             actualEncodedList != encodedStatusList
         }
     }
