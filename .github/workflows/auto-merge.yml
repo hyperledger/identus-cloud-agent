@@ -34,7 +34,7 @@ jobs:
           git config --global user.email '${{ steps.import_gpg.outputs.email }}'
 
       - name: Fetch all branches
-        run: git fetch --all
+        run: git fetch origin
 
       - name: Checkout the feature branch
         run: git checkout ${{ github.event.pull_request.head.ref }}
@@ -43,7 +43,7 @@ jobs:
         run: git merge --squash origin/main
 
       - name: Commit changes
-        run: git commit -m "Merge main into ${{ github.event.pull_request.head.ref }}"
+        run: git commit -S -m "Merge main into ${{ github.event.pull_request.head.ref }}"
         if: success()
 
       - name: Push changes
