@@ -66,7 +66,7 @@ class WalletsSteps {
     fun acmeCreateNewWalletWithTheSameId(acme: Actor) {
         createNewWallet(acme, id = acme.recall("uniqueId"))
         acme.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_UNPROCESSABLE_ENTITY),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST),
         )
     }
 
@@ -124,7 +124,7 @@ class WalletsSteps {
     @Then("{actor} should have only one wallet and second operation should fail")
     fun acmeShouldHaveOnlyOneWalletAndSecondOperationShouldFail(acme: Actor) {
         acme.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_UNPROCESSABLE_ENTITY),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST),
         )
         acme.attemptsTo(
             Get.resource("/wallets"),
