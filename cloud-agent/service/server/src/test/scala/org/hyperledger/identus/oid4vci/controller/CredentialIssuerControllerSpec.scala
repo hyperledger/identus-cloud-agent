@@ -1,14 +1,36 @@
 package org.hyperledger.identus.oid4vci.controller
 
+import org.hyperledger.identus.iam.authentication.oidc.{KeycloakAuthenticatorImpl, KeycloakClientImpl}
+import org.hyperledger.identus.iam.authentication.oidc.KeycloakAuthenticatorSpec.{
+  initializeClient,
+  keycloakAdminClientLayer,
+  keycloakConfigLayer,
+  keycloakContainerLayer
+}
+import org.hyperledger.identus.iam.authorization.keycloak.admin.KeycloakConfigUtils
 import org.hyperledger.identus.oid4vci.domain.Openid4VCIProofJwtOps
 import org.hyperledger.identus.pollux.core.service.CredentialServiceSpecHelper
+import org.hyperledger.identus.sharedtest.containers.{KeycloakTestContainerSupport, PostgresTestContainerSupport}
+import zio.mock.MockSpecDefault
 import zio.test.{assertTrue, ZIOSpecDefault}
 import zio.test.TestAspect.sequential
+import zio.ZLayer
 
 object CredentialIssuerControllerSpec
-    extends ZIOSpecDefault
+    extends MockSpecDefault
     with CredentialServiceSpecHelper
-    with Openid4VCIProofJwtOps {
+    with Openid4VCIProofJwtOps
+    with KeycloakConfigUtils
+    with KeycloakTestContainerSupport
+    with PostgresTestContainerSupport {
+
+  val keycloakLayers = ZLayer.makeSome(
+    KeycloakAuthenticatorImpl.layer,
+    ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
+    keycloakConfigLayer(),
+    keycloakAdminClientLayer,
+    keycloakContainerLayer
+  )
 
   override def spec = suite("CredentialIssuerController")(authorizationCodeFlowSpec1a, preAutorizedCodeFlowSpec)
 
@@ -40,7 +62,10 @@ object CredentialIssuerControllerSpec
   ) @@ sequential
 
   val autorizationCodeFlowSpec1b = suite("Authorization Code Flow 1b")(
-    test("The Issuer-initiated flow begins as the Credential Issuer generates a Credential Offer") {
+    test("Issuer creates DID, VC schema and configures OIDC issuer endpoint") {
+      assertTrue(true)
+    },
+    test("1: The Issuer-initiated flow begins as the Credential Issuer generates a Credential Offer") {
       assertTrue(true)
     },
     test("2: The Wallet uses the Credential Issuer's URL to fetch the Credential Issuer metadata") {
