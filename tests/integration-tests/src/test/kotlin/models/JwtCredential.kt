@@ -35,7 +35,7 @@ class JwtCredential {
     private var header: JWSHeader? = null
     private var payload: Payload? = null
     private var signature: Base64URL? = null
-    private var claimSetBuilder = JWTClaimsSet.Builder()
+    var claimSetBuilder = JWTClaimsSet.Builder()
 
     companion object {
         val provider: Provider = BouncyCastleProvider()
@@ -49,21 +49,22 @@ class JwtCredential {
             return JwtCredential().parseJwt(jwt)
         }
 
-        fun verify(jwt: String, verification: List<VerificationMethod>) {
+        fun verify(jwt: String, verification: List<VerificationMethod>): Boolean {
             val signedJWT = SignedJWT.parse(jwt)
             verification
                 .map { Gson().toJson(it.publicKeyJwk) }
                 .forEach {
                     val result = signedJWT.verify(verifier(it))
-                    println("Verified $result")
+                    if (result) return true
                 }
+            return false
         }
 
-        fun verify(jwt: String, verifier: JWSVerifier) {
+        fun verify(jwt: String, verifier: JWSVerifier): Boolean {
             verifier.jcaContext.provider = provider
             val signedJWT = SignedJWT.parse(jwt)
             val result = signedJWT.verify(verifier)
-            println("Verified $result")
+            return result
         }
 
         private fun type(algorithm: JWSAlgorithm): KClass<out JWSProvider> {
@@ -196,6 +197,11 @@ class JwtCredential {
 
     fun claim(key: String, data: Any): JwtCredential {
         claimSetBuilder.claim(key, Gson().fromJson(Gson().toJson(data), Object::class.java))
+        return this
+    }
+
+    fun claims(claims: Map<String, Any>): JwtCredential {
+        claims.forEach { (key, value) -> claimSetBuilder.claim(key, value) }
         return this
     }
 
