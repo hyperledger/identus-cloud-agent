@@ -92,7 +92,7 @@ afterEvaluate {
             systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
             dependsOn("cleanTarget")
             finalizedBy("aggregate", "reports")
-            outputs.upToDateWhen {false}
+            outputs.upToDateWhen { false }
         }
     }
 

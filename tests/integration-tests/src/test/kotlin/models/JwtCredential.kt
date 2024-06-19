@@ -1,7 +1,6 @@
 package models
 
 import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
 import com.nimbusds.jose.*
 import com.nimbusds.jose.crypto.*
 import com.nimbusds.jose.crypto.impl.*
@@ -92,15 +91,15 @@ class JwtCredential {
                 .getOrPut("${algorithm.name}-${curve?.name}") {
                     when (type(algorithm)) {
                         MACProvider::class -> Secret(
-                            generateBytes(128)
+                            generateBytes(128),
                         )
 
                         ECDSAProvider::class -> EC(
-                            ECKeyGenerator(curve).provider(provider).keyUse(KeyUse.SIGNATURE).generate()
+                            ECKeyGenerator(curve).provider(provider).keyUse(KeyUse.SIGNATURE).generate(),
                         )
 
                         EdDSAProvider::class -> OKP(
-                            OctetKeyPairGenerator(curve).provider(provider).keyUse(KeyUse.SIGNATURE).generate()
+                            OctetKeyPairGenerator(curve).provider(provider).keyUse(KeyUse.SIGNATURE).generate(),
                         )
 
                         else -> throw RuntimeException("Requested [$algorithm] not supported.")
@@ -140,9 +139,9 @@ class JwtCredential {
     fun sign(algorithm: JWSAlgorithm, curve: Curve?): String {
         val jwt = SignedJWT(
             JWSHeader.Builder(algorithm).build(),
-            claimSetBuilder.build()
+            claimSetBuilder.build(),
         )
-        jwt.sign(signer(algorithm, curve));
+        jwt.sign(signer(algorithm, curve))
         return jwt.serialize()
     }
 

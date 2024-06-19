@@ -41,7 +41,6 @@ enum class JwtCredentialProblem {
     INTEGRITY_OF_CLAIMS {
         override fun jwt(): String {
             TODO("Not supported yet")
-
         }
         override val verification = VcVerification.INTEGRITY_OF_CLAIMS
     },
@@ -97,7 +96,7 @@ enum class JwtCredentialProblem {
             TODO("Not yet implemented")
         }
         override val verification = VcVerification.SUBJECT_VERIFICATION
-    };
+    }, ;
 
     companion object {
         init {
@@ -118,5 +117,4 @@ enum class JwtCredentialProblem {
 
     abstract fun jwt(): String
     abstract val verification: VcVerification
-
 }

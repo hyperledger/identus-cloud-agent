@@ -1,6 +1,5 @@
 package steps.credentials
 
-import com.jayway.jsonpath.JsonPath
 import interactions.*
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
