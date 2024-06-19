@@ -5,9 +5,7 @@ import org.hyperledger.identus.agent.walletapi.service.EntityService
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticator
-import org.hyperledger.identus.iam.authentication.AuthenticationError
 import org.hyperledger.identus.iam.entity.http.model.{CreateEntityRequest, EntityResponse, EntityResponsePage}
-import org.hyperledger.identus.shared.models.Failure
 import zio.{IO, URLayer, ZLayer}
 import zio.ZIO.succeed
 
@@ -73,22 +71,12 @@ case class EntityControllerImpl(service: EntityService, apiKeyAuthenticator: Api
     service
       .getById(id)
       .flatMap(entity => apiKeyAuthenticator.add(entity.id, apiKey))
-      .mapError {
-        case ae: AuthenticationError =>
-          ErrorResponse.internalServerError("AuthenticationRepositoryError", detail = Option(ae.userFacingMessage))
-        case f: Failure => f
-      }
   }
 
   override def deleteApiKeyAuth(id: UUID, apiKey: String)(implicit rc: RequestContext): IO[ErrorResponse, Unit] = {
     service
       .getById(id)
       .flatMap(entity => apiKeyAuthenticator.delete(entity.id, apiKey))
-      .mapError {
-        case ae: AuthenticationError =>
-          ErrorResponse.internalServerError("AuthenticationRepositoryError", detail = Option(ae.userFacingMessage))
-        case f: Failure => f
-      }
   }
 }
 
