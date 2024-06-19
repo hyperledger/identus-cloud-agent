@@ -1,9 +1,11 @@
 package steps.credentials
 
+import com.jayway.jsonpath.JsonPath
 import interactions.*
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
+import io.iohk.atala.automation.extensions.toJsonPath
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import io.iohk.atala.automation.utils.Wait
 import models.JwtCredential
@@ -17,20 +19,20 @@ class RevokeCredentialSteps {
     @When("{actor} revokes the credential issued to {actor}")
     fun issuerRevokesCredentialsIssuedToHolder(issuer: Actor, holder: Actor) {
         val issuedCredential = issuer.recall<IssueCredentialRecord>("issuedCredential")
-//        val jwtCred = JwtCredential(issuedCredential.credential!!)
-//        val statusListId = statusListId(jwtCred)
-//        issuer.remember("statusListId", statusListId)
-//
-//        issuer.attemptsTo(
-//            Get.resource("/credential-status/$statusListId"),
-//        )
-//        val encodedList = SerenityRest.lastResponse().get<String>("credentialSubject.encodedList")
-//        issuer.remember("encodedStatusList", encodedList)
-//
-//        issuer.attemptsTo(
-//            Patch.to("/credential-status/revoke-credential/${issuedCredential.recordId}"),
-//            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
-//        )
+        val jwtCred = JwtCredential.parseBase64(issuedCredential.credential!!)
+        val statusListId = statusListId(jwtCred)
+        issuer.remember("statusListId", statusListId)
+
+        issuer.attemptsTo(
+            Get.resource("/credential-status/$statusListId"),
+        )
+        val encodedList = SerenityRest.lastResponse().get<String>("credentialSubject.encodedList")
+        issuer.remember("encodedStatusList", encodedList)
+
+        issuer.attemptsTo(
+            Patch.to("/credential-status/revoke-credential/${issuedCredential.recordId}"),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
+        )
     }
 
     @When("{actor} tries to revoke credential from {actor}")
@@ -43,7 +45,7 @@ class RevokeCredentialSteps {
         )
         holder.attemptsTo(
             Patch.to("/credential-status/revoke-credential/${receivedCredential.recordId}"),
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_UNPROCESSABLE_ENTITY),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_NOT_FOUND),
         )
     }
 
@@ -66,18 +68,18 @@ class RevokeCredentialSteps {
     @Then("{actor} should see the credential is not revoked")
     fun issuerShouldSeeTheCredentialIsNotRevoked(issuer: Actor) {
         val issuedCredential = issuer.recall<IssueCredentialRecord>("issuedCredential")
-//        val jwtCred = JwtCredential(issuedCredential.credential!!)
-//        val statusListId = statusListId(jwtCred)
-//        issuer.remember("statusListId", statusListId)
-//
-//        issuer.attemptsTo(
-//            Get.resource("/credential-status/$statusListId"),
-//        )
+        val jwtCred = JwtCredential.parseBase64(issuedCredential.credential!!)
+        val statusListId = statusListId(jwtCred)
+        issuer.remember("statusListId", statusListId)
+        issuer.attemptsTo(
+            Get.resource("/credential-status/$statusListId"),
+        )
     }
 
     private fun statusListId(jwtCredential: JwtCredential): String {
-//        val listUrl = jwtCredential.payload.read<String>("$.vc.credentialStatus.statusListCredential")
-//        return listUrl.split("/credential-status/")[1]
-        return ""
+        val listUrl = jwtCredential.payload!!
+            .toJSONObject().toJsonPath()
+            .read<String>("$.vc.credentialStatus.statusListCredential")
+        return listUrl.split("/credential-status/")[1]
     }
 }
