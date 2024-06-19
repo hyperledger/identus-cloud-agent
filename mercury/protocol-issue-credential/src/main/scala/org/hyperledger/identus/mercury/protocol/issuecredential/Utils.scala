@@ -9,7 +9,7 @@ private trait ReadAttachmentsUtils {
 
   def attachments: Seq[AttachmentDescriptor]
 
-  // TODO this formatName shoud be type safe
+  // TODO this formatName should be type safe
   lazy val getCredentialFormatAndCredential: Seq[(String, String, Array[Byte])] =
     attachments
       .flatMap(attachment =>

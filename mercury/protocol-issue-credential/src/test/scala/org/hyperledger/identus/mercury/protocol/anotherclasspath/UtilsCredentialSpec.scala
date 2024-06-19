@@ -102,14 +102,15 @@ class UtilsCredentialSpec extends ZSuite {
       )
       .makeMessage
 
-    val obj = ProposeCredential.readFromMessage(msg)
+    ProposeCredential.readFromMessage(msg).map { obj =>
+      assertEquals(obj.getCredentialFormatAndCredential.size, 1)
+      assertEquals(
+        obj.getCredentialFormatAndCredential.map(_._2),
+        Seq(IssueCredentialProposeFormat.Unsupported(nameCredentialType).name)
+      )
+      assertEquals(obj.getCredential[TestCredentialType](nameCredentialType).headOption, Some(credential))
+    }
 
-    assertEquals(obj.getCredentialFormatAndCredential.size, 1)
-    assertEquals(
-      obj.getCredentialFormatAndCredential.map(_._2),
-      Seq(IssueCredentialProposeFormat.Unsupported(nameCredentialType).name)
-    )
-    assertEquals(obj.getCredential[TestCredentialType](nameCredentialType).headOption, Some(credential))
   }
 
   test("RequestCredential encode and decode any type of Credential into the attachments") {
