@@ -2,35 +2,62 @@ package org.hyperledger.identus.iam.authentication
 
 import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Entity, EntityRole}
 import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
+import org.hyperledger.identus.shared.models.*
 import zio.{IO, ZIO, ZLayer}
 
 trait Credentials
 
-trait AuthenticationError {
-  def message: String
+trait AuthenticationError(
+    val statusCode: StatusCode,
+    val userFacingMessage: String
+) extends Failure {
+  override val namespace: String = "AuthenticationError"
 }
 
 object AuthenticationError {
 
-  case class InvalidCredentials(message: String) extends AuthenticationError
+  case class InvalidCredentials(message: String)
+      extends AuthenticationError(
+        StatusCode.Unauthorized,
+        message
+      )
 
-  case class AuthenticationMethodNotEnabled(message: String) extends AuthenticationError
+  case class AuthenticationMethodNotEnabled(message: String)
+      extends AuthenticationError(
+        StatusCode.Unauthorized,
+        message
+      )
 
-  case class UnexpectedError(message: String) extends AuthenticationError
+  case class UnexpectedError(message: String)
+      extends AuthenticationError(
+        StatusCode.InternalServerError,
+        message
+      )
 
-  case class ServiceError(message: String) extends AuthenticationError
+  case class ServiceError(message: String)
+      extends AuthenticationError(
+        StatusCode.InternalServerError,
+        message
+      )
 
-  case class ResourceNotPermitted(message: String) extends AuthenticationError
+  case class ResourceNotPermitted(message: String)
+      extends AuthenticationError(
+        StatusCode.Forbidden,
+        message
+      )
 
-  case class InvalidRole(message: String) extends AuthenticationError
+  case class InvalidRole(message: String)
+      extends AuthenticationError(
+        StatusCode.Forbidden,
+        message
+      )
 
   def toErrorResponse(error: AuthenticationError): ErrorResponse =
     ErrorResponse(
       status = sttp.model.StatusCode.Forbidden.code,
       `type` = "authentication_error",
       title = "",
-      detail = Option(error.message)
+      detail = Option(error.userFacingMessage)
     )
 }
 

@@ -61,7 +61,7 @@ case class ApiKeyAuthenticatorImpl(
       entityToCreate = Entity(name = "Auto provisioned entity", walletId = wallet.id.toUUID)
       entity <- entityService.create(entityToCreate).orDieAsUnmanagedFailure
       _ <- add(entity.id, apiKey)
-        .mapError(are => AuthenticationRepositoryError.ServiceError(are.message))
+        .mapError(are => AuthenticationRepositoryError.ServiceError(are.userFacingMessage))
     } yield entity
   }
 

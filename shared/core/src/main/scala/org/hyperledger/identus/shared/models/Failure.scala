@@ -24,6 +24,8 @@ sealed class StatusCode(val code: Int)
 
 object StatusCode {
   val BadRequest: StatusCode = StatusCode(400)
+  val Unauthorized: StatusCode = StatusCode(401)
+  val Forbidden: StatusCode = StatusCode(403)
   val NotFound: StatusCode = StatusCode(404)
   val UnprocessableContent: StatusCode = StatusCode(422)
 

@@ -1,6 +1,5 @@
 package org.hyperledger.identus.iam.entity.http.controller
 
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError
 import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.hyperledger.identus.agent.walletapi.service.EntityService
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
@@ -76,7 +75,7 @@ case class EntityControllerImpl(service: EntityService, apiKeyAuthenticator: Api
       .flatMap(entity => apiKeyAuthenticator.add(entity.id, apiKey))
       .mapError {
         case ae: AuthenticationError =>
-          ErrorResponse.internalServerError("AuthenticationRepositoryError", detail = Option(ae.message))
+          ErrorResponse.internalServerError("AuthenticationRepositoryError", detail = Option(ae.userFacingMessage))
         case f: Failure => f
       }
   }
@@ -87,7 +86,7 @@ case class EntityControllerImpl(service: EntityService, apiKeyAuthenticator: Api
       .flatMap(entity => apiKeyAuthenticator.delete(entity.id, apiKey))
       .mapError {
         case ae: AuthenticationError =>
-          ErrorResponse.internalServerError("AuthenticationRepositoryError", detail = Option(ae.message))
+          ErrorResponse.internalServerError("AuthenticationRepositoryError", detail = Option(ae.userFacingMessage))
         case f: Failure => f
       }
   }
