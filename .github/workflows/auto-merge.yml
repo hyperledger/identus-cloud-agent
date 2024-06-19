@@ -43,7 +43,7 @@ jobs:
         run: git merge --squash origin/main
 
       - name: Commit changes
-        run: git commit -S -m "Merge main into ${{ github.event.pull_request.head.ref }}"
+        run: git commit -S -s -m "Merge main into ${{ github.event.pull_request.head.ref }}"
         if: success()
 
       - name: Push changes
