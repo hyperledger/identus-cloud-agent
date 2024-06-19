@@ -32,9 +32,9 @@ class JwtCredential {
     class Secret(override val value: ByteArray) : Key<ByteArray>
 
     // properties
-    private var header: JWSHeader? = null
-    private var payload: Payload? = null
-    private var signature: Base64URL? = null
+    var header: JWSHeader? = null
+    var payload: Payload? = null
+    var signature: Base64URL? = null
     var claimSetBuilder = JWTClaimsSet.Builder()
 
     companion object {
