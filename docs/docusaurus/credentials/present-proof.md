@@ -294,7 +294,7 @@ The Holder/Prover will have to provide the following information:
 1. `presentationId`: The unique identifier of the presentation record to accept.
 2. `proofId`: The unique identifier of the verifiable credential record to use as proof.
 3. `credentialFormat`: SDJWT.
-4. `claims`: The Verifier requests certain claims to be disclosed. The path of these claims must be an exact match with those in the SD-JWT Verifiable Credential (VC).
+4. `claims`: The Verifier requests specific claims to disclose. The path of these claims must match exactly with those in the SD-JWT Verifiable Credential (VC).
 - 📌 **Note:**  When a SD-JWT Verifiable Credential (VC) has nested claims such as region and country within an address object, as shown in the example above, it falls under the Holder's responsibility to supply the right nested JSON structure for the claim attribute that is being disclosed.
 - 📌 **Note:** The holder or prover of the claims is only required to disclose the attribute names and the correct JSON path. The actual values are not necessary. A special JSON placeholder `{}`, can be used instead.
 
