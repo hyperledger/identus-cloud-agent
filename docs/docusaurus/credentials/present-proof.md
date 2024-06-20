@@ -128,7 +128,7 @@ curl -X 'POST' 'http://localhost:8070/cloud-agent/present-proof/presentations' \
 </TabItem>
 <TabItem value="sdjwt" label="SDJWT">
 
-i. `SD-JWT` The absence of the `cnf` key claim in the SD-JWT Verifiable Credential (VC) means that the Holder/Prover is unable to create a presentation and sign the `challenge` and `domain` supplied by the verifier
+a. `SD-JWT` The absence of the `cnf` key claim in the SD-JWT Verifiable Credential (VC) means that the Holder/Prover is unable to create a presentation and sign the `challenge` and `domain` supplied by the verifier
 
 ```bash
 curl -X 'POST' 'http://localhost:8070/cloud-agent/present-proof/presentations' \
