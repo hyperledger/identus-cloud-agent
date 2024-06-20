@@ -33,9 +33,11 @@ case class ApiKeyAuthenticatorImpl(
           }
       }
     } else {
-      ZIO.fail(
-        AuthenticationMethodNotEnabled(s"Authentication method not enabled: ${AuthenticationMethodType.ApiKey.value}")
-      ).orDieAsUnmanagedFailure
+      ZIO
+        .fail(
+          AuthenticationMethodNotEnabled(s"Authentication method not enabled: ${AuthenticationMethodType.ApiKey.value}")
+        )
+        .orDieAsUnmanagedFailure
     }
   }
 
