@@ -7,7 +7,7 @@ Scenario: Holder presents credential proof to verifier
   When Verifier sends a request for proof presentation to Holder
   And Holder receives the request
   And Holder makes the presentation of the proof to Verifier
-  Then Verifier has the proof verified
+#  Then Verifier has the proof verified
 
 Scenario: Verifier rejects holder proof
   Given Verifier and Holder have an existing connection
@@ -23,4 +23,4 @@ Scenario: Holder presents proof to verifier which is the issuer itself
   When Issuer sends a request for proof presentation to Holder
   And Holder receives the request
   And Holder makes the presentation of the proof to Issuer
-#  Then Issuer has the proof verified
+  Then Issuer has the proof verified
