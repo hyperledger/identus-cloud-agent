@@ -4,6 +4,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
@@ -52,7 +53,7 @@ trait CredentialRepository {
   def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
-      keyId: Option[String],
+      keyId: Option[KeyId],
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit]
 

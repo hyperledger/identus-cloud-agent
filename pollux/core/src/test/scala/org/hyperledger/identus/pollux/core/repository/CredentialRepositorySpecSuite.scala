@@ -6,6 +6,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.KeyId
 import zio.{Exit, ZIO, ZLayer}
 import zio.test.*
 import zio.test.Assertion.*
@@ -469,7 +470,7 @@ object CredentialRepositorySpecSuite {
         record1 = issueCredentialRecord(CredentialFormat.JWT)
         record2 = issueCredentialRecord(CredentialFormat.JWT)
         _ <- repo.create(record1).provide(wallet1)
-        res <- repo.updateWithSubjectId(record2.id, "my-id", Some("my-key-id"), newState).provide(wallet2).exit
+        res <- repo.updateWithSubjectId(record2.id, "my-id", Some(KeyId("my-key-id")), newState).provide(wallet2).exit
       } yield assert(res)(dies(isSubtype[RuntimeException](anything)))
     },
     test("unable to delete IssueCredentialRecord outside of the wallet") {

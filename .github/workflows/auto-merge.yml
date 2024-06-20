@@ -1,0 +1,79 @@
+name: Auto Merge Main into Feature Branch
+
+# Automatically merge main into a feature branch when a pull request is labeled with 'autoupdate'
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+jobs:
+  auto-merge:
+    if: contains(github.event.pull_request.labels.*.name, 'autoupdate')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up GPG key to extract the Git configuration
+        uses: crazy-max/ghaction-import-gpg@v3
+        id: import_gpg
+        with:
+          gpg-private-key: ${{ secrets.HYP_BOT_GPG_PRIVATE }}
+          passphrase: ${{ secrets.HYP_BOT_GPG_PASSWORD }}
+          git-user-signingkey: true
+          git-commit-gpgsign: true
+          git_config_global: true
+          git_tag_gpgsign: true
+
+      - name: Set up Git
+        run: |
+          git config --global user.name '${{ steps.import_gpg.outputs.name }}'
+          git config --global user.email '${{ steps.import_gpg.outputs.email }}'
+
+      - name: Fetch all branches
+        run: git fetch origin
+
+      - name: Checkout the feature branch
+        run: git checkout ${{ github.event.pull_request.head.ref }}
+
+      - name: Merge main into feature branch
+        run: git merge --squash origin/main
+
+      - name: Commit changes
+        run: git commit -S -s -m "Merge main into ${{ github.event.pull_request.head.ref }}"
+        if: success()
+
+      - name: Push changes
+        run: git push origin ${{ github.event.pull_request.head.ref }}
+        if: success()
+
+      - name: Add comment to PR
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = ${{ github.event.pull_request.number }};
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: 'The main branch has been successfully merged into this feature branch! :rocket:'
+            });
+
+      - name: Add sad comment to PR
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = ${{ github.event.pull_request.number }};
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: 'The main branch cannot be merged into the feature branch without your help :cry:'
+            });
