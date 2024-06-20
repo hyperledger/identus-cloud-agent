@@ -65,7 +65,6 @@ class VcVerificationSteps {
 
     @Then("{actor} should see that verification has failed with {} problem")
     fun holderShouldSeeThatVerificationHasFailedWithProblem(holder: Actor, problem: JwtCredentialProblem) {
-
     }
 
     @Then("{actor} should see that all checks have passed")
@@ -77,7 +76,7 @@ class VcVerificationSteps {
     @Then("{actor} should see the check has failed")
     fun holderShouldSeeTheCheckHasFailed(holder: Actor) {
         holder.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST)
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST),
         )
     }
 
@@ -85,7 +84,7 @@ class VcVerificationSteps {
         verifier: Actor,
         jwt: String,
         issuerDid: String,
-        verifications: Map<VcVerification, Boolean>
+        verifications: Map<VcVerification, Boolean>,
     ) {
         val now = OffsetDateTime.now()
 
@@ -121,7 +120,7 @@ class VcVerificationSteps {
 
         holder.attemptsTo(
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
-            Ensure.that(actual[0].credential).isEqualTo(jwt)
+            Ensure.that(actual[0].credential).isEqualTo(jwt),
         )
 
         // check each verification result from the requested checks
@@ -132,9 +131,8 @@ class VcVerificationSteps {
 
             holder.attemptsTo(
                 Ensure.that(it.success).isEqualTo(expected)
-                    .withReportedError("Expected [${it.verification}] to be [$expected] but got [${it.success}]")
+                    .withReportedError("Expected [${it.verification}] to be [$expected] but got [${it.success}]"),
             )
         }
     }
 }
-

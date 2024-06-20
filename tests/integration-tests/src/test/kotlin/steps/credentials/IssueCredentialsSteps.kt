@@ -51,7 +51,7 @@ class IssueCredentialsSteps {
         )
 
         issuer.attemptsTo(
-            Post.to("/issue-credentials/credential-offers").body(credentialOfferRequest)
+            Post.to("/issue-credentials/credential-offers").body(credentialOfferRequest),
         )
     }
 

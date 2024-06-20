@@ -4,8 +4,6 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
-import com.nimbusds.jose.JWSAlgorithm
-import com.nimbusds.jose.jwk.Curve
 import io.iohk.atala.automation.restassured.CustomGsonObjectMapperFactory
 import models.JwtCredential
 import java.time.OffsetDateTime
@@ -50,11 +48,13 @@ object VerifiableJwt {
 
         val credentialSchema = JsonObject()
         credentialSchema.addProperty(
-            "id", "https://www.w3.org/2022/credentials/v2/json-schema-credential-schema.json"
+            "id",
+            "https://www.w3.org/2022/credentials/v2/json-schema-credential-schema.json",
         )
         credentialSchema.addProperty("type", "JsonSchema")
         credentialSchema.addProperty(
-            "digestSRI", "sha384-S57yQDg1MTzF56Oi9DbSQ14u7jBy0RDdx0YbeV7shwhCS88G8SCXeFq82PafhCrW"
+            "digestSRI",
+            "sha384-S57yQDg1MTzF56Oi9DbSQ14u7jBy0RDdx0YbeV7shwhCS88G8SCXeFq82PafhCrW",
         )
 
         val verifiableSchema = VerifiableSchemaV1(
@@ -64,7 +64,7 @@ object VerifiableJwt {
             context = listOf("https://www.w3.org/ns/credentials/v2", "https://www.w3.org/ns/credentials/examples/v2"),
             id = "https://example.com/credentials/3734",
             issuer = "https://example.com/issuers/14",
-            issuanceDate = OffsetDateTime.now()
+            issuanceDate = OffsetDateTime.now(),
         )
 
         val typeToken = object : TypeToken<Map<String, Any>>() {}.type
@@ -90,8 +90,8 @@ object VerifiableJwt {
                 statusListIndex = 1,
                 id = "https://example.com/credential-status/4a6ad192-14b5-4804-8c78-8873c82d2250#1",
                 type = "StatusList2021Entry",
-                statusListCredential = "https://example.com/credential-status/4a6ad192-14b5-4804-8c78-8873c82d2250"
-            )
+                statusListCredential = "https://example.com/credential-status/4a6ad192-14b5-4804-8c78-8873c82d2250",
+            ),
         )
 
         val jwt = JwtCredential().issuer("did:prism:issuer").jwtID("jti").subject("did:subject")
@@ -109,7 +109,7 @@ object VerifiableJwt {
         val credentialSubject: Any,
         val type: Collection<String>,
         @SerializedName("@context") val context: Collection<String>,
-        val credentialStatus: CredentialStatus
+        val credentialStatus: CredentialStatus,
     )
 
     data class CredentialStatus(
@@ -117,7 +117,7 @@ object VerifiableJwt {
         val statusListIndex: Int,
         val id: String,
         val type: String,
-        val statusListCredential: String
+        val statusListCredential: String,
     )
 
     data class VerifiableSchemaV1(
