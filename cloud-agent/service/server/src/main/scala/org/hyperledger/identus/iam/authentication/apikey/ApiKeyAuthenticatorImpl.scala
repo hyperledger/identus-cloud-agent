@@ -6,7 +6,7 @@ import org.hyperledger.identus.iam.authentication.AuthenticationError
 import org.hyperledger.identus.iam.authentication.AuthenticationError.*
 import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{IO, UIO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
 import scala.language.implicitConversions
@@ -31,17 +31,6 @@ case class ApiKeyAuthenticatorImpl(
             case AuthenticationError.InvalidCredentials(message) if apiKeyConfig.autoProvisioning =>
               provisionNewEntity(apiKey)
           }
-          .mapError {
-            case AuthenticationRepositoryError.StorageError(cause) =>
-              UnexpectedError("Internal error")
-            case AuthenticationRepositoryError.UnexpectedError(cause) =>
-              UnexpectedError("Internal error")
-            case AuthenticationRepositoryError.ServiceError(message) =>
-              UnexpectedError("Internal error")
-            case AuthenticationRepositoryError.AuthenticationCompromised(entityId, amt, secret) =>
-              InvalidCredentials("API key is compromised")
-            case e: AuthenticationError => e
-          }
       }
     } else {
       ZIO.fail(
@@ -50,7 +39,7 @@ case class ApiKeyAuthenticatorImpl(
     }
   }
 
-  protected[apikey] def provisionNewEntity(apiKey: String): IO[AuthenticationRepositoryError, Entity] = synchronized {
+  protected[apikey] def provisionNewEntity(apiKey: String): UIO[Entity] = synchronized {
     for {
       wallet <- walletManagementService
         .createWallet(Wallet("Auto provisioned wallet", WalletId.random))
@@ -59,7 +48,6 @@ case class ApiKeyAuthenticatorImpl(
       entityToCreate = Entity(name = "Auto provisioned entity", walletId = wallet.id.toUUID)
       entity <- entityService.create(entityToCreate).orDieAsUnmanagedFailure
       _ <- add(entity.id, apiKey)
-        .mapError(are => AuthenticationRepositoryError.ServiceError(are.userFacingMessage))
     } yield entity
   }
 
@@ -76,17 +64,15 @@ case class ApiKeyAuthenticatorImpl(
     } yield entity
   }
 
-  override def add(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit] = {
+  override def add(entityId: UUID, apiKey: String): UIO[Unit] = {
     for {
       saltAndApiKey <- ZIO.succeed(apiKeyConfig.salt + apiKey)
       secret <- ZIO
         .fromTry(Try(Sha256Hash.compute(saltAndApiKey.getBytes).hexEncoded))
-        .logError("Failed to compute SHA256 hash")
-        .mapError(cause => AuthenticationError.UnexpectedError(cause.getMessage))
+        .orDie
       _ <- repository
         .insert(entityId, AuthenticationMethodType.ApiKey, secret)
-        .logError(s"Insert operation failed for entityId: $entityId")
-        .mapError(are => AuthenticationError.UnexpectedError(are.message))
+        .orDieAsUnmanagedFailure
     } yield ()
   }
 

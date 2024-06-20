@@ -2,6 +2,7 @@ package org.hyperledger.identus.iam.authentication.apikey
 
 import doobie.*
 import doobie.implicits.*
+import org.hyperledger.identus.shared.db.Errors
 import org.hyperledger.identus.shared.db.Implicits.ensureOneAffectedRowOrDie
 import org.postgresql.util.PSQLException
 import zio.*
@@ -18,27 +19,21 @@ case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends Authentica
       entityId: UUID,
       amt: AuthenticationMethodType,
       secret: String
-  ): IO[AuthenticationRepositoryError, Unit] = {
+  ): IO[AuthenticationCompromised, Unit] = {
     val authenticationMethod = AuthenticationMethod(amt, entityId, secret)
     AuthenticationRepositorySql
       .insert(authenticationMethod)
       .transact(xa)
-      .map(_ => ())
-      .logError(
-        s"insert failed for entityId: $entityId, authenticationMethodType: $amt, and secret: $secret"
-      )
-      .mapError {
+      .flatMap {
+        case 1     => ZIO.unit
+        case count => ZIO.die(Errors.UnexpectedAffectedRow(count))
+      }
+      .catchAll {
         case sqlException: PSQLException
             if sqlException.getMessage
               .contains("ERROR: duplicate key value violates unique constraint \"unique_type_secret_constraint\"") =>
-          AuthenticationCompromised(entityId, amt, secret)
-        case otherSqlException: PSQLException =>
-          StorageError(otherSqlException)
-        case unexpected: Throwable =>
-          UnexpectedError(unexpected)
-      }
-      .catchSome { case AuthenticationCompromised(eId, amt, s) =>
-        ensureThatTheApiKeyIsNotCompromised(eId, amt, s)
+          ensureThatTheApiKeyIsNotCompromised(entityId, amt, secret)
+        case e => ZIO.die(e)
       }
   }
 
@@ -46,9 +41,9 @@ case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends Authentica
       entityId: UUID,
       authenticationMethodType: AuthenticationMethodType,
       secret: String
-  ): IO[AuthenticationRepositoryError, Unit] = {
+  ): IO[AuthenticationCompromised, Unit] = {
     val ac = AuthenticationCompromised(entityId, authenticationMethodType, secret)
-    val acZIO: IO[AuthenticationRepositoryError, Unit] = ZIO.fail(ac)
+    val acZIO: IO[AuthenticationCompromised, Unit] = ZIO.fail(ac)
 
     for {
       authRecordOpt <- findAuthenticationMethodByTypeAndSecret(authenticationMethodType, secret)
