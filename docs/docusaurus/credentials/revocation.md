@@ -1,4 +1,8 @@
-# JWT credential revocation
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Credential revocation
+
 
 Identus implements the revocation mechanism of JWT credentials according to [Verifiable Credentials Status List v2021](https://www.w3.org/TR/2023/WD-vc-status-list-20230427/). This open standard enables Identus to verify the revocation status of any credential that implements the revocation mechanism using the same specification.
 
@@ -15,9 +19,11 @@ Every credential will contain the property `credentialStatus`, which will look l
     "statusListCredential": "http://localhost:8080/cloud-agent/cloud-agent/credential-status/27526236-3836-4061-9867-f69314e258b4"
   },
 ```
-
 * `type` will always be `StatusList2021Entry`
 * `statusListCredential` is a publicly accessible URL that resolves a status list credential that looks like this:
+
+<Tabs groupId="vc-formats">
+<TabItem value="jwt" label="JWT">
 
 ```json
 {
@@ -41,6 +47,12 @@ Every credential will contain the property `credentialStatus`, which will look l
 }
 
 ```
+
+</TabItem>
+
+</Tabs>
+
+
 * `statusListIndex` is an index in a bit string at which the credential's revocation status can be verified.
 
 The status list credential contains  `encodedList`, a base64-encoded bit string that contains the credential's revocation status.
@@ -57,6 +69,9 @@ To verify the revocation status of the credential, one must follow these steps:
 ## Proof verification
 
 Status list credential integrity can be verified using the embedded proof.
+
+<Tabs groupId="vc-formats">
+<TabItem value="jwt" label="JWT">
 
 We currently support 2 types of proofs:
 * `DataIntegrityProof` via crypto suite `eddsa-jcs-2022`. The exact steps on how to create a verify this proof are in the [Data Integrity EdDSA Cryptosuites v1.0](https://www.w3.org/TR/vc-di-eddsa/#eddsa-jcs-2022)
@@ -126,6 +141,13 @@ We currently support 2 types of proofs:
 }
 
 ```
+
+</TabItem>
+
+</Tabs>
+
+
+
 
 ## Revocation
 
