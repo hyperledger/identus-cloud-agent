@@ -2,6 +2,7 @@ package org.hyperledger.identus.iam.authentication.apikey
 
 import doobie.*
 import doobie.implicits.*
+import org.hyperledger.identus.shared.db.Implicits.ensureOneAffectedRowOrDie
 import org.postgresql.util.PSQLException
 import zio.*
 import zio.interop.catz.*
@@ -79,38 +80,34 @@ case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends Authentica
   override def findAuthenticationMethodByTypeAndSecret(
       amt: AuthenticationMethodType,
       secret: String
-  ): IO[AuthenticationRepositoryError, Option[AuthenticationMethod]] = {
+  ): UIO[Option[AuthenticationMethod]] = {
     AuthenticationRepositorySql
       .filterByTypeAndSecret(amt, secret)
       .transact(xa)
-      .logError(s"findAuthenticationMethodBySecret failed for secret:$secret")
       .map(_.headOption)
-      .mapError(AuthenticationRepositoryError.StorageError.apply)
+      .orDie
   }
 
   override def deleteByMethodAndEntityId(
       entityId: UUID,
       amt: AuthenticationMethodType
-  ): IO[AuthenticationRepositoryError, Unit] = {
+  ): UIO[Unit] = {
     AuthenticationRepositorySql
       .softDeleteByEntityIdAndType(entityId, amt, Some(OffsetDateTime.now()))
       .transact(xa)
-      .logError(s"deleteByMethodAndEntityId failed for method: $amt and entityId: $entityId")
-      .mapError(AuthenticationRepositoryError.StorageError.apply)
       .map(_ => ())
+      .orDie
   }
 
   override def delete(
       entityId: UUID,
       amt: AuthenticationMethodType,
       secret: String
-  ): IO[AuthenticationRepositoryError, Unit] = {
+  ): UIO[Unit] = {
     AuthenticationRepositorySql
       .softDeleteBy(entityId, amt, secret, Some(OffsetDateTime.now()))
       .transact(xa)
-      .logError(s"deleteByEntityIdAndSecret failed for id: $entityId and secret: $secret")
-      .mapError(AuthenticationRepositoryError.StorageError.apply)
-      .map(_ => ())
+      .ensureOneAffectedRowOrDie
   }
 }
 

@@ -1,7 +1,6 @@
 package org.hyperledger.identus.iam.authentication.apikey
 
 import org.hyperledger.identus.container.util.MigrationAspects.migrate
-import org.hyperledger.identus.iam.authentication.AuthenticationError
 import org.hyperledger.identus.iam.authentication.apikey.AuthenticationMethodType.ApiKey
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import zio.test.{TestAspect, ZIOSpecDefault, *}
@@ -40,9 +39,9 @@ object JdbcAuthenticationRepositorySpec extends ZIOSpecDefault, PostgresTestCont
           recordId <- repository.insert(entityId, AuthenticationMethodType.ApiKey, secret)
           fetchedEntityId <- repository.findEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret)
           _ <- repository.deleteByMethodAndEntityId(entityId, AuthenticationMethodType.ApiKey)
-          notFoundEntityId <- repository.findEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret).flip
-        } yield assert(entityId)(equalTo(fetchedEntityId)) &&
-          assert(notFoundEntityId)(isSubtype[AuthenticationError.AuthenticationNotFound](anything))
+          notFoundEntityId <- repository.findEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret)
+        } yield assert(fetchedEntityId)(isSome(equalTo(entityId))) &&
+          assert(notFoundEntityId)(isNone)
       }
     },
     test("insert a similar secret for a different tenant must fail") {

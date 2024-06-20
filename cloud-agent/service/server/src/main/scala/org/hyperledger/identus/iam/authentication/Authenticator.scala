@@ -2,7 +2,6 @@ package org.hyperledger.identus.iam.authentication
 
 import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Entity, EntityRole}
 import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.iam.authentication.apikey.AuthenticationMethodType
 import org.hyperledger.identus.shared.models.*
 import zio.{IO, ZIO, ZLayer}
 
@@ -21,13 +20,6 @@ object AuthenticationError {
       extends AuthenticationError(
         StatusCode.Unauthorized,
         message
-      )
-
-  def hide(secret: String) = secret.take(8) + "****"
-  case class AuthenticationNotFound(authenticationMethodType: AuthenticationMethodType, secret: String)
-      extends AuthenticationError(
-        StatusCode.NotFound,
-        s"Authentication method not found for type:${authenticationMethodType.value} and secret:${hide(secret)}"
       )
 
   case class AuthenticationMethodNotEnabled(message: String)

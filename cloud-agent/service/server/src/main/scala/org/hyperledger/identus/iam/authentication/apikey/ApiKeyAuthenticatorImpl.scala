@@ -28,8 +28,7 @@ case class ApiKeyAuthenticatorImpl(
       } else {
         authenticateBy(apiKey)
           .catchSome {
-            case AuthenticationError.AuthenticationNotFound(method, secret)
-                if apiKeyConfig.autoProvisioning =>
+            case AuthenticationError.InvalidCredentials(message) if apiKeyConfig.autoProvisioning =>
               provisionNewEntity(apiKey)
           }
           .mapError {
@@ -41,6 +40,7 @@ case class ApiKeyAuthenticatorImpl(
               UnexpectedError("Internal error")
             case AuthenticationRepositoryError.AuthenticationCompromised(entityId, amt, secret) =>
               InvalidCredentials("API key is compromised")
+            case e: AuthenticationError => e
           }
       }
     } else {
@@ -63,7 +63,7 @@ case class ApiKeyAuthenticatorImpl(
     } yield entity
   }
 
-  protected[apikey] def authenticateBy(apiKey: String): IO[AuthenticationNotFound, Entity] = {
+  protected[apikey] def authenticateBy(apiKey: String): IO[InvalidCredentials, Entity] = {
     for {
       saltAndApiKey <- ZIO.succeed(apiKeyConfig.salt + apiKey)
       secret <- ZIO
@@ -71,7 +71,7 @@ case class ApiKeyAuthenticatorImpl(
         .orDie
       entityId <- repository
         .findEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret)
-        .someOrFail(AuthenticationNotFound(AuthenticationMethodType.ApiKey, secret))
+        .someOrFail(InvalidCredentials("Invalid API key"))
       entity <- entityService.getById(entityId).orDieAsUnmanagedFailure
     } yield entity
   }
@@ -97,9 +97,7 @@ case class ApiKeyAuthenticatorImpl(
         .fromTry(Try(Sha256Hash.compute(saltAndApiKey.getBytes).hexEncoded))
         .logError("Failed to compute SHA256 hash")
         .mapError(cause => AuthenticationError.UnexpectedError(cause.getMessage))
-      _ <- repository
-        .delete(entityId, AuthenticationMethodType.ApiKey, secret)
-        .mapError(are => AuthenticationError.UnexpectedError(are.message))
+      _ <- repository.delete(entityId, AuthenticationMethodType.ApiKey, secret)
     } yield ()
   }
 }

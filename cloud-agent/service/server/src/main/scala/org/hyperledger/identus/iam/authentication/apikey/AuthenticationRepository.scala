@@ -44,18 +44,18 @@ trait AuthenticationRepository {
   def findAuthenticationMethodByTypeAndSecret(
       amt: AuthenticationMethodType,
       secret: String
-  ): zio.IO[AuthenticationRepositoryError, Option[AuthenticationMethod]]
+  ): zio.UIO[Option[AuthenticationMethod]]
 
   def deleteByMethodAndEntityId(
       entityId: UUID,
       amt: AuthenticationMethodType
-  ): zio.IO[AuthenticationRepositoryError, Unit]
+  ): zio.UIO[Unit]
 
   def delete(
       entityId: UUID,
       amt: AuthenticationMethodType,
       secret: String
-  ): zio.IO[AuthenticationRepositoryError, Unit]
+  ): zio.UIO[Unit]
 }
 
 //TODO: reconsider the hierarchy of the service and dal layers
