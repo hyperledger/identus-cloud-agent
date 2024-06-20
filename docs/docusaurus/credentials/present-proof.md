@@ -148,7 +148,7 @@ curl -X 'POST' 'http://localhost:8070/cloud-agent/present-proof/presentations' \
       }'
 ```
 
-ii. `SD-JWT` The presence of the `cnf` key as a disclosable claim in the SD-JWT Verifiable Credential (VC) allows the Holder/Prover to create a presentation and sign the `challenge` and `domain` given by the verifier. 
+b. `SD-JWT` The presence of the `cnf` key as a disclosable claim in the SD-JWT Verifiable Credential (VC) allows the Holder/Prover to create a presentation and sign the `challenge` and `domain` given by the verifier. 
 ```bash
 curl -X 'POST' 'http://localhost:8070/cloud-agent/present-proof/presentations' \
   -H 'accept: application/json' \
