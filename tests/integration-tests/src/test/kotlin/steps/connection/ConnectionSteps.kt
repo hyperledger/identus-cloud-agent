@@ -92,7 +92,7 @@ class ConnectionSteps {
                 it.data.thid == invitee.recall<Connection>("connection").thid
             }
             lastEvent != null &&
-                    lastEvent.data.state == Connection.State.CONNECTION_RESPONSE_RECEIVED
+                lastEvent.data.state == Connection.State.CONNECTION_RESPONSE_RECEIVED
         }
     }
 
