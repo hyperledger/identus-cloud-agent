@@ -65,20 +65,15 @@ case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends Authentica
     } yield result
   }
 
-  override def getEntityIdByMethodAndSecret(
+  override def findEntityIdByMethodAndSecret(
       amt: AuthenticationMethodType,
       secret: String
-  ): IO[AuthenticationRepositoryError, UUID] = {
+  ): UIO[Option[UUID]] = {
     AuthenticationRepositorySql
       .getEntityIdByMethodAndSecret(amt, secret)
       .transact(xa)
-      .logError(s"getEntityIdByMethodAndSecret failed for method: $amt and secret: $secret")
-      .mapError(AuthenticationRepositoryError.StorageError.apply)
-      .flatMap(
-        _.headOption.fold(ZIO.fail(AuthenticationRepositoryError.AuthenticationNotFound(amt, secret)))(entityId =>
-          ZIO.succeed(entityId)
-        )
-      )
+      .map(_.headOption)
+      .orDie
   }
 
   override def findAuthenticationMethodByTypeAndSecret(
@@ -116,19 +111,6 @@ case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends Authentica
       .logError(s"deleteByEntityIdAndSecret failed for id: $entityId and secret: $secret")
       .mapError(AuthenticationRepositoryError.StorageError.apply)
       .map(_ => ())
-  }
-
-  def checkDeleted(method: AuthenticationMethodType, secret: String) = {
-    AuthenticationRepositorySql
-      .getEntityIdByMethodAndSecret(method, secret)
-      .transact(xa)
-      .logError(s"getEntityIdByMethodAndSecret failed for method: $method and secret: $secret")
-      .mapError(AuthenticationRepositoryError.StorageError.apply)
-      .flatMap(
-        _.headOption.fold(ZIO.fail(AuthenticationRepositoryError.AuthenticationNotFound(method, secret)))(entityId =>
-          ZIO.succeed(entityId)
-        )
-      )
   }
 }
 

@@ -36,10 +36,10 @@ trait AuthenticationRepository {
       secret: String
   ): zio.IO[AuthenticationRepositoryError, Unit]
 
-  def getEntityIdByMethodAndSecret(
+  def findEntityIdByMethodAndSecret(
       amt: AuthenticationMethodType,
       secret: String
-  ): zio.IO[AuthenticationRepositoryError, UUID]
+  ): zio.UIO[Option[UUID]]
 
   def findAuthenticationMethodByTypeAndSecret(
       amt: AuthenticationMethodType,
@@ -66,11 +66,6 @@ sealed trait AuthenticationRepositoryError {
 object AuthenticationRepositoryError {
 
   def hide(secret: String) = secret.take(8) + "****"
-  case class AuthenticationNotFound(authenticationMethodType: AuthenticationMethodType, secret: String)
-      extends AuthenticationRepositoryError {
-    def message =
-      s"Authentication method not found for type:${authenticationMethodType.value} and secret:${hide(secret)}"
-  }
 
   case class AuthenticationCompromised(
       entityId: UUID,

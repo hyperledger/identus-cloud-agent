@@ -28,13 +28,11 @@ case class ApiKeyAuthenticatorImpl(
       } else {
         authenticateBy(apiKey)
           .catchSome {
-            case AuthenticationRepositoryError.AuthenticationNotFound(method, secret)
+            case AuthenticationError.AuthenticationNotFound(method, secret)
                 if apiKeyConfig.autoProvisioning =>
               provisionNewEntity(apiKey)
           }
           .mapError {
-            case AuthenticationRepositoryError.AuthenticationNotFound(method, secret) =>
-              InvalidCredentials("Invalid API key")
             case AuthenticationRepositoryError.StorageError(cause) =>
               UnexpectedError("Internal error")
             case AuthenticationRepositoryError.UnexpectedError(cause) =>
@@ -65,15 +63,15 @@ case class ApiKeyAuthenticatorImpl(
     } yield entity
   }
 
-  protected[apikey] def authenticateBy(apiKey: String): IO[AuthenticationRepositoryError, Entity] = {
+  protected[apikey] def authenticateBy(apiKey: String): IO[AuthenticationNotFound, Entity] = {
     for {
       saltAndApiKey <- ZIO.succeed(apiKeyConfig.salt + apiKey)
       secret <- ZIO
         .fromTry(Try(Sha256Hash.compute(saltAndApiKey.getBytes).hexEncoded))
-        .logError("Failed to compute SHA256 hash")
-        .mapError(cause => AuthenticationRepositoryError.UnexpectedError(cause))
+        .orDie
       entityId <- repository
-        .getEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret)
+        .findEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret)
+        .someOrFail(AuthenticationNotFound(AuthenticationMethodType.ApiKey, secret))
       entity <- entityService.getById(entityId).orDieAsUnmanagedFailure
     } yield entity
   }
