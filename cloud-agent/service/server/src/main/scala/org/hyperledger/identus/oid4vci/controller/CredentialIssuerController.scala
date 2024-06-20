@@ -166,8 +166,9 @@ case class CredentialIssuerControllerImpl(
               ZIO.unit,
               ZIO.fail(OIDCCredentialIssuerService.Errors.InvalidProof("Invalid proof"))
             )
-            .mapError { case InvalidProof(message) =>
-              badRequestInvalidProof(jwt, message)
+            .mapError {
+              case InvalidProof(message)       => badRequestInvalidProof(jwt, message)
+              case DIDResolutionError(message) => badRequestInvalidProof(jwt, message)
             }
           nonce <- getNonceFromJwt(JWT(jwt))
             .mapError(throwable => badRequestInvalidProof(jwt, throwable.getMessage))
@@ -180,7 +181,9 @@ case class CredentialIssuerControllerImpl(
           sessionWithSubjectDid <- credentialIssuerService
             .updateIssuanceSession(session.withSubjectDid(subjectDid))
             .mapError(ue =>
-              serverError(Some(s"Unexpected error while updating issuance session with subject DID: ${ue.message}"))
+              serverError(
+                Some(s"Unexpected error while updating issuance session with subject DID: ${ue.userFacingMessage}")
+              )
             )
           credentialDefinition <- ZIO
             .fromOption(maybeCredentialDefinition)
@@ -188,7 +191,7 @@ case class CredentialIssuerControllerImpl(
           validatedCredentialDefinition <- credentialIssuerService
             .validateCredentialDefinition(credentialDefinition)
             .mapError(ue =>
-              serverError(Some(s"Unexpected error while validating credential definition: ${ue.message}"))
+              serverError(Some(s"Unexpected error while validating credential definition: ${ue.userFacingMessage}"))
             )
           credential <- credentialIssuerService
             .issueJwtCredential(
@@ -198,9 +201,11 @@ case class CredentialIssuerControllerImpl(
               maybeCredentialIdentifier,
               validatedCredentialDefinition
             )
-            .mapError(ue => serverError(Some(s"Unexpected error while issuing credential: ${ue.message}")))
+            .mapError(ue => serverError(Some(s"Unexpected error while issuing credential: ${ue.userFacingMessage}")))
         } yield ImmediateCredentialResponse(credential.value)
       case None => ZIO.fail(badRequestInvalidProof(jwt = "empty", details = "No proof provided"))
+      // case Some(CwtProof(_, _)) => ??? // TODO
+      // case Some(LdpProof(_, _)) => ??? // TODO
     }
   }
 
@@ -223,7 +228,9 @@ case class CredentialIssuerControllerImpl(
         )
         .map(offer => CredentialOfferResponse(offer.offerUri))
         .mapError(ue =>
-          internalServerError(detail = Some(s"Unexpected error while creating credential offer: ${ue.message}"))
+          internalServerError(detail =
+            Some(s"Unexpected error while creating credential offer: ${ue.userFacingMessage}")
+          )
         )
     } yield resp
   }
@@ -236,7 +243,7 @@ case class CredentialIssuerControllerImpl(
       .getIssuanceSessionByIssuerState(request.issuerState)
       .map(session => NonceResponse(session.nonce))
       .mapError(ue =>
-        internalServerError(detail = Some(s"Unexpected error while creating credential offer: ${ue.message}"))
+        internalServerError(detail = Some(s"Unexpected error while creating credential offer: ${ue.userFacingMessage}"))
       )
   }
 

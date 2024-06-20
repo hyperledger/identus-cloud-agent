@@ -5,7 +5,7 @@ import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.*
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import zio.{mock, UIO, URIO, URLayer, ZIO, ZLayer}
 import zio.mock.{Mock, Proxy}
 
@@ -126,7 +126,7 @@ object MockConnectionService extends Mock[ConnectionService] {
 
       override def reportProcessingFailure(
           recordId: UUID,
-          failReason: Option[String]
+          failReason: Option[Failure]
       ): URIO[WalletAccessContext, Unit] = ???
     }
   }

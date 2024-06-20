@@ -8,7 +8,7 @@ import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialReco
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
-import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
+import org.hyperledger.identus.shared.models.*
 import zio.{mock, Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
 import zio.mock.{Mock, Proxy}
 
@@ -99,7 +99,7 @@ object MockCredentialService extends Mock[CredentialService] {
   object MarkCredentialPublicationPending extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkCredentialPublicationQueued extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkCredentialPublished extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
-  object ReportProcessingFailure extends Effect[(DidCommID, Option[String]), Nothing, Unit]
+  object ReportProcessingFailure extends Effect[(DidCommID, Option[Failure]), Nothing, Unit]
 
   override val compose: URLayer[mock.Proxy, CredentialService] = ZLayer {
     for {
@@ -244,7 +244,7 @@ object MockCredentialService extends Mock[CredentialService] {
 
       override def reportProcessingFailure(
           recordId: DidCommID,
-          failReason: Option[String]
+          failReason: Option[Failure]
       ): URIO[WalletAccessContext, Unit] =
         proxy(ReportProcessingFailure, recordId, failReason)
 

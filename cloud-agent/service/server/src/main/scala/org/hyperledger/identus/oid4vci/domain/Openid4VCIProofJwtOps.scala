@@ -5,7 +5,7 @@ import org.hyperledger.identus.castor.core.model.did.DIDUrl
 import org.hyperledger.identus.pollux.vc.jwt.JWT
 import org.hyperledger.identus.pollux.vc.jwt.JwtSignerImplicits.*
 import org.hyperledger.identus.shared.crypto.Secp256k1PrivateKey
-import zio.{Task, ZIO}
+import zio.*
 
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
@@ -46,36 +46,42 @@ trait Openid4VCIProofJwtOps {
     JWT(makeJwtProof(header, payload, privateKey.asJwtSigner))
   }
 
-  def getKeyIdFromJwt(jwt: JWT): Task[String] = {
+  def getKeyIdFromJwt(jwt: JWT): IO[RuntimeException, String] = { // FIXME RuntimeException
     for {
-      jwsObject <- ZIO.fromTry(Try(JWSObject.parse(jwt.value)))
+      jwsObject <- ZIO.fromTry(Try(JWSObject.parse(jwt.value))).orDie // FIXME
       keyID = jwsObject.getHeader.getKeyID
-      _ <- ZIO.fail(new Exception("Key ID not found in JWT header")) when (keyID == null || keyID.isEmpty)
+      _ <- ZIO.fail(
+        new RuntimeException("Key ID not found in JWT header")
+      ) when (keyID == null || keyID.isEmpty)
     } yield keyID
   }
 
-  def getAlgorithmFromJwt(jwt: JWT): Task[String] = {
+  def getAlgorithmFromJwt(jwt: JWT): IO[RuntimeException, String] = {
     for {
-      jwsObject <- ZIO.fromTry(Try(JWSObject.parse(jwt.value)))
+      jwsObject <- ZIO.fromTry(Try(JWSObject.parse(jwt.value))).orDie // FIXME
       algorithm <- ZIO
         .fromOption(Option(jwsObject.getHeader.getAlgorithm))
-        .mapError(_ => new Exception("Algorithm not found in JWT header"))
+        .mapError(_ => new RuntimeException("Algorithm not found in JWT header"))
     } yield algorithm.getName
   }
 
-  def getNonceFromJwt(jwt: JWT): Task[String] = {
+  def getNonceFromJwt(jwt: JWT): IO[RuntimeException, String] = { // FIXME RuntimeException
     for {
-      jwsObject <- ZIO.fromTry(Try(JWSObject.parse(jwt.value)))
+      jwsObject <- ZIO.fromTry(Try(JWSObject.parse(jwt.value))).orDie // FIXME
       payload = jwsObject.getPayload.toJSONObject
       nonce = payload.get("nonce").asInstanceOf[String]
-      _ <- ZIO.fail(new Exception("Nonce not found in JWT payload")) when (nonce == null || nonce.isEmpty)
+      _ <- ZIO.fail(
+        new RuntimeException("Nonce not found in JWT payload")
+      ) when (nonce == null || nonce.isEmpty)
     } yield nonce
   }
 
-  def parseDIDUrlFromKeyId(jwt: JWT): Task[DIDUrl] = {
+  def parseDIDUrlFromKeyId(jwt: JWT): IO[RuntimeException, DIDUrl] = { // FIXME RuntimeException
     for {
       keyId <- getKeyIdFromJwt(jwt)
-      didUrl <- ZIO.fromEither(DIDUrl.fromString(keyId)).mapError(e => new Exception(e))
+      didUrl <- ZIO
+        .fromEither(DIDUrl.fromString(keyId))
+        .mapError(e => new RuntimeException(e))
     } yield didUrl
   }
 }
