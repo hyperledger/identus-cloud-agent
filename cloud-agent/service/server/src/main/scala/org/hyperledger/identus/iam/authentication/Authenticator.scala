@@ -1,7 +1,6 @@
 package org.hyperledger.identus.iam.authentication
 
 import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Entity, EntityRole}
-import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.shared.models.*
 import zio.{IO, ZIO, ZLayer}
 
@@ -34,12 +33,6 @@ object AuthenticationError {
         message
       )
 
-  case class ServiceError(message: String)
-      extends AuthenticationError(
-        StatusCode.InternalServerError,
-        message
-      )
-
   case class ResourceNotPermitted(message: String)
       extends AuthenticationError(
         StatusCode.Forbidden,
@@ -51,14 +44,6 @@ object AuthenticationError {
         StatusCode.Forbidden,
         message
       )
-
-  def toErrorResponse(error: AuthenticationError): ErrorResponse =
-    ErrorResponse(
-      status = sttp.model.StatusCode.Forbidden.code,
-      `type` = "authentication_error",
-      title = "",
-      detail = Option(error.userFacingMessage)
-    )
 }
 
 trait Authenticator[E <: BaseEntity] {

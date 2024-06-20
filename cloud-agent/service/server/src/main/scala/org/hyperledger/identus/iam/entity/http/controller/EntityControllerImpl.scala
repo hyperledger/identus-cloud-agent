@@ -62,9 +62,8 @@ case class EntityControllerImpl(service: EntityService, apiKeyAuthenticator: Api
   }
 
   override def deleteEntity(id: UUID)(implicit rc: RequestContext): IO[ErrorResponse, Unit] = {
-    for {
-      _ <- service.deleteById(id)
-    } yield ()
+    service
+      .deleteById(id)
   }
 
   override def addApiKeyAuth(id: UUID, apiKey: String)(implicit rc: RequestContext): IO[ErrorResponse, Unit] = {

@@ -214,7 +214,7 @@ object AgentInitialization {
         .createWallet(defaultWallet, seed)
         .orDieAsUnmanagedFailure
       _ <- entityService.create(defaultEntity).orDieAsUnmanagedFailure
-      _ <- apiKeyAuth.add(defaultEntity.id, config.authApiKey).mapError(e => Exception(e.userFacingMessage))
+      _ <- apiKeyAuth.add(defaultEntity.id, config.authApiKey)
       _ <- config.webhookUrl.fold(ZIO.unit) { url =>
         val customHeaders = config.webhookApiKey.fold(Map.empty)(apiKey => Map("Authorization" -> s"Bearer $apiKey"))
         walletService

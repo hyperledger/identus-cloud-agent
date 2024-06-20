@@ -21,21 +21,21 @@ case class ApiKeyAuthenticatorImpl(
 
   override def isEnabled: Boolean = apiKeyConfig.enabled
 
-  override def authenticate(apiKey: String): IO[AuthenticationError, Entity] = {
+  override def authenticate(apiKey: String): IO[InvalidCredentials, Entity] = {
     if (apiKeyConfig.enabled) {
       if (apiKeyConfig.authenticateAsDefaultUser) {
         ZIO.succeed(Entity.Default)
       } else {
         authenticateBy(apiKey)
           .catchSome {
-            case AuthenticationError.InvalidCredentials(message) if apiKeyConfig.autoProvisioning =>
+            case InvalidCredentials(message) if apiKeyConfig.autoProvisioning =>
               provisionNewEntity(apiKey)
           }
       }
     } else {
       ZIO.fail(
         AuthenticationMethodNotEnabled(s"Authentication method not enabled: ${AuthenticationMethodType.ApiKey.value}")
-      )
+      ).orDieAsUnmanagedFailure
     }
   }
 
@@ -76,13 +76,12 @@ case class ApiKeyAuthenticatorImpl(
     } yield ()
   }
 
-  override def delete(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit] = {
+  override def delete(entityId: UUID, apiKey: String): UIO[Unit] = {
     for {
       saltAndApiKey <- ZIO.succeed(apiKeyConfig.salt + apiKey)
       secret <- ZIO
         .fromTry(Try(Sha256Hash.compute(saltAndApiKey.getBytes).hexEncoded))
-        .logError("Failed to compute SHA256 hash")
-        .mapError(cause => AuthenticationError.UnexpectedError(cause.getMessage))
+        .orDie
       _ <- repository.delete(entityId, AuthenticationMethodType.ApiKey, secret)
     } yield ()
   }
