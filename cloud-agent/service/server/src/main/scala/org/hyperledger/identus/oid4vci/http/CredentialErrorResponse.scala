@@ -55,7 +55,7 @@ object CredentialErrorResponse {
       case _: InvalidCredentials => CredentialErrorCode.invalid_token
       case _                     => CredentialErrorCode.invalid_request
     }
-    CredentialErrorResponse(error, Some(ae.message))
+    CredentialErrorResponse(error, Some(ae.userFacingMessage))
   }
 }
 

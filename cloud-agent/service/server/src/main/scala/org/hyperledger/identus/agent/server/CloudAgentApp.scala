@@ -18,7 +18,7 @@ import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticator
 import org.hyperledger.identus.iam.entity.http.EntityServerEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementServerEndpoints
 import org.hyperledger.identus.issue.controller.IssueServerEndpoints
-import org.hyperledger.identus.mercury.{DidOps, HttpClient}
+import org.hyperledger.identus.mercury.{DidAgent, DidOps, HttpClient}
 import org.hyperledger.identus.oid4vci.CredentialIssuerServerEndpoints
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
@@ -68,7 +68,7 @@ object CloudAgentApp {
 
   private val presentProofExchangeJob: RIO[
     AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService &
-      DIDNonSecretStorage & DIDService & ManagedDIDService & WalletManagementService,
+      DIDNonSecretStorage & DIDService & ManagedDIDService,
     Unit
   ] =
     for {
@@ -213,8 +213,8 @@ object AgentInitialization {
       _ <- walletService
         .createWallet(defaultWallet, seed)
         .orDieAsUnmanagedFailure
-      _ <- entityService.create(defaultEntity).mapError(e => Exception(e.message))
-      _ <- apiKeyAuth.add(defaultEntity.id, config.authApiKey).mapError(e => Exception(e.message))
+      _ <- entityService.create(defaultEntity).orDieAsUnmanagedFailure
+      _ <- apiKeyAuth.add(defaultEntity.id, config.authApiKey)
       _ <- config.webhookUrl.fold(ZIO.unit) { url =>
         val customHeaders = config.webhookApiKey.fold(Map.empty)(apiKey => Map("Authorization" -> s"Bearer $apiKey"))
         walletService
