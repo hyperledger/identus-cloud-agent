@@ -14,7 +14,7 @@ trait ContextAware
 type ContextAwareTask[T] = Task[T] & ContextAware
 
 object Errors {
-  final case class UnexpectedAffectedRow(count: Int) extends RuntimeException(s"Unexpected affected row count: $count")
+  final case class UnexpectedAffectedRow(count: Long) extends RuntimeException(s"Unexpected affected row count: $count")
 }
 
 object Implicits {
@@ -47,10 +47,10 @@ object Implicits {
 
   }
 
-  extension (ma: RIO[WalletAccessContext, Int]) {
-    def ensureOneAffectedRowOrDie: URIO[WalletAccessContext, Unit] = ma.flatMap {
+  extension [R, A: Numeric](ma: ZIO[R, Throwable, A]) {
+    def ensureOneAffectedRowOrDie: URIO[R, Unit] = ma.flatMap {
       case 1     => ZIO.unit
-      case count => ZIO.fail(Errors.UnexpectedAffectedRow(count))
+      case count => ZIO.fail(Errors.UnexpectedAffectedRow(summon[Numeric[A]].toLong(count)))
     }.orDie
   }
 

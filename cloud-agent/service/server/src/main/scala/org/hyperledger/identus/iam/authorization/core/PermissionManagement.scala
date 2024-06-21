@@ -1,12 +1,6 @@
 package org.hyperledger.identus.iam.authorization.core
 
 import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.{
-  EntityAlreadyExists,
-  EntityNotFound,
-  EntityStorageError,
-  EntityWalletNotFound
-}
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
 import zio.*
@@ -42,12 +36,5 @@ object PermissionManagement {
     case class UnexpectedError(cause: Throwable) extends Error(cause.getMessage)
 
     case class ServiceError(cause: String) extends Error(cause)
-
-    given Conversion[EntityServiceError, Error] = {
-      case e: EntityNotFound       => UserNotFoundById(e.id)
-      case e: EntityAlreadyExists  => UnexpectedError(Exception(s"Entity with id ${e.id} already exists."))
-      case e: EntityStorageError   => UnexpectedError(Exception(s"Entity storage error: ${e.message}"))
-      case e: EntityWalletNotFound => WalletNotFoundById(WalletId.fromUUID(e.walletId))
-    }
   }
 }

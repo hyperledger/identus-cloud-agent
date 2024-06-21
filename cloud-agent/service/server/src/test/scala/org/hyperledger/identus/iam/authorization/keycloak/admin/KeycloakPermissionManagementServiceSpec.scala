@@ -7,13 +7,7 @@ import org.hyperledger.identus.agent.walletapi.service.{
   WalletManagementServiceImpl
 }
 import org.hyperledger.identus.agent.walletapi.sql.{JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
-import org.hyperledger.identus.iam.authentication.oidc.{
-  KeycloakAuthenticator,
-  KeycloakAuthenticatorImpl,
-  KeycloakClient,
-  KeycloakClientImpl,
-  KeycloakEntity
-}
+import org.hyperledger.identus.iam.authentication.oidc.*
 import org.hyperledger.identus.iam.authentication.AuthenticationError.ResourceNotPermitted
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.{UnexpectedError, WalletNotFoundById}
