@@ -6,7 +6,7 @@ import org.junit.runner.RunWith
     features = ["src/test/resources/features"],
     snippets = CucumberOptions.SnippetType.CAMELCASE,
     plugin = ["pretty"],
-    tags = "not @flaky"
+    tags = "not @flaky",
 )
 @RunWith(CucumberWithSerenity::class)
 class IntegrationTestsRunner
