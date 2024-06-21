@@ -16,7 +16,7 @@ class EntityPermissionManagementService(entityService: EntityService) extends Pe
       _ <- ZIO
         .serviceWith[WalletAdministrationContext](_.isAuthorized(walletId))
         .filterOrFail(identity)(Error.WalletNotFoundById(walletId))
-      _ <- entityService.assignWallet(entity.id, walletId.toUUID).mapError[Error](e => e)
+      _ <- entityService.assignWallet(entity.id, walletId.toUUID).orDieAsUnmanagedFailure
     } yield ()
   }
 

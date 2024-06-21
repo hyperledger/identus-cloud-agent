@@ -14,13 +14,6 @@ sealed trait PresentationError(
 
 object PresentationError {
 
-  // TODO: Remove once PresentationJob is cleaned
-  final case class UnexpectedError(error: String)
-      extends PresentationError(
-        StatusCode.InternalServerError,
-        error
-      )
-
   final case class RecordIdNotFound(recordId: DidCommID)
       extends PresentationError(
         StatusCode.NotFound,
@@ -157,5 +150,53 @@ object PresentationError {
       extends PresentationError(
         StatusCode.BadRequest,
         cause.toString
+      )
+
+  final case class NoCredentialFoundInRecord(presentationId: DidCommID)
+      extends PresentationError(
+        StatusCode.InternalServerError,
+        s"Presentation record has missing ThreadId for record: $presentationId"
+      )
+
+  final case class NotValidDidCommID(id: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        s"$id is not a valid DidCommID"
+      )
+
+  final case class PresentationNotFound(error: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        s"Error occurred while getting Presentation records: $error"
+      )
+
+  final case class DIDResolutionFailed(did: String, msg: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        s"DIDResolutionFailed for $did: $msg"
+      )
+
+  final case class DIDDocumentMissing(did: String)
+      extends PresentationError(
+        StatusCode.InternalServerError,
+        s"Did Document is missing the required publicKey: $did"
+      )
+
+  final case class PublicKeyDecodingError(msg: String)
+      extends PresentationError(
+        StatusCode.InternalServerError,
+        msg
+      )
+
+  final case class PresentationVerificationError(msg: String)
+      extends PresentationError(
+        StatusCode.InternalServerError,
+        msg
+      )
+
+  final case class PresentationReceivedError(msg: String)
+      extends PresentationError(
+        StatusCode.InternalServerError,
+        msg
       )
 }

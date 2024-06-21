@@ -20,10 +20,6 @@ class DidCommX() extends DidOps /* with DidAgent with DIDResolver */ {
     new DIDComm(UniversalDidResolver, AgentPeerService.getSecretResolverInMemory(agent))
   }
 
-  // override def id: DidId = fixme // FIXME the Secret is on org.didcommx.didcomm.model.DIDComm ...
-
-  // override def resolveDID(did: DidId): Task[DIDDoc] = UniversalDidResolver.resolveDID(did)
-
   override def packSigned(msg: Message): URIO[DidAgent, SignedMesage] = for {
     agent <- ZIO.service[DidAgent]
     params = new PackSignedParams.Builder(msg, agent.id.value).build()
@@ -39,7 +35,7 @@ class DidCommX() extends DidOps /* with DidAgent with DIDResolver */ {
     ret = didCommFor(agent).packEncrypted(params)
   } yield (ret)
 
-  // FIXME theoretically DidAgent is not needed
+  // TODO theoretically DidAgent is not needed
   override def packEncryptedAnon(msg: Message, to: DidId): URIO[DidAgent, EncryptedMessage] = for {
     agent <- ZIO.service[DidAgent]
     params = new PackEncryptedParams.Builder(msg, to.value)

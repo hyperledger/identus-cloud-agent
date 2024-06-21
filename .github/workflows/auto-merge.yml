@@ -1,61 +1,103 @@
 name: Auto Merge Main into Feature Branch
-
-# Automatically merge main into a feature branch when a pull request is labeled with 'autoupdate'
-
 on:
+  push:
+    branches:
+      - main
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened, labeled, ready_for_review]
+    branches:
+      - main
 
 jobs:
-  auto-merge:
-    if: contains(github.event.pull_request.labels.*.name, 'autoupdate')
+  on-pull-request:
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'autoupdate')
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Update PRs
+        uses: actions/github-script@v7
         with:
-          ref: main
-
-      - name: Set up GPG key to extract the Git configuration
-        uses: crazy-max/ghaction-import-gpg@v3
-        id: import_gpg
-        with:
-          gpg-private-key: ${{ secrets.HYP_BOT_GPG_PRIVATE }}
-          passphrase: ${{ secrets.HYP_BOT_GPG_PASSWORD }}
-          git-user-signingkey: true
-          git-commit-gpgsign: true
-          git_config_global: true
-          git_tag_gpgsign: true
-
-      - name: Set up Git
-        run: |
-          git config --global user.name '${{ steps.import_gpg.outputs.name }}'
-          git config --global user.email '${{ steps.import_gpg.outputs.email }}'
-
-      - name: Fetch all branches
-        run: git fetch --all
-
-      - name: Checkout the feature branch
-        run: git checkout ${{ github.event.pull_request.head.ref }}
-
-      - name: Merge main into feature branch
-        run: git merge origin/main
-
-      - name: Push changes
-        run: git push origin ${{ github.event.pull_request.head.ref }}
-        if: success()
-
-      - name: Add comment to PR
-        if: success()
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const prNumber = ${{ github.event.pull_request.number }};
-            github.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              body: 'The main branch has been successfully merged into this feature branch.'
+            let pr = {
+              number: ${{ github.event.pull_request.number }},
+              head: {
+                sha: "${{ github.event.pull_request.head.sha }}",
+                ref:"${{ github.event.pull_request.head.ref }}"
+              },
+              base: {
+                ref: "${{ github.event.pull_request.base.ref }}"
+              }
+            }
+            let changes = await github.rest.repos.compareCommitsWithBasehead({
+              ...context.repo,
+              basehead: `${pr.head.ref}...${pr.base.ref}`
             });
+            // after merging main to PR the comparison becomes 'behind'
+            if (changes.data.status == 'behind') {
+              console.info("no changes detected")
+            } else {
+              console.info("changes detected")
+              let updateResult = await github.rest.pulls.updateBranch({
+                  ...context.repo,
+                  expected_head_sha: pr.head.sha,
+                  pull_number: pr.number,
+              });
+              let commentMessage = updateResult.status == 202 ? ":rocket: Merge success!" : ":bangbang: Merge failed!"
+              let commentResult = await github.rest.issues.createComment({
+                  ...context.repo,
+                  issue_number: pr.number,
+                  body: commentMessage
+              });
+            }
+  on-main-push:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Update PRs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pullRequests } = await github.rest.pulls.list({
+                base: 'main',
+                sort: 'updated',
+                state: 'open',
+                ...context.repo
+            })
+            const labeledPullRequests = pullRequests.filter(pr => pr.labels.filter(label => label.name == 'autoupdate').length > 0)
+            for (let pr of labeledPullRequests) {
+                console.info("Check pull request number [" + `${pr.number}` + "]")
+                console.info("  -", "title:", pr.title)
+                console.info("  -", "url:", pr.html_url)
+                try {
+                    let changes = await github.rest.repos.compareCommits({
+                        ...context.repo,
+                        base: pr.head.ref,
+                        head: pr.base.ref
+                    });
+                    // after merging main to PR the comparison becomes 'behind'
+                    if (changes.data.status == 'behind') {
+                        console.info("  -", "comparison to main:", "no changes detected")
+                        console.info()
+                        continue
+                    }
+                    console.info("  -", "comparison to main:", "changes detected")
+                    // merge main to pull request
+                    let updateResult = await github.rest.pulls.updateBranch({
+                        ...context.repo,
+                        expected_head_sha: pr.head.sha,
+                        pull_number: pr.number,
+                    });
+                    // comment on pull request
+                    let commentMessage = updateResult.status == 202 ? ":rocket: Merge success" : ":bangbang: Merge failed"
+                    let commentResult = await github.rest.issues.createComment({
+                        ...context.repo,
+                        issue_number: pr.number,
+                        body: commentMessage
+                    });
+                    console.info("  - comment created", commentResult.status == 201 ? "successfully" : "unsuccessfully")
+                    console.info()
+                } catch (err) {
+                    core.error(err);
+                }
+            }

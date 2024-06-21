@@ -162,7 +162,7 @@ object OIDCCredentialIssuerServiceSpec
         MockOID4VCIIssuerMetadataService.empty,
         layers
       ),
-      test("create credential-offer with valid claims") {
+      test("create credential-offer with valid claims and schemaId") {
         val wac = ZLayer.succeed(WalletAccessContext(WalletId.random))
         val claims = Json(
           "credentialSubject" -> Json.Obj(
@@ -187,7 +187,8 @@ object OIDCCredentialIssuerServiceSpec
             .provide(wac)
           issuerState = offer.grants.get.authorization_code.issuer_state.get
           session <- oidcCredentialIssuerService.getIssuanceSessionByIssuerState(issuerState)
-        } yield assert(session.claims)(equalTo(claims))
+        } yield assert(session.claims)(equalTo(claims)) &&
+          assert(session.schemaId)(isSome(equalTo("resource:///vc-schema-example.json")))
       }.provide(
         MockDIDService.empty,
         MockManagedDIDService.empty,

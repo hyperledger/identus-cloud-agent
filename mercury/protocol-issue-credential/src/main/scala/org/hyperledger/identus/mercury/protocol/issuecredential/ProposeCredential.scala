@@ -79,20 +79,26 @@ object ProposeCredential {
     given Decoder[Body] = deriveDecoder[Body]
   }
 
-  def readFromMessage(message: Message): ProposeCredential = {
-    val body = message.body.asJson.as[ProposeCredential.Body].toOption.get // TODO get
-
-    ProposeCredential(
-      id = message.id,
-      `type` = message.piuri,
-      body = body,
-      attachments = message.attachments.getOrElse(Seq.empty),
-      from = message.from.get, // TODO get
-      to = {
-        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
-        message.to.head
-      },
-    )
+  def readFromMessage(message: Message): Either[String, ProposeCredential] = {
+    message.body.asJson.as[ProposeCredential.Body] match
+      case Left(fail) => Left("Fail to parse ProposeCredential's body: " + fail.getMessage)
+      case Right(body) =>
+        message.from match
+          case None => Left("ProposeCredential MUST have the sender explicit")
+          case Some(from) =>
+            message.to match
+              case firstTo +: Seq() =>
+                Right(
+                  ProposeCredential(
+                    id = message.id,
+                    `type` = message.piuri,
+                    body = body,
+                    attachments = message.attachments.getOrElse(Seq.empty),
+                    from = from,
+                    to = firstTo,
+                  )
+                )
+              case tos => Left(s"ProposeCredential MUST have only 1 recipient instead has '${tos}'")
   }
 
 }

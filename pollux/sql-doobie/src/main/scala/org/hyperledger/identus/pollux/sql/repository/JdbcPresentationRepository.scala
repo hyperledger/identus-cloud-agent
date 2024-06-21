@@ -13,7 +13,6 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.PresentationRecord.ProtocolState
 import org.hyperledger.identus.pollux.core.repository.PresentationRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
@@ -36,7 +35,7 @@ class JdbcPresentationRepository(
   override def updatePresentationWithCredentialsToUse(
       recordId: DidCommID,
       credentialsToUse: Option[Seq[String]],
-      protocolState: ProtocolState
+      protocolState: PresentationRecord.ProtocolState
   ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records
@@ -61,7 +60,7 @@ class JdbcPresentationRepository(
       recordId: DidCommID,
       credentialsToUse: Option[Seq[String]],
       sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
-      protocolState: ProtocolState
+      protocolState: PresentationRecord.ProtocolState
   ): URIO[WalletAccessContext, Unit] = {
     val cxnIO =
       sql"""
@@ -88,7 +87,7 @@ class JdbcPresentationRepository(
       recordId: DidCommID,
       anoncredCredentialsToUseJsonSchemaId: Option[String],
       anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
-      protocolState: ProtocolState
+      protocolState: PresentationRecord.ProtocolState
   ): URIO[WalletAccessContext, Unit] = {
     val cxnIO =
       sql"""

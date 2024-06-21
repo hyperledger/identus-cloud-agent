@@ -3,59 +3,59 @@ package org.hyperledger.identus.agent.walletapi.sql
 import io.getquill.*
 import io.getquill.doobie.DoobieContext
 import io.getquill.idiom.*
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError
 import org.hyperledger.identus.agent.walletapi.model.Entity
-import zio.{IO, ZIO}
+import zio.{UIO, URIO, ZIO}
 
 import java.time.Instant
 import java.util.UUID
 
 trait EntityRepository {
-  def insert(entity: Entity): IO[EntityServiceError, Entity]
-  def getById(id: UUID): IO[EntityServiceError, Entity]
-  def updateName(entityId: UUID, name: String): IO[EntityServiceError, Unit]
-  def updateWallet(entityId: UUID, walletId: UUID): IO[EntityServiceError, Unit]
-  def delete(id: UUID): IO[EntityServiceError, Unit]
-  def getAll(offset: Int, limit: Int): IO[EntityServiceError, List[Entity]]
+  def insert(entity: Entity): UIO[Entity]
+  def getById(id: UUID): UIO[Entity]
+  def findById(id: UUID): UIO[Option[Entity]]
+  def updateName(entityId: UUID, name: String): UIO[Unit]
+  def updateWallet(entityId: UUID, walletId: UUID): UIO[Unit]
+  def delete(id: UUID): UIO[Unit]
+  def getAll(offset: Int, limit: Int): UIO[List[Entity]]
 }
 
 object EntityRepository {
-  def insert(entity: Entity): ZIO[EntityRepository, EntityServiceError, Entity] = {
+  def insert(entity: Entity): URIO[EntityRepository, Entity] = {
     for {
       repository <- ZIO.service[EntityRepository]
       insertedEntity <- repository.insert(entity)
     } yield insertedEntity
   }
 
-  def getById(id: UUID): ZIO[EntityRepository, EntityServiceError, Entity] = {
+  def getById(id: UUID): URIO[EntityRepository, Entity] = {
     for {
       repository <- ZIO.service[EntityRepository]
       entity <- repository.getById(id)
     } yield entity
   }
 
-  def updateName(entityId: UUID, name: String): ZIO[EntityRepository, EntityServiceError, Unit] = {
+  def updateName(entityId: UUID, name: String): URIO[EntityRepository, Unit] = {
     for {
       repository <- ZIO.service[EntityRepository]
       _ <- repository.updateName(entityId, name)
     } yield ()
   }
 
-  def updateWallet(entityId: UUID, walletId: UUID): ZIO[EntityRepository, EntityServiceError, Unit] = {
+  def updateWallet(entityId: UUID, walletId: UUID): URIO[EntityRepository, Unit] = {
     for {
       repository <- ZIO.service[EntityRepository]
       _ <- repository.updateWallet(entityId, walletId)
     } yield ()
   }
 
-  def delete(id: UUID): ZIO[EntityRepository, EntityServiceError, Unit] = {
+  def delete(id: UUID): URIO[EntityRepository, Unit] = {
     for {
       repository <- ZIO.service[EntityRepository]
       _ <- repository.delete(id)
     } yield ()
   }
 
-  def getAll(skip: Int, take: Int): ZIO[EntityRepository, EntityServiceError, List[Entity]] = {
+  def getAll(skip: Int, take: Int): URIO[EntityRepository, List[Entity]] = {
     for {
       repository <- ZIO.service[EntityRepository]
       entities <- repository.getAll(skip, take)
