@@ -3,11 +3,13 @@ package org.hyperledger.identus.pollux.sql.repository
 import doobie.*
 import doobie.implicits.*
 import doobie.util.transactor.Transactor
+import org.flywaydb.core.api.exception.FlywayValidateException
 import org.flywaydb.core.Flyway
 import org.hyperledger.identus.shared.db.{ContextAwareTask, DbConfig}
 import org.hyperledger.identus.shared.db.Implicits.*
 import zio.*
 import zio.interop.catz.*
+import org.flywaydb.core.api.exception.FlywayValidateException
 
 final case class Migrations(config: DbConfig) {
 
@@ -30,6 +32,24 @@ final case class Migrations(config: DbConfig) {
           .migrate()
       }
     } yield ()
+
+  def repair: Task[Unit] =
+    for {
+      _ <- ZIO.logInfo("Repairing Flyway schema history")
+      _ <- ZIO.attempt {
+        Flyway
+          .configure()
+          .dataSource(config.jdbcUrl, config.username, config.password)
+          .locations(migrationScriptsLocation)
+          .load()
+          .repair()
+      }
+    } yield ()
+
+  def migrateAndRepair: Task[Unit] =
+    migrate.catchSome { case e: FlywayValidateException =>
+      ZIO.logError("Migration validation failed, attempting to repair") *> repair
+    }
 
 }
 
