@@ -6,5 +6,5 @@ import zio.*
 
 trait WalletSecretStorage {
   def setWalletSeed(seed: WalletSeed): URIO[WalletAccessContext, Unit]
-  def getWalletSeed: URIO[WalletAccessContext, Option[WalletSeed]]
+  def findWalletSeed: URIO[WalletAccessContext, Option[WalletSeed]]
 }

@@ -3,8 +3,8 @@ package org.hyperledger.identus.iam.authentication.oidc
 import org.hyperledger.identus.agent.walletapi.model.EntityRole
 import org.hyperledger.identus.iam.authentication.AuthenticationError
 import org.hyperledger.identus.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.PermissionNotAvailable
+import org.hyperledger.identus.iam.authorization.core.PermissionManagementService
+import org.hyperledger.identus.iam.authorization.core.PermissionManagementServiceError.PermissionNotAvailable
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
 import zio.*
 
@@ -13,7 +13,7 @@ import java.util.UUID
 class KeycloakAuthenticatorImpl(
     client: KeycloakClient,
     keycloakConfig: KeycloakConfig,
-    keycloakPermissionService: PermissionManagement.Service[KeycloakEntity],
+    keycloakPermissionService: PermissionManagementService[KeycloakEntity],
 ) extends KeycloakAuthenticator {
 
   override def isEnabled: Boolean = keycloakConfig.enabled
@@ -48,7 +48,7 @@ class KeycloakAuthenticatorImpl(
         .listWalletPermissions(entity)
         .mapError {
           case PermissionNotAvailable(_, msg) => AuthenticationError.InvalidCredentials(msg)
-          case e                              => AuthenticationError.UnexpectedError(e.message)
+          case e                              => AuthenticationError.UnexpectedError(e.userFacingMessage)
         }
         .flatMap {
           case head +: Nil => ZIO.succeed(head)
@@ -68,7 +68,7 @@ class KeycloakAuthenticatorImpl(
       .listWalletPermissions(entity)
       .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
       .mapBoth(
-        e => AuthenticationError.UnexpectedError(e.message),
+        e => AuthenticationError.UnexpectedError(e.userFacingMessage),
         wallets => WalletAdministrationContext.SelfService(wallets)
       )
 
@@ -90,7 +90,7 @@ class KeycloakAuthenticatorImpl(
 
 object KeycloakAuthenticatorImpl {
   val layer: RLayer[
-    KeycloakClient & KeycloakConfig & PermissionManagement.Service[KeycloakEntity],
+    KeycloakClient & KeycloakConfig & PermissionManagementService[KeycloakEntity],
     KeycloakAuthenticator
   ] =
     ZLayer.fromFunction(KeycloakAuthenticatorImpl(_, _, _))
