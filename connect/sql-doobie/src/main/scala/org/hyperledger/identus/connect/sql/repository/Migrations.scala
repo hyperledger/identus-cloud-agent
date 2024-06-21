@@ -46,7 +46,7 @@ final case class Migrations(config: DbConfig) {
 
   def migrateAndRepair: Task[Unit] =
     migrate.catchSome { case e: FlywayValidateException =>
-      ZIO.logError("Migration validation failed, attempting to repair") *> repair
+      ZIO.logError("Migration validation failed, attempting to repair") *> repair *> migrate
     }
 
 }
