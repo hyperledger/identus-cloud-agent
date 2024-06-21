@@ -4,7 +4,7 @@ name: Auto Merge Main into Feature Branch
 
 on:
   pull_request:
-    types: [ opened, synchronize, reopened, labeled ]
+    types: [opened, synchronize, reopened, labeled]
 
 jobs:
   auto-merge:
@@ -34,13 +34,17 @@ jobs:
           git config --global user.email '${{ steps.import_gpg.outputs.email }}'
 
       - name: Fetch all branches
-        run: git fetch --all
+        run: git fetch origin
 
       - name: Checkout the feature branch
         run: git checkout ${{ github.event.pull_request.head.ref }}
 
       - name: Merge main into feature branch
-        run: git merge origin/main
+        run: git merge --squash origin/main
+
+      - name: Commit changes
+        run: git commit -S -s -m "Merge main into ${{ github.event.pull_request.head.ref }}"
+        if: success()
 
       - name: Push changes
         run: git push origin ${{ github.event.pull_request.head.ref }}
@@ -72,4 +76,4 @@ jobs:
               repo: context.repo.repo,
               issue_number: prNumber,
               body: 'The main branch cannot be merged into the feature branch without your help :cry:'
-            });            
+            });
