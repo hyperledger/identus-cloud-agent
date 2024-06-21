@@ -8,6 +8,7 @@ on:
     types: [opened, synchronize, reopened, labeled, ready_for_review]
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   update-pull-requests:
