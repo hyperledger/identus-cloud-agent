@@ -1,7 +1,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Issue Credentials
+# Issue credentials
 
 In the Identus Platform, the [Issue Credentials Protocol](/docs/concepts/glossary#issue-credentials-protocol) allows you to create, retrieve, and manage issued [verifiable credentials (VCs)](/docs/concepts/glossary#verifiable-credentials) between a VC issuer and a VC holder.
 
@@ -33,6 +33,15 @@ Before using the Issuing Credentials protocol, the following conditions must be 
 1. Issuer and Holder Cloud Agents up and running
 2. A connection must be established between the Issuer and Holder Cloud Agents (see [Connections](../connections/connection.md))
 3. The Issuer must have created an AnonCreds Credential Definition as described [here](../credentialdefinition/create.md).
+
+</TabItem>
+<TabItem value="sdjwt" label="SDJWT">
+
+- 📌 **Note:** Currently we only support `Ed25519` curve
+1. Issuer and Holder Cloud Agents up and running
+2. A connection must be established between the Issuer and Holder Cloud Agents (see [Connections](../connections/connection.md))
+3. The Issuer must have a published PRISM DID, and the [DID document](/docs/concepts/glossary#did-document) must have at least one `assertionMethod` key for issuing credentials and the curve must be `Ed25519` (see [Create DID](../dids/create.md) and [Publish DID](../dids/publish.md))
+4. The Holder must have a PRISM DID, and the DID document must have at least one `authentication` key for presenting the proof and the curve must be `Ed25519`.
 
 </TabItem>
 </Tabs>
@@ -156,6 +165,53 @@ curl -X 'POST' \
 ```
 
 </TabItem>
+
+<TabItem value="sdjwt" label="SDJWT">
+
+1. `claims`: The data stored in a verifiable credential. Claims get expressed in a key-value format. The claims contain the data that the issuer attests to, such as name, address, date of birth, and so on.
+2. `issuingDID`: The DID referring to the issuer to issue this credential from
+3. `connectionId`: The unique ID of the connection between the holder and the issuer to offer this credential over.
+4. `schemaId`: An optional field that, if specified, contains a valid URL to an existing VC schema.
+   The Cloud Agent must be able to dereference the specified URL (i.e. fetch the VC schema content from it), in order to validate the provided claims against it.
+   When not specified, the claims fields is not validated and can be any valid JSON object.
+   Please refer to the [Create VC schema](../schemas/create.md) doc for details on how to create a VC schema.
+5. `credentialFormat`: The format of the credential that will be issued - `SDJWT` in this case.
+
+
+:::note
+The `issuingDID` and `connectionId` properties come from completing the pre-requisite steps listed above
+:::
+
+- 📌 **Note:** Claims can also include the `exp` Expiration Time attribute, which is part of JWT claims. `exp` attribute is disclosable if specified and can have a value in epoch time (in seconds), indicating when the SDJWT credential expires for more details
+<https://datatracker.ietf.org/doc/html/rfc7519#page-9>
+
+Once the request initiates, a new credential record for the issuer gets created with a unique ID. The state of this record is now `OfferPending`.
+
+```shell
+# Issuer POST request to create a new credential offer
+curl -X 'POST' \
+  'http://localhost:8080/cloud-agent/issue-credentials/credential-offers' \
+    -H 'accept: application/json' \
+    -H 'Content-Type: application/json' \
+    -H "apikey: $API_KEY" \
+    -d '{
+          "claims": {
+            "emailAddress": "alice@wonderland.com",
+            "givenName": "Alice",
+            "familyName": "Wonderland",
+            "dateOfIssuance": "2020-11-13T20:20:39+00:00",
+            "drivingLicenseID": "12345",
+            "drivingClass": 3,
+            "exp" : 1883000000
+          },
+          "credentialFormat": "SDJWT",
+          "issuingDID": "did:prism:9f847f8bbb66c112f71d08ab39930d468ccbfe1e0e1d002be53d46c431212c26",
+          "connectionId": "9d075518-f97e-4f11-9d10-d7348a7a0fda",
+          "schemaId": "http://localhost:8080/cloud-agent/schema-registry/schemas/3f86a73f-5b78-39c7-af77-0c16123fa9c2"
+        }'
+```
+
+</TabItem>
 </Tabs>
 
 
@@ -257,6 +313,92 @@ curl -X POST "http://localhost:8090/cloud-agent/issue-credentials/records/$holde
 ```
 
 </TabItem>
+
+<TabItem value="sdjwt" label="SDJWT">
+
+1. `holder_record_id`: The unique identifier of the issue credential record known by the holder's Cloud Agent.
+2. `subjectId`: This field represents the unique identifier for the subject of the verifiable credential. It is a short-form PRISM [DID](/docs/concepts/glossary#decentralized-identifier) string, such as `did:prism:subjectIdentifier`.
+3. `keyId` Option parameter
+   1. when keyId is not provided the SDJWT VC is not binded to Holder/Prover key
+   ```shell
+   # Holder POST request to accept the credential offer
+   curl -X POST "http://localhost:8090/cloud-agent/issue-credentials/records/$holder_record_id/accept-offer" \
+       -H 'accept: application/json' \
+       -H 'Content-Type: application/json' \
+       -H "apikey: $API_KEY" \
+       -d '{
+             "subjectId": "did:prism:subjectIdentifier"
+        }'
+   ```
+   A SD-JWT Verifiable Credential (VC) without a `cnf` key could possibly look like below
+
+   ```json
+    {
+     "_sd": [
+       "CrQe7S5kqBAHt-nMYXgc6bdt2SH5aTY1sU_M-PgkjPI",
+       "JzYjH4svliH0R3PyEMfeZu6Jt69u5qehZo7F7EPYlSE",
+       "PorFbpKuVu6xymJagvkFsFXAbRoc2JGlAUA2BA4o7cI",
+       "TGf4oLbgwd5JQaHyKVQZU9UdGE0w5rtDsrZzfUaomLo",
+       "XQ_3kPKt1XyX7KANkqVR6yZ2Va5NrPIvPYbyMvRKBMM",
+       "XzFrzwscM6Gn6CJDc6vVK8BkMnfG8vOSKfpPIZdAfdE",
+       "gbOsI4Edq2x2Kw-w5wPEzakob9hV1cRD0ATN3oQL9JM",
+       "jsu9yVulwQQlhFlM_3JlzMaSFzglhQG0DpfayQwLUK4"
+     ],
+     "iss": "https://issuer.example.com",
+     "iat": 1683000000,
+     "exp": 1883000000,
+     "sub": "user_42",
+     "_sd_alg": "sha-256"
+   }
+   ```
+   2. `keyId`: This is optional field but must be specified to choose which key bounds to the verifiable credential.
+   For more information on key-binding, <https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt>.
+   Currently, we only support the EdDSA algorithm and curve Ed25519.
+   The specified keyId should be of type Ed25519.
+   The purpose of the keyId should be authentication.
+
+   ```shell
+   # Holder POST request to accept the credential offer with keyId
+   curl -X POST "http://localhost:8090/cloud-agent/issue-credentials/records/$holder_record_id/accept-offer" \
+       -H 'accept: application/json' \
+       -H 'Content-Type: application/json' \
+       -H "apikey: $API_KEY" \
+       -d '{
+             "subjectId": "did:prism:subjectIdentifier",
+             "keyId": "key-1"    
+        }'
+   ```
+   A SD-JWT Verifiable Credential (VC) that includes a `cnf` key could possibly look like below
+   ```json
+    {
+     "_sd": [
+       "CrQe7S5kqBAHt-nMYXgc6bdt2SH5aTY1sU_M-PgkjPI",
+       "JzYjH4svliH0R3PyEMfeZu6Jt69u5qehZo7F7EPYlSE",
+       "PorFbpKuVu6xymJagvkFsFXAbRoc2JGlAUA2BA4o7cI",
+       "TGf4oLbgwd5JQaHyKVQZU9UdGE0w5rtDsrZzfUaomLo",
+       "XQ_3kPKt1XyX7KANkqVR6yZ2Va5NrPIvPYbyMvRKBMM",
+       "XzFrzwscM6Gn6CJDc6vVK8BkMnfG8vOSKfpPIZdAfdE",
+       "gbOsI4Edq2x2Kw-w5wPEzakob9hV1cRD0ATN3oQL9JM",
+       "jsu9yVulwQQlhFlM_3JlzMaSFzglhQG0DpfayQwLUK4"
+     ],
+     "iss": "https://issuer.example.com",
+     "iat": 1683000000,
+     "exp": 1883000000,
+     "sub": "user_42",
+     "_sd_alg": "sha-256",
+     "cnf": {
+       "jwk": {
+         "kty": "EC",
+         "crv": "P-256",
+         "x": "TCAER19Zvu3OHF4j4W4vfSVoHIP1ILilDls7vCeGemc",
+         "y": "ZxjiWWbZMQGHVWKVQ4hbSIirsVfuecCE6t4jT9F2HZQ"
+       }
+     }
+   }
+   ```
+
+</TabItem>
+
 </Tabs>
 
 This request will change the state of the record to `RequestPending`.
