@@ -46,6 +46,12 @@ object CredentialServiceError {
         s"The requested record was not found: recordId=$recordId, state=$state"
       )
 
+  final case class NoSubjectFoundInRecord(recordId: DidCommID)
+      extends CredentialServiceError(
+        StatusCode.InternalServerError,
+        s"VC SubjectId not found in credential record: $recordId"
+      )
+
   final case class RecordNotFoundForThreadIdAndStates(thid: DidCommID, states: ProtocolState*)
       extends CredentialServiceError(
         StatusCode.NotFound,
