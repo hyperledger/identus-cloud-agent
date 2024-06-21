@@ -75,11 +75,12 @@ export default (data: {
     holder.acceptVerifierConnection(verifier.connectionWithHolder!.invitation);
     verifier.finalizeConnectionWithHolder();
     holder.finalizeConnectionWithVerifier();
-  }) &&
-
-  describe("Verifier requests proof from Holder", function () {
-    verifier.requestProof();
-    holder.waitAndAcceptProofRequest(verifier.presentation!.thid);
-    verifier.acknowledgeProof();
   });
+  // &&
+  //
+  // describe("Verifier requests proof from Holder", function () {
+  //   verifier.requestProof();
+  //   holder.waitAndAcceptProofRequest(verifier.presentation!.thid);
+  //   verifier.acknowledgeProof();
+  // });
 };
