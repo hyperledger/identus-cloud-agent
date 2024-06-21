@@ -61,7 +61,6 @@ case class CredentialIssuerServerEndpoints(
           oid4vciAuthenticatorFactory
             .make(request.issuerState)
             .flatMap(_.authenticate(jwt))
-            .mapError(AuthenticationError.toErrorResponse)
             .flatMap { entity =>
               credentialIssuerController
                 .getNonce(rc, request)
