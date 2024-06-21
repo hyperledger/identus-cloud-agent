@@ -16,9 +16,6 @@ jobs:
     continue-on-error: true
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
       - name: Update PRs
         uses: actions/github-script@v7
         continue-on-error: true
