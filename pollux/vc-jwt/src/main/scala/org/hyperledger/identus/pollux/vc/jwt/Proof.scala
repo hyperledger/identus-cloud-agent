@@ -51,6 +51,9 @@ object Proof {
 }
 
 object EcdsaSecp256k1Signature2019ProofGenerator {
+  private def stripLeadingZero(arr: Array[Byte]): Array[Byte] = {
+    if (arr.length == 33 && arr.head == 0) then arr.tail else arr
+  }
   def generateProof(payload: Json, signer: ECDSASigner, pk: ECPublicKey): Task[EcdsaSecp256k1Signature2019Proof] = {
     for {
       dataToSign <- ZIO.fromEither(JsonUtils.canonicalizeJsonLDoRdf(payload.spaces2))
@@ -63,8 +66,8 @@ object EcdsaSecp256k1Signature2019ProofGenerator {
       jwsObject = JWSObject(header, payload)
       _ = jwsObject.sign(signer)
       jws = jwsObject.serialize(true)
-      x = pk.getW.getAffineX.toByteArray
-      y = pk.getW.getAffineY.toByteArray
+      x = stripLeadingZero(pk.getW.getAffineX.toByteArray)
+      y = stripLeadingZero(pk.getW.getAffineY.toByteArray)
       jwk = JsonWebKey(
         kty = "EC",
         crv = Some("secp256k1"),
