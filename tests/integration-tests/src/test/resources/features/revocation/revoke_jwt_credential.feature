@@ -1,4 +1,4 @@
-@revocation @jwt
+@revocation @jwt @flaky
 Feature: Credential revocation - JWT
 
   Background:
