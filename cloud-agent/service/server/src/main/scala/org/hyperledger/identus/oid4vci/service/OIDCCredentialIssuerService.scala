@@ -14,7 +14,6 @@ import org.hyperledger.identus.pollux.core.service.{
   OID4VCIIssuerMetadataServiceError,
   URIDereferencer
 }
-import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{
   DID as PolluxDID,
   DidResolver,
@@ -22,13 +21,13 @@ import org.hyperledger.identus.pollux.vc.jwt.{
   JWT,
   JWTVerification,
   JwtCredential,
-  W3cCredentialPayload
+  W3cCredentialPayload,
+  *
 }
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
-import java.net.URL
-import java.security.PublicKey
+import java.net.{URI, URL}
 import java.time.Instant
 import java.util.UUID
 import scala.util.Try
@@ -248,7 +247,7 @@ case class OIDCCredentialIssuerServiceImpl(
       _ <- CredentialSchema
         .validateJWTCredentialSubject(schemaId.toString(), simpleZioToCirce(claims).noSpaces, uriDereferencer)
         .mapError(e => CredentialSchemaError(e))
-      session <- buildNewIssuanceSession(issuerId, issuingDID, claims)
+      session <- buildNewIssuanceSession(issuerId, issuingDID, claims, schemaId)
       _ <- issuanceSessionStorage
         .start(session)
         .mapError(e => ServiceError(s"Failed to start issuance session: ${e.message}"))
@@ -278,7 +277,8 @@ case class OIDCCredentialIssuerServiceImpl(
   private def buildNewIssuanceSession(
       issuerId: UUID,
       issuerDid: PrismDID,
-      claims: zio.json.ast.Json
+      claims: zio.json.ast.Json,
+      schemaId: URI
   ): UIO[IssuanceSession] = {
     for {
       id <- ZIO.random.flatMap(_.nextUUID)
@@ -290,7 +290,7 @@ case class OIDCCredentialIssuerServiceImpl(
       nonce = nonce.toString,
       issuerState = issuerState.toString,
       claims = claims,
-      schemaId = None, // FIXME: populate correct value
+      schemaId = Some(schemaId.toString),
       subjectDid = None, // FIXME: populate correct value
       issuingDid = issuerDid,
     )

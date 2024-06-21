@@ -8,7 +8,7 @@ import org.hyperledger.identus.iam.authentication.{
   EntityAuthorizer
 }
 import org.hyperledger.identus.iam.authentication.AuthenticationError.*
-import zio.{IO, ZIO}
+import zio.{IO, UIO, ZIO}
 
 import java.util.UUID
 
@@ -35,11 +35,11 @@ trait ApiKeyAuthenticator extends AuthenticatorWithAuthZ[Entity], EntityAuthoriz
 
   def isEnabled: Boolean
 
-  def authenticate(apiKey: String): IO[AuthenticationError, Entity]
+  def authenticate(apiKey: String): IO[InvalidCredentials, Entity]
 
-  def add(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit]
+  def add(entityId: UUID, apiKey: String): UIO[Unit]
 
-  def delete(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit]
+  def delete(entityId: UUID, apiKey: String): UIO[Unit]
 }
 
 object ApiKeyAuthenticator {

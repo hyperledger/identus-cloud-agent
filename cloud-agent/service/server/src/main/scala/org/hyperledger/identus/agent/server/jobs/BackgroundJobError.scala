@@ -6,6 +6,8 @@ sealed trait BackgroundJobError
 
 object BackgroundJobError {
   final case class InvalidState(cause: String) extends BackgroundJobError
+
+  final case class ErrorSendingMessage(cause: String) extends BackgroundJobError
   case object NotImplemented extends BackgroundJobError
   final case class ErrorResponseReceivedFromPeerAgent(response: HttpResponse) extends BackgroundJobError {
     override def toString: String = s"DIDComm sending error: [${response.status}] - ${response.bodyAsString}"

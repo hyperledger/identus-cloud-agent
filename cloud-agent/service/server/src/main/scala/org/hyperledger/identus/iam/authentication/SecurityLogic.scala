@@ -9,6 +9,8 @@ import org.hyperledger.identus.iam.authentication.AuthenticationError.Authentica
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
 import zio.*
 
+import scala.language.implicitConversions
+
 object SecurityLogic {
 
   def authenticate[E <: BaseEntity](credentials: Credentials, others: Credentials*)(
@@ -31,7 +33,6 @@ object SecurityLogic {
           case head :: _ => ZIO.fail(head)
         }
       }
-      .mapError(AuthenticationError.toErrorResponse)
   }
 
   def authorizeWalletAccess[E <: BaseEntity](
@@ -39,7 +40,6 @@ object SecurityLogic {
   )(authorizer: Authorizer[E]): IO[ErrorResponse, WalletAccessContext] =
     authorizer
       .authorizeWalletAccess(entity)
-      .mapError(AuthenticationError.toErrorResponse)
 
   def authorizeWalletAccess[E <: BaseEntity](credentials: Credentials, others: Credentials*)(
       authenticator: Authenticator[E],
@@ -62,7 +62,6 @@ object SecurityLogic {
   )(authorizer: Authorizer[E]): IO[ErrorResponse, WalletAdministrationContext] =
     authorizer
       .authorizeWalletAdmin(entity)
-      .mapError(AuthenticationError.toErrorResponse)
 
   def authorizeWalletAdminWith[E <: BaseEntity](
       credentials: (AdminApiKeyCredentials, ApiKeyCredentials, JwtCredentials)
@@ -89,11 +88,9 @@ object SecurityLogic {
               .mapError(msg =>
                 AuthenticationError.UnexpectedError(s"Unable to retrieve entity role for entity id ${entity.id}. $msg")
               )
-              .mapError(AuthenticationError.toErrorResponse)
           _ <- ZIO
             .fail(AuthenticationError.InvalidRole(s"$role role is not permitted. Expected $permittedRole role."))
             .when(role != permittedRole)
-            .mapError(AuthenticationError.toErrorResponse)
         } yield entity
       }
   }
