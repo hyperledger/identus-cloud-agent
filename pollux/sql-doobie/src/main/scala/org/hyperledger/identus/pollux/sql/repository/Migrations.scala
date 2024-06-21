@@ -9,7 +9,6 @@ import org.hyperledger.identus.shared.db.{ContextAwareTask, DbConfig}
 import org.hyperledger.identus.shared.db.Implicits.*
 import zio.*
 import zio.interop.catz.*
-import org.flywaydb.core.api.exception.FlywayValidateException
 
 final case class Migrations(config: DbConfig) {
 
