@@ -37,11 +37,11 @@ object JdbcAuthenticationRepositorySpec extends ZIOSpecDefault, PostgresTestCont
         for {
           repository <- ZIO.service[AuthenticationRepository]
           recordId <- repository.insert(entityId, AuthenticationMethodType.ApiKey, secret)
-          fetchedEntityId <- repository.getEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret)
+          fetchedEntityId <- repository.findEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret)
           _ <- repository.deleteByMethodAndEntityId(entityId, AuthenticationMethodType.ApiKey)
-          notFoundEntityId <- repository.getEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret).flip
-        } yield assert(entityId)(equalTo(fetchedEntityId)) &&
-          assert(notFoundEntityId)(isSubtype[AuthenticationRepositoryError.AuthenticationNotFound](anything))
+          notFoundEntityId <- repository.findEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret)
+        } yield assert(fetchedEntityId)(isSome(equalTo(entityId))) &&
+          assert(notFoundEntityId)(isNone)
       }
     },
     test("insert a similar secret for a different tenant must fail") {
