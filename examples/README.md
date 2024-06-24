@@ -36,7 +36,7 @@ If an example contains a sub-directory named `hurl`, the example can be tested a
 
 ```bash
 cd ./hurl
-hurl --variable-files ./local *.hurl
+hurl --variables-file ./local *.hurl
 ```
 
 # Contributing
