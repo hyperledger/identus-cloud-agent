@@ -2,7 +2,7 @@ package org.hyperledger.identus.castor.core.model.did
 
 import org.hyperledger.identus.castor.core.util.GenUtils
 import zio.*
-import zio.test.{assert, *}
+import zio.test.*
 import zio.test.Assertion.*
 
 object DIDUrlSpec extends ZIOSpecDefault {

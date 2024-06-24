@@ -18,7 +18,7 @@ import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdminis
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.DBTestUtils
 import zio.*
-import zio.test.{ZIOSpecDefault, *}
+import zio.test.*
 import zio.test.Assertion.*
 
 import java.net.{URI, URL}

@@ -20,7 +20,7 @@ import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import zio.{Scope, ULayer, ZIO, ZLayer}
-import zio.test.{assert, Spec, TestEnvironment, ZIOSpecDefault, *}
+import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.sequential
 import zio.Runtime.removeDefaultLoggers
