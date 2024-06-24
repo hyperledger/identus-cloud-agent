@@ -2,10 +2,8 @@ package org.hyperledger.identus.castor.core.model.did
 
 import org.hyperledger.identus.castor.core.util.GenUtils
 import zio.*
-import zio.test.*
-import zio.test.assert
+import zio.test.{assert, *}
 import zio.test.Assertion.*
-import zio.test.Assertion.isLeft
 
 object DIDUrlSpec extends ZIOSpecDefault {
   override def spec = suite("DIDUrl")(fromStringSpec)

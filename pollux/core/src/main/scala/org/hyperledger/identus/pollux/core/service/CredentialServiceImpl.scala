@@ -24,8 +24,7 @@ import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, Issuer as JwtIssuer, *}
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, Secp256k1KeyPair}
 import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
-import org.hyperledger.identus.shared.models.KeyId
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.json.*

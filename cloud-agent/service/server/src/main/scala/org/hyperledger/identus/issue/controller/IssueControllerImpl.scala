@@ -21,8 +21,7 @@ import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import org.hyperledger.identus.pollux.core.service.CredentialService
-import org.hyperledger.identus.shared.models.KeyId
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
 import zio.{URLayer, ZIO, ZLayer}
 
 import scala.language.implicitConversions

@@ -19,8 +19,7 @@ import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.model.error.TransportError
 import org.hyperledger.identus.mercury.protocol.presentproof.*
-import org.hyperledger.identus.mercury.protocol.reportproblem.v2.ProblemCode
-import org.hyperledger.identus.mercury.protocol.reportproblem.v2.ReportProblem
+import org.hyperledger.identus.mercury.protocol.reportproblem.v2.{ProblemCode, ReportProblem}
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
