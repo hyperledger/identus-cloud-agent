@@ -83,11 +83,8 @@ class IssueCredentialsSteps {
         format: String,
         schema: CredentialSchema,
     ) {
-        val schemaGuid = issuer.recall<String>(schema.name)!!
-        val claims = linkedMapOf(
-            "name" to "Name",
-            "age" to 18,
-        )
+        val schemaGuid = issuer.recall<String>(schema.name)
+        val claims = schema.claims
         sendCredentialOffer(issuer, holder, format, schemaGuid, claims)
         saveCredentialOffer(issuer, holder)
     }
@@ -144,13 +141,13 @@ class IssueCredentialsSteps {
     fun holderReceivesCredentialOffer(holder: Actor) {
         Wait.until(
             errorMessage = "Holder was unable to receive the credential offer from Issuer! " +
-                "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.OFFER_RECEIVED} state.",
+                    "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.OFFER_RECEIVED} state.",
         ) {
             credentialEvent = ListenToEvents.with(holder).credentialEvents.lastOrNull {
                 it.data.thid == holder.recall<String>("thid")
             }
             credentialEvent != null &&
-                credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.OFFER_RECEIVED
+                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.OFFER_RECEIVED
         }
 
         val recordId = ListenToEvents.with(holder).credentialEvents.last().data.recordId
@@ -196,7 +193,7 @@ class IssueCredentialsSteps {
                 it.data.thid == issuer.recall<String>("thid")
             }
             credentialEvent != null &&
-                credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.REQUEST_RECEIVED
+                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.REQUEST_RECEIVED
         }
         val recordId = credentialEvent!!.data.recordId
         issuer.attemptsTo(
@@ -209,7 +206,7 @@ class IssueCredentialsSteps {
         Wait.until(
             10.seconds,
             errorMessage = "Issuer was unable to issue the credential! " +
-                "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT} state.",
+                    "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT} state.",
         ) {
             credentialEvent = ListenToEvents.with(issuer).credentialEvents.lastOrNull {
                 it.data.thid == issuer.recall<String>("thid")
@@ -217,7 +214,7 @@ class IssueCredentialsSteps {
             issuer.remember("issuedCredential", credentialEvent!!.data)
 
             credentialEvent != null &&
-                credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT
+                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT
         }
     }
 
@@ -225,13 +222,13 @@ class IssueCredentialsSteps {
     fun bobHasTheCredentialIssued(holder: Actor) {
         Wait.until(
             errorMessage = "Holder was unable to receive the credential from Issuer! " +
-                "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED} state.",
+                    "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED} state.",
         ) {
             credentialEvent = ListenToEvents.with(holder).credentialEvents.lastOrNull {
                 it.data.thid == holder.recall<String>("thid")
             }
             credentialEvent != null &&
-                credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED
+                    credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_RECEIVED
         }
         holder.remember("issuedCredential", ListenToEvents.with(holder).credentialEvents.last().data)
     }
@@ -239,7 +236,7 @@ class IssueCredentialsSteps {
     @Then("{actor} should see that credential issuance has failed")
     fun issuerShouldSeeThatCredentialIssuanceHasFailed(issuer: Actor) {
         issuer.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_UNPROCESSABLE_ENTITY),
         )
     }
 }
