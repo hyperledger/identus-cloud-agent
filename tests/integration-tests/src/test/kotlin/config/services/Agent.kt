@@ -6,7 +6,6 @@ import org.testcontainers.containers.ComposeContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.*
 
-
 data class Agent(
     val version: String,
     @ConfigAlias("http_port") val httpPort: Int,
@@ -18,7 +17,7 @@ data class Agent(
     val keycloak: Keycloak?,
     val vault: Vault?,
     @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
-    ) : ServiceBase() {
+) : ServiceBase() {
 
     override val logServices = listOf("identus-cloud-agent")
     override val container: ComposeContainer
