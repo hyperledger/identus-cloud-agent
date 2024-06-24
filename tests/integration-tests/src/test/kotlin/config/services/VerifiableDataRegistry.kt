@@ -9,7 +9,7 @@ data class VerifiableDataRegistry(
     @ConfigAlias("http_port") val httpPort: Int,
     val version: String,
     @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
-    ) : ServiceBase() {
+) : ServiceBase() {
     override val logServices: List<String> = listOf("prism-node")
     private val vdrComposeFile = "src/test/resources/containers/vdr.yml"
     override val container: ComposeContainer = ComposeContainer(File(vdrComposeFile)).withEnv(
