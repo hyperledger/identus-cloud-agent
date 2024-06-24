@@ -1,5 +1,6 @@
 package steps.common
 
+import common.CredentialSchema
 import interactions.Get
 import io.cucumber.java.DataTableType
 import io.cucumber.java.ParameterType
@@ -14,6 +15,7 @@ import org.hyperledger.identus.client.models.*
 import steps.connection.ConnectionSteps
 import steps.credentials.IssueCredentialsSteps
 import steps.did.PublishDidSteps
+import steps.schemas.CredentialSchemasSteps
 
 class CommonSteps {
     @ParameterType(".*")
@@ -46,6 +48,25 @@ class CommonSteps {
 
         val issueSteps = IssueCredentialsSteps()
         issueSteps.issuerOffersACredential(issuer, holder, "short")
+        issueSteps.holderReceivesCredentialOffer(holder)
+        issueSteps.holderAcceptsCredentialOfferForJwt(holder)
+        issueSteps.acmeIssuesTheCredential(issuer)
+        issueSteps.bobHasTheCredentialIssued(holder)
+    }
+
+    @Given("{actor} has an issued credential with {} schema from {actor}")
+    fun holderHasIssuedCredentialFromIssuerWithSchema(holder: Actor, schema: CredentialSchema, issuer: Actor) {
+        actorsHaveExistingConnection(issuer, holder)
+
+        val publishDidSteps = PublishDidSteps()
+        publishDidSteps.createsUnpublishedDid(holder)
+        publishDidSteps.agentHasAPublishedDID(issuer)
+
+        val schemaSteps = CredentialSchemasSteps()
+        schemaSteps.agentHasAPublishedSchema(issuer, schema)
+
+        val issueSteps = IssueCredentialsSteps()
+        issueSteps.issuerOffersCredentialToHolderUsingSchema(issuer, holder, "short", schema)
         issueSteps.holderReceivesCredentialOffer(holder)
         issueSteps.holderAcceptsCredentialOfferForJwt(holder)
         issueSteps.acmeIssuesTheCredential(issuer)

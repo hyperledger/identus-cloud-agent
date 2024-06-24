@@ -86,11 +86,11 @@ afterEvaluate {
         tasks.register<Test>("test_$fileName") {
             group = "verification"
             testLogging.showStandardStreams = true
+            systemProperty("context", fileName)
             systemProperty("TESTS_CONFIG", "/configs/$fileName.conf")
             systemProperty("PRISM_NODE_VERSION", System.getenv("PRISM_NODE_VERSION") ?: "")
             systemProperty("AGENT_VERSION", System.getenv("AGENT_VERSION") ?: "")
             systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
-            dependsOn("cleanTarget")
             finalizedBy("aggregate", "reports")
             outputs.upToDateWhen { false }
         }
@@ -100,7 +100,7 @@ afterEvaluate {
      * Runs the integration suite for each config file present
      * Restrictions: aggregation of all executions doesn't work because of serenity configuration
      */
-    tasks.register("regression") {
+    tasks.register<Test>("regression") {
         dependsOn("cleanTarget")
         group = "verification"
         configFiles.forEach {

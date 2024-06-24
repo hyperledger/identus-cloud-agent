@@ -4,7 +4,8 @@ import com.sksamuel.hoplite.ConfigAlias
 import config.VaultAuthType
 import org.testcontainers.containers.ComposeContainer
 import org.testcontainers.containers.wait.strategy.Wait
-import java.io.File
+import java.io.*
+
 
 data class Agent(
     val version: String,
@@ -13,12 +14,13 @@ data class Agent(
     @ConfigAlias("didcomm_service_url") val didcommServiceUrl: String?,
     @ConfigAlias("rest_service_url") val restServiceUrl: String?,
     @ConfigAlias("auth_enabled") val authEnabled: Boolean,
-    @ConfigAlias("prism_node") val prismNode: PrismNode?,
+    @ConfigAlias("prism_node") val prismNode: VerifiableDataRegistry?,
     val keycloak: Keycloak?,
     val vault: Vault?,
     @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
-) : ServiceBase {
+    ) : ServiceBase() {
 
+    override val logServices = listOf("identus-cloud-agent")
     override val container: ComposeContainer
 
     init {
@@ -50,9 +52,7 @@ data class Agent(
             env["VAULT_APPROLE_SECRET_ID"] = "agent-secret"
         }
 
-        container = ComposeContainer(
-            File("src/test/resources/containers/agent.yml"),
-        )
+        container = ComposeContainer(File("src/test/resources/containers/agent.yml"))
             .withEnv(env)
             .waitingFor("identus-cloud-agent", Wait.forHealthcheck())
     }
