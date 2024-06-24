@@ -18,13 +18,14 @@ data class Keycloak(
     @ConfigAlias("client_id") val clientId: String = "prism-agent",
     @ConfigAlias("client_secret") val clientSecret: String = "prism-agent-demo-secret",
     @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
-) : ServiceBase {
+) : ServiceBase() {
     private val logger = Logger.get<Keycloak>()
     private val keycloakComposeFile = "src/test/resources/containers/keycloak.yml"
     private val keycloakEnvConfig: Map<String, String> = mapOf(
         "KEYCLOAK_HTTP_PORT" to httpPort.toString(),
     )
-    private val keycloakClientRoles: List<String> = AgentRole.values().map { it.roleName }
+    override val logServices: List<String> = listOf("keycloak")
+    private val keycloakClientRoles: List<String> = AgentRole.entries.map { it.roleName }
     override val container: ComposeContainer =
         ComposeContainer(File(keycloakComposeFile)).withEnv(keycloakEnvConfig)
             .waitingFor("keycloak", Wait.forLogMessage(".*Running the server.*", 1))
