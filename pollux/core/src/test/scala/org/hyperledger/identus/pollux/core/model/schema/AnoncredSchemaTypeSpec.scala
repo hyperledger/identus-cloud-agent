@@ -6,7 +6,7 @@ import zio.*
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
-import zio.test.{assertZIO, *}
+import zio.test.*
 import zio.test.Assertion.*
 
 import scala.util.Random

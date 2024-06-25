@@ -14,7 +14,7 @@ import org.hyperledger.identus.pollux.core.service.PresentationService
 import org.hyperledger.identus.presentproof.controller.http.*
 import org.hyperledger.identus.presentproof.controller.PresentProofController.toDidCommID
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{URLayer, ZIO, ZLayer, *}
+import zio.*
 import zio.json.*
 import zio.json.ast.Json
 

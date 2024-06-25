@@ -5,8 +5,7 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import org.hyperledger.identus.shared.models.KeyId
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext, WalletId}
 import zio.{Exit, ZIO, ZLayer}
 import zio.test.*
 import zio.test.Assertion.*
