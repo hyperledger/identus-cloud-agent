@@ -8,7 +8,7 @@ import org.hyperledger.identus.agent.walletapi.model.{
   UpdateManagedDIDAction,
   WalletSeed
 }
-import org.hyperledger.identus.agent.walletapi.model.error.{UpdateManagedDIDError, *}
+import org.hyperledger.identus.agent.walletapi.model.error.*
 import org.hyperledger.identus.agent.walletapi.model.error.given
 import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.agent.walletapi.util.OperationFactory

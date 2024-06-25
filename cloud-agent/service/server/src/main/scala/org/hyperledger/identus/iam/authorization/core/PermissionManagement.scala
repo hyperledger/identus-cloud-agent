@@ -1,6 +1,5 @@
 package org.hyperledger.identus.iam.authorization.core
 
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
 import zio.*

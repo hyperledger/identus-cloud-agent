@@ -1,8 +1,7 @@
 package org.hyperledger.identus.iam.wallet.http.controller
 
 import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Wallet, WalletSeed}
-import org.hyperledger.identus.agent.walletapi.service.{WalletManagementService, WalletManagementServiceError}
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.TooManyPermittedWallet
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.util.PaginationUtils

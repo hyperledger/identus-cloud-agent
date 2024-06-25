@@ -139,7 +139,6 @@ case class OIDCCredentialIssuerServiceImpl(
         .mapError(dre => InvalidProof(dre.message))
       publicKey <- JWTVerification.extractPublicKey(verificationMethod).toZIO.mapError(InvalidProof.apply)
       _ <- JWTVerification.validateEncodedJwt(jwt, publicKey).toZIO.mapError(InvalidProof.apply)
-      _ <- ZIO.succeed(println(s"JWT proof is verified: ${jwt.value}")) // TODO: remove before the release
     } yield true
   }
 

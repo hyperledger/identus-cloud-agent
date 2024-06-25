@@ -3,7 +3,7 @@ package org.hyperledger.identus.didcomm.controller
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.EndpointOutputs.{basicFailuresWith, FailureVariant}
 import org.hyperledger.identus.didcomm.controller.http.DIDCommMessage
-import sttp.tapir.{endpoint, PublicEndpoint, *}
+import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
 
 object DIDCommEndpoints {

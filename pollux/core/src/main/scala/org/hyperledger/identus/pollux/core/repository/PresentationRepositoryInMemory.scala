@@ -1,29 +1,13 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import cats.data.NonEmptyList
-import doobie.*
-import doobie.free.connection
-import doobie.implicits.*
-import doobie.postgres.*
-import doobie.postgres.circe.json.implicits.*
-import doobie.postgres.implicits.*
-import io.circe
-import io.circe.*
-import io.circe.parser.*
-import io.circe.syntax.*
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
 import org.hyperledger.identus.pollux.core.model.PresentationRecord.ProtocolState
-import org.hyperledger.identus.pollux.core.repository.PresentationRepository
-import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
-import zio.interop.catz.*
 import zio.json.*
 import zio.json.ast.Json
-import zio.json.ast.Json.*
 
 import java.time.Instant
 
