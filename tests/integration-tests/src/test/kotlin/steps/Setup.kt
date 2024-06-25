@@ -4,8 +4,7 @@ import abilities.ListenToEvents
 import com.sksamuel.hoplite.ConfigException
 import com.sksamuel.hoplite.ConfigLoader
 import common.TestConstants
-import config.AgentRole
-import config.Config
+import config.*
 import io.cucumber.java.AfterAll
 import io.cucumber.java.BeforeAll
 import io.restassured.RestAssured
@@ -17,6 +16,7 @@ import net.serenitybdd.screenplay.rest.abilities.CallAnApi
 import org.apache.http.HttpStatus
 import org.hyperledger.identus.client.models.CreateWalletRequest
 import org.hyperledger.identus.client.models.CreateWebhookNotification
+import org.ietf.jgss.Oid
 import java.util.UUID
 
 object Setup {
@@ -35,6 +35,7 @@ object Setup {
      */
     fun initServices() {
         config.services?.keycloak?.setUsers(config.roles)?.start()
+        config.services?.keycloakOid4vci?.setUsers(config.roles.filter { it.name == "Holder" })?.start()
         config.services?.prismNode?.start()
         config.services?.vault?.start()
         config.agents?.forEach {
@@ -100,7 +101,10 @@ object Setup {
             config.roles.forEach { role ->
                 val actor = cast.actorNamed(role.name)
                 try {
-                    actor.remember("BEARER_TOKEN", config.services.keycloak.getKeycloakAuthToken(actor.name, actor.name))
+                    actor.remember(
+                        "BEARER_TOKEN",
+                        config.services.keycloak.getKeycloakAuthToken(actor.name, actor.name)
+                    )
                 } catch (e: NullPointerException) {
                     throw ConfigException("Keycloak is configured, but no token found for user ${actor.name}!")
                 }
@@ -125,6 +129,14 @@ object Setup {
                 }
             }
             actor.remember("baseUrl", role.url.toExternalForm())
+        }
+        if (config.services?.keycloakOid4vci != null) {
+            val role = config.roles.find { it.name == "Issuer" } ?: throw ConfigException("Issuer role does not exist")
+            val url = role.oid4vciAuthServer ?: throw ConfigException("Issuer's oid4vci_auth_server must be provided")
+            val actor = cast.actorNamed(role.name)
+            actor.remember("OID4VCI_AUTH_SERVER_URL", url.toExternalForm())
+            actor.remember("OID4VCI_AUTH_SERVER_CLIENT_ID", config.services.keycloakOid4vci.clientId)
+            actor.remember("OID4VCI_AUTH_SERVER_CLIENT_SECRET", config.services.keycloakOid4vci.clientSecret)
         }
         OnStage.setTheStage(cast)
     }
