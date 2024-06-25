@@ -1,6 +1,6 @@
 package org.hyperledger.identus.mercury.protocol.reportproblem.v2
 
-import io.circe.{Decoder, Encoder, *}
+import io.circe.*
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.{DidId, Message, PIURI}

@@ -12,7 +12,7 @@ import org.hyperledger.identus.castor.core.model.did.{
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
-import zio.{mock, *}
+import zio.*
 import zio.mock.*
 import zio.test.Assertion
 

@@ -10,7 +10,7 @@ import org.hyperledger.identus.pollux.credentialschema.*
 import org.hyperledger.identus.pollux.credentialschema.controller.CredentialSchemaController
 import org.hyperledger.identus.pollux.credentialschema.http.{CredentialSchemaInput, CredentialSchemaResponse}
 import sttp.client3.basicRequest
-import sttp.client3.ziojson.{asJsonAlways, *}
+import sttp.client3.ziojson.*
 import sttp.model.StatusCode
 import zio.*
 import zio.json.*

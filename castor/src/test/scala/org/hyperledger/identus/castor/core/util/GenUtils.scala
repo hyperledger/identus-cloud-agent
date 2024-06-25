@@ -8,7 +8,6 @@ import org.hyperledger.identus.shared.models.Base64UrlString
 import zio.*
 import zio.test.Gen
 
-import java.net.URI
 import scala.language.implicitConversions
 
 object GenUtils {

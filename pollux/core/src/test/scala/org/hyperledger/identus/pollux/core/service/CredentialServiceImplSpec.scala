@@ -19,8 +19,7 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.{
 }
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
-import org.hyperledger.identus.shared.models.{UnmanagedFailureException, WalletAccessContext, WalletId}
-import org.hyperledger.identus.shared.models.KeyId
+import org.hyperledger.identus.shared.models.{KeyId, UnmanagedFailureException, WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.MockSpecDefault
 import zio.test.*

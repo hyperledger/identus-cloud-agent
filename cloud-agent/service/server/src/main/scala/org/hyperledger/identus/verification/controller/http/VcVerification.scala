@@ -5,7 +5,7 @@ import org.hyperledger.identus.pollux.core.service
 import org.hyperledger.identus.pollux.core.service.verification.VcVerification as ServiceVcVerification
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.description
-import zio.{IO, *}
+import zio.*
 import zio.json.{JsonDecoder, JsonEncoder}
 
 /** Enum representing the various types of verifications that can be performed on a verifiable credential.
