@@ -32,7 +32,7 @@ class ManageDidSteps {
         val createDidRequest = createPrismDidRequest(curve, purpose)
 
         actor.attemptsTo(
-            Post.to("/did-registrar/dids").body(createDidRequest)
+            Post.to("/did-registrar/dids").body(createDidRequest),
         )
 
         if (SerenityRest.lastResponse().statusCode() == SC_CREATED) {

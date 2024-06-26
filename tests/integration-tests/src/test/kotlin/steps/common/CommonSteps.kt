@@ -37,7 +37,7 @@ class CommonSteps {
     fun holderHasIssuedCredentialFromIssuerWithSchema(
         holder: Actor,
         schema: CredentialSchema,
-        issuer: Actor
+        issuer: Actor,
     ) {
         actorsHaveExistingConnection(issuer, holder)
 

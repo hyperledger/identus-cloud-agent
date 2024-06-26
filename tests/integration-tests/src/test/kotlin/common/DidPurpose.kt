@@ -18,7 +18,7 @@ enum class DidPurpose {
     ANONCRED {
         override val publicKeys = emptyList<ManagedDIDKeyTemplate>()
         override val services = emptyList<Service>()
-    };
+    }, ;
 
     abstract val publicKeys: List<ManagedDIDKeyTemplate>
     abstract val services: List<Service>
