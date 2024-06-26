@@ -198,8 +198,8 @@ class UpdateDidSteps {
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_BAD_REQUEST),
             Ensure.that(detail)
                 .contains(
-                    "Ed25519 must be used in [Authentication, AssertionMethod]. X25519 must be used in [KeyAgreement]"
-                )
+                    "Ed25519 must be used in [Authentication, AssertionMethod]. X25519 must be used in [KeyAgreement]",
+                ),
         )
     }
 }
