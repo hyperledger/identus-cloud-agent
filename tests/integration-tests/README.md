@@ -439,7 +439,7 @@ Example
 AGENT_VERSION=v1.36.1 PRISM_NODE_VERSION=v2.3.0 ./gradlew regression --continue
 ```
 
-Each `context` is based on the configuration used for the current execution and will be displayed in the 
+Each `context` is based on the configuration used for the current execution and will be displayed in the
 Serenity report:
 
 <p style="text-align: center">
@@ -569,7 +569,7 @@ JUnit XML reports are also generated under `./target/site/serenity` folder with 
 
 Docker logs are now redirected to `target/logs` folder.
 
-If you're running the test using the custom config goals  it will have the context added 
+If you're running the test using the custom config goals  it will have the context added
 to the path as `target/logs/basic`.
 
 Example
