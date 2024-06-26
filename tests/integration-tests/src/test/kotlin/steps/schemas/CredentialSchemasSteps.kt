@@ -2,8 +2,7 @@ package steps.schemas
 
 import common.*
 import common.CredentialSchema.STUDENT_SCHEMA
-import interactions.Get
-import interactions.Post
+import interactions.*
 import io.cucumber.java.en.*
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure

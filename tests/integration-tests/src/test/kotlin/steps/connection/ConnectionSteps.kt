@@ -1,7 +1,7 @@
 package steps.connection
 
 import abilities.ListenToEvents
-import common.body
+import interactions.body
 import interactions.Get
 import interactions.Post
 import io.cucumber.java.en.Then

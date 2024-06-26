@@ -4,6 +4,7 @@ import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.Curve
 import common.*
 import interactions.Post
+import interactions.body
 import io.cucumber.datatable.DataTable
 import io.cucumber.java.en.*
 import io.iohk.atala.automation.extensions.getList

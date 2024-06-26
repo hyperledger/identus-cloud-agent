@@ -2,7 +2,7 @@ package steps.credentials
 
 import abilities.ListenToEvents
 import common.CredentialSchema
-import common.body
+import interactions.body
 import interactions.Post
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
