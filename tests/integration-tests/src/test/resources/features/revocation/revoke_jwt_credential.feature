@@ -2,7 +2,7 @@
 Feature: Credential revocation - JWT
 
   Background:
-    Given Holder has an issued credential from Issuer
+    Given Holder has a jwt issued credential from Issuer
 
   Scenario: Revoke issued credential
     When Issuer revokes the credential issued to Holder

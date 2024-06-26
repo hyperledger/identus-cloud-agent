@@ -1,7 +1,8 @@
 package steps.did
 
 import abilities.ListenToEvents
-import common.TestConstants
+import common.DidPurpose
+import common.body
 import interactions.Get
 import interactions.Post
 import io.cucumber.java.en.*
@@ -17,28 +18,44 @@ import org.hyperledger.identus.client.models.*
 import kotlin.time.Duration.Companion.seconds
 
 class PublishDidSteps {
+
+    @Given("{actor} has a published DID for {}")
+    fun agentHasAPublishedDID(agent: Actor, didPurpose: DidPurpose) {
+        if (agent.recallAll().containsKey("hasPublishedDid") && actualDidHasSamePurpose(agent, didPurpose)) {
+            return
+        }
+        agentHasAnUnpublishedDID(agent, didPurpose)
+        hePublishesDidToLedger(agent)
+    }
+
+    @Given("{actor} has an unpublished DID for {}")
+    fun agentHasAnUnpublishedDID(agent: Actor, didPurpose: DidPurpose) {
+        if (agent.recallAll().containsKey("shortFormDid") || agent.recallAll().containsKey("longFormDid")) {
+            // is not published and has the same purpose
+            if (!agent.recallAll().containsKey("hasPublishedDid") && actualDidHasSamePurpose(agent, didPurpose)) {
+                return
+            }
+        }
+        agentCreatesUnpublishedDid(agent, didPurpose)
+    }
+
+    private fun actualDidHasSamePurpose(agent: Actor, didPurpose: DidPurpose): Boolean {
+        val actualPurpose: DidPurpose = agent.recall<DidPurpose?>("didPurpose") ?: return false
+        return actualPurpose == didPurpose
+    }
+
     @Given("{actor} creates unpublished DID")
-    fun createsUnpublishedDid(actor: Actor) {
+    fun agentCreatesEmptyUnpublishedDid(actor: Actor) {
+        agentCreatesUnpublishedDid(actor, DidPurpose.EMPTY)
+    }
+
+    @Given("{actor} creates unpublished DID for {}")
+    fun agentCreatesUnpublishedDid(actor: Actor, didPurpose: DidPurpose) {
         val createDidRequest = CreateManagedDidRequest(
-            CreateManagedDidRequestDocumentTemplate(
-                publicKeys = listOf(
-                    ManagedDIDKeyTemplate("auth-1", Purpose.AUTHENTICATION, Curve.SECP256K1),
-                    ManagedDIDKeyTemplate("auth-2", Purpose.AUTHENTICATION, Curve.ED25519),
-                    ManagedDIDKeyTemplate("assertion-1", Purpose.ASSERTION_METHOD, Curve.SECP256K1),
-                    ManagedDIDKeyTemplate("comm-1", Purpose.KEY_AGREEMENT, Curve.X25519),
-                ),
-                services = listOf(
-                    Service("https://foo.bar.com", listOf("LinkedDomains"), Json("https://foo.bar.com/")),
-                    Service("https://update.com", listOf("LinkedDomains"), Json("https://update.com/")),
-                    Service("https://remove.com", listOf("LinkedDomains"), Json("https://remove.com/")),
-                ),
-            ),
+            CreateManagedDidRequestDocumentTemplate(didPurpose.publicKeys, services = didPurpose.services),
         )
         actor.attemptsTo(
-            Post.to("/did-registrar/dids")
-                .with {
-                    it.body(createDidRequest)
-                },
+            Post.to("/did-registrar/dids").body(createDidRequest),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
         )
 
@@ -54,42 +71,18 @@ class PublishDidSteps {
 
         actor.remember("longFormDid", managedDid.longFormDid)
         actor.remember("shortFormDid", did.did)
+        actor.remember("didPurpose", didPurpose)
         actor.forget<String>("hasPublishedDid")
-    }
-
-    @Given("{actor} has a published DID")
-    fun agentHasAPublishedDID(agent: Actor) {
-        if (agent.recallAll().containsKey("hasPublishedDid")) {
-            return
-        }
-        if (!agent.recallAll().containsKey("shortFormDid") &&
-            !agent.recallAll().containsKey("longFormDid")
-        ) {
-            createsUnpublishedDid(agent)
-        }
-        hePublishesDidToLedger(agent)
-    }
-
-    @Given("{actor} has an unpublished DID")
-    fun agentHasAnUnpublishedDID(agent: Actor) {
-        if (agent.recallAll().containsKey("shortFormDid") ||
-            agent.recallAll().containsKey("longFormDid")
-        ) {
-            // is not published
-            if (!agent.recallAll().containsKey("hasPublishedDid")) {
-                return
-            }
-        }
-        createsUnpublishedDid(agent)
     }
 
     @When("{actor} publishes DID to ledger")
     fun hePublishesDidToLedger(actor: Actor) {
+        val shortFormDid = actor.recall<String>("shortFormDid")
         actor.attemptsTo(
-            Post.to("/did-registrar/dids/${actor.recall<String>("shortFormDid")}/publications"),
+            Post.to("/did-registrar/dids/$shortFormDid/publications"),
         )
-        val didOperationResponse = SerenityRest.lastResponse().get<DIDOperationResponse>()
 
+        val didOperationResponse = SerenityRest.lastResponse().get<DIDOperationResponse>()
         actor.attemptsTo(
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_ACCEPTED),
             Ensure.that(didOperationResponse.scheduledOperation.didRef).isNotEmpty(),
@@ -126,9 +119,6 @@ class PublishDidSteps {
         val shortFormDid = actor.recall<String>("shortFormDid")
         actor.attemptsTo(
             Ensure.that(didDocument.id).isEqualTo(shortFormDid),
-            Ensure.that(didDocument.authentication!![0])
-                .isEqualTo("$shortFormDid#${TestConstants.PRISM_DID_AUTH_KEY.id}"),
-            Ensure.that(didDocument.verificationMethod!![0].controller).isEqualTo(shortFormDid),
             Ensure.that(didResolutionResult.didDocumentMetadata.deactivated!!).isFalse(),
         )
     }
