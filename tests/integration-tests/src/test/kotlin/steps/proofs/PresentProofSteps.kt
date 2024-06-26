@@ -1,9 +1,9 @@
 package steps.proofs
 
 import abilities.ListenToEvents
-import interactions.body
 import interactions.Patch
 import interactions.Post
+import interactions.body
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
@@ -66,7 +66,7 @@ class PresentProofSteps {
         val presentationId: String = holder.recall("presentationId")
         holder.attemptsTo(
             Patch.to("/present-proof/presentations/$presentationId").body(requestPresentationAction),
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK)
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
         )
     }
 

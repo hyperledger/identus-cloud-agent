@@ -1,8 +1,8 @@
 package steps.did
 
-import interactions.body
 import interactions.Get
 import interactions.Post
+import interactions.body
 import io.cucumber.java.en.*
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
