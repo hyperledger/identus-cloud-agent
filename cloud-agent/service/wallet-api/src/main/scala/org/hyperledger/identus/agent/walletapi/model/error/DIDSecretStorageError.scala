@@ -13,12 +13,12 @@ sealed trait DIDSecretStorageError(
 object DIDSecretStorageError {
   case class KeyNotFoundError(didId: DidId, keyId: String)
       extends DIDSecretStorageError(
-        StatusCode.InternalServerError,
+        StatusCode.NotFound,
         s"The not found: keyId='$keyId', didId='$didId'"
       )
   case class WalletNotFoundError(didId: DidId)
       extends DIDSecretStorageError(
-        StatusCode.InternalServerError,
+        StatusCode.NotFound,
         s"The DID not Found in Wallet: didId='$didId'"
       )
 }

@@ -17,7 +17,6 @@ import org.hyperledger.identus.castor.core.model.error.DIDResolutionError as Cas
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.model.*
-import org.hyperledger.identus.mercury.model.error.TransportError
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.mercury.protocol.reportproblem.v2.{ProblemCode, ReportProblem}
 import org.hyperledger.identus.pollux.core.model.*
@@ -84,7 +83,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
     aux(record)
       .tapError({
         (error: PresentationError | DIDSecretStorageError | BackgroundJobError | CredentialServiceError |
-          CastorDIDResolutionError | GetManagedDIDError | TransportError | Failure) =>
+          CastorDIDResolutionError | GetManagedDIDError | Failure) =>
           ZIO.logErrorCause(
             s"Present Proof - Error processing record: ${record.id}",
             Cause.fail(error)
@@ -999,7 +998,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           presentation: Presentation
       ): ZIO[
         PresentationService & DIDNonSecretStorage & MESSAGING_RESOURCES,
-        PresentationError | DIDSecretStorageError | TransportError,
+        PresentationError | DIDSecretStorageError,
         Unit
       ] = {
         for {
