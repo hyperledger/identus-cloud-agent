@@ -1,5 +1,6 @@
 package steps.did
 
+import common.body
 import interactions.Get
 import interactions.Post
 import io.cucumber.java.en.*
@@ -31,10 +32,7 @@ class ManageDidSteps {
         val createDidRequest = createPrismDidRequest(curve, purpose)
 
         actor.attemptsTo(
-            Post.to("/did-registrar/dids")
-                .with {
-                    it.body(createDidRequest)
-                },
+            Post.to("/did-registrar/dids").body(createDidRequest)
         )
 
         if (SerenityRest.lastResponse().statusCode() == SC_CREATED) {
