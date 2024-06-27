@@ -11,7 +11,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{
 }
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
-import org.hyperledger.identus.shared.models.KeyId
+import org.hyperledger.identus.shared.models.*
 
 import java.time.temporal.ChronoUnit
 import java.time.Instant
@@ -40,7 +40,7 @@ final case class IssueCredentialRecord(
     issuingDID: Option[CanonicalPrismDID],
     metaRetries: Int,
     metaNextRetry: Option[Instant],
-    metaLastFailure: Option[String],
+    metaLastFailure: Option[Failure],
 ) {
   def offerCredentialFormatAndData: Option[(IssueCredentialOfferFormat, OfferCredential)] =
     offerCredentialData.map { data =>

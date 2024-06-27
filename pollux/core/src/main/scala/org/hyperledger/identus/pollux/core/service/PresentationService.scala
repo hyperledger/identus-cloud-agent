@@ -9,7 +9,7 @@ import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
 import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, PresentationCompact}
 import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import zio.*
 import zio.json.ast
 
@@ -168,7 +168,7 @@ trait PresentationService {
 
   def reportProcessingFailure(
       recordId: DidCommID,
-      failReason: Option[String]
+      failReason: Option[Failure]
   ): ZIO[WalletAccessContext, PresentationError, Unit]
 
 }

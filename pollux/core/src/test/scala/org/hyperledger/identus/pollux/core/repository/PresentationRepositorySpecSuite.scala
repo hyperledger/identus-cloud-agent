@@ -5,7 +5,7 @@ import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, Prop
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.PresentationRecord.*
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofV1, AnoncredCredentialProofsV1}
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.*
 import zio.{ZIO, ZLayer}
 import zio.test.*
 import zio.test.Assertion.*
@@ -317,12 +317,15 @@ object PresentationRepositorySpecSuite {
     test("updateFail (fail one retry) updates record") {
       val aRecord = presentationRecord
 
-      val failReason = Some("Just to test")
+      val failReason = Some(FailureInfo("PresentationRepositorySpecSuite", StatusCode(999), "Just to test"))
       for {
         repo <- ZIO.service[PresentationRepository]
         tmp <- repo.createPresentationRecord(aRecord)
         record0 <- repo.findPresentationRecord(aRecord.id)
-        _ <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("PresentationRepositorySpecSuite", StatusCode(999), "Just to test"))
+        ) // TEST
         updatedRecord1 <- repo.findPresentationRecord(aRecord.id)
         _ <- repo.updatePresentationRecordProtocolState(
           aRecord.id,
@@ -348,12 +351,30 @@ object PresentationRepositorySpecSuite {
         repo <- ZIO.service[PresentationRepository]
         _ <- repo.createPresentationRecord(aRecord)
         record0 <- repo.findPresentationRecord(aRecord.id)
-        _ <- repo.updateAfterFail(aRecord.id, Some("1 - Just to test"))
-        _ <- repo.updateAfterFail(aRecord.id, Some("2 - Just to test"))
-        _ <- repo.updateAfterFail(aRecord.id, Some("3 - Just to test"))
-        _ <- repo.updateAfterFail(aRecord.id, Some("4 - Just to test"))
-        _ <- repo.updateAfterFail(aRecord.id, Some("5 - Just to test"))
-        _ <- repo.updateAfterFail(aRecord.id, Some("6 - Just to test"))
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("PresentationRepositorySpecSuite", StatusCode(999), "1 - Just to test"))
+        )
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("PresentationRepositorySpecSuite", StatusCode(999), "2 - Just to test"))
+        )
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("PresentationRepositorySpecSuite", StatusCode(999), "3 - Just to test"))
+        )
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("PresentationRepositorySpecSuite", StatusCode(999), "4 - Just to test"))
+        )
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("PresentationRepositorySpecSuite", StatusCode(999), "5 - Just to test"))
+        )
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("PresentationRepositorySpecSuite", StatusCode(999), "6 - Just to test"))
+        )
         // The 6 retry should not happen since the max retries is 5
         // (but should also not have an effect other that update the error message)
         updatedRecord1 <- repo.findPresentationRecord(aRecord.id)
@@ -362,8 +383,11 @@ object PresentationRepositorySpecSuite {
         assertTrue(record0.get.metaRetries == maxRetries) &&
         assertTrue(updatedRecord1.get.metaRetries == 0) && // assume the max retries is 5
         assertTrue(updatedRecord1.get.metaNextRetry.isEmpty) &&
-        assertTrue(updatedRecord1.get.metaLastFailure.contains("6 - Just to test"))
-
+        assertTrue(
+          updatedRecord1.get.metaLastFailure.contains(
+            FailureInfo("PresentationRepositorySpecSuite", StatusCode(999), "6 - Just to test")
+          )
+        )
       }
     }
   ).provideSomeLayer(ZLayer.succeed(WalletAccessContext(WalletId.random)))
@@ -413,7 +437,13 @@ object PresentationRepositorySpecSuite {
         record1 = presentationRecord
         record2 = presentationRecord
         _ <- repo.createPresentationRecord(record1).provide(wallet1)
-        exit <- repo.updateAfterFail(record2.id, Some("fail reason")).provide(wallet2).exit
+        exit <- repo
+          .updateAfterFail(
+            record2.id,
+            Some(FailureInfo("PresentationRepositorySpecSuite", StatusCode(999), "fail reason"))
+          )
+          .provide(wallet2)
+          .exit
       } yield assert(exit)(dies(hasMessage(equalTo("Unexpected affected row count: 0"))))
     },
     test("unable to updatePresentationRecordProtocolState PresentationRecord outside of the wallet") {

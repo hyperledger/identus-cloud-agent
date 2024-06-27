@@ -14,7 +14,7 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
-import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
+import org.hyperledger.identus.shared.models.*
 import zio.{Duration, IO, UIO, URIO, ZIO}
 
 import java.nio.charset.StandardCharsets
@@ -149,7 +149,7 @@ trait CredentialService {
 
   def reportProcessingFailure(
       recordId: DidCommID,
-      failReason: Option[String]
+      failReason: Option[Failure]
   ): URIO[WalletAccessContext, Unit]
 
   def getJwtIssuer(

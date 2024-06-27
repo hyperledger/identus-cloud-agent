@@ -2,6 +2,7 @@ package org.hyperledger.identus.pollux.core.model
 
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
+import org.hyperledger.identus.shared.models.Failure
 
 import java.time.temporal.ChronoUnit
 import java.time.Instant
@@ -30,7 +31,7 @@ final case class PresentationRecord(
     sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
     metaRetries: Int,
     metaNextRetry: Option[Instant],
-    metaLastFailure: Option[String],
+    metaLastFailure: Option[Failure],
 ) {
   def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): PresentationRecord =
     copy(
