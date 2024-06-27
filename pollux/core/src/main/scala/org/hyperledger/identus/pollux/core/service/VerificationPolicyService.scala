@@ -15,15 +15,17 @@ trait VerificationPolicyService {
       constraints: Seq[VerificationPolicyConstraint] = Seq.empty
   ): ZIO[WalletAccessContext, VerificationPolicyError, VerificationPolicy]
 
-  def get(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]]
+  def find(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]]
+
+  def get(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, VerificationPolicy]
 
   def update(
       id: UUID,
       nonce: Int,
       verificationPolicy: VerificationPolicy
-  ): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]]
+  ): ZIO[WalletAccessContext, VerificationPolicyError, VerificationPolicy]
 
-  def delete(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]]
+  def delete(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, VerificationPolicy]
 
   def totalCount(): ZIO[WalletAccessContext, VerificationPolicyError, Long]
 
