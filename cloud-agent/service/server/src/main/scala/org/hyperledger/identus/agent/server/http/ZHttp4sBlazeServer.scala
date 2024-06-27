@@ -23,7 +23,7 @@ import zio.interop.catz.*
 
 class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNamespace: String) {
 
-  private def browserFingerprint(sr: ServerRequest): Sha256Hash = {
+  private def browserFingerprint(sr: ServerRequest): Option[Sha256Hash] = {
     case class FingerPrintData(
         userAgent: Option[String],
         accept: Option[String],
@@ -55,14 +55,17 @@ class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNam
     )
 
     val jsonStr = fingerPrintData.asJson.dropNullValues.spaces2
-    val canonicalized = Json.canonicalizeToJcs(jsonStr).toOption.get
+    val canonicalized = Json.canonicalizeToJcs(jsonStr).toOption
 
-    Sha256Hash.compute(canonicalized.getBytes)
+    canonicalized.map(x => Sha256Hash.compute(x.getBytes))
   }
 
   private val metricsLabel: MetricLabels = MetricLabels.Default.copy(
     forRequest = MetricLabels.Default.forRequest :+ "browser_fingerprint" -> { case (_, sr) =>
-      browserFingerprint(sr).hexEncoded
+      browserFingerprint(sr) match {
+        case Some(hash) => hash.hexEncoded
+        case None       => "unknown"
+      }
     },
   )
 
