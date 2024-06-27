@@ -1,23 +1,77 @@
 package org.hyperledger.identus.agent.server.http
 
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.http4s.*
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Router
 import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.shared.crypto.Sha256Hash
+import org.hyperledger.identus.shared.utils.Json
 import org.hyperledger.identus.system.controller.SystemEndpoints
 import sttp.tapir.*
+import sttp.tapir.model.ServerRequest
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.server.http4s.Http4sServerOptions
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
+import sttp.tapir.server.metrics.MetricLabels
 import sttp.tapir.ztapir.ZServerEndpoint
 import zio.*
 import zio.interop.catz.*
 
 class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNamespace: String) {
 
+  private def browserFingerprint(sr: ServerRequest): Sha256Hash = {
+    case class FingerPrintData(
+        userAgent: Option[String],
+        accept: Option[String],
+        acceptLanguage: Option[String],
+        acceptEncoding: Option[String],
+        referrer: Option[String],
+        dnt: Option[String],
+        SecChUa: Option[String],
+        SecChUaMobile: Option[String],
+        SecChUaPlatform: Option[String],
+    )
+    object FingerPrintData {
+      given encoder: Encoder[FingerPrintData] = deriveEncoder[FingerPrintData]
+
+      given decoder: Decoder[FingerPrintData] = deriveDecoder[FingerPrintData]
+    }
+
+    val headers = sr.headers
+    val fingerPrintData = FingerPrintData(
+      headers.find(_.name.toLowerCase == "user-agent").map(_.value),
+      headers.find(_.name.toLowerCase == "accept").map(_.value),
+      headers.find(_.name.toLowerCase == "accept-language").map(_.value),
+      headers.find(_.name.toLowerCase == "accept-encoding").map(_.value),
+      headers.find(_.name.toLowerCase == "referer").map(_.value),
+      headers.find(_.name.toLowerCase == "dnt").map(_.value),
+      headers.find(_.name.toLowerCase == "sec-ch-ua").map(_.value),
+      headers.find(_.name.toLowerCase == "sec-ch-ua-mobile").map(_.value),
+      headers.find(_.name.toLowerCase == "sec-ch-ua-platform").map(_.value),
+    )
+
+    val jsonStr = fingerPrintData.asJson.dropNullValues.spaces2
+    val canonicalized = Json.canonicalizeToJcs(jsonStr).toOption.get
+
+    Sha256Hash.compute(canonicalized.getBytes)
+  }
+
+  private val metricsLabel: MetricLabels = MetricLabels.Default.copy(
+    forRequest = MetricLabels.Default.forRequest :+ "browser_fingerprint" -> { case (_, sr) =>
+      browserFingerprint(sr).hexEncoded
+    },
+  )
+
   private val tapirPrometheusMetricsZIO: Task[PrometheusMetrics[Task]] = ZIO.attempt {
-    PrometheusMetrics.default[Task](namespace = metricsNamespace, registry = micrometerRegistry.getPrometheusRegistry)
+    PrometheusMetrics.default[Task](
+      namespace = metricsNamespace,
+      registry = micrometerRegistry.getPrometheusRegistry,
+      labels = metricsLabel
+    )
   }
 
   private val serverOptionsZIO: ZIO[PrometheusMetrics[Task], Throwable, Http4sServerOptions[Task]] = for {
