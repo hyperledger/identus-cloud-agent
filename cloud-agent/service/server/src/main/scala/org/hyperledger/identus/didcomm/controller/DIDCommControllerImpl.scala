@@ -71,7 +71,7 @@ class DIDCommControllerImpl(
     for {
       recipientDid <- ZIO
         .fromOption(msg.recipients.headOption.map(_.header.kid.split("#")(0)))
-        .mapError(_ => RecipientNotFoundError())
+        .mapError(_ => RecipientNotFoundError)
       _ <- ZIO.logInfo(s"Extracted recipient Did => $recipientDid")
       didId = DidId(recipientDid)
       maybePeerDIDRecord <- didNonSecretStorage.getPeerDIDRecord(didId).orDie

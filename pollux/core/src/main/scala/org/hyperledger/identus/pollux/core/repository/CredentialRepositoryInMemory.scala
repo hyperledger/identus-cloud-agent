@@ -4,7 +4,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
-import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.*
 import zio.*
 
 import java.time.Instant
@@ -327,9 +327,9 @@ class CredentialRepositoryInMemory(
     } yield ()
   }
 
-  def updateAfterFail(
+  override def updateAfterFail(
       recordId: DidCommID,
-      failReason: Option[String]
+      failReason: Option[Failure]
   ): URIO[WalletAccessContext, Unit] = for {
     storeRef <- walletStoreRef
     maybeRecord <- findById(recordId)

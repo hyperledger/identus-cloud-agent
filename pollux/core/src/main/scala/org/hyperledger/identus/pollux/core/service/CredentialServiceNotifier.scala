@@ -9,7 +9,7 @@ import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialReco
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
-import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
+import org.hyperledger.identus.shared.models.*
 import zio.{Duration, UIO, URIO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
@@ -187,7 +187,7 @@ class CredentialServiceNotifier(
 
   override def reportProcessingFailure(
       recordId: DidCommID,
-      failReason: Option[_root_.java.lang.String]
+      failReason: Option[Failure]
   ): URIO[WalletAccessContext, Unit] =
     svc.reportProcessingFailure(recordId, failReason)
 

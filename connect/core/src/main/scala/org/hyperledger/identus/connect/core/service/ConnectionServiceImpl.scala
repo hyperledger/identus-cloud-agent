@@ -9,7 +9,7 @@ import org.hyperledger.identus.connect.core.repository.ConnectionRepository
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.Base64Utils
 import org.hyperledger.identus.shared.validation.ValidationUtils
@@ -295,9 +295,9 @@ private class ConnectionServiceImpl(
     } yield record
   }
 
-  def reportProcessingFailure(
+  override def reportProcessingFailure(
       recordId: UUID,
-      failReason: Option[String]
+      failReason: Option[Failure]
   ): URIO[WalletAccessContext, Unit] =
     connectionRepository.updateAfterFail(recordId, failReason)
 
