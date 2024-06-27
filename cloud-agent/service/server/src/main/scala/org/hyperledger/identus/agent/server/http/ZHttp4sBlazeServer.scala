@@ -61,12 +61,20 @@ class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNam
   }
 
   private val metricsLabel: MetricLabels = MetricLabels.Default.copy(
-    forRequest = MetricLabels.Default.forRequest :+ "browser_fingerprint" -> { case (_, sr) =>
-      browserFingerprint(sr) match {
-        case Some(hash) => hash.hexEncoded
-        case None       => "unknown"
-      }
-    },
+    forRequest = MetricLabels.Default.forRequest ++ List(
+      "browser_fingerprint" -> { case (_, sr) =>
+        browserFingerprint(sr) match {
+          case Some(hash) => hash.hexEncoded
+          case None       => "unknown"
+        }
+      },
+      "api_key" -> { case (_, sr) =>
+        sr.header("apikey").getOrElse("unknown")
+      },
+      "token" -> { case (_, sr) =>
+        sr.header("authorization").map(_.split(" ").last).getOrElse("unknown")
+      },
+    ),
   )
 
   private val tapirPrometheusMetricsZIO: Task[PrometheusMetrics[Task]] = ZIO.attempt {
