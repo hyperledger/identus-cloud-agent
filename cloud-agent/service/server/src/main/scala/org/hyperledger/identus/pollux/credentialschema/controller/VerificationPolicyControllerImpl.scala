@@ -4,35 +4,22 @@ import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{CollectionStats, Order, Pagination}
 import org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.pollux.core.model.CredentialSchemaAndTrustedIssuersConstraint
-import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError
-import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError.*
 import org.hyperledger.identus.pollux.core.service.VerificationPolicyService
-import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyResponse.*
 import org.hyperledger.identus.pollux.credentialschema.http.{
-  VerificationPolicyResponse,
   VerificationPolicyInput,
+  VerificationPolicyResponse,
   VerificationPolicyResponsePage
 }
+import org.hyperledger.identus.pollux.credentialschema.http.VerificationPolicyResponse.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.ZIO.*
 
 import java.util.UUID
+import scala.language.implicitConversions
 
 class VerificationPolicyControllerImpl(service: VerificationPolicyService) extends VerificationPolicyController {
 
-  def verificationPolicyError2FailureResponse(
-      vpe: VerificationPolicyError
-  ): ErrorResponse = {
-    vpe match {
-      case RepositoryError(cause) =>
-        ErrorResponse.internalServerError(detail = Option(cause.getMessage))
-      case NotFoundError(id) =>
-        ErrorResponse.notFound(detail = Option(s"VerificationPolicy is not found by $id"))
-      case UnexpectedError(cause) =>
-        ErrorResponse.internalServerError(detail = Option(cause.getMessage))
-    }
-  }
   override def createVerificationPolicy(
       ctx: RequestContext,
       in: VerificationPolicyInput
@@ -54,26 +41,21 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
     } yield createdVerificationPolicy
       .toSchema()
       .withBaseUri(ctx.request.uri)
-
-  } mapError (e => verificationPolicyError2FailureResponse(e))
+  }
 
   override def getVerificationPolicyById(
       ctx: RequestContext,
       id: UUID
-  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyResponse] = {
-    service.get(id).flatMap {
-      case Some(vp) => succeed(vp.toSchema().withUri(ctx.request.uri))
-      case None     => fail(NotFoundError(id))
-    }
-  }.mapError(e => verificationPolicyError2FailureResponse(e))
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyResponse] =
+    service.get(id).map(_.toSchema().withUri(ctx.request.uri))
 
   override def updateVerificationPolicyById(
       ctx: RequestContext,
       id: UUID,
       nonce: Int,
       update: VerificationPolicyInput
-  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyResponse] = {
-    val updatedZIO = for {
+  ): ZIO[WalletAccessContext, ErrorResponse, VerificationPolicyResponse] =
+    for {
       constraints <- zio.ZIO.succeed(
         update.constraints.toVector // TODO: refactor to Seq
           .map(c =>
@@ -90,28 +72,15 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
         nonce = nonce + 1
       )
       updated <- service.update(id, nonce, vp)
-    } yield updated
-
-    updatedZIO
-      .flatMap {
-        case Some(vp) => succeed(vp.toSchema().withUri(ctx.request.uri))
-        case None     => fail(NotFoundError(id))
-      }
-      .mapError(e => verificationPolicyError2FailureResponse(e))
-  }
+    } yield updated.toSchema().withUri(ctx.request.uri)
 
   override def deleteVerificationPolicyById(
       ctx: RequestContext,
       id: UUID
-  ): ZIO[WalletAccessContext, ErrorResponse, Unit] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, Unit] =
     service
       .delete(id)
-      .flatMap {
-        case Some(_) => succeed(())
-        case None    => fail(NotFoundError(id))
-      }
-      .mapError(e => verificationPolicyError2FailureResponse(e))
-  }
+      .as(())
 
   override def lookupVerificationPolicies(
       ctx: RequestContext,
@@ -122,17 +91,14 @@ class VerificationPolicyControllerImpl(service: VerificationPolicyService) exten
     for {
       filteredDomainRecords <- service
         .lookup(filter.name, Some(pagination.offset), Some(pagination.limit))
-        .mapError(verificationPolicyError2FailureResponse)
       filteredCount <- service
         .filteredCount(filter.name)
-        .mapError(verificationPolicyError2FailureResponse)
       baseUri = ctx.request.uri.copy(querySegments = Seq.empty)
       filteredRecords = filteredDomainRecords.map(
         _.toSchema().withBaseUri(baseUri)
       )
       totalCount <- service
         .totalCount()
-        .mapError(verificationPolicyError2FailureResponse)
       response = VerificationPolicyPageRequestLogic(
         ctx,
         pagination,

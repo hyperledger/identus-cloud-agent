@@ -11,15 +11,19 @@ import org.hyperledger.identus.connect.core.service
 import org.hyperledger.identus.connect.core.service.MockConnectionService
 import org.hyperledger.identus.container.util.MigrationAspects.migrate
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
-import org.hyperledger.identus.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest}
+import org.hyperledger.identus.issue.controller.http.{
+  AcceptCredentialOfferRequest,
+  CreateIssueCredentialRecordRequest,
+  IssueCredentialRecordPage
+}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord}
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.service.MockCredentialService
+import sttp.client3.{basicRequest, DeserializationException, UriContext}
 import sttp.client3.ziojson.*
-import sttp.client3.{DeserializationException, UriContext, basicRequest}
 import sttp.model.StatusCode
 import zio.*
 import zio.json.EncoderOps
@@ -66,6 +70,7 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
     None,
     None,
     None,
+    None,
     IssueCredentialRecord.ProtocolState.OfferPending,
     None,
     None,
@@ -104,7 +109,7 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
     None,
     ConnectionRecord.Role.Inviter,
     ConnectionRecord.ProtocolState.ConnectionResponseSent,
-    Invitation(from = DidId("did:peer:INVITER"), Invitation.Body(None, None, Nil)),
+    Invitation(from = DidId("did:peer:INVITER"), body = Invitation.Body(None, None, Nil)),
     None,
     Some(connectionResponse),
     5,
@@ -113,10 +118,22 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
   )
   val acceptCredentialOfferRequest = AcceptCredentialOfferRequest(
     Some(
-      "did:prism:332518729a7b7805f73a788e0944802527911901d9b7c16152281be9bc62d944:CosBCogBEkkKFW15LWtleS1hdXRoZW50aWNhdGlvbhAESi4KCXNlY3AyNTZrMRIhAuYoRIefsLhkvYwHz8gDtkG2b0kaZTDOLj_SExWX1fOXEjsKB21hc3RlcjAQAUouCglzZWNwMjU2azESIQLOzab8f0ibt1P0zdMfoWDQTSlPc8_tkV9Jk5BBsXB8fA"
-    )
+      "did:prism:332518729a7b7805f73a788e0944802527911901d9b7c16152281be9bc62d944"
+    ),
+    None
   )
-
+  val acceptCredentialOfferRequest2 = AcceptCredentialOfferRequest(
+    Some(
+      "did:prism:332518729a7b7805f73a788e0944802527911901d9b7c16152281be9bc62d944:CosBCogBEkkKFW15LWtleS1hdXRoZW50aWNhdGlvbhAESi4KCXNlY3AyNTZrMRIhAuYoRIefsLhkvYwHz8gDtkG2b0kaZTDOLj_SExWX1fOXEjsKB21hc3RlcjAQAUouCglzZWNwMjU2azESIQLOzab8f0ibt1P0zdMfoWDQTSlPc8_tkV9Jk5BBsXB8fA"
+    ),
+    None
+  )
+  val acceptCredentialOfferRequestWithKeyId = AcceptCredentialOfferRequest(
+    Some(
+      "did:prism:332518729a7b7805f73a788e0944802527911901d9b7c16152281be9bc62d944"
+    ),
+    Some("key-id-auth")
+  )
   private val mockConnectionServiceLayer =
     MockConnectionService.FindById(
       assertion = Assertion.anything,
@@ -175,7 +192,7 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
         backend = httpBackend(issueControllerService, authenticator)
         response: IssueCredentialBadRequestResponse <- basicRequest
           .post(uri"${issueUriBase}/records/12345/accept-offer")
-          .body(AcceptCredentialOfferRequest(Some("subjectId")).toJsonPretty)
+          .body(AcceptCredentialOfferRequest(Some("subjectId"), None).toJsonPretty)
           .response(asJsonAlways[ErrorResponse])
           .send(backend)
 
@@ -243,10 +260,10 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
         issueControllerService <- ZIO.service[IssueController]
         authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
         backend = httpBackend(issueControllerService, authenticator)
-        response: IssueCredentialBadRequestResponse <- basicRequest
+        response: IssueCredentialPageResponse <- basicRequest
           .post(uri"${issueUriBase}/records/123e4567-e89b-12d3-a456-426614174000/accept-offer")
           .body(acceptCredentialOfferRequest.toJsonPretty)
-          .response(asJsonAlways[ErrorResponse])
+          .response(asJsonAlways[IssueCredentialRecordPage])
           .send(backend)
 
         isSuccessRequestStatusCode = assert(response.code)(equalTo(StatusCode.Ok))
@@ -283,6 +300,27 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
       baseLayer
         ++ mockManagedDIDServiceExpectations.toLayer
         ++ mockDIDServiceExpectations(VerificationRelationship.AssertionMethod).toLayer
+        >+> testEnvironmentLayer
+    ),
+    test("AcceptCredentialOffer with keyId for Holder PrismDid with Authentication should return 200") {
+      for {
+        issueControllerService <- ZIO.service[IssueController]
+        authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
+        backend = httpBackend(issueControllerService, authenticator)
+        response: IssueCredentialPageResponse <- basicRequest
+          .post(uri"${issueUriBase}/records/123e4567-e89b-12d3-a456-426614174000/accept-offer")
+          .body(acceptCredentialOfferRequestWithKeyId.toJsonPretty)
+          .response(asJsonAlways[IssueCredentialRecordPage])
+          .send(backend)
+
+        isSuccessRequestStatusCode = assert(response.code)(equalTo(StatusCode.Ok))
+
+      } yield isSuccessRequestStatusCode
+    }.provideLayer(
+      baseLayer
+        ++ mockManagedDIDServiceExpectations.toLayer
+        ++ mockDIDServiceExpectations(VerificationRelationship.Authentication).toLayer
+        ++ mockCredentialServiceExpectationsAcceptCredentialOffer.toLayer
         >+> testEnvironmentLayer
     ),
   )

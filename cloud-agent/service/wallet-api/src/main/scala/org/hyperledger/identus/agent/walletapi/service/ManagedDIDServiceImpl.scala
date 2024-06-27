@@ -1,21 +1,19 @@
 package org.hyperledger.identus.agent.walletapi.service
 
 import org.hyperledger.identus.agent.walletapi.model.*
-import org.hyperledger.identus.agent.walletapi.model.error.{*, given}
-import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
+import org.hyperledger.identus.agent.walletapi.model.error.*
+import org.hyperledger.identus.agent.walletapi.model.error.given
 import org.hyperledger.identus.agent.walletapi.service.handler.{DIDCreateHandler, DIDUpdateHandler, PublicationHandler}
-import org.hyperledger.identus.agent.walletapi.storage.{DIDSecretStorage, DIDNonSecretStorage, WalletSecretStorage}
+import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
+import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.agent.walletapi.util.*
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.error.DIDOperationError
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
-import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.shared.crypto.Apollo
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
-import org.hyperledger.identus.shared.crypto.X25519KeyPair
+import org.hyperledger.identus.mercury.PeerDID
+import org.hyperledger.identus.shared.crypto.{Apollo, Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
@@ -60,7 +58,7 @@ class ManagedDIDServiceImpl private[walletapi] (
   def javaKeyPairWithDID(
       did: CanonicalPrismDID,
       keyId: String
-  ): ZIO[WalletAccessContext, GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]] = {
+  ): URIO[WalletAccessContext, Option[(JavaPrivateKey, JavaPublicKey)]] = {
     findDIDKeyPair(did, keyId)
       .flatMap {
         case None                            => ZIO.none
@@ -77,7 +75,7 @@ class ManagedDIDServiceImpl private[walletapi] (
   override def findDIDKeyPair(
       did: CanonicalPrismDID,
       keyId: String
-  ): ZIO[WalletAccessContext, GetKeyError, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]] =
+  ): URIO[WalletAccessContext, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]] =
     nonSecretStorage
       .getManagedDIDState(did)
       .flatMap {

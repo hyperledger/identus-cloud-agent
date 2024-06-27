@@ -9,14 +9,12 @@ import org.hyperledger.identus.castor.core.model.did.{
   PrismDIDOperation,
   ScheduleDIDOperationOutcome
 }
-import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.shared.crypto.Ed25519KeyPair
-import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
-import org.hyperledger.identus.shared.crypto.X25519KeyPair
+import org.hyperledger.identus.mercury.PeerDID
+import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
+import zio.*
 import zio.mock.*
 import zio.test.Assertion
-import zio.{mock, *}
 
 import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 
@@ -24,7 +22,7 @@ object MockManagedDIDService extends Mock[ManagedDIDService] {
 
   object GetManagedDIDState extends Effect[CanonicalPrismDID, GetManagedDIDError, Option[ManagedDIDState]]
   object JavaKeyPairWithDID
-      extends Effect[(CanonicalPrismDID, String), GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]]
+      extends Effect[(CanonicalPrismDID, String), Nothing, Option[(JavaPrivateKey, JavaPublicKey)]]
 
   override val compose: URLayer[mock.Proxy, ManagedDIDService] =
     ZLayer {
@@ -40,13 +38,13 @@ object MockManagedDIDService extends Mock[ManagedDIDService] {
         override def javaKeyPairWithDID(
             did: CanonicalPrismDID,
             keyId: String
-        ): IO[GetKeyError, Option[(JavaPrivateKey, JavaPublicKey)]] =
+        ): UIO[Option[(JavaPrivateKey, JavaPublicKey)]] =
           proxy(JavaKeyPairWithDID, did, keyId)
 
         override def findDIDKeyPair(
             did: CanonicalPrismDID,
             keyId: String
-        ): IO[GetKeyError, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]] = ???
+        ): UIO[Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]] = ???
 
         override def getManagedDIDState(
             did: CanonicalPrismDID

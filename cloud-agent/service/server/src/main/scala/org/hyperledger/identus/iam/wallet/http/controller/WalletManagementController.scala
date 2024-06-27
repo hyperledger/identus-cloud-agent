@@ -1,26 +1,20 @@
 package org.hyperledger.identus.iam.wallet.http.controller
 
-import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.model.WalletSeed
+import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Wallet, WalletSeed}
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.TooManyPermittedWallet
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
-import org.hyperledger.identus.api.http.model.CollectionStats
-import org.hyperledger.identus.api.http.model.PaginationInput
+import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.util.PaginationUtils
 import org.hyperledger.identus.iam.authentication.oidc.KeycloakEntity
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement
-import org.hyperledger.identus.iam.wallet.http.model.CreateWalletRequest
-import org.hyperledger.identus.iam.wallet.http.model.CreateWalletUmaPermissionRequest
-import org.hyperledger.identus.iam.wallet.http.model.WalletDetail
-import org.hyperledger.identus.iam.wallet.http.model.WalletDetailPage
-import org.hyperledger.identus.shared.models.HexString
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.iam.wallet.http.model.{
+  CreateWalletRequest,
+  CreateWalletUmaPermissionRequest,
+  WalletDetail,
+  WalletDetailPage
+}
+import org.hyperledger.identus.shared.models.{HexString, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.shared.models.WalletAdministrationContext.Admin
-import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 
 import java.util.UUID
@@ -48,21 +42,6 @@ trait WalletManagementController {
 }
 
 object WalletManagementController {
-  given walletServiceErrorConversion: Conversion[WalletManagementServiceError, ErrorResponse] = {
-    case WalletManagementServiceError.UnexpectedStorageError(cause) =>
-      ErrorResponse.internalServerError(detail = Some(cause.getMessage()))
-    case WalletManagementServiceError.TooManyWebhookError(limit, actual) =>
-      ErrorResponse.conflict(detail = Some(s"Too many webhook created for a wallet. (limit $limit, actual $actual)"))
-    case WalletManagementServiceError.DuplicatedWalletId(id) =>
-      ErrorResponse.badRequest(s"Wallet id $id is not unique.")
-    case WalletManagementServiceError.DuplicatedWalletSeed(id) =>
-      ErrorResponse.badRequest(s"Wallet id $id cannot be created. The seed value is not unique.")
-    case TooManyPermittedWallet() =>
-      ErrorResponse.badRequest(
-        s"The operation is not allowed because wallet access already exists for the current user."
-      )
-  }
-
   given permissionManagementErrorConversion: Conversion[PermissionManagement.Error, ErrorResponse] = {
     case e: PermissionManagement.Error.PermissionNotFoundById => ErrorResponse.badRequest(detail = Some(e.message))
     case e: PermissionManagement.Error.ServiceError       => ErrorResponse.internalServerError(detail = Some(e.message))
@@ -90,7 +69,6 @@ class WalletManagementControllerImpl(
     for {
       pageResult <- walletService
         .listWallets(offset = paginationInput.offset, limit = paginationInput.limit)
-        .mapError[ErrorResponse](e => e)
       (items, totalCount) = pageResult
       stats = CollectionStats(totalCount = totalCount, filteredCount = totalCount)
     } yield WalletDetailPage(
@@ -107,8 +85,7 @@ class WalletManagementControllerImpl(
   )(implicit rc: RequestContext): ZIO[WalletAdministrationContext, ErrorResponse, WalletDetail] = {
     for {
       wallet <- walletService
-        .getWallet(WalletId.fromUUID(walletId))
-        .mapError[ErrorResponse](e => e)
+        .findWallet(WalletId.fromUUID(walletId))
         .someOrFail(ErrorResponse.notFound(detail = Some(s"Wallet id $walletId does not exist.")))
     } yield wallet
   }

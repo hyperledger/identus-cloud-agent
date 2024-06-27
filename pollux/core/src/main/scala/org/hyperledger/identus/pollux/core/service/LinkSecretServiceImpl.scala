@@ -15,7 +15,7 @@ class LinkSecretServiceImpl(genericSecretStorage: GenericSecretStorage) extends 
 
   type Result[T] = ZIO[WalletAccessContext, LinkSecretError, T]
 
-  override def fetchOrCreate(): Result[AnoncredLinkSecretWithId] = {
+  override def fetchOrCreate(): URIO[WalletAccessContext, AnoncredLinkSecretWithId] = {
     genericSecretStorage
       .get[String, AnoncredLinkSecret](LinkSecretServiceImpl.defaultLinkSecretId)
       .flatMap {
@@ -27,7 +27,7 @@ class LinkSecretServiceImpl(genericSecretStorage: GenericSecretStorage) extends 
             .as(linkSecret)
       }
       .map(linkSecret => AnoncredLinkSecretWithId(LinkSecretServiceImpl.defaultLinkSecretId, linkSecret))
-      .mapError(LinkSecretError.apply)
+      .orDie
   }
 }
 

@@ -1,8 +1,8 @@
 package org.hyperledger.identus.mercury.protocol.invitation
-import cats.implicits._
-import io.circe.syntax._
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import cats.implicits.*
 import io.circe.{Decoder, Encoder}
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe.syntax.*
 
 sealed trait ServiceType
 

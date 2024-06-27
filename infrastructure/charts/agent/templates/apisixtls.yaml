@@ -2,16 +2,16 @@
 apiVersion: apisix.apache.org/v2
 kind: ApisixTls
 metadata:
-  name: "{{ .Chart.Name }}-base-path-tls"
+  name: "{{ include "cloud-agent.name" . }}-base-path-tls"
   namespace: "{{ .Release.Namespace }}"
   labels:
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4}}
 spec:
   hosts:
   {{- range .Values.ingress.applicationUrls }}
     - {{ . }}
   {{- end }}
   secret:
-    name: "{{ .Chart.Name }}-base-path-secret"
+    name: "{{ include "cloud-agent.name" . }}-base-path-secret"
     namespace: "{{ .Release.Namespace }}"
 {{- end }}

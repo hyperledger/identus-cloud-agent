@@ -3,7 +3,9 @@ package org.hyperledger.identus.verification.controller.http
 import org.hyperledger.identus.api.http.Annotation
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import zio.json.*
+import zio.json.ast.Json
+import zio.json.ast.Json.*
 
 final case class VcVerificationResponse(
     @description(VcVerificationResponse.annotations.credential.description)
@@ -20,14 +22,14 @@ object VcVerificationResponse {
 
     object credential
         extends Annotation[String](
-          description = "Encoded Verifiable Credential to verify",
+          description = "Encoded Verifiable Credential that was verified.",
           example =
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
         )
 
     object vcVerificationResults
-        extends Annotation[List[VcVerificationResult]](
-          description = "The list executed Verifications",
+        extends Annotation[String](
+          description = "The list of verification results for each verification performed on the credential.",
           example = List(
             VcVerificationResult(VcVerification.SignatureVerification, true),
             VcVerificationResult(VcVerification.IssuerIdentification, true),
@@ -41,7 +43,7 @@ object VcVerificationResponse {
             VcVerificationResult(VcVerification.AlgorithmVerification, true),
             VcVerificationResult(VcVerification.SchemaCheck, true),
             VcVerificationResult(VcVerification.SemanticCheckOfClaims, true),
-          )
+          ).toJson
         )
   }
 

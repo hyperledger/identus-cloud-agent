@@ -8,14 +8,16 @@ import org.hyperledger.identus.mercury.protocol.presentproof.{
   RequestPresentation
 }
 import org.hyperledger.identus.pollux.anoncreds.AnoncredPresentation
+import org.hyperledger.identus.pollux.core.model.{DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.presentation.Options
-import org.hyperledger.identus.pollux.core.model.{DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
+import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, PresentationCompact}
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
+import zio.{mock, IO, URLayer, ZIO, ZLayer}
+import zio.json.*
 import zio.mock.{Mock, Proxy}
-import zio.{IO, URLayer, ZIO, ZLayer, mock}
 
 import java.time.Instant
 import java.util.UUID
@@ -25,6 +27,12 @@ object MockPresentationService extends Mock[PresentationService] {
   object CreateJwtPresentationRecord
       extends Effect[
         (DidId, DidId, DidCommID, Option[String], Seq[ProofType], Option[Options]),
+        PresentationError,
+        PresentationRecord
+      ]
+  object CreateSDJWTPresentationRecord
+      extends Effect[
+        (DidId, DidId, DidCommID, Option[String], Seq[ProofType], ast.Json.Obj, Option[Options]),
         PresentationError,
         PresentationRecord
       ]
@@ -51,6 +59,9 @@ object MockPresentationService extends Mock[PresentationService] {
   object VerifyAnoncredPresentation extends Effect[DidCommID, PresentationError, PresentationRecord]
 
   object AcceptRequestPresentation extends Effect[(DidCommID, Seq[String]), PresentationError, PresentationRecord]
+
+  object AcceptSDJWTRequestPresentation
+      extends Effect[(DidCommID, Seq[String], Option[ast.Json.Obj]), PresentationError, PresentationRecord]
 
   object AcceptAnoncredRequestPresentation
       extends Effect[
@@ -90,6 +101,20 @@ object MockPresentationService extends Mock[PresentationService] {
           (pairwiseVerifierDID, pairwiseProverDID, thid, connectionId, proofTypes, options)
         )
 
+      override def createSDJWTPresentationRecord(
+          pairwiseVerifierDID: DidId,
+          pairwiseProverDID: DidId,
+          thid: DidCommID,
+          connectionId: Option[String],
+          proofTypes: Seq[ProofType],
+          claimsToDisclose: ast.Json.Obj,
+          options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+      ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+        proxy(
+          CreateSDJWTPresentationRecord,
+          (pairwiseVerifierDID, pairwiseProverDID, thid, connectionId, proofTypes, claimsToDisclose, options)
+        )
+
       override def createAnoncredPresentationRecord(
           pairwiseVerifierDID: DidId,
           pairwiseProverDID: DidId,
@@ -114,6 +139,13 @@ object MockPresentationService extends Mock[PresentationService] {
           credentialsToUse: AnoncredCredentialProofsV1
       ): IO[PresentationError, PresentationRecord] =
         proxy(AcceptAnoncredRequestPresentation, (recordId, credentialsToUse))
+
+      def acceptSDJWTRequestPresentation(
+          recordId: DidCommID,
+          credentialsToUse: Seq[String],
+          claimsToDisclose: Option[ast.Json.Obj]
+      ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+        proxy(AcceptSDJWTRequestPresentation, (recordId, credentialsToUse, claimsToDisclose))
 
       override def rejectRequestPresentation(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
         proxy(RejectRequestPresentation, recordId)
@@ -176,6 +208,16 @@ object MockPresentationService extends Mock[PresentationService] {
           issuanceDate: Instant
       ): IO[PresentationError, PresentationPayload] = ???
 
+      override def createPresentationFromRecord(
+          record: DidCommID
+      ): IO[PresentationError, PresentationCompact] = ???
+
+      def createSDJwtPresentation(
+          recordId: DidCommID,
+          requestPresentation: RequestPresentation,
+          optionalHolderPrivateKey: Option[HolderPrivateKey],
+      ): ZIO[WalletAccessContext, PresentationError, Presentation] = ???
+
       override def createAnoncredPresentationPayloadFromRecord(
           record: DidCommID,
           anoncredCredentialProof: AnoncredCredentialProofsV1,
@@ -201,9 +243,11 @@ object MockPresentationService extends Mock[PresentationService] {
           state: PresentationRecord.ProtocolState*
       ): IO[PresentationError, Seq[PresentationRecord]] = ???
 
-      override def getPresentationRecord(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = ???
+      override def findPresentationRecord(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = ???
 
-      override def getPresentationRecordByThreadId(thid: DidCommID): IO[PresentationError, Option[PresentationRecord]] =
+      override def findPresentationRecordByThreadId(
+          thid: DidCommID
+      ): IO[PresentationError, Option[PresentationRecord]] =
         ???
 
       override def receiveProposePresentation(request: ProposePresentation): IO[PresentationError, PresentationRecord] =
@@ -217,7 +261,7 @@ object MockPresentationService extends Mock[PresentationService] {
 
       override def reportProcessingFailure(
           recordId: DidCommID,
-          failReason: Option[String]
+          failReason: Option[Failure]
       ): IO[PresentationError, Unit] = ???
 
     }

@@ -1,8 +1,8 @@
 package org.hyperledger.identus.sharedtest.containers
 
 import com.dimafeng.testcontainers.{SingleContainer, VaultContainer}
-import org.testcontainers.vault.{VaultContainer => JavaVaultContainer}
 import org.testcontainers.utility.DockerImageName
+import org.testcontainers.vault.VaultContainer as JavaVaultContainer
 
 /** See PostgreSQLContainerCustom for explanation */
 class VaultContainerCustom(
@@ -11,7 +11,7 @@ class VaultContainerCustom(
     secrets: Option[VaultContainer.Secrets] = None,
     isOnGithubRunner: Boolean = false,
     useFileBackend: Boolean = false
-) extends SingleContainer[JavaVaultContainer[_]] {
+) extends SingleContainer[JavaVaultContainer[?]] {
 
   private val vaultFSBackendConfig: String =
     """{
@@ -29,7 +29,7 @@ class VaultContainerCustom(
       |}
       """.stripMargin
 
-  private val vaultContainer: JavaVaultContainer[_] = new JavaVaultContainer(dockerImageNameOverride) {
+  private val vaultContainer: JavaVaultContainer[?] = new JavaVaultContainer(dockerImageNameOverride) {
     override def getHost: String = {
       if (isOnGithubRunner) super.getContainerId().take(12)
       else super.getHost()
@@ -42,10 +42,10 @@ class VaultContainerCustom(
 
   if (vaultToken.isDefined) vaultContainer.withVaultToken(vaultToken.get)
   secrets.foreach { x =>
-    vaultContainer.withSecretInVault(x.path, x.firstSecret, x.secrets: _*)
+    vaultContainer.withSecretInVault(x.path, x.firstSecret, x.secrets*)
   }
 
-  override val container: JavaVaultContainer[_] = {
+  override val container: JavaVaultContainer[?] = {
     val con = vaultContainer
     if (useFileBackend) con.addEnv("VAULT_LOCAL_CONFIG", vaultFSBackendConfig)
     else con.addEnv("VAULT_LOCAL_CONFIG", vaultMemBackendConfig)

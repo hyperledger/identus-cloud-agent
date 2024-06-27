@@ -1,12 +1,12 @@
 package org.hyperledger.identus.connect.core.service
 
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.*
+import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.event.notification.{Event, EventNotificationService}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import zio.{UIO, URIO, URLayer, ZIO, ZLayer}
 
 import java.time.Duration
@@ -73,13 +73,13 @@ class ConnectionServiceNotifier(
   ] =
     notifyOnSuccess(svc.receiveConnectionResponse(response))
 
-  private[this] def notifyOnSuccess[E](effect: ZIO[WalletAccessContext, E, ConnectionRecord]) =
+  private def notifyOnSuccess[E](effect: ZIO[WalletAccessContext, E, ConnectionRecord]) =
     for {
       record <- effect
       _ <- notify(record)
     } yield record
 
-  private[this] def notify(record: ConnectionRecord) = {
+  private def notify(record: ConnectionRecord) = {
     val result = for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       producer <- eventNotificationService.producer[ConnectionRecord]("Connect")
@@ -103,7 +103,7 @@ class ConnectionServiceNotifier(
 
   override def reportProcessingFailure(
       recordId: UUID,
-      failReason: Option[String]
+      failReason: Option[Failure]
   ): URIO[WalletAccessContext, Unit] =
     svc.reportProcessingFailure(recordId, failReason)
 
@@ -115,14 +115,14 @@ class ConnectionServiceNotifier(
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
-    svc.findRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+    svc.findRecordsByStates(ignoreWithZeroRetries, limit, states*)
 
   override def findRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): UIO[Seq[ConnectionRecord]] =
-    svc.findRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+    svc.findRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states*)
 }
 
 object ConnectionServiceNotifier {

@@ -4,11 +4,9 @@ import io.circe.Json
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 import org.hyperledger.identus.shared.crypto.Apollo
-import org.hyperledger.identus.shared.models.Base64UrlString
-import org.hyperledger.identus.shared.models.HexString
+import org.hyperledger.identus.shared.models.{Base64UrlString, HexString}
 
-import java.time.Instant
-import java.time.ZoneOffset
+import java.time.{Instant, ZoneOffset}
 import java.time.format.DateTimeFormatter
 
 object W3CModelHelper extends W3CModelHelper
@@ -105,7 +103,7 @@ private[castor] trait W3CModelHelper {
             case UriOrJsonEndpoint.Uri(uri)   => Json.fromString(uri.value)
             case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json)
           }
-          Json.arr(uris: _*)
+          Json.arr(uris*)
       }
     }
   }

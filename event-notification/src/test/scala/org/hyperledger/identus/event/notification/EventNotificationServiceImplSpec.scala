@@ -1,14 +1,14 @@
 package org.hyperledger.identus.event.notification
 
+import org.hyperledger.identus.shared.models.WalletId
 import zio.*
 import zio.test.*
-import org.hyperledger.identus.shared.models.WalletId
 
 object EventNotificationServiceImplSpec extends ZIOSpecDefault {
 
   private val eventNotificationServiceLayer = ZLayer.succeed(10) >>> EventNotificationServiceImpl.layer
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = {
+  override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("EventNotificationServiceImpl")(
       test("should send events between a producer and a consumer of the same topic") {
         for {

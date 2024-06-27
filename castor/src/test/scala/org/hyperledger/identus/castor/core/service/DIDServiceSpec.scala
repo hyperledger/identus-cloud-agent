@@ -1,13 +1,8 @@
 package org.hyperledger.identus.castor.core.service
 
 import com.google.protobuf.ByteString
-import org.hyperledger.identus.castor.core.model.did.{DIDData, PrismDID, PrismDIDOperation}
-import org.hyperledger.identus.castor.core.model.error.DIDResolutionError
-import org.hyperledger.identus.castor.core.util.{GenUtils}
-import org.hyperledger.identus.castor.core.util.DIDOperationValidator
+import io.iohk.atala.prism.protos.{node_api, node_models}
 import io.iohk.atala.prism.protos.common_models.{HealthCheckRequest, HealthCheckResponse}
-import io.iohk.atala.prism.protos.node_api
-import io.iohk.atala.prism.protos.node_models
 import io.iohk.atala.prism.protos.node_api.{
   GetBatchStateRequest,
   GetBatchStateResponse,
@@ -27,6 +22,9 @@ import io.iohk.atala.prism.protos.node_api.{
   ScheduleOperationsRequest,
   ScheduleOperationsResponse
 }
+import org.hyperledger.identus.castor.core.model.did.{DIDData, PrismDID, PrismDIDOperation}
+import org.hyperledger.identus.castor.core.model.error.DIDResolutionError
+import org.hyperledger.identus.castor.core.util.{DIDOperationValidator, GenUtils}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

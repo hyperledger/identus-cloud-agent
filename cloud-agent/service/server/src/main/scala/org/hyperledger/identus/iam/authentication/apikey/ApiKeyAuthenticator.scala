@@ -1,11 +1,14 @@
 package org.hyperledger.identus.iam.authentication.apikey
 
 import org.hyperledger.identus.agent.walletapi.model.Entity
+import org.hyperledger.identus.iam.authentication.{
+  AuthenticationError,
+  AuthenticatorWithAuthZ,
+  Credentials,
+  EntityAuthorizer
+}
 import org.hyperledger.identus.iam.authentication.AuthenticationError.*
-import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
-import org.hyperledger.identus.iam.authentication.EntityAuthorizer
-import org.hyperledger.identus.iam.authentication.{AuthenticationError, Credentials}
-import zio.{IO, ZIO}
+import zio.{IO, UIO, ZIO}
 
 import java.util.UUID
 
@@ -32,11 +35,11 @@ trait ApiKeyAuthenticator extends AuthenticatorWithAuthZ[Entity], EntityAuthoriz
 
   def isEnabled: Boolean
 
-  def authenticate(apiKey: String): IO[AuthenticationError, Entity]
+  def authenticate(apiKey: String): IO[InvalidCredentials, Entity]
 
-  def add(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit]
+  def add(entityId: UUID, apiKey: String): UIO[Unit]
 
-  def delete(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit]
+  def delete(entityId: UUID, apiKey: String): UIO[Unit]
 }
 
 object ApiKeyAuthenticator {

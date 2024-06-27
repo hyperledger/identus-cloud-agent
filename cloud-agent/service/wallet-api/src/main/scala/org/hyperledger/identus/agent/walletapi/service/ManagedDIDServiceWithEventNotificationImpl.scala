@@ -1,11 +1,9 @@
 package org.hyperledger.identus.agent.walletapi.service
 
-import org.hyperledger.identus.agent.walletapi.model.ManagedDIDDetail
 import org.hyperledger.identus.agent.walletapi.model.error.CommonWalletStorageError
-import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage}
+import org.hyperledger.identus.agent.walletapi.model.ManagedDIDDetail
+import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
-import org.hyperledger.identus.castor.core.model.error
 import org.hyperledger.identus.castor.core.model.error.DIDOperationError
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator

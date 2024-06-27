@@ -1,16 +1,15 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.syntax._
-import io.circe.parser._
-
+import io.circe.parser.*
+import io.circe.syntax.*
 import io.circe.Decoder
-import org.hyperledger.identus.mercury.model.{LinkData, JsonData, AttachmentDescriptor, Base64, JwsData}
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64, JsonData, JwsData, LinkData}
 
-private[this] trait ReadAttachmentsUtils {
+private trait ReadAttachmentsUtils {
 
   def attachments: Seq[AttachmentDescriptor]
 
-  // TODO this formatName shoud be type safe
+  // TODO this formatName should be type safe
   lazy val getCredentialFormatAndCredential: Seq[(String, String, Array[Byte])] =
     attachments
       .flatMap(attachment =>

@@ -3,9 +3,11 @@ package org.hyperledger.identus.pollux.core.repository
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.PresentationRecord.ProtocolState
-import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.models.*
 import zio.*
+import zio.json.*
+import zio.json.ast.Json
 
 import java.time.Instant
 
@@ -28,18 +30,20 @@ class PresentationRepositoryInMemory(
         }(ZIO.succeed)
     } yield walletRef
 
-  override def createPresentationRecord(record: PresentationRecord): RIO[WalletAccessContext, Int] = {
-    for {
-      storeRef <- walletStoreRef
-      _ <- for {
-        store <- storeRef.get
-        maybeRecord = store.values.find(_.thid == record.thid)
-      } yield ()
-      _ <- storeRef.update(r => r + (record.id -> record))
-    } yield 1
+  override def createPresentationRecord(record: PresentationRecord): URIO[WalletAccessContext, Unit] = {
+    val result =
+      for {
+        storeRef <- walletStoreRef
+        _ <- for {
+          store <- storeRef.get
+          maybeRecord = store.values.find(_.thid == record.thid)
+        } yield ()
+        _ <- storeRef.update(r => r + (record.id -> record))
+      } yield 1
+    result.ensureOneAffectedRowOrDie
   }
 
-  override def getPresentationRecord(recordId: DidCommID): RIO[WalletAccessContext, Option[PresentationRecord]] = {
+  override def findPresentationRecord(recordId: DidCommID): URIO[WalletAccessContext, Option[PresentationRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -49,7 +53,7 @@ class PresentationRepositoryInMemory(
 
   override def getPresentationRecords(
       ignoreWithZeroRetries: Boolean,
-  ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
+  ): URIO[WalletAccessContext, Seq[PresentationRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -60,57 +64,95 @@ class PresentationRepositoryInMemory(
       recordId: DidCommID,
       from: ProtocolState,
       to: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
-    for {
-      storeRef <- walletStoreRef
-      store <- storeRef.get
-      maybeRecord = store.find((id, record) => id == recordId && record.protocolState == from).map(_._2)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  protocolState = to,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
+  ): URIO[WalletAccessContext, Unit] = {
+    val result =
+      for {
+        storeRef <- walletStoreRef
+        store <- storeRef.get
+        maybeRecord = store.find((id, record) => id == recordId && record.protocolState == from).map(_._2)
+        count <- maybeRecord
+          .map(record =>
+            for {
+              _ <- storeRef.update(r =>
+                r.updated(
+                  recordId,
+                  record.copy(
+                    protocolState = to,
+                    metaRetries = maxRetries,
+                    metaLastFailure = None,
+                  )
                 )
               )
-            )
-          } yield 1
-        )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+            } yield 1
+          )
+          .getOrElse(ZIO.succeed(0))
+      } yield count
+    result.ensureOneAffectedRowOrDie
   }
 
   override def updatePresentationWithCredentialsToUse(
       recordId: DidCommID,
       credentialsToUse: Option[Seq[String]],
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
-    for {
-      storeRef <- walletStoreRef
-      maybeRecord <- getPresentationRecord(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  updatedAt = Some(Instant.now),
-                  credentialsToUse = credentialsToUse.map(_.toList),
-                  protocolState = protocolState,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
+  ): URIO[WalletAccessContext, Unit] = {
+    val result =
+      for {
+        storeRef <- walletStoreRef
+        maybeRecord <- findPresentationRecord(recordId)
+        count <- maybeRecord
+          .map(record =>
+            for {
+              _ <- storeRef.update(r =>
+                r.updated(
+                  recordId,
+                  record.copy(
+                    updatedAt = Some(Instant.now),
+                    credentialsToUse = credentialsToUse.map(_.toList),
+                    protocolState = protocolState,
+                    metaRetries = maxRetries,
+                    metaLastFailure = None,
+                  )
                 )
               )
-            )
-          } yield 1
-        )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+            } yield 1
+          )
+          .getOrElse(ZIO.succeed(0))
+      } yield count
+    result.ensureOneAffectedRowOrDie
+  }
+
+  override def updateSDJWTPresentationWithCredentialsToUse(
+      recordId: DidCommID,
+      credentialsToUse: Option[Seq[String]],
+      sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
+      protocolState: ProtocolState
+  ): URIO[WalletAccessContext, Unit] = {
+    val result = {
+      for {
+        storeRef <- walletStoreRef
+        maybeRecord <- findPresentationRecord(recordId)
+        result <- maybeRecord
+          .map(record =>
+            for {
+              _ <- storeRef.update(r =>
+                r.updated(
+                  recordId,
+                  record.copy(
+                    updatedAt = Some(Instant.now),
+                    credentialsToUse = credentialsToUse.map(_.toList),
+                    sdJwtClaimsToDisclose = sdJwtClaimsToDisclose,
+                    protocolState = protocolState,
+                    metaRetries = maxRetries,
+                    metaLastFailure = None,
+                  )
+                )
+              )
+            } yield 1
+          )
+          .getOrElse(ZIO.succeed(0))
+      } yield result
+    }
+    result.ensureOneAffectedRowOrDie
   }
 
   def updateAnoncredPresentationWithCredentialsToUse(
@@ -118,66 +160,70 @@ class PresentationRepositoryInMemory(
       anoncredCredentialsToUseJsonSchemaId: Option[String],
       anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
-    for {
-      storeRef <- walletStoreRef
-      maybeRecord <- getPresentationRecord(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  updatedAt = Some(Instant.now),
-                  anoncredCredentialsToUseJsonSchemaId = anoncredCredentialsToUseJsonSchemaId,
-                  anoncredCredentialsToUse = anoncredCredentialsToUse,
-                  protocolState = protocolState,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
+  ): URIO[WalletAccessContext, Unit] = {
+    val result =
+      for {
+        storeRef <- walletStoreRef
+        maybeRecord <- findPresentationRecord(recordId)
+        count <- maybeRecord
+          .map(record =>
+            for {
+              _ <- storeRef.update(r =>
+                r.updated(
+                  recordId,
+                  record.copy(
+                    updatedAt = Some(Instant.now),
+                    anoncredCredentialsToUseJsonSchemaId = anoncredCredentialsToUseJsonSchemaId,
+                    anoncredCredentialsToUse = anoncredCredentialsToUse,
+                    protocolState = protocolState,
+                    metaRetries = maxRetries,
+                    metaLastFailure = None,
+                  )
                 )
               )
-            )
-          } yield 1
-        )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+            } yield 1
+          )
+          .getOrElse(ZIO.succeed(0))
+      } yield count
+    result.ensureOneAffectedRowOrDie
   }
 
   override def updateWithPresentation(
       recordId: DidCommID,
       presentation: Presentation,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
-    for {
-      storeRef <- walletStoreRef
-      maybeRecord <- getPresentationRecord(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  updatedAt = Some(Instant.now),
-                  presentationData = Some(presentation),
-                  protocolState = protocolState,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
+  ): URIO[WalletAccessContext, Unit] = {
+    val result =
+      for {
+        storeRef <- walletStoreRef
+        maybeRecord <- findPresentationRecord(recordId)
+        count <- maybeRecord
+          .map(record =>
+            for {
+              _ <- storeRef.update(r =>
+                r.updated(
+                  recordId,
+                  record.copy(
+                    updatedAt = Some(Instant.now),
+                    presentationData = Some(presentation),
+                    protocolState = protocolState,
+                    metaRetries = maxRetries,
+                    metaLastFailure = None,
+                  )
                 )
               )
-            )
-          } yield 1
-        )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+            } yield 1
+          )
+          .getOrElse(ZIO.succeed(0))
+      } yield count
+    result.ensureOneAffectedRowOrDie
   }
 
   override def getPresentationRecordsByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
-  ): RIO[WalletAccessContext, Seq[PresentationRecord]] = {
+  ): URIO[WalletAccessContext, Seq[PresentationRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -191,7 +237,7 @@ class PresentationRepositoryInMemory(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
-  ): Task[Seq[PresentationRecord]] = {
+  ): UIO[Seq[PresentationRecord]] = {
     for {
       refs <- walletRefs.get
       stores <- ZIO.foreach(refs.values.toList)(_.get)
@@ -207,9 +253,9 @@ class PresentationRepositoryInMemory(
     }
   }
 
-  override def getPresentationRecordByThreadId(
+  override def findPresentationRecordByThreadId(
       thid: DidCommID,
-  ): RIO[WalletAccessContext, Option[PresentationRecord]] = {
+  ): URIO[WalletAccessContext, Option[PresentationRecord]] = {
     for {
       storeRef <- walletStoreRef
       store <- storeRef.get
@@ -220,85 +266,93 @@ class PresentationRepositoryInMemory(
       recordId: DidCommID,
       request: RequestPresentation,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
-    for {
-      storeRef <- walletStoreRef
-      maybeRecord <- getPresentationRecord(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  updatedAt = Some(Instant.now),
-                  requestPresentationData = Some(request),
-                  protocolState = protocolState,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
+  ): URIO[WalletAccessContext, Unit] = {
+    val result =
+      for {
+        storeRef <- walletStoreRef
+        maybeRecord <- findPresentationRecord(recordId)
+        count <- maybeRecord
+          .map(record =>
+            for {
+              _ <- storeRef.update(r =>
+                r.updated(
+                  recordId,
+                  record.copy(
+                    updatedAt = Some(Instant.now),
+                    requestPresentationData = Some(request),
+                    protocolState = protocolState,
+                    metaRetries = maxRetries,
+                    metaLastFailure = None,
+                  )
                 )
               )
-            )
-          } yield 1
-        )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+            } yield 1
+          )
+          .getOrElse(ZIO.succeed(0))
+      } yield count
+    result.ensureOneAffectedRowOrDie
   }
+
   override def updateWithProposePresentation(
       recordId: DidCommID,
       request: ProposePresentation,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
-    for {
-      storeRef <- walletStoreRef
-      maybeRecord <- getPresentationRecord(recordId)
-      count <- maybeRecord
-        .map(record =>
-          for {
-            _ <- storeRef.update(r =>
-              r.updated(
-                recordId,
-                record.copy(
-                  updatedAt = Some(Instant.now),
-                  proposePresentationData = Some(request),
-                  protocolState = protocolState,
-                  metaRetries = maxRetries,
-                  metaLastFailure = None,
+  ): URIO[WalletAccessContext, Unit] = {
+    val result =
+      for {
+        storeRef <- walletStoreRef
+        maybeRecord <- findPresentationRecord(recordId)
+        count <- maybeRecord
+          .map(record =>
+            for {
+              _ <- storeRef.update(r =>
+                r.updated(
+                  recordId,
+                  record.copy(
+                    updatedAt = Some(Instant.now),
+                    proposePresentationData = Some(request),
+                    protocolState = protocolState,
+                    metaRetries = maxRetries,
+                    metaLastFailure = None,
+                  )
                 )
               )
-            )
-          } yield 1
-        )
-        .getOrElse(ZIO.succeed(0))
-    } yield count
+            } yield 1
+          )
+          .getOrElse(ZIO.succeed(0))
+      } yield count
+    result.ensureOneAffectedRowOrDie
   }
 
-  def updateAfterFail(
+  override def updateAfterFail(
       recordId: DidCommID,
-      failReason: Option[String]
-  ): RIO[WalletAccessContext, Int] = for {
-    storeRef <- walletStoreRef
-    maybeRecord <- getPresentationRecord(recordId)
-    count <- maybeRecord
-      .map(record =>
-        for {
-          _ <- storeRef.update(r =>
-            r.updated(
-              recordId,
-              record.copy(
-                metaRetries = math.max(0, record.metaRetries - 1),
-                metaNextRetry =
-                  if (record.metaRetries - 1 <= 0) None
-                  else Some(Instant.now().plusSeconds(60)), // TODO exponention time
-                metaLastFailure = failReason
+      failReason: Option[Failure]
+  ): URIO[WalletAccessContext, Unit] = {
+    val result =
+      for {
+        storeRef <- walletStoreRef
+        maybeRecord <- findPresentationRecord(recordId)
+        count <- maybeRecord
+          .map(record =>
+            for {
+              _ <- storeRef.update(r =>
+                r.updated(
+                  recordId,
+                  record.copy(
+                    metaRetries = math.max(0, record.metaRetries - 1),
+                    metaNextRetry =
+                      if (record.metaRetries - 1 <= 0) None
+                      else Some(Instant.now().plusSeconds(60)), // TODO exponention time
+                    metaLastFailure = failReason
+                  )
+                )
               )
-            )
+            } yield 1
           )
-        } yield 1
-      )
-      .getOrElse(ZIO.succeed(0))
-  } yield count
-
+          .getOrElse(ZIO.succeed(0))
+      } yield count
+    result.ensureOneAffectedRowOrDie
+  }
 }
 
 object PresentationRepositoryInMemory {

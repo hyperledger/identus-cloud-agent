@@ -1,3 +1,51 @@
+{{/*
+Expand the name of the chart.
+*/}}
+{{- define "cloud-agent.name" -}}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "cloud-agent.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "cloud-agent.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Common labels
+*/}}
+{{- define "labels.common" -}}
+helm.sh/chart: {{ include "cloud-agent.chart" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/part-of: {{ include "cloud-agent.fullname" . }}
+{{- end }}
+
+
+
+
+
 {{- define "cors" }}
     {{- if .Values.ingress.cors.enabled }}
     - name: cors
@@ -8,6 +56,7 @@
       {{- end }}
     {{- end }}
 {{- end -}}
+
 {{- define "consumer-restriction" }}
     - name: consumer-restriction
       enable: {{ .Values.ingress.auth.consumer_restriction }}
@@ -20,9 +69,8 @@
           -  {{ regexReplaceAll "-" $.Release.Name "_" }}_{{ regexReplaceAll "-" . "_" | lower }}
         {{- end }}
 {{- end -}}
-{{- define "labels.common" -}}
-app.kubernetes.io/part-of: {{ .Chart.Name }}
-{{- end -}}
+
+
 {{- define "headers.security" }}
     - name: response-rewrite
       enable: true
@@ -37,6 +85,7 @@ app.kubernetes.io/part-of: {{ .Chart.Name }}
             Cache-Control: "no-cache, no-store"
           remove: ["Server"]
 {{- end -}}
+
 {{- define "headers.requestId" }}
     - name: request-id
       enable: true

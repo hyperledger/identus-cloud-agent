@@ -2,10 +2,8 @@ package org.hyperledger.identus.connect.core.repository
 
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
-import org.hyperledger.identus.mercury.protocol.connection.ConnectionRequest
-import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
+import org.hyperledger.identus.shared.models.*
 import zio.*
 
 import java.time.Instant
@@ -115,7 +113,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
 
   def updateAfterFail(
       recordId: UUID,
-      failReason: Option[String],
+      failReason: Option[Failure],
   ): URIO[WalletAccessContext, Unit] = for {
     maybeRecord <- findById(recordId)
     record <- ZIO.getOrFailWith(new RuntimeException(s"Record not found for Id: $recordId"))(maybeRecord).orDie
@@ -133,7 +131,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
 
   def updateAfterFailForAllWallets(
       recordId: UUID,
-      failReason: Option[String],
+      failReason: Option[Failure],
   ): Task[Int] = walletRefs.get.flatMap { wallets =>
     ZIO.foldLeft(wallets.values)(0) { (acc, walletRef) =>
       for {

@@ -6,11 +6,14 @@ import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDDetail
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
-import org.hyperledger.identus.event.notification.EventNotificationConfig
-import org.hyperledger.identus.event.notification.{Event, EventConsumer, EventNotificationService}
+import org.hyperledger.identus.event.notification.{
+  Event,
+  EventConsumer,
+  EventNotificationConfig,
+  EventNotificationService
+}
 import org.hyperledger.identus.pollux.core.model.{IssueCredentialRecord, PresentationRecord}
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.http.*
 import zio.json.*
@@ -53,7 +56,7 @@ class WebhookPublisher(
     } yield ()
   }
 
-  private[this] def pollAndNotify[A](consumer: EventConsumer[A])(implicit encoder: JsonEncoder[A]) = {
+  private def pollAndNotify[A](consumer: EventConsumer[A])(implicit encoder: JsonEncoder[A]) = {
     for {
       _ <- ZIO.log(s"Polling $parallelism event(s)")
       events <- consumer.poll(parallelism).mapError(e => UnexpectedError(e.toString))
@@ -77,7 +80,7 @@ class WebhookPublisher(
     } yield ()
   }
 
-  private[this] def generateNotifyWebhookTasks[A](
+  private def generateNotifyWebhookTasks[A](
       event: Event[A],
       webhooks: Seq[EventNotificationConfig]
   )(implicit encoder: JsonEncoder[A]): Seq[ZIO[Client, UnexpectedError, Unit]] = {
@@ -91,7 +94,7 @@ class WebhookPublisher(
       .map { case (url, headers) => notifyWebhook(event, url.toString, headers) }
   }
 
-  private[this] def notifyWebhook[A](event: Event[A], url: String, headers: Headers)(implicit
+  private def notifyWebhook[A](event: Event[A], url: String, headers: Headers)(implicit
       encoder: JsonEncoder[A]
   ): ZIO[Client, UnexpectedError, Unit] = {
     val result = for {

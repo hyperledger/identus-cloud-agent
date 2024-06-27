@@ -1,10 +1,10 @@
 apiVersion: "acid.zalan.do/v1"
 kind: postgresql
 metadata:
-  name: "{{ .Values.database.postgres.managingTeam }}-{{ .Chart.Name }}-postgres-cluster"
+  name: "{{ .Values.database.postgres.managingTeam }}-{{ include "cloud-agent.name" . }}-postgres-cluster"
   namespace: {{ .Release.Namespace }}
   labels:
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   teamId: "{{ .Values.database.postgres.managingTeam }}"
   volume:
@@ -41,14 +41,13 @@ spec:
 
 {{- if .Values.keycloak.enabled }}
 ---
-
 apiVersion: "acid.zalan.do/v1"
 kind: postgresql
 metadata:
   name: "{{ .Values.database.postgres.managingTeam }}-keycloak-postgres-cluster"
   namespace: {{ .Release.Namespace }}
   labels:
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   teamId: "{{ .Values.database.postgres.managingTeam }}"
   volume:
@@ -63,5 +62,4 @@ spec:
     keycloak: keycloak-admin
   postgresql:
     version: "14"
-
 {{- end }}

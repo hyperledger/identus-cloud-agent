@@ -2,11 +2,13 @@ package org.hyperledger.identus.pollux.core.model
 
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
+import org.hyperledger.identus.shared.models.Failure
 
-import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.time.Instant
 
 type AnoncredCredentialProofs = zio.json.ast.Json
+type SdJwtCredentialToDisclose = zio.json.ast.Json.Obj
 
 final case class PresentationRecord(
     id: DidCommID,
@@ -25,9 +27,11 @@ final case class PresentationRecord(
     credentialsToUse: Option[List[String]],
     anoncredCredentialsToUseJsonSchemaId: Option[String],
     anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
+    sdJwtClaimsToUseJsonSchemaId: Option[String],
+    sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
     metaRetries: Int,
     metaNextRetry: Option[Instant],
-    metaLastFailure: Option[String],
+    metaLastFailure: Option[Failure],
 ) {
   def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): PresentationRecord =
     copy(

@@ -1,21 +1,24 @@
 package org.hyperledger.identus.agent.walletapi.storage
 
-import org.hyperledger.identus.agent.walletapi.model.DIDPublicKeyTemplate
-import org.hyperledger.identus.agent.walletapi.model.DIDUpdateLineage
-import org.hyperledger.identus.agent.walletapi.model.ManagedDIDState
-import org.hyperledger.identus.agent.walletapi.model.ManagedDIDTemplate
-import org.hyperledger.identus.agent.walletapi.model.PublicationState
-import org.hyperledger.identus.agent.walletapi.model.Wallet
+import org.hyperledger.identus.agent.walletapi.model.{
+  DIDPublicKeyTemplate,
+  DIDUpdateLineage,
+  ManagedDIDState,
+  ManagedDIDTemplate,
+  PublicationState,
+  Wallet
+}
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
 import org.hyperledger.identus.agent.walletapi.util.OperationFactory
-import org.hyperledger.identus.castor.core.model.did.EllipticCurve
-import org.hyperledger.identus.castor.core.model.did.PrismDID
-import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
-import org.hyperledger.identus.castor.core.model.did.ScheduledDIDOperationStatus
-import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.model.did.{
+  EllipticCurve,
+  PrismDID,
+  PrismDIDOperation,
+  ScheduledDIDOperationStatus,
+  VerificationRelationship
+}
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
 import zio.*
 import zio.test.*
 
@@ -73,8 +76,7 @@ trait StorageSpecHelper extends ApolloSpecHelper {
           ZIO
             .serviceWithZIO[WalletManagementService](_.createWallet(Wallet("global-wallet")))
             .map(wallet => WalletAccessContext(wallet.id))
-            .mapError(_.toThrowable)
-            .orDie
+            .orDieAsUnmanagedFailure
             .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
         )
       )

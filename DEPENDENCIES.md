@@ -212,11 +212,11 @@ Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | [org.scala-
 Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) | [org.scala-sbt # compiler-interface # 1.9.3](https://github.com/sbt/zinc) | <notextile></notextile>
 Apache | [Apache-2.0](https://github.com/sbt/sbt/blob/develop/LICENSE) | [org.scala-sbt # util-interface # 1.9.2](https://github.com/sbt/sbt) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # junit-interface # 0.7.29](https://github.com/scalameta/munit) | <notextile></notextile>
-Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # junit-interface # 1.0.0-RC1](https://github.com/scalameta/munit) | <notextile></notextile>
+Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # junit-interface # 1.0.0](https://github.com/scalameta/munit) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # mdoc-parser_2.13 # 2.5.2](https://github.com/scalameta/mdoc) | <notextile></notextile>
-Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # munit-diff_3 # 1.0.0-RC1](https://github.com/scalameta/munit) | <notextile></notextile>
+Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # munit-diff_3 # 1.0.0](https://github.com/scalameta/munit) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # munit_3 # 0.7.29](https://github.com/scalameta/munit) | <notextile></notextile>
-Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # munit_3 # 1.0.0-RC1](https://github.com/scalameta/munit) | <notextile></notextile>
+Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # munit_3 # 1.0.0](https://github.com/scalameta/munit) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # scalafmt-config_2.13 # 3.8.1](https://github.com/scalameta/scalafmt) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # scalafmt-core_2.13 # 3.8.1](https://github.com/scalameta/scalafmt) | <notextile></notextile>
 Apache | [Apache-2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalameta # scalafmt-sysops_2.13 # 3.8.1](https://github.com/scalameta/scalafmt) | <notextile></notextile>
@@ -233,13 +233,14 @@ Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.ty
 Apache | [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.typelevel # paiges-core_2.13 # 0.4.3](https://typelevel.org/paiges) | <notextile></notextile>
 Apache | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.ionspin.kotlin # bignum-jvm # 0.3.9](https://github.com/ionspin/kotlin-multiplatform-bignum) | <notextile></notextile>
 Apache | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.zmannotes # varint # 1.0.0](https://github.com/zman2013/varint) | <notextile></notextile>
-Apache | [The Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [io.iohk.atala.prism.apollo # apollo-jvm # 1.2.16](https://docs.atalaprism.io/) | <notextile></notextile>
+Apache | [The Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [io.iohk.atala # sd-jwt-kmp-jvm # 0.1.2](https://docs.atalaprism.io/) | <notextile></notextile>
+Apache | [The Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [io.iohk.atala.prism.apollo # apollo-jvm # 1.3.4](https://docs.atalaprism.io/) | <notextile></notextile>
 Apache | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.didcommx # didcomm # 0.3.2](https://github.com/sicpa-dlab/didcomm-jvm) | <notextile></notextile>
 Apache | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.didcommx # peerdid # 0.5.0](https://github.com/sicpa-dlab/peer-did-jvm) | <notextile></notextile>
 Apache | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlin # kotlin-stdlib # 1.8.22](https://kotlinlang.org/) | <notextile></notextile>
-Apache | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlin # kotlin-stdlib # 1.9.22](https://kotlinlang.org/) | <notextile></notextile>
+Apache | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlin # kotlin-stdlib # 1.9.23](https://kotlinlang.org/) | <notextile></notextile>
 Apache | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlin # kotlin-stdlib-common # 1.8.22](https://kotlinlang.org/) | <notextile></notextile>
-Apache | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlin # kotlin-stdlib-common # 1.9.21](https://kotlinlang.org/) | <notextile></notextile>
+Apache | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlin # kotlin-stdlib-common # 1.9.22](https://kotlinlang.org/) | <notextile></notextile>
 Apache | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlin # kotlin-stdlib-jdk7 # 1.8.22](https://kotlinlang.org/) | <notextile></notextile>
 Apache | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlin # kotlin-stdlib-jdk7 # 1.9.21](https://kotlinlang.org/) | <notextile></notextile>
 Apache | [The Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlin # kotlin-stdlib-jdk8 # 1.8.22](https://kotlinlang.org/) | <notextile></notextile>
@@ -267,12 +268,12 @@ Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licens
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.google.code.findbugs # jsr305 # 3.0.2](http://findbugs.sourceforge.net/) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | com.google.guava # failureaccess # 1.0.1 | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | com.google.guava # listenablefuture # 9999.0-empty-to-avoid-conflict-with-guava | <notextile></notextile>
+Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [com.nimbusds # nimbus-jose-jwt # 9.37.3](https://bitbucket.org/connect2id/nimbus-jose-jwt) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.squareup.okio # okio # 3.4.0](https://github.com/square/okio/) | <notextile></notextile>
-Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.squareup.okio # okio-jvm # 3.4.0](https://github.com/square/okio/) | <notextile></notextile>
+Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [com.squareup.okio # okio-jvm # 3.7.0](https://github.com/square/okio/) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | com.twitter # hpack # 1.0.2 | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [com.zaxxer # HikariCP # 5.1.0](https://github.com/brettwooldridge/HikariCP) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | io.github.java-diff-utils # java-diff-utils # 4.12 | <notextile></notextile>
-Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [io.iohk.atala # nimbus-jose-jwt # 10.0.0](https://bitbucket.org/connect2id/nimbus-jose-jwt) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [io.micrometer # micrometer-commons # 1.11.11](https://github.com/micrometer-metrics/micrometer) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [io.micrometer # micrometer-core # 1.11.11](https://github.com/micrometer-metrics/micrometer) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [io.micrometer # micrometer-observation # 1.11.11](https://github.com/micrometer-metrics/micrometer) | <notextile></notextile>
@@ -287,48 +288,33 @@ Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licen
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains # annotations # 13.0](http://www.jetbrains.org) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains # annotations # 15.0](http://www.jetbrains.org) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains # annotations # 17.0.0](https://github.com/JetBrains/java-annotations) | <notextile></notextile>
-Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlinx # kotlinx-serialization-core-jvm # 1.6.2](https://github.com/Kotlin/kotlinx.serialization) | <notextile></notextile>
-Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlinx # kotlinx-serialization-json-jvm # 1.6.2](https://github.com/Kotlin/kotlinx.serialization) | <notextile></notextile>
+Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlinx # atomicfu-jvm # 0.23.2](https://github.com/Kotlin/kotlinx.atomicfu) | <notextile></notextile>
+Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlinx # kotlinx-serialization-core-jvm # 1.6.3](https://github.com/Kotlin/kotlinx.serialization) | <notextile></notextile>
+Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.jetbrains.kotlinx # kotlinx-serialization-json-jvm # 1.6.3](https://github.com/Kotlin/kotlinx.serialization) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.kotlincrypto.core # common-jvm # 0.4.0](https://github.com/KotlinCrypto/core/) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.kotlincrypto.core # digest-jvm # 0.4.0](https://github.com/KotlinCrypto/core/) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.kotlincrypto.core # mac-jvm # 0.3.0](https://github.com/KotlinCrypto/core/) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.kotlincrypto.hash # sha2-jvm # 0.4.0](https://github.com/KotlinCrypto/hash/) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.kotlincrypto.macs # hmac-jvm # 0.3.0](https://github.com/KotlinCrypto/MACs/) | <notextile></notextile>
 Apache | [The Apache Software License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt) | [org.kotlincrypto.macs # hmac-sha2-jvm # 0.3.0](https://github.com/KotlinCrypto/MACs/) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalactic # scalactic_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalactic # scalactic_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalactic # scalactic_3 # 3.2.18](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-compatible # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-compatible # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-compatible # 3.2.18](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-core_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-core_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-core_3 # 3.2.18](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-diagrams_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-diagrams_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-featurespec_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-featurespec_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-flatspec_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-flatspec_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-freespec_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-freespec_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-funspec_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-funspec_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-funsuite_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-funsuite_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-matchers-core_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-matchers-core_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-mustmatchers_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-mustmatchers_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-propspec_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-propspec_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-refspec_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-refspec_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-shouldmatchers_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-shouldmatchers_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-wordspec_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest-wordspec_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
-Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest_3 # 3.2.15](http://www.scalatest.org) | <notextile></notextile>
 Apache | [the Apache License, ASL Version 2.0](http://www.apache.org/licenses/LICENSE-2.0) | [org.scalatest # scalatest_3 # 3.2.16](http://www.scalatest.org) | <notextile></notextile>
 BSD | [3-Clause BSD License](https://opensource.org/licenses/BSD-3-Clause) | com.google.protobuf # protobuf-java # 3.14.0 | <notextile></notextile>
 BSD | [3-Clause BSD License](https://opensource.org/licenses/BSD-3-Clause) | com.google.protobuf # protobuf-javalite # 3.18.0 | <notextile></notextile>
@@ -431,33 +417,34 @@ MIT | [The MIT License (MIT)](https://opensource.org/licenses/MIT) | [com.dimafe
 Public Domain | [Public Domain, per Creative Commons CC0](http://creativecommons.org/publicdomain/zero/1.0/) | [org.hdrhistogram # HdrHistogram # 2.1.12](http://hdrhistogram.github.io/HdrHistogram/) | <notextile></notextile>
 Public Domain | [Public Domain, per Creative Commons CC0](http://creativecommons.org/publicdomain/zero/1.0/) | [org.latencyutils # LatencyUtils # 2.0.3](http://latencyutils.github.io/LatencyUtils/) | <notextile></notextile>
 none specified | []() | [net.jcip # jcip-annotations # 1.0](http://jcip.net/) | <notextile></notextile>
-none specified | []() | [org.hyperledger # castor-core_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # cloud-agent-wallet-api_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # connect-core_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # connect-sql-doobie_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # event-notification_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-agent-core_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-agent-didcommx_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-data-models_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-protocol-connection_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-protocol-coordinate-mediation_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-protocol-invitation_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-protocol-issue-credential_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-protocol-mailbox_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-protocol-outofband-login_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-protocol-present-proof_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-protocol-report-problem_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-protocol-revocation-notification_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-protocol-routing-2-0_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-protocol-trust-ping_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-resolver_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # mercury-verifiable-credentials_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # pollux-anoncreds_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # pollux-core_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # pollux-sql-doobie_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # pollux-vc-jwt_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # prism-node-client_3 # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # shared # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # shared-crypto # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
-none specified | []() | [org.hyperledger # shared-test # 1.33.1-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # castor-core_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # cloud-agent-wallet-api_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # connect-core_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # connect-sql-doobie_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # event-notification_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-agent-core_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-agent-didcommx_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-data-models_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-protocol-connection_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-protocol-coordinate-mediation_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-protocol-invitation_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-protocol-issue-credential_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-protocol-mailbox_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-protocol-outofband-login_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-protocol-present-proof_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-protocol-report-problem_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-protocol-revocation-notification_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-protocol-routing-2-0_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-protocol-trust-ping_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-resolver_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # mercury-verifiable-credentials_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # pollux-anoncreds_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # pollux-core_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # pollux-sd-jwt_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # pollux-sql-doobie_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # pollux-vc-jwt_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # prism-node-client_3 # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # shared # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # shared-crypto # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
+none specified | []() | [org.hyperledger # shared-test # 1.36.0-SNAPSHOT](https://github.com/hyperledger/identus-cloud-agent) | <notextile></notextile>
 

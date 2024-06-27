@@ -7,13 +7,15 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
+import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, PresentationCompact}
 import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import zio.*
+import zio.json.ast
 
 import java.time.Instant
-import java.util as ju
 import java.util.UUID
+import java.util as ju
 
 trait PresentationService {
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
@@ -24,6 +26,16 @@ trait PresentationService {
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
+      options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
+
+  def createSDJWTPresentationRecord(
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: DidId,
+      thid: DidCommID,
+      connectionId: Option[String],
+      proofTypes: Seq[ProofType],
+      claimsToDisclose: ast.Json.Obj,
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
@@ -44,6 +56,16 @@ trait PresentationService {
       issuer: Issuer,
       issuanceDate: Instant
   ): ZIO[WalletAccessContext, PresentationError, PresentationPayload]
+
+  def createPresentationFromRecord(
+      record: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationCompact]
+
+  def createSDJwtPresentation(
+      recordId: DidCommID,
+      requestPresentation: RequestPresentation,
+      optionalHolderPrivateKey: Option[HolderPrivateKey],
+  ): ZIO[WalletAccessContext, PresentationError, Presentation]
 
   def createAnoncredPresentationPayloadFromRecord(
       record: DidCommID,
@@ -70,11 +92,11 @@ trait PresentationService {
       state: PresentationRecord.ProtocolState*
   ): IO[PresentationError, Seq[PresentationRecord]]
 
-  def getPresentationRecord(
+  def findPresentationRecord(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]]
 
-  def getPresentationRecordByThreadId(
+  def findPresentationRecordByThreadId(
       thid: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]]
 
@@ -86,6 +108,12 @@ trait PresentationService {
   def acceptRequestPresentation(
       recordId: DidCommID,
       credentialsToUse: Seq[String]
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
+
+  def acceptSDJWTRequestPresentation(
+      recordId: DidCommID,
+      credentialsToUse: Seq[String],
+      claimsToDisclose: Option[ast.Json.Obj]
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def acceptAnoncredRequestPresentation(
@@ -140,7 +168,7 @@ trait PresentationService {
 
   def reportProcessingFailure(
       recordId: DidCommID,
-      failReason: Option[String]
+      failReason: Option[Failure]
   ): ZIO[WalletAccessContext, PresentationError, Unit]
 
 }

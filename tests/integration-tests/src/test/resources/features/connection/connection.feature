@@ -1,4 +1,4 @@
-@connection
+@connection @create
 Feature: Agents connection
 
 Scenario: Establish a connection between two agents

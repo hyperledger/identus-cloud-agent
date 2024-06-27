@@ -1,11 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.syntax._
-
-import org.hyperledger.identus.mercury.model.PIURI
-import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Message, DidId}
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
 
 final case class RequestCredential(
     id: String = java.util.UUID.randomUUID.toString(),
@@ -64,35 +62,36 @@ object RequestCredential {
     given Decoder[Body] = deriveDecoder[Body]
   }
 
-  def makeRequestCredentialFromOffer(msg: Message): RequestCredential = { // TODO change msg: Message to RequestCredential
-    val oc: OfferCredential = OfferCredential.readFromMessage(msg)
-
+  def makeRequestCredentialFromOffer(oc: OfferCredential): RequestCredential =
     RequestCredential(
-      body = RequestCredential.Body(
-        goal_code = oc.body.goal_code,
-        comment = oc.body.comment,
-      ),
+      body = RequestCredential.Body(goal_code = oc.body.goal_code, comment = oc.body.comment),
       attachments = oc.attachments,
-      thid = msg.thid.orElse(Some(oc.id)),
+      thid = oc.thid.orElse(Some(oc.id)),
       from = oc.to,
       to = oc.from,
     )
+
+  def readFromMessage(message: Message): Either[String, RequestCredential] = {
+    message.body.asJson.as[RequestCredential.Body] match
+      case Left(fail) => Left("Fail to parse RequestCredential's body: " + fail.getMessage)
+      case Right(body) =>
+        message.from match
+          case None => Left("RequestCredential MUST have the sender explicit")
+          case Some(from) =>
+            message.to match
+              case firstTo +: Seq() =>
+                Right(
+                  RequestCredential(
+                    id = message.id,
+                    `type` = message.piuri,
+                    body = body,
+                    attachments = message.attachments.getOrElse(Seq.empty),
+                    thid = message.thid,
+                    from = from,
+                    to = firstTo,
+                  )
+                )
+              case tos => Left(s"RequestCredential MUST have only 1 recipient instead has '${tos}'")
   }
-
-  def readFromMessage(message: Message): RequestCredential =
-    val body = message.body.asJson.as[RequestCredential.Body].toOption.get // TODO get
-
-    RequestCredential(
-      id = message.id,
-      `type` = message.piuri,
-      body = body,
-      attachments = message.attachments.getOrElse(Seq.empty),
-      thid = message.thid,
-      from = message.from.get, // TODO get
-      to = {
-        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
-        message.to.head
-      },
-    )
 
 }

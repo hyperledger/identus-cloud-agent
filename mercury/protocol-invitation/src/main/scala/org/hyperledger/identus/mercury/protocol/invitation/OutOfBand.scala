@@ -1,11 +1,11 @@
 package org.hyperledger.identus.mercury.protocol.invitation
 
-import java.net.URI
-import java.net.URL
-import java.{util => ju}
-import org.hyperledger.identus.mercury.protocol.invitation.v2._
-import io.circe._
-import io.circe.parser._
+import io.circe.*
+import io.circe.parser.*
+import org.hyperledger.identus.mercury.protocol.invitation.v2.*
+
+import java.net.{URI, URL}
+import java.util as ju
 
 object OutOfBand {
 

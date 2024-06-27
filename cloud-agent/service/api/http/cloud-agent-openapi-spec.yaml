@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Identus Cloud Agent API Reference
-  version: 1.34.0
+  version: 1.36.1
   description: |2
 
     The Identus Cloud Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
@@ -1925,7 +1925,8 @@ paths:
       tags:
       - Present Proof
       summary: Gets the list of proof presentation records.
-      description: list of presentation statuses
+      description: Get the list of proof presentation records and its status that
+        the Agent have at moment
       operationId: getAllPresentation
       parameters:
       - name: offset
@@ -1946,6 +1947,7 @@ paths:
           format: int32
       - name: thid
         in: query
+        description: Filter by the DID Comm message's 'thid' of presentProof
         required: false
         schema:
           type: string
@@ -2137,11 +2139,11 @@ paths:
     post:
       tags:
       - Verifiable Credentials Verification
-      summary: As a Verifier, verify a set of credentials
-      description: As a Verifier, verify a set of credentials
+      summary: Verify a set of credentials as a Verifier
+      description: Endpoint to verify a set of verifiable credentials as a Verifier.
       operationId: verify
       requestBody:
-        description: List of VC to verify
+        description: List of verifiable credentials to verify
         content:
           application/json:
             schema:
@@ -2151,7 +2153,7 @@ paths:
         required: false
       responses:
         '200':
-          description: List of VC verification outcome
+          description: List of verifiable credentials verification outcomes
           content:
             application/json:
               schema:
@@ -4106,7 +4108,9 @@ components:
       properties:
         dateTime:
           type: string
+          description: The date and time to use for verification.
           format: date-time
+          example: '2022-03-10T12:00:00Z'
         parameterType:
           type: string
     DidOperationSubmission:
@@ -4131,6 +4135,8 @@ components:
       properties:
         did:
           type: string
+          description: The DID (Decentralized Identifier) to use for verification.
+          example: did:prism:issuer
         parameterType:
           type: string
     EntityResponse:
@@ -4327,7 +4333,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2024-05-27T18:32:07.650296597Z'
+          example: '2024-06-09T15:27:06.605422118Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -4627,7 +4633,11 @@ components:
           items:
             $ref: '#/components/schemas/PresentationStatus'
           description: A sequence of Presentation objects.
-          example: []
+          example:
+          - PresentationStatus(938bfc23-f78d-4734-9bf3-6dccf300856f,04112f4d-e894-4bff-a706-85b3e7190a2c,Verifier,RequestSent,List(),List(),Some(e0d81be9-47ca-4e0b-b8a7-325e8c3abc2f),5)
+          - PresentationStatus(d22158b0-c650-48ea-be85-2920a845ef26,04112f4d-e894-4bff-a706-85b3e7190a2c,Prover,RequestReceived,List(),List(),None,5)
+          - PresentationStatus(fd3f5e54-fae9-4f72-9413-ec66aab83a57,6b42fd91-4c98-40ae-a371-a1fd1a39e05e,Prover,PresentationPending,List(),List(),None,5)
+          - PresentationStatus(e56dd3e0-79d0-45f4-ba6c-ff857211b07b,6b42fd91-4c98-40ae-a371-a1fd1a39e05e,Verifier,PresentationVerified,List(),List({"claimsToDisclose":{"emailAddress":{},"givenName":{}},"presentation":"{\"protected\":\"eyJhbGciOiJFZERTQSJ9\",\"payload\":\"eyJfc2QiOlsiMGl4d0tIV0dzbzFvZThFR0hQd2tGYW9EZE1TRFQ3SmgyNkZGSm1ZbGRnRSIsIjQ4VlFXZS1tcjBibHMyOWpicHFKeDNxX2dYY0k5N3dHcEpsZnRoNXQwMGciLCI0Wk9xanFNZVNUVHRKQTNJRExsc3ZXN0dTNzRIemNxY3N2NVFoZk1valE4IiwiUjhGRE0ydXB1V09mNmVJMVA5ckNPdG12c3puVWFFYXpncVNuN0JfeTE0MCIsIlU5MmpfUHlpcHN2TERNQTlDaVRWbnl3bUFzYTM4S2lDWm5TeVhyUE5mNG8iLCJldFB1Mmc5ajdRd01rZ3g5VnpEX1RnNTNUV3UydVpadk1KeHRnNEJ1WGJBIiwidGV3RG1LWklNcS10bUNrMkpqZU0wajNYbU1aUUFLN01heENVNlF4dm9OMCJdLCJfc2RfYWxnIjoic2hhLTI1NiIsImlzcyI6ImRpZDpwcmlzbToxMmEzOWI1YWEwZTcxODI3ZmMxYzYwMjg1ZDVlZWJjMTk0Yjg2NzFhYTJmY2QxZDM2NDBkMGYwMTBlMzliZmVlIiwiaWF0IjoxNzE3NDEwMzgzLCJleHAiOjE3MjAwMDIzODN9\",\"signature\":\"953FfSRU_0Y2q0ERrFPzbXJ_hkF0YQe5efwESaZwtXDCn8aanD3MUstp3lzqGZkhvcWRdtCCpIxzhy0zgKwLBg\",\"disclosures\":[\"WyI0SHF6MDZCeG5fRlJMb2hWX2lWNXp3IiwgImdpdmVuTmFtZSIsICJBbGljZSJd\",\"WyJLUnNYYU01c3NXZTl4UEhqQnNjT213IiwgImVtYWlsQWRkcmVzcyIsICJhbGljZUB3b25kZXJsYW5kLmNvbSJd\"],\"kb_jwt\":null}"}),Some(e0d81be9-47ca-4e0b-b8a7-325e8c3abc2f),5)
         self:
           type: string
           description: The reference to the presentation collection itself.
@@ -4642,12 +4652,16 @@ components:
           example: 1
         next:
           type: string
-          description: URL of the next page (if available)
-          example: ''
+          description: An optional string field containing the URL of the next page
+            of results. If the API response does not contain any more pages, this
+            field should be set to None.
+          example: /present-proof/presentations?offset=20&limit=10
         previous:
           type: string
-          description: URL of the previous page (if available)
-          example: ''
+          description: An optional string field containing the URL of the previous
+            page of results. If the API response is the first page of results, this
+            field should be set to None.
+          example: /present-proof/presentations?offset=0&limit=10
     Proof:
       required:
       - type
@@ -4838,6 +4852,12 @@ components:
             applicable on the prover side when the action is `request-accept`.
         anoncredPresentationRequest:
           $ref: '#/components/schemas/AnoncredCredentialProofsV1'
+        claims:
+          $ref: '#/components/schemas/Obj'
+        credentialFormat:
+          type: string
+          description: The credential format (default to 'JWT')
+          example: JWT
     RequestPresentationInput:
       required:
       - connectionId
@@ -4860,6 +4880,8 @@ components:
           example: []
         anoncredPresentationRequest:
           $ref: '#/components/schemas/AnoncredPresentationRequestV1'
+        claims:
+          $ref: '#/components/schemas/Obj'
         credentialFormat:
           type: string
           description: The credential format (default to 'JWT')
@@ -4930,7 +4952,7 @@ components:
           type: string
           description: Issuance timestamp of status list credential
           format: date-time
-          example: '2024-05-27T18:32:07.694793558Z'
+          example: '2024-06-09T15:27:06.640034187Z'
         credentialSubject:
           $ref: '#/components/schemas/CredentialSubject'
         proof:
@@ -5033,6 +5055,7 @@ components:
         both be empty.
     VcVerification:
       type: string
+      description: The type of verification to perform.
       enum:
       - AlgorithmVerification
       - AudienceCheck
@@ -5047,6 +5070,7 @@ components:
       - SignatureVerification
       - SubjectVerification
     VcVerificationParameter:
+      description: Optional parameter for the verification.
       oneOf:
       - $ref: '#/components/schemas/DateTimeParameter'
       - $ref: '#/components/schemas/DidParameter'
@@ -5068,21 +5092,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ParameterizableVcVerification'
-          description: The list of Verifications to verify. All verifications run
-            if Verifications left empty
+          description: The list of verifications to perform on the credential. If
+            the list is empty, all available verifications will be performed.
           example:
-          - ParameterizableVcVerification(SignatureVerification,None)
-          - ParameterizableVcVerification(IssuerIdentification,Some(DidParameter(did:prism:issuer)))
-          - ParameterizableVcVerification(ExpirationCheck,Some(DateTimeParameter(2022-03-10T12:00Z)))
-          - ParameterizableVcVerification(NotBeforeCheck,Some(DateTimeParameter(2022-03-10T12:00Z)))
-          - ParameterizableVcVerification(AudienceCheck,Some(DidParameter(did:prism:holder)))
-          - ParameterizableVcVerification(SubjectVerification,None)
-          - ParameterizableVcVerification(IntegrityOfClaims,None)
-          - ParameterizableVcVerification(ComplianceWithStandards,None)
-          - ParameterizableVcVerification(RevocationCheck,None)
-          - ParameterizableVcVerification(AlgorithmVerification,None)
-          - ParameterizableVcVerification(SchemaCheck,None)
-          - ParameterizableVcVerification(SemanticCheckOfClaims,None)
+          - verification: SignatureVerification
+          - verification: IssuerIdentification
+            parameter:
+              did: did:prism:issuer
+          - verification: ExpirationCheck
+            parameter:
+              dateTime: '2022-03-10T12:00:00Z'
+          - verification: NotBeforeCheck
+            parameter:
+              dateTime: '2022-03-10T12:00:00Z'
+          - verification: AudienceCheck
+            parameter:
+              did: did:prism:holder
+          - verification: SubjectVerification
+          - verification: IntegrityOfClaims
+          - verification: ComplianceWithStandards
+          - verification: RevocationCheck
+          - verification: AlgorithmVerification
+          - verification: SchemaCheck
+          - verification: SemanticCheckOfClaims
     VcVerificationResponse:
       required:
       - credential
@@ -5090,26 +5122,39 @@ components:
       properties:
         credential:
           type: string
-          description: Encoded Verifiable Credential to verify
+          description: Encoded Verifiable Credential that was verified.
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         result:
           type: array
           items:
             $ref: '#/components/schemas/VcVerificationResult'
-          description: The list executed Verifications
+          description: The list of verification results for each verification performed
+            on the credential.
           example:
-          - VcVerificationResult(SignatureVerification,true)
-          - VcVerificationResult(IssuerIdentification,true)
-          - VcVerificationResult(ExpirationCheck,true)
-          - VcVerificationResult(NotBeforeCheck,true)
-          - VcVerificationResult(AudienceCheck,true)
-          - VcVerificationResult(SubjectVerification,true)
-          - VcVerificationResult(IntegrityOfClaims,true)
-          - VcVerificationResult(ComplianceWithStandards,true)
-          - VcVerificationResult(RevocationCheck,true)
-          - VcVerificationResult(AlgorithmVerification,true)
-          - VcVerificationResult(SchemaCheck,true)
-          - VcVerificationResult(SemanticCheckOfClaims,true)
+          - verification: SignatureVerification
+            success: true
+          - verification: IssuerIdentification
+            success: true
+          - verification: ExpirationCheck
+            success: true
+          - verification: NotBeforeCheck
+            success: true
+          - verification: AudienceCheck
+            success: true
+          - verification: SubjectVerification
+            success: true
+          - verification: IntegrityOfClaims
+            success: true
+          - verification: ComplianceWithStandards
+            success: true
+          - verification: RevocationCheck
+            success: true
+          - verification: AlgorithmVerification
+            success: true
+          - verification: SchemaCheck
+            success: true
+          - verification: SemanticCheckOfClaims
+            success: true
     VcVerificationResult:
       required:
       - verification
@@ -5120,6 +5165,7 @@ components:
           $ref: '#/components/schemas/VcVerification'
         success:
           type: boolean
+          description: Indicates whether the verification was successful.
     VerificationMethod:
       required:
       - id

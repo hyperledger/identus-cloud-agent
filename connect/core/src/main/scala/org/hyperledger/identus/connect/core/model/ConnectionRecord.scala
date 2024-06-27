@@ -3,9 +3,10 @@ package org.hyperledger.identus.connect.core.model
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
+import org.hyperledger.identus.shared.models.Failure
 
-import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.time.Instant
 import java.util.UUID
 
 /** @param id
@@ -42,7 +43,7 @@ case class ConnectionRecord(
     connectionResponse: Option[ConnectionResponse],
     metaRetries: Int,
     metaNextRetry: Option[Instant],
-    metaLastFailure: Option[String]
+    metaLastFailure: Option[Failure]
 ) {
   def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): ConnectionRecord = copy(
     createdAt = createdAt.truncatedTo(unit),

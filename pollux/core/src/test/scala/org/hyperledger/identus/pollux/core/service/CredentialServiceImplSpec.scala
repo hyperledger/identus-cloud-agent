@@ -1,20 +1,25 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.Json
 import io.circe.syntax.*
+import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship.AssertionMethod
 import org.hyperledger.identus.castor.core.service.MockDIDService
-import org.hyperledger.identus.mercury.model.{Base64 => MyBase64, *}
+import org.hyperledger.identus.mercury.model.{Base64 as MyBase64, *}
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredential
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.{
+  RecordNotFound,
+  RecordNotFoundForThreadIdAndStates,
+  UnsupportedDidFormat,
+  *
+}
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
+import org.hyperledger.identus.shared.models.{KeyId, UnmanagedFailureException, WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.MockSpecDefault
 import zio.test.*
@@ -215,8 +220,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
               .exit
           } yield {
             assertTrue(record match
-              case Exit.Failure(Cause.Fail(_: CredentialServiceError, _)) => true
-              case _                                                      => false
+              case Exit.Failure(Cause.Die(_: UnmanagedFailureException, _)) => true
+              case _                                                        => false
             )
           }
         }
@@ -228,10 +233,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           aRecord <- svc.createJWTIssueCredentialRecord(thid = thid)
           bRecord <- svc.createJWTIssueCredentialRecord(thid = thid).exit
         } yield {
-          assertTrue(bRecord match
-            case Exit.Failure(Cause.Fail(_: RepositoryError, _)) => true
-            case _                                               => false
-          )
+          assert(bRecord)(dies(anything))
         }
       },
       test("getCredentialRecords returns the created records") {
@@ -269,7 +271,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           svc <- ZIO.service[CredentialService]
           aRecord <- svc.createJWTIssueCredentialRecord()
           bRecord <- svc.createJWTIssueCredentialRecord()
-          record <- svc.getIssueCredentialRecord(bRecord.id)
+          record <- svc.findById(bRecord.id)
         } yield assertTrue(record.contains(bRecord))
       },
       test("getCredentialRecord returns nothing for an unknown 'recordId'") {
@@ -277,7 +279,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           svc <- ZIO.service[CredentialService]
           aRecord <- svc.createJWTIssueCredentialRecord()
           bRecord <- svc.createJWTIssueCredentialRecord()
-          record <- svc.getIssueCredentialRecord(DidCommID())
+          record <- svc.findById(DidCommID())
         } yield assertTrue(record.isEmpty)
       },
       test("receiveCredentialOffer successfully creates a record") {
@@ -307,10 +309,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           _ <- holderSvc.receiveCredentialOffer(offer)
           exit <- holderSvc.receiveCredentialOffer(offer).exit
         } yield {
-          assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: RepositoryError, _)) => true
-            case _                                               => false
-          )
+          assert(exit)(dies(anything))
         }
       },
       test("acceptCredentialOffer updates the record's protocol state") {
@@ -319,7 +318,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          offerAcceptedRecord <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId))
+          offerAcceptedRecord <- holderSvc
+            .acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId), Some(KeyId("my-key-id")))
         } yield {
           assertTrue(offerAcceptedRecord.protocolState == ProtocolState.RequestPending) &&
           assertTrue(offerAcceptedRecord.offerCredentialData.isDefined) &&
@@ -346,12 +346,14 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId))
-          exit <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId)).exit
+          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId), Some(KeyId("my-key-id")))
+          exit <- holderSvc
+            .acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId), Some(KeyId("my-key-id")))
+            .exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
-            case _                                                     => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFound, _)) => true
+            case _                                              => false
           )
         }
       },
@@ -361,7 +363,9 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           offer = offerCredential()
           subjectId = "did:unknown:subject"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          record <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId)).exit
+          record <- holderSvc
+            .acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId), Some(KeyId("my-key-id")))
+            .exit
         } yield {
           assertTrue(record match
             case Exit.Failure(Cause.Fail(_: UnsupportedDidFormat, _)) => true
@@ -391,8 +395,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- issuerSvc.receiveCredentialRequest(request).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
-            case _                                                     => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFoundForThreadIdAndStates, _)) => true
+            case _                                                                  => false
           )
         }
       },
@@ -405,8 +409,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- issuerSvc.receiveCredentialRequest(request).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: ThreadIdNotFound, _)) => true
-            case _                                                => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFoundForThreadIdAndStates, _)) => true
+            case _                                                                  => false
           )
         }
       },
@@ -434,8 +438,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- issuerSvc.acceptCredentialRequest(requestReceivedRecord.id).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
-            case _                                                     => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFound, _)) => true
+            case _                                              => false
           )
         }
       },
@@ -445,7 +449,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId))
+          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId), Some(KeyId("my-key-id")))
           _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           _ <- holderSvc.markRequestSent(offerReceivedRecord.id)
           issue = issueCredential(thid = Some(offerReceivedRecord.thid))
@@ -461,7 +465,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId))
+          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId), Some(KeyId("my-key-id")))
           _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           _ <- holderSvc.markRequestSent(offerReceivedRecord.id)
           issue = issueCredential(thid = Some(offerReceivedRecord.thid))
@@ -469,8 +473,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           exit <- holderSvc.receiveCredentialIssue(issue).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: InvalidFlowStateError, _)) => true
-            case _                                                     => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFoundForThreadIdAndStates, _)) => true
+            case _                                                                  => false
           )
         }
       }.provideSomeLayer(holderDidServiceExpectations.toLayer ++ holderManagedDIDServiceExpectations.toLayer),
@@ -480,15 +484,15 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId))
+          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId), Some(KeyId("my-key-id")))
           _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           _ <- holderSvc.markRequestSent(offerReceivedRecord.id)
           issue = issueCredential(thid = Some(DidCommID()))
           exit <- holderSvc.receiveCredentialIssue(issue).exit
         } yield {
           assertTrue(exit match
-            case Exit.Failure(Cause.Fail(_: ThreadIdNotFound, _)) => true
-            case _                                                => false
+            case Exit.Failure(Cause.Fail(_: RecordNotFoundForThreadIdAndStates, _)) => true
+            case _                                                                  => false
           )
         }
       }.provideSomeLayer(holderDidServiceExpectations.toLayer ++ holderManagedDIDServiceExpectations.toLayer),
@@ -503,18 +507,20 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           _ <- issuerSvc.markOfferSent(issuerRecordId)
           msg <- ZIO.fromEither(offerCreatedRecord.offerCredentialData.get.makeMessage.asJson.as[Message])
           // Holder receives offer
-          offerReceivedRecord <- holderSvc.receiveCredentialOffer(OfferCredential.readFromMessage(msg))
+          offerCredential <- ZIO.fromEither(OfferCredential.readFromMessage(msg))
+          offerReceivedRecord <- holderSvc.receiveCredentialOffer(offerCredential)
           holderRecordId = offerReceivedRecord.id
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           // Holder accepts offer
-          _ <- holderSvc.acceptCredentialOffer(holderRecordId, Some(subjectId))
+          _ <- holderSvc.acceptCredentialOffer(holderRecordId, Some(subjectId), Some(KeyId("my-key-id")))
           // Holder generates proof
           requestGeneratedRecord <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           // Holder sends offer
           _ <- holderSvc.markRequestSent(holderRecordId)
           msg <- ZIO.fromEither(requestGeneratedRecord.requestCredentialData.get.makeMessage.asJson.as[Message])
           // Issuer receives request
-          requestReceivedRecord <- issuerSvc.receiveCredentialRequest(RequestCredential.readFromMessage(msg))
+          requestCredential <- ZIO.fromEither(RequestCredential.readFromMessage(msg))
+          requestReceivedRecord <- issuerSvc.receiveCredentialRequest(requestCredential)
           // Issuer accepts request
           requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(issuerRecordId)
           // Issuer generates credential
@@ -526,7 +532,8 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           _ <- issuerSvc.markCredentialSent(issuerRecordId)
           msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.asJson.as[Message])
           // Holder receives credential
-          _ <- holderSvc.receiveCredentialIssue(IssueCredential.readFromMessage(msg))
+          issueCredential <- ZIO.fromEither(IssueCredential.readFromMessage(msg))
+          _ <- holderSvc.receiveCredentialIssue(issueCredential)
         } yield assertTrue(true)
       }.provideSomeLayer(
         (holderDidServiceExpectations ++ issuerDidServiceExpectations).toLayer
@@ -578,17 +585,19 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
                 ResourceURIDereferencerImpl.layerWithExtraResources >>>
                 credentialServiceLayer
             )
-          offerReceivedRecord <- holderSvc.receiveCredentialOffer(OfferCredential.readFromMessage(msg))
+          offerCredential <- ZIO.fromEither(OfferCredential.readFromMessage(msg))
+          offerReceivedRecord <- holderSvc.receiveCredentialOffer(offerCredential)
           holderRecordId = offerReceivedRecord.id
           // Holder accepts offer
-          _ <- holderSvc.acceptCredentialOffer(holderRecordId, None)
+          _ <- holderSvc.acceptCredentialOffer(holderRecordId, None, None)
           // Holder generates proof
           requestGeneratedRecord <- holderSvc.generateAnonCredsCredentialRequest(offerReceivedRecord.id)
           // Holder sends offer
           _ <- holderSvc.markRequestSent(holderRecordId)
           msg <- ZIO.fromEither(requestGeneratedRecord.requestCredentialData.get.makeMessage.asJson.as[Message])
           // Issuer receives request
-          _ <- issuerSvc.receiveCredentialRequest(RequestCredential.readFromMessage(msg))
+          requestCredential <- ZIO.fromEither(RequestCredential.readFromMessage(msg))
+          _ <- issuerSvc.receiveCredentialRequest(requestCredential)
           // Issuer accepts request
           _ <- issuerSvc.acceptCredentialRequest(issuerRecordId)
           // Issuer generates credential
@@ -596,8 +605,9 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           // Issuer sends credential
           _ <- issuerSvc.markCredentialSent(issuerRecordId)
           msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.asJson.as[Message])
-          // Holder receives credential
-          record <- holderSvc.receiveCredentialIssue(IssueCredential.readFromMessage(msg))
+          // Holder receives credential\
+          issueCredential <- ZIO.fromEither(IssueCredential.readFromMessage(msg))
+          record <- holderSvc.receiveCredentialIssue(issueCredential)
         } yield {
           assertTrue(record.issueCredentialData.isDefined) &&
           assertTrue(record.issueCredentialData.get.attachments.nonEmpty) &&
@@ -622,10 +632,10 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           svc <- ZIO.service[CredentialService]
           record1 <- svc.createJWTIssueCredentialRecord().provide(wallet1)
           record2 <- svc.createJWTIssueCredentialRecord().provide(wallet2)
-          ownRecord1 <- svc.getIssueCredentialRecord(record1.id).provide(wallet1)
-          ownRecord2 <- svc.getIssueCredentialRecord(record2.id).provide(wallet2)
-          crossRecord1 <- svc.getIssueCredentialRecord(record1.id).provide(wallet2)
-          crossRecord2 <- svc.getIssueCredentialRecord(record2.id).provide(wallet1)
+          ownRecord1 <- svc.findById(record1.id).provide(wallet1)
+          ownRecord2 <- svc.findById(record2.id).provide(wallet2)
+          crossRecord1 <- svc.findById(record1.id).provide(wallet2)
+          crossRecord2 <- svc.findById(record2.id).provide(wallet1)
         } yield assert(ownRecord1)(isSome(equalTo(record1))) &&
           assert(ownRecord2)(isSome(equalTo(record2))) &&
           assert(crossRecord1)(isNone) &&

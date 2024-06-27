@@ -1,9 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.connection
 
-import io.circe._
-import io.circe.parser._
+import io.circe.*
+import io.circe.parser.*
 import munit.*
-import org.hyperledger.identus.mercury.model.{Message, DidId}
+import org.hyperledger.identus.mercury.model.{DidId, Message}
 
 /** protocolConnection/testOnly org.hyperledger.identus.mercury.protocol.connection.CoordinateMediationSpec */
 class CoordinateMediationSpec extends ZSuite {

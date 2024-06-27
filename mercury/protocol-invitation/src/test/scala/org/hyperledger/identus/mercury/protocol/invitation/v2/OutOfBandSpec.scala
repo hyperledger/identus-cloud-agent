@@ -1,8 +1,8 @@
 package org.hyperledger.identus.mercury.protocol.invitation.v2
 
 import munit.*
-import org.hyperledger.identus.mercury.protocol.invitation.v2._
 import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.protocol.invitation.v2.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation.Body
 import org.hyperledger.identus.mercury.protocol.invitation.OutOfBand
 class OutOfBandSpec extends FunSuite {
@@ -13,7 +13,7 @@ class OutOfBandSpec extends FunSuite {
 
     val ret = OutOfBand.parseInvitation(link)
 
-    assert(ret.isInstanceOf[Right[_, Invitation]])
+    assert(ret.isInstanceOf[Right[?, Invitation]])
 
     val expected = Invitation(
       "421dbbc8-57ca-4341-aa3a-f5b4215c568f",

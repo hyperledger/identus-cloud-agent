@@ -1,18 +1,16 @@
 package org.hyperledger.identus.iam.authentication.apikey
 
-import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.agent.walletapi.model.Wallet
+import org.hyperledger.identus.agent.walletapi.model.{Entity, Wallet}
 import org.hyperledger.identus.agent.walletapi.service.{EntityService, WalletManagementService}
 import org.hyperledger.identus.iam.authentication.AuthenticationError
 import org.hyperledger.identus.iam.authentication.AuthenticationError.*
 import org.hyperledger.identus.shared.crypto.Sha256Hash
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.{IO, URLayer, ZIO, ZLayer}
+import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
+import zio.{IO, UIO, URLayer, ZIO, ZLayer}
 
 import java.util.UUID
-import scala.util.Try
 import scala.language.implicitConversions
+import scala.util.Try
 
 case class ApiKeyAuthenticatorImpl(
     apiKeyConfig: ApiKeyConfig,
@@ -23,91 +21,70 @@ case class ApiKeyAuthenticatorImpl(
 
   override def isEnabled: Boolean = apiKeyConfig.enabled
 
-  override def authenticate(apiKey: String): IO[AuthenticationError, Entity] = {
+  override def authenticate(apiKey: String): IO[InvalidCredentials, Entity] = {
     if (apiKeyConfig.enabled) {
       if (apiKeyConfig.authenticateAsDefaultUser) {
         ZIO.succeed(Entity.Default)
       } else {
         authenticateBy(apiKey)
           .catchSome {
-            case AuthenticationRepositoryError.AuthenticationNotFound(method, secret)
-                if apiKeyConfig.autoProvisioning =>
+            case InvalidCredentials(message) if apiKeyConfig.autoProvisioning =>
               provisionNewEntity(apiKey)
-          }
-          .mapError {
-            case AuthenticationRepositoryError.AuthenticationNotFound(method, secret) =>
-              InvalidCredentials("Invalid API key")
-            case AuthenticationRepositoryError.StorageError(cause) =>
-              UnexpectedError("Internal error")
-            case AuthenticationRepositoryError.UnexpectedError(cause) =>
-              UnexpectedError("Internal error")
-            case AuthenticationRepositoryError.ServiceError(message) =>
-              UnexpectedError("Internal error")
-            case AuthenticationRepositoryError.AuthenticationCompromised(entityId, amt, secret) =>
-              InvalidCredentials("API key is compromised")
           }
       }
     } else {
-      ZIO.fail(
-        AuthenticationMethodNotEnabled(s"Authentication method not enabled: ${AuthenticationMethodType.ApiKey.value}")
-      )
+      ZIO
+        .fail(
+          AuthenticationMethodNotEnabled(s"Authentication method not enabled: ${AuthenticationMethodType.ApiKey.value}")
+        )
+        .orDieAsUnmanagedFailure
     }
   }
 
-  protected[apikey] def provisionNewEntity(apiKey: String): IO[AuthenticationRepositoryError, Entity] = synchronized {
+  protected[apikey] def provisionNewEntity(apiKey: String): UIO[Entity] = synchronized {
     for {
       wallet <- walletManagementService
         .createWallet(Wallet("Auto provisioned wallet", WalletId.random))
-        .mapError(cause => AuthenticationRepositoryError.UnexpectedError(cause))
+        .orDieAsUnmanagedFailure
         .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
       entityToCreate = Entity(name = "Auto provisioned entity", walletId = wallet.id.toUUID)
-      entity <- entityService
-        .create(entityToCreate)
-        .mapError(entityServiceError => AuthenticationRepositoryError.ServiceError(entityServiceError.message))
+      entity <- entityService.create(entityToCreate).orDieAsUnmanagedFailure
       _ <- add(entity.id, apiKey)
-        .mapError(are => AuthenticationRepositoryError.ServiceError(are.message))
     } yield entity
   }
 
-  protected[apikey] def authenticateBy(apiKey: String): IO[AuthenticationRepositoryError, Entity] = {
+  protected[apikey] def authenticateBy(apiKey: String): IO[InvalidCredentials, Entity] = {
     for {
       saltAndApiKey <- ZIO.succeed(apiKeyConfig.salt + apiKey)
       secret <- ZIO
         .fromTry(Try(Sha256Hash.compute(saltAndApiKey.getBytes).hexEncoded))
-        .logError("Failed to compute SHA256 hash")
-        .mapError(cause => AuthenticationRepositoryError.UnexpectedError(cause))
+        .orDie
       entityId <- repository
-        .getEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret)
-      entity <- entityService
-        .getById(entityId)
-        .mapError(entityServiceError => AuthenticationRepositoryError.ServiceError(entityServiceError.message))
+        .findEntityIdByMethodAndSecret(AuthenticationMethodType.ApiKey, secret)
+        .someOrFail(InvalidCredentials("Invalid API key"))
+      entity <- entityService.getById(entityId).orDieAsUnmanagedFailure
     } yield entity
   }
 
-  override def add(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit] = {
+  override def add(entityId: UUID, apiKey: String): UIO[Unit] = {
     for {
       saltAndApiKey <- ZIO.succeed(apiKeyConfig.salt + apiKey)
       secret <- ZIO
         .fromTry(Try(Sha256Hash.compute(saltAndApiKey.getBytes).hexEncoded))
-        .logError("Failed to compute SHA256 hash")
-        .mapError(cause => AuthenticationError.UnexpectedError(cause.getMessage))
+        .orDie
       _ <- repository
         .insert(entityId, AuthenticationMethodType.ApiKey, secret)
-        .logError(s"Insert operation failed for entityId: $entityId")
-        .mapError(are => AuthenticationError.UnexpectedError(are.message))
+        .orDieAsUnmanagedFailure
     } yield ()
   }
 
-  override def delete(entityId: UUID, apiKey: String): IO[AuthenticationError, Unit] = {
+  override def delete(entityId: UUID, apiKey: String): UIO[Unit] = {
     for {
       saltAndApiKey <- ZIO.succeed(apiKeyConfig.salt + apiKey)
       secret <- ZIO
         .fromTry(Try(Sha256Hash.compute(saltAndApiKey.getBytes).hexEncoded))
-        .logError("Failed to compute SHA256 hash")
-        .mapError(cause => AuthenticationError.UnexpectedError(cause.getMessage))
-      _ <- repository
-        .delete(entityId, AuthenticationMethodType.ApiKey, secret)
-        .mapError(are => AuthenticationError.UnexpectedError(are.message))
+        .orDie
+      _ <- repository.delete(entityId, AuthenticationMethodType.ApiKey, secret)
     } yield ()
   }
 }

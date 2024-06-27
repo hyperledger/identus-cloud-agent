@@ -1,6 +1,7 @@
 package org.hyperledger.identus.agent.server
 
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
+import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.http.ZioHttpClient
 import org.hyperledger.identus.agent.server.sql.Migrations as AgentMigrations
@@ -22,17 +23,21 @@ import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.connect.controller.ConnectionControllerImpl
 import org.hyperledger.identus.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
 import org.hyperledger.identus.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
-import org.hyperledger.identus.credential.status.controller.CredentialStatusControllerImpl
+import org.hyperledger.identus.credentialstatus.controller.CredentialStatusControllerImpl
+import org.hyperledger.identus.didcomm.controller.DIDCommControllerImpl
 import org.hyperledger.identus.event.controller.EventControllerImpl
 import org.hyperledger.identus.event.notification.EventNotificationServiceImpl
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
+import org.hyperledger.identus.iam.authentication.{DefaultAuthenticator, Oid4vciAuthenticatorFactory}
 import org.hyperledger.identus.iam.authentication.apikey.JdbcAuthenticationRepository
-import org.hyperledger.identus.iam.authorization.DefaultPermissionManagementService
 import org.hyperledger.identus.iam.authorization.core.EntityPermissionManagementService
+import org.hyperledger.identus.iam.authorization.DefaultPermissionManagementService
 import org.hyperledger.identus.iam.entity.http.controller.{EntityController, EntityControllerImpl}
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementControllerImpl
 import org.hyperledger.identus.issue.controller.IssueControllerImpl
 import org.hyperledger.identus.mercury.*
+import org.hyperledger.identus.oid4vci.controller.CredentialIssuerControllerImpl
+import org.hyperledger.identus.oid4vci.service.OIDCCredentialIssuerServiceImpl
+import org.hyperledger.identus.oid4vci.storage.InMemoryIssuanceSessionService
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.core.service.verification.VcVerificationServiceImpl
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
@@ -46,6 +51,7 @@ import org.hyperledger.identus.pollux.sql.repository.{
   JdbcCredentialRepository,
   JdbcCredentialSchemaRepository,
   JdbcCredentialStatusListRepository,
+  JdbcOID4VCIIssuerMetadataRepository,
   JdbcPresentationRepository,
   JdbcVerificationPolicyRepository,
   Migrations as PolluxMigrations
@@ -54,14 +60,13 @@ import org.hyperledger.identus.presentproof.controller.PresentProofControllerImp
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.system.controller.SystemControllerImpl
 import org.hyperledger.identus.verification.controller.VcVerificationControllerImpl
-import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
 import zio.*
+import zio.logging.*
+import zio.logging.backend.SLF4J
+import zio.logging.LogFormat.*
 import zio.metrics.connectors.micrometer
 import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics
-import zio.logging.*
-import zio.logging.LogFormat.*
-import zio.logging.backend.SLF4J
 
 import java.security.Security
 
@@ -95,9 +100,9 @@ object MainApp extends ZIOAppDefault {
   } yield ()
 
   private val migrations = for {
-    _ <- ZIO.serviceWithZIO[PolluxMigrations](_.migrate)
-    _ <- ZIO.serviceWithZIO[ConnectMigrations](_.migrate)
-    _ <- ZIO.serviceWithZIO[AgentMigrations](_.migrate)
+    _ <- ZIO.serviceWithZIO[PolluxMigrations](_.migrateAndRepair)
+    _ <- ZIO.serviceWithZIO[ConnectMigrations](_.migrateAndRepair)
+    _ <- ZIO.serviceWithZIO[AgentMigrations](_.migrateAndRepair)
     _ <- ZIO.logInfo("Running post-migration RLS checks for DB application users")
     _ <- PolluxMigrations.validateRLS.provide(RepoModule.polluxContextAwareTransactorLayer)
     _ <- ConnectMigrations.validateRLS.provide(RepoModule.connectContextAwareTransactorLayer)
@@ -163,6 +168,7 @@ object MainApp extends ZIOAppDefault {
           EntityControllerImpl.layer,
           WalletManagementControllerImpl.layer,
           EventControllerImpl.layer,
+          DIDCommControllerImpl.layer,
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverLayer,
@@ -189,6 +195,7 @@ object MainApp extends ZIOAppDefault {
           DefaultAuthenticator.layer,
           DefaultPermissionManagementService.layer,
           EntityPermissionManagementService.layer,
+          Oid4vciAuthenticatorFactory.layer,
           // grpc
           GrpcModule.prismNodeStubLayer,
           // storage
@@ -203,7 +210,13 @@ object MainApp extends ZIOAppDefault {
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialSchemaRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcOID4VCIIssuerMetadataRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
+          // oidc
+          CredentialIssuerControllerImpl.layer,
+          InMemoryIssuanceSessionService.layer,
+          OID4VCIIssuerMetadataServiceImpl.layer,
+          OIDCCredentialIssuerServiceImpl.layer,
           // event notification service
           ZLayer.succeed(500) >>> EventNotificationServiceImpl.layer,
           // HTTP client

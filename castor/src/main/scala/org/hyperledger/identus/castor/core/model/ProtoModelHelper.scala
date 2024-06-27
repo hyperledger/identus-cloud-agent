@@ -2,7 +2,10 @@ package org.hyperledger.identus.castor.core.model
 
 import com.google.protobuf.ByteString
 import io.circe.Json
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
+import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
+import io.iohk.atala.prism.protos.common_models.OperationStatus
+import io.iohk.atala.prism.protos.node_models.KeyUsage
+import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
 import org.hyperledger.identus.castor.core.model.did.{
   DIDData,
   EllipticCurve,
@@ -21,15 +24,13 @@ import org.hyperledger.identus.castor.core.model.did.{
   UpdateDIDAction,
   VerificationRelationship
 }
-import io.iohk.atala.prism.protos.common_models.OperationStatus
-import io.iohk.atala.prism.protos.node_models.KeyUsage
-import io.iohk.atala.prism.protos.node_models.PublicKey.KeyData
-import io.iohk.atala.prism.protos.{common_models, node_api, node_models}
+import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
 import org.hyperledger.identus.shared.models.Base64UrlString
 import org.hyperledger.identus.shared.utils.Traverse.*
+import zio.*
+
 import java.time.Instant
 import scala.language.implicitConversions
-import zio.*
 
 object ProtoModelHelper extends ProtoModelHelper
 
@@ -191,7 +192,7 @@ private[castor] trait ProtoModelHelper {
         case ServiceType.Single(name) => name.value
         case ts: ServiceType.Multiple =>
           val names = ts.values.map(_.value).map(Json.fromString)
-          Json.arr(names: _*).noSpaces
+          Json.arr(names*).noSpaces
       }
     }
   }
@@ -209,7 +210,7 @@ private[castor] trait ProtoModelHelper {
             case UriOrJsonEndpoint.Uri(uri)   => Json.fromString(uri.value)
             case UriOrJsonEndpoint.Json(json) => Json.fromJsonObject(json)
           }
-          Json.arr(uris: _*).noSpaces
+          Json.arr(uris*).noSpaces
       }
     }
   }
@@ -249,10 +250,10 @@ private[castor] trait ProtoModelHelper {
       Clock.instant.map { now =>
         didData
           .withPublicKeys(didData.publicKeys.filter { publicKey =>
-            publicKey.revokedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime isAfter now)
+            publicKey.revokedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime `isAfter` now)
           })
           .withServices(didData.services.filter { service =>
-            service.deletedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime isAfter now)
+            service.deletedOn.flatMap(_.toInstant).forall(revokeTime => revokeTime `isAfter` now)
           })
       }
     }
@@ -369,7 +370,7 @@ private[castor] trait ProtoModelHelper {
             case Nil          => Left("the service type cannot be an empty JSON array")
           }
           .filterOrElse(
-            _ => s == io.circe.Json.arr(jsonArr: _*).noSpaces,
+            _ => s == io.circe.Json.arr(jsonArr*).noSpaces,
             "the service type is a valid JSON array of strings, but not conform to the ABNF"
           )
       }

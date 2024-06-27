@@ -1,17 +1,17 @@
 package org.hyperledger.identus.connect.core.service
 
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
-import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
+import org.hyperledger.identus.*
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.*
+import org.hyperledger.identus.connect.core.model.ConnectionRecord
+import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.repository.ConnectionRepository
-import org.hyperledger.identus.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.utils.Base64Utils
+import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
+import org.hyperledger.identus.shared.utils.Base64Utils
 import org.hyperledger.identus.shared.validation.ValidationUtils
 import zio.*
 import zio.prelude.*
@@ -55,7 +55,7 @@ private class ConnectionServiceImpl(
       count <- connectionRepository.create(record)
     } yield record
 
-  private[this] def validateInputs(
+  private def validateInputs(
       label: Option[String],
       goalCode: Option[String],
       goal: Option[String]
@@ -78,14 +78,14 @@ private class ConnectionServiceImpl(
       limit: Int,
       states: ProtocolState*
   ): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
-    connectionRepository.findByStates(ignoreWithZeroRetries, limit, states: _*)
+    connectionRepository.findByStates(ignoreWithZeroRetries, limit, states*)
 
   override def findRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ProtocolState*
   ): UIO[Seq[ConnectionRecord]] =
-    connectionRepository.findByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+    connectionRepository.findByStatesForAllWallets(ignoreWithZeroRetries, limit, states*)
 
   override def findRecordById(
       recordId: UUID
@@ -256,7 +256,7 @@ private class ConnectionServiceImpl(
       record <- connectionRepository.getById(record.id)
     } yield record
 
-  private[this] def getRecordByIdAndStates(
+  private def getRecordByIdAndStates(
       recordId: UUID,
       states: ProtocolState*
   ): ZIO[WalletAccessContext, RecordIdNotFound | InvalidStateForOperation, ConnectionRecord] = {
@@ -267,7 +267,7 @@ private class ConnectionServiceImpl(
     } yield record
   }
 
-  private[this] def getRecordByThreadIdAndStates(
+  private def getRecordByThreadIdAndStates(
       thid: String,
       states: ProtocolState*
   ): ZIO[WalletAccessContext, ThreadIdNotFound | InvalidStateForOperation, ConnectionRecord] = {
@@ -278,13 +278,13 @@ private class ConnectionServiceImpl(
     } yield record
   }
 
-  private[this] def ensureRecordHasExpectedState(record: ConnectionRecord, states: ProtocolState*) =
+  private def ensureRecordHasExpectedState(record: ConnectionRecord, states: ProtocolState*) =
     record.protocolState match {
       case s if states.contains(s) => ZIO.unit
       case state                   => ZIO.fail(InvalidStateForOperation(state))
     }
 
-  private[this] def updateConnectionProtocolState(
+  private def updateConnectionProtocolState(
       recordId: UUID,
       from: ProtocolState,
       to: ProtocolState,
@@ -295,9 +295,9 @@ private class ConnectionServiceImpl(
     } yield record
   }
 
-  def reportProcessingFailure(
+  override def reportProcessingFailure(
       recordId: UUID,
-      failReason: Option[String]
+      failReason: Option[Failure]
   ): URIO[WalletAccessContext, Unit] =
     connectionRepository.updateAfterFail(recordId, failReason)
 

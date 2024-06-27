@@ -1,14 +1,17 @@
 package org.hyperledger.identus.agent.walletapi.service
 
-import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.model.WalletSeed
-import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
+import org.hyperledger.identus.agent.walletapi.model.{Wallet, WalletSeed}
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.{
+  DuplicatedWalletId,
+  DuplicatedWalletSeed,
+  TooManyPermittedWallet,
+  TooManyWebhookError
+}
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceImpl.MAX_WEBHOOK_PER_WALLET
+import org.hyperledger.identus.agent.walletapi.storage.{WalletNonSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.crypto.Apollo
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
 import zio.*
 
 import java.util.UUID
@@ -23,13 +26,13 @@ class WalletManagementServiceImpl(
   override def createWallet(
       wallet: Wallet,
       seed: Option[WalletSeed]
-  ): ZIO[WalletAdministrationContext, WalletManagementServiceError, Wallet] =
+  ): ZIO[WalletAdministrationContext, TooManyPermittedWallet | DuplicatedWalletId | DuplicatedWalletSeed, Wallet] =
     for {
       _ <- ZIO.serviceWithZIO[WalletAdministrationContext] {
         case WalletAdministrationContext.Admin()                                                   => ZIO.unit
         case WalletAdministrationContext.SelfService(permittedWallets) if permittedWallets.isEmpty => ZIO.unit
         case WalletAdministrationContext.SelfService(_) =>
-          ZIO.fail(WalletManagementServiceError.TooManyPermittedWallet())
+          ZIO.fail(TooManyPermittedWallet())
       }
       seed <- seed.fold(
         apollo.secp256k1.randomBip32Seed
@@ -39,70 +42,75 @@ class WalletManagementServiceImpl(
               .orDieWith(msg => Exception(s"Wallet seed generation failed: $msg"))
           }
       )(ZIO.succeed)
+      _ <- nonSecretStorage.findWalletBySeed(seed.sha256Digest).flatMap {
+        case Some(w) => ZIO.fail(DuplicatedWalletSeed())
+        case None    => ZIO.unit
+      }
+      _ <- nonSecretStorage.findWalletById(wallet.id).flatMap {
+        case Some(w) => ZIO.fail(DuplicatedWalletId(wallet.id))
+        case None    => ZIO.unit
+      }
       createdWallet <- nonSecretStorage
         .createWallet(wallet, seed.sha256Digest)
-        .mapError[WalletManagementServiceError](e => e)
       _ <- secretStorage
         .setWalletSeed(seed)
-        .mapError(WalletManagementServiceError.UnexpectedStorageError.apply)
         .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
     } yield createdWallet
 
-  override def getWallet(
+  override def findWallet(
       walletId: WalletId
-  ): ZIO[WalletAdministrationContext, WalletManagementServiceError, Option[Wallet]] = {
+  ): URIO[WalletAdministrationContext, Option[Wallet]] = {
     ZIO
       .serviceWith[WalletAdministrationContext](_.isAuthorized(walletId))
       .flatMap {
-        case true  => nonSecretStorage.getWallet(walletId).mapError(e => e)
+        case true  => nonSecretStorage.findWalletById(walletId)
         case false => ZIO.none
       }
   }
 
   override def getWallets(
       walletIds: Seq[WalletId]
-  ): ZIO[WalletAdministrationContext, WalletManagementServiceError, Seq[Wallet]] = {
+  ): URIO[WalletAdministrationContext, Seq[Wallet]] = {
     ZIO
       .serviceWith[WalletAdministrationContext](ctx => walletIds.filter(ctx.isAuthorized))
-      .flatMap { filteredIds => nonSecretStorage.getWallets(filteredIds).mapError(e => e) }
+      .flatMap { filteredIds => nonSecretStorage.getWallets(filteredIds) }
   }
 
   override def listWallets(
       offset: Option[Int],
       limit: Option[Int]
-  ): ZIO[WalletAdministrationContext, WalletManagementServiceError, (Seq[Wallet], Int)] =
+  ): URIO[WalletAdministrationContext, (Seq[Wallet], Int)] =
     ZIO.serviceWithZIO[WalletAdministrationContext] {
       case WalletAdministrationContext.Admin() =>
         nonSecretStorage
           .listWallet(offset = offset, limit = limit)
-          .mapError(e => e)
       case WalletAdministrationContext.SelfService(permittedWallets) =>
         nonSecretStorage
           .getWallets(permittedWallets)
           .map(wallets => (wallets, wallets.length))
-          .mapError(e => e)
     }
 
-  override def listWalletNotifications
-      : ZIO[WalletAccessContext, WalletManagementServiceError, Seq[EventNotificationConfig]] =
+  override def listWalletNotifications: URIO[WalletAccessContext, Seq[EventNotificationConfig]] =
     nonSecretStorage.walletNotification
-      .mapError(e => e)
 
   override def createWalletNotification(
       config: EventNotificationConfig
-  ): ZIO[WalletAccessContext, WalletManagementServiceError, EventNotificationConfig] =
-    nonSecretStorage
-      .createWalletNotification(config)
-      .mapError(e => e)
+  ): ZIO[WalletAccessContext, TooManyWebhookError, Unit] =
+    for {
+      count <- nonSecretStorage.countWalletNotification
+      _ <-
+        if (count < MAX_WEBHOOK_PER_WALLET) nonSecretStorage.createWalletNotification(config)
+        else ZIO.fail(TooManyWebhookError(config.walletId, MAX_WEBHOOK_PER_WALLET))
+    } yield ()
 
-  override def deleteWalletNotification(id: UUID): ZIO[WalletAccessContext, WalletManagementServiceError, Unit] =
+  override def deleteWalletNotification(id: UUID): URIO[WalletAccessContext, Unit] =
     nonSecretStorage
       .deleteWalletNotification(id)
-      .mapError(e => e)
 
 }
 
 object WalletManagementServiceImpl {
+  val MAX_WEBHOOK_PER_WALLET = 1
   val layer: URLayer[Apollo & WalletNonSecretStorage & WalletSecretStorage, WalletManagementService] = {
     ZLayer.fromFunction(WalletManagementServiceImpl(_, _, _))
   }

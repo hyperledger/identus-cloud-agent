@@ -7,8 +7,7 @@ import io.getquill.*
 import org.hyperledger.identus.pollux.sql.model.db.{CredentialSchema, CredentialSchemaSql}
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.MigrationAspects.*
 import zio.*
@@ -56,7 +55,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
       Gen.fromIterable(Vocabulary.verifiableCredentialClaims)
     val schemaAttributes = Gen.setOfBounded(1, 4)(schemaAttribute).map(_.toList)
     val jsonSchema =
-      schemaAttributes.map(attributes => Json.Arr(attributes.map(Json.Str(_)): _*))
+      schemaAttributes.map(attributes => Json.Arr(attributes.map(Json.Str(_))*))
     val schemaAuthor =
       Gen.int(1000000, 9999999).map(i => s"did:prism:4fb06243213500578f59588de3e1dd9b266ec1b61e43b0ff86ad0712f$i")
     val schemaAuthored = Gen.offsetDateTime

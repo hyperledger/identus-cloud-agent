@@ -1,7 +1,8 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError
 import org.hyperledger.identus.pollux.core.model.{VerificationPolicy, VerificationPolicyConstraint}
+import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError
+import org.hyperledger.identus.pollux.core.model.error.VerificationPolicyError.NotFoundError
 import org.hyperledger.identus.pollux.core.repository.VerificationPolicyRepository
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
@@ -17,9 +18,6 @@ class VerificationPolicyServiceImpl(
     repository: VerificationPolicyRepository
 ) extends VerificationPolicyService {
 
-  private val throwableToVerificationPolicyError: Throwable => VerificationPolicyError =
-    VerificationPolicyError.RepositoryError.apply
-
   override def create(
       name: String,
       description: String,
@@ -29,34 +27,44 @@ class VerificationPolicyServiceImpl(
       verificationPolicy <- VerificationPolicy.make(name, description, constraints)
       createdVerificationPolicy <- repository.create(verificationPolicy)
     } yield createdVerificationPolicy
-  }.mapError(throwableToVerificationPolicyError)
+  }
 
-  override def get(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]] =
+  override def find(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]] =
     repository
-      .get(id)
-      .mapError(throwableToVerificationPolicyError)
+      .findById(id)
+
+  override def get(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, VerificationPolicy] = {
+    repository
+      .findById(id)
+      .flatMap {
+        case None        => ZIO.fail(NotFoundError(id))
+        case Some(value) => ZIO.succeed(value)
+      }
+  }
 
   override def update(
       id: UUID,
       nonce: Int,
       verificationPolicy: VerificationPolicy
-  ): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]] =
-    repository
-      .update(id, nonce, verificationPolicy)
-      .mapError(throwableToVerificationPolicyError)
+  ): ZIO[WalletAccessContext, VerificationPolicyError, VerificationPolicy] =
+    for {
+      _ <- get(id)
+      result <- repository.update(id, nonce, verificationPolicy)
+    } yield result
 
-  override def delete(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, Option[VerificationPolicy]] =
-    repository
-      .delete(id)
-      .mapError(throwableToVerificationPolicyError)
+  override def delete(id: UUID): ZIO[WalletAccessContext, VerificationPolicyError, VerificationPolicy] =
+    for {
+      _ <- get(id)
+      result <- repository.delete(id)
+    } yield result
 
   override def totalCount(): ZIO[WalletAccessContext, VerificationPolicyError, Long] =
-    repository.totalCount().mapError(throwableToVerificationPolicyError)
+    repository.totalCount()
 
   override def filteredCount(
       name: Option[String]
   ): ZIO[WalletAccessContext, VerificationPolicyError, Long] =
-    repository.filteredCount(name).mapError(throwableToVerificationPolicyError)
+    repository.filteredCount(name)
 
   override def lookup(
       name: Option[String],
@@ -65,5 +73,5 @@ class VerificationPolicyServiceImpl(
   ): ZIO[WalletAccessContext, VerificationPolicyError, List[VerificationPolicy]] =
     repository
       .lookup(name, offset, limit)
-      .mapError(throwableToVerificationPolicyError)
+
 }

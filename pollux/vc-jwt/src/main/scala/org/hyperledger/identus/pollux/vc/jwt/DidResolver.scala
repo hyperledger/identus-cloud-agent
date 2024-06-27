@@ -1,20 +1,20 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
+import io.circe.Json
 import org.hyperledger.identus.castor.core.model.did.w3c.{
+  makeW3CResolver,
   DIDDocumentRepr,
   DIDResolutionErrorRepr,
   PublicKeyJwk,
   PublicKeyRepr,
   PublicKeyReprOrRef,
-  ServiceRepr,
-  makeW3CResolver
+  ServiceRepr
 }
 import org.hyperledger.identus.castor.core.service.DIDService
 import zio.*
 
 import java.time.Instant
 import scala.annotation.unused
-import io.circe.Json
 
 trait DidResolver {
   def resolve(didUrl: String): UIO[DIDResolutionResult]
@@ -78,20 +78,7 @@ case class VerificationMethod(
     blockchainAccountId: Option[String] = Option.empty,
     ethereumAddress: Option[String] = Option.empty
 )
-case class JsonWebKey(
-    alg: Option[String] = Option.empty,
-    crv: Option[String] = Option.empty,
-    e: Option[String] = Option.empty,
-    d: Option[String] = Option.empty,
-    ext: Option[Boolean] = Option.empty,
-    key_ops: Vector[String] = Vector.empty,
-    kid: Option[String] = Option.empty,
-    kty: String,
-    n: Option[String] = Option.empty,
-    use: Option[String] = Option.empty,
-    x: Option[String] = Option.empty,
-    y: Option[String] = Option.empty
-)
+
 case class Service(id: String, `type`: String | Seq[String], serviceEndpoint: Json)
 
 /** An adapter for translating Castor resolver to resolver defined in JWT library */
@@ -176,4 +163,8 @@ class PrismDidResolver(didService: DIDService) extends DidResolver {
     )
   }
 
+}
+
+object PrismDidResolver {
+  val layer: URLayer[DIDService, DidResolver] = ZLayer.fromFunction(PrismDidResolver(_))
 }

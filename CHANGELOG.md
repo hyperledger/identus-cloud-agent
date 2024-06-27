@@ -1,3 +1,52 @@
+## [1.36.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.36.0...cloud-agent-v1.36.1) (2024-06-09)
+
+
+### Bug Fixes
+
+* Helm chart refactor vol2 ([#1162](https://github.com/hyperledger/identus-cloud-agent/issues/1162)) ([72fc6d1](https://github.com/hyperledger/identus-cloud-agent/commit/72fc6d1a61a4a1a5c0b1c81d3b0742538c8b9bc7))
+
+# [1.36.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.35.1...cloud-agent-v1.36.0) (2024-06-09)
+
+
+### Bug Fixes
+
+* Credential Defintion Error Handling Part 2 ([#1155](https://github.com/hyperledger/identus-cloud-agent/issues/1155)) ([2df5306](https://github.com/hyperledger/identus-cloud-agent/commit/2df530695522789bed6624bae8bd07433c05ddda))
+* Credential Defintion Error Handling Part 2 ([#1156](https://github.com/hyperledger/identus-cloud-agent/issues/1156)) ([5755504](https://github.com/hyperledger/identus-cloud-agent/commit/57555047cd56ae31bbf14601fe8b5d96f838e033))
+* Helm chart refactor ([#1160](https://github.com/hyperledger/identus-cloud-agent/issues/1160)) ([4b59112](https://github.com/hyperledger/identus-cloud-agent/commit/4b59112af649a00e17d6e5e0e927f5b972629ec9))
+* pick right key type when creating corresponding issuer ([#1157](https://github.com/hyperledger/identus-cloud-agent/issues/1157)) ([22f0448](https://github.com/hyperledger/identus-cloud-agent/commit/22f0448ca878b385eada89d805c8f993c52173a2))
+* Schema Error Handling ([#1138](https://github.com/hyperledger/identus-cloud-agent/issues/1138)) ([a9da840](https://github.com/hyperledger/identus-cloud-agent/commit/a9da84098bd56eeb9d64e7b2bdd78d5596cf35c5))
+* Update the Holder to send the presentation only, No claims to disclose is needed separately  ([#1158](https://github.com/hyperledger/identus-cloud-agent/issues/1158)) ([9eaa5d4](https://github.com/hyperledger/identus-cloud-agent/commit/9eaa5d444665dbda00038a9032b890afcfa4bc15))
+
+
+### Features
+
+* improve ZIO failures and defects in credential definition ([#1133](https://github.com/hyperledger/identus-cloud-agent/issues/1133)) ([d6dfb72](https://github.com/hyperledger/identus-cloud-agent/commit/d6dfb72e298127b3e9d3a4c6577f62f4c8a1970a))
+* Remove double Error logs in DIDController ([#1140](https://github.com/hyperledger/identus-cloud-agent/issues/1140)) ([888ebb4](https://github.com/hyperledger/identus-cloud-agent/commit/888ebb4b484224d9c73674cffdf7d00777cfb4dc))
+
+## [1.35.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.35.0...cloud-agent-v1.35.1) (2024-06-05)
+
+
+### Bug Fixes
+
+* Add expiration time for cloud-agent ([#1132](https://github.com/hyperledger/identus-cloud-agent/issues/1132)) ([f719120](https://github.com/hyperledger/identus-cloud-agent/commit/f719120211a83e96e6e4e282cc70e9f860d9298d))
+* Chart refactor ([#1143](https://github.com/hyperledger/identus-cloud-agent/issues/1143)) ([f309a0e](https://github.com/hyperledger/identus-cloud-agent/commit/f309a0e7c2101c2567498b060ee71a6964d3b9e6))
+
+# [1.35.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.34.0...cloud-agent-v1.35.0) (2024-06-03)
+
+
+### Bug Fixes
+
+*  SemanticCheckOfClaims In Verification API ([#1124](https://github.com/hyperledger/identus-cloud-agent/issues/1124)) ([7cb4192](https://github.com/hyperledger/identus-cloud-agent/commit/7cb4192d41a779e2ba4de815b2e8ec469636e485))
+*  update the jose dependency and switch back to the official library ([#1117](https://github.com/hyperledger/identus-cloud-agent/issues/1117)) ([3608aaf](https://github.com/hyperledger/identus-cloud-agent/commit/3608aafd980472cb63e5164339681fb079190dba))
+* Changing .chart.name reference, adding name override ([#1129](https://github.com/hyperledger/identus-cloud-agent/issues/1129)) ([650ae3b](https://github.com/hyperledger/identus-cloud-agent/commit/650ae3ba94ae322fc745eb07658f1663b3e7e321))
+* VC Verification API Doc ([#1118](https://github.com/hyperledger/identus-cloud-agent/issues/1118)) ([d70d4b7](https://github.com/hyperledger/identus-cloud-agent/commit/d70d4b74cb9f21d72e735f9650b746565068f282))
+
+
+### Features
+
+* **agent:** ATL-6839 migrate DIDComm endpoint to tapir ([#1116](https://github.com/hyperledger/identus-cloud-agent/issues/1116)) ([2f4f7c3](https://github.com/hyperledger/identus-cloud-agent/commit/2f4f7c395523763c3c7066781017430523317841))
+* integrate SD JWT ([#1016](https://github.com/hyperledger/identus-cloud-agent/issues/1016)) ([9d7948f](https://github.com/hyperledger/identus-cloud-agent/commit/9d7948fc8208edf9f8c1712a0cd6902474f0814d))
+
 # [1.34.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.33.1...cloud-agent-v1.34.0) (2024-05-27)
 
 

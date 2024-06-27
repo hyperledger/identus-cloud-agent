@@ -3,8 +3,9 @@ package org.hyperledger.identus.presentproof.controller.http
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.presentproof.controller.http.RequestPresentationInput.annotations
-import sttp.tapir.Schema.annotations.{description, encodedExample}
 import sttp.tapir.{Schema, Validator}
+import sttp.tapir.json.zio.*
+import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID
@@ -22,6 +23,9 @@ final case class RequestPresentationInput(
     @description(annotations.anoncredPresentationRequest.description)
     @encodedExample(annotations.anoncredPresentationRequest.example)
     anoncredPresentationRequest: Option[AnoncredPresentationRequestV1],
+    @description(annotations.claims.description)
+    @encodedExample(annotations.claims.example)
+    claims: Option[zio.json.ast.Json.Obj],
     @description(annotations.credentialFormat.description)
     @encodedExample(annotations.credentialFormat.example)
     credentialFormat: Option[String],
@@ -93,7 +97,19 @@ object RequestPresentationInput {
             )
           )
         )
-
+    object claims
+        extends Annotation[Option[zio.json.ast.Json.Obj]](
+          description = """
+                        |The set of claims to be disclosed from the  issued credential.
+                        |The JSON object should comply with the schema applicable for this offer (i.e. 'schemaId' or 'credentialDefinitionId').
+                        |""".stripMargin,
+          example = Some(
+            zio.json.ast.Json.Obj(
+              "firstname" -> zio.json.ast.Json.Str("Alice"),
+              "lastname" -> zio.json.ast.Json.Str("Wonderland"),
+            )
+          )
+        )
     object credentialFormat
         extends Annotation[Option[String]](
           description = "The credential format (default to 'JWT')",
@@ -101,6 +117,7 @@ object RequestPresentationInput {
           validator = Validator.enumeration(
             List(
               Some("JWT"),
+              Some("SDJWT"),
               Some("AnonCreds")
             )
           )

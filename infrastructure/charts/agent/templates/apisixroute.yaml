@@ -5,7 +5,7 @@ metadata:
   name: agent-route
   namespace: "{{ .Release.Namespace }}"
   labels:
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   http:
   - name: agent-rule
@@ -16,7 +16,7 @@ spec:
       {{- end }}
       paths:
       - /prism-agent/*
-      - /{{ .Chart.Name }}/*
+      - /{{ include "cloud-agent.name" . }}/*
     backends:
        - serviceName: agent-server-tapir-service
          servicePort: 8085
@@ -27,16 +27,16 @@ spec:
     - name: proxy-rewrite
       enable: true
       config:
-        regex_uri: ["^/(prism-agent|{{ .Chart.Name }})/(.*)","/$2"]
+        regex_uri: ["^/(prism-agent|{{ include "cloud-agent.name" . }})/(.*)","/$2"]
     - name: uri-blocker
       enable: true
       config:
         block_rules: ["_system/metrics"]
         rejected_message: "access to metrics resource is not allowed from an external location"
-    {{ template "cors" . }}
-    {{ template "consumer-restriction" . }}
-    {{ template "headers.requestId" . }}
-    {{ template "headers.security" . }}
+    {{- template "cors" . }}
+    {{- template "consumer-restriction" . }}
+    {{- template "headers.requestId" . }}
+    {{- template "headers.security" . }}
 
 ---
 
@@ -46,7 +46,7 @@ metadata:
   name: agent-didcomm-route
   namespace: "{{ .Release.Namespace }}"
   labels:
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4}}
 spec:
   http:
   - name: agent-didcomm-rule
@@ -57,7 +57,7 @@ spec:
       {{- end }}
       paths:
       - /prism-agent/didcomm*
-      - /{{ .Chart.Name }}/didcomm*
+      - /{{ include "cloud-agent.name" . }}/didcomm*
     backends:
       - serviceName: agent-server-didcomm-service
         servicePort: 8090
@@ -65,10 +65,10 @@ spec:
     - name: proxy-rewrite
       enable: true
       config:
-        regex_uri: ["^/(prism-agent|{{ .Chart.Name }})/didcomm(.*)", "/$2"]
-    {{ template "cors" . }}
-    {{ template "headers.requestId" . }}
-    {{ template "headers.security" . }}
+        regex_uri: ["^/(prism-agent|{{ include "cloud-agent.name" . }})/didcomm(.*)", "/$2"]
+    {{- template "cors" . }}
+    {{- template "headers.requestId" . }}
+    {{- template "headers.security" . }}
 
 ---
 
@@ -78,7 +78,7 @@ metadata:
   name: agent-schema-registry-route
   namespace: "{{ .Release.Namespace }}"
   labels:
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   http:
   - name: agent-schema-registry-rule
@@ -89,7 +89,7 @@ spec:
       {{- end }}
       paths:
       - /prism-agent/schema-registry/schemas/*
-      - /{{ .Chart.Name }}/schema-registry/schemas/*
+      - /{{ include "cloud-agent.name" . }}/schema-registry/schemas/*
       methods:
       - GET
     backends:
@@ -99,10 +99,10 @@ spec:
     - name: proxy-rewrite
       enable: true
       config:
-        regex_uri: ["^/(prism-agent|{{ .Chart.Name }})/schema-registry/schemas/(.*)", "/schema-registry/schemas/$2"]
-    {{ template "cors" . }}
-    {{ template "headers.requestId" . }}
-    {{ template "headers.security" . }}
+        regex_uri: ["^/(prism-agent|{{ include "cloud-agent.name" . }})/schema-registry/schemas/(.*)", "/schema-registry/schemas/$2"]
+    {{- template "cors" . }}
+    {{- template "headers.requestId" . }}
+    {{- template "headers.security" . }}
 
 ---
 
@@ -112,7 +112,7 @@ metadata:
   name: agent-cred-def-registry-route
   namespace: "{{ .Release.Namespace }}"
   labels:
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   http:
   - name: agent-cred-def-registry-rule
@@ -123,7 +123,7 @@ spec:
       {{- end }}
       paths:
         - /prism-agent/credential-definition-registry/definitions/*
-        - /{{ .Chart.Name }}/credential-definition-registry/definitions/*
+        - /{{ include "cloud-agent.name" . }}/credential-definition-registry/definitions/*
       methods:
         - GET
     backends:
@@ -133,10 +133,10 @@ spec:
     - name: proxy-rewrite
       enable: true
       config:
-        regex_uri: ["^/(prism-agent|{{ .Chart.Name }})/credential-definition-registry/definitions/(.*)", "/credential-definition-registry/definitions/$2"]
-    {{ template "cors" . }}
-    {{ template "headers.requestId" . }}
-    {{ template "headers.security" . }}
+        regex_uri: ["^/(prism-agent|{{ include "cloud-agent.name" . }})/credential-definition-registry/definitions/(.*)", "/credential-definition-registry/definitions/$2"]
+    {{- template "cors" . }}
+    {{- template "headers.requestId" . }}
+    {{- template "headers.security" . }}
 
 ---
 
@@ -146,7 +146,7 @@ metadata:
   name: agent-docs-route
   namespace: "{{ .Release.Namespace }}"
   labels:
-    {{ template "labels.common" . }}
+    {{- include "labels.common" . | nindent 4 }}
 spec:
   http:
   - name: agent-docs-rule
@@ -157,7 +157,7 @@ spec:
       {{- end }}
       paths:
       - /prism-agent/docs/*
-      - /{{ .Chart.Name }}/docs/*
+      - /{{ include "cloud-agent.name" . }}/docs/*
     backends:
       - serviceName: agent-server-tapir-service
         servicePort: 8085
@@ -165,10 +165,10 @@ spec:
     - name: proxy-rewrite
       enable: true
       config:
-        regex_uri: ["^/(prism-agent|{{ .Chart.Name }})/docs/(.*)","/docs/$2"]
-    {{ template "cors" . }}
-    {{ template "headers.requestId" . }}
-    {{ template "headers.security" . }}
+        regex_uri: ["^/(prism-agent|{{ include "cloud-agent.name" . }})/docs/(.*)","/docs/$2"]
+    {{- template "cors" . }}
+    {{- template "headers.requestId" . }}
+    {{- template "headers.security" . }}
 
 ---
 {{- end }}

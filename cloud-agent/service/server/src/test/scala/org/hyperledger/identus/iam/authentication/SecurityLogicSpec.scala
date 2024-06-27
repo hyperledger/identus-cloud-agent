@@ -1,9 +1,8 @@
 package org.hyperledger.identus.iam.authentication
 
-import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.agent.walletapi.model.EntityRole
-import org.hyperledger.identus.iam.authentication.AuthenticationError.InvalidCredentials
+import org.hyperledger.identus.agent.walletapi.model.{Entity, EntityRole}
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
+import org.hyperledger.identus.iam.authentication.AuthenticationError.InvalidCredentials
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -77,7 +76,7 @@ object SecurityLogicSpec extends ZIOSpecDefault {
             ApiKeyCredentials(Some("key-3"))
           )(testAuthenticator(entity))
           .exit
-      } yield assert(exit)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Forbidden.code))))
+      } yield assert(exit)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Unauthorized.code))))
     },
     test("authorizeRole accept if the role is matched") {
       val tenantentity = Entity("alice", UUID.randomUUID())
@@ -104,8 +103,8 @@ object SecurityLogicSpec extends ZIOSpecDefault {
         exit2 <- SecurityLogic
           .authorizeRole(ApiKeyCredentials(Some(adminEntity.id.toString())))(tenantAuth)(EntityRole.Tenant)
           .exit
-      } yield assert(exit1)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Forbidden.code)))) &&
-        assert(exit2)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Forbidden.code))))
+      } yield assert(exit1)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Unauthorized.code)))) &&
+        assert(exit2)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Unauthorized.code))))
     },
     test("display first error message that is not MethodNotEnabled error") {
       val alice = Entity("alice", UUID.randomUUID())
@@ -124,7 +123,7 @@ object SecurityLogicSpec extends ZIOSpecDefault {
             )
           )
           .exit
-      } yield assert(exit)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Forbidden.code)))) &&
+      } yield assert(exit)(fails(hasField("status", _.status, equalTo(sttp.model.StatusCode.Unauthorized.code)))) &&
         assert(exit)(fails(hasField("detail", _.detail, isSome(equalTo("invalid credentials")))))
     }
   )

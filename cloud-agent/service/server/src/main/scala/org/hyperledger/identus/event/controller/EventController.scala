@@ -1,23 +1,21 @@
 package org.hyperledger.identus.event.controller
 
 import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.api.http.RequestContext
-import org.hyperledger.identus.api.http.model.CollectionStats
-import org.hyperledger.identus.api.http.model.PaginationInput
+import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.util.PaginationUtils
-import org.hyperledger.identus.event.controller.http.CreateWebhookNotification
-import org.hyperledger.identus.event.controller.http.WebhookNotification
-import org.hyperledger.identus.event.controller.http.WebhookNotificationPage
+import org.hyperledger.identus.event.controller.http.{
+  CreateWebhookNotification,
+  WebhookNotification,
+  WebhookNotificationPage
+}
 import org.hyperledger.identus.event.notification.EventNotificationConfig
-import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementController
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 import java.net.URI
-import scala.language.implicitConversions
 import java.util.UUID
+import scala.language.implicitConversions
 
 trait EventController {
   def createWebhookNotification(
@@ -31,14 +29,7 @@ trait EventController {
   def deleteWebhookNotification(id: UUID)(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, Unit]
 }
 
-object EventController {
-  given Conversion[WalletManagementServiceError, ErrorResponse] =
-    WalletManagementController.walletServiceErrorConversion
-}
-
 class EventControllerImpl(service: WalletManagementService) extends EventController {
-
-  import EventController.given
 
   override def createWebhookNotification(
       request: CreateWebhookNotification
@@ -62,7 +53,7 @@ class EventControllerImpl(service: WalletManagementService) extends EventControl
     // Return paginated result for consistency and to make it future-proof
     val pagination = PaginationInput().toPagination
     for {
-      items <- service.listWalletNotifications.mapError[ErrorResponse](e => e)
+      items <- service.listWalletNotifications
       totalCount = items.length
       stats = CollectionStats(totalCount = totalCount, filteredCount = totalCount)
     } yield WebhookNotificationPage(
@@ -76,11 +67,8 @@ class EventControllerImpl(service: WalletManagementService) extends EventControl
 
   override def deleteWebhookNotification(
       id: UUID
-  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, Unit] = {
-    service
-      .deleteWalletNotification(id)
-      .mapError[ErrorResponse](e => e)
-  }
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, Unit] =
+    service.deleteWalletNotification(id)
 
 }
 

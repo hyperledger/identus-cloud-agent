@@ -3,6 +3,7 @@ package steps.credentials
 import abilities.ListenToEvents
 import common.CredentialSchema
 import interactions.Post
+import interactions.body
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
@@ -13,6 +14,7 @@ import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus.*
 import org.hyperledger.identus.client.models.*
+import kotlin.time.Duration.Companion.seconds
 
 class IssueCredentialsSteps {
 
@@ -49,10 +51,7 @@ class IssueCredentialsSteps {
         )
 
         issuer.attemptsTo(
-            Post.to("/issue-credentials/credential-offers")
-                .with {
-                    it.body(credentialOfferRequest)
-                },
+            Post.to("/issue-credentials/credential-offers").body(credentialOfferRequest),
         )
     }
 
@@ -84,11 +83,8 @@ class IssueCredentialsSteps {
         format: String,
         schema: CredentialSchema,
     ) {
-        val schemaGuid = issuer.recall<String>(schema.name)!!
-        val claims = linkedMapOf(
-            "name" to "Name",
-            "age" to 18,
-        )
+        val schemaGuid = issuer.recall<String>(schema.name)
+        val claims = schema.claims
         sendCredentialOffer(issuer, holder, format, schemaGuid, claims)
         saveCredentialOffer(issuer, holder)
     }
@@ -208,6 +204,7 @@ class IssueCredentialsSteps {
         )
 
         Wait.until(
+            10.seconds,
             errorMessage = "Issuer was unable to issue the credential! " +
                 "Protocol state did not achieve ${IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT} state.",
         ) {
@@ -215,6 +212,7 @@ class IssueCredentialsSteps {
                 it.data.thid == issuer.recall<String>("thid")
             }
             issuer.remember("issuedCredential", credentialEvent!!.data)
+
             credentialEvent != null &&
                 credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT
         }
@@ -238,7 +236,7 @@ class IssueCredentialsSteps {
     @Then("{actor} should see that credential issuance has failed")
     fun issuerShouldSeeThatCredentialIssuanceHasFailed(issuer: Actor) {
         issuer.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_UNPROCESSABLE_ENTITY),
         )
     }
 }

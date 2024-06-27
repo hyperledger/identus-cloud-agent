@@ -6,8 +6,8 @@ import sttp.tapir.*
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
-import java.util.UUID
 import java.time.Instant
+import java.util.UUID
 
 final case class WalletDetail(
     @description(WalletDetail.annotations.id.description)

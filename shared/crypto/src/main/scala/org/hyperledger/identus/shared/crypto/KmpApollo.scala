@@ -1,21 +1,23 @@
 package org.hyperledger.identus.shared.crypto
 
-import io.iohk.atala.prism.apollo.derivation
-import io.iohk.atala.prism.apollo.derivation.MnemonicHelper
-import io.iohk.atala.prism.apollo.secp256k1.Secp256k1Lib
-import io.iohk.atala.prism.apollo.securerandom.SecureRandom
-import io.iohk.atala.prism.apollo.utils.KMMECSecp256k1PrivateKey
-import io.iohk.atala.prism.apollo.utils.KMMECSecp256k1PublicKey
-import io.iohk.atala.prism.apollo.utils.KMMEdKeyPair
-import io.iohk.atala.prism.apollo.utils.KMMEdPrivateKey
-import io.iohk.atala.prism.apollo.utils.KMMEdPublicKey
-import io.iohk.atala.prism.apollo.utils.KMMX25519KeyPair
-import io.iohk.atala.prism.apollo.utils.KMMX25519PrivateKey
-import io.iohk.atala.prism.apollo.utils.KMMX25519PublicKey
+import org.hyperledger.identus.apollo.derivation
+import org.hyperledger.identus.apollo.derivation.MnemonicHelper
+import org.hyperledger.identus.apollo.secp256k1.Secp256k1Lib
+import org.hyperledger.identus.apollo.securerandom.SecureRandom
+import org.hyperledger.identus.apollo.utils.{
+  KMMECSecp256k1PrivateKey,
+  KMMECSecp256k1PublicKey,
+  KMMEdKeyPair,
+  KMMEdPrivateKey,
+  KMMEdPublicKey,
+  KMMX25519KeyPair,
+  KMMX25519PrivateKey,
+  KMMX25519PublicKey
+}
 import zio.*
 
 import scala.jdk.CollectionConverters.*
-import scala.util.{Try, Success, Failure}
+import scala.util.{Failure, Success, Try}
 
 final case class KmpSecp256k1PublicKey(publicKey: KMMECSecp256k1PublicKey) extends Secp256k1PublicKey {
 
@@ -109,6 +111,7 @@ object KmpSecp256k1KeyOps extends Secp256k1KeyOps {
 }
 
 final case class KmpEd25519PublicKey(publicKey: KMMEdPublicKey) extends Ed25519PublicKey {
+
   override def getEncoded: Array[Byte] = publicKey.getRaw()
   override def verify(data: Array[Byte], signature: Array[Byte]): Try[Unit] =
     Try(publicKey.verify(data, signature))

@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.generic.semiauto.*
 import io.circe.{Decoder, Encoder}
+import io.circe.generic.semiauto.*
 
 /*
 Issue Credential Formats:
@@ -69,6 +69,7 @@ enum IssueCredentialProposeFormat(val name: String) {
   case Unsupported(other: String) extends IssueCredentialProposeFormat(other)
   // case JWT extends IssueCredentialProposeFormat("jwt/credential-propose@v1.0") // TODO FOLLOW specs for JWT VC
   case JWT extends IssueCredentialProposeFormat("prism/jwt") // TODO REMOVE
+  case SDJWT extends IssueCredentialProposeFormat("vc+sd-jwt")
   case Anoncred extends IssueCredentialProposeFormat("anoncreds/credential-filter@v1.0")
 }
 
@@ -96,6 +97,7 @@ enum IssueCredentialOfferFormat(val name: String) {
   case Unsupported(other: String) extends IssueCredentialOfferFormat(other)
   // case JWT extends IssueCredentialOfferFormat("jwt/credential-offer@v1.0") // TODO FOLLOW specs for JWT VC
   case JWT extends IssueCredentialOfferFormat("prism/jwt") // TODO REMOVE
+  case SDJWT extends IssueCredentialOfferFormat("vc+sd-jwt")
   case Anoncred extends IssueCredentialOfferFormat("anoncreds/credential-offer@v1.0")
 }
 
@@ -123,6 +125,7 @@ enum IssueCredentialRequestFormat(val name: String) {
   case Unsupported(other: String) extends IssueCredentialRequestFormat(other)
   // case JWT extends IssueCredentialRequestFormat("jwt/credential-request@v1.0") // TODO FOLLOW specs for JWT VC
   case JWT extends IssueCredentialRequestFormat("prism/jwt") // TODO REMOVE
+  case SDJWT extends IssueCredentialRequestFormat("vc+sd-jwt")
   case Anoncred extends IssueCredentialRequestFormat("anoncreds/credential-request@v1.0")
 }
 
@@ -148,6 +151,7 @@ enum IssueCredentialIssuedFormat(val name: String) {
   case Unsupported(other: String) extends IssueCredentialIssuedFormat(other)
   // case JWT extends IssueCredentialIssuedFormat("jwt/credential@v1.0") // TODO FOLLOW specs for JWT VC
   case JWT extends IssueCredentialIssuedFormat("prism/jwt") // TODO REMOVE
+  case SDJWT extends IssueCredentialIssuedFormat("vc+sd-jwt")
   case Anoncred extends IssueCredentialIssuedFormat("anoncreds/credential@v1.0")
 }
 

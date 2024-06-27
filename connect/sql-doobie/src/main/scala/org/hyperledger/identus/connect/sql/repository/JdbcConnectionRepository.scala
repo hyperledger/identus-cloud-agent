@@ -15,13 +15,14 @@ import org.hyperledger.identus.mercury.protocol.connection.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import zio.*
 import zio.interop.catz.*
+import zio.json.*
 
 import java.time.Instant
-import java.util as ju
 import java.util.UUID
+import java.util as ju
 
 class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task]) extends ConnectionRepository {
 
@@ -44,6 +45,9 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
   given connectionResponseGet: Get[ConnectionResponse] = Get[String].map(decode[ConnectionResponse](_).getOrElse(???))
   given connectionResponsePut: Put[ConnectionResponse] = Put[String].contramap(_.asJson.toString)
+
+  given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
+  given failurePut: Put[Failure] = Put[String].contramap(_.asFailureInfo.toJson)
 
   override def create(record: ConnectionRecord): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
@@ -119,7 +123,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): URIO[WalletAccessContext, Seq[ConnectionRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*)
       .transactWallet(xa)
       .orDie
   }
@@ -129,7 +133,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): UIO[Seq[ConnectionRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*)
       .transact(xb)
       .orDie
   }
@@ -143,7 +147,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       case Nil =>
         connection.pure(Nil)
       case head +: tail =>
-        val nel = NonEmptyList.of(head, tail: _*)
+        val nel = NonEmptyList.of(head, tail*)
         val inClauseFragment = Fragments.in(fr"protocol_state", nel)
         val conditionFragment = Fragments.whereAndOpt(
           Some(inClauseFragment),
@@ -327,7 +331,7 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
   def updateAfterFail(
       recordId: UUID,
-      failReason: Option[String],
+      failReason: Option[Failure],
   ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.connection_records

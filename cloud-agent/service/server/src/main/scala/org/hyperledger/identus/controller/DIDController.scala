@@ -1,15 +1,20 @@
 package org.hyperledger.identus.castor.controller
 
-import org.hyperledger.identus.castor.controller.http.DIDResolutionResult
-import zio.*
-import org.hyperledger.identus.castor.controller.http.{DIDDocument, DIDDocumentMetadata, DIDResolutionMetadata}
+import org.hyperledger.identus.castor.controller.http.{
+  DIDDocument,
+  DIDDocumentMetadata,
+  DIDResolutionMetadata,
+  DIDResolutionResult
+}
 import org.hyperledger.identus.castor.core.model.did.w3c.{
+  makeW3CResolver,
   DIDDocumentMetadataRepr,
   DIDDocumentRepr,
   DIDResolutionErrorRepr
 }
 import org.hyperledger.identus.castor.core.service.DIDService
-import org.hyperledger.identus.castor.core.model.did.w3c.makeW3CResolver
+import zio.*
+
 import scala.language.implicitConversions
 
 trait DIDController {

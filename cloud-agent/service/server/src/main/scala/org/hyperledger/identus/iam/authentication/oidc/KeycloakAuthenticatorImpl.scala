@@ -5,8 +5,7 @@ import org.hyperledger.identus.iam.authentication.AuthenticationError
 import org.hyperledger.identus.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.PermissionNotAvailable
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
 import zio.*
 
 import java.util.UUID
@@ -82,6 +81,8 @@ class KeycloakAuthenticatorImpl(
       ctx <- role match {
         case EntityRole.Admin  => ZIO.succeed(WalletAdministrationContext.Admin())
         case EntityRole.Tenant => selfServiceCtx
+        case EntityRole.ExternalParty =>
+          ZIO.fail(AuthenticationError.InvalidRole("External party cannot access the wallet."))
       }
     } yield ctx
   }

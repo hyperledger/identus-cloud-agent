@@ -11,9 +11,10 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{
 }
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
+import org.hyperledger.identus.shared.models.*
 
-import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.time.Instant
 import java.util.UUID
 
 final case class IssueCredentialRecord(
@@ -27,6 +28,7 @@ final case class IssueCredentialRecord(
     credentialFormat: CredentialFormat,
     role: Role,
     subjectId: Option[String],
+    keyId: Option[KeyId],
     validityPeriod: Option[Double] = None,
     automaticIssuance: Option[Boolean],
     protocolState: ProtocolState,
@@ -38,24 +40,27 @@ final case class IssueCredentialRecord(
     issuingDID: Option[CanonicalPrismDID],
     metaRetries: Int,
     metaNextRetry: Option[Instant],
-    metaLastFailure: Option[String],
+    metaLastFailure: Option[Failure],
 ) {
   def offerCredentialFormatAndData: Option[(IssueCredentialOfferFormat, OfferCredential)] =
     offerCredentialData.map { data =>
       credentialFormat.match
         case CredentialFormat.JWT       => (IssueCredentialOfferFormat.JWT, data)
+        case CredentialFormat.SDJWT     => (IssueCredentialOfferFormat.SDJWT, data)
         case CredentialFormat.AnonCreds => (IssueCredentialOfferFormat.Anoncred, data)
     }
   def requestCredentialFormatAndData: Option[(IssueCredentialRequestFormat, RequestCredential)] =
     requestCredentialData.map { data =>
       credentialFormat.match
         case CredentialFormat.JWT       => (IssueCredentialRequestFormat.JWT, data)
+        case CredentialFormat.SDJWT     => (IssueCredentialRequestFormat.SDJWT, data)
         case CredentialFormat.AnonCreds => (IssueCredentialRequestFormat.Anoncred, data)
     }
   def issuedCredentialFormatAndData: Option[(IssueCredentialIssuedFormat, IssueCredential)] =
     issueCredentialData.map { data =>
       credentialFormat.match
         case CredentialFormat.JWT       => (IssueCredentialIssuedFormat.JWT, data)
+        case CredentialFormat.SDJWT     => (IssueCredentialIssuedFormat.SDJWT, data)
         case CredentialFormat.AnonCreds => (IssueCredentialIssuedFormat.Anoncred, data)
     }
 
@@ -71,7 +76,8 @@ final case class ValidIssuedCredentialRecord(
     id: DidCommID,
     issuedCredentialRaw: Option[String],
     credentialFormat: CredentialFormat,
-    subjectId: Option[String]
+    subjectId: Option[String],
+    keyId: Option[KeyId],
 )
 
 final case class ValidFullIssuedCredentialRecord(
@@ -80,7 +86,8 @@ final case class ValidFullIssuedCredentialRecord(
     credentialFormat: CredentialFormat,
     schemaUri: Option[String],
     credentialDefinitionUri: Option[String],
-    subjectId: Option[String]
+    subjectId: Option[String],
+    keyId: Option[KeyId],
 )
 
 object IssueCredentialRecord {

@@ -1,14 +1,13 @@
 package org.hyperledger.identus.mercury
 
-import scala.jdk.CollectionConverters.*
-import zio._
-
-import io.circe._
-import io.circe.JsonObject
-import org.hyperledger.identus.mercury.model._
-import org.hyperledger.identus.mercury.error._
-import org.hyperledger.identus.mercury.protocol.routing._
+import io.circe.*
+import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.model.error.*
+import org.hyperledger.identus.mercury.protocol.routing.*
 import org.hyperledger.identus.resolvers.DIDResolver
+import zio.*
+
+import scala.jdk.CollectionConverters.*
 
 type HttpOrDID = String //TODO
 case class ServiceEndpoint(uri: HttpOrDID, accept: Option[Seq[String]], routingKeys: Option[Seq[String]])
@@ -99,7 +98,12 @@ object MessagingService {
             finalMessage <- makeMessage(forwardMessage.asMessage) // Maybe it needs a double warping
           } yield finalMessage
         case ServiceEndpoint(uri, _, Some(routingKeys)) =>
-          ZIO.log(s"RoutingDID: $routingKeys") *> ??? // ZIO.fail(???) // FIXME no support for routingKeys
+          ZIO.log(s"RoutingDID: $routingKeys") *>
+            ZIO.fail(
+              SendMessageError(
+                RuntimeException("routingKeys is not supported at the moment")
+              )
+            )
         case s @ ServiceEndpoint(_, _, None) =>
           ZIO.logError(s"Unxpected ServiceEndpoint $s") *> ZIO.fail(
             SendMessageError(new RuntimeException(s"Unxpected ServiceEndpoint $s"))
@@ -117,11 +121,15 @@ object MessagingService {
         auxFinalMessage <- makeMessage(msg)
         MessageAndAddress(finalMessage, serviceEndpoint) = auxFinalMessage
         didCommService <- ZIO.service[DidOps]
+        to <- finalMessage.to match {
+          case Seq()            => ZIO.fail(SendMessageError(new RuntimeException("Message must have a recipient")))
+          case firstTo +: Seq() => ZIO.succeed(firstTo)
+          case all @ (firstTo +: _) =>
+            ZIO.logWarning(s"Message have multi recipients: $all") *> ZIO.succeed(firstTo)
+        }
         encryptedMessage <-
-          if (finalMessage.`type` == ForwardMessage.PIURI)
-            didCommService.packEncryptedAnon(msg = finalMessage, to = finalMessage.to.head) // TODO Head
-          else
-            didCommService.packEncrypted(msg = finalMessage, to = finalMessage.to.head) // TODO Head
+          if (finalMessage.`type` == ForwardMessage.PIURI) didCommService.packEncryptedAnon(msg = finalMessage, to = to)
+          else didCommService.packEncrypted(msg = finalMessage, to = to)
 
         _ <- ZIO.log(s"Sending a Message to '$serviceEndpoint'")
         resp <- org.hyperledger.identus.mercury.HttpClient

@@ -1,22 +1,17 @@
 package org.hyperledger.identus.pollux.core.model.schema
 
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.SchemaError
-import org.hyperledger.identus.pollux.core.model.schema.AnoncredSchemaTypeSpec.test
-import org.hyperledger.identus.pollux.core.model.schema.`type`.AnoncredSchemaType
-import org.hyperledger.identus.pollux.core.model.schema.`type`.CredentialJsonSchemaType
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.CredentialSchemaValidationError
+import org.hyperledger.identus.pollux.core.model.schema.`type`.{AnoncredSchemaType, CredentialJsonSchemaType}
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError.JsonValidationErrors
-import zio.Scope
+import org.hyperledger.identus.pollux.core.model.schema.AnoncredSchemaTypeSpec.test
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
-import zio.test.Assertion
+import zio.test.{assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
 import zio.test.Assertion.*
-import zio.test.Spec
-import zio.test.TestEnvironment
-import zio.test.ZIOSpecDefault
-import zio.test.assertZIO
+import zio.Scope
 
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -53,7 +48,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
     )
   }
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = suite("CredentialSchemaTest")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("CredentialSchemaTest")(
     suite("resolveCredentialSchemaType")(
       test("should return AnoncredSchemaType for a supported schema type") {
 
@@ -72,7 +67,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
         assertZIO(result.exit)(
           fails(
             isSubtype[CredentialSchemaError.UnsupportedCredentialSchemaType](
-              hasField("message", _.message, equalTo(s"Unsupported VC Schema type $schemaType"))
+              hasField("message", _.userFacingMessage, equalTo(s"Unsupported credential schema type: $schemaType"))
             )
           )
         )
@@ -343,7 +338,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
         assertZIO(CredentialSchema.validateCredentialSchema(credentialSchema).exit)(
           fails(
             isSubtype[CredentialSchemaError.UnsupportedCredentialSchemaType](
-              hasField("message", _.message, equalTo(s"Unsupported VC Schema type $schemaType"))
+              hasField("message", _.userFacingMessage, equalTo(s"Unsupported credential schema type: $schemaType"))
             )
           )
         )
@@ -353,7 +348,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
 
   def failsWithJsonValidationErrors(errorMessages: Iterable[String]) = {
     fails(
-      isSubtype[SchemaError](
+      isSubtype[CredentialSchemaValidationError](
         hasField(
           "schemaError",
           _.schemaError,

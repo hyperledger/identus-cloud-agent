@@ -3,10 +3,8 @@ package org.hyperledger.identus.iam.authorization.core
 import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.hyperledger.identus.agent.walletapi.service.EntityService
 import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.ServiceError
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.WalletNotFoundById
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.{ServiceError, WalletNotFoundById}
+import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
 import zio.*
 
 import scala.language.implicitConversions
@@ -18,7 +16,7 @@ class EntityPermissionManagementService(entityService: EntityService) extends Pe
       _ <- ZIO
         .serviceWith[WalletAdministrationContext](_.isAuthorized(walletId))
         .filterOrFail(identity)(Error.WalletNotFoundById(walletId))
-      _ <- entityService.assignWallet(entity.id, walletId.toUUID).mapError[Error](e => e)
+      _ <- entityService.assignWallet(entity.id, walletId.toUUID).orDieAsUnmanagedFailure
     } yield ()
   }
 

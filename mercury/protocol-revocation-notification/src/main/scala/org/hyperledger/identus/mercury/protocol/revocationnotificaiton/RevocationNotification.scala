@@ -1,10 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.revocationnotificaiton
 
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.syntax._
-
-import org.hyperledger.identus.mercury.model.{PIURI, Message, DidId}
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
+import org.hyperledger.identus.mercury.model.{DidId, Message, PIURI}
 
 final case class RevocationNotification(
     id: String = java.util.UUID.randomUUID.toString(),
@@ -59,19 +58,25 @@ object RevocationNotification {
     given Decoder[Body] = deriveDecoder[Body]
   }
 
-  def readFromMessage(message: Message): RevocationNotification =
-    val body = message.body.asJson.as[RevocationNotification.Body].toOption.get
-
-    RevocationNotification(
-      id = message.id,
-      `type` = message.piuri,
-      body = body,
-      thid = message.thid,
-      from = message.from.get, // TODO get
-      to = {
-        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient")
-        message.to.head
-      },
-    )
+  def readFromMessage(message: Message): Either[String, RevocationNotification] =
+    message.body.asJson.as[RevocationNotification.Body] match
+      case Left(fail) => Left("Fail to parse RevocationNotification's body: " + fail.getMessage)
+      case Right(body) =>
+        message.from match
+          case None => Left("OfferCredential MUST have the sender explicit")
+          case Some(from) =>
+            message.to match
+              case firstTo +: Seq() =>
+                Right(
+                  RevocationNotification(
+                    id = message.id,
+                    `type` = message.piuri,
+                    body = body,
+                    thid = message.thid,
+                    from = from,
+                    to = firstTo,
+                  )
+                )
+              case tos => Left(s"OfferCredential MUST have only 1 recipient instead has '${tos}'")
 
 }

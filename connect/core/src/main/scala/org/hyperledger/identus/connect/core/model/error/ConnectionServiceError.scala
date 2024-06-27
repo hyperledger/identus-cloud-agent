@@ -9,7 +9,9 @@ import java.util.UUID
 sealed trait ConnectionServiceError(
     val statusCode: StatusCode,
     val userFacingMessage: String
-) extends Failure
+) extends Failure {
+  override val namespace: String = "ConnectionServiceError"
+}
 
 object ConnectionServiceError {
   final case class UserInputValidationError(errors: NonEmptyChunk[String])
@@ -45,7 +47,7 @@ object ConnectionServiceError {
   final case class InvalidStateForOperation(state: ProtocolState)
       extends ConnectionServiceError(
         StatusCode.BadRequest,
-        s"The operation is not allowed for the current connection record state: $state=$state"
+        s"The operation is not allowed for the current connection record state: state=$state"
       )
   final case class InvitationExpired(invitationId: String)
       extends ConnectionServiceError(
