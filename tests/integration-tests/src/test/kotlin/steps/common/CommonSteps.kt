@@ -1,46 +1,55 @@
 package steps.common
 
+import common.CredentialSchema
+import common.DidPurpose
 import interactions.Get
-import io.cucumber.java.ParameterType
 import io.cucumber.java.en.Given
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
-import net.serenitybdd.screenplay.actors.OnStage
 import org.apache.http.HttpStatus
-import org.hyperledger.identus.client.models.*
+import org.hyperledger.identus.client.models.Connection
+import org.hyperledger.identus.client.models.ConnectionsPage
 import steps.connection.ConnectionSteps
 import steps.credentials.IssueCredentialsSteps
 import steps.did.PublishDidSteps
-import java.lang.IllegalArgumentException
+import steps.schemas.CredentialSchemasSteps
 
 class CommonSteps {
-    @ParameterType(".*")
-    fun actor(actorName: String): Actor {
-        return OnStage.theActorCalled(actorName)
-    }
-
-    @ParameterType(".*")
-    fun curve(value: String): Curve {
-        return Curve.decode(value) ?: throw IllegalArgumentException("$value is not a valid Curve value")
-    }
-
-    @ParameterType(".*")
-    fun purpose(value: String): Purpose {
-        return Purpose.decode(value) ?: throw IllegalArgumentException("$value is not a valid Purpose value")
-    }
-
-    @Given("{actor} has an issued credential from {actor}")
+    @Given("{actor} has a jwt issued credential from {actor}")
     fun holderHasIssuedCredentialFromIssuer(holder: Actor, issuer: Actor) {
         actorsHaveExistingConnection(issuer, holder)
 
         val publishDidSteps = PublishDidSteps()
-        publishDidSteps.createsUnpublishedDid(holder)
-        publishDidSteps.agentHasAPublishedDID(issuer)
+        publishDidSteps.agentHasAnUnpublishedDID(holder, DidPurpose.JWT)
+        publishDidSteps.agentHasAPublishedDID(issuer, DidPurpose.JWT)
 
         val issueSteps = IssueCredentialsSteps()
         issueSteps.issuerOffersACredential(issuer, holder, "short")
+        issueSteps.holderReceivesCredentialOffer(holder)
+        issueSteps.holderAcceptsCredentialOfferForJwt(holder)
+        issueSteps.acmeIssuesTheCredential(issuer)
+        issueSteps.bobHasTheCredentialIssued(holder)
+    }
+
+    @Given("{actor} has a jwt issued credential with {} schema from {actor}")
+    fun holderHasIssuedCredentialFromIssuerWithSchema(
+        holder: Actor,
+        schema: CredentialSchema,
+        issuer: Actor,
+    ) {
+        actorsHaveExistingConnection(issuer, holder)
+
+        val publishDidSteps = PublishDidSteps()
+        publishDidSteps.agentHasAnUnpublishedDID(holder, DidPurpose.JWT)
+        publishDidSteps.agentHasAPublishedDID(issuer, DidPurpose.JWT)
+
+        val schemaSteps = CredentialSchemasSteps()
+        schemaSteps.agentHasAPublishedSchema(issuer, schema)
+
+        val issueSteps = IssueCredentialsSteps()
+        issueSteps.issuerOffersCredentialToHolderUsingSchema(issuer, holder, "short", schema)
         issueSteps.holderReceivesCredentialOffer(holder)
         issueSteps.holderAcceptsCredentialOfferForJwt(holder)
         issueSteps.acmeIssuesTheCredential(issuer)

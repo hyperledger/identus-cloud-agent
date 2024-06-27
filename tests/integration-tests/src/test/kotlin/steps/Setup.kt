@@ -20,7 +20,15 @@ import org.hyperledger.identus.client.models.CreateWebhookNotification
 import java.util.UUID
 
 object Setup {
-    val config = ConfigLoader().loadConfigOrThrow<Config>(TestConstants.TESTS_CONFIG)
+    private val config: Config
+
+    init {
+        try {
+            config = ConfigLoader().loadConfigOrThrow<Config>(TestConstants.TESTS_CONFIG)
+        } catch (e: Exception) {
+            throw RuntimeException(e)
+        }
+    }
 
     /**
      * This function starts all services and actors before all tests.

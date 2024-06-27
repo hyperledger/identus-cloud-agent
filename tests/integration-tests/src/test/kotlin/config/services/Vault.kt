@@ -13,10 +13,11 @@ import java.io.File
 
 data class Vault(
     @ConfigAlias("http_port") val httpPort: Int,
-    @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
     @ConfigAlias("vault_auth_type") val authType: VaultAuthType = VaultAuthType.APP_ROLE,
-) : ServiceBase {
+    @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
+) : ServiceBase() {
     private val logger = Logger.get<Vault>()
+    override val logServices: List<String> = listOf("vault")
     private val vaultComposeFile: String = "src/test/resources/containers/vault.yml"
     override val container: ComposeContainer = ComposeContainer(File(vaultComposeFile)).withEnv(
         mapOf(
