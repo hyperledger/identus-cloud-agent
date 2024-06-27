@@ -1,11 +1,11 @@
 @RFC0453 @AIP20 @credentials
-Feature: Issue Credentials Protocol with published DID
+Feature: Issue JWT Credentials with published DID
 
   Background:
     Given Issuer and Holder have an existing connection
-    And Issuer has a published DID
+    And Issuer has a published DID for JWT
     And Issuer has published STUDENT_SCHEMA schema
-    And Holder has an unpublished DID
+    And Holder has an unpublished DID for JWT
 
   Scenario: Issuing credential with published PRISM DID
     When Issuer offers a credential to Holder with "short" form DID

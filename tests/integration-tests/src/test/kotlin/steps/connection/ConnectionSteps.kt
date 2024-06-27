@@ -3,6 +3,7 @@ package steps.connection
 import abilities.ListenToEvents
 import interactions.Get
 import interactions.Post
+import interactions.body
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
@@ -22,13 +23,9 @@ class ConnectionSteps {
         // Acme(Issuer) initiates a connection
         // and sends it to Bob(Holder) out-of-band, e.g. using QR-code
         val connectionLabel = "Connection with ${invitee.name}"
+
         inviter.attemptsTo(
-            Post.to("/connections")
-                .with {
-                    it.body(
-                        CreateConnectionRequest(label = connectionLabel),
-                    )
-                },
+            Post.to("/connections").body(CreateConnectionRequest(label = connectionLabel)),
         )
 
         val connection = SerenityRest.lastResponse().get<Connection>()

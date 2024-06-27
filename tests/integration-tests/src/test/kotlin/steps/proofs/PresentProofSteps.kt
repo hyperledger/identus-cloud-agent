@@ -3,6 +3,7 @@ package steps.proofs
 import abilities.ListenToEvents
 import interactions.Patch
 import interactions.Post
+import interactions.body
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
@@ -11,16 +12,17 @@ import io.iohk.atala.automation.utils.Wait
 import models.PresentationStatusAdapter
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
-import org.apache.http.HttpStatus.SC_CREATED
+import org.apache.http.HttpStatus.*
 import org.hyperledger.identus.client.models.*
 import kotlin.time.Duration.Companion.seconds
 
 class PresentProofSteps {
 
     @When("{actor} sends a request for proof presentation to {actor}")
-    fun faberSendsARequestForProofPresentationToBob(faber: Actor, bob: Actor) {
+    fun verifierSendsARequestForProofPresentationToHolder(verifier: Actor, holder: Actor) {
+        val verifierConnectionToHolder = verifier.recall<Connection>("connection-with-${holder.name}").connectionId
         val presentationRequest = RequestPresentationInput(
-            connectionId = faber.recall<Connection>("connection-with-${bob.name}").connectionId,
+            connectionId = verifierConnectionToHolder,
             options = Options(
                 challenge = "11c91493-01b3-4c4d-ac36-b336bab5bddf",
                 domain = "https://example-verifier.com",
@@ -32,54 +34,47 @@ class PresentProofSteps {
                 ),
             ),
         )
-        faber.attemptsTo(
-            Post.to("/present-proof/presentations")
-                .with {
-                    it.body(
-                        presentationRequest,
-                    )
-                },
-        )
-        faber.attemptsTo(
+        verifier.attemptsTo(
+            Post.to("/present-proof/presentations").body(presentationRequest),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
         )
         val presentationStatus = SerenityRest.lastResponse().get<PresentationStatus>()
-        faber.remember("thid", presentationStatus.thid)
-        bob.remember("thid", presentationStatus.thid)
+        verifier.remember("thid", presentationStatus.thid)
+        holder.remember("thid", presentationStatus.thid)
     }
 
-    @When("{actor} receives the request")
-    fun bobReceivesTheRequest(bob: Actor) {
+    @When("{actor} receives the presentation proof request")
+    fun holderReceivesTheRequest(holder: Actor) {
         Wait.until(
             timeout = 30.seconds,
             errorMessage = "ERROR: Bob did not achieve any presentation request!",
         ) {
-            val proofEvent = ListenToEvents.with(bob).presentationEvents.lastOrNull {
-                it.data.thid == bob.recall<String>("thid")
+            val proofEvent = ListenToEvents.with(holder).presentationEvents.lastOrNull {
+                it.data.thid == holder.recall<String>("thid")
             }
-            bob.remember("presentationId", proofEvent?.data?.presentationId)
+            holder.remember("presentationId", proofEvent?.data?.presentationId)
             proofEvent?.data?.status == PresentationStatusAdapter.Status.REQUEST_RECEIVED
         }
     }
 
-    @When("{actor} makes the presentation of the proof to {actor}")
-    fun bobMakesThePresentationOfTheProof(bob: Actor, faber: Actor) {
+    @When("{actor} makes the presentation of the proof")
+    fun holderMakesThePresentationOfTheProofToVerifier(holder: Actor) {
         val requestPresentationAction = RequestPresentationAction(
-            proofId = listOf(bob.recall<IssueCredentialRecord>("issuedCredential").recordId),
+            proofId = listOf(holder.recall<IssueCredentialRecord>("issuedCredential").recordId),
             action = RequestPresentationAction.Action.REQUEST_MINUS_ACCEPT,
         )
-
-        bob.attemptsTo(
-            Patch.to("/present-proof/presentations/${bob.recall<String>("presentationId")}").with {
-                it.body(requestPresentationAction)
-            },
+        val presentationId: String = holder.recall("presentationId")
+        holder.attemptsTo(
+            Patch.to("/present-proof/presentations/$presentationId").body(requestPresentationAction),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
         )
     }
 
     @When("{actor} rejects the proof")
-    fun bobRejectsProof(bob: Actor) {
-        bob.attemptsTo(
-            Patch.to("/present-proof/presentations/${bob.recall<String>("presentationId")}").with {
+    fun holderRejectsProof(holder: Actor) {
+        val presentationId: String = holder.recall("presentationId")
+        holder.attemptsTo(
+            Patch.to("/present-proof/presentations/$presentationId").with {
                 it.body(
                     RequestPresentationAction(action = RequestPresentationAction.Action.REQUEST_MINUS_REJECT),
                 )
