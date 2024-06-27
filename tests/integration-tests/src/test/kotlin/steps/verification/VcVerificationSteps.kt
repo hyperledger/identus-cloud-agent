@@ -1,106 +1,139 @@
 package steps.verification
 
-import com.google.gson.Gson
-import io.cucumber.java.en.When
+import com.nimbusds.jose.JWSAlgorithm
+import com.nimbusds.jose.jwk.Curve
+import common.*
+import interactions.Post
+import interactions.body
+import io.cucumber.datatable.DataTable
+import io.cucumber.java.en.*
+import io.iohk.atala.automation.extensions.getList
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import io.restassured.http.Header
+import models.JwtCredential
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
-import net.serenitybdd.screenplay.rest.interactions.Post
+import org.apache.http.HttpStatus.SC_BAD_REQUEST
 import org.apache.http.HttpStatus.SC_OK
 import org.hyperledger.identus.client.models.*
+import org.hyperledger.identus.client.models.VcVerification.*
 import java.time.OffsetDateTime
+
+typealias Verification = ParameterizableVcVerification
 
 class VcVerificationSteps {
 
-    @When("{actor} verifies VcVerificationRequest")
-    fun agentVerifiesVerifiableCredential(actor: Actor) {
-        val signedJwtCredential =
-            "eyJhbGciOiJFUzI1NksifQ.eyJpc3MiOiJkaWQ6cHJpc206NDE1ODg1OGI1ZjBkYWMyZTUwNDdmMjI4NTk4OWVlMzlhNTNkZWJhNzY0NjFjN2FmMDM5NjU0ZGYzYjU5MjI1YyIsImF1ZCI6ImRpZDpwcmlzbTp2ZXJpZmllciIsIm5iZiI6MTI2MjMwNDAwMCwiZXhwIjoxMjYzMjU0NDAwLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL2V4YW1wbGVzL3YxIl0sInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJVbml2ZXJzaXR5RGVncmVlQ3JlZGVudGlhbCJdLCJjcmVkZW50aWFsU2NoZW1hIjp7ImlkIjoiZGlkOndvcms6TURQOEFzRmhIemh3VXZHTnVZa1g3VDtpZD0wNmUxMjZkMS1mYTQ0LTQ4ODItYTI0My0xZTMyNmZiZTIxZGI7dmVyc2lvbj0xLjAiLCJ0eXBlIjoiSnNvblNjaGVtYVZhbGlkYXRvcjIwMTgifSwiY3JlZGVudGlhbFN1YmplY3QiOnsidXNlck5hbWUiOiJCb2IiLCJhZ2UiOjQyLCJlbWFpbCI6ImVtYWlsIn0sImNyZWRlbnRpYWxTdGF0dXMiOnsiaWQiOiJkaWQ6d29yazpNRFA4QXNGaEh6aHdVdkdOdVlrWDdUO2lkPTA2ZTEyNmQxLWZhNDQtNDg4Mi1hMjQzLTFlMzI2ZmJlMjFkYjt2ZXJzaW9uPTEuMCIsInR5cGUiOiJTdGF0dXNMaXN0MjAyMUVudHJ5Iiwic3RhdHVzUHVycG9zZSI6IlJldm9jYXRpb24iLCJzdGF0dXNMaXN0SW5kZXgiOjAsInN0YXR1c0xpc3RDcmVkZW50aWFsIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS9jcmVkZW50aWFscy9zdGF0dXMvMyJ9LCJyZWZyZXNoU2VydmljZSI6eyJpZCI6Imh0dHBzOi8vZXhhbXBsZS5lZHUvcmVmcmVzaC8zNzMyIiwidHlwZSI6Ik1hbnVhbFJlZnJlc2hTZXJ2aWNlMjAxOCJ9fSwianRpIjoiaHR0cDovL2V4YW1wbGUuZWR1L2NyZWRlbnRpYWxzLzM3MzIifQ.HBxrn8Nu6y1RvUAU8XcwUDPOiiHhC1OgHN757lWai6i8P-pHL4TBzIDartYtrMiZUKpNx9Onb19sJYywtqFkpg"
+    @Given("{actor} uses that JWT VC issued from {actor} for Verification API")
+    fun holderUsesThatJWTVCForVerificationAPI(holder: Actor, issuer: Actor) {
+        val issuedCredential = holder.recall<IssueCredentialRecord>("issuedCredential")
+        val jwt = JwtCredential.parseBase64(issuedCredential.credential!!).serialize()
+        val issuerDid = issuer.recall<String>("shortFormDid")
+        holder.remember("jwt", jwt)
+        holder.remember("issuerDid", issuerDid)
+    }
 
-        val request =
-            arrayOf(
-                VcVerificationRequest(
-                    signedJwtCredential,
-                    listOf(
-                        ParameterizableVcVerification(
-                            VcVerification.NOT_BEFORE_CHECK,
-                            DateTimeParameter(dateTime = OffsetDateTime.parse("2010-01-01T00:00:00Z")),
-                        ),
-                        ParameterizableVcVerification(
-                            VcVerification.EXPIRATION_CHECK,
-                            DateTimeParameter(dateTime = OffsetDateTime.parse("2010-01-01T00:00:00Z")),
-                        ),
-                        ParameterizableVcVerification(
-                            VcVerification.AUDIENCE_CHECK,
-                            DidParameter(did = "did:prism:verifier"),
-                        ),
-                        ParameterizableVcVerification(
-                            VcVerification.ISSUER_IDENTIFICATION,
-                            DidParameter(did = "did:prism:4158858b5f0dac2e5047f2285989ee39a53deba76461c7af039654df3b59225c"),
-                        ),
-                    ),
-                ),
-                VcVerificationRequest(
-                    signedJwtCredential,
-                    listOf(
-                        ParameterizableVcVerification(
-                            VcVerification.EXPIRATION_CHECK,
-                            DateTimeParameter(dateTime = OffsetDateTime.parse("2010-01-13T00:00:00Z")),
-                        ),
-                        ParameterizableVcVerification(
-                            VcVerification.NOT_BEFORE_CHECK,
-                            DateTimeParameter(dateTime = OffsetDateTime.parse("2009-01-01T00:00:00Z")),
-                        ),
-                        ParameterizableVcVerification(
-                            VcVerification.AUDIENCE_CHECK,
-                            DidParameter(did = "BAD AUDIENCE"),
-                        ),
-                        ParameterizableVcVerification(
-                            VcVerification.ISSUER_IDENTIFICATION,
-                            DidParameter(did = "BAD ISSUER"),
-                        ),
-                    ),
-                ),
-            )
+    @Given("{actor} has a JWT VC for Verification API")
+    fun holderHasAJWTVCForVerificationAPI(holder: Actor) {
+        val jwtCredential = VerifiableJwt.jwtVCv1()
+        val jwt = jwtCredential.sign(JWSAlgorithm.ES256K, Curve.SECP256K1)
+        holder.remember("jwt", jwt)
+        holder.remember("issuerDid", "did:prism:issuer")
+    }
 
-        val post =
-            Post.to("/verification/credential").with {
-                it.header(Header("apiKey", "pylnapbvyudwmfrt"))
-                it.body(request)
+    @Given("{actor} has a Verifiable Schema for Verification API")
+    fun holderHasAVerifiableSchemaForVerificationAPI(holder: Actor) {
+        val jwtCredential = VerifiableJwt.schemaVCv1()
+        val jwt = jwtCredential.sign(JWSAlgorithm.ES384, Curve.SECP256K1)
+        holder.remember("jwt", jwt)
+        holder.remember("issuerDid", "did:prism:issuer")
+    }
+
+    @Given("{actor} has a {} problem in the Verifiable Credential")
+    fun holderHasProblemInTheVerifiableCredential(holder: Actor, problem: JwtCredentialProblem) {
+        val jwt = problem.jwt()
+        holder.remember("jwt", jwt)
+        holder.remember("issuerDid", "did:prism:issuer")
+    }
+
+    @When("{actor} sends the JWT Credential to {actor} Verification API")
+    fun holderSendsJwtCredentialToVerificationAPI(holder: Actor, verifier: Actor, dataTable: DataTable) {
+        // add type to datatable
+        val checks = dataTable.asMap(VcVerification::class.java, Boolean::class.java)
+        val jwt: String = holder.recall("jwt")
+        val issuerDid: String = holder.recall("issuerDid")
+        verifyJwt(verifier, jwt, issuerDid, checks)
+        holder.remember("checks", checks)
+    }
+
+    @Then("{actor} should see that verification has failed with {} problem")
+    fun holderShouldSeeThatVerificationHasFailedWithProblem(holder: Actor, problem: JwtCredentialProblem) {
+    }
+
+    @Then("{actor} should see that all checks have passed")
+    fun holderShouldSeeThatVerificationHasPassed(holder: Actor) {
+        val jwt: String = holder.recall("jwt")
+        analyzeResponse(holder, jwt)
+    }
+
+    @Then("{actor} should see the check has failed")
+    fun holderShouldSeeTheCheckHasFailed(holder: Actor) {
+        holder.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_BAD_REQUEST),
+        )
+    }
+
+    private fun verifyJwt(
+        verifier: Actor,
+        jwt: String,
+        issuerDid: String,
+        verifications: Map<VcVerification, Boolean>,
+    ) {
+        val now = OffsetDateTime.now()
+
+        // creates the checks based on the data table from feature file
+        val checks = verifications.map { (key, value) ->
+            when (key) {
+                ALGORITHM_VERIFICATION -> Verification(key) to value
+                AUDIENCE_CHECK -> Verification(key, DidParameter(did = "did:prism:verifier")) to value
+                COMPLIANCE_WITH_STANDARDS -> Verification(key) to value
+                EXPIRATION_CHECK -> Verification(key, DateTimeParameter(dateTime = now.minusDays(5))) to value
+                INTEGRITY_OF_CLAIMS -> Verification(key) to value
+                ISSUER_IDENTIFICATION -> Verification(key, DidParameter(did = issuerDid)) to value
+                NOT_BEFORE_CHECK -> Verification(key, DateTimeParameter(dateTime = now.plusDays(5))) to value
+                REVOCATION_CHECK -> Verification(key) to value
+                SCHEMA_CHECK -> Verification(key) to value
+                SEMANTIC_CHECK_OF_CLAIMS -> Verification(key) to value
+                SIGNATURE_VERIFICATION -> Verification(key) to value
+                SUBJECT_VERIFICATION -> Verification(key, DidParameter(did = "did:prism:something")) to value
+            }
+        }.toMap()
+
+        val vcVerificationRequest = VcVerificationRequest(jwt, checks.keys.toList())
+        val payload = listOf(vcVerificationRequest)
+
+        verifier.attemptsTo(
+            Post.to("/verification/credential").body(payload),
+        )
+    }
+
+    private fun analyzeResponse(holder: Actor, jwt: String) {
+        val checks = holder.recall<Map<VcVerification, Boolean>>("checks")
+        val actual = SerenityRest.lastResponse().getList<VcVerificationResponse>()
+
+        holder.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
+            Ensure.that(actual[0].credential).isEqualTo(jwt),
+        )
+
+        // check each verification result from the requested checks
+        actual[0].result!!.forEach {
+            val expected = checks.getOrElse(it.verification) {
+                throw RuntimeException("Couldn't find ${it.verification} in verification request.")
             }
 
-        actor.attemptsTo(
-            post,
-        )
-
-        val expected = listOf(
-            VcVerificationResponse(
-                signedJwtCredential,
-                listOf(
-                    VcVerificationResult(VcVerification.NOT_BEFORE_CHECK, true),
-                    VcVerificationResult(VcVerification.EXPIRATION_CHECK, true),
-                    VcVerificationResult(VcVerification.AUDIENCE_CHECK, true),
-                    VcVerificationResult(VcVerification.ISSUER_IDENTIFICATION, true),
-                ),
-            ),
-            VcVerificationResponse(
-                signedJwtCredential,
-                listOf(
-                    VcVerificationResult(VcVerification.EXPIRATION_CHECK, false),
-                    VcVerificationResult(VcVerification.NOT_BEFORE_CHECK, false),
-                    VcVerificationResult(VcVerification.AUDIENCE_CHECK, false),
-                    VcVerificationResult(VcVerification.ISSUER_IDENTIFICATION, false),
-                ),
-            ),
-        )
-        actor.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
-            Ensure.that(
-                SerenityRest.lastResponse().body().asString(),
-            ).isEqualTo(
-                Gson().toJson(expected),
-            ),
-        )
+            holder.attemptsTo(
+                Ensure.that(it.success).isEqualTo(expected)
+                    .withReportedError("Expected [${it.verification}] to be [$expected] but got [${it.success}]"),
+            )
+        }
     }
 }

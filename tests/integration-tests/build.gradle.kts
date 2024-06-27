@@ -11,8 +11,8 @@ version = "1.0-SNAPSHOT"
 
 buildscript {
     dependencies {
-        classpath("net.serenity-bdd:serenity-single-page-report:4.1.4")
-        classpath("net.serenity-bdd:serenity-json-summary-report:4.1.4")
+        classpath("net.serenity-bdd:serenity-single-page-report:4.0.46")
+        classpath("net.serenity-bdd:serenity-json-summary-report:4.0.46")
     }
 }
 
@@ -33,7 +33,7 @@ dependencies {
     testImplementation("io.ktor:ktor-server-netty:2.3.0")
     testImplementation("io.ktor:ktor-client-apache:2.3.0")
     // RestAPI client
-    testImplementation("org.hyperledger.identus:cloud-agent-client-kotlin:1.33.1")
+    testImplementation("org.hyperledger.identus:cloud-agent-client-kotlin:1.36.1")
     // Test helpers library
     testImplementation("io.iohk.atala:atala-automation:0.4.0")
     // Hoplite for configuration
@@ -41,6 +41,10 @@ dependencies {
     testImplementation("com.sksamuel.hoplite:hoplite-hocon:2.7.5")
     // Kotlin compose
     testImplementation("org.testcontainers:testcontainers:1.19.1")
+    // Crypto
+    testImplementation("com.nimbusds:nimbus-jose-jwt:9.40")
+    testImplementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
+    testImplementation("com.google.crypto.tink:tink:1.13.0")
 }
 
 serenity {
@@ -54,7 +58,7 @@ tasks.register<Delete>("cleanTarget") {
 
 tasks.test {
     dependsOn("cleanTarget")
-    finalizedBy("reports")
+    finalizedBy("aggregate", "reports")
     testLogging.showStandardStreams = true
     systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
 }
@@ -82,11 +86,13 @@ afterEvaluate {
         tasks.register<Test>("test_$fileName") {
             group = "verification"
             testLogging.showStandardStreams = true
+            systemProperty("context", fileName)
             systemProperty("TESTS_CONFIG", "/configs/$fileName.conf")
             systemProperty("PRISM_NODE_VERSION", System.getenv("PRISM_NODE_VERSION") ?: "")
             systemProperty("AGENT_VERSION", System.getenv("AGENT_VERSION") ?: "")
             systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
             finalizedBy("aggregate", "reports")
+            outputs.upToDateWhen { false }
         }
     }
 
@@ -94,7 +100,7 @@ afterEvaluate {
      * Runs the integration suite for each config file present
      * Restrictions: aggregation of all executions doesn't work because of serenity configuration
      */
-    tasks.register("regression") {
+    tasks.register<Test>("regression") {
         dependsOn("cleanTarget")
         group = "verification"
         configFiles.forEach {
