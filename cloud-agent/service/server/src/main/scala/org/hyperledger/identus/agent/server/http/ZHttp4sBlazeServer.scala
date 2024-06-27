@@ -31,9 +31,9 @@ class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNam
         acceptEncoding: Option[String],
         referrer: Option[String],
         dnt: Option[String],
-        SecChUa: Option[String],
-        SecChUaMobile: Option[String],
-        SecChUaPlatform: Option[String],
+        secChUa: Option[String],
+        secChUaMobile: Option[String],
+        secChUaPlatform: Option[String],
     )
     object FingerPrintData {
       given encoder: Encoder[FingerPrintData] = deriveEncoder[FingerPrintData]
