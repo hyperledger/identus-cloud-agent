@@ -29,9 +29,11 @@ The Screenplay pattern is used to write the tests. The pattern is described in d
 * Each actor has their own abilities (actions they can perform) and interactions (tasks they can carry out). These interactions encapsulate the steps required to achieve a certain goal in the system.
 * The Screenplay Pattern promotes the use of high-level, business-oriented language in test scripts, making them more understandable to non-technical stakeholders.
 
-<p align="center">
-<img src="docs/static/screenplay.png" alt="Screenplay pattern overview" width="750"/><br>
-<em>Pic. 1. Screenplay pattern overview</em>
+<p style="text-align: center">
+    <picture>
+        <img src="docs/static/screenplay.png" alt="Screenplay pattern overview" width="750"/>
+    </picture><br>
+    <em>Screenplay pattern overview</em>
 </p>
 
 ## Project structure
@@ -66,9 +68,11 @@ The main idea of the framework is to test the ICA as a black box.
 
 The tests interact with the ICA through the API and webhook messages.
 
-<p align="center">
-<img src="docs/static/system_under_test.png" alt="Screenplay pattern overview" width="800"/><br>
-<em>Pic. 2. Overview of the system under test. Roles, Agents and Services communication.</em>
+<p style="text-align: center">
+    <picture>
+        <img src="docs/static/system_under_test.png" alt="Screenplay pattern overview" width="800"/>
+    </picture><br>
+    <em>Overview of the system under test. Roles, Agents and Services communication.</em>
 </p>
 
 ### ICA Roles in Tests
@@ -397,7 +401,7 @@ The following variables must be set before running the tests:
 * `AGENT_VERSION`: version of the ICA docker image to use.
 
 ```shell
-TESTS_CONFIG=/configs/basic.conf PRISM_NODE_VERSION=2.3.0 AGENT_VERSION=1.30.1 ./gradlew test
+TESTS_CONFIG=/configs/basic.conf PRISM_NODE_VERSION=2.3.0 AGENT_VERSION=1.36.1 ./gradlew test
 ```
 
 > Please note: there is no need to pass environment variables if you're using already running agents.
@@ -414,16 +418,36 @@ To simplify the execution, each configuration file creates a new `gradle` task. 
 It's possible to execute the configuration file as
 
 ```shell
-PRISM_NODE_VERSION=2.3.0 AGENT_VERSION=1.30.1 ./gradlew test_basic
+PRISM_NODE_VERSION=2.3.0 AGENT_VERSION=1.36.1 ./gradlew test_basic
 ```
 
-Also, it's possible to execute the integration tests to all configurations files. The task is named `regression`, it should take a lot of time to execute.
-
-Note: report is not working due constrains in Serenity BDD reporting system.
+Also, it's possible to execute the integration tests to all configurations files. The task is named `regression`, it should take a long time to execute.
 
 ```shell
-PRISM_NODE_VERSION=2.3.0 AGENT_VERSION=1.30.1 ./gradlew regression
+PRISM_NODE_VERSION=2.3.0 AGENT_VERSION=1.36.1 ./gradlew regression
 ```
+
+#### Regression report
+
+Running the regression tasks implies running the same features multiple times.
+To enable a full report of the regression execution, `context` variable was introduced to the report.
+
+To run all scenarios, even if there's a failure, it's required to add `--continue` to the execution
+
+Example
+```bash
+AGENT_VERSION=v1.36.1 PRISM_NODE_VERSION=v2.3.0 ./gradlew regression --continue
+```
+
+Each `context` is based on the configuration used for the current execution and will be displayed in the
+Serenity report:
+
+<p style="text-align: center">
+    <picture>
+        <img src="docs/static/serenity_context.png" alt="Serenity Regression report contexts" width="800">
+    </picture><br>
+    <em>Serenity Regression report with contexts</em>
+</p>
 
 ### Running scenarios in IntelliJ IDEA
 
@@ -433,9 +457,11 @@ It is easy to do by executing `IntegrationTestsRunner` class and selecting the r
 
 The required configuration will be created, but you have to edit it to set the environment variables.
 
-<p align="center">
-<img src="docs/static/intellij.png" alt="Running tests in IntelliJ IDEA" width="850"/><br>
-<em>Pic. 3. Running tests through IntelliJ IDEA.</em>
+<p style="text-align: center">
+    <picture>
+        <img src="docs/static/intellij.png" alt="Running tests in IntelliJ IDEA" width="850"/>
+    </picture><br>
+    <em>Running tests through IntelliJ IDEA.</em>
 </p>
 
 You could edit `@CucumberOptions` annotation to specify the features to run, as well as specify tags to include or exclude:
@@ -444,8 +470,9 @@ For example, here is how you can run only connection scenarios:
 ```kotlin
 @CucumberOptions(
     features = ["src/test/resources/features/connection"],
-    ...
+    // ...
 )
+class IntegrationTestsRunner
 ```
 
 If you would like to run only particular scenarios from the feature or combine multiple scenarios from different feature file,
@@ -454,8 +481,9 @@ you could use tags:
 @CucumberOptions(
     features = ["src/test/resources/features"],
     tags = ["@connection and @credentials"],
-    ...
+    // ...
 )
+class IntegrationTestsRunner
 ```
 
 > Please note: if you use custom tags, you need to specify them in the feature files as well.
@@ -488,21 +516,27 @@ You could start by opening `index.html` file in your browser.
 
 On the main report page you could see the summary of the test run as well as the functional coverage table:
 
-<p align="center">
-<img src="docs/static/report_summary.png" alt="Report summary" width="800"/><br>
-<em>Pic. 4. HTML-report summary example.</em>
+<p style="text-align: center">
+    <picture>
+        <img src="docs/static/report_summary.png" alt="Report summary" width="800"/>
+    </picture><br>
+    <em>HTML-report summary example.</em>
 </p>
 
-<p align="center">
-<img src="docs/static/functional_coverage.png" alt="Functional coverage" width="800"/><br>
-<em>Pic. 5. Functional coverage example.</em>
+<p style="text-align: center">
+    <picture>
+        <img src="docs/static/functional_coverage.png" alt="Functional coverage" width="800"/>
+    </picture><br>
+    <em>Functional coverage example.</em>
 </p>
 
 Then, you can go deeper to each scenario and open each step to see the details of the test execution:
 
-<p align="center">
-<img src="docs/static/rest_requests.png" alt="REST requests analysis" width="800"/><br>
-<em>Pic. 6. REST requests analysis example.</em>
+<p style="text-align: center">
+    <picture>
+        <img src="docs/static/rest_requests.png" alt="REST requests analysis" width="800"/>
+    </picture><br>
+    <em>REST requests analysis example.</em>
 </p>
 
 ### Summary reports
@@ -530,3 +564,24 @@ And summary reports themselves will be available in `./target/site/serenity` fol
 JUnit XML reports are also generated under `./target/site/serenity` folder with names `SERENITY-JUNIT-*.xml`.
 
 > For more information about the reports, please refer to [Serenity BDD reports documentation](https://serenity-bdd.github.io/docs/reporting/the_serenity_reports).
+
+### Docker logs
+
+Docker logs are now redirected to `target/logs` folder.
+
+If you're running the test using the custom config goals  it will have the context added
+to the path as `target/logs/basic`.
+
+Example
+```bash
+AGENT_VERSION=v1.36.1 PRISM_NODE_VERSION=v2.3.0 ./gradlew test_basic
+```
+
+Will have the logs output as such:
+
+<p style="text-align: center">
+    <picture>
+        <img src="docs/static/logs.png" alt="Docker logs directory" width="346"/>
+    </picture><br>
+    <em>Docker logs directory</em>
+</p>
