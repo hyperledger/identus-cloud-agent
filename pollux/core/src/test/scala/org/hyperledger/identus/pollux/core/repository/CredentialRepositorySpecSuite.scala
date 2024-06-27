@@ -5,7 +5,7 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
-import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.*
 import zio.{Exit, ZIO, ZLayer}
 import zio.test.*
 import zio.test.Assertion.*
@@ -388,12 +388,15 @@ object CredentialRepositorySpecSuite {
     test("updateFail (fail one retry) updates record") {
       val aRecord = issueCredentialRecord(CredentialFormat.JWT)
 
-      val failReason = Some("Just to test")
+      val failReason = FailureInfo("CredentialRepositorySpecSuite", StatusCode(999), "Just to test")
       for {
         repo <- ZIO.service[CredentialRepository]
         _ <- repo.create(aRecord)
         record0 <- repo.findById(aRecord.id)
-        _ <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("CredentialRepositorySpecSuite", StatusCode(999), "Just to test"))
+        )
         updatedRecord1 <- repo.findById(aRecord.id)
         _ <- repo.updateProtocolState(aRecord.id, ProtocolState.OfferPending, ProtocolState.OfferSent)
         updatedRecord2 <- repo.findById(aRecord.id)
@@ -401,7 +404,7 @@ object CredentialRepositorySpecSuite {
         assertTrue(record0.isDefined) &&
         assertTrue(record0.get.metaRetries == maxRetries) &&
         assertTrue(updatedRecord1.get.metaRetries == (maxRetries - 1)) &&
-        assertTrue(updatedRecord1.get.metaLastFailure == failReason) &&
+        assertTrue(updatedRecord1.get.metaLastFailure.get == failReason) &&
         assertTrue(updatedRecord1.get.metaNextRetry.isDefined) &&
         // continues to work normally after retry
         assertTrue(updatedRecord2.get.metaNextRetry.isDefined) &&
@@ -416,12 +419,30 @@ object CredentialRepositorySpecSuite {
         repo <- ZIO.service[CredentialRepository]
         _ <- repo.create(aRecord)
         record0 <- repo.findById(aRecord.id)
-        _ <- repo.updateAfterFail(aRecord.id, Some("1 - Just to test"))
-        _ <- repo.updateAfterFail(aRecord.id, Some("2 - Just to test"))
-        - <- repo.updateAfterFail(aRecord.id, Some("3 - Just to test"))
-        _ <- repo.updateAfterFail(aRecord.id, Some("4 - Just to test"))
-        _ <- repo.updateAfterFail(aRecord.id, Some("5 - Just to test"))
-        _ <- repo.updateAfterFail(aRecord.id, Some("6 - Just to test"))
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("CredentialRepositorySpecSuite", StatusCode(999), "1 - Just to test"))
+        )
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("CredentialRepositorySpecSuite", StatusCode(999), "2 - Just to test"))
+        )
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("CredentialRepositorySpecSuite", StatusCode(999), "3 - Just to test"))
+        )
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("CredentialRepositorySpecSuite", StatusCode(999), "4 - Just to test"))
+        )
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("CredentialRepositorySpecSuite", StatusCode(999), "5 - Just to test"))
+        )
+        _ <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("CredentialRepositorySpecSuite", StatusCode(999), "6 - Just to test"))
+        )
         // The 6 retry should not happen since the max retries is 5
         // (but should also not have an effect other that update the error message)
         updatedRecord1 <- repo.findById(aRecord.id)
@@ -431,7 +452,11 @@ object CredentialRepositorySpecSuite {
         assertTrue(record0.get.metaRetries == maxRetries) &&
         assertTrue(updatedRecord1.get.metaRetries == 0) && // assume the max retries is 5
         assertTrue(updatedRecord1.get.metaNextRetry.isEmpty) &&
-        assertTrue(updatedRecord1.get.metaLastFailure == Some("6 - Just to test"))
+        assertTrue(
+          updatedRecord1.get.metaLastFailure == Some(
+            FailureInfo("CredentialRepositorySpecSuite", StatusCode(999), "6 - Just to test")
+          )
+        )
 
       }
     }

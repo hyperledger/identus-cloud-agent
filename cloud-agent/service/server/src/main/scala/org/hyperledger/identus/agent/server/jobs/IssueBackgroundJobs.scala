@@ -9,6 +9,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.service.CredentialService
+import org.hyperledger.identus.shared.models.Failure
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
@@ -618,11 +619,12 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
           case walletNotFound: WalletNotFoundError            => ZIO.unit
           case CredentialServiceError.RecordNotFound(_, _)    => ZIO.unit
           case CredentialServiceError.UnsupportedDidFormat(_) => ZIO.unit
-          case ((walletAccessContext, e)) =>
+          case failure: Failure                               => ??? // FIXME
+          case ((walletAccessContext, failure)) =>
             for {
               credentialService <- ZIO.service[CredentialService]
               _ <- credentialService
-                .reportProcessingFailure(record.id, Some(e.toString))
+                .reportProcessingFailure(record.id, Some(failure))
                 .provideSomeLayer(ZLayer.succeed(walletAccessContext))
             } yield ()
         }
