@@ -16,7 +16,7 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.repository.PresentationRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import zio.*
 import zio.interop.catz.*
 import zio.json.*
@@ -160,6 +160,9 @@ class JdbcPresentationRepository(
   given proposePresentationGet: Get[ProposePresentation] =
     Get[String].map(decode[ProposePresentation](_).getOrElse(???))
   given proposePresentationPut: Put[ProposePresentation] = Put[String].contramap(_.asJson.toString)
+
+  given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
+  given failurePut: Put[Failure] = Put[String].contramap(_.asFailureInfo.toJson)
 
   override def createPresentationRecord(record: PresentationRecord): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
@@ -488,7 +491,7 @@ class JdbcPresentationRepository(
 
   def updateAfterFail(
       recordId: DidCommID,
-      failReason: Option[String]
+      failReason: Option[Failure]
   ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.presentation_records

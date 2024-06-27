@@ -34,7 +34,7 @@ inThisBuild(
       "-unchecked",
       "-Dquill.macro.log=false", // disable quill macro logs
       "-Wunused:all",
-      "-Wconf:any:warning" // TODO: change unused imports to errors, Wconf configuration string is different from scala 2, figure out how!
+      "-Wconf:any:warning", // TODO: change unused imports to errors, Wconf configuration string is different from scala 2, figure out how!
       // TODO "-feature",
       // TODO "-Xfatal-warnings",
       // TODO "-Yexplicit-nulls",
@@ -502,7 +502,8 @@ lazy val models = project
     ), // TODO try to remove this from this module
     // libraryDependencies += D.didScala
   )
-  .settings(libraryDependencies += D.nimbusJwt) //FIXME just for the DidAgent
+  .settings(libraryDependencies += D.nimbusJwt) // FIXME just for the DidAgent
+  .dependsOn(shared)
 
 /* TODO move code from agentDidcommx to here
 models implementation for didcommx () */

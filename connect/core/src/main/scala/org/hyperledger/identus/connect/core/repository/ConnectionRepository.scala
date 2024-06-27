@@ -3,6 +3,7 @@ package org.hyperledger.identus.connect.core.repository
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
 import org.hyperledger.identus.mercury.protocol.connection.*
+import org.hyperledger.identus.shared.models.Failure
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{UIO, URIO}
 
@@ -67,7 +68,7 @@ trait ConnectionRepository {
 
   def updateAfterFail(
       recordId: UUID,
-      failReason: Option[String],
+      failReason: Option[Failure],
   ): URIO[WalletAccessContext, Unit]
 
 }

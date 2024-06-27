@@ -74,7 +74,7 @@ class JdbcVerificationPolicyRepository(xa: Transactor[ContextAwareTask]) extends
 
   override def create(
       verificationPolicy: model.VerificationPolicy
-  ): RIO[WalletAccessContext, model.VerificationPolicy] = {
+  ): URIO[WalletAccessContext, VerificationPolicy] = {
     val program = (walletId: WalletId) =>
       for {
         vp <- VerificationPolicySql.insert(verificationPolicy.toDto(walletId))
@@ -83,80 +83,81 @@ class JdbcVerificationPolicyRepository(xa: Transactor[ContextAwareTask]) extends
 
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      vp: model.VerificationPolicy <- program(walletId).transactWallet(xa)
+      vp: model.VerificationPolicy <- program(walletId).transactWallet(xa).orDie
     } yield vp
   }
 
-  override def get(id: UUID): RIO[WalletAccessContext, Option[model.VerificationPolicy]] = {
+  override def findById(id: UUID): URIO[WalletAccessContext, Option[VerificationPolicy]] = {
     val program = for {
-      vp <- VerificationPolicySql.getById(id)
-      vpc <- VerificationPolicySql.getVerificationPolicyConstrains(Seq(id))
+      vp <- VerificationPolicySql.findById(id)
+      vpc <- VerificationPolicySql.getVerificationPolicyConstraints(Seq(id))
     } yield vp.map(_.toDomain(vpc))
 
     for {
-      vp: Option[model.VerificationPolicy] <- program.transactWallet(xa)
+      vp: Option[model.VerificationPolicy] <- program.transactWallet(xa).orDie
     } yield vp
   }
 
-  override def exists(id: UUID): RIO[WalletAccessContext, Boolean] =
-    VerificationPolicySql.exists(id).transactWallet(xa)
+  override def exists(id: UUID): URIO[WalletAccessContext, Boolean] =
+    VerificationPolicySql.exists(id).transactWallet(xa).orDie
 
-  override def getHash(id: UUID): RIO[WalletAccessContext, Option[Int]] =
-    VerificationPolicySql.getHashById(id).transactWallet(xa)
+  override def findHashById(id: UUID): URIO[WalletAccessContext, Option[Int]] =
+    VerificationPolicySql.findHashById(id).transactWallet(xa).orDie
 
   override def update(
       id: UUID,
       nonce: Int,
       verificationPolicy: model.VerificationPolicy
-  ): RIO[WalletAccessContext, Option[model.VerificationPolicy]] = {
+  ): URIO[WalletAccessContext, VerificationPolicy] = {
     val preparedVP = verificationPolicy.copy(id = id, updatedAt = OffsetDateTime.now(ZoneOffset.UTC))
     val program = (walletId: WalletId) =>
       for {
-        _ <- VerificationPolicySql.update(preparedVP.toDto(walletId), nonce)
+        updateVp <- VerificationPolicySql.update(preparedVP.toDto(walletId), nonce)
         _ <- VerificationPolicySql.dropConstraintsByVerificationPolicyId(id)
-        vp: Option[db.VerificationPolicy] <- VerificationPolicySql.getById(id)
         vpc: Seq[db.VerificationPolicyConstraint] <- VerificationPolicySql.insertConstraints(
           preparedVP.toDtoConstraints
         )
-      } yield vp.map(_.toDomain(vpc))
+      } yield updateVp.toDomain(vpc)
 
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      vp <- program(walletId).transactWallet(xa)
+      vp <- program(walletId).transactWallet(xa).orDie
     } yield vp
   }
 
-  override def delete(id: UUID): RIO[WalletAccessContext, Option[model.VerificationPolicy]] = {
+  override def delete(id: UUID): URIO[WalletAccessContext, VerificationPolicy] = {
     val program = for {
-      vp <- VerificationPolicySql.getById(id)
-      vpc <- VerificationPolicySql.getVerificationPolicyConstrains(Seq(id))
-      _ <- VerificationPolicySql.delete(id)
-    } yield vp.map(_.toDomain(vpc))
+      maybeVp <- VerificationPolicySql.findById(id)
+      vpc <- VerificationPolicySql.getVerificationPolicyConstraints(Seq(id))
+      vp <- VerificationPolicySql.delete(id)
+    } yield vp.toDomain(vpc)
 
-    program.transactWallet(xa)
+    program.transactWallet(xa).orDie
   }
 
-  override def totalCount(): RIO[WalletAccessContext, Long] = {
-    VerificationPolicySql.count().transactWallet(xa)
+  override def totalCount(): URIO[WalletAccessContext, Long] = {
+    VerificationPolicySql.count().transactWallet(xa).orDie
   }
 
-  override def filteredCount(nameOpt: Option[String]): RIO[WalletAccessContext, Long] =
-    VerificationPolicySql.countFiltered(nameOpt).transactWallet(xa)
+  override def filteredCount(nameOpt: Option[String]): URIO[WalletAccessContext, Long] =
+    VerificationPolicySql.countFiltered(nameOpt).transactWallet(xa).orDie
 
   override def lookup(
       nameOpt: Option[String],
       offsetOpt: Option[Int],
       limitOpt: Option[Int]
-  ): RIO[WalletAccessContext, List[model.VerificationPolicy]] = {
+  ): URIO[WalletAccessContext, List[VerificationPolicy]] = {
     for {
       policies: List[db.VerificationPolicy] <- VerificationPolicySql
         .filteredVerificationPolicies(nameOpt, offsetOpt, limitOpt)
         .transactWallet(xa)
+        .orDie
       ids = policies.map(_.id)
 
       constrains <- VerificationPolicySql
-        .getVerificationPolicyConstrains(ids)
+        .getVerificationPolicyConstraints(ids)
         .transactWallet(xa)
+        .orDie
 
       constraintsById = constrains.groupBy(_.fk_id)
 
