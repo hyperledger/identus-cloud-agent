@@ -59,8 +59,8 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
           .runCollectN(1)
           .flatMap(_.head)
         _ <- repo.create(record).provide(wallet1)
-        ownRecord <- repo.get(record.id).provide(wallet1)
-        crossRecord <- repo.get(record.id).provide(wallet2)
+        ownRecord <- repo.findById(record.id).provide(wallet1)
+        crossRecord <- repo.findById(record.id).provide(wallet2)
       } yield assert(ownRecord)(isSome(equalTo(record))) && assert(crossRecord)(isNone)
     },
     test("total count do not consider records outside of the wallet") {
@@ -90,7 +90,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
           .flatMap(_.head)
         _ <- repo.create(record1).provide(wallet1)
         deleteResult <- repo.delete(record1.id).provide(wallet2).exit
-        actualRecord <- repo.get(record1.id).provide(wallet1)
+        actualRecord <- repo.findById(record1.id).provide(wallet1)
       } yield assert(deleteResult)(failsCause(anything)) &&
         assert(actualRecord)(isSome(equalTo(record1)))
     }
@@ -107,7 +107,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
             .runCollectN(1)
             .flatMap(_.head)
           actualCreated <- repo.create(expectedCreated)
-          getByIdCreated <- repo.get(expectedCreated.id)
+          getByIdCreated <- repo.findById(expectedCreated.id)
 
           allRecordsAreSimilar = assert(expectedCreated)(
             equalTo(actualCreated)
@@ -122,13 +122,8 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
             description = "new description"
           )
           actualUpdated <- repo
-            .update(
-              actualCreated.id,
-              actualCreated.nonce,
-              expectedUpdated
-            )
-            .map(_.get)
-          getByIdUpdated <- repo.get(expectedUpdated.id).map(_.get)
+            .update(actualCreated.id, actualCreated.nonce, expectedUpdated)
+          getByIdUpdated <- repo.findById(expectedUpdated.id).map(_.get)
 
           isUpdated = assert(actualUpdated)(equalTo(expectedUpdated.copy(updatedAt = actualUpdated.updatedAt))) &&
             assert(getByIdUpdated)(equalTo(expectedUpdated.copy(updatedAt = actualUpdated.updatedAt)))
@@ -140,27 +135,20 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
             description = "new description 2"
           )
           actualUpdated2 <- repo
-            .update(
-              actualUpdated.id,
-              actualUpdated.nonce,
-              expectedUpdated2
-            )
-            .map(_.get)
-          getByIdUpdated2 <- repo.get(expectedUpdated2.id).map(_.get)
+            .update(actualUpdated.id, actualUpdated.nonce, expectedUpdated2)
+          getByIdUpdated2 <- repo.findById(expectedUpdated2.id).map(_.get)
 
           isUpdated2 = assert(actualUpdated2)(equalTo(expectedUpdated2.copy(updatedAt = actualUpdated.updatedAt))) &&
             assert(getByIdUpdated2)(equalTo(expectedUpdated2.copy(updatedAt = actualUpdated.updatedAt)))
 
           //
 
-          actualDeleted <- repo.delete(
-            expectedUpdated.id
-          )
+          actualDeleted <- repo.delete(expectedUpdated.id)
 
           isDeletedReturnedBack = assert(actualDeleted)(
-            isSome(equalTo(actualUpdated2))
+            equalTo(actualUpdated2)
           )
-          getByIdDeleted <- repo.get(actualUpdated.id)
+          getByIdDeleted <- repo.findById(actualUpdated.id)
 
           isDeleted = assert(getByIdDeleted)(isNone)
 
@@ -218,11 +206,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
       for {
         repo <- ZIO.service[VerificationPolicyRepository]
         first <- repo.lookup(None, offsetOpt = Some(0), limitOpt = Some(N / 2))
-        second <- repo.lookup(
-          None,
-          offsetOpt = Some(N / 2),
-          limitOpt = Some(N / 2)
-        )
+        second <- repo.lookup(None, offsetOpt = Some(N / 2), limitOpt = Some(N / 2))
         firstPageContainsAHalfOfTheRecords = assert(first.length)(
           equalTo(N / 2)
         )
@@ -241,11 +225,7 @@ object VerificationPolicySqlIntegrationSpec extends ZIOSpecDefault, PostgresTest
         repo <- ZIO.service[VerificationPolicyRepository]
 
         paginator = new Paginator(skipLimit =>
-          repo.lookup(
-            nameOpt = None,
-            offsetOpt = Some(skipLimit.skip),
-            limitOpt = Some(skipLimit.limit)
-          )
+          repo.lookup(nameOpt = None, offsetOpt = Some(skipLimit.skip), limitOpt = Some(skipLimit.limit))
         )
 
         allItems1 <- paginator.fetchAll(SkipLimit(0, 1))
