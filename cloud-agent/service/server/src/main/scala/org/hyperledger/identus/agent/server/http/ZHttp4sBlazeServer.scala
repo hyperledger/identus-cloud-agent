@@ -68,11 +68,14 @@ class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNam
           case None       => "unknown"
         }
       },
-      "api_key" -> { case (_, sr) =>
-        sr.header("apikey").getOrElse("unknown")
+      "api_key_hash" -> { case (_, sr) =>
+        sr.header("apikey").map(x => Sha256Hash.compute(x.getBytes).hexEncoded).getOrElse("unknown")
       },
-      "token" -> { case (_, sr) =>
-        sr.header("authorization").map(_.split(" ").last).getOrElse("unknown")
+      "token_hash" -> { case (_, sr) =>
+        sr.header("authorization")
+          .map(_.split(" ").last)
+          .map(x => Sha256Hash.compute(x.getBytes).hexEncoded)
+          .getOrElse("unknown")
       },
     ),
   )
