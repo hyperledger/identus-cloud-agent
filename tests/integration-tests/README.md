@@ -29,7 +29,7 @@ The Screenplay pattern is used to write the tests. The pattern is described in d
 * Each actor has their own abilities (actions they can perform) and interactions (tasks they can carry out). These interactions encapsulate the steps required to achieve a certain goal in the system.
 * The Screenplay Pattern promotes the use of high-level, business-oriented language in test scripts, making them more understandable to non-technical stakeholders.
 
-<p style="text-align: center">
+<p align="center">
     <picture>
         <img src="docs/static/screenplay.png" alt="Screenplay pattern overview" width="750"/>
     </picture><br>
@@ -68,7 +68,7 @@ The main idea of the framework is to test the ICA as a black box.
 
 The tests interact with the ICA through the API and webhook messages.
 
-<p style="text-align: center">
+<p align="center">
     <picture>
         <img src="docs/static/system_under_test.png" alt="Screenplay pattern overview" width="800"/>
     </picture><br>
@@ -442,7 +442,7 @@ AGENT_VERSION=v1.36.1 PRISM_NODE_VERSION=v2.3.0 ./gradlew regression --continue
 Each `context` is based on the configuration used for the current execution and will be displayed in the
 Serenity report:
 
-<p style="text-align: center">
+<p align="center">
     <picture>
         <img src="docs/static/serenity_context.png" alt="Serenity Regression report contexts" width="800">
     </picture><br>
@@ -457,7 +457,7 @@ It is easy to do by executing `IntegrationTestsRunner` class and selecting the r
 
 The required configuration will be created, but you have to edit it to set the environment variables.
 
-<p style="text-align: center">
+<p align="center">
     <picture>
         <img src="docs/static/intellij.png" alt="Running tests in IntelliJ IDEA" width="850"/>
     </picture><br>
@@ -516,14 +516,14 @@ You could start by opening `index.html` file in your browser.
 
 On the main report page you could see the summary of the test run as well as the functional coverage table:
 
-<p style="text-align: center">
+<p align="center">
     <picture>
         <img src="docs/static/report_summary.png" alt="Report summary" width="800"/>
     </picture><br>
     <em>HTML-report summary example.</em>
 </p>
 
-<p style="text-align: center">
+<p align="center">
     <picture>
         <img src="docs/static/functional_coverage.png" alt="Functional coverage" width="800"/>
     </picture><br>
@@ -532,7 +532,7 @@ On the main report page you could see the summary of the test run as well as the
 
 Then, you can go deeper to each scenario and open each step to see the details of the test execution:
 
-<p style="text-align: center">
+<p align="center">
     <picture>
         <img src="docs/static/rest_requests.png" alt="REST requests analysis" width="800"/>
     </picture><br>
@@ -579,7 +579,7 @@ AGENT_VERSION=v1.36.1 PRISM_NODE_VERSION=v2.3.0 ./gradlew test_basic
 
 Will have the logs output as such:
 
-<p style="text-align: center">
+<p align="center">
     <picture>
         <img src="docs/static/logs.png" alt="Docker logs directory" width="346"/>
     </picture><br>
