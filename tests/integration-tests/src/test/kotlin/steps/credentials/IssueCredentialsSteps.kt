@@ -3,6 +3,7 @@ package steps.credentials
 import abilities.ListenToEvents
 import common.CredentialSchema
 import interactions.Post
+import interactions.body
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
@@ -50,10 +51,7 @@ class IssueCredentialsSteps {
         )
 
         issuer.attemptsTo(
-            Post.to("/issue-credentials/credential-offers")
-                .with {
-                    it.body(credentialOfferRequest)
-                },
+            Post.to("/issue-credentials/credential-offers").body(credentialOfferRequest),
         )
     }
 
@@ -85,11 +83,8 @@ class IssueCredentialsSteps {
         format: String,
         schema: CredentialSchema,
     ) {
-        val schemaGuid = issuer.recall<String>(schema.name)!!
-        val claims = linkedMapOf(
-            "name" to "Name",
-            "age" to 18,
-        )
+        val schemaGuid = issuer.recall<String>(schema.name)
+        val claims = schema.claims
         sendCredentialOffer(issuer, holder, format, schemaGuid, claims)
         saveCredentialOffer(issuer, holder)
     }
@@ -217,6 +212,7 @@ class IssueCredentialsSteps {
                 it.data.thid == issuer.recall<String>("thid")
             }
             issuer.remember("issuedCredential", credentialEvent!!.data)
+
             credentialEvent != null &&
                 credentialEvent!!.data.protocolState == IssueCredentialRecord.ProtocolState.CREDENTIAL_SENT
         }
