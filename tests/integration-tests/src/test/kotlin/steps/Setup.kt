@@ -16,7 +16,6 @@ import net.serenitybdd.screenplay.rest.abilities.CallAnApi
 import org.apache.http.HttpStatus
 import org.hyperledger.identus.client.models.CreateWalletRequest
 import org.hyperledger.identus.client.models.CreateWebhookNotification
-import org.ietf.jgss.Oid
 import java.util.UUID
 
 object Setup {
@@ -103,7 +102,7 @@ object Setup {
                 try {
                     actor.remember(
                         "BEARER_TOKEN",
-                        config.services.keycloak.getKeycloakAuthToken(actor.name, actor.name)
+                        config.services.keycloak.getKeycloakAuthToken(actor.name, actor.name),
                     )
                 } catch (e: NullPointerException) {
                     throw ConfigException("Keycloak is configured, but no token found for user ${actor.name}!")

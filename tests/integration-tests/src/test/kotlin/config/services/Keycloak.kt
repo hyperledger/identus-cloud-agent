@@ -19,7 +19,7 @@ data class Keycloak(
     @ConfigAlias("client_secret") val clientSecret: String = "prism-agent-demo-secret",
     @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
     @ConfigAlias("compose_file") val keycloakComposeFile: String = "src/test/resources/containers/keycloak.yml",
-    @ConfigAlias("extra_envs") val extraEnvs: Map<String, String> = emptyMap()
+    @ConfigAlias("extra_envs") val extraEnvs: Map<String, String> = emptyMap(),
 ) : ServiceBase() {
     private val logger = Logger.get<Keycloak>()
     private val keycloakEnvConfig: Map<String, String> = extraEnvs + mapOf(

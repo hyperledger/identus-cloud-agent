@@ -29,11 +29,11 @@ class ManageCredentialConfigSteps {
                         CreateCredentialConfigurationRequest(
                             configurationId = configurationId,
                             format = CredentialFormat.JWT_VC_JSON,
-                            schemaId = "$baseUrl/schema-registry/schemas/$schemaGuid/schema"
-                        )
+                            schemaId = "$baseUrl/schema-registry/schemas/$schemaGuid/schema",
+                        ),
                     )
                 },
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_CREATED)
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_CREATED),
         )
     }
 
@@ -42,7 +42,7 @@ class ManageCredentialConfigSteps {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
         issuer.attemptsTo(
             Delete("/oid4vci/issuers/${credentialIssuer.id}/credential-configurations/$configurationId"),
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK)
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
         )
     }
 
@@ -51,12 +51,12 @@ class ManageCredentialConfigSteps {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
         issuer.attemptsTo(
             Get("/oid4vci/issuers/${credentialIssuer.id}/.well-known/openid-credential-issuer"),
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK)
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
         )
         val metadata = SerenityRest.lastResponse().get<IssuerMetadata>()
         val credConfig = metadata.credentialConfigurationsSupported[configurationId]!!
         issuer.attemptsTo(
-            Ensure.that(credConfig.scope).isEqualTo(configurationId)
+            Ensure.that(credConfig.scope).isEqualTo(configurationId),
         )
     }
 
@@ -65,11 +65,11 @@ class ManageCredentialConfigSteps {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
         issuer.attemptsTo(
             Get("/oid4vci/issuers/${credentialIssuer.id}/.well-known/openid-credential-issuer"),
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK)
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
         )
         val metadata = SerenityRest.lastResponse().get<IssuerMetadata>()
         issuer.attemptsTo(
-            Ensure.that(metadata.credentialConfigurationsSupported.keys).doesNotContain(configurationId)
+            Ensure.that(metadata.credentialConfigurationsSupported.keys).doesNotContain(configurationId),
         )
     }
 }
