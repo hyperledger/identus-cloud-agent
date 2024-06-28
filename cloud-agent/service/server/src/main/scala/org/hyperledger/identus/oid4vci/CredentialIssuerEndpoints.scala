@@ -77,7 +77,7 @@ object CredentialIssuerEndpoints {
     )
     .out(jsonBody[CredentialResponse])
     .errorOut(credentialEndpointErrorOutput)
-    .name("issueCredential")
+    .name("oid4vciIssueCredential")
     .summary("Credential Endpoint")
     .description(
       """OID for VCI [Credential Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-endpoint)""".stripMargin
@@ -97,7 +97,7 @@ object CredentialIssuerEndpoints {
     )
     .out(jsonBody[CredentialOfferResponse])
     .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
-    .name("createCredentialOffer")
+    .name("oid4vciCreateCredentialOffer")
     .summary("Create a new credential offer")
     .description(
       """Create a new credential offer and return a compliant `CredentialOffer` for the holder's
