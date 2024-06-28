@@ -14,7 +14,11 @@ import scala.util.Try
 type ExtendedErrorResponse = ErrorResponse | CredentialErrorResponse
 
 object ExtendedErrorResponse {
-  given schema: Schema[ExtendedErrorResponse] = Schema.schemaForEither[ErrorResponse, CredentialErrorResponse].as
+  given schema: Schema[ExtendedErrorResponse] =
+    Schema
+      .schemaForEither[ErrorResponse, CredentialErrorResponse]
+      .name(Schema.SName("ExtendedErrorResponse"))
+      .as
   given encoder: JsonEncoder[ExtendedErrorResponse] =
     ErrorResponse.encoder
       .orElseEither(CredentialErrorResponse.encoder)
