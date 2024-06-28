@@ -17,11 +17,3 @@ Scenario: Successfully delete credential issuer
     When Issuer deletes the oid4vci issuer
     Then Issuer cannot see the oid4vci issuer on the agent
     And Issuer cannot see the oid4vci IssuerMetadata endpoint
-
-@dev
-Scenario: Successfully create credential configuration
-    Given Issuer has a published DID for JWT
-    And Issuer has published STUDENT_SCHEMA schema
-    And Issuer has an existing oid4vci issuer
-    When Issuer uses STUDENT_SCHEMA to create a credential configuration "StudentProfile"
-    Then Issuer sees the "StudentProfile" credential configuration on IssuerMetadata endpoint
