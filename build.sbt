@@ -731,10 +731,18 @@ lazy val polluxCore = project
     name := "pollux-core",
     libraryDependencies ++= D_Pollux.coreDependencies
   )
-  .dependsOn(shared)
-  .dependsOn(agentWalletAPI)
-  .dependsOn(polluxVcJWT)
-  .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds, polluxSDJWT)
+  .dependsOn(
+    shared,
+    castorCore % "compile->compile;test->test", // Test is for MockDIDService
+    agentWalletAPI % "compile->compile;test->test", // Test is for MockManagedDIDService
+    vc,
+    resolver,
+    agentDidcommx,
+    eventNotification,
+    polluxAnoncreds,
+    polluxVcJWT,
+    polluxSDJWT,
+  )
 
 lazy val polluxDoobie = project
   .in(file("pollux/sql-doobie"))
@@ -864,17 +872,16 @@ lazy val cloudAgentServer = project
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(agentWalletAPI % "compile->compile;test->test")
   .dependsOn(
+    sharedTest % "test->test",
     agent,
-    polluxCore,
+    polluxCore % "compile->compile;test->test",
     polluxDoobie,
     polluxAnoncreds,
-    connectCore,
+    connectCore % "compile->compile;test->test", // Test is for MockConnectionService
     connectDoobie,
     castorCore,
-    eventNotification
+    eventNotification,
   )
-  .dependsOn(sharedTest % "test->test")
-  .dependsOn(polluxCore % "compile->compile;test->test")
 
 // ############################
 // ####  Release process  #####
