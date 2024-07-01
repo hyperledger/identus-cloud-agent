@@ -2,5 +2,7 @@ package.json
 docs
 
 # ignore broken files
+models/CredentialRequest.ts
+models/Proof2.ts
 models/Service.ts
 models/UpdateManagedDIDServiceAction.ts
