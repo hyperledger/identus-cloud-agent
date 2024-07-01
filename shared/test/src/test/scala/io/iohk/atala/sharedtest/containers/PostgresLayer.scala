@@ -10,7 +10,7 @@ object PostgresLayer {
 
   def postgresLayer(
       imageName: Option[String] = Some("postgres:13"),
-      verbose: Boolean = false
+      verbose: Boolean = true
   ): TaskLayer[PostgreSQLContainer] =
     ZLayer.scoped {
       ZIO
@@ -32,6 +32,4 @@ object PostgresLayer {
 
   lazy val dbConfigLayer: ZLayer[PostgreSQLContainer, Nothing, DbConfig] =
     ZLayer.fromZIO { ZIO.serviceWith[PostgreSQLContainer](dbConfig) }
-
-  def transactor: ZLayer[DbConfig, Throwable, Transactor[ContextAwareTask]] = TransactorLayer.contextAwareTask
 }

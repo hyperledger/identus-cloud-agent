@@ -9,7 +9,7 @@ trait PostgresTestContainerSupport {
 
   protected val pgContainerLayer: TaskLayer[PostgreSQLContainer] = PostgresLayer.postgresLayer()
 
-  protected val contextAwareTransactorLayer: TaskLayer[Transactor[ContextAwareTask]] = {
+  protected val contextAwareTransactorLayer: RLayer[PostgreSQLContainer, Transactor[ContextAwareTask]] = {
     import doobie.*
     import doobie.implicits.*
     import zio.interop.catz.*
@@ -54,10 +54,10 @@ trait PostgresTestContainerSupport {
       } yield appUserTransactor
     }.flatten
 
-    pgContainerLayer >>> initializedTransactor
+    initializedTransactor
   }
 
-  protected val systemTransactorLayer: TaskLayer[Transactor[Task]] = {
-    pgContainerLayer >>> PostgresLayer.dbConfigLayer >>> TransactorLayer.task
+  protected val systemTransactorLayer: RLayer[PostgreSQLContainer, Transactor[Task]] = {
+    PostgresLayer.dbConfigLayer >>> TransactorLayer.task
   }
 }

@@ -43,6 +43,7 @@ object GenericSecretStorageSpec
       WalletManagementServiceImpl.layer,
       JdbcWalletNonSecretStorage.layer,
       contextAwareTransactorLayer,
+      pgContainerLayer,
       apolloLayer
     )
 

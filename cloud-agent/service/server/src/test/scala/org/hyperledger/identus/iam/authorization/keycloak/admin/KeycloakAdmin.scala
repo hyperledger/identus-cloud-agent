@@ -1,11 +1,11 @@
 package org.hyperledger.identus.iam.authorization.keycloak.admin
 
+import org.hyperledger.identus.sharedtest.containers.KeycloakAdminClient
 import org.keycloak.admin.client.Keycloak
 import zio.{RLayer, Task, ZIO, ZLayer}
 
 import scala.util.Try
-
-type KeycloakAdmin = Keycloak
+// TODO: move to shared module closed to the KeycloakTestContainerSupport class
 
 // The following arguments are available:
 // serverUrl: String,
@@ -35,12 +35,12 @@ case class KeycloakAdminConfig(
 
 object KeycloakAdmin {
 
-  def apply(config: KeycloakAdminConfig): Task[KeycloakAdmin] = {
+  def apply(config: KeycloakAdminConfig): Task[KeycloakAdminClient] = {
     if (config.isHttps)
       ZIO.fail(new Exception("Ssl is not supported yet"))
     else
-      ZIO.fromTry[KeycloakAdmin](
-        Try[KeycloakAdmin](
+      ZIO.fromTry[KeycloakAdminClient](
+        Try[KeycloakAdminClient](
           Keycloak.getInstance(
             config.serverUrl,
             config.realm,
@@ -53,6 +53,6 @@ object KeycloakAdmin {
       )
   }
 
-  val layer: RLayer[KeycloakAdminConfig, KeycloakAdmin] =
+  val layer: RLayer[KeycloakAdminConfig, KeycloakAdminClient] =
     ZLayer.fromZIO(ZIO.service[KeycloakAdminConfig].flatMap(config => apply(config)))
 }

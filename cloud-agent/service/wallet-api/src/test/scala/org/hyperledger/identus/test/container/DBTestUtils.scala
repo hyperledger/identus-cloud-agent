@@ -14,6 +14,7 @@ object DBTestUtils {
     for {
       pg <- ZIO.service[PostgreSQLContainer]
       result <- runMigration(pg.jdbcUrl, pg.username, pg.password, schema, paths*)
+      _ <- ZIO.log(s"Migration result: ${result.success}")
     } yield result
 
   def runMigration(

@@ -6,6 +6,7 @@ import org.keycloak.representations.idm.{
   CredentialRepresentation,
   RealmRepresentation,
   RoleRepresentation,
+  RolesRepresentation,
   UserRepresentation
 }
 import zio.*
@@ -68,6 +69,8 @@ trait KeycloakTestContainerSupport {
     ZIO.attemptBlocking {
       keycloak.realms().create(realmRepresentation)
       keycloak.realm(realmName).clients().create(agentClientRepresentation)
+      keycloak.realm(realmName).roles().create(new RoleRepresentation("tenant", "Cloud-Agent tenant", false))
+      keycloak.realm(realmName).roles().create(new RoleRepresentation("admin", "Cloud-Agent admin", false))
       ()
     }
   )
