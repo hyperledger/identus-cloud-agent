@@ -24,7 +24,7 @@ export class CredentialRequest {
     'credentialIdentifier'?: string;
     'credentialResponseEncryption'?: CredentialResponseEncryption;
     'credentialDefinition'?: CredentialDefinition;
-    'anoncreds': string;
+    'anoncreds'?: string;
 
     static readonly discriminator: string | undefined = "format";
 
