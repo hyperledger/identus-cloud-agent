@@ -81,7 +81,7 @@ object KeycloakAuthenticatorSpec
     val disabledAutoRptSpec =
       authorizedWalletAccessDisabledAutoRptSpec @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
-    suite("KeycloakAuthenticatorSepc")(
+    suite("KeycloakAuthenticatorSpec")(
       basicSpec
         .provide(
           KeycloakAuthenticatorImpl.layer,
