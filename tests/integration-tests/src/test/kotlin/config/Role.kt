@@ -10,4 +10,5 @@ data class Role(
     val authHeader: String = "apikey",
     val webhook: Webhook?,
     val agentRole: AgentRole?,
+    val oid4vciAuthServer: URL?,
 )
