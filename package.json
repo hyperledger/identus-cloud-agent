@@ -1,6 +1,6 @@
 {
   "name": "identus-cloud-agent",
-  "version": "1.37.0-snapshot.test.1",
+  "version": "1.36.1",
   "engines": {
     "node": ">=16.13.0"
   },
