@@ -42,7 +42,7 @@ class KafkaConsumerImpl[K, V](kSerde: Serde[K], vSerde: Serde[V]) extends Consum
     ZIO.succeed(consumer.subscribe(List(topic).concat(topics).asJava)) *>
       ZStream
         .repeatZIO(ZIO.attempt(consumer.poll(50.millis)))
-        .mapZIO(records => ZIO.foreach(records.asScala)(r => handler(Message(r.key(), r.value()))))
+        .mapZIO(records => ZIO.foreach(records.asScala)(r => handler(Message(r.key(), r.value(), r.offset()))))
         .runDrain
   }
 }
@@ -60,9 +60,9 @@ class KafkaProducerImpl[K, V](kSerde: Serde[K], vSerde: Serde[V]) extends Produc
   props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS)
   val producer = new KafkaProducer(props, kafkaKeySerializer, kafkaValueSerializer)
 
-  override def produce(topic: String, message: Message[K, V]): Task[Unit] =
+  override def produce(topic: String, key: K, value: V): Task[Unit] =
     ZIO.logInfo("Producing message...") *>
       ZIO
-        .fromFutureJava(producer.send(new ProducerRecord(topic, message.key, message.value)))
+        .fromFutureJava(producer.send(new ProducerRecord(topic, key, value)))
         .map(_ => ())
 }
