@@ -6,8 +6,10 @@ import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError
 import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.InvalidStateForOperation
-import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.RecordIdNotFound
+import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.{
+  InvalidStateForOperation,
+  RecordIdNotFound
+}
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.service.ConnectionService
