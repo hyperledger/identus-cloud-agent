@@ -10,7 +10,7 @@ object PostgresLayer {
 
   def postgresLayer(
       imageName: Option[String] = Some("postgres:13"),
-      verbose: Boolean = true
+      verbose: Boolean = false
   ): TaskLayer[PostgreSQLContainer] =
     ZLayer.scoped {
       ZIO

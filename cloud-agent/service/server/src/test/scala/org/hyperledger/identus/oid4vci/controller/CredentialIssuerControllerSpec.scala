@@ -1,87 +1,39 @@
 package org.hyperledger.identus.oid4vci.controller
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import doobie.*
 import doobie.util.transactor.Transactor
-import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.AppModule.apolloLayer
 import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, DIDPublicKeyTemplate, Entity, ManagedDIDTemplate}
-import org.hyperledger.identus.agent.walletapi.service.{
-  ManagedDIDService,
-  ManagedDIDServiceImpl,
-  WalletManagementService,
-  WalletManagementServiceImpl
-}
-import org.hyperledger.identus.agent.walletapi.service.ManagedDIDServiceSpec.{
-  contextAwareTransactorLayer,
-  jdbcSecretStorageLayer,
-  pgContainerLayer
-}
-import org.hyperledger.identus.agent.walletapi.sql.{
-  JdbcDIDNonSecretStorage,
-  JdbcDIDSecretStorage,
-  JdbcWalletNonSecretStorage,
-  JdbcWalletSecretStorage
-}
+import org.hyperledger.identus.agent.walletapi.service.ManagedDIDServiceSpec.{contextAwareTransactorLayer, pgContainerLayer}
+import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, ManagedDIDServiceImpl, WalletManagementService, WalletManagementServiceImpl}
+import org.hyperledger.identus.agent.walletapi.sql.{JdbcDIDNonSecretStorage, JdbcDIDSecretStorage, JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
 import org.hyperledger.identus.agent.walletapi.storage.{DIDSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.castor.controller.{DIDRegistrarController, DIDRegistrarControllerImpl}
-import org.hyperledger.identus.castor.core.model.did.{
-  DIDData,
-  DIDMetadata,
-  EllipticCurve,
-  PrismDID,
-  ScheduleDIDOperationOutcome,
-  ScheduledDIDOperationDetail,
-  ScheduledDIDOperationStatus,
-  SignedPrismDIDOperation,
-  VerificationRelationship
-}
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.error.{DIDOperationError, DIDResolutionError}
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
-import org.hyperledger.identus.iam.authentication.oidc.{
-  KeycloakAuthenticator,
-  KeycloakAuthenticatorImpl,
-  KeycloakClient,
-  KeycloakClientImpl,
-  KeycloakConfig,
-  KeycloakEntity
-}
-import org.hyperledger.identus.iam.authentication.oidc.KeycloakAuthenticatorSpec.{
-  grantClientRole,
-  initializeClient,
-  keycloakAdminClientLayer,
-  keycloakConfigLayer,
-  keycloakContainerLayer
-}
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement
-import org.hyperledger.identus.iam.authorization.keycloak.admin.{
-  KeycloakAdmin,
-  KeycloakConfigUtils,
-  KeycloakPermissionManagementService
-}
+import org.hyperledger.identus.iam.authentication.oidc.KeycloakAuthenticatorSpec.{grantClientRole, keycloakAdminClientLayer, keycloakContainerLayer}
+import org.hyperledger.identus.iam.authentication.oidc.*
 import org.hyperledger.identus.iam.authorization.DefaultPermissionManagementService
+import org.hyperledger.identus.iam.authorization.core.PermissionManagement
+import org.hyperledger.identus.iam.authorization.keycloak.admin.{KeycloakConfigUtils, KeycloakPermissionManagementService}
 import org.hyperledger.identus.iam.wallet.http.controller.{WalletManagementController, WalletManagementControllerImpl}
 import org.hyperledger.identus.iam.wallet.http.model.CreateWalletRequest
 import org.hyperledger.identus.oid4vci.domain.Openid4VCIProofJwtOps
 import org.hyperledger.identus.pollux.core.service.CredentialServiceSpecHelper
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
-import org.hyperledger.identus.sharedtest.containers.{
-  KeycloakAdminClient,
-  KeycloakContainerCustom,
-  KeycloakTestContainerSupport,
-  PostgresTestContainerSupport
-}
+import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
+import org.hyperledger.identus.sharedtest.containers.{KeycloakAdminClient, KeycloakContainerCustom, KeycloakTestContainerSupport, PostgresTestContainerSupport}
 import org.hyperledger.identus.test.container.DBTestUtils
 import org.keycloak.authorization.client.AuthzClient
-import zio.{IO, RIO, Ref, Task, UIO, URIO, ZIO, ZLayer}
-import zio.{mock, *}
 import zio.http.Client
-import zio.mock.*
-import zio.mock.{Mock, MockSpecDefault}
-import zio.test.{assertTrue, TestAspect, ZIOSpecDefault}
+import zio.mock.MockSpecDefault
 import zio.test.TestAspect.sequential
+import zio.test.{TestAspect, assertTrue}
+import zio.{IO, Ref, Task, UIO, ZIO, ZLayer, mock}
 
 import scala.collection.immutable.ArraySeq
 
@@ -156,7 +108,7 @@ object CredentialIssuerControllerSpec
 
   private val applicationLayers =
     ZLayer.makeSome[
-      KeycloakConfig & KeycloakAdminClient & PostgreSQLContainer,
+      KeycloakConfig & KeycloakAdminClient & PostgreSQLContainer & Transactor[Task] & Transactor[ContextAwareTask],
       KeycloakConfig & WalletManagementController & KeycloakClient & AuthzClient & DIDRegistrarController &
         KeycloakAuthenticator
     ](
@@ -169,8 +121,6 @@ object CredentialIssuerControllerSpec
       ZLayer.succeed(PSE),
       JdbcWalletSecretStorage.layer,
       JdbcWalletNonSecretStorage.layer,
-      systemTransactorLayer,
-      contextAwareTransactorLayer,
       KeycloakClientImpl.authzClientLayer,
       KeycloakClientImpl.layer,
       Client.default,
@@ -193,7 +143,9 @@ object CredentialIssuerControllerSpec
     autorizationCodeFlowSpec1b.provideSomeLayerShared(applicationLayers)
     // preAutorizedCodeFlowSpec,
   ) @@ bootstrapKeycloakRealmAspect @@ TestAspect.beforeAll(DBTestUtils.runMigrationAgentDB))
-    .provideLayerShared(keycloakInfrastructureLayers ++ pgContainerLayer)
+    .provideLayerShared(
+      keycloakInfrastructureLayers ++ pgContainerLayer >+> systemTransactorLayer >+> contextAwareTransactorLayer
+    )
 
   val authorizationCodeFlowSpec1a = suite("Authorization Code Flow 1a")(
     test(
@@ -238,7 +190,7 @@ object CredentialIssuerControllerSpec
         wmc <- ZIO.service[WalletManagementController]
         wallet <- wmc
           .createWallet(CreateWalletRequest(seed = None, name = "issuerWallet", id = None), issuerEntity)(rc)
-          .provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+          .provide(ZLayer.succeed(WalletAdministrationContext.SelfService(permittedWallets = Seq.empty)))
 
 //        mds <- ZIO.service[ManagedDIDService]
 //        issuerDid <- mds
