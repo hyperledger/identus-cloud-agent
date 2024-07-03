@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.daemon.common.configureDaemonJVMOptions
+
 plugins {
     kotlin("jvm") version "1.9.21"
     idea
@@ -45,6 +47,8 @@ dependencies {
     testImplementation("com.nimbusds:nimbus-jose-jwt:9.40")
     testImplementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
     testImplementation("com.google.crypto.tink:tink:1.13.0")
+    // OID4VCI
+    testImplementation("eu.europa.ec.eudi:eudi-lib-jvm-openid4vci-kt:0.3.2")
 }
 
 serenity {
@@ -61,6 +65,7 @@ tasks.test {
     finalizedBy("aggregate", "reports")
     testLogging.showStandardStreams = true
     systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
+    systemProperty("jdk.net.hosts.file", "hosts_test")
 }
 
 kotlin {
@@ -91,6 +96,7 @@ afterEvaluate {
             systemProperty("PRISM_NODE_VERSION", System.getenv("PRISM_NODE_VERSION") ?: "")
             systemProperty("AGENT_VERSION", System.getenv("AGENT_VERSION") ?: "")
             systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
+            systemProperty("jdk.net.hosts.file", "hosts_test")
             finalizedBy("aggregate", "reports")
             outputs.upToDateWhen { false }
         }
