@@ -1,7 +1,6 @@
 package steps.oid4vci
 
-import eu.europa.ec.eudi.openid4vci.CredentialOffer
-import eu.europa.ec.eudi.openid4vci.CredentialOfferRequestResolver
+import eu.europa.ec.eudi.openid4vci.*
 import interactions.Post
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
@@ -12,6 +11,7 @@ import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
 import org.hyperledger.identus.client.models.*
 import org.hyperledger.identus.client.models.CredentialOfferRequest
+import java.net.URI
 
 // TODO
 // Agent does not support Holder capability.
@@ -52,12 +52,32 @@ class IssueCredentialSteps {
         holder.remember("oid4vciOffer", offerUri)
     }
 
-    @When("{actor} resolves issuer metadata from oid4vci offer")
+    @When("{actor} resolves oid4vci issuer metadata and prepare AuthorizationRequest")
     fun holderResolvesIssuerMetadata(holder: Actor) {
         val offerUri = holder.recall<String>("oid4vciOffer")
         val credentialOffer = runBlocking {
             CredentialOfferRequestResolver().resolve(offerUri).getOrThrow()
         }
+        val openId4VCIConfig = OpenId4VCIConfig(
+            clientId = "wallet-dev",
+            authFlowRedirectionURI = URI.create("eudi-wallet//auth"),
+            keyGenerationConfig = KeyGenerationConfig.ecOnly(com.nimbusds.jose.jwk.Curve.SECP256K1),
+            credentialResponseEncryptionPolicy = CredentialResponseEncryptionPolicy.SUPPORTED,
+        )
+        val issuer = Issuer.make(openId4VCIConfig, credentialOffer).getOrThrow()
+//        val authorizationRequest = with(issuer) {
+//            runBlocking {
+//                prepareAuthorizationRequest().getOrThrow()
+//                // TODO: how to authorize?
+////                val preparedAuthorizationRequest = prepareAuthorizationRequest().getOrThrow()
+////                val authorizationCode: String = ... // using url preparedAuthorizationRequest.authorizationCodeURL authenticate via front-channel on authorization server and retrieve authorization code
+////                val authorizedRequest =
+////                    preparedAuthorizationRequest.authorizeWithAuthorizationCode(
+////                        AuthorizationCode(authorizationCode),
+////                    ).getOrThrow()
+//            }
+//        }
         println(credentialOffer)
+//        println(authorizationRequest)
     }
 }
