@@ -7,8 +7,8 @@ import java.nio.ByteBuffer
 import java.util.UUID
 
 trait MessagingService {
-  def makeConsumer[K, V](implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Consumer[K, V]]
-  def makeProducer[K, V](implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Producer[K, V]]
+  def makeConsumer[K, V](groupId: String)(implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Consumer[K, V]]
+  def makeProducer[K, V]()(implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Producer[K, V]]
 }
 
 case class Message[K, V](key: K, value: V, offset: Long)

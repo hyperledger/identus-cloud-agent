@@ -11,22 +11,26 @@ import zio.kafka.consumer.{
 import zio.kafka.producer.{Producer as ZKProducer, ProducerSettings as ZKProducerSettings}
 import zio.kafka.serde.{Deserializer as ZKDeserializer, Serializer as ZKSerializer}
 
-class ZKafkaMessagingServiceImpl extends MessagingService {
-  override def makeConsumer[K, V](implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Consumer[K, V]] =
-    ZIO.succeed(new ZKafkaConsumerImpl[K, V](kSerde, vSerde))
+class ZKafkaMessagingServiceImpl(bootstrapServers: List[String]) extends MessagingService {
+  override def makeConsumer[K, V](groupId: String)(implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Consumer[K, V]] =
+    ZIO.succeed(new ZKafkaConsumerImpl[K, V](bootstrapServers, groupId, kSerde, vSerde))
 
-  override def makeProducer[K, V](implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Producer[K, V]] =
-    ZIO.succeed(new ZKafkaProducerImpl[K, V](kSerde, vSerde))
+  override def makeProducer[K, V]()(implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Producer[K, V]] =
+    ZIO.succeed(new ZKafkaProducerImpl[K, V](bootstrapServers, kSerde, vSerde))
 }
 
 object ZKafkaMessagingServiceImpl {
-  val layer: ULayer[MessagingService] = ZLayer.succeed(new ZKafkaMessagingServiceImpl())
+  def layer(bootstrapServers: List[String]): ULayer[MessagingService] =
+    ZLayer.succeed(new ZKafkaMessagingServiceImpl(bootstrapServers))
 }
 
-class ZKafkaConsumerImpl[K, V](kSerde: Serde[K], vSerde: Serde[V]) extends Consumer[K, V] {
-  private val BOOTSTRAP_SERVERS = List("localhost:29092")
-  private val GROUP_ID = "identus-cloud-agent"
-  private val zkConsumer = ZLayer.scoped(ZKConsumer.make(ZKConsumerSettings(BOOTSTRAP_SERVERS).withGroupId(GROUP_ID)))
+class ZKafkaConsumerImpl[K, V](
+    bootstrapServers: List[String],
+    groupId: String,
+    kSerde: Serde[K],
+    vSerde: Serde[V]
+) extends Consumer[K, V] {
+  private val zkConsumer = ZLayer.scoped(ZKConsumer.make(ZKConsumerSettings(bootstrapServers).withGroupId(groupId)))
 
   private val zkKeyDeserializer = new ZKDeserializer[Any, K] {
     override def deserialize(topic: String, headers: Headers, data: Array[Byte]): RIO[Any, K] =
@@ -48,9 +52,9 @@ class ZKafkaConsumerImpl[K, V](kSerde: Serde[K], vSerde: Serde[V]) extends Consu
       .provideSome(zkConsumer)
 }
 
-class ZKafkaProducerImpl[K, V](kSerde: Serde[K], vSerde: Serde[V]) extends Producer[K, V] {
-  private val BOOTSTRAP_SERVERS = List("localhost:29092")
-  private val zkProducer = ZLayer.scoped(ZKProducer.make(ZKProducerSettings(BOOTSTRAP_SERVERS)))
+class ZKafkaProducerImpl[K, V](bootstrapServers: List[String], kSerde: Serde[K], vSerde: Serde[V])
+    extends Producer[K, V] {
+  private val zkProducer = ZLayer.scoped(ZKProducer.make(ZKProducerSettings(bootstrapServers)))
 
   private val zkKeySerializer = new ZKSerializer[Any, K] {
     override def serialize(topic: String, headers: Headers, value: K): RIO[Any, Array[Byte]] =

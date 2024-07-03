@@ -23,8 +23,8 @@ object MessagingServiceTest extends ZIOAppDefault {
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = {
     val effect = for {
       ms <- ZIO.service[MessagingService]
-      consumer <- ms.makeConsumer[UUID, Customer]
-      producer <- ms.makeProducer[UUID, Customer]
+      consumer <- ms.makeConsumer[UUID, Customer]("identus-cloud-agent")
+      producer <- ms.makeProducer[UUID, Customer]()
       f1 <- consumer
         .consume("Connect")(msg => ZIO.logInfo(s"Handling new message: ${msg.offset} - ${msg.key} - ${msg.value}"))
         .fork
@@ -34,6 +34,6 @@ object MessagingServiceTest extends ZIOAppDefault {
         .fork
       _ <- ZIO.never
     } yield ()
-    effect.provide(ZKafkaMessagingServiceImpl.layer)
+    effect.provide(ZKafkaMessagingServiceImpl.layer(List("localhost:29092")))
   }
 }
