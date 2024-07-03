@@ -53,6 +53,7 @@ lazy val V = new {
   val zioCatsInterop = "3.3.0" // TODO "23.1.0.2" // https://mvnrepository.com/artifact/dev.zio/zio-interop-cats
   val zioMetricsConnector = "2.3.1"
   val zioMock = "1.0.0-RC12"
+  val zioKafka = "2.7.5"
   val mockito = "3.2.18.0"
   val monocle = "3.2.0"
 
@@ -330,7 +331,9 @@ lazy val D_Pollux_VC_JWT = new {
 lazy val D_EventNotification = new {
   val zio = "dev.zio" %% "zio" % V.zio
   val zioConcurrent = "dev.zio" %% "zio-concurrent" % V.zio
-  val zioKafka = "dev.zio" %% "zio-kafka" % "2.7.5"
+  val zioKafka = "dev.zio" %% "zio-kafka" % V.zioKafka excludeAll (
+    ExclusionRule("dev.zio", "zio_3"), ExclusionRule("dev.zio", "zio-streams_3")
+  )
   val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
