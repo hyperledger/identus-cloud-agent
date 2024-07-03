@@ -1,7 +1,7 @@
 package org.hyperledger.identus.messaging
 
 import org.hyperledger.identus.messaging.kafka.ZKafkaMessagingServiceImpl
-import zio.{durationInt, Random, Schedule, Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
+import zio.{durationInt, Random, Schedule, Scope, URIO, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 import java.nio.charset.StandardCharsets
@@ -26,7 +26,7 @@ object MessagingServiceTest extends ZIOAppDefault {
       consumer <- ms.makeConsumer[UUID, Customer]("identus-cloud-agent")
       producer <- ms.makeProducer[UUID, Customer]()
       f1 <- consumer
-        .consume("Connect")(msg => ZIO.logInfo(s"Handling new message: ${msg.offset} - ${msg.key} - ${msg.value}"))
+        .consume("Connect")(handle)
         .fork
       f2 <- Random.nextUUID
         .flatMap(uuid => producer.produce("Connect", uuid, Customer(s"Name $uuid")))
@@ -34,6 +34,14 @@ object MessagingServiceTest extends ZIOAppDefault {
         .fork
       _ <- ZIO.never
     } yield ()
-    effect.provide(ZKafkaMessagingServiceImpl.layer(List("localhost:29092")))
+    effect.provide(
+      ZKafkaMessagingServiceImpl.layer(List("localhost:29092")),
+      ZLayer.succeed("Sample 'R' passed to handler")
+    )
   }
+
+  def handle[K, V](msg: Message[K, V]): URIO[String, Unit] = for {
+    tag <- ZIO.service[String]
+    _ <- ZIO.logInfo(s"Handling new message [$tag]: ${msg.offset} - ${msg.key} - ${msg.value}")
+  } yield ()
 }

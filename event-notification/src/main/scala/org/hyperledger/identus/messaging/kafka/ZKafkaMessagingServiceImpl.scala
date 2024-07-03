@@ -2,7 +2,7 @@ package org.hyperledger.identus.messaging.kafka
 
 import org.apache.kafka.common.header.Headers
 import org.hyperledger.identus.messaging.*
-import zio.{RIO, Task, UIO, ULayer, ZIO, ZLayer}
+import zio.{RIO, Task, ULayer, URIO, ZIO, ZLayer}
 import zio.kafka.consumer.{
   Consumer as ZKConsumer,
   ConsumerSettings as ZKConsumerSettings,
@@ -42,14 +42,14 @@ class ZKafkaConsumerImpl[K, V](
       ZIO.succeed(vSerde.deserialize(data))
   }
 
-  override def consume(topic: String, topics: String*)(handler: Message[K, V] => UIO[Unit]): Task[Unit] =
+  override def consume[HR](topic: String, topics: String*)(handler: Message[K, V] => URIO[HR, Unit]): RIO[HR, Unit] =
     ZKConsumer
       .plainStream(ZKSubscription.topics(topic, topics*), zkKeyDeserializer, zkValueDeserializer)
+      .provideSomeLayer(zkConsumer)
       .mapZIO(record => handler(Message(record.key, record.value, record.offset.offset)).as(record.offset))
       .aggregateAsync(ZKConsumer.offsetBatches)
       .mapZIO(_.commit)
       .runDrain
-      .provideSome(zkConsumer)
 }
 
 class ZKafkaProducerImpl[K, V](bootstrapServers: List[String], kSerde: Serde[K], vSerde: Serde[V])

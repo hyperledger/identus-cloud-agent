@@ -1,6 +1,6 @@
 package org.hyperledger.identus.messaging
 
-import zio.{Task, UIO}
+import zio.{RIO, Task, URIO}
 
 import java.nio.charset.StandardCharsets
 import java.nio.ByteBuffer
@@ -14,7 +14,7 @@ trait MessagingService {
 case class Message[K, V](key: K, value: V, offset: Long)
 
 trait Consumer[K, V] {
-  def consume(topic: String, topics: String*)(handler: Message[K, V] => UIO[Unit]): Task[Unit]
+  def consume[HR](topic: String, topics: String*)(handler: Message[K, V] => URIO[HR, Unit]): RIO[HR, Unit]
 }
 trait Producer[K, V] {
   def produce(topic: String, key: K, value: V): Task[Unit]

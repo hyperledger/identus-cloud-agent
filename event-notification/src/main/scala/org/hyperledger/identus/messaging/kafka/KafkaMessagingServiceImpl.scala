@@ -4,7 +4,7 @@ import org.apache.kafka.clients.consumer.{ConsumerConfig, KafkaConsumer}
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import org.apache.kafka.common.serialization.{Deserializer, Serializer}
 import org.hyperledger.identus.messaging.*
-import zio.{durationInt, Task, UIO, ULayer, ZIO, ZLayer}
+import zio.{durationInt, RIO, Task, ULayer, URIO, ZIO, ZLayer}
 import zio.stream.ZStream
 
 import java.util.Properties
@@ -44,7 +44,7 @@ class KafkaConsumerImpl[K, V](
   props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId)
   private val consumer = new KafkaConsumer(props, kafkaKeyDeserializer, kafkaValueDeserializer)
 
-  override def consume(topic: String, topics: String*)(handler: Message[K, V] => UIO[Unit]): Task[Unit] = {
+  override def consume[HR](topic: String, topics: String*)(handler: Message[K, V] => URIO[HR, Unit]): RIO[HR, Unit] = {
     ZIO.succeed(consumer.subscribe(List(topic).concat(topics).asJava)) *>
       ZStream
         .repeatZIO(ZIO.attempt(consumer.poll(50.millis)))
