@@ -4,12 +4,12 @@ import org.testcontainers.utility.DockerImageName
 
 object KeycloakTestContainer {
   def keycloakContainer(
-      imageName: String = "quay.io/keycloak/keycloak:23.0.7",
+      dockerImageNameOverride: DockerImageName = DockerImageName.parse("quay.io/keycloak/keycloak:23.0.7"),
   ): KeycloakContainerCustom = {
     val isOnGithubRunner = sys.env.contains("GITHUB_NETWORK")
     val container =
       new KeycloakContainerCustom(
-        dockerImageNameOverride = DockerImageName.parse(imageName),
+        dockerImageNameOverride = dockerImageNameOverride,
         isOnGithubRunner = isOnGithubRunner
       )
 

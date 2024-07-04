@@ -23,6 +23,6 @@ object KeycloakAdminSpec extends ZIOSpecDefault with KeycloakTestContainerSuppor
         )
       } yield assertTrue(keycloakContainer.container.isRunning) && assert(usersCount)(equalTo(1))
     }
-  ).provideLayerShared(keycloakContainerLayer >+> keycloakAdminConfigLayer) @@ sequential
+  ).provideLayerShared(KeycloakContainerCustom.default >+> keycloakAdminConfigLayer) @@ sequential
 
 }

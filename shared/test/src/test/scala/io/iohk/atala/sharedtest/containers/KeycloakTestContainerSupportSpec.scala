@@ -39,5 +39,5 @@ object KeycloakTestContainerSupportSpec extends ZIOSpecDefault with KeycloakTest
           .exists(_.getClientId == agentClientRepresentation.getClientId)
       } yield assertTrue(clientCreated)
     }
-  ).provideLayerShared(keycloakContainerLayer >+> keycloakAdminClientLayer) @@ sequential
+  ).provideLayerShared(KeycloakContainerCustom.default >+> keycloakAdminClientLayer) @@ sequential
 }

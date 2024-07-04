@@ -23,7 +23,7 @@ trait PostgresTestContainerSupport {
     import zio.interop.catz.*
 
     val createAppUser = (xa: Transactor[Task]) =>
-      //TODO: Refactor this to decouple the user creation from the Transactor initialization
+      // TODO: Refactor this to decouple the user creation from the Transactor initialization
       // it's important to know that these statement must be executed before the Flyway migrations
       doobie.free.connection.createStatement
         .map { stm =>

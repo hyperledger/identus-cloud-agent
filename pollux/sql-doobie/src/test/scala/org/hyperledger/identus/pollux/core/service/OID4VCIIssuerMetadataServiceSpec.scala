@@ -17,8 +17,7 @@ object OID4VCIIssuerMetadataServiceSpec extends ZIOSpecDefault, PostgresTestCont
     OID4VCIIssuerMetadataServiceImpl.layer,
     JdbcOID4VCIIssuerMetadataRepository.layer,
     ResourceURIDereferencerImpl.layer,
-    contextAwareTransactorLayer,
-    systemTransactorLayer
+    pgContainerLayer >+> systemTransactorLayer >+> contextAwareTransactorLayer
   )
 
   override def spec =

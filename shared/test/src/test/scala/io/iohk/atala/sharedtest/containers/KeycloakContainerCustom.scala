@@ -4,11 +4,14 @@ import com.dimafeng.testcontainers.SingleContainer
 import dasniko.testcontainers.keycloak.ExtendableKeycloakContainer
 import org.hyperledger.identus.sharedtest.containers.KeycloakTestContainer.keycloakContainer
 import org.testcontainers.utility.DockerImageName
-import zio.{TaskLayer, ZIO, ZLayer}
+import zio.{RLayer, TaskLayer, ZIO, ZLayer}
+
+import scala.jdk.CollectionConverters.*
 
 final class KeycloakContainerCustom(
     dockerImageNameOverride: DockerImageName,
-    isOnGithubRunner: Boolean = false
+    isOnGithubRunner: Boolean = false,
+    environmentVariables: Map[String, String] = Map.empty
 ) extends SingleContainer[ExtendableKeycloakContainer[?]] {
 
   private val keycloakContainer: ExtendableKeycloakContainer[?] = new ExtendableKeycloakContainer(
@@ -23,18 +26,38 @@ final class KeycloakContainerCustom(
       if (isOnGithubRunner) 8080
       else super.getMappedPort(originalPort)
     }
+
+    withEnv(environmentVariables.asJava)
   }
 
   override val container: ExtendableKeycloakContainer[?] = keycloakContainer
 }
 
+enum KeycloakImageType(val imageName: DockerImageName) {
+  case Default extends KeycloakImageType(DockerImageName.parse("quay.io/keycloak/keycloak:23.0.7"))
+  case OID4VCI
+      extends KeycloakImageType(
+        DockerImageName
+          .parse("ghcr.io/hyperledger/identus-keycloak-plugins:0.2.0")
+          .asCompatibleSubstituteFor(Default.imageName)
+      )
+}
+
 object KeycloakContainerCustom {
-  val layer: TaskLayer[KeycloakContainerCustom] =
+
+  val layer: RLayer[KeycloakImageType, KeycloakContainerCustom] =
     ZLayer.scoped {
       ZIO
-        .acquireRelease(ZIO.attemptBlockingIO {
-          keycloakContainer()
-        })(container => ZIO.attemptBlockingIO(container.stop()).orDie)
-        .tap(container => ZIO.attemptBlocking(container.start()))
+        .service[KeycloakImageType]
+        .flatMap(keycloakImageType =>
+          ZIO
+            .acquireRelease(ZIO.attemptBlockingIO {
+              keycloakContainer(keycloakImageType.imageName)
+            })(container => ZIO.attemptBlockingIO(container.stop()).orDie)
+            .tap(container => ZIO.attemptBlocking(container.start()))
+        )
     }
+
+  val default: TaskLayer[KeycloakContainerCustom] = ZLayer.succeed(KeycloakImageType.Default) >>> layer
+  val oid4vci: TaskLayer[KeycloakContainerCustom] = ZLayer.succeed(KeycloakImageType.OID4VCI) >>> layer
 }

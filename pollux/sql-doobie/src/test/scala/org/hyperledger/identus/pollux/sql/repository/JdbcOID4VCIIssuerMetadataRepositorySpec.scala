@@ -17,9 +17,10 @@ object JdbcOID4VCIIssuerMetadataRepositorySpec extends ZIOSpecDefault, PostgresT
   )
 
   private val testEnvironmentLayer = ZLayer.make[OID4VCIIssuerMetadataRepository](
-    JdbcOID4VCIIssuerMetadataRepository.layer,
-    contextAwareTransactorLayer,
-    systemTransactorLayer
+    pgContainerLayer >+>
+      systemTransactorLayer >+>
+      contextAwareTransactorLayer >+>
+      JdbcOID4VCIIssuerMetadataRepository.layer
   )
 
   override def spec =

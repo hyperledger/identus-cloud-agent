@@ -45,7 +45,7 @@ object KeycloakPermissionManagementServiceSpec
 
     s.provide(
       Client.default,
-      keycloakContainerLayer,
+      KeycloakContainerCustom.default,
       keycloakAdminConfigLayer,
       KeycloakAdmin.layer,
       KeycloakPermissionManagementService.layer,
