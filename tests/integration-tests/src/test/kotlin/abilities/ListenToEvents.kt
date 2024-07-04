@@ -29,7 +29,7 @@ open class ListenToEvents(
     var credentialEvents: MutableList<CredentialEvent> = mutableListOf()
     var presentationEvents: MutableList<PresentationEvent> = mutableListOf()
     var didEvents: MutableList<DidEvent> = mutableListOf()
-    var authCodeCallbackEvents: MutableList<String> = mutableListOf()
+    var authCodeCallbackEvents: MutableList<Pair<String, String>> = mutableListOf()
 
     private fun route(application: Application) {
         application.routing {
@@ -49,7 +49,8 @@ open class ListenToEvents(
             }
             get("/auth-cb") {
                 val authCode = call.parameters["code"]!!
-                authCodeCallbackEvents.add(authCode)
+                val state = call.parameters["state"]!!
+                authCodeCallbackEvents.add(Pair(authCode, state))
                 call.respond(HttpStatusCode.OK, "Login Successfully")
             }
         }
