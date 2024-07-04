@@ -9,9 +9,12 @@ import kotlinx.coroutines.runBlocking
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
+import org.htmlunit.WebClient
+import org.htmlunit.html.HtmlPage
 import org.hyperledger.identus.client.models.*
 import org.hyperledger.identus.client.models.CredentialOfferRequest
 import java.net.URI
+import java.net.URL
 
 // TODO
 // Agent does not support Holder capability.
@@ -52,17 +55,15 @@ class IssueCredentialSteps {
         holder.remember("oid4vciOffer", offerUri)
     }
 
-    @When("{actor} resolves oid4vci issuer metadata and prepare AuthorizationRequest")
+    @When("{actor} resolves oid4vci issuer metadata and login via front-end channel")
     fun holderResolvesIssuerMetadata(holder: Actor) {
         val offerUri = holder.recall<String>("oid4vciOffer")
         val credentialOffer = runBlocking {
             CredentialOfferRequestResolver().resolve(offerUri).getOrThrow()
         }
-        println(credentialOffer)
-
         val openId4VCIConfig = OpenId4VCIConfig(
-            clientId = "wallet-dev",
-            authFlowRedirectionURI = URI.create("eudi-wallet//auth"),
+            clientId = holder.recall("OID4VCI_AUTH_SERVER_CLIENT_ID"),
+            authFlowRedirectionURI = URI.create("eudi-wallet://auth/cb"),
             keyGenerationConfig = KeyGenerationConfig.ecOnly(com.nimbusds.jose.jwk.Curve.SECP256K1),
             credentialResponseEncryptionPolicy = CredentialResponseEncryptionPolicy.SUPPORTED,
             parUsage = ParUsage.Never
@@ -71,12 +72,13 @@ class IssueCredentialSteps {
         val authorizationRequest = runBlocking {
             issuer.prepareAuthorizationRequest().getOrThrow()
         }
-        println(authorizationRequest)
+        keycloakLoginViaBrowser(authorizationRequest.authorizationCodeURL.value)
+    }
 
-        println(authorizationRequest.authorizationCodeURL)
-
-        // TODO: how to authorize via frontend channel in test?
-
-
+    private fun keycloakLoginViaBrowser(loginUrl: URL): String {
+        val client = WebClient()
+        val page = client.getPage<HtmlPage>(loginUrl)
+        println(page)
+        return ""
     }
 }

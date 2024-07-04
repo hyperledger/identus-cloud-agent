@@ -10,4 +10,4 @@ Background:
 Scenario: Issuing credential with published PRISM DID
     When Issuer creates an offer using "StudentProfile" configuration with "short" form DID
     And Holder receives oid4vci offer from Issuer
-    And Holder resolves oid4vci issuer metadata and prepare AuthorizationRequest
+    And Holder resolves oid4vci issuer metadata and login via front-end channel

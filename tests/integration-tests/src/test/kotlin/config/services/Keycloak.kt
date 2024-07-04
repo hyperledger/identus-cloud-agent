@@ -15,12 +15,13 @@ import java.io.File
 data class Keycloak(
     @ConfigAlias("http_port") val httpPort: Int,
     val realm: String = "atala-demo",
-    @ConfigAlias("client_id") val clientId: String = "prism-agent",
-    @ConfigAlias("client_secret") val clientSecret: String = "prism-agent-demo-secret",
+    @ConfigAlias("client_id") val clientId: String = "cloud-agent",
+    @ConfigAlias("client_secret") val clientSecret: String = "cloud-agent-secret",
     @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
     @ConfigAlias("compose_file") val keycloakComposeFile: String = "src/test/resources/containers/keycloak.yml",
+    @ConfigAlias("logger_name") val loggerName: String = "keycloak",
     @ConfigAlias("extra_envs") val extraEnvs: Map<String, String> = emptyMap(),
-    @ConfigAlias("logger_name") val loggerName: String = "keycloak"
+    @ConfigAlias("extra_clients") val extraClients: Map<String, KeycloakPublicClientConfig> = emptyMap()
 ) : ServiceBase() {
     private val logger = Logger.get<Keycloak>()
     private val keycloakEnvConfig: Map<String, String> = extraEnvs + mapOf(
@@ -44,7 +45,8 @@ data class Keycloak(
         logger.info("Setting up Keycloak")
         initRequestBuilder()
         createRealm()
-        createClient()
+        createAgentClient()
+        createPublicClients()
         createClientRoles()
         createUsers(users)
     }
@@ -94,7 +96,7 @@ data class Keycloak(
             .then().statusCode(HttpStatus.SC_CREATED)
     }
 
-    private fun createClient() {
+    private fun createAgentClient() {
         RestAssured.given().spec(requestBuilder)
             .body(
                 mapOf(
@@ -107,6 +109,22 @@ data class Keycloak(
             )
             .post("/admin/realms/$realm/clients")
             .then().statusCode(HttpStatus.SC_CREATED)
+    }
+
+    private fun createPublicClients() {
+        extraClients.forEach { client ->
+            RestAssured.given().spec(requestBuilder)
+                .body(
+                    mapOf(
+                        "id" to client.key,
+                        "publicClient" to true,
+                        "consentRequired" to true,
+                        "redirectUris" to client.value.redirectUris
+                    ),
+                )
+                .post("/admin/realms/$realm/clients")
+                .then().statusCode(HttpStatus.SC_CREATED)
+        }
     }
 
     private fun createClientRoles() {
@@ -172,3 +190,5 @@ data class Keycloak(
             .then().statusCode(HttpStatus.SC_NO_CONTENT)
     }
 }
+
+data class KeycloakPublicClientConfig(val redirectUris: List<String> = listOf())

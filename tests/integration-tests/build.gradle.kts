@@ -48,6 +48,7 @@ dependencies {
     testImplementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
     testImplementation("com.google.crypto.tink:tink:1.13.0")
     // OID4VCI
+    testImplementation("org.htmlunit:htmlunit:4.3.0")
     testImplementation("eu.europa.ec.eudi:eudi-lib-jvm-openid4vci-kt:0.3.2")
 }
 
