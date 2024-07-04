@@ -7,6 +7,7 @@ import common.TestConstants
 import config.*
 import io.cucumber.java.AfterAll
 import io.cucumber.java.BeforeAll
+import io.ktor.server.util.url
 import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder
 import net.serenitybdd.screenplay.Actor
@@ -130,12 +131,18 @@ object Setup {
             actor.remember("baseUrl", role.url.toExternalForm())
         }
         if (config.services?.keycloakOid4vci != null) {
-            val role = config.roles.find { it.name == "Issuer" } ?: throw ConfigException("Issuer role does not exist")
-            val url = role.oid4vciAuthServer ?: throw ConfigException("Issuer's oid4vci_auth_server must be provided")
-            val actor = cast.actorNamed(role.name)
-            actor.remember("OID4VCI_AUTH_SERVER_URL", url.toExternalForm())
-            actor.remember("OID4VCI_AUTH_SERVER_CLIENT_ID", config.services.keycloakOid4vci.clientId)
-            actor.remember("OID4VCI_AUTH_SERVER_CLIENT_SECRET", config.services.keycloakOid4vci.clientSecret)
+            val issuerRole = config.roles.find { it.name == "Issuer" } ?: throw ConfigException("Issuer role does not exist")
+            val issuerActor = cast.actorNamed(issuerRole.name)
+            with(issuerActor) {
+                val url = issuerRole.oid4vciAuthServer ?: throw ConfigException("Issuer's oid4vci_auth_server must be provided")
+                remember("OID4VCI_AUTH_SERVER_URL", url.toExternalForm())
+                remember("OID4VCI_AUTH_SERVER_CLIENT_ID", config.services.keycloakOid4vci.clientId)
+                remember("OID4VCI_AUTH_SERVER_CLIENT_SECRET", config.services.keycloakOid4vci.clientSecret)
+            }
+
+            val holderRole = config.roles.find { it.name == "Holder" } ?: throw ConfigException("Holder role does not exist")
+            val holderActor = cast.actorNamed(holderRole.name)
+            holderActor.remember("OID4VCI_AUTH_SERVER_CLIENT_ID", "holder")
         }
         OnStage.setTheStage(cast)
     }
