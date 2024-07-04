@@ -1,5 +1,6 @@
 package steps.oid4vci
 
+import abilities.ListenToEvents
 import eu.europa.ec.eudi.openid4vci.*
 import interactions.Post
 import io.cucumber.java.en.When
@@ -9,8 +10,12 @@ import kotlinx.coroutines.runBlocking
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
-import org.htmlunit.WebClient
+import org.apache.pdfbox.pdmodel.interactive.annotation.layout.PlainText
+import org.htmlunit.*
 import org.htmlunit.html.HtmlPage
+import org.htmlunit.html.HtmlPasswordInput
+import org.htmlunit.html.HtmlSubmitInput
+import org.htmlunit.html.HtmlTextInput
 import org.hyperledger.identus.client.models.*
 import org.hyperledger.identus.client.models.CredentialOfferRequest
 import java.net.URI
@@ -61,9 +66,10 @@ class IssueCredentialSteps {
         val credentialOffer = runBlocking {
             CredentialOfferRequestResolver().resolve(offerUri).getOrThrow()
         }
+        val redirectUrl = holder.recall<URL>("webhookUrl")
         val openId4VCIConfig = OpenId4VCIConfig(
             clientId = holder.recall("OID4VCI_AUTH_SERVER_CLIENT_ID"),
-            authFlowRedirectionURI = URI.create("eudi-wallet://auth/cb"),
+            authFlowRedirectionURI = URI.create("${redirectUrl}/auth-cb"),
             keyGenerationConfig = KeyGenerationConfig.ecOnly(com.nimbusds.jose.jwk.Curve.SECP256K1),
             credentialResponseEncryptionPolicy = CredentialResponseEncryptionPolicy.SUPPORTED,
             parUsage = ParUsage.Never
@@ -72,13 +78,20 @@ class IssueCredentialSteps {
         val authorizationRequest = runBlocking {
             issuer.prepareAuthorizationRequest().getOrThrow()
         }
-        keycloakLoginViaBrowser(authorizationRequest.authorizationCodeURL.value)
+        val authCode = keycloakLoginViaBrowser(authorizationRequest.authorizationCodeURL.value, holder)
+        holder.remember("authorizationCode", authCode)
     }
 
-    private fun keycloakLoginViaBrowser(loginUrl: URL): String {
+    private fun keycloakLoginViaBrowser(loginUrl: URL, actor: Actor): String {
         val client = WebClient()
-        val page = client.getPage<HtmlPage>(loginUrl)
-        println(page)
-        return ""
+        val loginPage = client.getPage<HtmlPage>(loginUrl)
+        val loginForm = loginPage.forms.first()
+        loginForm.getInputByName<HtmlTextInput>("username").type(actor.name)
+        loginForm.getInputByName<HtmlPasswordInput>("password").type(actor.name)
+        val consentPage = loginForm.getInputByName<HtmlSubmitInput>("login").click<HtmlPage>()
+        val consentForm = consentPage.forms.first()
+        consentForm.getInputByName<HtmlSubmitInput>("accept").click<TextPage>()
+        client.close()
+        return ListenToEvents.with(actor).authCodeCallbackEvents.last()
     }
 }

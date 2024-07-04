@@ -124,6 +124,7 @@ object Setup {
             }
             if (role.webhook != null) {
                 actor.whoCan(ListenToEvents.at(role.webhook.url, role.webhook.localPort))
+                actor.remember("webhookUrl", role.webhook.url)
                 if (role.webhook.initRequired) {
                     registerWebhook(actor, role.webhook.url.toExternalForm())
                 }
