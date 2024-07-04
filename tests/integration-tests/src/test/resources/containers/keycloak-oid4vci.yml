@@ -10,4 +10,6 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       IDENTUS_URL:
-    command: start-dev --health-enabled=true --hostname-url=http://localhost:${KEYCLOAK_HTTP_PORT}
+    command: start-dev --health-enabled=true --hostname-url=http://host.docker.internal:${KEYCLOAK_HTTP_PORT}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

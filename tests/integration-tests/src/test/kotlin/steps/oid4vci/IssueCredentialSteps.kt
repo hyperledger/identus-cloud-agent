@@ -78,20 +78,36 @@ class IssueCredentialSteps {
         val authorizationRequest = runBlocking {
             issuer.prepareAuthorizationRequest().getOrThrow()
         }
-        val authCode = keycloakLoginViaBrowser(authorizationRequest.authorizationCodeURL.value, holder)
-        holder.remember("authorizationCode", authCode)
+        val authResponse = keycloakLoginViaBrowser(authorizationRequest.authorizationCodeURL.value, holder)
+        val authorizedRequest =
+            with(issuer) {
+                runBlocking {
+                    val authCode = AuthorizationCode(authResponse.first)
+                    authorizationRequest.authorizeWithAuthorizationCode(authCode, authResponse.second).getOrThrow()
+                }
+            }
+
+        println(authorizedRequest)
     }
 
-    private fun keycloakLoginViaBrowser(loginUrl: URL, actor: Actor): String {
+    /**
+     * @return A tuple of authorization code and authorization server state
+     */
+    private fun keycloakLoginViaBrowser(loginUrl: URL, actor: Actor): Pair<String, String> {
         val client = WebClient()
+
+        // step 1 - login with username and password
         val loginPage = client.getPage<HtmlPage>(loginUrl)
         val loginForm = loginPage.forms.first()
         loginForm.getInputByName<HtmlTextInput>("username").type(actor.name)
         loginForm.getInputByName<HtmlPasswordInput>("password").type(actor.name)
         val consentPage = loginForm.getInputByName<HtmlSubmitInput>("login").click<HtmlPage>()
+
+        // step 2 - give client consent to access the scopes
         val consentForm = consentPage.forms.first()
         consentForm.getInputByName<HtmlSubmitInput>("accept").click<TextPage>()
         client.close()
+
         return ListenToEvents.with(actor).authCodeCallbackEvents.last()
     }
 }
