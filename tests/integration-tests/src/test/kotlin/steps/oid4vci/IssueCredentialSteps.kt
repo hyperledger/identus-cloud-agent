@@ -21,9 +21,6 @@ import org.hyperledger.identus.client.models.CredentialOfferRequest
 import java.net.URI
 import java.net.URL
 
-// TODO
-// Agent does not support Holder capability.
-// These steps should be updated when Agent can act as holder.
 class IssueCredentialSteps {
     @When("{actor} creates an offer using {string} configuration with {string} form DID")
     fun issuerCreateCredentialOffer(issuer: Actor, configurationId: String, didForm: String) {
@@ -86,8 +83,32 @@ class IssueCredentialSteps {
                     authorizationRequest.authorizeWithAuthorizationCode(authCode, authResponse.second).getOrThrow()
                 }
             }
+        holder.remember("eudiCredentialOffer", credentialOffer)
+        holder.remember("eudiAuthorizedRequest", authorizedRequest)
+        holder.remember("eudiIssuer", issuer)
+    }
+
+    @When("{actor} presents the access token with JWT proof on CredentialEndpoint")
+    fun holderPresentsTokenOnCredentialEdpoint(holder: Actor) {
+        val credentialOffer = holder.recall<CredentialOffer>("eeudiCredentialOffer")
+        val issuer = holder.recall<Issuer>("eudiIssuer")
+        val authorizedRequest = holder.recall<AuthorizedRequest>("eudiAuthorizedRequest")
+        val requestPayload = IssuanceRequestPayload.ConfigurationBased(credentialOffer.credentialConfigurationIdentifiers.first(), null)
+        val signer: PopSigner = TODO("PopSigner.jwtPopSigner()")
+        with(issuer) {
+            when(authorizedRequest) {
+                is AuthorizedRequest.NoProofRequired -> throw Exception("Not supported yet")
+                is AuthorizedRequest.ProofRequired -> runBlocking {
+                    authorizedRequest.requestSingle(
+                        requestPayload,
+                        TODO()
+                    )
+                }
+            }
+        }
 
         println(authorizedRequest)
+        TODO()
     }
 
     /**
