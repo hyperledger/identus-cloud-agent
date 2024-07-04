@@ -7,7 +7,6 @@ import org.hyperledger.identus.agent.server.http.ZioHttpClient
 import org.hyperledger.identus.agent.server.sql.Migrations as AgentMigrations
 import org.hyperledger.identus.agent.walletapi.service.{
   EntityServiceImpl,
-  ManagedDIDService,
   ManagedDIDServiceWithEventNotificationImpl,
   WalletManagementServiceImpl
 }
@@ -16,7 +15,6 @@ import org.hyperledger.identus.agent.walletapi.sql.{
   JdbcEntityRepository,
   JdbcWalletNonSecretStorage
 }
-import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import org.hyperledger.identus.castor.core.service.DIDServiceImpl
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
@@ -31,10 +29,11 @@ import org.hyperledger.identus.iam.authentication.{DefaultAuthenticator, Oid4vci
 import org.hyperledger.identus.iam.authentication.apikey.JdbcAuthenticationRepository
 import org.hyperledger.identus.iam.authorization.core.EntityPermissionManagementService
 import org.hyperledger.identus.iam.authorization.DefaultPermissionManagementService
-import org.hyperledger.identus.iam.entity.http.controller.{EntityController, EntityControllerImpl}
+import org.hyperledger.identus.iam.entity.http.controller.EntityControllerImpl
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementControllerImpl
 import org.hyperledger.identus.issue.controller.IssueControllerImpl
 import org.hyperledger.identus.mercury.*
+import org.hyperledger.identus.messaging.kafka.ZKafkaMessagingServiceImpl
 import org.hyperledger.identus.oid4vci.controller.CredentialIssuerControllerImpl
 import org.hyperledger.identus.oid4vci.service.OIDCCredentialIssuerServiceImpl
 import org.hyperledger.identus.oid4vci.storage.InMemoryIssuanceSessionService
@@ -42,7 +41,6 @@ import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.core.service.verification.VcVerificationServiceImpl
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionControllerImpl
 import org.hyperledger.identus.pollux.credentialschema.controller.{
-  CredentialSchemaController,
   CredentialSchemaControllerImpl,
   VerificationPolicyControllerImpl
 }
@@ -222,6 +220,7 @@ object MainApp extends ZIOAppDefault {
           // HTTP client
           SystemModule.zioHttpClientLayer,
           Scope.default,
+          ZKafkaMessagingServiceImpl.layer(List("kafka:9092"))
         )
     } yield app
 

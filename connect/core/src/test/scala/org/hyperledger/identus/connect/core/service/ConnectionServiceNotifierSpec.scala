@@ -7,6 +7,7 @@ import org.hyperledger.identus.event.notification.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
+import org.hyperledger.identus.messaging.kafka.ZKafkaMessagingServiceImpl
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.Expectation
@@ -144,7 +145,8 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
         inviteeExpectations.toLayer >>> ConnectionServiceNotifier.layer,
-        ZLayer.succeed(WalletAccessContext(WalletId.random))
+        ZLayer.succeed(WalletAccessContext(WalletId.random)),
+        ZKafkaMessagingServiceImpl.layer(List("localhost:29092"))
       )
     )
   }

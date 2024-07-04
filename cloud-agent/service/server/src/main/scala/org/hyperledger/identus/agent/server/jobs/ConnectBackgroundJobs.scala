@@ -2,25 +2,22 @@ package org.hyperledger.identus.agent.server.jobs
 
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.jobs.BackgroundJobError.ErrorResponseReceivedFromPeerAgent
-import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError
-import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
+import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.{
-  InvalidStateForOperation,
-  RecordIdNotFound
-}
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
+import org.hyperledger.identus.connect.core.model.{ConnectionRecord, WalletIdAndRecordId}
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.*
-import org.hyperledger.identus.mercury.model.error.SendMessageError
+import org.hyperledger.identus.messaging.Message
 import org.hyperledger.identus.resolvers.DIDResolver
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
 import zio.metrics.*
+
+import java.util.UUID
 
 object ConnectBackgroundJobs extends BackgroundJobsHelper {
 
@@ -36,6 +33,22 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
           ConnectionRecord.ProtocolState.ConnectionResponsePending
         )
       _ <- ZIO.foreachPar(records)(performExchange).withParallelism(config.connect.connectBgJobProcessingParallelism)
+    } yield ()
+  }
+
+  def handleMessage(message: Message[UUID, WalletIdAndRecordId]): URIO[
+    DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & DIDNonSecretStorage & AppConfig,
+    Unit
+  ] = {
+    for {
+      _ <- ZIO.logInfo(s"!!! Handling recordId: ${message.value} via Kafka queue")
+      connectionService <- ZIO.service[ConnectionService]
+      walletAccessContext = WalletAccessContext(WalletId.fromUUID(message.value.walletId))
+      record <- connectionService
+        .findRecordById(message.value.recordId)
+        .provideSome(ZLayer.succeed(walletAccessContext))
+        .someOrElseZIO(ZIO.dieMessage("Record Not Found"))
+      _ <- performExchange(record)
     } yield ()
   }
 

@@ -8,6 +8,7 @@ import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.repository.ConnectionRepositoryInMemory
 import org.hyperledger.identus.mercury.model.{DidId, Message}
 import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
+import org.hyperledger.identus.messaging.kafka.ZKafkaMessagingServiceImpl
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.test.*
@@ -310,7 +311,11 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
           }
         }
       }
-    ).provide(connectionServiceLayer, ZLayer.succeed(WalletAccessContext(WalletId.random)))
+    ).provide(
+      connectionServiceLayer,
+      ZLayer.succeed(WalletAccessContext(WalletId.random)),
+      ZKafkaMessagingServiceImpl.layer(List("localhost:29092"))
+    )
   }
 
 }

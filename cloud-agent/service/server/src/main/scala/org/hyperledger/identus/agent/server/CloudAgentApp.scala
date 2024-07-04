@@ -10,6 +10,7 @@ import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEndpoints}
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.controller.ConnectionServerEndpoints
+import org.hyperledger.identus.connect.core.model.WalletIdAndRecordId
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.credentialstatus.controller.CredentialStatusServiceEndpoints
 import org.hyperledger.identus.event.controller.EventServerEndpoints
@@ -19,13 +20,11 @@ import org.hyperledger.identus.iam.entity.http.EntityServerEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementServerEndpoints
 import org.hyperledger.identus.issue.controller.IssueServerEndpoints
 import org.hyperledger.identus.mercury.{DidOps, HttpClient}
+import org.hyperledger.identus.messaging.MessagingService
 import org.hyperledger.identus.oid4vci.CredentialIssuerServerEndpoints
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
-import org.hyperledger.identus.pollux.credentialschema.{
-  SchemaRegistryServerEndpoints,
-  VerificationPolicyServerEndpoints
-}
+import org.hyperledger.identus.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import org.hyperledger.identus.pollux.vc.jwt.DidResolver as JwtDidResolver
 import org.hyperledger.identus.presentproof.controller.PresentProofServerEndpoints
 import org.hyperledger.identus.resolvers.DIDResolver
@@ -35,6 +34,8 @@ import org.hyperledger.identus.system.controller.SystemServerEndpoints
 import org.hyperledger.identus.verification.controller.VcVerificationServerEndpoints
 import zio.*
 import zio.metrics.*
+
+import java.util.UUID
 
 object CloudAgentApp {
 
@@ -82,16 +83,19 @@ object CloudAgentApp {
 
   private val connectDidCommExchangesJob: RIO[
     AppConfig & DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & DIDNonSecretStorage &
-      WalletManagementService,
+      WalletManagementService & MessagingService,
     Unit
   ] =
     for {
       config <- ZIO.service[AppConfig]
-      _ <- (ConnectBackgroundJobs.didCommExchanges @@ Metric
-        .gauge("connection_flow_did_com_exchange_job_ms_gauge")
-        .trackDurationWith(_.toMetricsSeconds))
-        .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
-        .unit
+      messagingService <- ZIO.service[MessagingService]
+      consumer <- messagingService.makeConsumer[UUID, WalletIdAndRecordId]("identus-cloud-agent-connect")
+      _ <- consumer.consume("connect")(ConnectBackgroundJobs.handleMessage)
+//      _ <- (ConnectBackgroundJobs.didCommExchanges @@ Metric
+//        .gauge("connection_flow_did_com_exchange_job_ms_gauge")
+//        .trackDurationWith(_.toMetricsSeconds))
+//        .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
+//        .unit
     } yield ()
 
   private val syncRevocationStatusListsJob = {
