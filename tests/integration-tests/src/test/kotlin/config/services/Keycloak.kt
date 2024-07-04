@@ -20,13 +20,13 @@ data class Keycloak(
     @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
     @ConfigAlias("compose_file") val keycloakComposeFile: String = "src/test/resources/containers/keycloak.yml",
     @ConfigAlias("extra_envs") val extraEnvs: Map<String, String> = emptyMap(),
-    @ConfigAlias("log_name") val logServiceName: String = "keycloak"
+    @ConfigAlias("logger_name") val loggerName: String = "keycloak"
 ) : ServiceBase() {
     private val logger = Logger.get<Keycloak>()
     private val keycloakEnvConfig: Map<String, String> = extraEnvs + mapOf(
         "KEYCLOAK_HTTP_PORT" to httpPort.toString(),
     )
-    override val logServices: List<String> = listOf(logServiceName)
+    override val logServices: List<String> = listOf(loggerName)
     private val keycloakClientRoles: List<String> = AgentRole.entries.map { it.roleName }
     override val container: ComposeContainer =
         ComposeContainer(File(keycloakComposeFile)).withEnv(keycloakEnvConfig)
