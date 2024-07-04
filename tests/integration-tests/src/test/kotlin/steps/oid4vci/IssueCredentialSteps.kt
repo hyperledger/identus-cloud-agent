@@ -58,26 +58,25 @@ class IssueCredentialSteps {
         val credentialOffer = runBlocking {
             CredentialOfferRequestResolver().resolve(offerUri).getOrThrow()
         }
+        println(credentialOffer)
+
         val openId4VCIConfig = OpenId4VCIConfig(
             clientId = "wallet-dev",
             authFlowRedirectionURI = URI.create("eudi-wallet//auth"),
             keyGenerationConfig = KeyGenerationConfig.ecOnly(com.nimbusds.jose.jwk.Curve.SECP256K1),
             credentialResponseEncryptionPolicy = CredentialResponseEncryptionPolicy.SUPPORTED,
+            parUsage = ParUsage.Never
         )
         val issuer = Issuer.make(openId4VCIConfig, credentialOffer).getOrThrow()
-//        val authorizationRequest = with(issuer) {
-//            runBlocking {
-//                prepareAuthorizationRequest().getOrThrow()
-//                // TODO: how to authorize?
-////                val preparedAuthorizationRequest = prepareAuthorizationRequest().getOrThrow()
-////                val authorizationCode: String = ... // using url preparedAuthorizationRequest.authorizationCodeURL authenticate via front-channel on authorization server and retrieve authorization code
-////                val authorizedRequest =
-////                    preparedAuthorizationRequest.authorizeWithAuthorizationCode(
-////                        AuthorizationCode(authorizationCode),
-////                    ).getOrThrow()
-//            }
-//        }
-        println(credentialOffer)
-//        println(authorizationRequest)
+        val authorizationRequest = runBlocking {
+            issuer.prepareAuthorizationRequest().getOrThrow()
+        }
+        println(authorizationRequest)
+
+        println(authorizationRequest.authorizationCodeURL)
+
+        // TODO: how to authorize via frontend channel in test?
+
+
     }
 }
