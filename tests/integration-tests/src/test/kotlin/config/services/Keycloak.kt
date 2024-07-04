@@ -21,7 +21,8 @@ data class Keycloak(
     @ConfigAlias("compose_file") val keycloakComposeFile: String = "src/test/resources/containers/keycloak.yml",
     @ConfigAlias("logger_name") val loggerName: String = "keycloak",
     @ConfigAlias("extra_envs") val extraEnvs: Map<String, String> = emptyMap(),
-    @ConfigAlias("extra_clients") val extraClients: Map<String, KeycloakPublicClientConfig> = emptyMap()
+    @ConfigAlias("extra_clients") val extraClients: Map<String, KeycloakPublicClientConfig> = emptyMap(),
+    @ConfigAlias("extra_scopes") val extraScopes: List<String> = emptyList()
 ) : ServiceBase() {
     private val logger = Logger.get<Keycloak>()
     private val keycloakEnvConfig: Map<String, String> = extraEnvs + mapOf(
@@ -48,6 +49,7 @@ data class Keycloak(
         createAgentClient()
         createPublicClients()
         createClientRoles()
+        createScopes()
         createUsers(users)
     }
 
@@ -124,6 +126,39 @@ data class Keycloak(
                 )
                 .post("/admin/realms/$realm/clients")
                 .then().statusCode(HttpStatus.SC_CREATED)
+        }
+    }
+
+    private fun createScopes() {
+        extraScopes.forEach { scope ->
+            val response = RestAssured.given().spec(requestBuilder)
+                .body(
+                    mapOf(
+                        "name" to scope,
+                        "description" to scope,
+                        "protocol" to "openid-connect",
+                        "attributes" to mapOf(
+                            "consent.screen.text" to scope,
+                            "display.on.consent.screen" to true,
+                            "include.in.token.scope" to true,
+                            "gui.order" to ""
+                        )
+                    ),
+                )
+                .post("/admin/realms/$realm/client-scopes")
+                .thenReturn()
+            response.then().statusCode(HttpStatus.SC_CREATED)
+            val clientScopeId = response.getHeader("Location").split("/").last()
+            mapClientsScopeToClient(clientScopeId)
+        }
+    }
+
+    private fun mapClientsScopeToClient(clientScopeId: String) {
+        extraClients.keys.forEach { client ->
+            RestAssured.given().spec(requestBuilder)
+                .put("/admin/realms/$realm/clients/$client/optional-client-scopes/$clientScopeId")
+                .then()
+                .statusCode(HttpStatus.SC_NO_CONTENT)
         }
     }
 

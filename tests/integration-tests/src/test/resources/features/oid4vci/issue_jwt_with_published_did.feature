@@ -1,5 +1,5 @@
 @oid4vci @dev
-Feature: Issue JWT Credentials with published DID (OID4VCI)
+Feature: Issue JWT Credentials with published DID using OID4VCI authorization code flow
 
 Background:
     Given Issuer has a published DID for JWT
