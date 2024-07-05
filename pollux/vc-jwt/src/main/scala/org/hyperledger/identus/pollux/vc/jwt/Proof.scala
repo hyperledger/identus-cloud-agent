@@ -2,7 +2,6 @@ package org.hyperledger.identus.pollux.vc.jwt
 
 import cats.implicits.*
 import com.nimbusds.jose.{JWSAlgorithm, JWSHeader, JWSObject, Payload}
-import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.nimbusds.jose.crypto.ECDSASigner
 import com.nimbusds.jwt.SignedJWT
 import io.circe.*
@@ -104,7 +103,6 @@ object EcdsaSecp256k1Signature2019ProofGenerator {
 }
 
 object EddsaJcs2022ProofGenerator {
-  private val provider = BouncyCastleProviderSingleton.getInstance
   private val ed25519MultiBaseHeader: Array[Byte] = Array(-19, 1) // 0xed01
 
   private def pkToMultiKey(pk: Ed25519PublicKey): MultiKey = {

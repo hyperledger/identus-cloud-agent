@@ -12,7 +12,10 @@ import org.hyperledger.identus.agent.walletapi.sql.{
   JdbcWalletNonSecretStorage,
   JdbcWalletSecretStorage
 }
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.{ServiceError, WalletNotFoundById}
+import org.hyperledger.identus.iam.authorization.core.PermissionManagementServiceError.{
+  ServiceError,
+  WalletNotFoundById
+}
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
 import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
@@ -48,7 +51,7 @@ object EntityPermissionManagementSpec extends ZIOSpecDefault, PostgresTestContai
     test("grant wallet access to the user") {
       for {
         entityService <- ZIO.service[EntityService]
-        permissionService <- ZIO.service[PermissionManagement.Service[Entity]]
+        permissionService <- ZIO.service[PermissionManagementService[Entity]]
         walletService <- ZIO.service[WalletManagementService]
         wallet1 <- walletService
           .createWallet(Wallet("test"))
@@ -73,7 +76,7 @@ object EntityPermissionManagementSpec extends ZIOSpecDefault, PostgresTestContai
     test("revoke wallet is not support") {
       for {
         entityService <- ZIO.service[EntityService]
-        permissionService <- ZIO.service[PermissionManagement.Service[Entity]]
+        permissionService <- ZIO.service[PermissionManagementService[Entity]]
         walletService <- ZIO.service[WalletManagementService]
         wallet1 <- walletService
           .createWallet(Wallet("test"))
@@ -94,7 +97,7 @@ object EntityPermissionManagementSpec extends ZIOSpecDefault, PostgresTestContai
       val walletId2 = WalletId.random
       for {
         entityService <- ZIO.service[EntityService]
-        permissionService <- ZIO.service[PermissionManagement.Service[Entity]]
+        permissionService <- ZIO.service[PermissionManagementService[Entity]]
         walletService <- ZIO.service[WalletManagementService]
         wallet1 <- walletService
           .createWallet(Wallet("test", walletId1))
@@ -117,7 +120,7 @@ object EntityPermissionManagementSpec extends ZIOSpecDefault, PostgresTestContai
       val walletId2 = WalletId.random
       for {
         entityService <- ZIO.service[EntityService]
-        permissionService <- ZIO.service[PermissionManagement.Service[Entity]]
+        permissionService <- ZIO.service[PermissionManagementService[Entity]]
         walletService <- ZIO.service[WalletManagementService]
         wallet1 <- walletService
           .createWallet(Wallet("test", walletId1))

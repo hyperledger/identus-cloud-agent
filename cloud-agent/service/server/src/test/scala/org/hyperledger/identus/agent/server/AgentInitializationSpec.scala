@@ -103,7 +103,7 @@ object AgentInitializationSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         _ <- AgentInitialization.run.overrideConfig(seed = Some("0" * 128))
         actualSeed <- ZIO
           .serviceWithZIO[WalletSecretStorage](
-            _.getWalletSeed
+            _.findWalletSeed
               .provide(ZLayer.succeed(WalletAccessContext(WalletId.default)))
           )
       } yield assert(actualSeed.get.toByteArray)(equalTo(Array.fill[Byte](64)(0)))
