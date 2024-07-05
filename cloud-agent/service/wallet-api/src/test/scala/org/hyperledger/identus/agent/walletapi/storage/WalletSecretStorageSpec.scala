@@ -46,9 +46,9 @@ object WalletSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupp
           .map(_.id)
         walletAccessCtx = ZLayer.succeed(WalletAccessContext(walletId))
         seed = WalletSeed.fromByteArray(Array.fill[Byte](64)(0)).toOption.get
-        seedBefore <- storage.getWalletSeed.provide(walletAccessCtx)
+        seedBefore <- storage.findWalletSeed.provide(walletAccessCtx)
         _ <- storage.setWalletSeed(seed).provide(walletAccessCtx)
-        seedAfter <- storage.getWalletSeed.provide(walletAccessCtx)
+        seedAfter <- storage.findWalletSeed.provide(walletAccessCtx)
       } yield assert(seedBefore)(isNone) &&
         assert(seedAfter)(isSome(equalTo(seed)))
     },
@@ -69,7 +69,7 @@ object WalletSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         seeds <- ZIO
           .foreach(wallets) { wallet =>
             val walletAccessCtx = ZLayer.succeed(WalletAccessContext(wallet.id))
-            storage.getWalletSeed.provideSomeLayer(walletAccessCtx)
+            storage.findWalletSeed.provideSomeLayer(walletAccessCtx)
           }
           .map(_.flatten)
       } yield assert(seeds.size)(equalTo(10)) && assert(seeds)(isDistinct)
