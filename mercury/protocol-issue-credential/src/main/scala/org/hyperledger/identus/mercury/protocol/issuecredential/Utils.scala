@@ -15,9 +15,9 @@ private trait ReadAttachmentsUtils {
       .flatMap(attachment =>
         attachment.format.map { formatName =>
           attachment.data match {
-            case obj: JwsData  => ??? // TODO
+            case obj: JwsData  => FeatureNotImplemented
             case obj: Base64   => (attachment.id, formatName, obj.base64.getBytes())
-            case obj: LinkData => ??? // TODO
+            case obj: LinkData => FeatureNotImplemented
             case obj: JsonData =>
               (
                 attachment.id,

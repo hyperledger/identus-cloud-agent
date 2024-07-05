@@ -81,10 +81,10 @@ def mapValueToJson(obj: java.lang.Object): Json = {
             .toMap
         )
       }
-    case any => {
-      println("*****NotImplemented***" + any.getClass().getCanonicalName() + "**********") // FIXME
-      ???
-    }
+    // case any => {
+    //   println("*****NotImplemented***" + any.getClass().getCanonicalName() + "**********") // FIXME
+    //   ???
+    // }
   }
 }
 
@@ -101,7 +101,7 @@ given Conversion[AttachmentDescriptor, XAttachment] with {
         }
         case LinkData(links, hash) => new XAttachment.Data.Links(links.asJava, hash, null)
         case Base64(d)             => new XAttachment.Data.Base64(d, null, null)
-        case _                     => ??? // FIXME later attachment data of other types
+        case _                     => FeatureNotImplemented
       }
 
     new XAttachment.Builder(id, data)
@@ -128,10 +128,7 @@ given Conversion[XAttachment, AttachmentDescriptor] with {
         val list = aux.asInstanceOf[java.util.AbstractList[String]]
         val linksSeq = list.iterator().asScala.toSeq
         LinkData(linksSeq, hash = attachment.getData().getHash())
-      case e if e contains ("jws") =>
-        val aux = e("jws")
-        println(aux.getClass().getCanonicalName()) // TODO
-        ???
+      case e if e contains ("jws") => FeatureNotImplemented
     }
 
     AttachmentDescriptor(

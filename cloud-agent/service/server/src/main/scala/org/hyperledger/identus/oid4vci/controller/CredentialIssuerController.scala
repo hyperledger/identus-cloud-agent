@@ -203,9 +203,9 @@ case class CredentialIssuerControllerImpl(
             )
             .mapError(ue => serverError(Some(s"Unexpected error while issuing credential: ${ue.userFacingMessage}")))
         } yield ImmediateCredentialResponse(credential.value)
-      case None => ZIO.fail(badRequestInvalidProof(jwt = "empty", details = "No proof provided"))
-      // case Some(CwtProof(_, _)) => ??? // TODO
-      // case Some(LdpProof(_, _)) => ??? // TODO
+      case None                 => ZIO.fail(badRequestInvalidProof(jwt = "empty", details = "No proof provided"))
+      case Some(CwtProof(_, _)) => FIXME // I have no idea what this is
+      case Some(LdpProof(_, _)) => FIXME // I have no idea what this is
     }
   }
 

@@ -45,7 +45,7 @@ object PresentationStatus {
           case Base64(data) =>
             val base64Decoded = new String(java.util.Base64.getUrlDecoder.decode(data))
             Seq(base64Decoded)
-          case any => ???
+          case any => FeatureNotImplemented
         }
       case None => Seq.empty
     PresentationStatus(

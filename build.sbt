@@ -26,19 +26,20 @@ coberturaFile := target.value / "coverage" / "coverage-report" / "cobertura.xml"
 
 inThisBuild(
   Seq(
+    scalacOptions ++= Seq("-encoding", "UTF-8"),
     scalacOptions ++= Seq(
-      "-encoding",
-      "UTF-8",
       "-feature",
       "-deprecation",
       "-unchecked",
-      "-Wunused:all",
-      "-Wconf:any:warning", // TODO: change unused imports to errors, Wconf configuration string is different from scala 2, figure out how!
-      // TODO "-feature",
-      // TODO "-Xfatal-warnings",
-      // TODO "-Yexplicit-nulls",
-      // "-Ysafe-init",
-    )
+    ),
+    Compile / scalacOptions += "-Yimports:java.lang,scala,scala.Predef,org.hyperledger.identus.Predef",
+    Test / scalacOptions -= "-Yimports:java.lang,scala,scala.Predef,org.hyperledger.identus.Predef",
+    scalacOptions += "-Wunused:all",
+    scalacOptions += "-Wconf:cat=deprecation:warning,any:error", // "-Wconf:help",
+    // scalacOptions += "-Yexplicit-nulls",
+    // scalacOptions += "-Ysafe-init",
+    // scalacOptions +=  "-Werror", // <=> "-Xfatal-warnings"
+    scalacOptions += "-Dquill.macro.log=false", // disable quill macro logs
   )
 )
 
@@ -456,6 +457,9 @@ val commonSetttings = Seq(
 // #####  shared  ######
 // #####################
 
+lazy val predef = (project in file("shared/predef"))
+  .settings(Compile / scalacOptions -= "-Yimports:java.lang,scala,scala.Predef,org.hyperledger.identus.Predef")
+
 lazy val shared = (project in file("shared/core"))
   .settings(commonSetttings)
   .settings(
@@ -463,6 +467,7 @@ lazy val shared = (project in file("shared/core"))
     crossPaths := false,
     libraryDependencies ++= D_Shared.dependencies
   )
+  .dependsOn(predef)
 
 lazy val sharedCrypto = (project in file("shared/crypto"))
   .settings(commonSetttings)
@@ -555,11 +560,12 @@ lazy val protocolInvitation = project
   )
   .dependsOn(models)
 
-lazy val protocolMercuryMailbox = project
-  .in(file("mercury/protocol-mercury-mailbox"))
-  .settings(name := "mercury-protocol-mailbox")
-  .settings(libraryDependencies += D.zio)
-  .dependsOn(models, protocolInvitation, protocolRouting)
+// lazy val protocolMercuryMailbox = project
+//   .in(file("mercury/protocol-mercury-mailbox"))
+//   .settings(predefSetttings)
+//   .settings(name := "mercury-protocol-mailbox")
+//   .settings(libraryDependencies += D.zio)
+//   .dependsOn(models, protocolInvitation, protocolRouting)
 
 lazy val protocolLogin = project
   .in(file("mercury/protocol-outofband-login"))
@@ -653,7 +659,7 @@ lazy val agent = project // maybe merge into models
     protocolCoordinateMediation,
     protocolInvitation,
     protocolRouting,
-    protocolMercuryMailbox,
+    // protocolMercuryMailbox,
     protocolLogin,
     protocolIssueCredential,
     protocolRevocationNotification,
@@ -685,6 +691,7 @@ lazy val agentDidcommx = project
 // ####################
 val prismNodeClient = project
   .in(file("prism-node/client/scala-client"))
+  .dependsOn(predef)
   .settings(
     name := "prism-node-client",
     libraryDependencies ++= Seq(D.scalaPbGrpc, D.scalaPbRuntime, D.grpcOkHttp),
@@ -761,6 +768,7 @@ lazy val polluxDoobie = project
 
 lazy val polluxAnoncreds = project
   .in(file("pollux/anoncreds"))
+  .dependsOn(predef)
   .settings(
     name := "pollux-anoncreds",
     Compile / unmanagedJars += baseDirectory.value / "anoncreds-jvm-1.0-SNAPSHOT.jar",
@@ -906,7 +914,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   protocolCoordinateMediation,
   protocolDidExchange,
   protocolInvitation,
-  protocolMercuryMailbox,
+  // protocolMercuryMailbox,
   protocolLogin,
   protocolReportProblem,
   protocolRouting,
