@@ -5,6 +5,7 @@ import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.JWK
 import eu.europa.ec.eudi.openid4vci.*
 import interactions.Post
+import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
@@ -98,7 +99,7 @@ class IssueCredentialSteps {
         val issuer = holder.recall<Issuer>("eudiIssuer")
         val authorizedRequest = holder.recall<AuthorizedRequest>("eudiAuthorizedRequest")
         val requestPayload = IssuanceRequestPayload.ConfigurationBased(credentialOffer.credentialConfigurationIdentifiers.first(), null)
-        val issuanceOutcome = with(issuer) {
+        val submissionOutcome = with(issuer) {
             when(authorizedRequest) {
                 is AuthorizedRequest.NoProofRequired -> throw Exception("Not supported yet")
                 is AuthorizedRequest.ProofRequired -> runBlocking {
@@ -109,7 +110,19 @@ class IssueCredentialSteps {
                 }
             }.getOrThrow()
         }
-        holder.remember("eudiIssuanceOutcome", issuanceOutcome)
+        holder.remember("eudiSubmissionOutcome", submissionOutcome)
+    }
+
+    @Then("{actor} sees credential issued successfully from CredentialEndpoint")
+    fun holderSeesCredentialIssuedSuccessfully(holder: Actor) {
+        val credentials = when(val submissionOutcome = holder.recall<SubmissionOutcome>("eudiSubmissionOutcome")) {
+            is SubmissionOutcome.Success -> submissionOutcome.credentials
+            else -> throw Exception("Issuance failed. $submissionOutcome")
+        }
+        println(credentials)
+        holder.attemptsTo(
+            Ensure.that(credentials).hasSize(1)
+        )
     }
 
     private fun popSigner(): PopSigner {
@@ -143,13 +156,16 @@ class IssueCredentialSteps {
         val loginForm = loginPage.forms.first()
         loginForm.getInputByName<HtmlTextInput>("username").type(actor.name)
         loginForm.getInputByName<HtmlPasswordInput>("password").type(actor.name)
-        val consentPage = loginForm.getInputByName<HtmlSubmitInput>("login").click<HtmlPage>()
+        val postLoginPage = loginForm.getInputByName<HtmlSubmitInput>("login").click<Page>()
 
-        // step 2 - give client consent to access the scopes
-        val consentForm = consentPage.forms.first()
-        consentForm.getInputByName<HtmlSubmitInput>("accept").click<TextPage>()
+        // If it is the first time user is logged in, Keycloak ask for consent by returning HtmlPage.
+        if (postLoginPage is HtmlPage) {
+            // step 2 - give client consent to access the scopes
+            val consentForm = postLoginPage.forms.first()
+            consentForm.getInputByName<HtmlSubmitInput>("accept").click<TextPage>()
+        }
+
         client.close()
-
         return ListenToEvents.with(actor).authCodeCallbackEvents.last()
     }
 }

@@ -1,4 +1,4 @@
-@oid4vci @dev
+@oid4vci
 Feature: Issue JWT Credentials with published DID using OID4VCI authorization code flow
 
 Background:
@@ -12,3 +12,12 @@ Scenario: Issuing credential with published PRISM DID
     And Holder receives oid4vci offer from Issuer
     And Holder resolves oid4vci issuer metadata and login via front-end channel
     And Holder presents the access token with JWT proof on CredentialEndpoint
+    Then Holder sees credential issued successfully from CredentialEndpoint
+
+@dev
+Scenario: Issuing credential with unpublished PRISM DID
+    When Issuer creates an offer using "StudentProfile" configuration with "long" form DID
+    And Holder receives oid4vci offer from Issuer
+    And Holder resolves oid4vci issuer metadata and login via front-end channel
+    And Holder presents the access token with JWT proof on CredentialEndpoint
+    Then Holder sees credential issued successfully from CredentialEndpoint
