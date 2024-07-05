@@ -84,7 +84,7 @@ class CredentialStatusListRepositoryInMemory(
 
   def createNewForTheWallet(
       jwtIssuer: Issuer,
-      statusListRegistryUrl: String
+      statusListRegistryServiceName: String
   ): URIO[WalletAccessContext, CredentialStatusList] = {
 
     val id = UUID.randomUUID()
@@ -99,9 +99,11 @@ class CredentialStatusListRepositoryInMemory(
         case DecodingError(message)    => new Throwable(message)
         case IndexOutOfBounds(message) => new Throwable(message)
       }
+      resourcePath =
+        s"credential-status/$id"
       emptyJwtCredential <- VCStatusList2021
         .build(
-          vcId = s"$statusListRegistryUrl/credential-status/$id",
+          vcId = s"""${jwtIssuer.did}?resourceService="$statusListRegistryServiceName"&resourcePath="$resourcePath"""",
           revocationData = bitString,
           jwtIssuer = jwtIssuer
         )

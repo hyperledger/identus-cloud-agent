@@ -526,7 +526,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           // Issuer generates credential
           credentialGenerateRecord <- issuerSvc.generateJWTCredential(
             issuerRecordId,
-            "https://test-status-list.registry"
+            "status-list-registry"
           )
           // Issuer sends credential
           _ <- issuerSvc.markCredentialSent(issuerRecordId)

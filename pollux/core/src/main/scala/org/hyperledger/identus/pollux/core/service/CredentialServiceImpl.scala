@@ -1039,7 +1039,7 @@ class CredentialServiceImpl(
 
   override def generateJWTCredential(
       recordId: DidCommID,
-      statusListRegistryUrl: String,
+      statusListRegistryServiceName: String,
   ): ZIO[WalletAccessContext, RecordNotFound | CredentialRequestValidationFailed, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
@@ -1067,7 +1067,7 @@ class CredentialServiceImpl(
 
       // Custom for JWT
       issuanceDate = Instant.now()
-      credentialStatus <- allocateNewCredentialInStatusListForWallet(record, statusListRegistryUrl, jwtIssuer)
+      credentialStatus <- allocateNewCredentialInStatusListForWallet(record, statusListRegistryServiceName, jwtIssuer)
       // TODO: get schema when schema registry is available if schema ID is provided
       w3Credential = W3cCredentialPayload(
         `@context` = Set(
@@ -1196,31 +1196,36 @@ class CredentialServiceImpl(
 
   private def allocateNewCredentialInStatusListForWallet(
       record: IssueCredentialRecord,
-      statusListRegistryUrl: String,
+      statusListRegistryServiceName: String,
       jwtIssuer: JwtIssuer
   ): URIO[WalletAccessContext, CredentialStatus] = {
     val effect = for {
       lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet
       currentStatusList <- lastStatusList
-        .fold(credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl))(
+        .fold(credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryServiceName))(
           ZIO.succeed(_)
         )
       size = currentStatusList.size
       lastUsedIndex = currentStatusList.lastUsedIndex
       statusListToBeUsed <-
         if lastUsedIndex < size then ZIO.succeed(currentStatusList)
-        else credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl)
+        else credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryServiceName)
       _ <- credentialStatusListRepository.allocateSpaceForCredential(
         issueCredentialRecordId = record.id,
         credentialStatusListId = statusListToBeUsed.id,
         statusListIndex = statusListToBeUsed.lastUsedIndex + 1
       )
+      resourcePath =
+        s"credential-status/${statusListToBeUsed.id}"
+      segment = statusListToBeUsed.lastUsedIndex + 1
     } yield CredentialStatus(
-      id = s"$statusListRegistryUrl/credential-status/${statusListToBeUsed.id}#${statusListToBeUsed.lastUsedIndex + 1}",
+      id =
+        s"""${jwtIssuer.did}?resourceService="$statusListRegistryServiceName"&resourcePath="$resourcePath#$segment"""",
       `type` = "StatusList2021Entry",
       statusPurpose = StatusPurpose.Revocation,
       statusListIndex = lastUsedIndex + 1,
-      statusListCredential = s"$statusListRegistryUrl/credential-status/${statusListToBeUsed.id}"
+      statusListCredential =
+        s"""${jwtIssuer.did}?resourceService="$statusListRegistryServiceName"&resourcePath="$resourcePath""""
     )
     issueCredentialSem.withPermit(effect)
   }
