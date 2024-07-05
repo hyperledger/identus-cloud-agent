@@ -1,6 +1,8 @@
 package steps.oid4vci
 
 import abilities.ListenToEvents
+import com.nimbusds.jose.JWSAlgorithm
+import com.nimbusds.jose.jwk.JWK
 import eu.europa.ec.eudi.openid4vci.*
 import interactions.Post
 import io.cucumber.java.en.When
@@ -10,12 +12,14 @@ import kotlinx.coroutines.runBlocking
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
-import org.apache.pdfbox.pdmodel.interactive.annotation.layout.PlainText
 import org.htmlunit.*
 import org.htmlunit.html.HtmlPage
 import org.htmlunit.html.HtmlPasswordInput
 import org.htmlunit.html.HtmlSubmitInput
 import org.htmlunit.html.HtmlTextInput
+import org.hyperledger.identus.apollo.base64.base64UrlEncoded
+import org.hyperledger.identus.apollo.utils.KMMECSecp256k1PrivateKey
+import org.hyperledger.identus.apollo.utils.decodeHex
 import org.hyperledger.identus.client.models.*
 import org.hyperledger.identus.client.models.CredentialOfferRequest
 import java.net.URI
@@ -90,25 +94,42 @@ class IssueCredentialSteps {
 
     @When("{actor} presents the access token with JWT proof on CredentialEndpoint")
     fun holderPresentsTokenOnCredentialEdpoint(holder: Actor) {
-        val credentialOffer = holder.recall<CredentialOffer>("eeudiCredentialOffer")
+        val credentialOffer = holder.recall<CredentialOffer>("eudiCredentialOffer")
         val issuer = holder.recall<Issuer>("eudiIssuer")
         val authorizedRequest = holder.recall<AuthorizedRequest>("eudiAuthorizedRequest")
         val requestPayload = IssuanceRequestPayload.ConfigurationBased(credentialOffer.credentialConfigurationIdentifiers.first(), null)
-        val signer: PopSigner = TODO("PopSigner.jwtPopSigner()")
-        with(issuer) {
+        val issuanceOutcome = with(issuer) {
             when(authorizedRequest) {
                 is AuthorizedRequest.NoProofRequired -> throw Exception("Not supported yet")
                 is AuthorizedRequest.ProofRequired -> runBlocking {
                     authorizedRequest.requestSingle(
                         requestPayload,
-                        TODO()
+                        popSigner()
                     )
                 }
-            }
+            }.getOrThrow()
         }
+        holder.remember("eudiIssuanceOutcome", issuanceOutcome)
+    }
 
-        println(authorizedRequest)
-        TODO()
+    private fun popSigner(): PopSigner {
+        val privateKeyHex = "d93c6485e30aad4d6522313553e58d235693f7007b822676e5e1e9a667655b69"
+        val did = "did:prism:4a2bc09be65136f604d1564e2fced1a1cdbce9deb9b64ee396afc95fc0b01c59:CnsKeRI6CgZhdXRoLTEQBEouCglzZWNwMjU2azESIQOx16yykO2nDcmM-NeQeVipxmuaF38KasIA8gycJCHWJhI7CgdtYXN0ZXIwEAFKLgoJc2VjcDI1NmsxEiECKrfbf1_p7YT5aRJspBLct5zDyL6aicEam1Gycq5xKy0"
+        val kid = "$did#auth-1"
+        val privateKey = KMMECSecp256k1PrivateKey.secp256k1FromByteArray(privateKeyHex.decodeHex())
+        val point = privateKey.getPublicKey().getCurvePoint()
+        val jwk = JWK.parse(mapOf(
+            "kty" to "EC",
+            "crv" to "secp256k1",
+            "x" to point.x.base64UrlEncoded,
+            "y" to point.y.base64UrlEncoded,
+            "d" to privateKey.raw.base64UrlEncoded
+        ))
+        return PopSigner.jwtPopSigner(
+            privateKey = jwk,
+            algorithm = JWSAlgorithm.ES256K,
+            publicKey = JwtBindingKey.Did(identity = kid)
+        )
     }
 
     /**
