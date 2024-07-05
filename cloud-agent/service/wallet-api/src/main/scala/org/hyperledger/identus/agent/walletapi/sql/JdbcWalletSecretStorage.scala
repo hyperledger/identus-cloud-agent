@@ -36,7 +36,7 @@ class JdbcWalletSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletSe
     } yield ()
   }
 
-  override def getWalletSeed: URIO[WalletAccessContext, Option[WalletSeed]] = {
+  override def findWalletSeed: URIO[WalletAccessContext, Option[WalletSeed]] = {
     val cxnIO =
       sql"""
         | SELECT seed

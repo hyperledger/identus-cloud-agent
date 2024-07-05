@@ -2,6 +2,7 @@ package org.hyperledger.identus.oid4vci
 
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.iam.authentication.*
 import org.hyperledger.identus.iam.authentication.{
   Authenticator,
   Authorizer,
