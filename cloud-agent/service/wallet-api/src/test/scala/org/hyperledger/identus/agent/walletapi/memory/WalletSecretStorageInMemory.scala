@@ -14,7 +14,7 @@ class WalletSecretStorageInMemory(storeRef: Ref[Map[WalletId, WalletSeed]]) exte
     } yield ()
   }
 
-  override def getWalletSeed: URIO[WalletAccessContext, Option[WalletSeed]] = {
+  override def findWalletSeed: URIO[WalletAccessContext, Option[WalletSeed]] = {
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       seed <- storeRef.get.map(_.get(walletId))

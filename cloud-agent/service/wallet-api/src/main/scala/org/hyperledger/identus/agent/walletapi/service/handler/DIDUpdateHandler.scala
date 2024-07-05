@@ -40,7 +40,7 @@ private[walletapi] class DIDUpdateHandler(
     val did = state.createOperation.did
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      seed <- walletSecretStorage.getWalletSeed
+      seed <- walletSecretStorage.findWalletSeed
         .someOrElseZIO(ZIO.dieMessage(s"Wallet seed for wallet $walletId does not exist"))
       keyCounter <- nonSecretStorage
         .getHdKeyCounter(did)

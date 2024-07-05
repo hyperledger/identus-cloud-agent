@@ -20,7 +20,7 @@ class VaultWalletSecretStorage(vaultKV: VaultKVClient) extends WalletSecretStora
     } yield ()
   }
 
-  override def getWalletSeed: URIO[WalletAccessContext, Option[WalletSeed]] = {
+  override def findWalletSeed: URIO[WalletAccessContext, Option[WalletSeed]] = {
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       path = walletSeedPath(walletId)
