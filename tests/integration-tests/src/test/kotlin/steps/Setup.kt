@@ -1,6 +1,8 @@
 package steps
 
 import abilities.ListenToEvents
+import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
+import com.nimbusds.jwt.SignedJWT
 import com.sksamuel.hoplite.ConfigException
 import com.sksamuel.hoplite.ConfigLoader
 import common.TestConstants
@@ -17,6 +19,7 @@ import net.serenitybdd.screenplay.rest.abilities.CallAnApi
 import org.apache.http.HttpStatus
 import org.hyperledger.identus.client.models.CreateWalletRequest
 import org.hyperledger.identus.client.models.CreateWebhookNotification
+import java.security.Security
 import java.util.UUID
 
 object Setup {
@@ -197,6 +200,7 @@ object Setup {
 
 @BeforeAll
 fun init() {
+    Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
     Setup.initServices()
     Setup.initActors()
 }

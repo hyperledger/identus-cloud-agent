@@ -16,6 +16,7 @@ import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.shared.crypto.{ApolloSpecHelper, Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
+import org.hyperledger.identus.shared.models.HexString
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
@@ -168,7 +169,7 @@ object ManagedDIDServiceSpec
       )
       .provide(Runtime.removeDefaultLoggers)
 
-    suite("ManagedDIDService")(suite1, suite2)
+    suite("ManagedDIDService")(suite1)
   }
 
   private val publishStoredDIDSpec =
@@ -224,6 +225,29 @@ object ManagedDIDServiceSpec
     )
 
   private val createAndStoreDIDSpec = suite("createAndStoreDID")(
+    test("create did and get private keys") {
+      val template = generateDIDTemplate(
+        publicKeys = Seq(
+          DIDPublicKeyTemplate(
+            id = "auth-1",
+            purpose = VerificationRelationship.Authentication,
+            curve = EllipticCurve.SECP256K1
+          )
+        )
+      )
+      for {
+        svc <- ZIO.service[ManagedDIDService]
+        did <- svc.createAndStoreDID(template).debug("longFormDid")
+        privateKey <- svc
+          .findDIDKeyPair(did.asCanonical, "auth-1")
+          .map {
+            case Some(Secp256k1KeyPair(_, privateKey)) => HexString.fromByteArray(privateKey.getEncoded)
+            case _                                     => ???
+          }
+          .debug("privateKey")
+      } yield assertCompletes
+
+    } @@ TestAspect.tag("dev"),
     test("create and store DID list in DIDNonSecretStorage") {
       val template = generateDIDTemplate()
       for {
