@@ -169,7 +169,7 @@ object ManagedDIDServiceSpec
       )
       .provide(Runtime.removeDefaultLoggers)
 
-    suite("ManagedDIDService")(suite1)
+    suite("ManagedDIDService")(suite1, suite2)
   }
 
   private val publishStoredDIDSpec =
