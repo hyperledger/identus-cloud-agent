@@ -3,12 +3,12 @@ package org.hyperledger.identus.connect.core.service
 import io.circe.syntax.*
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.InvalidStateForOperation
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
+import org.hyperledger.identus.connect.core.model.{ConnectionRecord, WalletIdAndRecordId}
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.repository.ConnectionRepositoryInMemory
 import org.hyperledger.identus.mercury.model.{DidId, Message}
 import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
-import org.hyperledger.identus.messaging.kafka.ZKafkaMessagingServiceImpl
+import org.hyperledger.identus.messaging.kafka.{ZKafkaMessagingServiceImpl, ZKafkaProducerImpl}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.test.*
@@ -314,7 +314,8 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
     ).provide(
       connectionServiceLayer,
       ZLayer.succeed(WalletAccessContext(WalletId.random)),
-      ZKafkaMessagingServiceImpl.layer(List("localhost:29092"))
+      ZKafkaMessagingServiceImpl.layer(List("localhost:29092")),
+      ZKafkaProducerImpl.layer[UUID, WalletIdAndRecordId]
     )
   }
 

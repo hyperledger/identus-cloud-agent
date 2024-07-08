@@ -19,6 +19,7 @@ import org.hyperledger.identus.castor.controller.{DIDControllerImpl, DIDRegistra
 import org.hyperledger.identus.castor.core.service.DIDServiceImpl
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.connect.controller.ConnectionControllerImpl
+import org.hyperledger.identus.connect.core.model.WalletIdAndRecordId
 import org.hyperledger.identus.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
 import org.hyperledger.identus.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
 import org.hyperledger.identus.credentialstatus.controller.CredentialStatusControllerImpl
@@ -33,7 +34,7 @@ import org.hyperledger.identus.iam.entity.http.controller.EntityControllerImpl
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementControllerImpl
 import org.hyperledger.identus.issue.controller.IssueControllerImpl
 import org.hyperledger.identus.mercury.*
-import org.hyperledger.identus.messaging.kafka.ZKafkaMessagingServiceImpl
+import org.hyperledger.identus.messaging.kafka.{ZKafkaMessagingServiceImpl, ZKafkaProducerImpl}
 import org.hyperledger.identus.oid4vci.controller.CredentialIssuerControllerImpl
 import org.hyperledger.identus.oid4vci.service.OIDCCredentialIssuerServiceImpl
 import org.hyperledger.identus.oid4vci.storage.InMemoryIssuanceSessionService
@@ -67,6 +68,7 @@ import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics
 
 import java.security.Security
+import java.util.UUID
 
 object MainApp extends ZIOAppDefault {
 
@@ -220,7 +222,8 @@ object MainApp extends ZIOAppDefault {
           // HTTP client
           SystemModule.zioHttpClientLayer,
           Scope.default,
-          ZKafkaMessagingServiceImpl.layer(List("kafka:9092"))
+          ZKafkaMessagingServiceImpl.layer(List("kafka:9092")),
+          ZKafkaProducerImpl.layer[UUID, WalletIdAndRecordId]
         )
     } yield app
 

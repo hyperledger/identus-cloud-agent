@@ -7,7 +7,7 @@ import org.hyperledger.identus.connect.core.repository.ConnectionRepository
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.messaging.MessagingService
+import org.hyperledger.identus.messaging.Producer
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.Base64Utils
@@ -20,7 +20,7 @@ import java.util.UUID
 
 private class ConnectionServiceImpl(
     connectionRepository: ConnectionRepository,
-    messagingService: MessagingService,
+    messageProducer: Producer[UUID, WalletIdAndRecordId],
     maxRetries: Int = 5, // TODO move to config
 ) extends ConnectionService {
 
@@ -149,8 +149,9 @@ private class ConnectionServiceImpl(
         )
       walletAccessContext <- ZIO.service[WalletAccessContext]
       // TODO Should we use a singleton producer or create a new one each time?? (underlying Kafka Producer is thread safe)
-      producer <- messagingService.makeProducer[UUID, WalletIdAndRecordId]().orDie
-      _ <- producer.produce(TOPIC, record.id, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id)).orDie
+      _ <- messageProducer
+        .produce(TOPIC, record.id, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id))
+        .orDie
       maybeRecord <- connectionRepository
         .findById(record.id)
       record <- ZIO.getOrFailWith(RecordIdNotFound(recordId))(maybeRecord)
@@ -225,8 +226,9 @@ private class ConnectionServiceImpl(
           s"${record.id}_inviter_pending_to_res_sent"
         )
       walletAccessContext <- ZIO.service[WalletAccessContext]
-      producer <- messagingService.makeProducer[UUID, WalletIdAndRecordId]().orDie
-      _ <- producer.produce(TOPIC, record.id, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id)).orDie
+      _ <- messageProducer
+        .produce(TOPIC, record.id, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id))
+        .orDie
       record <- connectionRepository.getById(record.id)
     } yield record
 
@@ -313,6 +315,6 @@ private class ConnectionServiceImpl(
 }
 
 object ConnectionServiceImpl {
-  val layer: URLayer[ConnectionRepository & MessagingService, ConnectionService] =
+  val layer: URLayer[ConnectionRepository & Producer[UUID, WalletIdAndRecordId], ConnectionService] =
     ZLayer.fromFunction(ConnectionServiceImpl(_, _))
 }
