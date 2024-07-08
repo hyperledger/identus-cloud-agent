@@ -24,7 +24,10 @@ import org.hyperledger.identus.messaging.MessagingService
 import org.hyperledger.identus.oid4vci.CredentialIssuerServerEndpoints
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
-import org.hyperledger.identus.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
+import org.hyperledger.identus.pollux.credentialschema.{
+  SchemaRegistryServerEndpoints,
+  VerificationPolicyServerEndpoints
+}
 import org.hyperledger.identus.pollux.vc.jwt.DidResolver as JwtDidResolver
 import org.hyperledger.identus.presentproof.controller.PresentProofServerEndpoints
 import org.hyperledger.identus.resolvers.DIDResolver
@@ -43,7 +46,7 @@ object CloudAgentApp {
     _ <- AgentInitialization.run
     _ <- issueCredentialDidCommExchangesJob.debug.fork
     _ <- presentProofExchangeJob.debug.fork
-    _ <- connectDidCommExchangesJob.debug.fork
+    _ <- connectDidCommExchangesJob
     _ <- syncDIDPublicationStateFromDltJob.debug.fork
     _ <- syncRevocationStatusListsJob.debug.fork
     _ <- AgentHttpServer.run.tapDefect(e => ZIO.logErrorCause("Agent HTTP Server failure", e)).fork
@@ -89,8 +92,11 @@ object CloudAgentApp {
     for {
       config <- ZIO.service[AppConfig]
       messagingService <- ZIO.service[MessagingService]
-      consumer <- messagingService.makeConsumer[UUID, WalletIdAndRecordId]("identus-cloud-agent-connect")
-      _ <- consumer.consume("connect")(ConnectBackgroundJobs.handleMessage)
+      _ <- ZIO.foreachPar(1 to 5) { _ =>
+        messagingService
+          .makeConsumer[UUID, WalletIdAndRecordId]("identus-cloud-agent-connect")
+          .flatMap(_.consume("connect")(ConnectBackgroundJobs.handleMessage).debug.fork)
+      }
 //      _ <- (ConnectBackgroundJobs.didCommExchanges @@ Metric
 //        .gauge("connection_flow_did_com_exchange_job_ms_gauge")
 //        .trackDurationWith(_.toMetricsSeconds))
