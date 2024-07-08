@@ -65,6 +65,11 @@ tasks.test {
     finalizedBy("aggregate", "reports")
     testLogging.showStandardStreams = true
     systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
+    // Since the test runs on host and system-unter-test runs in containers,
+    // We need to make the test on host resolves host.docker.internal same as the containerized services,
+    // because some spec (e.g. OID4VCI) requires domain to be the same.
+    // 
+    // The OID4VCI library does not allow mixing host.docker.internal and localhost
     systemProperty("jdk.net.hosts.file", "hosts_test")
 }
 
