@@ -3,8 +3,7 @@ package org.hyperledger.identus.connect.core.repository
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
 import org.hyperledger.identus.mercury.protocol.connection.*
-import org.hyperledger.identus.shared.models.Failure
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{Failure, WalletAccessContext}
 import zio.{UIO, URIO}
 
 import java.util.UUID

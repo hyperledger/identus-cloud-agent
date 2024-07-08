@@ -1,7 +1,7 @@
 package org.hyperledger.identus.agent.server.jobs
 
 import org.hyperledger.identus.mercury.HttpResponse
-import org.hyperledger.identus.shared.models._
+import org.hyperledger.identus.shared.models.*
 
 sealed trait BackgroundJobError(
     override val statusCode: org.hyperledger.identus.shared.models.StatusCode,
