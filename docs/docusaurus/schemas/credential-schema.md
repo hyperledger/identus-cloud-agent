@@ -166,7 +166,7 @@ DID of the identity which authored the credential schema.
 ### schema (JSON Schema)
 
 A valid [JSON-SCHEMA](https://json-schema.org/) where the credential schema semantic gets defined.
-JSON Schema must be composed according to <https://json-schema.org/draft/2020-12/schema> schema.
+JSON Schema must be composed according to the [Metaschema](https://json-schema.org/draft/2020-12/schema) schema.
 **Example:**
 
 ```json
