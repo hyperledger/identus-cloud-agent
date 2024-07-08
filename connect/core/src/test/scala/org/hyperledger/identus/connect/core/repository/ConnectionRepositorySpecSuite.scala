@@ -5,7 +5,7 @@ import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId, *}
+import org.hyperledger.identus.shared.models.*
 import zio.{Cause, Exit, ZIO, ZLayer}
 import zio.test.*
 import zio.Exit.Failure
