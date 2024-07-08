@@ -119,7 +119,6 @@ class IssueCredentialSteps {
             is SubmissionOutcome.Success -> submissionOutcome.credentials
             else -> throw Exception("Issuance failed. $submissionOutcome")
         }
-        println(credentials)
         holder.attemptsTo(
             Ensure.that(credentials).hasSize(1),
         )
