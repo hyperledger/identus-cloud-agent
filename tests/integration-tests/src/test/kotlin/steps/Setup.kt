@@ -2,7 +2,6 @@ package steps
 
 import abilities.ListenToEvents
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
-import com.nimbusds.jwt.SignedJWT
 import com.sksamuel.hoplite.ConfigException
 import com.sksamuel.hoplite.ConfigLoader
 import common.TestConstants

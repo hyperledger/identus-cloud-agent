@@ -22,7 +22,7 @@ data class Keycloak(
     @ConfigAlias("logger_name") val loggerName: String = "keycloak",
     @ConfigAlias("extra_envs") val extraEnvs: Map<String, String> = emptyMap(),
     @ConfigAlias("extra_clients") val extraClients: Map<String, KeycloakPublicClientConfig> = emptyMap(),
-    @ConfigAlias("extra_scopes") val extraScopes: List<String> = emptyList()
+    @ConfigAlias("extra_scopes") val extraScopes: List<String> = emptyList(),
 ) : ServiceBase() {
     private val logger = Logger.get<Keycloak>()
     private val keycloakEnvConfig: Map<String, String> = extraEnvs + mapOf(
@@ -121,7 +121,7 @@ data class Keycloak(
                         "id" to client.key,
                         "publicClient" to true,
                         "consentRequired" to true,
-                        "redirectUris" to client.value.redirectUris
+                        "redirectUris" to client.value.redirectUris,
                     ),
                 )
                 .post("/admin/realms/$realm/clients")
@@ -141,8 +141,8 @@ data class Keycloak(
                             "consent.screen.text" to scope,
                             "display.on.consent.screen" to true,
                             "include.in.token.scope" to true,
-                            "gui.order" to ""
-                        )
+                            "gui.order" to "",
+                        ),
                     ),
                 )
                 .post("/admin/realms/$realm/client-scopes")

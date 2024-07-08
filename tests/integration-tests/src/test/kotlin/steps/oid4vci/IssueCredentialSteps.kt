@@ -46,8 +46,8 @@ class IssueCredentialSteps {
                         CredentialOfferRequest(
                             credentialConfigurationId = configurationId,
                             issuingDID = did,
-                            claims = claims
-                        )
+                            claims = claims,
+                        ),
                     )
                 },
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_CREATED),
@@ -71,10 +71,10 @@ class IssueCredentialSteps {
         val redirectUrl = holder.recall<URL>("webhookUrl")
         val openId4VCIConfig = OpenId4VCIConfig(
             clientId = holder.recall("OID4VCI_AUTH_SERVER_CLIENT_ID"),
-            authFlowRedirectionURI = URI.create("${redirectUrl}/auth-cb"),
+            authFlowRedirectionURI = URI.create("$redirectUrl/auth-cb"),
             keyGenerationConfig = KeyGenerationConfig.ecOnly(com.nimbusds.jose.jwk.Curve.SECP256K1),
             credentialResponseEncryptionPolicy = CredentialResponseEncryptionPolicy.SUPPORTED,
-            parUsage = ParUsage.Never
+            parUsage = ParUsage.Never,
         )
         val issuer = Issuer.make(openId4VCIConfig, credentialOffer).getOrThrow()
         val authorizationRequest = runBlocking {
@@ -100,12 +100,12 @@ class IssueCredentialSteps {
         val authorizedRequest = holder.recall<AuthorizedRequest>("eudiAuthorizedRequest")
         val requestPayload = IssuanceRequestPayload.ConfigurationBased(credentialOffer.credentialConfigurationIdentifiers.first(), null)
         val submissionOutcome = with(issuer) {
-            when(authorizedRequest) {
+            when (authorizedRequest) {
                 is AuthorizedRequest.NoProofRequired -> throw Exception("Not supported yet")
                 is AuthorizedRequest.ProofRequired -> runBlocking {
                     authorizedRequest.requestSingle(
                         requestPayload,
-                        popSigner()
+                        popSigner(),
                     )
                 }
             }.getOrThrow()
@@ -115,13 +115,13 @@ class IssueCredentialSteps {
 
     @Then("{actor} sees credential issued successfully from CredentialEndpoint")
     fun holderSeesCredentialIssuedSuccessfully(holder: Actor) {
-        val credentials = when(val submissionOutcome = holder.recall<SubmissionOutcome>("eudiSubmissionOutcome")) {
+        val credentials = when (val submissionOutcome = holder.recall<SubmissionOutcome>("eudiSubmissionOutcome")) {
             is SubmissionOutcome.Success -> submissionOutcome.credentials
             else -> throw Exception("Issuance failed. $submissionOutcome")
         }
         println(credentials)
         holder.attemptsTo(
-            Ensure.that(credentials).hasSize(1)
+            Ensure.that(credentials).hasSize(1),
         )
     }
 
@@ -131,17 +131,19 @@ class IssueCredentialSteps {
         val kid = "$did#auth-1"
         val privateKey = KMMECSecp256k1PrivateKey.secp256k1FromByteArray(privateKeyHex.decodeHex())
         val point = privateKey.getPublicKey().getCurvePoint()
-        val jwk = JWK.parse(mapOf(
-            "kty" to "EC",
-            "crv" to "secp256k1",
-            "x" to point.x.base64UrlEncoded,
-            "y" to point.y.base64UrlEncoded,
-            "d" to privateKey.raw.base64UrlEncoded
-        ))
+        val jwk = JWK.parse(
+            mapOf(
+                "kty" to "EC",
+                "crv" to "secp256k1",
+                "x" to point.x.base64UrlEncoded,
+                "y" to point.y.base64UrlEncoded,
+                "d" to privateKey.raw.base64UrlEncoded,
+            ),
+        )
         return PopSigner.jwtPopSigner(
             privateKey = jwk,
             algorithm = JWSAlgorithm.ES256K,
-            publicKey = JwtBindingKey.Did(identity = kid)
+            publicKey = JwtBindingKey.Did(identity = kid),
         )
     }
 
