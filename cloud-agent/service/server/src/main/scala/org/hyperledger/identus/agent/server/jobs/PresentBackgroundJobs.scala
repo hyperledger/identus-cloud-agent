@@ -37,7 +37,7 @@ import zio.json.*
 import zio.json.ast.Json
 import zio.metrics.*
 import zio.prelude.Validation
-import zio.prelude.ZValidation.{Failure => ZFailure, *}
+import zio.prelude.ZValidation.{Failure as ZFailure, *}
 
 import java.time.{Clock, Instant, ZoneId}
 

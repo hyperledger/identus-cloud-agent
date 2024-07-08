@@ -45,6 +45,10 @@ dependencies {
     testImplementation("com.nimbusds:nimbus-jose-jwt:9.40")
     testImplementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
     testImplementation("com.google.crypto.tink:tink:1.13.0")
+    testImplementation("io.iohk.atala.prism.apollo:apollo-jvm:1.3.4")
+    // OID4VCI
+    testImplementation("org.htmlunit:htmlunit:4.3.0")
+    testImplementation("eu.europa.ec.eudi:eudi-lib-jvm-openid4vci-kt:0.3.2")
 }
 
 serenity {
@@ -61,6 +65,12 @@ tasks.test {
     finalizedBy("aggregate", "reports")
     testLogging.showStandardStreams = true
     systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
+    // Since the test runs on host and system-unter-test runs in containers,
+    // We need to make the test on host resolves host.docker.internal same as the containerized services,
+    // because some spec (e.g. OID4VCI) requires domain to be the same.
+    //
+    // The OID4VCI library does not allow mixing host.docker.internal and localhost
+    systemProperty("jdk.net.hosts.file", "hosts_test")
 }
 
 kotlin {
@@ -91,6 +101,7 @@ afterEvaluate {
             systemProperty("PRISM_NODE_VERSION", System.getenv("PRISM_NODE_VERSION") ?: "")
             systemProperty("AGENT_VERSION", System.getenv("AGENT_VERSION") ?: "")
             systemProperty("cucumber.filter.tags", System.getProperty("cucumber.filter.tags"))
+            systemProperty("jdk.net.hosts.file", "hosts_test")
             finalizedBy("aggregate", "reports")
             outputs.upToDateWhen { false }
         }

@@ -1,6 +1,6 @@
 package org.hyperledger.identus.mercury.model
 
-import org.hyperledger.identus.shared.models._
+import org.hyperledger.identus.shared.models.*
 
 package object error {
 
