@@ -38,7 +38,7 @@ import org.hyperledger.identus.iam.authentication.oidc.{
   KeycloakConfig,
   KeycloakEntity
 }
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement
+import org.hyperledger.identus.iam.authorization.core.PermissionManagementService
 import org.hyperledger.identus.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, PrismDidResolver}
 import org.hyperledger.identus.shared.crypto.Apollo
@@ -103,7 +103,7 @@ object AppModule {
     )
 
   val keycloakAuthenticatorLayer: RLayer[
-    AppConfig & WalletManagementService & Client & PermissionManagement.Service[KeycloakEntity],
+    AppConfig & WalletManagementService & Client & PermissionManagementService[KeycloakEntity],
     KeycloakAuthenticator
   ] =
     ZLayer.fromZIO {
@@ -113,7 +113,7 @@ object AppModule {
           if (!isEnabled) KeycloakAuthenticatorImpl.disabled
           else
             ZLayer.makeSome[
-              AppConfig & WalletManagementService & Client & PermissionManagement.Service[KeycloakEntity],
+              AppConfig & WalletManagementService & Client & PermissionManagementService[KeycloakEntity],
               KeycloakAuthenticator
             ](
               KeycloakConfig.layer,
@@ -125,14 +125,14 @@ object AppModule {
     }.flatten
 
   val keycloakPermissionManagementLayer
-      : RLayer[AppConfig & WalletManagementService & Client, PermissionManagement.Service[KeycloakEntity]] = {
+      : RLayer[AppConfig & WalletManagementService & Client, PermissionManagementService[KeycloakEntity]] = {
     ZLayer.fromZIO {
       ZIO
         .serviceWith[AppConfig](_.agent.authentication.keycloak.enabled)
         .map { isEnabled =>
           if (!isEnabled) KeycloakPermissionManagementService.disabled
           else
-            ZLayer.makeSome[AppConfig & WalletManagementService & Client, PermissionManagement.Service[KeycloakEntity]](
+            ZLayer.makeSome[AppConfig & WalletManagementService & Client, PermissionManagementService[KeycloakEntity]](
               KeycloakClientImpl.authzClientLayer,
               KeycloakClientImpl.layer,
               KeycloakConfig.layer,

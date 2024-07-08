@@ -6,7 +6,7 @@ import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.util.PaginationUtils
 import org.hyperledger.identus.iam.authentication.oidc.KeycloakEntity
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement
+import org.hyperledger.identus.iam.authorization.core.PermissionManagementService
 import org.hyperledger.identus.iam.wallet.http.model.{
   CreateWalletRequest,
   CreateWalletUmaPermissionRequest,
@@ -41,25 +41,10 @@ trait WalletManagementController {
   )(implicit rc: RequestContext): ZIO[WalletAdministrationContext, ErrorResponse, Unit]
 }
 
-object WalletManagementController {
-  given permissionManagementErrorConversion: Conversion[PermissionManagement.Error, ErrorResponse] = {
-    case e: PermissionManagement.Error.PermissionNotFoundById => ErrorResponse.badRequest(detail = Some(e.message))
-    case e: PermissionManagement.Error.ServiceError       => ErrorResponse.internalServerError(detail = Some(e.message))
-    case e: PermissionManagement.Error.UnexpectedError    => ErrorResponse.internalServerError(detail = Some(e.message))
-    case e: PermissionManagement.Error.UserNotFoundById   => ErrorResponse.badRequest(detail = Some(e.message))
-    case e: PermissionManagement.Error.WalletNotFoundById => ErrorResponse.badRequest(detail = Some(e.message))
-    case e: PermissionManagement.Error.WalletNotFoundByUserId     => ErrorResponse.badRequest(detail = Some(e.message))
-    case e: PermissionManagement.Error.WalletResourceNotFoundById => ErrorResponse.badRequest(detail = Some(e.message))
-    case e: PermissionManagement.Error.PermissionNotAvailable     => ErrorResponse.badRequest(detail = Some(e.message))
-  }
-}
-
 class WalletManagementControllerImpl(
     walletService: WalletManagementService,
-    permissionService: PermissionManagement.Service[BaseEntity],
+    permissionService: PermissionManagementService[BaseEntity],
 ) extends WalletManagementController {
-
-  import WalletManagementController.given
 
   override def listWallet(
       paginationInput: PaginationInput
@@ -152,6 +137,6 @@ class WalletManagementControllerImpl(
 }
 
 object WalletManagementControllerImpl {
-  val layer: URLayer[WalletManagementService & PermissionManagement.Service[BaseEntity], WalletManagementController] =
+  val layer: URLayer[WalletManagementService & PermissionManagementService[BaseEntity], WalletManagementController] =
     ZLayer.fromFunction(WalletManagementControllerImpl(_, _))
 }
