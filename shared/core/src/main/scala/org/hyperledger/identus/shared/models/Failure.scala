@@ -1,7 +1,7 @@
 package org.hyperledger.identus.shared.models
 
 import zio.{URIO, ZIO}
-import zio.json._
+import zio.json.*
 
 trait Failure {
   def namespace: String
