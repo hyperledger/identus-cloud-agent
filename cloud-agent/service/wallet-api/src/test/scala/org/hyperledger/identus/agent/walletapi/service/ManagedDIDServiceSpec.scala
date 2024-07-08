@@ -225,29 +225,6 @@ object ManagedDIDServiceSpec
     )
 
   private val createAndStoreDIDSpec = suite("createAndStoreDID")(
-    test("create did and get private keys") {
-      val template = generateDIDTemplate(
-        publicKeys = Seq(
-          DIDPublicKeyTemplate(
-            id = "auth-1",
-            purpose = VerificationRelationship.Authentication,
-            curve = EllipticCurve.SECP256K1
-          )
-        )
-      )
-      for {
-        svc <- ZIO.service[ManagedDIDService]
-        did <- svc.createAndStoreDID(template).debug("longFormDid")
-        privateKey <- svc
-          .findDIDKeyPair(did.asCanonical, "auth-1")
-          .map {
-            case Some(Secp256k1KeyPair(_, privateKey)) => HexString.fromByteArray(privateKey.getEncoded)
-            case _                                     => ???
-          }
-          .debug("privateKey")
-      } yield assertCompletes
-
-    } @@ TestAspect.tag("dev"),
     test("create and store DID list in DIDNonSecretStorage") {
       val template = generateDIDTemplate()
       for {
