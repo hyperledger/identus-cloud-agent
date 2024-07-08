@@ -2,7 +2,7 @@ package org.hyperledger.identus.messaging.kafka
 
 import org.apache.kafka.common.header.Headers
 import org.hyperledger.identus.messaging.*
-import zio.{RIO, Task, ULayer, URIO, ZIO, ZLayer}
+import zio.{EnvironmentTag, RIO, RLayer, Task, ULayer, URIO, ZIO, ZLayer}
 import zio.kafka.consumer.{
   Consumer as ZKConsumer,
   ConsumerSettings as ZKConsumerSettings,
@@ -52,6 +52,16 @@ class ZKafkaConsumerImpl[K, V](
       .runDrain
 }
 
+object ZKafkaConsumerImpl {
+  def layer[K: EnvironmentTag, V: EnvironmentTag](groupId: String)(implicit
+      kSerde: Serde[K],
+      vSerde: Serde[V]
+  ): RLayer[MessagingService, Consumer[K, V]] = ZLayer.fromZIO(for {
+    messagingService <- ZIO.service[MessagingService]
+    consumer <- messagingService.makeConsumer[K, V](groupId)
+  } yield consumer)
+}
+
 class ZKafkaProducerImpl[K, V](bootstrapServers: List[String], kSerde: Serde[K], vSerde: Serde[V])
     extends Producer[K, V] {
   private val zkProducer = ZLayer.scoped(ZKProducer.make(ZKProducerSettings(bootstrapServers)))
@@ -73,4 +83,14 @@ class ZKafkaProducerImpl[K, V](bootstrapServers: List[String], kSerde: Serde[K],
       .map(_ => ())
       .provideSome(zkProducer)
 
+}
+
+object ZKafkaProducerImpl {
+  def layer[K: EnvironmentTag, V: EnvironmentTag](implicit
+      kSerde: Serde[K],
+      vSerde: Serde[V]
+  ): RLayer[MessagingService, Producer[K, V]] = ZLayer.fromZIO(for {
+    messagingService <- ZIO.service[MessagingService]
+    producer <- messagingService.makeProducer[K, V]()
+  } yield producer)
 }
