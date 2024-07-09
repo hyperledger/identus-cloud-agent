@@ -30,10 +30,15 @@ enum class CredentialSchema {
             tags = listOf("school", "students"),
             version = "1.0.0",
         )
+        override val claims: Map<String, Any> = linkedMapOf(
+            "name" to "Name",
+            "age" to 18,
+        )
     }, ;
 
     abstract val credentialSchema: CredentialSchemaInput
     abstract val schema: JsonSchema
     abstract val credentialSchemaType: String
     abstract val schemaType: String
+    abstract val claims: Map<String, Any>
 }

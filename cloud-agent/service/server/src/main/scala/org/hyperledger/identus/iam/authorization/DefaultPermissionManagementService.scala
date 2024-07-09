@@ -2,31 +2,38 @@ package org.hyperledger.identus.iam.authorization
 
 import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Entity}
 import org.hyperledger.identus.iam.authentication.oidc.KeycloakEntity
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error
+import org.hyperledger.identus.iam.authorization.core.{PermissionManagementService, PermissionManagementServiceError}
 import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
 import zio.*
 
 class DefaultPermissionManagementService(
-    entityPermission: PermissionManagement.Service[Entity],
-    keycloakPermission: PermissionManagement.Service[KeycloakEntity]
-) extends PermissionManagement.Service[BaseEntity] {
+    entityPermission: PermissionManagementService[Entity],
+    keycloakPermission: PermissionManagementService[KeycloakEntity]
+) extends PermissionManagementService[BaseEntity] {
 
-  def grantWalletToUser(walletId: WalletId, entity: BaseEntity): ZIO[WalletAdministrationContext, Error, Unit] = {
+  def grantWalletToUser(
+      walletId: WalletId,
+      entity: BaseEntity
+  ): ZIO[WalletAdministrationContext, PermissionManagementServiceError, Unit] = {
     entity match {
       case entity: Entity           => entityPermission.grantWalletToUser(walletId, entity)
       case kcEntity: KeycloakEntity => keycloakPermission.grantWalletToUser(walletId, kcEntity)
     }
   }
 
-  def revokeWalletFromUser(walletId: WalletId, entity: BaseEntity): ZIO[WalletAdministrationContext, Error, Unit] = {
+  def revokeWalletFromUser(
+      walletId: WalletId,
+      entity: BaseEntity
+  ): ZIO[WalletAdministrationContext, PermissionManagementServiceError, Unit] = {
     entity match {
       case entity: Entity           => entityPermission.revokeWalletFromUser(walletId, entity)
       case kcEntity: KeycloakEntity => keycloakPermission.revokeWalletFromUser(walletId, kcEntity)
     }
   }
 
-  def listWalletPermissions(entity: BaseEntity): ZIO[WalletAdministrationContext, Error, Seq[WalletId]] = {
+  def listWalletPermissions(
+      entity: BaseEntity
+  ): ZIO[WalletAdministrationContext, PermissionManagementServiceError, Seq[WalletId]] = {
     entity match {
       case entity: Entity           => entityPermission.listWalletPermissions(entity)
       case kcEntity: KeycloakEntity => keycloakPermission.listWalletPermissions(kcEntity)
@@ -37,8 +44,8 @@ class DefaultPermissionManagementService(
 
 object DefaultPermissionManagementService {
   def layer: URLayer[
-    PermissionManagement.Service[KeycloakEntity] & PermissionManagement.Service[Entity],
-    PermissionManagement.Service[BaseEntity]
+    PermissionManagementService[KeycloakEntity] & PermissionManagementService[Entity],
+    PermissionManagementService[BaseEntity]
   ] =
     ZLayer.fromFunction(DefaultPermissionManagementService(_, _))
 }

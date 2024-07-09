@@ -2,27 +2,27 @@
 Feature: Update DID
 
   Background: Published DID is created
-    Given Issuer has a published DID
+    Given Issuer has a published DID for JWT
 
-  Scenario: Update PRISM DID by adding new services
+  Scenario: Update PRISM DID services
     When Issuer updates PRISM DID with new services
-    And He submits PRISM DID update operation
-    Then He sees PRISM DID was successfully updated with new services
+    Then He sees the PRISM DID should have been updated successfully
+    And He sees that PRISM DID should have the new service
 
-  Scenario: Update PRISM DID by removing services
-    When Issuer updates PRISM DID by removing services
-    And He submits PRISM DID update operation
-    Then He sees PRISM DID was successfully updated by removing services
-
-  Scenario: Update PRISM DID by updating services
     When Issuer updates PRISM DID by updating services
-    And He submits PRISM DID update operation
-    Then He sees PRISM DID was successfully updated by updating services
+    Then He sees the PRISM DID should have been updated successfully
+    And He sees the PRISM DID should have the service updated
 
-  Scenario Outline: Update PRISM DID by adding new keys
+    When Issuer updates PRISM DID by removing services
+    Then He sees the PRISM DID should have been updated successfully
+    And He sees the PRISM DID should have the service removed
+
+  Scenario Outline: Update PRISM DID keys
     When Issuer updates PRISM DID by adding new key with <curve> curve and <purpose> purpose
-    And He submits PRISM DID update operation
     Then He sees PRISM DID was successfully updated with new keys of <purpose> purpose
+
+    When Issuer updates PRISM DID by removing keys
+    Then He sees PRISM DID was successfully updated and keys removed with <purpose> purpose
     Examples:
       | curve     | purpose         |
       | secp256k1 | authentication  |
@@ -31,7 +31,11 @@ Feature: Update DID
       | Ed25519   | assertionMethod |
       | X25519    | keyAgreement    |
 
-  Scenario: Update PRISM DID by removing keys
-    When Issuer updates PRISM DID by removing keys
-    And He submits PRISM DID update operation
-    Then He sees PRISM DID was successfully updated and keys removed
+  Scenario Outline: Update PRISM DID with disallowed key purpose
+    When Issuer updates PRISM DID by adding new key with <curve> curve and <purpose> purpose
+    Then He sees the PRISM DID was not successfully updated
+    Examples:
+      | curve   | purpose         |
+      | Ed25519 | keyAgreement    |
+      | X25519  | authentication  |
+      | X25519  | assertionMethod |

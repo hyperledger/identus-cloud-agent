@@ -34,7 +34,7 @@ inThisBuild(
       "-unchecked",
       "-Dquill.macro.log=false", // disable quill macro logs
       "-Wunused:all",
-      "-Wconf:any:warning" // TODO: change unused imports to errors, Wconf configuration string is different from scala 2, figure out how!
+      "-Wconf:any:warning", // TODO: change unused imports to errors, Wconf configuration string is different from scala 2, figure out how!
       // TODO "-feature",
       // TODO "-Xfatal-warnings",
       // TODO "-Yexplicit-nulls",
@@ -502,7 +502,8 @@ lazy val models = project
     ), // TODO try to remove this from this module
     // libraryDependencies += D.didScala
   )
-  .settings(libraryDependencies += D.nimbusJwt) //FIXME just for the DidAgent
+  .settings(libraryDependencies += D.nimbusJwt) // FIXME just for the DidAgent
+  .dependsOn(shared)
 
 /* TODO move code from agentDidcommx to here
 models implementation for didcommx () */
@@ -730,10 +731,18 @@ lazy val polluxCore = project
     name := "pollux-core",
     libraryDependencies ++= D_Pollux.coreDependencies
   )
-  .dependsOn(shared)
-  .dependsOn(agentWalletAPI)
-  .dependsOn(polluxVcJWT)
-  .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds, polluxSDJWT)
+  .dependsOn(
+    shared,
+    castorCore % "compile->compile;test->test", // Test is for MockDIDService
+    agentWalletAPI % "compile->compile;test->test", // Test is for MockManagedDIDService
+    vc,
+    resolver,
+    agentDidcommx,
+    eventNotification,
+    polluxAnoncreds,
+    polluxVcJWT,
+    polluxSDJWT,
+  )
 
 lazy val polluxDoobie = project
   .in(file("pollux/sql-doobie"))
@@ -863,17 +872,16 @@ lazy val cloudAgentServer = project
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(agentWalletAPI % "compile->compile;test->test")
   .dependsOn(
+    sharedTest % "test->test",
     agent,
-    polluxCore,
+    polluxCore % "compile->compile;test->test",
     polluxDoobie,
     polluxAnoncreds,
-    connectCore,
+    connectCore % "compile->compile;test->test", // Test is for MockConnectionService
     connectDoobie,
     castorCore,
-    eventNotification
+    eventNotification,
   )
-  .dependsOn(sharedTest % "test->test")
-  .dependsOn(polluxCore % "compile->compile;test->test")
 
 // ############################
 // ####  Release process  #####

@@ -8,29 +8,29 @@ import java.util.UUID
 
 trait VerificationPolicyRepository {
 
-  def create(verificationPolicy: VerificationPolicy): RIO[WalletAccessContext, VerificationPolicy]
+  def create(verificationPolicy: VerificationPolicy): URIO[WalletAccessContext, VerificationPolicy]
 
-  def get(id: UUID): RIO[WalletAccessContext, Option[VerificationPolicy]]
+  def findById(id: UUID): URIO[WalletAccessContext, Option[VerificationPolicy]]
 
-  def exists(id: UUID): RIO[WalletAccessContext, Boolean]
+  def exists(id: UUID): URIO[WalletAccessContext, Boolean]
 
-  def getHash(id: UUID): RIO[WalletAccessContext, Option[Int]]
+  def findHashById(id: UUID): URIO[WalletAccessContext, Option[Int]]
 
   def update(
       id: UUID,
       nonce: Int,
       verificationPolicy: VerificationPolicy
-  ): RIO[WalletAccessContext, Option[VerificationPolicy]]
+  ): URIO[WalletAccessContext, VerificationPolicy]
 
-  def delete(id: UUID): RIO[WalletAccessContext, Option[VerificationPolicy]]
+  def delete(id: UUID): URIO[WalletAccessContext, VerificationPolicy]
 
-  def totalCount(): RIO[WalletAccessContext, Long]
+  def totalCount(): URIO[WalletAccessContext, Long]
 
-  def filteredCount(nameOpt: Option[String]): RIO[WalletAccessContext, Long]
+  def filteredCount(nameOpt: Option[String]): URIO[WalletAccessContext, Long]
 
   def lookup(
       nameOpt: Option[String],
       offsetOpt: Option[Int],
       limitOpt: Option[Int]
-  ): RIO[WalletAccessContext, List[VerificationPolicy]]
+  ): URIO[WalletAccessContext, List[VerificationPolicy]]
 }

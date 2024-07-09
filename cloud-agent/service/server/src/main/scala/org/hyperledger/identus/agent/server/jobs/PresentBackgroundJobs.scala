@@ -17,7 +17,6 @@ import org.hyperledger.identus.castor.core.model.error.DIDResolutionError as Cas
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.model.*
-import org.hyperledger.identus.mercury.model.error.TransportError
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.mercury.protocol.reportproblem.v2.{ProblemCode, ReportProblem}
 import org.hyperledger.identus.pollux.core.model.*
@@ -30,7 +29,7 @@ import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, IssuerPublicKey, 
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, Issuer as JwtIssuer, JWT, JwtPresentation}
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.http.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
@@ -38,13 +37,15 @@ import zio.json.*
 import zio.json.ast.Json
 import zio.metrics.*
 import zio.prelude.Validation
-import zio.prelude.ZValidation.*
+import zio.prelude.ZValidation.{Failure as ZFailure, *}
 
 import java.time.{Clock, Instant, ZoneId}
 
 object PresentBackgroundJobs extends BackgroundJobsHelper {
-  type ERROR = DIDSecretStorageError | PresentationError | CredentialServiceError | BackgroundJobError |
-    CastorDIDResolutionError | GetManagedDIDError | TransportError
+
+  private type ERROR =
+    /*DIDSecretStorageError | PresentationError | CredentialServiceError | BackgroundJobError | TransportError | */
+    CastorDIDResolutionError | GetManagedDIDError | Failure
 
   private type RESOURCES = COMMON_RESOURCES & CredentialService & JwtDidResolver & DIDService & AppConfig &
     MESSAGING_RESOURCES
@@ -82,7 +83,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
     aux(record)
       .tapError({
         (error: PresentationError | DIDSecretStorageError | BackgroundJobError | CredentialServiceError |
-          CastorDIDResolutionError | GetManagedDIDError | TransportError) =>
+          CastorDIDResolutionError | GetManagedDIDError | Failure) =>
           ZIO.logErrorCause(
             s"Present Proof - Error processing record: ${record.id}",
             Cause.fail(error)
@@ -533,7 +534,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           requestPresentation: RequestPresentation
       ): ZIO[
         PresentationService & DIDNonSecretStorage,
-        PresentationError | DIDSecretStorageError | BackgroundJobError,
+        Failure,
         Unit
       ] = {
         maybeCredentialsToUseJson match {
@@ -645,7 +646,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
     def handlePresentationGenerated(id: DidCommID, presentation: Presentation): ZIO[
       JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
-      PresentationError | DIDSecretStorageError | BackgroundJobError | TransportError,
+      Failure,
       Unit
     ] = {
 
@@ -712,7 +713,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
     def handleRequestPending(id: DidCommID, record: RequestPresentation): ZIO[
       JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
-      PresentationError | DIDSecretStorageError | BackgroundJobError | TransportError,
+      Failure,
       Unit
     ] = {
       val VerifierSendPresentationRequestMsgSuccess = counterMetric(
@@ -800,7 +801,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           credentialFormat: CredentialFormat
       ): ZIO[
         AppConfig & JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
-        PresentationError | DIDSecretStorageError | TransportError,
+        Failure,
         Unit
       ] = {
         val result =
@@ -814,7 +815,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
       private def handleJWT(id: DidCommID, requestPresentation: RequestPresentation, presentation: Presentation): ZIO[
         AppConfig & JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
-        PresentationError | DIDSecretStorageError | TransportError,
+        Failure,
         Unit
       ] = {
         val clock = java.time.Clock.system(ZoneId.systemDefault)
@@ -887,8 +888,8 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               case any => ZIO.fail(PresentationReceivedError("Only Base64 Supported"))
             }
             _ <- credentialsClaimsValidationResult match
-              case l @ Failure(_, _) => ZIO.logError(s"CredentialsClaimsValidationResult: $l")
-              case l @ Success(_, _) => ZIO.logInfo(s"CredentialsClaimsValidationResult: $l")
+              case l @ ZFailure(_, _) => ZIO.logError(s"CredentialsClaimsValidationResult: $l")
+              case l @ Success(_, _)  => ZIO.logInfo(s"CredentialsClaimsValidationResult: $l")
             service <- ZIO.service[PresentationService]
             presReceivedToProcessedAspect = CustomMetricsAspect.endRecordingTime(
               s"${id}_present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge",
@@ -899,7 +900,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                 service
                   .markPresentationVerified(id)
                   .provideSomeLayer(ZLayer.succeed(walletAccessContext)) @@ presReceivedToProcessedAspect
-              case Failure(log, error) =>
+              case ZFailure(log, error) =>
                 for {
                   _ <- service
                     .markPresentationVerificationFailed(id)
@@ -928,7 +929,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
       private def handleSDJWT(id: DidCommID, presentation: Presentation): ZIO[
         JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
-        PresentationError | DIDSecretStorageError | TransportError,
+        Failure,
         Unit
       ] = {
         for {
@@ -997,7 +998,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           presentation: Presentation
       ): ZIO[
         PresentationService & DIDNonSecretStorage & MESSAGING_RESOURCES,
-        PresentationError | DIDSecretStorageError | TransportError,
+        PresentationError | DIDSecretStorageError,
         Unit
       ] = {
         for {

@@ -29,7 +29,7 @@ class KeyResolver(
     }
 
   private def deriveHdKey(path: ManagedDIDHdKeyPath): RIO[WalletAccessContext, Option[Secp256k1KeyPair]] =
-    walletSecretStorage.getWalletSeed.flatMap {
+    walletSecretStorage.findWalletSeed.flatMap {
       case None       => ZIO.none
       case Some(seed) => apollo.secp256k1.deriveKeyPair(seed.toByteArray)(path.derivationPath*).asSome
     }
