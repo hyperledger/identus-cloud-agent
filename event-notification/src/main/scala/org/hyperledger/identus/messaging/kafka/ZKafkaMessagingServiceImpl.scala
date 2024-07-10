@@ -2,7 +2,7 @@ package org.hyperledger.identus.messaging.kafka
 
 import org.apache.kafka.common.header.Headers
 import org.hyperledger.identus.messaging.*
-import zio.{EnvironmentTag, RIO, RLayer, Task, ULayer, URIO, ZIO, ZLayer}
+import zio.{durationInt, EnvironmentTag, RIO, RLayer, Task, ULayer, URIO, ZIO, ZLayer}
 import zio.kafka.consumer.{
   Consumer as ZKConsumer,
   ConsumerSettings as ZKConsumerSettings,
@@ -30,7 +30,19 @@ class ZKafkaConsumerImpl[K, V](
     kSerde: Serde[K],
     vSerde: Serde[V]
 ) extends Consumer[K, V] {
-  private val zkConsumer = ZLayer.scoped(ZKConsumer.make(ZKConsumerSettings(bootstrapServers).withGroupId(groupId)))
+  private val zkConsumer = ZLayer.scoped(
+    ZKConsumer.make(
+      ZKConsumerSettings(bootstrapServers)
+        .withGroupId(groupId)
+        // 'max.poll.records' default is 500. This is a Kafka property.
+        .withMaxPollRecords(500)
+        // 'max.poll.interval.ms' default is 5 minutes. This is a Kafka property.
+        .withMaxPollInterval(5.minutes) // Should be max.poll.records x 'max processing time per record'
+        // 'pollTimeout' default is 50 millis. This is a ZIO Kafka property.
+        .withPollTimeout(50.millis)
+//        .withOffsetRetrieval(OffsetRetrieval.Auto(AutoOffsetStrategy.Earliest))
+    )
+  )
 
   private val zkKeyDeserializer = new ZKDeserializer[Any, K] {
     override def deserialize(topic: String, headers: Headers, data: Array[Byte]): RIO[Any, K] =
