@@ -85,6 +85,7 @@ lazy val V = new {
   val zioPreludeVersion = "1.0.0-RC24"
 
   val apollo = "1.3.5"
+
   val jsonSchemaValidator = "1.3.2" // scala-steward:off //TODO 1.3.2 need to fix:
   // [error] 	org.hyperledger.identus.pollux.core.model.schema.AnoncredSchemaTypeSpec
   // [error] 	org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaSpec
