@@ -1,11 +1,11 @@
 # Castor:
-/castor/ @patlo-iog @yshyn-iohk
+/castor/ @patlo-iog @yshyn-iohk @shotexa
 
 # Connect:
-/connect/ @bvoiturier @FabioPinheiro @mineme0110
+/connect/ @bvoiturier @FabioPinheiro @mineme0110 @shotexa
 
 # Pollux:
-/pollux/ @patlo-iog @CryptoKnightIOG @mineme0110
+/pollux/ @patlo-iog @CryptoKnightIOG @mineme0110 @shotexa
 
 # Cloud Agent:
 /cloud-agent/ @bvoiturier @yshyn-iohk @patlo-iog
@@ -14,13 +14,16 @@
 /.github/ @mineme0110 @patlo-iog
 
 # PRISM Node:
-/prism-node/ @shotexa
+/prism-node/ @shotexa @patlo-iog
 
 # Shared:
 /shared/ @patlo-iog @FabioPinheiro @mineme0110 @yshyn-iohk @bvoiturier @shotexa @CryptoKnightIOG
 
 # E2E tests:
-/tests/ @todorkoleviohk @amagyar-iohk @yshyn-iohk @patlo-iog @mineme0110
+/tests/ @amagyar-iohk @yshyn-iohk @patlo-iog @mineme0110 @blockchaintimothy @shotexa @FabioPinheiro
+
+# infrastructure
+/infrastructure/ @patlo-iog @yshyn-iohk @womfoo @milosbackonja @mineme0110 @amagyar-iohk
 
 # Docs:
 /docs/ @bvoiturier @yshyn-iohk
