@@ -21,20 +21,20 @@ import java.util.UUID
 
 object ConnectBackgroundJobs extends BackgroundJobsHelper {
 
-  val didCommExchanges = {
-    for {
-      connectionService <- ZIO.service[ConnectionService]
-      config <- ZIO.service[AppConfig]
-      records <- connectionService
-        .findRecordsByStatesForAllWallets(
-          ignoreWithZeroRetries = true,
-          limit = config.connect.connectBgJobRecordsLimit,
-          ConnectionRecord.ProtocolState.ConnectionRequestPending,
-          ConnectionRecord.ProtocolState.ConnectionResponsePending
-        )
-      _ <- ZIO.foreachPar(records)(performExchange).withParallelism(config.connect.connectBgJobProcessingParallelism)
-    } yield ()
-  }
+//  val didCommExchanges = {
+//    for {
+//      connectionService <- ZIO.service[ConnectionService]
+//      config <- ZIO.service[AppConfig]
+//      records <- connectionService
+//        .findRecordsByStatesForAllWallets(
+//          ignoreWithZeroRetries = true,
+//          limit = config.connect.connectBgJobRecordsLimit,
+//          ConnectionRecord.ProtocolState.ConnectionRequestPending,
+//          ConnectionRecord.ProtocolState.ConnectionResponsePending
+//        )
+//      _ <- ZIO.foreachPar(records)(performExchange).withParallelism(config.connect.connectBgJobProcessingParallelism)
+//    } yield ()
+//  }
 
   def handleMessage(message: Message[UUID, WalletIdAndRecordId]): URIO[
     DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & DIDNonSecretStorage & AppConfig,
@@ -190,7 +190,7 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
           @@ Metric
             .gauge("connection_flow_inviter_process_connection_record_ms_gauge")
             .trackDurationWith(_.toMetricsSeconds)
-      case _ => ZIO.unit
+      case r => ZIO.logWarning(s"Invalid candidate record received for processing: $r") *> ZIO.unit
     }
 
     exchange
