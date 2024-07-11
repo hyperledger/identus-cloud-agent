@@ -54,21 +54,7 @@ Authorization: Bearer {{ issuer_access_token }}
 }
 HTTP 201
 [Captures]
-issuer_did: jsonpath "$.longFormDid" regex "(did:prism:[a-z0-9]+):.+$"
-
-# Issuer publish DID
-POST {{ agent_url }}/agent/did-registrar/dids/{{ issuer_did }}/publications
-Authorization: Bearer {{ issuer_access_token }}
-HTTP 202
-
-# Issuer wait for DID to be published
-GET {{ agent_url }}/agent/did-registrar/dids/{{ issuer_did }}
-Authorization: Bearer {{ issuer_access_token }}
-[Options]
-retry: -1
-HTTP 200
-[Asserts]
-jsonpath "$.status" == "PUBLISHED"
+issuer_did: jsonpath "$.longFormDid" # regex "(did:prism:[a-z0-9]+):.+$"
 
 # Holder create DID
 POST {{ agent_url }}/agent/did-registrar/dids
