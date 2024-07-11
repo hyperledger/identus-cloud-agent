@@ -1,6 +1,6 @@
 {
   # identus
-  agent = "1.37.0",
+  agent = "1.37.0-SNAPSHOT",
   node = "2.4.0",
   identusKeycloak = "0.2.0",
   # 3rd party
