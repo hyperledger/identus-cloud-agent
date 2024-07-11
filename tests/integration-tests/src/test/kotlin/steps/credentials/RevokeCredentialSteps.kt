@@ -6,15 +6,22 @@ import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.extensions.toJsonPath
 import io.iohk.atala.automation.serenity.ensure.Ensure
+import io.iohk.atala.automation.serenity.interactions.PollingWait
 import io.iohk.atala.automation.utils.Wait
 import models.JwtCredential
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
+import net.serenitybdd.screenplay.Question
 import org.apache.http.HttpStatus
+import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.equalTo
 import org.hyperledger.identus.client.models.IssueCredentialRecord
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class RevokeCredentialSteps {
+
     @When("{actor} revokes the credential issued to {actor}")
     fun issuerRevokesCredentialsIssuedToHolder(issuer: Actor, holder: Actor) {
         val issuedCredential = issuer.recall<IssueCredentialRecord>("issuedCredential")
@@ -50,18 +57,20 @@ class RevokeCredentialSteps {
 
     @Then("{actor} should see the credential was revoked")
     fun credentialShouldBeRevoked(issuer: Actor) {
-        Wait.until(
-            timeout = 60.seconds,
-            errorMessage = "Encoded Status List didn't change after revoking.",
-        ) {
-            val statusListId: String = issuer.recall("statusListId")
-            val encodedStatusList: String = issuer.recall("encodedStatusList")
-            issuer.attemptsTo(
-                Get.resource("/credential-status/$statusListId"),
+        issuer.attemptsTo(
+            PollingWait.with(1.minutes, 500.milliseconds).until<Boolean>(
+                Question.about("revocation status list").answeredBy {
+                    val statusListId: String = issuer.recall("statusListId")
+                    val encodedStatusList: String = issuer.recall("encodedStatusList")
+                    issuer.attemptsTo(
+                        Get.resource("/credential-status/$statusListId"),
+                    )
+                    val actualEncodedList: String = SerenityRest.lastResponse().jsonPath().get("credentialSubject.encodedList")
+                    actualEncodedList != encodedStatusList
+                },
+                equalTo(true)
             )
-            val actualEncodedList: String = SerenityRest.lastResponse().jsonPath().get("credentialSubject.encodedList")
-            actualEncodedList != encodedStatusList
-        }
+        )
     }
 
     @Then("{actor} should see the credential is not revoked")

@@ -146,7 +146,7 @@ class JwtCredential {
     }
 
     fun parseBase64(base64: String): JwtCredential {
-        val jwt = String(Base64.getDecoder().decode(base64))
+        val jwt = Base64URL.from(base64).decodeToString()
         return parseJwt(jwt)
     }
 

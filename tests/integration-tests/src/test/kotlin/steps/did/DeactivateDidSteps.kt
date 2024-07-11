@@ -5,7 +5,10 @@ import interactions.Post
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
+import io.iohk.atala.automation.matchers.RestAssuredJsonProperty
 import io.iohk.atala.automation.serenity.ensure.Ensure
+import io.iohk.atala.automation.serenity.interactions.PollingWait
+import io.iohk.atala.automation.serenity.questions.HttpRequest
 import io.iohk.atala.automation.utils.Wait
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
@@ -37,9 +40,11 @@ class DeactivateDidSteps {
     @Then("{actor} sees that PRISM DID is successfully deactivated")
     fun actorSeesThatPrismDidIsSuccessfullyDeactivated(actor: Actor) {
         val deactivatedDid = actor.recall<String>("deactivatedDid")
-        Wait.until(errorMessage = "ERROR: DID deactivate operation did not succeed on the ledger!") {
-            actor.attemptsTo(Get.resource("/dids/$deactivatedDid"))
-            SerenityRest.lastResponse().get<DIDResolutionResult>().didDocumentMetadata.deactivated!!
-        }
+        actor.attemptsTo(
+            PollingWait.until(
+                HttpRequest.get("/dids/$deactivatedDid"),
+                RestAssuredJsonProperty.toBe("didDocumentMetadata.deactivated", "true")
+            )
+        )
     }
 }
