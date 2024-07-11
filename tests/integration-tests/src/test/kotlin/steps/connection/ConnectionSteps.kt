@@ -79,8 +79,8 @@ class ConnectionSteps {
         inviter.attemptsTo(
             PollingWait.until(
                 ListenToEvents.connectionState(inviter),
-                CoreMatchers.equalTo(CONNECTION_RESPONSE_SENT)
-            )
+                CoreMatchers.equalTo(CONNECTION_RESPONSE_SENT),
+            ),
         )
     }
 
@@ -89,8 +89,8 @@ class ConnectionSteps {
         invitee.attemptsTo(
             PollingWait.until(
                 ListenToEvents.connectionState(invitee),
-                CoreMatchers.equalTo(CONNECTION_RESPONSE_RECEIVED)
-            )
+                CoreMatchers.equalTo(CONNECTION_RESPONSE_RECEIVED),
+            ),
         )
     }
 

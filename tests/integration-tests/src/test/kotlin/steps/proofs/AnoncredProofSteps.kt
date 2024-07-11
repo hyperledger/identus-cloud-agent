@@ -24,15 +24,15 @@ class AnoncredProofSteps {
         val anoncredsPresentationRequestV1 = AnoncredPresentationRequestV1(
             requestedAttributes = mapOf(
                 "sex" to
-                        AnoncredRequestedAttributeV1(
-                            name = "sex",
-                            restrictions = listOf(
-                                mapOf(
-                                    ("attr::sex::value" to "M"),
-                                    ("cred_def_id" to credentialDefinitionId),
-                                ),
+                    AnoncredRequestedAttributeV1(
+                        name = "sex",
+                        restrictions = listOf(
+                            mapOf(
+                                ("attr::sex::value" to "M"),
+                                ("cred_def_id" to credentialDefinitionId),
                             ),
                         ),
+                    ),
             ),
             requestedPredicates = mapOf(
                 "age" to AnoncredRequestedPredicateV1(
@@ -79,7 +79,7 @@ class AnoncredProofSteps {
 
         val presentationId = holder.recall<String>("presentationId")
         holder.attemptsTo(
-            Patch.to("/present-proof/presentations/$presentationId").body(requestPresentationAction)
+            Patch.to("/present-proof/presentations/$presentationId").body(requestPresentationAction),
         )
     }
 }

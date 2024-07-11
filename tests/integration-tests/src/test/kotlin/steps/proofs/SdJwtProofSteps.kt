@@ -34,7 +34,7 @@ class SdJwtProofSteps {
             ),
             proofs = listOf(),
             credentialFormat = "SDJWT",
-            claims = claims
+            claims = claims,
         )
         verifier.attemptsTo(
             Post.to("/present-proof/presentations").body(presentationRequest),
@@ -56,7 +56,7 @@ class SdJwtProofSteps {
             proofId = listOf(holder.recall<IssueCredentialRecord>("issuedCredential").recordId),
             action = RequestPresentationAction.Action.REQUEST_MINUS_ACCEPT,
             claims = claims,
-            credentialFormat = "SDJWT"
+            credentialFormat = "SDJWT",
         )
 
         val presentationId: String = holder.recall("presentationId")
@@ -84,7 +84,7 @@ class SdJwtProofSteps {
 
         verifier.attemptsTo(
             Ensure.that(claims.containsKey("firstName")).isTrue(),
-            Ensure.that(claims.containsKey("lastName")).isFalse()
+            Ensure.that(claims.containsKey("lastName")).isFalse(),
         )
 
         if (isBound) {
@@ -92,7 +92,7 @@ class SdJwtProofSteps {
             val payload = Gson().toJsonTree(bindingJwt.payload!!.toJSONObject()).asJsonObject
 
             verifier.attemptsTo(
-                Ensure.that(payload.get("aud").asString).isEqualTo("https://example-verifier.com")
+                Ensure.that(payload.get("aud").asString).isEqualTo("https://example-verifier.com"),
             )
         }
     }

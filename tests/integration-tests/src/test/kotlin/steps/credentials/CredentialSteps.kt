@@ -6,11 +6,8 @@ import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import io.iohk.atala.automation.serenity.interactions.PollingWait
-import io.iohk.atala.automation.utils.Wait
-import models.CredentialEvent
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus.*
-import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.equalTo
 import org.hyperledger.identus.client.models.*
 import org.hyperledger.identus.client.models.IssueCredentialRecord.ProtocolState.*
@@ -22,8 +19,8 @@ class CredentialSteps {
         holder.attemptsTo(
             PollingWait.until(
                 ListenToEvents.credentialState(holder),
-                equalTo(OFFER_RECEIVED)
-            )
+                equalTo(OFFER_RECEIVED),
+            ),
         )
         val recordId = ListenToEvents.with(holder).credentialEvents.last().data.recordId
         holder.remember("recordId", recordId)
@@ -34,8 +31,8 @@ class CredentialSteps {
         issuer.attemptsTo(
             PollingWait.until(
                 ListenToEvents.credentialState(issuer),
-                equalTo(REQUEST_RECEIVED)
-            )
+                equalTo(REQUEST_RECEIVED),
+            ),
         )
 
         val recordId = ListenToEvents.with(issuer).credentialEvents.last().data.recordId
@@ -56,8 +53,8 @@ class CredentialSteps {
         issuer.attemptsTo(
             PollingWait.until(
                 ListenToEvents.credentialState(issuer),
-                equalTo(CREDENTIAL_SENT)
-            )
+                equalTo(CREDENTIAL_SENT),
+            ),
         )
         issuer.remember("issuedCredential", ListenToEvents.with(issuer).credentialEvents.last().data)
     }
@@ -67,8 +64,8 @@ class CredentialSteps {
         holder.attemptsTo(
             PollingWait.until(
                 ListenToEvents.credentialState(holder),
-                equalTo(CREDENTIAL_RECEIVED)
-            )
+                equalTo(CREDENTIAL_RECEIVED),
+            ),
         )
         holder.remember("issuedCredential", ListenToEvents.with(holder).credentialEvents.last().data)
     }

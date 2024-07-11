@@ -7,18 +7,15 @@ import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.extensions.toJsonPath
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import io.iohk.atala.automation.serenity.interactions.PollingWait
-import io.iohk.atala.automation.utils.Wait
 import models.JwtCredential
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.Question
 import org.apache.http.HttpStatus
-import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.equalTo
 import org.hyperledger.identus.client.models.IssueCredentialRecord
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 class RevokeCredentialSteps {
 
@@ -68,8 +65,8 @@ class RevokeCredentialSteps {
                     val actualEncodedList: String = SerenityRest.lastResponse().jsonPath().get("credentialSubject.encodedList")
                     actualEncodedList != encodedStatusList
                 },
-                equalTo(true)
-            )
+                equalTo(true),
+            ),
         )
     }
 

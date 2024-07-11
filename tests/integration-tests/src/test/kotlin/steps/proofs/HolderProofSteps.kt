@@ -5,7 +5,6 @@ import interactions.*
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.serenity.interactions.PollingWait
 import models.PresentationStatusAdapter.Status.REQUEST_RECEIVED
-import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.hamcrest.CoreMatchers.equalTo
 import org.hyperledger.identus.client.models.RequestPresentationAction
@@ -18,7 +17,7 @@ class HolderProofSteps {
         holder.attemptsTo(
             Patch.to("/present-proof/presentations/$presentationId").body(
                 RequestPresentationAction(action = RequestPresentationAction.Action.REQUEST_MINUS_REJECT),
-            )
+            ),
         )
     }
 
@@ -27,8 +26,8 @@ class HolderProofSteps {
         holder.attemptsTo(
             PollingWait.until(
                 ListenToEvents.presentationProofStatus(holder),
-                equalTo(REQUEST_RECEIVED)
-            )
+                equalTo(REQUEST_RECEIVED),
+            ),
         )
         val presentationId = ListenToEvents.with(holder).presentationEvents.last().data.presentationId
         holder.remember("presentationId", presentationId)
