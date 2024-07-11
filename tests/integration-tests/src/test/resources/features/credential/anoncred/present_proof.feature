@@ -1,4 +1,4 @@
-@proof @anoncreds
+@anoncred @proof
 Feature: Present Proof Protocol
 
 Scenario: Holder presents anoncreds credential proof to verifier
@@ -9,10 +9,10 @@ Scenario: Holder presents anoncreds credential proof to verifier
   And Issuer has an anoncred schema definition
   And Issuer offers anoncred to Holder
   And Holder receives the credential offer
-  And Holder accepts credential offer for anoncred
+  And Holder accepts anoncred credential offer
   And Issuer issues the credential
   And Holder receives the issued credential
   When Verifier sends a anoncreds request for proof presentation to Holder using credential definition issued by Issuer
-  And Holder receives the anoncreds request
+  And Holder receives the presentation proof request
   And Holder accepts the anoncreds presentation request
 #  Then Verifier has the proof verified FIXME

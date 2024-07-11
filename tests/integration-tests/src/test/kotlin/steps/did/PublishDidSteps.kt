@@ -8,12 +8,15 @@ import interactions.body
 import io.cucumber.java.en.*
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
+import io.iohk.atala.automation.serenity.interactions.PollingWait
 import io.iohk.atala.automation.utils.Wait
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
 import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
+import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.equalTo
 import org.hyperledger.identus.client.models.*
 import kotlin.time.Duration.Companion.seconds
 
@@ -46,7 +49,7 @@ class PublishDidSteps {
 
     @Given("{actor} creates unpublished DID")
     fun agentCreatesEmptyUnpublishedDid(actor: Actor) {
-        agentCreatesUnpublishedDid(actor, DidPurpose.EMPTY)
+        agentCreatesUnpublishedDid(actor, DidPurpose.CUSTOM)
     }
 
     @Given("{actor} creates unpublished DID for {}")
@@ -75,6 +78,24 @@ class PublishDidSteps {
         actor.forget<String>("hasPublishedDid")
     }
 
+    @When("{actor} prepares a custom PRISM DID")
+    fun actorPreparesCustomDid(actor: Actor) {
+        val customDid = DidPurpose.CUSTOM
+        actor.remember("customDid", customDid)
+    }
+
+    @When("{actor} adds a '{curve}' key for '{purpose}' purpose with '{}' name to the custom PRISM DID")
+    fun actorAddsKeyToCustomDid(actor: Actor, curve: Curve, purpose: Purpose, name: String) {
+        val customDid = actor.recall<DidPurpose>("customDid")
+        customDid.publicKeys.add(ManagedDIDKeyTemplate(name, purpose, curve))
+    }
+
+    @When("{actor} creates the custom PRISM DID")
+    fun actorCreatesTheCustomPrismDid(actor: Actor) {
+        val customDid = actor.recall<DidPurpose>("customDid")
+        agentCreatesUnpublishedDid(actor, customDid)
+    }
+
     @When("{actor} publishes DID to ledger")
     fun hePublishesDidToLedger(actor: Actor) {
         val shortFormDid = actor.recall<String>("shortFormDid")
@@ -87,18 +108,7 @@ class PublishDidSteps {
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_ACCEPTED),
             Ensure.that(didOperationResponse.scheduledOperation.didRef).isNotEmpty(),
             Ensure.that(didOperationResponse.scheduledOperation.id).isNotEmpty(),
-        )
-
-        Wait.until(
-            timeout = 30.seconds,
-            errorMessage = "ERROR: DID was not published to ledger!",
-        ) {
-            val didEvent = ListenToEvents.with(actor).didEvents.lastOrNull {
-                it.data.did == actor.recall<String>("shortFormDid")
-            }
-            didEvent != null && didEvent.data.status == "PUBLISHED"
-        }
-        actor.attemptsTo(
+            PollingWait.until(ListenToEvents.didStatus(actor), equalTo("PUBLISHED")),
             Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
         )
 
