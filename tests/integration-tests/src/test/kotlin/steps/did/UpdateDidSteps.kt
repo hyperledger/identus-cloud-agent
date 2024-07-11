@@ -8,12 +8,10 @@ import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import io.iohk.atala.automation.serenity.interactions.PollingWait
-import io.iohk.atala.automation.utils.Wait
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.Question
 import org.apache.http.HttpStatus
-import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.equalTo
 import org.hyperledger.identus.client.models.*
 import java.util.UUID
@@ -109,8 +107,8 @@ class UpdateDidSteps {
                         Purpose.KEY_AGREEMENT -> didDocument.keyAgreement!!.any { it == didKey }
                     }
                 },
-                equalTo(true)
-            )
+                equalTo(true),
+            ),
         )
     }
 
@@ -136,8 +134,8 @@ class UpdateDidSteps {
                         Purpose.KEY_AGREEMENT -> didDocument.keyAgreement!!.none { it == didKey }
                     }
                 },
-                equalTo(true)
-            )
+                equalTo(true),
+            ),
         )
     }
 
@@ -156,8 +154,8 @@ class UpdateDidSteps {
                         it == "${actor.recall<String>("shortFormDid")}#$serviceId"
                     }
                 },
-                equalTo(true)
-            )
+                equalTo(true),
+            ),
         )
     }
 
@@ -176,8 +174,8 @@ class UpdateDidSteps {
                         it == "${actor.recall<String>("shortFormDid")}#$serviceId"
                     }
                 },
-                equalTo(true)
-            )
+                equalTo(true),
+            ),
         )
     }
 
@@ -193,8 +191,8 @@ class UpdateDidSteps {
                     val service = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.service!!
                     service.any { it.serviceEndpoint.value.contains(serviceUrl) }
                 },
-                equalTo(true)
-            )
+                equalTo(true),
+            ),
         )
     }
 

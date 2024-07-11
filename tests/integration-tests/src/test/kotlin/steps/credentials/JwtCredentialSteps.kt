@@ -6,7 +6,6 @@ import interactions.body
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import models.CredentialEvent
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus.SC_CREATED
@@ -98,7 +97,6 @@ class JwtCredentialSteps {
         )
         sendCredentialOffer(issuer, holder, format, schemaGuid, claims)
     }
-
 
     @When("{actor} accepts jwt credential offer")
     fun holderAcceptsJwtCredentialOfferForJwt(holder: Actor) {

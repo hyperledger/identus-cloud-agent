@@ -85,7 +85,7 @@ class SdJwtCredentialSteps {
     fun holderChecksTheSdJwtCredentialContents(holder: Actor) {
         commonValidation(holder) { payload, _ ->
             holder.attemptsTo(
-                Ensure.that(payload.containsKey("cnf")).isFalse()
+                Ensure.that(payload.containsKey("cnf")).isFalse(),
             )
         }
     }
@@ -94,7 +94,7 @@ class SdJwtCredentialSteps {
     fun holderChecksTheSdJwtCredentialContentsWithHolderBinding(holder: Actor) {
         commonValidation(holder) { payload, _ ->
             holder.attemptsTo(
-                Ensure.that(payload.containsKey("cnf")).isTrue()
+                Ensure.that(payload.containsKey("cnf")).isTrue(),
             )
         }
     }
@@ -108,7 +108,7 @@ class SdJwtCredentialSteps {
 
     private fun commonValidation(
         holder: Actor,
-        additionalChecks: (payload: Map<String, Any>, disclosedClaims: Map<String, SdJwtClaim>) -> Unit
+        additionalChecks: (payload: Map<String, Any>, disclosedClaims: Map<String, SdJwtClaim>) -> Unit,
     ) {
         val issuedCredential = holder.recall<IssueCredentialRecord>("issuedCredential")
         val jwtCredential = JwtCredential.parseBase64(issuedCredential.credential!!)
