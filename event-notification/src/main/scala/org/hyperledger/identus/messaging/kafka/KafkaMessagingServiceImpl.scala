@@ -48,7 +48,9 @@ class KafkaConsumerImpl[K, V](
     ZIO.succeed(consumer.subscribe(List(topic).concat(topics).asJava)) *>
       ZStream
         .repeatZIO(ZIO.attempt(consumer.poll(50.millis)))
-        .mapZIO(records => ZIO.foreach(records.asScala)(r => handler(Message(r.key(), r.value(), r.offset()))))
+        .mapZIO(records =>
+          ZIO.foreach(records.asScala)(r => handler(Message(r.key(), r.value(), r.offset(), r.timestamp())))
+        )
         .runDrain
   }
 }

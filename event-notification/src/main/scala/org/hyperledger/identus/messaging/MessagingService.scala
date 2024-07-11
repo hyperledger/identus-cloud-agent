@@ -11,7 +11,9 @@ trait MessagingService {
   def makeProducer[K, V]()(implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Producer[K, V]]
 }
 
-case class Message[K, V](key: K, value: V, offset: Long)
+case class Message[K, V](key: K, value: V, offset: Long, timestamp: Long)
+
+case class ByteArrayWrapper(ba: Array[Byte])
 
 trait Consumer[K, V] {
   def consume[HR](topic: String, topics: String*)(handler: Message[K, V] => URIO[HR, Unit]): RIO[HR, Unit]
@@ -26,6 +28,11 @@ trait Serde[T] {
 }
 
 object Serde {
+  given byteArraySerde: Serde[ByteArrayWrapper] = new Serde[ByteArrayWrapper] {
+    override def serialize(t: ByteArrayWrapper): Array[Byte] = t.ba
+    override def deserialize(ba: Array[Byte]): ByteArrayWrapper = ByteArrayWrapper(ba)
+  }
+
   given stringSerde: Serde[String] = new Serde[String] {
     override def serialize(t: String): Array[Byte] = t.getBytes()
     override def deserialize(ba: Array[Byte]): String = new String(ba, StandardCharsets.UTF_8)

@@ -58,7 +58,9 @@ class ZKafkaConsumerImpl[K, V](
     ZKConsumer
       .plainStream(ZKSubscription.topics(topic, topics*), zkKeyDeserializer, zkValueDeserializer)
       .provideSomeLayer(zkConsumer)
-      .mapZIO(record => handler(Message(record.key, record.value, record.offset.offset)).as(record.offset))
+      .mapZIO(record =>
+        handler(Message(record.key, record.value, record.offset.offset, record.timestamp)).as(record.offset)
+      )
       .aggregateAsync(ZKConsumer.offsetBatches)
       .mapZIO(_.commit)
       .runDrain
