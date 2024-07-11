@@ -4,6 +4,7 @@ import org.hyperledger.identus.shared.http.{GenericUriResolverError, UriResolver
 import org.hyperledger.identus.shared.models.StatusCode
 import zio.*
 import zio.http.*
+
 import java.nio.charset.StandardCharsets
 
 class HttpUrlResolver(client: Client) extends UriResolver {
@@ -39,41 +40,36 @@ object HttpUriResolver {
   val layer: URLayer[Client, HttpUrlResolver] = ZLayer.fromFunction(HttpUrlResolver(_))
 
   class HttpUriResolverError(statusCode: StatusCode, userFacingMessage: String)
-    extends GenericUriResolverError(statusCode, userFacingMessage)
-
+      extends GenericUriResolverError(statusCode, userFacingMessage)
 
   final case class InvalidURI(uri: String)
-    extends HttpUriResolverError(
-      StatusCode.UnprocessableContent,
-      s"The URI to resolve is invalid: uri=[$uri]"
-    )
+      extends HttpUriResolverError(
+        StatusCode.UnprocessableContent,
+        s"The URI to resolve is invalid: uri=[$uri]"
+      )
 
   final case class ConnectionError(cause: String)
-    extends HttpUriResolverError(
-      StatusCode.BadGateway,
-      s"An error occurred while connecting to the URI's underlying server: cause=[$cause]"
-    )
+      extends HttpUriResolverError(
+        StatusCode.BadGateway,
+        s"An error occurred while connecting to the URI's underlying server: cause=[$cause]"
+      )
 
   final case class ResourceNotFound(uri: String)
-    extends HttpUriResolverError(
-      StatusCode.NotFound,
-      s"The resource was not found on the URI's underlying server: uri=[$uri]"
-    )
+      extends HttpUriResolverError(
+        StatusCode.NotFound,
+        s"The resource was not found on the URI's underlying server: uri=[$uri]"
+      )
 
   final case class ResponseProcessingError(cause: String)
-    extends HttpUriResolverError(
-      StatusCode.BadGateway,
-      s"An error occurred while processing the URI's underlying server response: cause=[$cause]"
-    )
+      extends HttpUriResolverError(
+        StatusCode.BadGateway,
+        s"An error occurred while processing the URI's underlying server response: cause=[$cause]"
+      )
 
   final case class UnexpectedUpstreamResponseReceived(status: Int, content: Option[String] = None)
-    extends HttpUriResolverError(
-      StatusCode.BadGateway,
-      s"An unexpected response was received from the URI's underlying server: status=[$status], content=[${content.getOrElse("n/a")}]"
-    )
+      extends HttpUriResolverError(
+        StatusCode.BadGateway,
+        s"An unexpected response was received from the URI's underlying server: status=[$status], content=[${content.getOrElse("n/a")}]"
+      )
 
 }
-
-
-
-

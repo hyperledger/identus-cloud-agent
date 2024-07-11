@@ -23,7 +23,7 @@ import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, Cre
 import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer as JwtIssuer, *}
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, Secp256k1KeyPair}
-import org.hyperledger.identus.shared.http.{UriResolver}
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
@@ -37,8 +37,8 @@ import scala.language.implicitConversions
 
 object CredentialServiceImpl {
   val layer: URLayer[
-    CredentialRepository & CredentialStatusListRepository & DidResolver & UriResolver &
-      GenericSecretStorage & CredentialDefinitionService & LinkSecretService & DIDService & ManagedDIDService,
+    CredentialRepository & CredentialStatusListRepository & DidResolver & UriResolver & GenericSecretStorage &
+      CredentialDefinitionService & LinkSecretService & DIDService & ManagedDIDService,
     CredentialService
   ] = {
     ZLayer.fromZIO {
@@ -246,7 +246,7 @@ class CredentialServiceImpl(
           credentialDefinition.schemaId,
           claims.noSpaces,
           uriResolver,
-        ) // TODO: replace usage with UriResolver
+        )
         .orDieAsUnmanagedFailure
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
       offer <- createAnonCredsDidCommOfferCredential(

@@ -1,12 +1,11 @@
 package org.hyperledger.identus.pollux.core.service.uriResolvers
 
-import org.hyperledger.identus.shared.http.{GenericUriResolverError, UriResolver, InvalidUri}
-import zio.*
+import org.hyperledger.identus.shared.http.{GenericUriResolverError, InvalidUri, UriResolver}
 import org.hyperledger.identus.shared.models.StatusCode
+import zio.*
 
 import java.net.URI
 import scala.util.Try
-
 
 class ResourceUrlResolver(extraResources: Map[String, String]) extends UriResolver {
   import ResourceUrlResolver.*
@@ -35,8 +34,7 @@ class ResourceUrlResolver(extraResources: Map[String, String]) extends UriResolv
 }
 
 class ResourceUrlResolverError(statusCode: StatusCode, userFacingMessage: String)
-  extends GenericUriResolverError(statusCode, userFacingMessage)
-
+    extends GenericUriResolverError(statusCode, userFacingMessage)
 
 object ResourceUrlResolver {
   def layer: ULayer[ResourceUrlResolver] =
@@ -45,16 +43,15 @@ object ResourceUrlResolver {
   def layerWithExtraResources: URLayer[Map[String, String], ResourceUrlResolver] =
     ZLayer.fromFunction(ResourceUrlResolver(_))
 
-
   final case class InvalidURI(uri: String)
-    extends ResourceUrlResolverError(
-      StatusCode.UnprocessableContent,
-      s"The URI to resolve is invalid: uri=[$uri]"
-    )
+      extends ResourceUrlResolverError(
+        StatusCode.UnprocessableContent,
+        s"The URI to resolve is invalid: uri=[$uri]"
+      )
 
   final case class ResourceNotFound(uri: String)
-    extends ResourceUrlResolverError(
-      StatusCode.NotFound,
-      s"The resource was not found on the URI's underlying server: uri=[$uri]"
-    )
+      extends ResourceUrlResolverError(
+        StatusCode.NotFound,
+        s"The resource was not found on the URI's underlying server: uri=[$uri]"
+      )
 }

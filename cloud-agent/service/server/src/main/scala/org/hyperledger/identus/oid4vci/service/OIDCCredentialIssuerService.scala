@@ -11,7 +11,7 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.service.{
   CredentialService,
   OID4VCIIssuerMetadataService,
-  OID4VCIIssuerMetadataServiceError,
+  OID4VCIIssuerMetadataServiceError
 }
 import org.hyperledger.identus.pollux.vc.jwt.{
   DID as PolluxDID,

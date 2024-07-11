@@ -10,7 +10,11 @@ import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.presentation.{ClaimFormat, Ldp, Options, PresentationDefinition}
-import org.hyperledger.identus.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory, CredentialStatusListRepositoryInMemory}
+import org.hyperledger.identus.pollux.core.repository.{
+  CredentialDefinitionRepositoryInMemory,
+  CredentialRepositoryInMemory,
+  CredentialStatusListRepositoryInMemory
+}
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}

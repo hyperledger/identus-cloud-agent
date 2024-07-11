@@ -47,8 +47,8 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
     /*DIDSecretStorageError | PresentationError | CredentialServiceError | BackgroundJobError | TransportError | */
     CastorDIDResolutionError | GetManagedDIDError | Failure
 
-  private type RESOURCES = COMMON_RESOURCES & CredentialService & JwtDidResolver & UriResolver & DIDService & AppConfig &
-    MESSAGING_RESOURCES
+  private type RESOURCES = COMMON_RESOURCES & CredentialService & JwtDidResolver & UriResolver & DIDService &
+    AppConfig & MESSAGING_RESOURCES
 
   private type COMMON_RESOURCES = PresentationService & DIDNonSecretStorage & ManagedDIDService
 

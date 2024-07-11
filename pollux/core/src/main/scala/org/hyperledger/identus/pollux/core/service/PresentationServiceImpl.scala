@@ -25,7 +25,7 @@ import zio.*
 import zio.json.*
 
 import java.time.Instant
-import java.util.{UUID, Base64 as JBase64}
+import java.util.{Base64 as JBase64, UUID}
 import java.util as ju
 import scala.util.chaining.*
 import scala.util.Try
@@ -733,7 +733,9 @@ private class PresentationServiceImpl(
       credentialDefinitionUri: String
   ): IO[PresentationError, (String, AnoncredCredentialDefinition)] = {
     for {
-      content <- uriResolver.resolve(credentialDefinitionUri).mapError(e => CredentialDefinitionURIDereferencingError(e))
+      content <- uriResolver
+        .resolve(credentialDefinitionUri)
+        .mapError(e => CredentialDefinitionURIDereferencingError(e))
       _ <-
         PublicCredentialDefinitionSerDesV1.schemaSerDes
           .validate(content)

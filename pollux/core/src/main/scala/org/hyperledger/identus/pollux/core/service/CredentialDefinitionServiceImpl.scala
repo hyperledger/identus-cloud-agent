@@ -3,8 +3,18 @@ package org.hyperledger.identus.pollux.core.service
 import org.hyperledger.identus.agent.walletapi.storage
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.pollux.anoncreds.{AnoncredLib, AnoncredSchemaDef}
-import org.hyperledger.identus.pollux.core.model.error.{CredentialDefinitionCreationError, CredentialDefinitionGuidNotFoundError, CredentialDefinitionServiceError, CredentialDefinitionValidationError, CredentialSchemaError}
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{CredentialSchemaParsingError, CredentialSchemaValidationError, InvalidURI}
+import org.hyperledger.identus.pollux.core.model.error.{
+  CredentialDefinitionCreationError,
+  CredentialDefinitionGuidNotFoundError,
+  CredentialDefinitionServiceError,
+  CredentialDefinitionValidationError,
+  CredentialSchemaError
+}
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{
+  CredentialSchemaParsingError,
+  CredentialSchemaValidationError,
+  InvalidURI
+}
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
@@ -12,7 +22,11 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.{Fi
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
 import org.hyperledger.identus.pollux.core.repository.CredentialDefinitionRepository
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchQuery
-import org.hyperledger.identus.pollux.core.service.serdes.{PrivateCredentialDefinitionSchemaSerDesV1, ProofKeyCredentialDefinitionSchemaSerDesV1, PublicCredentialDefinitionSerDesV1}
+import org.hyperledger.identus.pollux.core.service.serdes.{
+  PrivateCredentialDefinitionSchemaSerDesV1,
+  ProofKeyCredentialDefinitionSchemaSerDesV1,
+  PublicCredentialDefinitionSerDesV1
+}
 import org.hyperledger.identus.shared.http.UriResolver
 import zio.*
 

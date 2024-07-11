@@ -5,7 +5,12 @@ import org.hyperledger.identus.pollux.core.model.oid4vci.{CredentialConfiguratio
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
 import org.hyperledger.identus.pollux.core.repository.OID4VCIIssuerMetadataRepository
-import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.{CredentialConfigurationNotFound, InvalidSchemaId, IssuerIdNotFound, UnsupportedCredentialFormat}
+import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.{
+  CredentialConfigurationNotFound,
+  InvalidSchemaId,
+  IssuerIdNotFound,
+  UnsupportedCredentialFormat
+}
 import org.hyperledger.identus.shared.db.Errors.UnexpectedAffectedRow
 import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.{Failure, StatusCode, WalletAccessContext}
