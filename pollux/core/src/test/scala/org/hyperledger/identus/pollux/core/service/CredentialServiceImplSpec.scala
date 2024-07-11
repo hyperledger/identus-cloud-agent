@@ -11,14 +11,10 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredential
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.{
-  RecordNotFound,
-  RecordNotFoundForThreadIdAndStates,
-  UnsupportedDidFormat,
-  *
-}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.{RecordNotFound, RecordNotFoundForThreadIdAndStates, UnsupportedDidFormat, *}
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.shared.models.{KeyId, UnmanagedFailureException, WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.MockSpecDefault
@@ -37,7 +33,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
   ).provideSomeLayer(
     MockDIDService.empty ++
       MockManagedDIDService.empty ++
-      ResourceURIDereferencerImpl.layer >+>
+      ResourceUrlResolver.layer >+>
       credentialServiceLayer ++
       ZLayer.succeed(WalletAccessContext(WalletId.random))
   )
@@ -582,7 +578,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
             .service[CredentialService]
             .provideSomeLayer(
               holderCredDefResolverLayer >>>
-                ResourceURIDereferencerImpl.layerWithExtraResources >>>
+                ResourceUrlResolver.layerWithExtraResources >>>
                 credentialServiceLayer
             )
           offerCredential <- ZIO.fromEither(OfferCredential.readFromMessage(msg))

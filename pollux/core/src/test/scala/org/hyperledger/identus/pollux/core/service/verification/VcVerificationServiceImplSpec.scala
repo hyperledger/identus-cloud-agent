@@ -4,7 +4,7 @@ import io.circe.*
 import io.circe.syntax.*
 import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.castor.core.service.MockDIDService
-import org.hyperledger.identus.pollux.core.service.ResourceURIDereferencerImpl
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
@@ -77,7 +77,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -141,7 +141,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -204,7 +204,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         issuerDidServiceExpectations.toLayer ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -271,7 +271,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -339,7 +339,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -403,7 +403,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -467,7 +467,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -531,7 +531,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -595,7 +595,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       )

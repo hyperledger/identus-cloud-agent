@@ -10,24 +10,14 @@ import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
 import org.hyperledger.identus.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
 import org.hyperledger.identus.pollux.core.repository.CredentialDefinitionRepository
-import org.hyperledger.identus.pollux.core.service.{
-  CredentialDefinitionService,
-  CredentialDefinitionServiceImpl,
-  ResourceURIDereferencerImpl
-}
-import org.hyperledger.identus.pollux.credentialdefinition.controller.{
-  CredentialDefinitionController,
-  CredentialDefinitionControllerImpl
-}
-import org.hyperledger.identus.pollux.credentialdefinition.http.{
-  CredentialDefinitionInput,
-  CredentialDefinitionResponse,
-  CredentialDefinitionResponsePage
-}
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
+import org.hyperledger.identus.pollux.core.service.{CredentialDefinitionService, CredentialDefinitionServiceImpl}
+import org.hyperledger.identus.pollux.credentialdefinition.controller.{CredentialDefinitionController, CredentialDefinitionControllerImpl}
+import org.hyperledger.identus.pollux.credentialdefinition.http.{CredentialDefinitionInput, CredentialDefinitionResponse, CredentialDefinitionResponsePage}
 import org.hyperledger.identus.pollux.sql.repository.JdbcCredentialDefinitionRepository
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import sttp.client3.{basicRequest, DeserializationException, Response, UriContext}
+import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
 import sttp.monad.MonadError
@@ -56,7 +46,7 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
   private val controllerLayer =
     GenericSecretStorageInMemory.layer >+>
       systemTransactorLayer >+> contextAwareTransactorLayer >+> JdbcCredentialDefinitionRepository.layer >+>
-      ResourceURIDereferencerImpl.layer >+>
+      ResourceUrlResolver.layer >+>
       CredentialDefinitionServiceImpl.layer >+>
       CredentialDefinitionControllerImpl.layer
 

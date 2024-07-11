@@ -10,12 +10,9 @@ import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.presentation.{ClaimFormat, Ldp, Options, PresentationDefinition}
-import org.hyperledger.identus.pollux.core.repository.{
-  CredentialDefinitionRepositoryInMemory,
-  CredentialRepositoryInMemory,
-  CredentialStatusListRepositoryInMemory
-}
+import org.hyperledger.identus.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory, CredentialStatusListRepositoryInMemory}
 import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
@@ -30,9 +27,10 @@ trait CredentialServiceSpecHelper {
   protected val credentialDefinitionServiceLayer =
     CredentialDefinitionRepositoryInMemory.layer >>> CredentialDefinitionServiceImpl.layer
 
+  // TODO: remove UriDereferencer
   protected val credentialServiceLayer
-      : URLayer[DIDService & ManagedDIDService & URIDereferencer, CredentialService & CredentialDefinitionService] =
-    ZLayer.makeSome[DIDService & ManagedDIDService & URIDereferencer, CredentialService & CredentialDefinitionService](
+      : URLayer[DIDService & ManagedDIDService & UriResolver, CredentialService & CredentialDefinitionService] =
+    ZLayer.makeSome[DIDService & ManagedDIDService & UriResolver, CredentialService & CredentialDefinitionService](
       CredentialRepositoryInMemory.layer,
       CredentialStatusListRepositoryInMemory.layer,
       ZLayer.fromFunction(PrismDidResolver(_)),
