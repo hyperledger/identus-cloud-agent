@@ -66,7 +66,7 @@ Resource identifier of the given credential schema composed from the author's [D
 **Example:** `{author}/{id}?version={version}`
 
 > **Note:** According to the [W3C specification](https://w3c-ccg.github.io/vc-json-schemas/#id), this field is locally unique and combines the Issuer `DID`, `uuid`, and `version`.
-**For **example:** `did:example:MDP8AsFhHzhwUvGNuYkX7T/06e126d1-fa44-4882-a243-1e326fbe21db?version=1.0`
+**For**example:** `did:example:MDP8AsFhHzhwUvGNuYkX7T/06e126d1-fa44-4882-a243-1e326fbe21db?version=1.0`
 
 
 ---
