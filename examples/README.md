@@ -16,7 +16,7 @@ docker-compose up
 
 If some example requires a different command, it should be provided in its own local README.
 
-Once finished, `docker-compose down --volumes` can be used to clean docker volumes to avoid unexpected behavior for the next run. 
+Once finished, `docker-compose down --volumes` can be used to clean docker volumes to avoid unexpected behavior for the next run.
 
 ## Examples
 
