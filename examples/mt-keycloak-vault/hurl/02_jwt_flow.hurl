@@ -1,8 +1,46 @@
 ##############################
+# Login
+##############################
+# Issuer login
+POST {{ keycloak_base_url }}/realms/{{ keycloak_realm }}/protocol/openid-connect/token
+[FormParams]
+grant_type: password
+client_id: web-ui
+username: {{ issuer_username }}
+password: {{ issuer_password }}
+HTTP 200
+[Captures]
+issuer_access_token: jsonpath "$.access_token"
+
+# Holder login
+POST {{ keycloak_base_url }}/realms/{{ keycloak_realm }}/protocol/openid-connect/token
+[FormParams]
+grant_type: password
+client_id: web-ui
+username: {{ holder_username }}
+password: {{ holder_password }}
+HTTP 200
+[Captures]
+holder_access_token: jsonpath "$.access_token"
+
+# Verfier login
+POST {{ keycloak_base_url }}/realms/{{ keycloak_realm }}/protocol/openid-connect/token
+[FormParams]
+grant_type: password
+client_id: web-ui
+username: {{ verifier_username }}
+password: {{ verifier_password }}
+HTTP 200
+[Captures]
+verifier_access_token: jsonpath "$.access_token"
+
+
+##############################
 # Prerequisites
 ##############################
 # Issuer create DID
-POST {{ issuer_url }}/prism-agent/did-registrar/dids
+POST {{ agent_url }}/agent/did-registrar/dids
+Authorization: Bearer {{ issuer_access_token }}
 {
   "documentTemplate": {
     "publicKeys": [
@@ -16,22 +54,11 @@ POST {{ issuer_url }}/prism-agent/did-registrar/dids
 }
 HTTP 201
 [Captures]
-issuer_did: jsonpath "$.longFormDid" regex "(did:prism:[a-z0-9]+):.+$"
-
-# Issuer publish DID
-POST {{ issuer_url }}/prism-agent/did-registrar/dids/{{ issuer_did }}/publications
-HTTP 202
-
-# Issuer wait for DID to be published
-GET {{ issuer_url }}/prism-agent/did-registrar/dids/{{ issuer_did }}
-[Options]
-retry: -1
-HTTP 200
-[Asserts]
-jsonpath "$.status" == "PUBLISHED"
+issuer_did: jsonpath "$.longFormDid" # regex "(did:prism:[a-z0-9]+):.+$"
 
 # Holder create DID
-POST {{ holder_url }}/prism-agent/did-registrar/dids
+POST {{ agent_url }}/agent/did-registrar/dids
+Authorization: Bearer {{ holder_access_token }}
 {
   "documentTemplate": {
     "publicKeys": [
@@ -45,13 +72,14 @@ POST {{ holder_url }}/prism-agent/did-registrar/dids
 }
 HTTP 201
 [Captures]
-holder_did: jsonpath "$.longFormDid"
+holder_did: jsonpath "$.longFormDid" regex "(did:prism:[a-z0-9]+):.+$"
 
 ##############################
 # Issuance Connection
 ##############################
 # Inviter create connection
-POST {{ issuer_url }}/prism-agent/connections
+POST {{ agent_url }}/agent/connections
+Authorization: Bearer {{ issuer_access_token }}
 {
   "label": "My Connection"
 }
@@ -61,7 +89,8 @@ raw_invitation: jsonpath "$.invitation.invitationUrl" regex ".*_oob=(.*)$"
 issuer_connection_id: jsonpath "$.connectionId"
 
 # Invitee accept connection
-POST {{ holder_url }}/prism-agent/connection-invitations
+POST {{ agent_url }}/agent/connection-invitations
+Authorization: Bearer {{ holder_access_token }}
 {
   "invitation": "{{ raw_invitation }}"
 }
@@ -70,7 +99,8 @@ HTTP 200
 holder_connection_id: jsonpath "$.connectionId"
 
 # Wait for inviter connection status
-GET {{ issuer_url }}/prism-agent/connections/{{ issuer_connection_id }}
+GET {{ agent_url }}/agent/connections/{{ issuer_connection_id }}
+Authorization: Bearer {{ issuer_access_token }}
 [Options]
 retry: -1
 HTTP 200
@@ -78,7 +108,8 @@ HTTP 200
 jsonpath "$.state" == "ConnectionResponseSent"
 
 # Wait for invitee connection status
-GET {{ holder_url }}/prism-agent/connections/{{ holder_connection_id }}
+GET {{ agent_url }}/agent/connections/{{ holder_connection_id }}
+Authorization: Bearer {{ holder_access_token }}
 [Options]
 retry: -1
 HTTP 200
@@ -89,7 +120,8 @@ jsonpath "$.state" == "ConnectionResponseReceived"
 # Issuance
 ##############################
 # Issuer create credential offer
-POST {{ issuer_url }}/prism-agent/issue-credentials/credential-offers
+POST {{ agent_url }}/agent/issue-credentials/credential-offers
+Authorization: Bearer {{ issuer_access_token }}
 {
   "claims": {
     "emailAddress": "alice@wonderland.com",
@@ -106,7 +138,8 @@ issuer_cred_record_id: jsonpath "$.recordId"
 didcomm_issuing_thid: jsonpath "$.thid"
 
 # Holder wait for OfferReceived state
-GET {{ holder_url }}/prism-agent/issue-credentials/records
+GET {{ agent_url }}/agent/issue-credentials/records
+Authorization: Bearer {{ holder_access_token }}
 [QueryStringParams]
 thid: {{ didcomm_issuing_thid }}
 [Options]
@@ -118,14 +151,16 @@ jsonpath "$.contents[0].protocolState" == "OfferReceived"
 holder_cred_record_id: jsonpath "$.contents[0].recordId"
 
 # Holder accept a credential-offer
-POST {{ holder_url }}/prism-agent/issue-credentials/records/{{ holder_cred_record_id }}/accept-offer
+POST {{ agent_url }}/agent/issue-credentials/records/{{ holder_cred_record_id }}/accept-offer
+Authorization: Bearer {{ holder_access_token }}
 {
   "subjectId": "{{ holder_did }}"
 }
 HTTP 200
 
 # Holder wait for CredentialReceived state
-GET {{ holder_url }}/prism-agent/issue-credentials/records/{{ holder_cred_record_id }}
+GET {{ agent_url }}/agent/issue-credentials/records/{{ holder_cred_record_id }}
+Authorization: Bearer {{ holder_access_token }}
 [Options]
 retry: -1
 HTTP 200
@@ -133,7 +168,8 @@ HTTP 200
 jsonpath "$.protocolState" == "CredentialReceived"
 
 # Issuer wait for CredentialSent state
-GET {{ issuer_url }}/prism-agent/issue-credentials/records/{{ issuer_cred_record_id }}
+GET {{ agent_url }}/agent/issue-credentials/records/{{ issuer_cred_record_id }}
+Authorization: Bearer {{ issuer_access_token }}
 [Options]
 retry: -1
 HTTP 200
@@ -144,7 +180,8 @@ jsonpath "$.protocolState" == "CredentialSent"
 # Presentation Connection
 ##############################
 # Inviter create connection
-POST {{ verifier_url }}/prism-agent/connections
+POST {{ agent_url }}/agent/connections
+Authorization: Bearer {{ verifier_access_token }}
 {
   "label": "My Connection"
 }
@@ -154,7 +191,8 @@ raw_invitation: jsonpath "$.invitation.invitationUrl" regex ".*_oob=(.*)$"
 verifier_connection_id: jsonpath "$.connectionId"
 
 # Invitee accept connection
-POST {{ holder_url }}/prism-agent/connection-invitations
+POST {{ agent_url }}/agent/connection-invitations
+Authorization: Bearer {{ holder_access_token }}
 {
   "invitation": "{{ raw_invitation }}"
 }
@@ -163,7 +201,8 @@ HTTP 200
 holder_connection_id: jsonpath "$.connectionId"
 
 # Wait for inviter connection status
-GET {{ verifier_url }}/prism-agent/connections/{{ verifier_connection_id }}
+GET {{ agent_url }}/agent/connections/{{ verifier_connection_id }}
+Authorization: Bearer {{ verifier_access_token }}
 [Options]
 retry: -1
 HTTP 200
@@ -171,7 +210,8 @@ HTTP 200
 jsonpath "$.state" == "ConnectionResponseSent"
 
 # Wait for invitee connection status
-GET {{ holder_url }}/prism-agent/connections/{{ holder_connection_id }}
+GET {{ agent_url }}/agent/connections/{{ holder_connection_id }}
+Authorization: Bearer {{ holder_access_token }}
 [Options]
 retry: -1
 HTTP 200
@@ -182,7 +222,8 @@ jsonpath "$.state" == "ConnectionResponseReceived"
 # Presentation
 ##############################
 # Verifier create presentation request
-POST {{ verifier_url }}/prism-agent/present-proof/presentations
+POST {{ agent_url }}/agent/present-proof/presentations
+Authorization: Bearer {{ verifier_access_token }}
 {
   "connectionId": "{{ verifier_connection_id }}",
   "proofs":[],
@@ -197,7 +238,8 @@ verifier_presentation_id: jsonpath "$.presentationId"
 didcomm_presentation_thid: jsonpath "$.thid"
 
 # Holder wait for RequestReceived state
-GET {{ holder_url }}/prism-agent/present-proof/presentations
+GET {{ agent_url }}/agent/present-proof/presentations
+Authorization: Bearer {{ holder_access_token }}
 [QueryStringParams]
 thid: {{ didcomm_presentation_thid }}
 [Options]
@@ -209,7 +251,8 @@ jsonpath "$.contents[0].status" == "RequestReceived"
 holder_presentation_id: jsonpath "$.contents[0].presentationId"
 
 # Holder accept presentation request
-PATCH {{ holder_url }}/prism-agent/present-proof/presentations/{{ holder_presentation_id }}
+PATCH {{ agent_url }}/agent/present-proof/presentations/{{ holder_presentation_id }}
+Authorization: Bearer {{ holder_access_token }}
 {
   "action": "request-accept",
   "proofId": ["{{ holder_cred_record_id }}"]
@@ -217,7 +260,8 @@ PATCH {{ holder_url }}/prism-agent/present-proof/presentations/{{ holder_present
 HTTP 200
 
 # Holder wait for PresentationSent state
-GET {{ holder_url }}/prism-agent/present-proof/presentations
+GET {{ agent_url }}/agent/present-proof/presentations
+Authorization: Bearer {{ holder_access_token }}
 [QueryStringParams]
 thid: {{ didcomm_presentation_thid }}
 [Options]
@@ -227,7 +271,8 @@ HTTP 200
 jsonpath "$.contents[0].status" == "PresentationSent"
 
 # Verfiier wait for PresentationVerified state
-GET {{ verifier_url }}/prism-agent/present-proof/presentations
+GET {{ agent_url }}/agent/present-proof/presentations
+Authorization: Bearer {{ verifier_access_token }}
 [QueryStringParams]
 thid: {{ didcomm_presentation_thid }}
 [Options]
