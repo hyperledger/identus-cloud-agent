@@ -20,7 +20,7 @@ import org.hyperledger.identus.iam.entity.http.EntityServerEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementServerEndpoints
 import org.hyperledger.identus.issue.controller.IssueServerEndpoints
 import org.hyperledger.identus.mercury.{DidOps, HttpClient}
-import org.hyperledger.identus.messaging.MessagingService
+import org.hyperledger.identus.messaging.{ByteArrayWrapper, MessagingService, Producer}
 import org.hyperledger.identus.oid4vci.CredentialIssuerServerEndpoints
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
@@ -41,6 +41,9 @@ import zio.metrics.*
 import java.util.UUID
 
 object CloudAgentApp {
+
+  private val CONNECT_TOPIC = "connect"
+  private val CONNECT_RETRY_TOPIC = "connect-retry"
 
   def run = for {
     _ <- AgentInitialization.run
@@ -86,7 +89,8 @@ object CloudAgentApp {
 
   private val connectDidCommExchangesJob: RIO[
     AppConfig & DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & DIDNonSecretStorage &
-      WalletManagementService & MessagingService,
+      WalletManagementService & MessagingService & Producer[UUID, WalletIdAndRecordId] &
+      Producer[ByteArrayWrapper, ByteArrayWrapper],
     Unit
   ] =
     for {
@@ -95,7 +99,12 @@ object CloudAgentApp {
       _ <- ZIO.foreachPar(1 to 5) { _ =>
         messagingService
           .makeConsumer[UUID, WalletIdAndRecordId]("identus-cloud-agent-connect")
-          .flatMap(_.consume("connect")(ConnectBackgroundJobs.handleMessage).debug.fork)
+          .flatMap(_.consume(CONNECT_TOPIC)(ConnectBackgroundJobs.handleMessage).debug.fork)
+      }
+      _ <- ZIO.foreachPar(1 to 5) { _ =>
+        messagingService
+          .makeConsumer[ByteArrayWrapper, ByteArrayWrapper]("identus-cloud-agent-connect")
+          .flatMap(_.consume(CONNECT_RETRY_TOPIC)(ConnectBackgroundJobs.handleRetry).debug.fork)
       }
 //      _ <- (ConnectBackgroundJobs.didCommExchanges @@ Metric
 //        .gauge("connection_flow_did_com_exchange_job_ms_gauge")

@@ -35,6 +35,7 @@ import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementContro
 import org.hyperledger.identus.issue.controller.IssueControllerImpl
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.messaging.kafka.{ZKafkaMessagingServiceImpl, ZKafkaProducerImpl}
+import org.hyperledger.identus.messaging.ByteArrayWrapper
 import org.hyperledger.identus.oid4vci.controller.CredentialIssuerControllerImpl
 import org.hyperledger.identus.oid4vci.service.OIDCCredentialIssuerServiceImpl
 import org.hyperledger.identus.oid4vci.storage.InMemoryIssuanceSessionService
@@ -223,7 +224,8 @@ object MainApp extends ZIOAppDefault {
           SystemModule.zioHttpClientLayer,
           Scope.default,
           ZKafkaMessagingServiceImpl.layer(List("kafka:9092")),
-          ZKafkaProducerImpl.layer[UUID, WalletIdAndRecordId]
+          ZKafkaProducerImpl.layer[UUID, WalletIdAndRecordId],
+          ZKafkaProducerImpl.layer[ByteArrayWrapper, ByteArrayWrapper]
         )
     } yield app
 
