@@ -52,9 +52,8 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
     credentialFormat = Some("JWT"),
     claims = json.toJsonAST.toOption.get,
     automaticIssuance = Some(true),
-    issuingDID = Some(
-      "did:prism:332518729a7b7805f73a788e0944802527911901d9b7c16152281be9bc62d944:CosBCogBEkkKFW15LWtleS1hdXRoZW50aWNhdGlvbhAESi4KCXNlY3AyNTZrMRIhAuYoRIefsLhkvYwHz8gDtkG2b0kaZTDOLj_SExWX1fOXEjsKB21hc3RlcjAQAUouCglzZWNwMjU2azESIQLOzab8f0ibt1P0zdMfoWDQTSlPc8_tkV9Jk5BBsXB8fA"
-    ),
+    issuingDID =
+      "did:prism:332518729a7b7805f73a788e0944802527911901d9b7c16152281be9bc62d944:CosBCogBEkkKFW15LWtleS1hdXRoZW50aWNhdGlvbhAESi4KCXNlY3AyNTZrMRIhAuYoRIefsLhkvYwHz8gDtkG2b0kaZTDOLj_SExWX1fOXEjsKB21hc3RlcjAQAUouCglzZWNwMjU2azESIQLOzab8f0ibt1P0zdMfoWDQTSlPc8_tkV9Jk5BBsXB8fA",
     connectionId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
   )
   private val issueCredentialRecord = IssueCredentialRecord(

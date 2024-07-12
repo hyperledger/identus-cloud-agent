@@ -38,6 +38,11 @@ class IssueControllerImpl(
   override def createCredentialOffer(
       request: CreateIssueCredentialRecordRequest
   )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
+
+    def getIssuingDidFromRequest(request: CreateIssueCredentialRecordRequest) = extractPrismDIDFromString(
+      request.issuingDID
+    )
+
     for {
       didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
       jsonClaims <- ZIO // TODO: Get read of Circe and use zio-json all the way down
@@ -48,10 +53,7 @@ class IssueControllerImpl(
         credentialFormat match
           case JWT =>
             for {
-              issuingDID <- ZIO
-                .fromOption(request.issuingDID)
-                .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
-                .flatMap(extractPrismDIDFromString)
+              issuingDID <- getIssuingDidFromRequest(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
               record <- credentialService
                 .createJWTIssueCredentialRecord(
@@ -67,10 +69,7 @@ class IssueControllerImpl(
             } yield record
           case SDJWT =>
             for {
-              issuingDID <- ZIO
-                .fromOption(request.issuingDID)
-                .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
-                .flatMap(extractPrismDIDFromString)
+              issuingDID <- getIssuingDidFromRequest(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
               record <- credentialService
                 .createSDJWTIssueCredentialRecord(
@@ -86,17 +85,20 @@ class IssueControllerImpl(
             } yield record
           case AnonCreds =>
             for {
+              issuingDID <- getIssuingDidFromRequest(request)
               credentialDefinitionGUID <- ZIO
                 .fromOption(request.credentialDefinitionId)
                 .mapError(_ =>
                   ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
                 )
               credentialDefinitionId = {
-                val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl.toExternalForm
-                val urlSuffix =
+
+                val publicEndpointServiceName = appConfig.agent.httpEndpoint.serviceName
+                val resourcePath =
                   s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
-                val urlPrefix = if (publicEndpointUrl.endsWith("/")) publicEndpointUrl else publicEndpointUrl + "/"
-                s"$urlPrefix$urlSuffix"
+                val didUrl = s"$issuingDID?resourceService=$publicEndpointServiceName&resourcePath=$resourcePath"
+
+                didUrl
               }
               record <- credentialService
                 .createAnonCredsIssueCredentialRecord(

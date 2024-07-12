@@ -12,8 +12,7 @@ import org.hyperledger.identus.pollux.core.model.error.{
 }
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{
   CredentialSchemaParsingError,
-  CredentialSchemaValidationError,
-  InvalidURI
+  CredentialSchemaValidationError
 }
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
@@ -30,7 +29,6 @@ import org.hyperledger.identus.pollux.core.service.serdes.{
 import org.hyperledger.identus.shared.http.UriResolver
 import zio.*
 
-import java.net.URI
 import java.util.UUID
 import scala.util.Try
 
