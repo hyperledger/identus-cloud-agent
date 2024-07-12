@@ -16,6 +16,8 @@ docker-compose up
 
 If some example requires a different command, it should be provided in its own local README.
 
+Once finished, `docker-compose down --volumes` can be used to clean docker volumes to avoid unexpected behavior for the next run. 
+
 ## Examples
 
 | example             | description                                                               |
@@ -32,11 +34,11 @@ If some example requires a different command, it should be provided in its own l
 
 Some example directories may contain a sub-directory called `hurl`.
 Hurl is a CLI tool for testing HTTP requests and can be installed according to [this documentation](https://hurl.dev/docs/installation.html).
-If an example contains a sub-directory named `hurl`, the example can be tested against HTTP calls with the following commands.
+If the example contains a sub-directory named `hurl`, the example can be tested against HTTP calls with the following commands.
 
 ```bash
 cd ./hurl
-hurl --variables-file ./local *.hurl
+hurl --variables-file ./local *.hurl --test
 ```
 
 # Contributing
