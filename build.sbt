@@ -32,7 +32,6 @@ inThisBuild(
       "-feature",
       "-deprecation",
       "-unchecked",
-      "-Dquill.macro.log=false", // disable quill macro logs
       "-Wunused:all",
       "-Wconf:any:warning", // TODO: change unused imports to errors, Wconf configuration string is different from scala 2, figure out how!
       // TODO "-feature",
