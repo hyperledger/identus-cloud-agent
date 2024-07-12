@@ -73,7 +73,7 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
       _ <- ZIO.when(sleepDelay > 0)(ZIO.sleep(Duration.fromMillis(sleepDelay)))
       _ <- retryProducer
         .produce(CONNECT_TOPIC, message.key, message.value)
-        .catchAll(e => ZIO.logErrorCause("Error sending message to the 'connect-retry' topic", Cause.fail(e)))
+        .catchAll(e => ZIO.logErrorCause(s"Error sending message to the $CONNECT_RETRY_TOPIC topic", Cause.fail(e)))
     } yield ()
   }
 
