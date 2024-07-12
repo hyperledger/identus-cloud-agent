@@ -8,7 +8,7 @@ import org.hyperledger.identus.connect.core.model.{ConnectionRecord, WalletIdAnd
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.*
-import org.hyperledger.identus.messaging.{ByteArrayWrapper, Message, Producer}
+import org.hyperledger.identus.messaging.Message
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
@@ -16,20 +16,14 @@ import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
 import zio.metrics.*
 
-import java.time.Instant
 import java.util.UUID
 
 object ConnectBackgroundJobs extends BackgroundJobsHelper {
 
-  private val CONNECT_TOPIC = "connect"
-  private val CONNECT_RETRY_TOPIC = "connect-retry"
-  private val CONNECT_RETRY_BACKOFF = 5.seconds
-
-  def handleMessage(message: Message[UUID, WalletIdAndRecordId]): URIO[
-    DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & DIDNonSecretStorage & AppConfig &
-      Producer[UUID, WalletIdAndRecordId],
+  def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
+    DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & DIDNonSecretStorage & AppConfig,
     Unit
-  ] = {
+  ] =
     for {
       _ <- ZIO.logInfo(s"!!! Handling recordId: ${message.value} via Kafka queue")
       connectionService <- ZIO.service[ConnectionService]
@@ -45,41 +39,12 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
             _ <- connectService
               .reportProcessingFailure(record.id, Some(errorResponse))
               .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-            _ <- ZIO.when(record.metaRetries > 0) {
-              for {
-                messageProducer <- ZIO.service[Producer[UUID, WalletIdAndRecordId]]
-                _ <- messageProducer.produce(
-                  CONNECT_RETRY_TOPIC,
-                  message.key,
-                  message.value
-                )
-              } yield ()
-            }
           } yield ()
         }
-        .catchAll { e => ZIO.logErrorCause(s"Connect - Error processing record: ${record.id} ", Cause.fail(e)) }
-        .catchAllDefect(d => ZIO.logErrorCause(s"Connect - Defect processing record: ${record.id}", Cause.fail(d)))
+        .catchAll { e => ZIO.fail(RuntimeException(s"Attempt failed with: ${e}")) }
     } yield ()
-  }
 
-  def handleRetry(
-      message: Message[ByteArrayWrapper, ByteArrayWrapper]
-  ): URIO[Producer[ByteArrayWrapper, ByteArrayWrapper], Unit] = {
-    for {
-      retryProducer <- ZIO.service[Producer[ByteArrayWrapper, ByteArrayWrapper]]
-      _ <- ZIO.logInfo("Posting message to connect topic in 10 sec")
-      millisSpentInQueue = Instant.now().toEpochMilli - message.timestamp
-      sleepDelay = CONNECT_RETRY_BACKOFF.toMillis - millisSpentInQueue
-      _ <- ZIO.when(sleepDelay > 0)(ZIO.sleep(Duration.fromMillis(sleepDelay)))
-      _ <- retryProducer
-        .produce(CONNECT_TOPIC, message.key, message.value)
-        .catchAll(e => ZIO.logErrorCause(s"Error sending message to the $CONNECT_RETRY_TOPIC topic", Cause.fail(e)))
-    } yield ()
-  }
-
-  private def performExchange(
-      record: ConnectionRecord
-  ) = {
+  private def performExchange(record: ConnectionRecord) = {
     import ProtocolState.*
     import Role.*
 
