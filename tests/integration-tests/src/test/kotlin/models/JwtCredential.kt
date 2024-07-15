@@ -16,7 +16,6 @@ import java.io.Serializable
 import java.security.Provider
 import java.security.SecureRandom
 import java.time.OffsetDateTime
-import java.util.Base64
 import java.util.Date
 import kotlin.reflect.KClass
 
@@ -146,7 +145,7 @@ class JwtCredential {
     }
 
     fun parseBase64(base64: String): JwtCredential {
-        val jwt = String(Base64.getDecoder().decode(base64))
+        val jwt = Base64URL.from(base64).decodeToString()
         return parseJwt(jwt)
     }
 
