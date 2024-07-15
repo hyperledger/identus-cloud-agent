@@ -1,5 +1,5 @@
-@RFC0453 @AIP20 @credentials
-Feature: Issue Anoncred with published DID
+@anoncred @issuance
+Feature: Issue Anoncred credential
 
   Background:
     Given Issuer and Holder have an existing connection
@@ -10,6 +10,6 @@ Feature: Issue Anoncred with published DID
     Given Issuer has an anoncred schema definition
     When Issuer offers anoncred to Holder
     And Holder receives the credential offer
-    And Holder accepts credential offer for anoncred
+    And Holder accepts anoncred credential offer
     And Issuer issues the credential
     Then Holder receives the issued credential
