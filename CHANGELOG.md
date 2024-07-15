@@ -1,3 +1,18 @@
+# [1.38.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.37.0...cloud-agent-v1.38.0) (2024-07-15)
+
+
+### Bug Fixes
+
+* Move InMemory classes to the test moduels ([#1240](https://github.com/hyperledger/identus-cloud-agent/issues/1240)) ([823057a](https://github.com/hyperledger/identus-cloud-agent/commit/823057adaa6127eca80dba4df123f07098d34f65))
+* move mocks into the test modules ([#1236](https://github.com/hyperledger/identus-cloud-agent/issues/1236)) ([df83026](https://github.com/hyperledger/identus-cloud-agent/commit/df83026704980e071f7aa158634da20fbc2527c3))
+* use Put and Get for DID in doobie statement ([#1250](https://github.com/hyperledger/identus-cloud-agent/issues/1250)) ([fc1cf51](https://github.com/hyperledger/identus-cloud-agent/commit/fc1cf5157f5503143c23da54c8ea6fe78a776640))
+* Wallet Management Error Handling ([#1248](https://github.com/hyperledger/identus-cloud-agent/issues/1248)) ([cfd5101](https://github.com/hyperledger/identus-cloud-agent/commit/cfd5101f18276b9f59830c47c0d7fa64b30662db))
+
+
+### Features
+
+* upgrade docusaurus and semantic-release packages ([de53f1d](https://github.com/hyperledger/identus-cloud-agent/commit/de53f1db15a25e4d66cba1b191fc6e591b42284b))
+
 # [1.37.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.36.1...cloud-agent-v1.37.0) (2024-07-01)
 
 
