@@ -40,12 +40,12 @@ sequenceDiagram
 
 ### Authorization Endpoint
 
-1. Authorization `scope` MUST be configured in the Authorization Server to the samse value as in Credential Issuer Metadata
+1. Authorization `scope` MUST be configured in the Authorization Server to the same value as in Credential Issuer Metadata
 2. The endpoint MUST accept the parameter `issuer_state` in the [__AuthorizationRequest__](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-5.1.3-2.3) and recall this value in the subsequent call to __TokenEndpoint__
 
 ### Token Endpoint
 
-1. When the holder makes a __TokenRequest__ to the __TokenEndpoint__, the __AuthorizationServer__ MUST recall the `issuer_state` parameter and make an HTTP call to the `/oid4vci/nonces` endpoint on Cloud Agent using the following format.
+1. When the holder makes a __TokenRequest__ to the __TokenEndpoint__, the __AuthorizationServer__ MUST recall the `issuer_state` parameter and make an HTTP call to the `/oid4vci/nonces` endpoint in the Cloud Agent using the following format.
 
 __NonceRequest__
 
