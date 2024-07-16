@@ -20,6 +20,7 @@ const sidebars = {
       },
       items: [
         'credentials/issue',
+        'credentials/oid4vci',
         'credentials/present-proof',
         'credentials/revocation',
       ]
