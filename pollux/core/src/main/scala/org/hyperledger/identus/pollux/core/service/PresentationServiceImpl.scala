@@ -1096,14 +1096,11 @@ private class PresentationServiceImpl(
     } yield result
   }
 
-  def reportProcessingFailure(
+  override def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[Failure]
-  ): ZIO[WalletAccessContext, PresentationError, Unit] =
-    for {
-      _ <- getRecord(recordId)
-      result <- presentationRepository.updateAfterFail(recordId, failReason)
-    } yield result
+  ): IO[PresentationError, Unit] =
+    presentationRepository.updateAfterFail(recordId, failReason)
 
   private def getRecordFromThreadId(
       thid: DidCommID
