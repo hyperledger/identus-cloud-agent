@@ -6,93 +6,99 @@ import zio.concurrent.ConcurrentMap
 import zio.stream._
 import zio.Clock
 import zio.Task
-import InMemoryMessagingService.*
+import InMemoryMessagingService._
 
 import java.util.concurrent.TimeUnit
 
+case class ConsumerGroupKey(groupId: GroupId, topic: Topic)
+
 class InMemoryMessagingService(
-    queueMap: ConcurrentMap[String, (Queue[Message[_, _]], Ref[Offset])],
+    topicQueues: ConcurrentMap[Topic, (Queue[Message[_, _]], Ref[Offset])],
     queueCapacity: Int,
-    consumerGroups: ConcurrentMap[String, ConcurrentMap[Offset, TimeStamp]] // Track processed messages by groupId
+    processedMessagesMap: ConcurrentMap[
+      ConsumerGroupKey,
+      ConcurrentMap[Offset, TimeStamp]
+    ]
 ) extends MessagingService {
 
   override def makeConsumer[K, V](groupId: String)(using kSerde: Serde[K], vSerde: Serde[V]): Task[Consumer[K, V]] = {
-    for {
-      processedMessages <- consumerGroups.get(groupId).flatMap {
-        case Some(map) => ZIO.succeed(map)
-        case None =>
-          for {
-            newMap <- ConcurrentMap.empty[Offset, TimeStamp]
-            _ <- consumerGroups.put(groupId, newMap)
-          } yield newMap
-      }
-    } yield new InMemoryConsumer[K, V](groupId, queueMap, processedMessages)
+    ZIO.succeed(new InMemoryConsumer[K, V](groupId, topicQueues, processedMessagesMap))
   }
 
   override def makeProducer[K, V]()(using kSerde: Serde[K], vSerde: Serde[V]): Task[Producer[K, V]] =
-    ZIO.succeed(new InMemoryProducer[K, V](queueMap, queueCapacity))
+    ZIO.succeed(new InMemoryProducer[K, V](topicQueues, queueCapacity))
 }
 
 class InMemoryConsumer[K, V](
-    groupId: String,
-    queueMap: ConcurrentMap[String, (Queue[Message[_, _]], Ref[Offset])],
-    processedMessages: ConcurrentMap[Offset, TimeStamp]
+    groupId: GroupId,
+    topicQueues: ConcurrentMap[Topic, (Queue[Message[_, _]], Ref[Offset])],
+    processedMessagesMap: ConcurrentMap[ConsumerGroupKey, ConcurrentMap[Offset, TimeStamp]]
 ) extends Consumer[K, V] {
   override def consume[HR](topic: String, topics: String*)(handler: Message[K, V] => URIO[HR, Unit]): RIO[HR, Unit] = {
     val allTopics = topic +: topics
-
-    def getQueueStream(topic: String): ZStream[Any, Nothing, Message[K, V]] =
+    def getQueueStream(topic: String): ZStream[Any, Nothing, (String, Message[K, V])] =
       ZStream.repeatZIO {
-        queueMap.get(topic).flatMap {
+        topicQueues.get(topic).flatMap {
           case Some((queue, _)) =>
             ZIO.debug(s"Connected to queue for topic $topic in group $groupId") *>
-              ZIO.succeed(ZStream.fromQueue(queue).collect { case msg: Message[K, V] => msg })
+              ZIO.succeed(ZStream.fromQueue(queue).collect { case msg: Message[K, V] => (topic, msg) })
           case None =>
-            ZIO.debug(s"Waiting to connect to queue for topic $topic in group $groupId, retrying...") *>
-              ZIO.sleep(1.second) *> ZIO.succeed(ZStream.empty)
+            ZIO.sleep(1.second) *> ZIO.succeed(ZStream.empty)
         }
       }.flatten
 
     val streams = allTopics.map(getQueueStream)
     ZStream
       .mergeAllUnbounded()(streams: _*)
-      .tap(msg => ZIO.log(s"Processing message in group $groupId: $msg"))
-      .filterZIO { msg =>
+      .tap { case (topic, msg) => ZIO.log(s"Processing message in group $groupId, topic:$topic : $msg") }
+      .filterZIO { case (topic, msg) =>
         for {
           currentTime <- Clock.currentTime(TimeUnit.MILLISECONDS)
-          isNew <- processedMessages
+          key = ConsumerGroupKey(groupId, topic)
+          topicProcessedMessages <- processedMessagesMap.get(key).flatMap {
+            case Some(map) => ZIO.succeed(map)
+            case None =>
+              for {
+                newMap <- ConcurrentMap.empty[Offset, TimeStamp]
+                _ <- processedMessagesMap.put(key, newMap)
+              } yield newMap
+          }
+          isNew <- topicProcessedMessages
             .putIfAbsent(Offset(msg.offset), TimeStamp(currentTime))
-            .map(_.isEmpty) // Store the current timestamp
+            .map(_.isEmpty)
         } yield isNew
-      } // Ensures message is processed only once
-      .mapZIO(handler)
+      }
+      .mapZIO { case (_, msg) => handler(msg) }
+      .tap(_ => ZIO.log(s"Message processed in group $groupId, topic:$topic"))
       .runDrain
   }
 }
 
 class InMemoryProducer[K, V](
-    queueMap: ConcurrentMap[String, (Queue[Message[_, _]], Ref[Offset])],
+    topicQueues: ConcurrentMap[Topic, (Queue[Message[_, _]], Ref[Offset])],
     queueCapacity: Int
 ) extends Producer[K, V] {
   override def produce(topic: String, key: K, value: V): Task[Unit] = for {
-    queueAndIdRef <- queueMap.get(topic).flatMap {
-      case Some(qAndIdRef) => ZIO.succeed(qAndIdRef)
+    queueAndOffsetRef <- topicQueues.get(topic).flatMap {
+      case Some(qAndOffSetRef) => ZIO.succeed(qAndOffSetRef)
       case None =>
         for {
           newQueue <- Queue.sliding[Message[_, _]](queueCapacity)
-          newIdRef <- Ref.make(Offset(0L))
-          _ <- queueMap.put(topic, (newQueue, newIdRef))
-        } yield (newQueue, newIdRef)
+          newOffSetRef <- Ref.make(Offset(0L))
+          _ <- topicQueues.put(topic, (newQueue, newOffSetRef))
+        } yield (newQueue, newOffSetRef)
     }
-    (queue, idRef) = queueAndIdRef
+    (queue, offsetRef) = queueAndOffsetRef
     currentTime <- Clock.currentTime(TimeUnit.MILLISECONDS)
-    messageId <- idRef.updateAndGet(x => Offset(x.value + 1)) //  unique atomic id incremented per topic
+    messageId <- offsetRef.updateAndGet(x => Offset(x.value + 1)) //  unique atomic id incremented per topic
     _ <- queue.offer(Message(key, value, messageId.value, currentTime))
     _ <- ZIO.debug(s"Message offered to queue: $topic with ID: $messageId")
   } yield ()
 }
 
 object InMemoryMessagingService {
+  type Topic = String
+  type GroupId = String
 
   opaque type Offset = Long
   object Offset:
@@ -107,11 +113,11 @@ object InMemoryMessagingService {
   val messagingServiceLayer: ULayer[MessagingService] =
     ZLayer.fromZIO {
       for {
-        queueMap <- ConcurrentMap.empty[String, (Queue[Message[_, _]], Ref[Offset])]
-        consumerGroups <- ConcurrentMap.empty[String, ConcurrentMap[Offset, TimeStamp]]
+        queueMap <- ConcurrentMap.empty[Topic, (Queue[Message[_, _]], Ref[Offset])]
+        processedMessagesMap <- ConcurrentMap.empty[ConsumerGroupKey, ConcurrentMap[Offset, TimeStamp]]
         queueCapacity = 100 // queue capacity
-        _ <- cleanupTaskForProcessedMessages(consumerGroups)
-      } yield new InMemoryMessagingService(queueMap, queueCapacity, consumerGroups)
+        _ <- cleanupTaskForProcessedMessages(processedMessagesMap)
+      } yield new InMemoryMessagingService(queueMap, queueCapacity, processedMessagesMap)
     }
 
   def producerLayer[K: EnvironmentTag, V: EnvironmentTag](using
@@ -136,7 +142,7 @@ object InMemoryMessagingService {
     }
 
   private def cleanupTaskForProcessedMessages(
-      consumerGroups: ConcurrentMap[String, ConcurrentMap[Offset, TimeStamp]],
+      processedMessagesMap: ConcurrentMap[ConsumerGroupKey, ConcurrentMap[Offset, TimeStamp]],
       maxAge: Duration = 60.minutes // Maximum age for entries
   ): UIO[Unit] = {
     def cleanupOldEntries(map: ConcurrentMap[Offset, TimeStamp]): UIO[Unit] = for {
@@ -151,14 +157,14 @@ object InMemoryMessagingService {
     } yield ()
 
     (for {
-      entries <- consumerGroups.toList
-      _ <- ZIO.foreachDiscard(entries) { case (groupId, map) =>
-        ZIO.log(s"Cleaning up entries for group: $groupId") *> cleanupOldEntries(map)
+      entries <- processedMessagesMap.toList
+      _ <- ZIO.foreachDiscard(entries) { case (key, map) =>
+        ZIO.log(s"Cleaning up entries for group: ${key.groupId} and topic: ${key.topic}") *>
+          cleanupOldEntries(map)
       }
     } yield ())
       .repeat(Schedule.spaced(10.minutes))
       .fork
       .unit
   }
-
 }

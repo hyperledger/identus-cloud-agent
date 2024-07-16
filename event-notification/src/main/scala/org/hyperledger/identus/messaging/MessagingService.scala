@@ -40,6 +40,51 @@ object MessagingService {
                     .catchAll { t =>
                       for {
                         _ <- ZIO.logErrorCause(s"Connect - Error processing message: ${m.key} ", Cause.fail(t))
+                        _ <- ZIO.log(s"Retrying message: ${m.key} to next topic: ${step.nextTopicName}")
+                        _ <- messageProducer
+                          .produce(step.nextTopicName, m.key, m.value)
+                          .tap(_ => ZIO.log(s"Message offered to queue: ${step.nextTopicName} with key: ${m.key}"))
+                          .catchAll(t => ZIO.logErrorCause("Unable to send message to the next topic", Cause.fail(t)))
+                      } yield ()
+                    }
+                    .catchAllDefect(t =>
+                      ZIO.logErrorCause(s"Connect - Defect processing message: ${m.key} ", Cause.fail(t))
+                    )
+                } yield ()
+              }
+              .tapError(t => ZIO.logErrorCause(s"Error consuming message from topic: ${step.topicName}", Cause.fail(t)))
+              .tap(_ => ZIO.log(s"Consumer for topic: ${step.topicName} is running"))
+              .debug
+              .fork
+          } yield ()
+        )
+      }
+    } yield ()
+  }
+  def consumeWithRetryStrategy1[K: EnvironmentTag, V: EnvironmentTag, HR](
+      groupId: String,
+      handler: Message[K, V] => RIO[HR, Unit],
+      steps: Seq[RetryStep]
+  )(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[HR & Producer[K, V] & MessagingService, Unit] = {
+
+    for {
+      messagingService <- ZIO.service[MessagingService]
+      messageProducer <- ZIO.service[Producer[K, V]]
+      _ <- ZIO.foreachPar(steps) { step =>
+        ZIO.foreachPar(1 to step.consumerCount)(_ =>
+          for {
+            consumer <- messagingService.makeConsumer[K, V](groupId)
+            _ <- consumer
+              .consume[HR](step.topicName) { m =>
+                for {
+                  // Wait configured backoff before processing message
+                  millisSpentInQueue <- ZIO.succeed(Instant.now().toEpochMilli - m.timestamp)
+                  sleepDelay = step.consumerBackoff.toMillis - millisSpentInQueue
+                  _ <- ZIO.when(sleepDelay > 0)(ZIO.sleep(Duration.fromMillis(sleepDelay)))
+                  _ <- handler(m)
+                    .catchAll { t =>
+                      for {
+                        _ <- ZIO.logErrorCause(s"Connect - Error processing message: ${m.key} ", Cause.fail(t))
                         _ <- messageProducer
                           .produce(step.nextTopicName, m.key, m.value)
                           .catchAll(t => ZIO.logErrorCause("Unable to send message to the next topic", Cause.fail(t)))
