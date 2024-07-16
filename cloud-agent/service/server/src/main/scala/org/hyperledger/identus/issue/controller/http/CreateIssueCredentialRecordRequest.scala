@@ -121,7 +121,7 @@ object CreateIssueCredentialRecordRequest {
     object issuingDID
         extends Annotation[String](
           description = """
-          |The short-form issuer Prism DID by which the verifiable credential will be issued.
+          |The issuer Prism DID by which the verifiable credential will be issued. DID can be short for or long form.
           |""".stripMargin,
           example = "did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f"
         )

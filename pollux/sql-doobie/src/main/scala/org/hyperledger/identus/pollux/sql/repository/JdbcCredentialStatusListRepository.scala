@@ -4,6 +4,7 @@ import doobie.*
 import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
+import io.lemonlabs.uri.Url
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
@@ -93,7 +94,9 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
         s"credential-status/$id"
       emptyStatusListCredential <- VCStatusList2021
         .build(
-          vcId = s"""${jwtIssuer.did}?resourceService="$statusListRegistryServiceName"&resourcePath="$resourcePath"""",
+          vcId = Url
+            .parse(s"${jwtIssuer.did}?resourceService=$statusListRegistryServiceName&resourcePath=$resourcePath")
+            .toString,
           revocationData = bitString,
           jwtIssuer = jwtIssuer
         )

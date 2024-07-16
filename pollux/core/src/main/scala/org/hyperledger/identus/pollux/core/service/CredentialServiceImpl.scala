@@ -2,6 +2,7 @@ package org.hyperledger.identus.pollux.core.service
 
 import io.circe.syntax.*
 import io.circe.Json
+import io.lemonlabs.uri.Url
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
@@ -30,7 +31,6 @@ import zio.*
 import zio.json.*
 import zio.prelude.ZValidation
 
-import java.net.URI
 import java.time.{Instant, ZoneId}
 import java.util.UUID
 import scala.language.implicitConversions
@@ -1223,13 +1223,15 @@ class CredentialServiceImpl(
         s"credential-status/${statusListToBeUsed.id}"
       segment = statusListToBeUsed.lastUsedIndex + 1
     } yield CredentialStatus(
-      id =
-        s"""${jwtIssuer.did}?resourceService="$statusListRegistryServiceName"&resourcePath="$resourcePath#$segment"""",
+      id = Url
+        .parse(s"${jwtIssuer.did}?resourceService=$statusListRegistryServiceName&resourcePath=$resourcePath#$segment")
+        .toString,
       `type` = "StatusList2021Entry",
       statusPurpose = StatusPurpose.Revocation,
       statusListIndex = lastUsedIndex + 1,
-      statusListCredential =
-        s"""${jwtIssuer.did}?resourceService="$statusListRegistryServiceName"&resourcePath="$resourcePath""""
+      statusListCredential = Url
+        .parse(s"${jwtIssuer.did}?resourceService=$statusListRegistryServiceName&resourcePath=$resourcePath")
+        .toString
     )
     issueCredentialSem.withPermit(effect)
   }

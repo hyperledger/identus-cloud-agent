@@ -31,7 +31,6 @@ trait CredentialServiceSpecHelper {
   protected val credentialDefinitionServiceLayer =
     CredentialDefinitionRepositoryInMemory.layer >>> CredentialDefinitionServiceImpl.layer
 
-  // TODO: remove UriDereferencer
   protected val credentialServiceLayer
       : URLayer[DIDService & ManagedDIDService & UriResolver, CredentialService & CredentialDefinitionService] =
     ZLayer.makeSome[DIDService & ManagedDIDService & UriResolver, CredentialService & CredentialDefinitionService](

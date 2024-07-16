@@ -1,5 +1,6 @@
 package org.hyperledger.identus.issue.controller
 
+import io.lemonlabs.uri.Url
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.ControllerHelper
 import org.hyperledger.identus.agent.walletapi.model.PublicationState
@@ -96,7 +97,9 @@ class IssueControllerImpl(
                 val publicEndpointServiceName = appConfig.agent.httpEndpoint.serviceName
                 val resourcePath =
                   s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
-                val didUrl = s"$issuingDID?resourceService=$publicEndpointServiceName&resourcePath=$resourcePath"
+                val didUrl = Url
+                  .parse(s"$issuingDID?resourceService=$publicEndpointServiceName&resourcePath=$resourcePath")
+                  .toString
 
                 didUrl
               }

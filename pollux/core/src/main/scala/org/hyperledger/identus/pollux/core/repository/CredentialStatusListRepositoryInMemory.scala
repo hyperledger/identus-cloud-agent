@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.core.repository
 
+import io.lemonlabs.uri.Url
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.vc.jwt.{revocation, Issuer, StatusPurpose}
@@ -103,7 +104,9 @@ class CredentialStatusListRepositoryInMemory(
         s"credential-status/$id"
       emptyJwtCredential <- VCStatusList2021
         .build(
-          vcId = s"""${jwtIssuer.did}?resourceService="$statusListRegistryServiceName"&resourcePath="$resourcePath"""",
+          vcId = Url
+            .parse(s"${jwtIssuer.did}?resourceService=$statusListRegistryServiceName&resourcePath=$resourcePath")
+            .toString,
           revocationData = bitString,
           jwtIssuer = jwtIssuer
         )
