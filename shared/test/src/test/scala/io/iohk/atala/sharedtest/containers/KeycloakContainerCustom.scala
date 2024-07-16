@@ -35,6 +35,8 @@ final class KeycloakContainerCustom(
 
 enum KeycloakImageType(val imageName: DockerImageName) {
   case Default extends KeycloakImageType(DockerImageName.parse("quay.io/keycloak/keycloak:23.0.7"))
+  case Atala
+      extends KeycloakImageType(DockerImageName.parse("ghcr.io/input-output-hk/atala-prism-keycloak:1.7.0-snapshot"))
   case OID4VCI
       extends KeycloakImageType(
         DockerImageName
@@ -59,5 +61,6 @@ object KeycloakContainerCustom {
     }
 
   val default: TaskLayer[KeycloakContainerCustom] = ZLayer.succeed(KeycloakImageType.Default) >>> layer
+  val atala: TaskLayer[KeycloakContainerCustom] = ZLayer.succeed(KeycloakImageType.Atala) >>> layer
   val oid4vci: TaskLayer[KeycloakContainerCustom] = ZLayer.succeed(KeycloakImageType.OID4VCI) >>> layer
 }

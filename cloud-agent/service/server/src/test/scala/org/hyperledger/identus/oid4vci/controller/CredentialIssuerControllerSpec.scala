@@ -34,7 +34,8 @@ import org.hyperledger.identus.iam.authentication.oidc.KeycloakAuthenticatorSpec
   grantClientRole,
   keycloakAdminClientLayer
 }
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement
+import org.hyperledger.identus.iam.authorization.core.{PermissionManagementService, PermissionManagementServiceError}
+//import org.hyperledger.identus.iam.authorization.core.PermissionManagement
 import org.hyperledger.identus.iam.authorization.keycloak.admin.{
   KeycloakConfigUtils,
   KeycloakPermissionManagementService
@@ -70,21 +71,21 @@ object CredentialIssuerControllerSpec
     with KeycloakTestContainerSupport
     with PostgresTestContainerSupport {
 
-  private object PSE extends PermissionManagement.Service[Entity] {
+  private object PSE extends PermissionManagementService[Entity] {
 
     override def grantWalletToUser(
         walletId: WalletId,
         entity: Entity
-    ): ZIO[WalletAdministrationContext, PermissionManagement.Error, Unit] = ???
+    ): ZIO[WalletAdministrationContext, PermissionManagementServiceError, Unit] = ???
 
     override def revokeWalletFromUser(
         walletId: WalletId,
         entity: Entity
-    ): ZIO[WalletAdministrationContext, PermissionManagement.Error, Unit] = ???
+    ): ZIO[WalletAdministrationContext, PermissionManagementServiceError, Unit] = ???
 
     override def listWalletPermissions(
         entity: Entity
-    ): ZIO[WalletAdministrationContext, PermissionManagement.Error, Seq[WalletId]] = ???
+    ): ZIO[WalletAdministrationContext, PermissionManagementServiceError, Seq[WalletId]] = ???
   }
 
   private trait TestDIDService extends DIDService {
