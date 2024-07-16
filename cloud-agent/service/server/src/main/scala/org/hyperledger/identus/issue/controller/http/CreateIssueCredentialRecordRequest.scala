@@ -47,7 +47,7 @@ final case class CreateIssueCredentialRecordRequest(
     automaticIssuance: Option[Boolean] = None,
     @description(annotations.issuingDID.description)
     @encodedExample(annotations.issuingDID.example)
-    issuingDID: Option[String],
+    issuingDID: String,
     @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
     connectionId: UUID
@@ -119,12 +119,11 @@ object CreateIssueCredentialRecordRequest {
         )
 
     object issuingDID
-        extends Annotation[Option[String]](
+        extends Annotation[String](
           description = """
-          |The short-form issuer Prism DID by which the JWT verifiable credential will be issued.
-          |Note that this parameter only applies when the offer is type 'JWT'.
+          |The issuer Prism DID by which the verifiable credential will be issued. DID can be short for or long form.
           |""".stripMargin,
-          example = Some("did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f")
+          example = "did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f"
         )
 
     object connectionId

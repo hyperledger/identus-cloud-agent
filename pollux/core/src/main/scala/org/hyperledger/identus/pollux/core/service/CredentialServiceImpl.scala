@@ -2,6 +2,7 @@ package org.hyperledger.identus.pollux.core.service
 
 import io.circe.syntax.*
 import io.circe.Json
+import io.lemonlabs.uri.Url
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
@@ -23,21 +24,20 @@ import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, Cre
 import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer as JwtIssuer, *}
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, Secp256k1KeyPair}
-import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.json.*
 import zio.prelude.ZValidation
 
-import java.net.URI
 import java.time.{Instant, ZoneId}
 import java.util.UUID
 import scala.language.implicitConversions
 
 object CredentialServiceImpl {
   val layer: URLayer[
-    CredentialRepository & CredentialStatusListRepository & DidResolver & URIDereferencer & GenericSecretStorage &
+    CredentialRepository & CredentialStatusListRepository & DidResolver & UriResolver & GenericSecretStorage &
       CredentialDefinitionService & LinkSecretService & DIDService & ManagedDIDService,
     CredentialService
   ] = {
@@ -46,7 +46,7 @@ object CredentialServiceImpl {
         credentialRepo <- ZIO.service[CredentialRepository]
         credentialStatusListRepo <- ZIO.service[CredentialStatusListRepository]
         didResolver <- ZIO.service[DidResolver]
-        uriDereferencer <- ZIO.service[URIDereferencer]
+        uriResolver <- ZIO.service[UriResolver]
         genericSecretStorage <- ZIO.service[GenericSecretStorage]
         credDefenitionService <- ZIO.service[CredentialDefinitionService]
         linkSecretService <- ZIO.service[LinkSecretService]
@@ -57,7 +57,7 @@ object CredentialServiceImpl {
         credentialRepo,
         credentialStatusListRepo,
         didResolver,
-        uriDereferencer,
+        uriResolver,
         genericSecretStorage,
         credDefenitionService,
         linkSecretService,
@@ -77,7 +77,7 @@ class CredentialServiceImpl(
     credentialRepository: CredentialRepository,
     credentialStatusListRepository: CredentialStatusListRepository,
     didResolver: DidResolver,
-    uriDereferencer: URIDereferencer,
+    uriResolver: UriResolver,
     genericSecretStorage: GenericSecretStorage,
     credentialDefinitionService: CredentialDefinitionService,
     linkSecretService: LinkSecretService,
@@ -242,7 +242,11 @@ class CredentialServiceImpl(
     for {
       credentialDefinition <- getCredentialDefinition(credentialDefinitionGUID)
       _ <- CredentialSchema
-        .validateAnonCredsClaims(credentialDefinition.schemaId, claims.noSpaces, uriDereferencer)
+        .validateAnonCredsClaims(
+          credentialDefinition.schemaId,
+          claims.noSpaces,
+          uriResolver,
+        )
         .orDieAsUnmanagedFailure
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
       offer <- createAnonCredsDidCommOfferCredential(
@@ -392,7 +396,7 @@ class CredentialServiceImpl(
   ): UIO[Unit] = maybeSchemaId match
     case Some(schemaId) =>
       CredentialSchema
-        .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriDereferencer)
+        .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriResolver)
         .orDieAsUnmanagedFailure
     case None =>
       ZIO.unit
@@ -662,8 +666,8 @@ class CredentialServiceImpl(
         )
         .orDieWith(_ => RuntimeException(s"No AnonCreds attachment found in the offer"))
       credentialOffer = anoncreds.AnoncredCredentialOffer(attachmentData)
-      credDefContent <- uriDereferencer
-        .dereference(new URI(credentialOffer.getCredDefId))
+      credDefContent <- uriResolver
+        .resolve(credentialOffer.getCredDefId)
         .orDieAsUnmanagedFailure
       credentialDefinition = anoncreds.AnoncredCredentialDefinition(credDefContent)
       linkSecret <- linkSecretService.fetchOrCreate()
@@ -786,8 +790,8 @@ class CredentialServiceImpl(
   ): URIO[WalletAccessContext, anoncreds.AnoncredCredential] = {
     for {
       credential <- ZIO.succeed(anoncreds.AnoncredCredential(new String(credentialBytes)))
-      credDefContent <- uriDereferencer
-        .dereference(new URI(credential.getCredDefId))
+      credDefContent <- uriResolver
+        .resolve(credential.getCredDefId)
         .orDieAsUnmanagedFailure
       credentialDefinition = anoncreds.AnoncredCredentialDefinition(credDefContent)
       metadata <- ZIO
@@ -1039,7 +1043,7 @@ class CredentialServiceImpl(
 
   override def generateJWTCredential(
       recordId: DidCommID,
-      statusListRegistryUrl: String,
+      statusListRegistryServiceName: String,
   ): ZIO[WalletAccessContext, RecordNotFound | CredentialRequestValidationFailed, IssueCredentialRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
@@ -1067,7 +1071,7 @@ class CredentialServiceImpl(
 
       // Custom for JWT
       issuanceDate = Instant.now()
-      credentialStatus <- allocateNewCredentialInStatusListForWallet(record, statusListRegistryUrl, jwtIssuer)
+      credentialStatus <- allocateNewCredentialInStatusListForWallet(record, statusListRegistryServiceName, jwtIssuer)
       // TODO: get schema when schema registry is available if schema ID is provided
       w3Credential = W3cCredentialPayload(
         `@context` = Set(
@@ -1196,31 +1200,38 @@ class CredentialServiceImpl(
 
   private def allocateNewCredentialInStatusListForWallet(
       record: IssueCredentialRecord,
-      statusListRegistryUrl: String,
+      statusListRegistryServiceName: String,
       jwtIssuer: JwtIssuer
   ): URIO[WalletAccessContext, CredentialStatus] = {
     val effect = for {
       lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet
       currentStatusList <- lastStatusList
-        .fold(credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl))(
+        .fold(credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryServiceName))(
           ZIO.succeed(_)
         )
       size = currentStatusList.size
       lastUsedIndex = currentStatusList.lastUsedIndex
       statusListToBeUsed <-
         if lastUsedIndex < size then ZIO.succeed(currentStatusList)
-        else credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl)
+        else credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryServiceName)
       _ <- credentialStatusListRepository.allocateSpaceForCredential(
         issueCredentialRecordId = record.id,
         credentialStatusListId = statusListToBeUsed.id,
         statusListIndex = statusListToBeUsed.lastUsedIndex + 1
       )
+      resourcePath =
+        s"credential-status/${statusListToBeUsed.id}"
+      segment = statusListToBeUsed.lastUsedIndex + 1
     } yield CredentialStatus(
-      id = s"$statusListRegistryUrl/credential-status/${statusListToBeUsed.id}#${statusListToBeUsed.lastUsedIndex + 1}",
+      id = Url
+        .parse(s"${jwtIssuer.did}?resourceService=$statusListRegistryServiceName&resourcePath=$resourcePath#$segment")
+        .toString,
       `type` = "StatusList2021Entry",
       statusPurpose = StatusPurpose.Revocation,
       statusListIndex = lastUsedIndex + 1,
-      statusListCredential = s"$statusListRegistryUrl/credential-status/${statusListToBeUsed.id}"
+      statusListCredential = Url
+        .parse(s"${jwtIssuer.did}?resourceService=$statusListRegistryServiceName&resourcePath=$resourcePath")
+        .toString
     )
     issueCredentialSem.withPermit(effect)
   }
@@ -1358,12 +1369,6 @@ class CredentialServiceImpl(
               ZIO.fail(CredentialRequestValidationFailed("domain/challenge proof validation failed"))
 
       clock = java.time.Clock.system(ZoneId.systemDefault)
-
-      genericUriResolver = GenericUriResolver(
-        Map(
-          "data" -> DataUrlResolver(),
-        )
-      )
       verificationResult <- JwtPresentation
         .verify(
           jwt,
@@ -1373,7 +1378,7 @@ class CredentialServiceImpl(
             verifyDates = false,
             leeway = Duration.Zero
           )
-        )(didResolver, genericUriResolver)(clock)
+        )(didResolver, uriResolver)(clock)
         .mapError(errors => CredentialRequestValidationFailed(errors*))
 
       result <- verificationResult match

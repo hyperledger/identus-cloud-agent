@@ -12,6 +12,7 @@ import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceE
   UnsupportedCredentialFormat
 }
 import org.hyperledger.identus.shared.db.Errors.UnexpectedAffectedRow
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.{Failure, StatusCode, WalletAccessContext}
 import zio.*
 
@@ -81,7 +82,7 @@ trait OID4VCIIssuerMetadataService {
   ): ZIO[WalletAccessContext, CredentialConfigurationNotFound, Unit]
 }
 
-class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataRepository, uriDereferencer: URIDereferencer)
+class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataRepository, uriResolver: UriResolver)
     extends OID4VCIIssuerMetadataService {
 
   override def createCredentialIssuer(issuer: CredentialIssuer): URIO[WalletAccessContext, CredentialIssuer] =
@@ -135,7 +136,7 @@ class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataReposito
       }
       schemaUri <- ZIO.attempt(new URI(schemaId)).mapError(t => InvalidSchemaId(schemaId, t.getMessage))
       _ <- CredentialSchema
-        .validSchemaValidator(schemaUri.toString(), uriDereferencer)
+        .validSchemaValidator(schemaUri.toString(), uriResolver)
         .catchAll {
           case e: InvalidURI                   => ZIO.fail(InvalidSchemaId(schemaId, e.userFacingMessage))
           case e: CredentialSchemaParsingError => ZIO.fail(InvalidSchemaId(schemaId, e.cause))
@@ -179,7 +180,7 @@ class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataReposito
 }
 
 object OID4VCIIssuerMetadataServiceImpl {
-  def layer: URLayer[OID4VCIIssuerMetadataRepository & URIDereferencer, OID4VCIIssuerMetadataService] = {
+  def layer: URLayer[OID4VCIIssuerMetadataRepository & UriResolver, OID4VCIIssuerMetadataService] = {
     ZLayer.fromFunction(OID4VCIIssuerMetadataServiceImpl(_, _))
   }
 }
