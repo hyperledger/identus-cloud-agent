@@ -6,14 +6,14 @@ import jwt
 import requests
 from cryptography.hazmat.primitives.asymmetric import ec
 
-MOCKSERVER_URL = "http://localhost:7777"
+MOCKSERVER_URL = "http://mockserver:1080"
 LOGIN_REDIRECT_URL = "http://localhost:7777/cb"
 
-AGENT_URL = "http://localhost:8080/prism-agent"
+AGENT_URL = "http://caddy-issuer:8080/agent"
 CREDENTIAL_ISSUER = None
 CREDENTIAL_ISSUER_DID = None
 CREDENTIAL_CONFIGURATION_ID = "UniversityDegreeCredential"
-AUTHORIZATION_SERVER = "http://localhost:9980/realms/students"
+AUTHORIZATION_SERVER = "http://external-keycloak-issuer:8080/realms/students"
 
 ALICE_CLIENT_ID = "alice-wallet"
 
@@ -24,10 +24,11 @@ HOLDER_ASSERTION_PRIVATE_KEY_HEX = (
 
 
 def prepare_mock_server():
-    # reset mock server
-    requests.put(f"{MOCKSERVER_URL}/mockserver/reset")
+    """
+    Prepare mock server for authorization redirect from front-end channel
+    """
 
-    # mock wallet authorization callback endpoint
+    requests.put(f"{MOCKSERVER_URL}/mockserver/reset")
     requests.put(
         f"{MOCKSERVER_URL}/mockserver/expectation",
         json={
@@ -41,7 +42,16 @@ def prepare_mock_server():
 
 
 def prepare_issuer():
-    # prepare issuging DID
+    """
+    Prepare an oid4vci issuer
+    1. Create issuing DID
+    2. Publish issuing DID
+    3. Create credential schema
+    4. Create oid4vci issuer
+    5. Create oid4vci credential configuration from schema
+    """
+
+    # 1. Create issuing DID
     dids = requests.get(f"{AGENT_URL}/did-registrar/dids").json()["contents"]
     if len(dids) == 0:
         requests.post(
@@ -55,6 +65,7 @@ def prepare_issuer():
         )
         dids = requests.get(f"{AGENT_URL}/did-registrar/dids").json()["contents"]
 
+    # 2. Publish issuing DID
     issuer_did = dids[0]
     while issuer_did["status"] != "PUBLISHED":
         time.sleep(2)
@@ -72,7 +83,7 @@ def prepare_issuer():
     global CREDENTIAL_ISSUER_DID
     CREDENTIAL_ISSUER_DID = canonical_did
 
-    # prepare schema
+    # 3. Create credential schema
     schema = requests.post(
         f"{AGENT_URL}/schema-registry/schemas",
         json={
@@ -97,7 +108,7 @@ def prepare_issuer():
     ).json()
     schema_guid = schema["guid"]
 
-    # prepare issuer
+    # 4. Create oid4vci issuer
     credential_issuer = requests.post(
         f"{AGENT_URL}/oid4vci/issuers",
         json={
@@ -112,14 +123,13 @@ def prepare_issuer():
     global CREDENTIAL_ISSUER
     CREDENTIAL_ISSUER = f"{AGENT_URL}/oid4vci/issuers/{issuer_id}"
 
-    # prepare credential configuration
+    # 5. Create oid4vci credential configuration from schema
     cred_config = requests.post(
         f"{CREDENTIAL_ISSUER}/credential-configurations",
         json={
             "configurationId": CREDENTIAL_CONFIGURATION_ID,
             "format": "jwt_vc_json",
-            # TODO: align docker host URL
-            "schemaId": f"http://localhost:8085/schema-registry/schemas/{schema_guid}/schema",
+            "schemaId": f"{AGENT_URL}/schema-registry/schemas/{schema_guid}/schema",
         },
     ).json()
 
@@ -137,19 +147,8 @@ def issuer_create_credential_offer(claims):
 
 
 def holder_get_issuer_metadata(credential_issuer: str):
-    # FIXME: override this just to make url reachable from host
-    def override_host(url):
-        return url.replace("http://caddy-issuer:8080/prism-agent", AGENT_URL)
-
-    metadata_url = override_host(
-        f"{credential_issuer}/.well-known/openid-credential-issuer"
-    )
+    metadata_url = f"{credential_issuer}/.well-known/openid-credential-issuer"
     response = requests.get(metadata_url).json()
-    response["credential_endpoint"] = override_host(response["credential_endpoint"])
-    response["credential_issuer"] = override_host(response["credential_issuer"])
-    response["authorization_servers"] = [
-        AUTHORIZATION_SERVER for s in response["authorization_servers"]
-    ]
     return response
 
 
@@ -157,7 +156,6 @@ def holder_get_issuer_as_metadata(authorization_server: str):
     metadata_url = f"{authorization_server}/.well-known/openid-configuration"
     response = requests.get(metadata_url)
     metadata = response.json()
-    print(f"Metadata: {metadata}")
     return metadata
 
 
@@ -293,6 +291,7 @@ if __name__ == "__main__":
     issuer_as_token_endpoint = issuer_as_metadata["token_endpoint"]
     issuer_as_authorization_endpoint = issuer_as_metadata["authorization_endpoint"]
     print("\n::::: Issuer Authorization Server Metadata :::::")
+    print(json.dumps(issuer_as_metadata, indent=2))
     print(f"issuer_as_auth_endpoint: {issuer_as_authorization_endpoint}")
     print(f"issuer_as_token_endpoint: {issuer_as_token_endpoint}")
     input("\nEnter to continue ...")
