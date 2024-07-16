@@ -15,8 +15,7 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.repository.CredentialRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
-import org.hyperledger.identus.shared.models.KeyId
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import zio.*
 import zio.interop.catz.*
 import zio.json.*
@@ -56,6 +55,10 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
   given keyIdGet: Get[KeyId] = Get[String].map(KeyId(_))
   given keyIdPut: Put[KeyId] = Put[String].contramap(_.value)
+
+  given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
+  given failurePut: Put[Failure] = Put[String].contramap(_.asFailureInfo.toJson)
+
   override def create(record: IssueCredentialRecord): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
@@ -547,7 +550,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
   def updateAfterFail(
       recordId: DidCommID,
-      failReason: Option[String]
+      failReason: Option[Failure]
   ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records

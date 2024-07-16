@@ -6,10 +6,15 @@ import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError
 import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
+import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.{
+  InvalidStateForOperation,
+  RecordIdNotFound
+}
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.*
+import org.hyperledger.identus.mercury.model.error.SendMessageError
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
@@ -182,11 +187,11 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
             s"Connect - Error processing record: ${record.id}",
             Cause.fail(walletNotFound)
           )
-        case ((walletAccessContext, e)) =>
+        case ((walletAccessContext, errorResponse)) =>
           for {
             connectService <- ZIO.service[ConnectionService]
             _ <- connectService
-              .reportProcessingFailure(record.id, Some(e.toString))
+              .reportProcessingFailure(record.id, Some(errorResponse))
               .provideSomeLayer(ZLayer.succeed(walletAccessContext))
           } yield ()
       })

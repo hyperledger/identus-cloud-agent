@@ -8,7 +8,7 @@ import org.hyperledger.identus.agent.walletapi.model.{
   UpdateManagedDIDAction,
   WalletSeed
 }
-import org.hyperledger.identus.agent.walletapi.model.error.{UpdateManagedDIDError, *}
+import org.hyperledger.identus.agent.walletapi.model.error.*
 import org.hyperledger.identus.agent.walletapi.model.error.given
 import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.agent.walletapi.util.OperationFactory
@@ -40,7 +40,7 @@ private[walletapi] class DIDUpdateHandler(
     val did = state.createOperation.did
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      seed <- walletSecretStorage.getWalletSeed
+      seed <- walletSecretStorage.findWalletSeed
         .someOrElseZIO(ZIO.dieMessage(s"Wallet seed for wallet $walletId does not exist"))
       keyCounter <- nonSecretStorage
         .getHdKeyCounter(did)

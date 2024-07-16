@@ -27,6 +27,7 @@ jobs:
       # New JDK version makes 'localhost' lookup on linux return ipv6.
       # Our test containers are on ipv4. We need to make 'localhost' resolve to ipv4.
       JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
+      SBT_OPTS: -Xmx2G
     runs-on: ubuntu-latest
     permissions:
       contents: write

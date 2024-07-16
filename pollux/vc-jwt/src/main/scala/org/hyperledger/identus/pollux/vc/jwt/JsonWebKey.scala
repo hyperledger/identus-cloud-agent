@@ -2,7 +2,6 @@ package org.hyperledger.identus.pollux.vc.jwt
 
 import io.circe.*
 import io.circe.generic.semiauto.*
-import io.circe.syntax.*
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class JsonWebKey(

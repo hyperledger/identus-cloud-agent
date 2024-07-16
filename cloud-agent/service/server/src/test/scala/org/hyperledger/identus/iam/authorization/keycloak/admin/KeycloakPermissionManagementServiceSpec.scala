@@ -1,16 +1,12 @@
 package org.hyperledger.identus.iam.authorization.keycloak.admin
 
 import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.service.{
-  WalletManagementService,
-  WalletManagementServiceError,
-  WalletManagementServiceImpl
-}
+import org.hyperledger.identus.agent.walletapi.service.{WalletManagementService, WalletManagementServiceImpl}
 import org.hyperledger.identus.agent.walletapi.sql.{JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
 import org.hyperledger.identus.iam.authentication.oidc.*
 import org.hyperledger.identus.iam.authentication.AuthenticationError.ResourceNotPermitted
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.{UnexpectedError, WalletNotFoundById}
+import org.hyperledger.identus.iam.authorization.core.PermissionManagementService
+import org.hyperledger.identus.iam.authorization.core.PermissionManagementServiceError.WalletNotFoundById
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.{
@@ -76,7 +72,7 @@ object KeycloakPermissionManagementServiceSpec
         user <- createUser(username = username, password = password)
         entity = KeycloakEntity(id = UUID.fromString(user.getId))
 
-        permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
+        permissionService <- ZIO.service[PermissionManagementService[KeycloakEntity]]
         _ <- permissionService.grantWalletToUser(wallet.id, entity)
 
         token <- client.getAccessToken(username, password).map(_.access_token)
@@ -99,7 +95,7 @@ object KeycloakPermissionManagementServiceSpec
         user <- createUser(username = username, password = password)
         entity = KeycloakEntity(id = UUID.fromString(user.getId))
 
-        permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
+        permissionService <- ZIO.service[PermissionManagementService[KeycloakEntity]]
         _ <- permissionService.grantWalletToUser(wallet.id, entity)
 
         token <- client.getAccessToken(username, password).map(_.access_token)
@@ -120,7 +116,7 @@ object KeycloakPermissionManagementServiceSpec
   private val failureCasesSuite = suite("Failure Cases Suite")(
     test("grant wallet access to the user with invalid wallet id") {
       for {
-        permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
+        permissionService <- ZIO.service[PermissionManagementService[KeycloakEntity]]
         entity = KeycloakEntity(id = UUID.randomUUID())
         exit <- permissionService.grantWalletToUser(WalletId.random, entity).exit
       } yield assert(exit)(fails(isSubtype[WalletNotFoundById](anything)))
@@ -132,9 +128,9 @@ object KeycloakPermissionManagementServiceSpec
         walletService <- ZIO.service[WalletManagementService]
         wallet <- walletService.createWallet(Wallet("test_1"))
         entity = KeycloakEntity(id = UUID.randomUUID())
-        permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
+        permissionService <- ZIO.service[PermissionManagementService[KeycloakEntity]]
         exit <- permissionService.grantWalletToUser(wallet.id, entity).exit
-      } yield assert(exit)(fails(isSubtype[UnexpectedError](anything)))
+      } yield assert(exit)(dies(hasMessage(equalTo(s"Error creating policy for resource [${wallet.id}]"))))
     }
   ).provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
 
@@ -156,7 +152,7 @@ object KeycloakPermissionManagementServiceSpec
         user <- createUser(username = username, password = password)
         entity = KeycloakEntity(id = UUID.fromString(user.getId))
 
-        permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
+        permissionService <- ZIO.service[PermissionManagementService[KeycloakEntity]]
         _ <- permissionService
           .grantWalletToUser(wallet.id, entity)
           .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.SelfService(Seq(walletId))))
@@ -183,7 +179,7 @@ object KeycloakPermissionManagementServiceSpec
         user <- createUser(username = username, password = password)
         entity = KeycloakEntity(id = UUID.fromString(user.getId))
 
-        permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
+        permissionService <- ZIO.service[PermissionManagementService[KeycloakEntity]]
         _ <- permissionService
           .grantWalletToUser(wallet.id, entity)
           .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
@@ -220,7 +216,7 @@ object KeycloakPermissionManagementServiceSpec
         user <- createUser(username = username, password = password)
         entity = KeycloakEntity(id = UUID.fromString(user.getId))
 
-        permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
+        permissionService <- ZIO.service[PermissionManagementService[KeycloakEntity]]
         exit <- permissionService
           .grantWalletToUser(WalletId.random, entity)
           .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.SelfService(Seq(walletId))))
@@ -243,7 +239,7 @@ object KeycloakPermissionManagementServiceSpec
         user <- createUser(username = username, password = password)
         entity = KeycloakEntity(id = UUID.fromString(user.getId))
 
-        permissionService <- ZIO.service[PermissionManagement.Service[KeycloakEntity]]
+        permissionService <- ZIO.service[PermissionManagementService[KeycloakEntity]]
         _ <- permissionService
           .grantWalletToUser(wallet.id, entity)
           .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))

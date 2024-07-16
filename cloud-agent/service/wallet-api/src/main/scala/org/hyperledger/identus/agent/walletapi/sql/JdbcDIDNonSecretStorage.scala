@@ -429,7 +429,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
            |  wallet_id
            | FROM public.prism_did_wallet_state
            | WHERE
-           |  did = ${prismDid.toString}
+           |  did = ${prismDid}
             """.stripMargin
       .query[WalletId]
       .option

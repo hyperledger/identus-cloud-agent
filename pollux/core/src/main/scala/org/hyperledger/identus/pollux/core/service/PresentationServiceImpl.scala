@@ -18,7 +18,7 @@ import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, Pre
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.pollux.sdjwt.{CredentialCompact, HolderPrivateKey, PresentationCompact, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
 import zio.json.*
@@ -1100,7 +1100,7 @@ private class PresentationServiceImpl(
 
   def reportProcessingFailure(
       recordId: DidCommID,
-      failReason: Option[String]
+      failReason: Option[Failure]
   ): ZIO[WalletAccessContext, PresentationError, Unit] =
     for {
       _ <- getRecord(recordId)

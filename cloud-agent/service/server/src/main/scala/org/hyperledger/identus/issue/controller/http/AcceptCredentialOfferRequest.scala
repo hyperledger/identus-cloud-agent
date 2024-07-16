@@ -2,7 +2,6 @@ package org.hyperledger.identus.issue.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.issue.controller.http.AcceptCredentialOfferRequest.annotations
-import org.hyperledger.identus.shared.models.KeyId
 import sttp.tapir.{Schema, Validator}
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}

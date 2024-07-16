@@ -7,8 +7,7 @@ import com.apicatalog.rdf.Rdf
 import io.setl.rdf.normalization.RdfNormalize
 import org.erdtman.jcs.JsonCanonicalizer
 
-import java.io.{ByteArrayInputStream, StringWriter}
-import java.io.IOException
+import java.io.{ByteArrayInputStream, IOException, StringWriter}
 import java.nio.charset.StandardCharsets
 import scala.util.Try
 
