@@ -30,6 +30,17 @@ class PresentationRepositoryInMemory(
         }(ZIO.succeed)
     } yield walletRef
 
+  private def anyWalletStoreRefBy(
+      recordId: DidCommID
+  ): ZIO[Any, Nothing, Option[Ref[Map[DidCommID, PresentationRecord]]]] = {
+    for {
+      refs <- walletRefs.get
+      // walletsNoRef <- ZIO.foreach(refs)({ case (wID, ref) => ref.get.map(r => (wID, r)) })
+      tmp <- ZIO.foreach(refs)({ case (wID, ref) => ref.get.map(r => (ref, r)) })
+      walletRef = tmp.find(e => e._2.keySet.contains(recordId)).map(_._1)
+    } yield walletRef
+  }
+
   override def createPresentationRecord(record: PresentationRecord): URIO[WalletAccessContext, Unit] = {
     val result =
       for {
@@ -324,35 +335,40 @@ class PresentationRepositoryInMemory(
     result.ensureOneAffectedRowOrDie
   }
 
+  // def updateAfterFailX(
+  //     recordId: DidCommID,
+  //     failReason: Option[Failure]
+  // ): URIO[WalletAccessContext, Unit] = {
   override def updateAfterFail(
       recordId: DidCommID,
       failReason: Option[Failure]
-  ): URIO[WalletAccessContext, Unit] = {
-    val result =
-      for {
-        storeRef <- walletStoreRef
-        maybeRecord <- findPresentationRecord(recordId)
-        count <- maybeRecord
-          .map(record =>
-            for {
-              _ <- storeRef.update(r =>
-                r.updated(
-                  recordId,
-                  record.copy(
-                    metaRetries = math.max(0, record.metaRetries - 1),
-                    metaNextRetry =
-                      if (record.metaRetries - 1 <= 0) None
-                      else Some(Instant.now().plusSeconds(60)), // TODO exponention time
-                    metaLastFailure = failReason
+  ): UIO[Unit] =
+    anyWalletStoreRefBy(recordId).flatMap { mStoreRef =>
+      mStoreRef match
+        case None => ZIO.succeed(0)
+        case Some(storeRef) =>
+          for {
+            maybeRecord <- storeRef.get.map(store => store.get(recordId))
+            count <- maybeRecord
+              .map(record =>
+                for {
+                  _ <- storeRef.update(r =>
+                    r.updated(
+                      recordId,
+                      record.copy(
+                        metaRetries = math.max(0, record.metaRetries - 1),
+                        metaNextRetry =
+                          if (record.metaRetries - 1 <= 0) None
+                          else Some(Instant.now().plusSeconds(60)), // TODO exponention time
+                        metaLastFailure = failReason
+                      )
+                    )
                   )
-                )
+                } yield 1
               )
-            } yield 1
-          )
-          .getOrElse(ZIO.succeed(0))
-      } yield count
-    result.ensureOneAffectedRowOrDie
-  }
+              .getOrElse(ZIO.succeed(0))
+          } yield count
+    }.ensureOneAffectedRowOrDie
 }
 
 object PresentationRepositoryInMemory {
