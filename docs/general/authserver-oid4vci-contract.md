@@ -10,6 +10,34 @@ However, the authorization server is not limited to only Keycloak.
 
 ## Contract for Authorization Code issuance flow
 
+The sequence diagram is largely based on [OID4VCI spec](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-authorization-code-flow)
+with slight modification on the __TokenEndpoint__.
+
+```mermaid
+sequenceDiagram
+  participant Holder
+  participant Issuer
+  participant AuthServer
+  participant CloudAgent
+
+  Issuer ->>+ CloudAgent: Create CredentialOffer
+  CloudAgent ->>- Issuer: CredentialOffer<br>(issuer_state)
+  Issuer -->> Holder: Present offer<br>(issuer_state)
+  Holder ->>+ CloudAgent: Discover Metadata
+  CloudAgent ->>- Holder: IssuerMetadata
+  Holder ->>+ AuthServer: Discover Metadata
+  AuthServer ->>- Holder: AuthServerMetadata
+  Holder ->>+ AuthServer: AuthorizationRequest<br>(issuer_state)
+  AuthServer ->>- Holder: AuthorizationResponse<br>(code)
+  Holder ->>+ AuthServer: TokenRequest<br>(code)
+  AuthServer ->>+ CloudAgent: NonceRequest<br>(issuer_state)
+  CloudAgent ->>- AuthServer: NonceResponse<br>(c_nonce)
+  AuthServer ->>- Holder: TokenResponse<br>(c_nonce)
+  Holder ->>+ CloudAgent: CredentialRequest<br>(proof)
+  CloudAgent ->>- Holder: CredentialResponse
+```
+
+
 ### Authorization Endpoint
 
 1. Authorization `scope` MUST be configured in the Authorization Server to the samse value as in Credential Issuer Metadata
