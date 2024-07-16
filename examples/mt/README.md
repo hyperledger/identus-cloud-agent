@@ -1,5 +1,5 @@
 ## Configuration
 
-| Exposed Service        | Description              |
-|------------------------|--------------------------|
-| `localhost:8080/agent` | Multi-tenant Cloud Agent |
+| Exposed Service              | Description              |
+|------------------------------|--------------------------|
+| `localhost:8080/cloud-agent` | Multi-tenant Cloud Agent |

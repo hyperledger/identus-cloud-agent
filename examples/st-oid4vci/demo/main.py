@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 MOCKSERVER_URL = "http://mockserver:1080"
 LOGIN_REDIRECT_URL = "http://localhost:7777/cb"
 
-AGENT_URL = "http://caddy-issuer:8080/agent"
+AGENT_URL = "http://caddy-issuer:8080/cloud-agent"
 CREDENTIAL_ISSUER = None
 CREDENTIAL_ISSUER_DID = None
 CREDENTIAL_CONFIGURATION_ID = "UniversityDegreeCredential"
