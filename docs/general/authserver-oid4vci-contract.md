@@ -45,7 +45,7 @@ sequenceDiagram
 
 ### Token Endpoint
 
-1. When the holder makes a __TokenRequest__ to the __TokenEndpoint__, the __AuthorizationServer__ MUST recall the `issuer_state` parameter and make an HTTP call to the `/oid4vci/nonces` endpoint on Cloud Agent using the following format.
+1. When the holder makes a __TokenRequest__ to the __TokenEndpoint__, the __AuthorizationServer__ MUST recall the `issuer_state` parameter and make an HTTP call to the `/oid4vci/nonces` endpoint in the Cloud Agent using the following format.
 
 __NonceRequest__
 
