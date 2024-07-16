@@ -11,7 +11,7 @@ However, the authorization server is not limited to only Keycloak.
 ## Contract for Authorization Code issuance flow
 
 The sequence diagram is largely based on [OID4VCI spec](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-authorization-code-flow)
-with slight modification on the __TokenEndpoint__.
+with slight modification to the __TokenEndpoint__.
 
 ```mermaid
 sequenceDiagram
@@ -41,7 +41,7 @@ sequenceDiagram
 ### Authorization Endpoint
 
 1. Authorization `scope` MUST be configured in the Authorization Server to the same value as in Credential Issuer Metadata
-2. The endpoint MUST accept the parameter `issuer_state` in the [__AuthorizationRequest__](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-5.1.3-2.3) and recall this value in the subsequent call to __TokenEndpoint__
+2. The endpoint MUST accept the parameter `issuer_state` in the [__AuthorizationRequest__](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-5.1.3-2.3) and recall this value in the subsequent call on the __TokenEndpoint__
 
 ### Token Endpoint
 
