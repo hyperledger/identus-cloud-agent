@@ -20,8 +20,9 @@ const sidebars = {
       },
       items: [
         'credentials/issue',
+        'credentials/oid4vci',
         'credentials/present-proof',
-        'credentials/revocation',
+        'credentials/revocation'
       ]
     },
     {
@@ -96,7 +97,7 @@ const sidebars = {
         'multitenancy/tenant-onboarding-ext-iam',
         'multitenancy/tenant-onboarding-self-service',
         'multitenancy/tenant-migration',
-        'multitenancy/admin-authz-ext-iam',
+        'multitenancy/admin-authz-ext-iam'
       ]
     }
   ]
