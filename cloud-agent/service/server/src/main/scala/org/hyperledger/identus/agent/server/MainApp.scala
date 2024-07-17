@@ -36,7 +36,6 @@ import org.hyperledger.identus.issue.controller.IssueControllerImpl
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.messaging.kafka.{ZKafkaMessagingServiceImpl, ZKafkaProducerImpl}
 import org.hyperledger.identus.messaging.kafka.InMemoryMessagingService
-import org.hyperledger.identus.messaging.ByteArrayWrapper
 import org.hyperledger.identus.oid4vci.controller.CredentialIssuerControllerImpl
 import org.hyperledger.identus.oid4vci.service.OIDCCredentialIssuerServiceImpl
 import org.hyperledger.identus.oid4vci.storage.InMemoryIssuanceSessionService
@@ -143,6 +142,27 @@ object MainApp extends ZIOAppDefault {
 
       _ <- preMigrations
       _ <- migrations
+      appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
+      kafkaMessagingServiceLayer <-
+        if (appConfig.agent.kafka.enabled) {
+          ZIO.succeed(
+            ZKafkaMessagingServiceImpl.layer(List("kafka:9092"))
+          )
+        } else {
+          ZIO.succeed(
+            InMemoryMessagingService.messagingServiceLayer
+          )
+        }
+      kafkaProducerLayer <-
+        if (appConfig.agent.kafka.enabled) {
+          ZIO.succeed(
+            ZKafkaProducerImpl.layer[UUID, WalletIdAndRecordId]
+          )
+        } else {
+          ZIO.succeed(
+            InMemoryMessagingService.producerLayer[UUID, WalletIdAndRecordId]
+          )
+        }
 
       app <- CloudAgentApp.run
         .provide(
@@ -224,12 +244,8 @@ object MainApp extends ZIOAppDefault {
           // HTTP client
           SystemModule.zioHttpClientLayer,
           Scope.default,
-//          ZKafkaMessagingServiceImpl.layer(List("kafka:9092")),
-//          ZKafkaProducerImpl.layer[UUID, WalletIdAndRecordId],
-//          ZKafkaProducerImpl.layer[ByteArrayWrapper, ByteArrayWrapper]
-          InMemoryMessagingService.messagingServiceLayer,
-          InMemoryMessagingService.producerLayer[UUID, WalletIdAndRecordId],
-          InMemoryMessagingService.producerLayer[ByteArrayWrapper, ByteArrayWrapper]
+          kafkaMessagingServiceLayer,
+          kafkaProducerLayer
         )
     } yield app
 

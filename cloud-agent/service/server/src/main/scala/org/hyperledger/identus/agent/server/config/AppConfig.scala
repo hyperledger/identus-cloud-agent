@@ -162,6 +162,8 @@ final case class DefaultWalletConfig(
     authApiKey: String
 )
 
+final case class DefaultKafkaConfig(enabled: Boolean)
+
 final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
     didCommEndpoint: DidCommEndpointConfig,
@@ -171,7 +173,8 @@ final case class AgentConfig(
     verification: VerificationConfig,
     secretStorage: SecretStorageConfig,
     webhookPublisher: WebhookPublisherConfig,
-    defaultWallet: DefaultWalletConfig
+    defaultWallet: DefaultWalletConfig,
+    kafka: DefaultKafkaConfig
 ) {
   def validate: Either[String, Unit] =
     for {
