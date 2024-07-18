@@ -1,7 +1,6 @@
-package org.hyperledger.identus.pollux.core.service.uriResolvers
+package org.hyperledger.identus.shared.http
 
 import io.lemonlabs.uri.DataUrl
-import org.hyperledger.identus.shared.http.{GenericUriResolverError, InvalidUri, UriResolver}
 import zio.*
 
 class DataUrlResolver extends UriResolver {
