@@ -1,9 +1,9 @@
 package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.service.uriResolvers.*
-import org.hyperledger.identus.shared.http.DataUrlResolver
 import org.hyperledger.identus.pollux.vc.jwt.DidResolver
 import org.hyperledger.identus.shared.http.{GenericUriResolver, GenericUriResolverError, UriResolver}
+import org.hyperledger.identus.shared.http.DataUrlResolver
 import zio.*
 import zio.http.*
 

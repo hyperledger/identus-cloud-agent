@@ -23,7 +23,7 @@ class DidUrlResolver(httpUrlResolver: HttpUrlResolver, didResolver: DidResolver)
         .mapError(_ => MissingRequiredParams(uri))
       (resourceService, resourcePath) = serviceAndPath
       didStr = parsed.removeQueryString().toString
-      didCoument <- didResolver.resolve(didStr).flatMap {
+      didDocument <- didResolver.resolve(didStr).flatMap {
         case DIDResolutionFailed(err) =>
           err match
             case InvalidDid(message)                 => ZIO.fail(DidResolutionError(didStr, message))
@@ -36,7 +36,9 @@ class DidUrlResolver(httpUrlResolver: HttpUrlResolver, didResolver: DidResolver)
         case DIDResolutionSucceeded(didDocument, didDocumentMetadata) => ZIO.succeed(didDocument)
       }
       service <- ZIO
-        .fromOption(didCoument.service.find(x => x.id == s"$didStr#$resourceService" && x.`type` == "LinkedResourceV1"))
+        .fromOption(
+          didDocument.service.find(x => x.id == s"$didStr#$resourceService" && x.`type` == "LinkedResourceV1")
+        )
         .mapError(_ =>
           DidDocumentParsingError(
             s"""Service with id: "$resourceService" and type: "LinkedResourceV1" not found inside DID document"""
