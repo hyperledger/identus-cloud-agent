@@ -159,7 +159,7 @@ in
                     agentDb = makeSharedDbConfig "agent",
                     node = { host = "node" },
                     didcommServiceUrl = "http://%{hosts.caddy}:%{std.to_string args.port}/didcomm",
-                    restServiceUrl = "http://%{hosts.caddy}:%{std.to_string args.port}/agent",
+                    restServiceUrl = "http://%{hosts.caddy}:%{std.to_string args.port}/cloud-agent",
                     apikeyEnabled = args.apikeyEnabled,
                   }
                   & (
