@@ -14,15 +14,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Git checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - name: Update PRs
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.IDENTUS_CI }}
+          debug: true
           script: |
             let pr = {
               number: ${{ github.event.pull_request.number }},
@@ -60,15 +56,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Git checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - name: Update PRs
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.IDENTUS_CI }}
+          debug: true
           script: |
             const { data: pullRequests } = await github.rest.pulls.list({
                 base: 'main-2',
