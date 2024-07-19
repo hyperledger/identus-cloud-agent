@@ -2,11 +2,11 @@ name: Auto Merge Main into Feature Branch
 on:
   push:
     branches:
-      - main
+      - main-2
   pull_request:
     types: [opened, synchronize, reopened, labeled, ready_for_review]
     branches:
-      - main
+      - main-2
 
 jobs:
   on-pull-request:
@@ -59,7 +59,7 @@ jobs:
         with:
           script: |
             const { data: pullRequests } = await github.rest.pulls.list({
-                base: 'main',
+                base: 'main-2',
                 sort: 'updated',
                 state: 'open',
                 ...context.repo
