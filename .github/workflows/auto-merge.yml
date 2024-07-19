@@ -17,7 +17,7 @@ jobs:
       - name: Update PRs
         uses: actions/github-script@v7
         with:
-          github-token: not-a-valid-token
+          github-token: ${{ secrets.TMP_TEST_TOKEN }}
           debug: true
           script: |
             let pr = {
@@ -59,7 +59,7 @@ jobs:
       - name: Update PRs
         uses: actions/github-script@v7
         with:
-          github-token: not-a-valid-token
+          github-token: ${{ secrets.TMP_TEST_TOKEN }}
           debug: true
           script: |
             const { data: pullRequests } = await github.rest.pulls.list({
