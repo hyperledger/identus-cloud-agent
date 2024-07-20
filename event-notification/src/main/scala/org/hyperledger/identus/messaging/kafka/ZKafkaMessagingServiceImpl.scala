@@ -2,6 +2,7 @@ package org.hyperledger.identus.messaging.kafka
 
 import org.apache.kafka.common.header.Headers
 import org.hyperledger.identus.messaging.*
+import org.hyperledger.identus.shared.models.Serde
 import zio.{durationInt, EnvironmentTag, RIO, RLayer, Task, ULayer, URIO, ZIO, ZLayer}
 import zio.kafka.consumer.{
   Consumer as ZKConsumer,

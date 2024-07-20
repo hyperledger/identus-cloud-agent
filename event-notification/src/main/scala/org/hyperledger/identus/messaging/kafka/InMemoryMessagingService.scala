@@ -1,6 +1,7 @@
 package org.hyperledger.identus.messaging.kafka
 
 import org.hyperledger.identus.messaging._
+import org.hyperledger.identus.shared.models.Serde
 import zio._
 import zio.concurrent.ConcurrentMap
 import zio.stream._

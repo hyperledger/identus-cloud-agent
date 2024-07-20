@@ -4,6 +4,7 @@ import org.apache.kafka.clients.consumer.{ConsumerConfig, KafkaConsumer}
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import org.apache.kafka.common.serialization.{Deserializer, Serializer}
 import org.hyperledger.identus.messaging.*
+import org.hyperledger.identus.shared.models.Serde
 import zio.{durationInt, RIO, Task, ULayer, URIO, ZIO, ZLayer}
 import zio.stream.ZStream
 

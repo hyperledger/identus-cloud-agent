@@ -3,19 +3,50 @@ package org.hyperledger.identus.agent.server.jobs
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.jobs.BackgroundJobError.ErrorResponseReceivedFromPeerAgent
 import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.WalletNotFoundError
+import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
+import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
+import org.hyperledger.identus.messaging.Message
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.service.CredentialService
+import org.hyperledger.identus.resolvers.DIDResolver
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.Failure
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
 import zio.metrics.*
 
+import java.util.UUID
+
 object IssueBackgroundJobs extends BackgroundJobsHelper {
+
+  def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
+    HttpClient & DidOps & DIDResolver & (CredentialService & DIDNonSecretStorage & (ManagedDIDService & AppConfig)),
+    Unit
+  ] =
+    for {
+      _ <- ZIO.logInfo(s"!!! Handling recordId: ${message.value} via Kafka queue")
+      credentialService <- ZIO.service[CredentialService]
+      walletAccessContext = WalletAccessContext(WalletId.fromUUID(message.value.walletId))
+      record <- credentialService
+        .findById(DidCommID(message.value.recordId.toString))
+        .provideSome(ZLayer.succeed(walletAccessContext))
+        .someOrElseZIO(ZIO.dieMessage("Record Not Found"))
+      _ <- performIssueCredentialExchange(record)
+        .tapSomeError { case (walletAccessContext, errorResponse) =>
+          for {
+            credentialService <- ZIO.service[CredentialService]
+            _ <- credentialService
+              .reportProcessingFailure(record.id, Some(errorResponse))
+              .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+          } yield ()
+        }
+        .catchAll { e => ZIO.fail(RuntimeException(s"Attempt failed with: ${e}")) }
+    } yield ()
 
   val issueCredentialDidCommExchanges = {
     for {
@@ -136,7 +167,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
       "issuance_flow_issuer_send_credential_msg_succeed_counter"
     )
 
-    val aux = for {
+    val exchange = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
         // Offer should be sent from Issuer to Holder
@@ -608,32 +639,30 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
             @@ IssuerSendCredentialAll @@ Metric
               .gauge("issuance_flow_issuer_send_cred_flow_ms_gauge")
               .trackDurationWith(_.toMetricsSeconds)
-
-        case _: IssueCredentialRecord => ZIO.unit
+        case r: IssueCredentialRecord =>
+          ZIO.logWarning(s"Invalid candidate record received for processing: $r") *> ZIO.unit
       }
     } yield ()
-
-    aux
-      .tapError(
-        {
-          case walletNotFound: WalletNotFoundError            => ZIO.unit
-          case CredentialServiceError.RecordNotFound(_, _)    => ZIO.unit
-          case CredentialServiceError.UnsupportedDidFormat(_) => ZIO.unit
-          case failure: Failure                               => ??? // FIXME
-          case ((walletAccessContext, failure)) =>
-            for {
-              credentialService <- ZIO.service[CredentialService]
-              _ <- credentialService
-                .reportProcessingFailure(record.id, Some(failure))
-                .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-            } yield ()
-        }
-      )
-      .catchAll(e => ZIO.logErrorCause(s"Issue Credential - Error processing record: ${record.id} ", Cause.fail(e)))
-      .catchAllDefect(d =>
-        ZIO.logErrorCause(s"Issue Credential - Defect processing record: ${record.id}", Cause.fail(d))
-      )
-
+    exchange
+    // .tapError(
+    //   {
+    //     case walletNotFound: WalletNotFoundError            => ZIO.unit
+    //     case CredentialServiceError.RecordNotFound(_, _)    => ZIO.unit
+    //     case CredentialServiceError.UnsupportedDidFormat(_) => ZIO.unit
+    //     case failure: Failure                               => ??? // FIXME
+    //     case ((walletAccessContext, failure)) =>
+    //       for {
+    //         credentialService <- ZIO.service[CredentialService]
+    //         _ <- credentialService
+    //           .reportProcessingFailure(record.id, Some(failure))
+    //           .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+    //       } yield ()
+    //   }
+    // )
+    // .catchAll(e => ZIO.logErrorCause(s"Issue Credential - Error processing record: ${record.id} ", Cause.fail(e)))
+    // .catchAllDefect(d =>
+    //   ZIO.logErrorCause(s"Issue Credential - Defect processing record: ${record.id}", Cause.fail(d))
+    // )
   }
 
 }

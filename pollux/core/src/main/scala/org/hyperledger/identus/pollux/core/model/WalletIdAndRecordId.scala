@@ -1,4 +1,4 @@
-//package org.hyperledger.identus.connect.core.model
+//package org.hyperledger.identus.pollux.core.model
 //
 //import org.hyperledger.identus.messaging.Serde
 //import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
@@ -14,6 +14,8 @@
 //  given ser: Serde[WalletIdAndRecordId] = new Serde[WalletIdAndRecordId] {
 //    override def serialize(t: WalletIdAndRecordId): Array[Byte] = t.toJson.getBytes(StandardCharsets.UTF_8)
 //    override def deserialize(ba: Array[Byte]): WalletIdAndRecordId =
-//      new String(ba, StandardCharsets.UTF_8).fromJson[WalletIdAndRecordId].getOrElse(throw RuntimeException(""))
+//      new String(ba, StandardCharsets.UTF_8)
+//        .fromJson[WalletIdAndRecordId]
+//        .getOrElse(throw RuntimeException("Deserialization Error WalletIdAndRecordId"))
 //  }
 //}

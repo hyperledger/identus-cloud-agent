@@ -9,6 +9,7 @@ import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
+import org.hyperledger.identus.messaging.Producer
 import org.hyperledger.identus.pollux.*
 import org.hyperledger.identus.pollux.anoncreds.*
 import org.hyperledger.identus.pollux.core.model.*
@@ -38,7 +39,8 @@ import scala.language.implicitConversions
 object CredentialServiceImpl {
   val layer: URLayer[
     CredentialRepository & CredentialStatusListRepository & DidResolver & URIDereferencer & GenericSecretStorage &
-      CredentialDefinitionService & LinkSecretService & DIDService & ManagedDIDService,
+      CredentialDefinitionService & LinkSecretService & DIDService & ManagedDIDService &
+      Producer[UUID, WalletIdAndRecordId],
     CredentialService
   ] = {
     ZLayer.fromZIO {
@@ -53,6 +55,7 @@ object CredentialServiceImpl {
         didService <- ZIO.service[DIDService]
         manageDidService <- ZIO.service[ManagedDIDService]
         issueCredentialSem <- Semaphore.make(1)
+        messageProducer <- ZIO.service[Producer[UUID, WalletIdAndRecordId]]
       } yield CredentialServiceImpl(
         credentialRepo,
         credentialStatusListRepo,
@@ -64,7 +67,8 @@ object CredentialServiceImpl {
         didService,
         manageDidService,
         5,
-        issueCredentialSem
+        issueCredentialSem,
+        messageProducer
       )
     }
   }
@@ -84,12 +88,13 @@ class CredentialServiceImpl(
     didService: DIDService,
     managedDIDService: ManagedDIDService,
     maxRetries: Int = 5, // TODO move to config
-    issueCredentialSem: Semaphore
+    issueCredentialSem: Semaphore,
+    messageProducer: Producer[UUID, WalletIdAndRecordId],
 ) extends CredentialService {
 
   import CredentialServiceImpl.*
   import IssueCredentialRecord.*
-
+  private val TOPIC = "issue-credential"
   override def getIssueCredentialRecords(
       ignoreWithZeroRetries: Boolean,
       offset: Option[Int],
@@ -171,6 +176,10 @@ class CredentialServiceImpl(
       count <- credentialRepository
         .create(record) @@ CustomMetricsAspect
         .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
     } yield record
   }
 
@@ -227,6 +236,10 @@ class CredentialServiceImpl(
       count <- credentialRepository
         .create(record) @@ CustomMetricsAspect
         .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
     } yield record
 
   override def createAnonCredsIssueCredentialRecord(
@@ -284,6 +297,10 @@ class CredentialServiceImpl(
       count <- credentialRepository
         .create(record) @@ CustomMetricsAspect
         .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
     } yield record
   }
 
@@ -440,6 +457,10 @@ class CredentialServiceImpl(
             )
         case (format, maybeSubjectId) =>
           ZIO.dieMessage(s"Invalid subjectId input for $format offer acceptance: $maybeSubjectId")
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- credentialRepository.getById(record.id)
     } yield record
   }
@@ -597,6 +618,10 @@ class CredentialServiceImpl(
           s"${record.id}_issuance_flow_holder_req_pending_to_generated",
           "issuance_flow_holder_req_pending_to_generated_ms_gauge"
         ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- credentialRepository.getById(record.id)
     } yield record
   }
@@ -642,6 +667,10 @@ class CredentialServiceImpl(
           s"${record.id}_issuance_flow_holder_req_pending_to_generated",
           "issuance_flow_holder_req_pending_to_generated_ms_gauge"
         ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- credentialRepository.getById(record.id)
     } yield record
   }
@@ -685,6 +714,10 @@ class CredentialServiceImpl(
         ProtocolState.OfferSent
       )
       _ <- credentialRepository.updateWithJWTRequestCredential(record.id, request, ProtocolState.RequestReceived)
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- credentialRepository.getById(record.id)
     } yield record
   }
@@ -703,6 +736,10 @@ class CredentialServiceImpl(
         @@ CustomMetricsAspect.startRecordingTime(
           s"${record.id}_issuance_flow_issuer_credential_pending_to_generated"
         )
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- credentialRepository.getById(record.id)
     } yield record
   }
@@ -839,6 +876,10 @@ class CredentialServiceImpl(
           s"${record.id}_issuance_flow_issuer_credential_pending_to_generated",
           "issuance_flow_issuer_credential_pending_to_generated_ms_gauge"
         ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_issuer_credential_generated_to_sent")
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- credentialRepository.getById(record.id)
     } yield record
   }

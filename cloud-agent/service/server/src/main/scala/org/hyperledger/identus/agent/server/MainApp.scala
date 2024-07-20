@@ -19,7 +19,6 @@ import org.hyperledger.identus.castor.controller.{DIDControllerImpl, DIDRegistra
 import org.hyperledger.identus.castor.core.service.DIDServiceImpl
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.connect.controller.ConnectionControllerImpl
-import org.hyperledger.identus.connect.core.model.WalletIdAndRecordId
 import org.hyperledger.identus.connect.core.service.{ConnectionServiceImpl, ConnectionServiceNotifier}
 import org.hyperledger.identus.connect.sql.repository.{JdbcConnectionRepository, Migrations as ConnectMigrations}
 import org.hyperledger.identus.credentialstatus.controller.CredentialStatusControllerImpl
@@ -58,6 +57,7 @@ import org.hyperledger.identus.pollux.sql.repository.{
 }
 import org.hyperledger.identus.presentproof.controller.PresentProofControllerImpl
 import org.hyperledger.identus.resolvers.DIDResolver
+import org.hyperledger.identus.shared.models.WalletIdAndRecordId
 import org.hyperledger.identus.system.controller.SystemControllerImpl
 import org.hyperledger.identus.verification.controller.VcVerificationControllerImpl
 import zio.*

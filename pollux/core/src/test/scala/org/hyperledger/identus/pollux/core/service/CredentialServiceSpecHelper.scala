@@ -8,6 +8,7 @@ import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
+import org.hyperledger.identus.messaging.kafka.InMemoryMessagingService
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.presentation.{ClaimFormat, Ldp, Options, PresentationDefinition}
 import org.hyperledger.identus.pollux.core.repository.{
@@ -16,6 +17,7 @@ import org.hyperledger.identus.pollux.core.repository.{
   CredentialStatusListRepositoryInMemory
 }
 import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
@@ -39,6 +41,8 @@ trait CredentialServiceSpecHelper {
       credentialDefinitionServiceLayer,
       GenericSecretStorageInMemory.layer,
       LinkSecretServiceImpl.layer,
+      (InMemoryMessagingService.messagingServiceLayer >>>
+        InMemoryMessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
       CredentialServiceImpl.layer
     )
 

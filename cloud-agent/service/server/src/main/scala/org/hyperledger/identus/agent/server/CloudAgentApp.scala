@@ -41,7 +41,7 @@ object CloudAgentApp {
 
   def run = for {
     _ <- AgentInitialization.run
-    _ <- issueCredentialDidCommExchangesJob.debug.fork
+    _ <- issueCredentialExchangesJob
     _ <- presentProofExchangeJob.debug.fork
     _ <- connectDidCommExchangesJob
     _ <- syncDIDPublicationStateFromDltJob.debug.fork
@@ -52,20 +52,6 @@ object CloudAgentApp {
     _ <- fiber.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
   } yield ()
-
-  private val issueCredentialDidCommExchangesJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & CredentialService & DIDNonSecretStorage &
-      DIDService & ManagedDIDService & PresentationService & WalletManagementService,
-    Unit
-  ] =
-    for {
-      config <- ZIO.service[AppConfig]
-      _ <- (IssueBackgroundJobs.issueCredentialDidCommExchanges @@ Metric
-        .gauge("issuance_flow_did_com_exchange_job_ms_gauge")
-        .trackDurationWith(_.toMetricsSeconds))
-        .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
-        .unit
-    } yield ()
 
   private val presentProofExchangeJob: RIO[
     AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService &
@@ -81,6 +67,23 @@ object CloudAgentApp {
         .unit
     } yield ()
 
+  private val issueCredentialExchangesJob = MessagingService.consumeWithRetryStrategy(
+    "identus-cloud-agent",
+    IssueBackgroundJobs.handleMessage,
+    Seq(
+      RetryStep("issue-credential", 5, 0.seconds, "issue-credential-retry-1"),
+      RetryStep("issue-credential-retry-1", 5, 2.seconds, "issue-credential-retry-2"),
+      RetryStep("issue-credential-retry-2", 5, 4.seconds, "issue-credential-retry-3"),
+      RetryStep("issue-credential-retry-3", 5, 8.seconds, "issue-credential-retry-4"),
+      RetryStep("issue-credential-retry-4", 5, 16.seconds, "issue-credential-DLQ")
+    )
+  )
+  // TODO See how metrics can be re-implemented using MessagingService
+  //      _ <- (IssueBackgroundJobs.issueCredentialDidCommExchanges @@ Metric
+  //        .gauge("issuance_flow_did_com_exchange_job_ms_gauge")
+  //        .trackDurationWith(_.toMetricsSeconds))
+  //        .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
+  //        .unit
   private val connectDidCommExchangesJob = MessagingService.consumeWithRetryStrategy(
     "identus-cloud-agent",
     ConnectBackgroundJobs.handleMessage,
