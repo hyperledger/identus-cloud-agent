@@ -18,6 +18,7 @@ import org.hyperledger.identus.shared.models.*
 import zio.{mock, IO, URLayer, ZIO, ZLayer}
 import zio.json.*
 import zio.mock.{Mock, Proxy}
+import zio.UIO
 
 import java.time.Instant
 import java.util.UUID
@@ -262,7 +263,7 @@ object MockPresentationService extends Mock[PresentationService] {
       override def reportProcessingFailure(
           recordId: DidCommID,
           failReason: Option[Failure]
-      ): IO[PresentationError, Unit] = ???
+      ): UIO[Unit] = ???
 
     }
   }

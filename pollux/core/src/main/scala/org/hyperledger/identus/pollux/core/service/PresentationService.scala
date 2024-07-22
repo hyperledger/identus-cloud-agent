@@ -169,6 +169,6 @@ trait PresentationService {
   def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[Failure]
-  ): IO[PresentationError, Unit]
+  ): UIO[Unit]
 
 }
