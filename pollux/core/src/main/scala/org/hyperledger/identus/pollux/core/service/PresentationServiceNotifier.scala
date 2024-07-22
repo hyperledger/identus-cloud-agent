@@ -2,7 +2,12 @@ package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.event.notification.{Event, EventNotificationService}
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, ProofType, ProposePresentation, RequestPresentation}
+import org.hyperledger.identus.mercury.protocol.presentproof.{
+  Presentation,
+  ProofType,
+  ProposePresentation,
+  RequestPresentation
+}
 import org.hyperledger.identus.pollux.anoncreds.AnoncredPresentation
 import org.hyperledger.identus.pollux.core.model.{DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
