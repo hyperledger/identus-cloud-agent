@@ -16,7 +16,7 @@ import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialPro
 import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, PresentationCompact}
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import org.hyperledger.identus.shared.models.*
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{IO, UIO, URLayer, ZIO, ZLayer}
 import zio.json.*
 
 import java.time.Instant
@@ -281,7 +281,7 @@ class PresentationServiceNotifier(
   override def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[Failure]
-  ): IO[PresentationError, Unit] = svc.reportProcessingFailure(recordId, failReason)
+  ): UIO[Unit] = svc.reportProcessingFailure(recordId, failReason)
 }
 
 object PresentationServiceNotifier {
