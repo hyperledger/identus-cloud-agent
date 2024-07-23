@@ -18,6 +18,7 @@ import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCr
 import org.hyperledger.identus.shared.models.*
 import zio.{IO, UIO, URLayer, ZIO, ZLayer}
 import zio.json.*
+import zio.URIO
 
 import java.time.Instant
 import java.util.UUID
@@ -245,7 +246,7 @@ class PresentationServiceNotifier(
 
   override def findPresentationRecord(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]] =
+  ): URIO[WalletAccessContext, Option[PresentationRecord]] =
     svc.findPresentationRecord(recordId)
 
   override def findPresentationRecordByThreadId(

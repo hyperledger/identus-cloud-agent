@@ -410,7 +410,6 @@ class JdbcPresentationRepository(
         |   id = $recordId
         |   AND protocol_state = $from
         """.stripMargin.update
-
     cxnIO.run
       .transactWallet(xa)
       .orDie

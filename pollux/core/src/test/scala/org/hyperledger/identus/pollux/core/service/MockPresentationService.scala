@@ -19,6 +19,7 @@ import zio.{mock, IO, URLayer, ZIO, ZLayer}
 import zio.json.*
 import zio.mock.{Mock, Proxy}
 import zio.UIO
+import zio.URIO
 
 import java.time.Instant
 import java.util.UUID
@@ -244,7 +245,8 @@ object MockPresentationService extends Mock[PresentationService] {
           state: PresentationRecord.ProtocolState*
       ): IO[PresentationError, Seq[PresentationRecord]] = ???
 
-      override def findPresentationRecord(recordId: DidCommID): IO[PresentationError, Option[PresentationRecord]] = ???
+      override def findPresentationRecord(recordId: DidCommID): URIO[WalletAccessContext, Option[PresentationRecord]] =
+        ???
 
       override def findPresentationRecordByThreadId(
           thid: DidCommID

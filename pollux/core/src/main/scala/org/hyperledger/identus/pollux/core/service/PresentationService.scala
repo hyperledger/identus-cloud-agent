@@ -94,7 +94,7 @@ trait PresentationService {
 
   def findPresentationRecord(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]]
+  ): URIO[WalletAccessContext, Option[PresentationRecord]]
 
   def findPresentationRecordByThreadId(
       thid: DidCommID

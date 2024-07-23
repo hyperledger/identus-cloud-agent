@@ -19,6 +19,7 @@ import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.mercury.protocol.reportproblem.v2.{ProblemCode, ReportProblem}
+import org.hyperledger.identus.messaging.Message
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
@@ -30,6 +31,7 @@ import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, Iss
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.http.*
 import org.hyperledger.identus.shared.models.*
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
@@ -40,6 +42,7 @@ import zio.prelude.Validation
 import zio.prelude.ZValidation.{Failure as ZFailure, *}
 
 import java.time.{Clock, Instant, ZoneId}
+import java.util.UUID
 
 object PresentBackgroundJobs extends BackgroundJobsHelper {
 
@@ -54,46 +57,39 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
   private type MESSAGING_RESOURCES = DidOps & DIDResolver & HttpClient
 
-  val presentProofExchanges: ZIO[RESOURCES, Throwable, Unit] = {
+  def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
+    RESOURCES,
+    Unit
+  ] =
     for {
+      _ <- ZIO.logInfo(s"!!! Present Proof Handling recordId: ${message.value} via Kafka queue")
       presentationService <- ZIO.service[PresentationService]
-      config <- ZIO.service[AppConfig]
-      records <- presentationService
-        .getPresentationRecordsByStatesForAllWallets(
-          ignoreWithZeroRetries = true,
-          limit = config.pollux.presentationBgJobRecordsLimit,
-          PresentationRecord.ProtocolState.RequestPending,
-          PresentationRecord.ProtocolState.PresentationPending,
-          PresentationRecord.ProtocolState.PresentationGenerated,
-          PresentationRecord.ProtocolState.PresentationReceived
+      walletAccessContext = WalletAccessContext(WalletId.fromUUID(message.value.walletId))
+      record <- presentationService
+        .findPresentationRecord(DidCommID(message.value.recordId.toString))
+        .provideSome(ZLayer.succeed(walletAccessContext))
+        .someOrElseZIO(ZIO.dieMessage("Record Not Found"))
+      _ <- performPresentProofExchange(record)
+        .catchAll {
+          case ex: Failure =>
+            ZIO
+              .service[PresentationService]
+              .flatMap(_.reportProcessingFailure(record.id, Some(ex)))
+          case ex => ZIO.logErrorCause(s"PresentBackgroundJobs - Error processing record: ${record.id}", Cause.fail(ex))
+        }
+        .catchAllDefect(d =>
+          ZIO.logErrorCause(s"PresentBackgroundJobs - Defect processing record: ${record.id}", Cause.fail(d))
         )
-        .mapError(err => Throwable(s"Error occurred while getting Presentation records: $err"))
-      _ <- ZIO
-        .foreachPar(records)(performPresentProofExchange)
-        .withParallelism(config.pollux.presentationBgJobProcessingParallelism)
+
     } yield ()
-  }
 
   private def counterMetric(key: String) = Metric
     .counterInt(key)
     .fromConst(1)
 
-  private def performPresentProofExchange(record: PresentationRecord): URIO[RESOURCES, Unit] =
-    aux(record)
-      .catchAll {
-        case ex: Failure =>
-          ZIO
-            .service[PresentationService]
-            .flatMap(_.reportProcessingFailure(record.id, Some(ex)))
-        case ex => ZIO.logErrorCause(s"PresentBackgroundJobs - Error processing record: ${record.id}", Cause.fail(ex))
-      }
-      .catchAllDefect(d =>
-        ZIO.logErrorCause(s"PresentBackgroundJobs - Defect processing record: ${record.id}", Cause.fail(d))
-      )
-
-  private def aux(record: PresentationRecord): ZIO[RESOURCES, ERROR, Unit] = {
+  private def performPresentProofExchange(record: PresentationRecord): ZIO[RESOURCES, ERROR, Unit] = {
     import org.hyperledger.identus.pollux.core.model.PresentationRecord.ProtocolState.*
-    for {
+    val exchange = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
         case PresentationRecord(id, _, _, _, _, _, _, _, ProposalPending, _, _, _, _, _, _, _, _, _, _, _, _) =>
@@ -401,6 +397,8 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           ZIO.logDebug("PresentationRecord: PresentationRejected") *> ZIO.unit
       }
     } yield ()
+
+    exchange
   }
 
   object Prover {

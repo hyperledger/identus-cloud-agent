@@ -6,9 +6,7 @@ import org.hyperledger.identus.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpo
 import org.hyperledger.identus.agent.server.jobs.*
 import org.hyperledger.identus.agent.walletapi.model.{Entity, Wallet, WalletSeed}
 import org.hyperledger.identus.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
-import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEndpoints}
-import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.controller.ConnectionServerEndpoints
 import org.hyperledger.identus.credentialstatus.controller.CredentialStatusServiceEndpoints
 import org.hyperledger.identus.event.controller.EventServerEndpoints
@@ -17,19 +15,15 @@ import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticator
 import org.hyperledger.identus.iam.entity.http.EntityServerEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementServerEndpoints
 import org.hyperledger.identus.issue.controller.IssueServerEndpoints
-import org.hyperledger.identus.mercury.{DidOps, HttpClient}
 import org.hyperledger.identus.messaging.MessagingService
 import org.hyperledger.identus.messaging.MessagingService.RetryStep
 import org.hyperledger.identus.oid4vci.CredentialIssuerServerEndpoints
-import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
 import org.hyperledger.identus.pollux.credentialschema.{
   SchemaRegistryServerEndpoints,
   VerificationPolicyServerEndpoints
 }
-import org.hyperledger.identus.pollux.vc.jwt.DidResolver as JwtDidResolver
 import org.hyperledger.identus.presentproof.controller.PresentProofServerEndpoints
-import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.models.{HexString, WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import org.hyperledger.identus.system.controller.SystemServerEndpoints
@@ -42,7 +36,7 @@ object CloudAgentApp {
   def run = for {
     _ <- AgentInitialization.run
     _ <- issueCredentialExchangesJob
-    _ <- presentProofExchangeJob.debug.fork
+    _ <- presentProofExchangeJob
     _ <- connectDidCommExchangesJob
     _ <- syncDIDPublicationStateFromDltJob.debug.fork
     _ <- syncRevocationStatusListsJob.debug.fork
@@ -53,20 +47,22 @@ object CloudAgentApp {
     _ <- ZIO.never
   } yield ()
 
-  private val presentProofExchangeJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService &
-      DIDNonSecretStorage & DIDService & ManagedDIDService,
-    Unit
-  ] =
-    for {
-      config <- ZIO.service[AppConfig]
-      _ <- (PresentBackgroundJobs.presentProofExchanges @@ Metric
-        .gauge("present_proof_flow_did_com_exchange_job_ms_gauge")
-        .trackDurationWith(_.toMetricsSeconds))
-        .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
-        .unit
-    } yield ()
-
+  private val presentProofExchangeJob = MessagingService.consumeWithRetryStrategy(
+    "identus-cloud-agent",
+    PresentBackgroundJobs.handleMessage,
+    Seq(
+      RetryStep("present-proof", 5, 0.seconds, "present-proof-retry-1"),
+      RetryStep("present-proof-retry-1", 5, 2.seconds, "present-proof-retry-2"),
+      RetryStep("present-proof-retry-2", 5, 4.seconds, "present-proof-retry-3"),
+      RetryStep("present-proof-retry-3", 5, 8.seconds, "present-proof-retry-4"),
+      RetryStep("present-proof-retry-4", 5, 16.seconds, "present-proof-DLQ")
+    )
+  )
+  // TODO  @@ Metric
+  //        .gauge("present_proof_flow_did_com_exchange_job_ms_gauge")
+  //        .trackDurationWith(_.toMetricsSeconds))
+  //        .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
+  //        .unit
   private val issueCredentialExchangesJob = MessagingService.consumeWithRetryStrategy(
     "identus-cloud-agent",
     IssueBackgroundJobs.handleMessage,
