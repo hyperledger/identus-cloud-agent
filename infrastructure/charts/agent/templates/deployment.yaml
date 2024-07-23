@@ -202,7 +202,7 @@ spec:
           - name: KEYCLOAK_ENABLED
             value: "true"
           - name: KEYCLOAK_URL
-            value: http://{{ .Release.Name }}-keycloak
+            value: {{ .Values.server.keycloak.url }}
           - name: KEYCLOAK_REALM
             value: {{ .Values.server.keycloak.realm }}
           - name: KEYCLOAK_CLIENT_ID
