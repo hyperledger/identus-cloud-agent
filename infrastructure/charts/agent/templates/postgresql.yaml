@@ -62,39 +62,4 @@ spec:
     keycloak: keycloak-admin
   postgresql:
     version: "14"
-  sidecars:
-    - name: postgres-exporter
-      image: wrouesnel/postgres_exporter
-      ports:
-        - containerPort: 9187
-          name: metrics
-      env:
-        - name: DATASOURCE_URI
-          value: "postgresql://localhost:5432/ranger?sslmode=disable"
-        - name: DATA_SOURCE_USER
-          value: "$(POSTGRES_USER)"
-        - name: DATA_SOURCE_PASS
-          value: "$(POSTGRES_PASSWORD)"
-      resources:
-        limits:
-          cpu: 50m
-          memory: 150Mi
-        requests:
-          cpu: 50m
-          memory: 150Mi
 {{- end }}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
