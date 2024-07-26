@@ -25,14 +25,14 @@ spec:
       {{- if .Values.server.keycloak.enabled }}
       - name: wait-keycloak-ready
         image: badouralix/curl-jq:ubuntu
-        command: ['/bin/bash', '-c', 'until curl http://{{ .Release.Name }}-keycloak/health/ready; do sleep 2; done && echo "Keycloak is ready."']
+        command: ['/bin/bash', '-c', 'until curl {{ .Values.server.keycloak.url }}/health/ready; do sleep 2; done && echo "Keycloak is ready."']
       {{- if .Values.server.keycloak.bootstrap }}
       - name: keycloak-bootstrap
         image: badouralix/curl-jq:ubuntu
         command: ['/bin/bash', '-c', '/scripts/init.sh']
         env:
         - name: KEYCLOAK_BASE_URL
-          value: http://{{ .Release.Name }}-keycloak
+          value: {{ .Values.server.keycloak.url }}
         - name: KEYCLOAK_ADMIN_USER
           value: {{ .Values.server.keycloak.admin.username }}
         - name: KEYCLOAK_ADMIN_PASSWORD
@@ -202,7 +202,7 @@ spec:
           - name: KEYCLOAK_ENABLED
             value: "true"
           - name: KEYCLOAK_URL
-            value: http://{{ .Release.Name }}-keycloak
+            value: {{ .Values.server.keycloak.url }}
           - name: KEYCLOAK_REALM
             value: {{ .Values.server.keycloak.realm }}
           - name: KEYCLOAK_CLIENT_ID

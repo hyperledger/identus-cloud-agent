@@ -50,6 +50,7 @@ server:
   useVault: true
   keycloak:
     enabled: false
+    url: http://agent-keycloak
     realm: prism-agent
     bootstrap: true
     admin:
