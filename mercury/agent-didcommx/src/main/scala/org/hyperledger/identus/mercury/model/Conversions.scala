@@ -81,10 +81,6 @@ def mapValueToJson(obj: java.lang.Object): Json = {
             .toMap
         )
       }
-    // case any => {
-    //   println("*****NotImplemented***" + any.getClass().getCanonicalName() + "**********") // FIXME
-    //   ???
-    // }
   }
 }
 
