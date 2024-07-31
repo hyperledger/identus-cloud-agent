@@ -35,14 +35,14 @@ object MessagingService {
                   _ <- handler(m)
                     .catchAll { t =>
                       for {
-                        _ <- ZIO.logErrorCause(s"Connect - Error processing message: ${m.key} ", Cause.fail(t))
+                        _ <- ZIO.logErrorCause(s"Error processing message: ${m.key} ", Cause.fail(t))
                         _ <- messageProducer
                           .produce(step.nextTopicName, m.key, m.value)
                           .catchAll(t => ZIO.logErrorCause("Unable to send message to the next topic", Cause.fail(t)))
                       } yield ()
                     }
                     .catchAllDefect(t =>
-                      ZIO.logErrorCause(s"Connect - Defect processing message: ${m.key} ", Cause.fail(t))
+                      ZIO.logErrorCause(s"Defect processing message: ${m.key} ", Cause.fail(t))
                     )
                 } yield ()
               }

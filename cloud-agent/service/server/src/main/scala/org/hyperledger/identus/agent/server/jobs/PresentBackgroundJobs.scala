@@ -70,17 +70,14 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         .provideSome(ZLayer.succeed(walletAccessContext))
         .someOrElseZIO(ZIO.dieMessage("Record Not Found"))
       _ <- performPresentProofExchange(record)
-        .catchAll {
-          case ex: Failure =>
-            ZIO
-              .service[PresentationService]
-              .flatMap(_.reportProcessingFailure(record.id, Some(ex)))
-          case ex => ZIO.logErrorCause(s"PresentBackgroundJobs - Error processing record: ${record.id}", Cause.fail(ex))
+        .tapSomeError { case f: Failure =>
+          for {
+            presentationService <- ZIO.service[PresentationService]
+            _ <- presentationService
+              .reportProcessingFailure(record.id, Some(f))
+          } yield ()
         }
-        .catchAllDefect(d =>
-          ZIO.logErrorCause(s"PresentBackgroundJobs - Defect processing record: ${record.id}", Cause.fail(d))
-        )
-
+        .catchAll { e => ZIO.fail(RuntimeException(s"Attempt failed with: ${e}")) }
     } yield ()
 
   private def counterMetric(key: String) = Metric

@@ -46,27 +46,6 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
         .catchAll { e => ZIO.fail(RuntimeException(s"Attempt failed with: ${e}")) }
     } yield ()
 
-  val issueCredentialDidCommExchanges = {
-    for {
-      credentialService <- ZIO.service[CredentialService]
-      config <- ZIO.service[AppConfig]
-      records <- credentialService
-        .getIssueCredentialRecordsByStatesForAllWallets(
-          ignoreWithZeroRetries = true,
-          limit = config.pollux.issueBgJobRecordsLimit,
-          IssueCredentialRecord.ProtocolState.OfferPending,
-          IssueCredentialRecord.ProtocolState.RequestPending,
-          IssueCredentialRecord.ProtocolState.RequestGenerated,
-          IssueCredentialRecord.ProtocolState.RequestReceived,
-          IssueCredentialRecord.ProtocolState.CredentialPending,
-          IssueCredentialRecord.ProtocolState.CredentialGenerated
-        )
-      _ <- ZIO
-        .foreachPar(records)(performIssueCredentialExchange)
-        .withParallelism(config.pollux.issueBgJobProcessingParallelism)
-    } yield ()
-  }
-
   private def counterMetric(key: String) = Metric
     .counterInt(key)
     .fromConst(1)
@@ -641,26 +620,8 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
           ZIO.logWarning(s"Invalid candidate record received for processing: $r") *> ZIO.unit
       }
     } yield ()
+
     exchange
-    // .tapError(
-    //   {
-    //     case walletNotFound: WalletNotFoundError            => ZIO.unit
-    //     case CredentialServiceError.RecordNotFound(_, _)    => ZIO.unit
-    //     case CredentialServiceError.UnsupportedDidFormat(_) => ZIO.unit
-    //     case failure: Failure                               => ??? // FIXME
-    //     case ((walletAccessContext, failure)) =>
-    //       for {
-    //         credentialService <- ZIO.service[CredentialService]
-    //         _ <- credentialService
-    //           .reportProcessingFailure(record.id, Some(failure))
-    //           .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-    //       } yield ()
-    //   }
-    // )
-    // .catchAll(e => ZIO.logErrorCause(s"Issue Credential - Error processing record: ${record.id} ", Cause.fail(e)))
-    // .catchAllDefect(d =>
-    //   ZIO.logErrorCause(s"Issue Credential - Defect processing record: ${record.id}", Cause.fail(d))
-    // )
   }
 
 }

@@ -143,7 +143,7 @@ object MainApp extends ZIOAppDefault {
       _ <- preMigrations
       _ <- migrations
       appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
-      kafkaMessagingServiceLayer <-
+      messagingServiceLayer <-
         if (appConfig.agent.kafka.enabled) {
           ZIO.succeed(
             ZKafkaMessagingServiceImpl.layer(List("kafka:9092"))
@@ -153,7 +153,7 @@ object MainApp extends ZIOAppDefault {
             InMemoryMessagingService.messagingServiceLayer
           )
         }
-      kafkaProducerLayer <-
+      messageProducerLayer <-
         if (appConfig.agent.kafka.enabled) {
           ZIO.succeed(
             ZKafkaProducerImpl.layer[UUID, WalletIdAndRecordId]
@@ -244,8 +244,8 @@ object MainApp extends ZIOAppDefault {
           // HTTP client
           SystemModule.zioHttpClientLayer,
           Scope.default,
-          kafkaMessagingServiceLayer,
-          kafkaProducerLayer
+          messagingServiceLayer,
+          messageProducerLayer
         )
     } yield app
 
