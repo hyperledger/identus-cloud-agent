@@ -429,9 +429,7 @@ object PresentationRepositorySpecSuite {
     },
     test("updateAfterFail PresentationRecord outside of the wallet") {
       val walletId1 = WalletId.random
-      val walletId2 = WalletId.random
       val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
-      val wallet2 = ZLayer.succeed(WalletAccessContext(walletId2))
       for {
         repo <- ZIO.service[PresentationRepository]
         record1 = presentationRecord
