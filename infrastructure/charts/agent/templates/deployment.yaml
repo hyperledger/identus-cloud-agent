@@ -28,8 +28,8 @@ spec:
         command: ['/bin/bash', '-c', 'until curl {{ .Values.server.keycloak.url }}/health/ready; do sleep 2; done && echo "Keycloak is ready."']
       {{- if .Values.server.keycloak.bootstrap }}
       - name: keycloak-bootstrap
-        image: badouralix/curl-jq:ubuntu
-        command: ['/bin/bash', '-c', '/scripts/init.sh']
+        image: oven/bun:1
+        command: ['bun', 'run', '/scripts/init.ts']
         env:
         - name: KEYCLOAK_BASE_URL
           value: {{ .Values.server.keycloak.url }}
@@ -222,8 +222,8 @@ spec:
           name: keycloak-bootstrap-script
           defaultMode: 0500
           items:
-          - key: "init.sh"
-            path: "init.sh"
+          - key: "init.ts"
+            path: "init.ts"
       {{- end }}
       affinity:
         {{- toYaml .Values.affinity | nindent 8 }}

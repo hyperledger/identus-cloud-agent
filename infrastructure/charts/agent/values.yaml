@@ -60,7 +60,7 @@ server:
           name: keycloak-admin-secret
           key: password
     client:
-      clientId: prism-agent
+      clientId: cloud-agent
       clientSecret:
         secretKeyRef:
           name: agent-keycloak-client-secret
