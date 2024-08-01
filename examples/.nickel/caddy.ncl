@@ -25,7 +25,7 @@ in
                 handle_path /didcomm* {
                   reverse_proxy %{args.agent.host}:%{std.to_string args.agent.didcommPort}
                 }
-                handle_path /agent* {
+                handle_path /cloud-agent* {
                   reverse_proxy %{args.agent.host}:%{std.to_string args.agent.restPort}
                 }
                 handle_path /keycloak* {

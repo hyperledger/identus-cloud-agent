@@ -66,7 +66,7 @@ HTTP 200
 issuer_access_token: jsonpath "$.access_token"
 
 # Create Issuer wallet
-POST {{ agent_url }}/agent/wallets
+POST {{ agent_url }}/cloud-agent/wallets
 Authorization: Bearer {{ issuer_access_token }}
 {
   "name": "issuer-wallet"
@@ -85,7 +85,7 @@ HTTP 200
 holder_access_token: jsonpath "$.access_token"
 
 # Create Holder wallet
-POST {{ agent_url }}/agent/wallets
+POST {{ agent_url }}/cloud-agent/wallets
 Authorization: Bearer {{ holder_access_token }}
 {
   "name": "holder-wallet"
@@ -104,7 +104,7 @@ HTTP 200
 verifier_access_token: jsonpath "$.access_token"
 
 # Create Verifier wallet
-POST {{ agent_url }}/agent/wallets
+POST {{ agent_url }}/cloud-agent/wallets
 Authorization: Bearer {{ verifier_access_token }}
 {
   "name": "verifier-wallet"

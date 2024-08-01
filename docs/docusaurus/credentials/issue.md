@@ -1,7 +1,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Issue credentials
+# Issue credentials (DIDComm)
 
 In the Identus Platform, the [Issue Credentials Protocol](/docs/concepts/glossary#issue-credentials-protocol) allows you to create, retrieve, and manage issued [verifiable credentials (VCs)](/docs/concepts/glossary#verifiable-credentials) between a VC issuer and a VC holder.
 
