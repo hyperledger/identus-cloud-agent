@@ -85,9 +85,6 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           ZIO
             .service[PresentationService]
             .flatMap(_.reportProcessingFailure(record.id, Some(ex)))
-            .catchAll(ex =>
-              ZIO.logErrorCause(s"PresentBackgroundJobs - Fail to recover from ${record.id}", Cause.fail(ex))
-            )
         case ex => ZIO.logErrorCause(s"PresentBackgroundJobs - Error processing record: ${record.id}", Cause.fail(ex))
       }
       .catchAllDefect(d =>

@@ -1099,7 +1099,7 @@ private class PresentationServiceImpl(
   override def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[Failure]
-  ): IO[PresentationError, Unit] =
+  ): UIO[Unit] =
     presentationRepository.updateAfterFail(recordId, failReason)
 
   private def getRecordFromThreadId(
