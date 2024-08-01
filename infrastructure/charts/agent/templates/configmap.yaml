@@ -46,7 +46,13 @@ data:
           "enabled": true,
         })
       });
-      await fetch(req);
+      const resp = await fetch(req);
+      const body = await resp.json();
+      if (resp.status < 200 || resp.status >= 300) {
+        throw new Error("Response did not return success status code." +
+          ` Status: ${resp.status}, Body: ${JSON.stringify(body)}`
+        );
+      }
     }
 
     async function createRealmIfNotExist(accessToken: string) {
@@ -78,7 +84,13 @@ data:
           "secret": CLOUD_AGENT_CLIENT_SECRET
         })
       });
-      await fetch(req);
+      const resp = await fetch(req);
+      const body = await resp.json();
+      if (resp.status < 200 || resp.status >= 300) {
+        throw new Error("Response did not return success status code." +
+          ` Status: ${resp.status}, Body: ${JSON.stringify(body)}`
+        );
+      }
     }
 
     async function createClientIfNotExist(accessToken: string) {
