@@ -11,8 +11,6 @@ inThisBuild(
     run / connectInput := true,
     releaseUseGlobalVersion := false,
     versionScheme := Some("semver-spec"),
-    githubOwner := "hyperledger",
-    githubRepository := "identus-cloud-agent",
     resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
     resolvers += "jitpack" at "https://jitpack.io",
   )
