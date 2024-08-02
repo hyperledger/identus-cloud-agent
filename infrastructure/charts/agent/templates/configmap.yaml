@@ -113,22 +113,3 @@ data:
       await createRealm(adminToken);
       await createClient(adminToken, CLOUD_AGENT_CLIENT_ID, CLOUD_AGENT_CLIENT_SECRET);
     })();
-
-{{- if .Values.keycloak.enabled }}
-
----
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "cloud-agent.name" . }}-realm-import
-  labels:
-    {{- include "labels.common" . | nindent 4}}
-data:
-  {{ include "cloud-agent.name" . }}.json: |
-    {
-      "realm": {{ .Values.server.keycloak.realm | quote }},
-      "enabled": true
-    }
-
-{{- end }}
