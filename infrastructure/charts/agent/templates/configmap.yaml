@@ -35,6 +35,7 @@ data:
     }
 
     async function createRealm(accessToken: string) {
+      console.log(`Creating realm ${REALM_NAME} ...`);
       const req = new Request(`${KEYCLOAK_BASE_URL}/admin/realms`, {
         method: "POST",
         headers: {
@@ -47,71 +48,70 @@ data:
         })
       });
       const resp = await fetch(req);
-      const body = await resp.json();
-      if (resp.status < 200 || resp.status >= 300) {
-        throw new Error("Response did not return success status code." +
-          ` Status: ${resp.status}, Body: ${JSON.stringify(body)}`
-        );
+      const resp_body = await resp.json();
+      switch (resp.status) {
+        case 201:
+          console.log(`Realm ${REALM_NAME} created.`);
+          break;
+        case 409:
+          console.log(`Realm ${REALM_NAME} already exists.`);
+          break;
+        default:
+          throw new Error("Response did not return success status code." +
+            ` Status: ${resp.status}, Body: ${JSON.stringify(resp_body)}`
+          );
       }
     }
 
-    async function createRealmIfNotExist(accessToken: string) {
-      const req = new Request(`${KEYCLOAK_BASE_URL}/admin/realms/${REALM_NAME}`, {
-        method: "GET",
-        headers: { "Authorization": `Bearer ${accessToken}` }
-      });
-      const resp = await fetch(req);
-      if (resp.status !== 200) {
-        console.log(`Creating a new ${REALM_NAME} realm ...`);
-        await createRealm(accessToken);
+    async function createClient(accessToken: string, clientId: string, clientSecret?: string) {
+      console.log(`Creating client ${clientId} ...`);
+      let req_body = {};
+      if (clientSecret) {
+        req_body = {
+          "id": clientId,
+          "directAccessGrantsEnabled": true,
+          "authorizationServicesEnabled": true,
+          "serviceAccountsEnabled": true,
+          "secret": clientSecret
+        };
       } else {
-        console.log(`Realm ${REALM_NAME} already exists.`)
+        // public client is created if client secret is not provided
+        req_body = {
+          "id": clientId,
+          "publicClient": true,
+          "consentRequired": true,
+          "redirectUris": ["*"]
+        };
       }
-    }
 
-    async function createClient(accessToken: string) {
       const req = new Request(`${KEYCLOAK_BASE_URL}/admin/realms/${REALM_NAME}/clients`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${accessToken}`
         },
-        body: JSON.stringify({
-          "id": CLOUD_AGENT_CLIENT_ID,
-          "directAccessGrantsEnabled": true,
-          "authorizationServicesEnabled": true,
-          "serviceAccountsEnabled": true,
-          "secret": CLOUD_AGENT_CLIENT_SECRET
-        })
+        body: JSON.stringify(req_body)
       });
       const resp = await fetch(req);
-      const body = await resp.json();
-      if (resp.status < 200 || resp.status >= 300) {
-        throw new Error("Response did not return success status code." +
-          ` Status: ${resp.status}, Body: ${JSON.stringify(body)}`
-        );
+      const resp_body = await resp.json();
+      switch (resp.status) {
+        case 201:
+          console.log(`Client ${clientId} created.`);
+          break;
+        case 409:
+          console.log(`Client ${clientId} already exists.`);
+          break;
+        default:
+          throw new Error("Response did not return success status code." +
+            ` Status: ${resp.status}, Body: ${JSON.stringify(resp_body)}`
+          );
       }
     }
-
-    async function createClientIfNotExist(accessToken: string) {
-      const req = new Request(`${KEYCLOAK_BASE_URL}/admin/realms/${REALM_NAME}/clients/${CLOUD_AGENT_CLIENT_ID}`, {
-        method: "GET",
-        headers: { "Authorization": `Bearer ${accessToken}` }
-      });
-      const resp = await fetch(req);
-      if (resp.status !== 200) {
-        console.log(`Creating a new ${CLOUD_AGENT_CLIENT_ID} client ...`);
-        createClient(accessToken);
-      } else {
-        console.log(`Client ${CLOUD_AGENT_CLIENT_ID} already exists.`)
-      }
-    }
-
     (async () => {
       console.log("Getting admin access token ...");
       const adminToken = await getAdminToken();
-      await createRealmIfNotExist(adminToken);
-      await createClientIfNotExist(adminToken);
+      await createRealm(adminToken);
+      await createClient(adminToken, CLOUD_AGENT_CLIENT_ID, CLOUD_AGENT_CLIENT_SECRET);
     })();
 
 {{- if .Values.keycloak.enabled }}
