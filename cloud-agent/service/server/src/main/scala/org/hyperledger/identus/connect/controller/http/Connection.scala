@@ -1,10 +1,11 @@
 package org.hyperledger.identus.connect.controller.http
 
-import org.hyperledger.identus.api.http.Annotation
+import org.hyperledger.identus.api.http.{Annotation, ErrorResponse}
 import org.hyperledger.identus.connect.controller.http.Connection.annotations
 import org.hyperledger.identus.connect.controller.http.Connection.annotations.goalcode
 import org.hyperledger.identus.connect.core.model
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.Role
+import org.hyperledger.identus.shared.models.{FailureInfo, StatusCode}
 import sttp.model.Uri
 import sttp.tapir.{Schema, Validator}
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
@@ -54,6 +55,9 @@ case class Connection(
     @description(annotations.metaRetries.description)
     @encodedExample(annotations.metaRetries.example)
     metaRetries: Int,
+    @description(annotations.metaLastFailure.description)
+    @encodedExample(annotations.metaLastFailure.example)
+    metaLastFailure: Option[ErrorResponse] = None,
     @description(annotations.self.description)
     @encodedExample(annotations.self.example)
     self: String = "",
@@ -92,6 +96,7 @@ object Connection {
       createdAt = domain.createdAt.atOffset(ZoneOffset.UTC),
       updatedAt = domain.updatedAt.map(_.atOffset(ZoneOffset.UTC)),
       metaRetries = domain.metaRetries,
+      metaLastFailure = domain.metaLastFailure.map(failure => ErrorResponse.failureToErrorResponseConversion(failure)),
       self = domain.id.toString,
       kind = "Connection",
     )
@@ -197,6 +202,13 @@ object Connection {
         extends Annotation[Int](
           description = "The maximum background processing attempts remaining for this record",
           example = 5
+        )
+
+    object metaLastFailure
+        extends Annotation[ErrorResponse](
+          description = "The last failure if any.",
+          example =
+            ErrorResponse.failureToErrorResponseConversion(FailureInfo("Error", StatusCode.NotFound, "Not Found"))
         )
 
     object self
