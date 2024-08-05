@@ -54,6 +54,29 @@ object MessagingService {
     } yield ()
   }
 
+  def consumeStrategy[K: EnvironmentTag, V: EnvironmentTag, HR](
+      groupId: String,
+      topicName: String,
+      consumerCount:Int,
+      handler: Message[K, V] => RIO[HR, Unit]
+  )(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[HR & Producer[K, V] & MessagingService, Unit] = {
+    for {
+      messagingService <- ZIO.service[MessagingService]
+      messageProducer <- ZIO.service[Producer[K, V]]
+       _ <- ZIO.foreachPar(1 to consumerCount)(_ =>
+          for {
+            consumer <- messagingService.makeConsumer[K, V](groupId)
+            _ <- consumer
+              .consume[HR](topicName) { m =>
+               handler(m).orDie // Terminate and continue
+              }
+              .debug
+              .fork
+          } yield ()
+        )
+    } yield ()
+  }
+
 }
 
 case class Message[K, V](key: K, value: V, offset: Long, timestamp: Long)

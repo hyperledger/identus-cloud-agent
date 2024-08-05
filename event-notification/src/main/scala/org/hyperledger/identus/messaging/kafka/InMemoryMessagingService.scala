@@ -8,7 +8,6 @@ import zio.stream._
 import zio.Clock
 import zio.Task
 import InMemoryMessagingService._
-
 import java.util.concurrent.TimeUnit
 
 case class ConsumerGroupKey(groupId: GroupId, topic: Topic)

@@ -67,7 +67,7 @@ import zio.logging.LogFormat.*
 import zio.metrics.connectors.micrometer
 import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics
-
+import org.hyperledger.identus.shared.models.WalletId
 import java.security.Security
 import java.util.UUID
 
@@ -163,6 +163,16 @@ object MainApp extends ZIOAppDefault {
             InMemoryMessagingService.producerLayer[UUID, WalletIdAndRecordId]
           )
         }
+      syncDIDStateProducerLayer <-
+        if (appConfig.agent.kafka.enabled) {
+          ZIO.succeed(
+            ZKafkaProducerImpl.layer[WalletId, WalletId]
+          )
+        } else {
+          ZIO.succeed(
+            InMemoryMessagingService.producerLayer[WalletId, WalletId]
+          )
+        }  
 
       app <- CloudAgentApp.run
         .provide(
@@ -245,7 +255,8 @@ object MainApp extends ZIOAppDefault {
           SystemModule.zioHttpClientLayer,
           Scope.default,
           messagingServiceLayer,
-          messageProducerLayer
+          messageProducerLayer,
+          syncDIDStateProducerLayer
         )
     } yield app
 

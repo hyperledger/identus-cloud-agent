@@ -24,13 +24,13 @@ import org.hyperledger.identus.pollux.credentialschema.{
   VerificationPolicyServerEndpoints
 }
 import org.hyperledger.identus.presentproof.controller.PresentProofServerEndpoints
-import org.hyperledger.identus.shared.models.{HexString, WalletAccessContext, WalletAdministrationContext, WalletId}
+import org.hyperledger.identus.shared.models.{HexString, WalletAccessContext, WalletAdministrationContext, WalletId, Serde}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import org.hyperledger.identus.system.controller.SystemServerEndpoints
 import org.hyperledger.identus.verification.controller.VcVerificationServerEndpoints
 import zio.*
 import zio.metrics.*
-
+import org.hyperledger.identus.messaging.*
 object CloudAgentApp {
 
   def run = for {
@@ -39,6 +39,7 @@ object CloudAgentApp {
     _ <- presentProofExchangeJob
     _ <- connectDidCommExchangesJob
     _ <- syncDIDPublicationStateFromDltJob.debug.fork
+    _ <- consumeAndSyncDIDPublicationStateFromDlt
     _ <- syncRevocationStatusListsJob.debug.fork
     _ <- AgentHttpServer.run.tapDefect(e => ZIO.logErrorCause("Agent HTTP Server failure", e)).fork
     fiber <- DidCommHttpServer.run.tapDefect(e => ZIO.logErrorCause("DIDComm HTTP Server failure", e)).fork
@@ -109,13 +110,15 @@ object CloudAgentApp {
     } yield ()
   }
 
-  private val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService & WalletManagementService, Unit] =
+  private val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService & WalletManagementService & Producer[WalletId, WalletId], Unit] =
     ZIO
       .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
       .flatMap { wallets =>
         ZIO.foreach(wallets) { wallet =>
-          DIDStateSyncBackgroundJobs.syncDIDPublicationStateFromDlt
-            .provideSomeLayer(ZLayer.succeed(WalletAccessContext(wallet.id)))
+          for {
+            producer <- ZIO.service[Producer[WalletId, WalletId]]
+            _ <- producer.produce("sync-did-state", wallet.id, wallet.id)
+          } yield ()
         }
       }
       .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
@@ -123,6 +126,13 @@ object CloudAgentApp {
       .unit
       .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
 
+  
+  private val consumeAndSyncDIDPublicationStateFromDlt = MessagingService.consumeStrategy(
+    groupId = "identus-cloud-agent",
+    topicName = "sync-did-state", 
+    consumerCount = 5,
+    DIDStateSyncBackgroundJobs.handleMessage
+  ) 
 }
 
 object AgentHttpServer {

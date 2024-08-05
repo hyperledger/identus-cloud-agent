@@ -45,4 +45,9 @@ object Serde {
       new UUID(high, low)
     }
   }
+
+  given walletIdSerde(using uuidSerde: Serde[UUID]): Serde[WalletId] = new Serde[WalletId] {
+    override def serialize(w: WalletId): Array[Byte] = uuidSerde.serialize(w.toUUID)
+    override def deserialize(ba: Array[Byte]): WalletId = WalletId.fromUUID(uuidSerde.deserialize(ba))
+  }
 }
