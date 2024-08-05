@@ -38,7 +38,7 @@ object CloudAgentApp {
     _ <- issueCredentialExchangesJob
     _ <- presentProofExchangeJob
     _ <- connectDidCommExchangesJob
-    _ <- syncDIDPublicationStateFromDltJob.debug.fork
+    _ <- syncDIDPublicationStateFromDltJob
     _ <- consumeAndSyncDIDPublicationStateFromDlt
     _ <- syncRevocationStatusListsJob.debug.fork
     _ <- AgentHttpServer.run.tapDefect(e => ZIO.logErrorCause("Agent HTTP Server failure", e)).fork
@@ -110,23 +110,25 @@ object CloudAgentApp {
     } yield ()
   }
 
-  private val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService & WalletManagementService & Producer[WalletId, WalletId], Unit] =
-    ZIO
-      .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
-      .flatMap { wallets =>
-        ZIO.foreach(wallets) { wallet =>
-          for {
-            producer <- ZIO.service[Producer[WalletId, WalletId]]
-            _ <- producer.produce("sync-did-state", wallet.id, wallet.id)
-          } yield ()
-        }
+  private val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService & WalletManagementService & Producer[WalletId, WalletId],  Unit] =
+  ZIO.serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
+    .flatMap { wallets =>
+      ZIO.foreach(wallets) { wallet =>
+        for {
+          producer <- ZIO.service[Producer[WalletId, WalletId]]
+          _ <- producer.produce("sync-did-state", wallet.id, wallet.id)
+        } yield ()
       }
-      .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
-      .repeat(Schedule.spaced(10.seconds))
-      .unit
-      .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
+    }
+    .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
+    .repeat(Schedule.spaced(10.seconds))
+    .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
+    .debug
+    .fork
+    .unit
 
-  
+
+
   private val consumeAndSyncDIDPublicationStateFromDlt = MessagingService.consumeStrategy(
     groupId = "identus-cloud-agent",
     topicName = "sync-did-state", 
