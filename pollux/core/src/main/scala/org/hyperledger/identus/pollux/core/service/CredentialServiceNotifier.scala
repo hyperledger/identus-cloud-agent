@@ -8,6 +8,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.repository.CredentialRepository
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
 import org.hyperledger.identus.shared.models.*
 import zio.{Duration, UIO, URIO, URLayer, ZIO, ZLayer}
@@ -16,7 +17,8 @@ import java.util.UUID
 
 class CredentialServiceNotifier(
     svc: CredentialService,
-    eventNotificationService: EventNotificationService
+    eventNotificationService: EventNotificationService,
+    credentialRepository: CredentialRepository,
 ) extends CredentialService {
 
   private val issueCredentialRecordUpdatedEvent = "IssueCredentialRecordUpdated"
@@ -176,6 +178,9 @@ class CredentialServiceNotifier(
       _ <- notify(record)
     } yield record
 
+  private def notifyOnFail(record: IssueCredentialRecord) =
+    notify(record)
+
   private def notify(record: IssueCredentialRecord) = {
     val result = for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
@@ -188,8 +193,11 @@ class CredentialServiceNotifier(
   override def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[Failure]
-  ): URIO[WalletAccessContext, Unit] =
-    svc.reportProcessingFailure(recordId, failReason)
+  ): URIO[WalletAccessContext, Unit] = for {
+    ret <- svc.reportProcessingFailure(recordId, failReason)
+    recordAfterFail <- credentialRepository.getById(recordId)
+    _ <- notifyOnFail(recordAfterFail)
+  } yield ret
 
   override def findById(
       recordId: DidCommID
@@ -237,6 +245,6 @@ class CredentialServiceNotifier(
 }
 
 object CredentialServiceNotifier {
-  val layer: URLayer[CredentialService & EventNotificationService, CredentialServiceNotifier] =
-    ZLayer.fromFunction(CredentialServiceNotifier(_, _))
+  val layer: URLayer[CredentialService & EventNotificationService & CredentialRepository, CredentialServiceNotifier] =
+    ZLayer.fromFunction(CredentialServiceNotifier(_, _, _))
 }

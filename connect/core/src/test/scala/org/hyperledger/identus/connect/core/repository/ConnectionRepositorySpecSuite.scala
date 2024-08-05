@@ -42,7 +42,8 @@ object ConnectionRepositorySpecSuite {
     None,
     maxRetries,
     Some(Instant.now.truncatedTo(ChronoUnit.MICROS)),
-    None
+    None,
+    WalletId.fromUUID(UUID.randomUUID)
   ).withTruncatedTimestamp()
 
   private def connectionRequest = ConnectionRequest(

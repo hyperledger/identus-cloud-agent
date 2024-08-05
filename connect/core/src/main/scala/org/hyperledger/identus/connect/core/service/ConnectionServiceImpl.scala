@@ -32,6 +32,7 @@ private class ConnectionServiceImpl(
   ): ZIO[WalletAccessContext, UserInputValidationError, ConnectionRecord] =
     for {
       _ <- validateInputs(label, goalCode, goal)
+      wallet <- ZIO.service[WalletAccessContext]
       invitation <- ZIO.succeed(ConnectionInvitation.makeConnectionInvitation(pairwiseDID, goalCode, goal))
       record <- ZIO.succeed(
         ConnectionRecord(
@@ -50,6 +51,7 @@ private class ConnectionServiceImpl(
           metaRetries = maxRetries,
           metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
+          walletId = wallet.walletId
         )
       )
       count <- connectionRepository.create(record)
@@ -109,6 +111,7 @@ private class ConnectionServiceImpl(
         .mapError(err => InvitationParsingError(err.getMessage))
       maybeRecord <- connectionRepository.findByThreadId(invitation.id)
       _ <- ZIO.noneOrFailWith(maybeRecord)(_ => InvitationAlreadyReceived(invitation.id))
+      wallet <- ZIO.service[WalletAccessContext]
       record <- ZIO.succeed(
         ConnectionRecord(
           id = UUID.randomUUID(),
@@ -126,6 +129,7 @@ private class ConnectionServiceImpl(
           metaRetries = maxRetries,
           metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
+          walletId = wallet.walletId,
         )
       )
       _ <- connectionRepository.create(record)

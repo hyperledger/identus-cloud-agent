@@ -38,6 +38,7 @@ object PresentationRepositorySpecSuite {
     metaRetries = maxRetries,
     metaNextRetry = Some(Instant.now()),
     metaLastFailure = None,
+    walletId = WalletId.fromUUID(UUID.randomUUID()),
   ).withTruncatedTimestamp()
 
   private def requestPresentation = RequestPresentation(
