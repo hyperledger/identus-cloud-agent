@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.core.repository
 
+import io.lemonlabs.uri.Url
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.vc.jwt.{revocation, Issuer, StatusPurpose}
@@ -84,7 +85,7 @@ class CredentialStatusListRepositoryInMemory(
 
   def createNewForTheWallet(
       jwtIssuer: Issuer,
-      statusListRegistryUrl: String
+      statusListRegistryServiceName: String
   ): URIO[WalletAccessContext, CredentialStatusList] = {
 
     val id = UUID.randomUUID()
@@ -99,9 +100,13 @@ class CredentialStatusListRepositoryInMemory(
         case DecodingError(message)    => new Throwable(message)
         case IndexOutOfBounds(message) => new Throwable(message)
       }
+      resourcePath =
+        s"credential-status/$id"
       emptyJwtCredential <- VCStatusList2021
         .build(
-          vcId = s"$statusListRegistryUrl/credential-status/$id",
+          vcId = Url
+            .parse(s"${jwtIssuer.did}?resourceService=$statusListRegistryServiceName&resourcePath=$resourcePath")
+            .toString,
           revocationData = bitString,
           jwtIssuer = jwtIssuer
         )

@@ -174,7 +174,7 @@ object MainApp extends ZIOAppDefault {
           AppModule.didJwtResolverLayer,
           DIDOperationValidator.layer(),
           DIDResolver.layer,
-          HttpURIDereferencerImpl.layer,
+          GenericUriResolverImpl.layer,
           // service
           ConnectionServiceImpl.layer >>> ConnectionServiceNotifier.layer,
           CredentialSchemaServiceImpl.layer,

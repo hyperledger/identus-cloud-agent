@@ -61,7 +61,7 @@ trait ControllerHelper {
   protected def extractPrismDIDFromString(maybeDid: String): IO[ErrorResponse, PrismDID] =
     ZIO
       .fromEither(PrismDID.fromString(maybeDid))
-      .mapError(e => ErrorResponse.badRequest(detail = Some(s"Error parsing string as PrismDID: ${e}")))
+      .mapError(e => ErrorResponse.badRequest(detail = Some(s"Error parsing string as PrismDID: $e")))
 
   protected def getLongFormPrismDID(
       did: PrismDID,

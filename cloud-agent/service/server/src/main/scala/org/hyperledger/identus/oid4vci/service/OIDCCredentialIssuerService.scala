@@ -11,8 +11,7 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.service.{
   CredentialService,
   OID4VCIIssuerMetadataService,
-  OID4VCIIssuerMetadataServiceError,
-  URIDereferencer
+  OID4VCIIssuerMetadataServiceError
 }
 import org.hyperledger.identus.pollux.vc.jwt.{
   DID as PolluxDID,
@@ -24,6 +23,7 @@ import org.hyperledger.identus.pollux.vc.jwt.{
   W3cCredentialPayload,
   *
 }
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.*
 import zio.*
 
@@ -105,7 +105,7 @@ case class OIDCCredentialIssuerServiceImpl(
     issuerMetadataService: OID4VCIIssuerMetadataService,
     issuanceSessionStorage: IssuanceSessionStorage,
     didResolver: DidResolver,
-    uriDereferencer: URIDereferencer,
+    uriResolver: UriResolver,
 ) extends OIDCCredentialIssuerService
     with Openid4VCIProofJwtOps {
 
@@ -244,7 +244,7 @@ case class OIDCCredentialIssuerServiceImpl(
         }
         .map(_.schemaId)
       _ <- CredentialSchema
-        .validateJWTCredentialSubject(schemaId.toString(), simpleZioToCirce(claims).noSpaces, uriDereferencer)
+        .validateJWTCredentialSubject(schemaId.toString(), simpleZioToCirce(claims).noSpaces, uriResolver)
         .mapError(e => CredentialSchemaError(e))
       session <- buildNewIssuanceSession(issuerId, issuingDID, claims, schemaId)
       _ <- issuanceSessionStorage
@@ -298,7 +298,7 @@ case class OIDCCredentialIssuerServiceImpl(
 
 object OIDCCredentialIssuerServiceImpl {
   val layer: URLayer[
-    DIDNonSecretStorage & CredentialService & IssuanceSessionStorage & DidResolver & URIDereferencer &
+    DIDNonSecretStorage & CredentialService & IssuanceSessionStorage & DidResolver & UriResolver &
       OID4VCIIssuerMetadataService,
     OIDCCredentialIssuerService
   ] =

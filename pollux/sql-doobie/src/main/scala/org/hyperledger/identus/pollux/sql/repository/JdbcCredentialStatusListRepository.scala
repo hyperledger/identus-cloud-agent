@@ -4,6 +4,7 @@ import doobie.*
 import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
+import io.lemonlabs.uri.Url
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
@@ -75,7 +76,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
 
   def createNewForTheWallet(
       jwtIssuer: Issuer,
-      statusListRegistryUrl: String
+      statusListRegistryServiceName: String
   ): URIO[WalletAccessContext, CredentialStatusList] = {
 
     val id = UUID.randomUUID()
@@ -89,9 +90,13 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
         case DecodingError(message)    => new Throwable(message)
         case IndexOutOfBounds(message) => new Throwable(message)
       }
+      resourcePath =
+        s"credential-status/$id"
       emptyStatusListCredential <- VCStatusList2021
         .build(
-          vcId = s"$statusListRegistryUrl/credential-status/$id",
+          vcId = Url
+            .parse(s"${jwtIssuer.did}?resourceService=$statusListRegistryServiceName&resourcePath=$resourcePath")
+            .toString,
           revocationData = bitString,
           jwtIssuer = jwtIssuer
         )

@@ -12,8 +12,7 @@ import org.hyperledger.identus.pollux.core.model.error.{
 }
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{
   CredentialSchemaParsingError,
-  CredentialSchemaValidationError,
-  InvalidURI
+  CredentialSchemaValidationError
 }
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
@@ -27,22 +26,21 @@ import org.hyperledger.identus.pollux.core.service.serdes.{
   ProofKeyCredentialDefinitionSchemaSerDesV1,
   PublicCredentialDefinitionSerDesV1
 }
+import org.hyperledger.identus.shared.http.UriResolver
 import zio.*
 
-import java.net.URI
 import java.util.UUID
 import scala.util.Try
 
 class CredentialDefinitionServiceImpl(
     genericSecretStorage: GenericSecretStorage,
     credentialDefinitionRepository: CredentialDefinitionRepository,
-    uriDereferencer: URIDereferencer
+    uriResolver: UriResolver
 ) extends CredentialDefinitionService {
 
   override def create(in: CredentialDefinition.Input): Result[CredentialDefinition] = {
     for {
-      uri <- ZIO.attempt(new URI(in.schemaId)).mapError(error => InvalidURI(in.schemaId)).orDieAsUnmanagedFailure
-      content <- uriDereferencer.dereference(uri).orDieAsUnmanagedFailure
+      content <- uriResolver.resolve(in.schemaId).orDieAsUnmanagedFailure
       anoncredSchema <- AnoncredSchemaSerDesV1.schemaSerDes
         .deserialize(content)
         .mapError(error => CredentialSchemaParsingError(error.error))
@@ -124,7 +122,7 @@ class CredentialDefinitionServiceImpl(
 
 object CredentialDefinitionServiceImpl {
   val layer: URLayer[
-    GenericSecretStorage & CredentialDefinitionRepository & URIDereferencer,
+    GenericSecretStorage & CredentialDefinitionRepository & UriResolver,
     CredentialDefinitionService
   ] =
     ZLayer.fromFunction(CredentialDefinitionServiceImpl(_, _, _))

@@ -29,6 +29,7 @@ import org.hyperledger.identus.pollux.credentialschema.{
 import org.hyperledger.identus.pollux.vc.jwt.DidResolver as JwtDidResolver
 import org.hyperledger.identus.presentproof.controller.PresentProofServerEndpoints
 import org.hyperledger.identus.resolvers.DIDResolver
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.{HexString, WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import org.hyperledger.identus.system.controller.SystemServerEndpoints
@@ -67,8 +68,8 @@ object CloudAgentApp {
     } yield ()
 
   private val presentProofExchangeJob: RIO[
-    AppConfig & DidOps & DIDResolver & JwtDidResolver & HttpClient & PresentationService & CredentialService &
-      DIDNonSecretStorage & DIDService & ManagedDIDService,
+    AppConfig & DidOps & UriResolver & DIDResolver & JwtDidResolver & HttpClient & PresentationService &
+      CredentialService & DIDNonSecretStorage & DIDService & ManagedDIDService,
     Unit
   ] =
     for {

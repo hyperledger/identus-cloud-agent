@@ -10,11 +10,8 @@ import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
 import org.hyperledger.identus.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
 import org.hyperledger.identus.pollux.core.repository.CredentialDefinitionRepository
-import org.hyperledger.identus.pollux.core.service.{
-  CredentialDefinitionService,
-  CredentialDefinitionServiceImpl,
-  ResourceURIDereferencerImpl
-}
+import org.hyperledger.identus.pollux.core.service.{CredentialDefinitionService, CredentialDefinitionServiceImpl}
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.credentialdefinition.controller.{
   CredentialDefinitionController,
   CredentialDefinitionControllerImpl
@@ -56,7 +53,7 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
   private val controllerLayer =
     GenericSecretStorageInMemory.layer >+>
       systemTransactorLayer >+> contextAwareTransactorLayer >+> JdbcCredentialDefinitionRepository.layer >+>
-      ResourceURIDereferencerImpl.layer >+>
+      ResourceUrlResolver.layer >+>
       CredentialDefinitionServiceImpl.layer >+>
       CredentialDefinitionControllerImpl.layer
 

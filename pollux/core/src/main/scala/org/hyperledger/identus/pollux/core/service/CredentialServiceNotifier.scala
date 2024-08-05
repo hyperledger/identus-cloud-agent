@@ -149,9 +149,9 @@ class CredentialServiceNotifier(
 
   override def generateJWTCredential(
       recordId: DidCommID,
-      statusListRegistryUrl: String
+      statusListRegistryServiceName: String
   ): ZIO[WalletAccessContext, RecordNotFound | CredentialRequestValidationFailed, IssueCredentialRecord] =
-    notifyOnSuccess(svc.generateJWTCredential(recordId, statusListRegistryUrl))
+    notifyOnSuccess(svc.generateJWTCredential(recordId, statusListRegistryServiceName))
 
   override def generateSDJWTCredential(
       recordId: DidCommID,
