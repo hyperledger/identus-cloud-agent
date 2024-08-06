@@ -23,9 +23,6 @@ spec:
         image: busybox
         command: ['sh', '-c', "until nc -z {{ .Values.database.postgres.managingTeam }}-{{ include "cloud-agent.name" . }}-postgres-cluster.{{ .Release.Namespace }} 5432; do echo waiting for postgress-operator; sleep 2; done;"]
       {{- if .Values.server.keycloak.enabled }}
-      - name: wait-keycloak-ready
-        image: badouralix/curl-jq:ubuntu
-        command: ['/bin/bash', '-c', 'until curl -vv {{ .Values.server.keycloak.url }}/health; do sleep 2; done && echo "Keycloak is ready."']
       {{- if .Values.server.keycloak.bootstrap }}
       - name: keycloak-bootstrap
         image: oven/bun:1
