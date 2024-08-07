@@ -42,7 +42,7 @@ private class PresentationServiceImpl(
 
   import PresentationRecord.*
 
-  private val TOPIC = "present-proof"
+  private val TOPIC_NAME = "present"
 
   override def markPresentationGenerated(
       recordId: DidCommID,
@@ -61,7 +61,7 @@ private class PresentationServiceImpl(
           )
       walletAccessContext <- ZIO.service[WalletAccessContext]
       _ <- messageProducer
-        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
         .orDie
       record <- getRecord(recordId)
     } yield record
@@ -417,7 +417,7 @@ private class PresentationServiceImpl(
         )
       walletAccessContext <- ZIO.service[WalletAccessContext]
       _ <- messageProducer
-        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
         .orDie
     } yield record
   }
@@ -494,7 +494,7 @@ private class PresentationServiceImpl(
       _ <- presentationRepository.createPresentationRecord(record)
       walletAccessContext <- ZIO.service[WalletAccessContext]
       _ <- messageProducer
-        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
         .orDie
     } yield record
   }
@@ -782,7 +782,7 @@ private class PresentationServiceImpl(
         )
       walletAccessContext <- ZIO.service[WalletAccessContext]
       _ <- messageProducer
-        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
         .orDie
       record <- getRecord(recordId)
     } yield record
@@ -814,7 +814,7 @@ private class PresentationServiceImpl(
         )
       walletAccessContext <- ZIO.service[WalletAccessContext]
       _ <- messageProducer
-        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
         .orDie
       record <- getRecord(recordId)
     } yield record
@@ -852,7 +852,7 @@ private class PresentationServiceImpl(
       )
       walletAccessContext <- ZIO.service[WalletAccessContext]
       _ <- messageProducer
-        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
         .orDie
       record <- getRecord(record.id)
     } yield record
@@ -942,7 +942,7 @@ private class PresentationServiceImpl(
         )
       walletAccessContext <- ZIO.service[WalletAccessContext]
       _ <- messageProducer
-        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
         .orDie
       record <- getRecord(record.id)
     } yield record
@@ -962,7 +962,7 @@ private class PresentationServiceImpl(
         .updateWithRequestPresentation(recordId, requestPresentation, ProtocolState.PresentationPending)
       walletAccessContext <- ZIO.service[WalletAccessContext]
       _ <- messageProducer
-        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
         .orDie
       record <- getRecord(recordId)
     } yield record
@@ -982,7 +982,7 @@ private class PresentationServiceImpl(
         .updateWithProposePresentation(record.id, proposePresentation, ProtocolState.ProposalReceived)
       walletAccessContext <- ZIO.service[WalletAccessContext]
       _ <- messageProducer
-        .produce(TOPIC, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
         .orDie
       record <- getRecord(record.id)
     } yield record

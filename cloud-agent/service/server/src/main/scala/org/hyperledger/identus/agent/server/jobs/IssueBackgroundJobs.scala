@@ -24,15 +24,17 @@ import java.util.UUID
 
 object IssueBackgroundJobs extends BackgroundJobsHelper {
 
+  private val TOPIC_NAME = "issue"
+
   val issueFlowsHandler = messaging.MessagingService.consumeWithRetryStrategy(
     "identus-cloud-agent",
     IssueBackgroundJobs.handleMessage,
     Seq(
-      RetryStep("issue-credential", 5, 0.seconds, "issue-credential-retry-1"),
-      RetryStep("issue-credential-retry-1", 5, 2.seconds, "issue-credential-retry-2"),
-      RetryStep("issue-credential-retry-2", 5, 4.seconds, "issue-credential-retry-3"),
-      RetryStep("issue-credential-retry-3", 5, 8.seconds, "issue-credential-retry-4"),
-      RetryStep("issue-credential-retry-4", 5, 16.seconds, "issue-credential-DLQ")
+      RetryStep(TOPIC_NAME, 5, 0.seconds, s"$TOPIC_NAME-retry-1"),
+      RetryStep(s"$TOPIC_NAME-retry-1", 5, 2.seconds, s"$TOPIC_NAME-retry-2"),
+      RetryStep(s"$TOPIC_NAME-retry-2", 5, 4.seconds, s"$TOPIC_NAME-retry-3"),
+      RetryStep(s"$TOPIC_NAME-retry-3", 5, 8.seconds, s"$TOPIC_NAME-retry-4"),
+      RetryStep(s"$TOPIC_NAME-retry-4", 5, 16.seconds, s"$TOPIC_NAME-DLQ")
     )
   )
   // TODO See how metrics can be re-implemented using MessagingService

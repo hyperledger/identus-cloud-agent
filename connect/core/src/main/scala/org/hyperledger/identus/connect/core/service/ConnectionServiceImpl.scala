@@ -24,7 +24,7 @@ private class ConnectionServiceImpl(
     maxRetries: Int = 5, // TODO move to config
 ) extends ConnectionService {
 
-  private val TOPIC = "connect"
+  private val TOPIC_NAME = "connect"
 
   override def createConnectionInvitation(
       label: Option[String],
@@ -150,7 +150,7 @@ private class ConnectionServiceImpl(
       walletAccessContext <- ZIO.service[WalletAccessContext]
       // TODO Should we use a singleton producer or create a new one each time?? (underlying Kafka Producer is thread safe)
       _ <- messageProducer
-        .produce(TOPIC, record.id, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id))
+        .produce(TOPIC_NAME, record.id, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id))
         .orDie
       maybeRecord <- connectionRepository
         .findById(record.id)
@@ -227,7 +227,7 @@ private class ConnectionServiceImpl(
         )
       walletAccessContext <- ZIO.service[WalletAccessContext]
       _ <- messageProducer
-        .produce(TOPIC, record.id, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id))
+        .produce(TOPIC_NAME, record.id, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id))
         .orDie
       record <- connectionRepository.getById(record.id)
     } yield record

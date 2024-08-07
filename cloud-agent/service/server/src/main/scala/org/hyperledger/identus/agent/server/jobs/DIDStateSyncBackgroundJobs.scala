@@ -7,6 +7,8 @@ import zio.*
 
 object DIDStateSyncBackgroundJobs {
 
+  private val TOPIC_NAME = "sync-did-state"
+
   val didPublicationStateSyncTrigger
       : URIO[ManagedDIDService & WalletManagementService & Producer[WalletId, WalletId], Unit] =
     ZIO
@@ -15,7 +17,7 @@ object DIDStateSyncBackgroundJobs {
         ZIO.foreach(wallets) { wallet =>
           for {
             producer <- ZIO.service[Producer[WalletId, WalletId]]
-            _ <- producer.produce("sync-did-state", wallet.id, wallet.id)
+            _ <- producer.produce(TOPIC_NAME, wallet.id, wallet.id)
           } yield ()
         }
       }
@@ -28,7 +30,7 @@ object DIDStateSyncBackgroundJobs {
 
   val didPublicationStateSyncHandler = MessagingService.consumeStrategy(
     groupId = "identus-cloud-agent",
-    topicName = "sync-did-state",
+    topicName = TOPIC_NAME,
     consumerCount = 5,
     DIDStateSyncBackgroundJobs.handleMessage
   )

@@ -21,6 +21,8 @@ import java.util.UUID
 
 object StatusListJobs extends BackgroundJobsHelper {
 
+  private val TOPIC_NAME = "sync-status-list"
+
   val statusListsSyncTrigger = {
     (for {
       config <- ZIO.service[AppConfig]
@@ -30,7 +32,7 @@ object StatusListJobs extends BackgroundJobsHelper {
         _ <- ZIO.logInfo(s"Triggering status list revocation sync for '${walletAndStatusListIds.size}' status lists")
         producer <- ZIO.service[Producer[UUID, WalletIdAndRecordId]]
         _ <- ZIO.foreach(walletAndStatusListIds) { (walletId, statusListId) =>
-          producer.produce("sync-status-list", walletId.toUUID, WalletIdAndRecordId(walletId.toUUID, statusListId))
+          producer.produce(TOPIC_NAME, walletId.toUUID, WalletIdAndRecordId(walletId.toUUID, statusListId))
         }
       } yield ()
       _ <- trigger.repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
@@ -44,7 +46,7 @@ object StatusListJobs extends BackgroundJobsHelper {
 
   val statusListSyncHandler = messaging.MessagingService.consumeStrategy(
     groupId = "identus-cloud-agent",
-    topicName = "sync-status-list",
+    topicName = TOPIC_NAME,
     consumerCount = 5,
     StatusListJobs.handleMessage
   )

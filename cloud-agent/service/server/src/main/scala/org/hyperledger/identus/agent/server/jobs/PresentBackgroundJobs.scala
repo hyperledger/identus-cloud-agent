@@ -59,15 +59,17 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
   private type MESSAGING_RESOURCES = DidOps & DIDResolver & HttpClient
 
+  private val TOPIC_NAME = "present"
+
   val presentFlowsHandler = messaging.MessagingService.consumeWithRetryStrategy(
     "identus-cloud-agent",
     PresentBackgroundJobs.handleMessage,
     Seq(
-      RetryStep("present-proof", 5, 0.seconds, "present-proof-retry-1"),
-      RetryStep("present-proof-retry-1", 5, 2.seconds, "present-proof-retry-2"),
-      RetryStep("present-proof-retry-2", 5, 4.seconds, "present-proof-retry-3"),
-      RetryStep("present-proof-retry-3", 5, 8.seconds, "present-proof-retry-4"),
-      RetryStep("present-proof-retry-4", 5, 16.seconds, "present-proof-DLQ")
+      RetryStep(TOPIC_NAME, 5, 0.seconds, s"$TOPIC_NAME-retry-1"),
+      RetryStep(s"$TOPIC_NAME-retry-1", 5, 2.seconds, s"$TOPIC_NAME-retry-2"),
+      RetryStep(s"$TOPIC_NAME-retry-2", 5, 4.seconds, s"$TOPIC_NAME-retry-3"),
+      RetryStep(s"$TOPIC_NAME-retry-3", 5, 8.seconds, s"$TOPIC_NAME-retry-4"),
+      RetryStep(s"$TOPIC_NAME-retry-4", 5, 16.seconds, s"$TOPIC_NAME-DLQ")
     )
   )
   // TODO  @@ Metric

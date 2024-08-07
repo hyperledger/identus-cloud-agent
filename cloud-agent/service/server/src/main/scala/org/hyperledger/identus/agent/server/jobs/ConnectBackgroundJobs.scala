@@ -22,15 +22,17 @@ import java.util.UUID
 
 object ConnectBackgroundJobs extends BackgroundJobsHelper {
 
+  private val TOPIC_NAME = "connect"
+
   val connectFlowsHandler = messaging.MessagingService.consumeWithRetryStrategy(
     "identus-cloud-agent",
     ConnectBackgroundJobs.handleMessage,
     Seq(
-      RetryStep("connect", 5, 0.seconds, "connect-retry-1"),
-      RetryStep("connect-retry-1", 5, 2.seconds, "connect-retry-2"),
-      RetryStep("connect-retry-2", 5, 4.seconds, "connect-retry-3"),
-      RetryStep("connect-retry-3", 5, 8.seconds, "connect-retry-4"),
-      RetryStep("connect-retry-4", 5, 16.seconds, "connect-DLQ")
+      RetryStep(TOPIC_NAME, 5, 0.seconds, s"$TOPIC_NAME-retry-1"),
+      RetryStep(s"$TOPIC_NAME-retry-1", 5, 2.seconds, s"$TOPIC_NAME-retry-2"),
+      RetryStep(s"$TOPIC_NAME-retry-2", 5, 4.seconds, s"$TOPIC_NAME-retry-3"),
+      RetryStep(s"$TOPIC_NAME-retry-3", 5, 8.seconds, s"$TOPIC_NAME-retry-4"),
+      RetryStep(s"$TOPIC_NAME-retry-4", 5, 16.seconds, s"$TOPIC_NAME-DLQ")
     )
   )
   // TODO See how metrics can be re-implemented using MessagingService
