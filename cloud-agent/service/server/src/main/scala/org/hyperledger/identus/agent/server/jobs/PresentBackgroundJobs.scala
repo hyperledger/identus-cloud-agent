@@ -19,7 +19,9 @@ import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.mercury.protocol.reportproblem.v2.{ProblemCode, ReportProblem}
+import org.hyperledger.identus.messaging
 import org.hyperledger.identus.messaging.Message
+import org.hyperledger.identus.messaging.MessagingService.RetryStep
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
@@ -57,7 +59,24 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
   private type MESSAGING_RESOURCES = DidOps & DIDResolver & HttpClient
 
-  def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
+  val presentFlowsHandler = messaging.MessagingService.consumeWithRetryStrategy(
+    "identus-cloud-agent",
+    PresentBackgroundJobs.handleMessage,
+    Seq(
+      RetryStep("present-proof", 5, 0.seconds, "present-proof-retry-1"),
+      RetryStep("present-proof-retry-1", 5, 2.seconds, "present-proof-retry-2"),
+      RetryStep("present-proof-retry-2", 5, 4.seconds, "present-proof-retry-3"),
+      RetryStep("present-proof-retry-3", 5, 8.seconds, "present-proof-retry-4"),
+      RetryStep("present-proof-retry-4", 5, 16.seconds, "present-proof-DLQ")
+    )
+  )
+  // TODO  @@ Metric
+  //        .gauge("present_proof_flow_did_com_exchange_job_ms_gauge")
+  //        .trackDurationWith(_.toMetricsSeconds))
+  //        .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
+  //        .unit
+
+  private def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
     RESOURCES,
     Unit
   ] =

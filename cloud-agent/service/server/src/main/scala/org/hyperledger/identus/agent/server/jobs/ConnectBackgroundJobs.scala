@@ -8,7 +8,9 @@ import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.*
+import org.hyperledger.identus.messaging
 import org.hyperledger.identus.messaging.Message
+import org.hyperledger.identus.messaging.MessagingService.RetryStep
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
@@ -20,7 +22,25 @@ import java.util.UUID
 
 object ConnectBackgroundJobs extends BackgroundJobsHelper {
 
-  def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
+  val connectFlowsHandler = messaging.MessagingService.consumeWithRetryStrategy(
+    "identus-cloud-agent",
+    ConnectBackgroundJobs.handleMessage,
+    Seq(
+      RetryStep("connect", 5, 0.seconds, "connect-retry-1"),
+      RetryStep("connect-retry-1", 5, 2.seconds, "connect-retry-2"),
+      RetryStep("connect-retry-2", 5, 4.seconds, "connect-retry-3"),
+      RetryStep("connect-retry-3", 5, 8.seconds, "connect-retry-4"),
+      RetryStep("connect-retry-4", 5, 16.seconds, "connect-DLQ")
+    )
+  )
+  // TODO See how metrics can be re-implemented using MessagingService
+  //      _ <- (ConnectBackgroundJobs.didCommExchanges @@ Metric
+  //        .gauge("connection_flow_did_com_exchange_job_ms_gauge")
+  //        .trackDurationWith(_.toMetricsSeconds))
+  //        .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
+  //        .unit
+
+  private def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
     DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & DIDNonSecretStorage & AppConfig,
     Unit
   ] =

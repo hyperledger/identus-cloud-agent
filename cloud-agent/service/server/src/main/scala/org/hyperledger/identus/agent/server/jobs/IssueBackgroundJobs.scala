@@ -7,7 +7,9 @@ import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
+import org.hyperledger.identus.messaging
 import org.hyperledger.identus.messaging.Message
+import org.hyperledger.identus.messaging.MessagingService.RetryStep
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.service.CredentialService
 import org.hyperledger.identus.resolvers.DIDResolver
@@ -22,7 +24,25 @@ import java.util.UUID
 
 object IssueBackgroundJobs extends BackgroundJobsHelper {
 
-  def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
+  val issueFlowsHandler = messaging.MessagingService.consumeWithRetryStrategy(
+    "identus-cloud-agent",
+    IssueBackgroundJobs.handleMessage,
+    Seq(
+      RetryStep("issue-credential", 5, 0.seconds, "issue-credential-retry-1"),
+      RetryStep("issue-credential-retry-1", 5, 2.seconds, "issue-credential-retry-2"),
+      RetryStep("issue-credential-retry-2", 5, 4.seconds, "issue-credential-retry-3"),
+      RetryStep("issue-credential-retry-3", 5, 8.seconds, "issue-credential-retry-4"),
+      RetryStep("issue-credential-retry-4", 5, 16.seconds, "issue-credential-DLQ")
+    )
+  )
+  // TODO See how metrics can be re-implemented using MessagingService
+  //      _ <- (IssueBackgroundJobs.issueCredentialDidCommExchanges @@ Metric
+  //        .gauge("issuance_flow_did_com_exchange_job_ms_gauge")
+  //        .trackDurationWith(_.toMetricsSeconds))
+  //        .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
+  //        .unit
+
+  private def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
     HttpClient & DidOps & DIDResolver & (CredentialService & DIDNonSecretStorage & (ManagedDIDService & AppConfig)),
     Unit
   ] =

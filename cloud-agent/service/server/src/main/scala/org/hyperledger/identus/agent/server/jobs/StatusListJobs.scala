@@ -1,11 +1,13 @@
 package org.hyperledger.identus.agent.server.jobs
 
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.protocol.revocationnotificaiton.RevocationNotification
-import org.hyperledger.identus.messaging.Message
+import org.hyperledger.identus.messaging
+import org.hyperledger.identus.messaging.{Message, Producer}
 import org.hyperledger.identus.pollux.core.model.{CredInStatusList, CredentialStatusListWithCreds}
 import org.hyperledger.identus.pollux.core.service.{CredentialService, CredentialStatusListService}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021, VCStatusList2021Error}
@@ -19,7 +21,35 @@ import java.util.UUID
 
 object StatusListJobs extends BackgroundJobsHelper {
 
-  def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
+  val statusListsSyncTrigger = {
+    (for {
+      config <- ZIO.service[AppConfig]
+      trigger = for {
+        credentialStatusListService <- ZIO.service[CredentialStatusListService]
+        walletAndStatusListIds <- credentialStatusListService.getCredentialStatusListIds
+        _ <- ZIO.logInfo(s"Triggering status list revocation sync for '${walletAndStatusListIds.size}' status lists")
+        producer <- ZIO.service[Producer[UUID, WalletIdAndRecordId]]
+        _ <- ZIO.foreach(walletAndStatusListIds) { (walletId, statusListId) =>
+          producer.produce("sync-status-list", walletId.toUUID, WalletIdAndRecordId(walletId.toUUID, statusListId))
+        }
+      } yield ()
+      _ <- trigger.repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
+    } yield ()).debug.fork
+  }
+  // TODO Reimplement metrics
+  //      _ <- (StatusListJobs.syncRevocationStatuses @@ Metric
+  //        .gauge("revocation_status_list_sync_job_ms_gauge")
+  //        .trackDurationWith(_.toMetricsSeconds))
+  //        .repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
+
+  val statusListSyncHandler = messaging.MessagingService.consumeStrategy(
+    groupId = "identus-cloud-agent",
+    topicName = "sync-status-list",
+    consumerCount = 5,
+    StatusListJobs.handleMessage
+  )
+
+  private def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
     DIDService & ManagedDIDService & CredentialService & DidOps & DIDResolver & HttpClient &
       CredentialStatusListService,
     Unit

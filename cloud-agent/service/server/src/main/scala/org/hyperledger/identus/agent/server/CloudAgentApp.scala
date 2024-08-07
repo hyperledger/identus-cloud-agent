@@ -5,7 +5,7 @@ import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.http.{ZHttp4sBlazeServer, ZHttpEndpoints}
 import org.hyperledger.identus.agent.server.jobs.*
 import org.hyperledger.identus.agent.walletapi.model.{Entity, Wallet, WalletSeed}
-import org.hyperledger.identus.agent.walletapi.service.{EntityService, ManagedDIDService, WalletManagementService}
+import org.hyperledger.identus.agent.walletapi.service.{EntityService, WalletManagementService}
 import org.hyperledger.identus.castor.controller.{DIDRegistrarServerEndpoints, DIDServerEndpoints}
 import org.hyperledger.identus.connect.controller.ConnectionServerEndpoints
 import org.hyperledger.identus.credentialstatus.controller.CredentialStatusServiceEndpoints
@@ -15,10 +15,7 @@ import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticator
 import org.hyperledger.identus.iam.entity.http.EntityServerEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementServerEndpoints
 import org.hyperledger.identus.issue.controller.IssueServerEndpoints
-import org.hyperledger.identus.messaging.*
-import org.hyperledger.identus.messaging.MessagingService.RetryStep
 import org.hyperledger.identus.oid4vci.CredentialIssuerServerEndpoints
-import org.hyperledger.identus.pollux.core.service.CredentialStatusListService
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
 import org.hyperledger.identus.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import org.hyperledger.identus.presentproof.controller.PresentProofServerEndpoints
@@ -26,131 +23,23 @@ import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.system.controller.SystemServerEndpoints
 import org.hyperledger.identus.verification.controller.VcVerificationServerEndpoints
 import zio.*
-
-import java.util.UUID
 object CloudAgentApp {
 
   def run = for {
     _ <- AgentInitialization.run
-    _ <- issueFlowsHandler
-    _ <- presentFlowsHandler
-    _ <- connectFlowsHandler
-    _ <- didPublicationStateSyncTrigger
-    _ <- didPublicationStateSyncHandler
-    _ <- statusListsSyncTrigger
-    _ <- statusListSyncHandler
+    _ <- ConnectBackgroundJobs.connectFlowsHandler
+    _ <- IssueBackgroundJobs.issueFlowsHandler
+    _ <- PresentBackgroundJobs.presentFlowsHandler
+    _ <- DIDStateSyncBackgroundJobs.didPublicationStateSyncTrigger
+    _ <- DIDStateSyncBackgroundJobs.didPublicationStateSyncHandler
+    _ <- StatusListJobs.statusListsSyncTrigger
+    _ <- StatusListJobs.statusListSyncHandler
     _ <- AgentHttpServer.run.tapDefect(e => ZIO.logErrorCause("Agent HTTP Server failure", e)).fork
     fiber <- DidCommHttpServer.run.tapDefect(e => ZIO.logErrorCause("DIDComm HTTP Server failure", e)).fork
     _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
     _ <- fiber.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
   } yield ()
-
-  private val presentFlowsHandler = MessagingService.consumeWithRetryStrategy(
-    "identus-cloud-agent",
-    PresentBackgroundJobs.handleMessage,
-    Seq(
-      RetryStep("present-proof", 5, 0.seconds, "present-proof-retry-1"),
-      RetryStep("present-proof-retry-1", 5, 2.seconds, "present-proof-retry-2"),
-      RetryStep("present-proof-retry-2", 5, 4.seconds, "present-proof-retry-3"),
-      RetryStep("present-proof-retry-3", 5, 8.seconds, "present-proof-retry-4"),
-      RetryStep("present-proof-retry-4", 5, 16.seconds, "present-proof-DLQ")
-    )
-  )
-  // TODO  @@ Metric
-  //        .gauge("present_proof_flow_did_com_exchange_job_ms_gauge")
-  //        .trackDurationWith(_.toMetricsSeconds))
-  //        .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
-  //        .unit
-  private val issueFlowsHandler = MessagingService.consumeWithRetryStrategy(
-    "identus-cloud-agent",
-    IssueBackgroundJobs.handleMessage,
-    Seq(
-      RetryStep("issue-credential", 5, 0.seconds, "issue-credential-retry-1"),
-      RetryStep("issue-credential-retry-1", 5, 2.seconds, "issue-credential-retry-2"),
-      RetryStep("issue-credential-retry-2", 5, 4.seconds, "issue-credential-retry-3"),
-      RetryStep("issue-credential-retry-3", 5, 8.seconds, "issue-credential-retry-4"),
-      RetryStep("issue-credential-retry-4", 5, 16.seconds, "issue-credential-DLQ")
-    )
-  )
-  // TODO See how metrics can be re-implemented using MessagingService
-  //      _ <- (IssueBackgroundJobs.issueCredentialDidCommExchanges @@ Metric
-  //        .gauge("issuance_flow_did_com_exchange_job_ms_gauge")
-  //        .trackDurationWith(_.toMetricsSeconds))
-  //        .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
-  //        .unit
-  private val connectFlowsHandler = MessagingService.consumeWithRetryStrategy(
-    "identus-cloud-agent",
-    ConnectBackgroundJobs.handleMessage,
-    Seq(
-      RetryStep("connect", 5, 0.seconds, "connect-retry-1"),
-      RetryStep("connect-retry-1", 5, 2.seconds, "connect-retry-2"),
-      RetryStep("connect-retry-2", 5, 4.seconds, "connect-retry-3"),
-      RetryStep("connect-retry-3", 5, 8.seconds, "connect-retry-4"),
-      RetryStep("connect-retry-4", 5, 16.seconds, "connect-DLQ")
-    )
-  )
-
-  // TODO See how metrics can be re-implemented using MessagingService
-  //      _ <- (ConnectBackgroundJobs.didCommExchanges @@ Metric
-  //        .gauge("connection_flow_did_com_exchange_job_ms_gauge")
-  //        .trackDurationWith(_.toMetricsSeconds))
-  //        .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
-  //        .unit
-
-  private val statusListsSyncTrigger = {
-    (for {
-      config <- ZIO.service[AppConfig]
-      trigger = for {
-        credentialStatusListService <- ZIO.service[CredentialStatusListService]
-        walletAndStatusListIds <- credentialStatusListService.getCredentialStatusListIds
-        _ <- ZIO.logInfo(s"Triggering status list revocation sync for '${walletAndStatusListIds.size}' status lists")
-        producer <- ZIO.service[Producer[UUID, WalletIdAndRecordId]]
-        _ <- ZIO.foreach(walletAndStatusListIds) { (walletId, statusListId) =>
-          producer.produce("sync-status-list", walletId.toUUID, WalletIdAndRecordId(walletId.toUUID, statusListId))
-        }
-      } yield ()
-      _ <- trigger.repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
-    } yield ()).debug.fork
-  }
-  // TODO Reimplement metrics
-  //      _ <- (StatusListJobs.syncRevocationStatuses @@ Metric
-  //        .gauge("revocation_status_list_sync_job_ms_gauge")
-  //        .trackDurationWith(_.toMetricsSeconds))
-  //        .repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
-
-  private val statusListSyncHandler = MessagingService.consumeStrategy(
-    groupId = "identus-cloud-agent",
-    topicName = "sync-status-list",
-    consumerCount = 5,
-    StatusListJobs.handleMessage
-  )
-
-  private val didPublicationStateSyncTrigger
-      : URIO[ManagedDIDService & WalletManagementService & Producer[WalletId, WalletId], Unit] =
-    ZIO
-      .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
-      .flatMap { wallets =>
-        ZIO.foreach(wallets) { wallet =>
-          for {
-            producer <- ZIO.service[Producer[WalletId, WalletId]]
-            _ <- producer.produce("sync-did-state", wallet.id, wallet.id)
-          } yield ()
-        }
-      }
-      .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
-      .repeat(Schedule.spaced(10.seconds))
-      .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
-      .debug
-      .fork
-      .unit
-
-  private val didPublicationStateSyncHandler = MessagingService.consumeStrategy(
-    groupId = "identus-cloud-agent",
-    topicName = "sync-did-state",
-    consumerCount = 5,
-    DIDStateSyncBackgroundJobs.handleMessage
-  )
 }
 
 object AgentHttpServer {
