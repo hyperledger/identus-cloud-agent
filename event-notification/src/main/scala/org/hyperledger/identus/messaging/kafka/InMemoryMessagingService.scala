@@ -92,7 +92,6 @@ class InMemoryProducer[K, V](
     currentTime <- Clock.currentTime(TimeUnit.MILLISECONDS)
     messageId <- offsetRef.updateAndGet(x => Offset(x.value + 1)) //  unique atomic id incremented per topic
     _ <- queue.offer(Message(key, value, messageId.value, currentTime))
-    _ <- ZIO.debug(s"Message offered to queue: $topic with ID: $messageId")
   } yield ()
 }
 
