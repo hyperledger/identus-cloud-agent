@@ -1,7 +1,7 @@
 package org.hyperledger.identus.messaging
 
 import org.hyperledger.identus.shared.models.Serde
-import zio.{Cause, Duration, EnvironmentTag, RIO, Task, URIO, ZIO}
+import zio.{durationInt, Cause, Duration, EnvironmentTag, RIO, Task, URIO, ZIO}
 
 import java.time.Instant
 trait MessagingService {
@@ -11,7 +11,12 @@ trait MessagingService {
 
 object MessagingService {
 
-  case class RetryStep(topicName: String, consumerCount: Int, consumerBackoff: Duration, nextTopicName: String)
+  case class RetryStep(topicName: String, consumerCount: Int, consumerBackoff: Duration, nextTopicName: Option[String])
+
+  object RetryStep {
+    def apply(topicName: String, consumerCount: Int, consumerBackoff: Duration, nextTopicName: String): RetryStep =
+      RetryStep(topicName, consumerCount, consumerBackoff, Some(nextTopicName))
+  }
 
   def consumeWithRetryStrategy[K: EnvironmentTag, V: EnvironmentTag, HR](
       groupId: String,
@@ -36,14 +41,17 @@ object MessagingService {
                     .catchAll { t =>
                       for {
                         _ <- ZIO.logErrorCause(s"Error processing message: ${m.key} ", Cause.fail(t))
-                        _ <- messageProducer
-                          .produce(step.nextTopicName, m.key, m.value)
-                          .catchAll(t => ZIO.logErrorCause("Unable to send message to the next topic", Cause.fail(t)))
+                        _ <- step.nextTopicName match
+                          case Some(name) =>
+                            messageProducer
+                              .produce(name, m.key, m.value)
+                              .catchAll(t =>
+                                ZIO.logErrorCause("Unable to send message to the next topic", Cause.fail(t))
+                              )
+                          case None => ZIO.unit
                       } yield ()
                     }
-                    .catchAllDefect(t =>
-                      ZIO.logErrorCause(s"Defect processing message: ${m.key} ", Cause.fail(t))
-                    )
+                    .catchAllDefect(t => ZIO.logErrorCause(s"Defect processing message: ${m.key} ", Cause.fail(t)))
                 } yield ()
               }
               .debug
@@ -54,28 +62,13 @@ object MessagingService {
     } yield ()
   }
 
-  def consumeStrategy[K: EnvironmentTag, V: EnvironmentTag, HR](
+  def consume[K: EnvironmentTag, V: EnvironmentTag, HR](
       groupId: String,
       topicName: String,
-      consumerCount:Int,
+      consumerCount: Int,
       handler: Message[K, V] => RIO[HR, Unit]
-  )(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[HR & Producer[K, V] & MessagingService, Unit] = {
-    for {
-      messagingService <- ZIO.service[MessagingService]
-      messageProducer <- ZIO.service[Producer[K, V]]
-       _ <- ZIO.foreachPar(1 to consumerCount)(_ =>
-          for {
-            consumer <- messagingService.makeConsumer[K, V](groupId)
-            _ <- consumer
-              .consume[HR](topicName) { m =>
-               handler(m).orDie // Terminate and continue
-              }
-              .debug
-              .fork
-          } yield ()
-        )
-    } yield ()
-  }
+  )(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[HR & Producer[K, V] & MessagingService, Unit] =
+    consumeWithRetryStrategy(groupId, handler, Seq(RetryStep(topicName, consumerCount, 0.seconds, None)))
 
 }
 

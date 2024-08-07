@@ -39,7 +39,7 @@ object StatusListJobs extends BackgroundJobsHelper {
     } yield ()).debug.fork
   }
 
-  val statusListSyncHandler = messaging.MessagingService.consumeStrategy(
+  val statusListSyncHandler = messaging.MessagingService.consume(
     groupId = "identus-cloud-agent",
     topicName = TOPIC_NAME,
     consumerCount = 5,

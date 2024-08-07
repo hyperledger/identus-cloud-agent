@@ -30,7 +30,7 @@ object DIDStateSyncBackgroundJobs {
       .fork
       .unit
 
-  val didPublicationStateSyncHandler = MessagingService.consumeStrategy(
+  val didPublicationStateSyncHandler = MessagingService.consume(
     groupId = "identus-cloud-agent",
     topicName = TOPIC_NAME,
     consumerCount = 5,
