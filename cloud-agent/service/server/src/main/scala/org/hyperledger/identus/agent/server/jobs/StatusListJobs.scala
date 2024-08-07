@@ -38,11 +38,6 @@ object StatusListJobs extends BackgroundJobsHelper {
       _ <- trigger.repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
     } yield ()).debug.fork
   }
-  // TODO Reimplement metrics
-  //      _ <- (StatusListJobs.syncRevocationStatuses @@ Metric
-  //        .gauge("revocation_status_list_sync_job_ms_gauge")
-  //        .trackDurationWith(_.toMetricsSeconds))
-  //        .repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
 
   val statusListSyncHandler = messaging.MessagingService.consumeStrategy(
     groupId = "identus-cloud-agent",
@@ -55,8 +50,8 @@ object StatusListJobs extends BackgroundJobsHelper {
     DIDService & ManagedDIDService & CredentialService & DidOps & DIDResolver & HttpClient &
       CredentialStatusListService,
     Unit
-  ] =
-    for {
+  ] = {
+    (for {
       _ <- ZIO.logInfo(s"!!! Handling recordId: ${message.value} via Kafka queue")
       credentialStatusListService <- ZIO.service[CredentialStatusListService]
       walletAccessContext = WalletAccessContext(WalletId.fromUUID(message.value.walletId))
@@ -64,7 +59,10 @@ object StatusListJobs extends BackgroundJobsHelper {
         .getCredentialStatusListWithCreds(message.value.recordId)
         .provideSome(ZLayer.succeed(walletAccessContext))
       _ <- updateStatusList(statusListWithCreds)
-    } yield ()
+    } yield ()) @@ Metric
+      .gauge("revocation_status_list_sync_job_ms_gauge")
+      .trackDurationWith(_.toMetricsSeconds)
+  }
 
   private def updateStatusList(statusListWithCreds: CredentialStatusListWithCreds) = {
     for {

@@ -3,7 +3,9 @@ package org.hyperledger.identus.agent.server.jobs
 import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, WalletManagementService}
 import org.hyperledger.identus.messaging.{Message, MessagingService, Producer}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
+import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
+import zio.metrics.Metric
 
 object DIDStateSyncBackgroundJobs {
 
@@ -44,5 +46,8 @@ object DIDStateSyncBackgroundJobs {
     effect
       .provideSomeLayer(ZLayer.succeed(WalletAccessContext(message.value)))
       .catchAll(t => ZIO.logErrorCause("Unable to syncing DID publication state", Cause.fail(t)))
+      @@ Metric
+        .gauge("did_publication_state_sync_job_ms_gauge")
+        .trackDurationWith(_.toMetricsSeconds)
   }
 }

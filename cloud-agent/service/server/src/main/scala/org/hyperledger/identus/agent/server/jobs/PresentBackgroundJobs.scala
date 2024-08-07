@@ -72,17 +72,12 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       RetryStep(s"$TOPIC_NAME-retry-4", 5, 16.seconds, s"$TOPIC_NAME-DLQ")
     )
   )
-  // TODO  @@ Metric
-  //        .gauge("present_proof_flow_did_com_exchange_job_ms_gauge")
-  //        .trackDurationWith(_.toMetricsSeconds))
-  //        .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
-  //        .unit
 
   private def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
     RESOURCES,
     Unit
-  ] =
-    for {
+  ] = {
+    (for {
       _ <- ZIO.logInfo(s"!!! Present Proof Handling recordId: ${message.value} via Kafka queue")
       presentationService <- ZIO.service[PresentationService]
       walletAccessContext = WalletAccessContext(WalletId.fromUUID(message.value.walletId))
@@ -99,7 +94,10 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           } yield ()
         }
         .catchAll { e => ZIO.fail(RuntimeException(s"Attempt failed with: ${e}")) }
-    } yield ()
+    } yield ()) @@ Metric
+      .gauge("present_proof_flow_did_com_exchange_job_ms_gauge")
+      .trackDurationWith(_.toMetricsSeconds)
+  }
 
   private def counterMetric(key: String) = Metric
     .counterInt(key)

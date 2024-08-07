@@ -37,18 +37,12 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
       RetryStep(s"$TOPIC_NAME-retry-4", 5, 16.seconds, s"$TOPIC_NAME-DLQ")
     )
   )
-  // TODO See how metrics can be re-implemented using MessagingService
-  //      _ <- (IssueBackgroundJobs.issueCredentialDidCommExchanges @@ Metric
-  //        .gauge("issuance_flow_did_com_exchange_job_ms_gauge")
-  //        .trackDurationWith(_.toMetricsSeconds))
-  //        .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
-  //        .unit
 
   private def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
     HttpClient & DidOps & DIDResolver & (CredentialService & DIDNonSecretStorage & (ManagedDIDService & AppConfig)),
     Unit
-  ] =
-    for {
+  ] = {
+    (for {
       _ <- ZIO.logInfo(s"!!! Handling recordId: ${message.value} via Kafka queue")
       credentialService <- ZIO.service[CredentialService]
       walletAccessContext = WalletAccessContext(WalletId.fromUUID(message.value.walletId))
@@ -66,7 +60,10 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
           } yield ()
         }
         .catchAll { e => ZIO.fail(RuntimeException(s"Attempt failed with: ${e}")) }
-    } yield ()
+    } yield ()) @@ Metric
+      .gauge("issuance_flow_did_com_exchange_job_ms_gauge")
+      .trackDurationWith(_.toMetricsSeconds)
+  }
 
   private def counterMetric(key: String) = Metric
     .counterInt(key)

@@ -35,18 +35,12 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
       RetryStep(s"$TOPIC_NAME-retry-4", 5, 16.seconds, s"$TOPIC_NAME-DLQ")
     )
   )
-  // TODO See how metrics can be re-implemented using MessagingService
-  //      _ <- (ConnectBackgroundJobs.didCommExchanges @@ Metric
-  //        .gauge("connection_flow_did_com_exchange_job_ms_gauge")
-  //        .trackDurationWith(_.toMetricsSeconds))
-  //        .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
-  //        .unit
 
   private def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
     DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & DIDNonSecretStorage & AppConfig,
     Unit
   ] =
-    for {
+    (for {
       _ <- ZIO.logInfo(s"!!! Handling recordId: ${message.value} via Kafka queue")
       connectionService <- ZIO.service[ConnectionService]
       walletAccessContext = WalletAccessContext(WalletId.fromUUID(message.value.walletId))
@@ -64,7 +58,9 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
           } yield ()
         }
         .catchAll { e => ZIO.fail(RuntimeException(s"Attempt failed with: ${e}")) }
-    } yield ()
+    } yield ()) @@ Metric
+      .gauge("connection_flow_did_com_exchange_job_ms_gauge")
+      .trackDurationWith(_.toMetricsSeconds)
 
   private def performExchange(record: ConnectionRecord) = {
     import ProtocolState.*
