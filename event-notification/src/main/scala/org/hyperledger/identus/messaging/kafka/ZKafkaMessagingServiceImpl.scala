@@ -1,16 +1,13 @@
 package org.hyperledger.identus.messaging.kafka
 
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.header.Headers
 import org.hyperledger.identus.messaging.*
 import org.hyperledger.identus.shared.models.Serde
-import zio.{durationInt, EnvironmentTag, RIO, RLayer, Task, ULayer, URIO, ZIO, ZLayer}
-import zio.kafka.consumer.{
-  Consumer as ZKConsumer,
-  ConsumerSettings as ZKConsumerSettings,
-  Subscription as ZKSubscription
-}
+import zio.kafka.consumer.{Consumer as ZKConsumer, ConsumerSettings as ZKConsumerSettings, Subscription as ZKSubscription}
 import zio.kafka.producer.{Producer as ZKProducer, ProducerSettings as ZKProducerSettings}
 import zio.kafka.serde.{Deserializer as ZKDeserializer, Serializer as ZKSerializer}
+import zio.{EnvironmentTag, RIO, RLayer, Task, ULayer, URIO, ZIO, ZLayer, durationInt}
 
 class ZKafkaMessagingServiceImpl(bootstrapServers: List[String]) extends MessagingService {
   override def makeConsumer[K, V](groupId: String)(implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Consumer[K, V]] =
@@ -34,6 +31,7 @@ class ZKafkaConsumerImpl[K, V](
   private val zkConsumer = ZLayer.scoped(
     ZKConsumer.make(
       ZKConsumerSettings(bootstrapServers)
+        .withProperty(ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, false.toString)
         .withGroupId(groupId)
         // 'max.poll.records' default is 500. This is a Kafka property.
         .withMaxPollRecords(500)
@@ -79,7 +77,11 @@ object ZKafkaConsumerImpl {
 
 class ZKafkaProducerImpl[K, V](bootstrapServers: List[String], kSerde: Serde[K], vSerde: Serde[V])
     extends Producer[K, V] {
-  private val zkProducer = ZLayer.scoped(ZKProducer.make(ZKProducerSettings(bootstrapServers)))
+  private val zkProducer = ZLayer.scoped(
+    ZKProducer.make(
+      ZKProducerSettings(bootstrapServers)
+    )
+  )
 
   private val zkKeySerializer = new ZKSerializer[Any, K] {
     override def serialize(topic: String, headers: Headers, value: K): RIO[Any, Array[Byte]] =
