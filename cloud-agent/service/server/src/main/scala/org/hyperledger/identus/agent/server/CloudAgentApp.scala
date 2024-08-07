@@ -10,27 +10,26 @@ import org.hyperledger.identus.castor.controller.{DIDRegistrarServerEndpoints, D
 import org.hyperledger.identus.connect.controller.ConnectionServerEndpoints
 import org.hyperledger.identus.credentialstatus.controller.CredentialStatusServiceEndpoints
 import org.hyperledger.identus.event.controller.EventServerEndpoints
-import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticator
 import org.hyperledger.identus.iam.entity.http.EntityServerEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementServerEndpoints
 import org.hyperledger.identus.issue.controller.IssueServerEndpoints
-import org.hyperledger.identus.messaging.MessagingService
+import org.hyperledger.identus.messaging.*
 import org.hyperledger.identus.messaging.MessagingService.RetryStep
 import org.hyperledger.identus.oid4vci.CredentialIssuerServerEndpoints
+import org.hyperledger.identus.pollux.core.service.CredentialStatusListService
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
 import org.hyperledger.identus.pollux.credentialschema.{
   SchemaRegistryServerEndpoints,
   VerificationPolicyServerEndpoints
 }
 import org.hyperledger.identus.presentproof.controller.PresentProofServerEndpoints
-import org.hyperledger.identus.shared.models.{HexString, WalletAccessContext, WalletAdministrationContext, WalletId, Serde}
-import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
+import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.system.controller.SystemServerEndpoints
 import org.hyperledger.identus.verification.controller.VcVerificationServerEndpoints
 import zio.*
-import zio.metrics.*
-import org.hyperledger.identus.messaging.*
+
+import java.util.UUID
 object CloudAgentApp {
 
   def run = for {
@@ -41,6 +40,7 @@ object CloudAgentApp {
     _ <- syncDIDPublicationStateFromDltJob
     _ <- consumeAndSyncDIDPublicationStateFromDlt
     _ <- syncRevocationStatusListsJob.debug.fork
+    _ <- consumeAndSyncRevocationStatusLists
     _ <- AgentHttpServer.run.tapDefect(e => ZIO.logErrorCause("Agent HTTP Server failure", e)).fork
     fiber <- DidCommHttpServer.run.tapDefect(e => ZIO.logErrorCause("DIDComm HTTP Server failure", e)).fork
     _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
@@ -103,38 +103,56 @@ object CloudAgentApp {
   private val syncRevocationStatusListsJob = {
     for {
       config <- ZIO.service[AppConfig]
-      _ <- (StatusListJobs.syncRevocationStatuses @@ Metric
-        .gauge("revocation_status_list_sync_job_ms_gauge")
-        .trackDurationWith(_.toMetricsSeconds))
-        .repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
+      trigger = for {
+        credentialStatusListService <- ZIO.service[CredentialStatusListService]
+        walletAndStatusListIds <- credentialStatusListService.getCredentialStatusListIds
+        _ <- ZIO.logInfo(s"Triggering status list revocation sync for '${walletAndStatusListIds.size}' status lists")
+        producer <- ZIO.service[Producer[UUID, WalletIdAndRecordId]]
+        _ <- ZIO.foreach(walletAndStatusListIds) { (walletId, statusListId) =>
+          producer.produce("sync-status-list", walletId.toUUID, WalletIdAndRecordId(walletId.toUUID, statusListId))
+        }
+      } yield ()
+      _ <- trigger.repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
     } yield ()
   }
+  // TODO Reimplement metrics
+  //      _ <- (StatusListJobs.syncRevocationStatuses @@ Metric
+  //        .gauge("revocation_status_list_sync_job_ms_gauge")
+  //        .trackDurationWith(_.toMetricsSeconds))
+  //        .repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
 
-  private val syncDIDPublicationStateFromDltJob: URIO[ManagedDIDService & WalletManagementService & Producer[WalletId, WalletId],  Unit] =
-  ZIO.serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
-    .flatMap { wallets =>
-      ZIO.foreach(wallets) { wallet =>
-        for {
-          producer <- ZIO.service[Producer[WalletId, WalletId]]
-          _ <- producer.produce("sync-did-state", wallet.id, wallet.id)
-        } yield ()
+  private val consumeAndSyncRevocationStatusLists = MessagingService.consumeStrategy(
+    groupId = "identus-cloud-agent",
+    topicName = "sync-status-list",
+    consumerCount = 5,
+    StatusListJobs.handleMessage
+  )
+
+  private val syncDIDPublicationStateFromDltJob
+      : URIO[ManagedDIDService & WalletManagementService & Producer[WalletId, WalletId], Unit] =
+    ZIO
+      .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
+      .flatMap { wallets =>
+        ZIO.foreach(wallets) { wallet =>
+          for {
+            producer <- ZIO.service[Producer[WalletId, WalletId]]
+            _ <- producer.produce("sync-did-state", wallet.id, wallet.id)
+          } yield ()
+        }
       }
-    }
-    .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
-    .repeat(Schedule.spaced(10.seconds))
-    .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
-    .debug
-    .fork
-    .unit
-
-
+      .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
+      .repeat(Schedule.spaced(10.seconds))
+      .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
+      .debug
+      .fork
+      .unit
 
   private val consumeAndSyncDIDPublicationStateFromDlt = MessagingService.consumeStrategy(
     groupId = "identus-cloud-agent",
-    topicName = "sync-did-state", 
+    topicName = "sync-did-state",
     consumerCount = 5,
     DIDStateSyncBackgroundJobs.handleMessage
-  ) 
+  )
 }
 
 object AgentHttpServer {
