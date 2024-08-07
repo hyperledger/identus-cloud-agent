@@ -21,11 +21,12 @@ object EndpointOutputs {
 
   val basicFailures: EndpointOutput[ErrorResponse] = basicFailuresWith()
 
-  val basicFailuresAndForbidden = basicFailuresWith(FailureVariant.forbidden)
+  val basicFailuresAndForbidden = basicFailuresWith(FailureVariant.unauthorized, FailureVariant.forbidden)
 
   val basicFailuresAndNotFound = basicFailuresWith(FailureVariant.notFound)
 
-  val basicFailureAndNotFoundAndForbidden = basicFailuresWith(FailureVariant.notFound, FailureVariant.forbidden)
+  val basicFailureAndNotFoundAndForbidden =
+    basicFailuresWith(FailureVariant.notFound, FailureVariant.unauthorized, FailureVariant.forbidden)
 
   object FailureVariant {
     val badRequest = oneOfVariantValueMatcher(
@@ -57,6 +58,11 @@ object EndpointOutputs {
       StatusCode.Forbidden,
       jsonBody[ErrorResponse].description("Forbidden")
     )(statusCodeMatcher(StatusCode.Forbidden))
+
+    val unauthorized = oneOfVariantValueMatcher(
+      StatusCode.Unauthorized,
+      jsonBody[ErrorResponse].description("Unauthorized")
+    )(statusCodeMatcher(StatusCode.Unauthorized))
   }
 
 }
