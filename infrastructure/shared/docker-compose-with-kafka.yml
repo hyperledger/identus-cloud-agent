@@ -1,6 +1,4 @@
 ---
-version: "3.8"
-
 services:
   ##########################
   # Database
@@ -102,6 +100,7 @@ services:
       DEFAULT_WALLET_WEBHOOK_URL:
       DEFAULT_WALLET_WEBHOOK_API_KEY:
       DEFAULT_WALLET_AUTH_API_KEY:
+      DEFAULT_KAFKA_ENABLED: true
       GLOBAL_WEBHOOK_URL:
       GLOBAL_WEBHOOK_API_KEY:
       WEBHOOK_PARALLELISM:
@@ -117,7 +116,7 @@ services:
         condition: service_started
       vault-server:
         condition: service_healthy
-      kafka:
+      init-kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://cloud-agent:8085/_system/health"]
@@ -184,15 +183,44 @@ services:
       # blocks until kafka is reachable
       kafka-topics --bootstrap-server kafka:9092 --list
       echo -e 'Creating kafka topics'
+      
+      # Connect
       kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic connect --replication-factor 1 --partitions 5
       kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic connect-retry-1 --replication-factor 1 --partitions 5
       kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic connect-retry-2 --replication-factor 1 --partitions 5
       kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic connect-retry-3 --replication-factor 1 --partitions 5
       kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic connect-retry-4 --replication-factor 1 --partitions 5
       kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic connect-DLQ --replication-factor 1 --partitions 1
-      echo -e 'Successfully created the following topics:'
-      kafka-topics --bootstrap-server kafka:9092 --list
+      
+      # Issue
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic issue --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic issue-retry-1 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic issue-retry-2 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic issue-retry-3 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic issue-retry-4 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic issue-DLQ --replication-factor 1 --partitions 1
+      
+      # Present
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic present --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic present-retry-1 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic present-retry-2 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic present-retry-3 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic present-retry-4 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic present-DLQ --replication-factor 1 --partitions 1
+      
+      # DID Publication State Sync
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic sync-did-state --replication-factor 1 --partitions 5
+      
+      # Status List Sync
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic sync-status-list --replication-factor 1 --partitions 5
+      
+      tail -f /dev/null
       "
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:9092 --list | grep -q 'sync-status-list'"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
 
 volumes:
   pg_data_db:
