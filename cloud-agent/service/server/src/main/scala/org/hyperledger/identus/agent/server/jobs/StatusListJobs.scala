@@ -1,33 +1,37 @@
 package org.hyperledger.identus.agent.server.jobs
 
-import org.hyperledger.identus.agent.server.config.AppConfig
+import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.protocol.revocationnotificaiton.RevocationNotification
+import org.hyperledger.identus.messaging.Message
 import org.hyperledger.identus.pollux.core.model.{CredInStatusList, CredentialStatusListWithCreds}
 import org.hyperledger.identus.pollux.core.service.{CredentialService, CredentialStatusListService}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021, VCStatusList2021Error}
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.resolvers.DIDResolver
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
 import zio.metrics.Metric
 
+import java.util.UUID
+
 object StatusListJobs extends BackgroundJobsHelper {
 
-  val syncRevocationStatuses =
+  def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
+    DIDService & ManagedDIDService & CredentialService & DidOps & DIDResolver & HttpClient &
+      CredentialStatusListService,
+    Unit
+  ] =
     for {
+      _ <- ZIO.logInfo(s"!!! Handling recordId: ${message.value} via Kafka queue")
       credentialStatusListService <- ZIO.service[CredentialStatusListService]
-      credentialStatusListsWithCreds <- credentialStatusListService.getCredentialsAndItsStatuses
-        @@ Metric
-          .gauge("revocation_status_list_sync_get_status_lists_w_creds_ms_gauge")
-          .trackDurationWith(_.toMetricsSeconds)
-      config <- ZIO.service[AppConfig]
-      _ <- (ZIO
-        .collectAll(credentialStatusListsWithCreds.map(updateStatusList))
-        @@ Metric
-          .gauge("revocation_status_list_sync_process_status_lists_w_creds_ms_gauge")
-          .trackDurationWith(_.toMetricsSeconds))
-        .withParallelism(config.pollux.syncRevocationStatusesBgJobProcessingParallelism)
+      walletAccessContext = WalletAccessContext(WalletId.fromUUID(message.value.walletId))
+      statusListWithCreds <- credentialStatusListService
+        .getCredentialStatusListWithCreds(message.value.recordId)
+        .provideSome(ZLayer.succeed(walletAccessContext))
+      _ <- updateStatusList(statusListWithCreds)
     } yield ()
 
   private def updateStatusList(statusListWithCreds: CredentialStatusListWithCreds) = {
@@ -108,7 +112,9 @@ object StatusListJobs extends BackgroundJobsHelper {
     } yield ()
   }
 
-  private def sendRevocationNotificationMessage(credInStatusList: CredInStatusList) = {
+  private def sendRevocationNotificationMessage(
+      credInStatusList: CredInStatusList
+  ) = {
     for {
       credentialService <- ZIO.service[CredentialService]
       maybeIssueCredentialRecord <- credentialService.findById(credInStatusList.issueCredentialRecordId)
