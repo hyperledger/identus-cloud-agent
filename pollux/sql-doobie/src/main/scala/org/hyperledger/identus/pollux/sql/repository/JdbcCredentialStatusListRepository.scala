@@ -8,7 +8,7 @@ import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, StatusPurpose}
-import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, BitStringError, VCStatusList2021}
+import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.*
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
@@ -212,9 +212,24 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
     } yield ()
   }
 
-  def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]] = {
+  def getCredentialStatusListIds: UIO[Seq[(WalletId, UUID)]] = {
+    val cxnIO =
+      sql"""
+           | SELECT 
+           |    wallet_id,
+           |    id
+           |  FROM public.credential_status_lists
+           |""".stripMargin
+        .query[(WalletId, UUID)]
+        .to[Seq]
+    cxnIO
+      .transact(xb)
+      .orDie
+  }
 
-    // Might need to add wallet Id in the select query, because I'm selecting all of them
+  def getCredentialStatusListsWithCreds(
+      statusListId: UUID
+  ): URIO[WalletAccessContext, CredentialStatusListWithCreds] = {
     val cxnIO =
       sql"""
            | SELECT
@@ -233,42 +248,35 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
            |   cisl.is_processed
            |  FROM public.credential_status_lists csl
            |  LEFT JOIN public.credentials_in_status_list cisl ON csl.id = cisl.credential_status_list_id
+           |  WHERE
+           |    csl.id = $statusListId
            |""".stripMargin
         .query[CredentialStatusListWithCred]
         .to[List]
+        .transactWallet(xa)
+        .orDie
 
-    val credentialStatusListsWithCredZio = cxnIO
-      .transact(xb)
-      .orDie
-
-    for {
-      credentialStatusListsWithCred <- credentialStatusListsWithCredZio
-    } yield {
-      credentialStatusListsWithCred
-        .groupBy(_.credentialStatusListId)
-        .map { case (id, items) =>
-          CredentialStatusListWithCreds(
-            id,
-            items.head.walletId,
-            items.head.issuer,
-            items.head.issued,
-            items.head.purpose,
-            items.head.statusListCredential,
-            items.head.size,
-            items.head.lastUsedIndex,
-            items.map { item =>
-              CredInStatusList(
-                item.credentialInStatusListId,
-                item.issueCredentialRecordId,
-                item.statusListIndex,
-                item.isCanceled,
-                item.isProcessed,
-              )
-            }
+    cxnIO.map(items =>
+      CredentialStatusListWithCreds(
+        statusListId,
+        items.head.walletId,
+        items.head.issuer,
+        items.head.issued,
+        items.head.purpose,
+        items.head.statusListCredential,
+        items.head.size,
+        items.head.lastUsedIndex,
+        items.map { item =>
+          CredInStatusList(
+            item.credentialInStatusListId,
+            item.issueCredentialRecordId,
+            item.statusListIndex,
+            item.isCanceled,
+            item.isProcessed,
           )
         }
-        .toList
-    }
+      )
+    )
   }
 
   def updateStatusListCredential(

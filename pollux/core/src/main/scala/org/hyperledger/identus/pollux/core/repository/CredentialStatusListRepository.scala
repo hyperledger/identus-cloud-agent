@@ -2,13 +2,15 @@ package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.util.UUID
 
 trait CredentialStatusListRepository {
-  def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]]
+  def getCredentialStatusListIds: UIO[Seq[(WalletId, UUID)]]
+
+  def getCredentialStatusListsWithCreds(statusListId: UUID): URIO[WalletAccessContext, CredentialStatusListWithCreds]
 
   def findById(
       id: UUID

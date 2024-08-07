@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
+import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.vc.jwt.{revocation, Issuer, StatusPurpose}
+import org.hyperledger.identus.pollux.vc.jwt.{Issuer, StatusPurpose}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{
   DecodingError,
@@ -186,37 +186,39 @@ class CredentialStatusListRepositoryInMemory(
     } yield ()
   }
 
-  def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]] = {
+  override def getCredentialStatusListIds: UIO[Seq[(WalletId, UUID)]] =
     for {
       statusListsRefs <- allStatusListsStorageRefs
       statusLists <- statusListsRefs.get
-      statusListWithCredEffects = statusLists.map { (id, statusList) =>
-        val credsinStatusListEffect = statusListToCredInStatusListStorageRefs(id).flatMap(_.get.map(_.values.toList))
-        credsinStatusListEffect.map { credsInStatusList =>
-          CredentialStatusListWithCreds(
-            id = id,
-            walletId = statusList.walletId,
-            issuer = statusList.issuer,
-            issued = statusList.issued,
-            purpose = statusList.purpose,
-            statusListCredential = statusList.statusListCredential,
-            size = statusList.size,
-            lastUsedIndex = statusList.lastUsedIndex,
-            credentials = credsInStatusList.map { cred =>
-              CredInStatusList(
-                id = cred.id,
-                issueCredentialRecordId = cred.issueCredentialRecordId,
-                statusListIndex = cred.statusListIndex,
-                isCanceled = cred.isCanceled,
-                isProcessed = cred.isProcessed,
-              )
-            }
-          )
-        }
+    } yield statusLists.values.toList.map(csl => (csl.walletId, csl.id))
 
-      }.toList
-      res <- ZIO.collectAll(statusListWithCredEffects)
-    } yield res
+  def getCredentialStatusListsWithCreds(
+      statusListId: UUID
+  ): URIO[WalletAccessContext, CredentialStatusListWithCreds] = {
+    for {
+      statusListsRefs <- allStatusListsStorageRefs
+      statusLists <- statusListsRefs.get
+      statusList = statusLists(statusListId)
+      credsInStatusList <- statusListToCredInStatusListStorageRefs(statusList.id).flatMap(_.get.map(_.values.toList))
+    } yield CredentialStatusListWithCreds(
+      id = statusList.id,
+      walletId = statusList.walletId,
+      issuer = statusList.issuer,
+      issued = statusList.issued,
+      purpose = statusList.purpose,
+      statusListCredential = statusList.statusListCredential,
+      size = statusList.size,
+      lastUsedIndex = statusList.lastUsedIndex,
+      credentials = credsInStatusList.map { cred =>
+        CredInStatusList(
+          id = cred.id,
+          issueCredentialRecordId = cred.issueCredentialRecordId,
+          statusListIndex = cred.statusListIndex,
+          isCanceled = cred.isCanceled,
+          isProcessed = cred.isProcessed,
+        )
+      }
+    )
   }
 
   def updateStatusListCredential(
