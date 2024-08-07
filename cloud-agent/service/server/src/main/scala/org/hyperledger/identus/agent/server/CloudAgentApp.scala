@@ -10,6 +10,7 @@ import org.hyperledger.identus.castor.controller.{DIDRegistrarServerEndpoints, D
 import org.hyperledger.identus.connect.controller.ConnectionServerEndpoints
 import org.hyperledger.identus.credentialstatus.controller.CredentialStatusServiceEndpoints
 import org.hyperledger.identus.event.controller.EventServerEndpoints
+import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticator
 import org.hyperledger.identus.iam.entity.http.EntityServerEndpoints
 import org.hyperledger.identus.iam.wallet.http.WalletManagementServerEndpoints
@@ -19,10 +20,7 @@ import org.hyperledger.identus.messaging.MessagingService.RetryStep
 import org.hyperledger.identus.oid4vci.CredentialIssuerServerEndpoints
 import org.hyperledger.identus.pollux.core.service.CredentialStatusListService
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
-import org.hyperledger.identus.pollux.credentialschema.{
-  SchemaRegistryServerEndpoints,
-  VerificationPolicyServerEndpoints
-}
+import org.hyperledger.identus.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
 import org.hyperledger.identus.presentproof.controller.PresentProofServerEndpoints
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.system.controller.SystemServerEndpoints
@@ -34,13 +32,13 @@ object CloudAgentApp {
 
   def run = for {
     _ <- AgentInitialization.run
-    _ <- issueCredentialExchangesJob
-    _ <- presentProofExchangeJob
-    _ <- connectDidCommExchangesJob
-    _ <- syncDIDPublicationStateFromDltJob
-    _ <- consumeAndSyncDIDPublicationStateFromDlt
-    _ <- syncRevocationStatusListsJob.debug.fork
-    _ <- consumeAndSyncRevocationStatusLists
+    _ <- issueFlowsHandler
+    _ <- presentFlowsHandler
+    _ <- connectFlowsHandler
+    _ <- didPublicationStateSyncTrigger
+    _ <- didPublicationStateSyncHandler
+    _ <- statusListsSyncTrigger
+    _ <- statusListSyncHandler
     _ <- AgentHttpServer.run.tapDefect(e => ZIO.logErrorCause("Agent HTTP Server failure", e)).fork
     fiber <- DidCommHttpServer.run.tapDefect(e => ZIO.logErrorCause("DIDComm HTTP Server failure", e)).fork
     _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
@@ -48,7 +46,7 @@ object CloudAgentApp {
     _ <- ZIO.never
   } yield ()
 
-  private val presentProofExchangeJob = MessagingService.consumeWithRetryStrategy(
+  private val presentFlowsHandler = MessagingService.consumeWithRetryStrategy(
     "identus-cloud-agent",
     PresentBackgroundJobs.handleMessage,
     Seq(
@@ -64,7 +62,7 @@ object CloudAgentApp {
   //        .trackDurationWith(_.toMetricsSeconds))
   //        .repeat(Schedule.spaced(config.pollux.presentationBgJobRecurrenceDelay))
   //        .unit
-  private val issueCredentialExchangesJob = MessagingService.consumeWithRetryStrategy(
+  private val issueFlowsHandler = MessagingService.consumeWithRetryStrategy(
     "identus-cloud-agent",
     IssueBackgroundJobs.handleMessage,
     Seq(
@@ -81,7 +79,7 @@ object CloudAgentApp {
   //        .trackDurationWith(_.toMetricsSeconds))
   //        .repeat(Schedule.spaced(config.pollux.issueBgJobRecurrenceDelay))
   //        .unit
-  private val connectDidCommExchangesJob = MessagingService.consumeWithRetryStrategy(
+  private val connectFlowsHandler = MessagingService.consumeWithRetryStrategy(
     "identus-cloud-agent",
     ConnectBackgroundJobs.handleMessage,
     Seq(
@@ -100,8 +98,8 @@ object CloudAgentApp {
   //        .repeat(Schedule.spaced(config.connect.connectBgJobRecurrenceDelay))
   //        .unit
 
-  private val syncRevocationStatusListsJob = {
-    for {
+  private val statusListsSyncTrigger = {
+    (for {
       config <- ZIO.service[AppConfig]
       trigger = for {
         credentialStatusListService <- ZIO.service[CredentialStatusListService]
@@ -113,7 +111,7 @@ object CloudAgentApp {
         }
       } yield ()
       _ <- trigger.repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
-    } yield ()
+    } yield ()).debug.fork
   }
   // TODO Reimplement metrics
   //      _ <- (StatusListJobs.syncRevocationStatuses @@ Metric
@@ -121,14 +119,14 @@ object CloudAgentApp {
   //        .trackDurationWith(_.toMetricsSeconds))
   //        .repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
 
-  private val consumeAndSyncRevocationStatusLists = MessagingService.consumeStrategy(
+  private val statusListSyncHandler = MessagingService.consumeStrategy(
     groupId = "identus-cloud-agent",
     topicName = "sync-status-list",
     consumerCount = 5,
     StatusListJobs.handleMessage
   )
 
-  private val syncDIDPublicationStateFromDltJob
+  private val didPublicationStateSyncTrigger
       : URIO[ManagedDIDService & WalletManagementService & Producer[WalletId, WalletId], Unit] =
     ZIO
       .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
@@ -147,7 +145,7 @@ object CloudAgentApp {
       .fork
       .unit
 
-  private val consumeAndSyncDIDPublicationStateFromDlt = MessagingService.consumeStrategy(
+  private val didPublicationStateSyncHandler = MessagingService.consumeStrategy(
     groupId = "identus-cloud-agent",
     topicName = "sync-did-state",
     consumerCount = 5,
