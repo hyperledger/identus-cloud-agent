@@ -1,9 +1,10 @@
 package org.hyperledger.identus.presentproof.controller.http
 
-import org.hyperledger.identus.api.http.Annotation
+import org.hyperledger.identus.api.http.{Annotation, ErrorResponse}
 import org.hyperledger.identus.mercury.model.Base64
 import org.hyperledger.identus.pollux.core.model.PresentationRecord
 import org.hyperledger.identus.presentproof.controller.http.PresentationStatus.annotations
+import org.hyperledger.identus.shared.models.{FailureInfo, StatusCode}
 import sttp.tapir.{Schema, Validator}
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
@@ -34,7 +35,10 @@ final case class PresentationStatus(
     connectionId: Option[String] = None,
     @description(annotations.metaRetries.description)
     @encodedExample(annotations.metaRetries.example)
-    metaRetries: Int
+    metaRetries: Int,
+    @description(annotations.metaLastFailure.description)
+    @encodedExample(annotations.metaLastFailure.example)
+    metaLastFailure: Option[ErrorResponse] = None
 )
 
 object PresentationStatus {
@@ -56,7 +60,8 @@ object PresentationStatus {
       proofs = Seq.empty,
       data = data,
       connectionId = domain.connectionId,
-      metaRetries = domain.metaRetries
+      metaRetries = domain.metaRetries,
+      metaLastFailure = domain.metaLastFailure.map(failure => ErrorResponse.failureToErrorResponseConversion(failure)),
     )
   }
 
@@ -131,6 +136,13 @@ object PresentationStatus {
         extends Annotation[Int](
           description = "The maximum background processing attempts remaining for this record",
           example = 5
+        )
+
+    object metaLastFailure
+        extends Annotation[ErrorResponse](
+          description = "The last failure if any.",
+          example =
+            ErrorResponse.failureToErrorResponseConversion(FailureInfo("Error", StatusCode.NotFound, "Not Found"))
         )
   }
 
