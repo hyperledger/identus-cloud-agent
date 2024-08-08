@@ -22,6 +22,7 @@ import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.service.MockCredentialService
+import org.hyperledger.identus.shared.models.WalletId
 import sttp.client3.{basicRequest, DeserializationException, UriContext}
 import sttp.client3.ziojson.*
 import sttp.model.StatusCode
@@ -114,7 +115,8 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
     Some(connectionResponse),
     5,
     None,
-    None
+    None,
+    WalletId.fromUUID(UUID.randomUUID)
   )
   val acceptCredentialOfferRequest = AcceptCredentialOfferRequest(
     Some(

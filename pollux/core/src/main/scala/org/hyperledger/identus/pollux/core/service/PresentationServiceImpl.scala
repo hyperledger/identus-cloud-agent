@@ -400,6 +400,7 @@ private class PresentationServiceImpl(
           metaRetries = maxRetries,
           metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
+          walletId = WalletId.fromUUID(UUID.randomUUID()),
         )
       )
       _ <- presentationRepository
@@ -477,6 +478,7 @@ private class PresentationServiceImpl(
           metaRetries = maxRetries,
           metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
+          walletId = WalletId.fromUUID(UUID.randomUUID()),
         )
       )
       _ <- presentationRepository.createPresentationRecord(record)

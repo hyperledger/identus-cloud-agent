@@ -5,6 +5,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
+import org.hyperledger.identus.pollux.core.repository.CredentialRepositoryInMemory
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.{Expectation, MockSpecDefault}
@@ -114,7 +115,10 @@ object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServ
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        issuerExpectations.toLayer >>> CredentialServiceNotifier.layer,
+        (
+          CredentialRepositoryInMemory.layer ++
+            issuerExpectations.toLayer
+        ) >>> CredentialServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("Happy flow generates relevant events on the holder side") {
@@ -141,7 +145,10 @@ object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServ
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        holderExpectations.toLayer >>> CredentialServiceNotifier.layer,
+        (
+          CredentialRepositoryInMemory.layer ++
+            holderExpectations.toLayer
+        ) >>> CredentialServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random))
       )
     )

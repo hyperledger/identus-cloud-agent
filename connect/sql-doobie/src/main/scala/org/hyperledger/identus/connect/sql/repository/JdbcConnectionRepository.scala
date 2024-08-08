@@ -49,7 +49,11 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
   given failurePut: Put[Failure] = Put[String].contramap(_.asFailureInfo.toJson)
 
+  given walletIdGet: Get[WalletId] = Get[UUID].map(id => WalletId.fromUUID(id))
+  given walletIdPut: Put[WalletId] = Put[UUID].contramap[WalletId](_.toUUID)
+
   override def create(record: ConnectionRecord): URIO[WalletAccessContext, Unit] = {
+    // assert( record.walletiId == current_setting('app.current_wallet_id')::UUID)
     val cxnIO = sql"""
         | INSERT INTO public.connection_records(
         |   id,
@@ -106,7 +110,8 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   connection_response,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | FROM public.connection_records
         | ORDER BY created_at
         """.stripMargin
@@ -169,7 +174,8 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   connection_response,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | FROM public.connection_records
         | $conditionFragment
         | ORDER BY created_at
@@ -198,7 +204,8 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   connection_response,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | FROM public.connection_records
         | WHERE id = $recordId
         """.stripMargin

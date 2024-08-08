@@ -3,6 +3,7 @@ package org.hyperledger.identus.connect.core.service
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.*
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
+import org.hyperledger.identus.connect.core.repository.ConnectionRepository
 import org.hyperledger.identus.event.notification.{Event, EventNotificationService}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
@@ -14,7 +15,8 @@ import java.util.UUID
 
 class ConnectionServiceNotifier(
     svc: ConnectionService,
-    eventNotificationService: EventNotificationService
+    eventNotificationService: EventNotificationService,
+    connectionRepository: ConnectionRepository,
 ) extends ConnectionService {
 
   private val connectionUpdatedEvent = "ConnectionUpdated"
@@ -74,10 +76,10 @@ class ConnectionServiceNotifier(
     notifyOnSuccess(svc.receiveConnectionResponse(response))
 
   private def notifyOnSuccess[E](effect: ZIO[WalletAccessContext, E, ConnectionRecord]) =
-    for {
-      record <- effect
-      _ <- notify(record)
-    } yield record
+    effect.tap(record => notify(record))
+
+  private def notifyOnFail(record: ConnectionRecord) =
+    notify(record)
 
   private def notify(record: ConnectionRecord) = {
     val result = for {
@@ -104,8 +106,11 @@ class ConnectionServiceNotifier(
   override def reportProcessingFailure(
       recordId: UUID,
       failReason: Option[Failure]
-  ): URIO[WalletAccessContext, Unit] =
-    svc.reportProcessingFailure(recordId, failReason)
+  ): URIO[WalletAccessContext, Unit] = for {
+    ret <- svc.reportProcessingFailure(recordId, failReason)
+    recordAfterFail <- connectionRepository.getById(recordId)
+    _ <- notifyOnFail(recordAfterFail)
+  } yield ret
 
   override def findAllRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
     svc.findAllRecords()
@@ -126,6 +131,6 @@ class ConnectionServiceNotifier(
 }
 
 object ConnectionServiceNotifier {
-  val layer: URLayer[ConnectionService & EventNotificationService, ConnectionService] =
-    ZLayer.fromFunction(ConnectionServiceNotifier(_, _))
+  val layer: URLayer[ConnectionService & EventNotificationService & ConnectionRepository, ConnectionService] =
+    ZLayer.fromFunction(ConnectionServiceNotifier(_, _, _))
 }

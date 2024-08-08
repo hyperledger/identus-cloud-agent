@@ -24,6 +24,7 @@ import zio.json.ast.Json
 import zio.json.ast.Json.*
 
 import java.time.Instant
+import java.util.UUID
 // TODO: replace with actual implementation
 class JdbcPresentationRepository(
     xa: Transactor[ContextAwareTask],
@@ -164,6 +165,9 @@ class JdbcPresentationRepository(
   given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
   given failurePut: Put[Failure] = Put[String].contramap(_.asFailureInfo.toJson)
 
+  given walletIdGet: Get[WalletId] = Get[UUID].map(id => WalletId.fromUUID(id))
+  given walletIdPut: Put[WalletId] = Put[UUID].contramap[WalletId](_.toUUID)
+
   override def createPresentationRecord(record: PresentationRecord): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | INSERT INTO public.presentation_records(
@@ -245,7 +249,8 @@ class JdbcPresentationRepository(
         |   sd_jwt_claims_to_disclose,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | FROM
         |   public.presentation_records
         | $conditionFragment
@@ -296,7 +301,8 @@ class JdbcPresentationRepository(
             |   sd_jwt_claims_to_disclose,
             |   meta_retries,
             |   meta_next_retry,
-            |   meta_last_failure
+            |   meta_last_failure,
+            |   wallet_id
             | FROM public.presentation_records
             | $conditionFragment
             | ORDER BY created_at
@@ -344,7 +350,8 @@ class JdbcPresentationRepository(
         |   sd_jwt_claims_to_disclose,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | FROM public.presentation_records
         | WHERE id = $recordId
         """.stripMargin
@@ -381,7 +388,8 @@ class JdbcPresentationRepository(
         |   sd_jwt_claims_to_disclose,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | FROM public.presentation_records
         | WHERE thid = $thid
         """.stripMargin
@@ -390,6 +398,42 @@ class JdbcPresentationRepository(
 
     cxnIO
       .transactWallet(xa)
+      .orDie
+  }
+
+  override def getPresentationRecordByDIDCommID(recordId: DidCommID): UIO[Option[PresentationRecord]] = {
+    val cxnIO = sql"""
+        | SELECT
+        |   id,
+        |   created_at,
+        |   updated_at,
+        |   thid,
+        |   schema_id,
+        |   connection_id,
+        |   role,
+        |   subject_id,
+        |   protocol_state,
+        |   credential_format,
+        |   request_presentation_data,
+        |   propose_presentation_data,
+        |   presentation_data,
+        |   credentials_to_use,
+        |   anoncred_credentials_to_use_json_schema_id,
+        |   anoncred_credentials_to_use,
+        |   sd_jwt_claims_to_use_json_schema_id,
+        |   sd_jwt_claims_to_disclose,
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure,
+        |   wallet_id
+        | FROM public.presentation_records
+        | WHERE id = ${recordId.value}
+        """.stripMargin
+      .query[PresentationRecord]
+      .option
+
+    cxnIO
+      .transact(xb)
       .orDie
   }
 
