@@ -472,6 +472,7 @@ object JwtPresentation {
                       s"holder DID ${iss} that signed the presentation must match the credentialSubject did  ${mayBeSubjectDid}  in each of the attached credentials"
                     )
               } yield x
+            case (_: AnoncredVerifiableCredentialPayload) => UnexpectedCodeExecutionPath
           }
         )
         .map(_ => ())

@@ -35,17 +35,17 @@ object PeerDidResolver {
   def getDIDDoc(didPeer: String): DIDDoc = {
     val json = resolveUnsafe(didPeer)
     val cursor: HCursor = json.hcursor
-    val did = cursor.downField("id").as[String].getOrElse(???)
+    val did = cursor.downField("id").as[String].getOrElse(UnexpectedCodeExecutionPath)
     val service = cursor.downField("service").as[List[Json]]
 
     val didCommServices: List[DIDCommService] = service
       .map {
         _.map { item =>
-          val id = item.hcursor.downField("id").as[String].getOrElse(???)
-          // val typ = item.hcursor.downField("type").as[String].getOrElse(???)
+          val id = item.hcursor.downField("id").as[String].getOrElse(UnexpectedCodeExecutionPath)
+          // val typ = item.hcursor.downField("type").as[String].getOrElse(UnexpectedCodeExecutionPath)
           val serviceEndpointJson = item.hcursor.downField("serviceEndpoint")
-          // val serviceEndpoint = item.hcursor.downField("serviceEndpoint").as[String].getOrElse(???)
-          val uri = serviceEndpointJson.downField("uri").as[String].getOrElse(???)
+          // val serviceEndpoint = item.hcursor.downField("serviceEndpoint").as[String].getOrElse(UnexpectedCodeExecutionPath)
+          val uri = serviceEndpointJson.downField("uri").as[String].getOrElse(UnexpectedCodeExecutionPath)
           val routingKeys: Seq[String] =
             serviceEndpointJson.downField("routingKeys").as[List[String]].getOrElse(Seq.empty)
           val accept: Seq[String] = serviceEndpointJson.downField("accept").as[List[String]].getOrElse(Seq.empty)
@@ -58,51 +58,51 @@ object PeerDidResolver {
     val verificationMethodList1: List[VerificationMethod] = authentications1
       .map {
         _.map(item =>
-          val id = item.hcursor.downField("id").as[String].getOrElse(???)
+          val id = item.hcursor.downField("id").as[String].getOrElse(UnexpectedCodeExecutionPath)
 
           val publicKeyJwk = item.hcursor
             .downField("publicKeyJwk")
             .as[Json]
             .map(_.toString)
-            .getOrElse(???)
+            .getOrElse(UnexpectedCodeExecutionPath)
 
-          val controller = item.hcursor.downField("controller").as[String].getOrElse(???)
+          val controller = item.hcursor.downField("controller").as[String].getOrElse(UnexpectedCodeExecutionPath)
           val verificationMaterial = new VerificationMaterial(VerificationMaterialFormat.JWK, publicKeyJwk)
           new VerificationMethod(id, VerificationMethodType.JSON_WEB_KEY_2020, verificationMaterial, controller)
         )
       }
-      .getOrElse(???)
+      .getOrElse(UnexpectedCodeExecutionPath)
 
     val keyIdAuthentications: List[String] = authentications1
       .map {
-        _.map(item => item.hcursor.downField("id").as[String].getOrElse(???))
+        _.map(item => item.hcursor.downField("id").as[String].getOrElse(UnexpectedCodeExecutionPath))
       }
-      .getOrElse(???)
+      .getOrElse(UnexpectedCodeExecutionPath)
 
     val keyAgreements1 = cursor.downField("keyAgreement").as[List[Json]]
     val verificationMethodList: List[VerificationMethod] = keyAgreements1
       .map {
         _.map(item =>
-          val id = item.hcursor.downField("id").as[String].getOrElse(???)
+          val id = item.hcursor.downField("id").as[String].getOrElse(UnexpectedCodeExecutionPath)
 
           val publicKeyJwk = item.hcursor
             .downField("publicKeyJwk")
             .as[Json]
             .map(_.toString)
-            .getOrElse(???)
+            .getOrElse(UnexpectedCodeExecutionPath)
 
-          val controller = item.hcursor.downField("controller").as[String].getOrElse(???)
+          val controller = item.hcursor.downField("controller").as[String].getOrElse(UnexpectedCodeExecutionPath)
           val verificationMaterial = new VerificationMaterial(VerificationMaterialFormat.JWK, publicKeyJwk)
           new VerificationMethod(id, VerificationMethodType.JSON_WEB_KEY_2020, verificationMaterial, controller)
         )
       }
-      .getOrElse(???)
+      .getOrElse(UnexpectedCodeExecutionPath)
 
     val keyIds: List[String] = keyAgreements1
       .map {
-        _.map(item => item.hcursor.downField("id").as[String].getOrElse(???))
+        _.map(item => item.hcursor.downField("id").as[String].getOrElse(UnexpectedCodeExecutionPath))
       }
-      .getOrElse(???)
+      .getOrElse(UnexpectedCodeExecutionPath)
     val mergedList = verificationMethodList ++ verificationMethodList1
 
     val didDoc =

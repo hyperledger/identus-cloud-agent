@@ -1,14 +1,12 @@
 package org.hyperledger.identus.mercury
 
+import io.circe._
 import io.circe.parser.*
-import io.circe.JsonObject
 import org.hyperledger.identus.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.coordinatemediation.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import zio.*
-
-import scala.util.chaining.*
 
 object CoordinateMediationPrograms {
 
@@ -22,8 +20,8 @@ object CoordinateMediationPrograms {
     )
   }
 
-  private def toPrettyJson(parseToJson: String) = {
-    parse(parseToJson).getOrElse(???).spaces2
+  private def toPrettyJson(parseToJson: String): Either[ParsingFailure, String] = {
+    parse(parseToJson).map(_.spaces2)
   }
 
   def senderMediationRequestProgram(mediatorURL: String = "http://localhost:8000") = {
@@ -55,18 +53,18 @@ object CoordinateMediationPrograms {
       messageReceived <- opsService.unpack(res.bodyAsString)
       _ <- Console.printLine("Unpacking and decrypting the received message ...")
       _ <- Console.printLine("*" * 100)
-      _ <- Console.printLine(toPrettyJson(messageReceived.message.toString))
+      tmp <- ZIO.fromEither(toPrettyJson(messageReceived.message.toString))
+      _ <- Console.printLine(tmp)
       _ <- Console.printLine("*" * 100)
-      ret = parse(messageReceived.message.toString)
-        .getOrElse(???)
-        // .flatMap()
-        .pipe { json =>
+      ret <- ZIO
+        .fromEither(parse(messageReceived.message.toString))
+        .flatMap { json =>
           json.as[MediateGrant] match {
-            case Right(mediateGrant) => Right(mediateGrant)
+            case Right(mediateGrant) => ZIO.succeed(mediateGrant)
             case Left(_) =>
               json.as[MediateDeny] match {
-                case Right(mediateDeny) => Left(mediateDeny)
-                case Left(_)            => ???
+                case Right(mediateDeny) => ZIO.succeed(mediateDeny)
+                case Left(ex)           => ZIO.fail(ex)
               }
           }
         }

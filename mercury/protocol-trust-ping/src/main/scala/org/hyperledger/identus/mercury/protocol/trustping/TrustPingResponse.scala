@@ -37,7 +37,7 @@ object TrustPingResponse {
               Right(
                 TrustPingResponse(
                   id = message.id,
-                  thid = message.thid.getOrElse(???), // TODO
+                  thid = message.thid.getOrElse(message.id),
                   `type` = piuri,
                   from = from,
                   to = onlyOneRecipient,

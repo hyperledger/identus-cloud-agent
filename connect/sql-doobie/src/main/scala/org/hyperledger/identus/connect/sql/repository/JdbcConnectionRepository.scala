@@ -37,13 +37,15 @@ class JdbcConnectionRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given roleGet: Get[Role] = Get[String].map(Role.valueOf)
   given rolePut: Put[Role] = Put[String].contramap(_.toString)
 
-  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(???))
+  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(UnexpectedCodeExecutionPath))
   given invitationPut: Put[Invitation] = Put[String].contramap(_.asJson.toString)
 
-  given connectionRequestGet: Get[ConnectionRequest] = Get[String].map(decode[ConnectionRequest](_).getOrElse(???))
+  given connectionRequestGet: Get[ConnectionRequest] =
+    Get[String].map(decode[ConnectionRequest](_).getOrElse(UnexpectedCodeExecutionPath))
   given connectionRequestPut: Put[ConnectionRequest] = Put[String].contramap(_.asJson.toString)
 
-  given connectionResponseGet: Get[ConnectionResponse] = Get[String].map(decode[ConnectionResponse](_).getOrElse(???))
+  given connectionResponseGet: Get[ConnectionResponse] =
+    Get[String].map(decode[ConnectionResponse](_).getOrElse(UnexpectedCodeExecutionPath))
   given connectionResponsePut: Put[ConnectionResponse] = Put[String].contramap(_.asJson.toString)
 
   given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])

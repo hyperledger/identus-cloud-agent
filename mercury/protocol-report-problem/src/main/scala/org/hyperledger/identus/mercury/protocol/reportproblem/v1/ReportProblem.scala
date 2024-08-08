@@ -1,6 +1,6 @@
 package org.hyperledger.identus.mercury.protocol.reportproblem.v1
 
-import org.hyperledger.identus.mercury.model.{Message, PIURI}
+import org.hyperledger.identus.mercury.model.PIURI
 
 /** ReportProblem
   *
@@ -41,20 +41,6 @@ final case class ReportProblem(
 ) {
   // assert(`@type` == "https://didcomm.org/report-problem/1.0/problem-report") // this is something for the parser TODO
   def `@type`: PIURI = "https://didcomm.org/report-problem/1.0/problem-report"
-}
-
-object ReportProblem {
-  def toMessage(obj: ReportProblem): Message = {
-    // FIXME this doesn't seems to full fit the DIDComm message
-    Message(
-      from = ???,
-      to = ???,
-      body = ???,
-      id = obj.`@id`.getOrElse(java.util.UUID.randomUUID.toString()),
-      `type` = obj.`@type`,
-    )
-  }
-  def fromMessage(msg: Message): ReportProblem = ??? // TODO FIXME
 }
 
 final case class Description( // TODO this will be +- a Map

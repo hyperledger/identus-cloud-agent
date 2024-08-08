@@ -97,8 +97,10 @@ class CredentialDefinitionServiceImpl(
           CredentialDefinitionCreationError(s"An error occurred while storing the CredDef secret: ${t.getMessage}")
         )
     } yield createdCredentialDefinition
-  }.mapError { case e: JsonSchemaError =>
-    CredentialDefinitionValidationError(CredentialSchemaValidationError(e))
+  }.mapError {
+    case error: JsonSchemaError =>
+      CredentialDefinitionValidationError(CredentialSchemaValidationError(error))
+    case error: CredentialDefinitionCreationError => error
   }
 
   override def delete(guid: UUID): Result[CredentialDefinition] =
