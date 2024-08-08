@@ -249,7 +249,8 @@ class JdbcPresentationRepository(
         |   sd_jwt_claims_to_disclose,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | FROM
         |   public.presentation_records
         | $conditionFragment
@@ -300,7 +301,8 @@ class JdbcPresentationRepository(
             |   sd_jwt_claims_to_disclose,
             |   meta_retries,
             |   meta_next_retry,
-            |   meta_last_failure
+            |   meta_last_failure,
+            |   wallet_id
             | FROM public.presentation_records
             | $conditionFragment
             | ORDER BY created_at
@@ -348,7 +350,8 @@ class JdbcPresentationRepository(
         |   sd_jwt_claims_to_disclose,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | FROM public.presentation_records
         | WHERE id = $recordId
         """.stripMargin
@@ -385,7 +388,8 @@ class JdbcPresentationRepository(
         |   sd_jwt_claims_to_disclose,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | FROM public.presentation_records
         | WHERE thid = $thid
         """.stripMargin
@@ -397,41 +401,41 @@ class JdbcPresentationRepository(
       .orDie
   }
 
-  override def getPresentationRecordByDIDCommID(recordId: DidCommID): UIO[Option[PresentationRecord]] = ???
-  // {
-  //   val cxnIO = sql"""
-  //       | SELECT
-  //       |   id,
-  //       |   created_at,
-  //       |   updated_at,
-  //       |   thid,
-  //       |   schema_id,
-  //       |   connection_id,
-  //       |   role,
-  //       |   subject_id,
-  //       |   protocol_state,
-  //       |   credential_format,
-  //       |   request_presentation_data,
-  //       |   propose_presentation_data,
-  //       |   presentation_data,
-  //       |   credentials_to_use,
-  //       |   anoncred_credentials_to_use_json_schema_id,
-  //       |   anoncred_credentials_to_use,
-  //       |   sd_jwt_claims_to_use_json_schema_id,
-  //       |   sd_jwt_claims_to_disclose,
-  //       |   meta_retries,
-  //       |   meta_next_retry,
-  //       |   meta_last_failure
-  //       | FROM public.presentation_records
-  //       | WHERE id = ${recordId.value}
-  //       """.stripMargin
-  //     .query[PresentationRecord]
-  //     .option
+  override def getPresentationRecordByDIDCommID(recordId: DidCommID): UIO[Option[PresentationRecord]] = {
+    val cxnIO = sql"""
+        | SELECT
+        |   id,
+        |   created_at,
+        |   updated_at,
+        |   thid,
+        |   schema_id,
+        |   connection_id,
+        |   role,
+        |   subject_id,
+        |   protocol_state,
+        |   credential_format,
+        |   request_presentation_data,
+        |   propose_presentation_data,
+        |   presentation_data,
+        |   credentials_to_use,
+        |   anoncred_credentials_to_use_json_schema_id,
+        |   anoncred_credentials_to_use,
+        |   sd_jwt_claims_to_use_json_schema_id,
+        |   sd_jwt_claims_to_disclose,
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure,
+        |   wallet_id
+        | FROM public.presentation_records
+        | WHERE id = ${recordId.value}
+        """.stripMargin
+      .query[PresentationRecord]
+      .option
 
-  //   cxnIO
-  //     .transactWallet(xa)
-  //     .orDie
-  // }
+    cxnIO
+      .transact(xb)
+      .orDie
+  }
 
   override def updatePresentationRecordProtocolState(
       recordId: DidCommID,
