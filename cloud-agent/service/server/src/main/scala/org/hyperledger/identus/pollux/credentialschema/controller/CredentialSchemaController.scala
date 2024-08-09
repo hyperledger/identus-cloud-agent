@@ -1,8 +1,10 @@
 package org.hyperledger.identus.pollux.credentialschema.controller
 
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{Order, Pagination}
 import org.hyperledger.identus.pollux.credentialschema.http.{
+  CredentialSchemaDidUrlResponse,
   CredentialSchemaInput,
   CredentialSchemaResponse,
   CredentialSchemaResponsePage,
@@ -20,13 +22,17 @@ trait CredentialSchemaController {
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse]
 
+  def createSchemaDidUrl(config: AppConfig, in: CredentialSchemaInput)(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaDidUrlResponse]
+
   def updateSchema(author: String, id: UUID, in: CredentialSchemaInput)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse]
 
-  def getSchemaByGuid(id: UUID)(implicit
+  def getSchemaByGuid(config: AppConfig, id: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaResponse]
+  ): IO[ErrorResponse, CredentialSchemaResponse | CredentialSchemaDidUrlResponse]
 
   def getSchemaJsonByGuid(id: UUID)(implicit
       rc: RequestContext

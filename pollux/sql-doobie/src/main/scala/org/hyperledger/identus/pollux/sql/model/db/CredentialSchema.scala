@@ -6,7 +6,7 @@ import io.getquill.doobie.DoobieContext
 import io.getquill.idiom.*
 import org.hyperledger.identus.pollux.core.model.schema.Schema
 import org.hyperledger.identus.shared.models.WalletId
-
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import java.time.temporal.ChronoUnit
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -22,6 +22,7 @@ case class CredentialSchema(
     description: String,
     `type`: String,
     schema: JsonValue[Schema],
+    resolutionMethod: ResourceResolutionMethod,
     walletId: WalletId
 ) {
   lazy val uniqueConstraintKey = author + name + version
@@ -47,6 +48,7 @@ object CredentialSchema {
       description = m.description,
       `type` = m.`type`,
       schema = JsonValue(m.schema),
+      resolutionMethod = m.resolutionMethod,
       walletId = walletId
     )
 
@@ -63,12 +65,17 @@ object CredentialSchema {
       tags = db.tags,
       description = db.description,
       `type` = db.`type`,
+      resolutionMethod = db.resolutionMethod,
       schema = db.schema.value
     )
   }
 }
 
-object CredentialSchemaSql extends DoobieContext.Postgres(SnakeCase) with PostgresJsonExtensions {
+object CredentialSchemaSql
+    extends DoobieContext.Postgres(SnakeCase)
+    with PostgresJsonExtensions
+    with PostgresEnumEncoders {
+
   def insert(schema: CredentialSchema) = run {
     quote(
       query[CredentialSchema]
@@ -90,7 +97,6 @@ object CredentialSchemaSql extends DoobieContext.Postgres(SnakeCase) with Postgr
         .filter(_.id == lift(id))
         .filter(_.author == lift(author))
         .sortBy(_.version)(ord = Ord.asc)
-        .map(_.version)
     )
   }
 

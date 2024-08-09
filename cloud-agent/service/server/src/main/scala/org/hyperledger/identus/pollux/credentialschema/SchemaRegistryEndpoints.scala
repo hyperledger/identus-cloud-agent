@@ -9,6 +9,7 @@ import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityL
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import org.hyperledger.identus.pollux.credentialschema.http.{
+  CredentialSchemaDidUrlResponse,
   CredentialSchemaInput,
   CredentialSchemaResponse,
   CredentialSchemaResponsePage,
@@ -16,17 +17,7 @@ import org.hyperledger.identus.pollux.credentialschema.http.{
 }
 import sttp.apispec.{ExternalDocumentation, Tag}
 import sttp.model.StatusCode
-import sttp.tapir.{
-  endpoint,
-  extractFromRequest,
-  path,
-  query,
-  statusCode,
-  stringToPath,
-  Endpoint,
-  EndpointInput,
-  PublicEndpoint
-}
+import sttp.tapir.*
 import sttp.tapir.json.zio.{jsonBody, schemaForZioJsonValue}
 import zio.json.ast.Json
 
@@ -66,7 +57,42 @@ object SchemaRegistryEndpoints {
 
   val tag = Tag(name = tagName, description = Option(tagDescription), externalDocs = Option(tagExternalDocumentation))
 
-  val createSchemaEndpoint: Endpoint[
+  val createSchemaDidUrlEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, CredentialSchemaInput),
+    ErrorResponse,
+    CredentialSchemaDidUrlResponse,
+    Any
+  ] =
+    endpoint.post
+      .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in("schema-registry" / "schemas" / "did-url")
+      .in(
+        jsonBody[CredentialSchemaInput]
+          .description(
+            "JSON object required for the credential schema creation"
+          )
+      )
+      .out(
+        statusCode(StatusCode.Created)
+          .description(
+            "The new credential schema record is successfully created"
+          )
+      )
+      .out(jsonBody[CredentialSchemaDidUrlResponse])
+      .description("Credential schema record")
+      .errorOut(basicFailureAndNotFoundAndForbidden)
+      .name("createSchema")
+      .summary("Publish new schema to the schema registry, did url resolvable")
+      .description(
+        "Create the new credential schema record with metadata and internal JSON Schema on behalf of Cloud Agent. " +
+          "The credential schema will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it."
+      )
+      .tag(tagName)
+
+  val createSchemaHttpUrlEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, CredentialSchemaInput),
     ErrorResponse,
@@ -94,7 +120,7 @@ object SchemaRegistryEndpoints {
       .description("Credential schema record")
       .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("createSchema")
-      .summary("Publish new schema to the schema registry")
+      .summary("Publish new schema to the schema registry, http url resolvable")
       .description(
         "Create the new credential schema record with metadata and internal JSON Schema on behalf of Cloud Agent. " +
           "The credential schema will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it."
@@ -143,7 +169,7 @@ object SchemaRegistryEndpoints {
   val getSchemaByIdEndpoint: PublicEndpoint[
     (RequestContext, UUID),
     ErrorResponse,
-    CredentialSchemaResponse,
+    CredentialSchemaResponse | CredentialSchemaDidUrlResponse,
     Any
   ] =
     endpoint.get
@@ -153,7 +179,18 @@ object SchemaRegistryEndpoints {
           "Globally unique identifier of the credential schema record"
         )
       )
-      .out(jsonBody[CredentialSchemaResponse].description("CredentialSchema found by `guid`"))
+      .out(
+        oneOf[CredentialSchemaResponse | CredentialSchemaDidUrlResponse](
+          oneOfVariant(
+            jsonBody[CredentialSchemaResponse].description("CredentialSchema found by `guid`, resolvable by HTTP URL")
+          ),
+          oneOfVariant(
+            jsonBody[CredentialSchemaDidUrlResponse].description(
+              "CredentialSchema found by `guid`, resolvable by DID URL"
+            )
+          )
+        )
+      )
       .errorOut(basicFailuresAndNotFound)
       .name("getSchemaById")
       .summary("Fetch the schema from the registry by `guid`")

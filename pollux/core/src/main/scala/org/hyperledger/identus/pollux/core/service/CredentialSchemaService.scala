@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.core.service
 
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaServiceError
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.*
@@ -15,7 +16,7 @@ trait CredentialSchemaService {
     * @return
     *   Created instance of the Credential Schema
     */
-  def create(in: Input): Result[CredentialSchema]
+  def create(in: Input, resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP): Result[CredentialSchema]
 
   /** @param guid
     *   Globally unique UUID of the credential schema

@@ -9,18 +9,21 @@ import org.hyperledger.identus.pollux.credentialschema.http.{CredentialSchemaInp
 import org.hyperledger.identus.pollux.credentialschema.SchemaRegistryEndpoints.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.LogUtils.*
+import org.hyperledger.identus.agent.server.config.AppConfig
 import sttp.tapir.ztapir.*
 import zio.*
 
 import java.util.UUID
 
 class SchemaRegistryServerEndpoints(
+    config: AppConfig,
     credentialSchemaController: CredentialSchemaController,
     authenticator: Authenticator[BaseEntity],
     authorizer: Authorizer[BaseEntity]
 ) {
-  val createSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
-    createSchemaEndpoint
+
+  val createSchemaHttpUrlServerEndpoint: ZServerEndpoint[Any, Any] =
+    createSchemaHttpUrlEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, schemaInput: CredentialSchemaInput) =>
@@ -30,6 +33,18 @@ class SchemaRegistryServerEndpoints(
             .logTrace(ctx)
         }
       }
+
+  val createSchemaDidUrlServerEndpoint: ZServerEndpoint[Any, Any] =
+    createSchemaDidUrlEndpoint
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac => {
+        case (ctx: RequestContext, schemaInput: CredentialSchemaInput) =>
+          credentialSchemaController
+            .createSchemaDidUrl(config, schemaInput)(ctx)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
+      }
+    }
 
   val updateSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
     updateSchemaEndpoint
@@ -47,7 +62,7 @@ class SchemaRegistryServerEndpoints(
     getSchemaByIdEndpoint
       .zServerLogic { case (ctx: RequestContext, guid: UUID) =>
         credentialSchemaController
-          .getSchemaByGuid(guid)(ctx)
+          .getSchemaByGuid(config, guid)(ctx)
           .logTrace(ctx)
       }
 
@@ -75,8 +90,9 @@ class SchemaRegistryServerEndpoints(
 
   val all: List[ZServerEndpoint[Any, Any]] =
     List(
-      createSchemaServerEndpoint,
-      updateSchemaServerEndpoint,
+      createSchemaHttpUrlServerEndpoint,
+      createSchemaDidUrlServerEndpoint,
+      updateSchemaServerEndpoint, // TODO: get back to it, see if changes are needed
       getSchemaByIdServerEndpoint,
       getRawSchemaByIdServerEndpoint,
       lookupSchemasByQueryServerEndpoint
@@ -84,11 +100,13 @@ class SchemaRegistryServerEndpoints(
 }
 
 object SchemaRegistryServerEndpoints {
-  def all: URIO[CredentialSchemaController & DefaultAuthenticator, List[ZServerEndpoint[Any, Any]]] = {
+  def all: URIO[CredentialSchemaController & DefaultAuthenticator & AppConfig, List[ZServerEndpoint[Any, Any]]] = {
     for {
       authenticator <- ZIO.service[DefaultAuthenticator]
+      config <- ZIO.service[AppConfig]
       schemaRegistryService <- ZIO.service[CredentialSchemaController]
       schemaRegistryEndpoints = new SchemaRegistryServerEndpoints(
+        config,
         schemaRegistryService,
         authenticator,
         authenticator

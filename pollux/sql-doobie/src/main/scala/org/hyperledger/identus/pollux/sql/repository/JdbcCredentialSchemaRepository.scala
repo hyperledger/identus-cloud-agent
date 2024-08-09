@@ -3,6 +3,7 @@ package org.hyperledger.identus.pollux.sql.repository
 import doobie.*
 import doobie.implicits.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.repository.{CredentialSchemaRepository, Repository}
 import org.hyperledger.identus.pollux.core.repository.Repository.*
 import org.hyperledger.identus.pollux.sql.model.db.{CredentialSchema as CredentialSchemaRow, CredentialSchemaSql}
@@ -38,6 +39,7 @@ case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: 
       )
   }
 
+  // NOTE: this function is not used anywhere
   override def update(cs: CredentialSchema): URIO[WalletAccessContext, CredentialSchema] = {
     ZIO.serviceWithZIO[WalletAccessContext](ctx =>
       CredentialSchemaSql
@@ -48,11 +50,13 @@ case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: 
     )
   }
 
-  def getAllVersions(id: UUID, author: String): URIO[WalletAccessContext, List[String]] = {
+  def getAllVersions(id: UUID, author: String): URIO[WalletAccessContext, List[CredentialSchema]] = {
     CredentialSchemaSql
       .getAllVersions(id, author)
       .transactWallet(xa)
       .orDie
+      .map(_.map(CredentialSchemaRow.toModel))
+
   }
 
   override def delete(guid: UUID): URIO[WalletAccessContext, CredentialSchema] = {

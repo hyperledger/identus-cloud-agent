@@ -9,6 +9,7 @@ import org.hyperledger.identus.pollux.core.model.error.{
 }
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.FilteredEntries
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.repository.CredentialSchemaRepository
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchQuery
 import zio.*
@@ -18,9 +19,12 @@ import java.util.UUID
 class CredentialSchemaServiceImpl(
     credentialSchemaRepository: CredentialSchemaRepository
 ) extends CredentialSchemaService {
-  override def create(in: CredentialSchema.Input): Result[CredentialSchema] = {
+  override def create(
+      in: CredentialSchema.Input,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+  ): Result[CredentialSchema] = {
     for {
-      credentialSchema <- CredentialSchema.make(in)
+      credentialSchema <- CredentialSchema.make(in, resolutionMethod)
       _ <- CredentialSchema.validateCredentialSchema(credentialSchema)
       createdCredentialSchema <- credentialSchemaRepository.create(credentialSchema)
     } yield createdCredentialSchema
@@ -48,11 +52,21 @@ class CredentialSchemaServiceImpl(
       in: CredentialSchema.Input
   ): Result[CredentialSchema] = {
     for {
-      cs <- CredentialSchema.make(guid, in)
-      _ <- CredentialSchema.validateCredentialSchema(cs).mapError(CredentialSchemaValidationError.apply)
       existingVersions <- credentialSchemaRepository.getAllVersions(guid, in.author)
+      _ <- if existingVersions.isEmpty then
+        ZIO.fail(
+          CredentialSchemaUpdateError(
+            guid,
+            in.version,
+            in.author,
+            s"No Schema exists of author: ${in.author}, with provided id: $guid"
+          )
+        ) else ZIO.unit
+      resolutionMethod = existingVersions.head.resolutionMethod
+      cs <- CredentialSchema.make(guid, in, resolutionMethod)
+      _ <- CredentialSchema.validateCredentialSchema(cs).mapError(CredentialSchemaValidationError.apply)
       _ <- ZIO.fromOption(existingVersions.headOption).mapError(_ => CredentialSchemaGuidNotFoundError(guid))
-      _ <- existingVersions.find(_ > in.version) match {
+      _ <- existingVersions.find(_.version > in.version) match {
         case Some(higherVersion) =>
           ZIO.fail(
             CredentialSchemaUpdateError(
@@ -65,7 +79,7 @@ class CredentialSchemaServiceImpl(
         case None =>
           ZIO.succeed(cs)
       }
-      _ <- existingVersions.find(_ == in.version) match {
+      _ <- existingVersions.find(_.version == in.version) match {
         case Some(existingVersion) =>
           ZIO.fail(
             CredentialSchemaUpdateError(

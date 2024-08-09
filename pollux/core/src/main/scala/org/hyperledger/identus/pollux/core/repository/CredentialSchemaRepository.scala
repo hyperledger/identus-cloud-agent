@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.core.repository
 
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.*
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchCapability
@@ -17,7 +18,7 @@ trait CredentialSchemaRepository
 
   def update(cs: CredentialSchema): URIO[WalletAccessContext, CredentialSchema]
 
-  def getAllVersions(id: UUID, author: String): URIO[WalletAccessContext, List[String]]
+  def getAllVersions(id: UUID, author: String): URIO[WalletAccessContext, List[CredentialSchema]]
 
   def delete(guid: UUID): URIO[WalletAccessContext, CredentialSchema]
 
