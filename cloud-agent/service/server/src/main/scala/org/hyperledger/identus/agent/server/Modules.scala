@@ -231,26 +231,31 @@ object RepoModule {
   }
 
   val allSecretStorageLayer: TaskLayer[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage] = {
-    SystemModule.configLayer.flatMap { configEnv =>
-      val secretStorageConfig = configEnv.get.agent.secretStorage
-      val useSemanticPath = secretStorageConfig.vault.map(_.useSemanticPath).getOrElse(true)
-      secretStorageConfig.backend match {
-        case SecretStorageBackend.vault =>
-          ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
-            VaultDIDSecretStorage.layer(useSemanticPath),
-            VaultGenericSecretStorage.layer(useSemanticPath),
-            VaultWalletSecretStorage.layer,
-            vaultClientLayer,
-          )
-        case SecretStorageBackend.postgres =>
-          ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
-            JdbcDIDSecretStorage.layer,
-            JdbcGenericSecretStorage.layer,
-            JdbcWalletSecretStorage.layer,
-            agentContextAwareTransactorLayer,
-          )
+    SystemModule.configLayer
+      .tap { config =>
+        val backend = config.get.agent.secretStorage.backend
+        ZIO.logInfo(s"Using '${backend}' as a secret storage backend")
       }
-    }
+      .flatMap { config =>
+        val secretStorageConfig = config.get.agent.secretStorage
+        val useSemanticPath = secretStorageConfig.vault.map(_.useSemanticPath).getOrElse(true)
+        secretStorageConfig.backend match {
+          case SecretStorageBackend.vault =>
+            ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
+              VaultDIDSecretStorage.layer(useSemanticPath),
+              VaultGenericSecretStorage.layer(useSemanticPath),
+              VaultWalletSecretStorage.layer,
+              vaultClientLayer,
+            )
+          case SecretStorageBackend.postgres =>
+            ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
+              JdbcDIDSecretStorage.layer,
+              JdbcGenericSecretStorage.layer,
+              JdbcWalletSecretStorage.layer,
+              agentContextAwareTransactorLayer,
+            )
+        }
+      }
   }
 
 }
