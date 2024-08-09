@@ -1,4 +1,4 @@
-package org.hyperledger.identus.shared.models
+package org.hyperledger.identus.shared.messaging
 
 import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 

@@ -4,11 +4,7 @@ import cats.syntax.all.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import org.hyperledger.identus.agent.server.config.AppConfig
-import org.hyperledger.identus.agent.server.jobs.BackgroundJobError.{
-  ErrorResponseReceivedFromPeerAgent,
-  InvalidState,
-  NotImplemented
-}
+import org.hyperledger.identus.agent.server.jobs.BackgroundJobError.{ErrorResponseReceivedFromPeerAgent, InvalidState, NotImplemented}
 import org.hyperledger.identus.agent.walletapi.model.error.{DIDSecretStorageError, GetManagedDIDError}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
@@ -19,9 +15,7 @@ import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.mercury.protocol.reportproblem.v2.{ProblemCode, ReportProblem}
-import org.hyperledger.identus.messaging
-import org.hyperledger.identus.messaging.Message
-import org.hyperledger.identus.messaging.MessagingService.RetryStep
+import org.hyperledger.identus.shared.messaging.MessagingService.RetryStep
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
@@ -29,11 +23,13 @@ import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
 import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, IssuerPublicKey, PresentationCompact, SDJWT}
-import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, Issuer as JwtIssuer, JWT, JwtPresentation}
+import org.hyperledger.identus.pollux.vc.jwt.{JWT, JwtPresentation, DidResolver as JwtDidResolver, Issuer as JwtIssuer}
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.http.*
+import org.hyperledger.identus.shared.messaging
+import org.hyperledger.identus.shared.messaging.{Message, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.*
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId, WalletIdAndRecordId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*

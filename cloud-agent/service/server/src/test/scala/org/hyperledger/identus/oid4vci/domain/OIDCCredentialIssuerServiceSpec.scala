@@ -6,7 +6,6 @@ import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockM
 import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, MockDIDNonSecretStorage}
 import org.hyperledger.identus.castor.core.model.did.{DID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.service.{DIDService, MockDIDService}
-import org.hyperledger.identus.messaging.kafka.InMemoryMessagingService
 import org.hyperledger.identus.oid4vci.http.{ClaimDescriptor, CredentialDefinition, Localization}
 import org.hyperledger.identus.oid4vci.service.{OIDCCredentialIssuerService, OIDCCredentialIssuerServiceImpl}
 import org.hyperledger.identus.oid4vci.storage.InMemoryIssuanceSessionService
@@ -19,7 +18,9 @@ import org.hyperledger.identus.pollux.core.repository.{
 }
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.vc.jwt.PrismDidResolver
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId, WalletIdAndRecordId}
+import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
+import org.hyperledger.identus.shared.messaging.kafka.InMemoryMessagingService
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.{Clock, Random, URLayer, ZIO, ZLayer}
 import zio.json.*
 import zio.json.ast.Json

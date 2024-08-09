@@ -8,7 +8,8 @@ import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.repository.ConnectionRepositoryInMemory
 import org.hyperledger.identus.mercury.model.{DidId, Message}
 import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
-import org.hyperledger.identus.messaging.kafka.InMemoryMessagingService
+import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
+import org.hyperledger.identus.shared.messaging.kafka.InMemoryMessagingService
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*

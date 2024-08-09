@@ -8,7 +8,6 @@ import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialIssuedFormat
 import org.hyperledger.identus.mercury.protocol.presentproof.*
-import org.hyperledger.identus.messaging.Producer
 import org.hyperledger.identus.pollux.anoncreds.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
@@ -19,6 +18,7 @@ import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, Pre
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.pollux.sdjwt.{CredentialCompact, HolderPrivateKey, PresentationCompact, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.shared.messaging.{Producer, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import zio.*
@@ -26,7 +26,7 @@ import zio.json.*
 
 import java.net.URI
 import java.time.Instant
-import java.util.{Base64 as JBase64, UUID}
+import java.util.{UUID, Base64 as JBase64}
 import java.util as ju
 import scala.util.chaining.*
 import scala.util.Try

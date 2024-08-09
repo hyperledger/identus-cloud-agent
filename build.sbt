@@ -103,7 +103,11 @@ lazy val D = new {
   val zioLog: ModuleID = "dev.zio" %% "zio-logging" % V.zioLogging
   val zioSLF4J: ModuleID = "dev.zio" %% "zio-logging-slf4j" % V.zioLogging
   val zioJson: ModuleID = "dev.zio" %% "zio-json" % V.zioJson
+  val zioConcurrent: ModuleID = "dev.zio" %% "zio-concurrent" % V.zio
   val zioHttp: ModuleID = "dev.zio" %% "zio-http" % V.zioHttp
+  val zioKafka: ModuleID = "dev.zio" %% "zio-kafka" % V.zioKafka excludeAll (
+    ExclusionRule("dev.zio", "zio_3"), ExclusionRule("dev.zio", "zio-streams_3")
+  )
   val zioCatsInterop: ModuleID = "dev.zio" %% "zio-interop-cats" % V.zioCatsInterop
   val zioMetricsConnectorMicrometer: ModuleID = "dev.zio" %% "zio-metrics-connectors-micrometer" % V.zioMetricsConnector
   val tapirPrometheusMetrics: ModuleID = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % V.tapir
@@ -178,7 +182,9 @@ lazy val D_Shared = new {
       D.typesafeConfig,
       D.scalaPbGrpc,
       D.zio,
+      D.zioConcurrent,
       D.zioHttp,
+      D.zioKafka,
       D.scalaUri,
       // FIXME: split shared DB stuff as subproject?
       D.doobieHikari,
@@ -330,15 +336,11 @@ lazy val D_Pollux_VC_JWT = new {
 
 lazy val D_EventNotification = new {
   val zio = "dev.zio" %% "zio" % V.zio
-  val zioConcurrent = "dev.zio" %% "zio-concurrent" % V.zio
-  val zioKafka = "dev.zio" %% "zio-kafka" % V.zioKafka excludeAll (
-    ExclusionRule("dev.zio", "zio_3"), ExclusionRule("dev.zio", "zio-streams_3")
-  )
   val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
 
-  val zioDependencies: Seq[ModuleID] = Seq(zio, zioConcurrent, zioTest, zioTestSbt, zioTestMagnolia, zioKafka)
+  val zioDependencies: Seq[ModuleID] = Seq(zio, zioTest, zioTestSbt, zioTestMagnolia)
   val baseDependencies: Seq[ModuleID] = zioDependencies
 }
 

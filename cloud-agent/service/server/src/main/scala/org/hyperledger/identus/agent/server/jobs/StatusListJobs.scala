@@ -6,13 +6,13 @@ import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.protocol.revocationnotificaiton.RevocationNotification
-import org.hyperledger.identus.messaging
-import org.hyperledger.identus.messaging.{Message, Producer}
 import org.hyperledger.identus.pollux.core.model.{CredInStatusList, CredentialStatusListWithCreds}
 import org.hyperledger.identus.pollux.core.service.{CredentialService, CredentialStatusListService}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021, VCStatusList2021Error}
 import org.hyperledger.identus.resolvers.DIDResolver
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId, WalletIdAndRecordId}
+import org.hyperledger.identus.shared.messaging
+import org.hyperledger.identus.shared.messaging.{Message, Producer, WalletIdAndRecordId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
 import zio.metrics.Metric

@@ -1,13 +1,13 @@
-package org.hyperledger.identus.messaging.kafka
+package org.hyperledger.identus.shared.messaging.kafka
 
-import org.hyperledger.identus.messaging._
-import org.hyperledger.identus.shared.models.Serde
-import zio._
+import zio.*
 import zio.concurrent.ConcurrentMap
-import zio.stream._
+import zio.stream.*
 import zio.Clock
 import zio.Task
-import InMemoryMessagingService._
+import InMemoryMessagingService.*
+import org.hyperledger.identus.shared.messaging.{Consumer, Message, MessagingService, Producer, Serde}
+
 import java.util.concurrent.TimeUnit
 
 case class ConsumerGroupKey(groupId: GroupId, topic: Topic)

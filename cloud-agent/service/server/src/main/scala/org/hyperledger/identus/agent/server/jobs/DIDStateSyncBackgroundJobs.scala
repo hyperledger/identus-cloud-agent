@@ -1,7 +1,7 @@
 package org.hyperledger.identus.agent.server.jobs
 
 import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, WalletManagementService}
-import org.hyperledger.identus.messaging.{Message, MessagingService, Producer}
+import org.hyperledger.identus.shared.messaging.{Message, MessagingService, Producer}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*

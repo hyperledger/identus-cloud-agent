@@ -5,13 +5,14 @@ import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemo
 import org.hyperledger.identus.mercury.{AgentPeerService, PeerDID}
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.presentproof.*
-import org.hyperledger.identus.messaging.kafka.InMemoryMessagingService
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.repository.*
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
+import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
+import org.hyperledger.identus.shared.messaging.kafka.InMemoryMessagingService
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*

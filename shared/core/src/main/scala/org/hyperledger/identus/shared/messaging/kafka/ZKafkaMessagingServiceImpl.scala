@@ -1,9 +1,8 @@
-package org.hyperledger.identus.messaging.kafka
+package org.hyperledger.identus.shared.messaging.kafka
 
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.header.Headers
-import org.hyperledger.identus.messaging.*
-import org.hyperledger.identus.shared.models.Serde
+import org.hyperledger.identus.shared.messaging.{Consumer, Message, MessagingService, Producer, Serde}
 import zio.kafka.consumer.{Consumer as ZKConsumer, ConsumerSettings as ZKConsumerSettings, Subscription as ZKSubscription}
 import zio.kafka.producer.{Producer as ZKProducer, ProducerSettings as ZKProducerSettings}
 import zio.kafka.serde.{Deserializer as ZKDeserializer, Serializer as ZKSerializer}

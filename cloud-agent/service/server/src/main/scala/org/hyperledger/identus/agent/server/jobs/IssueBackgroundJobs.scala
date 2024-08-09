@@ -7,13 +7,13 @@ import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
-import org.hyperledger.identus.messaging
-import org.hyperledger.identus.messaging.Message
-import org.hyperledger.identus.messaging.MessagingService.RetryStep
+import org.hyperledger.identus.shared.messaging.MessagingService.RetryStep
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.service.CredentialService
 import org.hyperledger.identus.resolvers.DIDResolver
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId, WalletIdAndRecordId}
+import org.hyperledger.identus.shared.messaging
+import org.hyperledger.identus.shared.messaging.{Message, WalletIdAndRecordId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.shared.models.Failure
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds

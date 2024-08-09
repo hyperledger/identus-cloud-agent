@@ -1,6 +1,8 @@
 package org.hyperledger.identus.messaging.kafka
 
 import org.hyperledger.identus.messaging.*
+import org.hyperledger.identus.shared.messaging.{Consumer, Message, Producer}
+import org.hyperledger.identus.shared.messaging.kafka.InMemoryMessagingService
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*

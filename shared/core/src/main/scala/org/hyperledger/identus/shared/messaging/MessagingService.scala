@@ -1,7 +1,6 @@
-package org.hyperledger.identus.messaging
+package org.hyperledger.identus.shared.messaging
 
-import org.hyperledger.identus.shared.models.Serde
-import zio.{durationInt, Cause, Duration, EnvironmentTag, RIO, Task, URIO, ZIO}
+import zio.{Cause, Duration, EnvironmentTag, RIO, Task, URIO, ZIO, durationInt}
 
 import java.time.Instant
 trait MessagingService {
