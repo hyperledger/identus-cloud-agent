@@ -9,6 +9,9 @@ if (productionRelease) {
         '+([0-9])?(.{+([0-9]),x}).x',
     ]
     extraPlugins = [
+        ["@semantic-release/exec", {
+            "prepareCmd": "echo ${nextRelease.version} > .release-version"
+        }],
         '@semantic-release/release-notes-generator',
         ["@semantic-release/changelog", {
             "changelogFile": "CHANGELOG.md"
@@ -38,7 +41,7 @@ if (productionRelease) {
                 "cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml",
                 "infrastructure/local/.env"
             ],
-            "message": "chore(release): cut Identus Cloud agent ${nextRelease.version} release\n\n${nextRelease.notes}\n\nSigned-off-by: Allain Magyar <allain.magyar@iohk.io>"
+            "message": "chore(release): cut the Identus Cloud agent ${nextRelease.version} release\n\n${nextRelease.notes} [skip ci]\n\nSigned-off-by: Hyperledger Bot <hyperledger-bot@hyperledger.org>"
         }],
         ["semantic-release-slack-bot", {
             "notifyOnSuccess": true,
