@@ -11,6 +11,7 @@ import io.circe
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.repository.PresentationRepository
@@ -163,6 +164,9 @@ class JdbcPresentationRepository(
 
   given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
   given failurePut: Put[Failure] = Put[String].contramap(_.asFailureInfo.toJson)
+  
+  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(???))
+  given invitationPut: Put[Invitation] = Put[String].contramap(_.asJson.toString)
 
   override def createPresentationRecord(record: PresentationRecord): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
@@ -177,6 +181,7 @@ class JdbcPresentationRepository(
         |   subject_id,
         |   protocol_state,
         |   credential_format,
+        |   invitation,
         |   request_presentation_data,
         |   credentials_to_use,
         |   anoncred_credentials_to_use_json_schema_id,
@@ -198,6 +203,7 @@ class JdbcPresentationRepository(
         |   ${record.subjectId},
         |   ${record.protocolState},
         |   ${record.credentialFormat},
+        |   ${record.invitation},
         |   ${record.requestPresentationData},
         |   ${record.credentialsToUse.map(_.toList)},
         |   ${record.anoncredCredentialsToUseJsonSchemaId},
@@ -235,6 +241,7 @@ class JdbcPresentationRepository(
         |   subject_id,
         |   protocol_state,
         |   credential_format,
+        |   invitation,
         |   request_presentation_data,
         |   propose_presentation_data,
         |   presentation_data,
@@ -286,6 +293,7 @@ class JdbcPresentationRepository(
             |   subject_id,
             |   protocol_state,
             |   credential_format,
+            |   invitation,
             |   request_presentation_data,
             |   propose_presentation_data,
             |   presentation_data,
@@ -334,6 +342,7 @@ class JdbcPresentationRepository(
         |   subject_id,
         |   protocol_state,
         |   credential_format,
+        |   invitation,
         |   request_presentation_data,
         |   propose_presentation_data,
         |   presentation_data,
@@ -371,6 +380,7 @@ class JdbcPresentationRepository(
         |   subject_id,
         |   protocol_state,
         |   credential_format,
+        |   invitation,
         |   request_presentation_data,
         |   propose_presentation_data,
         |   presentation_data,

@@ -70,11 +70,13 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             pairwiseProverDid = DidId("did:peer:Prover")
             record <- svc.createJwtPresentationRecord(
               pairwiseVerifierDid,
-              pairwiseProverDid,
+              Some(pairwiseProverDid),
               thid,
               connectionId,
               proofTypes,
-              options
+              options,
+              None,
+              None
             )
           } yield {
             assertTrue(record.thid == thid) &&
@@ -136,10 +138,12 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             record <-
               svc.createAnoncredPresentationRecord(
                 pairwiseVerifierDid,
-                pairwiseProverDid,
+                Some(pairwiseProverDid),
                 thid,
                 connectionId,
-                anoncredPresentationRequestV1
+                anoncredPresentationRequestV1,
+                None,
+                None
               )
           } yield {
             assertTrue(record.thid == thid) &&
@@ -322,8 +326,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 "domain": "us.gov/DriverLicense",
                 "credential_manifest": {}
             }"""
-          prover = DidId("did:peer:Prover")
-          verifier = DidId("did:peer:Verifier")
+          prover = Some(DidId("did:peer:Prover"))
+          verifier = Some(DidId("did:peer:Verifier"))
 
           attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
             payload = presentationAttachmentAsJson,
@@ -350,8 +354,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 "domain": "us.gov/DriverLicense",
                 "credential_manifest": {}
             }"""
-          prover = DidId("did:peer:Prover")
-          verifier = DidId("did:peer:Verifier")
+          prover = Some(DidId("did:peer:Prover"))
+          verifier = Some(DidId("did:peer:Verifier"))
 
           attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
             payload = presentationAttachmentAsJson,
@@ -379,8 +383,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 "domain": "us.gov/DriverLicense",
                 "credential_manifest": {}
             }"""
-          prover = DidId("did:peer:Prover")
-          verifier = DidId("did:peer:Verifier")
+          prover = Some(DidId("did:peer:Prover"))
+          verifier = Some(DidId("did:peer:Verifier"))
 
           attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
             payload = presentationAttachmentAsJson,
@@ -536,8 +540,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           requestPresentation = RequestPresentation(
             body = RequestPresentation.Body(goal_code = Some("Presentation Request")),
             attachments = Seq(attachmentDescriptor),
-            to = DidId("did:peer:Prover"),
-            from = DidId("did:peer:Verifier"),
+            to = Some(DidId("did:peer:Prover")),
+            from = Some(DidId("did:peer:Verifier")),
           )
           aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentation)
           credentialsToUse =
@@ -598,8 +602,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           requestPresentation = RequestPresentation(
             body = RequestPresentation.Body(goal_code = Some("Presentation Request")),
             attachments = Seq(attachmentDescriptor),
-            to = DidId("did:peer:Prover"),
-            from = DidId("did:peer:Verifier"),
+            to = Some(DidId("did:peer:Prover")),
+            from = Some(DidId("did:peer:Verifier")),
           )
           aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentation)
           credentialsToUse = Seq(aIssueCredentialRecord.id.value)
@@ -772,8 +776,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       svc <- ZIO.service[PresentationService]
       connectionId = Some("connectionId")
       body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
-      prover = DidId("did:peer:Prover")
-      verifier = DidId("did:peer:Verifier")
+      prover = Some(DidId("did:peer:Prover"))
+      verifier = Some(DidId("did:peer:Verifier"))
       attachmentDescriptor = attachment
       requestPresentation = RequestPresentation(
         body = body,

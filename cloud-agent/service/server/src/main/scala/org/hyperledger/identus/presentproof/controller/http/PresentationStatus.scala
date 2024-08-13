@@ -33,6 +33,17 @@ final case class PresentationStatus(
     @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
     connectionId: Option[String] = None,
+    @description(annotations.goalcode.description)
+    @encodedExample(annotations.goalcode.example)
+    goalCode: Option[String] = None,
+    @description(annotations.goal.description)
+    @encodedExample(annotations.goal.example)
+    goal: Option[String] = None,
+    @description(annotations.myDid.description)
+    @encodedExample(annotations.myDid.example)
+    myDid: Option[String] = None,
+    @description(annotations.invitation.description)
+    invitation: Option[OOBPresentationInvitation] = None,
     @description(annotations.metaRetries.description)
     @encodedExample(annotations.metaRetries.example)
     metaRetries: Int,
@@ -60,6 +71,10 @@ object PresentationStatus {
       proofs = Seq.empty,
       data = data,
       connectionId = domain.connectionId,
+      invitation = domain.invitation.map(invitation => OOBPresentationInvitation.fromDomain(Some(invitation))),
+      goalCode = domain.invitation.flatMap(_.body.goal_code),
+      goal = domain.invitation.flatMap(_.body.goal),
+      myDid = domain.invitation.map(_.from.value),
       metaRetries = domain.metaRetries,
       metaLastFailure = domain.metaLastFailure.map(failure => ErrorResponse.failureToErrorResponseConversion(failure)),
     )
@@ -111,7 +126,9 @@ object PresentationStatus {
               "PresentationRejected",
               "ProblemReportPending",
               "ProblemReportSent",
-              "ProblemReportReceived"
+              "ProblemReportReceived",
+              "InvitationGenerated",
+              "InvitationReceived"
             )
           )
         )
@@ -143,6 +160,32 @@ object PresentationStatus {
           description = "The last failure if any.",
           example =
             ErrorResponse.failureToErrorResponseConversion(FailureInfo("Error", StatusCode.NotFound, "Not Found"))
+        )
+
+    object goalcode
+        extends Annotation[String](
+          description =
+            "A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.",
+          example = "issue-vc"
+        )
+
+    object goal
+        extends Annotation[String](
+          description =
+            "A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.",
+          example = "To verify a Peter College Graduate credential"
+        )
+
+    object myDid
+        extends Annotation[String](
+          description = "The DID representing me as the inviter or invitee in this specific connection.",
+          example = "did:peer:12345"
+        )
+
+    object invitation
+        extends Annotation[OOBPresentationInvitation](
+          description = "The invitation for this Request Presentation",
+          example = OOBPresentationInvitation.Example
         )
   }
 
