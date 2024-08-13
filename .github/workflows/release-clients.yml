@@ -1,6 +1,12 @@
 name: Publish Identus-cloud-agent clients
 
 on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Version to release clients (e.g. v1.33.0)"
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       releaseTag:

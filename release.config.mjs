@@ -6,6 +6,7 @@ let extraPlugins = []
 if (productionRelease) {
     branches = [
         'main',
+        'beta',
         '+([0-9])?(.{+([0-9]),x}).x',
     ]
     extraPlugins = [
@@ -56,7 +57,8 @@ if (productionRelease) {
     branches = [
         '+([0-9])?(.{+([0-9]),x}).x',
         'base',
-        { name: 'main', prerelease: 'rc' }
+        { name: 'main', prerelease: 'rc' },
+        { name: 'beta', prerelease: 'beta' }
     ]
     extraPlugins = []
 }
