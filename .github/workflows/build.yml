@@ -72,11 +72,8 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          sbt "release release-version ${{ env.BUILD_VERSION }} with-defaults"
-
-      - name: Generate OAS
-        run: |
-          sbt "cloudAgentServer/test:runMain org.hyperledger.identus.api.util.Tapir2StaticOAS ${process.env.PWD}/cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml ${BUILD_VERSION}"
+          sbt "set version := \"${{ env.BUILD_VERSION }}\"" "docker:stage"
+          docker buildx build --platform=linux/arm64,linux/amd64 --push -t ghcr.io/hyperledger/identus-cloud-agent:${{ env.BUILD_VERSION}} ./cloud-agent/service/server/target/docker/stage
 
       - name: Trigger helm chart update
         uses: peter-evans/repository-dispatch@v3
