@@ -26,20 +26,47 @@ object MockPresentationService extends Mock[PresentationService] {
 
   object CreateJwtPresentationRecord
       extends Effect[
-        (DidId, Option[DidId], DidCommID, Option[String], Seq[ProofType], Option[Options], Option[String], Option[String]),
+        (
+            DidId,
+            Option[DidId],
+            DidCommID,
+            Option[String],
+            Seq[ProofType],
+            Option[Options],
+            Option[String],
+            Option[String]
+        ),
         PresentationError,
         PresentationRecord
       ]
   object CreateSDJWTPresentationRecord
       extends Effect[
-        (DidId, Option[DidId], DidCommID, Option[String], Seq[ProofType], ast.Json.Obj, Option[Options], Option[String], Option[String]),
+        (
+            DidId,
+            Option[DidId],
+            DidCommID,
+            Option[String],
+            Seq[ProofType],
+            ast.Json.Obj,
+            Option[Options],
+            Option[String],
+            Option[String]
+        ),
         PresentationError,
         PresentationRecord
       ]
 
   object CreateAnoncredPresentationRecord
       extends Effect[
-        (DidId, Option[DidId], DidCommID, Option[String], AnoncredPresentationRequestV1, Option[String], Option[String]),
+        (
+            DidId,
+            Option[DidId],
+            DidCommID,
+            Option[String],
+            AnoncredPresentationRequestV1,
+            Option[String],
+            Option[String]
+        ),
         PresentationError,
         PresentationRecord
       ]
@@ -118,7 +145,17 @@ object MockPresentationService extends Mock[PresentationService] {
       ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
         proxy(
           CreateSDJWTPresentationRecord,
-          (pairwiseVerifierDID, pairwiseProverDID, thid, connectionId, proofTypes, claimsToDisclose, options, goalCode, goal)
+          (
+            pairwiseVerifierDID,
+            pairwiseProverDID,
+            thid,
+            connectionId,
+            proofTypes,
+            claimsToDisclose,
+            options,
+            goalCode,
+            goal
+          )
         )
 
       override def createAnoncredPresentationRecord(

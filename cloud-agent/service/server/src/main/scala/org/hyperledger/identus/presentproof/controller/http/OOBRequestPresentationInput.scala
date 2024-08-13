@@ -8,10 +8,10 @@ import org.hyperledger.identus.pollux.core.service.serdes.{
   AnoncredRequestedPredicateV1
 }
 import sttp.tapir.{Schema, Validator}
+import sttp.tapir.json.zio.*
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import OOBRequestPresentationInput.annotations
-import sttp.tapir.json.zio.*
 
 //TODO Should I just use RequestPresentationInput and add the optional fields will that cause any confusion
 final case class OOBRequestPresentationInput(

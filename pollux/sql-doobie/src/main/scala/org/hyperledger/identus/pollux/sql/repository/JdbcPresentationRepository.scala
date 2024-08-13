@@ -164,7 +164,7 @@ class JdbcPresentationRepository(
 
   given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
   given failurePut: Put[Failure] = Put[String].contramap(_.asFailureInfo.toJson)
-  
+
   given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(???))
   given invitationPut: Put[Invitation] = Put[String].contramap(_.asJson.toString)
 

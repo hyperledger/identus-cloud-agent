@@ -298,8 +298,8 @@ class PresentationServiceNotifier(
   override def getRequestPresentationFromInvitation(
       pairwiseProverDID: DidId,
       invitation: String
-  ): ZIO[WalletAccessContext, PresentationError, RequestPresentation] = 
-    svc.getRequestPresentationFromInvitation(pairwiseProverDID,invitation)
+  ): ZIO[WalletAccessContext, PresentationError, RequestPresentation] =
+    svc.getRequestPresentationFromInvitation(pairwiseProverDID, invitation)
 }
 
 object PresentationServiceNotifier {

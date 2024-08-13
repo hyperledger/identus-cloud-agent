@@ -1,10 +1,10 @@
 package org.hyperledger.identus.presentproof.controller.http
 
+import org.hyperledger.identus.api.http.Annotation
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import AcceptRequestPresentationInvitation.annotations
-import org.hyperledger.identus.api.http.Annotation
 
 case class AcceptRequestPresentationInvitation(
     @description(annotations.invitation.description)

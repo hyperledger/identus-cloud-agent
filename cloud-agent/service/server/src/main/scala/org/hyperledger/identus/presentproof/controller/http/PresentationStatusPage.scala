@@ -1,11 +1,12 @@
 package org.hyperledger.identus.presentproof.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
+import org.hyperledger.identus.connect.controller.http.Connection.annotations.myDid
 import org.hyperledger.identus.presentproof.controller.http.PresentationStatusPage.annotations
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
-import org.hyperledger.identus.connect.controller.http.Connection.annotations.myDid
+
 import java.util.UUID
 
 final case class PresentationStatusPage(
@@ -114,12 +115,15 @@ object PresentationStatusPage {
               data = Seq.empty,
               connectionId = None,
               myDid = Some("did:peer:veriferPeerDID1234567890"),
-              invitation = Some(OOBPresentationInvitation(
-                id = UUID.fromString("04112f4d-e894-4bff-a706-85b3e7190a2c"),
-                `type` = "didcomm/aip2;rfc0048/invitation",
-                from = "did:peer:veriferPeerDID1234567890",
-                invitationUrl = "http://localhost:8000/present-proof/invitation?_oob=eyJpZCI6ImU2M2JkNzQ1LWZjYzYtNGQ0My05NjgzLTY4MjUyOTNlYTgxNiIsInR5cGUiOiJodHRwczovL2RpZGNvbW0ub3JnL291dC1vZi1iYW5kLzIuMC9pbnZpdGF0aW9uIiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNoOWFSQmRFQlV6WkFRSzN5VnFBRnRYS0pVMVZ1cUZlMVd1U1ZRcnRvRGROZi5WejZNa3NCWmZkc3U4UmFxWjNmdjlBdkJ0elVGd1VyaW5td0xRODFNVjVoc29td2JZLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TVRrNU9qZ3dOekF2Wkdsa1kyOXRiU0lzSW5JaU9sdGRMQ0poSWpwYkltUnBaR052YlcwdmRqSWlYWDE5IiwiYm9keSI6eyJnb2FsX2NvZGUiOiJwcmVzZW50LXZwIiwiZ29hbCI6IlJlcXVlc3QgcHJvb2Ygb2YgdmFjY2luYXRpb24gaW5mb3JtYXRpb24iLCJhY2NlcHQiOltdfSwiYXR0YWNobWVudHMiOlt7ImlkIjoiZTE5ZjNkNmMtY2U2Ni00Y2EwLWI1ZWUtZDBiY2ZhOGI1MTc3IiwibWVkaWFfdHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJkYXRhIjp7Impzb24iOnsiaWQiOiIxYjMwYzRjZi05MmVjLTQwOTMtYWFlOC1hZDk3NmIzODljY2MiLCJ0eXBlIjoiaHR0cHM6Ly9kaWRjb21tLmF0YWxhcHJpc20uaW8vcHJlc2VudC1wcm9vZi8zLjAvcmVxdWVzdC1wcmVzZW50YXRpb24iLCJib2R5Ijp7ImdvYWxfY29kZSI6IlJlcXVlc3QgUHJvb2YgUHJlc2VudGF0aW9uIiwid2lsbF9jb25maXJtIjpmYWxzZSwicHJvb2ZfdHlwZXMiOltdfSwiYXR0YWNobWVudHMiOlt7ImlkIjoiNDBiZjcyNzUtMDNkNS00MjI1LWFlYjAtMzhhZDYyODhhMThkIiwibWVkaWFfdHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJkYXRhIjp7Impzb24iOnsib3B0aW9ucyI6eyJjaGFsbGVuZ2UiOiIxMWM5MTQ5My0wMWIzLTRjNGQtYWMzNi1iMzM2YmFiNWJkZGYiLCJkb21haW4iOiJodHRwczovL3ByaXNtLXZlcmlmaWVyLmNvbSJ9LCJwcmVzZW50YXRpb25fZGVmaW5pdGlvbiI6eyJpZCI6IjkyODkyMjJmLWY3ZmItNDk4Yi1iMmE0LTNlODdiNzdiMzk5ZiIsImlucHV0X2Rlc2NyaXB0b3JzIjpbXX19fSwiZm9ybWF0IjoicHJpc20vand0In1dLCJ0aGlkIjoiZTYzYmQ3NDUtZmNjNi00ZDQzLTk2ODMtNjgyNTI5M2VhODE2IiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNoOWFSQmRFQlV6WkFRSzN5VnFBRnRYS0pVMVZ1cUZlMVd1U1ZRcnRvRGROZi5WejZNa3NCWmZkc3U4UmFxWjNmdjlBdkJ0elVGd1VyaW5td0xRODFNVjVoc29td2JZLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TVRrNU9qZ3dOekF2Wkdsa1kyOXRiU0lzSW5JaU9sdGRMQ0poSWpwYkltUnBaR052YlcwdmRqSWlYWDE5In19fV19"
-              )),
+              invitation = Some(
+                OOBPresentationInvitation(
+                  id = UUID.fromString("04112f4d-e894-4bff-a706-85b3e7190a2c"),
+                  `type` = "didcomm/aip2;rfc0048/invitation",
+                  from = "did:peer:veriferPeerDID1234567890",
+                  invitationUrl =
+                    "http://localhost:8000/present-proof/invitation?_oob=eyJpZCI6ImU2M2JkNzQ1LWZjYzYtNGQ0My05NjgzLTY4MjUyOTNlYTgxNiIsInR5cGUiOiJodHRwczovL2RpZGNvbW0ub3JnL291dC1vZi1iYW5kLzIuMC9pbnZpdGF0aW9uIiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNoOWFSQmRFQlV6WkFRSzN5VnFBRnRYS0pVMVZ1cUZlMVd1U1ZRcnRvRGROZi5WejZNa3NCWmZkc3U4UmFxWjNmdjlBdkJ0elVGd1VyaW5td0xRODFNVjVoc29td2JZLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TVRrNU9qZ3dOekF2Wkdsa1kyOXRiU0lzSW5JaU9sdGRMQ0poSWpwYkltUnBaR052YlcwdmRqSWlYWDE5IiwiYm9keSI6eyJnb2FsX2NvZGUiOiJwcmVzZW50LXZwIiwiZ29hbCI6IlJlcXVlc3QgcHJvb2Ygb2YgdmFjY2luYXRpb24gaW5mb3JtYXRpb24iLCJhY2NlcHQiOltdfSwiYXR0YWNobWVudHMiOlt7ImlkIjoiZTE5ZjNkNmMtY2U2Ni00Y2EwLWI1ZWUtZDBiY2ZhOGI1MTc3IiwibWVkaWFfdHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJkYXRhIjp7Impzb24iOnsiaWQiOiIxYjMwYzRjZi05MmVjLTQwOTMtYWFlOC1hZDk3NmIzODljY2MiLCJ0eXBlIjoiaHR0cHM6Ly9kaWRjb21tLmF0YWxhcHJpc20uaW8vcHJlc2VudC1wcm9vZi8zLjAvcmVxdWVzdC1wcmVzZW50YXRpb24iLCJib2R5Ijp7ImdvYWxfY29kZSI6IlJlcXVlc3QgUHJvb2YgUHJlc2VudGF0aW9uIiwid2lsbF9jb25maXJtIjpmYWxzZSwicHJvb2ZfdHlwZXMiOltdfSwiYXR0YWNobWVudHMiOlt7ImlkIjoiNDBiZjcyNzUtMDNkNS00MjI1LWFlYjAtMzhhZDYyODhhMThkIiwibWVkaWFfdHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJkYXRhIjp7Impzb24iOnsib3B0aW9ucyI6eyJjaGFsbGVuZ2UiOiIxMWM5MTQ5My0wMWIzLTRjNGQtYWMzNi1iMzM2YmFiNWJkZGYiLCJkb21haW4iOiJodHRwczovL3ByaXNtLXZlcmlmaWVyLmNvbSJ9LCJwcmVzZW50YXRpb25fZGVmaW5pdGlvbiI6eyJpZCI6IjkyODkyMjJmLWY3ZmItNDk4Yi1iMmE0LTNlODdiNzdiMzk5ZiIsImlucHV0X2Rlc2NyaXB0b3JzIjpbXX19fSwiZm9ybWF0IjoicHJpc20vand0In1dLCJ0aGlkIjoiZTYzYmQ3NDUtZmNjNi00ZDQzLTk2ODMtNjgyNTI5M2VhODE2IiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNoOWFSQmRFQlV6WkFRSzN5VnFBRnRYS0pVMVZ1cUZlMVd1U1ZRcnRvRGROZi5WejZNa3NCWmZkc3U4UmFxWjNmdjlBdkJ0elVGd1VyaW5td0xRODFNVjVoc29td2JZLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TVRrNU9qZ3dOekF2Wkdsa1kyOXRiU0lzSW5JaU9sdGRMQ0poSWpwYkltUnBaR052YlcwdmRqSWlYWDE5In19fV19"
+                )
+              ),
               metaRetries = 5
             ),
           )

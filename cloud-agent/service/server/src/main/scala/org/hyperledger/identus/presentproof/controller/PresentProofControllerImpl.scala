@@ -262,7 +262,7 @@ class PresentProofControllerImpl(
   )(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
-     for {
+    for {
       pairwiseDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
       requestPresentation <- presentationService.getRequestPresentationFromInvitation(
         pairwiseDid.did,
