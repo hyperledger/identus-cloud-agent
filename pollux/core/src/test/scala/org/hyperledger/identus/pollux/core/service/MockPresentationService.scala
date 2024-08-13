@@ -15,7 +15,7 @@ import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialPro
 import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, PresentationCompact}
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import org.hyperledger.identus.shared.models.*
-import zio.{mock, IO, URLayer, ZIO, ZLayer}
+import zio.{mock, IO, UIO, URLayer, ZIO, ZLayer}
 import zio.json.*
 import zio.mock.{Mock, Proxy}
 
@@ -262,7 +262,7 @@ object MockPresentationService extends Mock[PresentationService] {
       override def reportProcessingFailure(
           recordId: DidCommID,
           failReason: Option[Failure]
-      ): IO[PresentationError, Unit] = ???
+      ): UIO[Unit] = ???
 
     }
   }

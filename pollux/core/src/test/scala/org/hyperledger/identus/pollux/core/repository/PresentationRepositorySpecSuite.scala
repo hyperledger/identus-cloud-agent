@@ -427,7 +427,7 @@ object PresentationRepositorySpecSuite {
         exit <- repo.updatePresentationWithCredentialsToUse(record2.id, Option(Nil), newState).provide(wallet2).exit
       } yield assert(exit)(dies(hasMessage(equalTo("Unexpected affected row count: 0"))))
     },
-    test("unable to updateAfterFail PresentationRecord outside of the wallet") {
+    test("updateAfterFail PresentationRecord outside of the wallet") {
       val walletId1 = WalletId.random
       val walletId2 = WalletId.random
       val wallet1 = ZLayer.succeed(WalletAccessContext(walletId1))
@@ -442,7 +442,6 @@ object PresentationRepositorySpecSuite {
             record2.id,
             Some(FailureInfo("PresentationRepositorySpecSuite", StatusCode(999), "fail reason"))
           )
-          .provide(wallet2)
           .exit
       } yield assert(exit)(dies(hasMessage(equalTo("Unexpected affected row count: 0"))))
     },
