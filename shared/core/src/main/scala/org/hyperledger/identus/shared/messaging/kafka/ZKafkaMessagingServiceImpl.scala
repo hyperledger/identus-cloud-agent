@@ -2,11 +2,15 @@ package org.hyperledger.identus.shared.messaging.kafka
 
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.header.Headers
-import org.hyperledger.identus.shared.messaging.{Consumer, Message, MessagingService, Producer, Serde}
-import zio.kafka.consumer.{Consumer as ZKConsumer, ConsumerSettings as ZKConsumerSettings, Subscription as ZKSubscription}
+import org.hyperledger.identus.shared.messaging.*
+import zio.{durationInt, EnvironmentTag, RIO, RLayer, Task, ULayer, URIO, ZIO, ZLayer}
+import zio.kafka.consumer.{
+  Consumer as ZKConsumer,
+  ConsumerSettings as ZKConsumerSettings,
+  Subscription as ZKSubscription
+}
 import zio.kafka.producer.{Producer as ZKProducer, ProducerSettings as ZKProducerSettings}
 import zio.kafka.serde.{Deserializer as ZKDeserializer, Serializer as ZKSerializer}
-import zio.{EnvironmentTag, RIO, RLayer, Task, ULayer, URIO, ZIO, ZLayer, durationInt}
 
 class ZKafkaMessagingServiceImpl(bootstrapServers: List[String]) extends MessagingService {
   override def makeConsumer[K, V](groupId: String)(implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Consumer[K, V]] =
@@ -38,7 +42,9 @@ class ZKafkaConsumerImpl[K, V](
         .withMaxPollInterval(5.minutes) // Should be max.poll.records x 'max processing time per record'
         // 'pollTimeout' default is 50 millis. This is a ZIO Kafka property.
         .withPollTimeout(50.millis)
-//        .withOffsetRetrieval(OffsetRetrieval.Auto(AutoOffsetStrategy.Earliest))
+        // .withOffsetRetrieval(OffsetRetrieval.Auto(AutoOffsetStrategy.Earliest))
+        .withRebalanceSafeCommits(true)
+        // .withMaxRebalanceDuration(30.seconds)
     )
   )
 
