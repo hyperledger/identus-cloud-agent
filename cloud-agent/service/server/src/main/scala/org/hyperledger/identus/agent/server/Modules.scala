@@ -50,7 +50,7 @@ import zio.http.Client
 
 object SystemModule {
 
-  private val tmp: IO[Config.Error, AppConfig] =
+  val configLayer: ZLayer[Any, Config.Error, AppConfig] = ZLayer.fromZIO(
     for {
       ret: AppConfig <- TypesafeConfigProvider
         .fromTypesafeConfig(ConfigFactory.load())
@@ -58,8 +58,7 @@ object SystemModule {
       _ <- ZIO.log(s"HTTP server endpoint is setup as '${ret.agent.httpEndpoint.publicEndpointUrl}'")
       _ <- ZIO.log(s"DIDComm server endpoint is setup as '${ret.agent.didCommEndpoint.publicEndpointUrl}'")
     } yield ret
-
-  val configLayer = ZLayer.fromZIO(tmp)
+  )
 
   val zioHttpClientLayer: ZLayer[Any, Throwable, Client] = {
     import zio.http.netty.NettyConfig
@@ -232,36 +231,31 @@ object RepoModule {
   }
 
   val allSecretStorageLayer: TaskLayer[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage] = {
-    ZLayer.fromZIO {
-      ZIO
-        .service[AppConfig]
-        .map(_.agent.secretStorage)
-        .tap(conf => ZIO.logInfo(s"Using '${conf.backend}' as a secret storage backend"))
-        .flatMap { conf =>
-          val useSemanticPath = conf.vault.map(_.useSemanticPath).getOrElse(true)
-          conf.backend match {
-            case SecretStorageBackend.vault =>
-              ZIO.succeed(
-                ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
-                  VaultDIDSecretStorage.layer(useSemanticPath),
-                  VaultGenericSecretStorage.layer(useSemanticPath),
-                  VaultWalletSecretStorage.layer,
-                  vaultClientLayer,
-                )
-              )
-            case SecretStorageBackend.postgres =>
-              ZIO.succeed(
-                ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
-                  JdbcDIDSecretStorage.layer,
-                  JdbcGenericSecretStorage.layer,
-                  JdbcWalletSecretStorage.layer,
-                  agentContextAwareTransactorLayer,
-                )
-              )
-          }
+    SystemModule.configLayer
+      .tap { config =>
+        val backend = config.get.agent.secretStorage.backend
+        ZIO.logInfo(s"Using '${backend}' as a secret storage backend")
+      }
+      .flatMap { config =>
+        val secretStorageConfig = config.get.agent.secretStorage
+        val useSemanticPath = secretStorageConfig.vault.map(_.useSemanticPath).getOrElse(true)
+        secretStorageConfig.backend match {
+          case SecretStorageBackend.vault =>
+            ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
+              VaultDIDSecretStorage.layer(useSemanticPath),
+              VaultGenericSecretStorage.layer(useSemanticPath),
+              VaultWalletSecretStorage.layer,
+              vaultClientLayer,
+            )
+          case SecretStorageBackend.postgres =>
+            ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
+              JdbcDIDSecretStorage.layer,
+              JdbcGenericSecretStorage.layer,
+              JdbcWalletSecretStorage.layer,
+              agentContextAwareTransactorLayer,
+            )
         }
-        .provide(SystemModule.configLayer)
-    }.flatten
+      }
   }
 
 }
