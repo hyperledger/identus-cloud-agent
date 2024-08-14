@@ -1222,15 +1222,6 @@ private class PresentationServiceImpl(
       record <- getRecord(id)
     } yield record
 
-  // override def createOOBPresentationRecord(
-  //     goalCode: Option[String],
-  //     goal: Option[String],
-  //     pairwiseVerifierDID: DidId,
-  //     proofTypes: Seq[ProofType],
-  //     maybeOptions: Option[Options],
-  //     format: CredentialFormat,
-  // ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = ???
-
   override def getRequestPresentationFromInvitation(
       pairwiseProverDID: DidId,
       invitation: String
