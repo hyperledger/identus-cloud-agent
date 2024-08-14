@@ -166,7 +166,7 @@ object PresentationStatus {
         extends Annotation[String](
           description =
             "A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.",
-          example = "issue-vc"
+          example = "present-vp"
         )
 
     object goal
