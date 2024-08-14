@@ -17,6 +17,8 @@ jobs:
     name: "Build and unit tests"
     runs-on: self-hosted
     if: ${{ !contains(github.event.pull_request.title, '[skip ci]') }}
+    permissions:
+      pull-requests: write
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     container:
