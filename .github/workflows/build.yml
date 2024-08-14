@@ -5,19 +5,13 @@ concurrency:
 
 on:
   workflow_dispatch:
-    inputs:
-      branch:
-        description: "Branch to build from"
-        required: false
-        default: "main"
   push:
     branches:
       - "main"
-      - "beta"
 
 jobs:
   build-and-unit-tests:
-    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    if: ${{ !contains(github.event.head_commit.message, 'chore(release)') }}
     env:
       GITHUB_ACTOR: "hyperledger-bot"
       GITHUB_ACTOR_EMAIL: "hyperledger-bot@hyperledger.org"

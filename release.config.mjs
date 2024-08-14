@@ -1,15 +1,14 @@
-let productionRelease = process.env.PRODUCTION_RELEASE ? true : false
-
-let branches = []
-let extraPlugins = []
-
-if (productionRelease) {
-    branches = [
+export default {
+    branches: [
         'main',
-        'beta',
         '+([0-9])?(.{+([0-9]),x}).x',
-    ]
-    extraPlugins = [
+        { name: 'beta/*', prerelease: 'rc' }
+    ],
+    plugins: [
+        '@semantic-release/commit-analyzer',
+        ["@semantic-release/exec", {
+            "prepareCmd": "docker buildx build --platform=linux/arm64,linux/amd64 --push -t ghcr.io/hyperledger/identus-cloud-agent:${nextRelease.version} ./cloud-agent/service/server/target/docker/stage"
+        }],
         ["@semantic-release/exec", {
             "prepareCmd": "echo ${nextRelease.version} > .release-version"
         }],
@@ -52,25 +51,6 @@ if (productionRelease) {
                 "text": "A new version of Identus Cloud Agent successfully released!\nVersion: `$npm_package_version`\nTag: $repo_url/releases/tag/cloud-agent-v$npm_package_version\n\nRelease notes:\n$release_notes"
             }
         }],
-    ]
-} else {
-    branches = [
-        '+([0-9])?(.{+([0-9]),x}).x',
-        'base',
-        { name: 'main', prerelease: 'rc' },
-        { name: 'beta', prerelease: 'beta' }
-    ]
-    extraPlugins = []
-}
-
-export default {
-    branches: branches,
-    plugins: [
-        '@semantic-release/commit-analyzer',
-        ["@semantic-release/exec", {
-            "prepareCmd": "docker buildx build --platform=linux/arm64,linux/amd64 --push -t ghcr.io/hyperledger/identus-cloud-agent:${nextRelease.version} ./cloud-agent/service/server/target/docker/stage"
-        }],
-        ...extraPlugins
     ],
     tagFormat: "cloud-agent-v${version}"
 }
