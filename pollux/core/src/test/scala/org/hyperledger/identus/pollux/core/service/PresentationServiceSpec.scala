@@ -60,7 +60,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
 
         check(
           Gen.uuid.map(e => DidCommID(e.toString)),
-          Gen.option(Gen.string),
+          Gen.string,
           Gen.listOfBounded(1, 5)(proofTypeGen),
           Gen.option(optionsGen)
         ) { (thid, connectionId, proofTypes, options) =>
@@ -72,7 +72,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
               pairwiseVerifierDid,
               Some(pairwiseProverDid),
               thid,
-              connectionId,
+              Some(connectionId),
               proofTypes,
               options,
               None,
@@ -81,7 +81,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
-            assertTrue(record.connectionId == connectionId) &&
+            assertTrue(record.connectionId.contains(connectionId)) &&
             assertTrue(record.role == PresentationRecord.Role.Verifier) &&
             assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestPending) &&
             assertTrue(record.requestPresentationData.isDefined) &&
@@ -118,7 +118,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("createPresentationRecord creates a valid Anoncred PresentationRecord") {
         check(
           Gen.uuid.map(e => DidCommID(e.toString)),
-          Gen.option(Gen.string),
+          Gen.string,
           Gen.string,
           Gen.string,
           Gen.string
@@ -140,7 +140,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 pairwiseVerifierDid,
                 Some(pairwiseProverDid),
                 thid,
-                connectionId,
+                Some(connectionId),
                 anoncredPresentationRequestV1,
                 None,
                 None
@@ -148,7 +148,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
-            assertTrue(record.connectionId == connectionId) &&
+            assertTrue(record.connectionId.contains(connectionId)) &&
             assertTrue(record.role == PresentationRecord.Role.Verifier) &&
             assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestPending) &&
             assertTrue(record.requestPresentationData.isDefined) &&
