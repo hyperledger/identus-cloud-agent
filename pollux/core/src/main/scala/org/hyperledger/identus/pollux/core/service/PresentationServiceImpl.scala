@@ -393,18 +393,17 @@ private class PresentationServiceImpl(
           attachments
         )
       )
-      invitation <- ZIO.succeed {
-        for {
-          gc <- goalCode
-          g <- goal
-        } yield PresentProofInvitation.makeInvitation(
-          pairwiseVerifierDID,
-          Some(gc),
-          Some(g),
-          thid.value,
-          request
+      invitation = connectionId.fold(
+        Some(
+          PresentProofInvitation.makeInvitation(
+            pairwiseVerifierDID,
+            goalCode,
+            goal,
+            thid.value,
+            request
+          )
         )
-      } // // thid / pthid is invitationId
+      )(_ => None)
 
       record <- ZIO.succeed(
         PresentationRecord(

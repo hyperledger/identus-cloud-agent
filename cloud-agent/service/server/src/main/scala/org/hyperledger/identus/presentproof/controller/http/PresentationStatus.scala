@@ -71,7 +71,7 @@ object PresentationStatus {
       proofs = Seq.empty,
       data = data,
       connectionId = domain.connectionId,
-      invitation = domain.invitation.map(invitation => OOBPresentationInvitation.fromDomain(Some(invitation))),
+      invitation = domain.invitation.map(invitation => OOBPresentationInvitation.fromDomain(invitation)),
       goalCode = domain.invitation.flatMap(_.body.goal_code),
       goal = domain.invitation.flatMap(_.body.goal),
       myDid = domain.invitation.map(_.from.value),

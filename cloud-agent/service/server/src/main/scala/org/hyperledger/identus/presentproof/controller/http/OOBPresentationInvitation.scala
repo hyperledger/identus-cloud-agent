@@ -26,16 +26,12 @@ case class OOBPresentationInvitation(
 
 object OOBPresentationInvitation {
 
-  def fromDomain(domain: Option[Invitation]) = domain
-    .map(invitation =>
-      OOBPresentationInvitation(
-        id = UUID.fromString(invitation.id),
-        `type` = invitation.`type`,
-        from = invitation.from.value,
-        invitationUrl = s"https://my.domain.com/path?_oob=${invitation.toBase64}"
-      )
-    )
-    .getOrElse(throw RuntimeException("Invitation cannot empty here"))
+  def fromDomain(invitation: Invitation) = OOBPresentationInvitation(
+    id = UUID.fromString(invitation.id),
+    `type` = invitation.`type`,
+    from = invitation.from.value,
+    invitationUrl = s"https://my.domain.com/path?_oob=${invitation.toBase64}"
+  )
 
   object annotations {
     object id

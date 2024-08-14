@@ -85,7 +85,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             assertTrue(record.role == PresentationRecord.Role.Verifier) &&
             assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestPending) &&
             assertTrue(record.requestPresentationData.isDefined) &&
-            assertTrue(record.requestPresentationData.get.to == pairwiseProverDid) &&
+            assertTrue(record.requestPresentationData.get.to.contains(pairwiseProverDid)) &&
             assertTrue(record.requestPresentationData.get.thid.contains(thid.toString)) &&
             assertTrue(record.requestPresentationData.get.body.goal_code.contains("Request Proof Presentation")) &&
             assertTrue(record.requestPresentationData.get.body.proof_types == proofTypes) &&
@@ -152,7 +152,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             assertTrue(record.role == PresentationRecord.Role.Verifier) &&
             assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestPending) &&
             assertTrue(record.requestPresentationData.isDefined) &&
-            assertTrue(record.requestPresentationData.get.to == pairwiseProverDid) &&
+            assertTrue(record.requestPresentationData.get.to.contains(pairwiseProverDid)) &&
             assertTrue(record.requestPresentationData.get.thid.contains(thid.toString)) &&
             assertTrue(record.requestPresentationData.get.body.goal_code.contains("Request Proof Presentation")) &&
             assertTrue(
