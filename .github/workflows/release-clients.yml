@@ -3,8 +3,12 @@ name: Publish Identus-cloud-agent clients
 on:
   workflow_call:
     inputs:
-      version:
-        description: "Version to release clients (e.g. v1.33.0)"
+      revision:
+        description: "Revision to build and publish clients (e.g. 1.33.0-a3j4456-1)"
+        required: true
+        type: string
+      check_sum:
+        description: "Checksum of the OAS specification"
         required: true
         type: string
   workflow_dispatch:
@@ -26,7 +30,7 @@ jobs:
     name: "Build and publish Identus Cloud Agent clients"
     runs-on: ubuntu-latest
     env:
-      VERSION_TAG: ${{inputs.releaseTag || github.ref_name}}
+      VERSION_TAG: ${{inputs.releaseTag || github.ref_name || inputs.revision}}
       GITHUB_ACTOR: "hyperledger-bot"
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,6 +63,18 @@ jobs:
 
       - name: Setup yq - portable yaml processor
         uses: mikefarah/yq@v4.34.2
+
+      - name: Download OpenAPI specification
+        if: ${{ github.event_name == 'workflow_call' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: cloud-agent-openapi-spec-${{ inputs.check_sum }}
+          path: ./cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml
+
+      - name: Set revision version
+        if: ${{ github.event_name == 'workflow_call' }}
+        working-directory: cloud-agent/client/generator
+        run: yarn version --new-version ${{ inputs.revision }} --no-git-tag-version
 
       - name: Install generator dependencies
         working-directory: cloud-agent/client/generator

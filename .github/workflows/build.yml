@@ -8,6 +8,18 @@ on:
   push:
     branches:
       - "main"
+      - "beta"
+    paths:
+      - "cloud-agent/**"
+      - "castor/**"
+      - "connect/**"
+      - "mercury/**"
+      - "pollux/**"
+      - "shared/**"
+      - "shared-test/**"
+      - "*.sbt"
+      - "project/**"
+      - "prism-node/**"
 
 jobs:
   build:
@@ -19,7 +31,15 @@ jobs:
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
       JAVA_TOOL_OPTIONS: -Djava.net.preferIPv4Stack=true
       SBT_OPTS: -Xmx2G
+
     runs-on: ubuntu-latest
+
+    outputs:
+        COMMIT_HASH: ${{ steps.get_version.outputs.COMMIT_HASH }}
+        BUILD_VERSION: ${{ steps.get_version.outputs.VERSION }}
+        REVISION_VERSION: ${{ steps.get_version.outputs.REVISION_VERSION }}
+        OAS_CHECKSUM: ${{ steps.build-oas.outputs.OAS_CHECKSUM }}
+        OAS_PUBLISHED: ${{ steps.upload-oas-artifact.conclusion == 'success' }}
 
     permissions:
       contents: write
@@ -65,9 +85,11 @@ jobs:
         run: |
           VERSION=$(grep -Eo 'version := "[^"]+"' version.sbt | sed 's/version := "//; s/"//; s/-SNAPSHOT//')
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
-
-      - name: Set build version
-        run: echo "BUILD_VERSION=${{ env.VERSION }}-${{ env.COMMIT_HASH }}-${{ env.BUILD_NUMBER }}" >> $GITHUB_ENV
+          echo "BUILD_VERSION=${{ env.VERSION }}-${{ env.COMMIT_HASH }}-${{ env.BUILD_NUMBER }}" >> $GITHUB_ENV
+          echo "REVISION_VERSION=${{ env.VERSION }}-${{ env.COMMIT_HASH }}" >> $GITHUB_ENV
+          echo "::set-output name=BUILD_VERSION::${{ env.BUILD_VERSION }}"
+          echo "::set-output name=REVISION_VERSION::${{ env.REVISION_VERSION }}"
+          echo "::set-output name=COMMIT_HASH::${{ env.COMMIT_HASH }}"
 
       - name: Build and push Docker image
         run: |
@@ -81,3 +103,30 @@ jobs:
           repository: input-output-hk/atala-prism-helm-charts
           event-type: build-chart-package
           client-payload: '{"version": "${{ env.BUILD_VERSION }}", "chart": "cloud-agent"}'
+
+      - name: Build Cloud-Agent Open API Specification
+        id: build-oas
+        run: |
+          sbt "cloudAgentServer/test:runMain org.hyperledger.identus.api.util.Tapir2StaticOAS ./cloud-agent-openapi-spec-${{ env.REVISION_VERSION}}.yaml revision"
+          checksum=$(sha256sum ./cloud-agent-openapi-spec-${{ env.REVISION_VERSION}}.yaml | awk '{ print $1 }')
+          short_checksum=${checksum:0:8}
+          echo "OAS_CHECKSUM=$short_checksum" >> $GITHUB_ENV
+          echo "::set-output name=OAS_CHECKSUM::$short_checksum"
+
+      - name: Publish Cloud-Agent Open API Specification
+        id: upload-oas-artifact
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: cloud-agent-openapi-spec-${{ env.OAS_CHECKSUM}}
+          path: ./cloud-agent-openapi-spec-${{ env.REVISION_VERSION}}.yaml
+          overwrite: false
+
+  build-and-publish-clients:
+    needs: build
+    if: needs.build.outputs.OAS_PUBLISHED
+    uses: ./.github/workflows/release-clients.yml
+    secrets: inherit
+    with:
+      revision: ${{ needs.build.outputs.BUILD_VERSION }}
+      check_sum: ${{ needs.build.outputs.OAS_CHECKSUM }}
