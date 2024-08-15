@@ -42,7 +42,7 @@ jobs:
       COMMIT_HASH: ${{ steps.get_version.outputs.COMMIT_HASH }}
       BUILD_VERSION: ${{ steps.get_version.outputs.BUILD_VERSION }}
       REVISION_VERSION: ${{ steps.get_version.outputs.REVISION_VERSION }}
-      OAS_CHECKSUM: ${{ steps.build-oas.outputs.OAS_CHECKSUM }}
+      OAS_CHECKSUM: ${{ env.OAS_CHECKSUM }}
       OAS_PUBLISHED: ${{ steps.upload-oas.conclusion == 'success' }}
 
     steps:
@@ -91,9 +91,6 @@ jobs:
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "REVISION_VERSION=${REVISION_VERSION}" >> $GITHUB_ENV
           echo "BUILD_VERSION=${BUILD_VERSION}" >> $GITHUB_ENV
-          echo "::set-output name=BUILD_VERSION::${BUILD_VERSION}"
-          echo "::set-output name=REVISION_VERSION::${REVISION_VERSION}"
-          echo "::set-output name=COMMIT_HASH::${{ env.COMMIT_HASH }}"
 
       - name: Build and push Docker image
         run: |
@@ -113,9 +110,8 @@ jobs:
         run: |
           sbt "cloudAgentServer/test:runMain org.hyperledger.identus.api.util.Tapir2StaticOAS ../../../cloud-agent-openapi-spec-${{ env.REVISION_VERSION}}.yaml revision"
           checksum=$(sha256sum ./cloud-agent-openapi-spec-${{ env.REVISION_VERSION }}.yaml | awk '{ print $1 }')
-          short_checksum=${checksum:0:8}
-          echo "OAS_CHECKSUM=${short_checksum}" >> $GITHUB_ENV
-          echo "::set-output name=OAS_CHECKSUM::${short_checksum}"
+          OAS_CHECKSUM=${checksum:0:8}
+          echo "OAS_CHECKSUM=$OAS_CHECKSUM" >> $GITHUB_ENV
 
       - name: Publish Cloud-Agent Open API Specification
         id: upload-oas
@@ -133,7 +129,6 @@ jobs:
           echo "REVISION_VERSION=${{ env.REVISION_VERSION }}" >> $GITHUB_ENV
           echo "OAS_CHECKSUM=${{ env.OAS_CHECKSUM }}" >> $GITHUB_ENV
           echo "OAS_PUBLISHED=${{ env.OAS_PUBLISHED }}" >> $GITHUB_ENV
-          echo "::set-output name=OAS_CHECKSUM::${{ env.OAS_CHECKSUM }}"
 
   build-and-publish-clients:
     needs: build
