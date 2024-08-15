@@ -39,9 +39,9 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      COMMIT_HASH: ${{ steps.get_version.outputs.COMMIT_HASH }}
-      BUILD_VERSION: ${{ steps.get_version.outputs.BUILD_VERSION }}
-      REVISION_VERSION: ${{ steps.get_version.outputs.REVISION_VERSION }}
+      COMMIT_HASH: ${{ env.COMMIT_HASH }}
+      BUILD_VERSION: ${{ env.BUILD_VERSION }}
+      REVISION_VERSION: ${{ env.REVISION_VERSION }}
       OAS_CHECKSUM: ${{ env.OAS_CHECKSUM }}
       OAS_PUBLISHED: ${{ steps.upload-oas.conclusion == 'success' }}
 
