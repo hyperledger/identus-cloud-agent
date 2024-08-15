@@ -85,7 +85,7 @@ jobs:
         run: |
           VERSION=$(grep -Eo 'version := "[^"]+"' version.sbt | sed 's/version := "//; s/"//; s/-SNAPSHOT//')
           REVISION_VERSION=${VERSION}-${{ env.COMMIT_HASH }}
-          BUILD_VERSION=${REVISION}-${{ env.BUILD_NUMBER }}
+          BUILD_VERSION=${REVISION_VERSION}-${{ env.BUILD_NUMBER }}
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "REVISION_VERSION=${REVISION_VERSION}" >> $GITHUB_ENV
           echo "BUILD_VERSION=${BUILD_VERSION}" >> $GITHUB_ENV
