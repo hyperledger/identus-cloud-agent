@@ -76,6 +76,9 @@ jobs:
         run: |
           echo ${{ github.event_name }}
 
+      - name: Delete existing Open API specification
+        run: rm -f ./cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml
+
       - name: Download OpenAPI specification
         if: ${{ !inputs.releaseTag }}
         uses: actions/download-artifact@v3
