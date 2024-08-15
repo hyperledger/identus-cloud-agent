@@ -63,6 +63,14 @@ jobs:
       - name: Setup yq - portable yaml processor
         uses: mikefarah/yq@v4.34.2
 
+      - name: What is going on????
+        continue-on-error: true
+        run: |
+          echo ${{ github.event }}
+          echo ${{ github.event.inputs }}
+          echo ${{ github.event_name }}
+          echo ${{ github.event.name }}
+
       - name: Download OpenAPI specification
         if: ${{ github.event_name == 'workflow_call' }}
         uses: actions/download-artifact@v4
