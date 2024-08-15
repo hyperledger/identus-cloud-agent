@@ -34,8 +34,8 @@ class RequestCredentialSpec extends ZSuite {
       id = "061bf917-2cbe-460b-8d12-b1a9609505c2",
       body = body,
       attachments = Seq(attachmentDescriptor),
-      to = DidId("did:prism:test123"),
-      from = DidId("did:prism:test123"),
+      to = Some(DidId("did:prism:test123")),
+      from = Some(DidId("did:prism:test123")),
     )
 
     val result = requestPresentation.asJson.deepDropNullValues
