@@ -125,6 +125,15 @@ jobs:
           path: ./cloud-agent-openapi-spec-${{ env.REVISION_VERSION}}.yaml
           overwrite: true
 
+      - name: Set outputs
+        id: set_outputs
+        run: |
+          echo "COMMIT_HASH=${{ env.COMMIT_HASH }}" >> $GITHUB_ENV
+          echo "BUILD_VERSION=${{ env.BUILD_VERSION }}" >> $GITHUB_ENV
+          echo "REVISION_VERSION=${{ env.REVISION_VERSION }}" >> $GITHUB_ENV
+          echo "OAS_CHECKSUM=${{ env.OAS_CHECKSUM }}" >> $GITHUB_ENV
+          echo "OAS_PUBLISHED=${{ env.OAS_PUBLISHED }}" >> $GITHUB_ENV
+
   build-and-publish-clients:
     needs: build
     if: needs.build.outputs.OAS_PUBLISHED
