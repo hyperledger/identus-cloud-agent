@@ -43,7 +43,7 @@ jobs:
       BUILD_VERSION: ${{ steps.get_version.outputs.BUILD_VERSION }}
       REVISION_VERSION: ${{ steps.get_version.outputs.REVISION_VERSION }}
       OAS_CHECKSUM: ${{ steps.build-oas.outputs.OAS_CHECKSUM }}
-      OAS_PUBLISHED: ${{ steps.upload-oas-artifact.conclusion == 'success' }}
+      OAS_PUBLISHED: ${{ steps.upload-oas.conclusion == 'success' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -114,11 +114,11 @@ jobs:
           sbt "cloudAgentServer/test:runMain org.hyperledger.identus.api.util.Tapir2StaticOAS ../../../cloud-agent-openapi-spec-${{ env.REVISION_VERSION}}.yaml revision"
           checksum=$(sha256sum ./cloud-agent-openapi-spec-${{ env.REVISION_VERSION }}.yaml | awk '{ print $1 }')
           short_checksum=${checksum:0:8}
-          echo "OAS_CHECKSUM=$short_checksum" >> $GITHUB_ENV
-          echo "::set-output name=OAS_CHECKSUM::$short_checksum"
+          echo "OAS_CHECKSUM=${short_checksum}" >> $GITHUB_ENV
+          echo "::set-output name=OAS_CHECKSUM::${short_checksum}"
 
       - name: Publish Cloud-Agent Open API Specification
-        id: upload-oas-artifact
+        id: upload-oas
         uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
