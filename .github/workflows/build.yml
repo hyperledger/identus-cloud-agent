@@ -133,6 +133,7 @@ jobs:
           echo "REVISION_VERSION=${{ env.REVISION_VERSION }}" >> $GITHUB_ENV
           echo "OAS_CHECKSUM=${{ env.OAS_CHECKSUM }}" >> $GITHUB_ENV
           echo "OAS_PUBLISHED=${{ env.OAS_PUBLISHED }}" >> $GITHUB_ENV
+          echo "::set-output name=OAS_CHECKSUM::${{ env.OAS_CHECKSUM }}"
 
   build-and-publish-clients:
     needs: build
