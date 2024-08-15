@@ -75,7 +75,9 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Get short commit hash
-        run: echo "COMMIT_HASH=${GITHUB_SHA::7}" >> $GITHUB_ENV
+        run: |
+          echo "COMMIT_HASH=${GITHUB_SHA::7}" >> $GITHUB_ENV
+          echo "::set-output name=COMMIT_HASH::${COMMIT_HASH}"
 
       - name: Set build number
         run: echo "BUILD_NUMBER=${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
@@ -109,8 +111,8 @@ jobs:
       - name: Build Cloud-Agent Open API Specification
         id: build-oas
         run: |
-          sbt "cloudAgentServer/test:runMain org.hyperledger.identus.api.util.Tapir2StaticOAS ./cloud-agent-openapi-spec-${{ env.REVISION_VERSION}}.yaml revision"
-          checksum=$(sha256sum ./cloud-agent-openapi-spec-${{ env.REVISION_VERSION}}.yaml | awk '{ print $1 }')
+          sbt "cloudAgentServer/test:runMain org.hyperledger.identus.api.util.Tapir2StaticOAS ../../../cloud-agent-openapi-spec-${{ env.REVISION_VERSION}}.yaml revision"
+          checksum=$(sha256sum ./cloud-agent-openapi-spec-${{ env.REVISION_VERSION }}.yaml | awk '{ print $1 }')
           short_checksum=${checksum:0:8}
           echo "OAS_CHECKSUM=$short_checksum" >> $GITHUB_ENV
           echo "::set-output name=OAS_CHECKSUM::$short_checksum"
