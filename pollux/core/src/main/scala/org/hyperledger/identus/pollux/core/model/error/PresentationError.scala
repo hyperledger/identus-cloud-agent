@@ -121,6 +121,11 @@ object PresentationError {
         StatusCode.InternalServerError,
         error
       )
+  final case class MissingSDJWTPresentationRequest(error: String)
+      extends PresentationError(
+        StatusCode.InternalServerError,
+        error
+      )
 
   final case class NotMatchingPresentationCredentialFormat(cause: Throwable)
       extends PresentationError(
@@ -199,4 +204,29 @@ object PresentationError {
         StatusCode.InternalServerError,
         msg
       )
+
+  final case class RequestPresentationDecodingError(msg: String)
+      extends PresentationError(
+        StatusCode.InternalServerError,
+        msg
+      )
+
+  final case class InvitationParsingError(cause: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        cause
+      )
+
+  final case class InvitationAlreadyReceived(msg: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        msg
+      )
+
+  final case class MissingInvitationAttachment(msg: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        msg
+      )
+
 }

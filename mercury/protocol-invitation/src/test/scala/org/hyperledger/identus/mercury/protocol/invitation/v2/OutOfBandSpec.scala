@@ -23,7 +23,6 @@ class OutOfBandSpec extends FunSuite {
       ),
       Body(Some("request-mediate"), Some("RequestMediate"), Seq("didcomm/v2", "didcomm/aip2;env=rfc587")),
     )
-
     assertEquals(ret, Right(expected))
   }
 
