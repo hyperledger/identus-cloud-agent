@@ -30,7 +30,6 @@ jobs:
     name: "Build and publish Identus Cloud Agent clients"
     runs-on: ubuntu-latest
     env:
-      VERSION_TAG: ${{inputs.releaseTag || github.ref_name || inputs.revision}}
       GITHUB_ACTOR: "hyperledger-bot"
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -86,4 +85,11 @@ jobs:
 
       - name: Publish clients
         working-directory: cloud-agent/client/generator
-        run: yarn publish:clients
+        run: |
+          if [ -z "${{ github.event.inputs.releaseTag }}" ]; then
+            echo "Using revision version for publishing: ${{ inputs.revision }}"
+            yarn publish:clients --new-version ${{ inputs.revision }}
+          else
+            echo "Using release tag for publishing: ${{ github.event.inputs.releaseTag }}"
+            yarn publish:clients --new-version ${{ github.event.inputs.releaseTag }}
+          fi
