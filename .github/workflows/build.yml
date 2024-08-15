@@ -1,7 +1,9 @@
 name: Build and Publish Revision
 
+run-name: Build and Publish Cloud-Agent Revision from ${{ github.head_ref || github.ref_name }} run ${{ github.run_number }}
+
 concurrency:
-  group: release
+  group: build-${{ github.sha }}
 
 on:
   workflow_dispatch:
@@ -21,8 +23,13 @@ on:
       - "project/**"
       - "prism-node/**"
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build:
+    name: "Build and Publish Cloud-Agent Revision"
     if: ${{ !contains(github.event.head_commit.message, 'chore(release)') }}
     env:
       GITHUB_ACTOR: "hyperledger-bot"
@@ -35,15 +42,11 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-        COMMIT_HASH: ${{ steps.get_version.outputs.COMMIT_HASH }}
-        BUILD_VERSION: ${{ steps.get_version.outputs.VERSION }}
-        REVISION_VERSION: ${{ steps.get_version.outputs.REVISION_VERSION }}
-        OAS_CHECKSUM: ${{ steps.build-oas.outputs.OAS_CHECKSUM }}
-        OAS_PUBLISHED: ${{ steps.upload-oas-artifact.conclusion == 'success' }}
-
-    permissions:
-      contents: write
-      packages: write
+      COMMIT_HASH: ${{ env.COMMIT_HASH }}
+      BUILD_VERSION: ${{ env.BUILD_VERSION }}
+      REVISION_VERSION: ${{ env.REVISION_VERSION }}
+      OAS_CHECKSUM: ${{ env.OAS_CHECKSUM }}
+      OAS_PUBLISHED: ${{ steps.upload-oas.conclusion == 'success' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -55,6 +58,9 @@ jobs:
         uses: olafurpg/setup-scala@v14
         with:
           java-version: openjdk@1.17
+
+      - uses: coursier/cache-action@v6
+        id: coursier-cache
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -75,7 +81,8 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Get short commit hash
-        run: echo "COMMIT_HASH=${GITHUB_SHA::7}" >> $GITHUB_ENV
+        run: |
+          echo "COMMIT_HASH=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Set build number
         run: echo "BUILD_NUMBER=${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
@@ -84,12 +91,11 @@ jobs:
         id: get_version
         run: |
           VERSION=$(grep -Eo 'version := "[^"]+"' version.sbt | sed 's/version := "//; s/"//; s/-SNAPSHOT//')
+          REVISION_VERSION=${VERSION}-${{ env.COMMIT_HASH }}
+          BUILD_VERSION=${REVISION_VERSION}-${{ env.BUILD_NUMBER }}
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "BUILD_VERSION=${{ env.VERSION }}-${{ env.COMMIT_HASH }}-${{ env.BUILD_NUMBER }}" >> $GITHUB_ENV
-          echo "REVISION_VERSION=${{ env.VERSION }}-${{ env.COMMIT_HASH }}" >> $GITHUB_ENV
-          echo "::set-output name=BUILD_VERSION::${{ env.BUILD_VERSION }}"
-          echo "::set-output name=REVISION_VERSION::${{ env.REVISION_VERSION }}"
-          echo "::set-output name=COMMIT_HASH::${{ env.COMMIT_HASH }}"
+          echo "REVISION_VERSION=${REVISION_VERSION}" >> $GITHUB_ENV
+          echo "BUILD_VERSION=${BUILD_VERSION}" >> $GITHUB_ENV
 
       - name: Build and push Docker image
         run: |
@@ -107,20 +113,28 @@ jobs:
       - name: Build Cloud-Agent Open API Specification
         id: build-oas
         run: |
-          sbt "cloudAgentServer/test:runMain org.hyperledger.identus.api.util.Tapir2StaticOAS ./cloud-agent-openapi-spec-${{ env.REVISION_VERSION}}.yaml revision"
-          checksum=$(sha256sum ./cloud-agent-openapi-spec-${{ env.REVISION_VERSION}}.yaml | awk '{ print $1 }')
-          short_checksum=${checksum:0:8}
-          echo "OAS_CHECKSUM=$short_checksum" >> $GITHUB_ENV
-          echo "::set-output name=OAS_CHECKSUM::$short_checksum"
+          sbt "cloudAgentServer/test:runMain org.hyperledger.identus.api.util.Tapir2StaticOAS ../../../cloud-agent-openapi-spec-${{ env.REVISION_VERSION}}.yaml revision"
+          checksum=$(sha256sum ./cloud-agent-openapi-spec-${{ env.REVISION_VERSION }}.yaml | awk '{ print $1 }')
+          OAS_CHECKSUM=${checksum:0:8}
+          echo "OAS_CHECKSUM=$OAS_CHECKSUM" >> $GITHUB_ENV
 
       - name: Publish Cloud-Agent Open API Specification
-        id: upload-oas-artifact
-        uses: actions/upload-artifact@v4
-        continue-on-error: true
+        id: upload-oas
+        uses: actions/upload-artifact@v3
         with:
           name: cloud-agent-openapi-spec-${{ env.OAS_CHECKSUM}}
           path: ./cloud-agent-openapi-spec-${{ env.REVISION_VERSION}}.yaml
-          overwrite: false
+          overwrite: true
+          compression-level: 0
+
+      - name: Set outputs
+        id: set_outputs
+        run: |
+          echo "COMMIT_HASH=${{ env.COMMIT_HASH }}" >> $GITHUB_ENV
+          echo "BUILD_VERSION=${{ env.BUILD_VERSION }}" >> $GITHUB_ENV
+          echo "REVISION_VERSION=${{ env.REVISION_VERSION }}" >> $GITHUB_ENV
+          echo "OAS_CHECKSUM=${{ env.OAS_CHECKSUM }}" >> $GITHUB_ENV
+          echo "OAS_PUBLISHED=${{ env.OAS_PUBLISHED }}" >> $GITHUB_ENV
 
   build-and-publish-clients:
     needs: build
@@ -128,5 +142,5 @@ jobs:
     uses: ./.github/workflows/release-clients.yml
     secrets: inherit
     with:
-      revision: ${{ needs.build.outputs.BUILD_VERSION }}
+      revision: ${{ needs.build.outputs.REVISION_VERSION }}
       check_sum: ${{ needs.build.outputs.OAS_CHECKSUM }}
