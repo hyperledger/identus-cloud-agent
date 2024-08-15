@@ -84,11 +84,13 @@ jobs:
         id: get_version
         run: |
           VERSION=$(grep -Eo 'version := "[^"]+"' version.sbt | sed 's/version := "//; s/"//; s/-SNAPSHOT//')
+          REVISION_VERSION=${VERSION}-${{ env.COMMIT_HASH }}
+          BUILD_VERSION=${REVISION}-${{ env.BUILD_NUMBER }}
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "BUILD_VERSION=${{ env.VERSION }}-${{ env.COMMIT_HASH }}-${{ env.BUILD_NUMBER }}" >> $GITHUB_ENV
-          echo "REVISION_VERSION=${{ env.VERSION }}-${{ env.COMMIT_HASH }}" >> $GITHUB_ENV
-          echo "::set-output name=BUILD_VERSION::${{ env.BUILD_VERSION }}"
-          echo "::set-output name=REVISION_VERSION::${{ env.REVISION_VERSION }}"
+          echo "REVISION_VERSION=${REVISION_VERSION}" >> $GITHUB_ENV
+          echo "BUILD_VERSION=${BUILD_VERSION}" >> $GITHUB_ENV
+          echo "::set-output name=BUILD_VERSION::${BUILD_VERSION}"
+          echo "::set-output name=REVISION_VERSION::${REVISION_VERSION}"
           echo "::set-output name=COMMIT_HASH::${{ env.COMMIT_HASH }}"
 
       - name: Build and push Docker image
