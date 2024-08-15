@@ -21,6 +21,10 @@ on:
       - "project/**"
       - "prism-node/**"
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build:
     if: ${{ !contains(github.event.head_commit.message, 'chore(release)') }}
@@ -40,10 +44,6 @@ jobs:
         REVISION_VERSION: ${{ steps.get_version.outputs.REVISION_VERSION }}
         OAS_CHECKSUM: ${{ steps.build-oas.outputs.OAS_CHECKSUM }}
         OAS_PUBLISHED: ${{ steps.upload-oas-artifact.conclusion == 'success' }}
-
-    permissions:
-      contents: write
-      packages: write
 
     steps:
       - uses: actions/checkout@v4
