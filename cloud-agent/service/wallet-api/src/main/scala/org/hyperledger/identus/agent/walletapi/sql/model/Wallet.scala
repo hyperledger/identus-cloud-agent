@@ -1,15 +1,18 @@
 package org.hyperledger.identus.agent.walletapi.sql.model
 
-import io.getquill.{SnakeCase, *}
+import io.getquill.*
+import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.doobie.DoobieContext
 import org.hyperledger.identus.agent.walletapi.model
+import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.models.WalletId
 
+import java.net.URL
 import java.time.Instant
 import java.util.UUID
 
 final case class Wallet(
-    walletId: UUID,
+    walletId: WalletId,
     name: String,
     createdAt: Instant,
     updatedAt: Instant,
@@ -19,7 +22,7 @@ final case class Wallet(
 object Wallet {
   def from(wallet: model.Wallet, seedDigest: Array[Byte]): Wallet = {
     Wallet(
-      walletId = wallet.id.toUUID,
+      walletId = wallet.id,
       name = wallet.name,
       createdAt = wallet.createdAt,
       updatedAt = wallet.updatedAt,
@@ -30,7 +33,7 @@ object Wallet {
   extension (wallet: Wallet) {
     def toModel: model.Wallet =
       model.Wallet(
-        id = WalletId.fromUUID(wallet.walletId),
+        id = wallet.walletId,
         name = wallet.name,
         createdAt = wallet.createdAt,
         updatedAt = wallet.updatedAt
@@ -39,6 +42,7 @@ object Wallet {
 }
 
 object WalletSql extends DoobieContext.Postgres(SnakeCase) {
+
   def insert(wallet: Wallet) = run {
     quote(
       query[Wallet]
@@ -58,5 +62,45 @@ object WalletSql extends DoobieContext.Postgres(SnakeCase) {
 
   def lookup(offset: Int, limit: Int) = run {
     quote(query[Wallet].drop(lift(offset)).take(lift(limit)))
+  }
+}
+
+final case class WalletNotification(
+    id: UUID,
+    walletId: WalletId,
+    url: URL,
+    customHeaders: JsonValue[Map[String, String]],
+    createdAt: Instant,
+)
+
+object WalletNotification {
+  def from(notification: EventNotificationConfig): WalletNotification = {
+    WalletNotification(
+      id = notification.id,
+      walletId = notification.walletId,
+      url = notification.url,
+      customHeaders = JsonValue(notification.customHeaders),
+      createdAt = notification.createdAt,
+    )
+  }
+
+  extension (notification: WalletNotification) {
+    def toModel: EventNotificationConfig =
+      EventNotificationConfig(
+        id = notification.id,
+        walletId = notification.walletId,
+        url = notification.url,
+        customHeaders = notification.customHeaders.value,
+        createdAt = notification.createdAt,
+      )
+  }
+}
+
+object WalletNotificationSql extends DoobieContext.Postgres(SnakeCase), PostgresJsonExtensions {
+  def insert(notification: WalletNotification) = run {
+    quote(
+      query[WalletNotification]
+        .insertValue(lift(notification))
+    )
   }
 }

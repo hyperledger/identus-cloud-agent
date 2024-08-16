@@ -12,6 +12,7 @@ import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.{*, given}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import quillModel.WalletNotificationSql
 import zio.*
 
 import java.net.URL
@@ -92,25 +93,8 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
   override def createWalletNotification(
       config: EventNotificationConfig
   ): URIO[WalletAccessContext, Unit] = {
-    val insertIO = (row: WalletNofiticationRow) => sql"""
-        | INSERT INTO public.wallet_notification (
-        |   id,
-        |   wallet_id,
-        |   url,
-        |   custom_headers,
-        |   created_at
-        | ) VALUES (
-        |   ${row.id},
-        |   ${row.walletId},
-        |   ${row.url},
-        |   ${row.customHeaders},
-        |   ${row.createdAt}
-        | )
-        """.stripMargin.update
-
-    val row = WalletNofiticationRow.from(config)
-
-    insertIO(row).run
+    WalletNotificationSql
+      .insert(quillModel.WalletNotification.from(config))
       .transactWallet(xa)
       .ensureOneAffectedRowOrDie
   }
