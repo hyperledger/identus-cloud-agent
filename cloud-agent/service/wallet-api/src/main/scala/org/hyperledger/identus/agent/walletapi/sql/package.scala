@@ -214,34 +214,6 @@ package object sql {
   }
 
   // TODO: remove when done with quill migration for WalletNonSecretStorage
-  final case class WalletRow(
-      id: WalletId,
-      name: String,
-      createdAt: Instant,
-      updatedAt: Instant
-  ) {
-    def toDomain: Wallet = {
-      Wallet(
-        id: WalletId,
-        name: String,
-        createdAt: Instant,
-        updatedAt: Instant
-      )
-    }
-  }
-
-  object WalletRow {
-    def from(wallet: Wallet): WalletRow = {
-      WalletRow(
-        id = wallet.id,
-        name = wallet.name,
-        createdAt = wallet.createdAt,
-        updatedAt = wallet.updatedAt
-      )
-    }
-  }
-
-  // TODO: remove when done with quill migration for WalletNonSecretStorage
   final case class WalletNofiticationRow(
       id: UUID,
       walletId: WalletId,
