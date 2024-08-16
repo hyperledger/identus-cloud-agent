@@ -6,6 +6,7 @@ import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialIssuedFormat
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.pollux.anoncreds.*
@@ -21,6 +22,7 @@ import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.messaging.{Producer, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
+import org.hyperledger.identus.shared.utils.Base64Utils
 import zio.*
 import zio.json.*
 
@@ -203,8 +205,8 @@ private class PresentationServiceImpl(
               )
           ),
           thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
-          from = requestPresentation.to,
-          to = requestPresentation.from
+          from = requestPresentation.to.getOrElse(throw RuntimeException(s"RequestPresentation to field is missing")),
+          to = requestPresentation.from.getOrElse(throw RuntimeException(s"RequestPresentation from field is missing"))
         )
       )
     } yield presentation
@@ -274,8 +276,8 @@ private class PresentationServiceImpl(
               )
           ),
           thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
-          from = requestPresentation.to,
-          to = requestPresentation.from
+          from = requestPresentation.to.getOrElse(throw RuntimeException(s"RequestPresentation to field is missing")),
+          to = requestPresentation.from.getOrElse(throw RuntimeException(s"RequestPresentation from field is missing"))
         )
       )
     } yield presentation
@@ -311,11 +313,13 @@ private class PresentationServiceImpl(
 
   override def createJwtPresentationRecord(
       pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseProverDID: Option[DidId],
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
-      options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options]
+      options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+      goalCode: Option[String] = None,
+      goal: Option[String] = None,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     createPresentationRecord(
       pairwiseVerifierDID,
@@ -324,18 +328,22 @@ private class PresentationServiceImpl(
       connectionId,
       CredentialFormat.JWT,
       proofTypes,
-      options.map(o => Seq(toJWTAttachment(o))).getOrElse(Seq.empty)
+      options.map(o => Seq(toJWTAttachment(o))).getOrElse(Seq.empty),
+      goalCode,
+      goal
     )
   }
 
   override def createSDJWTPresentationRecord(
       pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseProverDID: Option[DidId],
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       claimsToDisclose: ast.Json.Obj,
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+      goalCode: Option[String] = None,
+      goal: Option[String] = None,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     createPresentationRecord(
       pairwiseVerifierDID,
@@ -344,16 +352,20 @@ private class PresentationServiceImpl(
       connectionId,
       CredentialFormat.SDJWT,
       proofTypes,
-      attachments = Seq(toSDJWTAttachment(options, claimsToDisclose))
+      attachments = Seq(toSDJWTAttachment(options, claimsToDisclose)),
+      goalCode,
+      goal
     )
   }
 
   override def createAnoncredPresentationRecord(
       pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseProverDID: Option[DidId],
       thid: DidCommID,
       connectionId: Option[String],
-      presentationRequest: AnoncredPresentationRequestV1
+      presentationRequest: AnoncredPresentationRequestV1,
+      goalCode: Option[String] = None,
+      goal: Option[String] = None,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     createPresentationRecord(
       pairwiseVerifierDID,
@@ -362,29 +374,45 @@ private class PresentationServiceImpl(
       connectionId,
       CredentialFormat.AnonCreds,
       Seq.empty,
-      Seq(toAnoncredAttachment(presentationRequest))
+      Seq(toAnoncredAttachment(presentationRequest)),
+      goalCode,
+      goal
     )
   }
 
   private def createPresentationRecord(
       pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseProverDID: Option[DidId],
       thid: DidCommID,
       connectionId: Option[String],
       format: CredentialFormat,
       proofTypes: Seq[ProofType],
-      attachments: Seq[AttachmentDescriptor]
+      attachments: Seq[AttachmentDescriptor],
+      goalCode: Option[String] = None,
+      goal: Option[String] = None,
   ) = {
     for {
       request <- ZIO.succeed(
         createDidCommRequestPresentation(
           proofTypes,
           thid,
-          pairwiseVerifierDID,
+          Some(pairwiseVerifierDID),
           pairwiseProverDID,
           attachments
         )
       )
+      invitation = connectionId.fold(
+        Some(
+          PresentProofInvitation.makeInvitation(
+            pairwiseVerifierDID,
+            goalCode,
+            goal,
+            thid.value,
+            request
+          )
+        )
+      )(_ => None)
+
       record <- ZIO.succeed(
         PresentationRecord(
           id = DidCommID(),
@@ -394,9 +422,12 @@ private class PresentationServiceImpl(
           connectionId = connectionId,
           schemaId = None, // TODO REMOVE from DB
           role = PresentationRecord.Role.Verifier,
-          subjectId = pairwiseProverDID,
-          protocolState = PresentationRecord.ProtocolState.RequestPending,
+          subjectId = pairwiseProverDID.getOrElse(DidId("TODO REMOVE subject did")),
+          protocolState = invitation.fold(PresentationRecord.ProtocolState.RequestPending)(_ =>
+            PresentationRecord.ProtocolState.InvitationGenerated
+          ),
           credentialFormat = format,
+          invitation = invitation,
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
@@ -475,9 +506,11 @@ private class PresentationServiceImpl(
           connectionId = connectionId,
           schemaId = None,
           role = Role.Prover,
-          subjectId = request.to,
+          subjectId =
+            request.to.getOrElse(throw RuntimeException(s"RequestPresentation from field is missing")), // TODO REMOVE
           protocolState = PresentationRecord.ProtocolState.RequestReceived,
           credentialFormat = format,
+          invitation = None,
           requestPresentationData = Some(request),
           proposePresentationData = None,
           presentationData = None,
@@ -1187,8 +1220,8 @@ private class PresentationServiceImpl(
   private def createDidCommRequestPresentation(
       proofTypes: Seq[ProofType],
       thid: DidCommID,
-      pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseVerifierDID: Option[DidId],
+      pairwiseProverDID: Option[DidId],
       attachments: Seq[AttachmentDescriptor]
   ): RequestPresentation = {
     RequestPresentation(
@@ -1212,8 +1245,8 @@ private class PresentationServiceImpl(
     RequestPresentation(
       body = body,
       attachments = proposePresentation.attachments,
-      from = proposePresentation.to,
-      to = proposePresentation.from,
+      from = Some(proposePresentation.to),
+      to = Some(proposePresentation.from),
       thid = proposePresentation.thid
     )
   }
@@ -1229,6 +1262,47 @@ private class PresentationServiceImpl(
       record <- getRecord(id)
     } yield record
 
+  override def getRequestPresentationFromInvitation(
+      pairwiseProverDID: DidId,
+      invitation: String
+  ): ZIO[WalletAccessContext, PresentationError, RequestPresentation] = {
+    for {
+      invitation <- ZIO
+        .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
+        .mapError(err => InvitationParsingError(err.getMessage))
+      _ <- presentationRepository
+        .findPresentationRecordByThreadId(DidCommID(invitation.id))
+        .flatMap {
+          case None    => ZIO.unit
+          case Some(_) => ZIO.fail(InvitationAlreadyReceived(invitation.id))
+        }
+      requestPresentation <- ZIO.fromEither {
+        invitation.attachments
+          .flatMap(
+            _.headOption.map(attachment =>
+              decode[org.hyperledger.identus.mercury.model.JsonData](
+                attachment.data.asJson.noSpaces
+              ) // TODO Move mercury to use ZIO JSON
+                .flatMap { data =>
+                  RequestPresentation.given_Decoder_RequestPresentation
+                    .decodeJson(data.json.asJson)
+                    .map(r => r.copy(to = Some(pairwiseProverDID)))
+                    .leftMap(err =>
+                      PresentationDecodingError(
+                        s"RequestPresentation As Attachment decoding error: ${err.getMessage}"
+                      )
+                    )
+                }
+                .leftMap(err => PresentationDecodingError(s"Invitation Attachment JsonData decoding error: $err"))
+            )
+          )
+          .getOrElse(
+            Left(MissingInvitationAttachment("Missing Invitation Attachment for RequestPresentation"))
+          )
+      }
+    } yield requestPresentation
+
+  }
 }
 
 object PresentationServiceImpl {

@@ -184,10 +184,10 @@ Example response log
 < content-length: 0
 ```
 
-The response should return status `201 Created` indicating the new user is registerd with username `alice` with a password `1234`.
+The response should return status `201 Created` indicating the new user is registered with username `alice` with a password `1234`.
 The user ID can be observed from `Location` header of the response. This ID will be used for creating permission later in this tutorial.
 
-For in-depth user management, please consult the official Keycloaak administration documentation on [managing users section](https://www.keycloak.org/docs/latest/server_admin/index.html#assembly-managing-users_server_administration_guide).
+For in-depth user management, please consult the official Keycloak administration documentation on [managing users section](https://www.keycloak.org/docs/latest/server_admin/index.html#assembly-managing-users_server_administration_guide).
 
 ### 4. Grant the user permission to the wallet
 

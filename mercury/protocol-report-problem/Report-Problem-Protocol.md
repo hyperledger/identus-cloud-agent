@@ -1,6 +1,6 @@
 # Report Problem Protocol 1.0 & 2.0
 
-This Protocol is parte of Aries (RFC 0035).
+This Protocol is part of Aries (RFC 0035).
 Describes how to report errors and warnings in a powerful, interoperable way.
 
 - Version 1.0 - see [https://github.com/hyperledger/aries-rfcs/tree/main/features/0035-report-problem]

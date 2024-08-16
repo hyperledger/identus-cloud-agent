@@ -1,6 +1,6 @@
 # Running multiple locally
 
-This folder contains scripts to run mulitple copies of the Atala `building-block` stack for end-user usage - without building any local components.
+This folder contains scripts to run multiple copies of the Atala `building-block` stack for end-user usage - without building any local components.
 
 This allows you to run an issuer, holder and verifier with a single run command - but - these are locked to fixed ports and cannot be customised at run time.
 
