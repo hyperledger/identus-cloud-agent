@@ -26,47 +26,23 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
       .insert(quillModel.Wallet.from(wallet, seedDigest))
       .transactWithoutContext(xa)
       .orDie
-      .map(quillModel.Wallet.toModel)
+      .map(_.toModel)
   }
 
   override def findWalletById(walletId: WalletId): UIO[Option[Wallet]] = {
-    val cxnIO =
-      sql"""
-        | SELECT
-        |   wallet_id,
-        |   name,
-        |   created_at,
-        |   updated_at
-        | FROM public.wallet
-        | WHERE wallet_id = $walletId
-        """.stripMargin
-        .query[WalletRow]
-        .option
-
-    cxnIO
+    WalletSql
+      .findById(walletId)
       .transactWithoutContext(xa)
-      .map(_.map(_.toDomain))
       .orDie
+      .map(_.headOption.map(_.toModel))
   }
 
   override def findWalletBySeed(seedDigest: Array[Byte]): UIO[Option[Wallet]] = {
-    val cxnIO =
-      sql"""
-           | SELECT
-           |   wallet_id,
-           |   name,
-           |   created_at,
-           |   updated_at
-           | FROM public.wallet
-           | WHERE seed_digest = $seedDigest
-        """.stripMargin
-        .query[WalletRow]
-        .option
-
-    cxnIO
+    WalletSql
+      .findBySeed(seedDigest)
       .transactWithoutContext(xa)
-      .map(_.map(_.toDomain))
       .orDie
+      .map(_.headOption.map(_.toModel))
   }
 
   override def getWallets(walletIds: Seq[WalletId]): UIO[Seq[Wallet]] = {

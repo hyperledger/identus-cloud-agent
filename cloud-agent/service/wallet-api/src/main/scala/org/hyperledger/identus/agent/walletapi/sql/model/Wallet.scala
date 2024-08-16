@@ -9,7 +9,7 @@ import java.time.Instant
 import java.util.UUID
 
 final case class Wallet(
-    id: UUID,
+    walletId: UUID,
     name: String,
     createdAt: Instant,
     updatedAt: Instant,
@@ -19,7 +19,7 @@ final case class Wallet(
 object Wallet {
   def from(wallet: model.Wallet, seedDigest: Array[Byte]): Wallet = {
     Wallet(
-      id = wallet.id.toUUID,
+      walletId = wallet.id.toUUID,
       name = wallet.name,
       createdAt = wallet.createdAt,
       updatedAt = wallet.updatedAt,
@@ -27,13 +27,14 @@ object Wallet {
     )
   }
 
-  def toModel(wallet: Wallet): model.Wallet = {
-    model.Wallet(
-      id = WalletId.fromUUID(wallet.id),
-      name = wallet.name,
-      createdAt = wallet.createdAt,
-      updatedAt = wallet.updatedAt
-    )
+  extension (wallet: Wallet) {
+    def toModel: model.Wallet =
+      model.Wallet(
+        id = WalletId.fromUUID(wallet.walletId),
+        name = wallet.name,
+        createdAt = wallet.createdAt,
+        updatedAt = wallet.updatedAt
+      )
   }
 }
 
@@ -43,5 +44,13 @@ object WalletSql extends DoobieContext.Postgres(SnakeCase) {
       query[Wallet]
         .insertValue(lift(wallet))
     ).returning(w => w)
+  }
+
+  def findById(walletId: WalletId) = run {
+    quote(query[Wallet].filter(_.walletId == lift(walletId.toUUID)).take(1))
+  }
+
+  def findBySeed(seedDigest: Array[Byte]) = run {
+    quote(query[Wallet].filter(_.seedDigest == lift(seedDigest)).take(1))
   }
 }
