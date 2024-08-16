@@ -46,8 +46,8 @@ object WalletSql extends DoobieContext.Postgres(SnakeCase) {
     ).returning(w => w)
   }
 
-  def findById(walletId: WalletId) = run {
-    quote(query[Wallet].filter(_.walletId == lift(walletId.toUUID)).take(1))
+  def findByIds(walletIds: Seq[WalletId]) = run {
+    quote(query[Wallet].filter(p => liftQuery(walletIds.map(_.toUUID)).contains(p.walletId)))
   }
 
   def findBySeed(seedDigest: Array[Byte]) = run {

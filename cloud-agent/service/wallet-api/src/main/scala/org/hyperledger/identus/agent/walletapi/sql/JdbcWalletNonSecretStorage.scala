@@ -1,6 +1,5 @@
 package org.hyperledger.identus.agent.walletapi.sql
 
-import cats.data.NonEmptyList
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
@@ -31,7 +30,7 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
 
   override def findWalletById(walletId: WalletId): UIO[Option[Wallet]] = {
     WalletSql
-      .findById(walletId)
+      .findByIds(Seq(walletId))
       .transactWithoutContext(xa)
       .orDie
       .map(_.headOption.map(_.toModel))
@@ -48,26 +47,12 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
   override def getWallets(walletIds: Seq[WalletId]): UIO[Seq[Wallet]] = {
     walletIds match
       case Nil => ZIO.succeed(Nil)
-      case head +: tail =>
-        val nel = NonEmptyList.of(head, tail*)
-        val conditionFragment = Fragments.in(fr"wallet_id", nel)
-        val cxnIO =
-          sql"""
-            | SELECT
-            |   wallet_id,
-            |   name,
-            |   created_at,
-            |   updated_at
-            | FROM public.wallet
-            | WHERE $conditionFragment
-            """.stripMargin
-            .query[WalletRow]
-            .to[List]
-
-        cxnIO
+      case ids =>
+        WalletSql
+          .findByIds(ids)
           .transactWithoutContext(xa)
-          .map(_.map(_.toDomain))
           .orDie
+          .map(_.map(_.toModel))
   }
 
   override def listWallet(
