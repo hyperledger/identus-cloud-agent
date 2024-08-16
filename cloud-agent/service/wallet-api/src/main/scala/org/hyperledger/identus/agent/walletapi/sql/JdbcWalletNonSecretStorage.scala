@@ -78,15 +78,10 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
   }
 
   override def countWalletNotification: URIO[WalletAccessContext, Int] = {
-    val countIO = sql"""
-        | SELECT COUNT(*)
-        | FROM public.wallet_notification
-        """.stripMargin
-      .query[Int]
-      .unique
-
-    countIO
+    WalletNotificationSql
+      .lookupCount()
       .transactWallet(xa)
+      .map(_.toInt)
       .orDie
   }
 
@@ -100,33 +95,16 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
   }
 
   override def walletNotification: URIO[WalletAccessContext, Seq[EventNotificationConfig]] = {
-    val cxn =
-      sql"""
-        | SELECT
-        |   id,
-        |   wallet_id,
-        |   url,
-        |   custom_headers,
-        |   created_at
-        | FROM public.wallet_notification
-        """.stripMargin
-        .query[WalletNofiticationRow]
-        .to[List]
-
-    cxn
+    WalletNotificationSql
+      .lookup()
       .transactWallet(xa)
-      .flatMap(rows => ZIO.foreach(rows) { row => ZIO.fromTry(row.toDomain) })
+      .map(_.map(_.toModel))
       .orDie
   }
 
   override def deleteWalletNotification(id: UUID): URIO[WalletAccessContext, Unit] = {
-    val cxn =
-      sql"""
-        | DELETE FROM public.wallet_notification
-        | WHERE id = $id
-        """.stripMargin.update
-
-    cxn.run
+    WalletNotificationSql
+      .delete(id)
       .transactWallet(xa)
       .ensureOneAffectedRowOrDie
   }

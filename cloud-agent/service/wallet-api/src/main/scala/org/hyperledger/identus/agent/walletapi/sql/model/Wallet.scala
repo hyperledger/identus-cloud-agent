@@ -103,4 +103,16 @@ object WalletNotificationSql extends DoobieContext.Postgres(SnakeCase), Postgres
         .insertValue(lift(notification))
     )
   }
+
+  def lookupCount() = run {
+    quote(query[WalletNotification].size)
+  }
+
+  def lookup() = run {
+    quote(query[WalletNotification])
+  }
+
+  def delete(id: UUID) = run {
+    quote(query[WalletNotification].filter(_.id == lift(id)).delete)
+  }
 }
