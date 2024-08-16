@@ -213,38 +213,4 @@ package object sql {
     }
   }
 
-  // TODO: remove when done with quill migration for WalletNonSecretStorage
-  final case class WalletNofiticationRow(
-      id: UUID,
-      walletId: WalletId,
-      url: URL,
-      customHeaders: String,
-      createdAt: Instant,
-  ) {
-    def toDomain: Try[EventNotificationConfig] = {
-      decode[Map[String, String]](customHeaders).toTry
-        .map { headers =>
-          EventNotificationConfig(
-            id = id,
-            walletId = walletId,
-            url = url,
-            customHeaders = headers,
-            createdAt = createdAt,
-          )
-        }
-    }
-  }
-
-  object WalletNofiticationRow {
-    def from(config: EventNotificationConfig): WalletNofiticationRow = {
-      WalletNofiticationRow(
-        id = config.id,
-        walletId = config.walletId,
-        url = config.url,
-        customHeaders = config.customHeaders.asJson.noSpacesSortKeys,
-        createdAt = config.createdAt,
-      )
-    }
-  }
-
 }

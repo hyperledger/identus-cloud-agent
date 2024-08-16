@@ -3,8 +3,7 @@ package org.hyperledger.identus.agent.walletapi.sql
 import io.getquill.MappedEncoding
 import org.hyperledger.identus.shared.models.WalletId
 
-import java.net.URI
-import java.net.URL
+import java.net.{URI, URL}
 import java.util.UUID
 
 package object model {
