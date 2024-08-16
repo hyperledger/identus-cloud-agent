@@ -213,6 +213,7 @@ package object sql {
     }
   }
 
+  // TODO: remove when done with quill migration for WalletNonSecretStorage
   final case class WalletRow(
       id: WalletId,
       name: String,
@@ -240,6 +241,7 @@ package object sql {
     }
   }
 
+  // TODO: remove when done with quill migration for WalletNonSecretStorage
   final case class WalletNofiticationRow(
       id: UUID,
       walletId: WalletId,

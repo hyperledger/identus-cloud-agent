@@ -6,6 +6,8 @@ import doobie.implicits.*
 import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor
 import org.hyperledger.identus.agent.walletapi.model.Wallet
+import org.hyperledger.identus.agent.walletapi.sql.model.WalletSql
+import org.hyperledger.identus.agent.walletapi.sql.model as quillModel
 import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorage
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.db.ContextAwareTask
@@ -20,28 +22,11 @@ import java.util.UUID
 class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletNonSecretStorage {
 
   override def createWallet(wallet: Wallet, seedDigest: Array[Byte]): UIO[Wallet] = {
-    val cxnIO = (row: WalletRow) => sql"""
-        | INSERT INTO public.wallet(
-        |   wallet_id,
-        |   name,
-        |   created_at,
-        |   updated_at,
-        |   seed_digest
-        | )
-        | VALUES (
-        |   ${row.id},
-        |   ${row.name},
-        |   ${row.createdAt},
-        |   ${row.updatedAt},
-        |   ${seedDigest}
-        | )
-        """.stripMargin.update
-
-    val row = WalletRow.from(wallet)
-    cxnIO(row).run
+    WalletSql
+      .insert(quillModel.Wallet.from(wallet, seedDigest))
       .transactWithoutContext(xa)
-      .as(wallet)
       .orDie
+      .map(quillModel.Wallet.toModel)
   }
 
   override def findWalletById(walletId: WalletId): UIO[Option[Wallet]] = {
