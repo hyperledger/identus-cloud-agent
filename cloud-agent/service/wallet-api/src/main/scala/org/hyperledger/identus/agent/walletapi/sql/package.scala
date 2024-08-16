@@ -4,11 +4,8 @@ import com.nimbusds.jose.jwk.OctetKeyPair
 import doobie.*
 import doobie.postgres.implicits.*
 import doobie.util.invariant.InvalidEnum
-import io.circe.*
-import io.circe.parser.*
-import io.circe.syntax.*
 import io.iohk.atala.prism.protos.node_models
-import org.hyperledger.identus.agent.walletapi.model.{KeyManagementMode, ManagedDIDState, PublicationState, Wallet}
+import org.hyperledger.identus.agent.walletapi.model.{KeyManagementMode, ManagedDIDState, PublicationState}
 import org.hyperledger.identus.castor.core.model.did.{
   EllipticCurve,
   InternalKeyPurpose,
@@ -18,7 +15,6 @@ import org.hyperledger.identus.castor.core.model.did.{
   VerificationRelationship
 }
 import org.hyperledger.identus.castor.core.model.ProtoModelHelper.*
-import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.crypto.jwk.JWK
 import org.hyperledger.identus.shared.models.WalletId
 import zio.json.*
@@ -27,7 +23,6 @@ import zio.json.ast.Json.*
 
 import java.net.{URI, URL}
 import java.time.Instant
-import java.util.UUID
 import scala.collection.immutable.ArraySeq
 import scala.util.Try
 

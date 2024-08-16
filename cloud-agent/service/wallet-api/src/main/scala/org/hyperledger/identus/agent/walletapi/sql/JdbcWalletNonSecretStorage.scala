@@ -1,8 +1,6 @@
 package org.hyperledger.identus.agent.walletapi.sql
 
 import doobie.*
-import doobie.implicits.*
-import doobie.postgres.implicits.*
 import doobie.util.transactor.Transactor
 import org.hyperledger.identus.agent.walletapi.model.Wallet
 import org.hyperledger.identus.agent.walletapi.sql.model.WalletSql
@@ -10,13 +8,11 @@ import org.hyperledger.identus.agent.walletapi.sql.model as quillModel
 import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorage
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits.{*, given}
+import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import quillModel.WalletNotificationSql
 import zio.*
 
-import java.net.URL
-import java.time.Instant
 import java.util.UUID
 
 class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends WalletNonSecretStorage {
