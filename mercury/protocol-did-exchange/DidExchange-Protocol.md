@@ -1,6 +1,6 @@
 # DidExchange Protocol
 
-This Protocol is parte of the DIDComm Messaging Specification.
+This Protocol is part of the DIDComm Messaging Specification.
 
 Protocol to exchange DIDs between agents when establishing a DID-based relationship
 
