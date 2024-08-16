@@ -1,6 +1,6 @@
 # Invitation Protocol
 
-This Protocol is parte of the **DIDComm Messaging Specification** but also **Aries RFC 0434: Out-of-Band Protocol 1.1**
+This Protocol is part of the **DIDComm Messaging Specification** but also **Aries RFC 0434: Out-of-Band Protocol 1.1**
 
 Its a out-of-band style protocol.
 
