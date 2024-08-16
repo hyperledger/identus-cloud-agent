@@ -3,14 +3,13 @@ package org.hyperledger.identus.agent.walletapi.sql
 import doobie.*
 import doobie.util.transactor.Transactor
 import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.sql.model.WalletSql
-import org.hyperledger.identus.agent.walletapi.sql.model as quillModel
+import org.hyperledger.identus.agent.walletapi.sql.model.{WalletNotificationSql, WalletSql}
+import org.hyperledger.identus.agent.walletapi.sql.model as db
 import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorage
 import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import quillModel.WalletNotificationSql
 import zio.*
 
 import java.util.UUID
@@ -19,7 +18,7 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
 
   override def createWallet(wallet: Wallet, seedDigest: Array[Byte]): UIO[Wallet] = {
     WalletSql
-      .insert(quillModel.Wallet.from(wallet, seedDigest))
+      .insert(db.Wallet.from(wallet, seedDigest))
       .transactWithoutContext(xa)
       .orDie
       .map(_.toModel)
@@ -85,7 +84,7 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
       config: EventNotificationConfig
   ): URIO[WalletAccessContext, Unit] = {
     WalletNotificationSql
-      .insert(quillModel.WalletNotification.from(config))
+      .insert(db.WalletNotification.from(config))
       .transactWallet(xa)
       .ensureOneAffectedRowOrDie
   }
