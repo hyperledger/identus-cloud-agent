@@ -36,7 +36,7 @@ To run the Atala `building-block` stack - execute the `run.sh` script. This can 
 
 | Name   | Purpose                              | Notes                                                                    |
 | ------ | ------------------------------------ | ------------------------------------------------------------------------ |
-| run.sh | Run the Atala `building-block` stack | Runs using docker-compose and versions are controlled by the `.env` file. Can be used to run multiple instances with command line paramaters [see below] |
+| run.sh | Run the Atala `building-block` stack | Runs using docker-compose and versions are controlled by the `.env` file. Can be used to run multiple instances with command line parameters [see below] |
 | stop.sh  | Stops a running instance                                                                             | Used to stop a running instance if you've executed `run.sh` with the `-b/--background` option. Please note - you must supply the same `-n/--name` parameter to this script if you have used a non-default value in the `run.sh` script |
 
 ## run.sh
