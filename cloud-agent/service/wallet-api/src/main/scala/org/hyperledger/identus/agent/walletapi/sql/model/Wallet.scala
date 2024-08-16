@@ -53,4 +53,10 @@ object WalletSql extends DoobieContext.Postgres(SnakeCase) {
   def findBySeed(seedDigest: Array[Byte]) = run {
     quote(query[Wallet].filter(_.seedDigest == lift(seedDigest)).take(1))
   }
+
+  def lookupCount() = run { quote(query[Wallet].size) }
+
+  def lookup(offset: Int, limit: Int) = run {
+    quote(query[Wallet].drop(lift(offset)).take(lift(limit)))
+  }
 }

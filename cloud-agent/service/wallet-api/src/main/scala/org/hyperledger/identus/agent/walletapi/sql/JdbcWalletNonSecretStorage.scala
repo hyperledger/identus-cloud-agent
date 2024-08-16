@@ -59,32 +59,17 @@ class JdbcWalletNonSecretStorage(xa: Transactor[ContextAwareTask]) extends Walle
       offset: Option[Int],
       limit: Option[Int]
   ): UIO[(Seq[Wallet], RuntimeFlags)] = {
-    val countCxnIO =
-      sql"""
-        | SELECT COUNT(*)
-        | FROM public.wallet
-        """.stripMargin
-        .query[Int]
-        .unique
+    val countCxnIO = WalletSql.lookupCount()
 
-    val baseFr =
-      sql"""
-        | SELECT
-        |   wallet_id,
-        |   name,
-        |   created_at,
-        |   updated_at
-        | FROM public.wallet
-        | ORDER BY created_at
-        """.stripMargin
-    val withOffsetFr = offset.fold(baseFr)(offsetValue => baseFr ++ fr"OFFSET $offsetValue")
-    val withOffsetAndLimitFr = limit.fold(withOffsetFr)(limitValue => withOffsetFr ++ fr"LIMIT $limitValue")
-    val walletsCxnIO = withOffsetAndLimitFr.query[WalletRow].to[List]
+    val walletsCxnIO = WalletSql.lookup(
+      offset = offset.getOrElse(0),
+      limit = limit.getOrElse(1000)
+    )
 
     val effect = for {
       totalCount <- countCxnIO
-      rows <- walletsCxnIO.map(_.map(_.toDomain))
-    } yield (rows, totalCount)
+      rows <- walletsCxnIO.map(_.map(_.toModel))
+    } yield (rows, totalCount.toInt)
 
     effect
       .transactWithoutContext(xa)
