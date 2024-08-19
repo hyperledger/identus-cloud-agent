@@ -17,7 +17,6 @@ import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
-import zio.{IO, ZIO}
 
 import java.util.UUID
 import scala.util.Try

@@ -91,8 +91,8 @@ jobs:
         id: get_version
         run: |
           VERSION=$(grep -Eo 'version := "[^"]+"' version.sbt | sed 's/version := "//; s/"//; s/-SNAPSHOT//')
-          REVISION_VERSION=${VERSION}-${{ env.COMMIT_HASH }}
-          BUILD_VERSION=${REVISION_VERSION}-${{ env.BUILD_NUMBER }}
+          REVISION_VERSION=${VERSION}-${{ env.COMMIT_HASH }} # Revision version is used for the OAS file name and client libraries
+          BUILD_VERSION=${VERSION}-${{ env.BUILD_NUMBER }}-${{ env.COMMIT_HASH }} # Build version is used for the Docker image tag
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
           echo "REVISION_VERSION=${REVISION_VERSION}" >> $GITHUB_ENV
           echo "BUILD_VERSION=${BUILD_VERSION}" >> $GITHUB_ENV
