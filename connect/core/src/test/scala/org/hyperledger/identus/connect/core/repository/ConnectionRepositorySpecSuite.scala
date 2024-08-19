@@ -1,6 +1,6 @@
 package org.hyperledger.identus.connect.core.repository
 
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
+import org.hyperledger.identus.connect.core.model.{ConnectionRecord, ConnectionRecordBeforeStored}
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
@@ -18,7 +18,7 @@ object ConnectionRepositorySpecSuite {
 
   val maxRetries = 2
 
-  private def connectionRecord = ConnectionRecord(
+  private def connectionRecord = ConnectionRecordBeforeStored(
     UUID.randomUUID,
     Instant.now.truncatedTo(ChronoUnit.MICROS),
     None,
@@ -43,7 +43,6 @@ object ConnectionRepositorySpecSuite {
     maxRetries,
     Some(Instant.now.truncatedTo(ChronoUnit.MICROS)),
     None,
-    WalletId.fromUUID(UUID.randomUUID)
   ).withTruncatedTimestamp()
 
   private def connectionRequest = ConnectionRequest(
@@ -85,7 +84,8 @@ object ConnectionRepositorySpecSuite {
         _ <- repo.create(aRecord)
         _ <- repo.create(bRecord)
         record <- repo.findById(bRecord.id)
-      } yield assertTrue(record.contains(bRecord))
+        walletId <- ZIO.service[WalletAccessContext].map(_.walletId)
+      } yield assertTrue(record.contains(bRecord.withWalletId(walletId)))
     },
     test("getConnectionRecord returns None for an unknown record") {
       for {
@@ -105,10 +105,11 @@ object ConnectionRepositorySpecSuite {
         _ <- repo.create(aRecord)
         _ <- repo.create(bRecord)
         records <- repo.findAll
+        walletId <- ZIO.service[WalletAccessContext].map(_.walletId)
       } yield {
         assertTrue(records.size == 2) &&
-        assertTrue(records.contains(aRecord)) &&
-        assertTrue(records.contains(bRecord))
+        assertTrue(records.contains(aRecord.withWalletId(walletId))) &&
+        assertTrue(records.contains(bRecord.withWalletId(walletId)))
       }
     },
     test("getConnectionRecordsByStates returns correct records") {
@@ -143,9 +144,10 @@ object ConnectionRepositorySpecSuite {
           ProtocolState.ConnectionRequestReceived,
           ProtocolState.ConnectionResponsePending
         )
+        walletId <- ZIO.service[WalletAccessContext].map(_.walletId)
       } yield {
         assertTrue(invitationGeneratedRecords.size == 1) &&
-        assertTrue(invitationGeneratedRecords.contains(bRecord)) &&
+        assertTrue(invitationGeneratedRecords.contains(bRecord.withWalletId(walletId))) &&
         assertTrue(otherRecords.size == 2) &&
         assertTrue(otherRecords.exists(_.id == aRecord.id)) &&
         assertTrue(otherRecords.exists(_.id == cRecord.id))
@@ -192,9 +194,10 @@ object ConnectionRepositorySpecSuite {
         _ <- repo.create(bRecord)
         _ <- repo.deleteById(aRecord.id)
         records <- repo.findAll
+        walletId <- ZIO.service[WalletAccessContext].map(_.walletId)
       } yield {
         assertTrue(records.size == 1) &&
-        assertTrue(records.contains(bRecord))
+        assertTrue(records.contains(bRecord.withWalletId(walletId)))
       }
     },
     test("deleteRecord does nothing for an unknown record") {
@@ -206,14 +209,15 @@ object ConnectionRepositorySpecSuite {
         _ <- repo.create(bRecord)
         deleteResult <- repo.deleteById(UUID.randomUUID).exit
         records <- repo.findAll
+        walletId <- ZIO.service[WalletAccessContext].map(_.walletId)
       } yield {
         assertTrue(deleteResult match
           case Exit.Failure(cause: Cause.Die) => true
           case _                              => false
         ) &&
         assertTrue(records.size == 2) &&
-        assertTrue(records.contains(aRecord)) &&
-        assertTrue(records.contains(bRecord))
+        assertTrue(records.contains(aRecord.withWalletId(walletId))) &&
+        assertTrue(records.contains(bRecord.withWalletId(walletId)))
       }
     },
     test("getConnectionRecordByThreadId correctly returns an existing thid") {
@@ -225,7 +229,8 @@ object ConnectionRepositorySpecSuite {
         _ <- repo.create(aRecord)
         _ <- repo.create(bRecord)
         record <- repo.findByThreadId(thid)
-      } yield assertTrue(record.contains(aRecord))
+        walletId <- ZIO.service[WalletAccessContext].map(_.walletId)
+      } yield assertTrue(record.contains(aRecord.withWalletId(walletId)))
     },
     test("getConnectionRecordByThreadId returns nothing for an unknown thid") {
       for {
