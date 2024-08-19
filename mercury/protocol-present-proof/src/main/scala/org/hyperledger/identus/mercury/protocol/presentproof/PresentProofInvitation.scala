@@ -1,7 +1,6 @@
 package org.hyperledger.identus.mercury.protocol.presentproof
 
-import org.hyperledger.identus.mercury.model.AttachmentDescriptor
-import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 object PresentProofInvitation {
   def makeInvitation(
