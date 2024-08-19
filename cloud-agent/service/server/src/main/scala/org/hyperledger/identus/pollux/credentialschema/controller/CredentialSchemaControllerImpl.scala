@@ -62,17 +62,18 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
     res
   }
 
-  override def updateSchema(id: UUID, in: CredentialSchemaInput)(implicit
+  override def updateSchema(config: AppConfig, id: UUID, in: CredentialSchemaInput)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse | CredentialSchemaDidUrlResponse] = {
     val res = for {
       _ <- validatePrismDID(in.author)
+      serviceName = config.agent.httpEndpoint.serviceName
       cs <- service
         .update(id, toDomain(in))
       result <- cs.resolutionMethod match
         case ResourceResolutionMethod.DID =>
           ZIO
-            .fromEither(CredentialSchemaDidUrlResponse.fromDomain(cs, ""))
+            .fromEither(CredentialSchemaDidUrlResponse.fromDomain(cs, serviceName))
             .mapError(e =>
               ErrorResponse.internalServerError(detail = Some(s"Error occurred while parsing a schema response: $e"))
             )

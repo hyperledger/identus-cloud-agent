@@ -52,7 +52,7 @@ class SchemaRegistryServerEndpoints(
       .serverLogic { wac =>
         { case (ctx: RequestContext, id: UUID, schemaInput: CredentialSchemaInput) =>
           credentialSchemaController
-            .updateSchema(id, schemaInput)(ctx)
+            .updateSchema(config, id, schemaInput)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(ctx)
         }

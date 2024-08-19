@@ -26,7 +26,7 @@ trait CredentialSchemaController {
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaDidUrlResponse]
 
-  def updateSchema(id: UUID, in: CredentialSchemaInput)(implicit
+  def updateSchema(config: AppConfig, id: UUID, in: CredentialSchemaInput)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse | CredentialSchemaDidUrlResponse]
 
