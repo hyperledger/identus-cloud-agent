@@ -30,11 +30,7 @@ case class CredentialSchemaControllerLogic(
       pageOf = pageOf,
       next = next,
       previous = previous,
-      contents = page.contents.map(item =>
-        item.withBaseUri(
-          ctx.request.uri.copy(querySegments = Seq.empty)
-        )
-      )
+      contents = page.contents
     )
 
     pageResult

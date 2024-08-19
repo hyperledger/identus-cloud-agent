@@ -42,7 +42,7 @@ object CredentialSchemaDidUrlResponse {
         Seq(),
         ListMap(
           "resourceService" -> Seq(serviceName),
-          "resourcePath" -> Seq(s"schema-registry/schemas/${cs.guid}" ),
+          "resourcePath" -> Seq(s"schema-registry/schemas/${cs.guid}"),
           "resourceHash" -> Seq(hash)
         ),
         None
@@ -52,7 +52,6 @@ object CredentialSchemaDidUrlResponse {
       schemaUrl = didUrl
     )
   }
-
 
   given encoder: zio.json.JsonEncoder[CredentialSchemaDidUrlResponse] =
     DeriveJsonEncoder.gen[CredentialSchemaDidUrlResponse]

@@ -26,9 +26,9 @@ trait CredentialSchemaController {
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaDidUrlResponse]
 
-  def updateSchema(author: String, id: UUID, in: CredentialSchemaInput)(implicit
+  def updateSchema(id: UUID, in: CredentialSchemaInput)(implicit
       rc: RequestContext
-  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse]
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse | CredentialSchemaDidUrlResponse]
 
   def getSchemaByGuid(config: AppConfig, id: UUID)(implicit
       rc: RequestContext
@@ -45,7 +45,8 @@ trait CredentialSchemaController {
   def lookupSchemas(
       filter: FilterInput,
       pagination: Pagination,
-      order: Option[Order]
+      order: Option[Order],
+      config: AppConfig
   )(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponsePage]

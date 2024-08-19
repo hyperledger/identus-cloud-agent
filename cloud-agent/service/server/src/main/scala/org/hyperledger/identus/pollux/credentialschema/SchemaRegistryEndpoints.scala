@@ -129,9 +129,9 @@ object SchemaRegistryEndpoints {
 
   val updateSchemaEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
-    (RequestContext, String, UUID, CredentialSchemaInput),
+    (RequestContext, UUID, CredentialSchemaInput),
     ErrorResponse,
-    CredentialSchemaResponse,
+    CredentialSchemaResponse | CredentialSchemaDidUrlResponse,
     Any
   ] =
     endpoint.put
@@ -139,9 +139,9 @@ object SchemaRegistryEndpoints {
       .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
-        "schema-registry" /
-          path[String]("author").description(CredentialSchemaResponse.annotations.author.description) /
-          path[UUID]("id").description(CredentialSchemaResponse.annotations.id.description)
+        "schema-registry" / "schemas" / path[UUID]("id").description(
+          CredentialSchemaResponse.annotations.id.description
+        )
       )
       .in(
         jsonBody[CredentialSchemaInput]
@@ -155,7 +155,18 @@ object SchemaRegistryEndpoints {
             "The credential schema record is successfully updated"
           )
       )
-      .out(jsonBody[CredentialSchemaResponse])
+      .out(
+        oneOf[CredentialSchemaResponse | CredentialSchemaDidUrlResponse](
+          oneOfVariant(
+            jsonBody[CredentialSchemaResponse].description("CredentialSchema found by `guid`, resolvable by HTTP URL")
+          ),
+          oneOfVariant(
+            jsonBody[CredentialSchemaDidUrlResponse].description(
+              "CredentialSchema found by `guid`, resolvable by DID URL"
+            )
+          )
+        )
+      )
       .description("Credential schema record")
       .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("updateSchema")
@@ -221,6 +232,7 @@ object SchemaRegistryEndpoints {
 
   private val credentialSchemaFilterInput: EndpointInput[FilterInput] = EndpointInput.derived[FilterInput]
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
+
   val lookupSchemasByQueryEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (

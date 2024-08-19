@@ -50,9 +50,9 @@ class SchemaRegistryServerEndpoints(
     updateSchemaEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
-        { case (ctx: RequestContext, author: String, id: UUID, schemaInput: CredentialSchemaInput) =>
+        { case (ctx: RequestContext, id: UUID, schemaInput: CredentialSchemaInput) =>
           credentialSchemaController
-            .updateSchema(author, id, schemaInput)(ctx)
+            .updateSchema(id, schemaInput)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(ctx)
         }
@@ -81,7 +81,8 @@ class SchemaRegistryServerEndpoints(
             .lookupSchemas(
               filter,
               paginationInput.toPagination,
-              order
+              order,
+              config
             )(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(ctx)
