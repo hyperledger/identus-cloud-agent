@@ -1,7 +1,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Issue credentials
+# Issue credentials (DIDComm)
 
 In the Identus Platform, the [Issue Credentials Protocol](/docs/concepts/glossary#issue-credentials-protocol) allows you to create, retrieve, and manage issued [verifiable credentials (VCs)](/docs/concepts/glossary#verifiable-credentials) between a VC issuer and a VC holder.
 
@@ -183,7 +183,7 @@ The `issuingDID` and `connectionId` properties come from completing the pre-requ
 :::
 
 - 📌 **Note:** Claims can also include the `exp` Expiration Time attribute, which is part of JWT claims. `exp` attribute is disclosable if specified and can have a value in epoch time (in seconds), indicating when the SDJWT credential expires for more details
-<https://datatracker.ietf.org/doc/html/rfc7519#page-9>
+[RFC5719](https://datatracker.ietf.org/doc/html/rfc7519#page-9)
 
 Once the request initiates, a new credential record for the issuer gets created with a unique ID. The state of this record is now `OfferPending`.
 
@@ -352,7 +352,7 @@ curl -X POST "http://localhost:8090/cloud-agent/issue-credentials/records/$holde
    }
    ```
    2. `keyId`: This is optional field but must be specified to choose which key bounds to the verifiable credential.
-   For more information on key-binding, <https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt>.
+   For more information on key-binding, [ietf-oauth-selective-disclosure-jwt](https://datatracker.ietf.org/doc/draft-ietf-oauth-selective-disclosure-jwt).
    Currently, we only support the EdDSA algorithm and curve Ed25519.
    The specified keyId should be of type Ed25519.
    The purpose of the keyId should be authentication.

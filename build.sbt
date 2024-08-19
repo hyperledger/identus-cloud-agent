@@ -11,8 +11,6 @@ inThisBuild(
     run / connectInput := true,
     releaseUseGlobalVersion := false,
     versionScheme := Some("semver-spec"),
-    githubOwner := "hyperledger",
-    githubRepository := "identus-cloud-agent",
     resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
     resolvers += "jitpack" at "https://jitpack.io",
   )
@@ -32,9 +30,8 @@ inThisBuild(
       "-feature",
       "-deprecation",
       "-unchecked",
-      "-Dquill.macro.log=false", // disable quill macro logs
       "-Wunused:all",
-      "-Wconf:any:warning" // TODO: change unused imports to errors, Wconf configuration string is different from scala 2, figure out how!
+      "-Wconf:any:warning", // TODO: change unused imports to errors, Wconf configuration string is different from scala 2, figure out how!
       // TODO "-feature",
       // TODO "-Xfatal-warnings",
       // TODO "-Yexplicit-nulls",
@@ -48,11 +45,11 @@ lazy val V = new {
   val munitZio = "0.2.0"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.22"
-  val zioConfig = "4.0.1"
-  val zioLogging = "2.1.17"
+  val zio = "2.1.1"
+  val zioConfig = "4.0.2"
+  val zioLogging = "2.2.4"
   val zioJson = "0.6.2"
-  val zioHttp = "3.0.0-RC6"
+  val zioHttp = "3.0.0-RC7"
   val zioCatsInterop = "3.3.0" // TODO "23.1.0.2" // https://mvnrepository.com/artifact/dev.zio/zio-interop-cats
   val zioMetricsConnector = "2.3.1"
   val zioMock = "1.0.0-RC12"
@@ -82,9 +79,10 @@ lazy val V = new {
   val scalaUri = "4.0.3"
 
   val jwtCirceVersion = "9.4.6"
-  val zioPreludeVersion = "1.0.0-RC24"
+  val zioPreludeVersion = "1.0.0-RC26"
 
-  val apollo = "1.3.4"
+  val apollo = "1.3.5"
+
   val jsonSchemaValidator = "1.3.2" // scala-steward:off //TODO 1.3.2 need to fix:
   // [error] 	org.hyperledger.identus.pollux.core.model.schema.AnoncredSchemaTypeSpec
   // [error] 	org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaSpec
@@ -502,7 +500,8 @@ lazy val models = project
     ), // TODO try to remove this from this module
     // libraryDependencies += D.didScala
   )
-  .settings(libraryDependencies += D.nimbusJwt) //FIXME just for the DidAgent
+  .settings(libraryDependencies += D.nimbusJwt) // FIXME just for the DidAgent
+  .dependsOn(shared)
 
 /* TODO move code from agentDidcommx to here
 models implementation for didcommx () */
@@ -603,7 +602,7 @@ lazy val protocolPresentProof = project
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
-  .dependsOn(models)
+  .dependsOn(models, protocolInvitation)
 
 lazy val vc = project
   .in(file("mercury/vc"))
@@ -730,10 +729,18 @@ lazy val polluxCore = project
     name := "pollux-core",
     libraryDependencies ++= D_Pollux.coreDependencies
   )
-  .dependsOn(shared)
-  .dependsOn(agentWalletAPI)
-  .dependsOn(polluxVcJWT)
-  .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds, polluxSDJWT)
+  .dependsOn(
+    shared,
+    castorCore % "compile->compile;test->test", // Test is for MockDIDService
+    agentWalletAPI % "compile->compile;test->test", // Test is for MockManagedDIDService
+    vc,
+    resolver,
+    agentDidcommx,
+    eventNotification,
+    polluxAnoncreds,
+    polluxVcJWT,
+    polluxSDJWT,
+  )
 
 lazy val polluxDoobie = project
   .in(file("pollux/sql-doobie"))
@@ -863,17 +870,16 @@ lazy val cloudAgentServer = project
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(agentWalletAPI % "compile->compile;test->test")
   .dependsOn(
+    sharedTest % "test->test",
     agent,
-    polluxCore,
+    polluxCore % "compile->compile;test->test",
     polluxDoobie,
     polluxAnoncreds,
-    connectCore,
+    connectCore % "compile->compile;test->test", // Test is for MockConnectionService
     connectDoobie,
     castorCore,
-    eventNotification
+    eventNotification,
   )
-  .dependsOn(sharedTest % "test->test")
-  .dependsOn(polluxCore % "compile->compile;test->test")
 
 // ############################
 // ####  Release process  #####

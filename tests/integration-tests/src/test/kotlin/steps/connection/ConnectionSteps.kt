@@ -3,17 +3,21 @@ package steps.connection
 import abilities.ListenToEvents
 import interactions.Get
 import interactions.Post
+import interactions.body
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import io.iohk.atala.automation.utils.Wait
+import io.iohk.atala.automation.serenity.interactions.PollingWait
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.CoreMatchers
 import org.hyperledger.identus.client.models.*
+import org.hyperledger.identus.client.models.Connection.State.CONNECTION_RESPONSE_RECEIVED
+import org.hyperledger.identus.client.models.Connection.State.CONNECTION_RESPONSE_SENT
 
 class ConnectionSteps {
 
@@ -22,13 +26,9 @@ class ConnectionSteps {
         // Acme(Issuer) initiates a connection
         // and sends it to Bob(Holder) out-of-band, e.g. using QR-code
         val connectionLabel = "Connection with ${invitee.name}"
+
         inviter.attemptsTo(
-            Post.to("/connections")
-                .with {
-                    it.body(
-                        CreateConnectionRequest(label = connectionLabel),
-                    )
-                },
+            Post.to("/connections").body(CreateConnectionRequest(label = connectionLabel)),
         )
 
         val connection = SerenityRest.lastResponse().get<Connection>()
@@ -76,27 +76,22 @@ class ConnectionSteps {
 
     @When("{actor} receives the connection request and sends back the response")
     fun inviterReceivesTheConnectionRequest(inviter: Actor) {
-        Wait.until(
-            errorMessage = "Inviter connection didn't reach ${Connection.State.CONNECTION_RESPONSE_SENT} state",
-        ) {
-            val lastEvent = ListenToEvents.with(inviter).connectionEvents.lastOrNull {
-                it.data.thid == inviter.recall<Connection>("connection").thid
-            }
-            lastEvent != null && lastEvent.data.state == Connection.State.CONNECTION_RESPONSE_SENT
-        }
+        inviter.attemptsTo(
+            PollingWait.until(
+                ListenToEvents.connectionState(inviter),
+                CoreMatchers.equalTo(CONNECTION_RESPONSE_SENT),
+            ),
+        )
     }
 
     @When("{actor} receives the connection response")
     fun inviteeReceivesTheConnectionResponse(invitee: Actor) {
-        Wait.until(
-            errorMessage = "Invitee connection didn't reach ${Connection.State.CONNECTION_RESPONSE_RECEIVED} state.",
-        ) {
-            val lastEvent = ListenToEvents.with(invitee).connectionEvents.lastOrNull {
-                it.data.thid == invitee.recall<Connection>("connection").thid
-            }
-            lastEvent != null &&
-                lastEvent.data.state == Connection.State.CONNECTION_RESPONSE_RECEIVED
-        }
+        invitee.attemptsTo(
+            PollingWait.until(
+                ListenToEvents.connectionState(invitee),
+                CoreMatchers.equalTo(CONNECTION_RESPONSE_RECEIVED),
+            ),
+        )
     }
 
     @Then("{actor} and {actor} have a connection")
@@ -123,8 +118,8 @@ class ConnectionSteps {
         assertThat(inviter.recall<Connection>("connection-with-${invitee.name}").theirDid)
             .isEqualTo(invitee.recall<Connection>("connection-with-${inviter.name}").myDid)
         assertThat(inviter.recall<Connection>("connection-with-${invitee.name}").state)
-            .isEqualTo(Connection.State.CONNECTION_RESPONSE_SENT)
+            .isEqualTo(CONNECTION_RESPONSE_SENT)
         assertThat(invitee.recall<Connection>("connection-with-${inviter.name}").state)
-            .isEqualTo(Connection.State.CONNECTION_RESPONSE_RECEIVED)
+            .isEqualTo(CONNECTION_RESPONSE_RECEIVED)
     }
 }

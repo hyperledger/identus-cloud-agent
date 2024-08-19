@@ -5,7 +5,7 @@ configs:
         handle_path /didcomm* {
           reverse_proxy agent-holder:8090
         }
-        handle_path /prism-agent* {
+        handle_path /cloud-agent* {
           reverse_proxy agent-holder:8085
         }
         handle_path /keycloak* {
@@ -21,7 +21,7 @@ configs:
         handle_path /didcomm* {
           reverse_proxy agent-issuer:8090
         }
-        handle_path /prism-agent* {
+        handle_path /cloud-agent* {
           reverse_proxy agent-issuer:8085
         }
         handle_path /keycloak* {
@@ -37,7 +37,7 @@ configs:
         handle_path /didcomm* {
           reverse_proxy agent-verifier:8090
         }
-        handle_path /prism-agent* {
+        handle_path /cloud-agent* {
           reverse_proxy agent-verifier:8085
         }
         handle_path /keycloak* {
@@ -71,12 +71,12 @@ services:
       POLLUX_DB_PASSWORD: postgres
       POLLUX_DB_PORT: '5432'
       POLLUX_DB_USER: postgres
-      POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL: http://caddy-holder:8081/prism-agent
+      POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL: http://caddy-holder:8081/cloud-agent
       PRISM_NODE_HOST: node
       PRISM_NODE_PORT: '50053'
-      REST_SERVICE_URL: http://caddy-holder:8081/prism-agent
+      REST_SERVICE_URL: http://caddy-holder:8081/cloud-agent
       SECRET_STORAGE_BACKEND: postgres
-    image: ghcr.io/hyperledger/identus-cloud-agent:1.36.1-SNAPSHOT
+    image: ghcr.io/hyperledger/identus-cloud-agent:1.38.0
     restart: always
   agent-issuer:
     depends_on:
@@ -101,12 +101,12 @@ services:
       POLLUX_DB_PASSWORD: postgres
       POLLUX_DB_PORT: '5432'
       POLLUX_DB_USER: postgres
-      POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL: http://caddy-issuer:8080/prism-agent
+      POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL: http://caddy-issuer:8080/cloud-agent
       PRISM_NODE_HOST: node
       PRISM_NODE_PORT: '50053'
-      REST_SERVICE_URL: http://caddy-issuer:8080/prism-agent
+      REST_SERVICE_URL: http://caddy-issuer:8080/cloud-agent
       SECRET_STORAGE_BACKEND: postgres
-    image: ghcr.io/hyperledger/identus-cloud-agent:1.36.1-SNAPSHOT
+    image: ghcr.io/hyperledger/identus-cloud-agent:1.38.0
     restart: always
   agent-verifier:
     depends_on:
@@ -131,12 +131,12 @@ services:
       POLLUX_DB_PASSWORD: postgres
       POLLUX_DB_PORT: '5432'
       POLLUX_DB_USER: postgres
-      POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL: http://caddy-verifier:8082/prism-agent
+      POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL: http://caddy-verifier:8082/cloud-agent
       PRISM_NODE_HOST: node
       PRISM_NODE_PORT: '50053'
-      REST_SERVICE_URL: http://caddy-verifier:8082/prism-agent
+      REST_SERVICE_URL: http://caddy-verifier:8082/cloud-agent
       SECRET_STORAGE_BACKEND: postgres
-    image: ghcr.io/hyperledger/identus-cloud-agent:1.36.1-SNAPSHOT
+    image: ghcr.io/hyperledger/identus-cloud-agent:1.38.0
     restart: always
   caddy-holder:
     configs:

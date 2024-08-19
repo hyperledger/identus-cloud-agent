@@ -24,7 +24,7 @@ import org.hyperledger.identus.pollux.vc.jwt.{
   W3cCredentialPayload,
   *
 }
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.*
 import zio.*
 
 import java.net.{URI, URL}
@@ -40,7 +40,7 @@ trait OIDCCredentialIssuerService {
   import OIDCCredentialIssuerService.Error
   import OIDCCredentialIssuerService.Errors.*
 
-  def verifyJwtProof(jwt: JWT): IO[InvalidProof, Boolean]
+  def verifyJwtProof(jwt: JWT): IO[InvalidProof | DIDResolutionError, Boolean]
 
   def validateCredentialDefinition(
       credentialDefinition: CredentialDefinition
@@ -70,30 +70,31 @@ trait OIDCCredentialIssuerService {
 }
 
 object OIDCCredentialIssuerService {
-  trait Error {
-    def message: String
+  sealed trait Error extends Failure {
+    override val namespace = "OIDCCredentialIssuerService"
+    override val statusCode = StatusCode.BadRequest
   }
 
   // TODO: use shared Failure trait
   object Errors {
-    case class InvalidProof(message: String) extends Error
+    case class InvalidProof(userFacingMessage: String) extends Error
 
-    case class DIDResolutionError(message: String) extends Error
+    case class DIDResolutionError(userFacingMessage: String) extends Error
 
     case class CredentialConfigurationNotFound(issuerId: UUID, credentialConfigurationId: String) extends Error {
-      override def message: String =
+      override def userFacingMessage: String =
         s"Credential configuration with id $credentialConfigurationId not found for issuer $issuerId"
     }
 
     case class CredentialSchemaError(cause: org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError)
         extends Error {
-      override def message: String = cause.userFacingMessage
+      override def userFacingMessage: String = cause.userFacingMessage
     }
 
-    case class ServiceError(message: String) extends Error
+    case class ServiceError(userFacingMessage: String) extends Error
 
     case class UnexpectedError(cause: Throwable) extends Error {
-      override def message: String = cause.getMessage
+      override def userFacingMessage: String = cause.getMessage // TODO
     }
   }
 }
@@ -129,17 +130,15 @@ case class OIDCCredentialIssuerServiceImpl(
     } yield verificationMethod
   }
 
-  override def verifyJwtProof(jwt: JWT): IO[InvalidProof, Boolean] = {
+  override def verifyJwtProof(jwt: JWT): IO[InvalidProof | DIDResolutionError, Boolean] = {
     for {
       algorithm <- getAlgorithmFromJwt(jwt)
         .mapError(e => InvalidProof(e.getMessage))
       didUrl <- parseDIDUrlFromKeyId(jwt)
         .mapError(e => InvalidProof(e.getMessage))
       verificationMethod <- resolveVerificationMethodByKeyId(didUrl)
-        .mapError(dre => InvalidProof(dre.message))
       publicKey <- JWTVerification.extractPublicKey(verificationMethod).toZIO.mapError(InvalidProof.apply)
       _ <- JWTVerification.validateEncodedJwt(jwt, publicKey).toZIO.mapError(InvalidProof.apply)
-      _ <- ZIO.succeed(println(s"JWT proof is verified: ${jwt.value}")) // TODO: remove before the release
     } yield true
   }
 

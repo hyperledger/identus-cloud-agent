@@ -42,7 +42,7 @@ object VerificationPolicySql extends DoobieContext.Postgres(SnakeCase) {
     run(quote(query[VerificationPolicyConstraint].filter(_.fk_id == lift(fk_id)).delete))
   }
 
-  def getById(id: UUID) =
+  def findById(id: UUID) =
     run(
       quote(
         query[VerificationPolicy]
@@ -50,7 +50,7 @@ object VerificationPolicySql extends DoobieContext.Postgres(SnakeCase) {
       )
     ).map(_.headOption)
 
-  def getHashById(id: UUID) =
+  def findHashById(id: UUID) =
     run(
       quote(
         query[VerificationPolicy]
@@ -72,7 +72,7 @@ object VerificationPolicySql extends DoobieContext.Postgres(SnakeCase) {
       )
     )
 
-  def getVerificationPolicyConstrains(fk_ids: Seq[UUID]) =
+  def getVerificationPolicyConstraints(fk_ids: Seq[UUID]) =
     run(
       quote(
         query[VerificationPolicyConstraint]

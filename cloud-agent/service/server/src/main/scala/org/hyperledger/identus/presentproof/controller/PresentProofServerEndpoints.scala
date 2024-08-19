@@ -4,8 +4,15 @@ import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
-import org.hyperledger.identus.presentproof.controller.http.{RequestPresentationAction, RequestPresentationInput}
+import org.hyperledger.identus.presentproof.controller.http.{
+  AcceptRequestPresentationInvitation,
+  OOBRequestPresentationInput,
+  RequestPresentationAction,
+  RequestPresentationInput
+}
 import org.hyperledger.identus.presentproof.controller.PresentProofEndpoints.{
+  acceptRequestPresentationInvitation,
+  createOOBRequestPresentationInvitation,
   getAllPresentations,
   getPresentation,
   requestPresentation,
@@ -71,11 +78,37 @@ class PresentProofServerEndpoints(
         }
       }
 
+  private val createOOBRequestPresentationInvitationEndpoint: ZServerEndpoint[Any, Any] =
+    createOOBRequestPresentationInvitation
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
+        { case (ctx: RequestContext, action: OOBRequestPresentationInput) =>
+          presentProofController
+            .createOOBRequestPresentationInvitation(action)(ctx)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
+        }
+      }
+
+  private val acceptRequestPresentationInvitationEndpoint: ZServerEndpoint[Any, Any] =
+    acceptRequestPresentationInvitation
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
+        { case (ctx: RequestContext, action: AcceptRequestPresentationInvitation) =>
+          presentProofController
+            .acceptRequestPresentationInvitation(action)(ctx)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
+        }
+      }
+
   val all: List[ZServerEndpoint[Any, Any]] = List(
     requestPresentationEndpoint,
     getAllPresentationsEndpoint,
     getPresentationEndpoint,
-    updatePresentationEndpoint
+    updatePresentationEndpoint,
+    createOOBRequestPresentationInvitationEndpoint,
+    acceptRequestPresentationInvitationEndpoint
   )
 }
 

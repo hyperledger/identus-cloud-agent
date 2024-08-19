@@ -3,24 +3,6 @@
 ## Prerequisites
 
 - Docker installed v2.24.0 or later
-- Python 3 with the following packages installed
-  - [requests](https://pypi.org/project/requests/)
-  - [pyjwt](https://pyjwt.readthedocs.io/en/stable/)
-  - [cryptography](https://cryptography.io/en/latest/)
-- Virtual environment (optional)
-
-Example of the script to install the required packages in a virtual environment:
-```shell
-python -m venv {path-to-the-project-dir}/identus-cloud-agent/examples/st-oid4vci/python-env
-source {path-to-the-project-dir}/identus-cloud-agent/examples/st-oid4vci/python-env/bin/activate
-pip install requests pyjwt cryptography
-```
-
-- the latest Cloud Agent image is built and available in the local Docker registry
-
-```shell
-sbt docker:publishLocal
-```
 
 ### 1. Spin up the agent stack with pre-configured Keycloak
 
@@ -32,9 +14,15 @@ The Keycloak UI is available at `http://localhost:9980` and the admin username i
 
 ### 2. Run the issuance demo script
 
+Build the demo application and run it using
+
 ```bash
-python demo.py
+docker build -t identus-oid4vci-demo:latest ./demo
+docker run --network <NETWORK_NAME> -it identus-oid4vci-demo:latest
 ```
+
+where `NETWORK_NAME` is the docker-compose network name from agent stack.
+By default, this value should be `st-oid4vci_default`.
 
 - 2.1 Follow the instructions in the terminal. The holder will then be asked to log in via a browser
 - 2.2 Enter the username `alice` and password `1234` to log in

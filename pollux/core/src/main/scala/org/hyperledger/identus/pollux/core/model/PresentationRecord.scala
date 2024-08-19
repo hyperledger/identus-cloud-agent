@@ -1,7 +1,9 @@
 package org.hyperledger.identus.pollux.core.model
 
 import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
+import org.hyperledger.identus.shared.models.Failure
 
 import java.time.temporal.ChronoUnit
 import java.time.Instant
@@ -17,9 +19,10 @@ final case class PresentationRecord(
     schemaId: Option[String],
     connectionId: Option[String],
     role: PresentationRecord.Role,
-    subjectId: DidId,
+    subjectId: DidId, // TODO Remove
     protocolState: PresentationRecord.ProtocolState,
     credentialFormat: CredentialFormat,
+    invitation: Option[Invitation],
     requestPresentationData: Option[RequestPresentation],
     proposePresentationData: Option[ProposePresentation],
     presentationData: Option[Presentation],
@@ -30,7 +33,7 @@ final case class PresentationRecord(
     sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
     metaRetries: Int,
     metaNextRetry: Option[Instant],
-    metaLastFailure: Option[String],
+    metaLastFailure: Option[Failure],
 ) {
   def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): PresentationRecord =
     copy(
@@ -88,5 +91,10 @@ object PresentationRecord {
     case PresentationAccepted extends ProtocolState
     // Verifier has rejected the presentation (proof) (Verifier DB)
     case PresentationRejected extends ProtocolState // TODO send problem report
+
+    // Verifier has created a OOB Presentation request  (in Verifier DB)
+    case InvitationGenerated extends ProtocolState
+    // Verifier receives a presentation from an expired OOB Presentation request (update Verifier DB) //TODO send problem report
+    case InvitationExpired extends ProtocolState
 
 }

@@ -5,7 +5,7 @@ import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.*
 import zio.{Cause, Exit, ZIO, ZLayer}
 import zio.test.*
 import zio.Exit.Failure
@@ -335,13 +335,16 @@ object ConnectionRepositorySpecSuite {
       }
     },
     test("updateFail (fail one retry) updates record") {
-      val failReason = Some("Just to test")
+      val failReason = Some(FailureInfo("ConnectionRepositorySpecSuite", StatusCode(999), "Just to test"))
       for {
         repo <- ZIO.service[ConnectionRepository]
         aRecord = connectionRecord
         _ <- repo.create(aRecord)
         record <- repo.findById(aRecord.id)
-        count <- repo.updateAfterFail(aRecord.id, Some("Just to test")) // TEST
+        count <- repo.updateAfterFail(
+          aRecord.id,
+          Some(FailureInfo("ConnectionRepositorySpecSuite", StatusCode(999), "Just to test"))
+        ) // TEST
         updatedRecord1 <- repo.findById(aRecord.id)
         response = ConnectionResponse.makeResponseFromRequest(connectionRequest.makeMessage).toOption.get
         _ <- repo.updateWithConnectionResponse(

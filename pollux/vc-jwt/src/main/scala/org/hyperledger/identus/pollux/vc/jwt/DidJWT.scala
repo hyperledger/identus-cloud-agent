@@ -12,8 +12,6 @@ import zio.*
 
 import java.security.*
 import java.security.interfaces.ECPublicKey
-import java.util.Base64
-import scala.jdk.CollectionConverters.*
 
 opaque type JWT = String
 

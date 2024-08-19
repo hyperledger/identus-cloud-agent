@@ -2,6 +2,7 @@ package steps.did
 
 import interactions.Get
 import interactions.Post
+import interactions.body
 import io.cucumber.java.en.*
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
@@ -31,10 +32,7 @@ class ManageDidSteps {
         val createDidRequest = createPrismDidRequest(curve, purpose)
 
         actor.attemptsTo(
-            Post.to("/did-registrar/dids")
-                .with {
-                    it.body(createDidRequest)
-                },
+            Post.to("/did-registrar/dids").body(createDidRequest),
         )
 
         if (SerenityRest.lastResponse().statusCode() == SC_CREATED) {

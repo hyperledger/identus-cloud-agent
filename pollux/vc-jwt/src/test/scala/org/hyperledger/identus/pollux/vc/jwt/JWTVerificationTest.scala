@@ -39,8 +39,8 @@ object JWTVerificationTest extends ZIOSpecDefault {
                                               |    "type" : "EcdsaSecp256k1Signature2019",
                                               |    "proofPurpose" : "assertionMethod",
                                               |    "verificationMethod" : "data:application/json;base64,eyJAY29udGV4dCI6WyJodHRwczovL3czaWQub3JnL3NlY3VyaXR5L3YxIl0sInR5cGUiOiJFY2RzYVNlY3AyNTZrMVZlcmlmaWNhdGlvbktleTIwMTkiLCJwdWJsaWNLZXlKd2siOnsiY3J2Ijoic2VjcDI1NmsxIiwia2V5X29wcyI6WyJ2ZXJpZnkiXSwia3R5IjoiRUMiLCJ4IjoiQ1hJRmwyUjE4YW1lTEQteWtTT0dLUW9DQlZiRk01b3Vsa2MydklySnRTND0iLCJ5IjoiRDJRWU5pNi1BOXoxbHhwUmpLYm9jS1NUdk5BSXNOVnNsQmpsemVnWXlVQT0ifX0=",
-                                              |    "created" : "2024-06-06T22:47:27.987035Z",
-                                              |    "jws" : "eyJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdLCJhbGciOiJFUzI1NksifQ..ERDKKRukFs3UZiBdlH-e9r3rS9n05XDaR3yh-7jtmuZhY40b1CTMELHHRRfnfTv6XJ2ROziN4dj_nU_9W8qi5Q"
+                                              |    "created" : "2024-07-25T22:49:59.091957Z",
+                                              |    "jws" : "eyJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdLCJhbGciOiJFUzI1NksifQ..FJLUBsZhGB1o_G1UwsVaoL-8agvcpoelJtAr2GlNOOqCSOd-WNEj5-FOgv0m0QcdKMokl2TxibJMg3Y-MJq4-A"
                                               |  },
                                               |  "@context" : [
                                               |    "https://www.w3.org/2018/credentials/v1",
@@ -50,13 +50,13 @@ object JWTVerificationTest extends ZIOSpecDefault {
                                               |    "VerifiableCredential",
                                               |    "StatusList2021Credential"
                                               |  ],
-                                              |  "id" : "http://localhost:8085/credential-status/575092c2-7eb0-40ae-8f41-3b499f45f3dc",
+                                              |  "id" : "http://localhost:8085/credential-status/01def9a2-2bcb-4bb3-8a36-6834066431d0",
                                               |  "issuer" : "did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a",
-                                              |  "issuanceDate" : 1717714047,
+                                              |  "issuanceDate" : 1721947798,
                                               |  "credentialSubject" : {
                                               |    "type" : "StatusList2021",
                                               |    "statusPurpose" : "Revocation",
-                                              |    "encodedList" : "H4sIAAAAAAAA_-3BMQ0AAAACIGf_0MbwARoAAAAAAAAAAAAAAAAAAADgbbmHB0sAQAAA"
+                                              |    "encodedList" : "H4sIAAAAAAAA_-3BIQEAAAACIKf6f4UzLEADAAAAAAAAAAAAAAAAAAAAvA3PduITAEAAAA=="
                                               |  }
                                               |}
                                               |""".stripMargin
@@ -130,7 +130,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
         statusPurpose = StatusPurpose.Revocation,
         `type` = "StatusList2021Entry",
         statusListCredential = "http://localhost:8085/credential-status/664382dc-9e6d-4d0c-99d1-85e2c74eb5e9",
-        statusListIndex = 2
+        statusListIndex = 3
       )
 
       val urlResolver = new UriResolver {

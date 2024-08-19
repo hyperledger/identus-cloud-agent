@@ -1,6 +1,8 @@
 package org.hyperledger.identus.presentproof.controller
 
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.ControllerHelper
+import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
@@ -10,11 +12,12 @@ import org.hyperledger.identus.mercury.protocol.presentproof.ProofType
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.presentation.Options
+import org.hyperledger.identus.pollux.core.service.serdes.AnoncredPresentationRequestV1
 import org.hyperledger.identus.pollux.core.service.PresentationService
 import org.hyperledger.identus.presentproof.controller.http.*
 import org.hyperledger.identus.presentproof.controller.PresentProofController.toDidCommID
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{URLayer, ZIO, ZLayer, *}
+import zio.*
 import zio.json.*
 import zio.json.ast.Json
 
@@ -23,7 +26,9 @@ import scala.language.implicitConversions
 
 class PresentProofControllerImpl(
     presentationService: PresentationService,
-    connectionService: ConnectionService
+    connectionService: ConnectionService,
+    managedDIDService: ManagedDIDService,
+    appConfig: AppConfig
 ) extends PresentProofController
     with ControllerHelper {
   override def requestPresentation(request: RequestPresentationInput)(implicit
@@ -31,72 +36,143 @@ class PresentProofControllerImpl(
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
     val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] = for {
       didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
-      credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
-      record <-
-        credentialFormat match {
-          case CredentialFormat.JWT =>
-            presentationService
-              .createJwtPresentationRecord(
-                pairwiseVerifierDID = didIdPair.myDID,
-                pairwiseProverDID = didIdPair.theirDid,
-                thid = DidCommID(),
-                connectionId = Some(request.connectionId.toString),
-                proofTypes = request.proofs.map { e =>
-                  ProofType(
-                    schema = e.schemaId,
-                    requiredFields = None,
-                    trustIssuers = Some(e.trustIssuers.map(DidId(_)))
-                  )
-                },
-                options = request.options.map(x => Options(x.challenge, x.domain))
-              )
-          case CredentialFormat.SDJWT =>
-            request.claims match {
-              case Some(claims) =>
-                for {
-                  s <- presentationService.createSDJWTPresentationRecord(
-                    pairwiseVerifierDID = didIdPair.myDID,
-                    pairwiseProverDID = didIdPair.theirDid,
-                    thid = DidCommID(),
-                    connectionId = Some(request.connectionId.toString),
-                    proofTypes = request.proofs.map { e =>
-                      ProofType(
-                        schema = e.schemaId,
-                        requiredFields = None,
-                        trustIssuers = Some(e.trustIssuers.map(DidId(_)))
-                      )
-                    },
-                    claimsToDisclose = claims,
-                    options = request.options.map(o => Options(o.challenge, o.domain))
-                  )
-                } yield s
-
-              case None =>
-                ZIO.fail(
-                  PresentationError.MissingAnoncredPresentationRequest(
-                    "presentation request is missing claims to be disclosed"
-                  )
-                )
-            }
-          case CredentialFormat.AnonCreds =>
-            request.anoncredPresentationRequest match {
-              case Some(presentationRequest) =>
-                presentationService
-                  .createAnoncredPresentationRecord(
-                    pairwiseVerifierDID = didIdPair.myDID,
-                    pairwiseProverDID = didIdPair.theirDid,
-                    thid = DidCommID(),
-                    connectionId = Some(request.connectionId.toString),
-                    presentationRequest = presentationRequest
-                  )
-              case None =>
-                ZIO.fail(
-                  PresentationError.MissingAnoncredPresentationRequest("Anoncred presentation request is missing")
-                )
-            }
-        }
+      record <- createRequestPresentation(
+        verifierDID = didIdPair.myDID,
+        proverDID = Some(didIdPair.theirDid),
+        connectionId = Some(request.connectionId.toString),
+        request = request
+      )
     } yield PresentationStatus.fromDomain(record)
     result
+  }
+
+  override def createOOBRequestPresentationInvitation(request: OOBRequestPresentationInput)(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
+    val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] = for {
+      peerDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
+      record <- createRequestPresentation(
+        verifierDID = peerDid.did,
+        proverDID = None,
+        connectionId = None,
+        request = request
+      )
+    } yield PresentationStatus.fromDomain(record)
+    result
+  }
+
+  private def createRequestPresentation(
+      verifierDID: DidId,
+      proverDID: Option[DidId],
+      connectionId: Option[String],
+      request: RequestPresentationInput | OOBRequestPresentationInput
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
+    request match {
+      case req: RequestPresentationInput =>
+        createPresentationRecord(
+          verifierDID,
+          proverDID,
+          connectionId,
+          req.credentialFormat,
+          req.proofs,
+          req.options.map(o => Options(o.challenge, o.domain)),
+          req.claims,
+          req.anoncredPresentationRequest,
+          None,
+          None
+        )
+      case req: OOBRequestPresentationInput =>
+        createPresentationRecord(
+          verifierDID,
+          proverDID,
+          connectionId,
+          req.credentialFormat,
+          req.proofs,
+          req.options.map(o => Options(o.challenge, o.domain)),
+          req.claims,
+          req.anoncredPresentationRequest,
+          req.goalCode,
+          req.goal
+        )
+    }
+  }
+
+  private def createPresentationRecord(
+      verifierDID: DidId,
+      proverDID: Option[DidId],
+      connectionId: Option[String],
+      credentialFormat: Option[String],
+      proofs: Seq[ProofRequestAux],
+      options: Option[Options],
+      claims: Option[zio.json.ast.Json.Obj],
+      anoncredPresentationRequest: Option[AnoncredPresentationRequestV1],
+      goalCode: Option[String],
+      goal: Option[String]
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
+    val format = credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+    format match {
+      case CredentialFormat.JWT =>
+        presentationService.createJwtPresentationRecord(
+          pairwiseVerifierDID = verifierDID,
+          pairwiseProverDID = proverDID,
+          thid = DidCommID(),
+          connectionId = connectionId,
+          proofTypes = proofs.map { e =>
+            ProofType(
+              schema = e.schemaId,
+              requiredFields = None,
+              trustIssuers = Some(e.trustIssuers.map(DidId(_)))
+            )
+          },
+          options = options,
+          goalCode = goalCode,
+          goal = goal
+        )
+      case CredentialFormat.SDJWT =>
+        claims match {
+          case Some(claimsToDisclose) =>
+            presentationService.createSDJWTPresentationRecord(
+              pairwiseVerifierDID = verifierDID,
+              pairwiseProverDID = proverDID,
+              thid = DidCommID(),
+              connectionId = connectionId,
+              proofTypes = proofs.map { e =>
+                ProofType(
+                  schema = e.schemaId,
+                  requiredFields = None,
+                  trustIssuers = Some(e.trustIssuers.map(DidId(_)))
+                )
+              },
+              claimsToDisclose = claimsToDisclose,
+              options = options,
+              goalCode = goalCode,
+              goal = goal
+            )
+          case None =>
+            ZIO.fail(
+              PresentationError.MissingSDJWTPresentationRequest(
+                "presentation request is missing claims to be disclosed"
+              )
+            )
+        }
+      case CredentialFormat.AnonCreds =>
+        anoncredPresentationRequest match {
+          case Some(presentationRequest) =>
+            presentationService.createAnoncredPresentationRecord(
+              pairwiseVerifierDID = verifierDID,
+              pairwiseProverDID = proverDID,
+              thid = DidCommID(),
+              connectionId = connectionId,
+              presentationRequest = presentationRequest,
+              goalCode = goalCode,
+              goal = goal
+            )
+          case None =>
+            ZIO.fail(
+              PresentationError.MissingAnoncredPresentationRequest("Anoncred presentation request is missing")
+            )
+        }
+    }
   }
 
   override def getPresentations(paginationInput: PaginationInput, thid: Option[String])(implicit
@@ -168,9 +244,27 @@ class PresentProofControllerImpl(
 
     result
   }
+
+  def acceptRequestPresentationInvitation(
+      request: AcceptRequestPresentationInvitation
+  )(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
+    for {
+      pairwiseDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
+      requestPresentation <- presentationService.getRequestPresentationFromInvitation(
+        pairwiseDid.did,
+        request.invitation
+      )
+      record <- presentationService.receiveRequestPresentation(
+        None, // connectionless hence none
+        requestPresentation
+      ) // TODO should we store the invitation in prover db ???
+    } yield PresentationStatus.fromDomain(record)
+  }
 }
 
 object PresentProofControllerImpl {
-  val layer: URLayer[PresentationService & ConnectionService, PresentProofController] =
-    ZLayer.fromFunction(PresentProofControllerImpl(_, _))
+  val layer: URLayer[PresentationService & ConnectionService & ManagedDIDService & AppConfig, PresentProofController] =
+    ZLayer.fromFunction(PresentProofControllerImpl(_, _, _, _))
 }

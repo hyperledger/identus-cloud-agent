@@ -1,0 +1,14 @@
+{{- if .Values.database.postgres.metrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: postgres-metrics
+  namespace: {{ .Release.Namespace }}
+spec:
+  podMetricsEndpoints:
+    - path: /metrics
+      port: exporter
+  selector:
+    matchLabels:
+      application: spilo
+{{- end }}

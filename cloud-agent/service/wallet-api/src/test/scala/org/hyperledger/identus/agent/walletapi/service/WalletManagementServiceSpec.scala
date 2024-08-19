@@ -88,7 +88,7 @@ object WalletManagementServiceSpec
         secretStorage <- ZIO.service[WalletSecretStorage]
         createdWallet <- svc.createWallet(Wallet("wallet-1"))
         listedWallets <- svc.listWallets().map(_._1)
-        seed <- secretStorage.getWalletSeed.provide(ZLayer.succeed(WalletAccessContext(createdWallet.id)))
+        seed <- secretStorage.findWalletSeed.provide(ZLayer.succeed(WalletAccessContext(createdWallet.id)))
       } yield assert(listedWallets)(hasSameElements(Seq(createdWallet))) &&
         assert(seed)(isSome)
     },
@@ -99,7 +99,7 @@ object WalletManagementServiceSpec
         createdWallets <- ZIO.foreach(1 to 10)(i => svc.createWallet(Wallet(s"wallet-$i")))
         listedWallets <- svc.listWallets().map(_._1)
         seeds <- ZIO.foreach(listedWallets) { wallet =>
-          secretStorage.getWalletSeed.provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
+          secretStorage.findWalletSeed.provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
         }
       } yield assert(createdWallets)(hasSameElements(listedWallets)) &&
         assert(seeds)(forall(isSome))
@@ -111,7 +111,7 @@ object WalletManagementServiceSpec
         seed1 = WalletSeed.fromByteArray(Array.fill[Byte](64)(0)).toOption.get
         createdWallet <- svc.createWallet(Wallet("wallet-1"), Some(seed1))
         listedWallets <- svc.listWallets().map(_._1)
-        seed2 <- secretStorage.getWalletSeed.provide(ZLayer.succeed(WalletAccessContext(createdWallet.id)))
+        seed2 <- secretStorage.findWalletSeed.provide(ZLayer.succeed(WalletAccessContext(createdWallet.id)))
       } yield assert(listedWallets)(hasSameElements(Seq(createdWallet))) &&
         assert(seed2)(isSome(equalTo(seed1)))
     },
@@ -123,7 +123,7 @@ object WalletManagementServiceSpec
         createdWallets <- ZIO.foreach(seeds1) { seed => svc.createWallet(Wallet("test-wallet"), Some(seed)) }
         listedWallets <- svc.listWallets().map(_._1)
         seeds2 <- ZIO.foreach(listedWallets) { wallet =>
-          secretStorage.getWalletSeed.provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
+          secretStorage.findWalletSeed.provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
         }
       } yield assert(createdWallets)(hasSameElements(listedWallets)) &&
         assert(seeds2.flatten)(hasSameElements(seeds1))

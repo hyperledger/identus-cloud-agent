@@ -3,7 +3,7 @@ package org.hyperledger.identus.agent.server.config
 import monocle.syntax.all.*
 import org.hyperledger.identus.agent.server.SystemModule
 import zio.*
-import zio.test.{ZIOSpecDefault, *}
+import zio.test.*
 import zio.test.Assertion.*
 
 object AppConfigSpec extends ZIOSpecDefault {

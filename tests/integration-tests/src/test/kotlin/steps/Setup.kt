@@ -1,13 +1,14 @@
 package steps
 
 import abilities.ListenToEvents
+import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
 import com.sksamuel.hoplite.ConfigException
 import com.sksamuel.hoplite.ConfigLoader
 import common.TestConstants
-import config.AgentRole
-import config.Config
+import config.*
 import io.cucumber.java.AfterAll
 import io.cucumber.java.BeforeAll
+import io.ktor.server.util.url
 import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder
 import net.serenitybdd.screenplay.Actor
@@ -17,16 +18,26 @@ import net.serenitybdd.screenplay.rest.abilities.CallAnApi
 import org.apache.http.HttpStatus
 import org.hyperledger.identus.client.models.CreateWalletRequest
 import org.hyperledger.identus.client.models.CreateWebhookNotification
+import java.security.Security
 import java.util.UUID
 
 object Setup {
-    val config = ConfigLoader().loadConfigOrThrow<Config>(TestConstants.TESTS_CONFIG)
+    private val config: Config
+
+    init {
+        try {
+            config = ConfigLoader().loadConfigOrThrow<Config>(TestConstants.TESTS_CONFIG)
+        } catch (e: Exception) {
+            throw RuntimeException(e)
+        }
+    }
 
     /**
      * This function starts all services and actors before all tests.
      */
     fun initServices() {
         config.services?.keycloak?.setUsers(config.roles)?.start()
+        config.services?.keycloakOid4vci?.setUsers(config.roles.filter { it.name == "Holder" })?.start()
         config.services?.prismNode?.start()
         config.services?.vault?.start()
         config.agents?.forEach {
@@ -92,7 +103,10 @@ object Setup {
             config.roles.forEach { role ->
                 val actor = cast.actorNamed(role.name)
                 try {
-                    actor.remember("BEARER_TOKEN", config.services.keycloak.getKeycloakAuthToken(actor.name, actor.name))
+                    actor.remember(
+                        "BEARER_TOKEN",
+                        config.services.keycloak.getKeycloakAuthToken(actor.name, actor.name),
+                    )
                 } catch (e: NullPointerException) {
                     throw ConfigException("Keycloak is configured, but no token found for user ${actor.name}!")
                 }
@@ -112,11 +126,26 @@ object Setup {
             }
             if (role.webhook != null) {
                 actor.whoCan(ListenToEvents.at(role.webhook.url, role.webhook.localPort))
+                actor.remember("webhookUrl", role.webhook.url)
                 if (role.webhook.initRequired) {
                     registerWebhook(actor, role.webhook.url.toExternalForm())
                 }
             }
             actor.remember("baseUrl", role.url.toExternalForm())
+        }
+        if (config.services?.keycloakOid4vci != null) {
+            val issuerRole = config.roles.find { it.name == "Issuer" } ?: throw ConfigException("Issuer role does not exist")
+            val issuerActor = cast.actorNamed(issuerRole.name)
+            with(issuerActor) {
+                val url = issuerRole.oid4vciAuthServer ?: throw ConfigException("Issuer's oid4vci_auth_server must be provided")
+                remember("OID4VCI_AUTH_SERVER_URL", url.toExternalForm())
+                remember("OID4VCI_AUTH_SERVER_CLIENT_ID", config.services.keycloakOid4vci.clientId)
+                remember("OID4VCI_AUTH_SERVER_CLIENT_SECRET", config.services.keycloakOid4vci.clientSecret)
+            }
+
+            val holderRole = config.roles.find { it.name == "Holder" } ?: throw ConfigException("Holder role does not exist")
+            val holderActor = cast.actorNamed(holderRole.name)
+            holderActor.remember("OID4VCI_AUTH_SERVER_CLIENT_ID", "holder")
         }
         OnStage.setTheStage(cast)
     }
@@ -170,6 +199,7 @@ object Setup {
 
 @BeforeAll
 fun init() {
+    Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
     Setup.initServices()
     Setup.initActors()
 }

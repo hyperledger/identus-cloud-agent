@@ -3,8 +3,7 @@ package org.hyperledger.identus.pollux.vc.jwt
 import io.circe.*
 import io.circe.syntax.*
 
-import java.time.Instant
-import java.time.ZoneOffset
+import java.time.{Instant, ZoneOffset}
 
 case class EcdsaSecp256k1VerificationKey2019(
     publicKeyJwk: JsonWebKey,

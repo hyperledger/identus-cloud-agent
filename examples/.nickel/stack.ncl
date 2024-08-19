@@ -159,7 +159,7 @@ in
                     agentDb = makeSharedDbConfig "agent",
                     node = { host = "node" },
                     didcommServiceUrl = "http://%{hosts.caddy}:%{std.to_string args.port}/didcomm",
-                    restServiceUrl = "http://%{hosts.caddy}:%{std.to_string args.port}/prism-agent",
+                    restServiceUrl = "http://%{hosts.caddy}:%{std.to_string args.port}/cloud-agent",
                     apikeyEnabled = args.apikeyEnabled,
                   }
                   & (
@@ -200,12 +200,12 @@ in
                       version = V.hurl,
                       hurlDir = "../.shared/hurl/simple_realm",
                       variables = {
-                        HURL_KEYCLOAK_BASE_URL = "http://%{hosts.keycloak}:8080",
-                        HURL_KEYCLOAK_ADMIN_USER = "admin",
-                        HURL_KEYCLOAK_ADMIN_PASSWORD = "admin",
-                        HURL_KEYCLOAK_REALM = "identus",
-                        HURL_KEYCLOAK_CLIENT_ID = "agent",
-                        HURL_KEYCLOAK_CLIENT_SECRET = "agent-secret",
+                        HURL_keycloak_base_url = "http://%{hosts.keycloak}:8080",
+                        HURL_keycloak_admin_user = "admin",
+                        HURL_keycloak_admin_password = "admin",
+                        HURL_keycloak_realm = "identus",
+                        HURL_keycloak_client_id = "agent",
+                        HURL_keycloak_client_secret = "agent-secret",
                       }
                     },
               }

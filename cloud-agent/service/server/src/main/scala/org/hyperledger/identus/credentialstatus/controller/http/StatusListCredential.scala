@@ -2,7 +2,6 @@ package org.hyperledger.identus.credentialstatus.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.credentialstatus.controller.http.StatusListCredential.annotations
-import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError
 import org.hyperledger.identus.pollux.core.model.CredentialStatusList
 import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
 import sttp.tapir.json.zio.schemaForZioJsonValue

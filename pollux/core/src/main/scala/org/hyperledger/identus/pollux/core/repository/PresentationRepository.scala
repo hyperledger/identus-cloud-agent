@@ -3,7 +3,7 @@ package org.hyperledger.identus.pollux.core.repository
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.PresentationRecord.ProtocolState
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import zio.*
 
 trait PresentationRepository {
@@ -73,6 +73,6 @@ trait PresentationRepository {
 
   def updateAfterFail(
       recordId: DidCommID,
-      failReason: Option[String]
-  ): URIO[WalletAccessContext, Unit]
+      failReason: Option[Failure]
+  ): UIO[Unit]
 }
