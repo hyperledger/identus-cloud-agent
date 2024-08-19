@@ -170,7 +170,8 @@ trait PresentationServiceSpecHelper {
         proofTypes = Seq(proofType),
         options = options,
         goalCode = None,
-        goal = None
+        goal = None,
+        expirationTime = None
       )
     }
 
@@ -214,7 +215,8 @@ trait PresentationServiceSpecHelper {
         connectionId = Some("connectionId"),
         anoncredPresentationRequestV1,
         goalCode = None,
-        goal = None
+        goal = None,
+        expirationTime = None
       )
     }
 }

@@ -79,6 +79,7 @@ class PresentProofControllerImpl(
           req.claims,
           req.anoncredPresentationRequest,
           None,
+          None,
           None
         )
       case req: OOBRequestPresentationInput =>
@@ -92,7 +93,8 @@ class PresentProofControllerImpl(
           req.claims,
           req.anoncredPresentationRequest,
           req.goalCode,
-          req.goal
+          req.goal,
+          Some(appConfig.pollux.presentationInvitationExpiry)
         )
     }
   }
@@ -107,7 +109,8 @@ class PresentProofControllerImpl(
       claims: Option[zio.json.ast.Json.Obj],
       anoncredPresentationRequest: Option[AnoncredPresentationRequestV1],
       goalCode: Option[String],
-      goal: Option[String]
+      goal: Option[String],
+      expirationDuration: Option[Duration],
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     val format = credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
     format match {
@@ -126,7 +129,8 @@ class PresentProofControllerImpl(
           },
           options = options,
           goalCode = goalCode,
-          goal = goal
+          goal = goal,
+          expirationDuration = expirationDuration,
         )
       case CredentialFormat.SDJWT =>
         claims match {
@@ -146,7 +150,8 @@ class PresentProofControllerImpl(
               claimsToDisclose = claimsToDisclose,
               options = options,
               goalCode = goalCode,
-              goal = goal
+              goal = goal,
+              expirationDuration = expirationDuration,
             )
           case None =>
             ZIO.fail(
@@ -165,7 +170,8 @@ class PresentProofControllerImpl(
               connectionId = connectionId,
               presentationRequest = presentationRequest,
               goalCode = goalCode,
-              goal = goal
+              goal = goal,
+              expirationDuration = expirationDuration,
             )
           case None =>
             ZIO.fail(
