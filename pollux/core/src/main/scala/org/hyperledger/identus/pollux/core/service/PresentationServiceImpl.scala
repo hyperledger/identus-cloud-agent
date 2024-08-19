@@ -1248,11 +1248,12 @@ private class PresentationServiceImpl(
         .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
         .mapError(err => InvitationParsingError(err.getMessage))
       _ <- invitation.expires_time match {
-          case Some(expiryTime) =>
-            ZIO.fail(PresentationError.InvitationExpired(s"Invitation has expired. Expiry time: $expiryTime"))
-              .when(Instant.now().getEpochSecond > expiryTime)
-          case None => ZIO.unit
-        }
+        case Some(expiryTime) =>
+          ZIO
+            .fail(PresentationError.InvitationExpired(s"Invitation has expired. Expiry time: $expiryTime"))
+            .when(Instant.now().getEpochSecond > expiryTime)
+        case None => ZIO.unit
+      }
       _ <- presentationRepository
         .findPresentationRecordByThreadId(DidCommID(invitation.id))
         .flatMap {

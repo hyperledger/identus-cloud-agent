@@ -913,7 +913,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       private def checkInvitationExpiry(
           id: DidCommID,
           invitation: Option[Invitation]
-      ): ZIO[PresentationService& WalletAccessContext, PresentationError, Unit] = {
+      ): ZIO[PresentationService & WalletAccessContext, PresentationError, Unit] = {
         invitation.flatMap(_.expires_time) match {
           case Some(expiryTime) if Instant.now().getEpochSecond > expiryTime =>
             for {
@@ -925,8 +925,12 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         }
       }
 
-
-      private def handleJWT(id: DidCommID, requestPresentation: RequestPresentation, presentation: Presentation, invitation: Option[Invitation]): ZIO[
+      private def handleJWT(
+          id: DidCommID,
+          requestPresentation: RequestPresentation,
+          presentation: Presentation,
+          invitation: Option[Invitation]
+      ): ZIO[
         AppConfig & JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
         Failure,
         Unit
@@ -934,7 +938,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         val clock = java.time.Clock.system(ZoneId.systemDefault)
         for {
           walletAccessContext <- buildWalletAccessContextLayer(presentation.to)
-           _ <- checkInvitationExpiry(id, invitation).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+          _ <- checkInvitationExpiry(id, invitation).provideSomeLayer(ZLayer.succeed(walletAccessContext))
           result <- for {
             didResolverService <- ZIO.service[JwtDidResolver]
             credentialsClaimsValidationResult <- presentation.attachments.head.data match {
@@ -1048,7 +1052,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       ] = {
         for {
           walletAccessContext <- buildWalletAccessContextLayer(presentation.to)
-           _ <- checkInvitationExpiry(id, invitation).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+          _ <- checkInvitationExpiry(id, invitation).provideSomeLayer(ZLayer.succeed(walletAccessContext))
           result <- for {
             didResolverService <- ZIO.service[JwtDidResolver]
             credentialsClaimsValidationResult <- presentation.attachments.head.data match {
@@ -1119,13 +1123,13 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       ] = {
         for {
           walletAccessContext <- buildWalletAccessContextLayer(presentation.to)
-           _ <- checkInvitationExpiry(id, invitation).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+          _ <- checkInvitationExpiry(id, invitation).provideSomeLayer(ZLayer.succeed(walletAccessContext))
           result <- for {
             service <- ZIO.service[PresentationService]
             presReceivedToProcessedAspect = CustomMetricsAspect.endRecordingTime(
               s"${id}_present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge",
               "present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge"
-           )
+            )
             _ <- (service
               .verifyAnoncredPresentation(presentation, requestPresentation, id)
               .provideSomeLayer(ZLayer.succeed(walletAccessContext)) @@ presReceivedToProcessedAspect)

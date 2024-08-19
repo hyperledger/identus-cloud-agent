@@ -19,6 +19,7 @@ import zio.{mock, IO, UIO, URLayer, ZIO, ZLayer}
 import zio.json.*
 import zio.mock.{Mock, Proxy}
 import zio.Duration
+
 import java.time.Instant
 import java.util.UUID
 
@@ -135,7 +136,17 @@ object MockPresentationService extends Mock[PresentationService] {
       ): IO[PresentationError, PresentationRecord] =
         proxy(
           CreateJwtPresentationRecord,
-          (pairwiseVerifierDID, pairwiseProverDID, thid, connectionId, proofTypes, options, goalCode, goal, expirationTime)
+          (
+            pairwiseVerifierDID,
+            pairwiseProverDID,
+            thid,
+            connectionId,
+            proofTypes,
+            options,
+            goalCode,
+            goal,
+            expirationTime
+          )
         )
 
       override def createSDJWTPresentationRecord(
@@ -178,7 +189,16 @@ object MockPresentationService extends Mock[PresentationService] {
       ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
         proxy(
           CreateAnoncredPresentationRecord,
-          (pairwiseVerifierDID, pairwiseProverDID, thid, connectionId, presentationRequest, goalCode, goal, expirationTime)
+          (
+            pairwiseVerifierDID,
+            pairwiseProverDID,
+            thid,
+            connectionId,
+            presentationRequest,
+            goalCode,
+            goal,
+            expirationTime
+          )
         )
       }
 
