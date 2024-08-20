@@ -17,13 +17,13 @@ export default {
             "changelogFile": "CHANGELOG.md"
         }],
         ["@semantic-release/exec", {
-            "prepareCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
+            "prepareCmd": "sbt \"release release-version ${nextRelease.version} with-defaults\""
         }],
         ["@semantic-release/exec", {
             "prepareCmd": "npm version ${nextRelease.version} --git-tag-version false"
         }],
         ["@semantic-release/exec", {
-            "prepareCmd": "sbt dumpLicenseReportAggregate && cp ./target/license-reports/root-licenses.md ./DEPENDENCIES.md"
+            "prepareCmd": 'sbt "set ThisBuild / version:=\"${nextRelease.version}\"" "dumpLicenseReportAggregate" && cp ./target/license-reports/root-licenses.md ./DEPENDENCIES.md'
         }],
         ["@semantic-release/exec", {
             "prepareCmd": "sed -i.bak \"s/AGENT_VERSION=.*/AGENT_VERSION=${nextRelease.version}/\" ./infrastructure/local/.env && rm -f ./infrastructure/local/.env.bak"
