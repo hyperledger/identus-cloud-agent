@@ -1,3 +1,10 @@
+# [1.39.0-beta.2](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.39.0-beta.1...cloud-agent-v1.39.0-beta.2) (2024-08-20)
+
+
+### Bug Fixes
+
+* test IDENTUS_CI token and release flow ([49b03e0](https://github.com/hyperledger/identus-cloud-agent/commit/49b03e0ef46e2889dd13271f126fa5521a2ace8b))
+
 # [1.39.0-beta.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.38.0...cloud-agent-v1.39.0-beta.1) (2024-08-20)
 
 
