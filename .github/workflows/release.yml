@@ -24,9 +24,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.IDENTUS_CI }}
+          token: ${{ secrets.IDENTUS_CI_2 }}
           ref: ${{ github.event.inputs.release-branch }}
           fetch-depth: 0
+
 
       - name: Setup Java and Scala
         uses: olafurpg/setup-scala@v14
@@ -67,7 +68,7 @@ jobs:
           GIT_COMMITTER_EMAIL: ${{ steps.import_gpg.outputs.email }}
           GIT_AUTHOR_NAME: ${{ steps.import_gpg.outputs.name }}
           GIT_COMMITTER_NAME: ${{ steps.import_gpg.outputs.name }}
-          GITHUB_TOKEN: ${{ secrets.IDENTUS_CI }}
+          GITHUB_TOKEN: ${{ secrets.IDENTUS_CI_2 }}
         run: |
           npm install
           npx semantic-release
