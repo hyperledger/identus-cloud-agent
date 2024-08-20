@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.IDENTUS_CI_2 }}
+          token: ${{ secrets.IDENTUS_CI }}
           ref: ${{ github.event.inputs.release-branch }}
           fetch-depth: 0
 
@@ -68,7 +68,7 @@ jobs:
           GIT_COMMITTER_EMAIL: ${{ steps.import_gpg.outputs.email }}
           GIT_AUTHOR_NAME: ${{ steps.import_gpg.outputs.name }}
           GIT_COMMITTER_NAME: ${{ steps.import_gpg.outputs.name }}
-          GITHUB_TOKEN: ${{ secrets.IDENTUS_CI_2 }}
+          GITHUB_TOKEN: ${{ secrets.IDENTUS_CI }}
         run: |
           npm install
           npx semantic-release
