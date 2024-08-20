@@ -52,7 +52,6 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
       result = Expectation.value(record.copy(protocolState = ProtocolState.ConnectionResponseSent))
     )
 
-  /*
   private val inviteeExpectations =
     MockConnectionService.ReceiveConnectionInvitation(
       assertion = Assertion.anything,
@@ -67,7 +66,6 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
       assertion = Assertion.anything,
       result = Expectation.value(record.copy(protocolState = ProtocolState.ConnectionResponseReceived))
     )
-   */
 
   override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("ConnectionServiceWithEventNotificationImpl")(
@@ -151,10 +149,10 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
         (
           ConnectionRepositoryInMemory.layer ++
-            inviterExpectations.toLayer
+            inviteeExpectations.toLayer
         ) >>> ConnectionServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random))
-      ) @@ TestAspect.ignore // TODO fix the test
+      )
     )
   }
 
