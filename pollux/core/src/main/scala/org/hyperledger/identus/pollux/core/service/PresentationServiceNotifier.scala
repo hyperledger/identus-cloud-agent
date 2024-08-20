@@ -33,11 +33,13 @@ class PresentationServiceNotifier(
 
   override def createJwtPresentationRecord(
       pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseProverDID: Option[DidId],
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       options: Option[Options],
+      goalCode: Option[String],
+      goal: Option[String],
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(
       svc.createJwtPresentationRecord(
@@ -46,18 +48,22 @@ class PresentationServiceNotifier(
         thid,
         connectionId,
         proofTypes,
-        options
+        options,
+        goalCode,
+        goal
       )
     )
 
   override def createSDJWTPresentationRecord(
       pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseProverDID: Option[DidId],
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       claimsToDisclose: ast.Json.Obj,
-      options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options]
+      options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+      goalCode: Option[String],
+      goal: Option[String],
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(
       svc.createSDJWTPresentationRecord(
@@ -68,15 +74,19 @@ class PresentationServiceNotifier(
         proofTypes,
         claimsToDisclose,
         options,
+        goalCode,
+        goal
       )
     )
 
   def createAnoncredPresentationRecord(
       pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseProverDID: Option[DidId],
       thid: DidCommID,
       connectionId: Option[String],
-      presentationRequest: AnoncredPresentationRequestV1
+      presentationRequest: AnoncredPresentationRequestV1,
+      goalCode: Option[String],
+      goal: Option[String]
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(
       svc.createAnoncredPresentationRecord(
@@ -84,7 +94,9 @@ class PresentationServiceNotifier(
         pairwiseProverDID,
         thid,
         connectionId,
-        presentationRequest
+        presentationRequest,
+        goalCode,
+        goal
       )
     )
 
@@ -297,6 +309,12 @@ class PresentationServiceNotifier(
           notifyOnFail(recordAfterFail, recordAfterFail.walletId)
       }
     } yield ret
+
+  override def getRequestPresentationFromInvitation(
+      pairwiseProverDID: DidId,
+      invitation: String
+  ): ZIO[WalletAccessContext, PresentationError, RequestPresentation] =
+    svc.getRequestPresentationFromInvitation(pairwiseProverDID, invitation)
 }
 
 object PresentationServiceNotifier {

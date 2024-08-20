@@ -27,6 +27,7 @@ object PresentationRepositorySpecSuite {
     subjectId = DidId("did:prism:aaa"),
     protocolState = PresentationRecord.ProtocolState.RequestPending,
     credentialFormat = CredentialFormat.JWT,
+    invitation = None,
     requestPresentationData = None,
     proposePresentationData = None,
     presentationData = None,
@@ -42,8 +43,8 @@ object PresentationRepositorySpecSuite {
   ).withTruncatedTimestamp()
 
   private def requestPresentation = RequestPresentation(
-    from = DidId("did:prism:aaa"),
-    to = DidId("did:prism:bbb"),
+    from = Some(DidId("did:prism:aaa")),
+    to = Some(DidId("did:prism:bbb")),
     thid = Some(UUID.randomUUID.toString),
     body = RequestPresentation.Body(goal_code = Some("request Presentation")),
     attachments = Nil

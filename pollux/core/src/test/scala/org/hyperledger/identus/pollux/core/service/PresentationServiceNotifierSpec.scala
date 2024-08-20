@@ -39,6 +39,7 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
     None,
     None,
     None,
+    None,
     5,
     None,
     None,
@@ -112,10 +113,12 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
 
           record <- svc.createJwtPresentationRecord(
             DidId(""),
-            DidId(""),
+            Some(DidId("")),
             DidCommID(""),
             None,
             Seq.empty,
+            None,
+            None,
             None
           )
           _ <- svc.markRequestPresentationSent(record.id)

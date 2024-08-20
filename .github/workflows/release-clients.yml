@@ -1,18 +1,38 @@
 name: Publish Identus-cloud-agent clients
 
+run-name: Build and publish Identus Cloud Agent clients from from ${{ github.head_ref || github.ref_name }} run ${{ github.run_number }}
+
 on:
+  workflow_call:
+    inputs:
+      revision:
+        description: "Revision to build and publish clients (e.g. 1.33.0-a3j4456-1)"
+        required: true
+        type: string
+      check_sum:
+        description: "Checksum of the OAS specification"
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       releaseTag:
         description: "Tag to release clients (e.g. cloud-agent-v1.33.0)"
-        required: true
+        required: false
+        type: string
+      revision:
+        description: "Revision to build and publish clients (e.g. 1.33.0-a3j4456-1)"
+        required: false
+        type: string
+      check_sum:
+        description: "Checksum of the OAS specification"
+        required: false
         type: string
   push:
     tags:
       - "cloud-agent-v*"
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -20,7 +40,6 @@ jobs:
     name: "Build and publish Identus Cloud Agent clients"
     runs-on: ubuntu-latest
     env:
-      VERSION_TAG: ${{inputs.releaseTag || github.ref_name}}
       GITHUB_ACTOR: "hyperledger-bot"
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -54,6 +73,29 @@ jobs:
       - name: Setup yq - portable yaml processor
         uses: mikefarah/yq@v4.34.2
 
+      - name: Delete existing Open API specification
+        if: ${{ !inputs.releaseTag }}
+        run: |
+          echo "Current directory: $(pwd)"
+          rm -f ./cloud-agent/service/api/http/cloud-agent-openapi-spec.yaml
+
+      - name: Download OpenAPI specification
+        if: ${{ !inputs.releaseTag }}
+        uses: actions/download-artifact@v3
+        with:
+          name: cloud-agent-openapi-spec-${{ inputs.check_sum }}
+          path: ./cloud-agent/service/api/http
+
+      - name: Rename OpenAPI specification
+        working-directory: cloud-agent/service/api/http
+        run: |
+          mv cloud-agent-openapi-spec-${{ inputs.revision }}.yaml cloud-agent-openapi-spec.yaml
+
+      - name: Set revision version
+        if: ${{ !inputs.releaseTag }}
+        working-directory: cloud-agent/client/generator
+        run: yarn version --new-version ${{ inputs.revision }} --no-git-tag-version
+
       - name: Install generator dependencies
         working-directory: cloud-agent/client/generator
         run: yarn install
@@ -62,6 +104,23 @@ jobs:
         working-directory: cloud-agent/client/generator
         run: yarn generate:all
 
+      - name: Set version for clients
+        run: |
+          if [ -z "${{ github.event.inputs.releaseTag }}" ]; then
+              echo "VERSION_TAG=cloud-agent-v${{ inputs.revision }}" >> $GITHUB_ENV
+          else
+              echo "VERSION_TAG=${{ github.event.inputs.releaseTag }}" >> $GITHUB_ENV
+          fi
+
       - name: Publish clients
         working-directory: cloud-agent/client/generator
-        run: yarn publish:clients
+        env:
+          VERSION_TAG: ${{ env.VERSION_TAG }}
+        run: |
+          if [ -z "${{ github.event.inputs.releaseTag }}" ]; then
+            echo "Using revision version for publishing: ${VERSION_TAG}"
+            yarn publish:clients
+          else
+            echo "Using release tag for publishing: ${VERSION_TAG}"
+            yarn publish:clients
+          fi
