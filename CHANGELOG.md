@@ -1,3 +1,27 @@
+# [1.39.0-beta.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.38.0...cloud-agent-v1.39.0-beta.1) (2024-08-20)
+
+
+### Bug Fixes
+
+* [#1259](https://github.com/hyperledger/identus-cloud-agent/issues/1259) make GITHUB_TOKEN optional ([#1275](https://github.com/hyperledger/identus-cloud-agent/issues/1275)) ([1c9cbd0](https://github.com/hyperledger/identus-cloud-agent/commit/1c9cbd0a124cdf5626605e1e4419130f885364a7))
+* add beta branch to trigger the release ([33771b5](https://github.com/hyperledger/identus-cloud-agent/commit/33771b56df3950ec89d369a2ee2aedcf7a36233d))
+* add reportProcessingFailure back in PresentationRepository ([#1232](https://github.com/hyperledger/identus-cloud-agent/issues/1232)) ([d22745f](https://github.com/hyperledger/identus-cloud-agent/commit/d22745fc9589c71d038af60d8fc2c99d8cbd104a))
+* bitString base64 encoding for revocation status list ([#1273](https://github.com/hyperledger/identus-cloud-agent/issues/1273)) ([45e0613](https://github.com/hyperledger/identus-cloud-agent/commit/45e0613ea42fb21786562c7f44b40f63cbdae6dc))
+* changed IO to UIO as as underline repository doesn't throw error ([#1271](https://github.com/hyperledger/identus-cloud-agent/issues/1271)) ([2aba639](https://github.com/hyperledger/identus-cloud-agent/commit/2aba639aa77cfe293b11fabca5c458a220576435))
+* escape "" in the dumpLicenses command ([aed67c6](https://github.com/hyperledger/identus-cloud-agent/commit/aed67c620dbba32cc4472759d7342e1f6df9b1ed))
+* improve k8s keycloak bootstrapping script ([#1278](https://github.com/hyperledger/identus-cloud-agent/issues/1278)) ([cfc4ccf](https://github.com/hyperledger/identus-cloud-agent/commit/cfc4ccf3b10f2a59471f107e0b3cfc4ac568f5c4))
+* migrate wallet nonsecret storage to quill ([#1290](https://github.com/hyperledger/identus-cloud-agent/issues/1290)) ([525b3bc](https://github.com/hyperledger/identus-cloud-agent/commit/525b3bcb7006599d873e8a089e8f03da361e74eb))
+* misc spelling ([#1288](https://github.com/hyperledger/identus-cloud-agent/issues/1288)) ([88efa9c](https://github.com/hyperledger/identus-cloud-agent/commit/88efa9ca1bc323af4cac35fb3096ac44b74e74bc))
+* rename folder from atala to identus ([#1270](https://github.com/hyperledger/identus-cloud-agent/issues/1270)) ([12660ef](https://github.com/hyperledger/identus-cloud-agent/commit/12660ef81a8f057bd63f1a6fa8cc775cc2459cb1))
+
+
+### Features
+
+* connection less presentation ([#1285](https://github.com/hyperledger/identus-cloud-agent/issues/1285)) ([c5846d1](https://github.com/hyperledger/identus-cloud-agent/commit/c5846d15cbe1cfd4b9776ad7c259962182057e0c))
+* Expose Stored Error ([#1276](https://github.com/hyperledger/identus-cloud-agent/issues/1276)) ([758fe87](https://github.com/hyperledger/identus-cloud-agent/commit/758fe87cb3c729b544a1df434c23d535162cbba9))
+* Move ADRs to the identus-docs repo ([#1284](https://github.com/hyperledger/identus-cloud-agent/issues/1284)) ([4d5ca64](https://github.com/hyperledger/identus-cloud-agent/commit/4d5ca6419ac416c5851cc2a09b1cca1af572d55b))
+* postgres metrics ([#1274](https://github.com/hyperledger/identus-cloud-agent/issues/1274)) ([cf3ccbe](https://github.com/hyperledger/identus-cloud-agent/commit/cf3ccbefdd8ab3f1f18e80303c910f72661cfc42))
+
 # [1.38.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.37.0...cloud-agent-v1.38.0) (2024-07-15)
 
 
