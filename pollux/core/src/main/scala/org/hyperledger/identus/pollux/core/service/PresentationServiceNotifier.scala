@@ -40,6 +40,7 @@ class PresentationServiceNotifier(
       options: Option[Options],
       goalCode: Option[String],
       goal: Option[String],
+      expirationTime: Option[Duration],
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(
       svc.createJwtPresentationRecord(
@@ -50,7 +51,8 @@ class PresentationServiceNotifier(
         proofTypes,
         options,
         goalCode,
-        goal
+        goal,
+        expirationTime
       )
     )
 
@@ -64,6 +66,7 @@ class PresentationServiceNotifier(
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
       goalCode: Option[String],
       goal: Option[String],
+      expirationTime: Option[Duration],
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(
       svc.createSDJWTPresentationRecord(
@@ -75,7 +78,8 @@ class PresentationServiceNotifier(
         claimsToDisclose,
         options,
         goalCode,
-        goal
+        goal,
+        expirationTime
       )
     )
 
@@ -86,7 +90,8 @@ class PresentationServiceNotifier(
       connectionId: Option[String],
       presentationRequest: AnoncredPresentationRequestV1,
       goalCode: Option[String],
-      goal: Option[String]
+      goal: Option[String],
+      expirationTime: Option[Duration],
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(
       svc.createAnoncredPresentationRecord(
@@ -96,7 +101,8 @@ class PresentationServiceNotifier(
         connectionId,
         presentationRequest,
         goalCode,
-        goal
+        goal,
+        expirationTime
       )
     )
 
@@ -159,6 +165,11 @@ class PresentationServiceNotifier(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     notifyOnSuccess(svc.markPresentationVerificationFailed(recordId))
+
+  override def markPresentationInvitationExpired(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+    notifyOnSuccess(svc.markPresentationInvitationExpired(recordId))
 
   override def verifyAnoncredPresentation(
       presentation: Presentation,

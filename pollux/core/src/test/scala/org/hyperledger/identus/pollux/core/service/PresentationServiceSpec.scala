@@ -76,7 +76,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
               proofTypes,
               options,
               None,
-              None
+              None,
+              None,
             )
           } yield {
             assertTrue(record.thid == thid) &&
@@ -142,6 +143,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 thid,
                 Some(connectionId),
                 anoncredPresentationRequestV1,
+                None,
                 None,
                 None
               )
