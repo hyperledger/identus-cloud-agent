@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.IDENTUS_CI }}
           ref: ${{ github.event.inputs.release-branch }}
           fetch-depth: 0
           persist-credentials: false
