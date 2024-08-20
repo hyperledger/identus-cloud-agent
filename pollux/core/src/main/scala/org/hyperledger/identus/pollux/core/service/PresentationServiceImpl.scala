@@ -422,7 +422,7 @@ private class PresentationServiceImpl(
           connectionId = connectionId,
           schemaId = None, // TODO REMOVE from DB
           role = PresentationRecord.Role.Verifier,
-          subjectId = pairwiseProverDID.getOrElse(DidId("TODO REMOVE subject did")),
+          subjectId = pairwiseProverDID.getOrElse(DidId("TODO REMOVE")), // TODO REMOVE from DB
           protocolState = invitation.fold(PresentationRecord.ProtocolState.RequestPending)(_ =>
             PresentationRecord.ProtocolState.InvitationGenerated
           ),
