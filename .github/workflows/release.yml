@@ -28,7 +28,6 @@ jobs:
           ref: ${{ github.event.inputs.release-branch }}
           fetch-depth: 0
 
-
       - name: Setup Java and Scala
         uses: olafurpg/setup-scala@v14
         with:
