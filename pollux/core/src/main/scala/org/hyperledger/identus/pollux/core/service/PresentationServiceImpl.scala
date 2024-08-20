@@ -312,7 +312,7 @@ private class PresentationServiceImpl(
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
       goalCode: Option[String] = None,
       goal: Option[String] = None,
-      expirationTime: Option[Duration] = None,
+      expirationDuration: Option[Duration] = None,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     createPresentationRecord(
       pairwiseVerifierDID,
@@ -324,7 +324,7 @@ private class PresentationServiceImpl(
       options.map(o => Seq(toJWTAttachment(o))).getOrElse(Seq.empty),
       goalCode,
       goal,
-      expirationTime
+      expirationDuration
     )
   }
 
@@ -338,7 +338,7 @@ private class PresentationServiceImpl(
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
       goalCode: Option[String] = None,
       goal: Option[String] = None,
-      expirationTime: Option[Duration] = None,
+      expirationDuration: Option[Duration] = None,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     createPresentationRecord(
       pairwiseVerifierDID,
@@ -350,7 +350,7 @@ private class PresentationServiceImpl(
       attachments = Seq(toSDJWTAttachment(options, claimsToDisclose)),
       goalCode,
       goal,
-      expirationTime
+      expirationDuration
     )
   }
 
@@ -362,7 +362,7 @@ private class PresentationServiceImpl(
       presentationRequest: AnoncredPresentationRequestV1,
       goalCode: Option[String] = None,
       goal: Option[String] = None,
-      expirationTime: Option[Duration] = None,
+      expirationDuration: Option[Duration] = None,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     createPresentationRecord(
       pairwiseVerifierDID,
@@ -374,7 +374,7 @@ private class PresentationServiceImpl(
       Seq(toAnoncredAttachment(presentationRequest)),
       goalCode,
       goal,
-      expirationTime
+      expirationDuration
     )
   }
 
@@ -388,7 +388,7 @@ private class PresentationServiceImpl(
       attachments: Seq[AttachmentDescriptor],
       goalCode: Option[String] = None,
       goal: Option[String] = None,
-      expirationTime: Option[Duration] = None,
+      expirationDuration: Option[Duration] = None,
   ) = {
     for {
       request <- ZIO.succeed(
@@ -408,7 +408,7 @@ private class PresentationServiceImpl(
             goal,
             thid.value,
             request,
-            expirationTime
+            expirationDuration
           )
         )
       )(_ => None)

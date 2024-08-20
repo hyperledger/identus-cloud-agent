@@ -13,7 +13,7 @@ object PresentProofInvitation {
       goal: Option[String],
       invitationId: String,
       requestPresentation: RequestPresentation,
-      expirationTime: Option[Duration] = None,
+      expirationDuration: Option[Duration] = None,
   ): Invitation = {
     val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = requestPresentation)
     val now = Instant.now
@@ -21,7 +21,7 @@ object PresentProofInvitation {
       id = invitationId,
       from = from,
       created_time = Some(now.getEpochSecond),
-      expires_time = expirationTime.map(now.plus(_).getEpochSecond),
+      expires_time = expirationDuration.map(now.plus(_).getEpochSecond),
       body = Invitation.Body(
         goal_code = goalCode,
         goal = goal,

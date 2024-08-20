@@ -171,7 +171,7 @@ trait PresentationServiceSpecHelper {
         options = options,
         goalCode = None,
         goal = None,
-        expirationTime = None
+        expirationDuration = None
       )
     }
 
@@ -216,7 +216,7 @@ trait PresentationServiceSpecHelper {
         anoncredPresentationRequestV1,
         goalCode = None,
         goal = None,
-        expirationTime = None
+        expirationDuration = None
       )
     }
 }
