@@ -18,6 +18,7 @@ import org.hyperledger.identus.shared.models.*
 import zio.{mock, IO, UIO, URLayer, ZIO, ZLayer}
 import zio.json.*
 import zio.mock.{Mock, Proxy}
+import zio.Duration
 
 import java.time.Instant
 import java.util.UUID
@@ -34,7 +35,8 @@ object MockPresentationService extends Mock[PresentationService] {
             Seq[ProofType],
             Option[Options],
             Option[String],
-            Option[String]
+            Option[String],
+            Option[Duration]
         ),
         PresentationError,
         PresentationRecord
@@ -50,7 +52,8 @@ object MockPresentationService extends Mock[PresentationService] {
             ast.Json.Obj,
             Option[Options],
             Option[String],
-            Option[String]
+            Option[String],
+            Option[Duration]
         ),
         PresentationError,
         PresentationRecord
@@ -65,7 +68,8 @@ object MockPresentationService extends Mock[PresentationService] {
             Option[String],
             AnoncredPresentationRequestV1,
             Option[String],
-            Option[String]
+            Option[String],
+            Option[Duration]
         ),
         PresentationError,
         PresentationRecord
@@ -76,6 +80,8 @@ object MockPresentationService extends Mock[PresentationService] {
   object ReceivePresentation extends Effect[Presentation, PresentationError, PresentationRecord]
 
   object MarkPresentationVerified extends Effect[DidCommID, PresentationError, PresentationRecord]
+
+  object MarkPresentationInvitationExpired extends Effect[DidCommID, PresentationError, PresentationRecord]
 
   object MarkPresentationAccepted extends Effect[DidCommID, PresentationError, PresentationRecord]
 
@@ -125,11 +131,22 @@ object MockPresentationService extends Mock[PresentationService] {
           proofTypes: Seq[ProofType],
           options: Option[Options],
           goalCode: Option[String],
-          goal: Option[String]
+          goal: Option[String],
+          expirationTime: Option[Duration]
       ): IO[PresentationError, PresentationRecord] =
         proxy(
           CreateJwtPresentationRecord,
-          (pairwiseVerifierDID, pairwiseProverDID, thid, connectionId, proofTypes, options, goalCode, goal)
+          (
+            pairwiseVerifierDID,
+            pairwiseProverDID,
+            thid,
+            connectionId,
+            proofTypes,
+            options,
+            goalCode,
+            goal,
+            expirationTime
+          )
         )
 
       override def createSDJWTPresentationRecord(
@@ -141,7 +158,8 @@ object MockPresentationService extends Mock[PresentationService] {
           claimsToDisclose: ast.Json.Obj,
           options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
           goalCode: Option[String],
-          goal: Option[String]
+          goal: Option[String],
+          expirationTime: Option[Duration]
       ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
         proxy(
           CreateSDJWTPresentationRecord,
@@ -154,7 +172,8 @@ object MockPresentationService extends Mock[PresentationService] {
             claimsToDisclose,
             options,
             goalCode,
-            goal
+            goal,
+            expirationTime
           )
         )
 
@@ -165,11 +184,21 @@ object MockPresentationService extends Mock[PresentationService] {
           connectionId: Option[String],
           presentationRequest: AnoncredPresentationRequestV1,
           goalCode: Option[String],
-          goal: Option[String]
+          goal: Option[String],
+          expirationTime: Option[Duration]
       ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
         proxy(
           CreateAnoncredPresentationRecord,
-          (pairwiseVerifierDID, pairwiseProverDID, thid, connectionId, presentationRequest, goalCode, goal)
+          (
+            pairwiseVerifierDID,
+            pairwiseProverDID,
+            thid,
+            connectionId,
+            presentationRequest,
+            goalCode,
+            goal,
+            expirationTime
+          )
         )
       }
 
@@ -212,6 +241,9 @@ object MockPresentationService extends Mock[PresentationService] {
 
       override def markPresentationVerified(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
         proxy(MarkPresentationVerified, recordId)
+
+      override def markPresentationInvitationExpired(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
+        proxy(MarkPresentationInvitationExpired, recordId)
 
       override def markPresentationRejected(recordId: DidCommID): IO[PresentationError, PresentationRecord] =
         proxy(MarkPresentationRejected, recordId)

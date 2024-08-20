@@ -116,6 +116,7 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
             Seq.empty,
             None,
             None,
+            None,
             None
           )
           _ <- svc.markRequestPresentationSent(record.id)
