@@ -6,7 +6,6 @@ import org.hyperledger.identus.pollux.anoncreds.AnoncredPresentation
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.presentation.*
-import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
 import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, PresentationCompact}
 import org.hyperledger.identus.pollux.vc.jwt.*
@@ -16,7 +15,6 @@ import zio.json.ast
 
 import java.time.Instant
 import java.util.UUID
-import java.util as ju
 
 trait PresentationService {
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
