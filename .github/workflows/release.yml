@@ -11,7 +11,7 @@ jobs:
     env:
       GITHUB_ACTOR: "hyperledger-bot"
       GITHUB_ACTOR_EMAIL: "hyperledger-bot@hyperledger.org"
-      GITHUB_TOKEN: ${{ secrets.IDENTUS_CI }}
+      GITHUB_TOKEN: ${{ secrets.IDENTUS_CI_2 }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
       # New JDK version makes 'localhost' lookup on linux return ipv6.
       # Our test containers are on ipv4. We need to make 'localhost' resolve to ipv4.
@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.IDENTUS_CI }}
+          token: ${{ secrets.IDENTUS_CI_2 }}
           ref: ${{ github.event.inputs.release-branch }}
           fetch-depth: 0
 
@@ -68,7 +68,7 @@ jobs:
           GIT_COMMITTER_EMAIL: ${{ steps.import_gpg.outputs.email }}
           GIT_AUTHOR_NAME: ${{ steps.import_gpg.outputs.name }}
           GIT_COMMITTER_NAME: ${{ steps.import_gpg.outputs.name }}
-          GITHUB_TOKEN: ${{ secrets.IDENTUS_CI }}
+          GITHUB_TOKEN: ${{ secrets.IDENTUS_CI_2 }}
         run: |
           npm install
           npx semantic-release
