@@ -28,6 +28,7 @@ trait PresentationService {
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
       goalCode: Option[String],
       goal: Option[String],
+      expirationDuration: Option[Duration],
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def createSDJWTPresentationRecord(
@@ -40,6 +41,7 @@ trait PresentationService {
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
       goalCode: Option[String],
       goal: Option[String],
+      expirationDuration: Option[Duration],
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def createAnoncredPresentationRecord(
@@ -50,6 +52,7 @@ trait PresentationService {
       presentationRequest: AnoncredPresentationRequestV1,
       goalCode: Option[String],
       goal: Option[String],
+      expirationDuration: Option[Duration],
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def getPresentationRecords(
@@ -180,4 +183,8 @@ trait PresentationService {
       pairwiseProverDID: DidId,
       invitation: String
   ): ZIO[WalletAccessContext, PresentationError, RequestPresentation]
+
+  def markPresentationInvitationExpired(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 }

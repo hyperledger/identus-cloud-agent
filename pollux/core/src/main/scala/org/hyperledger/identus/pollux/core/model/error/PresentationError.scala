@@ -217,6 +217,12 @@ object PresentationError {
         cause
       )
 
+  final case class InvitationExpired(msg: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        msg
+      )
+
   final case class InvitationAlreadyReceived(msg: String)
       extends PresentationError(
         StatusCode.BadRequest,

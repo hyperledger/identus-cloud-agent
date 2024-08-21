@@ -320,6 +320,7 @@ private class PresentationServiceImpl(
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
       goalCode: Option[String] = None,
       goal: Option[String] = None,
+      expirationDuration: Option[Duration] = None,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     createPresentationRecord(
       pairwiseVerifierDID,
@@ -330,7 +331,8 @@ private class PresentationServiceImpl(
       proofTypes,
       options.map(o => Seq(toJWTAttachment(o))).getOrElse(Seq.empty),
       goalCode,
-      goal
+      goal,
+      expirationDuration
     )
   }
 
@@ -344,6 +346,7 @@ private class PresentationServiceImpl(
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
       goalCode: Option[String] = None,
       goal: Option[String] = None,
+      expirationDuration: Option[Duration] = None,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     createPresentationRecord(
       pairwiseVerifierDID,
@@ -354,7 +357,8 @@ private class PresentationServiceImpl(
       proofTypes,
       attachments = Seq(toSDJWTAttachment(options, claimsToDisclose)),
       goalCode,
-      goal
+      goal,
+      expirationDuration
     )
   }
 
@@ -366,6 +370,7 @@ private class PresentationServiceImpl(
       presentationRequest: AnoncredPresentationRequestV1,
       goalCode: Option[String] = None,
       goal: Option[String] = None,
+      expirationDuration: Option[Duration] = None,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     createPresentationRecord(
       pairwiseVerifierDID,
@@ -376,7 +381,8 @@ private class PresentationServiceImpl(
       Seq.empty,
       Seq(toAnoncredAttachment(presentationRequest)),
       goalCode,
-      goal
+      goal,
+      expirationDuration
     )
   }
 
@@ -390,6 +396,7 @@ private class PresentationServiceImpl(
       attachments: Seq[AttachmentDescriptor],
       goalCode: Option[String] = None,
       goal: Option[String] = None,
+      expirationDuration: Option[Duration] = None,
   ) = {
     for {
       request <- ZIO.succeed(
@@ -408,7 +415,8 @@ private class PresentationServiceImpl(
             goalCode,
             goal,
             thid.value,
-            request
+            request,
+            expirationDuration
           )
         )
       )(_ => None)
@@ -422,7 +430,7 @@ private class PresentationServiceImpl(
           connectionId = connectionId,
           schemaId = None, // TODO REMOVE from DB
           role = PresentationRecord.Role.Verifier,
-          subjectId = pairwiseProverDID.getOrElse(DidId("TODO REMOVE subject did")),
+          subjectId = pairwiseProverDID.getOrElse(DidId("TODO REMOVE")), // TODO REMOVE from DB
           protocolState = invitation.fold(PresentationRecord.ProtocolState.RequestPending)(_ =>
             PresentationRecord.ProtocolState.InvitationGenerated
           ),
@@ -1105,6 +1113,15 @@ private class PresentationServiceImpl(
       PresentationRecord.ProtocolState.RequestRejected
     )
 
+  override def markPresentationInvitationExpired(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+    updatePresentationRecordProtocolState(
+      recordId,
+      PresentationRecord.ProtocolState.PresentationReceived,
+      PresentationRecord.ProtocolState.InvitationExpired
+    )
+
   override def markPresentationVerificationFailed(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
@@ -1270,6 +1287,13 @@ private class PresentationServiceImpl(
       invitation <- ZIO
         .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
         .mapError(err => InvitationParsingError(err.getMessage))
+      _ <- invitation.expires_time match {
+        case Some(expiryTime) =>
+          ZIO
+            .fail(PresentationError.InvitationExpired(s"Invitation has expired. Expiry time: $expiryTime"))
+            .when(Instant.now().getEpochSecond > expiryTime)
+        case None => ZIO.unit
+      }
       _ <- presentationRepository
         .findPresentationRecordByThreadId(DidCommID(invitation.id))
         .flatMap {
