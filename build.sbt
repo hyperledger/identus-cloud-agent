@@ -303,12 +303,6 @@ lazy val D_Pollux = new {
 
 lazy val D_Pollux_VC_JWT = new {
 
-  private lazy val circeJsonSchema = ("net.reactivecore" %% "circe-json-schema" % "0.4.1")
-    .cross(CrossVersion.for3Use2_13)
-    .exclude("io.circe", "circe-core_2.13")
-    .exclude("io.circe", "circe-generic_2.13")
-    .exclude("io.circe", "circe-parser_2.13")
-
   val zio = "dev.zio" %% "zio" % V.zio
   val zioPrelude = "dev.zio" %% "zio-prelude" % V.zioPreludeVersion
 
@@ -321,7 +315,7 @@ lazy val D_Pollux_VC_JWT = new {
   // Dependency Modules
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
   val baseDependencies: Seq[ModuleID] =
-    zioDependencies :+ D.jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ D.scalaTest
+    zioDependencies :+ D.jwtCirce :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ D.scalaTest
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
