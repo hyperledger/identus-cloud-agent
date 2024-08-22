@@ -1085,7 +1085,9 @@ class CredentialServiceImpl(
         credentialSubject = claims.add("id", jwtPresentation.iss.asJson).asJson,
         maybeRefreshService = None,
         maybeEvidence = None,
-        maybeTermsOfUse = None
+        maybeTermsOfUse = None,
+        maybeValidFrom = None,
+        maybeValidUntil = None
       )
       signedJwtCredential = W3CCredential.toEncodedJwt(w3Credential, jwtIssuer)
       issueCredential = IssueCredential.build(

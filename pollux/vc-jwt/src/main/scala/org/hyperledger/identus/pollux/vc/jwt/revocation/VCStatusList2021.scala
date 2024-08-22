@@ -69,7 +69,9 @@ object VCStatusList2021 {
         maybeCredentialStatus = None,
         maybeRefreshService = None,
         maybeEvidence = None,
-        maybeTermsOfUse = None
+        maybeTermsOfUse = None,
+        maybeValidFrom = None,
+        maybeValidUntil = None
       )
       VCStatusList2021(w3Credential, jwtIssuer)
     }

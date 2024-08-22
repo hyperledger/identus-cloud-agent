@@ -75,7 +75,9 @@ object JWTVerificationTest extends ZIOSpecDefault {
         maybeCredentialStatus = None,
         maybeRefreshService = None,
         maybeEvidence = None,
-        maybeTermsOfUse = None
+        maybeTermsOfUse = None,
+        maybeValidFrom = None,
+        maybeValidUntil = None
       ),
       nbf = jwtCredentialNbf, // ISSUANCE DATE
       aud = Set.empty,
