@@ -2,13 +2,10 @@ export default {
     branches: [
         'main',
         '+([0-9])?(.{+([0-9]),x}).x',
-        { name: 'beta/*', prerelease: 'rc' }
+        { name: 'beta', prerelease: true }
     ],
     plugins: [
         '@semantic-release/commit-analyzer',
-        ["@semantic-release/exec", {
-            "prepareCmd": "docker buildx build --platform=linux/arm64,linux/amd64 --push -t ghcr.io/hyperledger/identus-cloud-agent:${nextRelease.version} ./cloud-agent/service/server/target/docker/stage"
-        }],
         ["@semantic-release/exec", {
             "prepareCmd": "echo ${nextRelease.version} > .release-version"
         }],
@@ -17,13 +14,16 @@ export default {
             "changelogFile": "CHANGELOG.md"
         }],
         ["@semantic-release/exec", {
-            "prepareCmd": "sbt \"release release-version ${nextRelease.version} next-version ${nextRelease.version}-SNAPSHOT with-defaults\""
+            "prepareCmd": "sbt \"release release-version ${nextRelease.version} with-defaults\""
         }],
         ["@semantic-release/exec", {
             "prepareCmd": "npm version ${nextRelease.version} --git-tag-version false"
         }],
         ["@semantic-release/exec", {
-            "prepareCmd": "sbt dumpLicenseReportAggregate && cp ./target/license-reports/root-licenses.md ./DEPENDENCIES.md"
+            "prepareCmd": 'sbt "set ThisBuild / version:=\\\"${nextRelease.version}\\\"" "dumpLicenseReportAggregate" && cp ./target/license-reports/root-licenses.md ./DEPENDENCIES.md'
+        }],
+        ["@semantic-release/exec", {
+            "prepareCmd": "docker buildx build --platform=linux/arm64,linux/amd64 --push -t ghcr.io/hyperledger/identus-cloud-agent:${nextRelease.version} ./cloud-agent/service/server/target/docker/stage"
         }],
         ["@semantic-release/exec", {
             "prepareCmd": "sed -i.bak \"s/AGENT_VERSION=.*/AGENT_VERSION=${nextRelease.version}/\" ./infrastructure/local/.env && rm -f ./infrastructure/local/.env.bak"
