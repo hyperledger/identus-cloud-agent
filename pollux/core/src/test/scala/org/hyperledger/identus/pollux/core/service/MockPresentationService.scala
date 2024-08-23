@@ -15,10 +15,9 @@ import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialPro
 import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, PresentationCompact}
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import org.hyperledger.identus.shared.models.*
-import zio.{mock, IO, UIO, URLayer, ZIO, ZLayer}
+import zio.{mock, Duration, IO, UIO, URLayer, ZIO, ZLayer}
 import zio.json.*
 import zio.mock.{Mock, Proxy}
-import zio.Duration
 
 import java.time.Instant
 import java.util.UUID
