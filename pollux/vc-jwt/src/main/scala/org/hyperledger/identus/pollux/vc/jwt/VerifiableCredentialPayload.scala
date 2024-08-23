@@ -83,6 +83,10 @@ sealed trait CredentialPayload {
 
   def maybeExp: Option[Instant]
 
+  def maybeValidFrom: Option[Instant]
+
+  def maybeValidUntil: Option[Instant]
+
   def iss: String
 
   def maybeCredentialStatus: Option[CredentialStatus]
@@ -109,7 +113,9 @@ sealed trait CredentialPayload {
         maybeCredentialStatus = maybeCredentialStatus,
         maybeRefreshService = maybeRefreshService,
         maybeEvidence = maybeEvidence,
-        maybeTermsOfUse = maybeTermsOfUse
+        maybeTermsOfUse = maybeTermsOfUse,
+        maybeValidFrom = maybeValidFrom,
+        maybeValidUntil = maybeValidUntil
       ),
       nbf = nbf,
       aud = aud,
@@ -131,7 +137,9 @@ sealed trait CredentialPayload {
       maybeRefreshService = maybeRefreshService,
       maybeEvidence = maybeEvidence,
       maybeTermsOfUse = maybeTermsOfUse,
-      aud = aud
+      aud = aud,
+      maybeValidFrom = maybeValidFrom,
+      maybeValidUntil = maybeValidUntil
     )
 }
 
@@ -176,6 +184,8 @@ case class JwtVc(
     `type`: Set[String],
     maybeCredentialSchema: Option[CredentialSchema],
     credentialSubject: Json,
+    maybeValidFrom: Option[Instant],
+    maybeValidUntil: Option[Instant],
     maybeCredentialStatus: Option[CredentialStatus],
     maybeRefreshService: Option[RefreshService],
     maybeEvidence: Option[Json],
@@ -199,6 +209,8 @@ case class JwtCredentialPayload(
   override val maybeTermsOfUse = vc.maybeTermsOfUse
   override val maybeCredentialSchema = vc.maybeCredentialSchema
   override val credentialSubject = vc.credentialSubject
+  override val maybeValidFrom = vc.maybeValidFrom
+  override val maybeValidUntil = vc.maybeValidUntil
 }
 
 case class W3cCredentialPayload(
@@ -214,7 +226,9 @@ case class W3cCredentialPayload(
     override val maybeRefreshService: Option[RefreshService],
     override val maybeEvidence: Option[Json],
     override val maybeTermsOfUse: Option[Json],
-    override val aud: Set[String] = Set.empty
+    override val aud: Set[String] = Set.empty,
+    override val maybeValidFrom: Option[Instant],
+    override val maybeValidUntil: Option[Instant]
 ) extends CredentialPayload {
   override val maybeSub = credentialSubject.hcursor.downField("id").as[String].toOption
   override val maybeJti = maybeId
@@ -384,6 +398,8 @@ object CredentialPayload {
           issuer <- c.downField("issuer").as[String]
           issuanceDate <- c.downField("issuanceDate").as[Instant]
           maybeExpirationDate <- c.downField("expirationDate").as[Option[Instant]]
+          maybeValidFrom <- c.downField("maybeValidFrom").as[Option[Instant]]
+          maybeValidUntil <- c.downField("maybeValidUntil").as[Option[Instant]]
           maybeCredentialSchema <- c.downField("credentialSchema").as[Option[CredentialSchema]]
           credentialSubject <- c.downField("credentialSubject").as[Json]
           maybeCredentialStatus <- c.downField("credentialStatus").as[Option[CredentialStatus]]
@@ -398,6 +414,8 @@ object CredentialPayload {
             issuer = DID(issuer),
             issuanceDate = issuanceDate,
             maybeExpirationDate = maybeExpirationDate,
+            maybeValidFrom = maybeValidFrom,
+            maybeValidUntil = maybeValidUntil,
             maybeCredentialSchema = maybeCredentialSchema,
             credentialSubject = credentialSubject,
             maybeCredentialStatus = maybeCredentialStatus,
@@ -425,6 +443,8 @@ object CredentialPayload {
           maybeRefreshService <- c.downField("refreshService").as[Option[RefreshService]]
           maybeEvidence <- c.downField("evidence").as[Option[Json]]
           maybeTermsOfUse <- c.downField("termsOfUse").as[Option[Json]]
+          maybeValidFrom <- c.downField("maybeValidFrom").as[Option[Instant]]
+          maybeValidUntil <- c.downField("maybeValidUntil").as[Option[Instant]]
         } yield {
           JwtVc(
             `@context` = `@context`,
@@ -434,7 +454,9 @@ object CredentialPayload {
             maybeCredentialStatus = maybeCredentialStatus,
             maybeRefreshService = maybeRefreshService,
             maybeEvidence = maybeEvidence,
-            maybeTermsOfUse = maybeTermsOfUse
+            maybeTermsOfUse = maybeTermsOfUse,
+            maybeValidFrom = maybeValidFrom,
+            maybeValidUntil = maybeValidUntil,
           )
         }
 
