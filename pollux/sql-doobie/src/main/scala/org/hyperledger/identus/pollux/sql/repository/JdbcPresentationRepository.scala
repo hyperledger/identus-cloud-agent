@@ -173,6 +173,7 @@ class JdbcPresentationRepository(
   given invitationPut: Put[Invitation] = Put[String].contramap(_.asJson.toString)
 
   override def createPresentationRecord(record: PresentationRecord): URIO[WalletAccessContext, Unit] = {
+
     val cxnIO = sql"""
         | INSERT INTO public.presentation_records(
         |   id,

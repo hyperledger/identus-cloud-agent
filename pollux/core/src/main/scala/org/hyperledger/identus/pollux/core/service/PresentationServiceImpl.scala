@@ -494,6 +494,7 @@ private class PresentationServiceImpl(
             case Some(unsupportedFormat) => ZIO.fail(PresentationError.UnsupportedCredentialFormat(unsupportedFormat))
         case _ => ZIO.fail(PresentationError.RequestPresentationHasMultipleAttachment(request.id))
       }
+      walletId <- ZIO.service[WalletAccessContext].map(_.walletId)
       record <- ZIO.succeed(
         PresentationRecord(
           id = DidCommID(),
@@ -519,7 +520,7 @@ private class PresentationServiceImpl(
           metaRetries = maxRetries,
           metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
-          walletId = WalletId.fromUUID(UUID.randomUUID()),
+          walletId = walletId,
         )
       )
       _ <- presentationRepository.createPresentationRecord(record)

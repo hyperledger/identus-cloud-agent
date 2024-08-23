@@ -3,8 +3,8 @@ package org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
-import org.hyperledger.identus.shared.models.Failure
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{Failure, WalletAccessContext, WalletId}
+import zio.{UIO, URIO, ZIO}
 
 import java.time.temporal.ChronoUnit
 import java.time.Instant
@@ -46,6 +46,58 @@ final case class PresentationRecord(
 }
 
 object PresentationRecord {
+
+  def make(
+      id: DidCommID,
+      createdAt: Instant,
+      updatedAt: Option[Instant],
+      thid: DidCommID,
+      schemaId: Option[String],
+      connectionId: Option[String],
+      role: Role,
+      subjectId: DidId,
+      protocolState: ProtocolState,
+      credentialFormat: CredentialFormat,
+      invitation: Option[Invitation],
+      requestPresentationData: Option[RequestPresentation],
+      proposePresentationData: Option[ProposePresentation],
+      presentationData: Option[Presentation],
+      credentialsToUse: Option[List[String]],
+      anoncredCredentialsToUseJsonSchemaId: Option[String],
+      anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
+      sdJwtClaimsToUseJsonSchemaId: Option[String],
+      sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
+      metaRetries: Int,
+      metaNextRetry: Option[Instant],
+      metaLastFailure: Option[Failure]
+  ): URIO[WalletAccessContext, PresentationRecord] =
+    ZIO.serviceWith[WalletAccessContext] { walletAccessContext =>
+      PresentationRecord(
+        id,
+        createdAt,
+        updatedAt,
+        thid,
+        schemaId,
+        connectionId,
+        role,
+        subjectId,
+        protocolState,
+        credentialFormat,
+        invitation,
+        requestPresentationData,
+        proposePresentationData,
+        presentationData,
+        credentialsToUse,
+        anoncredCredentialsToUseJsonSchemaId,
+        anoncredCredentialsToUse,
+        sdJwtClaimsToUseJsonSchemaId,
+        sdJwtClaimsToDisclose,
+        metaRetries,
+        metaNextRetry,
+        metaLastFailure,
+        walletAccessContext.walletId,
+      )
+    }
 
   enum Role:
     case Verifier extends Role
