@@ -69,6 +69,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           PresentationRecord.ProtocolState.PresentationReceived
         )
         .mapError(err => Throwable(s"Error occurred while getting Presentation records: $err"))
+      _ <- ZIO.logInfo(s"Processing ${records.size} Presentation records")
       _ <- ZIO
         .foreachPar(records)(performPresentProofExchange)
         .withParallelism(config.pollux.presentationBgJobProcessingParallelism)

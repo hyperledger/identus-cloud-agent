@@ -517,6 +517,7 @@ private class PresentationServiceImpl(
         metaLastFailure = None,
       )
       _ <- presentationRepository.createPresentationRecord(record)
+      _ <- ZIO.logDebug(s"Received and created the RequestPresentation: $request")
     } yield record
   }
 
