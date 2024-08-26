@@ -201,7 +201,9 @@ case class OIDCCredentialIssuerServiceImpl(
       maybeCredentialStatus = None, // TODO: Add credential status
       maybeRefreshService = None, // TODO: Add refresh service
       maybeEvidence = None, // TODO: Add evidence
-      maybeTermsOfUse = None // TODO: Add terms of use
+      maybeTermsOfUse = None, // TODO: Add terms of use,
+      maybeValidFrom = None, // TODO: Add ValidFrom
+      maybeValidUntil = None // TODO: Add ValidUntil
     )
 
     ZIO.succeed(credential) // TODO: there might be other calls to fill the VC claims from the session, etc
