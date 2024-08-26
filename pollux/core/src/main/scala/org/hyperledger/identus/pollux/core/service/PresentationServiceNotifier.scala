@@ -12,11 +12,12 @@ import org.hyperledger.identus.pollux.anoncreds.AnoncredPresentation
 import org.hyperledger.identus.pollux.core.model.{DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.presentation.Options
+import org.hyperledger.identus.pollux.core.repository.PresentationRepository
 import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialProofsV1, AnoncredPresentationRequestV1}
 import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, PresentationCompact}
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import org.hyperledger.identus.shared.models.*
-import zio.{Duration, IO, UIO, URLayer, ZIO, ZLayer}
+import zio._
 import zio.json.*
 
 import java.time.Instant
@@ -24,7 +25,8 @@ import java.util.UUID
 
 class PresentationServiceNotifier(
     svc: PresentationService,
-    eventNotificationService: EventNotificationService
+    eventNotificationService: EventNotificationService,
+    presentationRepository: PresentationRepository,
 ) extends PresentationService {
 
   private val presentationUpdatedEvent = "PresentationUpdated"
@@ -201,6 +203,10 @@ class PresentationServiceNotifier(
       _ <- notify(record)
     } yield record
 
+  private def notifyOnFail(record: PresentationRecord, walletId: WalletId) =
+    notify(record)
+      .provideEnvironment(ZEnvironment.apply(WalletAccessContext(walletId)))
+
   private def notify(record: PresentationRecord) = {
     val result = for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
@@ -304,7 +310,16 @@ class PresentationServiceNotifier(
   override def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[Failure]
-  ): UIO[Unit] = svc.reportProcessingFailure(recordId, failReason)
+  ): UIO[Unit] =
+    for {
+      ret <- svc.reportProcessingFailure(recordId, failReason)
+      mRecordAfterFail <- presentationRepository.getPresentationRecordByDIDCommID(recordId)
+      _ <- mRecordAfterFail match {
+        case None => ZIO.unit
+        case Some(recordAfterFail) =>
+          notifyOnFail(recordAfterFail, recordAfterFail.walletId)
+      }
+    } yield ret
 
   override def getRequestPresentationFromInvitation(
       pairwiseProverDID: DidId,
@@ -314,6 +329,6 @@ class PresentationServiceNotifier(
 }
 
 object PresentationServiceNotifier {
-  val layer: URLayer[EventNotificationService & PresentationService, PresentationService] =
-    ZLayer.fromFunction(PresentationServiceNotifier(_, _))
+  val layer: URLayer[EventNotificationService & PresentationService & PresentationRepository, PresentationService] =
+    ZLayer.fromFunction(PresentationServiceNotifier(_, _, _))
 }

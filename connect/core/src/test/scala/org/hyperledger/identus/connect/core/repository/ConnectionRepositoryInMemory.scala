@@ -1,6 +1,6 @@
 package org.hyperledger.identus.connect.core.repository
 
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
+import org.hyperledger.identus.connect.core.model.{ConnectionRecord, ConnectionRecordBeforeStored}
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.shared.models.*
@@ -202,7 +202,7 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
     }
   }
 
-  override def create(record: ConnectionRecord): URIO[WalletAccessContext, Unit] = {
+  override def create(record: ConnectionRecordBeforeStored): URIO[WalletAccessContext, Unit] = {
     for {
       _ <- for {
         storeRef <- walletStoreRef
@@ -213,7 +213,8 @@ class ConnectionRepositoryInMemory(walletRefs: Ref[Map[WalletId, Ref[Map[UUID, C
           case None        => ZIO.unit
       } yield ()
       storeRef <- walletStoreRef
-      _ <- storeRef.update(r => r + (record.id -> record))
+      walletId <- ZIO.service[WalletAccessContext].map(_.walletId)
+      _ <- storeRef.update(r => r + (record.id -> record.withWalletId(walletId)))
     } yield ()
   }
 

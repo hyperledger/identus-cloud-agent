@@ -9,12 +9,14 @@ import org.hyperledger.identus.mercury.protocol.presentproof.{
 }
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.PresentationRecord.ProtocolState
+import org.hyperledger.identus.pollux.core.repository.PresentationRepositoryInMemory
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.{Scope, ZIO, ZLayer}
 import zio.mock.Expectation
 import zio.test.{assertTrue, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
 
 import java.time.Instant
+import java.util.UUID
 
 object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationServiceSpecHelper {
 
@@ -40,7 +42,8 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
     None,
     5,
     None,
-    None
+    None,
+    walletId = WalletId.fromUUID(UUID.randomUUID())
   )
 
   private val verifierHappyFlowExpectations =
@@ -136,7 +139,10 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        verifierHappyFlowExpectations.toLayer >>> PresentationServiceNotifier.layer,
+        (
+          PresentationRepositoryInMemory.layer ++
+            verifierHappyFlowExpectations.toLayer
+        ) >>> PresentationServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("Generates relevant events on presentation verification failed") {
@@ -154,7 +160,10 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        verifierPresentationVerificationFailedExpectations.toLayer >>> PresentationServiceNotifier.layer,
+        (
+          PresentationRepositoryInMemory.layer ++
+            verifierPresentationVerificationFailedExpectations.toLayer
+        ) >>> PresentationServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("Generates relevant events on presentation rejected") {
@@ -172,7 +181,10 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        verifierRejectPresentationExpectations.toLayer >>> PresentationServiceNotifier.layer,
+        (
+          PresentationRepositoryInMemory.layer ++
+            verifierRejectPresentationExpectations.toLayer
+        ) >>> PresentationServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("Happy flow generates relevant events on the prover side") {
@@ -196,7 +208,10 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        proverHappyFlowExpectations.toLayer >>> PresentationServiceNotifier.layer,
+        (
+          PresentationRepositoryInMemory.layer ++
+            proverHappyFlowExpectations.toLayer
+        ) >>> PresentationServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("Happy flow generates relevant events on the prover side") {
@@ -214,7 +229,10 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        proverRejectPresentationRequestExpectations.toLayer >>> PresentationServiceNotifier.layer,
+        (
+          PresentationRepositoryInMemory.layer ++
+            proverRejectPresentationRequestExpectations.toLayer
+        ) >>> PresentationServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random))
       )
     )

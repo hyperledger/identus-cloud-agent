@@ -99,7 +99,8 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
             _,
             metaRetries,
             _,
-            _
+            _,
+            _,
           ) if metaRetries > 0 =>
         val inviteeProcessFlow = for {
           walletAccessContext <- buildWalletAccessContextLayer(request.from)
@@ -147,7 +148,8 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
             Some(response),
             metaRetries,
             _,
-            _
+            _,
+            _,
           ) if metaRetries > 0 =>
         val inviterProcessFlow = for {
           walletAccessContext <- buildWalletAccessContextLayer(response.from)

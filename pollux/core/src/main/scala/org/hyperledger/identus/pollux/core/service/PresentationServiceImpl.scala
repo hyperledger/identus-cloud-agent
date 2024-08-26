@@ -413,33 +413,31 @@ private class PresentationServiceImpl(
         )
       )(_ => None)
 
-      record <- ZIO.succeed(
-        PresentationRecord(
-          id = DidCommID(),
-          createdAt = Instant.now,
-          updatedAt = None,
-          thid = thid,
-          connectionId = connectionId,
-          schemaId = None, // TODO REMOVE from DB
-          role = PresentationRecord.Role.Verifier,
-          subjectId = pairwiseProverDID.getOrElse(DidId("TODO REMOVE")), // TODO REMOVE from DB
-          protocolState = invitation.fold(PresentationRecord.ProtocolState.RequestPending)(_ =>
-            PresentationRecord.ProtocolState.InvitationGenerated
-          ),
-          credentialFormat = format,
-          invitation = invitation,
-          requestPresentationData = Some(request),
-          proposePresentationData = None,
-          presentationData = None,
-          credentialsToUse = None,
-          anoncredCredentialsToUseJsonSchemaId = None,
-          anoncredCredentialsToUse = None,
-          sdJwtClaimsToUseJsonSchemaId = None,
-          sdJwtClaimsToDisclose = None,
-          metaRetries = maxRetries,
-          metaNextRetry = Some(Instant.now()),
-          metaLastFailure = None,
-        )
+      record <- PresentationRecord.make(
+        id = DidCommID(),
+        createdAt = Instant.now,
+        updatedAt = None,
+        thid = thid,
+        connectionId = connectionId,
+        schemaId = None, // TODO REMOVE from DB
+        role = PresentationRecord.Role.Verifier,
+        subjectId = pairwiseProverDID.getOrElse(DidId("TODO REMOVE")), // TODO REMOVE from DB
+        protocolState = invitation.fold(PresentationRecord.ProtocolState.RequestPending)(_ =>
+          PresentationRecord.ProtocolState.InvitationGenerated
+        ),
+        credentialFormat = format,
+        invitation = invitation,
+        requestPresentationData = Some(request),
+        proposePresentationData = None,
+        presentationData = None,
+        credentialsToUse = None,
+        anoncredCredentialsToUseJsonSchemaId = None,
+        anoncredCredentialsToUse = None,
+        sdJwtClaimsToUseJsonSchemaId = None,
+        sdJwtClaimsToDisclose = None,
+        metaRetries = maxRetries,
+        metaNextRetry = Some(Instant.now()),
+        metaLastFailure = None
       )
       _ <- presentationRepository
         .createPresentationRecord(record)
@@ -493,34 +491,33 @@ private class PresentationServiceImpl(
             case Some(unsupportedFormat) => ZIO.fail(PresentationError.UnsupportedCredentialFormat(unsupportedFormat))
         case _ => ZIO.fail(PresentationError.RequestPresentationHasMultipleAttachment(request.id))
       }
-      record <- ZIO.succeed(
-        PresentationRecord(
-          id = DidCommID(),
-          createdAt = Instant.now,
-          updatedAt = None,
-          thid = DidCommID(request.thid.getOrElse(request.id)),
-          connectionId = connectionId,
-          schemaId = None,
-          role = Role.Prover,
-          subjectId =
-            request.to.getOrElse(throw RuntimeException(s"RequestPresentation from field is missing")), // TODO REMOVE
-          protocolState = PresentationRecord.ProtocolState.RequestReceived,
-          credentialFormat = format,
-          invitation = None,
-          requestPresentationData = Some(request),
-          proposePresentationData = None,
-          presentationData = None,
-          credentialsToUse = None,
-          anoncredCredentialsToUseJsonSchemaId = None,
-          anoncredCredentialsToUse = None,
-          sdJwtClaimsToUseJsonSchemaId = None,
-          sdJwtClaimsToDisclose = None,
-          metaRetries = maxRetries,
-          metaNextRetry = Some(Instant.now()),
-          metaLastFailure = None,
-        )
+      record <- PresentationRecord.make(
+        id = DidCommID(),
+        createdAt = Instant.now,
+        updatedAt = None,
+        thid = DidCommID(request.thid.getOrElse(request.id)),
+        connectionId = connectionId,
+        schemaId = None,
+        role = Role.Prover,
+        subjectId =
+          request.to.getOrElse(throw RuntimeException(s"RequestPresentation from field is missing")), // TODO REMOVE
+        protocolState = PresentationRecord.ProtocolState.RequestReceived,
+        credentialFormat = format,
+        invitation = None,
+        requestPresentationData = Some(request),
+        proposePresentationData = None,
+        presentationData = None,
+        credentialsToUse = None,
+        anoncredCredentialsToUseJsonSchemaId = None,
+        anoncredCredentialsToUse = None,
+        sdJwtClaimsToUseJsonSchemaId = None,
+        sdJwtClaimsToDisclose = None,
+        metaRetries = maxRetries,
+        metaNextRetry = Some(Instant.now()),
+        metaLastFailure = None,
       )
       _ <- presentationRepository.createPresentationRecord(record)
+      _ <- ZIO.logDebug(s"Received and created the RequestPresentation: $request")
     } yield record
   }
 

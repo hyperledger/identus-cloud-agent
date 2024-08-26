@@ -27,6 +27,8 @@ trait PresentationRepository {
 
   def findPresentationRecordByThreadId(thid: DidCommID): URIO[WalletAccessContext, Option[PresentationRecord]]
 
+  def getPresentationRecordByDIDCommID(recordId: DidCommID): UIO[Option[PresentationRecord]]
+
   def updatePresentationRecordProtocolState(
       recordId: DidCommID,
       from: PresentationRecord.ProtocolState,
