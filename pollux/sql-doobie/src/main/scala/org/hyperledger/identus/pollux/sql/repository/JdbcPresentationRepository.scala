@@ -425,6 +425,7 @@ class JdbcPresentationRepository(
         |   subject_id,
         |   protocol_state,
         |   credential_format,
+        |   invitation,
         |   request_presentation_data,
         |   propose_presentation_data,
         |   presentation_data,
