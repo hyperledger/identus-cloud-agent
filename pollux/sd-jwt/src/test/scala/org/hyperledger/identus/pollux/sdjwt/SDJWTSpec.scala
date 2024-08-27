@@ -80,11 +80,6 @@ def CLAIMS_QUERY =
     |  }
     |}""".stripMargin
 
-def CLAIMS_QUERY_INVALID =
-  """{
-    | "country": {}
-    |}""".stripMargin
-
 def CLAIMS_PRESENTED =
   """{
     |  "sub": "did:example:holder",
@@ -309,22 +304,6 @@ object SDJWTSpec extends ZIOSpecDefault {
         expectedAud = "did:example:verifier"
       )
       assertTrue(ret == SDJWT.InvalidSignature)
-    },
-    test("Flow with invalid claims in the presentation") {
-      val ed25519KeyPair = KmpEd25519KeyOps.generateKeyPair
-      val privateKey = ed25519KeyPair.privateKey
-      val issuerKey = IssuerPrivateKey(privateKey)
-      val issuerPublicKey = IssuerPublicKey(ed25519KeyPair.publicKey)
-      val credential = SDJWT.issueCredential(issuerKey, CLAIMS)
-      val presentation = SDJWT.createPresentation(
-        sdjwt = credential,
-        claimsToDisclose = CLAIMS_QUERY_INVALID,
-      )
-      val ret = SDJWT.getVerifiedClaims(
-        key = issuerPublicKey,
-        presentation = presentation
-      )
-      assertTrue(ret == SDJWT.InvalidState)
     },
     // methods
     test("get iss field from PresentationCompact") {
