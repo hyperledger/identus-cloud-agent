@@ -28,6 +28,17 @@ class IssueServerEndpoints(
             .logTrace(ctx)
         }
       }
+  val createCredentialOfferInvitationEndpoint: ZServerEndpoint[Any, Any] =
+    createCredentialOfferInvitation
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
+        { case (ctx: RequestContext, request: CreateIssueCredentialRecordRequest) =>
+          issueController
+            .createCredentialOffer(request)(ctx)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
+        }
+      }
 
   val getCredentialRecordsEndpoint: ZServerEndpoint[Any, Any] =
     getCredentialRecords
@@ -79,6 +90,7 @@ class IssueServerEndpoints(
 
   val all: List[ZServerEndpoint[Any, Any]] = List(
     createCredentialOfferEndpoint,
+    createCredentialOfferInvitationEndpoint,
     getCredentialRecordsEndpoint,
     getCredentialRecordEndpoint,
     acceptCredentialOfferEndpoint,

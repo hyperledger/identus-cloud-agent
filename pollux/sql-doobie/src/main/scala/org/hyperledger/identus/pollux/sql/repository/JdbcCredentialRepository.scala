@@ -19,6 +19,7 @@ import org.hyperledger.identus.shared.models.*
 import zio.*
 import zio.interop.catz.*
 import zio.json.*
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 
 import java.time.Instant
 import java.util.UUID
@@ -59,6 +60,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
   given failurePut: Put[Failure] = Put[String].contramap(_.asFailureInfo.toJson)
 
+  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(???))
+  given invitationPut: Put[Invitation] = Put[String].contramap(_.asJson.toString)
+
   override def create(record: IssueCredentialRecord): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
@@ -70,6 +74,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   credential_definition_id,
         |   credential_definition_uri,
         |   credential_format,
+        |   invitation,
         |   role,
         |   subject_id,
         |   key_id,
@@ -95,6 +100,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   ${record.credentialDefinitionId},
         |   ${record.credentialDefinitionUri},
         |   ${record.credentialFormat},
+        |   ${record.invitation},
         |   ${record.role},
         |   ${record.subjectId},
         |   ${record.keyId},
@@ -138,6 +144,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
            |   credential_definition_id,
            |   credential_definition_uri,
            |   credential_format,
+           |   invitation,
            |   role,
            |   subject_id,
            |   key_id,
@@ -209,6 +216,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
             |   credential_definition_id,
             |   credential_definition_uri,
             |   credential_format,
+            |   invitation,
             |   role,
             |   subject_id,
             |   key_id,
@@ -272,6 +280,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   credential_definition_id,
         |   credential_definition_uri,
         |   credential_format,
+        |   invitation,
         |   role,
         |   subject_id,
         |   key_id,
@@ -316,6 +325,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   credential_definition_id,
         |   credential_definition_uri,
         |   credential_format,
+        |   invitation,
         |   role,
         |   subject_id,
         |   key_id,

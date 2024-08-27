@@ -136,6 +136,7 @@ trait PresentationServiceSpecHelper {
     credentialDefinitionId = None,
     credentialDefinitionUri = None,
     credentialFormat = credentialFormat,
+    invitation = None,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,
     keyId = None,

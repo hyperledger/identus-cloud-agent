@@ -16,6 +16,34 @@ sealed trait CredentialServiceError(
 }
 
 object CredentialServiceError {
+  final case class InvitationExpired(expiryTime: Long)
+      extends CredentialServiceError(
+        StatusCode.BadRequest,
+        s"The invitation has expired: expiryTime=$expiryTime"
+      )
+
+  final case class InvitationAlreadyReceived(invitationId: String)
+      extends CredentialServiceError(
+        StatusCode.BadRequest,
+        s"The invitation has already been received: invitationId=$invitationId"
+      )
+
+  final case class InvitationParsingError(cause: String)
+      extends CredentialServiceError(
+        StatusCode.BadRequest,
+        cause
+      )
+  final case class MissingInvitationAttachment(cause: String)
+      extends CredentialServiceError(
+        StatusCode.BadRequest,
+        cause
+      )
+  final case class CredentialOfferDecodingError(cause: String)
+      extends CredentialServiceError(
+        StatusCode.InternalServerError,
+        s"Credential Offer decoding error: $cause"
+      )
+
   final case class InvalidCredentialOffer(cause: String)
       extends CredentialServiceError(
         StatusCode.BadRequest,

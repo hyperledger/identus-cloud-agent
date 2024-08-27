@@ -24,7 +24,7 @@ final case class OfferCredential(
     // extra
     thid: Option[String] = None,
     from: DidId,
-    to: DidId,
+    to: Option[DidId] = None,
 ) extends ReadAttachmentsUtils {
   assert(`type` == OfferCredential.`type`)
 
@@ -32,7 +32,7 @@ final case class OfferCredential(
     id = this.id,
     `type` = this.`type`,
     from = Some(this.from),
-    to = Seq(to),
+    to = to.toSeq,
     thid = this.thid,
     body = this.body.asJson.asObject.get, // TODO get
     attachments = Some(this.attachments),
@@ -62,7 +62,7 @@ object OfferCredential {
     OfferCredential(
       thid = thid,
       from = fromDID,
-      to = toDID,
+      to = Some(toDID),
       body = Body(credential_preview = credential_preview),
       attachments = attachments
     )
@@ -100,7 +100,7 @@ object OfferCredential {
               attachments = pc.attachments,
               thid = msg.thid.orElse(Some(pc.id)),
               from = pc.to,
-              to = pc.from,
+              to = Some(pc.from),
             )
           )
     }
@@ -122,7 +122,7 @@ object OfferCredential {
                     attachments = message.attachments.getOrElse(Seq.empty),
                     thid = message.thid,
                     from = from,
-                    to = firstTo,
+                    to = Some(firstTo),
                   )
                 )
               case tos => Left(s"OfferCredential MUST have only 1 recipient instead has '${tos}'")

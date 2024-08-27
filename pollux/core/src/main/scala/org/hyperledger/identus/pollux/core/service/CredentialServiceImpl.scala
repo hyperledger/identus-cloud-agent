@@ -1,7 +1,10 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.syntax.*
 import io.circe.Json
+import cats.implicits.*
+import io.circe.*
+import io.circe.parser.*
+import io.circe.syntax.*
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
@@ -26,6 +29,9 @@ import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, 
 import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
+import org.hyperledger.identus.shared.utils.Base64Utils
+
 import zio.*
 import zio.json.*
 import zio.prelude.ZValidation
@@ -118,15 +124,84 @@ class CredentialServiceImpl(
         .mapError(_ => RecordNotFound(recordId))
     } yield record
 
+  private def createIssueCredentialRecord(
+      pairwiseIssuerDID: DidId,
+      thid: DidCommID,
+      schemaUri: Option[String],
+      validityPeriod: Option[Double],
+      automaticIssuance: Option[Boolean],
+      issuingDID: Option[CanonicalPrismDID],
+      credentialFormat: CredentialFormat,
+      offer: OfferCredential,
+      credentialDefinitionGUID: Option[UUID] = None,
+      credentialDefinitionId: Option[String] = None,
+      connectionId: Option[UUID],
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
+  ): URIO[WalletAccessContext, IssueCredentialRecord] = {
+    for {
+      invitation <- ZIO.succeed(connectionId.fold(
+        Some(
+          IssueCredentialInvitation.makeInvitation(
+            pairwiseIssuerDID,
+            goalCode,
+            goal,
+            thid.value,
+            offer,
+            expirationDuration
+          )
+        )
+      )(_ => None))
+      record <- ZIO.succeed(
+        IssueCredentialRecord(
+          id = DidCommID(),
+          createdAt = Instant.now,
+          updatedAt = None,
+          thid = thid,
+          schemaUri = schemaUri,
+          credentialDefinitionId = credentialDefinitionGUID,
+          credentialDefinitionUri = credentialDefinitionId,
+          credentialFormat = credentialFormat,
+          invitation = invitation,
+          role = IssueCredentialRecord.Role.Issuer,
+          subjectId = None,
+          keyId = None,
+          validityPeriod = validityPeriod,
+          automaticIssuance = automaticIssuance,
+          protocolState = invitation.fold(IssueCredentialRecord.ProtocolState.OfferPending)(_ =>
+            IssueCredentialRecord.ProtocolState.InvitationGenerated
+          ),
+          offerCredentialData = Some(offer),
+          requestCredentialData = None,
+          anonCredsRequestMetadata = None,
+          issueCredentialData = None,
+          issuedCredentialRaw = None,
+          issuingDID = issuingDID,
+          metaRetries = maxRetries,
+          metaNextRetry = Some(Instant.now()),
+          metaLastFailure = None,
+        )
+      )
+      count <- credentialRepository
+        .create(record) @@ CustomMetricsAspect
+        .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
+    } yield record
+  }
+
   override def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
-      issuingDID: CanonicalPrismDID
+      issuingDID: CanonicalPrismDID,
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
+      connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord] = {
     for {
       _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaId)
@@ -141,49 +216,39 @@ class CredentialServiceImpl(
         "domain",
         IssueCredentialOfferFormat.JWT
       )
-      record <- ZIO.succeed(
-        IssueCredentialRecord(
-          id = DidCommID(),
-          createdAt = Instant.now,
-          updatedAt = None,
-          thid = thid,
-          schemaUri = maybeSchemaId,
-          credentialDefinitionId = None,
-          credentialDefinitionUri = None,
-          credentialFormat = CredentialFormat.JWT,
-          role = IssueCredentialRecord.Role.Issuer,
-          subjectId = None,
-          keyId = None,
-          validityPeriod = validityPeriod,
-          automaticIssuance = automaticIssuance,
-          protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
-          offerCredentialData = Some(offer),
-          requestCredentialData = None,
-          anonCredsRequestMetadata = None,
-          issueCredentialData = None,
-          issuedCredentialRaw = None,
-          issuingDID = Some(issuingDID),
-          metaRetries = maxRetries,
-          metaNextRetry = Some(Instant.now()),
-          metaLastFailure = None,
-        )
+      record <- createIssueCredentialRecord(
+        pairwiseIssuerDID = pairwiseIssuerDID,
+        thid = thid,
+        schemaUri = maybeSchemaId,
+        validityPeriod = validityPeriod,
+        automaticIssuance = automaticIssuance,
+        issuingDID = Some(issuingDID),
+        credentialFormat = CredentialFormat.JWT,
+        offer = offer,
+        credentialDefinitionGUID = None,
+        credentialDefinitionId = None,
+        connectionId = connectionId,
+        goalCode = goalCode,
+        goal = goal,
+        expirationDuration = expirationDuration,
       )
-      count <- credentialRepository
-        .create(record) @@ CustomMetricsAspect
-        .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
     } yield record
   }
 
   override def createSDJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
-      issuingDID: CanonicalPrismDID
-  ): URIO[WalletAccessContext, IssueCredentialRecord] =
+      issuingDID: CanonicalPrismDID,
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
+      connectionId: Option[UUID],
+  ): URIO[WalletAccessContext, IssueCredentialRecord] = {
     for {
       _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaId)
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
@@ -197,47 +262,38 @@ class CredentialServiceImpl(
         "domain",
         IssueCredentialOfferFormat.SDJWT
       )
-      record <- ZIO.succeed(
-        IssueCredentialRecord(
-          id = DidCommID(),
-          createdAt = Instant.now,
-          updatedAt = None,
-          thid = thid,
-          schemaUri = maybeSchemaId,
-          credentialDefinitionId = None,
-          credentialDefinitionUri = None,
-          credentialFormat = CredentialFormat.SDJWT,
-          role = IssueCredentialRecord.Role.Issuer,
-          subjectId = None,
-          keyId = None,
-          validityPeriod = validityPeriod,
-          automaticIssuance = automaticIssuance,
-          protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
-          offerCredentialData = Some(offer),
-          requestCredentialData = None,
-          anonCredsRequestMetadata = None,
-          issueCredentialData = None,
-          issuedCredentialRaw = None,
-          issuingDID = Some(issuingDID),
-          metaRetries = maxRetries,
-          metaNextRetry = Some(Instant.now()),
-          metaLastFailure = None,
-        )
+      record <- createIssueCredentialRecord(
+        pairwiseIssuerDID = pairwiseIssuerDID ,
+        thid = thid,
+        schemaUri = maybeSchemaId,
+        validityPeriod = validityPeriod,
+        automaticIssuance = automaticIssuance,
+        issuingDID = Some(issuingDID),
+        credentialFormat = CredentialFormat.SDJWT,
+        offer = offer,
+        credentialDefinitionGUID = None,
+        credentialDefinitionId = None,
+        connectionId = connectionId,
+        goalCode = goalCode,
+        goal = goal,
+        expirationDuration = expirationDuration,
       )
-      count <- credentialRepository
-        .create(record) @@ CustomMetricsAspect
-        .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
     } yield record
+  }
 
   override def createAnonCredsIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       thid: DidCommID,
       credentialDefinitionGUID: UUID,
       credentialDefinitionId: String,
       claims: Json,
       validityPeriod: Option[Double],
-      automaticIssuance: Option[Boolean]
+      automaticIssuance: Option[Boolean],
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
+      connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord] = {
     for {
       credentialDefinition <- getCredentialDefinition(credentialDefinitionGUID)
@@ -254,38 +310,201 @@ class CredentialServiceImpl(
         claims = attributes,
         thid = thid,
       )
-      record <- ZIO.succeed(
-        IssueCredentialRecord(
-          id = DidCommID(),
-          createdAt = Instant.now,
-          updatedAt = None,
-          thid = thid,
-          schemaUri = Some(credentialDefinition.schemaId),
-          credentialDefinitionId = Some(credentialDefinitionGUID),
-          credentialDefinitionUri = Some(credentialDefinitionId),
-          credentialFormat = CredentialFormat.AnonCreds,
-          role = IssueCredentialRecord.Role.Issuer,
-          subjectId = None,
-          keyId = None,
-          validityPeriod = validityPeriod,
-          automaticIssuance = automaticIssuance,
-          protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
-          offerCredentialData = Some(offer),
-          requestCredentialData = None,
-          anonCredsRequestMetadata = None,
-          issueCredentialData = None,
-          issuedCredentialRaw = None,
-          issuingDID = None,
-          metaRetries = maxRetries,
-          metaNextRetry = Some(Instant.now()),
-          metaLastFailure = None,
-        )
+      record <- createIssueCredentialRecord(
+        pairwiseIssuerDID = pairwiseIssuerDID,
+        thid = thid,
+        schemaUri = Some(credentialDefinition.schemaId),
+        validityPeriod = validityPeriod,
+        automaticIssuance = automaticIssuance,
+        issuingDID = None,
+        credentialFormat = CredentialFormat.AnonCreds,
+        offer = offer,
+        credentialDefinitionGUID = Some(credentialDefinitionGUID),
+        credentialDefinitionId = Some(credentialDefinitionId),
+        connectionId = connectionId,
+        goalCode = goalCode,
+        goal = goal,
+        expirationDuration = expirationDuration,
       )
-      count <- credentialRepository
-        .create(record) @@ CustomMetricsAspect
-        .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
     } yield record
   }
+  // override def createJWTIssueCredentialRecord1(
+  //     pairwiseIssuerDID: DidId,
+  //     pairwiseHolderDID: Option[DidId],
+  //     thid: DidCommID,
+  //     maybeSchemaId: Option[String],
+  //     claims: Json,
+  //     validityPeriod: Option[Double],
+  //     automaticIssuance: Option[Boolean],
+  //     issuingDID: CanonicalPrismDID,
+  //     goalCode: Option[String],
+  //     goal: Option[String],
+  //     expirationDuration: Option[Duration],
+  // ): URIO[WalletAccessContext, IssueCredentialRecord] = {
+  //   for {
+  //     _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaId)
+  //     attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
+  //     offer <- createDidCommOfferCredential(
+  //       pairwiseIssuerDID = pairwiseIssuerDID,
+  //       pairwiseHolderDID = pairwiseHolderDID,
+  //       maybeSchemaId = maybeSchemaId,
+  //       claims = attributes,
+  //       thid = thid,
+  //       UUID.randomUUID().toString,
+  //       "domain",
+  //       IssueCredentialOfferFormat.JWT
+  //     )
+  //     record <- ZIO.succeed(
+  //       IssueCredentialRecord(
+  //         id = DidCommID(),
+  //         createdAt = Instant.now,
+  //         updatedAt = None,
+  //         thid = thid,
+  //         schemaUri = maybeSchemaId,
+  //         credentialDefinitionId = None,
+  //         credentialDefinitionUri = None,
+  //         credentialFormat = CredentialFormat.JWT,
+  //         role = IssueCredentialRecord.Role.Issuer,
+  //         subjectId = None,
+  //         keyId = None,
+  //         validityPeriod = validityPeriod,
+  //         automaticIssuance = automaticIssuance,
+  //         protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
+  //         offerCredentialData = Some(offer),
+  //         requestCredentialData = None,
+  //         anonCredsRequestMetadata = None,
+  //         issueCredentialData = None,
+  //         issuedCredentialRaw = None,
+  //         issuingDID = Some(issuingDID),
+  //         metaRetries = maxRetries,
+  //         metaNextRetry = Some(Instant.now()),
+  //         metaLastFailure = None,
+  //       )
+  //     )
+  //     count <- credentialRepository
+  //       .create(record) @@ CustomMetricsAspect
+  //       .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
+  //   } yield record
+  // }
+
+  // override def createSDJWTIssueCredentialRecord1(
+  //     pairwiseIssuerDID: DidId,
+  //     pairwiseHolderDID: Option[DidId],
+  //     thid: DidCommID,
+  //     maybeSchemaId: Option[String],
+  //     claims: io.circe.Json,
+  //     validityPeriod: Option[Double] = None,
+  //     automaticIssuance: Option[Boolean],
+  //     issuingDID: CanonicalPrismDID,
+  //     goalCode: Option[String],
+  //     goal: Option[String],
+  //     expirationDuration: Option[Duration],
+  // ): URIO[WalletAccessContext, IssueCredentialRecord] =
+  //   for {
+  //     _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaId)
+  //     attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
+  //     offer <- createDidCommOfferCredential(
+  //       pairwiseIssuerDID = pairwiseIssuerDID,
+  //       pairwiseHolderDID = pairwiseHolderDID,
+  //       maybeSchemaId = maybeSchemaId,
+  //       claims = attributes,
+  //       thid = thid,
+  //       UUID.randomUUID().toString,
+  //       "domain",
+  //       IssueCredentialOfferFormat.SDJWT
+  //     )
+  //     record <- ZIO.succeed(
+  //       IssueCredentialRecord(
+  //         id = DidCommID(),
+  //         createdAt = Instant.now,
+  //         updatedAt = None,
+  //         thid = thid,
+  //         schemaUri = maybeSchemaId,
+  //         credentialDefinitionId = None,
+  //         credentialDefinitionUri = None,
+  //         credentialFormat = CredentialFormat.SDJWT,
+  //         role = IssueCredentialRecord.Role.Issuer,
+  //         subjectId = None,
+  //         keyId = None,
+  //         validityPeriod = validityPeriod,
+  //         automaticIssuance = automaticIssuance,
+  //         protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
+  //         offerCredentialData = Some(offer),
+  //         requestCredentialData = None,
+  //         anonCredsRequestMetadata = None,
+  //         issueCredentialData = None,
+  //         issuedCredentialRaw = None,
+  //         issuingDID = Some(issuingDID),
+  //         metaRetries = maxRetries,
+  //         metaNextRetry = Some(Instant.now()),
+  //         metaLastFailure = None,
+  //       )
+  //     )
+  //     count <- credentialRepository
+  //       .create(record) @@ CustomMetricsAspect
+  //       .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
+  //   } yield record
+
+  // override def createAnonCredsIssueCredentialRecord1(
+  //     pairwiseIssuerDID: DidId,
+  //     pairwiseHolderDID: Option[DidId],
+  //     thid: DidCommID,
+  //     credentialDefinitionGUID: UUID,
+  //     credentialDefinitionId: String,
+  //     claims: Json,
+  //     validityPeriod: Option[Double],
+  //     automaticIssuance: Option[Boolean],
+  //     goalCode: Option[String],
+  //     goal: Option[String],
+  //     expirationDuration: Option[Duration],
+  // ): URIO[WalletAccessContext, IssueCredentialRecord] = {
+  //   for {
+  //     credentialDefinition <- getCredentialDefinition(credentialDefinitionGUID)
+  //     _ <- CredentialSchema
+  //       .validateAnonCredsClaims(credentialDefinition.schemaId, claims.noSpaces, uriDereferencer)
+  //       .orDieAsUnmanagedFailure
+  //     attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
+  //     offer <- createAnonCredsDidCommOfferCredential(
+  //       pairwiseIssuerDID = pairwiseIssuerDID,
+  //       pairwiseHolderDID = pairwiseHolderDID,
+  //       schemaUri = credentialDefinition.schemaId,
+  //       credentialDefinitionGUID = credentialDefinitionGUID,
+  //       credentialDefinitionId = credentialDefinitionId,
+  //       claims = attributes,
+  //       thid = thid,
+  //     )
+  //     record <- ZIO.succeed(
+  //       IssueCredentialRecord(
+  //         id = DidCommID(),
+  //         createdAt = Instant.now,
+  //         updatedAt = None,
+  //         thid = thid,
+  //         schemaUri = Some(credentialDefinition.schemaId),
+  //         credentialDefinitionId = Some(credentialDefinitionGUID),
+  //         credentialDefinitionUri = Some(credentialDefinitionId),
+  //         credentialFormat = CredentialFormat.AnonCreds,
+  //         role = IssueCredentialRecord.Role.Issuer,
+  //         subjectId = None,
+  //         keyId = None,
+  //         validityPeriod = validityPeriod,
+  //         automaticIssuance = automaticIssuance,
+  //         protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
+  //         offerCredentialData = Some(offer),
+  //         requestCredentialData = None,
+  //         anonCredsRequestMetadata = None,
+  //         issueCredentialData = None,
+  //         issuedCredentialRaw = None,
+  //         issuingDID = None,
+  //         metaRetries = maxRetries,
+  //         metaNextRetry = Some(Instant.now()),
+  //         metaLastFailure = None,
+  //       )
+  //     )
+  //     count <- credentialRepository
+  //       .create(record) @@ CustomMetricsAspect
+  //       .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
+  //   } yield record
+  // }
 
   override def getIssueCredentialRecordsByStates(
       ignoreWithZeroRetries: Boolean,
@@ -330,6 +549,7 @@ class CredentialServiceImpl(
           credentialDefinitionId = None,
           credentialDefinitionUri = None,
           credentialFormat = credentialFormat,
+          invitation = None,
           role = Role.Holder,
           subjectId = None,
           keyId = None,
@@ -632,7 +852,7 @@ class CredentialServiceImpl(
       request = RequestCredential(
         body = body,
         attachments = attachments,
-        from = offerCredential.to,
+        from = offerCredential.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient")),
         to = offerCredential.from,
         thid = offerCredential.thid
       )
@@ -816,6 +1036,14 @@ class CredentialServiceImpl(
       IssueCredentialRecord.ProtocolState.OfferSent
     )
 
+  override def markCredentialOfferInvitationExpired(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord] =
+    updateCredentialRecordProtocolState(
+      recordId,
+      IssueCredentialRecord.ProtocolState.RequestReceived,
+      IssueCredentialRecord.ProtocolState.InvitationExpired
+    )
   override def markRequestSent(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord] =
@@ -892,7 +1120,7 @@ class CredentialServiceImpl(
 
   private def createDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       maybeSchemaId: Option[String],
       claims: Seq[Attribute],
       thid: DidCommID,
@@ -929,7 +1157,7 @@ class CredentialServiceImpl(
 
   private def createAnonCredsDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       schemaUri: String,
       credentialDefinitionGUID: UUID,
       credentialDefinitionId: String,
@@ -994,7 +1222,7 @@ class CredentialServiceImpl(
           )
       ),
       thid = offer.thid.orElse(Some(offer.id)),
-      from = offer.to,
+      from = offer.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient")),
       to = offer.from
     )
   }
@@ -1389,4 +1617,51 @@ class CredentialServiceImpl(
     } yield jwtPresentation
   }
 
+  override def getCredentialOfferInvitation(
+      pairwiseHolderDID: DidId,
+      invitation: String
+  ): ZIO[WalletAccessContext, CredentialServiceError, OfferCredential] = {
+    for {
+      invitation <- ZIO
+        .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
+        .mapError(err => InvitationParsingError(err.getMessage))
+      _ <- invitation.expires_time match {
+        case Some(expiryTime) =>
+          ZIO
+            .fail(InvitationExpired(expiryTime))
+            .when(Instant.now().getEpochSecond > expiryTime)
+        case None => ZIO.unit
+      }
+      _ <- getIssueCredentialRecordByThreadId(DidCommID(invitation.id), false)
+        .flatMap {
+          case None    => ZIO.unit
+          case Some(_) => ZIO.fail(InvitationAlreadyReceived(invitation.id))
+        }
+      credentialOffer <- ZIO.fromEither {
+        invitation.attachments
+          .flatMap(
+            _.headOption.map(attachment =>
+              decode[org.hyperledger.identus.mercury.model.JsonData](
+                attachment.data.asJson.noSpaces
+              ) // TODO Move mercury to use ZIO JSON
+                .flatMap { data =>
+                  OfferCredential.given_Decoder_OfferCredential
+                    .decodeJson(data.json.asJson)
+                    .map(r => r.copy(to = Some(pairwiseHolderDID)))
+                    .leftMap(err =>
+                      CredentialOfferDecodingError(
+                        s"Credential Offer As Attachment decoding error: ${err.getMessage}"
+                      )
+                    )
+                }
+                .leftMap(err => CredentialOfferDecodingError(s"Invitation Attachment JsonData decoding error: $err"))
+            )
+          )
+          .getOrElse(
+            Left(MissingInvitationAttachment("Missing Invitation Attachment for Credential Offer"))
+          )
+      }
+    } yield credentialOffer
+
+  }
 }

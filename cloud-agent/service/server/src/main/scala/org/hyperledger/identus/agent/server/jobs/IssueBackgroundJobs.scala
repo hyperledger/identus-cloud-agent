@@ -149,6 +149,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               _,
+              _,
               Role.Issuer,
               _,
               _,
@@ -206,6 +207,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               CredentialFormat.JWT,
+              _,
               Role.Holder,
               Some(subjectId),
               _,
@@ -223,7 +225,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- buildWalletAccessContextLayer(offer.to)
+            walletAccessContext <- buildWalletAccessContextLayer(offer.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient")))
             result <- for {
               credentialService <- ZIO.service[CredentialService]
               _ <- credentialService
@@ -248,6 +250,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               CredentialFormat.SDJWT,
+              _,
               Role.Holder,
               Some(subjectId),
               keyId,
@@ -265,7 +268,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- buildWalletAccessContextLayer(offer.to)
+            walletAccessContext <- buildWalletAccessContextLayer(offer.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient")))
             result <- for {
               credentialService <- ZIO.service[CredentialService]
               _ <- credentialService
@@ -290,6 +293,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               CredentialFormat.AnonCreds,
+              _,
               Role.Holder,
               None,
               _,
@@ -307,7 +311,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- buildWalletAccessContextLayer(offer.to)
+            walletAccessContext <- buildWalletAccessContextLayer(offer.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient")))
             result <- for {
               credentialService <- ZIO.service[CredentialService]
               _ <- credentialService
@@ -326,6 +330,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
         // Request should be sent from Holder to Issuer
         case IssueCredentialRecord(
               id,
+              _,
               _,
               _,
               _,
@@ -390,6 +395,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               _,
+              _,
               Role.Issuer,
               _,
               _,
@@ -431,6 +437,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               CredentialFormat.JWT,
+              _,
               Role.Issuer,
               _,
               _,
@@ -478,6 +485,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               CredentialFormat.SDJWT,
+              _,
               Role.Issuer,
               _,
               _,
@@ -524,6 +532,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               CredentialFormat.AnonCreds,
+              _,
               Role.Issuer,
               _,
               _,
@@ -560,6 +569,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
         // Credential has been generated and can be sent directly to the Holder
         case IssueCredentialRecord(
               id,
+              _,
               _,
               _,
               _,
@@ -609,7 +619,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               .gauge("issuance_flow_issuer_send_cred_flow_ms_gauge")
               .trackDurationWith(_.toMetricsSeconds)
 
-        case _: IssueCredentialRecord => ZIO.unit
+        case record: IssueCredentialRecord => ZIO.logDebug(s"IssuanceRecord: ${record.id} - ${record.protocolState}") *> ZIO.unit
       }
     } yield ()
 

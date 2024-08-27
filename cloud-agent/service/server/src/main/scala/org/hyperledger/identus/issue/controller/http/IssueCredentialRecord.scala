@@ -57,6 +57,17 @@ final case class IssueCredentialRecord(
     @description(annotations.issuingDID.description)
     @encodedExample(annotations.issuingDID.example)
     issuingDID: Option[String] = None,
+    @description(annotations.goalcode.description)
+    @encodedExample(annotations.goalcode.example)
+    goalCode: Option[String] = None,
+    @description(annotations.goal.description)
+    @encodedExample(annotations.goal.example)
+    goal: Option[String] = None,
+    @description(annotations.myDid.description)
+    @encodedExample(annotations.myDid.example)
+    myDid: Option[String] = None,
+    @description(annotations.invitation.description)
+    invitation: Option[IssueCredentialOfferInvitation] = None,
     @description(annotations.metaRetries.description)
     @encodedExample(annotations.metaRetries.example)
     metaRetries: Int,
@@ -99,6 +110,10 @@ object IssueCredentialRecord {
           vc
         }
       }),
+      invitation = domain.invitation.map(invitation => IssueCredentialOfferInvitation.fromDomain(invitation)),
+      goalCode = domain.invitation.flatMap(_.body.goal_code),
+      goal = domain.invitation.flatMap(_.body.goal),
+      myDid = domain.invitation.map(_.from.value),
       metaRetries = domain.metaRetries,
       metaLastFailure = domain.metaLastFailure.map(failure => ErrorResponse.failureToErrorResponseConversion(failure)),
     )
@@ -220,7 +235,9 @@ object IssueCredentialRecord {
               "CredentialReceived",
               "ProblemReportPending",
               "ProblemReportSent",
-              "ProblemReportReceived"
+              "ProblemReportReceived",
+              "InvitationExpired",
+              "InvitationGenerated",
             )
           )
         )
@@ -241,6 +258,32 @@ object IssueCredentialRecord {
           |Note that this parameter only applies when the offer is type 'JWT'.
           |""".stripMargin,
           example = Some("did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f")
+        )
+
+    object goalcode
+        extends Annotation[String](
+          description =
+            "A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.",
+          example = "issue-vc"
+        )
+
+    object goal
+        extends Annotation[String](
+          description =
+            "A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.",
+          example = "To issue a Faber College Graduate credential"
+        )
+
+    object myDid
+        extends Annotation[String](
+          description = "The DID representing me as the inviter or invitee in this specific connection.",
+          example = "did:peer:12345"
+        )
+
+    object invitation
+        extends Annotation[IssueCredentialOfferInvitation](
+          description = "The invitation for this Offer Credential",
+          example = IssueCredentialOfferInvitation.Example
         )
 
     object metaRetries

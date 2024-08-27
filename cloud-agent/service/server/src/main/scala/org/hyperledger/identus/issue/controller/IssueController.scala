@@ -6,13 +6,24 @@ import org.hyperledger.identus.issue.controller.http.{
   AcceptCredentialOfferRequest,
   CreateIssueCredentialRecordRequest,
   IssueCredentialRecord,
-  IssueCredentialRecordPage
+  IssueCredentialRecordPage,
+  AcceptCredentialOfferInvitation
 }
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
 trait IssueController {
   def createCredentialOffer(request: CreateIssueCredentialRecordRequest)(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord]
+  
+  def createCredentialOfferInvitation(request: CreateIssueCredentialRecordRequest)(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord]
+
+  def acceptCredentialOfferInvitation(
+      request: AcceptCredentialOfferInvitation
+  )(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord]
 

@@ -65,6 +65,41 @@ object IssueEndpoints {
         |""".stripMargin)
       .tag(tagName)
 
+  val createCredentialOfferInvitation: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, CreateIssueCredentialRecordRequest),
+    ErrorResponse,
+    IssueCredentialRecord,
+    Any
+  ] =
+    endpoint.post
+      .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in("issue-credentials" / "credential-offers" / "invitation")
+      .in(jsonBody[CreateIssueCredentialRecordRequest].description("The credential offer object."))
+      .errorOut(
+        oneOf(
+          FailureVariant.forbidden,
+          FailureVariant.badRequest,
+          FailureVariant.internalServerError,
+          FailureVariant.notFound
+        )
+      )
+      .out(
+        statusCode(StatusCode.Created)
+          .description("The credential issuance record was created successfully, and is returned in the response body.")
+      )
+      .out(jsonBody[IssueCredentialRecord].description("The issue credential record."))
+      .name("createCredentialOffer")
+      .summary("As a credential issuer, create a new credential offer that will be sent to a holder Agent.")
+      .description("""
+        |Creates a new credential offer that will be delivered, through a previously established DIDComm connection, to a holder Agent.
+        |The subsequent credential offer message adheres to the [Issue Credential Protocol 3.0 - Offer Credential](https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential#offer-credential) specification.
+        |The created offer can be of two types: 'JWT' or 'AnonCreds'.
+        |""".stripMargin)
+      .tag(tagName)
+
   val getCredentialRecords: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, PaginationInput, Option[String]),

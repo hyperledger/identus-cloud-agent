@@ -34,6 +34,7 @@ object SDJWT {
   sealed trait Invalid extends ClaimsValidationResult
   case object InvalidSignature extends Invalid { def error = "Fail due to invalid input: InvalidSignature" }
   case object InvalidToken extends Invalid { def error = "Fail due to invalid input: InvalidToken" }
+  case object InvalidState extends Invalid { def error = "Fail due to invalid claim: Requested claim doesn't exist" }
   case object InvalidClaims extends Invalid { def error = "Fail to Verify the claims" }
   case object ClaimsDoNotMatch extends Invalid { def error = "Claims (are valid) but do not match the expected value" }
   case object InvalidClaimsIsNotJsonObj extends Invalid { def error = "The claims must be a valid json Obj" }
@@ -145,6 +146,8 @@ object SDJWT {
         InvalidSignature
       case Failure(ex: SdjwtException.Unspecified) if ex.getMessage() == "invalid input: InvalidToken" =>
         InvalidToken
+      case Failure(ex: SdjwtException.Unspecified) if ex.getMessage() == "invalid state: Requested claim doesn't exist" =>
+        InvalidToken  
       case Failure(ex) => InvalidError(ex.getMessage())
       case Success(claims) =>
         claims.fromJson[Json] match
