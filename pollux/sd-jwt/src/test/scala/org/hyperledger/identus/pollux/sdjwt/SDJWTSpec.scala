@@ -83,7 +83,7 @@ def CLAIMS_QUERY =
 def CLAIMS_QUERY_INVALID =
   """{
     | "country": {}
-    |}""".stripMargin    
+    |}""".stripMargin
 
 def CLAIMS_PRESENTED =
   """{

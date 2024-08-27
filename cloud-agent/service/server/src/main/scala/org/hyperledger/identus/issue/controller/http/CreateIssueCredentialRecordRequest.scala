@@ -156,7 +156,7 @@ object CreateIssueCredentialRecordRequest {
 
     object goal
         extends Annotation[Option[String]](
-          description ="""
+          description = """
           | A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.
           | goal is optional and can be provided when the offer is from invitation for connectionless issuance.
           |""".stripMargin,

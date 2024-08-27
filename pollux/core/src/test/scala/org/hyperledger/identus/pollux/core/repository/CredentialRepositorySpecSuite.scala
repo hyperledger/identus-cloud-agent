@@ -24,7 +24,7 @@ object CredentialRepositorySpecSuite {
     schemaUri = None,
     credentialDefinitionId = None,
     credentialDefinitionUri = None,
-    credentialFormat = credentialFormat, 
+    credentialFormat = credentialFormat,
     invitation = None,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,

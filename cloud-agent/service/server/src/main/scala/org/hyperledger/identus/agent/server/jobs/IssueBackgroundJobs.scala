@@ -225,7 +225,9 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- buildWalletAccessContextLayer(offer.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient")))
+            walletAccessContext <- buildWalletAccessContextLayer(
+              offer.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient"))
+            )
             result <- for {
               credentialService <- ZIO.service[CredentialService]
               _ <- credentialService
@@ -268,7 +270,9 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- buildWalletAccessContextLayer(offer.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient")))
+            walletAccessContext <- buildWalletAccessContextLayer(
+              offer.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient"))
+            )
             result <- for {
               credentialService <- ZIO.service[CredentialService]
               _ <- credentialService
@@ -311,7 +315,9 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- buildWalletAccessContextLayer(offer.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient")))
+            walletAccessContext <- buildWalletAccessContextLayer(
+              offer.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient"))
+            )
             result <- for {
               credentialService <- ZIO.service[CredentialService]
               _ <- credentialService
@@ -619,7 +625,8 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               .gauge("issuance_flow_issuer_send_cred_flow_ms_gauge")
               .trackDurationWith(_.toMetricsSeconds)
 
-        case record: IssueCredentialRecord => ZIO.logDebug(s"IssuanceRecord: ${record.id} - ${record.protocolState}") *> ZIO.unit
+        case record: IssueCredentialRecord =>
+          ZIO.logDebug(s"IssuanceRecord: ${record.id} - ${record.protocolState}") *> ZIO.unit
       }
     } yield ()
 

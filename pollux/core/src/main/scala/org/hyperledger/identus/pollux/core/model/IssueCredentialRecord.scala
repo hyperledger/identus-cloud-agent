@@ -1,6 +1,7 @@
 package org.hyperledger.identus.pollux.core.model
 
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.issuecredential.{
   IssueCredential,
   IssueCredentialIssuedFormat,
@@ -16,7 +17,6 @@ import org.hyperledger.identus.shared.models.*
 import java.time.temporal.ChronoUnit
 import java.time.Instant
 import java.util.UUID
-import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 
 final case class IssueCredentialRecord(
     id: DidCommID,
@@ -132,7 +132,7 @@ object IssueCredentialRecord {
     case CredentialReceived extends ProtocolState
     // Issuer has created a OOB Credential offer request  (in Issuer DB)
     case InvitationGenerated extends ProtocolState
-    // Issuer receives a Credential offer from an expired OOB Credential offer request (update Issuer DB) 
+    // Issuer receives a Credential offer from an expired OOB Credential offer request (update Issuer DB)
     case InvitationExpired extends ProtocolState
 
 }

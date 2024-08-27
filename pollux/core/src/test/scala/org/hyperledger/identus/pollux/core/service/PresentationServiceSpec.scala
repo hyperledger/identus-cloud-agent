@@ -866,7 +866,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           schemaUri = Some(schemaId),
           credentialDefinitionId = Some(credentialDefinitionDb.guid),
           credentialDefinitionUri = Some(credentialDefinitionId),
-          credentialFormat = CredentialFormat.AnonCreds,  
+          credentialFormat = CredentialFormat.AnonCreds,
           invitation = None,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,

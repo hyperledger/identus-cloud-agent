@@ -158,11 +158,11 @@ trait CredentialService {
   def markCredentialSent(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
-  
+
   def markCredentialOfferInvitationExpired(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
-  
+
   def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[Failure]
@@ -177,7 +177,7 @@ trait CredentialService {
   def getCredentialOfferInvitation(
       pairwiseHolderDID: DidId,
       invitation: String
-  ): ZIO[WalletAccessContext, CredentialServiceError, OfferCredential]  
+  ): ZIO[WalletAccessContext, CredentialServiceError, OfferCredential]
 }
 
 object CredentialService {

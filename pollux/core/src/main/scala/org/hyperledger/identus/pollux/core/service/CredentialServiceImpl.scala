@@ -1,16 +1,17 @@
 package org.hyperledger.identus.pollux.core.service
 
-import io.circe.Json
 import cats.implicits.*
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
+import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.*
 import org.hyperledger.identus.pollux.anoncreds.*
@@ -29,9 +30,7 @@ import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, 
 import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
-import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.shared.utils.Base64Utils
-
 import zio.*
 import zio.json.*
 import zio.prelude.ZValidation
@@ -141,18 +140,20 @@ class CredentialServiceImpl(
       expirationDuration: Option[Duration],
   ): URIO[WalletAccessContext, IssueCredentialRecord] = {
     for {
-      invitation <- ZIO.succeed(connectionId.fold(
-        Some(
-          IssueCredentialInvitation.makeInvitation(
-            pairwiseIssuerDID,
-            goalCode,
-            goal,
-            thid.value,
-            offer,
-            expirationDuration
+      invitation <- ZIO.succeed(
+        connectionId.fold(
+          Some(
+            IssueCredentialInvitation.makeInvitation(
+              pairwiseIssuerDID,
+              goalCode,
+              goal,
+              thid.value,
+              offer,
+              expirationDuration
+            )
           )
-        )
-      )(_ => None))
+        )(_ => None)
+      )
       record <- ZIO.succeed(
         IssueCredentialRecord(
           id = DidCommID(),
@@ -263,7 +264,7 @@ class CredentialServiceImpl(
         IssueCredentialOfferFormat.SDJWT
       )
       record <- createIssueCredentialRecord(
-        pairwiseIssuerDID = pairwiseIssuerDID ,
+        pairwiseIssuerDID = pairwiseIssuerDID,
         thid = thid,
         schemaUri = maybeSchemaId,
         validityPeriod = validityPeriod,
@@ -852,7 +853,8 @@ class CredentialServiceImpl(
       request = RequestCredential(
         body = body,
         attachments = attachments,
-        from = offerCredential.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient")),
+        from =
+          offerCredential.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient")),
         to = offerCredential.from,
         thid = offerCredential.thid
       )

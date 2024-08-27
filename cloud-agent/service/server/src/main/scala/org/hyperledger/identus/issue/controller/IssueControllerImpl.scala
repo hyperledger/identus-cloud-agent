@@ -12,12 +12,13 @@ import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRela
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.issue.controller.http.{
+  AcceptCredentialOfferInvitation,
   AcceptCredentialOfferRequest,
   CreateIssueCredentialRecordRequest,
   IssueCredentialRecord,
-  IssueCredentialRecordPage,
-  AcceptCredentialOfferInvitation
+  IssueCredentialRecordPage
 }
+import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
@@ -25,8 +26,8 @@ import org.hyperledger.identus.pollux.core.service.CredentialService
 import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
 import zio.{URLayer, ZIO, ZLayer}
 import zio.Duration
+
 import scala.language.implicitConversions
-import org.hyperledger.identus.mercury.model.DidId
 class IssueControllerImpl(
     credentialService: CredentialService,
     connectionService: ConnectionService,
@@ -37,11 +38,11 @@ class IssueControllerImpl(
     with ControllerHelper {
 
   private case class OfferContext(
-    pairwiseIssuerDID: DidId,
-    pairwiseHolderDID: Option[DidId],
-    goalCode: Option[String],
-    goal: Option[String],
-    expirationDuration: Option[Duration]
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: Option[DidId],
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration]
   )
 
   private def createCredentialOfferRecord(
@@ -141,7 +142,8 @@ class IssueControllerImpl(
       request: CreateIssueCredentialRecordRequest
   )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
     for {
-      connectionId <- ZIO.fromOption(request.connectionId)
+      connectionId <- ZIO
+        .fromOption(request.connectionId)
         .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing connectionId for credential offer")))
       didIdPair <- getPairwiseDIDs(connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
       offerContext = OfferContext(
@@ -174,7 +176,7 @@ class IssueControllerImpl(
       request: AcceptCredentialOfferInvitation
   )(implicit
       rc: RequestContext
-  ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {    
+  ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
     for {
       peerDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
       credentialOffer <- credentialService.getCredentialOfferInvitation(

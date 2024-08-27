@@ -171,7 +171,7 @@ class CredentialServiceNotifier(
   override def markCredentialOfferInvitationExpired(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
-    notifyOnSuccess(svc.markCredentialOfferInvitationExpired(recordId))  
+    notifyOnSuccess(svc.markCredentialOfferInvitationExpired(recordId))
 
   override def receiveCredentialIssue(
       issueCredential: IssueCredential
