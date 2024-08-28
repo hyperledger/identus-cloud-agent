@@ -1,13 +1,10 @@
 package org.hyperledger.identus.pollux.prex
 
-import com.networknt.schema.JsonSchema
-import com.networknt.schema.SpecVersion
+import com.networknt.schema.{JsonSchema, SpecVersion}
 import io.circe.*
 import io.circe.generic.semiauto.*
 import io.circe.Json as CirceJson
-import org.hyperledger.identus.shared.json.JsonInterop
-import org.hyperledger.identus.shared.json.JsonSchemaError
-import org.hyperledger.identus.shared.json.JsonSchemaUtils
+import org.hyperledger.identus.shared.json.{JsonInterop, JsonSchemaError, JsonSchemaUtils}
 import zio.*
 import zio.json.ast.Json as ZioJson
 

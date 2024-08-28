@@ -17,7 +17,7 @@ import org.hyperledger.identus.pollux.core.service.serdes.{AnoncredCredentialPro
 import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, PresentationCompact}
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, PresentationPayload, W3cCredentialPayload}
 import org.hyperledger.identus.shared.models.*
-import zio._
+import zio.*
 import zio.json.*
 
 import java.time.Instant

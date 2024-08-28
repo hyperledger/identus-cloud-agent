@@ -1,12 +1,11 @@
 package org.hyperledger.identus.pollux.prex
 
-import org.hyperledger.identus.pollux.prex.PresentationDefinitionError.InvalidFilterJsonSchema
-import org.hyperledger.identus.pollux.prex.PresentationDefinitionError.JsonSchemaOptionNotSupported
-import org.hyperledger.identus.shared.json.JsonSchemaError
-import org.hyperledger.identus.shared.json.JsonSchemaValidator
-import org.hyperledger.identus.shared.json.JsonSchemaValidatorImpl
-import org.hyperledger.identus.shared.models.Failure
-import org.hyperledger.identus.shared.models.StatusCode
+import org.hyperledger.identus.pollux.prex.PresentationDefinitionError.{
+  InvalidFilterJsonSchema,
+  JsonSchemaOptionNotSupported
+}
+import org.hyperledger.identus.shared.json.{JsonSchemaError, JsonSchemaValidator, JsonSchemaValidatorImpl}
+import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 import zio.*
 
 import scala.jdk.CollectionConverters.*

@@ -3,8 +3,10 @@ package org.hyperledger.identus.pollux.prex
 import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.*
-import org.hyperledger.identus.pollux.prex.PresentationDefinitionError.InvalidFilterJsonSchema
-import org.hyperledger.identus.pollux.prex.PresentationDefinitionError.JsonSchemaOptionNotSupported
+import org.hyperledger.identus.pollux.prex.PresentationDefinitionError.{
+  InvalidFilterJsonSchema,
+  JsonSchemaOptionNotSupported
+}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
