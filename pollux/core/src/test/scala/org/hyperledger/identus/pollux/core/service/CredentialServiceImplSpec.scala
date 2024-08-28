@@ -73,7 +73,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           for {
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
-            pairwiseHolderDid = DidId("did:peer:HOLDER")
+            pairwiseHolderDid = Some(DidId("did:peer:HOLDER"))
             thid = DidCommID(UUID.randomUUID().toString)
             record <- svc.createJWTIssueCredentialRecord(
               thid = thid,
@@ -132,7 +132,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           for {
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
-            pairwiseHolderDid = DidId("did:peer:HOLDER")
+            pairwiseHolderDid = Some(DidId("did:peer:HOLDER"))
             claims = io.circe.parser
               .parse("""
                 |{
@@ -194,7 +194,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           for {
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
-            pairwiseHolderDid = DidId("did:peer:HOLDER")
+            pairwiseHolderDid = Some(DidId("did:peer:HOLDER"))
             claims = io.circe.parser
               .parse(
                 """

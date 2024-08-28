@@ -65,6 +65,41 @@ object IssueEndpoints {
         |""".stripMargin)
       .tag(tagName)
 
+  val createCredentialOfferInvitation: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, CreateIssueCredentialRecordRequest),
+    ErrorResponse,
+    IssueCredentialRecord,
+    Any
+  ] =
+    endpoint.post
+      .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in("issue-credentials" / "credential-offers" / "invitation")
+      .in(jsonBody[CreateIssueCredentialRecordRequest].description("The credential offer object."))
+      .errorOut(
+        oneOf(
+          FailureVariant.forbidden,
+          FailureVariant.badRequest,
+          FailureVariant.internalServerError,
+          FailureVariant.notFound
+        )
+      )
+      .out(
+        statusCode(StatusCode.Created)
+          .description("The credential issuance record was created successfully, and is returned in the response body.")
+      )
+      .out(jsonBody[IssueCredentialRecord].description("The issue credential record."))
+      .name("createCredentialOffer")
+      .summary("As a credential issuer, create a new credential offer that will be sent to a holder Agent.")
+      .description("""
+        |Creates a new credential offer that will be delivered, through a previously established DIDComm connection, to a holder Agent.
+        |The subsequent credential offer message adheres to the [Issue Credential Protocol 3.0 - Offer Credential](https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential#offer-credential) specification.
+        |The created offer can be of two types: 'JWT' or 'AnonCreds'.
+        |""".stripMargin)
+      .tag(tagName)
+
   val getCredentialRecords: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, PaginationInput, Option[String]),
@@ -176,6 +211,46 @@ object IssueEndpoints {
       .description("""
         |As a holder, accept a new credential offer received from an issuer Agent.
         |The subsequent credential request message sent to the issuer adheres to the [Issue Credential Protocol 3.0 - Request Credential](https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential#request-credential) specification.
+        |""".stripMargin)
+      .tag(tagName)
+
+  val acceptCredentialOfferInvitation: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, AcceptCredentialOfferInvitation),
+    ErrorResponse,
+    IssueCredentialRecord,
+    Any
+  ] =
+    endpoint.post
+      .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in(
+        "issue-credentials" / "credential-offers" / "accept-invitation"
+      )
+      .in(
+        jsonBody[AcceptCredentialOfferInvitation]
+          .description("The accept credential offer Invitation OOB message.")
+      )
+      .errorOut(
+        oneOf(
+          FailureVariant.forbidden,
+          FailureVariant.badRequest,
+          FailureVariant.internalServerError,
+          FailureVariant.notFound
+        )
+      )
+      .out(
+        jsonBody[IssueCredentialRecord]
+          .description(
+            "The issue credential offer Invitation was successfully accepted, and new record with RequestReceived state is returned in the response body."
+          )
+      )
+      .name("acceptCredentialOfferInvitation")
+      .summary("As a holder, accept a new credential offer invitation received from another issuer Agent.")
+      .description("""
+        |As a holder, accept a new credential offer invitation received from an issuer Agent.
+        |The credential offer request message from issuer is decoded and processed. New record with RequestReceived state is created.
         |""".stripMargin)
       .tag(tagName)
 

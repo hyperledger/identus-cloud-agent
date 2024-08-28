@@ -1,4 +1,4 @@
-package org.hyperledger.identus.mercury.protocol.presentproof
+package org.hyperledger.identus.mercury.protocol.issuecredential
 
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
@@ -6,16 +6,16 @@ import zio.Duration
 
 import java.time.Instant
 
-object PresentProofInvitation {
+object IssueCredentialInvitation {
   def makeInvitation(
       from: DidId,
       goalCode: Option[String],
       goal: Option[String],
       invitationId: String,
-      requestPresentation: RequestPresentation,
+      offerCredential: OfferCredential,
       expirationDuration: Option[Duration] = None,
   ): Invitation = {
-    val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = requestPresentation)
+    val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(payload = offerCredential)
     val now = Instant.now
     Invitation(
       id = invitationId,

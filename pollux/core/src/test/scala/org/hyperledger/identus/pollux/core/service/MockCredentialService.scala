@@ -20,13 +20,17 @@ object MockCredentialService extends Mock[CredentialService] {
       extends Effect[
         (
             DidId,
-            DidId,
+            Option[DidId],
             DidCommID,
             Option[String],
             Json,
             Option[Double],
             Option[Boolean],
-            CanonicalPrismDID
+            CanonicalPrismDID,
+            Option[String],
+            Option[String],
+            Option[Duration],
+            Option[UUID]
         ),
         Nothing,
         IssueCredentialRecord
@@ -35,13 +39,17 @@ object MockCredentialService extends Mock[CredentialService] {
       extends Effect[
         (
             DidId,
-            DidId,
+            Option[DidId],
             DidCommID,
             Option[String],
             Json,
             Option[Double],
             Option[Boolean],
-            CanonicalPrismDID
+            CanonicalPrismDID,
+            Option[String],
+            Option[String],
+            Option[Duration],
+            Option[UUID]
         ),
         Nothing,
         IssueCredentialRecord
@@ -51,13 +59,17 @@ object MockCredentialService extends Mock[CredentialService] {
       extends Effect[
         (
             DidId,
-            DidId,
+            Option[DidId],
             DidCommID,
             UUID,
             Json,
             Option[Double],
             Option[Boolean],
-            String
+            String,
+            Option[String],
+            Option[String],
+            Option[Duration],
+            Option[UUID]
         ),
         Nothing,
         IssueCredentialRecord
@@ -94,27 +106,38 @@ object MockCredentialService extends Mock[CredentialService] {
         IssueCredentialRecord
       ]
   object MarkOfferSent extends Effect[DidCommID, InvalidStateForOperation, IssueCredentialRecord]
+  object MarkCredentialOfferInvitationExpired extends Effect[DidCommID, InvalidStateForOperation, IssueCredentialRecord]
   object MarkRequestSent extends Effect[DidCommID, InvalidStateForOperation, IssueCredentialRecord]
   object MarkCredentialSent extends Effect[DidCommID, InvalidStateForOperation, IssueCredentialRecord]
   object MarkCredentialPublicationPending extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkCredentialPublicationQueued extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object MarkCredentialPublished extends Effect[DidCommID, CredentialServiceError, IssueCredentialRecord]
   object ReportProcessingFailure extends Effect[(DidCommID, Option[Failure]), Nothing, Unit]
-
+  object GetCredentialOfferInvitation extends Effect[(DidId, String), CredentialServiceError, OfferCredential]
   override val compose: URLayer[mock.Proxy, CredentialService] = ZLayer {
     for {
       proxy <- ZIO.service[Proxy]
     } yield new CredentialService {
 
+      override def getCredentialOfferInvitation(
+          pairwiseHolderDID: DidId,
+          invitation: String
+      ): ZIO[WalletAccessContext, CredentialServiceError, OfferCredential] =
+        proxy(GetCredentialOfferInvitation, pairwiseHolderDID, invitation)
+
       override def createJWTIssueCredentialRecord(
           pairwiseIssuerDID: DidId,
-          pairwiseHolderDID: DidId,
+          pairwiseHolderDID: Option[DidId],
           thid: DidCommID,
           maybeSchemaId: Option[String],
           claims: Json,
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
-          issuingDID: CanonicalPrismDID
+          issuingDID: CanonicalPrismDID,
+          goalCode: Option[String],
+          goal: Option[String],
+          expirationDuration: Option[Duration],
+          connectionId: Option[UUID]
       ): URIO[WalletAccessContext, IssueCredentialRecord] =
         proxy(
           CreateJWTIssueCredentialRecord,
@@ -125,18 +148,26 @@ object MockCredentialService extends Mock[CredentialService] {
           claims,
           validityPeriod,
           automaticIssuance,
-          issuingDID
+          issuingDID,
+          goalCode,
+          goal,
+          expirationDuration,
+          connectionId
         )
 
       override def createSDJWTIssueCredentialRecord(
           pairwiseIssuerDID: DidId,
-          pairwiseHolderDID: DidId,
+          pairwiseHolderDID: Option[DidId],
           thid: DidCommID,
           maybeSchemaId: Option[String],
           claims: Json,
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
-          issuingDID: CanonicalPrismDID
+          issuingDID: CanonicalPrismDID,
+          goalCode: Option[String],
+          goal: Option[String],
+          expirationDuration: Option[Duration],
+          connectionId: Option[UUID]
       ): URIO[WalletAccessContext, IssueCredentialRecord] =
         proxy(
           CreateSDJWTIssueCredentialRecord,
@@ -147,18 +178,26 @@ object MockCredentialService extends Mock[CredentialService] {
           claims,
           validityPeriod,
           automaticIssuance,
-          issuingDID
+          issuingDID,
+          goalCode,
+          goal,
+          expirationDuration,
+          connectionId
         )
 
       override def createAnonCredsIssueCredentialRecord(
           pairwiseIssuerDID: DidId,
-          pairwiseHolderDID: DidId,
+          pairwiseHolderDID: Option[DidId],
           thid: DidCommID,
           credentialDefinitionGUID: UUID,
           credentialDefinitionId: String,
           claims: Json,
           validityPeriod: Option[Double],
-          automaticIssuance: Option[Boolean]
+          automaticIssuance: Option[Boolean],
+          goalCode: Option[String],
+          goal: Option[String],
+          expirationDuration: Option[Duration],
+          connectionId: Option[UUID]
       ): URIO[WalletAccessContext, IssueCredentialRecord] =
         proxy(
           CreateAnonCredsIssueCredentialRecord,
@@ -169,7 +208,11 @@ object MockCredentialService extends Mock[CredentialService] {
           claims,
           validityPeriod,
           automaticIssuance,
-          credentialDefinitionId
+          credentialDefinitionId,
+          goalCode,
+          goal,
+          expirationDuration,
+          connectionId
         )
 
       override def receiveCredentialOffer(offer: OfferCredential): IO[InvalidCredentialOffer, IssueCredentialRecord] =
@@ -231,6 +274,11 @@ object MockCredentialService extends Mock[CredentialService] {
           recordId: DidCommID
       ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord] =
         proxy(MarkOfferSent, recordId)
+
+      override def markCredentialOfferInvitationExpired(
+          recordId: DidCommID
+      ): ZIO[WalletAccessContext, InvalidStateForOperation, IssueCredentialRecord] =
+        proxy(MarkCredentialOfferInvitationExpired, recordId)
 
       override def markRequestSent(
           recordId: DidCommID

@@ -25,13 +25,17 @@ class CredentialServiceNotifier(
 
   override def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
-      issuingDID: CanonicalPrismDID
+      issuingDID: CanonicalPrismDID,
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
+      connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createJWTIssueCredentialRecord(
@@ -42,19 +46,27 @@ class CredentialServiceNotifier(
         claims,
         validityPeriod,
         automaticIssuance,
-        issuingDID
+        issuingDID,
+        goalCode,
+        goal,
+        expirationDuration,
+        connectionId
       )
     )
 
   override def createSDJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
-      issuingDID: CanonicalPrismDID
+      issuingDID: CanonicalPrismDID,
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
+      connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createSDJWTIssueCredentialRecord(
@@ -65,19 +77,27 @@ class CredentialServiceNotifier(
         claims,
         validityPeriod,
         automaticIssuance,
-        issuingDID
+        issuingDID,
+        goalCode,
+        goal,
+        expirationDuration,
+        connectionId
       )
     )
 
   override def createAnonCredsIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       thid: DidCommID,
       credentialDefinitionGUID: UUID,
       credentialDefinitionId: _root_.java.lang.String,
       claims: Json,
       validityPeriod: Option[Double],
-      automaticIssuance: Option[Boolean]
+      automaticIssuance: Option[Boolean],
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
+      connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createAnonCredsIssueCredentialRecord(
@@ -88,7 +108,11 @@ class CredentialServiceNotifier(
         credentialDefinitionId,
         claims,
         validityPeriod,
-        automaticIssuance
+        automaticIssuance,
+        goalCode,
+        goal,
+        expirationDuration,
+        connectionId
       )
     )
 
@@ -143,6 +167,11 @@ class CredentialServiceNotifier(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(svc.markCredentialSent(recordId))
+
+  override def markCredentialOfferInvitationExpired(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+    notifyOnSuccess(svc.markCredentialOfferInvitationExpired(recordId))
 
   override def receiveCredentialIssue(
       issueCredential: IssueCredential
@@ -242,6 +271,12 @@ class CredentialServiceNotifier(
       keyId: Option[KeyId]
   ): URIO[WalletAccessContext, Issuer] =
     svc.getJwtIssuer(jwtIssuerDID, verificationRelationship, keyId)
+
+  override def getCredentialOfferInvitation(
+      pairwiseHolderDID: DidId,
+      invitation: String
+  ): ZIO[WalletAccessContext, CredentialServiceError, OfferCredential] =
+    svc.getCredentialOfferInvitation(pairwiseHolderDID, invitation)
 }
 
 object CredentialServiceNotifier {
