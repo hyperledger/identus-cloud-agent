@@ -1,6 +1,6 @@
 package org.hyperledger.identus.pollux.core.model.schema.`type`
 
-import org.hyperledger.identus.pollux.core.model.schema.validator.SchemaSerDes
+import org.hyperledger.identus.shared.json.SchemaSerDes
 import zio.*
 import zio.json.*
 import zio.json.ast.Json

@@ -7,7 +7,8 @@ import com.nimbusds.jwt.SignedJWT
 import io.circe.*
 import io.circe.syntax.*
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, KmpEd25519KeyOps}
-import org.hyperledger.identus.shared.utils.{Base64Utils, Json as JsonUtils}
+import org.hyperledger.identus.shared.json.Json as JsonUtils
+import org.hyperledger.identus.shared.utils.Base64Utils
 import scodec.bits.ByteVector
 import zio.*
 

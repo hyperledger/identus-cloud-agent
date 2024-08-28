@@ -1,4 +1,4 @@
-package org.hyperledger.identus.shared.utils
+package org.hyperledger.identus.shared.json
 
 import com.apicatalog.jsonld.document.JsonDocument
 import com.apicatalog.jsonld.http.media.MediaType
