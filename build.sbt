@@ -344,15 +344,6 @@ lazy val D_EventNotification = new {
   val baseDependencies: Seq[ModuleID] = zioDependencies
 }
 
-lazy val D_Pollux_PreX = new {
-  val baseDependencies: Seq[ModuleID] = Seq(
-    D.zioJson,
-    D.circeCore,
-    D.circeGeneric,
-    D.circeParser
-  )
-}
-
 lazy val D_Pollux_AnonCreds = new {
   val baseDependencies: Seq[ModuleID] = Seq(D.zio, D.zioJson)
 }
@@ -781,10 +772,7 @@ lazy val polluxDoobie = project
 lazy val polluxPreX = project
   .in(file("pollux/prex"))
   .settings(commonSetttings)
-  .settings(
-    name := "pollux-prex",
-    libraryDependencies ++= D_Pollux_PreX.baseDependencies
-  )
+  .settings(name := "pollux-prex")
   .dependsOn(shared, sharedJson)
 
 // ########################
