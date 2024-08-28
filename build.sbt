@@ -600,7 +600,7 @@ lazy val protocolIssueCredential = project
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
-  .dependsOn(models)
+  .dependsOn(models, protocolInvitation)
 
 lazy val protocolRevocationNotification = project
   .in(file("mercury/protocol-revocation-notification"))

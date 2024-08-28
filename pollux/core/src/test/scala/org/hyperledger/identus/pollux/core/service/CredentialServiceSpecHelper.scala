@@ -47,7 +47,7 @@ trait CredentialServiceSpecHelper {
       thid: Option[UUID] = Some(UUID.randomUUID())
   ) = OfferCredential(
     from = DidId("did:prism:issuer"),
-    to = DidId("did:prism:holder"),
+    to = Some(DidId("did:prism:holder")),
     thid = thid.map(_.toString),
     attachments = Seq(
       AttachmentDescriptor.buildJsonAttachment(
@@ -105,7 +105,7 @@ trait CredentialServiceSpecHelper {
   extension (svc: CredentialService)
     def createJWTIssueCredentialRecord(
         pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
-        pairwiseHolderDID: DidId = DidId("did:prism:holder-pairwise"),
+        pairwiseHolderDID: Option[DidId] = Some(DidId("did:prism:holder-pairwise")),
         thid: DidCommID = DidCommID(),
         maybeSchemaId: Option[String] = None,
         claims: Json = io.circe.parser
@@ -133,14 +133,18 @@ trait CredentialServiceSpecHelper {
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
-        issuingDID = issuingDID
+        issuingDID = issuingDID,
+        goalCode = None,
+        goal = None,
+        expirationDuration = None,
+        connectionId = Some(UUID.randomUUID())
       )
     } yield record
 
     def createAnonCredsIssueCredentialRecord(
         credentialDefinitionGUID: UUID,
         pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
-        pairwiseHolderDID: DidId = DidId("did:prism:holder-pairwise"),
+        pairwiseHolderDID: Option[DidId] = Some(DidId("did:prism:holder-pairwise")),
         thid: DidCommID = DidCommID(),
         claims: Json = io.circe.parser
           .parse("""
@@ -165,7 +169,11 @@ trait CredentialServiceSpecHelper {
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
         credentialDefinitionGUID = credentialDefinitionGUID,
-        credentialDefinitionId = credentialDefinitionId
+        credentialDefinitionId = credentialDefinitionId,
+        goalCode = None,
+        goal = None,
+        expirationDuration = None,
+        connectionId = Some(UUID.randomUUID())
       )
     } yield record
 

@@ -67,7 +67,7 @@ object RequestCredential {
       body = RequestCredential.Body(goal_code = oc.body.goal_code, comment = oc.body.comment),
       attachments = oc.attachments,
       thid = oc.thid.orElse(Some(oc.id)),
-      from = oc.to,
+      from = oc.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient")),
       to = oc.from,
     )
 
