@@ -252,7 +252,9 @@ object CredentialPayload {
             ("credentialStatus", w3cCredentialPayload.maybeCredentialStatus.asJson),
             ("refreshService", w3cCredentialPayload.maybeRefreshService.asJson),
             ("evidence", w3cCredentialPayload.maybeEvidence.asJson),
-            ("termsOfUse", w3cCredentialPayload.maybeTermsOfUse.asJson)
+            ("termsOfUse", w3cCredentialPayload.maybeTermsOfUse.asJson),
+            ("validFrom", w3cCredentialPayload.maybeValidFrom.asJson),
+            ("validUntil", w3cCredentialPayload.maybeValidUntil.asJson)
           )
           .deepDropNullValues
           .dropEmptyValues
@@ -268,7 +270,9 @@ object CredentialPayload {
             ("credentialStatus", jwtVc.maybeCredentialStatus.asJson),
             ("refreshService", jwtVc.maybeRefreshService.asJson),
             ("evidence", jwtVc.maybeEvidence.asJson),
-            ("termsOfUse", jwtVc.maybeTermsOfUse.asJson)
+            ("termsOfUse", jwtVc.maybeTermsOfUse.asJson),
+            ("validFrom", jwtVc.maybeValidFrom.asJson),
+            ("validUntil", jwtVc.maybeValidUntil.asJson)
           )
           .deepDropNullValues
           .dropEmptyValues
@@ -360,8 +364,8 @@ object CredentialPayload {
           issuer <- c.downField("issuer").as[String]
           issuanceDate <- c.downField("issuanceDate").as[Instant]
           maybeExpirationDate <- c.downField("expirationDate").as[Option[Instant]]
-          maybeValidFrom <- c.downField("maybeValidFrom").as[Option[Instant]]
-          maybeValidUntil <- c.downField("maybeValidUntil").as[Option[Instant]]
+          maybeValidFrom <- c.downField("validFrom").as[Option[Instant]]
+          maybeValidUntil <- c.downField("validUntil").as[Option[Instant]]
           maybeCredentialSchema <- c.downField("credentialSchema").as[Option[CredentialSchema]]
           credentialSubject <- c.downField("credentialSubject").as[Json]
           maybeCredentialStatus <- c.downField("credentialStatus").as[Option[CredentialStatus]]
@@ -405,8 +409,8 @@ object CredentialPayload {
           maybeRefreshService <- c.downField("refreshService").as[Option[RefreshService]]
           maybeEvidence <- c.downField("evidence").as[Option[Json]]
           maybeTermsOfUse <- c.downField("termsOfUse").as[Option[Json]]
-          maybeValidFrom <- c.downField("maybeValidFrom").as[Option[Instant]]
-          maybeValidUntil <- c.downField("maybeValidUntil").as[Option[Instant]]
+          maybeValidFrom <- c.downField("validFrom").as[Option[Instant]]
+          maybeValidUntil <- c.downField("validUntil").as[Option[Instant]]
         } yield {
           JwtVc(
             `@context` = `@context`,
@@ -749,12 +753,6 @@ object JwtCredential {
       )
       .flatMap(_ => Validation.unit)
       .mapError(_.getMessage)
-  }
-
-  def verifyDates(jwtPayload: JwtVerifiableCredentialPayload, leeway: TemporalAmount)(implicit
-      clock: Clock
-  ): Validation[String, Unit] = {
-    verifyDates(jwtPayload.jwt, leeway)(clock)
   }
 
   def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {
