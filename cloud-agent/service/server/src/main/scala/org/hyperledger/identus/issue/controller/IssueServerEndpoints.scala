@@ -4,7 +4,11 @@ import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
-import org.hyperledger.identus.issue.controller.http.{AcceptCredentialOfferRequest, CreateIssueCredentialRecordRequest}
+import org.hyperledger.identus.issue.controller.http.{
+  AcceptCredentialOfferInvitation,
+  AcceptCredentialOfferRequest,
+  CreateIssueCredentialRecordRequest
+}
 import org.hyperledger.identus.issue.controller.IssueEndpoints.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.LogUtils.*
@@ -34,7 +38,7 @@ class IssueServerEndpoints(
       .serverLogic { wac =>
         { case (ctx: RequestContext, request: CreateIssueCredentialRecordRequest) =>
           issueController
-            .createCredentialOffer(request)(ctx)
+            .createCredentialOfferInvitation(request)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(ctx)
         }
@@ -76,6 +80,18 @@ class IssueServerEndpoints(
         }
       }
 
+  val acceptCredentialOfferInvitationEndpoint: ZServerEndpoint[Any, Any] =
+    acceptCredentialOfferInvitation
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
+        { case (ctx: RequestContext, request: AcceptCredentialOfferInvitation) =>
+          issueController
+            .acceptCredentialOfferInvitation(request)(ctx)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
+        }
+      }
+
   val issueCredentialEndpoint: ZServerEndpoint[Any, Any] =
     issueCredential
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
@@ -91,6 +107,7 @@ class IssueServerEndpoints(
   val all: List[ZServerEndpoint[Any, Any]] = List(
     createCredentialOfferEndpoint,
     createCredentialOfferInvitationEndpoint,
+    acceptCredentialOfferInvitationEndpoint,
     getCredentialRecordsEndpoint,
     getCredentialRecordEndpoint,
     acceptCredentialOfferEndpoint,
