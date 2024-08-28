@@ -225,7 +225,9 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- ZIO.fromOption(offer.to).flatMap(buildWalletAccessContextLayer)
+            walletAccessContext <- ZIO
+              .fromOption(offer.to)
+              .flatMap(buildWalletAccessContextLayer)
               .orElseFail(ZIO.die(new IllegalArgumentException("OfferCredential must have a recipient")))
             result <- for {
               credentialService <- ZIO.service[CredentialService]
@@ -269,7 +271,9 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- ZIO.fromOption(offer.to).flatMap(buildWalletAccessContextLayer)
+            walletAccessContext <- ZIO
+              .fromOption(offer.to)
+              .flatMap(buildWalletAccessContextLayer)
               .orElseFail(ZIO.die(new IllegalArgumentException("OfferCredential must have a recipient")))
             result <- for {
               credentialService <- ZIO.service[CredentialService]
@@ -313,7 +317,9 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- ZIO.fromOption(offer.to).flatMap(buildWalletAccessContextLayer)
+            walletAccessContext <- ZIO
+              .fromOption(offer.to)
+              .flatMap(buildWalletAccessContextLayer)
               .orElseFail(ZIO.die(new IllegalArgumentException("OfferCredential must have a recipient")))
             result <- for {
               credentialService <- ZIO.service[CredentialService]
