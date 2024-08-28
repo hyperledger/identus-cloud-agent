@@ -8,7 +8,7 @@ import io.circe.parser.decode
 import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitString
-import org.hyperledger.identus.shared.crypto.{KmpSecp256k1KeyOps, PublicKey as ApolloPublicKey}
+import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
 import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.utils.Base64Utils
 import pdi.jwt.*
