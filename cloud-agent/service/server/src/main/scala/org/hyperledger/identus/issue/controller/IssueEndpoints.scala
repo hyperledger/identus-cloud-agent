@@ -226,7 +226,7 @@ object IssueEndpoints {
       .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
-        "issue-credentials"/ "credential-offers" / "accept-invitation"
+        "issue-credentials" / "credential-offers" / "accept-invitation"
       )
       .in(
         jsonBody[AcceptCredentialOfferInvitation]

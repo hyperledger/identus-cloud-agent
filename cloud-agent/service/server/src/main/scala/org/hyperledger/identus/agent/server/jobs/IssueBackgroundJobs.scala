@@ -401,7 +401,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               _,
-              _,
+              invitation,
               Role.Issuer,
               _,
               _,
@@ -422,6 +422,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
             walletAccessContext <- buildWalletAccessContextLayer(request.to)
             result <- (for {
               credentialService <- ZIO.service[CredentialService]
+              _ <- checkInvitationExpiry(id, invitation).provideSomeLayer(ZLayer.succeed(walletAccessContext))
               _ <- credentialService.acceptCredentialRequest(id).provideSomeLayer(ZLayer.succeed(walletAccessContext))
             } yield ()).mapError(e => (walletAccessContext, e))
           } yield result
