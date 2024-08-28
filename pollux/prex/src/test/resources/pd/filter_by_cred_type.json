@@ -9,9 +9,7 @@
         "constraints": {
           "fields": [
             {
-              "path": [
-                "$.type"
-              ],
+              "path": ["$.type"],
               "filter": {
                 "type": "array"
               }

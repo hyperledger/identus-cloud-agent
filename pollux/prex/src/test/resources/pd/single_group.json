@@ -2,12 +2,14 @@
   "comment": "VP, OIDC, DIDComm, or CHAPI outer wrapper here",
   "presentation_definition": {
     "id": "32f54163-7166-48f1-93d8-ff217bdb0653",
-    "submission_requirements": [{
-      "name": "Citizenship Information",
-      "rule": "pick",
-      "count": 1,
-      "from": "A"
-    }],
+    "submission_requirements": [
+      {
+        "name": "Citizenship Information",
+        "rule": "pick",
+        "count": 1,
+        "from": "A"
+      }
+    ],
     "input_descriptors": [
       {
         "id": "citizenship_input_1",
@@ -31,7 +33,11 @@
               }
             },
             {
-              "path": ["$.credentialSubject.dob", "$.vc.credentialSubject.dob", "$.dob"],
+              "path": [
+                "$.credentialSubject.dob",
+                "$.vc.credentialSubject.dob",
+                "$.dob"
+              ],
               "filter": {
                 "type": "string"
               }
@@ -53,7 +59,11 @@
               }
             },
             {
-              "path": ["$.credentialSubject.birth_date", "$.vc.credentialSubject.birth_date", "$.birth_date"],
+              "path": [
+                "$.credentialSubject.birth_date",
+                "$.vc.credentialSubject.birth_date",
+                "$.birth_date"
+              ],
               "filter": {
                 "type": "string"
               }
