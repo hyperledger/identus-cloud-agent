@@ -225,9 +225,8 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- buildWalletAccessContextLayer(
-              offer.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient"))
-            )
+            walletAccessContext <- ZIO.fromOption(offer.to).flatMap(buildWalletAccessContextLayer)
+              .orElseFail(ZIO.die(new IllegalArgumentException("OfferCredential must have a recipient")))
             result <- for {
               credentialService <- ZIO.service[CredentialService]
               _ <- credentialService
@@ -270,9 +269,8 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- buildWalletAccessContextLayer(
-              offer.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient"))
-            )
+            walletAccessContext <- ZIO.fromOption(offer.to).flatMap(buildWalletAccessContextLayer)
+              .orElseFail(ZIO.die(new IllegalArgumentException("OfferCredential must have a recipient")))
             result <- for {
               credentialService <- ZIO.service[CredentialService]
               _ <- credentialService
@@ -315,9 +313,8 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           val holderPendingToGeneratedFlow = for {
-            walletAccessContext <- buildWalletAccessContextLayer(
-              offer.to.getOrElse(throw new IllegalArgumentException("OfferCredential must have a recipient"))
-            )
+            walletAccessContext <- ZIO.fromOption(offer.to).flatMap(buildWalletAccessContextLayer)
+              .orElseFail(ZIO.die(new IllegalArgumentException("OfferCredential must have a recipient")))
             result <- for {
               credentialService <- ZIO.service[CredentialService]
               _ <- credentialService
