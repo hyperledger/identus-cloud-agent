@@ -179,7 +179,6 @@ lazy val D_Shared = new {
       D.scalaPbGrpc,
       D.zio,
       D.zioHttp,
-      D.zioJson,
       D.scalaUri,
       D.zioPrelude,
       // FIXME: split shared DB stuff as subproject?

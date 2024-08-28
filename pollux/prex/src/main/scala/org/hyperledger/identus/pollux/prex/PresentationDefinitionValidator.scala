@@ -75,16 +75,14 @@ class PresentationDefinitionValidatorImpl(filterSchemaValidator: JsonSchemaValid
       .unit
   }
 
-  private def validateFilters(filters: Seq[FieldFilter]): IO[PresentationDefinitionError, Unit] = {
-    for {
-      _ <-
-        ZIO
-          .foreach(filters) { filter =>
-            val json = filter.asJsonZio
-            filterSchemaValidator
-              .validate(json.toString())
-              .mapError(InvalidFilterJsonSchema(json.toString(), _))
-          }
-    } yield ()
-  }
+  private def validateFilters(filters: Seq[FieldFilter]): IO[PresentationDefinitionError, Unit] =
+    ZIO
+      .foreach(filters) { filter =>
+        val json = filter.asJsonZio.toString()
+        filterSchemaValidator
+          .validate(json)
+          .mapError(InvalidFilterJsonSchema(json, _))
+      }
+      .unit
+
 }
