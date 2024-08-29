@@ -7,6 +7,7 @@ inThisBuild(
   Seq(
     organization := "org.hyperledger",
     scalaVersion := "3.3.3",
+    licenses := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
     fork := true,
     run / connectInput := true,
     releaseUseGlobalVersion := false,
