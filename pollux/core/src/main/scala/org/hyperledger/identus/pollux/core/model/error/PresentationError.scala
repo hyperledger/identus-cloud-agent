@@ -126,7 +126,7 @@ object PresentationError {
         StatusCode.BadRequest,
         s"Presentation Request missing connectionId"
       )
-      
+
   final case class MissingAnoncredPresentationRequest(error: String)
       extends PresentationError(
         StatusCode.InternalServerError,

@@ -34,20 +34,20 @@ class PresentProofControllerImpl(
   override def requestPresentation(request: RequestPresentationInput)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
-    val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] = 
-    for {
-      connectionId <- ZIO
-        .fromOption(request.connectionId)
-        .mapError(_ => PresentationError.MissingConnectionIdForPresentationRequest)
-      didIdPair <- getPairwiseDIDs(connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
-      record <- createRequestPresentation(
-        verifierDID = didIdPair.myDID,
-        proverDID = Some(didIdPair.theirDid),
-        connectionId = Some(request.connectionId.toString),
-        request = request,
-        expirationDuration = None
-      )
-    } yield PresentationStatus.fromDomain(record)
+    val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] =
+      for {
+        connectionId <- ZIO
+          .fromOption(request.connectionId)
+          .mapError(_ => PresentationError.MissingConnectionIdForPresentationRequest)
+        didIdPair <- getPairwiseDIDs(connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
+        record <- createRequestPresentation(
+          verifierDID = didIdPair.myDID,
+          proverDID = Some(didIdPair.theirDid),
+          connectionId = Some(request.connectionId.toString),
+          request = request,
+          expirationDuration = None
+        )
+      } yield PresentationStatus.fromDomain(record)
     result
   }
 
@@ -74,19 +74,19 @@ class PresentProofControllerImpl(
       request: RequestPresentationInput,
       expirationDuration: Option[Duration]
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
-      createPresentationRecord(
-          verifierDID,
-          proverDID,
-          connectionId,
-          request.credentialFormat,
-          request.proofs,
-          request.options.map(o => Options(o.challenge, o.domain)),
-          request.claims,
-          request.anoncredPresentationRequest,
-          request.goalCode,
-          request.goal,
-          expirationDuration
-        )
+    createPresentationRecord(
+      verifierDID,
+      proverDID,
+      connectionId,
+      request.credentialFormat,
+      request.proofs,
+      request.options.map(o => Options(o.challenge, o.domain)),
+      request.claims,
+      request.anoncredPresentationRequest,
+      request.goalCode,
+      request.goal,
+      expirationDuration
+    )
   }
 
   private def createPresentationRecord(

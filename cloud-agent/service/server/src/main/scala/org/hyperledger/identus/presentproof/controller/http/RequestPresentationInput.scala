@@ -68,7 +68,7 @@ object RequestPresentationInput {
           |""".stripMargin,
           example = Some("Request proof of vaccine")
         )
-        
+
     object options
         extends Annotation[Option[Options]](
           description = "The options to use when creating the proof presentation request (e.g., domain, challenge).",
