@@ -45,7 +45,7 @@ object RequestPresentationInput {
             |The unique identifier of a DIDComm connection that already exists between the this verifier agent and the prover cloud or edeg agent.
             |It should be the identifier of a connection that exists in the verifier agent's database.
             |This connection will be used to execute the present proof protocol.
-            |Note: connectionId is only required when the presenta  tion request is from existing connection.
+            |Note: connectionId is only required when the presentation request is from existing connection.
             |connectionId is not required when the presentation request is from invitation for connectionless issuance.
             |""".stripMargin,
           example = Some(UUID.fromString("d9569cec-c81e-4779-aa86-0d5994d82676"))
