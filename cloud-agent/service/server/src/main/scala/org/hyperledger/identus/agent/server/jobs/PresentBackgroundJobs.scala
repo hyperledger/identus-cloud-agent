@@ -17,6 +17,7 @@ import org.hyperledger.identus.castor.core.model.error.DIDResolutionError as Cas
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.mercury.protocol.reportproblem.v2.{ProblemCode, ReportProblem}
 import org.hyperledger.identus.pollux.core.model.*
@@ -68,6 +69,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           PresentationRecord.ProtocolState.PresentationReceived
         )
         .mapError(err => Throwable(s"Error occurred while getting Presentation records: $err"))
+      _ <- ZIO.logInfo(s"Processing ${records.size} Presentation records")
       _ <- ZIO
         .foreachPar(records)(performPresentProofExchange)
         .withParallelism(config.pollux.presentationBgJobProcessingParallelism)
@@ -96,13 +98,41 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
     for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalPending, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              InvitationGenerated,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _
+            ) =>
+          ZIO.unit
+        case PresentationRecord(_, _, _, _, _, _, _, _, InvitationExpired, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
+          ZIO.unit
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalPending, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
           ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalSent, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalSent, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
           ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalReceived, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalReceived, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
           ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalRejected, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProposalRejected, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
           ZIO.fail(NotImplemented)
         case PresentationRecord(
               id,
@@ -115,7 +145,9 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               RequestPending,
               _,
+              _,
               None,
+              _,
               _,
               _,
               _,
@@ -139,7 +171,9 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               RequestPending,
               _,
+              _,
               Some(requestPresentation),
+              _,
               _,
               _,
               _,
@@ -152,7 +186,31 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _
             ) => // Verifier
           Verifier.handleRequestPending(id, requestPresentation)
-        case PresentationRecord(id, _, _, _, _, _, _, _, RequestSent, _, _, _, _, _, _, _, _, _, _, _, _) => // Verifier
+        case PresentationRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              RequestSent,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _
+            ) => // Verifier
           ZIO.logDebug("PresentationRecord: RequestSent") *> ZIO.unit
         case PresentationRecord(
               id,
@@ -164,6 +222,8 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               RequestReceived,
+              _,
+              _,
               _,
               _,
               _,
@@ -199,14 +259,64 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               _,
+              _,
+              _,
               _
             ) => // Prover
           ZIO.logDebug("PresentationRecord: RequestRejected") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportPending, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              ProblemReportPending,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _
+            ) =>
           ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportSent, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
           ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _, _, _, ProblemReportReceived, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              ProblemReportReceived,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _
+            ) =>
           ZIO.fail(NotImplemented)
         case PresentationRecord(
               id,
@@ -219,10 +329,12 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               PresentationPending,
               _,
+              _,
               None,
               _,
               _,
               credentialsToUse,
+              _,
               _,
               _,
               _,
@@ -244,12 +356,14 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               PresentationPending,
               credentialFormat,
+              _,
               Some(requestPresentation),
               _,
               _,
               credentialsToUse,
               _,
               maybeCredentialsToUseJson,
+              _,
               _,
               _,
               _,
@@ -277,7 +391,9 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               _,
+              _,
               None,
+              _,
               _,
               _,
               _,
@@ -302,7 +418,9 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               _,
+              _,
               Some(presentation),
+              _,
               _,
               _,
               _,
@@ -315,7 +433,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           ZIO.logDebug("PresentationRecord: PresentationGenerated") *> ZIO.unit
           Prover.handlePresentationGenerated(id, presentation)
 
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationSent, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationSent") *> ZIO.unit
         case PresentationRecord(
               id,
@@ -330,7 +448,9 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               _,
+              _,
               None,
+              _,
               _,
               _,
               _,
@@ -341,7 +461,31 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _
             ) => // Verifier
           ZIO.fail(InvalidState("PresentationRecord in 'PresentationReceived' with no Presentation"))
-        case PresentationRecord(_, _, _, _, _, _, _, _, PresentationReceived, _, None, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              PresentationReceived,
+              _,
+              _,
+              None,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _
+            ) =>
           ZIO.fail(InvalidState("PresentationRecord in 'PresentationReceived' with no Presentation Request"))
         case PresentationRecord(
               id,
@@ -354,6 +498,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               PresentationReceived,
               credentialFormat,
+              invitation,
               Some(requestPresentation),
               _,
               Some(presentation),
@@ -364,10 +509,11 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               _,
+              _,
               _
             ) => // Verifier
           ZIO.logDebug("PresentationRecord: PresentationReceived") *> ZIO.unit
-          Verifier.PresentationReceived.handle(id, requestPresentation, presentation, credentialFormat)
+          Verifier.PresentationReceived.handle(id, requestPresentation, presentation, credentialFormat, invitation)
 
         case PresentationRecord(
               id,
@@ -390,15 +536,91 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _,
               _,
               _,
+              _,
+              _,
               _
             ) =>
           ZIO.logDebug("PresentationRecord: PresentationVerificationFailed") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationAccepted, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              PresentationAccepted,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _
+            ) =>
           ZIO.logDebug("PresentationRecord: PresentationVerifiedAccepted") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationVerified, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              PresentationVerified,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _
+            ) =>
           ZIO.logDebug("PresentationRecord: PresentationVerified") *> ZIO.unit
-        case PresentationRecord(id, _, _, _, _, _, _, _, PresentationRejected, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              PresentationRejected,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _
+            ) =>
           ZIO.logDebug("PresentationRecord: PresentationRejected") *> ZIO.unit
+        case _ =>
+          ZIO.logWarning(s"Unhandled PresentationRecord state: ${record.protocolState}")
       }
     } yield ()
   }
@@ -453,7 +675,10 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         Unit
       ] = {
         val proverPresentationPendingToGeneratedFlow = for {
-          walletAccessContext <- buildWalletAccessContextLayer(requestPresentation.to)
+          walletAccessContext <- ZIO
+            .fromOption(requestPresentation.to)
+            .flatMap(buildWalletAccessContextLayer)
+            .mapError(_ => PresentationError.RequestPresentationMissingField(id.value, "recipient"))
           _ <- for {
             presentationService <- ZIO.service[PresentationService]
             prover <- createPrismDIDIssuerFromPresentationCredentials(id, credentialsToUse.getOrElse(Nil))
@@ -472,24 +697,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                   presentationPayload.toW3CPresentationPayload,
                   prover
                 )
-                presentation <- ZIO.succeed(
-                  Presentation(
-                    body = Presentation.Body(
-                      goal_code = requestPresentation.body.goal_code,
-                      comment = requestPresentation.body.comment
-                    ),
-                    attachments = Seq(
-                      AttachmentDescriptor
-                        .buildBase64Attachment(
-                          payload = signedJwtPresentation.value.getBytes(),
-                          mediaType = Some(PresentCredentialFormat.JWT.name)
-                        )
-                    ),
-                    thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
-                    from = requestPresentation.to,
-                    to = requestPresentation.from
-                  )
-                )
+                presentation <- createPresentation(id, requestPresentation, signedJwtPresentation)
               } yield presentation
             _ <- presentationService
               .markPresentationGenerated(id, presentation)
@@ -498,6 +706,36 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         } yield ()
 
         proverPresentationPendingToGeneratedFlow
+      }
+
+      private def createPresentation(
+          id: DidCommID,
+          requestPresentation: RequestPresentation,
+          signedJwtPresentation: JWT
+      ): ZIO[Any, PresentationError, Presentation] = {
+        for {
+          from <- ZIO
+            .fromOption(requestPresentation.to)
+            .mapError(_ => PresentationError.RequestPresentationMissingField(id.value, "recipient"))
+          to <- ZIO
+            .fromOption(requestPresentation.from)
+            .mapError(_ => PresentationError.RequestPresentationMissingField(id.value, "sender"))
+        } yield Presentation(
+          body = Presentation.Body(
+            goal_code = requestPresentation.body.goal_code,
+            comment = requestPresentation.body.comment
+          ),
+          attachments = Seq(
+            AttachmentDescriptor
+              .buildBase64Attachment(
+                payload = signedJwtPresentation.value.getBytes(),
+                mediaType = Some(PresentCredentialFormat.JWT.name)
+              )
+          ),
+          thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
+          from = from,
+          to = to
+        )
       }
 
       private def handleSDJWT(
@@ -509,7 +747,10 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         ERROR,
         Unit
       ] = for {
-        walletAccessContext <- buildWalletAccessContextLayer(requestPresentation.to)
+        walletAccessContext <- ZIO
+          .fromOption(requestPresentation.to)
+          .flatMap(buildWalletAccessContextLayer)
+          .mapError(_ => PresentationError.RequestPresentationMissingField(id.value, "recipient"))
         result <-
           for {
             presentationService <- ZIO.service[PresentationService]
@@ -539,7 +780,10 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         maybeCredentialsToUseJson match {
           case Some(credentialsToUseJson) =>
             val proverPresentationPendingToGeneratedFlow = for {
-              walletAccessContext <- buildWalletAccessContextLayer(requestPresentation.to)
+              walletAccessContext <- ZIO
+                .fromOption(requestPresentation.to)
+                .flatMap(buildWalletAccessContextLayer)
+                .mapError(_ => PresentationError.RequestPresentationMissingField(id.value, "recipient"))
               result <- for {
                 presentationService <- ZIO.service[PresentationService]
                 anoncredCredentialProofs <-
@@ -741,10 +985,14 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
       val verifierReqPendingToSentFlow = for {
         _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Message)")
-        walletAccessContext <- buildWalletAccessContextLayer(record.from)
+        walletAccessContext <- buildWalletAccessContextLayer(
+          record.from.getOrElse(throw new RuntimeException("from is None is not possible"))
+        )
         result <- for {
           didOps <- ZIO.service[DidOps]
-          didCommAgent <- buildDIDCommAgent(record.from).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+          didCommAgent <- buildDIDCommAgent(
+            record.from.getOrElse(throw new RuntimeException("from is None is not possible"))
+          ).provideSomeLayer(ZLayer.succeed(walletAccessContext))
           resp <-
             MessagingService
               .send(record.makeMessage)
@@ -797,7 +1045,8 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           id: DidCommID,
           requestPresentation: RequestPresentation,
           presentation: Presentation,
-          credentialFormat: CredentialFormat
+          credentialFormat: CredentialFormat,
+          invitation: Option[Invitation]
       ): ZIO[
         AppConfig & JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
         Failure,
@@ -805,14 +1054,34 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       ] = {
         val result =
           credentialFormat match {
-            case CredentialFormat.JWT       => handleJWT(id, requestPresentation, presentation)
-            case CredentialFormat.SDJWT     => handleSDJWT(id, presentation)
-            case CredentialFormat.AnonCreds => handleAnoncred(id, requestPresentation, presentation)
+            case CredentialFormat.JWT       => handleJWT(id, requestPresentation, presentation, invitation)
+            case CredentialFormat.SDJWT     => handleSDJWT(id, presentation, invitation)
+            case CredentialFormat.AnonCreds => handleAnoncred(id, requestPresentation, presentation, invitation)
           }
         result @@ metric
       }
 
-      private def handleJWT(id: DidCommID, requestPresentation: RequestPresentation, presentation: Presentation): ZIO[
+      private def checkInvitationExpiry(
+          id: DidCommID,
+          invitation: Option[Invitation]
+      ): ZIO[PresentationService & WalletAccessContext, PresentationError, Unit] = {
+        invitation.flatMap(_.expires_time) match {
+          case Some(expiryTime) if Instant.now().getEpochSecond > expiryTime =>
+            for {
+              service <- ZIO.service[PresentationService]
+              _ <- service.markPresentationInvitationExpired(id)
+              _ <- ZIO.fail(PresentationError.InvitationExpired(s"Invitation has expired. Expiry time: $expiryTime"))
+            } yield ()
+          case _ => ZIO.unit
+        }
+      }
+
+      private def handleJWT(
+          id: DidCommID,
+          requestPresentation: RequestPresentation,
+          presentation: Presentation,
+          invitation: Option[Invitation]
+      ): ZIO[
         AppConfig & JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
         Failure,
         Unit
@@ -820,6 +1089,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         val clock = java.time.Clock.system(ZoneId.systemDefault)
         for {
           walletAccessContext <- buildWalletAccessContextLayer(presentation.to)
+          _ <- checkInvitationExpiry(id, invitation).provideSomeLayer(ZLayer.succeed(walletAccessContext))
           result <- for {
             didResolverService <- ZIO.service[JwtDidResolver]
             credentialsClaimsValidationResult <- presentation.attachments.head.data match {
@@ -926,13 +1196,14 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         } yield result
       }
 
-      private def handleSDJWT(id: DidCommID, presentation: Presentation): ZIO[
+      private def handleSDJWT(id: DidCommID, presentation: Presentation, invitation: Option[Invitation]): ZIO[
         JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
         Failure,
         Unit
       ] = {
         for {
           walletAccessContext <- buildWalletAccessContextLayer(presentation.to)
+          _ <- checkInvitationExpiry(id, invitation).provideSomeLayer(ZLayer.succeed(walletAccessContext))
           result <- for {
             didResolverService <- ZIO.service[JwtDidResolver]
             credentialsClaimsValidationResult <- presentation.attachments.head.data match {
@@ -994,7 +1265,8 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       private def handleAnoncred(
           id: DidCommID,
           requestPresentation: RequestPresentation,
-          presentation: Presentation
+          presentation: Presentation,
+          invitation: Option[Invitation]
       ): ZIO[
         PresentationService & DIDNonSecretStorage & MESSAGING_RESOURCES,
         PresentationError | DIDSecretStorageError,
@@ -1002,12 +1274,13 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       ] = {
         for {
           walletAccessContext <- buildWalletAccessContextLayer(presentation.to)
-          presReceivedToProcessedAspect = CustomMetricsAspect.endRecordingTime(
-            s"${id}_present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge",
-            "present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge"
-          )
+          _ <- checkInvitationExpiry(id, invitation).provideSomeLayer(ZLayer.succeed(walletAccessContext))
           result <- for {
             service <- ZIO.service[PresentationService]
+            presReceivedToProcessedAspect = CustomMetricsAspect.endRecordingTime(
+              s"${id}_present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge",
+              "present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge"
+            )
             _ <- (service
               .verifyAnoncredPresentation(presentation, requestPresentation, id)
               .provideSomeLayer(ZLayer.succeed(walletAccessContext)) @@ presReceivedToProcessedAspect)
@@ -1037,11 +1310,11 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
     }
   }
 
-  val syncDIDPublicationStateFromDlt: ZIO[WalletAccessContext & ManagedDIDService, GetManagedDIDError, Unit] =
-    for {
-      managedDidService <- ZIO.service[ManagedDIDService]
-      _ <- managedDidService.syncManagedDIDState
-      _ <- managedDidService.syncUnconfirmedUpdateOperations
-    } yield ()
+//  val syncDIDPublicationStateFromDlt: ZIO[WalletAccessContext & ManagedDIDService, GetManagedDIDError, Unit] =
+//    for {
+//      managedDidService <- ZIO.service[ManagedDIDService]
+//      _ <- managedDidService.syncManagedDIDState
+//      _ <- managedDidService.syncUnconfirmedUpdateOperations
+//    } yield ()
 
 }

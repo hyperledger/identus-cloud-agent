@@ -44,11 +44,11 @@ lazy val V = new {
   val munitZio = "0.2.0"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.22"
-  val zioConfig = "4.0.1"
-  val zioLogging = "2.1.17"
+  val zio = "2.1.1"
+  val zioConfig = "4.0.2"
+  val zioLogging = "2.2.4"
   val zioJson = "0.6.2"
-  val zioHttp = "3.0.0-RC6"
+  val zioHttp = "3.0.0-RC7"
   val zioCatsInterop = "3.3.0" // TODO "23.1.0.2" // https://mvnrepository.com/artifact/dev.zio/zio-interop-cats
   val zioMetricsConnector = "2.3.1"
   val zioMock = "1.0.0-RC12"
@@ -78,7 +78,7 @@ lazy val V = new {
   val scalaUri = "4.0.3"
 
   val jwtCirceVersion = "9.4.6"
-  val zioPreludeVersion = "1.0.0-RC24"
+  val zioPreludeVersion = "1.0.0-RC26"
 
   val apollo = "1.3.5"
 
@@ -117,6 +117,7 @@ lazy val D = new {
   val circeGeneric: ModuleID = "io.circe" %% "circe-generic" % V.circe
   val circeParser: ModuleID = "io.circe" %% "circe-parser" % V.circe
 
+  val networkntJsonSchemaValidator = "com.networknt" % "json-schema-validator" % V.jsonSchemaValidator
   val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
   val jsonCanonicalization: ModuleID = "io.github.erdtman" % "java-json-canonicalization" % "1.1"
   val titaniumJsonLd: ModuleID = "com.apicatalog" % "titanium-json-ld" % "1.4.0"
@@ -178,16 +179,28 @@ lazy val D_Shared = new {
       D.zio,
       D.zioHttp,
       D.scalaUri,
+      D.zioPrelude,
       // FIXME: split shared DB stuff as subproject?
       D.doobieHikari,
       D.doobiePostgres,
       D.zioCatsInterop,
-      D.zioPrelude,
+    )
+}
+
+lazy val D_SharedJson = new {
+  lazy val dependencies: Seq[ModuleID] =
+    Seq(
+      D.zio,
+      D.zioJson,
+      D.circeCore,
+      D.circeGeneric,
+      D.circeParser,
       D.jsonCanonicalization,
       D.titaniumJsonLd,
       D.jakartaJson,
       D.ironVC,
       D.scodecBits,
+      D.networkntJsonSchemaValidator
     )
 }
 
@@ -302,16 +315,8 @@ lazy val D_Pollux = new {
 
 lazy val D_Pollux_VC_JWT = new {
 
-  private lazy val circeJsonSchema = ("net.reactivecore" %% "circe-json-schema" % "0.4.1")
-    .cross(CrossVersion.for3Use2_13)
-    .exclude("io.circe", "circe-core_2.13")
-    .exclude("io.circe", "circe-generic_2.13")
-    .exclude("io.circe", "circe-parser_2.13")
-
   val zio = "dev.zio" %% "zio" % V.zio
   val zioPrelude = "dev.zio" %% "zio-prelude" % V.zioPreludeVersion
-
-  val networkntJsonSchemaValidator = "com.networknt" % "json-schema-validator" % V.jsonSchemaValidator
 
   val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
@@ -320,7 +325,7 @@ lazy val D_Pollux_VC_JWT = new {
   // Dependency Modules
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
   val baseDependencies: Seq[ModuleID] =
-    zioDependencies :+ D.jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ D.scalaTest
+    zioDependencies :+ D.jwtCirce :+ D.networkntJsonSchemaValidator :+ D.nimbusJwt :+ D.scalaTest
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
@@ -469,6 +474,15 @@ lazy val shared = (project in file("shared/core"))
     libraryDependencies ++= D_Shared.dependencies
   )
 
+lazy val sharedJson = (project in file("shared/json"))
+  .settings(commonSetttings)
+  .settings(
+    name := "shared-json",
+    crossPaths := false,
+    libraryDependencies ++= D_SharedJson.dependencies
+  )
+  .dependsOn(shared)
+
 lazy val sharedCrypto = (project in file("shared/crypto"))
   .configure(commonConfigure)
   .settings(commonSetttings)
@@ -605,7 +619,7 @@ lazy val protocolIssueCredential = project
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
-  .dependsOn(models)
+  .dependsOn(models, protocolInvitation)
 
 lazy val protocolRevocationNotification = project
   .in(file("mercury/protocol-revocation-notification"))
@@ -623,7 +637,7 @@ lazy val protocolPresentProof = project
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
-  .dependsOn(models)
+  .dependsOn(models, protocolInvitation)
 
 lazy val vc = project
   .in(file("mercury/vc"))
@@ -749,7 +763,7 @@ lazy val polluxVcJWT = project
     name := "pollux-vc-jwt",
     libraryDependencies ++= D_Pollux_VC_JWT.polluxVcJwtDependencies
   )
-  .dependsOn(castorCore)
+  .dependsOn(castorCore, sharedJson)
 
 lazy val polluxCore = project
   .in(file("pollux/core"))
@@ -770,6 +784,7 @@ lazy val polluxCore = project
     polluxAnoncreds,
     polluxVcJWT,
     polluxSDJWT,
+    polluxPreX
   )
 
 lazy val polluxDoobie = project
@@ -783,6 +798,12 @@ lazy val polluxDoobie = project
   .dependsOn(polluxCore % "compile->compile;test->test")
   .dependsOn(shared)
   .dependsOn(sharedTest % "test->test")
+
+lazy val polluxPreX = project
+  .in(file("pollux/prex"))
+  .settings(commonSetttings)
+  .settings(name := "pollux-prex")
+  .dependsOn(shared, sharedJson)
 
 // ########################
 // ### Pollux Anoncreds ###
@@ -936,6 +957,7 @@ releaseProcess := Seq[ReleaseStep](
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   shared,
+  sharedJson,
   sharedCrypto,
   sharedTest,
   models,
@@ -962,6 +984,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   polluxAnoncreds,
   polluxAnoncredsTest,
   polluxSDJWT,
+  polluxPreX,
   connectCore,
   connectDoobie,
   agentWalletAPI,

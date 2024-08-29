@@ -1,6 +1,6 @@
 # Routing Protocol 2.0
 
-This Protocol is parte of the DIDComm Messaging Specification.
+This Protocol is part of the DIDComm Messaging Specification.
 
 See [https://identity.foundation/didcomm-messaging/spec/#routing-protocol-20]
 

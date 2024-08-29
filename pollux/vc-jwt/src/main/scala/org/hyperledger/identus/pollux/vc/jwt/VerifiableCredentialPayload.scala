@@ -8,8 +8,7 @@ import io.circe.parser.decode
 import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitString
-import org.hyperledger.identus.pollux.vc.jwt.schema.{SchemaResolver, SchemaValidator}
-import org.hyperledger.identus.shared.crypto.{KmpSecp256k1KeyOps, PublicKey as ApolloPublicKey}
+import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
 import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.utils.Base64Utils
 import pdi.jwt.*
@@ -34,8 +33,6 @@ object DID {
 
 case class Issuer(did: DID, signer: Signer, publicKey: PublicKey)
 
-case class ApolloIssuer(did: DID, signer: Signer, publicKey: ApolloPublicKey)
-
 sealed trait VerifiableCredentialPayload
 
 case class W3cVerifiableCredentialPayload(payload: W3cCredentialPayload, proof: JwtProof)
@@ -43,8 +40,6 @@ case class W3cVerifiableCredentialPayload(payload: W3cCredentialPayload, proof: 
       VerifiableCredentialPayload
 
 case class JwtVerifiableCredentialPayload(jwt: JWT) extends VerifiableCredentialPayload
-
-case class AnoncredVerifiableCredentialPayload(json: String) extends VerifiableCredentialPayload //FIXME json type
 
 enum StatusPurpose(val str: String) {
   case Revocation extends StatusPurpose("Revocation")
@@ -84,6 +79,10 @@ sealed trait CredentialPayload {
 
   def maybeExp: Option[Instant]
 
+  def maybeValidFrom: Option[Instant]
+
+  def maybeValidUntil: Option[Instant]
+
   def iss: String
 
   def maybeCredentialStatus: Option[CredentialStatus]
@@ -110,7 +109,9 @@ sealed trait CredentialPayload {
         maybeCredentialStatus = maybeCredentialStatus,
         maybeRefreshService = maybeRefreshService,
         maybeEvidence = maybeEvidence,
-        maybeTermsOfUse = maybeTermsOfUse
+        maybeTermsOfUse = maybeTermsOfUse,
+        maybeValidFrom = maybeValidFrom,
+        maybeValidUntil = maybeValidUntil
       ),
       nbf = nbf,
       aud = aud,
@@ -132,107 +133,10 @@ sealed trait CredentialPayload {
       maybeRefreshService = maybeRefreshService,
       maybeEvidence = maybeEvidence,
       maybeTermsOfUse = maybeTermsOfUse,
-      aud = aud
+      aud = aud,
+      maybeValidFrom = maybeValidFrom,
+      maybeValidUntil = maybeValidUntil
     )
-}
-
-object CredentialPayloadValidation {
-
-  val DEFAULT_VC_TYPE = "VerifiableCredential"
-  val DEFAULT_CONTEXT = "https://www.w3.org/2018/credentials/v1"
-
-  def validateIssuerDid(maybeIssuerDid: Option[String]): Validation[String, String] = {
-    Validation
-      .fromOptionWith("Issuer Did is empty")(maybeIssuerDid)
-  }
-
-  def validateIssuanceDate(maybeIssuanceDate: Option[Instant]): Validation[String, Instant] = {
-    Validation
-      .fromOptionWith("Issuance Date is empty")(maybeIssuanceDate)
-  }
-
-  def validateContext(`@context`: Set[String]): Validation[String, NonEmptySet[String]] = {
-    Validation
-      .fromOptionWith("@context is empty")(`@context`.toNonEmptySet)
-      .flatMap(`nonEmpty@context` =>
-        Validation.fromPredicateWith("Missing default context from @context")(`nonEmpty@context`)(
-          _.contains(DEFAULT_CONTEXT)
-        )
-      )
-  }
-
-  def validateVcType(`type`: Set[String]): Validation[String, NonEmptySet[String]] = {
-    Validation
-      .fromOptionWith("Type is empty")(`type`.toNonEmptySet)
-      .flatMap(nonEmptyType =>
-        Validation.fromPredicateWith("Missing default type from `type`")(nonEmptyType)(
-          _.contains(DEFAULT_VC_TYPE)
-        )
-      )
-  }
-
-  def validateCredentialSchema(
-      maybeCredentialSchema: Option[Json]
-  )(schemaToValidator: Json => Validation[String, SchemaValidator]): Validation[String, Option[SchemaValidator]] = {
-    maybeCredentialSchema.fold(Validation.succeed(Option.empty))(credentialSchema => {
-      schemaToValidator(credentialSchema).map(Some(_))
-    })
-  }
-
-  def validateCredentialSubjectSchema(
-      credentialSubject: Json,
-      credentialSchemaValidator: SchemaValidator
-  ): Validation[String, Json] =
-    credentialSchemaValidator.validate(credentialSubject)
-
-  def validateCredentialSubject(
-      credentialSubject: Json,
-      maybeCredentialSchemaValidator: Option[SchemaValidator]
-  ): Validation[String, Json] = {
-    for {
-      validatedCredentialSubjectNotEmpty <- validateCredentialSubjectNotEmpty(credentialSubject)
-      validatedCredentialSubjectHasId <- validateCredentialSubjectHasId(validatedCredentialSubjectNotEmpty)
-      validatedCredentialSubjectSchema <- maybeCredentialSchemaValidator
-        .map(validateCredentialSubjectSchema(validatedCredentialSubjectHasId, _))
-        .getOrElse(Validation.succeed(validatedCredentialSubjectHasId))
-    } yield validatedCredentialSubjectSchema
-  }
-
-  def validate[C <: CredentialPayload](credentialPayload: C): Validation[String, C] =
-    Validation.validateWith(
-      CredentialPayloadValidation.validateContext(credentialPayload.`@context`),
-      CredentialPayloadValidation.validateVcType(credentialPayload.`type`)
-    ) { (`@context`, `type`) => credentialPayload }
-
-  def validateSchema[C <: CredentialPayload](credentialPayload: C)(schemaResolver: SchemaResolver)(
-      schemaToValidator: Json => Validation[String, SchemaValidator]
-  ): IO[String, C] =
-    val validation =
-      for {
-        resolvedSchema <- ZIO.foreach(credentialPayload.maybeCredentialSchema)(schemaResolver.resolve)
-        maybeDocumentValidator <- CredentialPayloadValidation
-          .validateCredentialSchema(resolvedSchema)(schemaToValidator)
-          .toZIO
-        maybeValidatedCredentialSubject <- CredentialPayloadValidation
-          .validateCredentialSubject(
-            credentialPayload.credentialSubject,
-            maybeDocumentValidator
-          )
-          .toZIO
-      } yield maybeValidatedCredentialSubject
-    validation.map(_ => credentialPayload)
-
-  private def validateCredentialSubjectNotEmpty(credentialSubject: Json): Validation[String, Json] = {
-    Validation
-      .fromPredicateWith("credentialSubject is empty.")(credentialSubject)(_.isObject)
-  }
-
-  private def validateCredentialSubjectHasId(credentialSubject: Json): Validation[String, Json] = {
-    Validation
-      .fromPredicateWith("credentialSubject must contain id.")(credentialSubject)(
-        _.asObject.exists(jsonObject => jsonObject.toMap.contains("id"))
-      )
-  }
 }
 
 case class JwtVc(
@@ -240,6 +144,8 @@ case class JwtVc(
     `type`: Set[String],
     maybeCredentialSchema: Option[CredentialSchema],
     credentialSubject: Json,
+    maybeValidFrom: Option[Instant],
+    maybeValidUntil: Option[Instant],
     maybeCredentialStatus: Option[CredentialStatus],
     maybeRefreshService: Option[RefreshService],
     maybeEvidence: Option[Json],
@@ -263,6 +169,8 @@ case class JwtCredentialPayload(
   override val maybeTermsOfUse = vc.maybeTermsOfUse
   override val maybeCredentialSchema = vc.maybeCredentialSchema
   override val credentialSubject = vc.credentialSubject
+  override val maybeValidFrom = vc.maybeValidFrom
+  override val maybeValidUntil = vc.maybeValidUntil
 }
 
 case class W3cCredentialPayload(
@@ -278,7 +186,9 @@ case class W3cCredentialPayload(
     override val maybeRefreshService: Option[RefreshService],
     override val maybeEvidence: Option[Json],
     override val maybeTermsOfUse: Option[Json],
-    override val aud: Set[String] = Set.empty
+    override val aud: Set[String] = Set.empty,
+    override val maybeValidFrom: Option[Instant],
+    override val maybeValidUntil: Option[Instant]
 ) extends CredentialPayload {
   override val maybeSub = credentialSubject.hcursor.downField("id").as[String].toOption
   override val maybeJti = maybeId
@@ -335,6 +245,8 @@ object CredentialPayload {
             ("issuer", w3cCredentialPayload.issuer.asJson),
             ("issuanceDate", w3cCredentialPayload.issuanceDate.asJson),
             ("expirationDate", w3cCredentialPayload.maybeExpirationDate.asJson),
+            ("validFrom", w3cCredentialPayload.maybeValidFrom.asJson),
+            ("validUntil", w3cCredentialPayload.maybeValidUntil.asJson),
             ("credentialSchema", w3cCredentialPayload.maybeCredentialSchema.asJson),
             ("credentialSubject", w3cCredentialPayload.credentialSubject),
             ("credentialStatus", w3cCredentialPayload.maybeCredentialStatus.asJson),
@@ -449,6 +361,8 @@ object CredentialPayload {
           issuer <- c.downField("issuer").as[String]
           issuanceDate <- c.downField("issuanceDate").as[Instant]
           maybeExpirationDate <- c.downField("expirationDate").as[Option[Instant]]
+          maybeValidFrom <- c.downField("maybeValidFrom").as[Option[Instant]]
+          maybeValidUntil <- c.downField("maybeValidUntil").as[Option[Instant]]
           maybeCredentialSchema <- c.downField("credentialSchema").as[Option[CredentialSchema]]
           credentialSubject <- c.downField("credentialSubject").as[Json]
           maybeCredentialStatus <- c.downField("credentialStatus").as[Option[CredentialStatus]]
@@ -463,6 +377,8 @@ object CredentialPayload {
             issuer = DID(issuer),
             issuanceDate = issuanceDate,
             maybeExpirationDate = maybeExpirationDate,
+            maybeValidFrom = maybeValidFrom,
+            maybeValidUntil = maybeValidUntil,
             maybeCredentialSchema = maybeCredentialSchema,
             credentialSubject = credentialSubject,
             maybeCredentialStatus = maybeCredentialStatus,
@@ -490,6 +406,8 @@ object CredentialPayload {
           maybeRefreshService <- c.downField("refreshService").as[Option[RefreshService]]
           maybeEvidence <- c.downField("evidence").as[Option[Json]]
           maybeTermsOfUse <- c.downField("termsOfUse").as[Option[Json]]
+          maybeValidFrom <- c.downField("maybeValidFrom").as[Option[Instant]]
+          maybeValidUntil <- c.downField("maybeValidUntil").as[Option[Instant]]
         } yield {
           JwtVc(
             `@context` = `@context`,
@@ -499,7 +417,9 @@ object CredentialPayload {
             maybeCredentialStatus = maybeCredentialStatus,
             maybeRefreshService = maybeRefreshService,
             maybeEvidence = maybeEvidence,
-            maybeTermsOfUse = maybeTermsOfUse
+            maybeTermsOfUse = maybeTermsOfUse,
+            maybeValidFrom = maybeValidFrom,
+            maybeValidUntil = maybeValidUntil,
           )
         }
 
@@ -562,53 +482,67 @@ object CredentialVerification {
 
   import CredentialPayload.Implicits.*
 
-  def validateCredential(
-      verifiableCredentialPayload: VerifiableCredentialPayload
-  )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
-    verifiableCredentialPayload match {
-      case (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) =>
-        W3CCredential.validateW3C(w3cVerifiableCredentialPayload)(didResolver)
-      case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
-        JwtCredential.validateEncodedJWT(jwtVerifiableCredentialPayload.jwt)(didResolver)
-      case (_: AnoncredVerifiableCredentialPayload) => UnexpectedCodeExecutionPath
-    }
+  def validateValidFromNotAfterValidUntil(
+      maybeValidFrom: Option[Instant],
+      maybeValidUntil: Option[Instant],
+      validFromName: String,
+      validUntilName: String
+  ): Validation[String, Unit] = {
+    (maybeValidFrom, maybeValidUntil)
+      .mapN((validFrom, validUntil) =>
+        if (validFrom.isAfter(validUntil))
+          Validation.fail(
+            s"Credential cannot expire before being in effect. $validFromName=$validFrom $validUntilName=$validUntil"
+          )
+        else Validation.unit
+      )
+      .getOrElse(Validation.unit)
   }
 
-  def verifyDates(issuanceDate: Instant, maybeExpirationDate: Option[Instant], leeway: TemporalAmount)(implicit
+  private def validateValidFrom(
+      maybeValidFrom: Option[Instant],
+      now: Instant,
+      leeway: TemporalAmount,
+      validFromName: String,
+  ): Validation[String, Unit] = {
+    maybeValidFrom
+      .map(validFrom =>
+        if (now.isBefore(validFrom.minus(leeway)))
+          Validation.fail(s"Credential is not yet in effect. now=$now $validFromName=$validFrom leeway=$leeway")
+        else Validation.unit
+      )
+      .getOrElse(Validation.unit)
+  }
+
+  private def validateValidUntil(
+      maybeValidUntil: Option[Instant],
+      now: Instant,
+      leeway: TemporalAmount,
+      validUntilName: String,
+  ): Validation[String, Unit] = {
+    maybeValidUntil
+      .map(validUntil =>
+        if (now.isAfter(validUntil.plus(leeway)))
+          Validation.fail(s"Credential has expired. now=$now $validUntilName=$validUntil leeway=$leeway")
+        else Validation.unit
+      )
+      .getOrElse(Validation.unit)
+  }
+
+  def verifyDates(
+      maybeValidFrom: Option[Instant],
+      maybeValidUntil: Option[Instant],
+      leeway: TemporalAmount,
+      validFromName: String,
+      validUntilName: String
+  )(implicit
       clock: Clock
   ): Validation[String, Unit] = {
     val now = clock.instant()
-
-    def validateNbfNotAfterExp(nbf: Instant, maybeExp: Option[Instant]): Validation[String, Unit] = {
-      maybeExp
-        .map(exp =>
-          if (nbf.isAfter(exp))
-            Validation.fail(s"Credential cannot expire before being in effect. nbf=$nbf exp=$exp")
-          else Validation.unit
-        )
-        .getOrElse(Validation.unit)
-    }
-
-    def validateNbf(nbf: Instant): Validation[String, Unit] = {
-      if (now.isBefore(nbf.minus(leeway)))
-        Validation.fail(s"Credential is not yet in effect. now=$now nbf=$nbf leeway=$leeway")
-      else Validation.unit
-    }
-
-    def validateExp(maybeExp: Option[Instant]): Validation[String, Unit] = {
-      maybeExp
-        .map(exp =>
-          if (now.isAfter(exp.plus(leeway)))
-            Validation.fail(s"Credential has expired. now=$now exp=$exp leeway=$leeway")
-          else Validation.unit
-        )
-        .getOrElse(Validation.unit)
-    }
-
     Validation.validateWith(
-      validateNbfNotAfterExp(issuanceDate, maybeExpirationDate),
-      validateNbf(issuanceDate),
-      validateExp(maybeExpirationDate)
+      validateValidFromNotAfterValidUntil(maybeValidFrom, maybeValidUntil, validFromName, validUntilName),
+      validateValidFrom(maybeValidFrom, now, leeway, validFromName),
+      validateValidUntil(maybeValidUntil, now, leeway, validUntilName)
     )((l, _, _) => l)
   }
 
@@ -799,28 +733,6 @@ object JwtCredential {
     )(_.iss)
   }
 
-  def validateJwtSchema(
-      jwt: JWT
-  )(schemaResolver: SchemaResolver)(
-      schemaToValidator: Json => Validation[String, SchemaValidator]
-  ): IO[String, Validation[String, Unit]] = {
-    val decodeJWT =
-      Validation.fromTry(JwtCirce.decodeRawAll(jwt.value, JwtOptions(false, false, false))).mapError(_.getMessage)
-
-    val validatedDecodedClaim: Validation[String, JwtCredentialPayload] =
-      for {
-        decodedJwtTask <- decodeJWT
-        (_, claim, _) = decodedJwtTask
-        decodedClaim <- Validation.fromEither(decode[JwtCredentialPayload](claim).left.map(_.toString))
-      } yield decodedClaim
-
-    ValidationUtils.foreach(
-      validatedDecodedClaim.map(decodedClaim =>
-        CredentialPayloadValidation.validateSchema(decodedClaim)(schemaResolver)(schemaToValidator)
-      )
-    )(_.replicateZIODiscard(1))
-  }
-
   def validateExpiration(jwt: JWT, dateTime: OffsetDateTime): Validation[String, Unit] = {
     Validation
       .fromTry(
@@ -841,19 +753,6 @@ object JwtCredential {
       .mapError(_.getMessage)
   }
 
-  def validateSchemaAndSignature(
-      jwt: JWT
-  )(didResolver: DidResolver)(schemaResolver: SchemaResolver)(
-      schemaToValidator: Json => Validation[String, SchemaValidator]
-  ): IO[String, Validation[String, Unit]] = {
-    for {
-      validatedJwtSchema <- validateJwtSchema(jwt)(schemaResolver)(schemaToValidator)
-      validateJwtSignature <- validateEncodedJWT(jwt)(didResolver)
-    } yield {
-      Validation.validateWith(validatedJwtSchema, validateJwtSignature)((a, _) => a)
-    }
-  }
-
   def verifyDates(jwtPayload: JwtVerifiableCredentialPayload, leeway: TemporalAmount)(implicit
       clock: Clock
   ): Validation[String, Unit] = {
@@ -871,7 +770,12 @@ object JwtCredential {
       jwtCredentialPayload <- Validation.fromEither(decode[JwtCredentialPayload](decodedJWT)).mapError(_.getMessage)
       nbf = jwtCredentialPayload.nbf
       maybeExp = jwtCredentialPayload.maybeExp
-      result <- CredentialVerification.verifyDates(nbf, maybeExp, leeway)(clock)
+      maybeValidFrom = jwtCredentialPayload.vc.maybeValidFrom
+      maybeValidUntil = jwtCredentialPayload.vc.maybeValidUntil
+      result <- Validation.validateWith(
+        CredentialVerification.verifyDates(maybeValidFrom, maybeValidUntil, leeway, "validFrom", "validUntil")(clock),
+        CredentialVerification.verifyDates(Some(nbf), maybeExp, leeway, "nbf", "exp")(clock)
+      )((l, _) => l)
     } yield result
   }
 
@@ -959,9 +863,24 @@ object W3CCredential {
   def verifyDates(w3cPayload: W3cVerifiableCredentialPayload, leeway: TemporalAmount)(implicit
       clock: Clock
   ): Validation[String, Unit] = {
-    CredentialVerification.verifyDates(w3cPayload.payload.issuanceDate, w3cPayload.payload.maybeExpirationDate, leeway)(
-      clock
-    )
+    Validation.validateWith(
+      CredentialVerification.verifyDates(
+        w3cPayload.payload.maybeValidFrom,
+        w3cPayload.payload.maybeValidUntil,
+        leeway,
+        "validFrom",
+        "validUntil"
+      )(clock),
+      CredentialVerification.verifyDates(
+        Some(w3cPayload.payload.issuanceDate),
+        w3cPayload.payload.maybeExpirationDate,
+        leeway,
+        "issuanceDate",
+        "expirationDate"
+      )(
+        clock
+      )
+    )((l, _) => l)
   }
 
   private def verifyRevocationStatusW3c(

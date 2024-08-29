@@ -8,6 +8,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.repository.CredentialRepository
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
 import org.hyperledger.identus.shared.models.*
 import zio.{Duration, UIO, URIO, URLayer, ZIO, ZLayer}
@@ -16,20 +17,25 @@ import java.util.UUID
 
 class CredentialServiceNotifier(
     svc: CredentialService,
-    eventNotificationService: EventNotificationService
+    eventNotificationService: EventNotificationService,
+    credentialRepository: CredentialRepository,
 ) extends CredentialService {
 
   private val issueCredentialRecordUpdatedEvent = "IssueCredentialRecordUpdated"
 
   override def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
-      issuingDID: CanonicalPrismDID
+      issuingDID: CanonicalPrismDID,
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
+      connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createJWTIssueCredentialRecord(
@@ -40,19 +46,27 @@ class CredentialServiceNotifier(
         claims,
         validityPeriod,
         automaticIssuance,
-        issuingDID
+        issuingDID,
+        goalCode,
+        goal,
+        expirationDuration,
+        connectionId
       )
     )
 
   override def createSDJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
-      issuingDID: CanonicalPrismDID
+      issuingDID: CanonicalPrismDID,
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
+      connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createSDJWTIssueCredentialRecord(
@@ -63,19 +77,27 @@ class CredentialServiceNotifier(
         claims,
         validityPeriod,
         automaticIssuance,
-        issuingDID
+        issuingDID,
+        goalCode,
+        goal,
+        expirationDuration,
+        connectionId
       )
     )
 
   override def createAnonCredsIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       thid: DidCommID,
       credentialDefinitionGUID: UUID,
       credentialDefinitionId: _root_.java.lang.String,
       claims: Json,
       validityPeriod: Option[Double],
-      automaticIssuance: Option[Boolean]
+      automaticIssuance: Option[Boolean],
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
+      connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord] =
     notifyOnSuccess(
       svc.createAnonCredsIssueCredentialRecord(
@@ -86,7 +108,11 @@ class CredentialServiceNotifier(
         credentialDefinitionId,
         claims,
         validityPeriod,
-        automaticIssuance
+        automaticIssuance,
+        goalCode,
+        goal,
+        expirationDuration,
+        connectionId
       )
     )
 
@@ -142,6 +168,11 @@ class CredentialServiceNotifier(
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
     notifyOnSuccess(svc.markCredentialSent(recordId))
 
+  override def markCredentialOfferInvitationExpired(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord] =
+    notifyOnSuccess(svc.markCredentialOfferInvitationExpired(recordId))
+
   override def receiveCredentialIssue(
       issueCredential: IssueCredential
   ): ZIO[WalletAccessContext, InvalidCredentialIssue | RecordNotFoundForThreadIdAndStates, IssueCredentialRecord] =
@@ -176,6 +207,9 @@ class CredentialServiceNotifier(
       _ <- notify(record)
     } yield record
 
+  private def notifyOnFail(record: IssueCredentialRecord) =
+    notify(record)
+
   private def notify(record: IssueCredentialRecord) = {
     val result = for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
@@ -188,8 +222,11 @@ class CredentialServiceNotifier(
   override def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[Failure]
-  ): URIO[WalletAccessContext, Unit] =
-    svc.reportProcessingFailure(recordId, failReason)
+  ): URIO[WalletAccessContext, Unit] = for {
+    ret <- svc.reportProcessingFailure(recordId, failReason)
+    recordAfterFail <- credentialRepository.getById(recordId)
+    _ <- notifyOnFail(recordAfterFail)
+  } yield ret
 
   override def findById(
       recordId: DidCommID
@@ -234,9 +271,15 @@ class CredentialServiceNotifier(
       keyId: Option[KeyId]
   ): URIO[WalletAccessContext, Issuer] =
     svc.getJwtIssuer(jwtIssuerDID, verificationRelationship, keyId)
+
+  override def getCredentialOfferInvitation(
+      pairwiseHolderDID: DidId,
+      invitation: String
+  ): ZIO[WalletAccessContext, CredentialServiceError, OfferCredential] =
+    svc.getCredentialOfferInvitation(pairwiseHolderDID, invitation)
 }
 
 object CredentialServiceNotifier {
-  val layer: URLayer[CredentialService & EventNotificationService, CredentialServiceNotifier] =
-    ZLayer.fromFunction(CredentialServiceNotifier(_, _))
+  val layer: URLayer[CredentialService & EventNotificationService & CredentialRepository, CredentialServiceNotifier] =
+    ZLayer.fromFunction(CredentialServiceNotifier(_, _, _))
 }

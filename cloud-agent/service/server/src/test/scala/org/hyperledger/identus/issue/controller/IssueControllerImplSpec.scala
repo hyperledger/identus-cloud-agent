@@ -22,6 +22,7 @@ import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.service.MockCredentialService
+import org.hyperledger.identus.shared.models.WalletId
 import sttp.client3.{basicRequest, DeserializationException, UriContext}
 import sttp.client3.ziojson.*
 import sttp.model.StatusCode
@@ -55,7 +56,7 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
     issuingDID = Some(
       "did:prism:332518729a7b7805f73a788e0944802527911901d9b7c16152281be9bc62d944:CosBCogBEkkKFW15LWtleS1hdXRoZW50aWNhdGlvbhAESi4KCXNlY3AyNTZrMRIhAuYoRIefsLhkvYwHz8gDtkG2b0kaZTDOLj_SExWX1fOXEjsKB21hc3RlcjAQAUouCglzZWNwMjU2azESIQLOzab8f0ibt1P0zdMfoWDQTSlPc8_tkV9Jk5BBsXB8fA"
     ),
-    connectionId = UUID.fromString("123e4567-e89b-12d3-a456-426614174000")
+    connectionId = Some(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
   )
   private val issueCredentialRecord = IssueCredentialRecord(
     DidCommID(),
@@ -66,6 +67,7 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
     None,
     None,
     CredentialFormat.JWT,
+    invitation = None,
     IssueCredentialRecord.Role.Issuer,
     None,
     None,
@@ -114,7 +116,8 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
     Some(connectionResponse),
     5,
     None,
-    None
+    None,
+    WalletId.fromUUID(UUID.randomUUID)
   )
   val acceptCredentialOfferRequest = AcceptCredentialOfferRequest(
     Some(

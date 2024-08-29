@@ -72,8 +72,8 @@ trait PresentationServiceSpecHelper {
                 "domain": "us.gov/DriverLicense",
                 "credential_manifest": {}
             }"""
-    val prover = DidId("did:peer:Prover")
-    val verifier = DidId("did:peer:Verifier")
+    val prover = Some(DidId("did:peer:Prover"))
+    val verifier = Some(DidId("did:peer:Verifier"))
 
     val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
       payload = presentationAttachmentAsJson,
@@ -136,6 +136,7 @@ trait PresentationServiceSpecHelper {
     credentialDefinitionId = None,
     credentialDefinitionUri = None,
     credentialFormat = credentialFormat,
+    invitation = None,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,
     keyId = None,
@@ -165,10 +166,13 @@ trait PresentationServiceSpecHelper {
       svc.createJwtPresentationRecord(
         thid = thid,
         pairwiseVerifierDID = pairwiseVerifierDID,
-        pairwiseProverDID = pairwiseProverDID,
+        pairwiseProverDID = Some(pairwiseProverDID),
         connectionId = Some("connectionId"),
         proofTypes = Seq(proofType),
-        options = options
+        options = options,
+        goalCode = None,
+        goal = None,
+        expirationDuration = None
       )
     }
 
@@ -208,9 +212,12 @@ trait PresentationServiceSpecHelper {
       svc.createAnoncredPresentationRecord(
         thid = thid,
         pairwiseVerifierDID = pairwiseVerifierDID,
-        pairwiseProverDID = pairwiseProverDID,
+        pairwiseProverDID = Some(pairwiseProverDID),
         connectionId = Some("connectionId"),
-        anoncredPresentationRequestV1
+        anoncredPresentationRequestV1,
+        goalCode = None,
+        goal = None,
+        expirationDuration = None
       )
     }
 }

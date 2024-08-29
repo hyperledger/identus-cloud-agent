@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.model.schema.`type`
 
-import org.hyperledger.identus.pollux.core.model.schema.validator.{JsonSchemaError, JsonSchemaValidatorImpl}
 import org.hyperledger.identus.pollux.core.model.schema.Schema
+import org.hyperledger.identus.shared.json.{JsonSchemaError, JsonSchemaValidatorImpl}
 import zio.*
 import zio.json.*
 

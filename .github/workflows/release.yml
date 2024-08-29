@@ -4,25 +4,14 @@ concurrency:
   group: release
 
 on:
-  workflow_call:
-    inputs:
-      release-branch:
-        required: false
-        type: string
-        default: "main"
   workflow_dispatch:
-    inputs:
-      release-branch:
-        description: "Branch to release from"
-        required: false
-        default: "main"
 
 jobs:
   release:
     env:
       GITHUB_ACTOR: "hyperledger-bot"
       GITHUB_ACTOR_EMAIL: "hyperledger-bot@hyperledger.org"
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.IDENTUS_CI }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
       # New JDK version makes 'localhost' lookup on linux return ipv6.
       # Our test containers are on ipv4. We need to make 'localhost' resolve to ipv4.
@@ -33,46 +22,45 @@ jobs:
       contents: write
       packages: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.IDENTUS_CI }}
           ref: ${{ github.event.inputs.release-branch }}
           fetch-depth: 0
-          persist-credentials: false
+
       - name: Setup Java and Scala
         uses: olafurpg/setup-scala@v14
         with:
           java-version: openjdk@1.17
+
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
-      - name: Setup Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: "3.12.2" # default is latest (stable)
-        id: install
-      - name: Setup yq - portable yaml processor
-        uses: mikefarah/yq@v4.34.2
-      - uses: crazy-max/ghaction-import-gpg@v3
+
+      - uses: crazy-max/ghaction-import-gpg@v6
         id: import_gpg
         with:
-          gpg-private-key: ${{ secrets.HYP_BOT_GPG_PRIVATE }}
+          gpg_private_key: ${{ secrets.HYP_BOT_GPG_PRIVATE }}
           passphrase: ${{ secrets.HYP_BOT_GPG_PASSWORD }}
-          git-user-signingkey: true
-          git-commit-gpgsign: true
+          git_user_signingkey: true
+          git_commit_gpgsign: true
           git_config_global: true
-          git_tag_gpgsign: true
+          git_tag_gpgsign: false
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ env.GITHUB_ACTOR }}
-          password: ${{ env.GITHUB_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+
       - name: Release
         env:
           GIT_AUTHOR_EMAIL: ${{ steps.import_gpg.outputs.email }}
@@ -83,3 +71,15 @@ jobs:
         run: |
           npm install
           npx semantic-release
+
+      - name: Get release version
+        id: get_version
+        run: echo "RELEASE_VERSION=$(cat .release-version)" >> $GITHUB_ENV
+
+      - name: Trigger helm chart update
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.ATALA_GITHUB_TOKEN }}
+          repository: input-output-hk/atala-prism-helm-charts
+          event-type: build-chart-package
+          client-payload: '{"version": "${{ env.RELEASE_VERSION }}", "chart": "cloud-agent"}'
