@@ -14,7 +14,8 @@ import org.hyperledger.identus.castor.core.model.did.{
 }
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits.{*, given}
+import org.hyperledger.identus.shared.db.Implicits.*
+import org.hyperledger.identus.shared.db.Implicits.given
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.interop.catz.*
@@ -418,6 +419,20 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
             """.stripMargin
         .query[PeerDIDRecord]
         .option
+
+    cnxIO.transact(xb)
+  }
+
+  override def getPrismDidWalletId(prismDid: PrismDID): Task[Option[WalletId]] = {
+    val cnxIO = sql"""
+           | SELECT
+           |  wallet_id
+           | FROM public.prism_did_wallet_state
+           | WHERE
+           |  did = ${prismDid}
+            """.stripMargin
+      .query[WalletId]
+      .option
 
     cnxIO.transact(xb)
   }

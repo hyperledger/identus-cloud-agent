@@ -10,8 +10,7 @@ import org.hyperledger.identus.agent.walletapi.sql.{
 }
 import org.hyperledger.identus.agent.walletapi.vault.{VaultGenericSecretStorage, VaultWalletSecretStorage}
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*

@@ -2,17 +2,18 @@ package org.hyperledger.identus.pollux.core.service
 
 import com.nimbusds.jose.jwk.*
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
+import org.hyperledger.identus.mercury.{AgentPeerService, PeerDID}
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.presentproof.*
-import org.hyperledger.identus.mercury.{AgentPeerService, PeerDID}
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.repository.*
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
+
 import java.time.Instant
 import java.util.UUID
 
@@ -71,8 +72,8 @@ trait PresentationServiceSpecHelper {
                 "domain": "us.gov/DriverLicense",
                 "credential_manifest": {}
             }"""
-    val prover = DidId("did:peer:Prover")
-    val verifier = DidId("did:peer:Verifier")
+    val prover = Some(DidId("did:peer:Prover"))
+    val verifier = Some(DidId("did:peer:Verifier"))
 
     val attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
       payload = presentationAttachmentAsJson,
@@ -135,8 +136,10 @@ trait PresentationServiceSpecHelper {
     credentialDefinitionId = None,
     credentialDefinitionUri = None,
     credentialFormat = credentialFormat,
+    invitation = None,
     role = IssueCredentialRecord.Role.Issuer,
     subjectId = None,
+    keyId = None,
     validityPeriod = None,
     automaticIssuance = None,
     protocolState = IssueCredentialRecord.ProtocolState.OfferPending,
@@ -163,10 +166,13 @@ trait PresentationServiceSpecHelper {
       svc.createJwtPresentationRecord(
         thid = thid,
         pairwiseVerifierDID = pairwiseVerifierDID,
-        pairwiseProverDID = pairwiseProverDID,
+        pairwiseProverDID = Some(pairwiseProverDID),
         connectionId = Some("connectionId"),
         proofTypes = Seq(proofType),
-        options = options
+        options = options,
+        goalCode = None,
+        goal = None,
+        expirationDuration = None
       )
     }
 
@@ -206,9 +212,12 @@ trait PresentationServiceSpecHelper {
       svc.createAnoncredPresentationRecord(
         thid = thid,
         pairwiseVerifierDID = pairwiseVerifierDID,
-        pairwiseProverDID = pairwiseProverDID,
+        pairwiseProverDID = Some(pairwiseProverDID),
         connectionId = Some("connectionId"),
-        anoncredPresentationRequestV1
+        anoncredPresentationRequestV1,
+        goalCode = None,
+        goal = None,
+        expirationDuration = None
       )
     }
 }

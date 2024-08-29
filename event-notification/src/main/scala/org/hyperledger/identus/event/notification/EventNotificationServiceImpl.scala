@@ -1,13 +1,13 @@
 package org.hyperledger.identus.event.notification
 
 import org.hyperledger.identus.event.notification.EventNotificationServiceError.EventSendingFailed
-import zio.concurrent.ConcurrentMap
 import zio.{IO, Queue, URLayer, ZIO, ZLayer}
+import zio.concurrent.ConcurrentMap
 
-class EventNotificationServiceImpl(queueMap: ConcurrentMap[String, Queue[Event[_]]], queueCapacity: Int)
+class EventNotificationServiceImpl(queueMap: ConcurrentMap[String, Queue[Event[?]]], queueCapacity: Int)
     extends EventNotificationService:
 
-  private[this] def getOrCreateQueue(topic: String): IO[EventNotificationServiceError, Queue[Event[_]]] = {
+  private def getOrCreateQueue(topic: String): IO[EventNotificationServiceError, Queue[Event[?]]] = {
     for {
       maybeQueue <- queueMap.get(topic)
       queue <- maybeQueue match
@@ -43,7 +43,7 @@ object EventNotificationServiceImpl {
   val layer: URLayer[Int, EventNotificationServiceImpl] =
     ZLayer.fromZIO(
       for {
-        map <- ConcurrentMap.make[String, Queue[Event[_]]]()
+        map <- ConcurrentMap.make[String, Queue[Event[?]]]()
         capacity <- ZIO.service[Int]
       } yield new EventNotificationServiceImpl(map, capacity)
     )

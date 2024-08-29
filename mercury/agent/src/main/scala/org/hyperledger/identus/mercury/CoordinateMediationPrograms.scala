@@ -1,14 +1,12 @@
 package org.hyperledger.identus.mercury
 
-import scala.util.chaining._
-import zio._
-import io.circe.parser._
-import io.circe.JsonObject
-
-import org.hyperledger.identus._
-import org.hyperledger.identus.mercury.model._
-import org.hyperledger.identus.mercury.protocol.coordinatemediation._
+import io.circe._
+import io.circe.parser.*
+import org.hyperledger.identus.*
+import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.protocol.coordinatemediation.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
+import zio.*
 
 object CoordinateMediationPrograms {
 
@@ -22,8 +20,8 @@ object CoordinateMediationPrograms {
     )
   }
 
-  private def toPrettyJson(parseToJson: String) = {
-    parse(parseToJson).getOrElse(???).spaces2
+  private def toPrettyJson(parseToJson: String): Either[ParsingFailure, String] = {
+    parse(parseToJson).map(_.spaces2)
   }
 
   def senderMediationRequestProgram(mediatorURL: String = "http://localhost:8000") = {
@@ -32,12 +30,15 @@ object CoordinateMediationPrograms {
       _ <- ZIO.log("#### Send Mediation request ####")
       link <- InvitationPrograms
         .getInvitationProgram(mediatorURL + "/oob_url")
-        .map(_.toOption) // FIXME
+        .flatMap {
+          case Left(value)  => ZIO.fail(value)
+          case Right(value) => ZIO.succeed(value)
+        }
       opsService <- ZIO.service[DidOps]
       agentService <- ZIO.service[DidAgent]
 
-      planMessage = link.map(to => replyToInvitation(agentService.id, to)).get
-      invitationFrom = link.get.from
+      planMessage = replyToInvitation(agentService.id, link)
+      invitationFrom = link.from
       _ <- ZIO.log(s"Invitation from $invitationFrom")
 
       encryptedMessage <- opsService.packEncrypted(planMessage, to = invitationFrom)
@@ -52,18 +53,18 @@ object CoordinateMediationPrograms {
       messageReceived <- opsService.unpack(res.bodyAsString)
       _ <- Console.printLine("Unpacking and decrypting the received message ...")
       _ <- Console.printLine("*" * 100)
-      _ <- Console.printLine(toPrettyJson(messageReceived.message.toString))
+      tmp <- ZIO.fromEither(toPrettyJson(messageReceived.message.toString))
+      _ <- Console.printLine(tmp)
       _ <- Console.printLine("*" * 100)
-      ret = parse(messageReceived.message.toString)
-        .getOrElse(???)
-        // .flatMap()
-        .pipe { json =>
+      ret <- ZIO
+        .fromEither(parse(messageReceived.message.toString))
+        .flatMap { json =>
           json.as[MediateGrant] match {
-            case Right(mediateGrant) => Right(mediateGrant)
+            case Right(mediateGrant) => ZIO.succeed(mediateGrant)
             case Left(_) =>
               json.as[MediateDeny] match {
-                case Right(mediateDeny) => Left(mediateDeny)
-                case Left(_)            => ???
+                case Right(mediateDeny) => ZIO.succeed(mediateDeny)
+                case Left(ex)           => ZIO.fail(ex)
               }
           }
         }

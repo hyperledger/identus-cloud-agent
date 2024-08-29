@@ -7,22 +7,21 @@ import org.hyperledger.identus.api.http.model.{CollectionStats, Order, Paginatio
 import org.hyperledger.identus.castor.core.model.did.{LongFormPrismDID, PrismDID}
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.FilteredEntries
 import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService
-import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService.Error.*
 import org.hyperledger.identus.pollux.credentialdefinition
-import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController.domainToHttpErrorIO
-import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionInput.toDomain
-import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponse.fromDomain
 import org.hyperledger.identus.pollux.credentialdefinition.http.{
   CredentialDefinitionInput,
   CredentialDefinitionResponse,
   CredentialDefinitionResponsePage,
   FilterInput
 }
+import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionInput.toDomain
+import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionResponse.fromDomain
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.json.ast.Json
 
 import java.util.UUID
+import scala.language.implicitConversions
 
 class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, managedDIDService: ManagedDIDService)
     extends CredentialDefinitionController {
@@ -31,15 +30,12 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
   )(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponse] = {
-    (for {
+    for {
       _ <- validatePrismDID(in.author)
       result <- service
         .create(toDomain(in))
         .map(cs => fromDomain(cs).withBaseUri(rc.request.uri))
-    } yield result).mapError {
-      case e: ErrorResponse                     => e
-      case e: CredentialDefinitionService.Error => CredentialDefinitionController.domainToHttpError(e)
-    }
+    } yield result
   }
 
   override def getCredentialDefinitionByGuid(
@@ -93,15 +89,15 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
     } yield CredentialDefinitionControllerLogic(rc, pagination, page, stats).result
   }
 
-  private[this] def validatePrismDID(author: String) =
+  private def validatePrismDID(author: String) =
     for {
       authorDID <- ZIO
         .fromEither(PrismDID.fromString(author))
-        .mapError(_ => ErrorResponse.badRequest(detail = Some(s"Unable to parse as a Prism DID: ${author}")))
+        .mapError(ex => ErrorResponse.badRequest(detail = Some(s"Unable to parse Prism DID from '${author}' due: $ex")))
       longFormPrismDID <- getLongForm(authorDID, true)
     } yield longFormPrismDID
 
-  private[this] def getLongForm(
+  private def getLongForm(
       did: PrismDID,
       allowUnpublishedIssuingDID: Boolean = false
   ): ZIO[WalletAccessContext, ErrorResponse, LongFormPrismDID] = {
@@ -110,7 +106,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
         .getManagedDIDState(did.asCanonical)
         .mapError(e =>
           ErrorResponse.internalServerError(detail =
-            Some(s"Error occurred while getting did from wallet: ${e.toString}")
+            Some(s"Error occurred while getting DID from wallet: ${e.toString}")
           )
         )
         .someOrFail(ErrorResponse.notFound(detail = Some(s"Issuer DID does not exist in the wallet: $did")))

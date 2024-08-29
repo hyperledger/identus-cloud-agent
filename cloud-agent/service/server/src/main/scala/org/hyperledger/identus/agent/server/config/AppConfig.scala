@@ -4,9 +4,10 @@ import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.iam.authentication.AuthenticationConfig
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.db.DbConfig
-import zio.Config
 import zio.config.*
 import zio.config.magnolia.*
+import zio.Config
+
 import java.net.URL
 import java.time.Duration
 import scala.util.Try
@@ -67,6 +68,7 @@ object ValidatedVaultConfig {
 
 final case class PolluxConfig(
     database: DatabaseConfig,
+    credentialSdJwtExpirationTime: Duration,
     statusListRegistry: StatusListRegistryConfig,
     issueBgJobRecordsLimit: Int,
     issueBgJobRecurrenceDelay: Duration,
@@ -76,6 +78,8 @@ final case class PolluxConfig(
     presentationBgJobProcessingParallelism: Int,
     syncRevocationStatusesBgJobRecurrenceDelay: Duration,
     syncRevocationStatusesBgJobProcessingParallelism: Int,
+    presentationInvitationExpiry: Duration,
+    issuanceInvitationExpiry: Duration,
 )
 final case class ConnectConfig(
     database: DatabaseConfig,

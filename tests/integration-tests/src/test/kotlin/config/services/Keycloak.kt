@@ -15,16 +15,21 @@ import java.io.File
 data class Keycloak(
     @ConfigAlias("http_port") val httpPort: Int,
     val realm: String = "atala-demo",
-    @ConfigAlias("client_id") val clientId: String = "prism-agent",
-    @ConfigAlias("client_secret") val clientSecret: String = "prism-agent-demo-secret",
+    @ConfigAlias("client_id") val clientId: String = "cloud-agent",
+    @ConfigAlias("client_secret") val clientSecret: String = "cloud-agent-secret",
     @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
-) : ServiceBase {
+    @ConfigAlias("compose_file") val keycloakComposeFile: String = "src/test/resources/containers/keycloak.yml",
+    @ConfigAlias("logger_name") val loggerName: String = "keycloak",
+    @ConfigAlias("extra_envs") val extraEnvs: Map<String, String> = emptyMap(),
+    @ConfigAlias("extra_clients") val extraClients: Map<String, KeycloakPublicClientConfig> = emptyMap(),
+    @ConfigAlias("extra_scopes") val extraScopes: List<String> = emptyList(),
+) : ServiceBase() {
     private val logger = Logger.get<Keycloak>()
-    private val keycloakComposeFile = "src/test/resources/containers/keycloak.yml"
-    private val keycloakEnvConfig: Map<String, String> = mapOf(
+    private val keycloakEnvConfig: Map<String, String> = extraEnvs + mapOf(
         "KEYCLOAK_HTTP_PORT" to httpPort.toString(),
     )
-    private val keycloakClientRoles: List<String> = AgentRole.values().map { it.roleName }
+    override val logServices: List<String> = listOf(loggerName)
+    private val keycloakClientRoles: List<String> = AgentRole.entries.map { it.roleName }
     override val container: ComposeContainer =
         ComposeContainer(File(keycloakComposeFile)).withEnv(keycloakEnvConfig)
             .waitingFor("keycloak", Wait.forLogMessage(".*Running the server.*", 1))
@@ -41,8 +46,10 @@ data class Keycloak(
         logger.info("Setting up Keycloak")
         initRequestBuilder()
         createRealm()
-        createClient()
+        createAgentClient()
+        createPublicClients()
         createClientRoles()
+        createScopes()
         createUsers(users)
     }
 
@@ -91,7 +98,7 @@ data class Keycloak(
             .then().statusCode(HttpStatus.SC_CREATED)
     }
 
-    private fun createClient() {
+    private fun createAgentClient() {
         RestAssured.given().spec(requestBuilder)
             .body(
                 mapOf(
@@ -104,6 +111,55 @@ data class Keycloak(
             )
             .post("/admin/realms/$realm/clients")
             .then().statusCode(HttpStatus.SC_CREATED)
+    }
+
+    private fun createPublicClients() {
+        extraClients.forEach { client ->
+            RestAssured.given().spec(requestBuilder)
+                .body(
+                    mapOf(
+                        "id" to client.key,
+                        "publicClient" to true,
+                        "consentRequired" to true,
+                        "redirectUris" to client.value.redirectUris,
+                    ),
+                )
+                .post("/admin/realms/$realm/clients")
+                .then().statusCode(HttpStatus.SC_CREATED)
+        }
+    }
+
+    private fun createScopes() {
+        extraScopes.forEach { scope ->
+            val response = RestAssured.given().spec(requestBuilder)
+                .body(
+                    mapOf(
+                        "name" to scope,
+                        "description" to scope,
+                        "protocol" to "openid-connect",
+                        "attributes" to mapOf(
+                            "consent.screen.text" to scope,
+                            "display.on.consent.screen" to true,
+                            "include.in.token.scope" to true,
+                            "gui.order" to "",
+                        ),
+                    ),
+                )
+                .post("/admin/realms/$realm/client-scopes")
+                .thenReturn()
+            response.then().statusCode(HttpStatus.SC_CREATED)
+            val clientScopeId = response.getHeader("Location").split("/").last()
+            mapClientsScopeToClient(clientScopeId)
+        }
+    }
+
+    private fun mapClientsScopeToClient(clientScopeId: String) {
+        extraClients.keys.forEach { client ->
+            RestAssured.given().spec(requestBuilder)
+                .put("/admin/realms/$realm/clients/$client/optional-client-scopes/$clientScopeId")
+                .then()
+                .statusCode(HttpStatus.SC_NO_CONTENT)
+        }
     }
 
     private fun createClientRoles() {
@@ -169,3 +225,5 @@ data class Keycloak(
             .then().statusCode(HttpStatus.SC_NO_CONTENT)
     }
 }
+
+data class KeycloakPublicClientConfig(val redirectUris: List<String> = listOf())

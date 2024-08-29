@@ -6,6 +6,7 @@ import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.*
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.issuecredential.IssueCredentialIssuedFormat
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.pollux.anoncreds.*
@@ -16,16 +17,19 @@ import org.hyperledger.identus.pollux.core.model.presentation.*
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import org.hyperledger.identus.pollux.core.service.serdes.*
+import org.hyperledger.identus.pollux.sdjwt.{CredentialCompact, HolderPrivateKey, PresentationCompact, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
+import org.hyperledger.identus.shared.utils.Base64Utils
 import zio.*
+import zio.json.*
 
 import java.net.URI
-import java.rmi.UnexpectedException
 import java.time.Instant
+import java.util.{Base64 as JBase64, UUID}
 import java.util as ju
-import java.util.{UUID, Base64 as JBase64}
+import scala.util.chaining.*
 import scala.util.Try
 
 private class PresentationServiceImpl(
@@ -44,24 +48,16 @@ private class PresentationServiceImpl(
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
       record <- getRecordWithState(recordId, ProtocolState.PresentationPending)
-      count <- presentationRepository
-        .updateWithPresentation(recordId, presentation, ProtocolState.PresentationGenerated)
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.endRecordingTime(
-        s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge",
-        "present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
-      ) @@ CustomMetricsAspect.startRecordingTime(
-        s"${record.id}_present_proof_flow_prover_presentation_generated_to_sent_ms_gauge"
-      )
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case _ => ZIO.fail(RecordIdNotFound(recordId))
-      record <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(record.id))
-          case Some(value) => ZIO.succeed(value)
-        }
+      count <-
+        presentationRepository
+          .updateWithPresentation(recordId, presentation, ProtocolState.PresentationGenerated)
+          @@ CustomMetricsAspect.endRecordingTime(
+            s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge",
+            "present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
+          ) @@ CustomMetricsAspect.startRecordingTime(
+            s"${record.id}_present_proof_flow_prover_presentation_generated_to_sent_ms_gauge"
+          )
+      record <- getRecord(recordId)
     } yield record
   }
 
@@ -72,12 +68,7 @@ private class PresentationServiceImpl(
   ): ZIO[WalletAccessContext, PresentationError, PresentationPayload] = {
 
     for {
-      maybeRecord <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
+      record <- getRecord(recordId)
       credentialsToUse <- ZIO
         .fromOption(record.credentialsToUse)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
@@ -85,25 +76,133 @@ private class PresentationServiceImpl(
         .fromOption(record.requestPresentationData)
         .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
       issuedValidCredentials <- credentialRepository
-        .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
-        .mapError(RepositoryError.apply)
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
       signedCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw)
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
           signedCredentials.nonEmpty,
           signedCredentials,
           PresentationError.IssuedCredentialNotFoundError(
-            new Throwable("No matching issued credentials found in prover db")
+            "No matching issued credentials found in prover db"
           )
         )
       )
-
       presentationPayload <- createJwtPresentationPayloadFromCredential(
         issuedCredentials,
         requestPresentation,
         prover
       )
     } yield presentationPayload
+  }
+
+  private def createSDJwtPresentationFromRecord(
+      recordId: DidCommID,
+      optionalHolderPrivateKey: Option[HolderPrivateKey]
+  ): ZIO[WalletAccessContext, PresentationError, PresentationCompact] = {
+
+    for {
+      record <- getRecord(recordId)
+      credentialsToUse <- ZIO
+        .fromOption(record.credentialsToUse)
+        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
+      sdJwtClaimsToDisclose <- ZIO
+        .fromOption(record.sdJwtClaimsToDisclose)
+        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
+      requestPresentation <- ZIO
+        .fromOption(record.requestPresentationData)
+        .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
+      issuedValidCredentials <- credentialRepository
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
+      signedCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw)
+
+      issuedCredentials <- ZIO.fromEither(
+        Either.cond(
+          signedCredentials.nonEmpty,
+          signedCredentials,
+          PresentationError.IssuedCredentialNotFoundError(
+            "No matching issued credentials found in prover db"
+          )
+        )
+      )
+
+      presentationCompact <- createPresentationFromIssuedCredential(
+        issuedCredentials,
+        sdJwtClaimsToDisclose,
+        requestPresentation,
+        optionalHolderPrivateKey
+      )
+      presentationPayload <- ZIO.succeed(presentationCompact)
+
+    } yield presentationCompact
+  }
+//This can be private remove
+  override def createPresentationFromRecord(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationCompact] = {
+
+    for {
+      record <- getRecord(recordId)
+      credentialsToUse <- ZIO
+        .fromOption(record.credentialsToUse)
+        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
+      sdJwtClaimsToDisclose <- ZIO
+        .fromOption(record.sdJwtClaimsToDisclose)
+        .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
+      requestPresentation <- ZIO
+        .fromOption(record.requestPresentationData)
+        .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
+      issuedValidCredentials <- credentialRepository
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
+      signedCredentials = issuedValidCredentials.flatMap(_.issuedCredentialRaw)
+
+      issuedCredentials <- ZIO.fromEither(
+        Either.cond(
+          signedCredentials.nonEmpty,
+          signedCredentials,
+          PresentationError.IssuedCredentialNotFoundError(
+            "No matching issued credentials found in prover db"
+          )
+        )
+      )
+
+      presentationCompact <- createPresentationFromIssuedCredential(
+        issuedCredentials,
+        sdJwtClaimsToDisclose,
+        requestPresentation,
+        None
+      )
+      presentationPayload <- ZIO.succeed(presentationCompact)
+
+    } yield presentationCompact
+  }
+
+  override def createSDJwtPresentation(
+      recordId: DidCommID,
+      requestPresentation: RequestPresentation,
+      optionalHolderPrivateKey: Option[HolderPrivateKey],
+  ): ZIO[WalletAccessContext, PresentationError, Presentation] = {
+    for {
+      presentationPayload <- createSDJwtPresentationFromRecord(recordId, optionalHolderPrivateKey)
+      presentation <- ZIO.succeed(
+        Presentation(
+          body = Presentation.Body(
+            goal_code = requestPresentation.body.goal_code,
+            comment = requestPresentation.body.comment
+          ),
+          attachments = Seq(
+            AttachmentDescriptor
+              .buildBase64Attachment(
+                payload = presentationPayload.compact.getBytes,
+                mediaType = Some(PresentCredentialFormat.SDJWT.name)
+              )
+          ),
+          thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
+          from = requestPresentation.to.getOrElse(throw RuntimeException(s"RequestPresentation to field is missing")),
+          to = requestPresentation.from.getOrElse(throw RuntimeException(s"RequestPresentation from field is missing"))
+        )
+      )
+    } yield presentation
+
   }
 
   override def createAnoncredPresentationPayloadFromRecord(
@@ -113,27 +212,21 @@ private class PresentationServiceImpl(
   ): ZIO[WalletAccessContext, PresentationError, AnoncredPresentation] = {
 
     for {
-      maybeRecord <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
+      record <- getRecord(recordId)
       requestPresentation <- ZIO
         .fromOption(record.requestPresentationData)
         .mapError(_ => InvalidFlowStateError(s"RequestPresentation not found: $recordId"))
       issuedValidCredentials <-
         credentialRepository
-          .getValidAnoncredIssuedCredentials(
+          .findValidAnonCredsIssuedCredentials(
             anoncredCredentialProof.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential))
           )
-          .mapError(RepositoryError.apply)
       issuedCredentials <- ZIO.fromEither(
         Either.cond(
           issuedValidCredentials.nonEmpty,
           issuedValidCredentials,
           PresentationError.IssuedCredentialNotFoundError(
-            new Throwable("No matching issued credentials found in prover db")
+            "No matching issued credentials found in prover db"
           )
         )
       )
@@ -175,8 +268,8 @@ private class PresentationServiceImpl(
               )
           ),
           thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
-          from = requestPresentation.to,
-          to = requestPresentation.from
+          from = requestPresentation.to.getOrElse(throw RuntimeException(s"RequestPresentation to field is missing")),
+          to = requestPresentation.from.getOrElse(throw RuntimeException(s"RequestPresentation from field is missing"))
         )
       )
     } yield presentation
@@ -187,32 +280,18 @@ private class PresentationServiceImpl(
 
   override def getPresentationRecords(
       ignoreWithZeroRetries: Boolean
-  ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] = {
-    for {
-      records <- presentationRepository
-        .getPresentationRecords(ignoreWithZeroRetries)
-        .mapError(RepositoryError.apply)
-    } yield records
-  }
+  ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] = presentationRepository
+    .getPresentationRecords(ignoreWithZeroRetries)
 
-  override def getPresentationRecord(
+  override def findPresentationRecord(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]] = {
-    for {
-      record <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-    } yield record
-  }
+  ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]] =
+    presentationRepository.findPresentationRecord(recordId)
 
-  override def getPresentationRecordByThreadId(
+  override def findPresentationRecordByThreadId(
       thid: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]] =
-    for {
-      record <- presentationRepository
-        .getPresentationRecordByThreadId(thid)
-        .mapError(RepositoryError.apply)
-    } yield record
+    presentationRepository.findPresentationRecordByThreadId(thid)
 
   override def rejectRequestPresentation(
       recordId: DidCommID
@@ -226,11 +305,14 @@ private class PresentationServiceImpl(
 
   override def createJwtPresentationRecord(
       pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseProverDID: Option[DidId],
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
-      maybeOptions: Option[org.hyperledger.identus.pollux.core.model.presentation.Options]
+      options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+      goalCode: Option[String] = None,
+      goal: Option[String] = None,
+      expirationDuration: Option[Duration] = None,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     createPresentationRecord(
       pairwiseVerifierDID,
@@ -239,16 +321,48 @@ private class PresentationServiceImpl(
       connectionId,
       CredentialFormat.JWT,
       proofTypes,
-      maybeOptions.map(options => Seq(toJWTAttachment(options))).getOrElse(Seq.empty)
+      options.map(o => Seq(toJWTAttachment(o))).getOrElse(Seq.empty),
+      goalCode,
+      goal,
+      expirationDuration
+    )
+  }
+
+  override def createSDJWTPresentationRecord(
+      pairwiseVerifierDID: DidId,
+      pairwiseProverDID: Option[DidId],
+      thid: DidCommID,
+      connectionId: Option[String],
+      proofTypes: Seq[ProofType],
+      claimsToDisclose: ast.Json.Obj,
+      options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+      goalCode: Option[String] = None,
+      goal: Option[String] = None,
+      expirationDuration: Option[Duration] = None,
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
+    createPresentationRecord(
+      pairwiseVerifierDID,
+      pairwiseProverDID,
+      thid,
+      connectionId,
+      CredentialFormat.SDJWT,
+      proofTypes,
+      attachments = Seq(toSDJWTAttachment(options, claimsToDisclose)),
+      goalCode,
+      goal,
+      expirationDuration
     )
   }
 
   override def createAnoncredPresentationRecord(
       pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseProverDID: Option[DidId],
       thid: DidCommID,
       connectionId: Option[String],
-      presentationRequest: AnoncredPresentationRequestV1
+      presentationRequest: AnoncredPresentationRequestV1,
+      goalCode: Option[String] = None,
+      goal: Option[String] = None,
+      expirationDuration: Option[Duration] = None,
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     createPresentationRecord(
       pairwiseVerifierDID,
@@ -257,61 +371,79 @@ private class PresentationServiceImpl(
       connectionId,
       CredentialFormat.AnonCreds,
       Seq.empty,
-      Seq(toAnoncredAttachment(presentationRequest))
+      Seq(toAnoncredAttachment(presentationRequest)),
+      goalCode,
+      goal,
+      expirationDuration
     )
   }
 
   private def createPresentationRecord(
       pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseProverDID: Option[DidId],
       thid: DidCommID,
       connectionId: Option[String],
       format: CredentialFormat,
       proofTypes: Seq[ProofType],
-      attachments: Seq[AttachmentDescriptor]
+      attachments: Seq[AttachmentDescriptor],
+      goalCode: Option[String] = None,
+      goal: Option[String] = None,
+      expirationDuration: Option[Duration] = None,
   ) = {
     for {
       request <- ZIO.succeed(
         createDidCommRequestPresentation(
           proofTypes,
           thid,
-          pairwiseVerifierDID,
+          Some(pairwiseVerifierDID),
           pairwiseProverDID,
           attachments
         )
       )
-      record <- ZIO.succeed(
-        PresentationRecord(
-          id = DidCommID(),
-          createdAt = Instant.now,
-          updatedAt = None,
-          thid = thid,
-          connectionId = connectionId,
-          schemaId = None, // TODO REMOVE from DB
-          role = PresentationRecord.Role.Verifier,
-          subjectId = pairwiseProverDID,
-          protocolState = PresentationRecord.ProtocolState.RequestPending,
-          credentialFormat = format,
-          requestPresentationData = Some(request),
-          proposePresentationData = None,
-          presentationData = None,
-          credentialsToUse = None,
-          anoncredCredentialsToUseJsonSchemaId = None,
-          anoncredCredentialsToUse = None,
-          metaRetries = maxRetries,
-          metaNextRetry = Some(Instant.now()),
-          metaLastFailure = None,
+      invitation = connectionId.fold(
+        Some(
+          PresentProofInvitation.makeInvitation(
+            pairwiseVerifierDID,
+            goalCode,
+            goal,
+            thid.value,
+            request,
+            expirationDuration
+          )
         )
+      )(_ => None)
+
+      record <- PresentationRecord.make(
+        id = DidCommID(),
+        createdAt = Instant.now,
+        updatedAt = None,
+        thid = thid,
+        connectionId = connectionId,
+        schemaId = None, // TODO REMOVE from DB
+        role = PresentationRecord.Role.Verifier,
+        subjectId = pairwiseProverDID.getOrElse(DidId("TODO REMOVE")), // TODO REMOVE from DB
+        protocolState = invitation.fold(PresentationRecord.ProtocolState.RequestPending)(_ =>
+          PresentationRecord.ProtocolState.InvitationGenerated
+        ),
+        credentialFormat = format,
+        invitation = invitation,
+        requestPresentationData = Some(request),
+        proposePresentationData = None,
+        presentationData = None,
+        credentialsToUse = None,
+        anoncredCredentialsToUseJsonSchemaId = None,
+        anoncredCredentialsToUse = None,
+        sdJwtClaimsToUseJsonSchemaId = None,
+        sdJwtClaimsToDisclose = None,
+        metaRetries = maxRetries,
+        metaNextRetry = Some(Instant.now()),
+        metaLastFailure = None
       )
       _ <- presentationRepository
         .createPresentationRecord(record)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
-        s"${record.id}_present_proof_flow_verifier_req_pending_to_sent_ms_gauge"
-      )
+        @@ CustomMetricsAspect.startRecordingTime(
+          s"${record.id}_present_proof_flow_verifier_req_pending_to_sent_ms_gauge"
+        )
     } yield record
   }
 
@@ -319,25 +451,17 @@ private class PresentationServiceImpl(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: PresentationRecord.ProtocolState*
-  ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] = {
-    for {
-      records <- presentationRepository
-        .getPresentationRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
-        .mapError(RepositoryError.apply)
-    } yield records
-  }
+  ): ZIO[WalletAccessContext, PresentationError, Seq[PresentationRecord]] =
+    presentationRepository
+      .getPresentationRecordsByStates(ignoreWithZeroRetries, limit, states*)
 
   override def getPresentationRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: PresentationRecord.ProtocolState*
-  ): IO[PresentationError, Seq[PresentationRecord]] = {
-    for {
-      records <- presentationRepository
-        .getPresentationRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
-        .mapError(RepositoryError.apply)
-    } yield records
-  }
+  ): IO[PresentationError, Seq[PresentationRecord]] =
+    presentationRepository
+      .getPresentationRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states*)
 
   override def receiveRequestPresentation(
       connectionId: Option[String],
@@ -349,9 +473,12 @@ private class PresentationServiceImpl(
         case Seq(head) =>
           val jsonF = PresentCredentialRequestFormat.JWT.name // stable identifier
           val anoncredF = PresentCredentialRequestFormat.Anoncred.name // stable identifier
+          val sdjwtF = PresentCredentialRequestFormat.SDJWT.name // stable identifier
+
           head.format match
-            case None          => ZIO.fail(PresentationError.MissingCredentialFormat)
-            case Some(`jsonF`) => ZIO.succeed(CredentialFormat.JWT)
+            case None           => ZIO.fail(PresentationError.MissingCredentialFormat)
+            case Some(`jsonF`)  => ZIO.succeed(CredentialFormat.JWT)
+            case Some(`sdjwtF`) => ZIO.succeed(CredentialFormat.SDJWT)
             case Some(`anoncredF`) =>
               head.data match
                 case Base64(data) =>
@@ -362,39 +489,105 @@ private class PresentationServiceImpl(
                     .mapError(error => InvalidAnoncredPresentationRequest(error.error))
                 case _ => ZIO.fail(InvalidAnoncredPresentationRequest("Expecting Base64-encoded data"))
             case Some(unsupportedFormat) => ZIO.fail(PresentationError.UnsupportedCredentialFormat(unsupportedFormat))
-        case _ => ZIO.fail(PresentationError.UnexpectedError("Presentation with multi attachments"))
+        case _ => ZIO.fail(PresentationError.RequestPresentationHasMultipleAttachment(request.id))
       }
-      record <- ZIO.succeed(
-        PresentationRecord(
-          id = DidCommID(),
-          createdAt = Instant.now,
-          updatedAt = None,
-          thid = DidCommID(request.thid.getOrElse(request.id)),
-          connectionId = connectionId,
-          schemaId = None,
-          role = Role.Prover,
-          subjectId = request.to,
-          protocolState = PresentationRecord.ProtocolState.RequestReceived,
-          credentialFormat = format,
-          requestPresentationData = Some(request),
-          proposePresentationData = None,
-          presentationData = None,
-          credentialsToUse = None,
-          anoncredCredentialsToUseJsonSchemaId = None,
-          anoncredCredentialsToUse = None,
-          metaRetries = maxRetries,
-          metaNextRetry = Some(Instant.now()),
-          metaLastFailure = None,
-        )
+      record <- PresentationRecord.make(
+        id = DidCommID(),
+        createdAt = Instant.now,
+        updatedAt = None,
+        thid = DidCommID(request.thid.getOrElse(request.id)),
+        connectionId = connectionId,
+        schemaId = None,
+        role = Role.Prover,
+        subjectId =
+          request.to.getOrElse(throw RuntimeException(s"RequestPresentation from field is missing")), // TODO REMOVE
+        protocolState = PresentationRecord.ProtocolState.RequestReceived,
+        credentialFormat = format,
+        invitation = None,
+        requestPresentationData = Some(request),
+        proposePresentationData = None,
+        presentationData = None,
+        credentialsToUse = None,
+        anoncredCredentialsToUseJsonSchemaId = None,
+        anoncredCredentialsToUse = None,
+        sdJwtClaimsToUseJsonSchemaId = None,
+        sdJwtClaimsToDisclose = None,
+        metaRetries = maxRetries,
+        metaNextRetry = Some(Instant.now()),
+        metaLastFailure = None,
       )
-      _ <- presentationRepository
-        .createPresentationRecord(record)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply)
+      _ <- presentationRepository.createPresentationRecord(record)
+      _ <- ZIO.logDebug(s"Received and created the RequestPresentation: $request")
     } yield record
+  }
+
+  private def createPresentationFromIssuedCredential(
+      issuedCredentials: Seq[String],
+      claimsToDisclose: SdJwtCredentialToDisclose,
+      requestPresentation: RequestPresentation,
+      optionalHolderPrivateKey: Option[HolderPrivateKey],
+  ): IO[PresentationError, PresentationCompact] = {
+
+    val verifiableCredentials: Either[
+      PresentationError.PresentationDecodingError,
+      Seq[CredentialCompact]
+    ] = issuedCredentials.map { signedCredential =>
+      decode[org.hyperledger.identus.mercury.model.Base64](signedCredential)
+        .flatMap(x =>
+          Right(CredentialCompact.unsafeFromCompact(new String(java.util.Base64.getUrlDecoder.decode(x.base64))))
+        )
+        .left
+        .map(err => PresentationDecodingError(s"JsonData decoding error: $err"))
+    }.sequence
+
+    import io.circe.parser.decode
+    import io.circe.syntax.*
+
+    import java.util.Base64
+
+    val result: Either[PresentationDecodingError, SDJwtPresentation] =
+      requestPresentation.attachments.headOption
+        .map(attachment =>
+          decode[org.hyperledger.identus.mercury.model.Base64](attachment.data.asJson.noSpaces)
+            .leftMap(err => PresentationDecodingError(s"PresentationAttachment decoding error: $err"))
+            .flatMap { base64 =>
+              org.hyperledger.identus.pollux.core.service.serdes.SDJwtPresentation.given_JsonDecoder_SDJwtPresentation
+                .decodeJson(new String(Base64.getUrlDecoder.decode(base64.base64)))
+                .leftMap(err => PresentationDecodingError(s"SDJwtPresentation decoding error: $err"))
+            }
+        )
+        .getOrElse(Left(PresentationDecodingError("Error: No attachment found for SDJwtPresentation")))
+
+    for {
+      sdJwtPresentation <- ZIO.fromEither(result)
+      vcs <- ZIO.fromEither(verifiableCredentials)
+      vc <- ZIO
+        .fromOption(vcs.headOption)
+        .orElseFail(MissingCredential)
+      iss <- ZIO.fromEither(vc.iss).mapError(error => PresentationDecodingError(s"Error: IssuedCredentials $error"))
+      sub = vc.sub.toOption // optional
+      iat = vc.iat.toOption // optional
+      exp <- ZIO.fromEither(vc.exp).mapError(error => PresentationDecodingError(s"Error: IssuedCredentials $error"))
+      claimsObject <- ZIO
+        .fromOption(claimsToDisclose.asObject)
+        .mapError(error => PresentationDecodingError(s"Error: IssuedCredentials claimsToDisclose must be a Json Obj"))
+      sdJwtClaimsToDisclose = claimsObject
+        .add("iss", ast.Json.Str(iss))
+        .pipe(o => sub.map(sub => o.add("sub", ast.Json.Str(sub))).getOrElse(o)) // optional
+        .pipe(o => iat.map(iat => o.add("iat", ast.Json.Num(iat))).getOrElse(o)) // optional
+        .add("exp", ast.Json.Num(exp))
+      presentationPayload = (sdJwtPresentation.options, optionalHolderPrivateKey) match {
+        case (Some(options), Some(holderPrivateKey)) =>
+          SDJWT.createPresentation(
+            vc,
+            sdJwtClaimsToDisclose.toJson,
+            options.challenge,
+            options.domain,
+            holderPrivateKey
+          )
+        case _ => SDJWT.createPresentation(vc, sdJwtClaimsToDisclose.toJson)
+      }
+    } yield presentationPayload
   }
 
   /** All credentials MUST be of the same format */
@@ -410,10 +603,10 @@ private class PresentationServiceImpl(
     ] =
       issuedCredentials.map { signedCredential =>
         decode[org.hyperledger.identus.mercury.model.Base64](signedCredential)
-          .flatMap(x => Right(new String(java.util.Base64.getDecoder.decode(x.base64))))
+          .flatMap(x => Right(new String(java.util.Base64.getUrlDecoder.decode(x.base64))))
           .flatMap(x => Right(JwtVerifiableCredentialPayload(JWT(x))))
           .left
-          .map(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
+          .map(err => PresentationDecodingError(s"JsonData decoding error: $err"))
       }.sequence
 
     val maybePresentationOptions
@@ -425,11 +618,9 @@ private class PresentationServiceImpl(
               org.hyperledger.identus.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
                 .decodeJson(data.json.asJson)
                 .map(_.options)
-                .leftMap(err =>
-                  PresentationDecodingError(new Throwable(s"PresentationAttachment decoding error: $err"))
-                )
+                .leftMap(err => PresentationDecodingError(s"PresentationAttachment decoding error: $err"))
             )
-            .leftMap(err => PresentationDecodingError(new Throwable(s"JsonData decoding error: $err")))
+            .leftMap(err => PresentationDecodingError(s"JsonData decoding error: $err"))
         )
         .getOrElse(Right(None))
 
@@ -535,7 +726,6 @@ private class PresentationServiceImpl(
         linkSecretService
           .fetchOrCreate()
           .map(_.secret)
-          .mapError(t => AnoncredPresentationCreationError(t.cause))
       credentialRequest =
         verifiableCredentials.map(verifiableCredential =>
           AnoncredCredentialRequests(
@@ -560,14 +750,14 @@ private class PresentationServiceImpl(
     } yield presentation
   }
 
-  private def resolveSchema(schemaUri: String): IO[UnexpectedError, (String, AnoncredSchemaDef)] = {
+  private def resolveSchema(schemaUri: String): IO[PresentationError, (String, AnoncredSchemaDef)] = {
     for {
-      uri <- ZIO.attempt(new URI(schemaUri)).mapError(e => UnexpectedError(e.getMessage))
-      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
+      uri <- ZIO.attempt(new URI(schemaUri)).mapError(e => InvalidSchemaURIError(schemaUri, e))
+      content <- uriDereferencer.dereference(uri).mapError(e => SchemaURIDereferencingError(e))
       anoncredSchema <-
         AnoncredSchemaSerDesV1.schemaSerDes
           .deserialize(content)
-          .mapError(error => UnexpectedError(s"AnonCreds Schema parsing error: $error"))
+          .mapError(error => AnoncredPresentationParsingError(error))
       anoncredLibSchema =
         AnoncredSchemaDef(
           schemaUri,
@@ -580,18 +770,19 @@ private class PresentationServiceImpl(
 
   private def resolveCredentialDefinition(
       credentialDefinitionUri: String
-  ): IO[UnexpectedError, (String, AnoncredCredentialDefinition)] = {
+  ): IO[PresentationError, (String, AnoncredCredentialDefinition)] = {
     for {
-      uri <- ZIO.attempt(new URI(credentialDefinitionUri)).mapError(e => UnexpectedError(e.getMessage))
-      content <- uriDereferencer.dereference(uri).mapError(e => UnexpectedError(e.error))
+      uri <- ZIO
+        .attempt(new URI(credentialDefinitionUri))
+        .mapError(e => InvalidCredentialDefinitionURIError(credentialDefinitionUri, e))
+      content <- uriDereferencer.dereference(uri).mapError(e => CredentialDefinitionURIDereferencingError(e))
       _ <-
         PublicCredentialDefinitionSerDesV1.schemaSerDes
           .validate(content)
-          .mapError(error => UnexpectedError(s"AnonCreds Schema parsing error: $error"))
+          .mapError(error => AnoncredPresentationParsingError(error))
       anoncredCredentialDefinition = AnoncredCredentialDefinition(content)
     } yield (credentialDefinitionUri, anoncredCredentialDefinition)
   }
-
   def acceptRequestPresentation(
       recordId: DidCommID,
       credentialsToUse: Seq[String]
@@ -600,34 +791,46 @@ private class PresentationServiceImpl(
     for {
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       issuedCredentials <- credentialRepository
-        .getValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
-        .mapError(RepositoryError.apply)
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
       validatedCredentialsFormat <- validateCredentialsFormat(record, issuedCredentials)
       _ <- validateCredentials(
         s"No matching issued credentials found in prover db from the given: $credentialsToUse",
         validatedCredentialsFormat
       )
-      count <- presentationRepository
+      _ <- presentationRepository
         .updatePresentationWithCredentialsToUse(recordId, Option(credentialsToUse), ProtocolState.PresentationPending)
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
-        s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
-      )
-      record <- fetchPresentationRecord(recordId, count)
+        @@ CustomMetricsAspect.startRecordingTime(
+          s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
+        )
+      record <- getRecord(recordId)
     } yield record
   }
+  def acceptSDJWTRequestPresentation(
+      recordId: DidCommID,
+      credentialsToUse: Seq[String],
+      claimsToDisclose: Option[ast.Json.Obj]
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
 
-  private def fetchPresentationRecord(recordId: DidCommID, count: RuntimeFlags) = {
     for {
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case _ => ZIO.fail(RecordIdNotFound(recordId))
-      record <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(recordId))
-          case Some(value) => ZIO.succeed(value)
-        }
+      record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
+      issuedCredentials <- credentialRepository
+        .findValidIssuedCredentials(credentialsToUse.map(DidCommID(_)))
+      validatedCredentialsFormat <- validateCredentialsFormat(record, issuedCredentials)
+      _ <- validateCredentials(
+        s"No matching issued credentials found in prover db from the given: $credentialsToUse",
+        validatedCredentialsFormat
+      )
+      _ <-
+        presentationRepository
+          .updateSDJWTPresentationWithCredentialsToUse(
+            recordId,
+            Option(credentialsToUse),
+            claimsToDisclose,
+            ProtocolState.PresentationPending
+          ) @@ CustomMetricsAspect.startRecordingTime(
+          s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
+        )
+      record <- getRecord(recordId)
     } yield record
   }
 
@@ -640,10 +843,9 @@ private class PresentationServiceImpl(
       record <- getRecordWithState(recordId, ProtocolState.RequestReceived)
       issuedCredentials <-
         credentialRepository
-          .getValidAnoncredIssuedCredentials(
+          .findValidAnonCredsIssuedCredentials(
             credentialsToUse.credentialProofs.map(credentialProof => DidCommID(credentialProof.credential))
           )
-          .mapError(RepositoryError.apply)
       _ <- validateFullCredentialsFormat(
         record,
         issuedCredentials
@@ -652,22 +854,17 @@ private class PresentationServiceImpl(
         .fromEither(
           AnoncredCredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
         )
-        .mapError(error =>
-          PresentationError.UnexpectedError(
-            s"Unable to serialize credentialsToUse. credentialsToUse:$credentialsToUse, error:$error"
-          )
-        )
+        .mapError(error => PresentationError.AnoncredCredentialProofParsingError(error))
       count <- presentationRepository
         .updateAnoncredPresentationWithCredentialsToUse(
           recordId,
           Option(AnoncredCredentialProofsV1.version),
           Option(anoncredCredentialProofsV1AsJson),
           ProtocolState.PresentationPending
-        )
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
+        ) @@ CustomMetricsAspect.startRecordingTime(
         s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
       )
-      record <- fetchPresentationRecord(recordId, count)
+      record <- getRecord(record.id)
     } yield record
   }
 
@@ -681,9 +878,7 @@ private class PresentationServiceImpl(
         Either.cond(
           issuedCredentialRaw.nonEmpty,
           issuedCredentialRaw,
-          PresentationError.IssuedCredentialNotFoundError(
-            new Throwable(errorMessage)
-          )
+          PresentationError.IssuedCredentialNotFoundError(errorMessage)
         )
       )
     } yield ()
@@ -723,19 +918,16 @@ private class PresentationServiceImpl(
       issuedCredentials: Seq[ValidFullIssuedCredentialRecord]
   ) = validateCredentialsFormat(
     record,
-    issuedCredentials.map(cred => ValidIssuedCredentialRecord(cred.id, None, cred.credentialFormat, cred.subjectId))
+    issuedCredentials.map(cred =>
+      ValidIssuedCredentialRecord(cred.id, None, cred.credentialFormat, cred.subjectId, cred.keyId)
+    )
   )
 
   override def acceptPresentation(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
-      maybeRecord <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
+      record <- getRecord(recordId)
       _ <- ZIO
         .fromOption(record.presentationData)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
@@ -747,23 +939,18 @@ private class PresentationServiceImpl(
       presentation: Presentation
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
-      record <- getRecordFromThreadId(presentation.thid)
+      thid <-
+        ZIO
+          .fromOption(presentation.thid)
+          .map(DidCommID(_))
+          .mapError(_ => NoThreadIdFoundInRecord(presentation.id))
+      record <- getRecordFromThreadId(thid)
       _ <- presentationRepository
-        .updateWithPresentation(record.id, presentation, ProtocolState.PresentationReceived)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply) @@ CustomMetricsAspect.startRecordingTime(
-        s"${record.id}_present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge"
-      )
-      record <- presentationRepository
-        .getPresentationRecord(record.id)
-        .mapError(RepositoryError.apply)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(record.id))
-          case Some(value) => ZIO.succeed(value)
-        }
+        .updateWithPresentation(record.id, presentation, ProtocolState.PresentationReceived) @@ CustomMetricsAspect
+        .startRecordingTime(
+          s"${record.id}_present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge"
+        )
+      record <- getRecord(record.id)
     } yield record
   }
 
@@ -771,30 +958,15 @@ private class PresentationServiceImpl(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
-      maybeRecord <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
+      record <- getRecord(recordId)
       request <- ZIO
         .fromOption(record.proposePresentationData)
         .mapError(_ => InvalidFlowStateError(s"No request found for this record: $recordId"))
       // TODO: Generate the JWT credential and use it to create the Presentation object
       requestPresentation = createDidCommRequestPresentationFromProposal(request)
-      count <- presentationRepository
+      _ <- presentationRepository
         .updateWithRequestPresentation(recordId, requestPresentation, ProtocolState.PresentationPending)
-        .mapError(RepositoryError.apply)
-      _ <- count match
-        case 1 => ZIO.succeed(())
-        case _ => ZIO.fail(RecordIdNotFound(recordId))
-      record <- presentationRepository
-        .getPresentationRecord(record.id)
-        .mapError(RepositoryError.apply)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(record.id))
-          case Some(value) => ZIO.succeed(value)
-        }
+      record <- getRecord(recordId)
     } yield record
   }
 
@@ -802,35 +974,33 @@ private class PresentationServiceImpl(
       proposePresentation: ProposePresentation
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
-      record <- getRecordFromThreadId(proposePresentation.thid)
+      thid <-
+        ZIO
+          .fromOption(proposePresentation.thid)
+          .map(DidCommID(_))
+          .mapError(_ => NoThreadIdFoundInRecord(proposePresentation.id))
+      record <- getRecordFromThreadId(thid)
       _ <- presentationRepository
         .updateWithProposePresentation(record.id, proposePresentation, ProtocolState.ProposalReceived)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply)
-      record <- presentationRepository
-        .getPresentationRecord(record.id)
-        .mapError(RepositoryError.apply)
-        .flatMap {
-          case None        => ZIO.fail(RecordIdNotFound(record.id))
-          case Some(value) => ZIO.succeed(value)
-        }
+      record <- getRecord(record.id)
     } yield record
   }
 
-  private[this] def getRecordWithState(
+  private def getRecord(recordId: DidCommID) = {
+    presentationRepository
+      .findPresentationRecord(recordId)
+      .flatMap {
+        case None        => ZIO.fail(RecordIdNotFound(recordId))
+        case Some(value) => ZIO.succeed(value)
+      }
+  }
+
+  private def getRecordWithState(
       recordId: DidCommID,
       state: ProtocolState
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
-      maybeRecord <- presentationRepository
-        .getPresentationRecord(recordId)
-        .mapError(RepositoryError.apply)
-      record <- ZIO
-        .fromOption(maybeRecord)
-        .mapError(_ => RecordIdNotFound(recordId))
+      record <- getRecord(recordId)
       _ <- record.protocolState match {
         case s if s == state => ZIO.unit
         case state           => ZIO.fail(InvalidFlowStateError(s"Invalid protocol state for operation: $state"))
@@ -900,6 +1070,15 @@ private class PresentationServiceImpl(
       PresentationRecord.ProtocolState.RequestRejected
     )
 
+  override def markPresentationInvitationExpired(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
+    updatePresentationRecordProtocolState(
+      recordId,
+      PresentationRecord.ProtocolState.PresentationReceived,
+      PresentationRecord.ProtocolState.InvitationExpired
+    )
+
   override def markPresentationVerificationFailed(
       recordId: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
@@ -922,7 +1101,7 @@ private class PresentationServiceImpl(
       deserializedPresentation <-
         AnoncredPresentationV1.schemaSerDes
           .deserialize(serializedPresentation.data)
-          .mapError(error => PresentationError.UnexpectedError(error.error))
+          .mapError(error => AnoncredPresentationParsingError(error))
       schemaIds = deserializedPresentation.identifiers.map(_.schema_id)
       schemaMap <-
         ZIO
@@ -966,43 +1145,43 @@ private class PresentationServiceImpl(
     } yield result
   }
 
-  def reportProcessingFailure(
+  override def reportProcessingFailure(
       recordId: DidCommID,
-      failReason: Option[String]
-  ): ZIO[WalletAccessContext, PresentationError, Unit] =
-    presentationRepository
-      .updateAfterFail(recordId, failReason)
-      .mapError(RepositoryError.apply)
-      .flatMap {
-        case 1 => ZIO.unit
-        case n => ZIO.fail(UnexpectedError(s"Invalid number of records updated: $n"))
-      }
+      failReason: Option[Failure]
+  ): UIO[Unit] =
+    presentationRepository.updateAfterFail(recordId, failReason)
 
-  private[this] def getRecordFromThreadId(
-      thid: Option[String]
+  private def getRecordFromThreadId(
+      thid: DidCommID
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     for {
-      thidID <- ZIO
-        .fromOption(thid)
-        .map(DidCommID(_))
-        .mapError(_ => UnexpectedError("No `thid` found in Presentation request"))
       maybeRecord <- presentationRepository
-        .getPresentationRecordByThreadId(thidID)
-        .mapError(RepositoryError.apply)
+        .findPresentationRecordByThreadId(thid)
       record <- ZIO
         .fromOption(maybeRecord)
-        .mapError(_ => ThreadIdNotFound(thidID))
+        .mapError(_ => ThreadIdNotFound(thid))
     } yield record
   }
 
-  private[this] def toJWTAttachment(options: Options): AttachmentDescriptor = {
+  private def toJWTAttachment(options: Options): AttachmentDescriptor = {
     AttachmentDescriptor.buildJsonAttachment(
       payload = PresentationAttachment.build(Some(options)),
       format = Some(PresentCredentialRequestFormat.JWT.name)
     )
   }
 
-  private[this] def toAnoncredAttachment(
+  private def toSDJWTAttachment(
+      options: Option[Options],
+      claimsToDsiclose: ast.Json.Obj
+  ): AttachmentDescriptor = {
+    AttachmentDescriptor.buildBase64Attachment(
+      mediaType = Some("application/json"),
+      format = Some(PresentCredentialRequestFormat.SDJWT.name),
+      payload = SDJwtPresentation(options, claimsToDsiclose).toJson.getBytes
+    )
+  }
+
+  private def toAnoncredAttachment(
       presentationRequest: AnoncredPresentationRequestV1
   ): AttachmentDescriptor = {
     AttachmentDescriptor.buildBase64Attachment(
@@ -1012,11 +1191,11 @@ private class PresentationServiceImpl(
     )
   }
 
-  private[this] def createDidCommRequestPresentation(
+  private def createDidCommRequestPresentation(
       proofTypes: Seq[ProofType],
       thid: DidCommID,
-      pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseVerifierDID: Option[DidId],
+      pairwiseProverDID: Option[DidId],
       attachments: Seq[AttachmentDescriptor]
   ): RequestPresentation = {
     RequestPresentation(
@@ -1031,7 +1210,7 @@ private class PresentationServiceImpl(
     )
   }
 
-  private[this] def createDidCommRequestPresentationFromProposal(
+  private def createDidCommRequestPresentationFromProposal(
       proposePresentation: ProposePresentation
   ): RequestPresentation = {
     // TODO to review what is needed
@@ -1040,29 +1219,71 @@ private class PresentationServiceImpl(
     RequestPresentation(
       body = body,
       attachments = proposePresentation.attachments,
-      from = proposePresentation.to,
-      to = proposePresentation.from,
+      from = Some(proposePresentation.to),
+      to = Some(proposePresentation.from),
       thid = proposePresentation.thid
     )
   }
 
-  private[this] def updatePresentationRecordProtocolState(
+  private def updatePresentationRecordProtocolState(
       id: DidCommID,
       from: PresentationRecord.ProtocolState,
       to: PresentationRecord.ProtocolState
-  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] =
     for {
-      _ <- presentationRepository
-        .updatePresentationRecordProtocolState(id, from, to)
-        .flatMap {
-          case 1 => ZIO.succeed(())
-          case n => ZIO.fail(UnexpectedException(s"Invalid row count result: $n"))
-        }
-        .mapError(RepositoryError.apply)
-      record <- fetchPresentationRecord(id, 1)
+      _ <- getRecord(id)
+      _ <- presentationRepository.updatePresentationRecordProtocolState(id, from, to)
+      record <- getRecord(id)
     } yield record
-  }
 
+  override def getRequestPresentationFromInvitation(
+      pairwiseProverDID: DidId,
+      invitation: String
+  ): ZIO[WalletAccessContext, PresentationError, RequestPresentation] = {
+    for {
+      invitation <- ZIO
+        .fromEither(io.circe.parser.decode[Invitation](Base64Utils.decodeUrlToString(invitation)))
+        .mapError(err => InvitationParsingError(err.getMessage))
+      _ <- invitation.expires_time match {
+        case Some(expiryTime) =>
+          ZIO
+            .fail(PresentationError.InvitationExpired(s"Invitation has expired. Expiry time: $expiryTime"))
+            .when(Instant.now().getEpochSecond > expiryTime)
+        case None => ZIO.unit
+      }
+      _ <- presentationRepository
+        .findPresentationRecordByThreadId(DidCommID(invitation.id))
+        .flatMap {
+          case None    => ZIO.unit
+          case Some(_) => ZIO.fail(InvitationAlreadyReceived(invitation.id))
+        }
+      requestPresentation <- ZIO.fromEither {
+        invitation.attachments
+          .flatMap(
+            _.headOption.map(attachment =>
+              decode[org.hyperledger.identus.mercury.model.JsonData](
+                attachment.data.asJson.noSpaces
+              ) // TODO Move mercury to use ZIO JSON
+                .flatMap { data =>
+                  RequestPresentation.given_Decoder_RequestPresentation
+                    .decodeJson(data.json.asJson)
+                    .map(r => r.copy(to = Some(pairwiseProverDID)))
+                    .leftMap(err =>
+                      PresentationDecodingError(
+                        s"RequestPresentation As Attachment decoding error: ${err.getMessage}"
+                      )
+                    )
+                }
+                .leftMap(err => PresentationDecodingError(s"Invitation Attachment JsonData decoding error: $err"))
+            )
+          )
+          .getOrElse(
+            Left(MissingInvitationAttachment("Missing Invitation Attachment for RequestPresentation"))
+          )
+      }
+    } yield requestPresentation
+
+  }
 }
 
 object PresentationServiceImpl {

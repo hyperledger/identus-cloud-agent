@@ -2,6 +2,8 @@ package org.hyperledger.identus.iam.authentication.apikey
 
 import doobie.*
 import doobie.implicits.*
+import org.hyperledger.identus.shared.db.Errors
+import org.hyperledger.identus.shared.db.Implicits.ensureOneAffectedRowOrDie
 import org.postgresql.util.PSQLException
 import zio.*
 import zio.interop.catz.*
@@ -11,33 +13,27 @@ import java.util.UUID
 
 case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends AuthenticationRepository {
 
-  import AuthenticationRepositorySql.*
   import AuthenticationRepositoryError.*
+  import AuthenticationRepositorySql.*
   override def insert(
       entityId: UUID,
       amt: AuthenticationMethodType,
       secret: String
-  ): IO[AuthenticationRepositoryError, Unit] = {
+  ): IO[AuthenticationCompromised, Unit] = {
     val authenticationMethod = AuthenticationMethod(amt, entityId, secret)
     AuthenticationRepositorySql
       .insert(authenticationMethod)
       .transact(xa)
-      .map(_ => ())
-      .logError(
-        s"insert failed for entityId: $entityId, authenticationMethodType: $amt, and secret: $secret"
-      )
-      .mapError {
+      .flatMap {
+        case 1     => ZIO.unit
+        case count => ZIO.die(Errors.UnexpectedAffectedRow(count))
+      }
+      .catchAll {
         case sqlException: PSQLException
             if sqlException.getMessage
               .contains("ERROR: duplicate key value violates unique constraint \"unique_type_secret_constraint\"") =>
-          AuthenticationCompromised(entityId, amt, secret)
-        case otherSqlException: PSQLException =>
-          StorageError(otherSqlException)
-        case unexpected: Throwable =>
-          UnexpectedError(unexpected)
-      }
-      .catchSome { case AuthenticationCompromised(eId, amt, s) =>
-        ensureThatTheApiKeyIsNotCompromised(eId, amt, s)
+          ensureThatTheApiKeyIsNotCompromised(entityId, amt, secret)
+        case e => ZIO.die(e)
       }
   }
 
@@ -45,9 +41,9 @@ case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends Authentica
       entityId: UUID,
       authenticationMethodType: AuthenticationMethodType,
       secret: String
-  ): IO[AuthenticationRepositoryError, Unit] = {
+  ): IO[AuthenticationCompromised, Unit] = {
     val ac = AuthenticationCompromised(entityId, authenticationMethodType, secret)
-    val acZIO: IO[AuthenticationRepositoryError, Unit] = ZIO.fail(ac)
+    val acZIO: IO[AuthenticationCompromised, Unit] = ZIO.fail(ac)
 
     for {
       authRecordOpt <- findAuthenticationMethodByTypeAndSecret(authenticationMethodType, secret)
@@ -65,70 +61,48 @@ case class JdbcAuthenticationRepository(xa: Transactor[Task]) extends Authentica
     } yield result
   }
 
-  override def getEntityIdByMethodAndSecret(
+  override def findEntityIdByMethodAndSecret(
       amt: AuthenticationMethodType,
       secret: String
-  ): IO[AuthenticationRepositoryError, UUID] = {
+  ): UIO[Option[UUID]] = {
     AuthenticationRepositorySql
       .getEntityIdByMethodAndSecret(amt, secret)
       .transact(xa)
-      .logError(s"getEntityIdByMethodAndSecret failed for method: $amt and secret: $secret")
-      .mapError(AuthenticationRepositoryError.StorageError.apply)
-      .flatMap(
-        _.headOption.fold(ZIO.fail(AuthenticationRepositoryError.AuthenticationNotFound(amt, secret)))(entityId =>
-          ZIO.succeed(entityId)
-        )
-      )
+      .map(_.headOption)
+      .orDie
   }
 
   override def findAuthenticationMethodByTypeAndSecret(
       amt: AuthenticationMethodType,
       secret: String
-  ): IO[AuthenticationRepositoryError, Option[AuthenticationMethod]] = {
+  ): UIO[Option[AuthenticationMethod]] = {
     AuthenticationRepositorySql
       .filterByTypeAndSecret(amt, secret)
       .transact(xa)
-      .logError(s"findAuthenticationMethodBySecret failed for secret:$secret")
       .map(_.headOption)
-      .mapError(AuthenticationRepositoryError.StorageError.apply)
+      .orDie
   }
 
   override def deleteByMethodAndEntityId(
       entityId: UUID,
       amt: AuthenticationMethodType
-  ): IO[AuthenticationRepositoryError, Unit] = {
+  ): UIO[Unit] = {
     AuthenticationRepositorySql
       .softDeleteByEntityIdAndType(entityId, amt, Some(OffsetDateTime.now()))
       .transact(xa)
-      .logError(s"deleteByMethodAndEntityId failed for method: $amt and entityId: $entityId")
-      .mapError(AuthenticationRepositoryError.StorageError.apply)
       .map(_ => ())
+      .orDie
   }
 
   override def delete(
       entityId: UUID,
       amt: AuthenticationMethodType,
       secret: String
-  ): IO[AuthenticationRepositoryError, Unit] = {
+  ): UIO[Unit] = {
     AuthenticationRepositorySql
       .softDeleteBy(entityId, amt, secret, Some(OffsetDateTime.now()))
       .transact(xa)
-      .logError(s"deleteByEntityIdAndSecret failed for id: $entityId and secret: $secret")
-      .mapError(AuthenticationRepositoryError.StorageError.apply)
-      .map(_ => ())
-  }
-
-  def checkDeleted(method: AuthenticationMethodType, secret: String) = {
-    AuthenticationRepositorySql
-      .getEntityIdByMethodAndSecret(method, secret)
-      .transact(xa)
-      .logError(s"getEntityIdByMethodAndSecret failed for method: $method and secret: $secret")
-      .mapError(AuthenticationRepositoryError.StorageError.apply)
-      .flatMap(
-        _.headOption.fold(ZIO.fail(AuthenticationRepositoryError.AuthenticationNotFound(method, secret)))(entityId =>
-          ZIO.succeed(entityId)
-        )
-      )
+      .ensureOneAffectedRowOrDie
   }
 }
 

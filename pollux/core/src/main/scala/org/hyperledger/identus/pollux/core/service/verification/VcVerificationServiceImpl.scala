@@ -3,7 +3,7 @@ package org.hyperledger.identus.pollux.core.service.verification
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.service.URIDereferencer
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver, JWT, JWTVerification, JwtCredential}
-import zio.{IO, *}
+import zio.*
 
 import java.time.OffsetDateTime
 
@@ -216,7 +216,7 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
       .as(
         VcVerificationResult(
           credential = credential,
-          verification = VcVerification.SubjectVerification,
+          verification = VcVerification.SemanticCheckOfClaims,
           success = true
         )
       )
@@ -224,7 +224,7 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
         ZIO.succeed(
           VcVerificationResult(
             credential = credential,
-            verification = VcVerification.SubjectVerification,
+            verification = VcVerification.SemanticCheckOfClaims,
             success = false
           )
         )

@@ -1,16 +1,26 @@
 package org.hyperledger.identus.mercury.model
 
-// import org.didcommx.didcomm.model.PackEncryptedResult //FIXME REMOVE
-import java.util.Base64
+import io.circe.*
+import io.circe.parser.*
 
-import io.circe._
-import io.circe.parser._
+import java.util.Base64
 
 trait EncryptedMessage { // (private val msg: PackEncryptedResult) {
   def string: String // = msg.getPackedMessage
   def base64: String = Base64.getUrlEncoder.encodeToString(string.getBytes)
   def asJson: JsonObject = {
-    val aux = parse(string).getOrElse(???) // .getOrElse(Json.Null)
-    aux.asObject.getOrElse(???) // TODO
+    parse(string)
+      .flatMap(o =>
+        o.asObject match
+          case None =>
+            Left(
+              ParsingFailure(
+                "Expecting the Json to be a Json Object",
+                RuntimeException(s"Expecting Json Object got '$o'")
+              )
+            )
+          case Some(value) => Right(value)
+      )
+      .getOrElse(UnexpectedCodeExecutionPath)
   }
 }

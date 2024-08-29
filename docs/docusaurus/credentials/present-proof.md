@@ -126,6 +126,55 @@ curl -X 'POST' 'http://localhost:8070/cloud-agent/present-proof/presentations' \
       }'
 ```
 </TabItem>
+<TabItem value="sdjwt" label="SDJWT">
+
+a. `SD-JWT` The absence of the `cnf` key claim in the SD-JWT Verifiable Credential (VC) means that the Holder/Prover is unable to create a presentation and sign the `challenge` and `domain` supplied by the verifier
+
+```bash
+curl -X 'POST' 'http://localhost:8070/cloud-agent/present-proof/presentations' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+ -H "apikey: $API_KEY" \
+  -d '{
+        "connectionId": "872ddfa9-4115-46c2-8a1b-22c24c7431d7",
+        "proofs":[],
+        "credentialFormat": "SDJWT",
+         "claims": {
+            "emailAddress": {},
+            "givenName": {},
+    `       "region": {},
+            "country": {}`
+         }
+      }'
+```
+
+b. `SD-JWT` The presence of the `cnf` key as a disclosable claim in the SD-JWT Verifiable Credential (VC) allows the Holder/Prover to create a presentation and sign the `challenge` and `domain` given by the verifier.
+```bash
+curl -X 'POST' 'http://localhost:8070/cloud-agent/present-proof/presentations' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+ -H "apikey: $API_KEY" \
+  -d '{
+        "connectionId": "872ddfa9-4115-46c2-8a1b-22c24c7431d7",
+        "proofs":[],
+        "options": {
+          "challenge": "11c91493-01b3-4c4d-ac36-b336bab5bddf",
+          "domain": "https://prism-verifier.com"
+        },
+        "credentialFormat": "SDJWT",
+         "claims": {
+            "emailAddress": {},
+            "givenName": {},
+            "region": {},
+            "country": {}
+         }
+      }'
+```
+SDJWT Specific attributes
+1. `credentialFormat`: SDJWT.
+2. `claims`: The claims to be disclosed  by Holder/Prover.
+
+</TabItem>
 </Tabs>
 
 Upon execution, a new presentation request record gets created with an initial state of `RequestPending`. The Verifier Cloud Agent will send the presentation request message to the Cloud Agent of the Holder/Prover through the specified DIDComm connection. The record state then is updated to `RequestSent`.
@@ -219,6 +268,38 @@ curl -X 'PATCH' 'http://localhost:8090/cloud-agent/present-proof/presentations/{
       }'
 ```
 </TabItem>
+
+<TabItem value="sdjwt" label="SDJWT">
+
+```bash
+curl -X 'PATCH' 'http://localhost:8090/cloud-agent/present-proof/presentations/{PRESENTATION_ID}' \
+  -H 'Content-Type: application/json' \
+  -H "apikey: $API_KEY" \
+  -d '{
+        "action": "request-accept",
+        "proofId": ["{CRED_RECORD_ID}"]
+        "claims": {
+          "emailAddress": {},
+          "givenName": {},
+          "address": {
+            "region": {},
+            "country": {}
+          }
+        },
+        "credentialFormat": "SDJWT"
+      }'
+```
+
+The Holder/Prover will have to provide the following information:
+1. `presentationId`: The unique identifier of the presentation record to accept.
+2. `proofId`: The unique identifier of the verifiable credential record to use as proof.
+3. `credentialFormat`: SDJWT.
+4. `claims`: The Verifier requests specific claims to disclose. The path of these claims must match exactly with those in the SD-JWT Verifiable Credential (VC).
+- 📌 **Note:**  When a SD-JWT Verifiable Credential (VC) has nested claims such as region and country within an address object, as shown in the example above, it falls under the Holder's responsibility to supply the correct nested JSON structure for the claims attribute(s) that is being disclosed.
+- 📌 **Note:** The holder or prover of the claims is only required to disclose the attribute names and the correct JSON path. The actual values are not necessary. A special JSON placeholder `{}`, can be used instead.
+
+</TabItem>
+
 </Tabs>
 
 The Holder/Prover will have to provide the following information:

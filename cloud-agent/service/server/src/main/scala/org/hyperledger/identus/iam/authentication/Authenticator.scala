@@ -1,41 +1,49 @@
 package org.hyperledger.identus.iam.authentication
 
-import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.agent.walletapi.model.EntityRole
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Entity, EntityRole}
+import org.hyperledger.identus.shared.models.*
 import zio.{IO, ZIO, ZLayer}
 
 trait Credentials
 
-trait AuthenticationError {
-  def message: String
+trait AuthenticationError(
+    val statusCode: StatusCode,
+    val userFacingMessage: String
+) extends Failure {
+  override val namespace: String = "AuthenticationError"
 }
 
 object AuthenticationError {
 
-  case class InvalidCredentials(message: String) extends AuthenticationError
+  case class InvalidCredentials(message: String)
+      extends AuthenticationError(
+        StatusCode.Unauthorized,
+        message
+      )
 
-  case class AuthenticationMethodNotEnabled(message: String) extends AuthenticationError
+  case class AuthenticationMethodNotEnabled(message: String)
+      extends AuthenticationError(
+        StatusCode.Unauthorized,
+        message
+      )
 
-  case class UnexpectedError(message: String) extends AuthenticationError
+  case class UnexpectedError(message: String)
+      extends AuthenticationError(
+        StatusCode.InternalServerError,
+        message
+      )
 
-  case class ServiceError(message: String) extends AuthenticationError
+  case class ResourceNotPermitted(message: String)
+      extends AuthenticationError(
+        StatusCode.Forbidden,
+        message
+      )
 
-  case class ResourceNotPermitted(message: String) extends AuthenticationError
-
-  case class InvalidRole(message: String) extends AuthenticationError
-
-  def toErrorResponse(error: AuthenticationError): ErrorResponse =
-    ErrorResponse(
-      status = sttp.model.StatusCode.Forbidden.code,
-      `type` = "authentication_error",
-      title = "",
-      detail = Option(error.message)
-    )
+  case class InvalidRole(message: String)
+      extends AuthenticationError(
+        StatusCode.Forbidden,
+        message
+      )
 }
 
 trait Authenticator[E <: BaseEntity] {
@@ -55,8 +63,8 @@ trait Authorizer[E <: BaseEntity] {
       .mapError(msg =>
         AuthenticationError.UnexpectedError(s"Unable to retrieve entity role for entity id ${entity.id}. $msg")
       )
-      .filterOrFail(_ != EntityRole.Admin)(
-        AuthenticationError.InvalidRole("Admin role is not allowed to access the tenant's wallet.")
+      .filterOrFail(_ == EntityRole.Tenant)(
+        AuthenticationError.InvalidRole("Only Tenant role is allowed to access the tenant's wallet.")
       )
       .flatMap(_ => authorizeWalletAccessLogic(entity))
 

@@ -1,10 +1,10 @@
 package org.hyperledger.identus.castor.core.model.did
 
+import io.iohk.atala.prism.protos.node_models
 import org.hyperledger.identus.castor.core.model.ProtoModelHelper
 import org.hyperledger.identus.shared.crypto.Sha256Hash
 
 import scala.collection.compat.immutable.ArraySeq
-import io.iohk.atala.prism.protos.node_models
 
 sealed trait PrismDIDOperation {
   def did: CanonicalPrismDID

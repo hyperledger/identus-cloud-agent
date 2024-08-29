@@ -1,13 +1,10 @@
 package org.hyperledger.identus.pollux.core.model.schema.`type`
 
 import com.networknt.schema.*
-import org.hyperledger.identus.pollux.core.model.schema.Schema
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1.*
-import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
-import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaUtils
-import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaValidatorImpl
-import org.hyperledger.identus.pollux.core.model.schema.validator.SchemaSerDes
+import org.hyperledger.identus.pollux.core.model.schema.Schema
+import org.hyperledger.identus.shared.json.{JsonSchemaError, JsonSchemaUtils, JsonSchemaValidatorImpl, SchemaSerDes}
 import zio.*
 import zio.json.*
 

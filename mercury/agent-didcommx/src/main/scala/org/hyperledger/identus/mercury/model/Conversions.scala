@@ -1,10 +1,10 @@
 package org.hyperledger.identus.mercury.model
 
 import io.circe.*
-import org.hyperledger.identus.mercury.model.*
+import org.didcommx.didcomm.message.{Attachment as XAttachment, MessageBuilder}
 import org.didcommx.didcomm.message.Attachment.Data
-import org.didcommx.didcomm.message.{MessageBuilder, Attachment as XAttachment}
 import org.didcommx.didcomm.model.*
+import org.hyperledger.identus.mercury.model.*
 
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
@@ -37,7 +37,7 @@ given Conversion[Message, org.didcommx.didcomm.message.Message] with {
     msg.to.foreach(did => aux.to(Seq(did.value).asJava))
 
     msg.pleaseAck.foreach { seq => // https://identity.foundation/didcomm-messaging/spec/#acks
-      aux.pleaseAck(true) // FIXME lib limitation the field pleaseAck MUST be a Array of string
+      aux.pleaseAck(true) // NOTE lib limitation the field pleaseAck MUST be a Array of string
     }
     msg.ack.flatMap(_.headOption).foreach(str => aux.ack(str)) // NOTE: headOption becuase DidCommx only support one ack
     msg.thid.foreach(str => aux.thid(str))
@@ -81,10 +81,6 @@ def mapValueToJson(obj: java.lang.Object): Json = {
             .toMap
         )
       }
-    case any => {
-      println("*****NotImplemented***" + any.getClass().getCanonicalName() + "**********") // FIXME
-      ???
-    }
   }
 }
 
@@ -101,7 +97,7 @@ given Conversion[AttachmentDescriptor, XAttachment] with {
         }
         case LinkData(links, hash) => new XAttachment.Data.Links(links.asJava, hash, null)
         case Base64(d)             => new XAttachment.Data.Base64(d, null, null)
-        case _                     => ??? // FIXME later attachment data of other types
+        case _                     => FeatureNotImplemented
       }
 
     new XAttachment.Builder(id, data)
@@ -128,10 +124,7 @@ given Conversion[XAttachment, AttachmentDescriptor] with {
         val list = aux.asInstanceOf[java.util.AbstractList[String]]
         val linksSeq = list.iterator().asScala.toSeq
         LinkData(linksSeq, hash = attachment.getData().getHash())
-      case e if e contains ("jws") =>
-        val aux = e("jws")
-        println(aux.getClass().getCanonicalName()) // TODO
-        ???
+      case e if e contains ("jws") => FeatureNotImplemented
     }
 
     AttachmentDescriptor(

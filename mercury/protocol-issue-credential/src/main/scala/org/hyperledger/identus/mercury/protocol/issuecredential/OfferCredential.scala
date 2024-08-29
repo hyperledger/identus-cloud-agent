@@ -1,11 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.syntax._
-
-import org.hyperledger.identus.mercury.model.PIURI
-import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Message, DidId}
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
 
 /** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
   * @see
@@ -26,7 +24,7 @@ final case class OfferCredential(
     // extra
     thid: Option[String] = None,
     from: DidId,
-    to: DidId,
+    to: Option[DidId] = None,
 ) extends ReadAttachmentsUtils {
   assert(`type` == OfferCredential.`type`)
 
@@ -34,7 +32,7 @@ final case class OfferCredential(
     id = this.id,
     `type` = this.`type`,
     from = Some(this.from),
-    to = Seq(to),
+    to = to.toSeq,
     thid = this.thid,
     body = this.body.asJson.asObject.get, // TODO get
     attachments = Some(this.attachments),
@@ -64,7 +62,7 @@ object OfferCredential {
     OfferCredential(
       thid = thid,
       from = fromDID,
-      to = toDID,
+      to = Some(toDID),
       body = Body(credential_preview = credential_preview),
       attachments = attachments
     )
@@ -83,37 +81,50 @@ object OfferCredential {
     given Decoder[Body] = deriveDecoder[Body]
   }
 
-  def makeOfferToProposeCredential(msg: Message): OfferCredential = { // TODO change msg: Message to ProposeCredential
-    val pc: ProposeCredential = ProposeCredential.readFromMessage(msg)
+  def makeOfferToProposeCredential(
+      msg: Message // TODO change msg: Message to ProposeCredential
+  ): Either[String, OfferCredential] =
+    ProposeCredential.readFromMessage(msg).flatMap { pc =>
+      pc.body.credential_preview match
+        case None => Left("This method expects the ProposeCredential to have a 'credential_preview' in the body")
+        case Some(credential_preview) =>
+          Right(
+            OfferCredential(
+              body = OfferCredential.Body(
+                goal_code = pc.body.goal_code,
+                comment = pc.body.comment,
+                replacement_id = None,
+                multiple_available = None,
+                credential_preview = credential_preview,
+              ),
+              attachments = pc.attachments,
+              thid = msg.thid.orElse(Some(pc.id)),
+              from = pc.to,
+              to = Some(pc.from),
+            )
+          )
+    }
 
-    OfferCredential(
-      body = OfferCredential.Body(
-        goal_code = pc.body.goal_code,
-        comment = pc.body.comment,
-        replacement_id = None,
-        multiple_available = None,
-        credential_preview = pc.body.credential_preview.get, // FIXME .get
-      ),
-      attachments = pc.attachments,
-      thid = msg.thid.orElse(Some(pc.id)),
-      from = pc.to,
-      to = pc.from,
-    )
-  }
-
-  def readFromMessage(message: Message): OfferCredential = {
-    val body = message.body.asJson.as[OfferCredential.Body].toOption.get // TODO get
-    OfferCredential(
-      id = message.id,
-      `type` = message.piuri,
-      body = body,
-      attachments = message.attachments.getOrElse(Seq.empty),
-      thid = message.thid,
-      from = message.from.get, // TODO get
-      to = {
-        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
-        message.to.head
-      },
-    )
+  def readFromMessage(message: Message): Either[String, OfferCredential] = {
+    message.body.asJson.as[OfferCredential.Body] match
+      case Left(fail) => Left("Fail to parse OfferCredential's body: " + fail.getMessage)
+      case Right(body) =>
+        message.from match
+          case None => Left("OfferCredential MUST have the sender explicit")
+          case Some(from) =>
+            message.to match
+              case firstTo +: Seq() =>
+                Right(
+                  OfferCredential(
+                    id = message.id,
+                    `type` = message.piuri,
+                    body = body,
+                    attachments = message.attachments.getOrElse(Seq.empty),
+                    thid = message.thid,
+                    from = from,
+                    to = Some(firstTo),
+                  )
+                )
+              case tos => Left(s"OfferCredential MUST have only 1 recipient instead has '${tos}'")
   }
 }

@@ -1,9 +1,9 @@
 package org.hyperledger.identus.pollux.credentialdefinition
 
 import org.hyperledger.identus.api.http.*
-import org.hyperledger.identus.api.http.EndpointOutputs.*
 import org.hyperledger.identus.api.http.codec.OrderCodec.*
 import org.hyperledger.identus.api.http.model.{Order, PaginationInput}
+import org.hyperledger.identus.api.http.EndpointOutputs.*
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
@@ -16,18 +16,18 @@ import org.hyperledger.identus.pollux.credentialdefinition.http.{
 }
 import sttp.apispec.{ExternalDocumentation, Tag}
 import sttp.model.StatusCode
-import sttp.tapir.json.zio.{jsonBody, schemaForZioJsonValue}
 import sttp.tapir.{
-  Endpoint,
-  EndpointInput,
-  PublicEndpoint,
   endpoint,
   extractFromRequest,
   path,
   query,
   statusCode,
-  stringToPath
+  stringToPath,
+  Endpoint,
+  EndpointInput,
+  PublicEndpoint
 }
+import sttp.tapir.json.zio.{jsonBody, schemaForZioJsonValue}
 
 import java.util.UUID
 

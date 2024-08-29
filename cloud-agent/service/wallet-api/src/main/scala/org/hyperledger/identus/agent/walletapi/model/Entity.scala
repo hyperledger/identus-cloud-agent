@@ -3,13 +3,14 @@ package org.hyperledger.identus.agent.walletapi.model
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
-import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.time.Instant
 import java.util.UUID
 
 enum EntityRole {
   case Admin extends EntityRole
   case Tenant extends EntityRole
+  case ExternalParty extends EntityRole
 }
 
 trait BaseEntity {
@@ -20,7 +21,7 @@ trait BaseEntity {
 case class Entity(id: UUID, name: String, walletId: UUID, createdAt: Instant, updatedAt: Instant) extends BaseEntity {
   def withUpdatedAt(updatedAt: Instant = Instant.now()): Entity = copy(updatedAt = updatedAt)
   def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): Entity =
-    copy(createdAt = createdAt.truncatedTo(unit), updatedAt.truncatedTo(unit))
+    copy(createdAt = createdAt.truncatedTo(unit), updatedAt = updatedAt.truncatedTo(unit))
 
   def role: Either[String, EntityRole] =
     if (this == Entity.Admin) Right(EntityRole.Admin)

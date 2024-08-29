@@ -4,22 +4,36 @@ import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.pollux.core.service
 import org.hyperledger.identus.pollux.core.service.verification.VcVerification as ServiceVcVerification
 import sttp.tapir.Schema
+import sttp.tapir.Schema.annotations.description
+import zio.*
 import zio.json.{JsonDecoder, JsonEncoder}
-import zio.{IO, *}
 
+/** Enum representing the various types of verifications that can be performed on a verifiable credential.
+  */
 enum VcVerification {
-  case SignatureVerification
-  case IssuerIdentification
-  case ExpirationCheck
-  case NotBeforeCheck
-  case AudienceCheck
-  case SubjectVerification
-  case IntegrityOfClaims
-  case ComplianceWithStandards
-  case RevocationCheck
-  case AlgorithmVerification
-  case SchemaCheck
-  case SemanticCheckOfClaims
+  @description("Verify the digital signature of the credential.") case SignatureVerification
+
+  @description("Verify the identity of the issuer of the credential.") case IssuerIdentification
+
+  @description("Check if the credential has expired.") case ExpirationCheck
+
+  @description("Check if the credential is valid before a certain date and time.") case NotBeforeCheck
+
+  @description("Verify the audience for which the credential is intended.") case AudienceCheck
+
+  @description("Verify the subject of the credential.") case SubjectVerification
+
+  @description("Check the integrity of the claims in the credential.") case IntegrityOfClaims
+
+  @description("Ensure the credential complies with required standards.") case ComplianceWithStandards
+
+  @description("Check if the credential has been revoked.") case RevocationCheck
+
+  @description("Verify the algorithm used for creating the credential.") case AlgorithmVerification
+
+  @description("Validate the schema of the credential.") case SchemaCheck
+
+  @description("Perform a semantic check on the claims of the credential.") case SemanticCheckOfClaims
 }
 
 object VcVerification {

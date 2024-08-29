@@ -28,6 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !contains(github.event.pull_request.title, '[skip ci]') }}
     env:
+      LOGS_DIR: "tests/integration-tests/target/logs"
       REPORTS_DIR: "tests/integration-tests/target/site/serenity"
     steps:
       - name: Checkout
@@ -36,7 +37,7 @@ jobs:
       - name: Setup Java and Scala
         uses: olafurpg/setup-scala@v14
         with:
-          java-version: openjdk@1.11
+          java-version: openjdk@1.17
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v3
@@ -131,12 +132,21 @@ jobs:
           comment_title: "Integration Test Results"
           check_name: "Integration Test Results"
 
-      - name: Upload artifacts
+      - name: Upload serenity report
         if: github.ref_name == 'main' || failure()
         uses: actions/upload-artifact@v4
         with:
           name: integration-tests-result
           path: ${{ env.REPORTS_DIR }}
+          compression-level: 9
+
+      - name: Upload logs
+        if: github.ref_name == 'main' || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs
+          path: ${{ env.LOGS_DIR }}
+          compression-level: 9
 
       - name: Slack Notification
         if: github.ref_name == 'main' && failure()

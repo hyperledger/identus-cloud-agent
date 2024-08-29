@@ -1,12 +1,13 @@
 package org.hyperledger.identus.issue.controller.http
 
-import org.hyperledger.identus.api.http.Annotation
+import org.hyperledger.identus.api.http.{Annotation, ErrorResponse}
 import org.hyperledger.identus.issue.controller.http.IssueCredentialRecord.annotations
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord as PolluxIssueCredentialRecord
-import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
-import sttp.tapir.json.zio.schemaForZioJsonValue
+import org.hyperledger.identus.shared.models.{FailureInfo, StatusCode}
 import sttp.tapir.{Schema, Validator}
+import sttp.tapir.json.zio.schemaForZioJsonValue
+import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
 import zio.json.*
 import zio.json.ast.Json
 
@@ -56,9 +57,23 @@ final case class IssueCredentialRecord(
     @description(annotations.issuingDID.description)
     @encodedExample(annotations.issuingDID.example)
     issuingDID: Option[String] = None,
+    @description(annotations.goalcode.description)
+    @encodedExample(annotations.goalcode.example)
+    goalCode: Option[String] = None,
+    @description(annotations.goal.description)
+    @encodedExample(annotations.goal.example)
+    goal: Option[String] = None,
+    @description(annotations.myDid.description)
+    @encodedExample(annotations.myDid.example)
+    myDid: Option[String] = None,
+    @description(annotations.invitation.description)
+    invitation: Option[IssueCredentialOfferInvitation] = None,
     @description(annotations.metaRetries.description)
     @encodedExample(annotations.metaRetries.example)
-    metaRetries: Int
+    metaRetries: Int,
+    @description(annotations.metaLastFailure.description)
+    @encodedExample(annotations.metaLastFailure.example)
+    metaLastFailure: Option[ErrorResponse] = None
 )
 
 object IssueCredentialRecord {
@@ -95,7 +110,12 @@ object IssueCredentialRecord {
           vc
         }
       }),
-      metaRetries = domain.metaRetries
+      invitation = domain.invitation.map(invitation => IssueCredentialOfferInvitation.fromDomain(invitation)),
+      goalCode = domain.invitation.flatMap(_.body.goal_code),
+      goal = domain.invitation.flatMap(_.body.goal),
+      myDid = domain.invitation.map(_.from.value),
+      metaRetries = domain.metaRetries,
+      metaLastFailure = domain.metaLastFailure.map(failure => ErrorResponse.failureToErrorResponseConversion(failure)),
     )
 
   given Conversion[PolluxIssueCredentialRecord, IssueCredentialRecord] = fromDomain
@@ -215,7 +235,9 @@ object IssueCredentialRecord {
               "CredentialReceived",
               "ProblemReportPending",
               "ProblemReportSent",
-              "ProblemReportReceived"
+              "ProblemReportReceived",
+              "InvitationExpired",
+              "InvitationGenerated",
             )
           )
         )
@@ -238,10 +260,43 @@ object IssueCredentialRecord {
           example = Some("did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f")
         )
 
+    object goalcode
+        extends Annotation[String](
+          description =
+            "A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.",
+          example = "issue-vc"
+        )
+
+    object goal
+        extends Annotation[String](
+          description =
+            "A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.",
+          example = "To issue a Faber College Graduate credential"
+        )
+
+    object myDid
+        extends Annotation[String](
+          description = "The DID representing me as the inviter or invitee in this specific connection.",
+          example = "did:peer:12345"
+        )
+
+    object invitation
+        extends Annotation[IssueCredentialOfferInvitation](
+          description = "The invitation for this Offer Credential",
+          example = IssueCredentialOfferInvitation.Example
+        )
+
     object metaRetries
         extends Annotation[Int](
           description = "The maximum background processing attempts remaining for this record.",
           example = 5
+        )
+
+    object metaLastFailure
+        extends Annotation[ErrorResponse](
+          description = "The last failure if any.",
+          example =
+            ErrorResponse.failureToErrorResponseConversion(FailureInfo("Error", StatusCode.NotFound, "Not Found"))
         )
 
   }

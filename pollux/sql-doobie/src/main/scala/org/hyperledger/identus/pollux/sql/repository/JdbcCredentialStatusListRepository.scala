@@ -4,17 +4,18 @@ import doobie.*
 import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
-import org.hyperledger.identus.pollux.vc.jwt.{Issuer, StatusPurpose}
-import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, BitStringError, VCStatusList2021}
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
+import org.hyperledger.identus.pollux.vc.jwt.{Issuer, StatusPurpose}
+import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, BitStringError, VCStatusList2021}
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.*
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
-import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.*
+import org.hyperledger.identus.shared.db.Implicits.given
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.interop.catz.*
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 
 import java.time.Instant
 import java.util.UUID
@@ -22,7 +23,7 @@ import java.util.UUID
 class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task])
     extends CredentialStatusListRepository {
 
-  def findById(id: UUID): Task[Option[CredentialStatusList]] = {
+  def findById(id: UUID): UIO[Option[CredentialStatusList]] = {
     val cxnIO =
       sql"""
            | SELECT
@@ -41,11 +42,12 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
         .query[CredentialStatusList]
         .option
 
-    cxnIO.transact(xb)
-
+    cxnIO
+      .transact(xb)
+      .orDie
   }
 
-  def getLatestOfTheWallet: RIO[WalletAccessContext, Option[CredentialStatusList]] = {
+  def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]] = {
 
     val cxnIO =
       sql"""
@@ -67,13 +69,14 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
 
     cxnIO
       .transactWallet(xa)
+      .orDie
 
   }
 
   def createNewForTheWallet(
       jwtIssuer: Issuer,
       statusListRegistryUrl: String
-  ): RIO[WalletAccessContext, CredentialStatusList] = {
+  ): URIO[WalletAccessContext, CredentialStatusList] = {
 
     val id = UUID.randomUUID()
     val issued = Instant.now()
@@ -89,7 +92,6 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       emptyStatusListCredential <- VCStatusList2021
         .build(
           vcId = s"$statusListRegistryUrl/credential-status/$id",
-          slId = "",
           revocationData = bitString,
           jwtIssuer = jwtIssuer
         )
@@ -98,7 +100,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       credentialWithEmbeddedProof <- emptyStatusListCredential.toJsonWithEmbeddedProof
     } yield credentialWithEmbeddedProof.spaces2
 
-    for {
+    (for {
       credentialStr <- credentialWithEmbeddedProof
       query = sql"""
                    |INSERT INTO public.credential_status_lists (
@@ -123,9 +125,8 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
                    | )
                    |RETURNING id, wallet_id, issuer, issued, purpose, status_list_credential, size, last_used_index, created_at, updated_at
              """.stripMargin.query[CredentialStatusList].unique
-      newStatusList <- query
-        .transactWallet(xa)
-    } yield newStatusList
+      newStatusList <- query.transactWallet(xa)
+    } yield newStatusList).orDie
 
   }
 
@@ -133,7 +134,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       issueCredentialRecordId: DidCommID,
       credentialStatusListId: UUID,
       statusListIndex: Int
-  ): RIO[WalletAccessContext, Unit] = {
+  ): URIO[WalletAccessContext, Unit] = {
 
     val statusListEntryCreationQuery =
       sql"""
@@ -168,14 +169,31 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       _ <- statusListUpdateQuery
     } yield ()
 
-    res.transactWallet(xa)
+    res
+      .transactWallet(xa)
+      .orDie
 
+  }
+
+  def existsForIssueCredentialRecordId(id: DidCommID): URIO[WalletAccessContext, Boolean] = {
+    val cxnIO =
+      sql"""
+           | SELECT COUNT(*)
+           |  FROM public.credentials_in_status_list
+           |  WHERE issue_credential_record_id = $id
+           |""".stripMargin
+        .query[Int]
+        .unique
+
+    cxnIO
+      .map(_ > 0)
+      .transactWallet(xa)
+      .orDie
   }
 
   def revokeByIssueCredentialRecordId(
       issueCredentialRecordId: DidCommID
-  ): RIO[WalletAccessContext, Boolean] = {
-
+  ): URIO[WalletAccessContext, Unit] = {
     for {
       walletId <- ZIO.service[WalletAccessContext].map(_.walletId)
       updateQuery =
@@ -188,14 +206,13 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
              | AND cisl.issue_credential_record_id = $issueCredentialRecordId
              | AND cisl.is_canceled = false;
              |""".stripMargin.update.run
-
-      revoked <- updateQuery.transactWallet(xa).map(_ > 0)
-
-    } yield revoked
-
+      _ <- updateQuery
+        .transactWallet(xa)
+        .ensureOneAffectedRowOrDie
+    } yield ()
   }
 
-  def getCredentialStatusListsWithCreds: Task[List[CredentialStatusListWithCreds]] = {
+  def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]] = {
 
     // Might need to add wallet Id in the select query, because I'm selecting all of them
     val cxnIO =
@@ -222,6 +239,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
 
     val credentialStatusListsWithCredZio = cxnIO
       .transact(xb)
+      .orDie
 
     for {
       credentialStatusListsWithCred <- credentialStatusListsWithCredZio
@@ -256,7 +274,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
   def updateStatusListCredential(
       credentialStatusListId: UUID,
       statusListCredential: String
-  ): RIO[WalletAccessContext, Unit] = {
+  ): URIO[WalletAccessContext, Unit] = {
 
     val updateQuery =
       sql"""
@@ -268,13 +286,16 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
            |   id = $credentialStatusListId
            |""".stripMargin.update.run
 
-    updateQuery.transactWallet(xa).unit
+    updateQuery
+      .transactWallet(xa)
+      .unit
+      .orDie
 
   }
 
   def markAsProcessedMany(
       credsInStatusListIds: Seq[UUID]
-  ): RIO[WalletAccessContext, Unit] = {
+  ): URIO[WalletAccessContext, Unit] = {
 
     val updateQuery =
       sql"""
@@ -285,7 +306,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
            |   id::text IN (${credsInStatusListIds.map(_.toString).mkString(",")})
            |""".stripMargin.update.run
 
-    if credsInStatusListIds.nonEmpty then updateQuery.transactWallet(xa).unit else ZIO.unit
+    if credsInStatusListIds.nonEmpty then updateQuery.transactWallet(xa).unit.orDie else ZIO.unit
 
   }
 

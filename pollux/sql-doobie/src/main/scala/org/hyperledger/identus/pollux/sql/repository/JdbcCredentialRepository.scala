@@ -9,16 +9,14 @@ import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.*
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError
-import org.hyperledger.identus.pollux.core.model.error.CredentialRepositoryError.*
 import org.hyperledger.identus.pollux.core.repository.CredentialRepository
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.postgresql.util.PSQLException
+import org.hyperledger.identus.shared.models.*
 import zio.*
 import zio.interop.catz.*
 import zio.json.*
@@ -43,20 +41,32 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given roleGet: Get[Role] = Get[String].map(Role.valueOf)
   given rolePut: Put[Role] = Put[String].contramap(_.toString)
 
-  given offerCredentialGet: Get[OfferCredential] = Get[String].map(decode[OfferCredential](_).getOrElse(???))
+  given offerCredentialGet: Get[OfferCredential] =
+    Get[String].map(decode[OfferCredential](_).getOrElse(UnexpectedCodeExecutionPath))
   given offerCredentialPut: Put[OfferCredential] = Put[String].contramap(_.asJson.toString)
 
-  given requestCredentialGet: Get[RequestCredential] = Get[String].map(decode[RequestCredential](_).getOrElse(???))
+  given requestCredentialGet: Get[RequestCredential] =
+    Get[String].map(decode[RequestCredential](_).getOrElse(UnexpectedCodeExecutionPath))
   given requestCredentialPut: Put[RequestCredential] = Put[String].contramap(_.asJson.toString)
 
   given acRequestMetadataGet: Get[AnoncredCredentialRequestMetadata] =
-    Get[String].map(_.fromJson[AnoncredCredentialRequestMetadata].getOrElse(???))
+    Get[String].map(_.fromJson[AnoncredCredentialRequestMetadata].getOrElse(UnexpectedCodeExecutionPath))
   given acRequestMetadataPut: Put[AnoncredCredentialRequestMetadata] = Put[String].contramap(_.toJson)
 
-  given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
+  given issueCredentialGet: Get[IssueCredential] =
+    Get[String].map(decode[IssueCredential](_).getOrElse(UnexpectedCodeExecutionPath))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
 
-  override def createIssueCredentialRecord(record: IssueCredentialRecord): RIO[WalletAccessContext, Int] = {
+  given keyIdGet: Get[KeyId] = Get[String].map(KeyId(_))
+  given keyIdPut: Put[KeyId] = Put[String].contramap(_.value)
+
+  given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
+  given failurePut: Put[Failure] = Put[String].contramap(_.asFailureInfo.toJson)
+
+  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(UnexpectedCodeExecutionPath))
+  given invitationPut: Put[Invitation] = Put[String].contramap(_.asJson.toString)
+
+  override def create(record: IssueCredentialRecord): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | INSERT INTO public.issue_credential_records(
         |   id,
@@ -67,8 +77,10 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   credential_definition_id,
         |   credential_definition_uri,
         |   credential_format,
+        |   invitation,
         |   role,
         |   subject_id,
+        |   key_id,
         |   validity_period,
         |   automatic_issuance,
         |   protocol_state,
@@ -91,8 +103,10 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   ${record.credentialDefinitionId},
         |   ${record.credentialDefinitionUri},
         |   ${record.credentialFormat},
+        |   ${record.invitation},
         |   ${record.role},
         |   ${record.subjectId},
+        |   ${record.keyId},
         |   ${record.validityPeriod},
         |   ${record.automaticIssuance},
         |   ${record.protocolState},
@@ -111,17 +125,14 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
-      .mapError {
-        case e: PSQLException => CredentialRepositoryError.fromPSQLException(e.getSQLState, e.getMessage)
-        case e                => e
-      }
+      .ensureOneAffectedRowOrDie
   }
 
-  override def getIssueCredentialRecords(
+  override def findAll(
       ignoreWithZeroRetries: Boolean,
       offset: Option[Int],
       limit: Option[Int]
-  ): RIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)] = {
+  ): URIO[WalletAccessContext, (Seq[IssueCredentialRecord], Int)] = {
     val conditionFragment = Fragments.whereAndOpt(
       Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
     )
@@ -136,8 +147,10 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
            |   credential_definition_id,
            |   credential_definition_uri,
            |   credential_format,
+           |   invitation,
            |   role,
            |   subject_id,
+           |   key_id,
            |   validity_period,
            |   automatic_issuance,
            |   protocol_state,
@@ -176,7 +189,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       records <- cxnIO
     } yield (records, totalCount)
 
-    effect.transactWallet(xa)
+    effect
+      .transactWallet(xa)
+      .orDie
   }
 
   private def getRecordsByStates(
@@ -189,7 +204,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         connection.pure(Nil)
       case head +: tail =>
         val conditionFragment = {
-          val nel = NonEmptyList.of(head, tail: _*)
+          val nel = NonEmptyList.of(head, tail*)
           val inClauseFragment = Fragments.in(fr"protocol_state", nel)
           if (!ignoreWithZeroRetries) inClauseFragment
           else Fragments.and(inClauseFragment, fr"meta_retries > 0")
@@ -204,8 +219,10 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
             |   credential_definition_id,
             |   credential_definition_uri,
             |   credential_format,
+            |   invitation,
             |   role,
             |   subject_id,
+            |   key_id,
             |   validity_period,
             |   automatic_issuance,
             |   protocol_state,
@@ -227,24 +244,35 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
           .to[Seq]
         cxnIO
   }
-  override def getIssueCredentialRecordsByStates(
+  override def findByStates(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): RIO[WalletAccessContext, Seq[IssueCredentialRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transactWallet(xa)
+  ): URIO[WalletAccessContext, Seq[IssueCredentialRecord]] = {
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*)
+      .transactWallet(xa)
+      .orDie
   }
 
-  override def getIssueCredentialRecordsByStatesForAllWallets(
+  override def findByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: IssueCredentialRecord.ProtocolState*
-  ): Task[Seq[IssueCredentialRecord]] = {
-    getRecordsByStates(ignoreWithZeroRetries, limit, states: _*).transact(xb)
+  ): UIO[Seq[IssueCredentialRecord]] = {
+    getRecordsByStates(ignoreWithZeroRetries, limit, states*)
+      .transact(xb)
+      .orDie
   }
-  override def getIssueCredentialRecord(
+
+  override def getById(recordId: DidCommID): URIO[WalletAccessContext, IssueCredentialRecord] =
+    for {
+      maybeRecord <- findById(recordId)
+      record <- ZIO.fromOption(maybeRecord).orDieWith(_ => RuntimeException(s"Record not found: $recordId"))
+    } yield record
+
+  override def findById(
       recordId: DidCommID
-  ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
     val cxnIO = sql"""
         | SELECT
         |   id,
@@ -255,8 +283,10 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   credential_definition_id,
         |   credential_definition_uri,
         |   credential_format,
+        |   invitation,
         |   role,
         |   subject_id,
+        |   key_id,
         |   validity_period,
         |   automatic_issuance,
         |   protocol_state,
@@ -277,12 +307,13 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO
       .transactWallet(xa)
+      .orDie
   }
 
-  override def getIssueCredentialRecordByThreadId(
+  override def findByThreadId(
       thid: DidCommID,
       ignoreWithZeroRetries: Boolean,
-  ): RIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
+  ): URIO[WalletAccessContext, Option[IssueCredentialRecord]] = {
     val conditionFragment = Fragments.whereAndOpt(
       Some(fr"thid = $thid"),
       Option.when(ignoreWithZeroRetries)(fr"meta_retries > 0")
@@ -297,8 +328,10 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   credential_definition_id,
         |   credential_definition_uri,
         |   credential_format,
+        |   invitation,
         |   role,
         |   subject_id,
+        |   key_id,
         |   validity_period,
         |   automatic_issuance,
         |   protocol_state,
@@ -319,13 +352,14 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO
       .transactWallet(xa)
+      .orDie
   }
 
-  override def updateCredentialRecordProtocolState(
+  override def updateProtocolState(
       recordId: DidCommID,
       from: IssueCredentialRecord.ProtocolState,
       to: IssueCredentialRecord.ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
@@ -341,18 +375,21 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
   def updateWithSubjectId(
       recordId: DidCommID,
       subjectId: String,
+      keyId: Option[KeyId] = None,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
         |   protocol_state = $protocolState,
         |   subject_id = ${Some(subjectId)},
+        |   key_id = ${keyId},
         |   updated_at = ${Instant.now}
         | WHERE
         |   id = $recordId
@@ -360,13 +397,14 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateWithJWTRequestCredential(
       recordId: DidCommID,
       request: RequestCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
@@ -379,6 +417,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateWithAnonCredsRequestCredential(
@@ -386,7 +425,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       request: RequestCredential,
       metadata: AnoncredCredentialRequestMetadata,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO =
       sql"""
            | UPDATE public.issue_credential_records
@@ -401,13 +440,14 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateWithIssueCredential(
       recordId: DidCommID,
       issue: IssueCredential,
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
@@ -420,13 +460,14 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
-  override def getValidIssuedCredentials(
+  override def findValidIssuedCredentials(
       recordIds: Seq[DidCommID]
-  ): RIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]] = {
+  ): URIO[WalletAccessContext, Seq[ValidIssuedCredentialRecord]] = {
     val idAsStrings = recordIds.map(_.toString)
-    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail: _*)
+    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail*)
     val inClauseFragment = Fragments.in(fr"id", nel)
 
     val cxnIO = sql"""
@@ -434,7 +475,8 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   id,
         |   issued_credential_raw,
         |   credential_format,
-        |   subject_id
+        |   subject_id,
+        |   key_id
         | FROM public.issue_credential_records
         | WHERE
         |   issued_credential_raw IS NOT NULL
@@ -445,14 +487,15 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO
       .transactWallet(xa)
+      .orDie
 
   }
 
-  override def getValidAnoncredIssuedCredentials(
+  override def findValidAnonCredsIssuedCredentials(
       recordIds: Seq[DidCommID]
-  ): RIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]] = {
+  ): URIO[WalletAccessContext, Seq[ValidFullIssuedCredentialRecord]] = {
     val idAsStrings = recordIds.map(_.toString)
-    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail: _*)
+    val nel = NonEmptyList.of(idAsStrings.head, idAsStrings.tail*)
     val inClauseFragment = Fragments.in(fr"id", nel)
 
     val cxnIO = sql"""
@@ -476,10 +519,11 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO
       .transactWallet(xa)
+      .orDie
 
   }
 
-  override def deleteIssueCredentialRecord(recordId: DidCommID): RIO[WalletAccessContext, Int] = {
+  override def deleteById(recordId: DidCommID): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
       | DELETE
       | FROM public.issue_credential_records
@@ -488,6 +532,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
   override def updateWithIssuedRawCredential(
@@ -497,7 +542,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       schemaUri: Option[String],
       credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
-  ): RIO[WalletAccessContext, Int] = {
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
@@ -513,12 +558,13 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
     cxnIO.run
       .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 
-  def updateAfterFail(
+  override def updateAfterFail(
       recordId: DidCommID,
-      failReason: Option[String]
-  ): RIO[WalletAccessContext, Int] = {
+      failReason: Option[Failure]
+  ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
@@ -528,7 +574,9 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         | WHERE
         |   id = $recordId
         """.stripMargin.update
-    cxnIO.run.transactWallet(xa)
+    cxnIO.run
+      .transactWallet(xa)
+      .ensureOneAffectedRowOrDie
   }
 }
 

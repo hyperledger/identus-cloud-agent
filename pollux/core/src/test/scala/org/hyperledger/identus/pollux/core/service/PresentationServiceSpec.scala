@@ -8,13 +8,13 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.pollux.anoncreds.*
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
-import org.hyperledger.identus.pollux.core.model.PresentationRecord.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
 import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.Input
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
+import org.hyperledger.identus.pollux.core.model.PresentationRecord.*
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, PresentationRepository}
 import org.hyperledger.identus.pollux.core.service.serdes.{
   AnoncredCredentialProofV1,
@@ -31,7 +31,7 @@ import zio.test.Assertion.*
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
 import java.time.{Instant, OffsetDateTime}
-import java.util.{UUID, Base64 as JBase64}
+import java.util.{Base64 as JBase64, UUID}
 
 object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSpecHelper {
 
@@ -60,7 +60,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
 
         check(
           Gen.uuid.map(e => DidCommID(e.toString)),
-          Gen.option(Gen.string),
+          Gen.string,
           Gen.listOfBounded(1, 5)(proofTypeGen),
           Gen.option(optionsGen)
         ) { (thid, connectionId, proofTypes, options) =>
@@ -70,20 +70,23 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             pairwiseProverDid = DidId("did:peer:Prover")
             record <- svc.createJwtPresentationRecord(
               pairwiseVerifierDid,
-              pairwiseProverDid,
+              Some(pairwiseProverDid),
               thid,
-              connectionId,
+              Some(connectionId),
               proofTypes,
-              options
+              options,
+              None,
+              None,
+              None,
             )
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
-            assertTrue(record.connectionId == connectionId) &&
+            assertTrue(record.connectionId.contains(connectionId)) &&
             assertTrue(record.role == PresentationRecord.Role.Verifier) &&
             assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestPending) &&
             assertTrue(record.requestPresentationData.isDefined) &&
-            assertTrue(record.requestPresentationData.get.to == pairwiseProverDid) &&
+            assertTrue(record.requestPresentationData.get.to.contains(pairwiseProverDid)) &&
             assertTrue(record.requestPresentationData.get.thid.contains(thid.toString)) &&
             assertTrue(record.requestPresentationData.get.body.goal_code.contains("Request Proof Presentation")) &&
             assertTrue(record.requestPresentationData.get.body.proof_types == proofTypes) &&
@@ -116,7 +119,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("createPresentationRecord creates a valid Anoncred PresentationRecord") {
         check(
           Gen.uuid.map(e => DidCommID(e.toString)),
-          Gen.option(Gen.string),
+          Gen.string,
           Gen.string,
           Gen.string,
           Gen.string
@@ -136,19 +139,22 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             record <-
               svc.createAnoncredPresentationRecord(
                 pairwiseVerifierDid,
-                pairwiseProverDid,
+                Some(pairwiseProverDid),
                 thid,
-                connectionId,
-                anoncredPresentationRequestV1
+                Some(connectionId),
+                anoncredPresentationRequestV1,
+                None,
+                None,
+                None
               )
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
-            assertTrue(record.connectionId == connectionId) &&
+            assertTrue(record.connectionId.contains(connectionId)) &&
             assertTrue(record.role == PresentationRecord.Role.Verifier) &&
             assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestPending) &&
             assertTrue(record.requestPresentationData.isDefined) &&
-            assertTrue(record.requestPresentationData.get.to == pairwiseProverDid) &&
+            assertTrue(record.requestPresentationData.get.to.contains(pairwiseProverDid)) &&
             assertTrue(record.requestPresentationData.get.thid.contains(thid.toString)) &&
             assertTrue(record.requestPresentationData.get.body.goal_code.contains("Request Proof Presentation")) &&
             assertTrue(
@@ -210,7 +216,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           svc <- ZIO.service[PresentationService]
           _ <- svc.createJwtRecord()
           bRecord <- svc.createJwtRecord()
-          record <- svc.getPresentationRecord(bRecord.id)
+          record <- svc.findPresentationRecord(bRecord.id)
         } yield assertTrue(record.contains(bRecord))
       },
       test("getPresentationRecord returns nothing for an unknown 'recordId'") {
@@ -218,19 +224,22 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           svc <- ZIO.service[PresentationService]
           _ <- svc.createJwtRecord()
           _ <- svc.createJwtRecord()
-          record <- svc.getPresentationRecord(DidCommID())
+          record <- svc.findPresentationRecord(DidCommID())
         } yield assertTrue(record.isEmpty)
       },
       test("createJwtPresentationPayloadFromRecord returns jwt presentation payload") {
         for {
           repo <- ZIO.service[CredentialRepository]
           aIssueCredentialRecord = issueCredentialRecord(CredentialFormat.JWT)
-          _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
+          _ <- repo.create(aIssueCredentialRecord)
           rawCredentialData =
             """{"base64":"ZXlKaGJHY2lPaUpGVXpJMU5rc2lMQ0owZVhBaU9pSktWMVFpZlEuZXlKcFlYUWlPakUyTnprek1qYzROaklzSW1GMVpDSTZJbVJ2YldGcGJpSXNJbTV2Ym1ObElqb2lZMlk1T1RJMk56Z3RPREV3TmkwME1EZzVMV0UxWXprdE5tTmhObU0wWkRBMU1HVTBJaXdpZG5BaU9uc2lRR052Ym5SbGVIUWlPbHNpYUhSMGNITTZMeTkzZDNjdWR6TXViM0puTHpJd01UZ3ZjSEpsYzJWdWRHRjBhVzl1Y3k5Mk1TSmRMQ0owZVhCbElqcGJJbFpsY21sbWFXRmliR1ZRY21WelpXNTBZWFJwYjI0aVhYMHNJbWx6Y3lJNkltUnBaRHB3Y21semJUcGhaR0psT1RJNE9XUXdZelZtWWpVMlptWmhOVEF6T0Rka01UZ3dOR0ZpTkdFeE5UYzJOVEkzWXprME5tRTFNalV5T0RFM1ptRTRaVGhoTW1OalpXUXdPa056YzBKRGMyZENSVzFKUzBSWE1XaGpNMUpzWTJsb2NHSnRVbXhsUTJ0UlFWVktVRU5uYkZSYVYwNTNUV3BWTW1GNlJWTkpSUzFNYVVkTU0xRklaRlZ1VG10d1dXSkthSE5VYTIxWVVGaEpVM0ZXZWpjMll6RlZPWGhvVURseWNFZHBSSEZXTlRselJYcEtWbEpEYWxJMGEwMHdaMGg0YkhWUU5tVk5Ta2wwZHpJMk4yWllWbEpoTUhoRE5XaEthVU5uTVhSWldFNHdXbGhKYjJGWE5XdGFXR2R3UlVGU1ExUjNiMHBWTWxacVkwUkpNVTV0YzNoRmFVSlFhVFJvYVRrd1FqTldTbnBhUzFkSGVWbGlSVFZLYkhveGVVVnhiR010TFc1T1ZsQmpXVlJmWVRaU2IyYzJiR1ZtWWtKTmVWWlZVVzh3WlVwRVRrbENPRnBpYWkxdWFrTlRUR05PZFhVek1URlZWM1JOVVhWWkluMC5CcmFpbEVXa2VlSXhWbjY3dnpkVHZGTXpBMV9oNzFoaDZsODBHRFBpbkRaVVB4ajAxSC0tUC1QZDIxTk9wRDd3am51SDkxdUNBOFZMUW9fS2FnVjlnQQo="}"""
+          issueCredential <- ZIO.fromEither(
+            IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+          )
           _ <- repo.updateWithIssuedRawCredential(
             aIssueCredentialRecord.id,
-            IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
+            issueCredential,
             rawCredentialData,
             None,
             None,
@@ -319,8 +328,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 "domain": "us.gov/DriverLicense",
                 "credential_manifest": {}
             }"""
-          prover = DidId("did:peer:Prover")
-          verifier = DidId("did:peer:Verifier")
+          prover = Some(DidId("did:peer:Prover"))
+          verifier = Some(DidId("did:peer:Verifier"))
 
           attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
             payload = presentationAttachmentAsJson,
@@ -347,8 +356,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 "domain": "us.gov/DriverLicense",
                 "credential_manifest": {}
             }"""
-          prover = DidId("did:peer:Prover")
-          verifier = DidId("did:peer:Verifier")
+          prover = Some(DidId("did:peer:Prover"))
+          verifier = Some(DidId("did:peer:Verifier"))
 
           attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
             payload = presentationAttachmentAsJson,
@@ -376,8 +385,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 "domain": "us.gov/DriverLicense",
                 "credential_manifest": {}
             }"""
-          prover = DidId("did:peer:Prover")
-          verifier = DidId("did:peer:Verifier")
+          prover = Some(DidId("did:peer:Prover"))
+          verifier = Some(DidId("did:peer:Verifier"))
 
           attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
             payload = presentationAttachmentAsJson,
@@ -466,12 +475,15 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         for {
           repo <- ZIO.service[CredentialRepository]
           aIssueCredentialRecord = issueCredentialRecord(CredentialFormat.JWT)
-          _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
+          _ <- repo.create(aIssueCredentialRecord)
           rawCredentialData =
             """{"base64":"ZXlKaGJHY2lPaUpGVXpJMU5rc2lMQ0owZVhBaU9pSktWMVFpZlEuZXlKcFlYUWlPakUyTnprek1qYzROaklzSW1GMVpDSTZJbVJ2YldGcGJpSXNJbTV2Ym1ObElqb2lZMlk1T1RJMk56Z3RPREV3TmkwME1EZzVMV0UxWXprdE5tTmhObU0wWkRBMU1HVTBJaXdpZG5BaU9uc2lRR052Ym5SbGVIUWlPbHNpYUhSMGNITTZMeTkzZDNjdWR6TXViM0puTHpJd01UZ3ZjSEpsYzJWdWRHRjBhVzl1Y3k5Mk1TSmRMQ0owZVhCbElqcGJJbFpsY21sbWFXRmliR1ZRY21WelpXNTBZWFJwYjI0aVhYMHNJbWx6Y3lJNkltUnBaRHB3Y21semJUcGhaR0psT1RJNE9XUXdZelZtWWpVMlptWmhOVEF6T0Rka01UZ3dOR0ZpTkdFeE5UYzJOVEkzWXprME5tRTFNalV5T0RFM1ptRTRaVGhoTW1OalpXUXdPa056YzBKRGMyZENSVzFKUzBSWE1XaGpNMUpzWTJsb2NHSnRVbXhsUTJ0UlFWVktVRU5uYkZSYVYwNTNUV3BWTW1GNlJWTkpSUzFNYVVkTU0xRklaRlZ1VG10d1dXSkthSE5VYTIxWVVGaEpVM0ZXZWpjMll6RlZPWGhvVURseWNFZHBSSEZXTlRselJYcEtWbEpEYWxJMGEwMHdaMGg0YkhWUU5tVk5Ta2wwZHpJMk4yWllWbEpoTUhoRE5XaEthVU5uTVhSWldFNHdXbGhKYjJGWE5XdGFXR2R3UlVGU1ExUjNiMHBWTWxacVkwUkpNVTV0YzNoRmFVSlFhVFJvYVRrd1FqTldTbnBhUzFkSGVWbGlSVFZLYkhveGVVVnhiR010TFc1T1ZsQmpXVlJmWVRaU2IyYzJiR1ZtWWtKTmVWWlZVVzh3WlVwRVRrbENPRnBpYWkxdWFrTlRUR05PZFhVek1URlZWM1JOVVhWWkluMC5CcmFpbEVXa2VlSXhWbjY3dnpkVHZGTXpBMV9oNzFoaDZsODBHRFBpbkRaVVB4ajAxSC0tUC1QZDIxTk9wRDd3am51SDkxdUNBOFZMUW9fS2FnVjlnQQo="}"""
+          issueCredential <- ZIO.fromEither(
+            IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+          )
           _ <- repo.updateWithIssuedRawCredential(
             aIssueCredentialRecord.id,
-            IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
+            issueCredential,
             rawCredentialData,
             None,
             None,
@@ -497,12 +509,15 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         for {
           repo <- ZIO.service[CredentialRepository]
           aIssueCredentialRecord = issueCredentialRecord(CredentialFormat.AnonCreds)
-          _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
+          _ <- repo.create(aIssueCredentialRecord)
           rawCredentialData =
             """{"base64":"ZXlKaGJHY2lPaUpGVXpJMU5rc2lMQ0owZVhBaU9pSktWMVFpZlEuZXlKcFlYUWlPakUyTnprek1qYzROaklzSW1GMVpDSTZJbVJ2YldGcGJpSXNJbTV2Ym1ObElqb2lZMlk1T1RJMk56Z3RPREV3TmkwME1EZzVMV0UxWXprdE5tTmhObU0wWkRBMU1HVTBJaXdpZG5BaU9uc2lRR052Ym5SbGVIUWlPbHNpYUhSMGNITTZMeTkzZDNjdWR6TXViM0puTHpJd01UZ3ZjSEpsYzJWdWRHRjBhVzl1Y3k5Mk1TSmRMQ0owZVhCbElqcGJJbFpsY21sbWFXRmliR1ZRY21WelpXNTBZWFJwYjI0aVhYMHNJbWx6Y3lJNkltUnBaRHB3Y21semJUcGhaR0psT1RJNE9XUXdZelZtWWpVMlptWmhOVEF6T0Rka01UZ3dOR0ZpTkdFeE5UYzJOVEkzWXprME5tRTFNalV5T0RFM1ptRTRaVGhoTW1OalpXUXdPa056YzBKRGMyZENSVzFKUzBSWE1XaGpNMUpzWTJsb2NHSnRVbXhsUTJ0UlFWVktVRU5uYkZSYVYwNTNUV3BWTW1GNlJWTkpSUzFNYVVkTU0xRklaRlZ1VG10d1dXSkthSE5VYTIxWVVGaEpVM0ZXZWpjMll6RlZPWGhvVURseWNFZHBSSEZXTlRselJYcEtWbEpEYWxJMGEwMHdaMGg0YkhWUU5tVk5Ta2wwZHpJMk4yWllWbEpoTUhoRE5XaEthVU5uTVhSWldFNHdXbGhKYjJGWE5XdGFXR2R3UlVGU1ExUjNiMHBWTWxacVkwUkpNVTV0YzNoRmFVSlFhVFJvYVRrd1FqTldTbnBhUzFkSGVWbGlSVFZLYkhveGVVVnhiR010TFc1T1ZsQmpXVlJmWVRaU2IyYzJiR1ZtWWtKTmVWWlZVVzh3WlVwRVRrbENPRnBpYWkxdWFrTlRUR05PZFhVek1URlZWM1JOVVhWWkluMC5CcmFpbEVXa2VlSXhWbjY3dnpkVHZGTXpBMV9oNzFoaDZsODBHRFBpbkRaVVB4ajAxSC0tUC1QZDIxTk9wRDd3am51SDkxdUNBOFZMUW9fS2FnVjlnQQo="}"""
+          issueCredential <- ZIO.fromEither(
+            IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+          )
           _ <- repo.updateWithIssuedRawCredential(
             aIssueCredentialRecord.id,
-            IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
+            issueCredential,
             rawCredentialData,
             Some("SchemaId"),
             Some("CredDefId"),
@@ -527,8 +542,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           requestPresentation = RequestPresentation(
             body = RequestPresentation.Body(goal_code = Some("Presentation Request")),
             attachments = Seq(attachmentDescriptor),
-            to = DidId("did:peer:Prover"),
-            from = DidId("did:peer:Verifier"),
+            to = Some(DidId("did:peer:Prover")),
+            from = Some(DidId("did:peer:Verifier")),
           )
           aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentation)
           credentialsToUse =
@@ -556,12 +571,15 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
         for {
           repo <- ZIO.service[CredentialRepository]
           aIssueCredentialRecord = issueCredentialRecord(CredentialFormat.JWT)
-          _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
+          _ <- repo.create(aIssueCredentialRecord)
           rawCredentialData =
             """{"base64":"ZXlKaGJHY2lPaUpGVXpJMU5rc2lMQ0owZVhBaU9pSktWMVFpZlEuZXlKcFlYUWlPakUyTnprek1qYzROaklzSW1GMVpDSTZJbVJ2YldGcGJpSXNJbTV2Ym1ObElqb2lZMlk1T1RJMk56Z3RPREV3TmkwME1EZzVMV0UxWXprdE5tTmhObU0wWkRBMU1HVTBJaXdpZG5BaU9uc2lRR052Ym5SbGVIUWlPbHNpYUhSMGNITTZMeTkzZDNjdWR6TXViM0puTHpJd01UZ3ZjSEpsYzJWdWRHRjBhVzl1Y3k5Mk1TSmRMQ0owZVhCbElqcGJJbFpsY21sbWFXRmliR1ZRY21WelpXNTBZWFJwYjI0aVhYMHNJbWx6Y3lJNkltUnBaRHB3Y21semJUcGhaR0psT1RJNE9XUXdZelZtWWpVMlptWmhOVEF6T0Rka01UZ3dOR0ZpTkdFeE5UYzJOVEkzWXprME5tRTFNalV5T0RFM1ptRTRaVGhoTW1OalpXUXdPa056YzBKRGMyZENSVzFKUzBSWE1XaGpNMUpzWTJsb2NHSnRVbXhsUTJ0UlFWVktVRU5uYkZSYVYwNTNUV3BWTW1GNlJWTkpSUzFNYVVkTU0xRklaRlZ1VG10d1dXSkthSE5VYTIxWVVGaEpVM0ZXZWpjMll6RlZPWGhvVURseWNFZHBSSEZXTlRselJYcEtWbEpEYWxJMGEwMHdaMGg0YkhWUU5tVk5Ta2wwZHpJMk4yWllWbEpoTUhoRE5XaEthVU5uTVhSWldFNHdXbGhKYjJGWE5XdGFXR2R3UlVGU1ExUjNiMHBWTWxacVkwUkpNVTV0YzNoRmFVSlFhVFJvYVRrd1FqTldTbnBhUzFkSGVWbGlSVFZLYkhveGVVVnhiR010TFc1T1ZsQmpXVlJmWVRaU2IyYzJiR1ZtWWtKTmVWWlZVVzh3WlVwRVRrbENPRnBpYWkxdWFrTlRUR05PZFhVek1URlZWM1JOVVhWWkluMC5CcmFpbEVXa2VlSXhWbjY3dnpkVHZGTXpBMV9oNzFoaDZsODBHRFBpbkRaVVB4ajAxSC0tUC1QZDIxTk9wRDd3am51SDkxdUNBOFZMUW9fS2FnVjlnQQo="}"""
+          issueCredential <- ZIO.fromEither(
+            IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage)
+          )
           _ <- repo.updateWithIssuedRawCredential(
             aIssueCredentialRecord.id,
-            IssueCredential.makeIssueCredentialFromRequestCredential(requestCredential.makeMessage),
+            issueCredential,
             rawCredentialData,
             None,
             None,
@@ -586,8 +604,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           requestPresentation = RequestPresentation(
             body = RequestPresentation.Body(goal_code = Some("Presentation Request")),
             attachments = Seq(attachmentDescriptor),
-            to = DidId("did:peer:Prover"),
-            from = DidId("did:peer:Verifier"),
+            to = Some(DidId("did:peer:Prover")),
+            from = Some(DidId("did:peer:Verifier")),
           )
           aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentation)
           credentialsToUse = Seq(aIssueCredentialRecord.id.value)
@@ -747,11 +765,6 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           p = proposePresentation(aRecord.thid.value)
           aRecordReceived <- svc.receiveProposePresentation(p)
           repo <- ZIO.service[PresentationRepository]
-          _ <- repo.updatePresentationRecordProtocolState(
-            aRecord.id,
-            PresentationRecord.ProtocolState.ProposalPending,
-            PresentationRecord.ProtocolState.ProposalReceived
-          )
           _ <- svc.acceptProposePresentation(aRecord.id)
         } yield {
           assertTrue(aRecordReceived.id == aRecord.id) &&
@@ -765,8 +778,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       svc <- ZIO.service[PresentationService]
       connectionId = Some("connectionId")
       body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
-      prover = DidId("did:peer:Prover")
-      verifier = DidId("did:peer:Verifier")
+      prover = Some(DidId("did:peer:Prover"))
+      verifier = Some(DidId("did:peer:Verifier"))
       attachmentDescriptor = attachment
       requestPresentation = RequestPresentation(
         body = body,
@@ -854,8 +867,10 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           credentialDefinitionId = Some(credentialDefinitionDb.guid),
           credentialDefinitionUri = Some(credentialDefinitionId),
           credentialFormat = CredentialFormat.AnonCreds,
+          invitation = None,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,
+          keyId = None,
           validityPeriod = None,
           automaticIssuance = None,
           protocolState = IssueCredentialRecord.ProtocolState.CredentialReceived,
@@ -870,7 +885,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           metaNextRetry = Some(Instant.now()),
           metaLastFailure = None,
         )
-      _ <- repo.createIssueCredentialRecord(aIssueCredentialRecord)
+      _ <- repo.create(aIssueCredentialRecord)
       svc <- ZIO.service[PresentationService]
       aRecord <- svc.createAnoncredRecord(
         credentialDefinitionId = credentialDefinitionId
@@ -916,10 +931,10 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           svc <- ZIO.service[PresentationService]
           record1 <- svc.createJwtRecord().provide(wallet1)
           record2 <- svc.createJwtRecord().provide(wallet2)
-          ownRecord1 <- svc.getPresentationRecord(record1.id).provide(wallet1)
-          ownRecord2 <- svc.getPresentationRecord(record2.id).provide(wallet2)
-          crossRecord1 <- svc.getPresentationRecord(record1.id).provide(wallet2)
-          crossRecord2 <- svc.getPresentationRecord(record2.id).provide(wallet1)
+          ownRecord1 <- svc.findPresentationRecord(record1.id).provide(wallet1)
+          ownRecord2 <- svc.findPresentationRecord(record2.id).provide(wallet2)
+          crossRecord1 <- svc.findPresentationRecord(record1.id).provide(wallet2)
+          crossRecord2 <- svc.findPresentationRecord(record2.id).provide(wallet1)
         } yield assert(ownRecord1)(isSome(equalTo(record1))) &&
           assert(ownRecord2)(isSome(equalTo(record2))) &&
           assert(crossRecord1)(isNone) &&

@@ -3,14 +3,12 @@ package org.hyperledger.identus.pollux.credentialdefinition
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.hyperledger.identus.agent.server.http.CustomServerInterceptors
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
-import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
+import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
-import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
-import org.hyperledger.identus.iam.authentication.DefaultEntityAuthenticator
+import org.hyperledger.identus.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
 import org.hyperledger.identus.pollux.core.repository.CredentialDefinitionRepository
 import org.hyperledger.identus.pollux.core.service.{
   CredentialDefinitionService,
@@ -29,9 +27,9 @@ import org.hyperledger.identus.pollux.credentialdefinition.http.{
 import org.hyperledger.identus.pollux.sql.repository.JdbcCredentialDefinitionRepository
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
+import sttp.client3.{basicRequest, DeserializationException, Response, UriContext}
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.ziojson.*
-import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
@@ -121,16 +119,16 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
     backend
   }
 
-  def deleteAllCredentialDefinitions: RIO[CredentialDefinitionRepository & WalletAccessContext, Long] = {
+  def deleteAllCredentialDefinitions: RIO[CredentialDefinitionRepository & WalletAccessContext, Unit] = {
     for {
       repository <- ZIO.service[CredentialDefinitionRepository]
-      count <- repository.deleteAll()
-    } yield count
+      result <- repository.deleteAll()
+    } yield result
   }
 }
 
 trait CredentialDefinitionGen {
-  self: ZIOSpecDefault with CredentialDefinitionTestTools =>
+  self: ZIOSpecDefault & CredentialDefinitionTestTools =>
   object Generator {
     val credentialDefinitionName = Gen.alphaNumericStringBounded(4, 12)
     val majorVersion = Gen.int(1, 9)

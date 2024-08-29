@@ -9,9 +9,9 @@ import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, C
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
-import zio.ZIO.*
 import zio.mock.Expectation
 import zio.test.*
+import zio.ZIO.*
 
 import java.time.Instant
 import java.util.UUID
@@ -28,12 +28,13 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
     None,
     ConnectionRecord.Role.Inviter,
     ProtocolState.InvitationGenerated,
-    Invitation(from = DidId("did:peer:INVITER"), Invitation.Body(None, None, Nil)),
+    Invitation(from = DidId("did:peer:INVITER"), body = Invitation.Body(None, None, Nil)),
     None,
     None,
     5,
     None,
-    None
+    None,
+    WalletId.fromUUID(UUID.randomUUID)
   )
 
   private val inviterExpectations =
@@ -66,7 +67,7 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
       result = Expectation.value(record.copy(protocolState = ProtocolState.ConnectionResponseReceived))
     )
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = {
+  override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("ConnectionServiceWithEventNotificationImpl")(
       test("should send relevant events during flow execution on the inviter side") {
         for {
@@ -102,7 +103,10 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        inviterExpectations.toLayer >>> ConnectionServiceNotifier.layer,
+        (
+          ConnectionRepositoryInMemory.layer ++
+            inviterExpectations.toLayer
+        ) >>> ConnectionServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("should send relevant events during flow execution on the invitee side") {
@@ -143,7 +147,10 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        inviteeExpectations.toLayer >>> ConnectionServiceNotifier.layer,
+        (
+          ConnectionRepositoryInMemory.layer ++
+            inviteeExpectations.toLayer
+        ) >>> ConnectionServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random))
       )
     )

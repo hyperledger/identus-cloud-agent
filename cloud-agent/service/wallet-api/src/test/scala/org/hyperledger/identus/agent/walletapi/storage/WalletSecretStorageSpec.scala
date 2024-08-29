@@ -1,14 +1,11 @@
 package org.hyperledger.identus.agent.walletapi.storage
 
-import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.model.WalletSeed
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletSecretStorage
+import org.hyperledger.identus.agent.walletapi.model.{Wallet, WalletSeed}
+import org.hyperledger.identus.agent.walletapi.sql.{JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
 import org.hyperledger.identus.agent.walletapi.vault.VaultWalletSecretStorage
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import org.hyperledger.identus.test.container.DBTestUtils
-import org.hyperledger.identus.test.container.VaultTestContainerSupport
+import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -49,9 +46,9 @@ object WalletSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupp
           .map(_.id)
         walletAccessCtx = ZLayer.succeed(WalletAccessContext(walletId))
         seed = WalletSeed.fromByteArray(Array.fill[Byte](64)(0)).toOption.get
-        seedBefore <- storage.getWalletSeed.provide(walletAccessCtx)
+        seedBefore <- storage.findWalletSeed.provide(walletAccessCtx)
         _ <- storage.setWalletSeed(seed).provide(walletAccessCtx)
-        seedAfter <- storage.getWalletSeed.provide(walletAccessCtx)
+        seedAfter <- storage.findWalletSeed.provide(walletAccessCtx)
       } yield assert(seedBefore)(isNone) &&
         assert(seedAfter)(isSome(equalTo(seed)))
     },
@@ -72,7 +69,7 @@ object WalletSecretStorageSpec extends ZIOSpecDefault, PostgresTestContainerSupp
         seeds <- ZIO
           .foreach(wallets) { wallet =>
             val walletAccessCtx = ZLayer.succeed(WalletAccessContext(wallet.id))
-            storage.getWalletSeed.provideSomeLayer(walletAccessCtx)
+            storage.findWalletSeed.provideSomeLayer(walletAccessCtx)
           }
           .map(_.flatten)
       } yield assert(seeds.size)(equalTo(10)) && assert(seeds)(isDistinct)

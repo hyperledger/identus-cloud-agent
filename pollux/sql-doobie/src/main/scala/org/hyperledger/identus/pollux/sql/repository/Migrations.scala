@@ -3,10 +3,10 @@ package org.hyperledger.identus.pollux.sql.repository
 import doobie.*
 import doobie.implicits.*
 import doobie.util.transactor.Transactor
-import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.DbConfig
-import org.hyperledger.identus.shared.db.Implicits.*
+import org.flywaydb.core.api.exception.FlywayValidateException
 import org.flywaydb.core.Flyway
+import org.hyperledger.identus.shared.db.{ContextAwareTask, DbConfig}
+import org.hyperledger.identus.shared.db.Implicits.*
 import zio.*
 import zio.interop.catz.*
 
@@ -32,11 +32,29 @@ final case class Migrations(config: DbConfig) {
       }
     } yield ()
 
+  def repair: Task[Unit] =
+    for {
+      _ <- ZIO.logInfo("Repairing Flyway schema history")
+      _ <- ZIO.attempt {
+        Flyway
+          .configure()
+          .dataSource(config.jdbcUrl, config.username, config.password)
+          .locations(migrationScriptsLocation)
+          .load()
+          .repair()
+      }
+    } yield ()
+
+  def migrateAndRepair: Task[Unit] =
+    migrate.catchSome { case e: FlywayValidateException =>
+      ZIO.logError("Migration validation failed, attempting to repair") *> repair *> migrate
+    }
+
 }
 
 object Migrations {
   val layer: URLayer[DbConfig, Migrations] =
-    ZLayer.fromFunction(Migrations.apply _)
+    ZLayer.fromFunction(Migrations.apply)
 
   /** Fail if the RLS is not enabled from a sample table */
   def validateRLS: RIO[Transactor[ContextAwareTask], Unit] = {

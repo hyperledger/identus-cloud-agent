@@ -1,6 +1,8 @@
 package org.hyperledger.identus.castor.core.service
 
-import org.hyperledger.identus.castor.core.model.ProtoModelHelper
+import io.iohk.atala.prism.protos.{node_api, node_models}
+import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeService
+import io.iohk.atala.prism.protos.node_models.OperationOutput.OperationMaybe
 import org.hyperledger.identus.castor.core.model.did.{
   CanonicalPrismDID,
   DIDData,
@@ -13,16 +15,14 @@ import org.hyperledger.identus.castor.core.model.did.{
   ScheduledDIDOperationDetail,
   SignedPrismDIDOperation
 }
-import org.hyperledger.identus.castor.core.model.error.OperationValidationError
-import org.hyperledger.identus.castor.core.model.error.{DIDOperationError, DIDResolutionError}
+import org.hyperledger.identus.castor.core.model.error.{DIDOperationError, DIDResolutionError, OperationValidationError}
+import org.hyperledger.identus.castor.core.model.ProtoModelHelper
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
-import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc.NodeService
-import io.iohk.atala.prism.protos.node_models.OperationOutput.OperationMaybe
-import io.iohk.atala.prism.protos.{node_api, node_models}
 import org.hyperledger.identus.shared.models.HexString
+import zio.*
+
 import java.time.Instant
 import scala.collection.immutable.ArraySeq
-import zio.*
 
 trait DIDService {
   def scheduleOperation(operation: SignedPrismDIDOperation): IO[DIDOperationError, ScheduleDIDOperationOutcome]
@@ -44,17 +44,14 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
   override def scheduleOperation(
       signedOperation: SignedPrismDIDOperation
   ): IO[DIDOperationError, ScheduleDIDOperationOutcome] = {
-    val operationRequest = node_api.ScheduleOperationsRequest(
-      signedOperations = Seq(signedOperation.toProto)
-    )
+    val operationRequest = node_api.ScheduleOperationsRequest(signedOperations = Seq(signedOperation.toProto))
     for {
       _ <- ZIO
         .fromEither(didOpValidator.validate(signedOperation.operation))
         .mapError(DIDOperationError.ValidationError.apply)
       operationOutput <- ZIO
         .fromFuture(_ => nodeClient.scheduleOperations(operationRequest))
-        .logError("Error scheduling Node operation")
-        .mapBoth(DIDOperationError.DLTProxyError.apply, _.outputs.toList)
+        .mapBoth(ex => DIDOperationError.DLTProxyError("Error scheduling Node operation", ex), _.outputs.toList)
         .map {
           case output :: Nil => Right(output)
           case _ => Left(DIDOperationError.UnexpectedDLTResult("operation result is expected to have exactly 1 output"))
@@ -82,8 +79,7 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
     for {
       result <- ZIO
         .fromFuture(_ => nodeClient.getOperationInfo(node_api.GetOperationInfoRequest(operationId.toProto)))
-        .logError("Error getting Node operation information")
-        .mapError(DIDOperationError.DLTProxyError.apply)
+        .mapError(ex => DIDOperationError.DLTProxyError("Error getting Node operation information", ex))
       detail <- ZIO
         .fromEither(result.toDomain)
         .mapError(DIDOperationError.UnexpectedDLTResult.apply)
@@ -100,8 +96,7 @@ private class DIDServiceImpl(didOpValidator: DIDOperationValidator, nodeClient: 
       }
       result <- ZIO
         .fromFuture(_ => nodeClient.getDidDocument(request))
-        .logError("Error resolving DID document from Node")
-        .mapError(DIDResolutionError.DLTProxyError.apply)
+        .mapError(ex => DIDResolutionError.DLTProxyError("Error resolving DID document from Node", ex))
       publishedDidData <- ZIO
         .fromOption(result.document)
         .foldZIO(

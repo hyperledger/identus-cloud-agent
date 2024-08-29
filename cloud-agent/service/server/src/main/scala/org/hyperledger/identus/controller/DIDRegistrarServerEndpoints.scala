@@ -1,12 +1,9 @@
 package org.hyperledger.identus.castor.controller
 
-import org.hyperledger.identus.LogUtils.*
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.iam.authentication.Authenticator
-import org.hyperledger.identus.iam.authentication.Authorizer
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
-import org.hyperledger.identus.iam.authentication.SecurityLogic
+import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.LogUtils.*
 import sttp.tapir.ztapir.*
 import zio.*
 
@@ -22,7 +19,7 @@ class DIDRegistrarServerEndpoints(
       .serverLogic { wac =>
         { case (rc, paginationInput) =>
           didRegistrarController
-            .listManagedDid(paginationInput)(rc)
+            .listManagedDid(paginationInput)(using rc)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
@@ -34,7 +31,7 @@ class DIDRegistrarServerEndpoints(
       .serverLogic { wac =>
         { case (rc, createManagedDidRequest) =>
           didRegistrarController
-            .createManagedDid(createManagedDidRequest)(rc)
+            .createManagedDid(createManagedDidRequest)(using rc)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
@@ -46,7 +43,7 @@ class DIDRegistrarServerEndpoints(
       .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
-            .getManagedDid(did)(rc)
+            .getManagedDid(did)(using rc)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
@@ -58,7 +55,7 @@ class DIDRegistrarServerEndpoints(
       .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
-            .publishManagedDid(did)(rc)
+            .publishManagedDid(did)(using rc)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
@@ -70,7 +67,7 @@ class DIDRegistrarServerEndpoints(
       .serverLogic { wac =>
         { case (rc, did, updateRequest) =>
           didRegistrarController
-            .updateManagedDid(did, updateRequest)(rc)
+            .updateManagedDid(did, updateRequest)(using rc)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }
@@ -82,7 +79,7 @@ class DIDRegistrarServerEndpoints(
       .serverLogic { wac =>
         { case (rc, did) =>
           didRegistrarController
-            .deactivateManagedDid(did)(rc)
+            .deactivateManagedDid(did)(using rc)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(rc)
         }

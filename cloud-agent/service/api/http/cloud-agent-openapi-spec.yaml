@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Identus Cloud Agent API Reference
-  version: 1.34.0
+  version: 1.38.0
   description: |2
 
     The Identus Cloud Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
@@ -227,6 +227,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -276,6 +282,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -319,6 +331,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -355,6 +373,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -438,6 +462,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -483,6 +513,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -554,6 +590,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -597,6 +639,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -631,6 +679,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -693,6 +747,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -730,6 +790,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -779,6 +845,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -844,6 +916,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -884,6 +962,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -1251,6 +1335,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -1356,6 +1446,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -1407,6 +1503,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -1875,6 +1977,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -1911,6 +2019,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -1925,7 +2039,8 @@ paths:
       tags:
       - Present Proof
       summary: Gets the list of proof presentation records.
-      description: list of presentation statuses
+      description: Get the list of proof presentation records and its status that
+        the Agent have at moment
       operationId: getAllPresentation
       parameters:
       - name: offset
@@ -1946,6 +2061,7 @@ paths:
           format: int32
       - name: thid
         in: query
+        description: Filter by the DID Comm message's 'thid' of presentProof
         required: false
         schema:
           type: string
@@ -1964,6 +2080,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -2018,6 +2140,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2064,6 +2192,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -2124,6 +2258,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2137,11 +2277,11 @@ paths:
     post:
       tags:
       - Verifiable Credentials Verification
-      summary: As a Verifier, verify a set of credentials
-      description: As a Verifier, verify a set of credentials
+      summary: Verify a set of credentials as a Verifier
+      description: Endpoint to verify a set of verifiable credentials as a Verifier.
       operationId: verify
       requestBody:
-        description: List of VC to verify
+        description: List of verifiable credentials to verify
         content:
           application/json:
             schema:
@@ -2151,7 +2291,7 @@ paths:
         required: false
       responses:
         '200':
-          description: List of VC verification outcome
+          description: List of verifiable credentials verification outcomes
           content:
             application/json:
               schema:
@@ -2166,6 +2306,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -2199,6 +2345,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2222,6 +2374,12 @@ paths:
                 type: string
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -2275,6 +2433,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2319,6 +2483,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -2378,6 +2548,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2433,6 +2609,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2482,6 +2664,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2522,6 +2710,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -2570,6 +2764,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2609,6 +2809,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -2666,6 +2872,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2708,6 +2920,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -2762,6 +2980,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2807,6 +3031,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -2859,6 +3089,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2894,6 +3130,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
           content:
             application/json:
               schema:
@@ -2946,6 +3188,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2990,6 +3238,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
@@ -2999,6 +3253,611 @@ paths:
       security:
       - apiKeyAuth: []
       - jwtAuth: []
+  /oid4vci/issuers/{issuerId}/credentials:
+    post:
+      tags:
+      - OpenID for Verifiable Credential Issuance
+      summary: Credential Endpoint
+      description: OID for VCI [Credential Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-endpoint)
+      operationId: oid4vciIssueCredential
+      parameters:
+      - name: issuerId
+        in: path
+        description: An issuer identifier in the oid4vci protocol
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialRequest'
+        required: true
+      responses:
+        '200':
+          description: Credential issued successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtendedErrorResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtendedErrorResponse'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtendedErrorResponse'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtendedErrorResponse'
+      security:
+      - {}
+      - jwtAuth: []
+  /oid4vci/issuers/{issuerId}/credential-offers:
+    post:
+      tags:
+      - OpenID for Verifiable Credential Issuance
+      summary: Create a new credential offer
+      description: |-
+        Create a new credential offer and return a compliant `CredentialOffer` for the holder's
+        [Credential Offer Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-offer-endpoint).
+      operationId: oid4vciCreateCredentialOffer
+      parameters:
+      - name: issuerId
+        in: path
+        description: An issuer identifier in the oid4vci protocol
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialOfferRequest'
+        required: true
+      responses:
+        '201':
+          description: CredentialOffer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialOfferResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /oid4vci/nonces:
+    post:
+      tags:
+      - OpenID for Verifiable Credential Issuance
+      summary: Nonce Endpoint
+      description: The endpoint that returns a `nonce` value for the [Token Endpoint](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-nonce-endpoint)
+      operationId: getNonce
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NonceRequest'
+        required: true
+      responses:
+        '200':
+          description: Nonce issued successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NonceResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - {}
+      - jwtAuth: []
+  /oid4vci/issuers:
+    get:
+      tags:
+      - OpenID for Verifiable Credential Issuance
+      summary: List all credential issuers
+      operationId: getCredentialIssuers
+      responses:
+        '200':
+          description: List the credential issuers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialIssuerPage'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+    post:
+      tags:
+      - OpenID for Verifiable Credential Issuance
+      summary: Create a new  credential issuer
+      operationId: createCredentialIssuer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCredentialIssuerRequest'
+        required: true
+      responses:
+        '201':
+          description: Credential issuer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialIssuer'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /oid4vci/issuers/{issuerId}:
+    delete:
+      tags:
+      - OpenID for Verifiable Credential Issuance
+      summary: Delete the credential issuer
+      operationId: deleteCredentialIssuer
+      parameters:
+      - name: issuerId
+        in: path
+        description: An issuer identifier in the oid4vci protocol
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      responses:
+        '200':
+          description: Credential issuer deleted successfully
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+    patch:
+      tags:
+      - OpenID for Verifiable Credential Issuance
+      summary: Update the credential issuer
+      operationId: updateCredentialIssuer
+      parameters:
+      - name: issuerId
+        in: path
+        description: An issuer identifier in the oid4vci protocol
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchCredentialIssuerRequest'
+        required: true
+      responses:
+        '200':
+          description: Credential issuer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialIssuer'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /oid4vci/issuers/{issuerId}/credential-configurations:
+    post:
+      tags:
+      - OpenID for Verifiable Credential Issuance
+      summary: Create a new  credential configuration
+      description: |-
+        Create a new credential configuration for the issuer.
+        It represents the configuration of the credential that can be issued by the issuer.
+        This credential configuration object will be displayed in the credential issuer metadata.
+      operationId: createCredentialConfiguration
+      parameters:
+      - name: issuerId
+        in: path
+        description: An issuer identifier in the oid4vci protocol
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCredentialConfigurationRequest'
+        required: true
+      responses:
+        '201':
+          description: Credential configuration created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialConfiguration'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /oid4vci/issuers/{issuerId}/credential-configurations/{credentialConfigId}:
+    get:
+      tags:
+      - OpenID for Verifiable Credential Issuance
+      summary: Get the credential configuration
+      operationId: getCredentialConfiguration
+      parameters:
+      - name: issuerId
+        in: path
+        description: An issuer identifier in the oid4vci protocol
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      - name: credentialConfigId
+        in: path
+        description: An identifier for the credential configuration
+        required: true
+        schema:
+          type: string
+        example: UniversityDegree
+      responses:
+        '200':
+          description: Get credential configuration successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialConfiguration'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+    delete:
+      tags:
+      - OpenID for Verifiable Credential Issuance
+      summary: Delete the credential configuration
+      operationId: deleteCredentialConfiguration
+      parameters:
+      - name: issuerId
+        in: path
+        description: An issuer identifier in the oid4vci protocol
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      - name: credentialConfigId
+        in: path
+        description: An identifier for the credential configuration
+        required: true
+        schema:
+          type: string
+        example: UniversityDegree
+      responses:
+        '200':
+          description: Credential configuration deleted successfully
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /oid4vci/issuers/{issuerId}/.well-known/openid-credential-issuer:
+    get:
+      tags:
+      - OpenID for Verifiable Credential Issuance
+      summary: Get the credential issuer metadata
+      operationId: getIssuerMetadata
+      parameters:
+      - name: issuerId
+        in: path
+        description: An issuer identifier in the oid4vci protocol
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      responses:
+        '200':
+          description: Issuer Metadata successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuerMetadata'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     AcceptConnectionInvitationRequest:
@@ -3014,6 +3873,13 @@ components:
       type: object
       properties:
         subjectId:
+          type: string
+          description: |2
+
+            The short-form subject Prism DID to which the JWT verifiable credential will be issued.
+            This parameter only applies if the offer is of type 'JWT'.
+          example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
+        keyId:
           type: string
           description: |2
 
@@ -3121,6 +3987,24 @@ components:
             $ref: '#/components/schemas/Map_String'
         non_revoked:
           $ref: '#/components/schemas/AnoncredNonRevokedIntervalV1'
+    AnoncredsCredentialRequest:
+      required:
+      - format
+      - anoncreds
+      type: object
+      properties:
+        format:
+          $ref: '#/components/schemas/CredentialFormat'
+        proof:
+          $ref: '#/components/schemas/Proof2'
+        credential_identifier:
+          type: string
+        credential_response_encryption:
+          $ref: '#/components/schemas/CredentialResponseEncryption'
+        credential_definition:
+          $ref: '#/components/schemas/CredentialDefinition'
+        anoncreds:
+          type: string
     ApiKeyAuthenticationRequest:
       required:
       - entityId
@@ -3144,6 +4028,19 @@ components:
         elements:
           type: array
           items: {}
+    AuthorizationServer:
+      required:
+      - url
+      - clientId
+      - clientSecret
+      type: object
+      properties:
+        url:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
     Bool:
       required:
       - value
@@ -3151,6 +4048,17 @@ components:
       properties:
         value:
           type: boolean
+    ClaimDescriptor:
+      type: object
+      properties:
+        mandatory:
+          type: boolean
+        value_type:
+          type: string
+        display:
+          type: array
+          items:
+            $ref: '#/components/schemas/Localization'
     Connection:
       required:
       - connectionId
@@ -3340,6 +4248,29 @@ components:
           description: A self-attested string that the receiver may want to display
             to the user about the context-specific goal of the out-of-band message.
           example: To issue a Faber College Graduate credential
+    CreateCredentialConfigurationRequest:
+      required:
+      - configurationId
+      - format
+      - schemaId
+      type: object
+      properties:
+        configurationId:
+          type: string
+        format:
+          $ref: '#/components/schemas/CredentialFormat'
+        schemaId:
+          type: string
+    CreateCredentialIssuerRequest:
+      required:
+      - authorizationServer
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        authorizationServer:
+          $ref: '#/components/schemas/AuthorizationServer'
     CreateEntityRequest:
       required:
       - name
@@ -3504,6 +4435,39 @@ components:
           example: http://example.com
         customHeaders:
           $ref: '#/components/schemas/Map_String'
+    CredentialConfiguration:
+      required:
+      - configurationId
+      - format
+      - scope
+      - schemaId
+      - createdAt
+      type: object
+      properties:
+        configurationId:
+          type: string
+        format:
+          $ref: '#/components/schemas/CredentialFormat'
+        scope:
+          type: string
+        schemaId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CredentialDefinition:
+      type: object
+      properties:
+        '@context':
+          type: array
+          items:
+            type: string
+        type:
+          type: array
+          items:
+            type: string
+        credentialSubject:
+          $ref: '#/components/schemas/Map_ClaimDescriptor'
     CredentialDefinitionInput:
       required:
       - name
@@ -3707,6 +4671,114 @@ components:
             page of results. If the API response is the first page of results, this
             field should be set to None.
           example: /cloud-agent/schema-registry/schemas?skip=0&limit=10
+    CredentialErrorCode:
+      type: string
+      enum:
+      - insufficient_scope
+      - invalid_credential_request
+      - invalid_encryption_parameters
+      - invalid_proof
+      - invalid_request
+      - invalid_token
+      - unsupported_credential_format
+      - unsupported_credential_type
+    CredentialErrorResponse:
+      required:
+      - error
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/CredentialErrorCode'
+        error_description:
+          type: string
+        c_nonce:
+          type: string
+        c_nonce_expires_in:
+          type: integer
+          format: int64
+    CredentialFormat:
+      type: string
+      enum:
+      - anoncreds
+      - jwt_vc_json
+      - vc+sd-jwt
+    CredentialIssuer:
+      required:
+      - id
+      - authorizationServerUrl
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        authorizationServerUrl:
+          type: string
+    CredentialIssuerPage:
+      required:
+      - self
+      - kind
+      - pageOf
+      type: object
+      properties:
+        self:
+          type: string
+        kind:
+          type: string
+        pageOf:
+          type: string
+        next:
+          type: string
+        previous:
+          type: string
+        contents:
+          type: array
+          items:
+            $ref: '#/components/schemas/CredentialIssuer'
+    CredentialOfferRequest:
+      required:
+      - credentialConfigurationId
+      - issuingDID
+      - claims
+      type: object
+      properties:
+        credentialConfigurationId:
+          type: string
+        issuingDID:
+          type: string
+        claims: {}
+    CredentialOfferResponse:
+      required:
+      - credentialOffer
+      type: object
+      properties:
+        credentialOffer:
+          type: string
+    CredentialRequest:
+      oneOf:
+      - $ref: '#/components/schemas/AnoncredsCredentialRequest'
+      - $ref: '#/components/schemas/JwtCredentialRequest'
+      discriminator:
+        propertyName: format
+        mapping:
+          anoncreds: '#/components/schemas/AnoncredsCredentialRequest'
+          jwt_vc_json: '#/components/schemas/JwtCredentialRequest'
+    CredentialResponse:
+      oneOf:
+      - $ref: '#/components/schemas/DeferredCredentialResponse'
+      - $ref: '#/components/schemas/ImmediateCredentialResponse'
+    CredentialResponseEncryption:
+      required:
+      - jwk
+      - alg
+      - enc
+      type: object
+      properties:
+        jwk:
+          type: string
+        alg:
+          type: string
+        enc:
+          type: string
     CredentialSchemaInput:
       required:
       - name
@@ -3942,16 +5014,11 @@ components:
           example: /cloud-agent/schema-registry/schemas?skip=0&limit=10
     CredentialSubject:
       required:
-      - id
       - type
       - statusPurpose
       - encodedList
       type: object
       properties:
-        id:
-          type: string
-          description: Url to resolve this particular status list credential
-          example: http://issuer-agent.com/credential-status/060a2bec-6d6f-4c1f-9414-d3c9dbd3ccc9
         type:
           type: string
           description: Always equals to constnat value - StatusList2021
@@ -3972,6 +5039,16 @@ components:
       - Ed25519
       - X25519
       - secp256k1
+    CwtProof:
+      required:
+      - proof_type
+      - cwt
+      type: object
+      properties:
+        proof_type:
+          $ref: '#/components/schemas/ProofType'
+        cwt:
+          type: string
     DIDDocument:
       required:
       - id
@@ -4106,9 +5183,23 @@ components:
       properties:
         dateTime:
           type: string
+          description: The date and time to use for verification.
           format: date-time
+          example: '2022-03-10T12:00:00Z'
         parameterType:
           type: string
+    DeferredCredentialResponse:
+      required:
+      - transaction_id
+      type: object
+      properties:
+        transaction_id:
+          type: string
+        c_nonce:
+          type: string
+        c_nonce_expires_in:
+          type: integer
+          format: int32
     DidOperationSubmission:
       required:
       - id
@@ -4131,6 +5222,8 @@ components:
       properties:
         did:
           type: string
+          description: The DID (Decentralized Identifier) to use for verification.
+          example: did:prism:issuer
         parameterType:
           type: string
     EntityResponse:
@@ -4190,8 +5283,13 @@ components:
           description: A sequence of CredentialSchemaResponse objects representing
             the list of credential schemas that the API response contains
           example:
-          - EntityResponse(Entity,/cloud-agent/iam/entities/00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,John
-            Doe,00000000-0000-0000-0000-000000000000,2023-01-01T00:00:00Z,2023-01-01T00:00:00Z)
+          - kind: Entity
+            self: /cloud-agent/iam/entities/00000000-0000-0000-0000-000000000000
+            id: 00000000-0000-0000-0000-000000000000
+            name: John Doe
+            walletId: 00000000-0000-0000-0000-000000000000
+            createdAt: '2023-01-01T00:00:00Z'
+            updatedAt: '2023-01-01T00:00:00Z'
         kind:
           type: string
           description: A string field indicating the type of the API response. In
@@ -4250,6 +5348,10 @@ components:
           description: A URI reference that identifies the specific occurrence of
             the problem. It may or may not yield further information if dereferenced.
           example: The received '{}à!è@!.b}' email does not conform to the email format
+    ExtendedErrorResponse:
+      oneOf:
+      - $ref: '#/components/schemas/CredentialErrorResponse'
+      - $ref: '#/components/schemas/ErrorResponse'
     HealthInfo:
       required:
       - version
@@ -4259,6 +5361,18 @@ components:
           type: string
           description: The semantic version number of the running service
           example: 1.1.0
+    ImmediateCredentialResponse:
+      required:
+      - credential
+      type: object
+      properties:
+        credential:
+          type: string
+        c_nonce:
+          type: string
+        c_nonce_expires_in:
+          type: integer
+          format: int32
     IssueCredentialRecord:
       required:
       - recordId
@@ -4327,7 +5441,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2024-05-27T18:32:07.650296597Z'
+          example: '2024-07-15T12:05:35.865441004Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -4419,6 +5533,23 @@ components:
             page of results. If the API response is the first page of results, this
             field should be set to None.
           example: /cloud-agent/issue-credentials/records?offset=0&limit=10
+    IssuerMetadata:
+      required:
+      - credential_issuer
+      - credential_endpoint
+      - credential_configurations_supported
+      type: object
+      properties:
+        credential_issuer:
+          type: string
+        authorization_servers:
+          type: array
+          items:
+            type: string
+        credential_endpoint:
+          type: string
+        credential_configurations_supported:
+          $ref: '#/components/schemas/Map_SupportedCredentialConfiguration'
     Json:
       description: The service endpoint. Can contain multiple possible values as described
         in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did)
@@ -4430,6 +5561,51 @@ components:
       - $ref: '#/components/schemas/Num'
       - $ref: '#/components/schemas/Obj'
       - $ref: '#/components/schemas/Str'
+    JwtCredentialRequest:
+      required:
+      - format
+      type: object
+      properties:
+        format:
+          $ref: '#/components/schemas/CredentialFormat'
+        proof:
+          $ref: '#/components/schemas/Proof2'
+        credential_identifier:
+          type: string
+        credential_response_encryption:
+          $ref: '#/components/schemas/CredentialResponseEncryption'
+        credential_definition:
+          $ref: '#/components/schemas/CredentialDefinition'
+    JwtProof:
+      required:
+      - proof_type
+      - jwt
+      type: object
+      properties:
+        proof_type:
+          $ref: '#/components/schemas/ProofType'
+        jwt:
+          type: string
+    LdpProof:
+      required:
+      - proof_type
+      - vp
+      type: object
+      properties:
+        proof_type:
+          $ref: '#/components/schemas/ProofType'
+        vp:
+          type: string
+    Localization:
+      required:
+      - name
+      - locale
+      type: object
+      properties:
+        name:
+          type: string
+        locale:
+          type: string
     ManagedDID:
       required:
       - did
@@ -4495,10 +5671,36 @@ components:
       type: object
       additionalProperties:
         $ref: '#/components/schemas/AnoncredRequestedPredicateV1'
+    Map_ClaimDescriptor:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/ClaimDescriptor'
     Map_String:
       type: object
       additionalProperties:
         type: string
+    Map_SupportedCredentialConfiguration:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/SupportedCredentialConfiguration'
+    NonceRequest:
+      required:
+      - issuerState
+      type: object
+      properties:
+        issuerState:
+          type: string
+    NonceResponse:
+      required:
+      - nonce
+      - nonceExpiresIn
+      type: object
+      properties:
+        nonce:
+          type: string
+        nonceExpiresIn:
+          type: integer
+          format: int64
     'Null':
       type: object
     Num:
@@ -4535,6 +5737,15 @@ components:
           $ref: '#/components/schemas/VcVerification'
         parameter:
           $ref: '#/components/schemas/VcVerificationParameter'
+    PatchAuthorizationServer:
+      type: object
+      properties:
+        url:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
     PatchContextAction:
       type: object
       properties:
@@ -4544,6 +5755,11 @@ components:
             type: string
             description: The JSON-LD context describing the JSON document
             example: https://didcomm.org/messaging/contexts/v2
+    PatchCredentialIssuerRequest:
+      type: object
+      properties:
+        authorizationServer:
+          $ref: '#/components/schemas/PatchAuthorizationServer'
     PresentationStatus:
       required:
       - presentationId
@@ -4627,7 +5843,38 @@ components:
           items:
             $ref: '#/components/schemas/PresentationStatus'
           description: A sequence of Presentation objects.
-          example: []
+          example:
+          - presentationId: 938bfc23-f78d-4734-9bf3-6dccf300856f
+            thid: 04112f4d-e894-4bff-a706-85b3e7190a2c
+            role: Verifier
+            status: RequestSent
+            proofs: []
+            data: []
+            connectionId: e0d81be9-47ca-4e0b-b8a7-325e8c3abc2f
+            metaRetries: 5
+          - presentationId: d22158b0-c650-48ea-be85-2920a845ef26
+            thid: 04112f4d-e894-4bff-a706-85b3e7190a2c
+            role: Prover
+            status: RequestReceived
+            proofs: []
+            data: []
+            metaRetries: 5
+          - presentationId: fd3f5e54-fae9-4f72-9413-ec66aab83a57
+            thid: 6b42fd91-4c98-40ae-a371-a1fd1a39e05e
+            role: Prover
+            status: PresentationPending
+            proofs: []
+            data: []
+            metaRetries: 5
+          - presentationId: e56dd3e0-79d0-45f4-ba6c-ff857211b07b
+            thid: 6b42fd91-4c98-40ae-a371-a1fd1a39e05e
+            role: Verifier
+            status: PresentationVerified
+            proofs: []
+            data:
+            - '{"claimsToDisclose":{"emailAddress":{},"givenName":{}},"presentation":"{\"protected\":\"eyJhbGciOiJFZERTQSJ9\",\"payload\":\"eyJfc2QiOlsiMGl4d0tIV0dzbzFvZThFR0hQd2tGYW9EZE1TRFQ3SmgyNkZGSm1ZbGRnRSIsIjQ4VlFXZS1tcjBibHMyOWpicHFKeDNxX2dYY0k5N3dHcEpsZnRoNXQwMGciLCI0Wk9xanFNZVNUVHRKQTNJRExsc3ZXN0dTNzRIemNxY3N2NVFoZk1valE4IiwiUjhGRE0ydXB1V09mNmVJMVA5ckNPdG12c3puVWFFYXpncVNuN0JfeTE0MCIsIlU5MmpfUHlpcHN2TERNQTlDaVRWbnl3bUFzYTM4S2lDWm5TeVhyUE5mNG8iLCJldFB1Mmc5ajdRd01rZ3g5VnpEX1RnNTNUV3UydVpadk1KeHRnNEJ1WGJBIiwidGV3RG1LWklNcS10bUNrMkpqZU0wajNYbU1aUUFLN01heENVNlF4dm9OMCJdLCJfc2RfYWxnIjoic2hhLTI1NiIsImlzcyI6ImRpZDpwcmlzbToxMmEzOWI1YWEwZTcxODI3ZmMxYzYwMjg1ZDVlZWJjMTk0Yjg2NzFhYTJmY2QxZDM2NDBkMGYwMTBlMzliZmVlIiwiaWF0IjoxNzE3NDEwMzgzLCJleHAiOjE3MjAwMDIzODN9\",\"signature\":\"953FfSRU_0Y2q0ERrFPzbXJ_hkF0YQe5efwESaZwtXDCn8aanD3MUstp3lzqGZkhvcWRdtCCpIxzhy0zgKwLBg\",\"disclosures\":[\"WyI0SHF6MDZCeG5fRlJMb2hWX2lWNXp3IiwgImdpdmVuTmFtZSIsICJBbGljZSJd\",\"WyJLUnNYYU01c3NXZTl4UEhqQnNjT213IiwgImVtYWlsQWRkcmVzcyIsICJhbGljZUB3b25kZXJsYW5kLmNvbSJd\"],\"kb_jwt\":null}"}'
+            connectionId: e0d81be9-47ca-4e0b-b8a7-325e8c3abc2f
+            metaRetries: 5
         self:
           type: string
           description: The reference to the presentation collection itself.
@@ -4642,12 +5889,16 @@ components:
           example: 1
         next:
           type: string
-          description: URL of the next page (if available)
-          example: ''
+          description: An optional string field containing the URL of the next page
+            of results. If the API response does not contain any more pages, this
+            field should be set to None.
+          example: /present-proof/presentations?offset=20&limit=10
         previous:
           type: string
-          description: URL of the previous page (if available)
-          example: ''
+          description: An optional string field containing the URL of the previous
+            page of results. If the API response is the first page of results, this
+            field should be set to None.
+          example: /present-proof/presentations?offset=0&limit=10
     Proof:
       required:
       - type
@@ -4766,6 +6017,17 @@ components:
         proofValue: FiPfjknHikKmZ...
         jws: eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il0sImt0eSI6Ik...
         domain: prims.atala.com
+    Proof2:
+      oneOf:
+      - $ref: '#/components/schemas/CwtProof'
+      - $ref: '#/components/schemas/JwtProof'
+      - $ref: '#/components/schemas/LdpProof'
+      discriminator:
+        propertyName: proof_type
+        mapping:
+          cwt: '#/components/schemas/CwtProof'
+          jwt: '#/components/schemas/JwtProof'
+          ldp_vp: '#/components/schemas/LdpProof'
     ProofRequestAux:
       required:
       - schemaId
@@ -4785,6 +6047,19 @@ components:
           - did:web:atalaprism.io/users/testUser
           - did.prism:123
           - did:prism:...
+    ProofType:
+      type: string
+      enum:
+      - cwt
+      - jwt
+      - ldp_vp
+    ProofTypeConfiguration:
+      type: object
+      properties:
+        proof_signing_alg_values_supported:
+          type: array
+          items:
+            type: string
     PublicKeyJwk:
       required:
       - kty
@@ -4838,6 +6113,12 @@ components:
             applicable on the prover side when the action is `request-accept`.
         anoncredPresentationRequest:
           $ref: '#/components/schemas/AnoncredCredentialProofsV1'
+        claims:
+          $ref: '#/components/schemas/Obj'
+        credentialFormat:
+          type: string
+          description: The credential format (default to 'JWT')
+          example: JWT
     RequestPresentationInput:
       required:
       - connectionId
@@ -4860,6 +6141,8 @@ components:
           example: []
         anoncredPresentationRequest:
           $ref: '#/components/schemas/AnoncredPresentationRequestV1'
+        claims:
+          $ref: '#/components/schemas/Obj'
         credentialFormat:
           type: string
           description: The credential format (default to 'JWT')
@@ -4930,7 +6213,7 @@ components:
           type: string
           description: Issuance timestamp of status list credential
           format: date-time
-          example: '2024-05-27T18:32:07.694793558Z'
+          example: '2024-07-15T12:05:35.908034143Z'
         credentialSubject:
           $ref: '#/components/schemas/CredentialSubject'
         proof:
@@ -4957,6 +6240,37 @@ components:
       properties:
         value:
           type: string
+    SupportProofType:
+      required:
+      - jwt
+      type: object
+      properties:
+        jwt:
+          $ref: '#/components/schemas/ProofTypeConfiguration'
+    SupportedCredentialConfiguration:
+      required:
+      - format
+      - scope
+      - credential_definition
+      - proof_types_supported
+      type: object
+      properties:
+        format:
+          $ref: '#/components/schemas/CredentialFormat'
+        scope:
+          type: string
+        credential_definition:
+          $ref: '#/components/schemas/CredentialDefinition'
+        cryptographic_binding_methods_supported:
+          type: array
+          items:
+            type: string
+        credential_signing_alg_values_supported:
+          type: array
+          items:
+            type: string
+        proof_types_supported:
+          $ref: '#/components/schemas/SupportProofType'
     Suspension:
       type: object
     UpdateEntityNameRequest:
@@ -5033,6 +6347,7 @@ components:
         both be empty.
     VcVerification:
       type: string
+      description: The type of verification to perform.
       enum:
       - AlgorithmVerification
       - AudienceCheck
@@ -5047,6 +6362,7 @@ components:
       - SignatureVerification
       - SubjectVerification
     VcVerificationParameter:
+      description: Optional parameter for the verification.
       oneOf:
       - $ref: '#/components/schemas/DateTimeParameter'
       - $ref: '#/components/schemas/DidParameter'
@@ -5068,21 +6384,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ParameterizableVcVerification'
-          description: The list of Verifications to verify. All verifications run
-            if Verifications left empty
+          description: The list of verifications to perform on the credential. If
+            the list is empty, all available verifications will be performed.
           example:
-          - ParameterizableVcVerification(SignatureVerification,None)
-          - ParameterizableVcVerification(IssuerIdentification,Some(DidParameter(did:prism:issuer)))
-          - ParameterizableVcVerification(ExpirationCheck,Some(DateTimeParameter(2022-03-10T12:00Z)))
-          - ParameterizableVcVerification(NotBeforeCheck,Some(DateTimeParameter(2022-03-10T12:00Z)))
-          - ParameterizableVcVerification(AudienceCheck,Some(DidParameter(did:prism:holder)))
-          - ParameterizableVcVerification(SubjectVerification,None)
-          - ParameterizableVcVerification(IntegrityOfClaims,None)
-          - ParameterizableVcVerification(ComplianceWithStandards,None)
-          - ParameterizableVcVerification(RevocationCheck,None)
-          - ParameterizableVcVerification(AlgorithmVerification,None)
-          - ParameterizableVcVerification(SchemaCheck,None)
-          - ParameterizableVcVerification(SemanticCheckOfClaims,None)
+          - verification: SignatureVerification
+          - verification: IssuerIdentification
+            parameter:
+              did: did:prism:issuer
+          - verification: ExpirationCheck
+            parameter:
+              dateTime: '2022-03-10T12:00:00Z'
+          - verification: NotBeforeCheck
+            parameter:
+              dateTime: '2022-03-10T12:00:00Z'
+          - verification: AudienceCheck
+            parameter:
+              did: did:prism:holder
+          - verification: SubjectVerification
+          - verification: IntegrityOfClaims
+          - verification: ComplianceWithStandards
+          - verification: RevocationCheck
+          - verification: AlgorithmVerification
+          - verification: SchemaCheck
+          - verification: SemanticCheckOfClaims
     VcVerificationResponse:
       required:
       - credential
@@ -5090,26 +6414,39 @@ components:
       properties:
         credential:
           type: string
-          description: Encoded Verifiable Credential to verify
+          description: Encoded Verifiable Credential that was verified.
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         result:
           type: array
           items:
             $ref: '#/components/schemas/VcVerificationResult'
-          description: The list executed Verifications
+          description: The list of verification results for each verification performed
+            on the credential.
           example:
-          - VcVerificationResult(SignatureVerification,true)
-          - VcVerificationResult(IssuerIdentification,true)
-          - VcVerificationResult(ExpirationCheck,true)
-          - VcVerificationResult(NotBeforeCheck,true)
-          - VcVerificationResult(AudienceCheck,true)
-          - VcVerificationResult(SubjectVerification,true)
-          - VcVerificationResult(IntegrityOfClaims,true)
-          - VcVerificationResult(ComplianceWithStandards,true)
-          - VcVerificationResult(RevocationCheck,true)
-          - VcVerificationResult(AlgorithmVerification,true)
-          - VcVerificationResult(SchemaCheck,true)
-          - VcVerificationResult(SemanticCheckOfClaims,true)
+          - verification: SignatureVerification
+            success: true
+          - verification: IssuerIdentification
+            success: true
+          - verification: ExpirationCheck
+            success: true
+          - verification: NotBeforeCheck
+            success: true
+          - verification: AudienceCheck
+            success: true
+          - verification: SubjectVerification
+            success: true
+          - verification: IntegrityOfClaims
+            success: true
+          - verification: ComplianceWithStandards
+            success: true
+          - verification: RevocationCheck
+            success: true
+          - verification: AlgorithmVerification
+            success: true
+          - verification: SchemaCheck
+            success: true
+          - verification: SemanticCheckOfClaims
+            success: true
     VcVerificationResult:
       required:
       - verification
@@ -5120,6 +6457,7 @@ components:
           $ref: '#/components/schemas/VcVerification'
         success:
           type: boolean
+          description: Indicates whether the verification was successful.
     VerificationMethod:
       required:
       - id

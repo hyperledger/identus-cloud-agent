@@ -9,11 +9,11 @@ import org.hyperledger.identus.iam.authentication.{AuthenticatorWithAuthZ, Defau
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.core.service.verification.{VcVerificationService, VcVerificationServiceImpl}
 import org.hyperledger.identus.pollux.vc.jwt.*
-import org.hyperledger.identus.shared.models.WalletId.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.WalletId.*
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import sttp.client3.UriContext
 import sttp.client3.testing.SttpBackendStub
+import sttp.client3.UriContext
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
@@ -36,7 +36,7 @@ trait VcVerificationControllerTestTools extends PostgresTestContainerSupport {
 
   val didResolverLayer = ZLayer.fromZIO(ZIO.succeed(makeResolver(Map.empty)))
 
-  private[this] def makeResolver(lookup: Map[String, DIDDocument]): DidResolver = (didUrl: String) => {
+  private def makeResolver(lookup: Map[String, DIDDocument]): DidResolver = (didUrl: String) => {
     lookup
       .get(didUrl)
       .fold(

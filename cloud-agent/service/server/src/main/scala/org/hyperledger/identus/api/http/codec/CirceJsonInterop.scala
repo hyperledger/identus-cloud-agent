@@ -1,36 +1,15 @@
 package org.hyperledger.identus.api.http.codec
 
 import io.circe.Json as CirceJson
-import sttp.tapir.Schema
+import org.hyperledger.identus.shared.json.JsonInterop
 import sttp.tapir.json.zio.*
-import zio.json.ast.Json as ZioJson
+import sttp.tapir.Schema
 import zio.json.*
+import zio.json.ast.Json as ZioJson
 
 object CirceJsonInterop {
-
-  private def toZioJsonAst(circeJson: CirceJson): ZioJson = {
-    val encoded = circeJson.noSpaces
-    encoded.fromJson[ZioJson] match {
-      case Left(failure) =>
-        throw Exception(s"Circe and Zio Json interop fail. Unable to convert from Circe to Zio AST. $failure")
-      case Right(value) => value
-    }
-  }
-
-  private def toCirceJsonAst(zioJson: ZioJson): CirceJson = {
-    val encoded = zioJson.toJson
-    io.circe.parser.parse(encoded).left.map(_.toString) match {
-      case Left(failure) =>
-        throw Exception(s"Circe and Zio Json interop fail. Unable to convert from Zio to Circe AST. $failure")
-      case Right(value) => value
-    }
-  }
-
-  given encodeJson: JsonEncoder[CirceJson] = JsonEncoder[ZioJson].contramap(toZioJsonAst)
-
-  given decodeJson: JsonDecoder[CirceJson] = JsonDecoder[ZioJson].map(toCirceJsonAst)
-
+  given encodeJson: JsonEncoder[CirceJson] = JsonEncoder[ZioJson].contramap(JsonInterop.toZioJsonAst)
+  given decodeJson: JsonDecoder[CirceJson] = JsonDecoder[ZioJson].map(JsonInterop.toCirceJsonAst)
   given schemaJson: Schema[CirceJson] =
-    Schema.derived[ZioJson].map[CirceJson](js => Some(toCirceJsonAst(js)))(toZioJsonAst)
-
+    Schema.derived[ZioJson].map[CirceJson](js => Some(JsonInterop.toCirceJsonAst(js)))(JsonInterop.toZioJsonAst)
 }

@@ -1,7 +1,7 @@
 package org.hyperledger.identus.verification.controller
 
-import org.hyperledger.identus.api.http.EndpointOutputs.*
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.EndpointOutputs.*
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
@@ -21,14 +21,14 @@ object VcVerificationEndpoints {
     endpoint.post
       .tag("Verifiable Credentials Verification")
       .name("verify")
-      .summary("As a Verifier, verify a set of credentials")
-      .description("As a Verifier, verify a set of credentials")
+      .summary("Verify a set of credentials as a Verifier")
+      .description("Endpoint to verify a set of verifiable credentials as a Verifier.")
       .securityIn(apiKeyHeader)
       .securityIn(jwtAuthHeader)
       .in("verification" / "credential")
       .in(extractFromRequest[RequestContext](RequestContext.apply))
-      .in(jsonBody[List[http.VcVerificationRequest]].description("List of VC to verify"))
-      .out(statusCode(StatusCode.Ok).description("List of VC verification outcome"))
+      .in(jsonBody[List[http.VcVerificationRequest]].description("List of verifiable credentials to verify"))
+      .out(statusCode(StatusCode.Ok).description("List of verifiable credentials verification outcomes"))
       .out(jsonBody[List[http.VcVerificationResponse]])
       .errorOut(basicFailuresAndForbidden)
 }

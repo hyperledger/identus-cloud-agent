@@ -1,10 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.presentproof
 
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.syntax._
-
-import org.hyperledger.identus.mercury.model._
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
+import org.hyperledger.identus.mercury.model.*
 
 final case class RequestPresentation(
     id: String = java.util.UUID.randomUUID.toString(),
@@ -13,15 +12,15 @@ final case class RequestPresentation(
     attachments: Seq[AttachmentDescriptor],
     // extra
     thid: Option[String] = None,
-    from: DidId,
-    to: DidId,
+    from: Option[DidId],
+    to: Option[DidId],
 ) {
 
   def makeMessage: Message = Message(
     id = this.id,
     `type` = this.`type`,
-    from = Some(this.from),
-    to = Seq(this.to),
+    from = this.from,
+    to = this.to.toSeq,
     thid = this.thid,
     body = this.body.asJson.asObject.get, // TODO get
     attachments = Some(this.attachments),
@@ -65,9 +64,9 @@ object RequestPresentation {
       thid = Some(msg.id),
       from = {
         assert(msg.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
-        msg.to.head
+        msg.to.headOption
       },
-      to = msg.from.get, // TODO get
+      to = msg.from,
     )
   }
 
@@ -80,10 +79,10 @@ object RequestPresentation {
       body = body,
       attachments = message.attachments.getOrElse(Seq.empty),
       thid = message.thid,
-      from = message.from.get, // TODO get
+      from = message.from,
       to = {
         assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
-        message.to.head
+        message.to.headOption
       },
     )
 

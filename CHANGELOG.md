@@ -1,3 +1,101 @@
+# [1.38.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.37.0...cloud-agent-v1.38.0) (2024-07-15)
+
+
+### Bug Fixes
+
+* Move InMemory classes to the test moduels ([#1240](https://github.com/hyperledger/identus-cloud-agent/issues/1240)) ([823057a](https://github.com/hyperledger/identus-cloud-agent/commit/823057adaa6127eca80dba4df123f07098d34f65))
+* move mocks into the test modules ([#1236](https://github.com/hyperledger/identus-cloud-agent/issues/1236)) ([df83026](https://github.com/hyperledger/identus-cloud-agent/commit/df83026704980e071f7aa158634da20fbc2527c3))
+* use Put and Get for DID in doobie statement ([#1250](https://github.com/hyperledger/identus-cloud-agent/issues/1250)) ([fc1cf51](https://github.com/hyperledger/identus-cloud-agent/commit/fc1cf5157f5503143c23da54c8ea6fe78a776640))
+* Wallet Management Error Handling ([#1248](https://github.com/hyperledger/identus-cloud-agent/issues/1248)) ([cfd5101](https://github.com/hyperledger/identus-cloud-agent/commit/cfd5101f18276b9f59830c47c0d7fa64b30662db))
+
+
+### Features
+
+* upgrade docusaurus and semantic-release packages ([de53f1d](https://github.com/hyperledger/identus-cloud-agent/commit/de53f1db15a25e4d66cba1b191fc6e591b42284b))
+
+# [1.37.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.36.1...cloud-agent-v1.37.0) (2024-07-01)
+
+
+### Bug Fixes
+
+* avoid name and operationId conflict when creating oas client ([#1233](https://github.com/hyperledger/identus-cloud-agent/issues/1233)) ([73e8e24](https://github.com/hyperledger/identus-cloud-agent/commit/73e8e2445e038ea154b0ddd0ca93f15fa9db69b4))
+* incorrect parsing of public key coordinates and enable some tests again ([#1215](https://github.com/hyperledger/identus-cloud-agent/issues/1215)) ([5398a75](https://github.com/hyperledger/identus-cloud-agent/commit/5398a75cfde7ee922588bd84608223abf389d5c1))
+* KeyID from String to Opaque Type and presentation job cleanup  ([#1190](https://github.com/hyperledger/identus-cloud-agent/issues/1190)) ([b813faf](https://github.com/hyperledger/identus-cloud-agent/commit/b813faf5f076521955d4b84cab5d46d3635159a2))
+* make init-script.sh idempotent [#1173](https://github.com/hyperledger/identus-cloud-agent/issues/1173) ([#1194](https://github.com/hyperledger/identus-cloud-agent/issues/1194)) ([1712062](https://github.com/hyperledger/identus-cloud-agent/commit/1712062cafcba4a46f4d190a7ef628208d21ce7b))
+* migrate and repair in case of renaming issues ([#1211](https://github.com/hyperledger/identus-cloud-agent/issues/1211)) ([cb4d479](https://github.com/hyperledger/identus-cloud-agent/commit/cb4d47927c4d6f1c02e4fcf95a52e5ce074d2724))
+* Present Error Handling (Part 1: Repo Changes) ([#1172](https://github.com/hyperledger/identus-cloud-agent/issues/1172)) ([13e2447](https://github.com/hyperledger/identus-cloud-agent/commit/13e244738c54bcc43bbea694acebc9b372a1ccb5))
+* Present Error Handling Job ([#1204](https://github.com/hyperledger/identus-cloud-agent/issues/1204)) ([3191d8b](https://github.com/hyperledger/identus-cloud-agent/commit/3191d8b933e1e7e08ccd5dd95dbcfddb1ae8bb01))
+* present error handling Part 2 ([#1177](https://github.com/hyperledger/identus-cloud-agent/issues/1177)) ([9ac6e52](https://github.com/hyperledger/identus-cloud-agent/commit/9ac6e52ec447710ae7917d8176dcb0ebdc6b2e0d))
+* Verification Policy Error Handling ([#1228](https://github.com/hyperledger/identus-cloud-agent/issues/1228)) ([6117a3c](https://github.com/hyperledger/identus-cloud-agent/commit/6117a3cc00121c34a06fd680b1a0b4df4b188f49))
+
+
+### Features
+
+* add oidc4vci protocol MVP ([#1182](https://github.com/hyperledger/identus-cloud-agent/issues/1182)) ([3ae91dc](https://github.com/hyperledger/identus-cloud-agent/commit/3ae91dce17e5925aad8d5ce3471527889f26c6de))
+* add schemaId to the issuance session ([#1199](https://github.com/hyperledger/identus-cloud-agent/issues/1199)) ([97f5d83](https://github.com/hyperledger/identus-cloud-agent/commit/97f5d833d7988d59c4fd51459ee3d48d779399a3))
+* add support for EcdsaSecp256k1Signature2019Proof and fix pk encoding for EddsaJcs2022Proof ([#1127](https://github.com/hyperledger/identus-cloud-agent/issues/1127)) ([e617ded](https://github.com/hyperledger/identus-cloud-agent/commit/e617dedd962f379033ae199d40addd222bf945da))
+* **agent:** add browser fingerprint label to http metrics ([#1231](https://github.com/hyperledger/identus-cloud-agent/issues/1231)) ([f090554](https://github.com/hyperledger/identus-cloud-agent/commit/f09055455df7ebc316fbc6f0e6bf610a05a278a1))
+* ATL 6829 - Integrate ZIO failures and defects ADR in credential status list ([#1175](https://github.com/hyperledger/identus-cloud-agent/issues/1175)) ([dffad1d](https://github.com/hyperledger/identus-cloud-agent/commit/dffad1d0bc07248f1559651ddce82629231c6cf7))
+* ATL-6832 ZIO failures and defects in entity controller ([#1203](https://github.com/hyperledger/identus-cloud-agent/issues/1203)) ([9050094](https://github.com/hyperledger/identus-cloud-agent/commit/905009490cf0c360431fa235cf26609bea9b951b))
+* ATL-6833 integrate ZIO failures and defects in wallet event controller ([#1186](https://github.com/hyperledger/identus-cloud-agent/issues/1186)) ([8bc2018](https://github.com/hyperledger/identus-cloud-agent/commit/8bc2018bd1ca6d1aa679e1935cde5996602b8ae5))
+* ATL-6834 Use ZIO Failures and Defects effectively in the Issue flow ([#1139](https://github.com/hyperledger/identus-cloud-agent/issues/1139)) ([ede7b77](https://github.com/hyperledger/identus-cloud-agent/commit/ede7b770341d1efd5026f7badc1f963ecfefcdef))
+* Handle Error in Background Jobs - Improve the way we store errors and defects in DB ([#1218](https://github.com/hyperledger/identus-cloud-agent/issues/1218)) ([e3cadc9](https://github.com/hyperledger/identus-cloud-agent/commit/e3cadc9eb7f3adde05548345c456d1c059356a1c))
+* implement ADR Use ZIO Failures and Defects Effectively - Mercury should not throw exceptions ([#1192](https://github.com/hyperledger/identus-cloud-agent/issues/1192)) ([a4ce87f](https://github.com/hyperledger/identus-cloud-agent/commit/a4ce87fd709102e0a5e597e5ba50891e01d46a51))
+* improve OpenAPI's PresentProof to make more consistent ([#1130](https://github.com/hyperledger/identus-cloud-agent/issues/1130)) ([bdc5d20](https://github.com/hyperledger/identus-cloud-agent/commit/bdc5d207a6d1567b9dca88f4d72300de091d1d24))
+* Integrate ZIO failures and defects ADR in DID Registrar Controller and Mercury ([#1180](https://github.com/hyperledger/identus-cloud-agent/issues/1180)) ([d8e2120](https://github.com/hyperledger/identus-cloud-agent/commit/d8e21201f2b07cd03afbba8fb668329105048ba2))
+* SDJWT holder key binding ([#1185](https://github.com/hyperledger/identus-cloud-agent/issues/1185)) ([628f2f0](https://github.com/hyperledger/identus-cloud-agent/commit/628f2f07b29824a899b2c50b0d9cd1c5449bd0e7))
+* use kid in the jwt proof header of OID4VCI CredentialIssue request ([#1184](https://github.com/hyperledger/identus-cloud-agent/issues/1184)) ([ee53eda](https://github.com/hyperledger/identus-cloud-agent/commit/ee53edae1fc0bb7f06770a835234052de46665f5))
+* use the compact format in SD-JWT ([#1169](https://github.com/hyperledger/identus-cloud-agent/issues/1169)) ([65da651](https://github.com/hyperledger/identus-cloud-agent/commit/65da65185ebda33cab499e87196bf9ce3543b3aa))
+
+## [1.36.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.36.0...cloud-agent-v1.36.1) (2024-06-09)
+
+
+### Bug Fixes
+
+* Helm chart refactor vol2 ([#1162](https://github.com/hyperledger/identus-cloud-agent/issues/1162)) ([72fc6d1](https://github.com/hyperledger/identus-cloud-agent/commit/72fc6d1a61a4a1a5c0b1c81d3b0742538c8b9bc7))
+
+# [1.36.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.35.1...cloud-agent-v1.36.0) (2024-06-09)
+
+
+### Bug Fixes
+
+* Credential Defintion Error Handling Part 2 ([#1155](https://github.com/hyperledger/identus-cloud-agent/issues/1155)) ([2df5306](https://github.com/hyperledger/identus-cloud-agent/commit/2df530695522789bed6624bae8bd07433c05ddda))
+* Credential Defintion Error Handling Part 2 ([#1156](https://github.com/hyperledger/identus-cloud-agent/issues/1156)) ([5755504](https://github.com/hyperledger/identus-cloud-agent/commit/57555047cd56ae31bbf14601fe8b5d96f838e033))
+* Helm chart refactor ([#1160](https://github.com/hyperledger/identus-cloud-agent/issues/1160)) ([4b59112](https://github.com/hyperledger/identus-cloud-agent/commit/4b59112af649a00e17d6e5e0e927f5b972629ec9))
+* pick right key type when creating corresponding issuer ([#1157](https://github.com/hyperledger/identus-cloud-agent/issues/1157)) ([22f0448](https://github.com/hyperledger/identus-cloud-agent/commit/22f0448ca878b385eada89d805c8f993c52173a2))
+* Schema Error Handling ([#1138](https://github.com/hyperledger/identus-cloud-agent/issues/1138)) ([a9da840](https://github.com/hyperledger/identus-cloud-agent/commit/a9da84098bd56eeb9d64e7b2bdd78d5596cf35c5))
+* Update the Holder to send the presentation only, No claims to disclose is needed separately  ([#1158](https://github.com/hyperledger/identus-cloud-agent/issues/1158)) ([9eaa5d4](https://github.com/hyperledger/identus-cloud-agent/commit/9eaa5d444665dbda00038a9032b890afcfa4bc15))
+
+
+### Features
+
+* improve ZIO failures and defects in credential definition ([#1133](https://github.com/hyperledger/identus-cloud-agent/issues/1133)) ([d6dfb72](https://github.com/hyperledger/identus-cloud-agent/commit/d6dfb72e298127b3e9d3a4c6577f62f4c8a1970a))
+* Remove double Error logs in DIDController ([#1140](https://github.com/hyperledger/identus-cloud-agent/issues/1140)) ([888ebb4](https://github.com/hyperledger/identus-cloud-agent/commit/888ebb4b484224d9c73674cffdf7d00777cfb4dc))
+
+## [1.35.1](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.35.0...cloud-agent-v1.35.1) (2024-06-05)
+
+
+### Bug Fixes
+
+* Add expiration time for cloud-agent ([#1132](https://github.com/hyperledger/identus-cloud-agent/issues/1132)) ([f719120](https://github.com/hyperledger/identus-cloud-agent/commit/f719120211a83e96e6e4e282cc70e9f860d9298d))
+* Chart refactor ([#1143](https://github.com/hyperledger/identus-cloud-agent/issues/1143)) ([f309a0e](https://github.com/hyperledger/identus-cloud-agent/commit/f309a0e7c2101c2567498b060ee71a6964d3b9e6))
+
+# [1.35.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.34.0...cloud-agent-v1.35.0) (2024-06-03)
+
+
+### Bug Fixes
+
+*  SemanticCheckOfClaims In Verification API ([#1124](https://github.com/hyperledger/identus-cloud-agent/issues/1124)) ([7cb4192](https://github.com/hyperledger/identus-cloud-agent/commit/7cb4192d41a779e2ba4de815b2e8ec469636e485))
+*  update the jose dependency and switch back to the official library ([#1117](https://github.com/hyperledger/identus-cloud-agent/issues/1117)) ([3608aaf](https://github.com/hyperledger/identus-cloud-agent/commit/3608aafd980472cb63e5164339681fb079190dba))
+* Changing .chart.name reference, adding name override ([#1129](https://github.com/hyperledger/identus-cloud-agent/issues/1129)) ([650ae3b](https://github.com/hyperledger/identus-cloud-agent/commit/650ae3ba94ae322fc745eb07658f1663b3e7e321))
+* VC Verification API Doc ([#1118](https://github.com/hyperledger/identus-cloud-agent/issues/1118)) ([d70d4b7](https://github.com/hyperledger/identus-cloud-agent/commit/d70d4b74cb9f21d72e735f9650b746565068f282))
+
+
+### Features
+
+* **agent:** ATL-6839 migrate DIDComm endpoint to tapir ([#1116](https://github.com/hyperledger/identus-cloud-agent/issues/1116)) ([2f4f7c3](https://github.com/hyperledger/identus-cloud-agent/commit/2f4f7c395523763c3c7066781017430523317841))
+* integrate SD JWT ([#1016](https://github.com/hyperledger/identus-cloud-agent/issues/1016)) ([9d7948f](https://github.com/hyperledger/identus-cloud-agent/commit/9d7948fc8208edf9f8c1712a0cd6902474f0814d))
+
 # [1.34.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.33.1...cloud-agent-v1.34.0) (2024-05-27)
 
 

@@ -1,16 +1,15 @@
 package org.hyperledger.identus.iam.authentication
 
-import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.agent.walletapi.model.EntityRole
+import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Entity, EntityRole}
 import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
 import org.hyperledger.identus.iam.authentication.admin.AdminApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
+import org.hyperledger.identus.iam.authentication.AuthenticationError.AuthenticationMethodNotEnabled
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
 import zio.*
+
+import scala.language.implicitConversions
 
 object SecurityLogic {
 
@@ -34,7 +33,6 @@ object SecurityLogic {
           case head :: _ => ZIO.fail(head)
         }
       }
-      .mapError(AuthenticationError.toErrorResponse)
   }
 
   def authorizeWalletAccess[E <: BaseEntity](
@@ -42,13 +40,12 @@ object SecurityLogic {
   )(authorizer: Authorizer[E]): IO[ErrorResponse, WalletAccessContext] =
     authorizer
       .authorizeWalletAccess(entity)
-      .mapError(AuthenticationError.toErrorResponse)
 
   def authorizeWalletAccess[E <: BaseEntity](credentials: Credentials, others: Credentials*)(
       authenticator: Authenticator[E],
       authorizer: Authorizer[E]
   ): IO[ErrorResponse, WalletAccessContext] =
-    authenticate[E](credentials, others: _*)(authenticator)
+    authenticate[E](credentials, others*)(authenticator)
       .flatMap {
         case Left(entity)  => authorizeWalletAccess(entity)(EntityAuthorizer)
         case Right(entity) => authorizeWalletAccess(entity)(authorizer)
@@ -65,7 +62,6 @@ object SecurityLogic {
   )(authorizer: Authorizer[E]): IO[ErrorResponse, WalletAdministrationContext] =
     authorizer
       .authorizeWalletAdmin(entity)
-      .mapError(AuthenticationError.toErrorResponse)
 
   def authorizeWalletAdminWith[E <: BaseEntity](
       credentials: (AdminApiKeyCredentials, ApiKeyCredentials, JwtCredentials)
@@ -82,7 +78,7 @@ object SecurityLogic {
   def authorizeRole[E <: BaseEntity](credentials: Credentials, others: Credentials*)(
       authenticator: Authenticator[E],
   )(permittedRole: EntityRole): IO[ErrorResponse, BaseEntity] = {
-    authenticate[E](credentials, others: _*)(authenticator)
+    authenticate[E](credentials, others*)(authenticator)
       .flatMap { ee =>
         val entity = ee.fold(identity, identity)
         for {
@@ -92,11 +88,9 @@ object SecurityLogic {
               .mapError(msg =>
                 AuthenticationError.UnexpectedError(s"Unable to retrieve entity role for entity id ${entity.id}. $msg")
               )
-              .mapError(AuthenticationError.toErrorResponse)
           _ <- ZIO
             .fail(AuthenticationError.InvalidRole(s"$role role is not permitted. Expected $permittedRole role."))
             .when(role != permittedRole)
-            .mapError(AuthenticationError.toErrorResponse)
         } yield entity
       }
   }

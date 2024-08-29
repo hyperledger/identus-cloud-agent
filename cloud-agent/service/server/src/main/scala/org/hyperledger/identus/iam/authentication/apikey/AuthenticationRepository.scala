@@ -1,9 +1,10 @@
 package org.hyperledger.identus.iam.authentication.apikey
 
+import io.getquill.*
 import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.doobie.DoobieContext
-import io.getquill.*
-import zio.IO
+import org.hyperledger.identus.iam.authentication.apikey.AuthenticationRepositoryError.AuthenticationCompromised
+import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 import zio.*
 import zio.interop.catz.*
 
@@ -35,61 +36,50 @@ trait AuthenticationRepository {
       entityId: UUID,
       amt: AuthenticationMethodType,
       secret: String
-  ): zio.IO[AuthenticationRepositoryError, Unit]
+  ): zio.IO[AuthenticationCompromised, Unit]
 
-  def getEntityIdByMethodAndSecret(
+  def findEntityIdByMethodAndSecret(
       amt: AuthenticationMethodType,
       secret: String
-  ): zio.IO[AuthenticationRepositoryError, UUID]
+  ): zio.UIO[Option[UUID]]
 
   def findAuthenticationMethodByTypeAndSecret(
       amt: AuthenticationMethodType,
       secret: String
-  ): zio.IO[AuthenticationRepositoryError, Option[AuthenticationMethod]]
+  ): zio.UIO[Option[AuthenticationMethod]]
 
   def deleteByMethodAndEntityId(
       entityId: UUID,
       amt: AuthenticationMethodType
-  ): zio.IO[AuthenticationRepositoryError, Unit]
+  ): zio.UIO[Unit]
 
   def delete(
       entityId: UUID,
       amt: AuthenticationMethodType,
       secret: String
-  ): zio.IO[AuthenticationRepositoryError, Unit]
+  ): zio.UIO[Unit]
 }
 
 //TODO: reconsider the hierarchy of the service and dal layers
-sealed trait AuthenticationRepositoryError {
-  def message: String
+sealed trait AuthenticationRepositoryError(
+    val statusCode: StatusCode,
+    val userFacingMessage: String
+) extends Failure {
+  override val namespace: String = "AuthenticationRepositoryError"
 }
 
 object AuthenticationRepositoryError {
 
-  def hide(secret: String) = secret.take(8) + "****"
-  case class AuthenticationNotFound(authenticationMethodType: AuthenticationMethodType, secret: String)
-      extends AuthenticationRepositoryError {
-    def message =
-      s"Authentication method not found for type:${authenticationMethodType.value} and secret:${hide(secret)}"
-  }
+  private def hide(secret: String) = secret.take(8) + "****"
 
   case class AuthenticationCompromised(
       entityId: UUID,
       authenticationMethodType: AuthenticationMethodType,
       secret: String
-  ) extends AuthenticationRepositoryError {
-    def message =
-      s"Authentication method is compromised for entityId:$entityId, type:${authenticationMethodType.value}, and secret:${hide(secret)}"
-  }
-
-  case class ServiceError(message: String) extends AuthenticationRepositoryError
-  case class StorageError(cause: Throwable) extends AuthenticationRepositoryError {
-    def message = cause.getMessage
-  }
-
-  case class UnexpectedError(cause: Throwable) extends AuthenticationRepositoryError {
-    def message = cause.getMessage
-  }
+  ) extends AuthenticationRepositoryError(
+        StatusCode.Unauthorized,
+        s"Authentication method is compromised for entityId:$entityId, type:${authenticationMethodType.value}, and secret:${hide(secret)}"
+      )
 }
 
 object AuthenticationRepositorySql extends DoobieContext.Postgres(SnakeCase) with PostgresJsonExtensions {

@@ -1,7 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.trustping
 
-import io.circe._
-import org.hyperledger.identus.mercury.model.{PIURI, Message, DidId}
+import io.circe.*
+import org.hyperledger.identus.mercury.model.{DidId, Message, PIURI}
 
 final case class TrustPingResponse(
     `type`: PIURI = TrustPingResponse.`type`,
@@ -37,7 +37,7 @@ object TrustPingResponse {
               Right(
                 TrustPingResponse(
                   id = message.id,
-                  thid = message.thid.getOrElse(???), // TODO
+                  thid = message.thid.getOrElse(message.id),
                   `type` = piuri,
                   from = from,
                   to = onlyOneRecipient,

@@ -1,23 +1,91 @@
 package org.hyperledger.identus.agent.server.http
 
-import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.system.controller.SystemEndpoints
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.http4s.*
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Router
+import org.hyperledger.identus.api.http.ErrorResponse
+import org.hyperledger.identus.shared.crypto.Sha256Hash
+import org.hyperledger.identus.shared.json.Json
+import org.hyperledger.identus.system.controller.SystemEndpoints
 import sttp.tapir.*
-import sttp.tapir.server.http4s.Http4sServerOptions
+import sttp.tapir.model.ServerRequest
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
+import sttp.tapir.server.http4s.Http4sServerOptions
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
+import sttp.tapir.server.metrics.MetricLabels
 import sttp.tapir.ztapir.ZServerEndpoint
 import zio.*
 import zio.interop.catz.*
 
-class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry) {
+class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNamespace: String) {
+
+  private def browserFingerprint(sr: ServerRequest): Option[Sha256Hash] = {
+    case class FingerPrintData(
+        userAgent: Option[String],
+        accept: Option[String],
+        acceptLanguage: Option[String],
+        acceptEncoding: Option[String],
+        referrer: Option[String],
+        dnt: Option[String],
+        secChUa: Option[String],
+        secChUaMobile: Option[String],
+        secChUaPlatform: Option[String],
+    )
+    object FingerPrintData {
+      given encoder: Encoder[FingerPrintData] = deriveEncoder[FingerPrintData]
+
+      given decoder: Decoder[FingerPrintData] = deriveDecoder[FingerPrintData]
+    }
+
+    val headers = sr.headers
+    val fingerPrintData = FingerPrintData(
+      headers.find(_.name.toLowerCase == "user-agent").map(_.value),
+      headers.find(_.name.toLowerCase == "accept").map(_.value),
+      headers.find(_.name.toLowerCase == "accept-language").map(_.value),
+      headers.find(_.name.toLowerCase == "accept-encoding").map(_.value),
+      headers.find(_.name.toLowerCase == "referer").map(_.value),
+      headers.find(_.name.toLowerCase == "dnt").map(_.value),
+      headers.find(_.name.toLowerCase == "sec-ch-ua").map(_.value),
+      headers.find(_.name.toLowerCase == "sec-ch-ua-mobile").map(_.value),
+      headers.find(_.name.toLowerCase == "sec-ch-ua-platform").map(_.value),
+    )
+
+    val jsonStr = fingerPrintData.asJson.dropNullValues.spaces2
+    val canonicalized = Json.canonicalizeToJcs(jsonStr).toOption
+
+    canonicalized.map(x => Sha256Hash.compute(x.getBytes))
+  }
+
+  private val metricsLabel: MetricLabels = MetricLabels.Default.copy(
+    forRequest = MetricLabels.Default.forRequest ++ List(
+      "browser_fingerprint" -> { case (_, sr) =>
+        browserFingerprint(sr) match {
+          case Some(hash) => hash.hexEncoded
+          case None       => "unknown"
+        }
+      },
+      "api_key_hash" -> { case (_, sr) =>
+        sr.header("apikey").map(x => Sha256Hash.compute(x.getBytes).hexEncoded).getOrElse("unknown")
+      },
+      "token_hash" -> { case (_, sr) =>
+        sr.header("authorization")
+          .map(_.split(" ").last)
+          .map(x => Sha256Hash.compute(x.getBytes).hexEncoded)
+          .getOrElse("unknown")
+      },
+    ),
+  )
 
   private val tapirPrometheusMetricsZIO: Task[PrometheusMetrics[Task]] = ZIO.attempt {
-    PrometheusMetrics.default[Task](registry = micrometerRegistry.getPrometheusRegistry)
+    PrometheusMetrics.default[Task](
+      namespace = metricsNamespace,
+      registry = micrometerRegistry.getPrometheusRegistry,
+      labels = metricsLabel
+    )
   }
 
   private val serverOptionsZIO: ZIO[PrometheusMetrics[Task], Throwable, Http4sServerOptions[Task]] = for {
@@ -69,10 +137,10 @@ class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry) {
 }
 
 object ZHttp4sBlazeServer {
-  def make: URIO[PrometheusMeterRegistry, ZHttp4sBlazeServer] = {
+  def make(metricsNamespace: String): URIO[PrometheusMeterRegistry, ZHttp4sBlazeServer] = {
     for {
       micrometerRegistry <- ZIO.service[PrometheusMeterRegistry]
-      zHttp4sBlazeServer = ZHttp4sBlazeServer(micrometerRegistry)
+      zHttp4sBlazeServer = ZHttp4sBlazeServer(micrometerRegistry, metricsNamespace)
     } yield zHttp4sBlazeServer
   }
 }

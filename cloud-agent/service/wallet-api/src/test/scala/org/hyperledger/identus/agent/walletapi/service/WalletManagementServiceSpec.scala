@@ -1,23 +1,24 @@
 package org.hyperledger.identus.agent.walletapi.service
 
-import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.model.WalletSeed
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.DuplicatedWalletSeed
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.TooManyPermittedWallet
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletSecretStorage
+import org.hyperledger.identus.agent.walletapi.model.{Wallet, WalletSeed}
+import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceError.{
+  DuplicatedWalletSeed,
+  TooManyPermittedWallet,
+  TooManyWebhookError
+}
+import org.hyperledger.identus.agent.walletapi.sql.{JdbcWalletNonSecretStorage, JdbcWalletSecretStorage}
 import org.hyperledger.identus.agent.walletapi.storage.WalletSecretStorage
 import org.hyperledger.identus.agent.walletapi.vault.VaultWalletSecretStorage
+import org.hyperledger.identus.event.notification.EventNotificationConfig
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import org.hyperledger.identus.test.container.DBTestUtils
-import org.hyperledger.identus.test.container.VaultTestContainerSupport
+import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
+
+import java.net.URI
 
 object WalletManagementServiceSpec
     extends ZIOSpecDefault,
@@ -30,7 +31,8 @@ object WalletManagementServiceSpec
       suite(name)(
         createWalletSpec.provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin())),
         getWalletSpec.provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin())),
-        multitenantSpec
+        multitenantSpec,
+        webhookSpec
       ) @@ TestAspect.before(DBTestUtils.runMigrationAgentDB) @@ TestAspect.sequential
 
     val suite1 = testSuite("jdbc as secret storage")
@@ -62,13 +64,13 @@ object WalletManagementServiceSpec
       for {
         svc <- ZIO.service[WalletManagementService]
         createdWallet <- svc.createWallet(Wallet("wallet-1"))
-        wallet <- svc.getWallet(createdWallet.id)
+        wallet <- svc.findWallet(createdWallet.id)
       } yield assert(wallet)(isSome(equalTo(createdWallet)))
     },
     test("get non-existing wallet") {
       for {
         svc <- ZIO.service[WalletManagementService]
-        wallet <- svc.getWallet(WalletId.random)
+        wallet <- svc.findWallet(WalletId.random)
       } yield assert(wallet)(isNone)
     },
   )
@@ -86,7 +88,7 @@ object WalletManagementServiceSpec
         secretStorage <- ZIO.service[WalletSecretStorage]
         createdWallet <- svc.createWallet(Wallet("wallet-1"))
         listedWallets <- svc.listWallets().map(_._1)
-        seed <- secretStorage.getWalletSeed.provide(ZLayer.succeed(WalletAccessContext(createdWallet.id)))
+        seed <- secretStorage.findWalletSeed.provide(ZLayer.succeed(WalletAccessContext(createdWallet.id)))
       } yield assert(listedWallets)(hasSameElements(Seq(createdWallet))) &&
         assert(seed)(isSome)
     },
@@ -97,7 +99,7 @@ object WalletManagementServiceSpec
         createdWallets <- ZIO.foreach(1 to 10)(i => svc.createWallet(Wallet(s"wallet-$i")))
         listedWallets <- svc.listWallets().map(_._1)
         seeds <- ZIO.foreach(listedWallets) { wallet =>
-          secretStorage.getWalletSeed.provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
+          secretStorage.findWalletSeed.provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
         }
       } yield assert(createdWallets)(hasSameElements(listedWallets)) &&
         assert(seeds)(forall(isSome))
@@ -109,7 +111,7 @@ object WalletManagementServiceSpec
         seed1 = WalletSeed.fromByteArray(Array.fill[Byte](64)(0)).toOption.get
         createdWallet <- svc.createWallet(Wallet("wallet-1"), Some(seed1))
         listedWallets <- svc.listWallets().map(_._1)
-        seed2 <- secretStorage.getWalletSeed.provide(ZLayer.succeed(WalletAccessContext(createdWallet.id)))
+        seed2 <- secretStorage.findWalletSeed.provide(ZLayer.succeed(WalletAccessContext(createdWallet.id)))
       } yield assert(listedWallets)(hasSameElements(Seq(createdWallet))) &&
         assert(seed2)(isSome(equalTo(seed1)))
     },
@@ -121,7 +123,7 @@ object WalletManagementServiceSpec
         createdWallets <- ZIO.foreach(seeds1) { seed => svc.createWallet(Wallet("test-wallet"), Some(seed)) }
         listedWallets <- svc.listWallets().map(_._1)
         seeds2 <- ZIO.foreach(listedWallets) { wallet =>
-          secretStorage.getWalletSeed.provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
+          secretStorage.findWalletSeed.provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
         }
       } yield assert(createdWallets)(hasSameElements(listedWallets)) &&
         assert(seeds2.flatten)(hasSameElements(seeds1))
@@ -189,9 +191,28 @@ object WalletManagementServiceSpec
         walletIds = Seq(wallet1, wallet2, wallet3).map(_.id)
         permittedWalletIds = Seq(wallet1, wallet2).map(_.id)
         maybeWallet3 <- svc
-          .getWallet(wallet3.id)
+          .findWallet(wallet3.id)
           .provide(ZLayer.succeed(WalletAdministrationContext.SelfService(permittedWalletIds)))
       } yield assert(maybeWallet3)(isNone)
+    }
+  )
+
+  private def webhookSpec = suite("webhook spec")(
+    test("cannot create more notifications than the limit") {
+      for {
+        svc <- ZIO.service[WalletManagementService]
+        wallet1 <- svc.createWallet(Wallet("wallet-1")).provide(ZLayer.succeed(WalletAdministrationContext.Admin()))
+        exit <- (for {
+          _ <- ZIO.iterate(1)(_ <= WalletManagementServiceImpl.MAX_WEBHOOK_PER_WALLET)(s =>
+            for {
+              config <- EventNotificationConfig.applyWallet(URI.create("http://fake.host").toURL, Map.empty)
+              _ <- svc.createWalletNotification(config)
+            } yield s + 1
+          )
+          oneConfigTooMuch <- EventNotificationConfig.applyWallet(URI.create("http://fake.host").toURL, Map.empty)
+          exit <- svc.createWalletNotification(oneConfigTooMuch).exit
+        } yield exit).provide(ZLayer.succeed(WalletAccessContext(wallet1.id)))
+      } yield assert(exit)(fails(isSubtype[TooManyWebhookError](anything)))
     }
   )
 

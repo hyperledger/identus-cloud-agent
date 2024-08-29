@@ -1,18 +1,16 @@
 package org.hyperledger.identus.mercury
 
-import zio._
+import org.hyperledger.identus.mercury.model.*
+import zio.*
 
-import org.hyperledger.identus.mercury.model._
 import java.util.Base64
-import scala.util.Try
-import scala.util.Failure
-import scala.util.Success
+import scala.util.{Failure, Success, Try}
 
 /** Represents all possible DIDComm operations */
 trait DidOps {
   def packSigned(msg: Message): URIO[DidAgent, SignedMesage]
   def packEncrypted(msg: Message, to: DidId): URIO[DidAgent, EncryptedMessage]
-  // FIXME theoretically DidAgent is not needed for packEncryptedAnon
+  // TODO theoretically DidAgent is not needed for packEncryptedAnon
   def packEncryptedAnon(msg: Message, to: DidId): URIO[DidAgent, EncryptedMessage]
   def unpack(str: String): URIO[DidAgent, UnpackMessage]
   def unpackBase64(dataBase64: String): RIO[DidAgent, UnpackMessage] = {

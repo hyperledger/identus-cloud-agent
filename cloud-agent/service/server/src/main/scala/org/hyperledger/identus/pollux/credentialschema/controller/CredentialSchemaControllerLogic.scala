@@ -1,10 +1,10 @@
 package org.hyperledger.identus.pollux.credentialschema.controller
 
-import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.api.http.model.{CollectionStats, Pagination}
+import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.api.util.PaginationUtils
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponsePage
 import sttp.model.Uri
-import org.hyperledger.identus.api.util.PaginationUtils
 
 case class CredentialSchemaControllerLogic(
     ctx: RequestContext,
@@ -13,10 +13,10 @@ case class CredentialSchemaControllerLogic(
     stats: CollectionStats
 ) {
 
-  def composeNextUri(uri: Uri): Option[Uri] =
+  private def composeNextUri(uri: Uri): Option[Uri] =
     PaginationUtils.composeNextUri(uri, page.contents, pagination, stats)
 
-  def composePreviousUri(uri: Uri): Option[Uri] =
+  private def composePreviousUri(uri: Uri): Option[Uri] =
     PaginationUtils.composePreviousUri(uri, page.contents, pagination, stats)
 
   def result: CredentialSchemaResponsePage = {

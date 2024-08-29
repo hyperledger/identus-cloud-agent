@@ -1,16 +1,18 @@
 package org.hyperledger.identus.agent.server.http
 
 import org.hyperledger.identus.api.http.ErrorResponse
-import org.hyperledger.identus.shared.models.StatusCode
+import org.hyperledger.identus.shared.models.{Failure, StatusCode, UnmanagedFailureException}
 import org.log4s.*
 import sttp.tapir.*
 import sttp.tapir.json.zio.jsonBody
 import sttp.tapir.server.interceptor.*
-import sttp.tapir.server.interceptor.decodefailure.DefaultDecodeFailureHandler.FailureMessages
 import sttp.tapir.server.interceptor.decodefailure.{DecodeFailureHandler, DefaultDecodeFailureHandler}
+import sttp.tapir.server.interceptor.decodefailure.DefaultDecodeFailureHandler.FailureMessages
 import sttp.tapir.server.interceptor.exception.ExceptionHandler
 import sttp.tapir.server.interceptor.reject.RejectHandler
 import sttp.tapir.server.model.ValuedEndpointOutput
+
+import scala.language.implicitConversions
 
 object CustomServerInterceptors {
 
@@ -29,18 +31,21 @@ object CustomServerInterceptors {
   }
 
   def exceptionHandler[F[_]]: ExceptionHandler[F] = ExceptionHandler.pure[F](ctx =>
-    defectHandler(
-      ErrorResponse(
-        StatusCode.InternalServerError.code,
-        s"error:InternalServerError",
-        "Internal Server Error",
-        Some(
-          s"An unexpected error occurred when processing the request: " +
-            s"path=['${ctx.request.showShort}']"
+    ctx.e match
+      case UnmanagedFailureException(failure: Failure) => defectHandler(failure)
+      case e =>
+        defectHandler(
+          ErrorResponse(
+            StatusCode.InternalServerError.code,
+            s"error:InternalServerError",
+            "Internal Server Error",
+            Some(
+              s"An unexpected error occurred when processing the request: " +
+                s"path=['${ctx.request.showShort}']"
+            )
+          ),
+          Some(ctx.e)
         )
-      ),
-      Some(ctx.e)
-    )
   )
 
   def rejectHandler[F[_]]: RejectHandler[F] = RejectHandler.pure[F](resultFailure =>

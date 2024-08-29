@@ -3,8 +3,9 @@ package org.hyperledger.identus.pollux.core.service
 import org.hyperledger.identus.event.notification.{EventNotificationService, EventNotificationServiceImpl}
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
+import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
+import org.hyperledger.identus.pollux.core.repository.CredentialRepositoryInMemory
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.{Expectation, MockSpecDefault}
@@ -23,7 +24,9 @@ object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServ
     None,
     None,
     CredentialFormat.JWT,
+    None,
     IssueCredentialRecord.Role.Issuer,
+    None,
     None,
     None,
     None,
@@ -86,7 +89,7 @@ object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServ
         result = Expectation.value(issueCredentialRecord.copy(protocolState = ProtocolState.CredentialReceived))
       )
 
-  override def spec: Spec[TestEnvironment with Scope, Any] = {
+  override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("CredentialServiceWithEventNotificationImpl")(
       test("Happy flow generates relevant events on issuer side") {
         for {
@@ -113,7 +116,10 @@ object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServ
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        issuerExpectations.toLayer >>> CredentialServiceNotifier.layer,
+        (
+          CredentialRepositoryInMemory.layer ++
+            issuerExpectations.toLayer
+        ) >>> CredentialServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("Happy flow generates relevant events on the holder side") {
@@ -124,7 +130,7 @@ object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServ
           offerReceivedRecord <- svc.receiveCredentialOffer(offerCredential())
           holderRecordId = offerReceivedRecord.id
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
-          _ <- svc.acceptCredentialOffer(holderRecordId, Some(subjectId))
+          _ <- svc.acceptCredentialOffer(holderRecordId, Some(subjectId), None)
           _ <- svc.generateJWTCredentialRequest(offerReceivedRecord.id)
           _ <- svc.markRequestSent(holderRecordId)
           _ <- svc.receiveCredentialIssue(issueCredential())
@@ -140,7 +146,10 @@ object CredentialServiceNotifierSpec extends MockSpecDefault with CredentialServ
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        holderExpectations.toLayer >>> CredentialServiceNotifier.layer,
+        (
+          CredentialRepositoryInMemory.layer ++
+            holderExpectations.toLayer
+        ) >>> CredentialServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random))
       )
     )

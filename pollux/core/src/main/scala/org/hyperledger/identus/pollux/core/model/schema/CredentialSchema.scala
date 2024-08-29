@@ -2,14 +2,14 @@ package org.hyperledger.identus.pollux.core.model.schema
 
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.*
-import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.`type`.{
   AnoncredSchemaType,
   CredentialJsonSchemaType,
   CredentialSchemaType
 }
-import org.hyperledger.identus.pollux.core.model.schema.validator.{JsonSchemaValidator, JsonSchemaValidatorImpl}
+import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.service.URIDereferencer
+import org.hyperledger.identus.shared.json.{JsonSchemaValidator, JsonSchemaValidatorImpl}
 import zio.*
 import zio.json.*
 import zio.json.ast.Json
@@ -65,13 +65,13 @@ object CredentialSchema {
   def makeGUID(author: String, id: UUID, version: String) =
     UUID.nameUUIDFromBytes(makeLongId(author, id, version).getBytes)
 
-  def make(in: Input): ZIO[Any, Nothing, CredentialSchema] = {
+  def make(in: Input): UIO[CredentialSchema] = {
     for {
       id <- zio.Random.nextUUID
       cs <- make(id, in)
     } yield cs
   }
-  def make(id: UUID, in: Input): ZIO[Any, Nothing, CredentialSchema] = {
+  def make(id: UUID, in: Input): UIO[CredentialSchema] = {
     for {
       ts <- zio.Clock.currentDateTime.map(
         _.atZoneSameInstant(ZoneOffset.UTC).toOffsetDateTime
@@ -116,25 +116,31 @@ object CredentialSchema {
   given JsonEncoder[CredentialSchema] = DeriveJsonEncoder.gen[CredentialSchema]
   given JsonDecoder[CredentialSchema] = DeriveJsonDecoder.gen[CredentialSchema]
 
+  def resolveJWTSchema(uri: URI, uriDereferencer: URIDereferencer): IO[CredentialSchemaParsingError, Json] = {
+    for {
+      content <- uriDereferencer.dereference(uri).orDieAsUnmanagedFailure
+      json <- ZIO
+        .fromEither(content.fromJson[Json])
+        .mapError(error => CredentialSchemaParsingError(error))
+    } yield json
+  }
+
   def validSchemaValidator(
       schemaId: String,
       uriDereferencer: URIDereferencer
-  ): IO[CredentialSchemaError, JsonSchemaValidator] = {
+  ): IO[InvalidURI | CredentialSchemaParsingError, JsonSchemaValidator] = {
     for {
-      uri <- ZIO.attempt(new URI(schemaId)).mapError(t => URISyntaxError(t.getMessage))
-      content <- uriDereferencer.dereference(uri).mapError(err => UnexpectedError(err.toString))
-      json <- ZIO
-        .fromEither(content.fromJson[Json])
-        .mapError(error =>
-          CredentialSchemaError.CredentialSchemaParsingError(s"Failed to parse resolved schema content as Json: $error")
-        )
+      uri <- ZIO.attempt(new URI(schemaId)).mapError(_ => InvalidURI(schemaId))
+      json <- resolveJWTSchema(uri, uriDereferencer)
       schemaValidator <- JsonSchemaValidatorImpl
         .from(json)
         .orElse(
           ZIO
             .fromEither(json.as[CredentialSchema])
-            .mapError(error => CredentialSchemaParsingError(s"Failed to parse schema content as Json or OEA: $error"))
-            .flatMap(cs => JsonSchemaValidatorImpl.from(cs.schema).mapError(SchemaError.apply))
+            .mapError(error => CredentialSchemaParsingError(error))
+            .flatMap(cs =>
+              JsonSchemaValidatorImpl.from(cs.schema).mapError(error => CredentialSchemaParsingError(error.error))
+            )
         )
     } yield schemaValidator
   }
@@ -143,10 +149,10 @@ object CredentialSchema {
       schemaId: String,
       credentialSubject: String,
       uriDereferencer: URIDereferencer
-  ): IO[CredentialSchemaError, Unit] = {
+  ): IO[InvalidURI | CredentialSchemaParsingError | CredentialSchemaValidationError, Unit] = {
     for {
       schemaValidator <- validSchemaValidator(schemaId, uriDereferencer)
-      _ <- schemaValidator.validate(credentialSubject).mapError(SchemaError.apply)
+      _ <- schemaValidator.validate(credentialSubject).mapError(CredentialSchemaValidationError.apply)
     } yield ()
   }
 
@@ -154,25 +160,25 @@ object CredentialSchema {
       schemaId: String,
       claims: String,
       uriDereferencer: URIDereferencer
-  ): IO[CredentialSchemaError, Unit] = {
+  ): IO[InvalidURI | CredentialSchemaParsingError | VCClaimsParsingError | VCClaimValidationError, Unit] = {
     for {
-      uri <- ZIO.attempt(new URI(schemaId)).mapError(t => URISyntaxError(t.getMessage))
-      content <- uriDereferencer.dereference(uri).mapError(err => UnexpectedError(err.toString))
+      uri <- ZIO.attempt(new URI(schemaId)).mapError(_ => InvalidURI(schemaId))
+      content <- uriDereferencer.dereference(uri).orDieAsUnmanagedFailure
       validAttrNames <-
         AnoncredSchemaSerDesV1.schemaSerDes
           .deserialize(content)
-          .mapError(error => CredentialSchemaParsingError(s"AnonCreds Schema parsing error: $error"))
+          .mapError(error => CredentialSchemaParsingError(error.error))
           .map(_.attrNames)
-      jsonClaims <- ZIO.fromEither(claims.fromJson[Json]).mapError(err => UnexpectedError(err))
+      jsonClaims <- ZIO.fromEither(claims.fromJson[Json]).mapError(error => VCClaimsParsingError(error))
       _ <- jsonClaims match
         case Json.Obj(fields) =>
           ZIO.foreach(fields) {
             case (k, _) if !validAttrNames.contains(k) =>
-              ZIO.fail(UnexpectedError(s"Claim name undefined in schema: $k"))
+              ZIO.fail(VCClaimValidationError(k, "Name undefined in schema"))
             case (k, Json.Str(v)) => ZIO.succeed(k -> v)
-            case (k, _)           => ZIO.fail(UnexpectedError(s"Claim value should be a string: $k"))
+            case (k, _)           => ZIO.fail(VCClaimValidationError(k, "Value should be a string"))
           }
-        case _ => ZIO.fail(UnexpectedError("Provided 'claims' is not a JSON object"))
+        case _ => ZIO.fail(VCClaimsParsingError("The JSON claims is not a JSON 'object'"))
     } yield ()
   }
 
@@ -181,16 +187,18 @@ object CredentialSchema {
       .map(credentialSchemaType => (credentialSchemaType.`type`, credentialSchemaType))
       .toMap
 
-  def resolveCredentialSchemaType(`type`: String): IO[CredentialSchemaError, CredentialSchemaType] = {
+  def resolveCredentialSchemaType(`type`: String): IO[UnsupportedCredentialSchemaType, CredentialSchemaType] = {
     ZIO
       .fromOption(supportedCredentialSchemaTypes.get(`type`))
-      .mapError(_ => UnsupportedCredentialSchemaType(s"Unsupported VC Schema type ${`type`}"))
+      .mapError(_ => UnsupportedCredentialSchemaType(`type`))
   }
 
-  def validateCredentialSchema(vcSchema: CredentialSchema): IO[CredentialSchemaError, Unit] = {
+  def validateCredentialSchema(
+      vcSchema: CredentialSchema
+  ): IO[UnsupportedCredentialSchemaType | CredentialSchemaValidationError, Unit] = {
     for {
       resolvedSchemaType <- resolveCredentialSchemaType(vcSchema.`type`)
-      _ <- resolvedSchemaType.validate(vcSchema.schema).mapError(SchemaError.apply)
+      _ <- resolvedSchemaType.validate(vcSchema.schema).mapError(CredentialSchemaValidationError.apply)
     } yield ()
   }
 

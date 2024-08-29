@@ -1,21 +1,24 @@
 package org.hyperledger.identus.presentproof.controller
 
-import org.hyperledger.identus.LogUtils.*
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
-import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.api.http.model.PaginationInput
-import org.hyperledger.identus.iam.authentication.Authenticator
-import org.hyperledger.identus.iam.authentication.Authorizer
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
-import org.hyperledger.identus.iam.authentication.SecurityLogic
+import org.hyperledger.identus.api.http.RequestContext
+import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
+import org.hyperledger.identus.presentproof.controller.http.{
+  AcceptRequestPresentationInvitation,
+  RequestPresentationAction,
+  RequestPresentationInput
+}
 import org.hyperledger.identus.presentproof.controller.PresentProofEndpoints.{
+  acceptRequestPresentationInvitation,
+  createOOBRequestPresentationInvitation,
   getAllPresentations,
   getPresentation,
   requestPresentation,
   updatePresentation
 }
-import org.hyperledger.identus.presentproof.controller.http.{RequestPresentationAction, RequestPresentationInput}
 import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.LogUtils.*
 import sttp.tapir.ztapir.*
 import zio.*
 
@@ -74,11 +77,37 @@ class PresentProofServerEndpoints(
         }
       }
 
+  private val createOOBRequestPresentationInvitationEndpoint: ZServerEndpoint[Any, Any] =
+    createOOBRequestPresentationInvitation
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
+        { case (ctx: RequestContext, action: RequestPresentationInput) =>
+          presentProofController
+            .createOOBRequestPresentationInvitation(action)(ctx)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
+        }
+      }
+
+  private val acceptRequestPresentationInvitationEndpoint: ZServerEndpoint[Any, Any] =
+    acceptRequestPresentationInvitation
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
+        { case (ctx: RequestContext, action: AcceptRequestPresentationInvitation) =>
+          presentProofController
+            .acceptRequestPresentationInvitation(action)(ctx)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
+        }
+      }
+
   val all: List[ZServerEndpoint[Any, Any]] = List(
     requestPresentationEndpoint,
     getAllPresentationsEndpoint,
     getPresentationEndpoint,
-    updatePresentationEndpoint
+    updatePresentationEndpoint,
+    createOOBRequestPresentationInvitationEndpoint,
+    acceptRequestPresentationInvitationEndpoint
   )
 }
 

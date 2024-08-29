@@ -1,11 +1,11 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.Json
 import io.circe.parser.*
 import io.circe.syntax.*
+import io.circe.Json
+import munit.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
-import munit.*
 
 class OfferCredentialSpec extends ZSuite {
 
@@ -44,7 +44,7 @@ class OfferCredentialSpec extends ZSuite {
       id = "041bf917-2cbe-460b-8d12-b1a9609505c2",
       body = body,
       attachments = Seq(attachmentDescriptor),
-      to = DidId("did:prism:test123"),
+      to = Some(DidId("did:prism:test123")),
       from = DidId("did:prism:test123")
     )
 

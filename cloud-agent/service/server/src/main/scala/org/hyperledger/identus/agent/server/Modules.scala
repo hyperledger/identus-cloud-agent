@@ -3,41 +3,44 @@ package org.hyperledger.identus.agent.server
 import com.typesafe.config.ConfigFactory
 import doobie.util.transactor.Transactor
 import io.grpc.ManagedChannelBuilder
-import org.hyperledger.identus.agent.server.config.AppConfig
-import org.hyperledger.identus.agent.server.config.SecretStorageBackend
-import org.hyperledger.identus.agent.server.config.ValidatedVaultConfig
-import org.hyperledger.identus.agent.walletapi.service.EntityService
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
+import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
+import org.hyperledger.identus.agent.server.config.{AppConfig, SecretStorageBackend, ValidatedVaultConfig}
+import org.hyperledger.identus.agent.walletapi.service.{EntityService, WalletManagementService}
 import org.hyperledger.identus.agent.walletapi.sql.{
   JdbcDIDSecretStorage,
   JdbcGenericSecretStorage,
   JdbcWalletSecretStorage
 }
 import org.hyperledger.identus.agent.walletapi.storage.{DIDSecretStorage, GenericSecretStorage, WalletSecretStorage}
-import org.hyperledger.identus.agent.walletapi.vault.*
 import org.hyperledger.identus.agent.walletapi.vault.{
   VaultDIDSecretStorage,
   VaultKVClient,
   VaultKVClientImpl,
-  VaultWalletSecretStorage
+  VaultWalletSecretStorage,
+  *
 }
 import org.hyperledger.identus.castor.core.service.DIDService
-import org.hyperledger.identus.iam.authentication.admin.AdminApiKeyAuthenticator
-import org.hyperledger.identus.iam.authentication.admin.AdminApiKeyAuthenticatorImpl
-import org.hyperledger.identus.iam.authentication.admin.AdminConfig
-import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticator
-import org.hyperledger.identus.iam.authentication.apikey.ApiKeyAuthenticatorImpl
-import org.hyperledger.identus.iam.authentication.apikey.ApiKeyConfig
-import org.hyperledger.identus.iam.authentication.apikey.AuthenticationRepository
-import org.hyperledger.identus.iam.authentication.oidc.KeycloakAuthenticator
-import org.hyperledger.identus.iam.authentication.oidc.KeycloakAuthenticatorImpl
-import org.hyperledger.identus.iam.authentication.oidc.KeycloakClientImpl
-import org.hyperledger.identus.iam.authentication.oidc.KeycloakConfig
-import org.hyperledger.identus.iam.authentication.oidc.KeycloakEntity
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement
+import org.hyperledger.identus.iam.authentication.admin.{
+  AdminApiKeyAuthenticator,
+  AdminApiKeyAuthenticatorImpl,
+  AdminConfig
+}
+import org.hyperledger.identus.iam.authentication.apikey.{
+  ApiKeyAuthenticator,
+  ApiKeyAuthenticatorImpl,
+  ApiKeyConfig,
+  AuthenticationRepository
+}
+import org.hyperledger.identus.iam.authentication.oidc.{
+  KeycloakAuthenticator,
+  KeycloakAuthenticatorImpl,
+  KeycloakClientImpl,
+  KeycloakConfig,
+  KeycloakEntity
+}
+import org.hyperledger.identus.iam.authorization.core.PermissionManagementService
 import org.hyperledger.identus.iam.authorization.keycloak.admin.KeycloakPermissionManagementService
-import org.hyperledger.identus.pollux.vc.jwt.{PrismDidResolver, DidResolver as JwtDidResolver}
-import io.iohk.atala.prism.protos.node_api.NodeServiceGrpc
+import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, PrismDidResolver}
 import org.hyperledger.identus.shared.crypto.Apollo
 import org.hyperledger.identus.shared.db.{ContextAwareTask, DbConfig, TransactorLayer}
 import org.keycloak.authorization.client.AuthzClient
@@ -47,7 +50,7 @@ import zio.http.Client
 
 object SystemModule {
 
-  private val tmp: IO[Config.Error, AppConfig] =
+  val configLayer: ZLayer[Any, Config.Error, AppConfig] = ZLayer.fromZIO(
     for {
       ret: AppConfig <- TypesafeConfigProvider
         .fromTypesafeConfig(ConfigFactory.load())
@@ -55,8 +58,7 @@ object SystemModule {
       _ <- ZIO.log(s"HTTP server endpoint is setup as '${ret.agent.httpEndpoint.publicEndpointUrl}'")
       _ <- ZIO.log(s"DIDComm server endpoint is setup as '${ret.agent.didCommEndpoint.publicEndpointUrl}'")
     } yield ret
-
-  val configLayer = ZLayer.fromZIO(tmp)
+  )
 
   val zioHttpClientLayer: ZLayer[Any, Throwable, Client] = {
     import zio.http.netty.NettyConfig
@@ -100,7 +102,7 @@ object AppModule {
     )
 
   val keycloakAuthenticatorLayer: RLayer[
-    AppConfig & WalletManagementService & Client & PermissionManagement.Service[KeycloakEntity],
+    AppConfig & WalletManagementService & Client & PermissionManagementService[KeycloakEntity],
     KeycloakAuthenticator
   ] =
     ZLayer.fromZIO {
@@ -110,7 +112,7 @@ object AppModule {
           if (!isEnabled) KeycloakAuthenticatorImpl.disabled
           else
             ZLayer.makeSome[
-              AppConfig & WalletManagementService & Client & PermissionManagement.Service[KeycloakEntity],
+              AppConfig & WalletManagementService & Client & PermissionManagementService[KeycloakEntity],
               KeycloakAuthenticator
             ](
               KeycloakConfig.layer,
@@ -122,14 +124,14 @@ object AppModule {
     }.flatten
 
   val keycloakPermissionManagementLayer
-      : RLayer[AppConfig & WalletManagementService & Client, PermissionManagement.Service[KeycloakEntity]] = {
+      : RLayer[AppConfig & WalletManagementService & Client, PermissionManagementService[KeycloakEntity]] = {
     ZLayer.fromZIO {
       ZIO
         .serviceWith[AppConfig](_.agent.authentication.keycloak.enabled)
         .map { isEnabled =>
           if (!isEnabled) KeycloakPermissionManagementService.disabled
           else
-            ZLayer.makeSome[AppConfig & WalletManagementService & Client, PermissionManagement.Service[KeycloakEntity]](
+            ZLayer.makeSome[AppConfig & WalletManagementService & Client, PermissionManagementService[KeycloakEntity]](
               KeycloakClientImpl.authzClientLayer,
               KeycloakClientImpl.layer,
               KeycloakConfig.layer,
@@ -229,36 +231,31 @@ object RepoModule {
   }
 
   val allSecretStorageLayer: TaskLayer[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage] = {
-    ZLayer.fromZIO {
-      ZIO
-        .service[AppConfig]
-        .map(_.agent.secretStorage)
-        .tap(conf => ZIO.logInfo(s"Using '${conf.backend}' as a secret storage backend"))
-        .flatMap { conf =>
-          val useSemanticPath = conf.vault.map(_.useSemanticPath).getOrElse(true)
-          conf.backend match {
-            case SecretStorageBackend.vault =>
-              ZIO.succeed(
-                ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
-                  VaultDIDSecretStorage.layer(useSemanticPath),
-                  VaultGenericSecretStorage.layer(useSemanticPath),
-                  VaultWalletSecretStorage.layer,
-                  vaultClientLayer,
-                )
-              )
-            case SecretStorageBackend.postgres =>
-              ZIO.succeed(
-                ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
-                  JdbcDIDSecretStorage.layer,
-                  JdbcGenericSecretStorage.layer,
-                  JdbcWalletSecretStorage.layer,
-                  agentContextAwareTransactorLayer,
-                )
-              )
-          }
+    SystemModule.configLayer
+      .tap { config =>
+        val backend = config.get.agent.secretStorage.backend
+        ZIO.logInfo(s"Using '${backend}' as a secret storage backend")
+      }
+      .flatMap { config =>
+        val secretStorageConfig = config.get.agent.secretStorage
+        val useSemanticPath = secretStorageConfig.vault.map(_.useSemanticPath).getOrElse(true)
+        secretStorageConfig.backend match {
+          case SecretStorageBackend.vault =>
+            ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
+              VaultDIDSecretStorage.layer(useSemanticPath),
+              VaultGenericSecretStorage.layer(useSemanticPath),
+              VaultWalletSecretStorage.layer,
+              vaultClientLayer,
+            )
+          case SecretStorageBackend.postgres =>
+            ZLayer.make[DIDSecretStorage & WalletSecretStorage & GenericSecretStorage](
+              JdbcDIDSecretStorage.layer,
+              JdbcGenericSecretStorage.layer,
+              JdbcWalletSecretStorage.layer,
+              agentContextAwareTransactorLayer,
+            )
         }
-        .provide(SystemModule.configLayer)
-    }.flatten
+      }
   }
 
 }

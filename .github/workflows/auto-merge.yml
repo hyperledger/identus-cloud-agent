@@ -1,0 +1,105 @@
+name: Auto Merge Main into Feature Branch
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, ready_for_review]
+    branches:
+      - main
+
+jobs:
+  on-pull-request:
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'autoupdate')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Update PRs
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.IDENTUS_CI_INTERNAL }}
+          script: |
+            let pr = {
+              number: ${{ github.event.pull_request.number }},
+              head: {
+                sha: "${{ github.event.pull_request.head.sha }}",
+                ref:"${{ github.event.pull_request.head.ref }}"
+              },
+              base: {
+                ref: "${{ github.event.pull_request.base.ref }}"
+              }
+            }
+            let changes = await github.rest.repos.compareCommitsWithBasehead({
+              ...context.repo,
+              basehead: `${pr.head.ref}...${pr.base.ref}`
+            });
+            // after merging main to PR the comparison becomes 'behind'
+            if (changes.data.status == 'behind') {
+              console.info("no changes detected")
+            } else {
+              console.info("changes detected")
+              let updateResult = await github.rest.pulls.updateBranch({
+                  ...context.repo,
+                  expected_head_sha: pr.head.sha,
+                  pull_number: pr.number,
+              });
+              let commentMessage = updateResult.status == 202 ? ":rocket: Merge success!" : ":bangbang: Merge failed!"
+              let commentResult = await github.rest.issues.createComment({
+                  ...context.repo,
+                  issue_number: pr.number,
+                  body: commentMessage
+              });
+            }
+  on-main-push:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Update PRs
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.IDENTUS_CI_INTERNAL }}
+          script: |
+            const { data: pullRequests } = await github.rest.pulls.list({
+                base: 'main',
+                sort: 'updated',
+                state: 'open',
+                ...context.repo
+            })
+            const labeledPullRequests = pullRequests.filter(pr => pr.labels.filter(label => label.name == 'autoupdate').length > 0)
+            for (let pr of labeledPullRequests) {
+                console.info("Check pull request number [" + `${pr.number}` + "]")
+                console.info("  -", "title:", pr.title)
+                console.info("  -", "url:", pr.html_url)
+                try {
+                    let changes = await github.rest.repos.compareCommits({
+                        ...context.repo,
+                        base: pr.head.ref,
+                        head: pr.base.ref
+                    });
+                    // after merging main to PR the comparison becomes 'behind'
+                    if (changes.data.status == 'behind') {
+                        console.info("  -", "comparison to main:", "no changes detected")
+                        console.info()
+                        continue
+                    }
+                    console.info("  -", "comparison to main:", "changes detected")
+                    // merge main to pull request
+                    let updateResult = await github.rest.pulls.updateBranch({
+                        ...context.repo,
+                        expected_head_sha: pr.head.sha,
+                        pull_number: pr.number,
+                    });
+                    // comment on pull request
+                    let commentMessage = updateResult.status == 202 ? ":rocket: Merge success" : ":bangbang: Merge failed"
+                    let commentResult = await github.rest.issues.createComment({
+                        ...context.repo,
+                        issue_number: pr.number,
+                        body: commentMessage
+                    });
+                    console.info("  - comment created", commentResult.status == 201 ? "successfully" : "unsuccessfully")
+                    console.info()
+                } catch (err) {
+                    core.error(err);
+                }
+            }

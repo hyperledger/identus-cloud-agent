@@ -1,10 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.syntax._
-
-import org.hyperledger.identus.mercury.model.{PIURI, AttachmentDescriptor, Message, DidId}
+import io.circe.*
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, Message, PIURI}
 
 /** ALL parameterS are DIDCOMMV2 format and naming conventions and follows the protocol
   * @see
@@ -74,36 +73,43 @@ object IssueCredential {
     given Decoder[Body] = deriveDecoder[Body]
   }
 
-  def makeIssueCredentialFromRequestCredential(msg: Message): IssueCredential = {
-    val rc: RequestCredential = RequestCredential.readFromMessage(msg)
+  def makeIssueCredentialFromRequestCredential(msg: Message): Either[String, IssueCredential] =
+    RequestCredential.readFromMessage(msg).map { rc =>
+      IssueCredential(
+        body = IssueCredential.Body(
+          goal_code = rc.body.goal_code,
+          comment = rc.body.comment,
+          replacement_id = None,
+          more_available = None,
+        ),
+        attachments = rc.attachments,
+        thid = msg.thid.orElse(Some(rc.id)),
+        from = rc.to,
+        to = rc.from,
+      )
+    }
 
-    IssueCredential(
-      body = IssueCredential.Body(
-        goal_code = rc.body.goal_code,
-        comment = rc.body.comment,
-        replacement_id = None,
-        more_available = None,
-      ),
-      attachments = rc.attachments,
-      thid = msg.thid.orElse(Some(rc.id)),
-      from = rc.to,
-      to = rc.from,
-    )
+  def readFromMessage(message: Message): Either[String, IssueCredential] = {
+    message.body.asJson.as[IssueCredential.Body] match
+      case Left(fail) => Left("Fail to parse IssueCredential's body: " + fail.getMessage)
+      case Right(body) =>
+        message.from match
+          case None => Left("IssueCredential MUST have the sender explicit")
+          case Some(from) =>
+            message.to match
+              case firstTo +: Seq() =>
+                Right(
+                  IssueCredential(
+                    id = message.id,
+                    `type` = message.piuri,
+                    body = body,
+                    attachments = message.attachments.getOrElse(Seq.empty),
+                    thid = message.thid,
+                    from = from,
+                    to = firstTo
+                  )
+                )
+              case tos => Left(s"IssueCredential MUST have only 1 recipient instead has '${tos}'")
   }
 
-  def readFromMessage(message: Message): IssueCredential = {
-    val body = message.body.asJson.as[IssueCredential.Body].toOption.get // TODO get
-    IssueCredential(
-      id = message.id,
-      `type` = message.piuri,
-      body = body,
-      attachments = message.attachments.getOrElse(Seq.empty),
-      thid = message.thid,
-      from = message.from.get, // TODO get
-      to = {
-        assert(message.to.length == 1, "The recipient is ambiguous. Need to have only 1 recipient") // TODO return error
-        message.to.head
-      },
-    )
-  }
 }

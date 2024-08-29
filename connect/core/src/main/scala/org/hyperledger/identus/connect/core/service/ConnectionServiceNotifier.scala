@@ -1,12 +1,13 @@
 package org.hyperledger.identus.connect.core.service
 
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.*
+import org.hyperledger.identus.connect.core.model.ConnectionRecord
+import org.hyperledger.identus.connect.core.repository.ConnectionRepository
 import org.hyperledger.identus.event.notification.{Event, EventNotificationService}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import zio.{UIO, URIO, URLayer, ZIO, ZLayer}
 
 import java.time.Duration
@@ -14,7 +15,8 @@ import java.util.UUID
 
 class ConnectionServiceNotifier(
     svc: ConnectionService,
-    eventNotificationService: EventNotificationService
+    eventNotificationService: EventNotificationService,
+    connectionRepository: ConnectionRepository,
 ) extends ConnectionService {
 
   private val connectionUpdatedEvent = "ConnectionUpdated"
@@ -73,13 +75,13 @@ class ConnectionServiceNotifier(
   ] =
     notifyOnSuccess(svc.receiveConnectionResponse(response))
 
-  private[this] def notifyOnSuccess[E](effect: ZIO[WalletAccessContext, E, ConnectionRecord]) =
-    for {
-      record <- effect
-      _ <- notify(record)
-    } yield record
+  private def notifyOnSuccess[E](effect: ZIO[WalletAccessContext, E, ConnectionRecord]) =
+    effect.tap(record => notify(record))
 
-  private[this] def notify(record: ConnectionRecord) = {
+  private def notifyOnFail(record: ConnectionRecord) =
+    notify(record)
+
+  private def notify(record: ConnectionRecord) = {
     val result = for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       producer <- eventNotificationService.producer[ConnectionRecord]("Connect")
@@ -103,9 +105,12 @@ class ConnectionServiceNotifier(
 
   override def reportProcessingFailure(
       recordId: UUID,
-      failReason: Option[String]
-  ): URIO[WalletAccessContext, Unit] =
-    svc.reportProcessingFailure(recordId, failReason)
+      failReason: Option[Failure]
+  ): URIO[WalletAccessContext, Unit] = for {
+    ret <- svc.reportProcessingFailure(recordId, failReason)
+    recordAfterFail <- connectionRepository.getById(recordId)
+    _ <- notifyOnFail(recordAfterFail)
+  } yield ret
 
   override def findAllRecords(): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
     svc.findAllRecords()
@@ -115,17 +120,17 @@ class ConnectionServiceNotifier(
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): URIO[WalletAccessContext, Seq[ConnectionRecord]] =
-    svc.findRecordsByStates(ignoreWithZeroRetries, limit, states: _*)
+    svc.findRecordsByStates(ignoreWithZeroRetries, limit, states*)
 
   override def findRecordsByStatesForAllWallets(
       ignoreWithZeroRetries: Boolean,
       limit: Int,
       states: ConnectionRecord.ProtocolState*
   ): UIO[Seq[ConnectionRecord]] =
-    svc.findRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states: _*)
+    svc.findRecordsByStatesForAllWallets(ignoreWithZeroRetries, limit, states*)
 }
 
 object ConnectionServiceNotifier {
-  val layer: URLayer[ConnectionService & EventNotificationService, ConnectionService] =
-    ZLayer.fromFunction(ConnectionServiceNotifier(_, _))
+  val layer: URLayer[ConnectionService & EventNotificationService & ConnectionRepository, ConnectionService] =
+    ZLayer.fromFunction(ConnectionServiceNotifier(_, _, _))
 }

@@ -1,19 +1,23 @@
 package org.hyperledger.identus.iam.authorization.core
 
-import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.service.EntityService
-import org.hyperledger.identus.agent.walletapi.service.EntityServiceImpl
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementService
-import org.hyperledger.identus.agent.walletapi.service.WalletManagementServiceImpl
-import org.hyperledger.identus.agent.walletapi.sql.JdbcEntityRepository
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletSecretStorage
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.ServiceError
-import org.hyperledger.identus.iam.authorization.core.PermissionManagement.Error.WalletNotFoundById
+import org.hyperledger.identus.agent.walletapi.model.{Entity, Wallet}
+import org.hyperledger.identus.agent.walletapi.service.{
+  EntityService,
+  EntityServiceImpl,
+  WalletManagementService,
+  WalletManagementServiceImpl
+}
+import org.hyperledger.identus.agent.walletapi.sql.{
+  JdbcEntityRepository,
+  JdbcWalletNonSecretStorage,
+  JdbcWalletSecretStorage
+}
+import org.hyperledger.identus.iam.authorization.core.PermissionManagementServiceError.{
+  ServiceError,
+  WalletNotFoundById
+}
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
-import org.hyperledger.identus.shared.models.WalletAdministrationContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAdministrationContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.DBTestUtils
 import zio.*
@@ -47,7 +51,7 @@ object EntityPermissionManagementSpec extends ZIOSpecDefault, PostgresTestContai
     test("grant wallet access to the user") {
       for {
         entityService <- ZIO.service[EntityService]
-        permissionService <- ZIO.service[PermissionManagement.Service[Entity]]
+        permissionService <- ZIO.service[PermissionManagementService[Entity]]
         walletService <- ZIO.service[WalletManagementService]
         wallet1 <- walletService
           .createWallet(Wallet("test"))
@@ -72,7 +76,7 @@ object EntityPermissionManagementSpec extends ZIOSpecDefault, PostgresTestContai
     test("revoke wallet is not support") {
       for {
         entityService <- ZIO.service[EntityService]
-        permissionService <- ZIO.service[PermissionManagement.Service[Entity]]
+        permissionService <- ZIO.service[PermissionManagementService[Entity]]
         walletService <- ZIO.service[WalletManagementService]
         wallet1 <- walletService
           .createWallet(Wallet("test"))
@@ -93,7 +97,7 @@ object EntityPermissionManagementSpec extends ZIOSpecDefault, PostgresTestContai
       val walletId2 = WalletId.random
       for {
         entityService <- ZIO.service[EntityService]
-        permissionService <- ZIO.service[PermissionManagement.Service[Entity]]
+        permissionService <- ZIO.service[PermissionManagementService[Entity]]
         walletService <- ZIO.service[WalletManagementService]
         wallet1 <- walletService
           .createWallet(Wallet("test", walletId1))
@@ -116,7 +120,7 @@ object EntityPermissionManagementSpec extends ZIOSpecDefault, PostgresTestContai
       val walletId2 = WalletId.random
       for {
         entityService <- ZIO.service[EntityService]
-        permissionService <- ZIO.service[PermissionManagement.Service[Entity]]
+        permissionService <- ZIO.service[PermissionManagementService[Entity]]
         walletService <- ZIO.service[WalletManagementService]
         wallet1 <- walletService
           .createWallet(Wallet("test", walletId1))

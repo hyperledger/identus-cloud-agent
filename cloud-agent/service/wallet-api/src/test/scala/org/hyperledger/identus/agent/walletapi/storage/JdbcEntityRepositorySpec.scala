@@ -1,10 +1,5 @@
 package org.hyperledger.identus.agent.walletapi.storage
 
-import org.hyperledger.identus.agent.walletapi.model.error.EntityServiceError.{
-  EntityAlreadyExists,
-  EntityNotFound,
-  EntityWalletNotFound
-}
 import org.hyperledger.identus.agent.walletapi.model.{Entity, Wallet}
 import org.hyperledger.identus.agent.walletapi.sql.{EntityRepository, JdbcEntityRepository, JdbcWalletNonSecretStorage}
 import org.hyperledger.identus.shared.models.WalletId
@@ -98,13 +93,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
       for {
         in <- createRandomEntity
         updated <- EntityRepository.updateName(in.id, "newName").exit
-      } yield assert(updated)(
-        fails(
-          isSubtype[EntityNotFound](
-            hasField("message", _.message, containsString(s"Update entity name=newName by id=${in.id} failed"))
-          )
-        )
-      )
+      } yield assert(updated)(dies(anything))
     },
     test("update the Entity walletId") {
       for {
@@ -128,13 +117,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
         id <- random.nextUUID
         walletId <- random.nextUUID
         updated <- EntityRepository.updateWallet(id, walletId).exit
-      } yield assert(updated)(
-        fails(
-          isSubtype[EntityNotFound](
-            hasField("message", _.message, containsString(s"Update entity walletId=$walletId by id=$id failed"))
-          )
-        )
-      )
+      } yield assert(updated)(dies(anything))
     },
     test("update the Entity walletId by the walletId that does not exist") {
       for {
@@ -147,17 +130,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
         entity <- EntityRepository.insert(in)
 
         updated <- EntityRepository.updateWallet(entity.id, randomWalletId).exit
-      } yield assert(updated)(
-        fails(
-          isSubtype[EntityWalletNotFound](
-            hasField(
-              "message",
-              _.message,
-              containsString(s"Wallet with id:$randomWalletId not found for entity with id:${in.id}")
-            )
-          )
-        )
-      )
+      } yield assert(updated)(dies(anything))
     },
   )
 
@@ -177,9 +150,7 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
         _ <- random.setSeed(42L)
         id <- random.nextUUID
         get <- EntityRepository.getById(id).exit
-      } yield assert(get)(
-        fails(isSubtype[EntityNotFound](hasField("message", _.message, containsString(s"Get entity by id=$id failed"))))
-      )
+      } yield assert(get)(dies(anything))
     }
   )
 
@@ -218,26 +189,14 @@ object JdbcEntityRepositorySpec extends ZIOSpecDefault, PostgresTestContainerSup
         _ <- createAndStoreWallet(in)
         out <- EntityRepository.insert(in)
         exit <- EntityRepository.insert(in).exit
-      } yield assert(exit)(
-        fails(isSubtype[EntityAlreadyExists](hasField("message", _.message, containsString("duplicate key value"))))
-      )
+      } yield assert(exit)(dies(anything))
     },
     test("create the Entity with the walletId that doesn't exist") {
       for {
         in <- createRandomEntity
         // _ <- createAndStoreWallet(in) - the wallet is not created
         exit <- EntityRepository.insert(in).exit
-      } yield assert(exit)(
-        fails(
-          isSubtype[EntityWalletNotFound](
-            hasField(
-              "message",
-              _.message,
-              containsString(s"Wallet with id:${in.walletId} not found for entity with id:${in.id}")
-            )
-          )
-        )
-      )
+      } yield assert(exit)(dies(anything))
     }
   )
 

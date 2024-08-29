@@ -2,9 +2,9 @@ package org.hyperledger.identus.issue.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.issue.controller.http.CreateIssueCredentialRecordRequest.annotations
-import sttp.tapir.Schema.annotations.{description, encodedExample}
-import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.{Schema, Validator}
+import sttp.tapir.json.zio.schemaForZioJsonValue
+import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID
@@ -50,7 +50,13 @@ final case class CreateIssueCredentialRecordRequest(
     issuingDID: Option[String],
     @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
-    connectionId: UUID
+    connectionId: Option[UUID],
+    @description(annotations.goalcode.description)
+    @encodedExample(annotations.goalcode.example)
+    goalCode: Option[String] = None,
+    @description(annotations.goal.description)
+    @encodedExample(annotations.goal.example)
+    goal: Option[String] = None,
 )
 
 object CreateIssueCredentialRecordRequest {
@@ -128,15 +134,34 @@ object CreateIssueCredentialRecordRequest {
         )
 
     object connectionId
-        extends Annotation[UUID](
+        extends Annotation[Option[UUID]](
           description = """
             |The unique identifier of a DIDComm connection that already exists between the this issuer agent and the holder cloud or edeg agent.
             |It should be the identifier of a connection that exists in the issuer agent's database.
             |This connection will be used to execute the issue credential protocol.
+            |Note: connectionId is only required when the offer is from existing connection.
+            |connectionId is not required when the offer is from invitation for connectionless issuance.
             |""".stripMargin,
-          example = UUID.fromString("d9569cec-c81e-4779-aa86-0d5994d82676")
+          example = Some(UUID.fromString("d9569cec-c81e-4779-aa86-0d5994d82676"))
         )
 
+    object goalcode
+        extends Annotation[Option[String]](
+          description = """
+            | A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.
+            | goalcode is optional and can be provided when the offer is from invitation for connectionless issuance.
+            |""".stripMargin,
+          example = Some("issue-vc")
+        )
+
+    object goal
+        extends Annotation[Option[String]](
+          description = """
+          | A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.
+          | goal is optional and can be provided when the offer is from invitation for connectionless issuance.
+          |""".stripMargin,
+          example = Some("To issue a Faber College Graduate credential")
+        )
   }
 
   given encoder: JsonEncoder[CreateIssueCredentialRecordRequest] =

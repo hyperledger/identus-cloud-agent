@@ -1,9 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.invitation.v2
-import io.circe.syntax.*
 import io.circe.{Decoder, Encoder}
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId, PIURI}
 import org.hyperledger.identus.mercury.model.AttachmentDescriptor.attachmentDescriptorEncoderV2
-import io.circe.generic.semiauto._
-import org.hyperledger.identus.mercury.model.{PIURI, AttachmentDescriptor, DidId}
 
 /** Out-Of-Band invitation
   * @see
@@ -14,11 +14,12 @@ final case class Invitation(
     `type`: PIURI = Invitation.`type`,
     from: DidId,
     body: Invitation.Body,
-    attachments: Option[Seq[AttachmentDescriptor]] = None
+    attachments: Option[Seq[AttachmentDescriptor]] = None,
+    created_time: Option[Long] = None,
+    expires_time: Option[Long] = None,
 ) {
   assert(`type` == "https://didcomm.org/out-of-band/2.0/invitation")
   def toBase64: String = java.util.Base64.getUrlEncoder.encodeToString(this.asJson.deepDropNullValues.noSpaces.getBytes)
-
 }
 
 object Invitation {

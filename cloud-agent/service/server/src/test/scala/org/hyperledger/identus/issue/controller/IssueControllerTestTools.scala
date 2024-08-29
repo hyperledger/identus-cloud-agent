@@ -15,8 +15,8 @@ import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
-import sttp.client3.testing.SttpBackendStub
 import sttp.client3.{DeserializationException, Response, UriContext}
+import sttp.client3.testing.SttpBackendStub
 import sttp.monad.MonadError
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
@@ -44,7 +44,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
       .load(AppConfig.config)
   )
 
-  private[this] def makeResolver(lookup: Map[String, DIDDocument]): DidResolver = (didUrl: String) => {
+  private def makeResolver(lookup: Map[String, DIDDocument]): DidResolver = (didUrl: String) => {
     lookup
       .get(didUrl)
       .fold(

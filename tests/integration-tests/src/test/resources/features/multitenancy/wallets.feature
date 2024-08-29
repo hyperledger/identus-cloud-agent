@@ -1,3 +1,4 @@
+@multitenancy
 Feature: Wallets management
 
 Scenario Outline: Successful creation of a new wallet

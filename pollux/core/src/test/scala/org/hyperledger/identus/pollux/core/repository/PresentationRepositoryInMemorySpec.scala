@@ -1,11 +1,11 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import zio._
-import zio.test._
+import zio.*
+import zio.test.*
 
 object PresentationRepositoryInMemorySpec extends ZIOSpecDefault {
 
-  override def spec: Spec[TestEnvironment with Scope, Any] =
+  override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("Presentation Repository In Memory test suite")(
       PresentationRepositorySpecSuite.testSuite,
       PresentationRepositorySpecSuite.multitenantTestSuite

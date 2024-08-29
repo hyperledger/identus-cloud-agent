@@ -11,8 +11,6 @@ inThisBuild(
     run / connectInput := true,
     releaseUseGlobalVersion := false,
     versionScheme := Some("semver-spec"),
-    githubOwner := "hyperledger",
-    githubRepository := "identus-cloud-agent",
     resolvers += "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
     resolvers += "jitpack" at "https://jitpack.io",
   )
@@ -26,33 +24,31 @@ coberturaFile := target.value / "coverage" / "coverage-report" / "cobertura.xml"
 
 inThisBuild(
   Seq(
+    scalacOptions ++= Seq("-encoding", "UTF-8"),
     scalacOptions ++= Seq(
-      "-encoding",
-      "UTF-8",
       "-feature",
       "-deprecation",
       "-unchecked",
-      "-Dquill.macro.log=false", // disable quill macro logs
-      "-Wunused:all",
-      "-Wconf:any:warning" // TODO: change unused imports to errors, Wconf configuration string is different from scala 2, figure out how!
-      // TODO "-feature",
-      // TODO "-Xfatal-warnings",
-      // TODO "-Yexplicit-nulls",
-      // "-Ysafe-init",
-    )
+    ),
+    scalacOptions += "-Wunused:all",
+    scalacOptions += "-Wconf:cat=deprecation:warning,any:error", // "-Wconf:help",
+    // scalacOptions += "-Yexplicit-nulls",
+    // scalacOptions += "-Ysafe-init",
+    // scalacOptions +=  "-Werror", // <=> "-Xfatal-warnings"
+    scalacOptions += "-Dquill.macro.log=false", // disable quill macro logs // TODO https://github.com/zio/zio-protoquill/issues/470
   )
 )
 
 lazy val V = new {
-  val munit = "1.0.0-RC1" // "0.7.29"
+  val munit = "1.0.0" // "0.7.29"
   val munitZio = "0.2.0"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.0.22"
-  val zioConfig = "4.0.1"
-  val zioLogging = "2.1.17"
+  val zio = "2.1.1"
+  val zioConfig = "4.0.2"
+  val zioLogging = "2.2.4"
   val zioJson = "0.6.2"
-  val zioHttp = "3.0.0-RC6"
+  val zioHttp = "3.0.0-RC7"
   val zioCatsInterop = "3.3.0" // TODO "23.1.0.2" // https://mvnrepository.com/artifact/dev.zio/zio-interop-cats
   val zioMetricsConnector = "2.3.1"
   val zioMock = "1.0.0-RC12"
@@ -82,9 +78,10 @@ lazy val V = new {
   val scalaUri = "4.0.3"
 
   val jwtCirceVersion = "9.4.6"
-  val zioPreludeVersion = "1.0.0-RC24"
+  val zioPreludeVersion = "1.0.0-RC26"
 
-  val apollo = "1.2.16"
+  val apollo = "1.3.5"
+
   val jsonSchemaValidator = "1.3.2" // scala-steward:off //TODO 1.3.2 need to fix:
   // [error] 	org.hyperledger.identus.pollux.core.model.schema.AnoncredSchemaTypeSpec
   // [error] 	org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaSpec
@@ -92,7 +89,7 @@ lazy val V = new {
   val vaultDriver = "6.2.0"
   val micrometer = "1.11.11"
 
-  val nimbusJwt = "10.0.0"
+  val nimbusJwt = "9.37.3"
   val keycloak = "23.0.7" // scala-steward:off //TODO 24.0.3 // update all quay.io/keycloak/keycloak
 
 }
@@ -120,8 +117,12 @@ lazy val D = new {
   val circeGeneric: ModuleID = "io.circe" %% "circe-generic" % V.circe
   val circeParser: ModuleID = "io.circe" %% "circe-parser" % V.circe
 
+  val networkntJsonSchemaValidator = "com.networknt" % "json-schema-validator" % V.jsonSchemaValidator
   val jwtCirce = "com.github.jwt-scala" %% "jwt-circe" % V.jwtCirceVersion
   val jsonCanonicalization: ModuleID = "io.github.erdtman" % "java-json-canonicalization" % "1.1"
+  val titaniumJsonLd: ModuleID = "com.apicatalog" % "titanium-json-ld" % "1.4.0"
+  val jakartaJson: ModuleID = "org.glassfish" % "jakarta.json" % "2.0.1"
+  val ironVC: ModuleID = "com.apicatalog" % "iron-verifiable-credentials" % "0.14.0"
   val scodecBits: ModuleID = "org.scodec" %% "scodec-bits" % "1.1.38"
 
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
@@ -129,9 +130,7 @@ lazy val D = new {
   val peerDidcommx: ModuleID = "org.didcommx" % "peerdid" % "0.5.0"
   val didScala: ModuleID = "app.fmgp" %% "did" % "0.0.0+113-61efa271-SNAPSHOT"
 
-  // Customized version of numbus jose jwt
-  // from https://github.com/goncalo-frade-iohk/Nimbus-JWT_Fork/commit/8a6665c25979e771afae29ce8c965c8b0312fefb
-  val nimbusJwt: ModuleID = "io.iohk.atala" % "nimbus-jose-jwt" % V.nimbusJwt
+  val nimbusJwt: ModuleID = "com.nimbusds" % "nimbus-jose-jwt" % V.nimbusJwt
 
   val typesafeConfig: ModuleID = "com.typesafe" % "config" % V.typesafeConfig
   val scalaPbRuntime: ModuleID =
@@ -163,6 +162,7 @@ lazy val D = new {
   val mockito: ModuleID = "org.scalatestplus" %% "mockito-4-11" % V.mockito % Test
   val monocle: ModuleID = "dev.optics" %% "monocle-core" % V.monocle % Test
   val monocleMacro: ModuleID = "dev.optics" %% "monocle-macro" % V.monocle % Test
+  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % Test
 
   val apollo = "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo
 
@@ -179,13 +179,28 @@ lazy val D_Shared = new {
       D.zio,
       D.zioHttp,
       D.scalaUri,
+      D.zioPrelude,
       // FIXME: split shared DB stuff as subproject?
       D.doobieHikari,
       D.doobiePostgres,
       D.zioCatsInterop,
-      D.zioPrelude,
+    )
+}
+
+lazy val D_SharedJson = new {
+  lazy val dependencies: Seq[ModuleID] =
+    Seq(
+      D.zio,
+      D.zioJson,
+      D.circeCore,
+      D.circeGeneric,
+      D.circeParser,
       D.jsonCanonicalization,
+      D.titaniumJsonLd,
+      D.jakartaJson,
+      D.ironVC,
       D.scodecBits,
+      D.networkntJsonSchemaValidator
     )
 }
 
@@ -300,27 +315,17 @@ lazy val D_Pollux = new {
 
 lazy val D_Pollux_VC_JWT = new {
 
-  private lazy val circeJsonSchema = ("net.reactivecore" %% "circe-json-schema" % "0.4.1")
-    .cross(CrossVersion.for3Use2_13)
-    .exclude("io.circe", "circe-core_2.13")
-    .exclude("io.circe", "circe-generic_2.13")
-    .exclude("io.circe", "circe-parser_2.13")
-
   val zio = "dev.zio" %% "zio" % V.zio
   val zioPrelude = "dev.zio" %% "zio-prelude" % V.zioPreludeVersion
-
-  val networkntJsonSchemaValidator = "com.networknt" % "json-schema-validator" % V.jsonSchemaValidator
 
   val zioTest = "dev.zio" %% "zio-test" % V.zio % Test
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % V.zio % Test
   val zioTestMagnolia = "dev.zio" %% "zio-test-magnolia" % V.zio % Test
 
-  val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % Test
-
   // Dependency Modules
   val zioDependencies: Seq[ModuleID] = Seq(zio, zioPrelude, zioTest, zioTestSbt, zioTestMagnolia)
   val baseDependencies: Seq[ModuleID] =
-    zioDependencies :+ D.jwtCirce :+ circeJsonSchema :+ networkntJsonSchemaValidator :+ D.nimbusJwt :+ scalaTest
+    zioDependencies :+ D.jwtCirce :+ D.networkntJsonSchemaValidator :+ D.nimbusJwt :+ D.scalaTest
 
   // Project Dependencies
   lazy val polluxVcJwtDependencies: Seq[ModuleID] = baseDependencies
@@ -419,6 +424,7 @@ publish / skip := true
 
 val commonSetttings = Seq(
   testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+  libraryDependencies ++= Seq(D.zioTest, D.zioTestSbt, D.zioTestMagnolia),
   // Needed for Kotlin coroutines that support new memory management mode
   resolvers += "JetBrains Space Maven Repository" at "https://maven.pkg.jetbrains.space/public/p/kotlinx-coroutines/maven",
   resolvers += "jitpack" at "https://jitpack.io",
@@ -448,11 +454,19 @@ val commonSetttings = Seq(
   }
 )
 
+lazy val commonConfigure: Project => Project = _.settings(
+  Compile / scalacOptions += "-Yimports:java.lang,scala,scala.Predef,org.hyperledger.identus.Predef",
+  Test / scalacOptions -= "-Yimports:java.lang,scala,scala.Predef,org.hyperledger.identus.Predef",
+).dependsOn(predef)
+
 // #####################
 // #####  shared  ######
 // #####################
 
+lazy val predef = (project in file("shared/predef"))
+
 lazy val shared = (project in file("shared/core"))
+  .configure(commonConfigure)
   .settings(commonSetttings)
   .settings(
     name := "shared",
@@ -460,7 +474,17 @@ lazy val shared = (project in file("shared/core"))
     libraryDependencies ++= D_Shared.dependencies
   )
 
+lazy val sharedJson = (project in file("shared/json"))
+  .settings(commonSetttings)
+  .settings(
+    name := "shared-json",
+    crossPaths := false,
+    libraryDependencies ++= D_SharedJson.dependencies
+  )
+  .dependsOn(shared)
+
 lazy val sharedCrypto = (project in file("shared/crypto"))
+  .configure(commonConfigure)
   .settings(commonSetttings)
   .settings(
     name := "shared-crypto",
@@ -470,6 +494,7 @@ lazy val sharedCrypto = (project in file("shared/crypto"))
   .dependsOn(shared)
 
 lazy val sharedTest = (project in file("shared/test"))
+  .configure(commonConfigure)
   .settings(commonSetttings)
   .settings(
     name := "shared-test",
@@ -488,6 +513,7 @@ lazy val sharedTest = (project in file("shared/test"))
   */
 lazy val models = project
   .in(file("mercury/models"))
+  .configure(commonConfigure)
   .settings(name := "mercury-data-models")
   .settings(
     libraryDependencies ++= Seq(D.zio),
@@ -498,7 +524,8 @@ lazy val models = project
     ), // TODO try to remove this from this module
     // libraryDependencies += D.didScala
   )
-  .settings(libraryDependencies += D.nimbusJwt) //FIXME just for the DidAgent
+  .settings(libraryDependencies += D.nimbusJwt) // FIXME just for the DidAgent
+  .dependsOn(shared)
 
 /* TODO move code from agentDidcommx to here
 models implementation for didcommx () */
@@ -514,6 +541,7 @@ models implementation for didcommx () */
 
 lazy val protocolConnection = project
   .in(file("mercury/protocol-connection"))
+  .configure(commonConfigure)
   .settings(name := "mercury-protocol-connection")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -522,6 +550,7 @@ lazy val protocolConnection = project
 
 lazy val protocolCoordinateMediation = project
   .in(file("mercury/protocol-coordinate-mediation"))
+  .configure(commonConfigure)
   .settings(name := "mercury-protocol-coordinate-mediation")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -530,6 +559,7 @@ lazy val protocolCoordinateMediation = project
 
 lazy val protocolDidExchange = project
   .in(file("mercury/protocol-did-exchange"))
+  .configure(commonConfigure)
   .settings(name := "mercury-protocol-did-exchange")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -537,6 +567,7 @@ lazy val protocolDidExchange = project
 
 lazy val protocolInvitation = project
   .in(file("mercury/protocol-invitation"))
+  .configure(commonConfigure)
   .settings(name := "mercury-protocol-invitation")
   .settings(libraryDependencies += D.zio)
   .settings(
@@ -550,14 +581,16 @@ lazy val protocolInvitation = project
   )
   .dependsOn(models)
 
-lazy val protocolMercuryMailbox = project
-  .in(file("mercury/protocol-mercury-mailbox"))
-  .settings(name := "mercury-protocol-mailbox")
-  .settings(libraryDependencies += D.zio)
-  .dependsOn(models, protocolInvitation, protocolRouting)
+// lazy val protocolMercuryMailbox = project
+//   .in(file("mercury/protocol-mercury-mailbox"))
+//   .settings(predefSetttings)
+//   .settings(name := "mercury-protocol-mailbox")
+//   .settings(libraryDependencies += D.zio)
+//   .dependsOn(models, protocolInvitation, protocolRouting)
 
 lazy val protocolLogin = project
   .in(file("mercury/protocol-outofband-login"))
+  .configure(commonConfigure)
   .settings(name := "mercury-protocol-outofband-login")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies += D.zio)
@@ -567,26 +600,30 @@ lazy val protocolLogin = project
 
 lazy val protocolReportProblem = project
   .in(file("mercury/protocol-report-problem"))
+  .configure(commonConfigure)
   .settings(name := "mercury-protocol-report-problem")
   .settings(libraryDependencies += D.munitZio)
   .dependsOn(models)
 
 lazy val protocolRouting = project
   .in(file("mercury/protocol-routing"))
+  .configure(commonConfigure)
   .settings(name := "mercury-protocol-routing-2-0")
   .settings(libraryDependencies += D.zio)
   .dependsOn(models)
 
 lazy val protocolIssueCredential = project
   .in(file("mercury/protocol-issue-credential"))
+  .configure(commonConfigure)
   .settings(name := "mercury-protocol-issue-credential")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
-  .dependsOn(models)
+  .dependsOn(models, protocolInvitation)
 
 lazy val protocolRevocationNotification = project
   .in(file("mercury/protocol-revocation-notification"))
+  .configure(commonConfigure)
   .settings(name := "mercury-protocol-revocation-notification")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -595,19 +632,22 @@ lazy val protocolRevocationNotification = project
 
 lazy val protocolPresentProof = project
   .in(file("mercury/protocol-present-proof"))
+  .configure(commonConfigure)
   .settings(name := "mercury-protocol-present-proof")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
   .settings(libraryDependencies += D.munitZio)
-  .dependsOn(models)
+  .dependsOn(models, protocolInvitation)
 
 lazy val vc = project
   .in(file("mercury/vc"))
+  .configure(commonConfigure)
   .settings(name := "mercury-verifiable-credentials")
   .dependsOn(protocolIssueCredential, protocolPresentProof) //TODO merge those two modules into this one
 
 lazy val protocolTrustPing = project
   .in(file("mercury/protocol-trust-ping"))
+  .configure(commonConfigure)
   .settings(name := "mercury-protocol-trust-ping")
   .settings(libraryDependencies += D.zio)
   .settings(libraryDependencies ++= Seq(D.circeCore, D.circeGeneric, D.circeParser))
@@ -621,6 +661,7 @@ lazy val protocolTrustPing = project
 // TODO move stuff to the models module
 lazy val resolver = project // maybe merge into models
   .in(file("mercury/resolver"))
+  .configure(commonConfigure)
   .settings(name := "mercury-resolver")
   .settings(
     libraryDependencies ++= Seq(
@@ -640,6 +681,7 @@ lazy val resolver = project // maybe merge into models
 
 lazy val agent = project // maybe merge into models
   .in(file("mercury/agent"))
+  .configure(commonConfigure)
   .settings(name := "mercury-agent-core")
   .settings(libraryDependencies ++= Seq(D.zioLog, D.zioSLF4J))
   .dependsOn(
@@ -648,7 +690,7 @@ lazy val agent = project // maybe merge into models
     protocolCoordinateMediation,
     protocolInvitation,
     protocolRouting,
-    protocolMercuryMailbox,
+    // protocolMercuryMailbox,
     protocolLogin,
     protocolIssueCredential,
     protocolRevocationNotification,
@@ -662,6 +704,7 @@ lazy val agent = project // maybe merge into models
 /** agents implementation with didcommx */
 lazy val agentDidcommx = project
   .in(file("mercury/agent-didcommx"))
+  .configure(commonConfigure)
   .settings(name := "mercury-agent-didcommx")
   .settings(libraryDependencies += D.didcommx)
   .settings(libraryDependencies += D.munitZio)
@@ -680,6 +723,7 @@ lazy val agentDidcommx = project
 // ####################
 val prismNodeClient = project
   .in(file("prism-node/client/scala-client"))
+  .configure(commonConfigure)
   .settings(
     name := "prism-node-client",
     libraryDependencies ++= Seq(D.scalaPbGrpc, D.scalaPbRuntime, D.grpcOkHttp),
@@ -698,6 +742,7 @@ val prismNodeClient = project
 
 lazy val castorCore = project
   .in(file("castor"))
+  .configure(commonConfigure)
   .settings(commonSetttings)
   .settings(
     name := "castor-core",
@@ -712,27 +757,39 @@ lazy val castorCore = project
 
 lazy val polluxVcJWT = project
   .in(file("pollux/vc-jwt"))
+  .configure(commonConfigure)
   .settings(commonSetttings)
   .settings(
     name := "pollux-vc-jwt",
     libraryDependencies ++= D_Pollux_VC_JWT.polluxVcJwtDependencies
   )
-  .dependsOn(castorCore)
+  .dependsOn(castorCore, sharedJson)
 
 lazy val polluxCore = project
   .in(file("pollux/core"))
+  .configure(commonConfigure)
   .settings(commonSetttings)
   .settings(
     name := "pollux-core",
     libraryDependencies ++= D_Pollux.coreDependencies
   )
-  .dependsOn(shared)
-  .dependsOn(agentWalletAPI)
-  .dependsOn(polluxVcJWT)
-  .dependsOn(vc, resolver, agentDidcommx, eventNotification, polluxAnoncreds)
+  .dependsOn(
+    shared,
+    castorCore % "compile->compile;test->test", // Test is for MockDIDService
+    agentWalletAPI % "compile->compile;test->test", // Test is for MockManagedDIDService
+    vc,
+    resolver,
+    agentDidcommx,
+    eventNotification,
+    polluxAnoncreds,
+    polluxVcJWT,
+    polluxSDJWT,
+    polluxPreX
+  )
 
 lazy val polluxDoobie = project
   .in(file("pollux/sql-doobie"))
+  .configure(commonConfigure)
   .settings(commonSetttings)
   .settings(
     name := "pollux-sql-doobie",
@@ -742,14 +799,19 @@ lazy val polluxDoobie = project
   .dependsOn(shared)
   .dependsOn(sharedTest % "test->test")
 
+lazy val polluxPreX = project
+  .in(file("pollux/prex"))
+  .settings(commonSetttings)
+  .settings(name := "pollux-prex")
+  .dependsOn(shared, sharedJson)
+
 // ########################
 // ### Pollux Anoncreds ###
 // ########################
 
 lazy val polluxAnoncreds = project
   .in(file("pollux/anoncreds"))
-  .enablePlugins(BuildInfoPlugin)
-  .enablePlugins(JavaAppPackaging)
+  .configure(commonConfigure)
   .settings(
     name := "pollux-anoncreds",
     Compile / unmanagedJars += baseDirectory.value / "anoncreds-jvm-1.0-SNAPSHOT.jar",
@@ -761,8 +823,19 @@ lazy val polluxAnoncreds = project
 
 lazy val polluxAnoncredsTest = project
   .in(file("pollux/anoncredsTest"))
-  .settings(libraryDependencies ++= Seq("org.scalatest" %% "scalatest" % "3.2.15" % Test))
+  .configure(commonConfigure)
+  .settings(libraryDependencies += D.scalaTest)
   .dependsOn(polluxAnoncreds % "compile->test")
+
+lazy val polluxSDJWT = project
+  .in(file("pollux/sd-jwt"))
+  .configure(commonConfigure)
+  .settings(commonSetttings)
+  .settings(
+    name := "pollux-sd-jwt",
+    libraryDependencies += "io.iohk.atala" % "sd-jwt-kmp-jvm" % "0.1.2"
+  )
+  .dependsOn(sharedCrypto)
 
 // #####################
 // #####  connect  #####
@@ -770,6 +843,7 @@ lazy val polluxAnoncredsTest = project
 
 lazy val connectCore = project
   .in(file("connect/core"))
+  .configure(commonConfigure)
   .settings(commonSetttings)
   .settings(
     name := "connect-core",
@@ -781,6 +855,7 @@ lazy val connectCore = project
 
 lazy val connectDoobie = project
   .in(file("connect/sql-doobie"))
+  .configure(commonConfigure)
   .settings(commonSetttings)
   .settings(
     name := "connect-sql-doobie",
@@ -796,6 +871,7 @@ lazy val connectDoobie = project
 
 lazy val eventNotification = project
   .in(file("event-notification"))
+  .configure(commonConfigure)
   .settings(
     name := "event-notification",
     libraryDependencies ++= D_EventNotification.baseDependencies
@@ -808,6 +884,7 @@ lazy val eventNotification = project
 
 lazy val agentWalletAPI = project
   .in(file("cloud-agent/service/wallet-api"))
+  .configure(commonConfigure)
   .settings(commonSetttings)
   .settings(
     name := "cloud-agent-wallet-api",
@@ -827,6 +904,7 @@ lazy val agentWalletAPI = project
 
 lazy val cloudAgentServer = project
   .in(file("cloud-agent/service/server"))
+  .configure(commonConfigure)
   .settings(commonSetttings)
   .settings(
     name := "identus-cloud-agent",
@@ -852,16 +930,16 @@ lazy val cloudAgentServer = project
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(agentWalletAPI % "compile->compile;test->test")
   .dependsOn(
+    sharedTest % "test->test",
     agent,
-    polluxCore,
+    polluxCore % "compile->compile;test->test",
     polluxDoobie,
     polluxAnoncreds,
-    connectCore,
+    connectCore % "compile->compile;test->test", // Test is for MockConnectionService
     connectDoobie,
     castorCore,
-    eventNotification
+    eventNotification,
   )
-  .dependsOn(sharedTest % "test->test")
 
 // ############################
 // ####  Release process  #####
@@ -879,6 +957,7 @@ releaseProcess := Seq[ReleaseStep](
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   shared,
+  sharedJson,
   sharedCrypto,
   sharedTest,
   models,
@@ -886,7 +965,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   protocolCoordinateMediation,
   protocolDidExchange,
   protocolInvitation,
-  protocolMercuryMailbox,
+  // protocolMercuryMailbox,
   protocolLogin,
   protocolReportProblem,
   protocolRouting,
@@ -904,6 +983,8 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(
   polluxDoobie,
   polluxAnoncreds,
   polluxAnoncredsTest,
+  polluxSDJWT,
+  polluxPreX,
   connectCore,
   connectDoobie,
   agentWalletAPI,

@@ -9,8 +9,8 @@ import org.hyperledger.identus.issue.controller.IssueEndpoints
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryEndpoints
 import org.hyperledger.identus.pollux.credentialschema.{SchemaRegistryEndpoints, VerificationPolicyEndpoints}
 import org.hyperledger.identus.system.controller.SystemEndpoints
-import sttp.apispec.openapi.*
 import sttp.apispec.{SecurityScheme, Tag}
+import sttp.apispec.openapi.*
 import sttp.model.headers.AuthenticationScheme
 
 import scala.collection.immutable.ListMap

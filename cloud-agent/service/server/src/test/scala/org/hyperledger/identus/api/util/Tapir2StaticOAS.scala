@@ -1,15 +1,16 @@
 package org.hyperledger.identus.api.util
 
-import org.hyperledger.identus.agent.server.AgentHttpServer
 import org.hyperledger.identus.agent.server.http.DocModels
+import org.hyperledger.identus.agent.server.AgentHttpServer
 import org.hyperledger.identus.castor.controller.{DIDController, DIDRegistrarController}
 import org.hyperledger.identus.connect.controller.ConnectionController
-import org.hyperledger.identus.credential.status.controller.CredentialStatusController
+import org.hyperledger.identus.credentialstatus.controller.CredentialStatusController
 import org.hyperledger.identus.event.controller.EventController
-import org.hyperledger.identus.iam.authentication.DefaultAuthenticator
+import org.hyperledger.identus.iam.authentication.{DefaultAuthenticator, Oid4vciAuthenticatorFactory}
 import org.hyperledger.identus.iam.entity.http.controller.EntityController
 import org.hyperledger.identus.iam.wallet.http.controller.WalletManagementController
 import org.hyperledger.identus.issue.controller.IssueController
+import org.hyperledger.identus.oid4vci.controller.CredentialIssuerController
 import org.hyperledger.identus.pollux.credentialdefinition.controller.CredentialDefinitionController
 import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaController,
@@ -28,7 +29,7 @@ import scala.util.Using
 
 object Tapir2StaticOAS extends ZIOAppDefault {
 
-  @main override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = {
+  @main override def run: ZIO[Any & ZIOAppArgs & Scope, Any, Any] = {
     val effect = for {
       args <- getArgs
       _ <- ZIO.when(args.length != 2)(ZIO.fail("Usage: Tapir2StaticOAS <output file> <server url>"))
@@ -55,7 +56,9 @@ object Tapir2StaticOAS extends ZIOAppDefault {
         ZLayer.succeed(mock[EntityController]) ++
         ZLayer.succeed(mock[WalletManagementController]) ++
         ZLayer.succeed(mock[DefaultAuthenticator]) ++
-        ZLayer.succeed(mock[EventController])
+        ZLayer.succeed(mock[EventController]) ++
+        ZLayer.succeed(mock[CredentialIssuerController]) ++
+        ZLayer.succeed(mock[Oid4vciAuthenticatorFactory])
     )
   }
 

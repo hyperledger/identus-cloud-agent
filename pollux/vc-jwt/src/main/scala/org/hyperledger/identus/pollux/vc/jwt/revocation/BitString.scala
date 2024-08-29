@@ -5,8 +5,8 @@ import zio.{IO, UIO, ZIO}
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.util
-import java.util.Base64
 import java.util.zip.{GZIPInputStream, GZIPOutputStream}
+import java.util.Base64
 
 class BitString private (val bitSet: util.BitSet, val size: Int) {
   def setRevokedInPlace(index: Int, value: Boolean): IO[IndexOutOfBounds, Unit] =
@@ -20,8 +20,10 @@ class BitString private (val bitSet: util.BitSet, val size: Int) {
   def revokedCount(): UIO[Int] = ZIO.succeed(bitSet.stream().count().toInt)
 
   def encoded: IO[EncodingError, String] = {
+
     for {
-      bitSetByteArray <- ZIO.succeed(bitSet.toByteArray)
+      bitSetByteArray <- ZIO.succeed(bitSet.toByteArray.map(x => BitString.reverseBits(x).toByte))
+
       /*
       This is where the size constructor parameter comes into play (i.e. the initial bitstring size requested by the user).
       Interestingly, the underlying 'bitSet.toByteArray()' method only returns the byte array that are 'in use', which means the bytes needed to hold the current bits that are set to true.
@@ -52,6 +54,15 @@ object BitString {
    */
   val MIN_SL2021_SIZE: Int = 131072
 
+  private def reverseBits(b: Int): Int = {
+    var result: Int = 0
+    for (i <- 0 until 8) {
+      val bit = (b >> i) & 1
+      result = (result << 1) | bit
+    }
+    result
+  }
+
   def getInstance(): IO[BitStringError, BitString] = getInstance(MIN_SL2021_SIZE)
 
   def getInstance(size: Int): IO[BitStringError, BitString] = {
@@ -65,7 +76,7 @@ object BitString {
     } yield {
       val bais = new ByteArrayInputStream(ba)
       val gzipInputStream = new GZIPInputStream(bais)
-      val byteArray = gzipInputStream.readAllBytes()
+      val byteArray = gzipInputStream.readAllBytes().map(x => BitString.reverseBits(x).toByte)
       BitString(util.BitSet.valueOf(byteArray), byteArray.length * 8)
     }
   }

@@ -4,28 +4,25 @@ import com.nimbusds.jose.jwk.OctetKeyPair
 import doobie.*
 import doobie.postgres.implicits.*
 import doobie.util.invariant.InvalidEnum
-import io.circe.*
-import io.circe.parser.*
-import io.circe.syntax.*
-import org.hyperledger.identus.agent.walletapi.model.Wallet
-import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState, KeyManagementMode}
-import org.hyperledger.identus.castor.core.model.ProtoModelHelper.*
-import org.hyperledger.identus.castor.core.model.did.EllipticCurve
-import org.hyperledger.identus.castor.core.model.did.InternalKeyPurpose
-import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
-import org.hyperledger.identus.castor.core.model.did.{PrismDID, PrismDIDOperation, ScheduledDIDOperationStatus}
-import org.hyperledger.identus.event.notification.EventNotificationConfig
 import io.iohk.atala.prism.protos.node_models
+import org.hyperledger.identus.agent.walletapi.model.{KeyManagementMode, ManagedDIDState, PublicationState}
+import org.hyperledger.identus.castor.core.model.did.{
+  EllipticCurve,
+  InternalKeyPurpose,
+  PrismDID,
+  PrismDIDOperation,
+  ScheduledDIDOperationStatus,
+  VerificationRelationship
+}
+import org.hyperledger.identus.castor.core.model.ProtoModelHelper.*
 import org.hyperledger.identus.shared.crypto.jwk.JWK
 import org.hyperledger.identus.shared.models.WalletId
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
 
-import java.net.URI
-import java.net.URL
+import java.net.{URI, URL}
 import java.time.Instant
-import java.util.UUID
 import scala.collection.immutable.ArraySeq
 import scala.util.Try
 
@@ -207,66 +204,6 @@ package object sql {
         updatedAt = now,
         didIndex = state.didIndex,
         walletId = walletId
-      )
-    }
-  }
-
-  final case class WalletRow(
-      id: WalletId,
-      name: String,
-      createdAt: Instant,
-      updatedAt: Instant
-  ) {
-    def toDomain: Wallet = {
-      Wallet(
-        id: WalletId,
-        name: String,
-        createdAt: Instant,
-        updatedAt: Instant
-      )
-    }
-  }
-
-  object WalletRow {
-    def from(wallet: Wallet): WalletRow = {
-      WalletRow(
-        id = wallet.id,
-        name = wallet.name,
-        createdAt = wallet.createdAt,
-        updatedAt = wallet.updatedAt
-      )
-    }
-  }
-
-  final case class WalletNofiticationRow(
-      id: UUID,
-      walletId: WalletId,
-      url: URL,
-      customHeaders: String,
-      createdAt: Instant,
-  ) {
-    def toDomain: Try[EventNotificationConfig] = {
-      decode[Map[String, String]](customHeaders).toTry
-        .map { headers =>
-          EventNotificationConfig(
-            id = id,
-            walletId = walletId,
-            url = url,
-            customHeaders = headers,
-            createdAt = createdAt,
-          )
-        }
-    }
-  }
-
-  object WalletNofiticationRow {
-    def from(config: EventNotificationConfig): WalletNofiticationRow = {
-      WalletNofiticationRow(
-        id = config.id,
-        walletId = config.walletId,
-        url = config.url,
-        customHeaders = config.customHeaders.asJson.noSpacesSortKeys,
-        createdAt = config.createdAt,
       )
     }
   }

@@ -52,5 +52,5 @@ users can write down their mnemonic phrase, making it more convenient to keep tr
 
 By using BIP39, users have options to choose a mnemonic phrase length as well as a passphrase.
 There are many tools for generating a BIP39 seed including but not limited to:
-- <https://iancoleman.io/bip39/> (use the BIP39 seed field which provides a 128-chars hex string)
+- [BIP39](https://iancoleman.io/bip39/) (use the BIP39 seed field which provides a 128-chars hex string)
 - [BIP39 - implementations section](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#other-implementations) also provides a list of implementations

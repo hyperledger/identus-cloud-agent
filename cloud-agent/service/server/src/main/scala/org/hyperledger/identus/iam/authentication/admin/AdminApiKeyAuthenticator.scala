@@ -1,9 +1,12 @@
 package org.hyperledger.identus.iam.authentication.admin
 
 import org.hyperledger.identus.agent.walletapi.model.Entity
-import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
-import org.hyperledger.identus.iam.authentication.EntityAuthorizer
-import org.hyperledger.identus.iam.authentication.{AuthenticationError, Credentials}
+import org.hyperledger.identus.iam.authentication.{
+  AuthenticationError,
+  AuthenticatorWithAuthZ,
+  Credentials,
+  EntityAuthorizer
+}
 import zio.*
 
 trait AdminApiKeyAuthenticator extends AuthenticatorWithAuthZ[Entity], EntityAuthorizer {

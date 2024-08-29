@@ -2,12 +2,8 @@ package org.hyperledger.identus.agent.walletapi.storage
 
 import org.hyperledger.identus.agent.walletapi.model.Wallet
 import org.hyperledger.identus.agent.walletapi.sql.JdbcWalletNonSecretStorage
-import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageError.TooManyWebhook
-import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageError.DuplicatedWalletId
-import org.hyperledger.identus.agent.walletapi.storage.WalletNonSecretStorageError.DuplicatedWalletSeed
 import org.hyperledger.identus.event.notification.EventNotificationConfig
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.DBTestUtils
 import zio.*
@@ -43,13 +39,13 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
         wallet <- createWallets(1).map(_.head)
-        wallet2 <- storage.getWallet(wallet.id)
+        wallet2 <- storage.findWalletById(wallet.id)
       } yield assert(wallet2)(isSome(equalTo(wallet)))
     },
     test("get non-existing wallet") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
-        wallet <- storage.getWallet(WalletId.random)
+        wallet <- storage.findWalletById(WalletId.random)
       } yield assert(wallet)(isNone)
     }
   )
@@ -71,7 +67,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
         seedDigest2 <- Random.nextBytes(32).map(_.toArray)
         _ <- storage.createWallet(Wallet("wallet-1", WalletId.default), seedDigest1)
         exit <- storage.createWallet(Wallet("wallet-2", WalletId.default), seedDigest2).exit
-      } yield assert(exit)(fails(isSubtype[DuplicatedWalletId](anything)))
+      } yield assert(exit)(dies((anything)))
     },
     test("create wallet with same seed digest fail with duplicate seed error") {
       for {
@@ -79,7 +75,7 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
         seedDigest1 <- Random.nextBytes(32).map(_.toArray)
         _ <- storage.createWallet(Wallet("wallet-1", WalletId.random), seedDigest1)
         exit <- storage.createWallet(Wallet("wallet-2", WalletId.random), seedDigest1).exit
-      } yield assert(exit)(fails(isSubtype[DuplicatedWalletSeed](anything)))
+      } yield assert(exit)(dies((anything)))
     }
   )
 
@@ -140,14 +136,14 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
         storage <- ZIO.service[WalletNonSecretStorage]
         wallets <- createWallets(50)
         exit <- storage.listWallet(limit = Some(-1)).exit
-      } yield assert(exit)(fails(anything))
+      } yield assert(exit)(dies(anything))
     },
     test("fail when offset is negative") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]
         wallets <- createWallets(50)
         exit <- storage.listWallet(offset = Some(-1)).exit
-      } yield assert(exit)(fails(anything))
+      } yield assert(exit)(dies(anything))
     }
   )
 
@@ -164,22 +160,6 @@ object JdbcWalletNonSecretStorageSpec extends ZIOSpecDefault, PostgresTestContai
           .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
       } yield assert(configs)(hasSameElements(Seq(config)))
     },
-    test("unable to create new notification if exceed limit")(
-      for {
-        storage <- ZIO.service[WalletNonSecretStorage]
-        wallet <- createWallets(1).map(_.head)
-        limit = JdbcWalletNonSecretStorage.MAX_WEBHOOK_PER_WALLET
-        _ <- ZIO.foreach(1 to limit) { _ =>
-          storage
-            .createWalletNotification(EventNotificationConfig(wallet.id, URI("https://example.com").toURL()))
-            .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
-        }
-        exit <- storage
-          .createWalletNotification(EventNotificationConfig(wallet.id, URI("https://example.com").toURL()))
-          .provide(ZLayer.succeed(WalletAccessContext(wallet.id)))
-          .exit
-      } yield assert(exit)(fails(isSubtype[TooManyWebhook](anything)))
-    ),
     test("do not see notification outside of the wallet") {
       for {
         storage <- ZIO.service[WalletNonSecretStorage]

@@ -14,6 +14,9 @@ import models.*
 import net.serenitybdd.screenplay.Ability
 import net.serenitybdd.screenplay.Actor
 import net.serenitybdd.screenplay.HasTeardown
+import net.serenitybdd.screenplay.Question
+import org.hyperledger.identus.client.models.Connection
+import org.hyperledger.identus.client.models.IssueCredentialRecord
 import java.net.URL
 import java.time.OffsetDateTime
 
@@ -29,6 +32,7 @@ open class ListenToEvents(
     var credentialEvents: MutableList<CredentialEvent> = mutableListOf()
     var presentationEvents: MutableList<PresentationEvent> = mutableListOf()
     var didEvents: MutableList<DidEvent> = mutableListOf()
+    var authCodeCallbackEvents: MutableList<Pair<String, String>> = mutableListOf()
 
     private fun route(application: Application) {
         application.routing {
@@ -46,6 +50,12 @@ open class ListenToEvents(
                 }
                 call.respond(HttpStatusCode.OK)
             }
+            get("/auth-cb") {
+                val authCode = call.parameters["code"]!!
+                val state = call.parameters["state"]!!
+                authCodeCallbackEvents.add(Pair(authCode, state))
+                call.respond(HttpStatusCode.OK, "Login Successfully")
+            }
         }
     }
 
@@ -56,6 +66,42 @@ open class ListenToEvents(
 
         fun with(actor: Actor): ListenToEvents {
             return actor.abilityTo(ListenToEvents::class.java)
+        }
+
+        fun presentationProofStatus(actor: Actor): Question<PresentationStatusAdapter.Status?> {
+            return Question.about("presentation status").answeredBy {
+                val proofEvent = with(actor).presentationEvents.lastOrNull {
+                    it.data.thid == actor.recall<String>("thid")
+                }
+                proofEvent?.data?.status
+            }
+        }
+
+        fun connectionState(actor: Actor): Question<Connection.State?> {
+            return Question.about("connection state").answeredBy {
+                val lastEvent = with(actor).connectionEvents.lastOrNull {
+                    it.data.thid == actor.recall<Connection>("connection").thid
+                }
+                lastEvent?.data?.state
+            }
+        }
+
+        fun credentialState(actor: Actor): Question<IssueCredentialRecord.ProtocolState?> {
+            return Question.about("credential state").answeredBy {
+                val credentialEvent = ListenToEvents.with(actor).credentialEvents.lastOrNull {
+                    it.data.thid == actor.recall<String>("thid")
+                }
+                credentialEvent?.data?.protocolState
+            }
+        }
+
+        fun didStatus(actor: Actor): Question<String> {
+            return Question.about("did status").answeredBy {
+                val didEvent = ListenToEvents.with(actor).didEvents.lastOrNull {
+                    it.data.did == actor.recall<String>("shortFormDid")
+                }
+                didEvent?.data?.status
+            }
         }
     }
 

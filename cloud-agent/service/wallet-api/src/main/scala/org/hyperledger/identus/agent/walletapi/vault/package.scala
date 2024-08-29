@@ -3,14 +3,12 @@ package org.hyperledger.identus.agent.walletapi
 import com.nimbusds.jose.jwk.OctetKeyPair
 import org.hyperledger.identus.agent.walletapi.model.WalletSeed
 import org.hyperledger.identus.shared.crypto.jwk.JWK
-import org.hyperledger.identus.shared.models.HexString
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{HexString, WalletId}
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
 
-import scala.util.Failure
-import scala.util.Try
+import scala.util.{Failure, Try}
 
 package object vault {
   val SEMANTIC_PATH_METADATA_KEY: String = "semanticPath"
