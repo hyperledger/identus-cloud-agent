@@ -170,7 +170,7 @@ class JdbcPresentationRepository(
   given walletIdGet: Get[WalletId] = Get[UUID].map(id => WalletId.fromUUID(id))
   given walletIdPut: Put[WalletId] = Put[UUID].contramap[WalletId](_.toUUID)
 
-  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(???))
+  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(UnexpectedCodeExecutionPath))
   given invitationPut: Put[Invitation] = Put[String].contramap(_.asJson.toString)
 
   override def createPresentationRecord(record: PresentationRecord): URIO[WalletAccessContext, Unit] = {

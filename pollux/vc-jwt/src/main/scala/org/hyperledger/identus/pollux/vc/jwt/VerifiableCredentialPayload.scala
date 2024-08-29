@@ -300,7 +300,6 @@ object CredentialPayload {
     implicit val verifiableCredentialPayloadEncoder: Encoder[VerifiableCredentialPayload] = {
       case (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) => w3cVerifiableCredentialPayload.asJson
       case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) => jwtVerifiableCredentialPayload.asJson
-      case (_: AnoncredVerifiableCredentialPayload)                         => UnexpectedCodeExecutionPath
     }
 
     implicit val refreshServiceDecoder: Decoder[RefreshService] =
@@ -587,7 +586,6 @@ object CredentialVerification {
         W3CCredential.verify(w3cVerifiableCredentialPayload, options)(didResolver, uriResolver)
       case jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload =>
         JwtCredential.verify(jwtVerifiableCredentialPayload, options)(didResolver, uriResolver)
-      case (_: AnoncredVerifiableCredentialPayload) => UnexpectedCodeExecutionPath
     }
   }
 
