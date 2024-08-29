@@ -120,7 +120,7 @@ object PresentProofEndpoints {
 
   val createOOBRequestPresentationInvitation: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
-    (RequestContext, OOBRequestPresentationInput),
+    (RequestContext, RequestPresentationInput),
     ErrorResponse,
     PresentationStatus,
     Any
@@ -143,7 +143,7 @@ object PresentProofEndpoints {
       .securityIn(jwtAuthHeader)
       .in("present-proof" / "presentations" / "invitation")
       .in(extractFromRequest[RequestContext](RequestContext.apply))
-      .in(jsonBody[OOBRequestPresentationInput].description("The present proof creation request."))
+      .in(jsonBody[RequestPresentationInput].description("The present proof creation request."))
       .out(
         statusCode(StatusCode.Created).description(
           "The proof presentation request invitation was created successfully and that can be delivered as out-of-band to a peer Agent.."

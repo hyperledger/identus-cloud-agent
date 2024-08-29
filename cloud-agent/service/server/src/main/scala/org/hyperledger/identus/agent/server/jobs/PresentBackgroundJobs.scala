@@ -675,9 +675,10 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         Unit
       ] = {
         val proverPresentationPendingToGeneratedFlow = for {
-          walletAccessContext <- buildWalletAccessContextLayer(
-            requestPresentation.to.getOrElse(throw new RuntimeException("to is None is not possible"))
-          )
+          walletAccessContext <- ZIO
+            .fromOption(requestPresentation.to)
+            .flatMap(buildWalletAccessContextLayer)
+            .mapError(_ => PresentationError.RequestPresentationMissingField(id.value, "recipient"))
           _ <- for {
             presentationService <- ZIO.service[PresentationService]
             prover <- createPrismDIDIssuerFromPresentationCredentials(id, credentialsToUse.getOrElse(Nil))
@@ -696,24 +697,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                   presentationPayload.toW3CPresentationPayload,
                   prover
                 )
-                presentation <- ZIO.succeed(
-                  Presentation(
-                    body = Presentation.Body(
-                      goal_code = requestPresentation.body.goal_code,
-                      comment = requestPresentation.body.comment
-                    ),
-                    attachments = Seq(
-                      AttachmentDescriptor
-                        .buildBase64Attachment(
-                          payload = signedJwtPresentation.value.getBytes(),
-                          mediaType = Some(PresentCredentialFormat.JWT.name)
-                        )
-                    ),
-                    thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
-                    from = requestPresentation.to.getOrElse(throw new RuntimeException("to is None is not possible")),
-                    to = requestPresentation.from.getOrElse(throw new RuntimeException("from is None is not possible"))
-                  )
-                )
+                presentation <- createPresentation(id, requestPresentation, signedJwtPresentation)
               } yield presentation
             _ <- presentationService
               .markPresentationGenerated(id, presentation)
@@ -722,6 +706,36 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         } yield ()
 
         proverPresentationPendingToGeneratedFlow
+      }
+
+      private def createPresentation(
+          id: DidCommID,
+          requestPresentation: RequestPresentation,
+          signedJwtPresentation: JWT
+      ): ZIO[Any, PresentationError, Presentation] = {
+        for {
+          from <- ZIO
+            .fromOption(requestPresentation.to)
+            .mapError(_ => PresentationError.RequestPresentationMissingField(id.value, "recipient"))
+          to <- ZIO
+            .fromOption(requestPresentation.from)
+            .mapError(_ => PresentationError.RequestPresentationMissingField(id.value, "sender"))
+        } yield Presentation(
+          body = Presentation.Body(
+            goal_code = requestPresentation.body.goal_code,
+            comment = requestPresentation.body.comment
+          ),
+          attachments = Seq(
+            AttachmentDescriptor
+              .buildBase64Attachment(
+                payload = signedJwtPresentation.value.getBytes(),
+                mediaType = Some(PresentCredentialFormat.JWT.name)
+              )
+          ),
+          thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
+          from = from,
+          to = to
+        )
       }
 
       private def handleSDJWT(
@@ -733,9 +747,10 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         ERROR,
         Unit
       ] = for {
-        walletAccessContext <- buildWalletAccessContextLayer(
-          requestPresentation.to.getOrElse(throw new RuntimeException("to is None is not possible"))
-        )
+        walletAccessContext <- ZIO
+          .fromOption(requestPresentation.to)
+          .flatMap(buildWalletAccessContextLayer)
+          .mapError(_ => PresentationError.RequestPresentationMissingField(id.value, "recipient"))
         result <-
           for {
             presentationService <- ZIO.service[PresentationService]
@@ -765,9 +780,10 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         maybeCredentialsToUseJson match {
           case Some(credentialsToUseJson) =>
             val proverPresentationPendingToGeneratedFlow = for {
-              walletAccessContext <- buildWalletAccessContextLayer(
-                requestPresentation.to.getOrElse(throw new RuntimeException("to is None is not possible"))
-              )
+              walletAccessContext <- ZIO
+                .fromOption(requestPresentation.to)
+                .flatMap(buildWalletAccessContextLayer)
+                .mapError(_ => PresentationError.RequestPresentationMissingField(id.value, "recipient"))
               result <- for {
                 presentationService <- ZIO.service[PresentationService]
                 anoncredCredentialProofs <-

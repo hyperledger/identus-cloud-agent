@@ -44,6 +44,12 @@ object PresentationError {
         s"Request Presentation with multi attachments: $presentationId"
       )
 
+  final case class RequestPresentationMissingField(presentationId: String, field: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        s"Request Presentation missing $field field: $presentationId"
+      )
+
   final case class IssuedCredentialNotFoundError(cause: String)
       extends PresentationError(
         StatusCode.InternalServerError,
@@ -115,7 +121,12 @@ object PresentationError {
         StatusCode.InternalServerError,
         error
       )
-
+  object MissingConnectionIdForPresentationRequest
+      extends PresentationError(
+        StatusCode.BadRequest,
+        s"Presentation Request missing connectionId"
+      )
+      
   final case class MissingAnoncredPresentationRequest(error: String)
       extends PresentationError(
         StatusCode.InternalServerError,
