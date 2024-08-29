@@ -91,12 +91,15 @@ object IssueEndpoints {
           .description("The credential issuance record was created successfully, and is returned in the response body.")
       )
       .out(jsonBody[IssueCredentialRecord].description("The issue credential record."))
-      .name("createCredentialOffer")
-      .summary("As a credential issuer, create a new credential offer that will be sent to a holder Agent.")
+      .name("createCredentialOfferInvitation")
+      .summary(
+        "As a credential issuer, create a new credential offer Invitation that will be delivered as out-of-band to a peer Agent."
+      )
       .description("""
-        |Creates a new credential offer that will be delivered, through a previously established DIDComm connection, to a holder Agent.
-        |The subsequent credential offer message adheres to the [Issue Credential Protocol 3.0 - Offer Credential](https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential#offer-credential) specification.
-        |The created offer can be of two types: 'JWT' or 'AnonCreds'.
+        |Creates a new credential offer invitation to be delivered as an out-of-band message. 
+        |The invitation message adheres to the OOB specification as outlined [here](https://identity.foundation/didcomm-messaging/spec/#invitation),
+        |with the credential offer message attached according to the [Issue Credential Protocol 3.0 - Offer Credential specification](https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential#offer-credential).
+        |The created offer attachment can be of three types: 'JWT', 'AnonCreds', or 'SDJWT'.
         |""".stripMargin)
       .tag(tagName)
 
