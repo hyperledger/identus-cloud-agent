@@ -87,36 +87,6 @@ class PresentProofControllerImpl(
           request.goal,
           expirationDuration
         )
-    // request match {
-    //   case req: RequestPresentationInput =>
-    //     createPresentationRecord(
-    //       verifierDID,
-    //       proverDID,
-    //       connectionId,
-    //       req.credentialFormat,
-    //       req.proofs,
-    //       req.options.map(o => Options(o.challenge, o.domain)),
-    //       req.claims,
-    //       req.anoncredPresentationRequest,
-    //       req.goalCode,
-    //       req.goal,
-    //       expirationDuration
-    //     )
-    //   case req: RequestPresentationInput =>
-    //     createPresentationRecord(
-    //       verifierDID,
-    //       proverDID,
-    //       connectionId,
-    //       req.credentialFormat,
-    //       req.proofs,
-    //       req.options.map(o => Options(o.challenge, o.domain)),
-    //       req.claims,
-    //       req.anoncredPresentationRequest,
-    //       req.goalCode,
-    //       req.goal,
-    //       Some(appConfig.pollux.presentationInvitationExpiry)
-    //     )
-    // }
   }
 
   private def createPresentationRecord(
