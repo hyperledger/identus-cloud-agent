@@ -4,12 +4,22 @@ import com.networknt.schema.{JsonSchema, SpecVersion}
 import io.circe.*
 import io.circe.generic.semiauto.*
 import io.circe.Json as CirceJson
-import org.hyperledger.identus.shared.json.{JsonInterop, JsonSchemaError, JsonSchemaUtils}
+import org.hyperledger.identus.shared.json.{JsonInterop, JsonPath, JsonPathError, JsonSchemaError, JsonSchemaUtils}
 import zio.*
 import zio.json.ast.Json as ZioJson
 
-// TODO: define proper type
-type JsonPath = String
+opaque type JsonPathValue = String
+
+object JsonPathValue {
+  given Encoder[JsonPathValue] = Encoder.encodeString
+  given Decoder[JsonPathValue] = Decoder.decodeString
+  given Conversion[String, JsonPathValue] = identity
+
+  extension (jpv: JsonPathValue) {
+    def toJsonPath: IO[JsonPathError, JsonPath] = JsonPath.compile(jpv)
+    def value: String = jpv
+  }
+}
 
 opaque type FieldFilter = ZioJson
 
@@ -29,10 +39,11 @@ object FieldFilter {
 
 case class Field(
     id: Option[String] = None,
-    path: Seq[JsonPath] = Seq.empty,
+    path: Seq[JsonPathValue] = Seq.empty,
     name: Option[String] = None,
     purpose: Option[String] = None,
-    filter: Option[FieldFilter] = None
+    filter: Option[FieldFilter] = None,
+    optional: Option[Boolean] = None
 )
 
 object Field {
