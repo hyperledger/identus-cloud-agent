@@ -843,6 +843,7 @@ object W3CCredential {
       jsonProof <- proof match
         case b: EcdsaSecp256k1Signature2019Proof => ZIO.succeed(b.asJson.dropNullValues)
         case c: EddsaJcs2022Proof                => ZIO.succeed(c.asJson.dropNullValues)
+        case _: DataIntegrityProof               => UnexpectedCodeExecutionPath
       verifiableCredentialWithProof = jsonCred.deepMerge(Map("proof" -> jsonProof).asJson)
     } yield verifiableCredentialWithProof
 

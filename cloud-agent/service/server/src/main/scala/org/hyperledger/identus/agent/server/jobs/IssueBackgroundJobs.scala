@@ -641,7 +641,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
           case walletNotFound: WalletNotFoundError            => ZIO.unit
           case CredentialServiceError.RecordNotFound(_, _)    => ZIO.unit
           case CredentialServiceError.UnsupportedDidFormat(_) => ZIO.unit
-          case failure: Failure                               => ??? // FIXME
+          case failure: Failure                               => ZIO.unit
           case ((walletAccessContext, failure)) =>
             for {
               credentialService <- ZIO.service[CredentialService]

@@ -152,15 +152,16 @@ class JdbcPresentationRepository(
   given roleGet: Get[Role] = Get[String].map(Role.valueOf)
   given rolePut: Put[Role] = Put[String].contramap(_.toString)
 
-  given presentationGet: Get[Presentation] = Get[String].map(decode[Presentation](_).getOrElse(???))
+  given presentationGet: Get[Presentation] =
+    Get[String].map(decode[Presentation](_).getOrElse(UnexpectedCodeExecutionPath))
   given presentationPut: Put[Presentation] = Put[String].contramap(_.asJson.toString)
 
   given requestPresentationGet: Get[RequestPresentation] =
-    Get[String].map(decode[RequestPresentation](_).getOrElse(???))
+    Get[String].map(decode[RequestPresentation](_).getOrElse(UnexpectedCodeExecutionPath))
   given requestPresentationPut: Put[RequestPresentation] = Put[String].contramap(_.asJson.toString)
 
   given proposePresentationGet: Get[ProposePresentation] =
-    Get[String].map(decode[ProposePresentation](_).getOrElse(???))
+    Get[String].map(decode[ProposePresentation](_).getOrElse(UnexpectedCodeExecutionPath))
   given proposePresentationPut: Put[ProposePresentation] = Put[String].contramap(_.asJson.toString)
 
   given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
@@ -169,7 +170,7 @@ class JdbcPresentationRepository(
   given walletIdGet: Get[WalletId] = Get[UUID].map(id => WalletId.fromUUID(id))
   given walletIdPut: Put[WalletId] = Put[UUID].contramap[WalletId](_.toUUID)
 
-  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(???))
+  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(UnexpectedCodeExecutionPath))
   given invitationPut: Put[Invitation] = Put[String].contramap(_.asJson.toString)
 
   override def createPresentationRecord(record: PresentationRecord): URIO[WalletAccessContext, Unit] = {

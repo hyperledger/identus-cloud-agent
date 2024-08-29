@@ -41,17 +41,20 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given roleGet: Get[Role] = Get[String].map(Role.valueOf)
   given rolePut: Put[Role] = Put[String].contramap(_.toString)
 
-  given offerCredentialGet: Get[OfferCredential] = Get[String].map(decode[OfferCredential](_).getOrElse(???))
+  given offerCredentialGet: Get[OfferCredential] =
+    Get[String].map(decode[OfferCredential](_).getOrElse(UnexpectedCodeExecutionPath))
   given offerCredentialPut: Put[OfferCredential] = Put[String].contramap(_.asJson.toString)
 
-  given requestCredentialGet: Get[RequestCredential] = Get[String].map(decode[RequestCredential](_).getOrElse(???))
+  given requestCredentialGet: Get[RequestCredential] =
+    Get[String].map(decode[RequestCredential](_).getOrElse(UnexpectedCodeExecutionPath))
   given requestCredentialPut: Put[RequestCredential] = Put[String].contramap(_.asJson.toString)
 
   given acRequestMetadataGet: Get[AnoncredCredentialRequestMetadata] =
-    Get[String].map(_.fromJson[AnoncredCredentialRequestMetadata].getOrElse(???))
+    Get[String].map(_.fromJson[AnoncredCredentialRequestMetadata].getOrElse(UnexpectedCodeExecutionPath))
   given acRequestMetadataPut: Put[AnoncredCredentialRequestMetadata] = Put[String].contramap(_.toJson)
 
-  given issueCredentialGet: Get[IssueCredential] = Get[String].map(decode[IssueCredential](_).getOrElse(???))
+  given issueCredentialGet: Get[IssueCredential] =
+    Get[String].map(decode[IssueCredential](_).getOrElse(UnexpectedCodeExecutionPath))
   given issueCredentialPut: Put[IssueCredential] = Put[String].contramap(_.asJson.toString)
 
   given keyIdGet: Get[KeyId] = Get[String].map(KeyId(_))
@@ -60,7 +63,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
   given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
   given failurePut: Put[Failure] = Put[String].contramap(_.asFailureInfo.toJson)
 
-  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(???))
+  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(UnexpectedCodeExecutionPath))
   given invitationPut: Put[Invitation] = Put[String].contramap(_.asJson.toString)
 
   override def create(record: IssueCredentialRecord): URIO[WalletAccessContext, Unit] = {
