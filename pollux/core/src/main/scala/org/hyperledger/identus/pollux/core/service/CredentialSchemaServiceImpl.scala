@@ -32,9 +32,12 @@ class CredentialSchemaServiceImpl(
     CredentialSchemaValidationError(e)
   }
 
-  override def getByGUID(guid: UUID): IO[CredentialSchemaServiceError, CredentialSchema] = {
+  override def getByGUID(
+      guid: UUID,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+  ): IO[CredentialSchemaServiceError, CredentialSchema] = {
     for {
-      resultOpt <- credentialSchemaRepository.findByGuid(guid)
+      resultOpt <- credentialSchemaRepository.findByGuid(guid, resolutionMethod)
       result <- ZIO.fromOption(resultOpt).mapError(_ => CredentialSchemaGuidNotFoundError(guid))
     } yield result
   }
@@ -42,26 +45,30 @@ class CredentialSchemaServiceImpl(
   def getBy(
       author: String,
       id: UUID,
-      version: String
+      version: String,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
   ): Result[CredentialSchema] = {
-    getByGUID(CredentialSchema.makeGUID(author, id, version))
+    getByGUID(CredentialSchema.makeGUID(author, id, version), resolutionMethod)
   }
 
   override def update(
       guid: UUID,
-      in: CredentialSchema.Input
+      in: CredentialSchema.Input,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
   ): Result[CredentialSchema] = {
     for {
-      existingVersions <- credentialSchemaRepository.getAllVersions(guid, in.author)
-      _ <- if existingVersions.isEmpty then
-        ZIO.fail(
-          CredentialSchemaUpdateError(
-            guid,
-            in.version,
-            in.author,
-            s"No Schema exists of author: ${in.author}, with provided id: $guid"
+      existingVersions <- credentialSchemaRepository.getAllVersions(guid, in.author, resolutionMethod)
+      _ <-
+        if existingVersions.isEmpty then
+          ZIO.fail(
+            CredentialSchemaUpdateError(
+              guid,
+              in.version,
+              in.author,
+              s"No Schema exists of author: ${in.author}, with provided id: $guid"
+            )
           )
-        ) else ZIO.unit
+        else ZIO.unit
       resolutionMethod = existingVersions.head.resolutionMethod
       cs <- CredentialSchema.make(guid, in, resolutionMethod)
       _ <- CredentialSchema.validateCredentialSchema(cs).mapError(CredentialSchemaValidationError.apply)
@@ -95,17 +102,10 @@ class CredentialSchemaServiceImpl(
     } yield updated
   }
 
-  override def delete(guid: UUID): Result[CredentialSchema] =
-    for {
-      existingOpt <- credentialSchemaRepository.findByGuid(guid)
-      _ <- ZIO.fromOption(existingOpt).mapError(_ => CredentialSchemaGuidNotFoundError(guid))
-      result <- credentialSchemaRepository.delete(guid)
-    } yield result
-
   override def lookup(
       filter: CredentialSchema.Filter,
       skip: Int,
-      limit: Int
+      limit: Int,
   ): Result[CredentialSchema.FilteredEntries] = {
     credentialSchemaRepository
       .search(SearchQuery(filter, skip, limit))

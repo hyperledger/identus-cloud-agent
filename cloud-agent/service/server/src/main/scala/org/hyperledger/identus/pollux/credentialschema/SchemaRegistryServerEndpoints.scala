@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.credentialschema
 
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.api.http.model.{Order, PaginationInput}
 import org.hyperledger.identus.api.http.RequestContext
@@ -9,7 +10,6 @@ import org.hyperledger.identus.pollux.credentialschema.http.{CredentialSchemaInp
 import org.hyperledger.identus.pollux.credentialschema.SchemaRegistryEndpoints.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import org.hyperledger.identus.LogUtils.*
-import org.hyperledger.identus.agent.server.config.AppConfig
 import sttp.tapir.ztapir.*
 import zio.*
 
@@ -22,8 +22,8 @@ class SchemaRegistryServerEndpoints(
     authorizer: Authorizer[BaseEntity]
 ) {
 
-  val createSchemaHttpUrlServerEndpoint: ZServerEndpoint[Any, Any] =
-    createSchemaHttpUrlEndpoint
+  object create {
+    val http: ZServerEndpoint[Any, Any] = createSchemaHttpUrlEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, schemaInput: CredentialSchemaInput) =>
@@ -33,71 +33,114 @@ class SchemaRegistryServerEndpoints(
             .logTrace(ctx)
         }
       }
-
-  val createSchemaDidUrlServerEndpoint: ZServerEndpoint[Any, Any] =
-    createSchemaDidUrlEndpoint
+    val did: ZServerEndpoint[Any, Any] = createSchemaDidUrlEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
-      .serverLogic { wac => {
-        case (ctx: RequestContext, schemaInput: CredentialSchemaInput) =>
+      .serverLogic { wac =>
+        { case (ctx: RequestContext, schemaInput: CredentialSchemaInput) =>
           credentialSchemaController
-            .createSchemaDidUrl(config, schemaInput)(ctx)
+            .createSchemaDidUrl(config.agent.httpEndpoint.serviceName, schemaInput)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(ctx)
+        }
       }
-    }
 
-  val updateSchemaServerEndpoint: ZServerEndpoint[Any, Any] =
-    updateSchemaEndpoint
+    val all = List(http, did)
+
+  }
+
+  object update {
+    val http: ZServerEndpoint[Any, Any] = updateSchemaHttpUrlEndpoint
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
         { case (ctx: RequestContext, id: UUID, schemaInput: CredentialSchemaInput) =>
           credentialSchemaController
-            .updateSchema(config, id, schemaInput)(ctx)
+            .updateSchema(id, schemaInput)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
             .logTrace(ctx)
         }
       }
+    val did: ZServerEndpoint[Any, Any] = updateSchemaDidUrlEndpoint
+      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+      .serverLogic { wac =>
+        { case (ctx: RequestContext, id: UUID, schemaInput: CredentialSchemaInput) =>
+          credentialSchemaController
+            .updateSchemaDidUrl(config.agent.httpEndpoint.serviceName, id, schemaInput)(ctx)
+            .provideSomeLayer(ZLayer.succeed(wac))
+            .logTrace(ctx)
+        }
+      }
+    val all = List(http, did)
 
-  val getSchemaByIdServerEndpoint: ZServerEndpoint[Any, Any] =
-    getSchemaByIdEndpoint
+  }
+
+  object get {
+    val http: ZServerEndpoint[Any, Any] = getSchemaByIdHttpUrlEndpoint
       .zServerLogic { case (ctx: RequestContext, guid: UUID) =>
         credentialSchemaController
-          .getSchemaByGuid(config, guid)(ctx)
+          .getSchemaByGuid(guid)(ctx)
           .logTrace(ctx)
       }
+    val did: ZServerEndpoint[Any, Any] = getSchemaByIdDidUrlEndpoint
+      .zServerLogic { case (ctx: RequestContext, guid: UUID) =>
+        credentialSchemaController
+          .getSchemaByGuidDidUrl(config.agent.httpEndpoint.serviceName, guid)(ctx)
+          .logTrace(ctx)
+      }
+    val all = List(http, did)
 
-  val getRawSchemaByIdServerEndpoint: ZServerEndpoint[Any, Any] =
-    getRawSchemaByIdEndpoint
+  }
+
+  object getRaw {
+    val http: ZServerEndpoint[Any, Any] = getRawSchemaByIdHttpUrlEndpoint
       .zServerLogic { case (ctx: RequestContext, guid: UUID) =>
         credentialSchemaController.getSchemaJsonByGuid(guid)(ctx)
       }
-
-  val lookupSchemasByQueryServerEndpoint: ZServerEndpoint[Any, Any] =
-    lookupSchemasByQueryEndpoint
-      .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
-      .serverLogic { wac =>
-        { case (ctx: RequestContext, filter: FilterInput, paginationInput: PaginationInput, order: Option[Order]) =>
-          credentialSchemaController
-            .lookupSchemas(
-              filter,
-              paginationInput.toPagination,
-              order,
-              config
-            )(ctx)
-            .provideSomeLayer(ZLayer.succeed(wac))
-            .logTrace(ctx)
-        }
+    val did: ZServerEndpoint[Any, Any] = getRawSchemaByIdDidUrlEndpoint
+      .zServerLogic { case (ctx: RequestContext, guid: UUID) =>
+        credentialSchemaController.getSchemaJsonByGuidDidUrl(config.agent.httpEndpoint.serviceName, guid)(ctx)
       }
+    val all = List(http, did)
+
+  }
+
+  object getMany {
+    val http: ZServerEndpoint[Any, Any] =
+      lookupSchemasByQueryHttpUrlEndpoint
+        .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+        .serverLogic { wac =>
+          { case (ctx: RequestContext, filter: FilterInput, paginationInput: PaginationInput, order: Option[Order]) =>
+            credentialSchemaController
+              .lookupSchemas(
+                filter,
+                paginationInput.toPagination,
+                order,
+              )(ctx)
+              .provideSomeLayer(ZLayer.succeed(wac))
+              .logTrace(ctx)
+          }
+        }
+    val did: ZServerEndpoint[Any, Any] =
+      lookupSchemasByQueryDidUrlEndpoint
+        .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
+        .serverLogic { wac =>
+          { case (ctx: RequestContext, filter: FilterInput, paginationInput: PaginationInput, order: Option[Order]) =>
+            credentialSchemaController
+              .lookupSchemasDidUrl(
+                config.agent.httpEndpoint.serviceName,
+                filter,
+                paginationInput.toPagination,
+                order,
+              )(ctx)
+              .provideSomeLayer(ZLayer.succeed(wac))
+              .logTrace(ctx)
+          }
+        }
+    val all = List(http, did)
+
+  }
 
   val all: List[ZServerEndpoint[Any, Any]] =
-    List(
-      createSchemaHttpUrlServerEndpoint,
-      createSchemaDidUrlServerEndpoint,
-      updateSchemaServerEndpoint, // TODO: get back to it, see if changes are needed
-      getSchemaByIdServerEndpoint,
-      getRawSchemaByIdServerEndpoint,
-      lookupSchemasByQueryServerEndpoint
-    )
+    create.all ++ update.all ++ get.all ++ getRaw.all ++ getMany.all
 }
 
 object SchemaRegistryServerEndpoints {

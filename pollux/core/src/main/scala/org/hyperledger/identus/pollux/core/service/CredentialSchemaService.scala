@@ -23,11 +23,9 @@ trait CredentialSchemaService {
     * @return
     *   The instance of the credential schema or credential service error
     */
-  def getByGUID(guid: UUID): IO[CredentialSchemaServiceError, CredentialSchema]
+  def getByGUID(guid: UUID, resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP): IO[CredentialSchemaServiceError, CredentialSchema]
 
-  def update(id: UUID, in: Input): Result[CredentialSchema]
-
-  def delete(id: UUID): Result[CredentialSchema]
+  def update(id: UUID, in: Input, resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP): Result[CredentialSchema]
 
   def lookup(filter: Filter, skip: Int, limit: Int): Result[FilteredEntries]
 }

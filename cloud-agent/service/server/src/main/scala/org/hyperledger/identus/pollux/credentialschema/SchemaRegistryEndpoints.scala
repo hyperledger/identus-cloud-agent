@@ -10,6 +10,8 @@ import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import org.hyperledger.identus.pollux.credentialschema.http.{
   CredentialSchemaDidUrlResponse,
+  CredentialSchemaDidUrlResponsePage,
+  CredentialSchemaInnerDidUrlResponse,
   CredentialSchemaInput,
   CredentialSchemaResponse,
   CredentialSchemaResponsePage,
@@ -56,41 +58,8 @@ object SchemaRegistryEndpoints {
   )
 
   val tag = Tag(name = tagName, description = Option(tagDescription), externalDocs = Option(tagExternalDocumentation))
-
-  val createSchemaDidUrlEndpoint: Endpoint[
-    (ApiKeyCredentials, JwtCredentials),
-    (RequestContext, CredentialSchemaInput),
-    ErrorResponse,
-    CredentialSchemaDidUrlResponse,
-    Any
-  ] =
-    endpoint.post
-      .securityIn(apiKeyHeader)
-      .securityIn(jwtAuthHeader)
-      .in(extractFromRequest[RequestContext](RequestContext.apply))
-      .in("schema-registry" / "schemas" / "did-url")
-      .in(
-        jsonBody[CredentialSchemaInput]
-          .description(
-            "JSON object required for the credential schema creation"
-          )
-      )
-      .out(
-        statusCode(StatusCode.Created)
-          .description(
-            "The new credential schema record is successfully created"
-          )
-      )
-      .out(jsonBody[CredentialSchemaDidUrlResponse])
-      .description("Credential schema record")
-      .errorOut(basicFailureAndNotFoundAndForbidden)
-      .name("createSchema")
-      .summary("Publish new schema to the schema registry, did url resolvable")
-      .description(
-        "Create the new credential schema record with metadata and internal JSON Schema on behalf of Cloud Agent. " +
-          "The credential schema will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it."
-      )
-      .tag(tagName)
+  val httpUrlPathPrefix = "schema-registry" / "schemas"
+  val didUrlPathPrefix = "schema-registry" / "schemas" / "did-url"
 
   val createSchemaHttpUrlEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
@@ -103,7 +72,7 @@ object SchemaRegistryEndpoints {
       .securityIn(apiKeyHeader)
       .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
-      .in("schema-registry" / "schemas")
+      .in(httpUrlPathPrefix)
       .in(
         jsonBody[CredentialSchemaInput]
           .description(
@@ -127,11 +96,46 @@ object SchemaRegistryEndpoints {
       )
       .tag(tagName)
 
-  val updateSchemaEndpoint: Endpoint[
+  val createSchemaDidUrlEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, CredentialSchemaInput),
+    ErrorResponse,
+    CredentialSchemaDidUrlResponse,
+    Any
+  ] =
+    endpoint.post
+      .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in(didUrlPathPrefix)
+      .in(
+        jsonBody[CredentialSchemaInput]
+          .description(
+            "JSON object required for the credential schema creation"
+          )
+      )
+      .out(
+        statusCode(StatusCode.Created)
+          .description(
+            "The new credential schema record is successfully created"
+          )
+      )
+      .out(jsonBody[CredentialSchemaDidUrlResponse])
+      .description("Credential schema record")
+      .errorOut(basicFailureAndNotFoundAndForbidden)
+      .name("createSchema")
+      .summary("Publish new schema to the schema registry, did url resolvable")
+      .description(
+        "Create the new credential schema record with metadata and internal JSON Schema on behalf of Cloud Agent. " +
+          "The credential schema will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it."
+      )
+      .tag(tagName)
+
+  val updateSchemaHttpUrlEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID, CredentialSchemaInput),
     ErrorResponse,
-    CredentialSchemaResponse | CredentialSchemaDidUrlResponse,
+    CredentialSchemaResponse,
     Any
   ] =
     endpoint.put
@@ -139,7 +143,7 @@ object SchemaRegistryEndpoints {
       .securityIn(jwtAuthHeader)
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
-        "schema-registry" / "schemas" / path[UUID]("id").description(
+        httpUrlPathPrefix / path[UUID]("id").description(
           CredentialSchemaResponse.annotations.id.description
         )
       )
@@ -155,18 +159,7 @@ object SchemaRegistryEndpoints {
             "The credential schema record is successfully updated"
           )
       )
-      .out(
-        oneOf[CredentialSchemaResponse | CredentialSchemaDidUrlResponse](
-          oneOfVariant(
-            jsonBody[CredentialSchemaResponse].description("CredentialSchema found by `guid`, resolvable by HTTP URL")
-          ),
-          oneOfVariant(
-            jsonBody[CredentialSchemaDidUrlResponse].description(
-              "CredentialSchema found by `guid`, resolvable by DID URL"
-            )
-          )
-        )
-      )
+      .out(jsonBody[CredentialSchemaResponse])
       .description("Credential schema record")
       .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("updateSchema")
@@ -177,29 +170,83 @@ object SchemaRegistryEndpoints {
       )
       .tag(tagName)
 
-  val getSchemaByIdEndpoint: PublicEndpoint[
+  val updateSchemaDidUrlEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, UUID, CredentialSchemaInput),
+    ErrorResponse,
+    CredentialSchemaDidUrlResponse,
+    Any
+  ] =
+    endpoint.put
+      .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in(
+        didUrlPathPrefix / path[UUID]("id").description(
+          CredentialSchemaResponse.annotations.id.description
+        )
+      )
+      .in(
+        jsonBody[CredentialSchemaInput]
+          .description(
+            "JSON object required for the credential schema update"
+          )
+      )
+      .out(
+        statusCode(StatusCode.Ok)
+          .description(
+            "The credential schema record is successfully updated"
+          )
+      )
+      .out(jsonBody[CredentialSchemaDidUrlResponse])
+      .description("Credential schema record wrapped in an envelope")
+      .errorOut(basicFailureAndNotFoundAndForbidden)
+      .name("updateSchema")
+      .summary("Publish the new version of the credential schema to the schema registry")
+      .description(
+        "Publish the new version of the credential schema record with metadata and internal JSON Schema on behalf of Cloud Agent. " +
+          "The credential schema will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it."
+      )
+      .tag(tagName)
+
+  val getSchemaByIdHttpUrlEndpoint: PublicEndpoint[
     (RequestContext, UUID),
     ErrorResponse,
-    CredentialSchemaResponse | CredentialSchemaDidUrlResponse,
+    CredentialSchemaResponse,
     Any
   ] =
     endpoint.get
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
-        "schema-registry" / "schemas" / path[UUID]("guid").description(
+        httpUrlPathPrefix / path[UUID]("guid").description(
+          "Globally unique identifier of the credential schema record"
+        )
+      )
+      .out(jsonBody[CredentialSchemaResponse].description("CredentialSchema found by `guid`"))
+      .errorOut(basicFailuresAndNotFound)
+      .name("getSchemaById")
+      .summary("Fetch the schema from the registry by `guid`")
+      .description(
+        "Fetch the credential schema by the unique identifier"
+      )
+      .tag(tagName)
+
+  val getSchemaByIdDidUrlEndpoint: PublicEndpoint[
+    (RequestContext, UUID),
+    ErrorResponse,
+    CredentialSchemaDidUrlResponse,
+    Any
+  ] =
+    endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in(
+        didUrlPathPrefix / path[UUID]("guid").description(
           "Globally unique identifier of the credential schema record"
         )
       )
       .out(
-        oneOf[CredentialSchemaResponse | CredentialSchemaDidUrlResponse](
-          oneOfVariant(
-            jsonBody[CredentialSchemaResponse].description("CredentialSchema found by `guid`, resolvable by HTTP URL")
-          ),
-          oneOfVariant(
-            jsonBody[CredentialSchemaDidUrlResponse].description(
-              "CredentialSchema found by `guid`, resolvable by DID URL"
-            )
-          )
+        jsonBody[CredentialSchemaDidUrlResponse].description(
+          "CredentialSchema found by `guid`, wrapped in an envelope"
         )
       )
       .errorOut(basicFailuresAndNotFound)
@@ -210,16 +257,16 @@ object SchemaRegistryEndpoints {
       )
       .tag(tagName)
 
-  val getRawSchemaByIdEndpoint: PublicEndpoint[
+  val getRawSchemaByIdHttpUrlEndpoint: PublicEndpoint[
     (RequestContext, UUID),
     ErrorResponse,
-    Json, // changed to generic Json type
+    Json, // returns json of raw schema
     Any
   ] =
     endpoint.get
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
-        "schema-registry" / "schemas" / path[UUID]("guid") / "schema".description(
+        httpUrlPathPrefix / path[UUID]("guid") / "schema".description(
           "Globally unique identifier of the credential schema record"
         )
       )
@@ -230,10 +277,32 @@ object SchemaRegistryEndpoints {
       .description("Fetch the credential schema by the unique identifier")
       .tag("Schema Registry")
 
+  val getRawSchemaByIdDidUrlEndpoint: PublicEndpoint[
+    (RequestContext, UUID),
+    ErrorResponse,
+    CredentialSchemaInnerDidUrlResponse, // returns an envelope, where resource is a json of wrapped schema
+    Any
+  ] =
+    endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in(
+        didUrlPathPrefix / path[UUID]("guid") / "schema".description(
+          "Globally unique identifier of the credential schema record"
+        )
+      )
+      .out(
+        jsonBody[CredentialSchemaInnerDidUrlResponse].description("Raw JSON response of the CredentialSchema")
+      ) // changed to Json
+      .errorOut(basicFailuresAndNotFound)
+      .name("getRawSchemaById")
+      .summary("Fetch the schema from the registry by `guid`")
+      .description("Fetch the credential schema by the unique identifier")
+      .tag("Schema Registry")
+
   private val credentialSchemaFilterInput: EndpointInput[FilterInput] = EndpointInput.derived[FilterInput]
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
 
-  val lookupSchemasByQueryEndpoint: Endpoint[
+  val lookupSchemasByQueryHttpUrlEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (
         RequestContext,
@@ -254,6 +323,39 @@ object SchemaRegistryEndpoints {
       .in(paginationInput)
       .in(query[Option[Order]]("order"))
       .out(jsonBody[CredentialSchemaResponsePage].description("Collection of CredentialSchema records."))
+      .errorOut(basicFailuresAndForbidden)
+      .name("lookupSchemasByQuery")
+      .summary("Lookup schemas by indexed fields")
+      .description(
+        "Lookup schemas by `author`, `name`, `tags` parameters and control the pagination by `offset` and `limit` parameters "
+      )
+      .tag(tagName)
+
+  val lookupSchemasByQueryDidUrlEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (
+        RequestContext,
+        FilterInput,
+        PaginationInput,
+        Option[Order]
+    ),
+    ErrorResponse,
+    CredentialSchemaDidUrlResponsePage,
+    Any
+  ] =
+    endpoint.get
+      .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in("schema-registry" / "schemas" / "did-url".description("Lookup schemas by query"))
+      .in(credentialSchemaFilterInput)
+      .in(paginationInput)
+      .in(query[Option[Order]]("order"))
+      .out(
+        jsonBody[CredentialSchemaDidUrlResponsePage].description(
+          "Collection of CredentialSchema records each wrapped in an envelope."
+        )
+      )
       .errorOut(basicFailuresAndForbidden)
       .name("lookupSchemasByQuery")
       .summary("Lookup schemas by indexed fields")

@@ -2,17 +2,15 @@ package org.hyperledger.identus.pollux.credentialschema.http
 
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponsePage.annotations
+import sttp.tapir.generic.auto.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.*
-import zio.json.ast.Json
-import sttp.tapir.generic.auto.*
-import sttp.tapir.json.zio.schemaForZioJsonValue
 
 case class CredentialSchemaResponsePage(
     @description(annotations.contents.description)
     @encodedExample(annotations.contents.example)
-    contents: Seq[Json], // TODO: update type to CredentialSchemaResponse | CredentialSchemaDidUrlResponse once we update tapir to a version that supports sttp.tapir.Schema for union types
+    contents: Seq[CredentialSchemaResponse],
     @description(annotations.kind.description)
     @encodedExample(annotations.kind.example)
     kind: String = "CredentialSchemaPage",
@@ -51,7 +49,7 @@ object CredentialSchemaResponsePage {
   object annotations {
 
     object contents
-        extends Annotation[Seq[Json]](
+        extends Annotation[Seq[CredentialSchemaResponse]](
           description =
             "A sequence of CredentialSchemaResponse objects representing the list of credential schemas that the API response contains",
           example = Seq.empty
@@ -91,3 +89,5 @@ object CredentialSchemaResponsePage {
         )
   }
 }
+
+

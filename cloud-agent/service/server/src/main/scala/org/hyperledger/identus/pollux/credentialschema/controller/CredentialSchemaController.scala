@@ -1,10 +1,11 @@
 package org.hyperledger.identus.pollux.credentialschema.controller
 
-import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{Order, Pagination}
 import org.hyperledger.identus.pollux.credentialschema.http.{
   CredentialSchemaDidUrlResponse,
+  CredentialSchemaDidUrlResponsePage,
+  CredentialSchemaInnerDidUrlResponse,
   CredentialSchemaInput,
   CredentialSchemaResponse,
   CredentialSchemaResponsePage,
@@ -22,32 +23,48 @@ trait CredentialSchemaController {
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse]
 
-  def createSchemaDidUrl(config: AppConfig, in: CredentialSchemaInput)(implicit
+  def createSchemaDidUrl(baseUrlServiceName: String, in: CredentialSchemaInput)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaDidUrlResponse]
 
-  def updateSchema(config: AppConfig, id: UUID, in: CredentialSchemaInput)(implicit
+  def updateSchema(id: UUID, in: CredentialSchemaInput)(implicit
       rc: RequestContext
-  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse | CredentialSchemaDidUrlResponse]
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse]
 
-  def getSchemaByGuid(config: AppConfig, id: UUID)(implicit
+  def updateSchemaDidUrl(baseUrlServiceName: String, id: UUID, in: CredentialSchemaInput)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaResponse | CredentialSchemaDidUrlResponse]
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaDidUrlResponse]
+
+  def getSchemaByGuid(id: UUID)(implicit
+      rc: RequestContext
+  ): IO[ErrorResponse, CredentialSchemaResponse]
+
+  def getSchemaByGuidDidUrl(baseUrlServiceName: String, id: UUID)(implicit
+      rc: RequestContext
+  ): IO[ErrorResponse, CredentialSchemaDidUrlResponse]
 
   def getSchemaJsonByGuid(id: UUID)(implicit
       rc: RequestContext
   ): IO[ErrorResponse, Json]
 
-  def delete(guid: UUID)(implicit
+  def getSchemaJsonByGuidDidUrl(baseUrlServiceName: String, id: UUID)(implicit
       rc: RequestContext
-  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse]
+  ): IO[ErrorResponse, CredentialSchemaInnerDidUrlResponse]
 
   def lookupSchemas(
       filter: FilterInput,
       pagination: Pagination,
       order: Option[Order],
-      config: AppConfig
   )(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponsePage]
+
+  def lookupSchemasDidUrl(
+      baseUrlServiceName: String,
+      filter: FilterInput,
+      pagination: Pagination,
+      order: Option[Order],
+  )(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaDidUrlResponsePage]
 }

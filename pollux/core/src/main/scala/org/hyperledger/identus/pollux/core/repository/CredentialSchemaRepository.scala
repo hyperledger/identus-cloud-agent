@@ -14,11 +14,11 @@ trait CredentialSchemaRepository
     with SearchCapability[WalletTask, CredentialSchema.Filter, CredentialSchema] {
   def create(cs: CredentialSchema): URIO[WalletAccessContext, CredentialSchema]
 
-  def findByGuid(guid: UUID): UIO[Option[CredentialSchema]]
+  def findByGuid(guid: UUID, resolutionMethod: ResourceResolutionMethod): UIO[Option[CredentialSchema]]
 
   def update(cs: CredentialSchema): URIO[WalletAccessContext, CredentialSchema]
 
-  def getAllVersions(id: UUID, author: String): URIO[WalletAccessContext, List[CredentialSchema]]
+  def getAllVersions(id: UUID, author: String, resolutionMethod: ResourceResolutionMethod): URIO[WalletAccessContext, List[CredentialSchema]]
 
   def delete(guid: UUID): URIO[WalletAccessContext, CredentialSchema]
 

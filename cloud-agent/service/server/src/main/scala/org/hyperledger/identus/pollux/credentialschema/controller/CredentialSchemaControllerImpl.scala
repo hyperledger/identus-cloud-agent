@@ -14,13 +14,14 @@ import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.service.CredentialSchemaService
 import org.hyperledger.identus.pollux.credentialschema.http.{
   CredentialSchemaDidUrlResponse,
+  CredentialSchemaDidUrlResponsePage,
+  CredentialSchemaInnerDidUrlResponse,
   CredentialSchemaInput,
   CredentialSchemaResponse,
   CredentialSchemaResponsePage,
   FilterInput
 }
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaInput.toDomain
-import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponse.fromDomain
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.json.*
@@ -40,19 +41,18 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
       _ <- validatePrismDID(in.author)
       result <- service
         .create(toDomain(in))
-        .map(cs => fromDomain(cs).withBaseUri(rc.request.uri))
+        .map(cs => CredentialSchemaResponse.fromDomain(cs).withBaseUri(rc.request.uri))
     } yield result
   }
 
-  def createSchemaDidUrl(config: AppConfig, in: CredentialSchemaInput)(implicit
+  def createSchemaDidUrl(baseUrlServiceName: String, in: CredentialSchemaInput)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaDidUrlResponse] = {
     val res = for {
       validated <- validatePrismDID(in.author)
-      serviceName = config.agent.httpEndpoint.serviceName
       result <- service.create(toDomain(in), ResourceResolutionMethod.DID)
       response <- ZIO
-        .fromEither(CredentialSchemaDidUrlResponse.fromDomain(result, serviceName))
+        .fromEither(CredentialSchemaDidUrlResponse.fromDomain(result, baseUrlServiceName))
         .mapError(e =>
           ErrorResponse.internalServerError(detail = Some(s"Error occurred while parsing a schema response: $e"))
         )
@@ -62,43 +62,56 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
     res
   }
 
-  override def updateSchema(config: AppConfig, id: UUID, in: CredentialSchemaInput)(implicit
+  override def updateSchema(id: UUID, in: CredentialSchemaInput)(implicit
       rc: RequestContext
-  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse | CredentialSchemaDidUrlResponse] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse] = {
+    for {
+      _ <- validatePrismDID(in.author)
+      result <- service
+        .update(id, toDomain(in))
+        .map(cs => CredentialSchemaResponse.fromDomain(cs).withBaseUri(rc.request.uri))
+    } yield result
+  }
+
+  override def updateSchemaDidUrl(baseUrlServiceName: String, id: UUID, in: CredentialSchemaInput)(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaDidUrlResponse] = {
     val res = for {
       _ <- validatePrismDID(in.author)
-      serviceName = config.agent.httpEndpoint.serviceName
       cs <- service
-        .update(id, toDomain(in))
-      result <- cs.resolutionMethod match
-        case ResourceResolutionMethod.DID =>
-          ZIO
-            .fromEither(CredentialSchemaDidUrlResponse.fromDomain(cs, serviceName))
-            .mapError(e =>
-              ErrorResponse.internalServerError(detail = Some(s"Error occurred while parsing a schema response: $e"))
-            )
-
-        case ResourceResolutionMethod.HTTP =>
-          ZIO.succeed(fromDomain(cs).withBaseUri(rc.request.uri))
+        .update(id, toDomain(in), ResourceResolutionMethod.DID)
+      result <- ZIO
+        .fromEither(CredentialSchemaDidUrlResponse.fromDomain(cs, baseUrlServiceName))
+        .mapError(e =>
+          ErrorResponse.internalServerError(detail = Some(s"Error occurred while parsing a schema response: $e"))
+        )
     } yield result
 
     res
   }
 
-  override def getSchemaByGuid(config: AppConfig, guid: UUID)(implicit
+  override def getSchemaByGuid(guid: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaResponse | CredentialSchemaDidUrlResponse] = {
-    val res: IO[ErrorResponse, CredentialSchemaResponse | CredentialSchemaDidUrlResponse] = for {
-      cs <- service.getByGUID(guid)
-      serviceName = config.agent.httpEndpoint.serviceName
-      response <- cs.resolutionMethod match
-        case model.ResourceResolutionMethod.DID =>
-          ZIO
-            .fromEither(CredentialSchemaDidUrlResponse.fromDomain(cs, serviceName))
-            .mapError(e =>
-              ErrorResponse.internalServerError(detail = Some(s"Error occurred while parsing a schema response: $e"))
-            )
-        case model.ResourceResolutionMethod.HTTP => ZIO.succeed(fromDomain(cs).withSelf(rc.request.uri.toString))
+  ): IO[ErrorResponse, CredentialSchemaResponse] = {
+    service
+      .getByGUID(guid)
+      .map(
+        CredentialSchemaResponse
+          .fromDomain(_)
+          .withSelf(rc.request.uri.toString)
+      )
+  }
+
+  override def getSchemaByGuidDidUrl(baseUrlServiceName: String, guid: UUID)(implicit
+      rc: RequestContext
+  ): IO[ErrorResponse, CredentialSchemaDidUrlResponse] = {
+    val res: IO[ErrorResponse, CredentialSchemaDidUrlResponse] = for {
+      cs <- service.getByGUID(guid, ResourceResolutionMethod.DID)
+      response <- ZIO
+        .fromEither(CredentialSchemaDidUrlResponse.fromDomain(cs, baseUrlServiceName))
+        .mapError(e =>
+          ErrorResponse.internalServerError(detail = Some(s"Error occurred while parsing a schema response: $e"))
+        )
     } yield response
 
     res
@@ -114,42 +127,61 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
       )
   }
 
-  override def delete(guid: UUID)(implicit
+  override def getSchemaJsonByGuidDidUrl(baseUrlServiceName: String, id: UUID)(implicit
       rc: RequestContext
-  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponse] = {
-    service
-      .delete(guid)
-      .map(
-        fromDomain(_)
-          .withBaseUri(rc.request.uri)
-      )
+  ): IO[ErrorResponse, CredentialSchemaInnerDidUrlResponse] = {
+    val res = for {
+      cs <- service.getByGUID(id, ResourceResolutionMethod.DID)
+      authorDid <- ZIO
+        .fromEither(PrismDID.fromString(cs.author))
+        .mapError(_ => ErrorResponse.internalServerError(detail = Some("Invalid schema author DID")))
+      response <- ZIO
+        .fromEither(CredentialSchemaInnerDidUrlResponse.fromDomain(cs.schema, authorDid, cs.id, baseUrlServiceName))
+        .mapError(e =>
+          ErrorResponse.internalServerError(detail = Some(s"Error occurred while parsing a schema response: $e"))
+        )
+    } yield response
+
+    res
   }
 
   override def lookupSchemas(
       filter: FilterInput,
       pagination: Pagination,
-      order: Option[Order],
-      config: AppConfig
+      order: Option[Order]
   )(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponsePage] = {
+    for {
+      filteredEntries: FilteredEntries <- service.lookup(
+        filter.toDomain(ResourceResolutionMethod.DID),
+        pagination.offset,
+        pagination.limit
+      )
+      entries = filteredEntries.entries
+        .map(CredentialSchemaResponse.fromDomain(_).withBaseUri(rc.request.uri))
+        .toList
+      page = CredentialSchemaResponsePage(entries)
+      stats = CollectionStats(filteredEntries.totalCount, filteredEntries.count)
+    } yield CredentialSchemaControllerLogic(rc, pagination, stats).result(page)
+  }
+
+  override def lookupSchemasDidUrl(
+      baseUrlServiceName: String,
+      filter: FilterInput,
+      pagination: Pagination,
+      order: Option[Order],
+  )(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaDidUrlResponsePage] = {
     for {
       filteredEntries: FilteredEntries <- service.lookup(
         filter.toDomain,
         pagination.offset,
         pagination.limit
       )
-      serviceName = config.agent.httpEndpoint.serviceName
       entriesZio = filteredEntries.entries
-        .traverse(cs =>
-          cs.resolutionMethod match {
-            case ResourceResolutionMethod.DID =>
-              CredentialSchemaDidUrlResponse.fromDomain(cs, serviceName).flatMap(_.toJsonAST)
-            case ResourceResolutionMethod.HTTP =>
-              fromDomain(cs).withBaseUri(rc.request.uri).toJsonAST
-
-          }
-        )
+        .traverse(cs => CredentialSchemaDidUrlResponse.fromDomain(cs, baseUrlServiceName))
 
       entries <- ZIO
         .fromEither(entriesZio)
@@ -157,9 +189,9 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
           ErrorResponse.internalServerError(detail = Some(s"Error occurred while parsing a schema response: $e"))
         )
 
-      page = CredentialSchemaResponsePage(entries)
+      page = CredentialSchemaDidUrlResponsePage(entries)
       stats = CollectionStats(filteredEntries.totalCount, filteredEntries.count)
-    } yield CredentialSchemaControllerLogic(rc, pagination, page, stats).result
+    } yield CredentialSchemaControllerLogic(rc, pagination, stats).resultDidUrl(page)
   }
 
   private def validatePrismDID(author: String) =

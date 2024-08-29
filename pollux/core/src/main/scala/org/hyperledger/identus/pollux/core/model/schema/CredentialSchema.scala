@@ -112,11 +112,12 @@ object CredentialSchema {
       author: Option[String] = None,
       name: Option[String] = None,
       version: Option[String] = None,
-      tags: Option[String] = None
+      tags: Option[String] = None,
+      resolutionMethod: ResourceResolutionMethod
   )
 
   case class FilteredEntries(entries: Seq[CredentialSchema], count: Long, totalCount: Long)
-  
+
 
   given JsonEncoder[CredentialSchema] = DeriveJsonEncoder.gen[CredentialSchema]
   given JsonDecoder[CredentialSchema] = DeriveJsonDecoder.gen[CredentialSchema]

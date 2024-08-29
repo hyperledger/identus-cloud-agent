@@ -5,8 +5,9 @@ import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.doobie.DoobieContext
 import io.getquill.idiom.*
 import org.hyperledger.identus.pollux.core.model.schema.Schema
-import org.hyperledger.identus.shared.models.WalletId
 import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
+import org.hyperledger.identus.shared.models.WalletId
+
 import java.time.temporal.ChronoUnit
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -83,19 +84,26 @@ object CredentialSchemaSql
     ).returning(cs => cs)
   }
 
-  def findByGUID(guid: UUID) = run {
-    quote(query[CredentialSchema].filter(_.guid == lift(guid)).take(1))
+  def findByGUID(guid: UUID, resolutionMethod: ResourceResolutionMethod) = run {
+    quote(
+      query[CredentialSchema]
+        .filter(_.guid == lift(guid))
+        .filter(_.resolutionMethod == lift(resolutionMethod))
+        .take(1)
+    )
   }
 
+  // NOTE: this function is not used
   def findByID(id: UUID) = run {
     quote(query[CredentialSchema].filter(_.id == lift(id)))
   }
 
-  def getAllVersions(id: UUID, author: String) = run {
+  def getAllVersions(id: UUID, author: String, resolutionMethod: ResourceResolutionMethod) = run {
     quote(
       query[CredentialSchema]
         .filter(_.id == lift(id))
         .filter(_.author == lift(author))
+        .filter(_.resolutionMethod == lift(resolutionMethod))
         .sortBy(_.version)(ord = Ord.asc)
     )
   }
@@ -135,10 +143,16 @@ object CredentialSchemaSql
       authorOpt: Option[String] = None,
       nameOpt: Option[String] = None,
       versionOpt: Option[String] = None,
-      tagOpt: Option[String] = None
+      tagOpt: Option[String] = None,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
   ) = run {
     val q =
-      idOpt.fold(quote(query[CredentialSchema]))(id => quote(query[CredentialSchema].filter(cs => cs.id == lift(id))))
+      idOpt.fold(quote(query[CredentialSchema]))(id =>
+        quote(
+          query[CredentialSchema]
+            .filter(cs => cs.id == lift(id))
+        )
+      )
 
     q.dynamic
       .filterOpt(authorOpt)((cs, author) => quote(cs.author.like(author)))
@@ -148,6 +162,7 @@ object CredentialSchemaSql
         tagOpt
           .fold(quote(true))(tag => quote(cs.tags.contains(lift(tag))))
       )
+      .filter(_.resolutionMethod == lift(resolutionMethod))
       .size
   }
 
@@ -158,10 +173,16 @@ object CredentialSchemaSql
       versionOpt: Option[String] = None,
       tagOpt: Option[String] = None,
       offset: Int = 0,
-      limit: Int = 1000
+      limit: Int = 1000,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
   ) = run {
     val q =
-      idOpt.fold(quote(query[CredentialSchema]))(id => quote(query[CredentialSchema].filter(cs => cs.id == lift(id))))
+      idOpt.fold(quote(query[CredentialSchema]))(id =>
+        quote(
+          query[CredentialSchema]
+            .filter(cs => cs.id == lift(id))
+        )
+      )
 
     q.dynamic
       .filterOpt(authorOpt)((cs, author) => quote(cs.author.like(author)))
@@ -171,6 +192,7 @@ object CredentialSchemaSql
         tagOpt
           .fold(quote(true))(tag => quote(cs.tags.contains(lift(tag))))
       )
+      .filter(_.resolutionMethod == lift(resolutionMethod))
       .sortBy(cs => cs.id)
       .drop(offset)
       .take(limit)
