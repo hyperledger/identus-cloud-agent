@@ -11,9 +11,15 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 import java.util.UUID
 
 final case class RequestPresentationInput(
+    @description(annotations.goalcode.description)
+    @encodedExample(annotations.goalcode.example)
+    goalCode: Option[String] = None,
+    @description(annotations.goal.description)
+    @encodedExample(annotations.goal.example)
+    goal: Option[String] = None,
     @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
-    connectionId: UUID,
+    connectionId: Option[UUID] = None,
     @description(annotations.options.description)
     @encodedExample(annotations.options.example)
     options: Option[Options] = None,
@@ -34,10 +40,35 @@ final case class RequestPresentationInput(
 object RequestPresentationInput {
   object annotations {
     object connectionId
-        extends Annotation[UUID](
-          description = "The unique identifier of an established connection between the verifier and the prover.",
-          example = UUID.fromString("bc528dc8-69f1-4c5a-a508-5f8019047900")
+        extends Annotation[Option[UUID]](
+          description = """
+            |The unique identifier of a DIDComm connection that already exists between the this verifier agent and the prover cloud or edeg agent.
+            |It should be the identifier of a connection that exists in the verifier agent's database.
+            |This connection will be used to execute the present proof protocol.
+            |Note: connectionId is only required when the presentation request is from existing connection.
+            |connectionId is not required when the presentation request is from invitation for connectionless issuance.
+            |""".stripMargin,
+          example = Some(UUID.fromString("d9569cec-c81e-4779-aa86-0d5994d82676"))
         )
+
+    object goalcode
+        extends Annotation[Option[String]](
+          description = """
+            | A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.
+            | goalcode is optional and can be provided when the presentation request is from invitation for connectionless verification.
+            |""".stripMargin,
+          example = Some("present-vp")
+        )
+
+    object goal
+        extends Annotation[Option[String]](
+          description = """
+          | A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.
+          | goal is optional and can be provided when the presentation request is from invitation for connectionless verification.
+          |""".stripMargin,
+          example = Some("Request proof of vaccine")
+        )
+
     object options
         extends Annotation[Option[Options]](
           description = "The options to use when creating the proof presentation request (e.g., domain, challenge).",

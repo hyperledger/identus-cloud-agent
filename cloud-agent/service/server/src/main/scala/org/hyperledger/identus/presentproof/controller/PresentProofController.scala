@@ -32,7 +32,7 @@ trait PresentProofController {
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus]
 
   def createOOBRequestPresentationInvitation(
-      request: OOBRequestPresentationInput
+      request: RequestPresentationInput
   )(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus]

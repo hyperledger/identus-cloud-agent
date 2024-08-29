@@ -228,7 +228,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
             walletAccessContext <- ZIO
               .fromOption(offer.to)
               .flatMap(buildWalletAccessContextLayer)
-              .orElseFail(ZIO.die(new IllegalArgumentException("OfferCredential must have a recipient")))
+              .mapError(e => CredentialServiceError.CredentialOfferMissingField(id.value, "recipient"))
             result <- for {
               credentialService <- ZIO.service[CredentialService]
               _ <- credentialService
@@ -274,7 +274,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
             walletAccessContext <- ZIO
               .fromOption(offer.to)
               .flatMap(buildWalletAccessContextLayer)
-              .orElseFail(ZIO.die(new IllegalArgumentException("OfferCredential must have a recipient")))
+              .mapError(e => CredentialServiceError.CredentialOfferMissingField(id.value, "recipient"))
             result <- for {
               credentialService <- ZIO.service[CredentialService]
               _ <- credentialService
@@ -320,7 +320,8 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
             walletAccessContext <- ZIO
               .fromOption(offer.to)
               .flatMap(buildWalletAccessContextLayer)
-              .orElseFail(ZIO.die(new IllegalArgumentException("OfferCredential must have a recipient")))
+              .mapError(e => CredentialServiceError.CredentialOfferMissingField(id.value, "recipient"))
+
             result <- for {
               credentialService <- ZIO.service[CredentialService]
               _ <- credentialService

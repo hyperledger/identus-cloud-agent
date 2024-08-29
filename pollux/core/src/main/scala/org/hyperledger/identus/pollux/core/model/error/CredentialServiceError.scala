@@ -43,6 +43,11 @@ object CredentialServiceError {
         StatusCode.InternalServerError,
         s"Credential Offer decoding error: $cause"
       )
+  final case class CredentialOfferMissingField(recordId: String, missingField: String)
+      extends CredentialServiceError(
+        StatusCode.BadRequest,
+        s"Credential Offer missing $missingField field: $recordId"
+      )
 
   final case class InvalidCredentialOffer(cause: String)
       extends CredentialServiceError(

@@ -6,7 +6,6 @@ import org.hyperledger.identus.api.http.RequestContext
 import org.hyperledger.identus.iam.authentication.{Authenticator, Authorizer, DefaultAuthenticator, SecurityLogic}
 import org.hyperledger.identus.presentproof.controller.http.{
   AcceptRequestPresentationInvitation,
-  OOBRequestPresentationInput,
   RequestPresentationAction,
   RequestPresentationInput
 }
@@ -82,7 +81,7 @@ class PresentProofServerEndpoints(
     createOOBRequestPresentationInvitation
       .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
       .serverLogic { wac =>
-        { case (ctx: RequestContext, action: OOBRequestPresentationInput) =>
+        { case (ctx: RequestContext, action: RequestPresentationInput) =>
           presentProofController
             .createOOBRequestPresentationInvitation(action)(ctx)
             .provideSomeLayer(ZLayer.succeed(wac))
