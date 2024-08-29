@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.model.error
 
-import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
 import org.hyperledger.identus.pollux.core.model.DidCommID
 import org.hyperledger.identus.pollux.core.service.URIDereferencerError
+import org.hyperledger.identus.shared.json.JsonSchemaError
 import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 
 sealed trait PresentationError(

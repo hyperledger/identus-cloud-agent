@@ -24,6 +24,7 @@ import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecr
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
+import org.hyperledger.identus.pollux.prex.{ClaimFormat, Jwt, PresentationDefinition}
 import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer as JwtIssuer, *}
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, Secp256k1KeyPair}
@@ -967,7 +968,7 @@ class CredentialServiceImpl(
             format = Some(offerFormat.name),
             payload = PresentationAttachment(
               Some(Options(challenge, domain)),
-              PresentationDefinition(format = Some(ClaimFormat(jwt = Some(Jwt(alg = Seq("ES256K"), proof_type = Nil)))))
+              PresentationDefinition(format = Some(ClaimFormat(jwt = Some(Jwt(alg = Seq("ES256K"))))))
             )
           )
         )

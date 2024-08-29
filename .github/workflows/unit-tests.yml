@@ -26,6 +26,7 @@ jobs:
       pull-requests: write
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SBT_OPTS: -Xmx2G
     container:
       image: ghcr.io/hyperledger-labs/ci-debian-jdk-22:0.1.0
       volumes:

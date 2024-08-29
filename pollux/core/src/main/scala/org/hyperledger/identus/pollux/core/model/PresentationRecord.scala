@@ -4,7 +4,7 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
 import org.hyperledger.identus.shared.models.{Failure, WalletAccessContext, WalletId}
-import zio.{UIO, URIO, ZIO}
+import zio.{URIO, ZIO}
 
 import java.time.temporal.ChronoUnit
 import java.time.Instant
