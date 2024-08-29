@@ -74,7 +74,7 @@ class PresentProofControllerImpl(
     createPresentationRecord(
       verifierDID,
       proverDID,
-      request.connectionId,
+      request.connectionId.map(_.toString),
       request.credentialFormat,
       request.proofs,
       request.options.map(o => Options(o.challenge, o.domain)),
