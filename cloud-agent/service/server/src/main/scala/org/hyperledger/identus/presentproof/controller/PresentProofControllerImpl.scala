@@ -43,7 +43,6 @@ class PresentProofControllerImpl(
         record <- createRequestPresentation(
           verifierDID = didIdPair.myDID,
           proverDID = Some(didIdPair.theirDid),
-          connectionId = Some(request.connectionId.toString),
           request = request,
           expirationDuration = None
         )
@@ -59,7 +58,6 @@ class PresentProofControllerImpl(
       record <- createRequestPresentation(
         verifierDID = peerDid.did,
         proverDID = None,
-        connectionId = None,
         request = request,
         expirationDuration = Some(appConfig.pollux.presentationInvitationExpiry)
       )
@@ -70,14 +68,13 @@ class PresentProofControllerImpl(
   private def createRequestPresentation(
       verifierDID: DidId,
       proverDID: Option[DidId],
-      connectionId: Option[String],
       request: RequestPresentationInput,
       expirationDuration: Option[Duration]
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
     createPresentationRecord(
       verifierDID,
       proverDID,
-      connectionId,
+      request.connectionId,
       request.credentialFormat,
       request.proofs,
       request.options.map(o => Options(o.challenge, o.domain)),
