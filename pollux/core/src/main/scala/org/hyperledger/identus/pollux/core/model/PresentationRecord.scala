@@ -1,6 +1,5 @@
 package org.hyperledger.identus.pollux.core.model
 
-import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
 import org.hyperledger.identus.shared.models.{Failure, WalletAccessContext, WalletId}
@@ -20,7 +19,6 @@ final case class PresentationRecord(
     schemaId: Option[String],
     connectionId: Option[String],
     role: PresentationRecord.Role,
-    subjectId: DidId, // TODO Remove
     protocolState: PresentationRecord.ProtocolState,
     credentialFormat: CredentialFormat,
     invitation: Option[Invitation],
@@ -55,7 +53,6 @@ object PresentationRecord {
       schemaId: Option[String],
       connectionId: Option[String],
       role: Role,
-      subjectId: DidId,
       protocolState: ProtocolState,
       credentialFormat: CredentialFormat,
       invitation: Option[Invitation],
@@ -80,7 +77,6 @@ object PresentationRecord {
         schemaId,
         connectionId,
         role,
-        subjectId,
         protocolState,
         credentialFormat,
         invitation,
