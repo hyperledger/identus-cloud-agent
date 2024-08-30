@@ -24,8 +24,7 @@ import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JW
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import org.hyperledger.identus.pollux.core.service.CredentialService
 import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
-import zio.{URLayer, ZIO, ZLayer}
-import zio.Duration
+import zio.{Duration, URLayer, ZIO, ZLayer}
 
 import scala.language.implicitConversions
 class IssueControllerImpl(

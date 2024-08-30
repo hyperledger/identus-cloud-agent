@@ -124,6 +124,7 @@ lazy val D = new {
   val jakartaJson: ModuleID = "org.glassfish" % "jakarta.json" % "2.0.1"
   val ironVC: ModuleID = "com.apicatalog" % "iron-verifiable-credentials" % "0.14.0"
   val scodecBits: ModuleID = "org.scodec" %% "scodec-bits" % "1.1.38"
+  val jaywayJsonPath: ModuleID = "com.jayway.jsonpath" % "json-path" % "2.9.0"
 
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.2"
@@ -200,7 +201,8 @@ lazy val D_SharedJson = new {
       D.jakartaJson,
       D.ironVC,
       D.scodecBits,
-      D.networkntJsonSchemaValidator
+      D.networkntJsonSchemaValidator,
+      D.jaywayJsonPath
     )
 }
 
