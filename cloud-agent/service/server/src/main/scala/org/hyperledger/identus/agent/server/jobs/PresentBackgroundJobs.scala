@@ -283,7 +283,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               _
             ) =>
           ZIO.fail(NotImplemented)
-        case PresentationRecord(id, _, _, _, _, _,_,ProblemReportSent, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, ProblemReportSent, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
           ZIO.fail(NotImplemented)
         case PresentationRecord(
               id,
@@ -421,7 +421,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           ZIO.logDebug("PresentationRecord: PresentationGenerated") *> ZIO.unit
           Prover.handlePresentationGenerated(id, presentation)
 
-        case PresentationRecord(id, _, _, _, _, _, _,PresentationSent, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
+        case PresentationRecord(id, _, _, _, _, _, _, PresentationSent, _, _, _, _, _, _, _, _, _, _, _, _, _, _) =>
           ZIO.logDebug("PresentationRecord: PresentationSent") *> ZIO.unit
         case PresentationRecord(
               id,
