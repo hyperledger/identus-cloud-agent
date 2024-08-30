@@ -1,3 +1,16 @@
+# [1.39.0-beta.3](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.39.0-beta.2...cloud-agent-v1.39.0-beta.3) (2024-08-30)
+
+
+### Bug Fixes
+
+* migrate to quill for generic secret storage ([#1299](https://github.com/hyperledger/identus-cloud-agent/issues/1299)) ([e077cdd](https://github.com/hyperledger/identus-cloud-agent/commit/e077cdd016954d028b702f2a107e9165005beb5c))
+
+
+### Features
+
+* API Supports ValidFrom And ValidTo ([#1298](https://github.com/hyperledger/identus-cloud-agent/issues/1298)) ([b19f514](https://github.com/hyperledger/identus-cloud-agent/commit/b19f514d3e6bf762fa566dd4f0024e8732778911))
+* connection less presentation expiration time ([#1294](https://github.com/hyperledger/identus-cloud-agent/issues/1294)) ([6024c97](https://github.com/hyperledger/identus-cloud-agent/commit/6024c97269ad23b99c5e238c97179da095cb91dc))
+
 # [1.39.0-beta.2](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.39.0-beta.1...cloud-agent-v1.39.0-beta.2) (2024-08-20)
 
 
