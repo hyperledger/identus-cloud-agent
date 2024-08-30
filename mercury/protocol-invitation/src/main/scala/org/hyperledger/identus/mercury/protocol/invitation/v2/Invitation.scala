@@ -14,11 +14,12 @@ final case class Invitation(
     `type`: PIURI = Invitation.`type`,
     from: DidId,
     body: Invitation.Body,
-    attachments: Option[Seq[AttachmentDescriptor]] = None
+    attachments: Option[Seq[AttachmentDescriptor]] = None,
+    created_time: Option[Long] = None,
+    expires_time: Option[Long] = None,
 ) {
   assert(`type` == "https://didcomm.org/out-of-band/2.0/invitation")
   def toBase64: String = java.util.Base64.getUrlEncoder.encodeToString(this.asJson.deepDropNullValues.noSpaces.getBytes)
-
 }
 
 object Invitation {

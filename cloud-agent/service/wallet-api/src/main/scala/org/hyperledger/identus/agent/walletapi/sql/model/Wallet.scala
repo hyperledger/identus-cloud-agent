@@ -42,7 +42,6 @@ object Wallet {
 }
 
 object WalletSql extends DoobieContext.Postgres(SnakeCase) {
-
   def insert(wallet: Wallet) = run {
     quote(
       query[Wallet]
