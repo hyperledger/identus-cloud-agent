@@ -28,7 +28,6 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
     None,
     None,
     PresentationRecord.Role.Verifier,
-    DidId(""),
     ProtocolState.RequestPending,
     CredentialFormat.JWT,
     None,
