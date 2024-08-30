@@ -1,5 +1,6 @@
 package org.hyperledger.identus.sharedtest.containers
 
+import jakarta.ws.rs.NotFoundException
 import org.keycloak.admin.client.Keycloak
 import org.keycloak.representations.idm.{
   ClientRepresentation,
@@ -9,8 +10,6 @@ import org.keycloak.representations.idm.{
   UserRepresentation
 }
 import zio.*
-import zio.test.TestAspect.beforeAll
-import zio.test.TestAspectAtLeastR
 
 import java.util.UUID
 import scala.jdk.CollectionConverters.*
@@ -18,6 +17,7 @@ import scala.jdk.CollectionConverters.*
 type KeycloakAdminClient = Keycloak
 
 trait KeycloakTestContainerSupport {
+
   protected val keycloakContainerLayer: TaskLayer[KeycloakContainerCustom] =
     KeycloakContainerCustom.layer
 
@@ -50,11 +50,19 @@ trait KeycloakTestContainerSupport {
   protected def initializeClient =
     for {
       adminClient <- adminClientZIO
-      _ <- ZIO.attemptBlocking(
-        adminClient
-          .realms()
-          .create(realmRepresentation)
-      )
+      _ <- ZIO
+        .attemptBlocking(
+          adminClient
+            .realm(realmName)
+            .remove()
+        )
+        .catchSome { case _: NotFoundException => ZIO.unit }
+      _ <- ZIO
+        .attemptBlocking(
+          adminClient
+            .realms()
+            .create(realmRepresentation)
+        )
       _ <- ZIO
         .attemptBlocking(
           adminClient
@@ -63,24 +71,6 @@ trait KeycloakTestContainerSupport {
             .create(agentClientRepresentation)
         )
     } yield ()
-
-  def bootstrapKeycloakRealm = adminClientZIO.flatMap(keycloak =>
-    ZIO.attemptBlocking {
-      keycloak.realms().create(realmRepresentation)
-      keycloak.realm(realmName).clients().create(agentClientRepresentation)
-      ()
-    }
-  )
-
-  def bootstrapKeycloakRealmAspect: TestAspectAtLeastR[KeycloakAdminClient] = {
-    val run = for {
-      _ <- ZIO.log("Bootstrapping the Keycloak realm...")
-      _ <- bootstrapKeycloakRealm
-      _ <- ZIO.log("Bootstrap finished")
-    } yield ()
-
-    beforeAll(run.orDie)
-  }
 
   def createUser(username: String, password: String): RIO[KeycloakAdminClient, UserRepresentation] =
     val userRepresentation = {

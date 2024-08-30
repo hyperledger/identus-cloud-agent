@@ -1,6 +1,6 @@
 package org.hyperledger.identus.sharedtest.containers
 
-import com.dimafeng.testcontainers.{SingleContainer, VaultContainer}
+import com.dimafeng.testcontainers.SingleContainer
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.vault.VaultContainer as JavaVaultContainer
 
@@ -8,7 +8,6 @@ import org.testcontainers.vault.VaultContainer as JavaVaultContainer
 class VaultContainerCustom(
     dockerImageNameOverride: DockerImageName,
     vaultToken: Option[String] = None,
-    secrets: Option[VaultContainer.Secrets] = None,
     isOnGithubRunner: Boolean = false,
     useFileBackend: Boolean = false
 ) extends SingleContainer[JavaVaultContainer[?]] {
@@ -41,9 +40,6 @@ class VaultContainerCustom(
   }
 
   if (vaultToken.isDefined) vaultContainer.withVaultToken(vaultToken.get)
-  secrets.foreach { x =>
-    vaultContainer.withSecretInVault(x.path, x.firstSecret, x.secrets*)
-  }
 
   override val container: JavaVaultContainer[?] = {
     val con = vaultContainer

@@ -1,6 +1,6 @@
 package org.hyperledger.identus.mercury
 
-import io.circe._
+import io.circe.*
 import io.circe.parser.*
 import org.hyperledger.identus.*
 import org.hyperledger.identus.mercury.model.*
