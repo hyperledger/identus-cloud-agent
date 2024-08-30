@@ -22,10 +22,10 @@ While the DIDComm Error Reporting protocol effectively handles errors in peer-to
 ## Considered Options
 
 1. Storing error information in database records
- - Storing in RFC 9457 Problem Details for HTTP APIs format
- - Storing in proprietary format
- - Storing as ZIO.Failure string (as is)
- - Enhancing the API to return this attribute of the record when checking the status of an operation
+- Storing in RFC 9457 Problem Details for HTTP APIs format
+- Storing in proprietary format
+- Storing as ZIO.Failure string (as is)
+- Enhancing the API to return this attribute of the record when checking the status of an operation
 2. Creating a central registry of errors
 3. Using existing webhook system to send errors to clients
 4. Implementing event-driven error notifications
