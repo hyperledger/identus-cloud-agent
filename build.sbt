@@ -70,7 +70,7 @@ lazy val V = new {
   val testContainersJavaKeycloak = "3.2.0" // scala-steward:off
 
   val doobie = "1.0.0-RC5"
-  val quill = "4.8.4"
+  val quill = "4.8.5"
   val flyway = "9.22.3"
   val postgresDriver = "42.7.3"
   val logback = "1.4.14"
@@ -125,6 +125,7 @@ lazy val D = new {
   val jakartaJson: ModuleID = "org.glassfish" % "jakarta.json" % "2.0.1"
   val ironVC: ModuleID = "com.apicatalog" % "iron-verifiable-credentials" % "0.14.0"
   val scodecBits: ModuleID = "org.scodec" %% "scodec-bits" % "1.1.38"
+  val jaywayJsonPath: ModuleID = "com.jayway.jsonpath" % "json-path" % "2.9.0"
 
   // https://mvnrepository.com/artifact/org.didcommx/didcomm/0.3.2
   val didcommx: ModuleID = "org.didcommx" % "didcomm" % "0.3.2"
@@ -201,7 +202,8 @@ lazy val D_SharedJson = new {
       D.jakartaJson,
       D.ironVC,
       D.scodecBits,
-      D.networkntJsonSchemaValidator
+      D.networkntJsonSchemaValidator,
+      D.jaywayJsonPath
     )
 }
 

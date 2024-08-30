@@ -83,12 +83,11 @@ object KeycloakAuthenticatorSpec
 
     suite("KeycloakAuthenticatorSpec")(
       basicSpec
-        .provide(
+        .provideSome[KeycloakContainerCustom](
           KeycloakAuthenticatorImpl.layer,
           ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
           keycloakConfigLayer(),
           keycloakAdminClientLayer,
-          keycloakContainerLayer,
           Client.default,
           KeycloakPermissionManagementService.layer,
           WalletManagementServiceImpl.layer,
@@ -100,12 +99,11 @@ object KeycloakAuthenticatorSpec
           ZLayer.succeed(WalletAdministrationContext.Admin())
         ),
       disabledAutoRptSpec
-        .provide(
+        .provideSome[KeycloakContainerCustom](
           KeycloakAuthenticatorImpl.layer,
           ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
           keycloakConfigLayer(authUpgradeToRPT = false),
           keycloakAdminClientLayer,
-          keycloakContainerLayer,
           Client.default,
           KeycloakPermissionManagementService.layer,
           WalletManagementServiceImpl.layer,
@@ -117,6 +115,7 @@ object KeycloakAuthenticatorSpec
           ZLayer.succeed(WalletAdministrationContext.Admin())
         )
     )
+      .provideLayerShared(keycloakContainerLayer)
       .provide(Runtime.removeDefaultLoggers) @@ TestAspect.sequential
   }
 

@@ -73,7 +73,7 @@ object CredentialDefinitionLookupAndPaginationSpec
       )
   ).provideSomeLayerShared(
     mockManagedDIDServiceLayer.exactly(20).toLayer >+> testEnvironmentLayer
-  )
+  ).provide(Runtime.removeDefaultLoggers)
 
   private val credentialDefinitionPaginationSpec = suite("credential-definition-registry pagination logic")(
     test("pagination of the first page with the empty query params") {

@@ -6,6 +6,8 @@ import io.circe.Json
 import munit.*
 import org.hyperledger.identus.pollux.prex.*
 
+import scala.language.implicitConversions
+
 class PresentationAttachmentSpec extends ZSuite {
 
   test("Verifier Request Presentation Attachment") {

@@ -4,6 +4,7 @@ import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.*
 import org.hyperledger.identus.pollux.prex.PresentationDefinitionError.{
+  InvalidFilterJsonPath,
   InvalidFilterJsonSchema,
   JsonSchemaOptionNotSupported
 }
@@ -68,9 +69,6 @@ object PresentationDefinitionValidatorSpec extends ZIOSpecDefault {
         pd <- ZIO
           .fromEither(decode[ExampleTransportEnvelope](pdJson))
           .map(_.presentation_definition)
-        filters <- ZIO
-          .succeed(pd.input_descriptors.flatMap(_.constraints.fields.getOrElse(Nil)))
-          .map(_.flatMap(_.filter))
         exit <- validator.validate(pd).exit
       } yield assert(exit)(failsWithA[InvalidFilterJsonSchema])
     },
@@ -103,11 +101,39 @@ object PresentationDefinitionValidatorSpec extends ZIOSpecDefault {
         pd <- ZIO
           .fromEither(decode[ExampleTransportEnvelope](pdJson))
           .map(_.presentation_definition)
-        filters <- ZIO
-          .succeed(pd.input_descriptors.flatMap(_.constraints.fields.getOrElse(Nil)))
-          .map(_.flatMap(_.filter))
         exit <- validator.validate(pd).exit
       } yield assert(exit)(failsWithA[JsonSchemaOptionNotSupported])
+    },
+    test("reject when path is not a valid json path") {
+      val pdJson =
+        """{
+          |  "presentation_definition": {
+          |    "id": "32f54163-7166-48f1-93d8-ff217bdb0653",
+          |    "input_descriptors": [
+          |      {
+          |        "id": "wa_driver_license",
+          |        "name": "Washington State Business License",
+          |        "purpose": "We can only allow licensed Washington State business representatives into the WA Business Conference",
+          |        "constraints": {
+          |          "fields": [
+          |            {
+          |              "path": ["$$"]
+          |            }
+          |          ]
+          |        }
+          |      }
+          |    ]
+          |  }
+          |}
+          """.stripMargin
+
+      for {
+        validator <- ZIO.service[PresentationDefinitionValidator]
+        pd <- ZIO
+          .fromEither(decode[ExampleTransportEnvelope](pdJson))
+          .map(_.presentation_definition)
+        exit <- validator.validate(pd).exit
+      } yield assert(exit)(failsWithA[InvalidFilterJsonPath])
     }
   )
     .provide(PresentationDefinitionValidatorImpl.layer)

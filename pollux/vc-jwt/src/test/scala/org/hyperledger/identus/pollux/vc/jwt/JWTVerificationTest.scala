@@ -9,11 +9,12 @@ import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.shared.http.*
 import zio.*
+import zio.prelude.Validation
 import zio.test.*
 import zio.test.Assertion.*
 
 import java.security.Security
-import java.time.Instant
+import java.time.{Clock, Instant, ZoneId}
 
 object JWTVerificationTest extends ZIOSpecDefault {
 
@@ -62,7 +63,9 @@ object JWTVerificationTest extends ZIOSpecDefault {
                                               |""".stripMargin
 
   private def createJwtCredential(issuer: IssuerWithKey): JWT = {
+    val validFrom = Instant.parse("2010-01-05T00:00:00Z") // ISSUANCE DATE
     val jwtCredentialNbf = Instant.parse("2010-01-01T00:00:00Z") // ISSUANCE DATE
+    val validUntil = Instant.parse("2010-01-09T00:00:00Z") // EXPIRATION DATE
     val jwtCredentialExp = Instant.parse("2010-01-12T00:00:00Z") // EXPIRATION DATE
     val jwtCredentialPayload = JwtCredentialPayload(
       iss = issuer.issuer.did.value,
@@ -76,8 +79,8 @@ object JWTVerificationTest extends ZIOSpecDefault {
         maybeRefreshService = None,
         maybeEvidence = None,
         maybeTermsOfUse = None,
-        maybeValidFrom = None,
-        maybeValidUntil = None
+        maybeValidFrom = Some(validFrom),
+        maybeValidUntil = Some(validUntil)
       ),
       nbf = jwtCredentialNbf, // ISSUANCE DATE
       aud = Set.empty,
@@ -182,6 +185,42 @@ object JWTVerificationTest extends ZIOSpecDefault {
           _ => false
         )
       )
+    },
+    test("validate dates happy path") {
+      val issuer = createUser(DID("did:prism:issuer"))
+      val jwtCredential = createJwtCredential(issuer)
+      for {
+        validation <- ZIO.succeed(
+          JwtCredential
+            .verifyDates(jwtCredential, java.time.Duration.ZERO)(
+              Clock.fixed(Instant.parse("2010-01-08T00:00:00Z"), ZoneId.systemDefault())
+            )
+        )
+      } yield assertTrue(validation.fold(_ => false, _ => true))
+    },
+    test("validate dates should fail given after valid until") {
+      val issuer = createUser(DID("did:prism:issuer"))
+      val jwtCredential = createJwtCredential(issuer)
+      for {
+        validation <- ZIO.succeed(
+          JwtCredential
+            .verifyDates(jwtCredential, java.time.Duration.ZERO)(
+              Clock.fixed(Instant.parse("2010-01-10T00:00:00Z"), ZoneId.systemDefault())
+            )
+        )
+      } yield assertTrue(validation.fold(_ => true, _ => false))
+    },
+    test("validate dates should fail given before valid from") {
+      val issuer = createUser(DID("did:prism:issuer"))
+      val jwtCredential = createJwtCredential(issuer)
+      for {
+        validation <- ZIO.succeed(
+          JwtCredential
+            .verifyDates(jwtCredential, java.time.Duration.ZERO)(
+              Clock.fixed(Instant.parse("2010-01-02T00:00:00Z"), ZoneId.systemDefault())
+            )
+        )
+      } yield assertTrue(validation.fold(_ => true, _ => false))
     },
     test("validate PrismDID issued JWT VC using verification publicKeys") {
       val issuer = createUser(DID("did:prism:issuer"))
