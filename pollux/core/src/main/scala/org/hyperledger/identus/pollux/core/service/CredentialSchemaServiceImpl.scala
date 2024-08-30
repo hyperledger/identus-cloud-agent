@@ -3,6 +3,7 @@ package org.hyperledger.identus.pollux.core.service
 import org.hyperledger.identus.pollux.core.model.error.{
   CredentialSchemaError,
   CredentialSchemaGuidNotFoundError,
+  CredentialSchemaIdNotFoundError,
   CredentialSchemaServiceError,
   CredentialSchemaUpdateError,
   CredentialSchemaValidationError
@@ -52,32 +53,33 @@ class CredentialSchemaServiceImpl(
   }
 
   override def update(
-      guid: UUID,
+      id: UUID,
       in: CredentialSchema.Input,
       resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
   ): Result[CredentialSchema] = {
+
     for {
-      existingVersions <- credentialSchemaRepository.getAllVersions(guid, in.author, resolutionMethod)
+      existingVersions <- credentialSchemaRepository.getAllVersions(id, in.author, resolutionMethod)
       _ <-
         if existingVersions.isEmpty then
           ZIO.fail(
             CredentialSchemaUpdateError(
-              guid,
+              id,
               in.version,
               in.author,
-              s"No Schema exists of author: ${in.author}, with provided id: $guid"
+              s"No Schema exists of author: ${in.author}, with provided id: $id"
             )
           )
         else ZIO.unit
       resolutionMethod = existingVersions.head.resolutionMethod
-      cs <- CredentialSchema.make(guid, in, resolutionMethod)
+      cs <- CredentialSchema.make(id, in, resolutionMethod)
       _ <- CredentialSchema.validateCredentialSchema(cs).mapError(CredentialSchemaValidationError.apply)
-      _ <- ZIO.fromOption(existingVersions.headOption).mapError(_ => CredentialSchemaGuidNotFoundError(guid))
+      _ <- ZIO.fromOption(existingVersions.headOption).mapError(_ => CredentialSchemaIdNotFoundError(id))
       _ <- existingVersions.find(_.version > in.version) match {
         case Some(higherVersion) =>
           ZIO.fail(
             CredentialSchemaUpdateError(
-              guid,
+              id,
               in.version,
               in.author,
               s"Higher version is found: $higherVersion"
@@ -90,7 +92,7 @@ class CredentialSchemaServiceImpl(
         case Some(existingVersion) =>
           ZIO.fail(
             CredentialSchemaUpdateError(
-              guid,
+              id,
               in.version,
               in.author,
               s"The version already exists: $existingVersion"

@@ -123,7 +123,7 @@ object SchemaRegistryEndpoints {
       .out(jsonBody[CredentialSchemaDidUrlResponse])
       .description("Credential schema record")
       .errorOut(basicFailureAndNotFoundAndForbidden)
-      .name("createSchema")
+      .name("createSchemaDidUrl")
       .summary("Publish new schema to the schema registry, did url resolvable")
       .description(
         "Create the new credential schema record with metadata and internal JSON Schema on behalf of Cloud Agent. " +
@@ -201,7 +201,7 @@ object SchemaRegistryEndpoints {
       .out(jsonBody[CredentialSchemaDidUrlResponse])
       .description("Credential schema record wrapped in an envelope")
       .errorOut(basicFailureAndNotFoundAndForbidden)
-      .name("updateSchema")
+      .name("updateSchemaDidUrl")
       .summary("Publish the new version of the credential schema to the schema registry")
       .description(
         "Publish the new version of the credential schema record with metadata and internal JSON Schema on behalf of Cloud Agent. " +
@@ -250,7 +250,7 @@ object SchemaRegistryEndpoints {
         )
       )
       .errorOut(basicFailuresAndNotFound)
-      .name("getSchemaById")
+      .name("getSchemaByIdDidUrl")
       .summary("Fetch the schema from the registry by `guid`")
       .description(
         "Fetch the credential schema by the unique identifier"
@@ -292,9 +292,9 @@ object SchemaRegistryEndpoints {
       )
       .out(
         jsonBody[CredentialSchemaInnerDidUrlResponse].description("Raw JSON response of the CredentialSchema")
-      ) // changed to Json
+      )
       .errorOut(basicFailuresAndNotFound)
-      .name("getRawSchemaById")
+      .name("getRawSchemaByIdDidUrl")
       .summary("Fetch the schema from the registry by `guid`")
       .description("Fetch the credential schema by the unique identifier")
       .tag("Schema Registry")
@@ -357,7 +357,7 @@ object SchemaRegistryEndpoints {
         )
       )
       .errorOut(basicFailuresAndForbidden)
-      .name("lookupSchemasByQuery")
+      .name("lookupSchemasByQueryDidUrl")
       .summary("Lookup schemas by indexed fields")
       .description(
         "Lookup schemas by `author`, `name`, `tags` parameters and control the pagination by `offset` and `limit` parameters "

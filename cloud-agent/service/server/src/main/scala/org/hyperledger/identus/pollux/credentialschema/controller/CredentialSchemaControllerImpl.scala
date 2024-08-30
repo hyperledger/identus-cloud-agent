@@ -1,7 +1,6 @@
 package org.hyperledger.identus.pollux.credentialschema.controller
 
 import cats.implicits.*
-import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.api.http.*
@@ -154,7 +153,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaResponsePage] = {
     for {
       filteredEntries: FilteredEntries <- service.lookup(
-        filter.toDomain(ResourceResolutionMethod.DID),
+        filter.toDomain(),
         pagination.offset,
         pagination.limit
       )
@@ -176,7 +175,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaDidUrlResponsePage] = {
     for {
       filteredEntries: FilteredEntries <- service.lookup(
-        filter.toDomain,
+        filter.toDomain(ResourceResolutionMethod.DID),
         pagination.offset,
         pagination.limit
       )

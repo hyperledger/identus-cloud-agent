@@ -112,8 +112,7 @@ class IssueControllerImpl(
                     Seq(),
                     ListMap(
                       "resourceService" -> Seq(publicEndpointServiceName),
-                      "resourcePath" -> Seq(resourcePath),
-                      "resourceHash" -> Seq(hash)
+                      "resourcePath" -> Seq(s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition?resourceHash=$hash"),
                     ),
                     None
                   ).toString

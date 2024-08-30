@@ -119,6 +119,7 @@ class SchemaRegistryServerEndpoints(
               .logTrace(ctx)
           }
         }
+
     val did: ZServerEndpoint[Any, Any] =
       lookupSchemasByQueryDidUrlEndpoint
         .zServerSecurityLogic(SecurityLogic.authorizeWalletAccessWith(_)(authenticator, authorizer))
@@ -135,12 +136,12 @@ class SchemaRegistryServerEndpoints(
               .logTrace(ctx)
           }
         }
-    val all = List(http, did)
 
+    val all = List(http, did)
   }
 
   val all: List[ZServerEndpoint[Any, Any]] =
-    create.all ++ update.all ++ get.all ++ getRaw.all ++ getMany.all
+    create.all ++ update.all ++ getMany.all ++ getRaw.all ++ get.all
 }
 
 object SchemaRegistryServerEndpoints {
