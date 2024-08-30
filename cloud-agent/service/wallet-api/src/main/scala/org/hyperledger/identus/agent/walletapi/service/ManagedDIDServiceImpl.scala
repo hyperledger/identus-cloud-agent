@@ -17,7 +17,6 @@ import org.hyperledger.identus.shared.crypto.{Apollo, Ed25519KeyPair, Secp256k1K
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
-import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
 import scala.collection.immutable.ArraySeq
 import scala.language.implicitConversions
 
@@ -54,23 +53,6 @@ class ManagedDIDServiceImpl private[walletapi] (
 
   def syncUnconfirmedUpdateOperations: ZIO[WalletAccessContext, GetManagedDIDError, Unit] =
     syncUnconfirmedUpdateOperationsByDID(did = None)
-
-  def javaKeyPairWithDID(
-      did: CanonicalPrismDID,
-      keyId: String
-  ): URIO[WalletAccessContext, Option[(JavaPrivateKey, JavaPublicKey)]] = {
-    findDIDKeyPair(did, keyId)
-      .flatMap {
-        case None                            => ZIO.none
-        case Some(keyPair: Secp256k1KeyPair) => ZIO.some(keyPair)
-        case _ => ZIO.dieMessage("Only secp256k1 keypair is supported for Java KeyPair conversion")
-      }
-      .map(
-        _.map { keyPair =>
-          (keyPair.privateKey.toJavaPrivateKey, keyPair.publicKey.toJavaPublicKey)
-        }
-      )
-  }
 
   override def findDIDKeyPair(
       did: CanonicalPrismDID,
