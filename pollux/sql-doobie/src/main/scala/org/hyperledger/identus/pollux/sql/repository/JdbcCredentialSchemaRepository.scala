@@ -97,7 +97,8 @@ case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: 
           authorOpt = query.filter.author,
           nameOpt = query.filter.name,
           versionOpt = query.filter.version,
-          tagOpt = query.filter.tags
+          tagOpt = query.filter.tags,
+          resolutionMethod = query.filter.resolutionMethod
         )
         .transactWallet(xa)
         .orDie

@@ -99,6 +99,7 @@ class IssueControllerImpl(
               credentialDefinition <- credentialDefinitionService.getByGUID(credentialDefinitionGUID)
               credentialDefinitionId <- {
 
+                // TODO: this needs to be either DID or HTTP url based on credentialDefinition.resolutionMethod
                 val publicEndpointServiceName = appConfig.agent.httpEndpoint.serviceName
                 val resourcePath =
                   s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"

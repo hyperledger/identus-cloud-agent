@@ -3,6 +3,7 @@ package org.hyperledger.identus.pollux.sql.repository
 import doobie.*
 import doobie.implicits.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.repository.{CredentialDefinitionRepository, Repository}
 import org.hyperledger.identus.pollux.core.repository.Repository.*
 import org.hyperledger.identus.pollux.sql.model.db.{
@@ -31,9 +32,9 @@ case class JdbcCredentialDefinitionRepository(xa: Transactor[ContextAwareTask], 
     )
   }
 
-  override def findByGuid(guid: UUID): UIO[Option[CredentialDefinition]] = {
+  override def findByGuid(guid: UUID, resolutionMethod: ResourceResolutionMethod): UIO[Option[CredentialDefinition]] = {
     CredentialDefinitionSql
-      .findByGUID(guid)
+      .findByGUID(guid, resolutionMethod)
       .transact(xb)
       .orDie
       .map(
@@ -85,7 +86,8 @@ case class JdbcCredentialDefinitionRepository(xa: Transactor[ContextAwareTask], 
           versionOpt = query.filter.version,
           tagOpt = query.filter.tag,
           offset = query.skip,
-          limit = query.limit
+          limit = query.limit,
+          resolutionMethod = query.filter.resolutionMethod
         )
         .transactWallet(xa)
         .orDie
@@ -96,7 +98,8 @@ case class JdbcCredentialDefinitionRepository(xa: Transactor[ContextAwareTask], 
           authorOpt = query.filter.author,
           nameOpt = query.filter.name,
           versionOpt = query.filter.version,
-          tagOpt = query.filter.tag
+          tagOpt = query.filter.tag,
+          resolutionMethod = query.filter.resolutionMethod
         )
         .transactWallet(xa)
         .orDie

@@ -2,6 +2,7 @@ package org.hyperledger.identus.pollux.credentialdefinition.http
 
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.pollux.core.model
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.credentialdefinition.http.FilterInput.annotations
 import sttp.tapir.EndpointIO.annotations.{example, query}
@@ -21,7 +22,7 @@ case class FilterInput(
     @example(Option(annotations.tag.example))
     tag: Option[String] = Option.empty[String]
 ) {
-  def toDomain = CredentialDefinition.Filter(author, name, version, tag)
+  def toDomain(resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP) = CredentialDefinition.Filter(author, name, version, tag, resolutionMethod)
 }
 
 object FilterInput {
