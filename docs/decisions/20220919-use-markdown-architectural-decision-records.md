@@ -9,7 +9,7 @@
 We want to record architectural decisions made in this project.
 Which format and structure should these records follow?
 
-## Decision Drivers 
+## Decision Drivers
 
 - We want to improve the information and technical documentation of our software engineering projects
 - We want to create an immutable log of important architectural decisions we have made during the software development
@@ -20,7 +20,7 @@ Which format and structure should these records follow?
 
 ## Considered Options
 
-- [MADR](https://github.com/adr/madr/compare/3.0.0-beta...3.0.0-beta.2) 3.0.0-beta.2 
+- [MADR](https://github.com/adr/madr/compare/3.0.0-beta...3.0.0-beta.2) 3.0.0-beta.2
 - [MADR](https://adr.github.io/madr/) 2.1.2 with Log4brains patch
 - [MADR](https://adr.github.io/madr/) 2.1.2 – The original Markdown Architectural Decision Records
 - [Michael Nygard's template](http://thinkrelevance.com/blog/2011/11/15/documenting-architecture-decisions) – The first incarnation of the term "ADR"
