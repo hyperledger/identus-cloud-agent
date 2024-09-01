@@ -17,6 +17,7 @@ import zio.json.EncoderOps
 import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
+import org.hyperledger.identus.agent.server.config.AppConfig
 
 object CredentialDefinitionLookupAndPaginationSpec
     extends ZIOSpecDefault
@@ -25,13 +26,14 @@ object CredentialDefinitionLookupAndPaginationSpec
 
   def fetchAllPages(
       uri: Uri
-  ): ZIO[CredentialDefinitionController & AuthenticatorWithAuthZ[BaseEntity], Throwable, List[
+  ): ZIO[CredentialDefinitionController & AuthenticatorWithAuthZ[BaseEntity] & AppConfig, Throwable, List[
     CredentialDefinitionResponsePage
   ]] = {
     for {
       controller <- ZIO.service[CredentialDefinitionController]
       authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-      backend = httpBackend(controller, authenticator)
+      config <- ZIO.service[AppConfig]
+      backend = httpBackend(config, controller, authenticator)
       response: CredentialDefinitionResponsePageType <-
         for {
           response <- basicRequest
@@ -81,8 +83,8 @@ object CredentialDefinitionLookupAndPaginationSpec
         _ <- deleteAllCredentialDefinitions
         controller <- ZIO.service[CredentialDefinitionController]
         authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-        backend = httpBackend(controller, authenticator)
-
+        config <- ZIO.service[AppConfig]
+        backend = httpBackend(config, controller, authenticator)
         inputs <- Generator.credentialDefinitionInput.runCollectN(10)
         _ <- inputs
           .map(in =>

@@ -149,7 +149,7 @@ object CredentialDefinition {
       name: Option[String] = None,
       version: Option[String] = None,
       tag: Option[String] = None,
-      resolutionMethod: ResourceResolutionMethod
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
   )
 
   case class FilteredEntries(entries: Seq[CredentialDefinition], count: Long, totalCount: Long)

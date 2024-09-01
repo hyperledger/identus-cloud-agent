@@ -31,6 +31,11 @@ import scala.language.implicitConversions
 
 class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDIDService: ManagedDIDService)
     extends CredentialSchemaController {
+
+  private def parsingCredentialSchemaError(e: String) = ErrorResponse
+    .internalServerError(detail =
+      Some(s"Error occurred while parsing the credential schema response: $e"))
+
   override def createSchema(
       in: CredentialSchemaInput
   )(implicit
@@ -52,9 +57,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
       result <- service.create(toDomain(in), ResourceResolutionMethod.DID)
       response <- ZIO
         .fromEither(CredentialSchemaDidUrlResponse.fromDomain(result, baseUrlServiceName))
-        .mapError(e =>
-          ErrorResponse.internalServerError(detail = Some(s"Error occurred while parsing a schema response: $e"))
-        )
+        .mapError(parsingCredentialSchemaError)
 
     } yield response
 
@@ -81,9 +84,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
         .update(id, toDomain(in), ResourceResolutionMethod.DID)
       result <- ZIO
         .fromEither(CredentialSchemaDidUrlResponse.fromDomain(cs, baseUrlServiceName))
-        .mapError(e =>
-          ErrorResponse.internalServerError(detail = Some(s"Error occurred while parsing a schema response: $e"))
-        )
+        .mapError(parsingCredentialSchemaError)
     } yield result
 
     res
@@ -108,9 +109,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
       cs <- service.getByGUID(guid, ResourceResolutionMethod.DID)
       response <- ZIO
         .fromEither(CredentialSchemaDidUrlResponse.fromDomain(cs, baseUrlServiceName))
-        .mapError(e =>
-          ErrorResponse.internalServerError(detail = Some(s"Error occurred while parsing a schema response: $e"))
-        )
+        .mapError(parsingCredentialSchemaError)
     } yield response
 
     res
@@ -136,9 +135,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
         .mapError(_ => ErrorResponse.internalServerError(detail = Some("Invalid schema author DID")))
       response <- ZIO
         .fromEither(CredentialSchemaInnerDidUrlResponse.fromDomain(cs.schema, authorDid, cs.id, baseUrlServiceName))
-        .mapError(e =>
-          ErrorResponse.internalServerError(detail = Some(s"Error occurred while parsing a schema response: $e"))
-        )
+        .mapError(parsingCredentialSchemaError)
     } yield response
 
     res

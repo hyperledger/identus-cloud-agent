@@ -41,6 +41,10 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
         .map(cs => CredentialDefinitionResponse.fromDomain(cs).withBaseUri(rc.request.uri))
     } yield result
   }
+  
+  private def couldNotParseCredDefResponse(e: String) = ErrorResponse
+    .internalServerError(detail =
+      Some(s"Error occurred while parsing the credential definition response: $e")) 
 
   override def createCredentialDefinitionDidUrl(
       in: CredentialDefinitionInput
@@ -76,10 +80,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
       cd <- service.getByGUID(guid, ResourceResolutionMethod.DID)
       response <- ZIO
         .fromEither(CredentialDefinitionDidUrlResponse.fromDomain(cd, baseUrlServiceName))
-        .mapError(e =>
-          ErrorResponse
-            .internalServerError(detail = Some(s"Error occurred while parsing a credential definition response: $e"))
-        )
+        .mapError(couldNotParseCredDefResponse)
 
     } yield response
 
@@ -107,12 +108,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
           CredentialDefinitionInnerDefinitionDidUrlResponse
             .fromDomain(cd.definition, authorDid, cd.guid, baseUrlServiceName)
         )
-        .mapError(e =>
-          ErrorResponse
-            .internalServerError(detail =
-              Some(s"Error occurred while parsing inner definition of the credential definition response: $e")
-            )
-        )
+        .mapError(couldNotParseCredDefResponse)
 
     } yield response
 
@@ -160,9 +156,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
 
       entries <- ZIO
         .fromEither(entriesZio)
-        .mapError(e =>
-          ErrorResponse.internalServerError(detail = Some(s"Error occurred while parsing a schema response: $e"))
-        )
+        .mapError(couldNotParseCredDefResponse)
 
       page = CredentialDefinitionDidUrlResponsePage(entries)
       stats = CollectionStats(filteredEntries.totalCount, filteredEntries.count)
