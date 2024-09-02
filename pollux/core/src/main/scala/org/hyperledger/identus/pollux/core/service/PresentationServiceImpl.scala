@@ -421,7 +421,6 @@ private class PresentationServiceImpl(
         connectionId = connectionId,
         schemaId = None, // TODO REMOVE from DB
         role = PresentationRecord.Role.Verifier,
-        subjectId = pairwiseProverDID.getOrElse(DidId("TODO REMOVE")), // TODO REMOVE from DB
         protocolState = invitation.fold(PresentationRecord.ProtocolState.RequestPending)(_ =>
           PresentationRecord.ProtocolState.InvitationGenerated
         ),
@@ -499,8 +498,6 @@ private class PresentationServiceImpl(
         connectionId = connectionId,
         schemaId = None,
         role = Role.Prover,
-        subjectId =
-          request.to.getOrElse(throw RuntimeException(s"RequestPresentation from field is missing")), // TODO REMOVE
         protocolState = PresentationRecord.ProtocolState.RequestReceived,
         credentialFormat = format,
         invitation = None,

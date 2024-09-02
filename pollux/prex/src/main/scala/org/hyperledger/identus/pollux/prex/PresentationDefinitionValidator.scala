@@ -1,10 +1,16 @@
 package org.hyperledger.identus.pollux.prex
 
 import org.hyperledger.identus.pollux.prex.PresentationDefinitionError.{
+  InvalidFilterJsonPath,
   InvalidFilterJsonSchema,
   JsonSchemaOptionNotSupported
 }
-import org.hyperledger.identus.shared.json.{JsonSchemaError, JsonSchemaValidator, JsonSchemaValidatorImpl}
+import org.hyperledger.identus.shared.json.{
+  JsonPathError,
+  JsonSchemaError,
+  JsonSchemaValidator,
+  JsonSchemaValidatorImpl
+}
 import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 import zio.*
 
@@ -15,6 +21,12 @@ sealed trait PresentationDefinitionError extends Failure {
 }
 
 object PresentationDefinitionError {
+  final case class InvalidFilterJsonPath(path: String, error: JsonPathError) extends PresentationDefinitionError {
+    override def statusCode: StatusCode = StatusCode.BadRequest
+    override def userFacingMessage: String =
+      s"PresentationDefinition input_descriptors path '$path' is not a valid JsonPath"
+  }
+
   final case class InvalidFilterJsonSchema(json: String, error: JsonSchemaError) extends PresentationDefinitionError {
     override def statusCode: StatusCode = StatusCode.BadRequest
     override def userFacingMessage: String =
@@ -47,15 +59,26 @@ object PresentationDefinitionValidatorImpl {
 class PresentationDefinitionValidatorImpl(filterSchemaValidator: JsonSchemaValidator)
     extends PresentationDefinitionValidator {
   override def validate(pd: PresentationDefinition): IO[PresentationDefinitionError, Unit] = {
-    val filters = pd.input_descriptors
+    val fields = pd.input_descriptors
       .flatMap(_.constraints.fields)
       .flatten
-      .flatMap(_.filter)
+
+    val paths = fields.flatMap(_.path)
+    val filters = fields.flatMap(_.filter)
 
     for {
+      _ <- validateJsonPaths(paths)
       _ <- validateFilters(filters)
       _ <- validateAllowedFilterSchemaKeys(filters)
     } yield ()
+  }
+
+  private def validateJsonPaths(paths: Seq[JsonPathValue]): IO[PresentationDefinitionError, Unit] = {
+    ZIO
+      .foreach(paths) { path =>
+        path.toJsonPath.mapError(InvalidFilterJsonPath(path.value, _))
+      }
+      .unit
   }
 
   // while we use full-blown json-schema library, we limit the schema optiton

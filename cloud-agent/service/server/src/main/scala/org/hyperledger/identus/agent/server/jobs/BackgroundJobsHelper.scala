@@ -16,8 +16,7 @@ import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.{AgentPeerService, DidAgent}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.PresentationError
+import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import org.hyperledger.identus.pollux.core.model.DidCommID
 import org.hyperledger.identus.pollux.core.service.CredentialService
 import org.hyperledger.identus.pollux.sdjwt.SDJWT.*

@@ -10,8 +10,6 @@ import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair, 
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
-import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
-
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
   * indy-wallet-sdk.
   */
@@ -22,12 +20,6 @@ trait ManagedDIDService {
   def syncManagedDIDState: ZIO[WalletAccessContext, GetManagedDIDError, Unit]
 
   def syncUnconfirmedUpdateOperations: ZIO[WalletAccessContext, GetManagedDIDError, Unit]
-
-  @deprecated("will be dropped in favor of findDIDKeyPair")
-  def javaKeyPairWithDID(
-      did: CanonicalPrismDID,
-      keyId: String
-  ): URIO[WalletAccessContext, Option[(JavaPrivateKey, JavaPublicKey)]]
 
   def findDIDKeyPair(
       did: CanonicalPrismDID,

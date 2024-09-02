@@ -4,7 +4,6 @@ import cats.implicits.*
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
-import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
@@ -561,14 +560,18 @@ class CredentialServiceImpl(
     for {
       issuingKeyId <- getKeyId(jwtIssuerDID, verificationRelationship, EllipticCurve.SECP256K1)
       ecKeyPair <- managedDIDService
-        .javaKeyPairWithDID(jwtIssuerDID.asCanonical, issuingKeyId)
+        .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
+        .flatMap {
+          case Some(keyPair: Secp256k1KeyPair) => ZIO.some(keyPair)
+          case _                               => ZIO.none
+        }
         .someOrFail(KeyPairNotFoundInWallet(jwtIssuerDID, issuingKeyId, "Secp256k1"))
         .orDieAsUnmanagedFailure
-      (privateKey, publicKey) = ecKeyPair
+      Secp256k1KeyPair(publicKey, privateKey) = ecKeyPair
       jwtIssuer = JwtIssuer(
         org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
-        ES256KSigner(privateKey, keyId),
-        publicKey
+        ES256KSigner(privateKey.toJavaPrivateKey, keyId),
+        publicKey.toJavaPublicKey
       )
     } yield jwtIssuer
   }

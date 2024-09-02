@@ -39,22 +39,24 @@ object KeycloakPermissionManagementServiceSpec
       multitenantSuite
     ) @@ sequential @@ TestAspect.before(DBTestUtils.runMigrationAgentDB)
 
-    s.provide(
-      Client.default,
-      keycloakContainerLayer,
-      keycloakAdminConfigLayer,
-      KeycloakAdmin.layer,
-      KeycloakPermissionManagementService.layer,
-      KeycloakAuthenticatorImpl.layer,
-      ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
-      keycloakConfigLayer(),
-      WalletManagementServiceImpl.layer,
-      JdbcWalletNonSecretStorage.layer,
-      JdbcWalletSecretStorage.layer,
-      contextAwareTransactorLayer,
-      pgContainerLayer,
-      apolloLayer
-    ).provide(Runtime.removeDefaultLoggers)
+    s
+      .provideSome[KeycloakContainerCustom](
+        Client.default,
+        keycloakAdminConfigLayer,
+        KeycloakAdmin.layer,
+        KeycloakPermissionManagementService.layer,
+        KeycloakAuthenticatorImpl.layer,
+        ZLayer.fromZIO(initializeClient) >>> KeycloakClientImpl.authzClientLayer >+> KeycloakClientImpl.layer,
+        keycloakConfigLayer(),
+        WalletManagementServiceImpl.layer,
+        JdbcWalletNonSecretStorage.layer,
+        JdbcWalletSecretStorage.layer,
+        contextAwareTransactorLayer,
+        pgContainerLayer,
+        apolloLayer
+      )
+      .provideLayerShared(keycloakContainerLayer)
+      .provide(Runtime.removeDefaultLoggers)
   }
 
   private val successfulCasesSuite = suite("Successful Cases")(
