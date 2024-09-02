@@ -166,7 +166,10 @@ lazy val D = new {
   val monocleMacro: ModuleID = "dev.optics" %% "monocle-macro" % V.monocle % Test
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % Test
 
-  val apollo = "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo
+  val apollo = Seq( // TODO remove exclude after fix https://github.com/hyperledger/identus-apollo/issues/192
+    "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo exclude ("net.jcip", "jcip-annotations"), // Exclude because of license
+    "com.github.stephenc.jcip" % "jcip-annotations" % "1.0-1" % Runtime, // Replace for net.jcip % jcip-annotations"
+  )
 
   // LIST of Dependencies
   val doobieDependencies: Seq[ModuleID] =
@@ -211,12 +214,11 @@ lazy val D_SharedCrypto = new {
   lazy val dependencies: Seq[ModuleID] =
     Seq(
       D.zioJson,
-      D.apollo,
       D.nimbusJwt,
       D.zioTest,
       D.zioTestSbt,
       D.zioTestMagnolia,
-    )
+    ) ++ D.apollo
 }
 
 lazy val D_SharedTest = new {
