@@ -51,9 +51,7 @@ class CredentialDefinitionRepositoryInMemory(
         case Some(storeRef) => storeRef.get.map(_.get(guid))
         case None           => ZIO.none
       }
-    } yield record.fold(None)(x =>
-      if x.resolutionMethod == resolutionMethod then Some(x) else None
-    )
+    } yield record.fold(None)(x => if x.resolutionMethod == resolutionMethod then Some(x) else None)
   }
 
   override def update(cs: CredentialDefinition): URIO[WalletAccessContext, CredentialDefinition] = {

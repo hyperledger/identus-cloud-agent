@@ -7,8 +7,9 @@ import io.getquill.{MappedEncoding, PostgresJdbcContext, SnakeCase}
 import io.getquill.doobie.DoobieContext
 import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.shared.models.WalletId
-import java.util.UUID
 import org.postgresql.util.PGobject
+
+import java.util.UUID
 
 package object db {
 

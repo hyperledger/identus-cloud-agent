@@ -41,10 +41,9 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
         .map(cs => CredentialDefinitionResponse.fromDomain(cs).withBaseUri(rc.request.uri))
     } yield result
   }
-  
+
   private def couldNotParseCredDefResponse(e: String) = ErrorResponse
-    .internalServerError(detail =
-      Some(s"Error occurred while parsing the credential definition response: $e")) 
+    .internalServerError(detail = Some(s"Error occurred while parsing the credential definition response: $e"))
 
   override def createCredentialDefinitionDidUrl(
       in: CredentialDefinitionInput

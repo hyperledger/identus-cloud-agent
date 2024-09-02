@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.credentialdefinition
 
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.container.util.MigrationAspects.migrate
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
@@ -17,7 +18,6 @@ import zio.json.EncoderOps
 import zio.test.*
 import zio.test.Assertion.*
 import zio.test.TestAspect.*
-import org.hyperledger.identus.agent.server.config.AppConfig
 
 object CredentialDefinitionLookupAndPaginationSpec
     extends ZIOSpecDefault

@@ -181,7 +181,6 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
       >+> GenericSecretStorageInMemory.layer >+>
       ResourceUrlResolver.layer >>> CredentialDefinitionServiceImpl.layer
 
-
   val baseLayer =
     MockManagedDIDService.empty
       >+> MockDIDService.empty

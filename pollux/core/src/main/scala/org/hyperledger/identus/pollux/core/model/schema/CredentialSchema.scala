@@ -19,7 +19,6 @@ import java.net.URI
 import java.time.{OffsetDateTime, ZoneOffset}
 import java.util.UUID
 
-
 type Schema = zio.json.ast.Json
 
 /** @param guid
@@ -117,7 +116,6 @@ object CredentialSchema {
   )
 
   case class FilteredEntries(entries: Seq[CredentialSchema], count: Long, totalCount: Long)
-
 
   given JsonEncoder[CredentialSchema] = DeriveJsonEncoder.gen[CredentialSchema]
   given JsonDecoder[CredentialSchema] = DeriveJsonDecoder.gen[CredentialSchema]

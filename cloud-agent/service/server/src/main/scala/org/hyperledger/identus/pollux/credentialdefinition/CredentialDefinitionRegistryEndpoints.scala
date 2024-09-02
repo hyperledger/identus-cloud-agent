@@ -261,11 +261,11 @@ object CredentialDefinitionRegistryEndpoints {
   val lookupCredentialDefinitionsByQueryDidUrlEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (
-      RequestContext,
+        RequestContext,
         FilterInput,
         PaginationInput,
         Option[Order]
-      ),
+    ),
     ErrorResponse,
     CredentialDefinitionDidUrlResponsePage,
     Any
@@ -289,5 +289,5 @@ object CredentialDefinitionRegistryEndpoints {
       .description(
         "Lookup DID url resolvable credential definitions by `author`, `name`, `tag` parameters and control the pagination by `offset` and `limit` parameters "
       )
-      .tag(tagName)    
+      .tag(tagName)
 }

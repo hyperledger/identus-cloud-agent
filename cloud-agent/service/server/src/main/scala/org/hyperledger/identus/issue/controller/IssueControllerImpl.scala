@@ -21,13 +21,13 @@ import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import org.hyperledger.identus.pollux.core.service.{CredentialDefinitionService, CredentialService}
+import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
 import org.hyperledger.identus.shared.utils.{Base64Utils, Json as JsonUtils}
 import zio.*
 import zio.json.given
-import org.hyperledger.identus.shared.crypto.Sha256Hash
-import scala.collection.immutable.ListMap
 
+import scala.collection.immutable.ListMap
 import scala.language.implicitConversions
 
 class IssueControllerImpl(
@@ -113,13 +113,17 @@ class IssueControllerImpl(
                     Seq(),
                     ListMap(
                       "resourceService" -> Seq(publicEndpointServiceName),
-                      "resourcePath" -> Seq(s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition?resourceHash=$hash"),
+                      "resourcePath" -> Seq(
+                        s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition?resourceHash=$hash"
+                      ),
                     ),
                     None
                   ).toString
                 } yield didUrl
 
-                ZIO.fromEither(didUrl).mapError(_ => ErrorResponse.badRequest(detail = Some("Could not parse credential definition")))
+                ZIO
+                  .fromEither(didUrl)
+                  .mapError(_ => ErrorResponse.badRequest(detail = Some("Could not parse credential definition")))
 
               }
               record <- credentialService

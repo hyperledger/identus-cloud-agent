@@ -2,8 +2,8 @@ package org.hyperledger.identus.pollux.credentialschema.http
 
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.pollux.core.model
-import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.credentialschema.http.FilterInput.annotations
 import sttp.tapir.EndpointIO.annotations.{example, query}
 import sttp.tapir.Validator.*
@@ -22,7 +22,8 @@ case class FilterInput(
     @example(annotations.tags.example.headOption)
     tags: Option[String] = Option.empty[String]
 ) {
-  def toDomain(resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP) = CredentialSchema.Filter(author, name, version, tags, resolutionMethod)
+  def toDomain(resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP) =
+    CredentialSchema.Filter(author, name, version, tags, resolutionMethod)
 }
 
 object FilterInput {

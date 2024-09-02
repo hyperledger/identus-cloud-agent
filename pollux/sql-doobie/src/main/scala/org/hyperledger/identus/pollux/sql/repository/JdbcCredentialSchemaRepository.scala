@@ -50,7 +50,11 @@ case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: 
     )
   }
 
-  def getAllVersions(id: UUID, author: String, resolutionMethod: ResourceResolutionMethod): URIO[WalletAccessContext, List[CredentialSchema]] = {
+  def getAllVersions(
+      id: UUID,
+      author: String,
+      resolutionMethod: ResourceResolutionMethod
+  ): URIO[WalletAccessContext, List[CredentialSchema]] = {
     CredentialSchemaSql
       .getAllVersions(id, author, resolutionMethod)
       .transactWallet(xa)

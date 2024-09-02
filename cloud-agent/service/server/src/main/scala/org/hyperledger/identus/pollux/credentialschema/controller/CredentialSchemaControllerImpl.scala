@@ -33,8 +33,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
     extends CredentialSchemaController {
 
   private def parsingCredentialSchemaError(e: String) = ErrorResponse
-    .internalServerError(detail =
-      Some(s"Error occurred while parsing the credential schema response: $e"))
+    .internalServerError(detail = Some(s"Error occurred while parsing the credential schema response: $e"))
 
   override def createSchema(
       in: CredentialSchemaInput

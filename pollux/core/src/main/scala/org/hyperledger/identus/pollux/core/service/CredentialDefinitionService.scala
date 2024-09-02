@@ -1,9 +1,9 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.model.error.CredentialDefinitionServiceError
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.*
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{IO, ZIO}
 
@@ -17,14 +17,20 @@ trait CredentialDefinitionService {
     * @return
     *   Created instance of the Credential Definition
     */
-  def create(in: Input, resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP): Result[CredentialDefinition]
+  def create(
+      in: Input,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+  ): Result[CredentialDefinition]
 
   /** @param guid
     *   Globally unique UUID of the credential definition
     * @return
     *   The instance of the credential definition or credential service error
     */
-  def getByGUID(guid: UUID, resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP): IO[CredentialDefinitionServiceError, CredentialDefinition]
+  def getByGUID(
+      guid: UUID,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+  ): IO[CredentialDefinitionServiceError, CredentialDefinition]
 
   def lookup(filter: Filter, skip: Int, limit: Int): Result[FilteredEntries]
 }

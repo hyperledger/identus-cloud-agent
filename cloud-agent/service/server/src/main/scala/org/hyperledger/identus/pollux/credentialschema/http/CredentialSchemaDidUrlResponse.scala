@@ -116,18 +116,18 @@ object CredentialSchemaInnerDidUrlResponse {
 
   object annotations {
     object resource
-      extends Annotation[String](
-        description = "JCS normalized and base64url encoded inner json schema (without metadata)",
-        example =
-          """eyIkaWQiOiJodHRwczovL2V4YW1wbGUuY29tL2RyaXZpbmctbGljZW5zZS0xLjAuMCIsIiRzY2hlbWEiOiJodHRwczovL2pzb24tc2NoZW1hLm9yZy9kcmFmdC8yMDIwLTEyL3NjaGVtYSIsImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjp0cnVlLCJkZXNjcmlwdGlvbiI6IkRyaXZpbmcgTGljZW5zZSIsInByb3BlcnRpZXMiOnsiZGF0ZU9mSXNzdWFuY2UiOnsiZm9ybWF0IjoiZGF0ZS10aW1lIiwidHlwZSI6InN0cmluZyJ9LCJkcml2aW5nQ2xhc3MiOnsidHlwZSI6ImludGVnZXIifSwiZHJpdmluZ0xpY2Vuc2VJRCI6eyJ0eXBlIjoic3RyaW5nIn0sImVtYWlsQWRkcmVzcyI6eyJmb3JtYXQiOiJlbWFpbCIsInR5cGUiOiJzdHJpbmcifSwiZmFtaWx5TmFtZSI6eyJ0eXBlIjoic3RyaW5nIn0sImdpdmVuTmFtZSI6eyJ0eXBlIjoic3RyaW5nIn19LCJyZXF1aXJlZCI6WyJlbWFpbEFkZHJlc3MiLCJmYW1pbHlOYW1lIiwiZGF0ZU9mSXNzdWFuY2UiLCJkcml2aW5nTGljZW5zZUlEIiwiZHJpdmluZ0NsYXNzIl0sInR5cGUiOiJvYmplY3QifQ=="""
-      )
+        extends Annotation[String](
+          description = "JCS normalized and base64url encoded inner json schema (without metadata)",
+          example =
+            """eyIkaWQiOiJodHRwczovL2V4YW1wbGUuY29tL2RyaXZpbmctbGljZW5zZS0xLjAuMCIsIiRzY2hlbWEiOiJodHRwczovL2pzb24tc2NoZW1hLm9yZy9kcmFmdC8yMDIwLTEyL3NjaGVtYSIsImFkZGl0aW9uYWxQcm9wZXJ0aWVzIjp0cnVlLCJkZXNjcmlwdGlvbiI6IkRyaXZpbmcgTGljZW5zZSIsInByb3BlcnRpZXMiOnsiZGF0ZU9mSXNzdWFuY2UiOnsiZm9ybWF0IjoiZGF0ZS10aW1lIiwidHlwZSI6InN0cmluZyJ9LCJkcml2aW5nQ2xhc3MiOnsidHlwZSI6ImludGVnZXIifSwiZHJpdmluZ0xpY2Vuc2VJRCI6eyJ0eXBlIjoic3RyaW5nIn0sImVtYWlsQWRkcmVzcyI6eyJmb3JtYXQiOiJlbWFpbCIsInR5cGUiOiJzdHJpbmcifSwiZmFtaWx5TmFtZSI6eyJ0eXBlIjoic3RyaW5nIn0sImdpdmVuTmFtZSI6eyJ0eXBlIjoic3RyaW5nIn19LCJyZXF1aXJlZCI6WyJlbWFpbEFkZHJlc3MiLCJmYW1pbHlOYW1lIiwiZGF0ZU9mSXNzdWFuY2UiLCJkcml2aW5nTGljZW5zZUlEIiwiZHJpdmluZ0NsYXNzIl0sInR5cGUiOiJvYmplY3QifQ=="""
+        )
 
     object schemaUrl
-      extends Annotation[String](
-        description = "DID url that can be used to resolve this schema inner schema",
-        example =
-          "did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a?resourceService=agent-base-url&resourcePath=schema-registry/schemas/did-url/ef3e4135-8fcf-3ce7-b5bb-df37defc13f6&resourceHash=4074bb1a8e0ea45437ad86763cd7e12de3fe8349ef19113df773b0d65c8a9c46/schema"
-      )
+        extends Annotation[String](
+          description = "DID url that can be used to resolve this schema inner schema",
+          example =
+            "did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a?resourceService=agent-base-url&resourcePath=schema-registry/schemas/did-url/ef3e4135-8fcf-3ce7-b5bb-df37defc13f6&resourceHash=4074bb1a8e0ea45437ad86763cd7e12de3fe8349ef19113df773b0d65c8a9c46/schema"
+        )
   }
 
   given encoder: JsonEncoder[CredentialSchemaInnerDidUrlResponse] =

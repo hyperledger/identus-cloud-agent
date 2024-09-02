@@ -1,16 +1,16 @@
 package org.hyperledger.identus.pollux.core.model.schema
 
-import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.CredentialSchemaValidationError
 import org.hyperledger.identus.pollux.core.model.schema.`type`.{AnoncredSchemaType, CredentialJsonSchemaType}
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError.JsonValidationErrors
 import org.hyperledger.identus.pollux.core.model.schema.AnoncredSchemaTypeSpec.test
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*
-import zio.test.{Assertion, Spec, TestEnvironment, ZIOSpecDefault, assertZIO}
+import zio.test.{assertZIO, Assertion, Spec, TestEnvironment, ZIOSpecDefault}
 import zio.test.Assertion.*
 import zio.Scope
 

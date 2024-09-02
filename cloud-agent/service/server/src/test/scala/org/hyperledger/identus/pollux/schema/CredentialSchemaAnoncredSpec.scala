@@ -52,7 +52,9 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
       + wrapSpec(unsupportedSchemaSpec)
       + wrapSpec(wrongSchemaSpec)
 
-  private def wrapSpec(spec: Spec[CredentialSchemaController & AppConfig & AuthenticatorWithAuthZ[BaseEntity], Throwable]) = {
+  private def wrapSpec(
+      spec: Spec[CredentialSchemaController & AppConfig & AuthenticatorWithAuthZ[BaseEntity], Throwable]
+  ) = {
     (spec
       @@ nondeterministic @@ sequential @@ timed @@ migrateEach(
         schema = "public",

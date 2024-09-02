@@ -101,7 +101,11 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
       .decodeFailureHandler(CustomServerInterceptors.decodeFailureHandler)
   }
 
-  def httpBackend(config: AppConfig, controller: CredentialSchemaController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {
+  def httpBackend(
+      config: AppConfig,
+      controller: CredentialSchemaController,
+      authenticator: AuthenticatorWithAuthZ[BaseEntity]
+  ) = {
     val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(config, controller, authenticator, authenticator)
 
     val backend =
@@ -189,7 +193,9 @@ trait CredentialSchemaGen {
 
   def generateSchemasN(
       count: Int
-  ): ZIO[CredentialSchemaController & AppConfig & AuthenticatorWithAuthZ[BaseEntity], Throwable, List[CredentialSchemaInput]] =
+  ): ZIO[CredentialSchemaController & AppConfig & AuthenticatorWithAuthZ[BaseEntity], Throwable, List[
+    CredentialSchemaInput
+  ]] =
     for {
       controller <- ZIO.service[CredentialSchemaController]
       authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
