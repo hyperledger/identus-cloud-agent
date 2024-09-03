@@ -71,6 +71,7 @@ object PresentationStatusPage {
               status = "RequestSent",
               proofs = Seq.empty,
               data = Seq.empty,
+              requestData = Seq.empty,
               connectionId = Some("e0d81be9-47ca-4e0b-b8a7-325e8c3abc2f"),
               invitation = None,
               metaRetries = 5
@@ -81,6 +82,7 @@ object PresentationStatusPage {
               role = "Prover",
               status = "RequestReceived",
               proofs = Seq.empty,
+              requestData = Seq.empty,
               data = Seq.empty,
               metaRetries = 5
             ),
@@ -90,6 +92,7 @@ object PresentationStatusPage {
               role = "Prover",
               status = "PresentationPending",
               proofs = Seq.empty,
+              requestData = Seq.empty,
               data = Seq.empty,
               metaRetries = 5
             ),
@@ -99,6 +102,7 @@ object PresentationStatusPage {
               role = "Verifier",
               status = "PresentationVerified",
               proofs = Seq.empty,
+              requestData = Seq.empty,
               data = Seq(
                 "{\"claimsToDisclose\":{\"emailAddress\":{},\"givenName\":{}},\"presentation\":\"{\\\"protected\\\":\\\"eyJhbGciOiJFZERTQSJ9\\\",\\\"payload\\\":\\\"eyJfc2QiOlsiMGl4d0tIV0dzbzFvZThFR0hQd2tGYW9EZE1TRFQ3SmgyNkZGSm1ZbGRnRSIsIjQ4VlFXZS1tcjBibHMyOWpicHFKeDNxX2dYY0k5N3dHcEpsZnRoNXQwMGciLCI0Wk9xanFNZVNUVHRKQTNJRExsc3ZXN0dTNzRIemNxY3N2NVFoZk1valE4IiwiUjhGRE0ydXB1V09mNmVJMVA5ckNPdG12c3puVWFFYXpncVNuN0JfeTE0MCIsIlU5MmpfUHlpcHN2TERNQTlDaVRWbnl3bUFzYTM4S2lDWm5TeVhyUE5mNG8iLCJldFB1Mmc5ajdRd01rZ3g5VnpEX1RnNTNUV3UydVpadk1KeHRnNEJ1WGJBIiwidGV3RG1LWklNcS10bUNrMkpqZU0wajNYbU1aUUFLN01heENVNlF4dm9OMCJdLCJfc2RfYWxnIjoic2hhLTI1NiIsImlzcyI6ImRpZDpwcmlzbToxMmEzOWI1YWEwZTcxODI3ZmMxYzYwMjg1ZDVlZWJjMTk0Yjg2NzFhYTJmY2QxZDM2NDBkMGYwMTBlMzliZmVlIiwiaWF0IjoxNzE3NDEwMzgzLCJleHAiOjE3MjAwMDIzODN9\\\",\\\"signature\\\":\\\"953FfSRU_0Y2q0ERrFPzbXJ_hkF0YQe5efwESaZwtXDCn8aanD3MUstp3lzqGZkhvcWRdtCCpIxzhy0zgKwLBg\\\",\\\"disclosures\\\":[\\\"WyI0SHF6MDZCeG5fRlJMb2hWX2lWNXp3IiwgImdpdmVuTmFtZSIsICJBbGljZSJd\\\",\\\"WyJLUnNYYU01c3NXZTl4UEhqQnNjT213IiwgImVtYWlsQWRkcmVzcyIsICJhbGljZUB3b25kZXJsYW5kLmNvbSJd\\\"],\\\"kb_jwt\\\":null}\"}"
               ),
@@ -112,6 +116,7 @@ object PresentationStatusPage {
               status = "InvitationGenerated",
               proofs = Seq.empty,
               data = Seq.empty,
+              requestData = Seq.empty,
               connectionId = None,
               myDid = Some("did:peer:veriferPeerDID1234567890"),
               invitation = Some(
