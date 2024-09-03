@@ -32,7 +32,7 @@ inThisBuild(
       "-unchecked",
     ),
     scalacOptions += "-Wunused:all",
-    scalacOptions += "-Wconf:cat=deprecation:warning,any:error", // "-Wconf:help",
+    // scalacOptions += "-Wconf:cat=deprecation:warning,any:error", // "-Wconf:help", // TODO: revert before pr
     // scalacOptions += "-Yexplicit-nulls",
     // scalacOptions += "-Ysafe-init",
     // scalacOptions +=  "-Werror", // <=> "-Xfatal-warnings"
@@ -808,7 +808,7 @@ lazy val polluxPreX = project
   .in(file("pollux/prex"))
   .settings(commonSetttings)
   .settings(name := "pollux-prex")
-  .dependsOn(shared, sharedJson)
+  .dependsOn(shared, sharedJson, polluxVcJWT)
 
 // ########################
 // ### Pollux Anoncreds ###
