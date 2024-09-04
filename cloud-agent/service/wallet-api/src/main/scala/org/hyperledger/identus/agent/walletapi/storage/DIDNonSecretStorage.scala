@@ -4,6 +4,7 @@ import org.hyperledger.identus.agent.walletapi.model.*
 import org.hyperledger.identus.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.KeyId
 import zio.*
 
 trait DIDNonSecretStorage {
@@ -24,11 +25,11 @@ trait DIDNonSecretStorage {
   def getHdKeyCounter(did: PrismDID): RIO[WalletAccessContext, Option[HdKeyIndexCounter]]
 
   /** Return a tuple of key metadata and the operation hash */
-  def getKeyMeta(did: PrismDID, keyId: String): RIO[WalletAccessContext, Option[(ManagedDIDKeyMeta, Array[Byte])]]
+  def getKeyMeta(did: PrismDID, keyId: KeyId): RIO[WalletAccessContext, Option[(ManagedDIDKeyMeta, Array[Byte])]]
 
   def insertKeyMeta(
       did: PrismDID,
-      keyId: String,
+      keyId: KeyId,
       meta: ManagedDIDKeyMeta,
       operationHash: Array[Byte]
   ): RIO[WalletAccessContext, Unit]

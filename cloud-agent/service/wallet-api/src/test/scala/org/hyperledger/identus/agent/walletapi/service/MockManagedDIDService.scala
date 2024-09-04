@@ -12,6 +12,7 @@ import org.hyperledger.identus.castor.core.model.did.{
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
+import org.hyperledger.identus.shared.models.KeyId
 import zio.*
 import zio.mock.*
 import zio.test.Assertion
@@ -20,7 +21,7 @@ object MockManagedDIDService extends Mock[ManagedDIDService] {
 
   object GetManagedDIDState extends Effect[CanonicalPrismDID, GetManagedDIDError, Option[ManagedDIDState]]
   object FindDIDKeyPair
-      extends Effect[(CanonicalPrismDID, String), Nothing, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]]
+      extends Effect[(CanonicalPrismDID, KeyId), Nothing, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]]
 
   override val compose: URLayer[mock.Proxy, ManagedDIDService] =
     ZLayer {
@@ -35,7 +36,7 @@ object MockManagedDIDService extends Mock[ManagedDIDService] {
 
         override def findDIDKeyPair(
             did: CanonicalPrismDID,
-            keyId: String
+            keyId: KeyId
         ): UIO[Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]] =
           proxy(FindDIDKeyPair, (did, keyId))
 

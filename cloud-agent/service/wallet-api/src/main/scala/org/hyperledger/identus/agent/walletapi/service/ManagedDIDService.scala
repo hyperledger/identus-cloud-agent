@@ -7,6 +7,7 @@ import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
@@ -23,7 +24,7 @@ trait ManagedDIDService {
 
   def findDIDKeyPair(
       did: CanonicalPrismDID,
-      keyId: String
+      keyId: KeyId
   ): URIO[WalletAccessContext, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]]
 
   def getManagedDIDState(did: CanonicalPrismDID): ZIO[WalletAccessContext, GetManagedDIDError, Option[ManagedDIDState]]

@@ -5,6 +5,7 @@ import org.hyperledger.identus.castor.core.model.error.OperationValidationError
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator.Config
 import org.hyperledger.identus.castor.core.util.Prelude.*
 import org.hyperledger.identus.shared.crypto.Apollo
+import org.hyperledger.identus.shared.models.KeyId
 import zio.*
 
 import scala.collection.immutable.ArraySeq
@@ -70,14 +71,14 @@ private object CreateOperationValidator extends BaseOperationValidator {
     else Left(OperationValidationError.InvalidArgument("create operation must contain at least 1 master key"))
   }
 
-  private def extractKeyIds(operation: PrismDIDOperation.Create): Seq[String] = operation.publicKeys.map {
+  private def extractKeyIds(operation: PrismDIDOperation.Create): Seq[KeyId] = operation.publicKeys.map {
     case PublicKey(id, _, _)         => id
     case InternalPublicKey(id, _, _) => id
   }
 
   private def extractKeyData(
       operation: PrismDIDOperation.Create
-  ): Seq[(String, VerificationRelationship | InternalKeyPurpose, PublicKeyData)] =
+  ): Seq[(KeyId, VerificationRelationship | InternalKeyPurpose, PublicKeyData)] =
     operation.publicKeys.map {
       case PublicKey(id, purpose, data)         => (id, purpose, data)
       case InternalPublicKey(id, purpose, data) => (id, purpose, data)
@@ -139,15 +140,15 @@ private object UpdateOperationValidator extends BaseOperationValidator {
       )
   }
 
-  private def extractKeyIds(operation: PrismDIDOperation.Update): Seq[String] = operation.actions.collect {
+  private def extractKeyIds(operation: PrismDIDOperation.Update): Seq[KeyId] = operation.actions.collect {
     case UpdateDIDAction.AddKey(pk)         => pk.id
     case UpdateDIDAction.AddInternalKey(pk) => pk.id
-    case UpdateDIDAction.RemoveKey(id)      => id
+    case UpdateDIDAction.RemoveKey(id)      => KeyId(id)
   }
 
   private def extractKeyData(
       operation: PrismDIDOperation.Update
-  ): Seq[(String, VerificationRelationship | InternalKeyPurpose, PublicKeyData)] =
+  ): Seq[(KeyId, VerificationRelationship | InternalKeyPurpose, PublicKeyData)] =
     operation.actions.collect {
       case UpdateDIDAction.AddKey(pk)         => (pk.id, pk.purpose, pk.publicKeyData)
       case UpdateDIDAction.AddInternalKey(pk) => (pk.id, pk.purpose, pk.publicKeyData)
@@ -182,12 +183,12 @@ private object DeactivateOperationValidator extends BaseOperationValidator {
 
 private trait BaseOperationValidator {
 
-  type KeyIdExtractor[T] = T => Seq[String]
+  type KeyIdExtractor[T] = T => Seq[KeyId]
   type ServiceIdExtractor[T] = T => Seq[String]
   type ServiceTypeExtractor[T] = T => Seq[(String, ServiceType)]
   type ServiceEndpointExtractor[T] = T => Seq[(String, ServiceEndpoint)]
   type ContextExtractor[T] = T => Seq[Seq[String]]
-  type KeyDataExtractor[T] = T => Seq[(String, VerificationRelationship | InternalKeyPurpose, PublicKeyData)]
+  type KeyDataExtractor[T] = T => Seq[(KeyId, VerificationRelationship | InternalKeyPurpose, PublicKeyData)]
 
   protected def validateMaxPublicKeysAccess[T <: PrismDIDOperation](
       config: Config
@@ -266,7 +267,7 @@ private trait BaseOperationValidator {
       keyIdExtractor: KeyIdExtractor[T]
   ): Either[OperationValidationError, Unit] = {
     val ids = keyIdExtractor(operation)
-    val invalidIds = ids.filterNot(UriUtils.isValidUriFragment)
+    val invalidIds = ids.map(_.value).filterNot(UriUtils.isValidUriFragment)
     if (invalidIds.isEmpty) Right(())
     else
       Left(
@@ -289,7 +290,7 @@ private trait BaseOperationValidator {
       config: Config
   )(operation: T, keyIdExtractor: KeyIdExtractor[T]): Either[OperationValidationError, Unit] = {
     val ids = keyIdExtractor(operation)
-    val invalidIds = ids.filter(_.length > config.maxIdSize)
+    val invalidIds = ids.filter(_.value.length > config.maxIdSize)
     if (invalidIds.isEmpty) Right(())
     else
       Left(
