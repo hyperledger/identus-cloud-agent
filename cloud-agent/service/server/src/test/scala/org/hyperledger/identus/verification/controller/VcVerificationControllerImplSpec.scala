@@ -8,6 +8,7 @@ import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
+import org.hyperledger.identus.pollux.vc.jwt.DID.*
 import org.hyperledger.identus.verification.controller.http.*
 import sttp.client3.{basicRequest, DeserializationException, Response, UriContext}
 import sttp.client3.ziojson.*
@@ -36,7 +37,7 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
           `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
           maybeId = Some("http://example.edu/credentials/3732"),
           `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-          issuer = issuer.did,
+          issuer = Left(issuer.did.value),
           issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
           maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
           maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),

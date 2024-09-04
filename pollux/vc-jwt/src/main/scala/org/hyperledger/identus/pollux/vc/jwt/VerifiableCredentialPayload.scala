@@ -64,6 +64,8 @@ case class CredentialSchema(
     `type`: String
 )
 
+case class CredentialIssuer(id: String)
+
 sealed trait CredentialPayload {
   def maybeSub: Option[String]
 
@@ -83,7 +85,7 @@ sealed trait CredentialPayload {
 
   def maybeValidUntil: Option[Instant]
 
-  def iss: String
+  def issuer: Either[String, CredentialIssuer]
 
   def maybeCredentialStatus: Option[CredentialStatus]
 
@@ -99,7 +101,7 @@ sealed trait CredentialPayload {
 
   def toJwtCredentialPayload: JwtCredentialPayload =
     JwtCredentialPayload(
-      iss = iss,
+      iss = issuer.fold(identity, _.id),
       maybeSub = maybeSub,
       vc = JwtVc(
         `@context` = `@context`,
@@ -111,7 +113,8 @@ sealed trait CredentialPayload {
         maybeEvidence = maybeEvidence,
         maybeTermsOfUse = maybeTermsOfUse,
         maybeValidFrom = maybeValidFrom,
-        maybeValidUntil = maybeValidUntil
+        maybeValidUntil = maybeValidUntil,
+        maybeIssuer = Some(issuer),
       ),
       nbf = nbf,
       aud = aud,
@@ -124,7 +127,7 @@ sealed trait CredentialPayload {
       `@context` = `@context`,
       maybeId = maybeJti,
       `type` = `type`,
-      issuer = DID(iss),
+      issuer = issuer,
       issuanceDate = nbf,
       maybeExpirationDate = maybeExp,
       maybeCredentialSchema = maybeCredentialSchema,
@@ -146,6 +149,7 @@ case class JwtVc(
     credentialSubject: Json,
     maybeValidFrom: Option[Instant],
     maybeValidUntil: Option[Instant],
+    maybeIssuer: Option[Either[String, CredentialIssuer]],
     maybeCredentialStatus: Option[CredentialStatus],
     maybeRefreshService: Option[RefreshService],
     maybeEvidence: Option[Json],
@@ -153,7 +157,7 @@ case class JwtVc(
 )
 
 case class JwtCredentialPayload(
-    override val iss: String,
+    iss: String,
     override val maybeSub: Option[String],
     vc: JwtVc,
     override val nbf: Instant,
@@ -171,13 +175,14 @@ case class JwtCredentialPayload(
   override val credentialSubject = vc.credentialSubject
   override val maybeValidFrom = vc.maybeValidFrom
   override val maybeValidUntil = vc.maybeValidUntil
+  override val issuer = vc.maybeIssuer.getOrElse(Left(iss))
 }
 
 case class W3cCredentialPayload(
     override val `@context`: Set[String],
     override val `type`: Set[String],
     maybeId: Option[String],
-    issuer: DID,
+    issuer: Either[String, CredentialIssuer],
     issuanceDate: Instant,
     maybeExpirationDate: Option[Instant],
     override val maybeCredentialSchema: Option[CredentialSchema],
@@ -194,7 +199,6 @@ case class W3cCredentialPayload(
   override val maybeJti = maybeId
   override val nbf = issuanceDate
   override val maybeExp = maybeExpirationDate
-  override val iss = issuer.value
 }
 
 object CredentialPayload {
@@ -220,6 +224,13 @@ object CredentialPayload {
           .obj(
             ("id", credentialSchema.id.asJson),
             ("type", credentialSchema.`type`.asJson)
+          )
+
+    implicit val credentialIssuerEncoder: Encoder[CredentialIssuer] =
+      (credentialIssuer: CredentialIssuer) =>
+        Json
+          .obj(
+            ("id", credentialIssuer.id.asJson)
           )
 
     implicit val credentialStatusPurposeEncoder: Encoder[StatusPurpose] = (a: StatusPurpose) => a.toString.asJson
@@ -272,7 +283,8 @@ object CredentialPayload {
             ("evidence", jwtVc.maybeEvidence.asJson),
             ("termsOfUse", jwtVc.maybeTermsOfUse.asJson),
             ("validFrom", jwtVc.maybeValidFrom.asJson),
-            ("validUntil", jwtVc.maybeValidUntil.asJson)
+            ("validUntil", jwtVc.maybeValidUntil.asJson),
+            ("issuer", jwtVc.maybeIssuer.asJson)
           )
           .deepDropNullValues
           .dropEmptyValues
@@ -324,6 +336,14 @@ object CredentialPayload {
           CredentialSchema(id = id, `type` = `type`)
         }
 
+    implicit val credentialIssuerDecoder: Decoder[CredentialIssuer] =
+      (c: HCursor) =>
+        for {
+          id <- c.downField("id").as[String]
+        } yield {
+          CredentialIssuer(id = id)
+        }
+
     implicit val credentialStatusPurposeDecoder: Decoder[StatusPurpose] = (c: HCursor) =>
       Decoder.decodeString(c).flatMap { str =>
         Try(StatusPurpose.valueOf(str)).toEither.leftMap { _ =>
@@ -361,7 +381,7 @@ object CredentialPayload {
             .as[Set[String]]
             .orElse(c.downField("type").as[String].map(Set(_)))
           maybeId <- c.downField("id").as[Option[String]]
-          issuer <- c.downField("issuer").as[String]
+          issuer <- c.downField("issuer").as[Either[String, CredentialIssuer]]
           issuanceDate <- c.downField("issuanceDate").as[Instant]
           maybeExpirationDate <- c.downField("expirationDate").as[Option[Instant]]
           maybeValidFrom <- c.downField("validFrom").as[Option[Instant]]
@@ -377,7 +397,7 @@ object CredentialPayload {
             `@context` = `@context`,
             `type` = `type`,
             maybeId = maybeId,
-            issuer = DID(issuer),
+            issuer = issuer,
             issuanceDate = issuanceDate,
             maybeExpirationDate = maybeExpirationDate,
             maybeValidFrom = maybeValidFrom,
@@ -411,6 +431,7 @@ object CredentialPayload {
           maybeTermsOfUse <- c.downField("termsOfUse").as[Option[Json]]
           maybeValidFrom <- c.downField("validFrom").as[Option[Instant]]
           maybeValidUntil <- c.downField("validUntil").as[Option[Instant]]
+          maybeIssuer <- c.downField("issuer").as[Option[Either[String, CredentialIssuer]]]
         } yield {
           JwtVc(
             `@context` = `@context`,
@@ -423,6 +444,7 @@ object CredentialPayload {
             maybeTermsOfUse = maybeTermsOfUse,
             maybeValidFrom = maybeValidFrom,
             maybeValidUntil = maybeValidUntil,
+            maybeIssuer = maybeIssuer
           )
         }
 
@@ -853,7 +875,7 @@ object W3CCredential {
   )(didResolver: DidResolver): IO[String, Validation[String, Unit]] = {
     JWTVerification.validateEncodedJwt(payload.proof.jwt, proofPurpose)(didResolver: DidResolver)(claim =>
       Validation.fromEither(decode[W3cCredentialPayload](claim).left.map(_.toString))
-    )(_.issuer.value)
+    )(_.issuer.fold(identity, _.id))
   }
 
   def verifyDates(w3cPayload: W3cVerifiableCredentialPayload, leeway: TemporalAmount)(implicit

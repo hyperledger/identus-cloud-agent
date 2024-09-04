@@ -24,6 +24,7 @@ import org.hyperledger.identus.pollux.vc.jwt.{
   W3cCredentialPayload,
   *
 }
+import org.hyperledger.identus.pollux.vc.jwt.DID.*
 import org.hyperledger.identus.shared.models.*
 import zio.*
 
@@ -193,7 +194,7 @@ case class OIDCCredentialIssuerServiceImpl(
       `type` = Set(
         "VerifiableCredential"
       ) ++ credentialDefinition.`type`, // TODO: This information should come from Schema registry by record.schemaId
-      issuer = issuerDid,
+      issuer = Left(issuerDid.value),
       issuanceDate = Instant.now(),
       maybeExpirationDate = None, // TODO: Add expiration date
       maybeCredentialSchema = None, // TODO: Add schema from schema registry
