@@ -246,6 +246,14 @@ object CredentialPayload {
             ("statusListCredential", credentialStatus.statusListCredential.asJson)
           )
 
+    implicit val eitherStringOrCredentialIssuerEncoder: Encoder[Either[String, CredentialIssuer]] = {
+      case Left(value)   => Json.fromString(value)
+      case Right(issuer) => issuer.asJson
+    }
+
+    implicit val eitherStringOrCredentialIssuerDecoder: Decoder[Either[String, CredentialIssuer]] =
+      Decoder[String].map(Left(_)).or(Decoder[CredentialIssuer].map(Right(_)))
+
     implicit val w3cCredentialPayloadEncoder: Encoder[W3cCredentialPayload] =
       (w3cCredentialPayload: W3cCredentialPayload) =>
         Json
