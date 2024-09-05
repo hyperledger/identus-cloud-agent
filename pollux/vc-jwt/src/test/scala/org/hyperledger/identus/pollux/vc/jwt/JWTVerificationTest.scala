@@ -80,7 +80,8 @@ object JWTVerificationTest extends ZIOSpecDefault {
         maybeEvidence = None,
         maybeTermsOfUse = None,
         maybeValidFrom = Some(validFrom),
-        maybeValidUntil = Some(validUntil)
+        maybeValidUntil = Some(validUntil),
+        maybeIssuer = Some(Left(issuer.issuer.did.value))
       ),
       nbf = jwtCredentialNbf, // ISSUANCE DATE
       aud = Set.empty,

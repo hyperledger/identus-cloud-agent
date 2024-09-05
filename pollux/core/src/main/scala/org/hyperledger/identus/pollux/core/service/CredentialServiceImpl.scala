@@ -26,6 +26,7 @@ import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, Cre
 import org.hyperledger.identus.pollux.prex.{ClaimFormat, Jwt, PresentationDefinition}
 import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer as JwtIssuer, *}
+import org.hyperledger.identus.pollux.vc.jwt.DID.*
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, Secp256k1KeyPair}
 import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
 import org.hyperledger.identus.shared.models.*
@@ -1134,7 +1135,7 @@ class CredentialServiceImpl(
         maybeId = None,
         `type` =
           Set("VerifiableCredential"), // TODO: This information should come from Schema registry by record.schemaId
-        issuer = jwtIssuer.did,
+        issuer = Left(jwtIssuer.did.value),
         issuanceDate = issuanceDate,
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
         maybeCredentialSchema =
