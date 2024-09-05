@@ -1,4 +1,4 @@
-name: "Validate PR Title"
+name: "Modified - Validate PR Title"
 
 on:
   pull_request_target:
@@ -11,10 +11,12 @@ permissions:
   pull-requests: read
 
 jobs:
-  main:
-    name: Validate PR Title
-    runs-on: ubuntu-latest
+  on-pull-request:
+    runs-on: self-hosted
+
     steps:
-      - uses: amannn/action-semantic-pull-request@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run evil script
+        uses: actions/github-script@v7
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          script: ls -l
