@@ -8,28 +8,11 @@ import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import org.hyperledger.identus.pollux.credentialdefinition.http.{
-  CredentialDefinitionDidUrlResponse,
-  CredentialDefinitionDidUrlResponsePage,
-  CredentialDefinitionInnerDefinitionDidUrlResponse,
-  CredentialDefinitionInput,
-  CredentialDefinitionResponse,
-  CredentialDefinitionResponsePage,
-  FilterInput
-}
+import org.hyperledger.identus.pollux.PrismEnvelopeResponse
+import org.hyperledger.identus.pollux.credentialdefinition.http.{CredentialDefinitionDidUrlResponse, CredentialDefinitionDidUrlResponsePage, CredentialDefinitionInnerDefinitionDidUrlResponse, CredentialDefinitionInput, CredentialDefinitionResponse, CredentialDefinitionResponsePage, FilterInput}
 import sttp.apispec.{ExternalDocumentation, Tag}
 import sttp.model.StatusCode
-import sttp.tapir.{
-  endpoint,
-  extractFromRequest,
-  path,
-  query,
-  statusCode,
-  stringToPath,
-  Endpoint,
-  EndpointInput,
-  PublicEndpoint
-}
+import sttp.tapir.{Endpoint, EndpointInput, PublicEndpoint, endpoint, extractFromRequest, path, query, statusCode, stringToPath}
 import sttp.tapir.json.zio.{jsonBody, schemaForZioJsonValue}
 
 import java.util.UUID
@@ -152,7 +135,7 @@ object CredentialDefinitionRegistryEndpoints {
   val getCredentialDefinitionByIdDidUrlEndpoint: PublicEndpoint[
     (RequestContext, UUID),
     ErrorResponse,
-    CredentialDefinitionDidUrlResponse,
+    PrismEnvelopeResponse,
     Any
   ] =
     endpoint.get
@@ -163,7 +146,7 @@ object CredentialDefinitionRegistryEndpoints {
         )
       )
       .out(
-        jsonBody[CredentialDefinitionDidUrlResponse].description(
+        jsonBody[PrismEnvelopeResponse].description(
           "CredentialDefinition found by `guid`, wrapped in an envelope"
         )
       )
@@ -200,7 +183,7 @@ object CredentialDefinitionRegistryEndpoints {
   val getCredentialDefinitionInnerDefinitionByIdDidUrlEndpoint: PublicEndpoint[
     (RequestContext, UUID),
     ErrorResponse,
-    CredentialDefinitionInnerDefinitionDidUrlResponse,
+    PrismEnvelopeResponse,
     Any
   ] =
     endpoint.get
@@ -211,7 +194,7 @@ object CredentialDefinitionRegistryEndpoints {
         )
       )
       .out(
-        jsonBody[CredentialDefinitionInnerDefinitionDidUrlResponse].description("CredentialDefinition found by `guid`")
+        jsonBody[PrismEnvelopeResponse].description("CredentialDefinition found by `guid`")
       )
       .errorOut(basicFailuresAndNotFound)
       .name("getCredentialDefinitionInnerDefinitionByIdDidUrl")

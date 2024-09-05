@@ -8,15 +8,8 @@ import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
-import org.hyperledger.identus.pollux.credentialschema.http.{
-  CredentialSchemaDidUrlResponse,
-  CredentialSchemaDidUrlResponsePage,
-  CredentialSchemaInnerDidUrlResponse,
-  CredentialSchemaInput,
-  CredentialSchemaResponse,
-  CredentialSchemaResponsePage,
-  FilterInput
-}
+import org.hyperledger.identus.pollux.PrismEnvelopeResponse
+import org.hyperledger.identus.pollux.credentialschema.http.{CredentialSchemaDidUrlResponse, CredentialSchemaDidUrlResponsePage, CredentialSchemaInnerDidUrlResponse, CredentialSchemaInput, CredentialSchemaResponse, CredentialSchemaResponsePage, FilterInput}
 import sttp.apispec.{ExternalDocumentation, Tag}
 import sttp.model.StatusCode
 import sttp.tapir.*
@@ -100,7 +93,7 @@ object SchemaRegistryEndpoints {
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, CredentialSchemaInput),
     ErrorResponse,
-    CredentialSchemaDidUrlResponse,
+    PrismEnvelopeResponse,
     Any
   ] =
     endpoint.post
@@ -120,7 +113,7 @@ object SchemaRegistryEndpoints {
             "The new credential schema record is successfully created"
           )
       )
-      .out(jsonBody[CredentialSchemaDidUrlResponse])
+      .out(jsonBody[PrismEnvelopeResponse])
       .description("Credential schema record")
       .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("createSchemaDidUrl")
@@ -174,7 +167,7 @@ object SchemaRegistryEndpoints {
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, UUID, CredentialSchemaInput),
     ErrorResponse,
-    CredentialSchemaDidUrlResponse,
+    PrismEnvelopeResponse,
     Any
   ] =
     endpoint.put
@@ -198,7 +191,7 @@ object SchemaRegistryEndpoints {
             "The credential schema record is successfully updated"
           )
       )
-      .out(jsonBody[CredentialSchemaDidUrlResponse])
+      .out(jsonBody[PrismEnvelopeResponse])
       .description("Credential schema record wrapped in an envelope")
       .errorOut(basicFailureAndNotFoundAndForbidden)
       .name("updateSchemaDidUrl")
@@ -234,7 +227,7 @@ object SchemaRegistryEndpoints {
   val getSchemaByIdDidUrlEndpoint: PublicEndpoint[
     (RequestContext, UUID),
     ErrorResponse,
-    CredentialSchemaDidUrlResponse,
+    PrismEnvelopeResponse,
     Any
   ] =
     endpoint.get
@@ -245,7 +238,7 @@ object SchemaRegistryEndpoints {
         )
       )
       .out(
-        jsonBody[CredentialSchemaDidUrlResponse].description(
+        jsonBody[PrismEnvelopeResponse].description(
           "CredentialSchema found by `guid`, wrapped in an envelope"
         )
       )
@@ -280,7 +273,7 @@ object SchemaRegistryEndpoints {
   val getRawSchemaByIdDidUrlEndpoint: PublicEndpoint[
     (RequestContext, UUID),
     ErrorResponse,
-    CredentialSchemaInnerDidUrlResponse, // returns an envelope, where resource is a json of wrapped schema
+    PrismEnvelopeResponse, // returns an envelope, where resource is a json of wrapped schema
     Any
   ] =
     endpoint.get
@@ -291,7 +284,7 @@ object SchemaRegistryEndpoints {
         )
       )
       .out(
-        jsonBody[CredentialSchemaInnerDidUrlResponse].description("Raw JSON response of the CredentialSchema")
+        jsonBody[PrismEnvelopeResponse].description("Raw JSON response of the CredentialSchema")
       )
       .errorOut(basicFailuresAndNotFound)
       .name("getRawSchemaByIdDidUrl")

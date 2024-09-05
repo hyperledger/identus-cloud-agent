@@ -9,16 +9,8 @@ import org.hyperledger.identus.castor.core.model.did.{LongFormPrismDID, PrismDID
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.FilteredEntries
 import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService
-import org.hyperledger.identus.pollux.credentialdefinition
-import org.hyperledger.identus.pollux.credentialdefinition.http.{
-  CredentialDefinitionDidUrlResponse,
-  CredentialDefinitionDidUrlResponsePage,
-  CredentialDefinitionInnerDefinitionDidUrlResponse,
-  CredentialDefinitionInput,
-  CredentialDefinitionResponse,
-  CredentialDefinitionResponsePage,
-  FilterInput
-}
+import org.hyperledger.identus.pollux.{PrismEnvelopeResponse, credentialdefinition}
+import org.hyperledger.identus.pollux.credentialdefinition.http.{CredentialDefinitionDidUrlResponse, CredentialDefinitionDidUrlResponsePage, CredentialDefinitionInnerDefinitionDidUrlResponse, CredentialDefinitionInput, CredentialDefinitionResponse, CredentialDefinitionResponsePage, FilterInput}
 import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionInput.toDomain
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
@@ -73,12 +65,12 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
   override def getCredentialDefinitionByGuidDidUrl(
       baseUrlServiceName: String,
       guid: UUID
-  )(implicit rc: RequestContext): IO[ErrorResponse, CredentialDefinitionDidUrlResponse] = {
+  )(implicit rc: RequestContext): IO[ErrorResponse, PrismEnvelopeResponse] = {
 
     val res = for {
       cd <- service.getByGUID(guid, ResourceResolutionMethod.DID)
       response <- ZIO
-        .fromEither(CredentialDefinitionDidUrlResponse.fromDomain(cd, baseUrlServiceName))
+        .fromEither(CredentialDefinitionDidUrlResponse.asPrismEnvelopeResponse(cd, baseUrlServiceName))
         .mapError(couldNotParseCredDefResponse)
 
     } yield response
@@ -96,7 +88,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
 
   override def getCredentialDefinitionInnerDefinitionByGuidDidUrl(baseUrlServiceName: String, guid: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialDefinitionInnerDefinitionDidUrlResponse] = {
+  ): IO[ErrorResponse, PrismEnvelopeResponse] = {
     val res = for {
       cd <- service.getByGUID(guid, ResourceResolutionMethod.DID)
       authorDid <- ZIO
@@ -105,7 +97,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
       response <- ZIO
         .fromEither(
           CredentialDefinitionInnerDefinitionDidUrlResponse
-            .fromDomain(cd.definition, authorDid, cd.guid, baseUrlServiceName)
+            .asPrismEnvelopeResponse(cd.definition, authorDid, cd.guid, baseUrlServiceName)
         )
         .mapError(couldNotParseCredDefResponse)
 
@@ -151,7 +143,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
       )
 
       entriesZio = filteredEntries.entries
-        .traverse(cd => CredentialDefinitionDidUrlResponse.fromDomain(cd, baseUrlServiceName))
+        .traverse(cd => CredentialDefinitionDidUrlResponse.asPrismEnvelopeResponse(cd, baseUrlServiceName))
 
       entries <- ZIO
         .fromEither(entriesZio)

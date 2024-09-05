@@ -2,7 +2,10 @@ package org.hyperledger.identus.shared.http
 
 import io.lemonlabs.uri.{Uri, Url, Urn}
 import org.hyperledger.identus.shared.models.{Failure, StatusCode}
+import org.hyperledger.identus.shared.models.PrismEnvelopeData
+import org.hyperledger.identus.shared.utils.Base64Utils
 import zio.*
+import zio.json.*
 
 import scala.util
 
@@ -21,7 +24,15 @@ class GenericUriResolver(resolvers: Map[String, UriResolver]) extends UriResolve
       case url: Url =>
         url.schemeOption.fold(ZIO.fail(InvalidUri(uri)))(schema =>
           resolvers.get(schema).fold(ZIO.fail(UnsupportedUriSchema(schema))) { resolver =>
-            resolver.resolve(uri)
+            resolver.resolve(uri).flatMap { res =>
+              schema match
+                case "did" =>
+                  val envelope = res.fromJson[PrismEnvelopeData].left.map(_ => DidUriResponseNotEnvelope(url.toString))
+                  ZIO.fromEither(
+                    envelope.map(env => Base64Utils.decodeUrlToString(env.resource))
+                  )
+                case _ => ZIO.succeed(res)
+            }
           }
         )
 
@@ -40,6 +51,12 @@ trait GenericUriResolverError(val statusCode: StatusCode, val userFacingMessage:
       case UnsupportedUriSchema(schema) => new RuntimeException(s"Unsupported URI schema: $schema")
   }
 }
+
+case class DidUriResponseNotEnvelope(uri: String)
+    extends GenericUriResolverError(
+      StatusCode.UnprocessableContent,
+      s"The response of DID uri resolution was not prism envelope: uri=[$uri]"
+    )
 
 case class InvalidUri(uri: String)
     extends GenericUriResolverError(StatusCode.UnprocessableContent, s"The URI to dereference is invalid: uri=[$uri]")

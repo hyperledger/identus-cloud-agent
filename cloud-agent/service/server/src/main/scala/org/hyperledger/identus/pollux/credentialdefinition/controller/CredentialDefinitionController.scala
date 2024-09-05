@@ -2,15 +2,8 @@ package org.hyperledger.identus.pollux.credentialdefinition.controller
 
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{Order, Pagination}
-import org.hyperledger.identus.pollux.credentialdefinition.http.{
-  CredentialDefinitionDidUrlResponse,
-  CredentialDefinitionDidUrlResponsePage,
-  CredentialDefinitionInnerDefinitionDidUrlResponse,
-  CredentialDefinitionInput,
-  CredentialDefinitionResponse,
-  CredentialDefinitionResponsePage,
-  FilterInput
-}
+import org.hyperledger.identus.pollux.PrismEnvelopeResponse
+import org.hyperledger.identus.pollux.credentialdefinition.http.{CredentialDefinitionDidUrlResponse, CredentialDefinitionDidUrlResponsePage, CredentialDefinitionInnerDefinitionDidUrlResponse, CredentialDefinitionInput, CredentialDefinitionResponse, CredentialDefinitionResponsePage, FilterInput}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
@@ -32,7 +25,7 @@ trait CredentialDefinitionController {
 
   def getCredentialDefinitionByGuidDidUrl(baseUrlServiceName: String, guid: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialDefinitionDidUrlResponse]
+  ): IO[ErrorResponse, PrismEnvelopeResponse]
 
   def getCredentialDefinitionInnerDefinitionByGuid(id: UUID)(implicit
       rc: RequestContext
@@ -40,7 +33,7 @@ trait CredentialDefinitionController {
 
   def getCredentialDefinitionInnerDefinitionByGuidDidUrl(baseUrlServiceName: String, guid: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialDefinitionInnerDefinitionDidUrlResponse]
+  ): IO[ErrorResponse, PrismEnvelopeResponse]
 
   def lookupCredentialDefinitions(
       filter: FilterInput,

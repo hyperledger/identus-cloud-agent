@@ -6,7 +6,6 @@ import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{CollectionStats, Order, Pagination}
 import org.hyperledger.identus.castor.core.model.did.{LongFormPrismDID, PrismDID}
-import org.hyperledger.identus.pollux.core
 import org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema.FilteredEntries
 import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
@@ -21,6 +20,7 @@ import org.hyperledger.identus.pollux.credentialschema.http.{
   FilterInput
 }
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaInput.toDomain
+import org.hyperledger.identus.pollux.PrismEnvelopeResponse
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.json.*
@@ -50,12 +50,12 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
 
   def createSchemaDidUrl(baseUrlServiceName: String, in: CredentialSchemaInput)(implicit
       rc: RequestContext
-  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaDidUrlResponse] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, PrismEnvelopeResponse] = {
     val res = for {
       validated <- validatePrismDID(in.author)
       result <- service.create(toDomain(in), ResourceResolutionMethod.DID)
       response <- ZIO
-        .fromEither(CredentialSchemaDidUrlResponse.fromDomain(result, baseUrlServiceName))
+        .fromEither(CredentialSchemaDidUrlResponse.asPrismEnvelopeResponse(result, baseUrlServiceName))
         .mapError(parsingCredentialSchemaError)
 
     } yield response
@@ -76,13 +76,13 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
 
   override def updateSchemaDidUrl(baseUrlServiceName: String, id: UUID, in: CredentialSchemaInput)(implicit
       rc: RequestContext
-  ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaDidUrlResponse] = {
+  ): ZIO[WalletAccessContext, ErrorResponse, PrismEnvelopeResponse] = {
     val res = for {
       _ <- validatePrismDID(in.author)
       cs <- service
         .update(id, toDomain(in), ResourceResolutionMethod.DID)
       result <- ZIO
-        .fromEither(CredentialSchemaDidUrlResponse.fromDomain(cs, baseUrlServiceName))
+        .fromEither(CredentialSchemaDidUrlResponse.asPrismEnvelopeResponse(cs, baseUrlServiceName))
         .mapError(parsingCredentialSchemaError)
     } yield result
 
@@ -103,11 +103,11 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
 
   override def getSchemaByGuidDidUrl(baseUrlServiceName: String, guid: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaDidUrlResponse] = {
-    val res: IO[ErrorResponse, CredentialSchemaDidUrlResponse] = for {
+  ): IO[ErrorResponse, PrismEnvelopeResponse] = {
+    val res: IO[ErrorResponse, PrismEnvelopeResponse] = for {
       cs <- service.getByGUID(guid, ResourceResolutionMethod.DID)
       response <- ZIO
-        .fromEither(CredentialSchemaDidUrlResponse.fromDomain(cs, baseUrlServiceName))
+        .fromEither(CredentialSchemaDidUrlResponse.asPrismEnvelopeResponse(cs, baseUrlServiceName))
         .mapError(parsingCredentialSchemaError)
     } yield response
 
@@ -126,14 +126,16 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
 
   override def getSchemaJsonByGuidDidUrl(baseUrlServiceName: String, id: UUID)(implicit
       rc: RequestContext
-  ): IO[ErrorResponse, CredentialSchemaInnerDidUrlResponse] = {
+  ): IO[ErrorResponse, PrismEnvelopeResponse] = {
     val res = for {
       cs <- service.getByGUID(id, ResourceResolutionMethod.DID)
       authorDid <- ZIO
         .fromEither(PrismDID.fromString(cs.author))
         .mapError(_ => ErrorResponse.internalServerError(detail = Some("Invalid schema author DID")))
       response <- ZIO
-        .fromEither(CredentialSchemaInnerDidUrlResponse.fromDomain(cs.schema, authorDid, cs.id, baseUrlServiceName))
+        .fromEither(
+          CredentialSchemaInnerDidUrlResponse.asPrismEnvelopeResponse(cs.schema, authorDid, cs.id, baseUrlServiceName)
+        )
         .mapError(parsingCredentialSchemaError)
     } yield response
 
@@ -176,7 +178,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
         pagination.limit
       )
       entriesZio = filteredEntries.entries
-        .traverse(cs => CredentialSchemaDidUrlResponse.fromDomain(cs, baseUrlServiceName))
+        .traverse(cs => CredentialSchemaDidUrlResponse.asPrismEnvelopeResponse(cs, baseUrlServiceName))
 
       entries <- ZIO
         .fromEither(entriesZio)

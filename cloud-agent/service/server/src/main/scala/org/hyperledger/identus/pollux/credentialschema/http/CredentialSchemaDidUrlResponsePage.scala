@@ -1,6 +1,7 @@
 package org.hyperledger.identus.pollux.credentialschema.http
 
 import org.hyperledger.identus.api.http.Annotation
+import org.hyperledger.identus.pollux.PrismEnvelopeResponse
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaDidUrlResponsePage.annotations
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
@@ -9,7 +10,7 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 case class CredentialSchemaDidUrlResponsePage(
     @description(annotations.contents.description)
     @encodedExample(annotations.contents.example)
-    contents: Seq[CredentialSchemaDidUrlResponse],
+    contents: Seq[PrismEnvelopeResponse],
     @description(annotations.kind.description)
     @encodedExample(annotations.kind.example)
     kind: String = "CredentialSchemaDidUrlPage",
@@ -48,9 +49,9 @@ object CredentialSchemaDidUrlResponsePage {
   object annotations {
 
     object contents
-        extends Annotation[Seq[CredentialSchemaDidUrlResponse]](
+        extends Annotation[Seq[PrismEnvelopeResponse]](
           description =
-            "A sequence of CredentialSchemaDidUrlResponse objects representing the list of credential schemas wrapped in an envelope",
+            "A sequence of PrismEnvelopeResponse objects representing the list of credential schemas wrapped in an envelope",
           example = Seq.empty
         )
 
