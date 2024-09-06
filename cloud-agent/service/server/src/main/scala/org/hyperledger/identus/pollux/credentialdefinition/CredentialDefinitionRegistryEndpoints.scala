@@ -123,7 +123,7 @@ object CredentialDefinitionRegistryEndpoints {
       .name("createCredentialDefinitionDidUrl")
       .summary("Publish new definition to the definition registry, resolvable by DID url")
       .description(
-        "Create the new credential definition record with metadata and internal JSON Schema on behalf of Cloud Agent. " +
+        "Create the new credential definition record with metadata and internal JSON Schema on behalf of the Cloud Agent. " +
           "The credential definition will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it."
       )
       .tag(tagName)
