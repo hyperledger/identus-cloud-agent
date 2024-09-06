@@ -241,10 +241,15 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
         schemaCreated = assert(firstActual)(equalTo(firstExpected.get))
 
         totalCount <- CredentialSchemaSql.totalCount.transactWallet(tx)
-        lookupCount <- CredentialSchemaSql.lookupCount().transactWallet(tx)
+        lookupCountHttpSchemas <- CredentialSchemaSql
+          .lookupCount(resolutionMethod = ResourceResolutionMethod.HTTP)
+          .transactWallet(tx)
+        lookupCountDidSchemas <- CredentialSchemaSql
+          .lookupCount(resolutionMethod = ResourceResolutionMethod.DID)
+          .transactWallet(tx)
 
         totalCountIsN = assert(totalCount)(equalTo(generatedSchemas.length))
-        lookupCountIsN = assert(lookupCount)(equalTo(generatedSchemas.length))
+        lookupCountIsN = assert(lookupCountHttpSchemas + lookupCountDidSchemas)(equalTo(generatedSchemas.length))
 
       } yield allSchemasHaveUniqueId &&
         allSchemasHaveUniqueConstraint &&

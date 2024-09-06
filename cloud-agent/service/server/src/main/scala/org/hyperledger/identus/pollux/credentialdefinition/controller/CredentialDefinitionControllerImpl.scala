@@ -6,11 +6,19 @@ import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{CollectionStats, Order, Pagination}
 import org.hyperledger.identus.castor.core.model.did.{LongFormPrismDID, PrismDID}
+import org.hyperledger.identus.pollux.{credentialdefinition, PrismEnvelopeResponse}
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.FilteredEntries
 import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.service.CredentialDefinitionService
-import org.hyperledger.identus.pollux.{PrismEnvelopeResponse, credentialdefinition}
-import org.hyperledger.identus.pollux.credentialdefinition.http.{CredentialDefinitionDidUrlResponse, CredentialDefinitionDidUrlResponsePage, CredentialDefinitionInnerDefinitionDidUrlResponse, CredentialDefinitionInput, CredentialDefinitionResponse, CredentialDefinitionResponsePage, FilterInput}
+import org.hyperledger.identus.pollux.credentialdefinition.http.{
+  CredentialDefinitionDidUrlResponse,
+  CredentialDefinitionDidUrlResponsePage,
+  CredentialDefinitionInnerDefinitionDidUrlResponse,
+  CredentialDefinitionInput,
+  CredentialDefinitionResponse,
+  CredentialDefinitionResponsePage,
+  FilterInput
+}
 import org.hyperledger.identus.pollux.credentialdefinition.http.CredentialDefinitionInput.toDomain
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*

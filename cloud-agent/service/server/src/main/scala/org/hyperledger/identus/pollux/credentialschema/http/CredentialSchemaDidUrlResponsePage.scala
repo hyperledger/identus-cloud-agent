@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.credentialschema.http
 
 import org.hyperledger.identus.api.http.Annotation
-import org.hyperledger.identus.pollux.PrismEnvelopeResponse
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaDidUrlResponsePage.annotations
+import org.hyperledger.identus.pollux.PrismEnvelopeResponse
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}

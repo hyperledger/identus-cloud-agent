@@ -8,11 +8,29 @@ import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
+import org.hyperledger.identus.pollux.credentialdefinition.http.{
+  CredentialDefinitionDidUrlResponse,
+  CredentialDefinitionDidUrlResponsePage,
+  CredentialDefinitionInnerDefinitionDidUrlResponse,
+  CredentialDefinitionInput,
+  CredentialDefinitionResponse,
+  CredentialDefinitionResponsePage,
+  FilterInput
+}
 import org.hyperledger.identus.pollux.PrismEnvelopeResponse
-import org.hyperledger.identus.pollux.credentialdefinition.http.{CredentialDefinitionDidUrlResponse, CredentialDefinitionDidUrlResponsePage, CredentialDefinitionInnerDefinitionDidUrlResponse, CredentialDefinitionInput, CredentialDefinitionResponse, CredentialDefinitionResponsePage, FilterInput}
 import sttp.apispec.{ExternalDocumentation, Tag}
 import sttp.model.StatusCode
-import sttp.tapir.{Endpoint, EndpointInput, PublicEndpoint, endpoint, extractFromRequest, path, query, statusCode, stringToPath}
+import sttp.tapir.{
+  endpoint,
+  extractFromRequest,
+  path,
+  query,
+  statusCode,
+  stringToPath,
+  Endpoint,
+  EndpointInput,
+  PublicEndpoint
+}
 import sttp.tapir.json.zio.{jsonBody, schemaForZioJsonValue}
 
 import java.util.UUID

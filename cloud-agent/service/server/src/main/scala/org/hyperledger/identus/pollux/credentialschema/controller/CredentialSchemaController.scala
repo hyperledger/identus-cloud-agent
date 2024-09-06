@@ -2,8 +2,16 @@ package org.hyperledger.identus.pollux.credentialschema.controller
 
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{Order, Pagination}
+import org.hyperledger.identus.pollux.credentialschema.http.{
+  CredentialSchemaDidUrlResponse,
+  CredentialSchemaDidUrlResponsePage,
+  CredentialSchemaInnerDidUrlResponse,
+  CredentialSchemaInput,
+  CredentialSchemaResponse,
+  CredentialSchemaResponsePage,
+  FilterInput
+}
 import org.hyperledger.identus.pollux.PrismEnvelopeResponse
-import org.hyperledger.identus.pollux.credentialschema.http.{CredentialSchemaDidUrlResponse, CredentialSchemaDidUrlResponsePage, CredentialSchemaInnerDidUrlResponse, CredentialSchemaInput, CredentialSchemaResponse, CredentialSchemaResponsePage, FilterInput}
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 import zio.json.ast.Json

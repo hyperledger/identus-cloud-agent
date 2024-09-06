@@ -1,9 +1,9 @@
 package org.hyperledger.identus.pollux.credentialschema.http
 
 import org.hyperledger.identus.castor.core.model.did.{DIDUrl, PrismDID}
-import org.hyperledger.identus.pollux.PrismEnvelopeResponse
 import org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
+import org.hyperledger.identus.pollux.PrismEnvelopeResponse
 import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.utils.{Base64Utils, Json as JsonUtils}
 import zio.json.*

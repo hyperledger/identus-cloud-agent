@@ -8,8 +8,16 @@ import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
+import org.hyperledger.identus.pollux.credentialschema.http.{
+  CredentialSchemaDidUrlResponse,
+  CredentialSchemaDidUrlResponsePage,
+  CredentialSchemaInnerDidUrlResponse,
+  CredentialSchemaInput,
+  CredentialSchemaResponse,
+  CredentialSchemaResponsePage,
+  FilterInput
+}
 import org.hyperledger.identus.pollux.PrismEnvelopeResponse
-import org.hyperledger.identus.pollux.credentialschema.http.{CredentialSchemaDidUrlResponse, CredentialSchemaDidUrlResponsePage, CredentialSchemaInnerDidUrlResponse, CredentialSchemaInput, CredentialSchemaResponse, CredentialSchemaResponsePage, FilterInput}
 import sttp.apispec.{ExternalDocumentation, Tag}
 import sttp.model.StatusCode
 import sttp.tapir.*

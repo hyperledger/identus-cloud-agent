@@ -9,7 +9,6 @@ import org.hyperledger.identus.shared.models.PrismEnvelopeData
 import org.hyperledger.identus.shared.models.StatusCode
 import zio.*
 import zio.json.*
-import zio.json.ast.Json
 
 class DidUrlResolver(httpUrlResolver: HttpUrlResolver, didResolver: DidResolver) extends UriResolver {
   import DidUrlResolver.*
@@ -61,7 +60,7 @@ class DidUrlResolver(httpUrlResolver: HttpUrlResolver, didResolver: DidResolver)
         .fromEither(result.fromJson[PrismEnvelopeData])
         .mapError(_ => InvalidResponseFromResourceServer(finalUrl))
 
-      envelopeAsStr = envelope.toString
+      envelopeAsStr = envelope.toJson
 
       validatedResult <- maybeResourceHash.fold(ZIO.succeed(envelopeAsStr)) { hash =>
         val computedHash = Sha256Hash.compute(envelope.resource.getBytes()).hexEncoded

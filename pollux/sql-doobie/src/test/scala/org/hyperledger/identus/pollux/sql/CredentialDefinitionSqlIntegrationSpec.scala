@@ -206,10 +206,17 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault with Postgr
         credentialDefinitionCreated = assert(firstActual)(equalTo(firstExpected.get))
 
         totalCount <- CredentialDefinitionSql.totalCount.transactWallet(tx)
-        lookupCount <- CredentialDefinitionSql.lookupCount().transactWallet(tx)
+        lookupCountHttpCredDef <- CredentialDefinitionSql
+          .lookupCount(resolutionMethod = ResourceResolutionMethod.HTTP)
+          .transactWallet(tx)
+        lookupCountDidCredDef <- CredentialDefinitionSql
+          .lookupCount(resolutionMethod = ResourceResolutionMethod.DID)
+          .transactWallet(tx)
 
         totalCountIsN = assert(totalCount)(equalTo(generatedCredentialDefinitions.length))
-        lookupCountIsN = assert(lookupCount)(equalTo(generatedCredentialDefinitions.length))
+        lookupCountIsN = assert(lookupCountHttpCredDef + lookupCountDidCredDef)(
+          equalTo(generatedCredentialDefinitions.length)
+        )
 
       } yield allCredentialDefinitionsHaveUniqueId &&
         allCredentialDefinitionsHaveUniqueConstraint &&
