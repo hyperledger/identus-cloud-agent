@@ -17,7 +17,7 @@ import org.hyperledger.identus.issue.controller.http.{
   IssueCredentialRecord,
   IssueCredentialRecordPage
 }
-import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
+import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, ResourceResolutionMethod}
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import org.hyperledger.identus.pollux.core.service.{CredentialDefinitionService, CredentialService}
@@ -99,31 +99,38 @@ class IssueControllerImpl(
               credentialDefinition <- credentialDefinitionService.getByGUID(credentialDefinitionGUID)
               credentialDefinitionId <- {
 
-                // TODO: this needs to be either DID or HTTP url based on credentialDefinition.resolutionMethod
-                val publicEndpointServiceName = appConfig.agent.httpEndpoint.serviceName
-                val resourcePath =
-                  s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
+                credentialDefinition.resolutionMethod match
+                  case ResourceResolutionMethod.DID =>
+                    val publicEndpointServiceName = appConfig.agent.httpEndpoint.serviceName
+                    val didUrlResourcePath =
+                      s"credential-definition-registry/definitions/did-url/${credentialDefinitionGUID.toString}/definition"
+                    val didUrl = for {
+                      canonicalized <- JsonUtils.canonicalizeToJcs(credentialDefinition.definition.toJson)
+                      encoded = Base64Utils.encodeURL(canonicalized.getBytes)
+                      hash = Sha256Hash.compute(encoded.getBytes).hexEncoded
+                      didUrl = DIDUrl(
+                        issuingDID.did,
+                        Seq(),
+                        ListMap(
+                          "resourceService" -> Seq(publicEndpointServiceName),
+                          "resourcePath" -> Seq(
+                            s"$didUrlResourcePath?resourceHash=$hash"
+                          ),
+                        ),
+                        None
+                      ).toString
+                    } yield didUrl
 
-                val didUrl = for {
-                  canonicalized <- JsonUtils.canonicalizeToJcs(credentialDefinition.definition.toJson)
-                  encoded = Base64Utils.encodeURL(canonicalized.getBytes)
-                  hash = Sha256Hash.compute(encoded.getBytes).hexEncoded
-                  didUrl = DIDUrl(
-                    issuingDID.did,
-                    Seq(),
-                    ListMap(
-                      "resourceService" -> Seq(publicEndpointServiceName),
-                      "resourcePath" -> Seq(
-                        s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition?resourceHash=$hash"
-                      ),
-                    ),
-                    None
-                  ).toString
-                } yield didUrl
+                    ZIO
+                      .fromEither(didUrl)
+                      .mapError(_ => ErrorResponse.badRequest(detail = Some("Could not parse credential definition")))
 
-                ZIO
-                  .fromEither(didUrl)
-                  .mapError(_ => ErrorResponse.badRequest(detail = Some("Could not parse credential definition")))
+                  case ResourceResolutionMethod.HTTP =>
+                    val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl.toExternalForm
+                    val httpUrlSuffix =
+                      s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
+                    val urlPrefix = if (publicEndpointUrl.endsWith("/")) publicEndpointUrl else publicEndpointUrl + "/"
+                    ZIO.succeed(s"$urlPrefix$httpUrlSuffix")
 
               }
               record <- credentialService

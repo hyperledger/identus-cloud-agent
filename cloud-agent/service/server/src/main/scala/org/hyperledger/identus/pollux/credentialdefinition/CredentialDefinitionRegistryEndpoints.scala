@@ -207,7 +207,7 @@ object CredentialDefinitionRegistryEndpoints {
     endpoint.get
       .in(extractFromRequest[RequestContext](RequestContext.apply))
       .in(
-        "credential-definition-registry" / "definitions" / path[UUID]("guid") / "definition".description(
+        "credential-definition-registry" / "definitions" / "did-url" / path[UUID]("guid") / "definition".description(
           "Globally unique identifier of the credential definition record"
         )
       )

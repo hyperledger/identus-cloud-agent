@@ -3,6 +3,7 @@ package org.hyperledger.identus.pollux.credentialschema.http
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponse.annotations
 import sttp.model.Uri
 import sttp.model.Uri.*
@@ -52,6 +53,9 @@ case class CredentialSchemaResponse(
     @description(annotations.proof.description)
     @encodedExample(annotations.proof.example.toJson)
     proof: Option[Proof],
+    @description(annotations.resolutionMethod.description)
+    @encodedExample(annotations.resolutionMethod.example)
+    resolutionMethod: ResourceResolutionMethod,
     @description(annotations.kind.description)
     @encodedExample(annotations.kind.example)
     kind: String = "CredentialSchema",
@@ -78,6 +82,7 @@ object CredentialSchemaResponse {
       schema = cs.schema,
       author = cs.author,
       authored = cs.authored,
+      resolutionMethod = cs.resolutionMethod,
       proof = None
     )
 
@@ -87,6 +92,8 @@ object CredentialSchemaResponse {
     DeriveJsonEncoder.gen[CredentialSchemaResponse]
   given decoder: zio.json.JsonDecoder[CredentialSchemaResponse] =
     DeriveJsonDecoder.gen[CredentialSchemaResponse]
+
+  given resourceResolutionMethodSchema: Schema[ResourceResolutionMethod] = Schema.derived
   given schema: Schema[CredentialSchemaResponse] = Schema.derived
 
   object annotations {
@@ -134,6 +141,13 @@ object CredentialSchemaResponse {
           description = "A string that identifies the type of resource being returned in the response.",
           example = "CredentialSchema"
         )
+
+    object resolutionMethod
+        extends Annotation[ResourceResolutionMethod](
+          description = s"The method used to resolve the schema. It can be either HTTP or DID.",
+          example = ResourceResolutionMethod.HTTP
+        )
+
     object proof
         extends Annotation[Proof](
           description = "A digital signature over the Credential Schema for the sake of asserting authorship. " +
