@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.credentialdefinition
 
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.container.util.MigrationAspects.migrate
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
@@ -25,13 +26,14 @@ object CredentialDefinitionLookupAndPaginationSpec
 
   def fetchAllPages(
       uri: Uri
-  ): ZIO[CredentialDefinitionController & AuthenticatorWithAuthZ[BaseEntity], Throwable, List[
+  ): ZIO[CredentialDefinitionController & AuthenticatorWithAuthZ[BaseEntity] & AppConfig, Throwable, List[
     CredentialDefinitionResponsePage
   ]] = {
     for {
       controller <- ZIO.service[CredentialDefinitionController]
       authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-      backend = httpBackend(controller, authenticator)
+      config <- ZIO.service[AppConfig]
+      backend = httpBackend(config, controller, authenticator)
       response: CredentialDefinitionResponsePageType <-
         for {
           response <- basicRequest
@@ -81,8 +83,8 @@ object CredentialDefinitionLookupAndPaginationSpec
         _ <- deleteAllCredentialDefinitions
         controller <- ZIO.service[CredentialDefinitionController]
         authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-        backend = httpBackend(controller, authenticator)
-
+        config <- ZIO.service[AppConfig]
+        backend = httpBackend(config, controller, authenticator)
         inputs <- Generator.credentialDefinitionInput.runCollectN(10)
         _ <- inputs
           .map(in =>

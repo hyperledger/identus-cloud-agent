@@ -1,5 +1,6 @@
 package org.hyperledger.identus.issue.controller
 
+import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
 import org.hyperledger.identus.api.http.ErrorResponse
@@ -21,7 +22,9 @@ import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
-import org.hyperledger.identus.pollux.core.service.MockCredentialService
+import org.hyperledger.identus.pollux.core.repository.CredentialDefinitionRepositoryInMemory
+import org.hyperledger.identus.pollux.core.service.{CredentialDefinitionServiceImpl, MockCredentialService}
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import sttp.client3.{basicRequest, DeserializationException, UriContext}
 import sttp.client3.ziojson.*
 import sttp.model.StatusCode
@@ -172,11 +175,18 @@ object IssueControllerImplSpec extends ZIOSpecDefault with IssueControllerTestTo
         )
       )
     )
+
+  private val credentialDefinitionServiceLayer =
+    CredentialDefinitionRepositoryInMemory.layer
+      >+> GenericSecretStorageInMemory.layer >+>
+      ResourceUrlResolver.layer >>> CredentialDefinitionServiceImpl.layer
+
   val baseLayer =
     MockManagedDIDService.empty
       >+> MockDIDService.empty
       >+> MockCredentialService.empty
       >+> MockConnectionService.empty
+      >+> credentialDefinitionServiceLayer
 
   def spec = (httpErrorResponses @@ migrate(
     schema = "public",

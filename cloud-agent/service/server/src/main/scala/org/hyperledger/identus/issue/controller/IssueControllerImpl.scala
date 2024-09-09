@@ -1,6 +1,5 @@
 package org.hyperledger.identus.issue.controller
 
-import io.lemonlabs.uri.Url
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.ControllerHelper
 import org.hyperledger.identus.agent.walletapi.model.PublicationState
@@ -9,7 +8,7 @@ import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.util.PaginationUtils
-import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
+import org.hyperledger.identus.castor.core.model.did.{DIDUrl, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.issue.controller.http.{
@@ -18,17 +17,22 @@ import org.hyperledger.identus.issue.controller.http.{
   IssueCredentialRecord,
   IssueCredentialRecordPage
 }
-import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
+import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, ResourceResolutionMethod}
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
-import org.hyperledger.identus.pollux.core.service.CredentialService
+import org.hyperledger.identus.pollux.core.service.{CredentialDefinitionService, CredentialService}
+import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
-import zio.{URLayer, ZIO, ZLayer}
+import org.hyperledger.identus.shared.utils.{Base64Utils, Json as JsonUtils}
+import zio.*
+import zio.json.given
 
+import scala.collection.immutable.ListMap
 import scala.language.implicitConversions
 
 class IssueControllerImpl(
     credentialService: CredentialService,
+    credentialDefinitionService: CredentialDefinitionService,
     connectionService: ConnectionService,
     didService: DIDService,
     managedDIDService: ManagedDIDService,
@@ -92,16 +96,42 @@ class IssueControllerImpl(
                 .mapError(_ =>
                   ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
                 )
-              credentialDefinitionId = {
+              credentialDefinition <- credentialDefinitionService.getByGUID(credentialDefinitionGUID)
+              credentialDefinitionId <- {
 
-                val publicEndpointServiceName = appConfig.agent.httpEndpoint.serviceName
-                val resourcePath =
-                  s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
-                val didUrl = Url
-                  .parse(s"$issuingDID?resourceService=$publicEndpointServiceName&resourcePath=$resourcePath")
-                  .toString
+                credentialDefinition.resolutionMethod match
+                  case ResourceResolutionMethod.DID =>
+                    val publicEndpointServiceName = appConfig.agent.httpEndpoint.serviceName
+                    val didUrlResourcePath =
+                      s"credential-definition-registry/definitions/did-url/${credentialDefinitionGUID.toString}/definition"
+                    val didUrl = for {
+                      canonicalized <- JsonUtils.canonicalizeToJcs(credentialDefinition.definition.toJson)
+                      encoded = Base64Utils.encodeURL(canonicalized.getBytes)
+                      hash = Sha256Hash.compute(encoded.getBytes).hexEncoded
+                      didUrl = DIDUrl(
+                        issuingDID.did,
+                        Seq(),
+                        ListMap(
+                          "resourceService" -> Seq(publicEndpointServiceName),
+                          "resourcePath" -> Seq(
+                            s"$didUrlResourcePath?resourceHash=$hash"
+                          ),
+                        ),
+                        None
+                      ).toString
+                    } yield didUrl
 
-                didUrl
+                    ZIO
+                      .fromEither(didUrl)
+                      .mapError(_ => ErrorResponse.badRequest(detail = Some("Could not parse credential definition")))
+
+                  case ResourceResolutionMethod.HTTP =>
+                    val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl.toExternalForm
+                    val httpUrlSuffix =
+                      s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
+                    val urlPrefix = if (publicEndpointUrl.endsWith("/")) publicEndpointUrl else publicEndpointUrl + "/"
+                    ZIO.succeed(s"$urlPrefix$httpUrlSuffix")
+
               }
               record <- credentialService
                 .createAnonCredsIssueCredentialRecord(
@@ -244,7 +274,9 @@ class IssueControllerImpl(
 }
 
 object IssueControllerImpl {
-  val layer
-      : URLayer[CredentialService & ConnectionService & DIDService & ManagedDIDService & AppConfig, IssueController] =
-    ZLayer.fromFunction(IssueControllerImpl(_, _, _, _, _))
+  val layer: URLayer[
+    CredentialService & CredentialDefinitionService & ConnectionService & DIDService & ManagedDIDService & AppConfig,
+    IssueController
+  ] =
+    ZLayer.fromFunction(IssueControllerImpl(_, _, _, _, _, _))
 }

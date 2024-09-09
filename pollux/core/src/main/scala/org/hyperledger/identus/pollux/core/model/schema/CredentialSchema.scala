@@ -9,6 +9,7 @@ import org.hyperledger.identus.pollux.core.model.schema.`type`.{
 }
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.validator.{JsonSchemaValidator, JsonSchemaValidatorImpl}
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.shared.http.UriResolver
 import zio.*
 import zio.json.*
@@ -52,6 +53,7 @@ case class CredentialSchema(
     tags: Seq[String],
     description: String,
     `type`: String,
+    resolutionMethod: ResourceResolutionMethod,
     schema: Schema
 ) {
   def longId = CredentialSchema.makeLongId(author, id, version)
@@ -65,13 +67,13 @@ object CredentialSchema {
   def makeGUID(author: String, id: UUID, version: String) =
     UUID.nameUUIDFromBytes(makeLongId(author, id, version).getBytes)
 
-  def make(in: Input): UIO[CredentialSchema] = {
+  def make(in: Input, resolutionMethod: ResourceResolutionMethod): UIO[CredentialSchema] = {
     for {
       id <- zio.Random.nextUUID
-      cs <- make(id, in)
+      cs <- make(id, in, resolutionMethod)
     } yield cs
   }
-  def make(id: UUID, in: Input): UIO[CredentialSchema] = {
+  def make(id: UUID, in: Input, resolutionMethod: ResourceResolutionMethod): UIO[CredentialSchema] = {
     for {
       ts <- zio.Clock.currentDateTime.map(
         _.atZoneSameInstant(ZoneOffset.UTC).toOffsetDateTime
@@ -87,6 +89,7 @@ object CredentialSchema {
       tags = in.tags,
       description = in.description,
       `type` = in.`type`,
+      resolutionMethod = resolutionMethod,
       schema = in.schema
     )
   }
@@ -108,7 +111,8 @@ object CredentialSchema {
       author: Option[String] = None,
       name: Option[String] = None,
       version: Option[String] = None,
-      tags: Option[String] = None
+      tags: Option[String] = None,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
   )
 
   case class FilteredEntries(entries: Seq[CredentialSchema], count: Long, totalCount: Long)

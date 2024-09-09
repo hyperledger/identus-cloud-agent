@@ -19,6 +19,7 @@ import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaErro
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.{Filter, FilteredEntries}
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.repository.CredentialDefinitionRepository
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchQuery
 import org.hyperledger.identus.pollux.core.service.serdes.{
@@ -38,7 +39,10 @@ class CredentialDefinitionServiceImpl(
     uriResolver: UriResolver
 ) extends CredentialDefinitionService {
 
-  override def create(in: CredentialDefinition.Input): Result[CredentialDefinition] = {
+  override def create(
+      in: CredentialDefinition.Input,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+  ): Result[CredentialDefinition] = {
     for {
       content <- uriResolver.resolve(in.schemaId).orDieAsUnmanagedFailure
       anoncredSchema <- AnoncredSchemaSerDesV1.schemaSerDes
@@ -83,7 +87,8 @@ class CredentialDefinitionServiceImpl(
           PublicCredentialDefinitionSerDesV1.version,
           publicCredentialDefinitionJson,
           ProofKeyCredentialDefinitionSchemaSerDesV1.version,
-          proofKeyCredentialDefinitionJson
+          proofKeyCredentialDefinitionJson,
+          resolutionMethod
         )
       createdCredentialDefinition <- credentialDefinitionRepository.create(cd)
       _ <- genericSecretStorage
@@ -99,24 +104,20 @@ class CredentialDefinitionServiceImpl(
     CredentialDefinitionValidationError(CredentialSchemaValidationError(e))
   }
 
-  override def delete(guid: UUID): Result[CredentialDefinition] =
+  override def getByGUID(
+      guid: UUID,
+      resolutionMethod: ResourceResolutionMethod
+  ): IO[CredentialDefinitionServiceError, CredentialDefinition] = {
     for {
-      existingOpt <- credentialDefinitionRepository.findByGuid(guid)
-      _ <- ZIO.fromOption(existingOpt).mapError(_ => CredentialDefinitionGuidNotFoundError(guid))
-      result <- credentialDefinitionRepository.delete(guid)
+      resultOpt <- credentialDefinitionRepository.findByGuid(guid, resolutionMethod)
+      result <- ZIO.fromOption(resultOpt).mapError(_ => CredentialDefinitionGuidNotFoundError(guid))
     } yield result
+  }
 
   override def lookup(filter: CredentialDefinition.Filter, skip: Int, limit: Int): Result[FilteredEntries] = {
     credentialDefinitionRepository
       .search(SearchQuery(filter, skip, limit))
       .map(sr => FilteredEntries(sr.entries, sr.count.toInt, sr.totalCount.toInt))
-  }
-
-  override def getByGUID(guid: UUID): IO[CredentialDefinitionServiceError, CredentialDefinition] = {
-    for {
-      resultOpt <- credentialDefinitionRepository.findByGuid(guid)
-      result <- ZIO.fromOption(resultOpt).mapError(_ => CredentialDefinitionGuidNotFoundError(guid))
-    } yield result
   }
 }
 

@@ -4,7 +4,10 @@ import io.circe.*
 import io.lemonlabs.uri.Url
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.crypto.Sha256Hash
+import org.hyperledger.identus.shared.models.PrismEnvelopeData
+import org.hyperledger.identus.shared.utils.{Base64Utils, Json as JsonUtils}
 import zio.*
+import zio.json.*
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -68,13 +71,33 @@ object DidUrlResolverSpec extends ZIOSpecDefault {
                          |}
                          |""".stripMargin
 
+  private val normalizedSchema = JsonUtils.canonicalizeToJcs(schema).toOption.get
+  private val encodedSchema = Base64Utils.encodeURL(normalizedSchema.getBytes)
+
+  private val schemaHash = Sha256Hash.compute(encodedSchema.getBytes()).hexEncoded
+
+  private val testDidUrl = Url
+    .parse(
+      s"did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a?resourceService=agent-base-url&resourcePath=schema-registry/schemas/did-url/ef3e4135-8fcf-3ce7-b5bb-df37defc13f6&resourceHash=$schemaHash"
+    )
+    .toString
+
   class MockHttpUrlResolver extends HttpUrlResolver(null) {
     // Mock implementation, always resolves some schema
-    override def resolve(uri: String) = ZIO.succeed(schema)
+    override def resolve(uri: String) = {
+
+      val responseEnvelope = PrismEnvelopeData(
+        resource = encodedSchema,
+        url = uri
+      )
+
+      ZIO.succeed(responseEnvelope.toJson)
+
+    }
   }
 
   private val didResolverLayer = ZLayer.succeed(new DidResolver {
-    // mock implementation, alwasys resolves some DID
+    // mock implementation, always resolves the same DID
     override def resolve(didUrl: String) = ZIO.succeed(
       DIDResolutionSucceeded(
         DIDDocument(
@@ -145,14 +168,6 @@ object DidUrlResolverSpec extends ZIOSpecDefault {
   })
   private val httpUrlResolver = ZLayer.succeed(new MockHttpUrlResolver)
 
-  private val schemaHash = Sha256Hash.compute(schema.getBytes()).hexEncoded
-
-  private val testDidUrl = Url
-    .parse(
-      s"did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a?resourceService=agent-base-url&resourcePath=schema-registry/schemas/ef3e4135-8fcf-3ce7-b5bb-df37defc13f6&resourceHash=$schemaHash"
-    )
-    .toString
-
   override def spec = {
     suite("DidUrlResolverSpec")(
       test("Should resolve a DID url correctly") {
@@ -161,11 +176,13 @@ object DidUrlResolverSpec extends ZIOSpecDefault {
           httpUrlResolver <- ZIO.service[HttpUrlResolver]
           didUrlResolver = new DidUrlResolver(httpUrlResolver, didResolver)
           response <- didUrlResolver.resolve(testDidUrl)
-          responseJson = Json.fromString(response)
+          responseEnvelope <- ZIO.fromEither(response.fromJson[PrismEnvelopeData])
         } yield {
-          val schemaJson = Json.fromString(schema)
-          assert(responseJson.noSpaces)(
-            equalTo(schemaJson.noSpaces)
+          assert(responseEnvelope.url)(
+            equalTo(testDidUrl)
+          )
+          assert(responseEnvelope.resource)(
+            equalTo(encodedSchema)
           )
         }
       }

@@ -5,8 +5,10 @@ import org.hyperledger.identus.pollux.vc.jwt
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.http.{GenericUriResolverError, UriResolver}
+import org.hyperledger.identus.shared.models.PrismEnvelopeData
 import org.hyperledger.identus.shared.models.StatusCode
 import zio.*
+import zio.json.*
 
 class DidUrlResolver(httpUrlResolver: HttpUrlResolver, didResolver: DidResolver) extends UriResolver {
   import DidUrlResolver.*
@@ -54,9 +56,15 @@ class DidUrlResolver(httpUrlResolver: HttpUrlResolver, didResolver: DidResolver)
         .mapError(_ => InvalidURI(baseUrl))
       result <- httpUrlResolver.resolve(finalUrl)
 
-      validatedResult <- maybeResourceHash.fold(ZIO.succeed(result)) { hash =>
-        val computedHash = Sha256Hash.compute(result.getBytes()).hexEncoded
-        if (computedHash == hash) ZIO.succeed(result)
+      envelope <- ZIO
+        .fromEither(result.fromJson[PrismEnvelopeData])
+        .mapError(_ => InvalidResponseFromResourceServer(finalUrl))
+
+      envelopeAsStr = envelope.toJson
+
+      validatedResult <- maybeResourceHash.fold(ZIO.succeed(envelopeAsStr)) { hash =>
+        val computedHash = Sha256Hash.compute(envelope.resource.getBytes()).hexEncoded
+        if (computedHash == hash) ZIO.succeed(envelopeAsStr)
         else ZIO.fail(InvalidHash(hash, computedHash))
       }
 
@@ -105,6 +113,12 @@ object DidUrlResolver {
       extends DidUrlResolverError(
         StatusCode.UnprocessableContent,
         s"Invalid hash, expected: $expectedHash, computed: $computedHash"
+      )
+
+  final case class InvalidResponseFromResourceServer(resourceUrl: String)
+      extends DidUrlResolverError(
+        StatusCode.UnprocessableContent,
+        s"Invalid Json response, expected an envelope, resourceUrl: $resourceUrl"
       )
 
   val layer: URLayer[HttpUrlResolver & DidResolver, DidUrlResolver] =

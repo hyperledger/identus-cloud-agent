@@ -1,19 +1,19 @@
 package org.hyperledger.identus.pollux.credentialschema.http
 
 import org.hyperledger.identus.api.http.Annotation
-import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponsePage.annotations
-import sttp.tapir.generic.auto.*
+import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaDidUrlResponsePage.annotations
+import org.hyperledger.identus.pollux.PrismEnvelopeResponse
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.json.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
-case class CredentialSchemaResponsePage(
+case class CredentialSchemaDidUrlResponsePage(
     @description(annotations.contents.description)
     @encodedExample(annotations.contents.example)
-    contents: Seq[CredentialSchemaResponse],
+    contents: Seq[PrismEnvelopeResponse],
     @description(annotations.kind.description)
     @encodedExample(annotations.kind.example)
-    kind: String = "CredentialSchemaPage",
+    kind: String = "CredentialSchemaDidUrlPage",
     @description(annotations.self.description)
     @encodedExample(annotations.self.example)
     self: String = "",
@@ -30,14 +30,14 @@ case class CredentialSchemaResponsePage(
   def withSelf(self: String) = copy(self = self)
 }
 
-object CredentialSchemaResponsePage {
-  given encoder: JsonEncoder[CredentialSchemaResponsePage] =
-    DeriveJsonEncoder.gen[CredentialSchemaResponsePage]
-  given decoder: JsonDecoder[CredentialSchemaResponsePage] =
-    DeriveJsonDecoder.gen[CredentialSchemaResponsePage]
-  given schema: Schema[CredentialSchemaResponsePage] = Schema.derived
+object CredentialSchemaDidUrlResponsePage {
+  given encoder: JsonEncoder[CredentialSchemaDidUrlResponsePage] =
+    DeriveJsonEncoder.gen[CredentialSchemaDidUrlResponsePage]
+  given decoder: JsonDecoder[CredentialSchemaDidUrlResponsePage] =
+    DeriveJsonDecoder.gen[CredentialSchemaDidUrlResponsePage]
+  given schema: Schema[CredentialSchemaDidUrlResponsePage] = Schema.derived
 
-  val Example = CredentialSchemaResponsePage(
+  val Example = CredentialSchemaDidUrlResponsePage(
     contents = annotations.contents.example,
     kind = annotations.kind.example,
     self = annotations.self.example,
@@ -49,9 +49,9 @@ object CredentialSchemaResponsePage {
   object annotations {
 
     object contents
-        extends Annotation[Seq[CredentialSchemaResponse]](
+        extends Annotation[Seq[PrismEnvelopeResponse]](
           description =
-            "A sequence of CredentialSchemaResponse objects representing the list of credential schemas that the API response contains",
+            "A sequence of PrismEnvelopeResponse objects representing the list of credential schemas wrapped in an envelope",
           example = Seq.empty
         )
 
@@ -65,27 +65,27 @@ object CredentialSchemaResponsePage {
     object self
         extends Annotation[String](
           description = "A string field containing the URL of the current API endpoint",
-          example = "/cloud-agent/schema-registry/schemas?skip=10&limit=10"
+          example = "/cloud-agent/schema-registry/schemas/did-url?skip=10&limit=10"
         )
 
     object pageOf
         extends Annotation[String](
           description = "A string field indicating the type of resource that the contents field contains",
-          example = "/cloud-agent/schema-registry/schemas"
+          example = "/cloud-agent/schema-registry/schemas/did-url"
         )
 
     object next
         extends Annotation[String](
           description = "An optional string field containing the URL of the next page of results. " +
             "If the API response does not contain any more pages, this field should be set to None.",
-          example = "/cloud-agent/schema-registry/schemas?skip=20&limit=10"
+          example = "/cloud-agent/schema-registry/schemas/did-url?skip=20&limit=10"
         )
 
     object previous
         extends Annotation[String](
           description = "An optional string field containing the URL of the previous page of results. " +
             "If the API response is the first page of results, this field should be set to None.",
-          example = "/cloud-agent/schema-registry/schemas?skip=0&limit=10"
+          example = "/cloud-agent/schema-registry/schemas/did-url?skip=0&limit=10"
         )
   }
 }
