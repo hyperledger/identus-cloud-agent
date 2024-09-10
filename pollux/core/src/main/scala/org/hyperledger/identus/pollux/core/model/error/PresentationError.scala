@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.model.error
 
-import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
 import org.hyperledger.identus.pollux.core.model.DidCommID
 import org.hyperledger.identus.pollux.core.service.URIDereferencerError
+import org.hyperledger.identus.shared.json.JsonSchemaError
 import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 
 sealed trait PresentationError(
@@ -42,6 +42,12 @@ object PresentationError {
       extends PresentationError(
         StatusCode.BadRequest,
         s"Request Presentation with multi attachments: $presentationId"
+      )
+
+  final case class RequestPresentationMissingField(presentationId: String, field: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        s"Request Presentation missing $field field: $presentationId"
       )
 
   final case class IssuedCredentialNotFoundError(cause: String)
@@ -114,6 +120,11 @@ object PresentationError {
       extends PresentationError(
         StatusCode.InternalServerError,
         error
+      )
+  object MissingConnectionIdForPresentationRequest
+      extends PresentationError(
+        StatusCode.BadRequest,
+        s"Presentation Request missing connectionId"
       )
 
   final case class MissingAnoncredPresentationRequest(error: String)

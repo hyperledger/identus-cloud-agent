@@ -24,35 +24,47 @@ trait CredentialService {
 
   def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
-      issuingDID: CanonicalPrismDID
+      issuingDID: CanonicalPrismDID,
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
+      connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord]
 
   def createSDJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
-      issuingDID: CanonicalPrismDID
+      issuingDID: CanonicalPrismDID,
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
+      connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord]
 
   def createAnonCredsIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
-      pairwiseHolderDID: DidId,
+      pairwiseHolderDID: Option[DidId],
       thid: DidCommID,
       credentialDefinitionGUID: UUID,
       credentialDefinitionId: String,
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
-      automaticIssuance: Option[Boolean]
+      automaticIssuance: Option[Boolean],
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
+      connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord]
 
   /** Return a list of records as well as a count of all filtered items */
@@ -147,6 +159,10 @@ trait CredentialService {
       recordId: DidCommID
   ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
 
+  def markCredentialOfferInvitationExpired(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, CredentialServiceError, IssueCredentialRecord]
+
   def reportProcessingFailure(
       recordId: DidCommID,
       failReason: Option[Failure]
@@ -157,6 +173,11 @@ trait CredentialService {
       verificationRelationship: VerificationRelationship,
       keyId: Option[KeyId]
   ): URIO[WalletAccessContext, Issuer]
+
+  def getCredentialOfferInvitation(
+      pairwiseHolderDID: DidId,
+      invitation: String
+  ): ZIO[WalletAccessContext, CredentialServiceError, OfferCredential]
 }
 
 object CredentialService {

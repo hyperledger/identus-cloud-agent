@@ -79,6 +79,7 @@ final case class PolluxConfig(
     syncRevocationStatusesBgJobRecurrenceDelay: Duration,
     syncRevocationStatusesBgJobProcessingParallelism: Int,
     presentationInvitationExpiry: Duration,
+    issuanceInvitationExpiry: Duration,
 )
 final case class ConnectConfig(
     database: DatabaseConfig,

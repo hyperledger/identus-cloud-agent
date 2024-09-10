@@ -7,6 +7,7 @@ import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.pollux.core.service.ResourceURIDereferencerImpl
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
+import org.hyperledger.identus.pollux.vc.jwt.DID.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.test.*
@@ -27,9 +28,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.value),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -91,9 +94,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.value),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -154,9 +159,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.value),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -217,9 +224,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.value),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -285,9 +294,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.value),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -353,9 +364,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.value),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -417,9 +430,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.value),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -481,9 +496,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.value),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -545,9 +562,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.value),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",

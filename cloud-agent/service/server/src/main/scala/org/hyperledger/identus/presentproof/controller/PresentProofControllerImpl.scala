@@ -34,19 +34,23 @@ class PresentProofControllerImpl(
   override def requestPresentation(request: RequestPresentationInput)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
-    val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] = for {
-      didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
-      record <- createRequestPresentation(
-        verifierDID = didIdPair.myDID,
-        proverDID = Some(didIdPair.theirDid),
-        connectionId = Some(request.connectionId.toString),
-        request = request
-      )
-    } yield PresentationStatus.fromDomain(record)
+    val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] =
+      for {
+        connectionId <- ZIO
+          .fromOption(request.connectionId)
+          .mapError(_ => PresentationError.MissingConnectionIdForPresentationRequest)
+        didIdPair <- getPairwiseDIDs(connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
+        record <- createRequestPresentation(
+          verifierDID = didIdPair.myDID,
+          proverDID = Some(didIdPair.theirDid),
+          request = request,
+          expirationDuration = None
+        )
+      } yield PresentationStatus.fromDomain(record)
     result
   }
 
-  override def createOOBRequestPresentationInvitation(request: OOBRequestPresentationInput)(implicit
+  override def createOOBRequestPresentationInvitation(request: RequestPresentationInput)(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, PresentationStatus] = {
     val result: ZIO[WalletAccessContext, ConnectionServiceError | PresentationError, PresentationStatus] = for {
@@ -54,8 +58,8 @@ class PresentProofControllerImpl(
       record <- createRequestPresentation(
         verifierDID = peerDid.did,
         proverDID = None,
-        connectionId = None,
-        request = request
+        request = request,
+        expirationDuration = Some(appConfig.pollux.presentationInvitationExpiry)
       )
     } yield PresentationStatus.fromDomain(record)
     result
@@ -64,39 +68,22 @@ class PresentProofControllerImpl(
   private def createRequestPresentation(
       verifierDID: DidId,
       proverDID: Option[DidId],
-      connectionId: Option[String],
-      request: RequestPresentationInput | OOBRequestPresentationInput
+      request: RequestPresentationInput,
+      expirationDuration: Option[Duration]
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord] = {
-    request match {
-      case req: RequestPresentationInput =>
-        createPresentationRecord(
-          verifierDID,
-          proverDID,
-          connectionId,
-          req.credentialFormat,
-          req.proofs,
-          req.options.map(o => Options(o.challenge, o.domain)),
-          req.claims,
-          req.anoncredPresentationRequest,
-          None,
-          None,
-          None
-        )
-      case req: OOBRequestPresentationInput =>
-        createPresentationRecord(
-          verifierDID,
-          proverDID,
-          connectionId,
-          req.credentialFormat,
-          req.proofs,
-          req.options.map(o => Options(o.challenge, o.domain)),
-          req.claims,
-          req.anoncredPresentationRequest,
-          req.goalCode,
-          req.goal,
-          Some(appConfig.pollux.presentationInvitationExpiry)
-        )
-    }
+    createPresentationRecord(
+      verifierDID,
+      proverDID,
+      request.connectionId.map(_.toString),
+      request.credentialFormat,
+      request.proofs,
+      request.options.map(o => Options(o.challenge, o.domain)),
+      request.claims,
+      request.anoncredPresentationRequest,
+      request.goalCode,
+      request.goal,
+      expirationDuration
+    )
   }
 
   private def createPresentationRecord(

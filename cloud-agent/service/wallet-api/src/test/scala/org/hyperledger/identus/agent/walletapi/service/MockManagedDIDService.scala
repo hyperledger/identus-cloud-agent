@@ -16,13 +16,11 @@ import zio.*
 import zio.mock.*
 import zio.test.Assertion
 
-import java.security.{PrivateKey as JavaPrivateKey, PublicKey as JavaPublicKey}
-
 object MockManagedDIDService extends Mock[ManagedDIDService] {
 
   object GetManagedDIDState extends Effect[CanonicalPrismDID, GetManagedDIDError, Option[ManagedDIDState]]
-  object JavaKeyPairWithDID
-      extends Effect[(CanonicalPrismDID, String), Nothing, Option[(JavaPrivateKey, JavaPublicKey)]]
+  object FindDIDKeyPair
+      extends Effect[(CanonicalPrismDID, String), Nothing, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]]
 
   override val compose: URLayer[mock.Proxy, ManagedDIDService] =
     ZLayer {
@@ -35,16 +33,11 @@ object MockManagedDIDService extends Mock[ManagedDIDService] {
 
         override def syncUnconfirmedUpdateOperations: IO[GetManagedDIDError, Unit] = ???
 
-        override def javaKeyPairWithDID(
-            did: CanonicalPrismDID,
-            keyId: String
-        ): UIO[Option[(JavaPrivateKey, JavaPublicKey)]] =
-          proxy(JavaKeyPairWithDID, did, keyId)
-
         override def findDIDKeyPair(
             did: CanonicalPrismDID,
             keyId: String
-        ): UIO[Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]] = ???
+        ): UIO[Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]] =
+          proxy(FindDIDKeyPair, (did, keyId))
 
         override def getManagedDIDState(
             did: CanonicalPrismDID
@@ -98,11 +91,9 @@ object MockManagedDIDService extends Mock[ManagedDIDService] {
         )
       )
 
-  def javaKeyPairWithDIDExpectation(ecKeyPair: Secp256k1KeyPair): Expectation[ManagedDIDService] =
-    MockManagedDIDService.JavaKeyPairWithDID(
+  def findDIDKeyPairExpectation(keyPair: Secp256k1KeyPair): Expectation[ManagedDIDService] =
+    MockManagedDIDService.FindDIDKeyPair(
       assertion = Assertion.anything,
-      result = Expectation.value(
-        Some((ecKeyPair.privateKey.toJavaPrivateKey, ecKeyPair.publicKey.toJavaPublicKey))
-      )
+      result = Expectation.value(Some(keyPair))
     )
 }

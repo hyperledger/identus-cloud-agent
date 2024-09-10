@@ -35,7 +35,8 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
     None,
     5,
     None,
-    None
+    None,
+    WalletId.fromUUID(UUID.randomUUID)
   )
 
   private val inviterExpectations =
@@ -104,7 +105,10 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        inviterExpectations.toLayer >>> ConnectionServiceNotifier.layer,
+        (
+          ConnectionRepositoryInMemory.layer ++
+            inviterExpectations.toLayer
+        ) >>> ConnectionServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
       test("should send relevant events during flow execution on the invitee side") {
@@ -145,7 +149,10 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
         }
       }.provide(
         ZLayer.succeed(50) >>> EventNotificationServiceImpl.layer,
-        inviteeExpectations.toLayer >>> ConnectionServiceNotifier.layer,
+        (
+          ConnectionRepositoryInMemory.layer ++
+            inviteeExpectations.toLayer
+        ) >>> ConnectionServiceNotifier.layer,
         ZLayer.succeed(WalletAccessContext(WalletId.random)),
         ZKafkaMessagingServiceImpl.layer(List("localhost:29092")),
         ZKafkaProducerImpl.layer[UUID, WalletIdAndRecordId]

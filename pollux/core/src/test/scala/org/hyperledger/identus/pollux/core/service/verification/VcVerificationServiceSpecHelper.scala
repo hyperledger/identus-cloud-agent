@@ -28,7 +28,7 @@ trait VcVerificationServiceSpecHelper {
 
   protected val issuerManagedDIDServiceExpectations: Expectation[ManagedDIDService] =
     MockManagedDIDService.getManagedDIDStateExpectation(issuerOp)
-      ++ MockManagedDIDService.javaKeyPairWithDIDExpectation(issuerKp)
+      ++ MockManagedDIDService.findDIDKeyPairExpectation(issuerKp)
 
   protected val issuerDidResolverLayer: ZLayer[Any, Nothing, PrismDidResolver] = (issuerDidServiceExpectations ++
     issuerManagedDIDServiceExpectations).toLayer >>> ZLayer.fromFunction(PrismDidResolver(_))

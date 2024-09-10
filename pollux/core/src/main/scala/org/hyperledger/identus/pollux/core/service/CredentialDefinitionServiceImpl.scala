@@ -16,7 +16,6 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{
   InvalidURI
 }
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
-import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition.{Filter, FilteredEntries}
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
@@ -27,6 +26,7 @@ import org.hyperledger.identus.pollux.core.service.serdes.{
   ProofKeyCredentialDefinitionSchemaSerDesV1,
   PublicCredentialDefinitionSerDesV1
 }
+import org.hyperledger.identus.shared.json.JsonSchemaError
 import zio.*
 
 import java.net.URI
@@ -97,8 +97,10 @@ class CredentialDefinitionServiceImpl(
           CredentialDefinitionCreationError(s"An error occurred while storing the CredDef secret: ${t.getMessage}")
         )
     } yield createdCredentialDefinition
-  }.mapError { case e: JsonSchemaError =>
-    CredentialDefinitionValidationError(CredentialSchemaValidationError(e))
+  }.mapError {
+    case error: JsonSchemaError =>
+      CredentialDefinitionValidationError(CredentialSchemaValidationError(error))
+    case error: CredentialDefinitionCreationError => error
   }
 
   override def delete(guid: UUID): Result[CredentialDefinition] =

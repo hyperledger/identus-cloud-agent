@@ -25,7 +25,7 @@ object PresentProofInvitation {
       body = Invitation.Body(
         goal_code = goalCode,
         goal = goal,
-        Nil
+        accept = Seq("didcomm/v2")
       ),
       attachments = Some(Seq(attachmentDescriptor))
     )

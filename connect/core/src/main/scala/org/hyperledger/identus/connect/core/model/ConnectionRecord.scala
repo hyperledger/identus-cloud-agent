@@ -3,7 +3,7 @@ package org.hyperledger.identus.connect.core.model
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.shared.models.Failure
+import org.hyperledger.identus.shared.models.{Failure, WalletId}
 
 import java.time.temporal.ChronoUnit
 import java.time.Instant
@@ -43,12 +43,58 @@ case class ConnectionRecord(
     connectionResponse: Option[ConnectionResponse],
     metaRetries: Int,
     metaNextRetry: Option[Instant],
-    metaLastFailure: Option[Failure]
+    metaLastFailure: Option[Failure],
+    walletId: WalletId,
 ) {
   def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): ConnectionRecord = copy(
     createdAt = createdAt.truncatedTo(unit),
     updatedAt = updatedAt.map(_.truncatedTo(unit)),
     metaNextRetry = metaNextRetry.map(_.truncatedTo(unit))
+  )
+}
+
+/** Like [[ConnectionRecordBefore]] but without the walletId */
+case class ConnectionRecordBeforeStored(
+    id: UUID,
+    createdAt: Instant,
+    updatedAt: Option[Instant],
+    thid: String,
+    label: Option[String],
+    goalCode: Option[String],
+    goal: Option[String],
+    role: Role,
+    protocolState: ProtocolState,
+    invitation: Invitation,
+    connectionRequest: Option[ConnectionRequest],
+    connectionResponse: Option[ConnectionResponse],
+    metaRetries: Int,
+    metaNextRetry: Option[Instant],
+    metaLastFailure: Option[Failure],
+) {
+
+  def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS) = copy(
+    createdAt = createdAt.truncatedTo(unit),
+    updatedAt = updatedAt.map(_.truncatedTo(unit)),
+    metaNextRetry = metaNextRetry.map(_.truncatedTo(unit))
+  )
+
+  def withWalletId(walletId: WalletId): ConnectionRecord = ConnectionRecord(
+    id = id,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    thid = thid,
+    label = label,
+    goalCode = goalCode,
+    goal = goal,
+    role = role,
+    protocolState = protocolState,
+    invitation = invitation,
+    connectionRequest = connectionRequest,
+    connectionResponse = connectionResponse,
+    metaRetries = metaRetries,
+    metaNextRetry = metaNextRetry,
+    metaLastFailure = metaLastFailure,
+    walletId = walletId
   )
 }
 

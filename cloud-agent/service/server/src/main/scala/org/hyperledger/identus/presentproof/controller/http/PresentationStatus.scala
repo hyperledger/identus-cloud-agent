@@ -1,7 +1,8 @@
 package org.hyperledger.identus.presentproof.controller.http
 
 import org.hyperledger.identus.api.http.{Annotation, ErrorResponse}
-import org.hyperledger.identus.mercury.model.Base64
+import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64, JsonData}
+import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, RequestPresentation}
 import org.hyperledger.identus.pollux.core.model.PresentationRecord
 import org.hyperledger.identus.presentproof.controller.http.PresentationStatus.annotations
 import org.hyperledger.identus.shared.models.{FailureInfo, StatusCode}
@@ -30,6 +31,9 @@ final case class PresentationStatus(
     @description(annotations.data.description)
     @encodedExample(annotations.data.example)
     data: Seq[String],
+    @description(annotations.requestData.description)
+    @encodedExample(annotations.requestData.example)
+    requestData: Seq[String],
     @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
     connectionId: Option[String] = None,
@@ -54,15 +58,8 @@ final case class PresentationStatus(
 
 object PresentationStatus {
   def fromDomain(domain: PresentationRecord): PresentationStatus = {
-    val data = domain.presentationData match
-      case Some(p) =>
-        p.attachments.head.data match {
-          case Base64(data) =>
-            val base64Decoded = new String(java.util.Base64.getUrlDecoder.decode(data))
-            Seq(base64Decoded)
-          case any => ???
-        }
-      case None => Seq.empty
+    val data = extractData(domain.presentationData, (p: Presentation) => p.attachments)
+    val requestData = extractData(domain.requestPresentationData, (p: RequestPresentation) => p.attachments)
     PresentationStatus(
       domain.id.value,
       thid = domain.thid.value,
@@ -70,6 +67,7 @@ object PresentationStatus {
       status = domain.protocolState.toString,
       proofs = Seq.empty,
       data = data,
+      requestData = requestData,
       connectionId = domain.connectionId,
       invitation = domain.invitation.map(invitation => OOBPresentationInvitation.fromDomain(invitation)),
       goalCode = domain.invitation.flatMap(_.body.goal_code),
@@ -78,6 +76,23 @@ object PresentationStatus {
       metaRetries = domain.metaRetries,
       metaLastFailure = domain.metaLastFailure.map(failure => ErrorResponse.failureToErrorResponseConversion(failure)),
     )
+  }
+
+  private def extractData[A](
+      maybePresentation: Option[A],
+      extractAttachments: A => Seq[AttachmentDescriptor]
+  ): Seq[String] = {
+    maybePresentation match
+      case Some(p) =>
+        extractAttachments(p).head.data match {
+          case Base64(data) =>
+            val base64Decoded = new String(java.util.Base64.getUrlDecoder.decode(data))
+            Seq(base64Decoded)
+          case JsonData(jsonData) =>
+            Seq(jsonData.toJson.toString)
+          case any => FeatureNotImplemented
+        }
+      case None => Seq.empty
   }
 
   given Conversion[PresentationRecord, PresentationStatus] = fromDomain
@@ -141,6 +156,11 @@ object PresentationStatus {
     object data
         extends Annotation[Seq[String]](
           description = "The list of proofs presented by the prover to the verifier.",
+          example = Seq.empty
+        )
+    object requestData
+        extends Annotation[Seq[String]](
+          description = "The list of request presented by the verifier to the prover.",
           example = Seq.empty
         )
     object connectionId

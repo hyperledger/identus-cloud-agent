@@ -9,7 +9,7 @@ import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Router
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.shared.crypto.Sha256Hash
-import org.hyperledger.identus.shared.utils.Json
+import org.hyperledger.identus.shared.json.Json
 import org.hyperledger.identus.system.controller.SystemEndpoints
 import sttp.tapir.*
 import sttp.tapir.model.ServerRequest

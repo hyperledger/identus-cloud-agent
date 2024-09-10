@@ -25,6 +25,7 @@ import zio.json.ast.Json
 import zio.json.ast.Json.*
 
 import java.time.Instant
+import java.util.UUID
 // TODO: replace with actual implementation
 class JdbcPresentationRepository(
     xa: Transactor[ContextAwareTask],
@@ -151,24 +152,29 @@ class JdbcPresentationRepository(
   given roleGet: Get[Role] = Get[String].map(Role.valueOf)
   given rolePut: Put[Role] = Put[String].contramap(_.toString)
 
-  given presentationGet: Get[Presentation] = Get[String].map(decode[Presentation](_).getOrElse(???))
+  given presentationGet: Get[Presentation] =
+    Get[String].map(decode[Presentation](_).getOrElse(UnexpectedCodeExecutionPath))
   given presentationPut: Put[Presentation] = Put[String].contramap(_.asJson.toString)
 
   given requestPresentationGet: Get[RequestPresentation] =
-    Get[String].map(decode[RequestPresentation](_).getOrElse(???))
+    Get[String].map(decode[RequestPresentation](_).getOrElse(UnexpectedCodeExecutionPath))
   given requestPresentationPut: Put[RequestPresentation] = Put[String].contramap(_.asJson.toString)
 
   given proposePresentationGet: Get[ProposePresentation] =
-    Get[String].map(decode[ProposePresentation](_).getOrElse(???))
+    Get[String].map(decode[ProposePresentation](_).getOrElse(UnexpectedCodeExecutionPath))
   given proposePresentationPut: Put[ProposePresentation] = Put[String].contramap(_.asJson.toString)
 
   given failureGet: Get[Failure] = Get[String].temap(_.fromJson[FailureInfo])
   given failurePut: Put[Failure] = Put[String].contramap(_.asFailureInfo.toJson)
 
-  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(???))
+  given walletIdGet: Get[WalletId] = Get[UUID].map(id => WalletId.fromUUID(id))
+  given walletIdPut: Put[WalletId] = Put[UUID].contramap[WalletId](_.toUUID)
+
+  given invitationGet: Get[Invitation] = Get[String].map(decode[Invitation](_).getOrElse(UnexpectedCodeExecutionPath))
   given invitationPut: Put[Invitation] = Put[String].contramap(_.asJson.toString)
 
   override def createPresentationRecord(record: PresentationRecord): URIO[WalletAccessContext, Unit] = {
+
     val cxnIO = sql"""
         | INSERT INTO public.presentation_records(
         |   id,
@@ -178,7 +184,6 @@ class JdbcPresentationRepository(
         |   connection_id,
         |   schema_id,
         |   role,
-        |   subject_id,
         |   protocol_state,
         |   credential_format,
         |   invitation,
@@ -200,7 +205,6 @@ class JdbcPresentationRepository(
         |   ${record.connectionId},
         |   ${record.schemaId},
         |   ${record.role},
-        |   ${record.subjectId},
         |   ${record.protocolState},
         |   ${record.credentialFormat},
         |   ${record.invitation},
@@ -238,7 +242,6 @@ class JdbcPresentationRepository(
         |   schema_id,
         |   connection_id,
         |   role,
-        |   subject_id,
         |   protocol_state,
         |   credential_format,
         |   invitation,
@@ -252,7 +255,8 @@ class JdbcPresentationRepository(
         |   sd_jwt_claims_to_disclose,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | FROM
         |   public.presentation_records
         | $conditionFragment
@@ -290,7 +294,6 @@ class JdbcPresentationRepository(
             |   schema_id,
             |   connection_id,
             |   role,
-            |   subject_id,
             |   protocol_state,
             |   credential_format,
             |   invitation,
@@ -304,7 +307,8 @@ class JdbcPresentationRepository(
             |   sd_jwt_claims_to_disclose,
             |   meta_retries,
             |   meta_next_retry,
-            |   meta_last_failure
+            |   meta_last_failure,
+            |   wallet_id
             | FROM public.presentation_records
             | $conditionFragment
             | ORDER BY created_at
@@ -339,7 +343,6 @@ class JdbcPresentationRepository(
         |   schema_id,
         |   connection_id,
         |   role,
-        |   subject_id,
         |   protocol_state,
         |   credential_format,
         |   invitation,
@@ -353,7 +356,8 @@ class JdbcPresentationRepository(
         |   sd_jwt_claims_to_disclose,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | FROM public.presentation_records
         | WHERE id = $recordId
         """.stripMargin
@@ -377,7 +381,6 @@ class JdbcPresentationRepository(
         |   schema_id,
         |   connection_id,
         |   role,
-        |   subject_id,
         |   protocol_state,
         |   credential_format,
         |   invitation,
@@ -391,7 +394,8 @@ class JdbcPresentationRepository(
         |   sd_jwt_claims_to_disclose,
         |   meta_retries,
         |   meta_next_retry,
-        |   meta_last_failure
+        |   meta_last_failure,
+        |   wallet_id
         | FROM public.presentation_records
         | WHERE thid = $thid
         """.stripMargin
@@ -400,6 +404,42 @@ class JdbcPresentationRepository(
 
     cxnIO
       .transactWallet(xa)
+      .orDie
+  }
+
+  override def getPresentationRecordByDIDCommID(recordId: DidCommID): UIO[Option[PresentationRecord]] = {
+    val cxnIO = sql"""
+        | SELECT
+        |   id,
+        |   created_at,
+        |   updated_at,
+        |   thid,
+        |   schema_id,
+        |   connection_id,
+        |   role,
+        |   protocol_state,
+        |   credential_format,
+        |   invitation,
+        |   request_presentation_data,
+        |   propose_presentation_data,
+        |   presentation_data,
+        |   credentials_to_use,
+        |   anoncred_credentials_to_use_json_schema_id,
+        |   anoncred_credentials_to_use,
+        |   sd_jwt_claims_to_use_json_schema_id,
+        |   sd_jwt_claims_to_disclose,
+        |   meta_retries,
+        |   meta_next_retry,
+        |   meta_last_failure,
+        |   wallet_id
+        | FROM public.presentation_records
+        | WHERE id = ${recordId.value}
+        """.stripMargin
+      .query[PresentationRecord]
+      .option
+
+    cxnIO
+      .transact(xb)
       .orDie
   }
 
