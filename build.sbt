@@ -167,7 +167,10 @@ lazy val D = new {
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % Test
 
   val apollo = Seq( // TODO remove exclude after fix https://github.com/hyperledger/identus-apollo/issues/192
-    "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo exclude ("net.jcip", "jcip-annotations"), // Exclude because of license
+    "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo exclude (
+      "net.jcip",
+      "jcip-annotations"
+    ), // Exclude because of license
     "com.github.stephenc.jcip" % "jcip-annotations" % "1.0-1" % Runtime, // Replace for net.jcip % jcip-annotations"
   )
 
