@@ -26,7 +26,6 @@ import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, Cre
 import org.hyperledger.identus.pollux.prex.{ClaimFormat, Jwt, PresentationDefinition}
 import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer as JwtIssuer, *}
-import org.hyperledger.identus.pollux.vc.jwt.DID.*
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, Secp256k1KeyPair}
 import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
 import org.hyperledger.identus.shared.models.*
@@ -501,7 +500,7 @@ class CredentialServiceImpl(
         maybeId = None,
         `type` = Vector("VerifiablePresentation"),
         verifiableCredential = IndexedSeq.empty,
-        holder = subject.did.value,
+        holder = subject.did,
         verifier = IndexedSeq.empty ++ maybeOptions.map(_.domain),
         maybeIssuanceDate = None,
         maybeExpirationDate = None
@@ -570,7 +569,7 @@ class CredentialServiceImpl(
         .orDieAsUnmanagedFailure
       Secp256k1KeyPair(publicKey, privateKey) = ecKeyPair
       jwtIssuer = JwtIssuer(
-        org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
+        jwtIssuerDID.toString,
         ES256KSigner(privateKey.toJavaPrivateKey, keyId),
         publicKey.toJavaPublicKey
       )
@@ -611,7 +610,7 @@ class CredentialServiceImpl(
       ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
     } yield {
       JwtIssuer(
-        org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
+        jwtIssuerDID.toString,
         EdSigner(ed25519keyPair, keyId),
         Ed25519PublicKey.toJavaEd25519PublicKey(ed25519keyPair.publicKey.getEncoded)
       )
@@ -1135,7 +1134,7 @@ class CredentialServiceImpl(
         maybeId = None,
         `type` =
           Set("VerifiableCredential"), // TODO: This information should come from Schema registry by record.schemaId
-        issuer = Left(jwtIssuer.did.value),
+        issuer = Left(jwtIssuer.did),
         issuanceDate = issuanceDate,
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
         maybeCredentialSchema =

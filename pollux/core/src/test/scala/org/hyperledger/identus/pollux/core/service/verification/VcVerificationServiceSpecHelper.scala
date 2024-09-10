@@ -18,7 +18,7 @@ trait VcVerificationServiceSpecHelper {
 
   protected val issuer =
     Issuer(
-      did = org.hyperledger.identus.pollux.vc.jwt.DID(issuerDidData.id.did.toString),
+      did = issuerDidData.id.did.toString,
       signer = ES256KSigner(issuerKp.privateKey.toJavaPrivateKey),
       publicKey = issuerKp.publicKey.toJavaPublicKey
     )

@@ -4,7 +4,6 @@ import io.circe.{Json, JsonObject}
 import io.circe.syntax.*
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.revocation.VCStatusList2021Error.{DecodingError, EncodingError}
-import org.hyperledger.identus.pollux.vc.jwt.DID.*
 import zio.*
 
 import java.time.Instant
@@ -62,7 +61,7 @@ object VCStatusList2021 {
         ),
         maybeId = Some(vcId),
         `type` = Set("VerifiableCredential", "StatusList2021Credential"),
-        issuer = Left(jwtIssuer.did.value),
+        issuer = Left(jwtIssuer.did),
         issuanceDate = Instant.now,
         maybeExpirationDate = None,
         maybeCredentialSchema = None,

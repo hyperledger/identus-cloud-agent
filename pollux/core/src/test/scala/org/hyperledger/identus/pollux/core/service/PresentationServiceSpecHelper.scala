@@ -42,7 +42,7 @@ trait PresentationServiceSpecHelper {
     CredentialRepositoryInMemory.layer
   ) ++ defaultWalletLayer
 
-  def createIssuer(did: DID): Issuer = {
+  def createIssuer(did: String): Issuer = {
 
     val keyPair = KmpSecp256k1KeyOps.generateKeyPair
     val javaSKey = keyPair.privateKey.toJavaPrivateKey

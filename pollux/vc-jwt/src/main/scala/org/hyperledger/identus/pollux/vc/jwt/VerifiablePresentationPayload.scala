@@ -18,7 +18,7 @@ import scala.util.Try
 
 sealed trait VerifiablePresentationPayload
 
-case class Prover(did: DID, signer: Signer, publicKey: PublicKey)
+case class Prover(did: String, signer: Signer, publicKey: PublicKey)
 
 case class W3cVerifiablePresentationPayload(payload: W3cPresentationPayload, proof: JwtProof)
     extends Verifiable(proof),

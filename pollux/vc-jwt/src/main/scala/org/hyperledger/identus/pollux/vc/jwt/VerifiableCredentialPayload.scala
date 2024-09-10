@@ -20,18 +20,7 @@ import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
 import java.time.temporal.TemporalAmount
 import scala.util.{Failure, Try}
 
-//TODO: We should remove this code and use the DID form the castor library
-opaque type DID = String
-
-object DID {
-  def apply(value: String): DID = value
-
-  extension (did: DID) {
-    def value: String = did
-  }
-}
-
-case class Issuer(did: DID, signer: Signer, publicKey: PublicKey)
+case class Issuer(did: String, signer: Signer, publicKey: PublicKey)
 
 sealed trait VerifiableCredentialPayload
 
@@ -206,9 +195,6 @@ object CredentialPayload {
 
     import InstantDecoderEncoder.*
     import JwtProof.Implicits.*
-
-    implicit val didEncoder: Encoder[DID] =
-      (did: DID) => did.value.asJson
 
     implicit val refreshServiceEncoder: Encoder[RefreshService] =
       (refreshService: RefreshService) =>
