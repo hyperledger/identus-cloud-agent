@@ -41,7 +41,7 @@ class InMemoryConsumer[K, V](
         topicQueues.get(topic).flatMap {
           case Some((queue, _)) =>
             ZIO.debug(s"Connected to queue for topic $topic in group $groupId") *>
-              ZIO.succeed(ZStream.fromQueue(queue).collect { case msg: Message[K, V] => (topic, msg) })
+              ZIO.succeed(ZStream.fromQueue(queue).collect { case msg: Message[K, V] @unchecked => (topic, msg) })
           case None =>
             ZIO.sleep(1.second) *> ZIO.succeed(ZStream.empty)
         }
