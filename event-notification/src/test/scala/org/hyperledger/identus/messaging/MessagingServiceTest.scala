@@ -1,8 +1,8 @@
 package org.hyperledger.identus.messaging
 
-import org.hyperledger.identus.shared.messaging.kafka.ZKafkaMessagingServiceImpl
 import org.hyperledger.identus.shared.messaging.{Message, MessagingService, Serde}
-import zio.{Random, Schedule, Scope, URIO, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer, durationInt}
+import org.hyperledger.identus.shared.messaging.kafka.ZKafkaMessagingServiceImpl
+import zio.{durationInt, Random, Schedule, Scope, URIO, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 import java.nio.charset.StandardCharsets

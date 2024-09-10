@@ -1,6 +1,6 @@
 package org.hyperledger.identus.shared.messaging
 
-import zio.{Cause, Duration, EnvironmentTag, RIO, Task, URIO, ZIO, durationInt}
+import zio.{durationInt, Cause, Duration, EnvironmentTag, RIO, Task, URIO, ZIO}
 
 import java.time.Instant
 trait MessagingService {

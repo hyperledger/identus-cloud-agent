@@ -55,8 +55,13 @@ import org.hyperledger.identus.pollux.sql.repository.{
 }
 import org.hyperledger.identus.presentproof.controller.PresentProofControllerImpl
 import org.hyperledger.identus.resolvers.DIDResolver
+import org.hyperledger.identus.shared.messaging.kafka.{
+  InMemoryMessagingService,
+  ZKafkaMessagingServiceImpl,
+  ZKafkaProducerImpl
+}
 import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
-import org.hyperledger.identus.shared.messaging.kafka.{InMemoryMessagingService, ZKafkaMessagingServiceImpl, ZKafkaProducerImpl}
+import org.hyperledger.identus.shared.models.WalletId
 import org.hyperledger.identus.system.controller.SystemControllerImpl
 import org.hyperledger.identus.verification.controller.VcVerificationControllerImpl
 import zio.*
@@ -66,7 +71,7 @@ import zio.logging.LogFormat.*
 import zio.metrics.connectors.micrometer
 import zio.metrics.connectors.micrometer.MicrometerConfig
 import zio.metrics.jvm.DefaultJvmMetrics
-import org.hyperledger.identus.shared.models.WalletId
+
 import java.security.Security
 import java.util.UUID
 
@@ -171,7 +176,7 @@ object MainApp extends ZIOAppDefault {
           ZIO.succeed(
             InMemoryMessagingService.producerLayer[WalletId, WalletId]
           )
-        }  
+        }
 
       app <- CloudAgentApp.run
         .provide(

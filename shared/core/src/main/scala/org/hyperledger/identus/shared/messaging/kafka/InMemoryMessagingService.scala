@@ -1,12 +1,12 @@
 package org.hyperledger.identus.shared.messaging.kafka
 
+import org.hyperledger.identus.shared.messaging.{Consumer, Message, MessagingService, Producer, Serde}
 import zio.*
 import zio.concurrent.ConcurrentMap
 import zio.stream.*
 import zio.Clock
 import zio.Task
 import InMemoryMessagingService.*
-import org.hyperledger.identus.shared.messaging.{Consumer, Message, MessagingService, Producer, Serde}
 
 import java.util.concurrent.TimeUnit
 

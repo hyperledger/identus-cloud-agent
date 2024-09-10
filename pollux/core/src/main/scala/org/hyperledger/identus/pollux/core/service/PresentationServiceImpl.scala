@@ -28,7 +28,7 @@ import zio.json.*
 
 import java.net.URI
 import java.time.Instant
-import java.util.{UUID, Base64 as JBase64}
+import java.util.{Base64 as JBase64, UUID}
 import java.util as ju
 import scala.util.chaining.*
 import scala.util.Try

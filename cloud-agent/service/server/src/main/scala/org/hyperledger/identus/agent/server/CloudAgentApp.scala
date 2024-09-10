@@ -17,7 +17,10 @@ import org.hyperledger.identus.iam.wallet.http.WalletManagementServerEndpoints
 import org.hyperledger.identus.issue.controller.IssueServerEndpoints
 import org.hyperledger.identus.oid4vci.CredentialIssuerServerEndpoints
 import org.hyperledger.identus.pollux.credentialdefinition.CredentialDefinitionRegistryServerEndpoints
-import org.hyperledger.identus.pollux.credentialschema.{SchemaRegistryServerEndpoints, VerificationPolicyServerEndpoints}
+import org.hyperledger.identus.pollux.credentialschema.{
+  SchemaRegistryServerEndpoints,
+  VerificationPolicyServerEndpoints
+}
 import org.hyperledger.identus.presentproof.controller.PresentProofServerEndpoints
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.system.controller.SystemServerEndpoints

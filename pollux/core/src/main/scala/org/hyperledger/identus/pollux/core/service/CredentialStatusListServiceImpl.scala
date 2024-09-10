@@ -1,7 +1,11 @@
 package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.pollux.core.model.{CredentialStatusList, CredentialStatusListWithCreds, DidCommID}
-import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError.{InvalidRoleForOperation, StatusListNotFound, StatusListNotFoundForIssueCredentialRecord}
+import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServiceError.{
+  InvalidRoleForOperation,
+  StatusListNotFound,
+  StatusListNotFoundForIssueCredentialRecord
+}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}

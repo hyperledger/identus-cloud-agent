@@ -18,8 +18,8 @@ import org.hyperledger.identus.pollux.core.repository.{
 }
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.vc.jwt.PrismDidResolver
-import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
 import org.hyperledger.identus.shared.messaging.kafka.InMemoryMessagingService
+import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.{Clock, Random, URLayer, ZIO, ZLayer}
 import zio.json.*

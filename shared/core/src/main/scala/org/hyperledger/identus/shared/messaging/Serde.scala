@@ -2,8 +2,8 @@ package org.hyperledger.identus.shared.messaging
 
 import org.hyperledger.identus.shared.models.WalletId
 
-import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
+import java.nio.ByteBuffer
 import java.util.UUID
 
 case class ByteArrayWrapper(ba: Array[Byte])

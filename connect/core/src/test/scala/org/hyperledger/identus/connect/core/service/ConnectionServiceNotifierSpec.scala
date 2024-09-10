@@ -7,8 +7,8 @@ import org.hyperledger.identus.event.notification.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
 import org.hyperledger.identus.shared.messaging.kafka.{ZKafkaMessagingServiceImpl, ZKafkaProducerImpl}
+import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
