@@ -17,6 +17,7 @@ services:
       - "127.0.0.1:${PG_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres", "-d", "agent"]
+
       interval: 10s
       timeout: 5s
       retries: 5
