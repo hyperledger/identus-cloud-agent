@@ -74,7 +74,7 @@ lazy val V = new {
   val flyway = "10.17.3"
   val postgresDriver = "42.7.4"
   val logback = "1.5.8"
-  val slf4j = "2.0.13"
+  val slf4j = "2.0.16"
 
   val scalaUri = "4.0.3"
 
