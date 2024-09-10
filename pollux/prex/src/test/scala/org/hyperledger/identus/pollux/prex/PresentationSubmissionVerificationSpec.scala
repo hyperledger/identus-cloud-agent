@@ -3,12 +3,12 @@ package org.hyperledger.identus.pollux.prex
 import io.circe.*
 import io.circe.parser.*
 import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.{
+  ClaimFormatVerificationFailure,
+  ClaimNotSatisfyInputConstraint,
   InvalidNestedPathDescriptorId,
   InvalidSubmissionId,
   SubmissionNotSatisfyInputDescriptors
 }
-import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.ClaimFormatVerificationFailure
-import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.ClaimNotSatisfyInputConstraint
 import org.hyperledger.identus.pollux.vc.jwt.{
   DID,
   ES256KSigner,
@@ -16,13 +16,13 @@ import org.hyperledger.identus.pollux.vc.jwt.{
   JWT,
   JwtCredential,
   JwtCredentialPayload,
-  JwtVc
+  JwtPresentation,
+  JwtPresentationPayload,
+  JwtVc,
+  JwtVerifiableCredentialPayload,
+  JwtVp,
+  VerifiableCredentialPayload
 }
-import org.hyperledger.identus.pollux.vc.jwt.JwtPresentation
-import org.hyperledger.identus.pollux.vc.jwt.JwtPresentationPayload
-import org.hyperledger.identus.pollux.vc.jwt.JwtVerifiableCredentialPayload
-import org.hyperledger.identus.pollux.vc.jwt.JwtVp
-import org.hyperledger.identus.pollux.vc.jwt.VerifiableCredentialPayload
 import org.hyperledger.identus.shared.crypto.Apollo
 import zio.*
 import zio.json.ast.Json as ZioJson

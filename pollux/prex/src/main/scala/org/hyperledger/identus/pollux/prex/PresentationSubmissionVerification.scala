@@ -8,11 +8,11 @@ import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.{
   ClaimNotSatisfyInputConstraint,
   InvalidDataTypeForClaimFormat,
   InvalidJsonPath,
+  InvalidNestedPathDescriptorId,
   InvalidSubmissionId,
   JsonPathNotFound,
   SubmissionNotSatisfyInputDescriptors
 }
-import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.InvalidNestedPathDescriptorId
 import org.hyperledger.identus.pollux.vc.jwt.{JWT, JwtCredential, JwtPresentation}
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.pollux.vc.jwt.PresentationPayload.Implicits.*
