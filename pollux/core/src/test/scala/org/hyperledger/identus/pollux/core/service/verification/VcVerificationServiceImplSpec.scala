@@ -27,7 +27,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did),
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
@@ -92,7 +92,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did),
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
@@ -131,13 +131,13 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
           result <-
             svc.verify(
               List(
-                VcVerificationRequest(signedJwtCredential.value, VcVerification.AudienceCheck(issuer.did))
+                VcVerificationRequest(signedJwtCredential.value, VcVerification.AudienceCheck(issuer.did.toString))
               )
             )
         } yield {
           assertTrue(
             result.contains(
-              VcVerificationResult(signedJwtCredential.value, VcVerification.AudienceCheck(issuer.did), false)
+              VcVerificationResult(signedJwtCredential.value, VcVerification.AudienceCheck(issuer.did.toString), false)
             )
           )
         }
@@ -157,7 +157,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did),
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
@@ -222,7 +222,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did),
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
@@ -261,7 +261,10 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
           result <-
             svc.verify(
               List(
-                VcVerificationRequest(signedJwtCredential.value, VcVerification.IssuerIdentification(issuer.did))
+                VcVerificationRequest(
+                  signedJwtCredential.value,
+                  VcVerification.IssuerIdentification(issuer.did.toString)
+                )
               )
             )
         } yield {
@@ -269,7 +272,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             result.contains(
               VcVerificationResult(
                 signedJwtCredential.value,
-                VcVerification.IssuerIdentification(issuer.did),
+                VcVerification.IssuerIdentification(issuer.did.toString),
                 true
               )
             )
@@ -291,7 +294,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did),
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
@@ -361,7 +364,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did),
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
@@ -427,7 +430,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did),
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
@@ -493,7 +496,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did),
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
@@ -559,7 +562,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did),
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),

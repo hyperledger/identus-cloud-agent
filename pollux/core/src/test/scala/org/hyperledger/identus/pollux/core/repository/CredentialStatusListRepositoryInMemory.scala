@@ -90,7 +90,7 @@ class CredentialStatusListRepositoryInMemory(
     val id = UUID.randomUUID()
     val issued = Instant.now()
     val issuerDid = jwtIssuer.did
-    val canonical = PrismDID.fromString(issuerDid).fold(e => throw RuntimeException(e), _.asCanonical)
+    val canonical = PrismDID.fromString(issuerDid.toString).fold(e => throw RuntimeException(e), _.asCanonical)
 
     val embeddedProofCredential = for {
       bitString <- BitString.getInstance().mapError {

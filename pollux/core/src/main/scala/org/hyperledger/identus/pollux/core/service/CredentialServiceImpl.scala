@@ -500,7 +500,7 @@ class CredentialServiceImpl(
         maybeId = None,
         `type` = Vector("VerifiablePresentation"),
         verifiableCredential = IndexedSeq.empty,
-        holder = subject.did,
+        holder = subject.did.toString,
         verifier = IndexedSeq.empty ++ maybeOptions.map(_.domain),
         maybeIssuanceDate = None,
         maybeExpirationDate = None
@@ -569,7 +569,7 @@ class CredentialServiceImpl(
         .orDieAsUnmanagedFailure
       Secp256k1KeyPair(publicKey, privateKey) = ecKeyPair
       jwtIssuer = JwtIssuer(
-        jwtIssuerDID.toString,
+        jwtIssuerDID.did,
         ES256KSigner(privateKey.toJavaPrivateKey, keyId),
         publicKey.toJavaPublicKey
       )
@@ -610,7 +610,7 @@ class CredentialServiceImpl(
       ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
     } yield {
       JwtIssuer(
-        jwtIssuerDID.toString,
+        jwtIssuerDID.did,
         EdSigner(ed25519keyPair, keyId),
         Ed25519PublicKey.toJavaEd25519PublicKey(ed25519keyPair.publicKey.getEncoded)
       )
@@ -1134,7 +1134,7 @@ class CredentialServiceImpl(
         maybeId = None,
         `type` =
           Set("VerifiableCredential"), // TODO: This information should come from Schema registry by record.schemaId
-        issuer = Left(jwtIssuer.did),
+        issuer = Left(jwtIssuer.did.toString),
         issuanceDate = issuanceDate,
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
         maybeCredentialSchema =

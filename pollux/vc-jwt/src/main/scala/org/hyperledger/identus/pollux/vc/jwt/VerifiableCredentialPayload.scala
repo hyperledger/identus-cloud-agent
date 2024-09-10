@@ -6,7 +6,7 @@ import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
-import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.model.did.{DID, VerificationRelationship}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitString
 import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
 import org.hyperledger.identus.shared.http.UriResolver
@@ -20,7 +20,7 @@ import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
 import java.time.temporal.TemporalAmount
 import scala.util.{Failure, Try}
 
-case class Issuer(did: String, signer: Signer, publicKey: PublicKey)
+case class Issuer(did: DID, signer: Signer, publicKey: PublicKey)
 
 sealed trait VerifiableCredentialPayload
 

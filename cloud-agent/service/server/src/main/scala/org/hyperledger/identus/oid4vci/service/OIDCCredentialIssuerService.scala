@@ -177,7 +177,7 @@ case class OIDCCredentialIssuerServiceImpl(
   }
 
   def buildJwtVerifiableCredential(
-      issuerDid: String,
+      issuerDid: DID,
       subjectDid: Option[DID],
       credentialIdentifier: Option[String],
       credentialDefinition: CredentialDefinition,
@@ -192,7 +192,7 @@ case class OIDCCredentialIssuerServiceImpl(
       `type` = Set(
         "VerifiableCredential"
       ) ++ credentialDefinition.`type`, // TODO: This information should come from Schema registry by record.schemaId
-      issuer = Left(issuerDid),
+      issuer = Left(issuerDid.toString),
       issuanceDate = Instant.now(),
       maybeExpirationDate = None, // TODO: Add expiration date
       maybeCredentialSchema = None, // TODO: Add schema from schema registry

@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.vc.jwt.revocation
 
+import org.hyperledger.identus.castor.core.model.did.DID
 import org.hyperledger.identus.pollux.vc.jwt.{ES256KSigner, Issuer, JwtCredential}
 import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
 import zio.{UIO, ZIO}
@@ -17,7 +18,7 @@ object VCStatusList2021Spec extends ZIOSpecDefault {
 
     ZIO.succeed(
       Issuer(
-        did = "did:issuer:MDP8AsFhHzhwUvGNuYkX7T",
+        did = DID.fromString("did:issuer:MDP8AsFhHzhwUvGNuYkX7T").toOption.get,
         signer = ES256KSigner(javaSKey),
         publicKey = javaPKey
       )

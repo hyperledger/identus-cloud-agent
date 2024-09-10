@@ -5,7 +5,7 @@ import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator
 import io.circe.*
 import io.circe.syntax.*
-import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.model.did.{DID, VerificationRelationship}
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.shared.http.*
 import zio.*
@@ -26,7 +26,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
     val ecKey = ECKeyGenerator(Curve.SECP256K1).generate()
     IssuerWithKey(
       Issuer(
-        did = did,
+        did = DID.fromString(did).toOption.get,
         signer = ES256KSigner(ecKey.toPrivateKey),
         publicKey = ecKey.toPublicKey
       ),
@@ -68,7 +68,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
     val validUntil = Instant.parse("2010-01-09T00:00:00Z") // EXPIRATION DATE
     val jwtCredentialExp = Instant.parse("2010-01-12T00:00:00Z") // EXPIRATION DATE
     val jwtCredentialPayload = JwtCredentialPayload(
-      iss = issuer.issuer.did,
+      iss = issuer.issuer.did.toString,
       maybeSub = Some("1"),
       vc = JwtVc(
         `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
@@ -81,7 +81,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
         maybeTermsOfUse = None,
         maybeValidFrom = Some(validFrom),
         maybeValidUntil = Some(validUntil),
-        maybeIssuer = Some(Left(issuer.issuer.did))
+        maybeIssuer = Some(Left(issuer.issuer.did.toString))
       ),
       nbf = jwtCredentialNbf, // ISSUANCE DATE
       aud = Set.empty,

@@ -107,7 +107,7 @@ trait BackgroundJobsHelper {
           case Some(Secp256k1KeyPair(publicKey, privateKey)) =>
             ZIO.succeed(
               JwtIssuer(
-                jwtIssuerDID.toString,
+                jwtIssuerDID.did,
                 ES256KSigner(privateKey.toJavaPrivateKey),
                 publicKey.toJavaPublicKey
               )

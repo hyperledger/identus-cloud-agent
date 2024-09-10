@@ -29,7 +29,7 @@ trait VcVerificationControllerTestTools extends PostgresTestContainerSupport {
 
   protected val issuer =
     Issuer(
-      did = issuerDidData.id.did.toString,
+      did = issuerDidData.id.did,
       signer = ES256KSigner(issuerKp.privateKey.toJavaPrivateKey),
       publicKey = issuerKp.publicKey.toJavaPublicKey
     )
