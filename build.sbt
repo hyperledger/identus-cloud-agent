@@ -41,7 +41,7 @@ inThisBuild(
 )
 
 lazy val V = new {
-  val munit = "1.0.0" // "0.7.29"
+  val munit = "1.0.1" // "0.7.29"
   val munitZio = "0.2.0"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
@@ -167,7 +167,10 @@ lazy val D = new {
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % Test
 
   val apollo = Seq( // TODO remove exclude after fix https://github.com/hyperledger/identus-apollo/issues/192
-    "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo exclude ("net.jcip", "jcip-annotations"), // Exclude because of license
+    "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo exclude (
+      "net.jcip",
+      "jcip-annotations"
+    ), // Exclude because of license
     "com.github.stephenc.jcip" % "jcip-annotations" % "1.0-1" % Runtime, // Replace for net.jcip % jcip-annotations"
   )
 
