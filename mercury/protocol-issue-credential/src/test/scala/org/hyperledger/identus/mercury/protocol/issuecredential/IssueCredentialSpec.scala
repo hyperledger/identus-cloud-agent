@@ -21,7 +21,7 @@ class IssueCredentialSpec extends ZSuite {
         .deepDropNullValues
         .noSpaces
 
-      // FIXME !!! THIS WILL FAIL!
+    // FIXME !!! THIS WILL FAIL!
     val expectedProposalJson = parse(
       s"""{
          |  "id": "061bf917-2cbe-460b-8d12-b1a9609505c2",
