@@ -87,6 +87,8 @@ case class ClaimFormatVerification(
     jwtVc: JWT => IO[String, Unit],
 )
 
+// Known issues
+// 1. does not respect jwt format alg in presentation_definition
 object PresentationSubmissionVerification {
 
   def verify(
@@ -114,8 +116,8 @@ object PresentationSubmissionVerification {
     else ZIO.fail(InvalidSubmissionId(pd.id, ps.id))
   }
 
-  // This is not yet fully supported as in https://identity.foundation/presentation-exchange/spec/v2.1.1/#submission-requirement-feature
-  // It is now a simple check that submission satisties all input descriptors
+  // This is not yet fully supported as described in https://identity.foundation/presentation-exchange/spec/v2.1.1/#submission-requirement-feature
+  // It is now a simple check that submission descriptor_map satisfies all input_descriptors
   private def verifySubmissionRequirement(
       pd: PresentationDefinition,
       ps: PresentationSubmission
@@ -144,10 +146,13 @@ object PresentationSubmissionVerification {
       descriptor: InputDescriptor,
       entry: ZioJson
   ): IO[PresentationSubmissionError, Unit] = {
-    val fields = descriptor.constraints.fields.getOrElse(Nil)
+    val mandatoryFields = descriptor.constraints.fields
+      .getOrElse(Nil)
+      .filterNot(_.optional.getOrElse(false)) // optional field doesn't have to pass contraints
+
     // all fields need to be valid
     ZIO
-      .foreach(fields) { field =>
+      .foreach(mandatoryFields) { field =>
         // only one of the paths need to be valid
         ZIO
           .validateFirst(field.path) { p =>
@@ -155,17 +160,8 @@ object PresentationSubmissionVerification {
               jsonPath <- ZIO.fromEither(p.toJsonPath)
               jsonAtPath <- ZIO.fromEither(jsonPath.read(entry))
               maybeFilter <- ZIO.foreach(field.filter)(_.toJsonSchema)
-              _ <- ZIO.foreach(maybeFilter) { filter =>
-                JsonSchemaValidatorImpl(filter).validate(jsonAtPath.toString())
-              }
+              _ <- ZIO.foreach(maybeFilter)(JsonSchemaValidatorImpl(_).validate(jsonAtPath.toString()))
             } yield ()
-          }
-          .catchAll { errors =>
-            // if all paths don't satisfy constraints, but optional, then the field is still valid
-            // https://identity.foundation/presentation-exchange/spec/v2.1.1/#input-evaluation
-            if field.optional.getOrElse(false)
-            then ZIO.unit
-            else ZIO.fail(errors)
           }
           .mapError(_ => ClaimNotSatisfyInputConstraint(descriptor.id))
       }
@@ -184,10 +180,8 @@ object PresentationSubmissionVerification {
         .fromEither(path.read(traversalObject))
         .mapError(_ => JsonPathNotFound(descriptor.path))
       currentNode <- descriptor.format match {
-        case ClaimFormatValue.jwt_vc =>
-          verifyJwtVc(jsonAtPath, descriptor.path)(formatVerification.jwtVc)
-        case ClaimFormatValue.jwt_vp =>
-          verifyJwtVp(jsonAtPath, descriptor.path)(formatVerification.jwtVp)
+        case ClaimFormatValue.jwt_vc => verifyJwtVc(jsonAtPath, descriptor.path)(formatVerification.jwtVc)
+        case ClaimFormatValue.jwt_vp => verifyJwtVp(jsonAtPath, descriptor.path)(formatVerification.jwtVp)
       }
       leafNode <- descriptor.path_nested.fold(ZIO.succeed(currentNode)) { nestedDescriptor =>
         if descriptor.id != nestedDescriptor.id

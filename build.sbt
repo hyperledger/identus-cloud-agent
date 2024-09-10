@@ -32,7 +32,7 @@ inThisBuild(
       "-unchecked",
     ),
     scalacOptions += "-Wunused:all",
-    // scalacOptions += "-Wconf:cat=deprecation:warning,any:error", // "-Wconf:help", // TODO: revert before pr
+    scalacOptions += "-Wconf:cat=deprecation:warning,any:error", // "-Wconf:help",
     // scalacOptions += "-Yexplicit-nulls",
     // scalacOptions += "-Ysafe-init",
     // scalacOptions +=  "-Werror", // <=> "-Xfatal-warnings"
