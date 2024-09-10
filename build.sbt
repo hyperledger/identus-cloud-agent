@@ -71,7 +71,7 @@ lazy val V = new {
 
   val doobie = "1.0.0-RC5"
   val quill = "4.8.5"
-  val flyway = "9.22.3"
+  val flyway = "10.17.3"
   val postgresDriver = "42.7.4"
   val logback = "1.5.8"
   val slf4j = "2.0.13"
