@@ -7,6 +7,8 @@ import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.{
   InvalidSubmissionId,
   SubmissionNotSatisfyInputDescriptors
 }
+import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.ClaimFormatVerificationFailure
+import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.ClaimNotSatisfyInputConstraint
 import org.hyperledger.identus.pollux.vc.jwt.{
   DID,
   ES256KSigner,
@@ -123,7 +125,12 @@ object PresentationSubmissionVerificationSpec extends ZIOSpecDefault {
     JwtPresentation.encodeJwt(payload, issuer)
   }
 
-  private def assertSubmissionVerification(descriptorsJson: String, descriptorMapJson: String, jwt: JWT)(
+  private def assertSubmissionVerification(
+      descriptorsJson: String,
+      descriptorMapJson: String,
+      jwt: JWT,
+      formatVerification: ClaimFormatVerification = noopFormatVerification
+  )(
       assertion: Assertion[Exit[PresentationSubmissionError, Unit]]
   ) = {
     val descriptors = decodeUnsafe[Seq[InputDescriptor]](descriptorsJson)
@@ -132,7 +139,7 @@ object PresentationSubmissionVerificationSpec extends ZIOSpecDefault {
     val ps = basePs.copy(descriptor_map = descriptorMap)
     for {
       result <- PresentationSubmissionVerification
-        .verify(pd, ps, ZioJson.Str(jwt.value))(noopFormatVerification)
+        .verify(pd, ps, ZioJson.Str(jwt.value))(formatVerification)
         .exit
     } yield assert(result)(assertion)
   }
@@ -291,6 +298,34 @@ object PresentationSubmissionVerificationSpec extends ZIOSpecDefault {
           """.stripMargin,
         jwtVc,
       )(succeeds(anything))
+    },
+    test("descriptor and submission that dosn't satisfy the filter") {
+      val payload = generateVcPayload(parseUnsafe("""{"name": "alice"}"""))
+      val jwtVc = generateJwtVc(payload)
+      assertSubmissionVerification(
+        """[
+          |  {
+          |    "id": "university_degree",
+          |    "constraints": {
+          |      "fields": [
+          |        {
+          |          "path": ["$.vc.credentialSubject.name"],
+          |          "filter": {
+          |            "type": "string",
+          |            "const": "bob"
+          |          }
+          |        }
+          |      ]
+          |    }
+          |  }
+          |]
+          """.stripMargin,
+        """[
+          |  {"id": "university_degree", "format": "jwt_vc", "path": "$"}
+          |]
+          """.stripMargin,
+        jwtVc
+      )(failsWithA[ClaimNotSatisfyInputConstraint])
     },
     test("descriptor with multiple fields verification") {
       val payload = generateVcPayload(parseUnsafe("""{"name": "alice", "degree": "Finance"}"""))
@@ -489,10 +524,26 @@ object PresentationSubmissionVerificationSpec extends ZIOSpecDefault {
           """.stripMargin,
         jwtVc
       )(succeeds(anything))
+    },
+    test("descriptor and submission that fail the claim format decoding") {
+      val formatVerification = noopFormatVerification.copy(
+        jwtVc = _ => ZIO.fail("jwt is missing some required properties")
+      )
+      val payload = generateVcPayload(parseUnsafe("""{"name": "alice"}"""))
+      val jwtVc = generateJwtVc(payload)
+      assertSubmissionVerification(
+        """[
+          |  {"id": "university_degree", "constraints": {}}
+          |]
+          """.stripMargin,
+        """[
+          |  {"id": "university_degree", "format": "jwt_vc", "path": "$"}
+          |]
+          """.stripMargin,
+        jwtVc,
+        formatVerification
+      )(failsWithA[ClaimFormatVerificationFailure])
     }
   )
-  /* TODO
-   * - test for format verification failure
-   */
 
 }
