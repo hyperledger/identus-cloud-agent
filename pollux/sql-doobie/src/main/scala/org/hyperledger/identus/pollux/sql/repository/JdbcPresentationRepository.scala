@@ -114,7 +114,6 @@ class JdbcPresentationRepository(
 
   // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
-
   import PresentationRecord.*
 
   def zioJsonToCirceJson(zioJson: Json): circe.Json = {

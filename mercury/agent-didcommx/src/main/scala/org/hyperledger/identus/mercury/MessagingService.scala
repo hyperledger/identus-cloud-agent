@@ -111,10 +111,10 @@ object MessagingService {
       }
     } yield (msgToSend)
 
-    /** Encrypt and send a Message via HTTP
-      *
-      * TODO Move this method to another model
-      */
+  /** Encrypt and send a Message via HTTP
+    *
+    * TODO Move this method to another model
+    */
   def send(msg: Message): ZIO[DidOps & DidAgent & DIDResolver & HttpClient, SendMessageError, HttpResponse] =
     ZIO.logAnnotate("msgId", msg.id) {
       for {
