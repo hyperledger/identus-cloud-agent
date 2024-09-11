@@ -253,7 +253,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             Some(Seq(aIssueCredentialRecord.id.value)),
             PresentationRecord.ProtocolState.RequestPending
           )
-          issuer = createIssuer(DID("did:prism:issuer"))
+          issuer = createIssuer("did:prism:issuer")
           aPresentationPayload <- svc.createJwtPresentationPayloadFromRecord(aRecord.id, issuer, Instant.now())
         } yield {
           assertTrue(aPresentationPayload.toJwtPresentationPayload.iss == "did:prism:issuer")

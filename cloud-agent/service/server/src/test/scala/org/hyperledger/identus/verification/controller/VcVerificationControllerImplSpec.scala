@@ -8,7 +8,6 @@ import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
-import org.hyperledger.identus.pollux.vc.jwt.DID.*
 import org.hyperledger.identus.verification.controller.http.*
 import sttp.client3.{basicRequest, DeserializationException, Response, UriContext}
 import sttp.client3.ziojson.*
@@ -31,13 +30,13 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
     test("provide incorrect recordId to endpoint") {
       for {
         vcVerificationController <- ZIO.service[VcVerificationController]
-        verifier = DID("did:prism:verifier")
+        verifier = "did:prism:verifier"
         currentTime = OffsetDateTime.parse("2010-01-01T00:00:00Z").toOption.get
         jwtCredentialPayload = W3cCredentialPayload(
           `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
           maybeId = Some("http://example.edu/credentials/3732"),
           `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-          issuer = Left(issuer.did.value),
+          issuer = Left(issuer.did.toString),
           issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
           maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
           maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
@@ -70,7 +69,7 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
           ),
           maybeEvidence = Option.empty,
           maybeTermsOfUse = Option.empty,
-          aud = Set(verifier.value)
+          aud = Set(verifier)
         ).toJwtCredentialPayload
         signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
         authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
@@ -88,10 +87,10 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
           VcVerificationRequest(
             signedJwtCredential.value,
             List(
-              ParameterizableVcVerification(VcVerification.AudienceCheck, Some(DidParameter(verifier.value))),
+              ParameterizableVcVerification(VcVerification.AudienceCheck, Some(DidParameter(verifier))),
               ParameterizableVcVerification(
                 VcVerification.IssuerIdentification,
-                Some(DidParameter(issuer.did.value))
+                Some(DidParameter(issuer.did.toString))
               )
             )
           )

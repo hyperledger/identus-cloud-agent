@@ -6,7 +6,7 @@ import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.decode
 import io.circe.syntax.*
-import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.model.did.{DID, VerificationRelationship}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.BitString
 import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
 import org.hyperledger.identus.shared.http.UriResolver
@@ -19,17 +19,6 @@ import java.security.PublicKey
 import java.time.{Clock, Instant, OffsetDateTime, ZoneId}
 import java.time.temporal.TemporalAmount
 import scala.util.{Failure, Try}
-
-//TODO: We should remove this code and use the DID form the castor library
-opaque type DID = String
-
-object DID {
-  def apply(value: String): DID = value
-
-  extension (did: DID) {
-    def value: String = did
-  }
-}
 
 case class Issuer(did: DID, signer: Signer, publicKey: PublicKey)
 
@@ -206,9 +195,6 @@ object CredentialPayload {
 
     import InstantDecoderEncoder.*
     import JwtProof.Implicits.*
-
-    implicit val didEncoder: Encoder[DID] =
-      (did: DID) => did.value.asJson
 
     implicit val refreshServiceEncoder: Encoder[RefreshService] =
       (refreshService: RefreshService) =>
