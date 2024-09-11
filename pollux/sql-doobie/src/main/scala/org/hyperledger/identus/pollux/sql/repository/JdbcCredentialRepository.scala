@@ -29,7 +29,6 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
 
   // Uncomment to have Doobie LogHandler in scope and automatically output SQL statements in logs
   // given logHandler: LogHandler = LogHandler.jdkLogHandler
-
   import IssueCredentialRecord.*
 
   given credentialFormatGet: Get[CredentialFormat] = Get[String].map(CredentialFormat.valueOf)
