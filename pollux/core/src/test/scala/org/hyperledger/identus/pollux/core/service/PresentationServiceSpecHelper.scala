@@ -2,6 +2,7 @@ package org.hyperledger.identus.pollux.core.service
 
 import com.nimbusds.jose.jwk.*
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
+import org.hyperledger.identus.castor.core.model.did.DID
 import org.hyperledger.identus.mercury.{AgentPeerService, PeerDID}
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.presentproof.*
@@ -47,14 +48,14 @@ trait PresentationServiceSpecHelper {
       InMemoryMessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
   ) ++ defaultWalletLayer
 
-  def createIssuer(did: DID): Issuer = {
+  def createIssuer(did: String): Issuer = {
 
     val keyPair = KmpSecp256k1KeyOps.generateKeyPair
     val javaSKey = keyPair.privateKey.toJavaPrivateKey
     val javaPKey = keyPair.publicKey.toJavaPublicKey
 
     Issuer(
-      did = did,
+      did = DID.fromString(did).toOption.get,
       signer = ES256KSigner(javaSKey),
       publicKey = javaPKey
     )

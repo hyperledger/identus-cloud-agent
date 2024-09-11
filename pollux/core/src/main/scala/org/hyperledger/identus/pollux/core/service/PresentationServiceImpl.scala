@@ -649,7 +649,7 @@ private class PresentationServiceImpl(
                 maybeId = None,
                 `type` = Vector("VerifiablePresentation"),
                 verifiableCredential = vcs.toVector,
-                holder = prover.did.value,
+                holder = prover.did.toString,
                 verifier = Vector(options.domain),
                 maybeIssuanceDate = None,
                 maybeExpirationDate = None
@@ -661,7 +661,7 @@ private class PresentationServiceImpl(
                 maybeId = None,
                 `type` = Vector("VerifiablePresentation"),
                 verifiableCredential = vcs.toVector,
-                holder = prover.did.value,
+                holder = prover.did.toString,
                 verifier = Vector("https://example.verifier"), // TODO Fix this
                 maybeIssuanceDate = None,
                 maybeExpirationDate = None

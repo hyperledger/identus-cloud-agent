@@ -15,7 +15,6 @@ import org.hyperledger.identus.pollux.core.service.{
   URIDereferencer
 }
 import org.hyperledger.identus.pollux.vc.jwt.{
-  DID as PolluxDID,
   DidResolver,
   Issuer,
   JWT,
@@ -24,7 +23,6 @@ import org.hyperledger.identus.pollux.vc.jwt.{
   W3cCredentialPayload,
   *
 }
-import org.hyperledger.identus.pollux.vc.jwt.DID.*
 import org.hyperledger.identus.shared.models.*
 import zio.*
 
@@ -179,7 +177,7 @@ case class OIDCCredentialIssuerServiceImpl(
   }
 
   def buildJwtVerifiableCredential(
-      issuerDid: PolluxDID,
+      issuerDid: DID,
       subjectDid: Option[DID],
       credentialIdentifier: Option[String],
       credentialDefinition: CredentialDefinition,
@@ -194,7 +192,7 @@ case class OIDCCredentialIssuerServiceImpl(
       `type` = Set(
         "VerifiableCredential"
       ) ++ credentialDefinition.`type`, // TODO: This information should come from Schema registry by record.schemaId
-      issuer = Left(issuerDid.value),
+      issuer = Left(issuerDid.toString),
       issuanceDate = Instant.now(),
       maybeExpirationDate = None, // TODO: Add expiration date
       maybeCredentialSchema = None, // TODO: Add schema from schema registry
