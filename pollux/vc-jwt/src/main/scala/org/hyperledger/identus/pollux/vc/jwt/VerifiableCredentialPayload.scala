@@ -53,7 +53,10 @@ case class CredentialSchema(
     `type`: String
 )
 
-case class CredentialIssuer(id: String)
+case class CredentialIssuer(
+    id: String,
+    `type`: String
+)
 
 sealed trait CredentialPayload {
   def maybeSub: Option[String]
@@ -216,7 +219,8 @@ object CredentialPayload {
       (credentialIssuer: CredentialIssuer) =>
         Json
           .obj(
-            ("id", credentialIssuer.id.asJson)
+            ("id", credentialIssuer.id.asJson),
+            ("type", credentialIssuer.`type`.asJson)
           )
 
     implicit val credentialStatusPurposeEncoder: Encoder[StatusPurpose] = (a: StatusPurpose) => a.toString.asJson
@@ -334,8 +338,9 @@ object CredentialPayload {
       (c: HCursor) =>
         for {
           id <- c.downField("id").as[String]
+          `type` <- c.downField("type").as[String]
         } yield {
-          CredentialIssuer(id = id)
+          CredentialIssuer(id = id, `type` = `type`)
         }
 
     implicit val credentialStatusPurposeDecoder: Decoder[StatusPurpose] = (c: HCursor) =>
