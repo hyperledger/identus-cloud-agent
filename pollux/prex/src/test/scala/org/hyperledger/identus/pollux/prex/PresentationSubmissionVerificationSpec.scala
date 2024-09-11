@@ -2,6 +2,7 @@ package org.hyperledger.identus.pollux.prex
 
 import io.circe.*
 import io.circe.parser.*
+import org.hyperledger.identus.castor.core.model.did.DID
 import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.{
   ClaimFormatVerificationFailure,
   ClaimNotSatisfyInputConstraint,
@@ -10,7 +11,6 @@ import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.{
   SubmissionNotSatisfyInputDescriptors
 }
 import org.hyperledger.identus.pollux.vc.jwt.{
-  DID,
   ES256KSigner,
   Issuer,
   JWT,
@@ -106,7 +106,7 @@ object PresentationSubmissionVerificationSpec extends ZIOSpecDefault {
     val publicKey = keyPair.publicKey
     val privateKey = keyPair.privateKey
     val issuer = Issuer(
-      DID(payload.iss),
+      DID.fromString(payload.iss).toOption.get,
       ES256KSigner(privateKey.toJavaPrivateKey, None),
       publicKey.toJavaPublicKey
     )
@@ -118,7 +118,7 @@ object PresentationSubmissionVerificationSpec extends ZIOSpecDefault {
     val publicKey = keyPair.publicKey
     val privateKey = keyPair.privateKey
     val issuer = Issuer(
-      DID(payload.iss),
+      DID.fromString(payload.iss).toOption.get,
       ES256KSigner(privateKey.toJavaPrivateKey, None),
       publicKey.toJavaPublicKey
     )
