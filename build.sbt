@@ -41,15 +41,15 @@ inThisBuild(
 )
 
 lazy val V = new {
-  val munit = "1.0.0" // "0.7.29"
+  val munit = "1.0.1" // "0.7.29"
   val munitZio = "0.2.0"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
-  val zio = "2.1.1"
+  val zio = "2.1.9"
   val zioConfig = "4.0.2"
-  val zioLogging = "2.2.4"
-  val zioJson = "0.6.2"
-  val zioHttp = "3.0.0-RC7"
+  val zioLogging = "2.3.1"
+  val zioJson = "0.7.3"
+  val zioHttp = "3.0.0-RC10"
   val zioCatsInterop = "3.3.0" // TODO "23.1.0.2" // https://mvnrepository.com/artifact/dev.zio/zio-interop-cats
   val zioMetricsConnector = "2.3.1"
   val zioMock = "1.0.0-RC12"
@@ -72,14 +72,14 @@ lazy val V = new {
   val doobie = "1.0.0-RC5"
   val quill = "4.8.5"
   val flyway = "9.22.3"
-  val postgresDriver = "42.7.3"
+  val postgresDriver = "42.7.4"
   val logback = "1.4.14"
   val slf4j = "2.0.13"
 
   val scalaUri = "4.0.3"
 
   val jwtCirceVersion = "9.4.6"
-  val zioPreludeVersion = "1.0.0-RC26"
+  val zioPreludeVersion = "1.0.0-RC31"
 
   val apollo = "1.3.5"
 
@@ -167,7 +167,10 @@ lazy val D = new {
   val scalaTest = "org.scalatest" %% "scalatest" % "3.2.16" % Test
 
   val apollo = Seq( // TODO remove exclude after fix https://github.com/hyperledger/identus-apollo/issues/192
-    "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo exclude ("net.jcip", "jcip-annotations"), // Exclude because of license
+    "io.iohk.atala.prism.apollo" % "apollo-jvm" % V.apollo exclude (
+      "net.jcip",
+      "jcip-annotations"
+    ), // Exclude because of license
     "com.github.stephenc.jcip" % "jcip-annotations" % "1.0-1" % Runtime, // Replace for net.jcip % jcip-annotations"
   )
 

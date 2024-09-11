@@ -27,11 +27,11 @@ object DidOps {
 
   def packSigned(msg: Message): URIO[DidOps & DidAgent, SignedMesage] =
     ZIO.service[DidOps].flatMap(_.packSigned(msg))
-    // ZIO.serviceWithZIO(_.packSigned(msg))
+  // ZIO.serviceWithZIO(_.packSigned(msg))
 
   def packEncrypted(msg: Message, to: DidId): URIO[DidOps & DidAgent, EncryptedMessage] =
     ZIO.service[DidOps].flatMap(_.packEncrypted(msg, to))
-    // ZIO.serviceWithZIO(_.packEncrypted(msg, to))
+  // ZIO.serviceWithZIO(_.packEncrypted(msg, to))
 
   def packEncryptedAnon(msg: Message, to: DidId): URIO[DidOps & DidAgent, EncryptedMessage] =
     ZIO.service[DidOps].flatMap(_.packEncryptedAnon(msg, to))
@@ -39,7 +39,7 @@ object DidOps {
 
   def unpack(str: String): URIO[DidOps & DidAgent, UnpackMessage] =
     ZIO.service[DidOps].flatMap(_.unpack(str))
-    // ZIO.serviceWithZIO(_.unpack(str))
+  // ZIO.serviceWithZIO(_.unpack(str))
 
   def unpackBase64(base64str: String): RIO[DidOps & DidAgent, UnpackMessage] =
     ZIO.service[DidOps].flatMap(_.unpackBase64(base64str))

@@ -5,7 +5,7 @@ import com.nimbusds.jose.jwk.{Curve, ECKey}
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator
 import io.circe.*
 import io.circe.syntax.*
-import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
+import org.hyperledger.identus.castor.core.model.did.{DID, VerificationRelationship}
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.shared.http.*
 import zio.*
@@ -22,11 +22,11 @@ object JWTVerificationTest extends ZIOSpecDefault {
 
   case class IssuerWithKey(issuer: Issuer, key: ECKey)
 
-  private def createUser(did: DID): IssuerWithKey = {
+  private def createUser(did: String): IssuerWithKey = {
     val ecKey = ECKeyGenerator(Curve.SECP256K1).generate()
     IssuerWithKey(
       Issuer(
-        did = did,
+        did = DID.fromString(did).toOption.get,
         signer = ES256KSigner(ecKey.toPrivateKey),
         publicKey = ecKey.toPublicKey
       ),
@@ -68,7 +68,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
     val validUntil = Instant.parse("2010-01-09T00:00:00Z") // EXPIRATION DATE
     val jwtCredentialExp = Instant.parse("2010-01-12T00:00:00Z") // EXPIRATION DATE
     val jwtCredentialPayload = JwtCredentialPayload(
-      iss = issuer.issuer.did.value,
+      iss = issuer.issuer.did.toString,
       maybeSub = Some("1"),
       vc = JwtVc(
         `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
@@ -81,7 +81,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
         maybeTermsOfUse = None,
         maybeValidFrom = Some(validFrom),
         maybeValidUntil = Some(validUntil),
-        maybeIssuer = Some(Left(issuer.issuer.did.value))
+        maybeIssuer = Some(Left(issuer.issuer.did.toString))
       ),
       nbf = jwtCredentialNbf, // ISSUANCE DATE
       aud = Set.empty,
@@ -188,7 +188,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       )
     },
     test("validate dates happy path") {
-      val issuer = createUser(DID("did:prism:issuer"))
+      val issuer = createUser("did:prism:issuer")
       val jwtCredential = createJwtCredential(issuer)
       for {
         validation <- ZIO.succeed(
@@ -200,7 +200,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       } yield assertTrue(validation.fold(_ => false, _ => true))
     },
     test("validate dates should fail given after valid until") {
-      val issuer = createUser(DID("did:prism:issuer"))
+      val issuer = createUser("did:prism:issuer")
       val jwtCredential = createJwtCredential(issuer)
       for {
         validation <- ZIO.succeed(
@@ -212,7 +212,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       } yield assertTrue(validation.fold(_ => true, _ => false))
     },
     test("validate dates should fail given before valid from") {
-      val issuer = createUser(DID("did:prism:issuer"))
+      val issuer = createUser("did:prism:issuer")
       val jwtCredential = createJwtCredential(issuer)
       for {
         validation <- ZIO.succeed(
@@ -224,7 +224,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       } yield assertTrue(validation.fold(_ => true, _ => false))
     },
     test("validate PrismDID issued JWT VC using verification publicKeys") {
-      val issuer = createUser(DID("did:prism:issuer"))
+      val issuer = createUser("did:prism:issuer")
       val jwtCredential = createJwtCredential(issuer)
       val resolver = makeResolver(
         Map(
@@ -247,7 +247,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       } yield assertTrue(validation.fold(_ => false, _ => true))
     },
     test("validate PrismDID issued JWT VC using specified proofPurpose resolved as embedded key") {
-      val issuer = createUser(DID("did:prism:issuer"))
+      val issuer = createUser("did:prism:issuer")
       val jwtCredential = createJwtCredential(issuer)
       val resolver = makeResolver(
         Map(
@@ -272,7 +272,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       } yield assertTrue(validation.fold(_ => false, _ => true))
     },
     test("validate PrismDID issued JWT VC using specified proofPurpose resolved as referenced key") {
-      val issuer = createUser(DID("did:prism:issuer"))
+      val issuer = createUser("did:prism:issuer")
       val jwtCredential = createJwtCredential(issuer)
       val resolver = makeResolver(
         Map(
@@ -298,7 +298,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       } yield assertTrue(validation.fold(_ => false, _ => true))
     },
     test("validate PrismDID issued JWT VC using incorrect proofPurpose should fail") {
-      val issuer = createUser(DID("did:prism:issuer"))
+      val issuer = createUser("did:prism:issuer")
       val jwtCredential = createJwtCredential(issuer)
       val resolver = makeResolver(
         Map(
@@ -323,7 +323,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       } yield assert(validation.fold(_ => false, _ => true))(equalTo(false))
     },
     test("validate PrismDID issued JWT VC using non-resolvable DID should fail") {
-      val issuer = createUser(DID("did:prism:issuer"))
+      val issuer = createUser("did:prism:issuer")
       val jwtCredential = createJwtCredential(issuer)
       val resolver = makeResolver(Map.empty)
       for {
@@ -331,7 +331,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       } yield assert(validation.fold(_ => false, _ => true))(equalTo(false))
     },
     test("validate PrismDID issued JWT VC using non-existing public-key should fail") {
-      val issuer = createUser(DID("did:prism:issuer"))
+      val issuer = createUser("did:prism:issuer")
       val jwtCredential = createJwtCredential(issuer)
       val resolver = makeResolver(Map("did:prism:issuer" -> generateDidDocument(did = "did:prism:issuer")))
       for {
@@ -339,7 +339,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       } yield assert(validation.fold(_ => false, _ => true))(equalTo(false))
     },
     test("validate PrismDID issued JWT VC using incompatible public-key type should fail") {
-      val issuer = createUser(DID("did:prism:issuer"))
+      val issuer = createUser("did:prism:issuer")
       val jwtCredential = createJwtCredential(issuer)
       val resolver = makeResolver(
         Map(
@@ -362,7 +362,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
       } yield assert(validation.fold(_ => false, _ => true))(equalTo(false))
     },
     test("validate PrismDID issued JWT VC using different ECKey should fail") {
-      val issuer = createUser(DID("did:prism:issuer"))
+      val issuer = createUser("did:prism:issuer")
       val jwtCredential = createJwtCredential(issuer)
       val resolver = makeResolver(
         Map(
