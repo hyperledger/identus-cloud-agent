@@ -1,6 +1,5 @@
 package org.hyperledger.identus.pollux.credentialdefinition.http
 
-
 import org.hyperledger.identus.castor.core.model.did.{DIDUrl, PrismDID}
 import org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
@@ -8,11 +7,10 @@ import org.hyperledger.identus.pollux.PrismEnvelopeResponse
 import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.json.Json as JsonUtils
 import org.hyperledger.identus.shared.utils.Base64Utils
-
 import zio.json.*
 import zio.json.ast.Json
 
-import java.util.UUID  
+import java.util.UUID
 import scala.collection.immutable.ListMap
 
 object CredentialDefinitionDidUrlResponse {
