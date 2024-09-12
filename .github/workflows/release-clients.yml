@@ -87,6 +87,7 @@ jobs:
           path: ./cloud-agent/service/api/http
 
       - name: Rename OpenAPI specification
+        if: ${{ !inputs.releaseTag }}
         working-directory: cloud-agent/service/api/http
         run: |
           mv cloud-agent-openapi-spec-${{ inputs.revision }}.yaml cloud-agent-openapi-spec.yaml

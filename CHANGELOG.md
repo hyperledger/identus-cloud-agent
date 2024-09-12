@@ -1,3 +1,46 @@
+# [1.39.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.38.0...cloud-agent-v1.39.0) (2024-09-11)
+
+
+### Bug Fixes
+
+* [#1259](https://github.com/hyperledger/identus-cloud-agent/issues/1259) make GITHUB_TOKEN optional ([#1275](https://github.com/hyperledger/identus-cloud-agent/issues/1275)) ([1c9cbd0](https://github.com/hyperledger/identus-cloud-agent/commit/1c9cbd0a124cdf5626605e1e4419130f885364a7))
+* add License to the POM files [#1099](https://github.com/hyperledger/identus-cloud-agent/issues/1099) ([#1310](https://github.com/hyperledger/identus-cloud-agent/issues/1310)) ([5a7b950](https://github.com/hyperledger/identus-cloud-agent/commit/5a7b9508c9d62e57ac6a98da6726b382587478bf))
+* add reportProcessingFailure back in PresentationRepository ([#1232](https://github.com/hyperledger/identus-cloud-agent/issues/1232)) ([d22745f](https://github.com/hyperledger/identus-cloud-agent/commit/d22745fc9589c71d038af60d8fc2c99d8cbd104a))
+* bitString base64 encoding for revocation status list ([#1273](https://github.com/hyperledger/identus-cloud-agent/issues/1273)) ([45e0613](https://github.com/hyperledger/identus-cloud-agent/commit/45e0613ea42fb21786562c7f44b40f63cbdae6dc))
+* changed IO to UIO as as underline repository doesn't throw error ([#1271](https://github.com/hyperledger/identus-cloud-agent/issues/1271)) ([2aba639](https://github.com/hyperledger/identus-cloud-agent/commit/2aba639aa77cfe293b11fabca5c458a220576435))
+* cleanup and minor refactoring to remove duplicates ([#1309](https://github.com/hyperledger/identus-cloud-agent/issues/1309)) ([238492b](https://github.com/hyperledger/identus-cloud-agent/commit/238492b8af2e131ae9dde058ea6a57df5787c1b1))
+* delete subject id from presentation record ([#1314](https://github.com/hyperledger/identus-cloud-agent/issues/1314)) ([b73b806](https://github.com/hyperledger/identus-cloud-agent/commit/b73b8066651f0685fd8b2fd46b1e12d4adfe4156))
+* GET Requested present proof by Holder ([#1316](https://github.com/hyperledger/identus-cloud-agent/issues/1316)) ([3b3da2c](https://github.com/hyperledger/identus-cloud-agent/commit/3b3da2c3a14a7d48fca38f286153ceeca4839384))
+* improve k8s keycloak bootstrapping script ([#1278](https://github.com/hyperledger/identus-cloud-agent/issues/1278)) ([cfc4ccf](https://github.com/hyperledger/identus-cloud-agent/commit/cfc4ccf3b10f2a59471f107e0b3cfc4ac568f5c4))
+* migrate to quill for generic secret storage ([#1299](https://github.com/hyperledger/identus-cloud-agent/issues/1299)) ([e077cdd](https://github.com/hyperledger/identus-cloud-agent/commit/e077cdd016954d028b702f2a107e9165005beb5c))
+* migrate wallet nonsecret storage to quill ([#1290](https://github.com/hyperledger/identus-cloud-agent/issues/1290)) ([525b3bc](https://github.com/hyperledger/identus-cloud-agent/commit/525b3bcb7006599d873e8a089e8f03da361e74eb))
+* misc spelling ([#1288](https://github.com/hyperledger/identus-cloud-agent/issues/1288)) ([88efa9c](https://github.com/hyperledger/identus-cloud-agent/commit/88efa9ca1bc323af4cac35fb3096ac44b74e74bc))
+* operation id repeated error ([#1306](https://github.com/hyperledger/identus-cloud-agent/issues/1306)) ([8e39d0b](https://github.com/hyperledger/identus-cloud-agent/commit/8e39d0bbdbd7d4d087865651c4c8ce3b16540174))
+* remove `prism-agent` path from the apisixroute.yaml ([#1330](https://github.com/hyperledger/identus-cloud-agent/issues/1330)) ([82b9d1d](https://github.com/hyperledger/identus-cloud-agent/commit/82b9d1d38f0de0a381b9a6c6569411786630ca4b))
+* remove deprecation warnings and optimize tests performance ([#1315](https://github.com/hyperledger/identus-cloud-agent/issues/1315)) ([7558245](https://github.com/hyperledger/identus-cloud-agent/commit/75582453454c80e35080817dbe8b1bb02c4a94b6))
+* Remove type DID ([#1327](https://github.com/hyperledger/identus-cloud-agent/issues/1327)) ([1ed2a14](https://github.com/hyperledger/identus-cloud-agent/commit/1ed2a14651b6411add88f96208db6037b49ebd4a))
+* rename folder from atala to identus ([#1270](https://github.com/hyperledger/identus-cloud-agent/issues/1270)) ([12660ef](https://github.com/hyperledger/identus-cloud-agent/commit/12660ef81a8f057bd63f1a6fa8cc775cc2459cb1))
+* replace problematic dependency license from Apollo ([#1312](https://github.com/hyperledger/identus-cloud-agent/issues/1312)) ([11ee9df](https://github.com/hyperledger/identus-cloud-agent/commit/11ee9df88c789c36c6488ad1409c46cd43fcc7d5))
+* the oob encode invitation ([#1313](https://github.com/hyperledger/identus-cloud-agent/issues/1313)) ([f2313f2](https://github.com/hyperledger/identus-cloud-agent/commit/f2313f23189879d8f2f3a548ee1b27c6ecb0c0be))
+
+
+### Features
+
+* API Supports ValidFrom And ValidTo ([#1298](https://github.com/hyperledger/identus-cloud-agent/issues/1298)) ([b19f514](https://github.com/hyperledger/identus-cloud-agent/commit/b19f514d3e6bf762fa566dd4f0024e8732778911))
+* API Supports ValidFrom And ValidTo (PART 2) ([#1302](https://github.com/hyperledger/identus-cloud-agent/issues/1302)) ([b0c58f3](https://github.com/hyperledger/identus-cloud-agent/commit/b0c58f3c3a2fd6fa9c5364f894737bf301f4dea9))
+* API Supports ValidFrom And ValidTo Test ([#1305](https://github.com/hyperledger/identus-cloud-agent/issues/1305)) ([3a7984b](https://github.com/hyperledger/identus-cloud-agent/commit/3a7984b180989cad00e8511f9b564a51dae268f2))
+* connection less issuance ([#1301](https://github.com/hyperledger/identus-cloud-agent/issues/1301)) ([594f7c9](https://github.com/hyperledger/identus-cloud-agent/commit/594f7c910f4cbe8990263b4154490d3ad0ed169d))
+* connection less presentation ([#1285](https://github.com/hyperledger/identus-cloud-agent/issues/1285)) ([c5846d1](https://github.com/hyperledger/identus-cloud-agent/commit/c5846d15cbe1cfd4b9776ad7c259962182057e0c))
+* connection less presentation expiration time ([#1294](https://github.com/hyperledger/identus-cloud-agent/issues/1294)) ([6024c97](https://github.com/hyperledger/identus-cloud-agent/commit/6024c97269ad23b99c5e238c97179da095cb91dc))
+* Expose Stored Error ([#1276](https://github.com/hyperledger/identus-cloud-agent/issues/1276)) ([758fe87](https://github.com/hyperledger/identus-cloud-agent/commit/758fe87cb3c729b544a1df434c23d535162cbba9))
+* Fix Object causing StatusList to fail ([#1322](https://github.com/hyperledger/identus-cloud-agent/issues/1322)) ([fb32d6e](https://github.com/hyperledger/identus-cloud-agent/commit/fb32d6eb732c9c3ac2ad7d9cf3f1a388400a4b6b))
+* Handle Error Notify webhooks ATL-6934 ([#1279](https://github.com/hyperledger/identus-cloud-agent/issues/1279)) ([7c31a9d](https://github.com/hyperledger/identus-cloud-agent/commit/7c31a9d4ec3e63273f804c715ae96791b5aa50c9))
+* integrate json-path in presentation definition ([#1311](https://github.com/hyperledger/identus-cloud-agent/issues/1311)) ([9ef6b09](https://github.com/hyperledger/identus-cloud-agent/commit/9ef6b09e8f09cd52cdb67003506b3ef15c58d919))
+* Move ADRs to the identus-docs repo ([#1284](https://github.com/hyperledger/identus-cloud-agent/issues/1284)) ([4d5ca64](https://github.com/hyperledger/identus-cloud-agent/commit/4d5ca6419ac416c5851cc2a09b1cca1af572d55b))
+* postgres metrics ([#1274](https://github.com/hyperledger/identus-cloud-agent/issues/1274)) ([cf3ccbe](https://github.com/hyperledger/identus-cloud-agent/commit/cf3ccbefdd8ab3f1f18e80303c910f72661cfc42))
+* presentation-exchange model and json schema refactoring ([#1304](https://github.com/hyperledger/identus-cloud-agent/issues/1304)) ([75b2736](https://github.com/hyperledger/identus-cloud-agent/commit/75b2736b71739be7c57c582f64b6845da9a6bd8c))
+* URL or Object as Issuer ([#1321](https://github.com/hyperledger/identus-cloud-agent/issues/1321)) ([0c53bba](https://github.com/hyperledger/identus-cloud-agent/commit/0c53bbaf3b7753015b5876001002b7a9ba54ccfb))
+
 # [1.38.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.37.0...cloud-agent-v1.38.0) (2024-07-15)
 
 
