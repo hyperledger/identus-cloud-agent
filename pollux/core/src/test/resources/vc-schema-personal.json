@@ -1,38 +1,26 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "Driving License",
+  "description": "Age",
   "type": "object",
   "properties": {
     "credentialSubject": {
       "type": "object",
       "properties": {
-        "emailAddress": {
+        "email": {
           "type": "string",
           "format": "email"
         },
-        "givenName": {
+        "userName": {
           "type": "string"
         },
-        "familyName": {
-          "type": "string"
-        },
-        "dateOfIssuance": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "drivingLicenseID": {
-          "type": "string"
-        },
-        "drivingClass": {
+        "age": {
           "type": "integer"
         }
       },
       "required": [
-        "emailAddress",
-        "familyName",
-        "dateOfIssuance",
-        "drivingLicenseID",
-        "drivingClass"
+        "email",
+        "userName",
+        "age"
       ],
       "additionalProperties": false
     }
