@@ -15,6 +15,7 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
+import org.hyperledger.identus.pollux.vc.jwt.{CredentialIssuer, JWT, JwtCredential, JwtCredentialPayload}
 import org.hyperledger.identus.shared.models.{KeyId, UnmanagedFailureException, WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.MockSpecDefault
@@ -524,13 +525,27 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
             issuerRecordId,
             "status-list-registry"
           )
+          decodedJWT <- credentialGenerateRecord.issueCredentialData.get.attachments.head.data match {
+            case MyBase64(value) =>
+              val ba = new String(Base64.getUrlDecoder.decode(value))
+              JwtCredential.decodeJwt(JWT(ba))
+            case _ => ZIO.fail("Error")
+          }
           // Issuer sends credential
           _ <- issuerSvc.markCredentialSent(issuerRecordId)
           msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.asJson.as[Message])
           // Holder receives credential
           issueCredential <- ZIO.fromEither(IssueCredential.readFromMessage(msg))
           _ <- holderSvc.receiveCredentialIssue(issueCredential)
-        } yield assertTrue(true)
+        } yield assertTrue(
+          decodedJWT.issuer ==
+            Right(
+              CredentialIssuer(
+                id = decodedJWT.iss,
+                `type` = "Profile"
+              )
+            )
+        )
       }.provideSomeLayer(
         (holderDidServiceExpectations ++ issuerDidServiceExpectations).toLayer
           ++ (holderManagedDIDServiceExpectations ++ issuerManagedDIDServiceExpectations).toLayer

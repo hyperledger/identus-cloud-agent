@@ -16,7 +16,7 @@ object JsonPathValue {
   given Conversion[String, JsonPathValue] = identity
 
   extension (jpv: JsonPathValue) {
-    def toJsonPath: IO[JsonPathError, JsonPath] = JsonPath.compile(jpv)
+    def toJsonPath: Either[JsonPathError, JsonPath] = JsonPath.compile(jpv)
     def value: String = jpv
   }
 }
@@ -65,7 +65,26 @@ object Ldp {
   given Decoder[Ldp] = deriveDecoder[Ldp]
 }
 
-case class ClaimFormat(jwt: Option[Jwt] = None, ldp: Option[Ldp] = None)
+enum ClaimFormatValue(val value: String) {
+  case jwt_vc extends ClaimFormatValue("jwt_vc")
+  case jwt_vp extends ClaimFormatValue("jwt_vp")
+}
+
+object ClaimFormatValue {
+  given Encoder[ClaimFormatValue] = Encoder.encodeString.contramap(_.value)
+  given Decoder[ClaimFormatValue] = Decoder.decodeString.emap {
+    case "jwt_vc" => Right(ClaimFormatValue.jwt_vc)
+    case "jwt_vp" => Right(ClaimFormatValue.jwt_vp)
+    case other    => Left(s"Invalid ClaimFormatValue: $other")
+  }
+}
+
+case class ClaimFormat(
+    jwt: Option[Jwt] = None,
+    jwt_vc: Option[Jwt] = None,
+    jwt_vp: Option[Jwt] = None,
+    ldp: Option[Ldp] = None
+)
 
 object ClaimFormat {
   given Encoder[ClaimFormat] = deriveEncoder[ClaimFormat]

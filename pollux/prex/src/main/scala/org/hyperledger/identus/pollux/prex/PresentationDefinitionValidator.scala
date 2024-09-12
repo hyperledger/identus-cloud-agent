@@ -1,6 +1,7 @@
 package org.hyperledger.identus.pollux.prex
 
 import org.hyperledger.identus.pollux.prex.PresentationDefinitionError.{
+  DuplicatedDescriptorId,
   InvalidFilterJsonPath,
   InvalidFilterJsonSchema,
   JsonSchemaOptionNotSupported
@@ -21,6 +22,12 @@ sealed trait PresentationDefinitionError extends Failure {
 }
 
 object PresentationDefinitionError {
+  final case class DuplicatedDescriptorId(ids: Seq[String]) extends PresentationDefinitionError {
+    override def statusCode: StatusCode = StatusCode.BadRequest
+    override def userFacingMessage: String =
+      s"PresentationDefinition input_descriptors contains duplicated id(s): ${ids.mkString(", ")}"
+  }
+
   final case class InvalidFilterJsonPath(path: String, error: JsonPathError) extends PresentationDefinitionError {
     override def statusCode: StatusCode = StatusCode.BadRequest
     override def userFacingMessage: String =
@@ -67,16 +74,24 @@ class PresentationDefinitionValidatorImpl(filterSchemaValidator: JsonSchemaValid
     val filters = fields.flatMap(_.filter)
 
     for {
+      _ <- validateUniqueDescriptorIds(pd.input_descriptors)
       _ <- validateJsonPaths(paths)
       _ <- validateFilters(filters)
       _ <- validateAllowedFilterSchemaKeys(filters)
     } yield ()
   }
 
+  private def validateUniqueDescriptorIds(descriptors: Seq[InputDescriptor]): IO[PresentationDefinitionError, Unit] = {
+    val ids = descriptors.map(_.id)
+    if ids.distinct.size == ids.size
+    then ZIO.unit
+    else ZIO.fail(DuplicatedDescriptorId(ids))
+  }
+
   private def validateJsonPaths(paths: Seq[JsonPathValue]): IO[PresentationDefinitionError, Unit] = {
     ZIO
       .foreach(paths) { path =>
-        path.toJsonPath.mapError(InvalidFilterJsonPath(path.value, _))
+        ZIO.fromEither(path.toJsonPath).mapError(InvalidFilterJsonPath(path.value, _))
       }
       .unit
   }

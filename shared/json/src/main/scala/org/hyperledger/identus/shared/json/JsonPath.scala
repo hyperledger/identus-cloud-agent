@@ -7,6 +7,8 @@ import zio.*
 import zio.json.*
 import zio.json.ast.Json
 
+import scala.util.Try
+
 sealed trait JsonPathError extends Failure {
   override def namespace: String = "JsonPathError"
 }
@@ -21,32 +23,45 @@ object JsonPathError {
     override def statusCode: StatusCode = StatusCode.BadRequest
     override def userFacingMessage: String = s"The json path '$path' cannot be found in a json"
   }
+
+  final case class UnexpectedCompilePathError(path: String, e: Throwable) extends JsonPathError {
+    override def statusCode: StatusCode = StatusCode.InternalServerError
+    override def userFacingMessage: String = s"An unhandled error occurred while compiling the JsonPath for $path"
+  }
+
+  final case class UnexpectedReadPathError(path: String, e: Throwable) extends JsonPathError {
+    override def statusCode: StatusCode = StatusCode.InternalServerError
+    override def userFacingMessage: String = s"An unhandled error occurred while reading the JsonPath for $path"
+  }
 }
 
 opaque type JsonPath = JaywayJsonPath
 
 object JsonPath {
-  def compile(path: String): IO[JsonPathError, JsonPath] = {
-    ZIO
-      .attempt(JaywayJsonPath.compile(path))
-      .refineOrDie {
+  def compileUnsafe(path: String): JsonPath = JaywayJsonPath.compile(path)
+
+  def compile(path: String): Either[JsonPathError, JsonPath] =
+    Try(compileUnsafe(path)).toEither.left
+      .map {
         case e: IllegalArgumentException => JsonPathError.InvalidPathInput(e.getMessage())
         case e: InvalidPathException     => JsonPathError.InvalidPathInput(e.getMessage())
+        case e                           => JsonPathError.UnexpectedCompilePathError(path, e)
       }
-  }
 
   extension (jsonPath: JsonPath) {
-    def read(json: Json): IO[JsonPathError, Json] = {
+    def read(json: Json): Either[JsonPathError, Json] = {
       val jsonProvider = JacksonJsonProvider()
       val document = JaywayJsonPath.parse(json.toString())
       for {
-        queriedObj <- ZIO
-          .attempt(document.read[java.lang.Object](jsonPath))
-          .refineOrDie { case e: PathNotFoundException =>
-            JsonPathError.PathNotFound(jsonPath.getPath())
-          }
+        queriedObj <- Try(document.read[java.lang.Object](jsonPath)).toEither.left.map {
+          case e: PathNotFoundException => JsonPathError.PathNotFound(jsonPath.getPath())
+          case e                        => JsonPathError.UnexpectedReadPathError(jsonPath.getPath(), e)
+        }
         queriedJsonStr = jsonProvider.toJson(queriedObj)
-        queriedJson <- ZIO.fromEither(queriedJsonStr.fromJson[Json]).orDieWith(Exception(_))
+        queriedJson <- queriedJsonStr
+          .fromJson[Json]
+          .left
+          .map(e => JsonPathError.UnexpectedReadPathError(jsonPath.getPath(), Exception(e)))
       } yield queriedJson
     }
   }
