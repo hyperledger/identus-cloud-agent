@@ -37,8 +37,6 @@
       "additionalProperties": false
     }
   },
-  "required": [
-    "credentialSubject"
-  ],
+  "required": ["credentialSubject"],
   "additionalProperties": false
 }

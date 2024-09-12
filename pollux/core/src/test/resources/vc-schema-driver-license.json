@@ -17,16 +17,10 @@
           "type": "integer"
         }
       },
-      "required": [
-        "dateOfIssuance",
-        "drivingLicenseID",
-        "drivingClass"
-      ],
+      "required": ["dateOfIssuance", "drivingLicenseID", "drivingClass"],
       "additionalProperties": false
     }
   },
-  "required": [
-    "credentialSubject"
-  ],
+  "required": ["credentialSubject"],
   "additionalProperties": false
 }
