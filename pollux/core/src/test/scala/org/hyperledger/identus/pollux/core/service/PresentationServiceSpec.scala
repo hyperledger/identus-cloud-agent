@@ -60,7 +60,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
 
         check(
           Gen.uuid.map(e => DidCommID(e.toString)),
-          Gen.option(Gen.string),
+          Gen.string,
           Gen.listOfBounded(1, 5)(proofTypeGen),
           Gen.option(optionsGen)
         ) { (thid, connectionId, proofTypes, options) =>
@@ -70,20 +70,23 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             pairwiseProverDid = DidId("did:peer:Prover")
             record <- svc.createJwtPresentationRecord(
               pairwiseVerifierDid,
-              pairwiseProverDid,
+              Some(pairwiseProverDid),
               thid,
-              connectionId,
+              Some(connectionId),
               proofTypes,
-              options
+              options,
+              None,
+              None,
+              None,
             )
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
-            assertTrue(record.connectionId == connectionId) &&
+            assertTrue(record.connectionId.contains(connectionId)) &&
             assertTrue(record.role == PresentationRecord.Role.Verifier) &&
             assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestPending) &&
             assertTrue(record.requestPresentationData.isDefined) &&
-            assertTrue(record.requestPresentationData.get.to == pairwiseProverDid) &&
+            assertTrue(record.requestPresentationData.get.to.contains(pairwiseProverDid)) &&
             assertTrue(record.requestPresentationData.get.thid.contains(thid.toString)) &&
             assertTrue(record.requestPresentationData.get.body.goal_code.contains("Request Proof Presentation")) &&
             assertTrue(record.requestPresentationData.get.body.proof_types == proofTypes) &&
@@ -116,7 +119,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       test("createPresentationRecord creates a valid Anoncred PresentationRecord") {
         check(
           Gen.uuid.map(e => DidCommID(e.toString)),
-          Gen.option(Gen.string),
+          Gen.string,
           Gen.string,
           Gen.string,
           Gen.string
@@ -136,19 +139,22 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             record <-
               svc.createAnoncredPresentationRecord(
                 pairwiseVerifierDid,
-                pairwiseProverDid,
+                Some(pairwiseProverDid),
                 thid,
-                connectionId,
-                anoncredPresentationRequestV1
+                Some(connectionId),
+                anoncredPresentationRequestV1,
+                None,
+                None,
+                None
               )
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
-            assertTrue(record.connectionId == connectionId) &&
+            assertTrue(record.connectionId.contains(connectionId)) &&
             assertTrue(record.role == PresentationRecord.Role.Verifier) &&
             assertTrue(record.protocolState == PresentationRecord.ProtocolState.RequestPending) &&
             assertTrue(record.requestPresentationData.isDefined) &&
-            assertTrue(record.requestPresentationData.get.to == pairwiseProverDid) &&
+            assertTrue(record.requestPresentationData.get.to.contains(pairwiseProverDid)) &&
             assertTrue(record.requestPresentationData.get.thid.contains(thid.toString)) &&
             assertTrue(record.requestPresentationData.get.body.goal_code.contains("Request Proof Presentation")) &&
             assertTrue(
@@ -247,7 +253,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             Some(Seq(aIssueCredentialRecord.id.value)),
             PresentationRecord.ProtocolState.RequestPending
           )
-          issuer = createIssuer(DID("did:prism:issuer"))
+          issuer = createIssuer("did:prism:issuer")
           aPresentationPayload <- svc.createJwtPresentationPayloadFromRecord(aRecord.id, issuer, Instant.now())
         } yield {
           assertTrue(aPresentationPayload.toJwtPresentationPayload.iss == "did:prism:issuer")
@@ -322,8 +328,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 "domain": "us.gov/DriverLicense",
                 "credential_manifest": {}
             }"""
-          prover = DidId("did:peer:Prover")
-          verifier = DidId("did:peer:Verifier")
+          prover = Some(DidId("did:peer:Prover"))
+          verifier = Some(DidId("did:peer:Verifier"))
 
           attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
             payload = presentationAttachmentAsJson,
@@ -350,8 +356,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 "domain": "us.gov/DriverLicense",
                 "credential_manifest": {}
             }"""
-          prover = DidId("did:peer:Prover")
-          verifier = DidId("did:peer:Verifier")
+          prover = Some(DidId("did:peer:Prover"))
+          verifier = Some(DidId("did:peer:Verifier"))
 
           attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
             payload = presentationAttachmentAsJson,
@@ -379,8 +385,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 "domain": "us.gov/DriverLicense",
                 "credential_manifest": {}
             }"""
-          prover = DidId("did:peer:Prover")
-          verifier = DidId("did:peer:Verifier")
+          prover = Some(DidId("did:peer:Prover"))
+          verifier = Some(DidId("did:peer:Verifier"))
 
           attachmentDescriptor = AttachmentDescriptor.buildJsonAttachment(
             payload = presentationAttachmentAsJson,
@@ -536,8 +542,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           requestPresentation = RequestPresentation(
             body = RequestPresentation.Body(goal_code = Some("Presentation Request")),
             attachments = Seq(attachmentDescriptor),
-            to = DidId("did:peer:Prover"),
-            from = DidId("did:peer:Verifier"),
+            to = Some(DidId("did:peer:Prover")),
+            from = Some(DidId("did:peer:Verifier")),
           )
           aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentation)
           credentialsToUse =
@@ -598,8 +604,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           requestPresentation = RequestPresentation(
             body = RequestPresentation.Body(goal_code = Some("Presentation Request")),
             attachments = Seq(attachmentDescriptor),
-            to = DidId("did:peer:Prover"),
-            from = DidId("did:peer:Verifier"),
+            to = Some(DidId("did:peer:Prover")),
+            from = Some(DidId("did:peer:Verifier")),
           )
           aRecord <- svc.receiveRequestPresentation(connectionId, requestPresentation)
           credentialsToUse = Seq(aIssueCredentialRecord.id.value)
@@ -772,8 +778,8 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
       svc <- ZIO.service[PresentationService]
       connectionId = Some("connectionId")
       body = RequestPresentation.Body(goal_code = Some("Presentation Request"))
-      prover = DidId("did:peer:Prover")
-      verifier = DidId("did:peer:Verifier")
+      prover = Some(DidId("did:peer:Prover"))
+      verifier = Some(DidId("did:peer:Verifier"))
       attachmentDescriptor = attachment
       requestPresentation = RequestPresentation(
         body = body,
@@ -861,6 +867,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           credentialDefinitionId = Some(credentialDefinitionDb.guid),
           credentialDefinitionUri = Some(credentialDefinitionId),
           credentialFormat = CredentialFormat.AnonCreds,
+          invitation = None,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,
           keyId = None,

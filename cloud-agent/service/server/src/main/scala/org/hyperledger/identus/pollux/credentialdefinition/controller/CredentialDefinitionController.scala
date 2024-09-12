@@ -3,9 +3,7 @@ package org.hyperledger.identus.pollux.credentialdefinition.controller
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{Order, Pagination}
 import org.hyperledger.identus.pollux.credentialdefinition.http.{
-  CredentialDefinitionDidUrlResponse,
   CredentialDefinitionDidUrlResponsePage,
-  CredentialDefinitionInnerDefinitionDidUrlResponse,
   CredentialDefinitionInput,
   CredentialDefinitionResponse,
   CredentialDefinitionResponsePage,

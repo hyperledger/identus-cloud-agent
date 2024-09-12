@@ -4,6 +4,9 @@ import io.circe.parser.*
 import io.circe.syntax.*
 import io.circe.Json
 import munit.*
+import org.hyperledger.identus.pollux.prex.*
+
+import scala.language.implicitConversions
 
 class PresentationAttachmentSpec extends ZSuite {
 

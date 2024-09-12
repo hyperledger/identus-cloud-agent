@@ -5,7 +5,8 @@ import org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.PrismEnvelopeResponse
 import org.hyperledger.identus.shared.crypto.Sha256Hash
-import org.hyperledger.identus.shared.utils.{Base64Utils, Json as JsonUtils}
+import org.hyperledger.identus.shared.utils.Base64Utils
+import org.hyperledger.identus.shared.json.Json as JsonUtils
 import zio.json.*
 import zio.json.ast.Json
 

@@ -8,9 +8,9 @@ import org.hyperledger.identus.pollux.core.model.schema.`type`.{
   CredentialSchemaType
 }
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
-import org.hyperledger.identus.pollux.core.model.schema.validator.{JsonSchemaValidator, JsonSchemaValidatorImpl}
 import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.shared.http.UriResolver
+import org.hyperledger.identus.shared.json.{JsonSchemaValidator, JsonSchemaValidatorImpl}
 import zio.*
 import zio.json.*
 import zio.json.ast.Json

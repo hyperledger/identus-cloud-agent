@@ -9,9 +9,7 @@ import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityL
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import org.hyperledger.identus.pollux.credentialschema.http.{
-  CredentialSchemaDidUrlResponse,
   CredentialSchemaDidUrlResponsePage,
-  CredentialSchemaInnerDidUrlResponse,
   CredentialSchemaInput,
   CredentialSchemaResponse,
   CredentialSchemaResponsePage,

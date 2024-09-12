@@ -273,6 +273,14 @@ class PresentationRepositoryInMemory(
     } yield store.values.find(_.thid == thid).filter(_.metaRetries > 0)
   }
 
+  override def getPresentationRecordByDIDCommID(recordId: DidCommID): UIO[Option[PresentationRecord]] = {
+    ZIO.none
+    //   for {
+    //     storeRef <- walletStoreRef
+    //     store <- storeRef.get
+    //   } yield store.values.find(_.id == recordId).filter(_.metaRetries > 0)
+  }
+
   override def updateWithRequestPresentation(
       recordId: DidCommID,
       request: RequestPresentation,

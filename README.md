@@ -60,7 +60,7 @@ Before starting to use the Cloud Agent, it is important to understand the basic 
 
 The next diagrams offer a concise architectural overview, depicting a Cloud Agent instance, a controller, the interconnections linking the controller and agent, as well as the external routes to other agents and public ledgers across the Internet.
 
-#### Identus Ecosystem Achitecture
+#### Identus Ecosystem Architecture
 
 ![Identus Architecture](docs/images/identus-architecture-dark.png#gh-dark-mode-only)
 ![Identus Architecture](docs/images/identus-architecture-light.png#gh-light-mode-only)

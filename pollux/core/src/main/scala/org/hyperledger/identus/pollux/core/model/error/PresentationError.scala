@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.model.error
 
-import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError
 import org.hyperledger.identus.pollux.core.model.DidCommID
 import org.hyperledger.identus.shared.http.GenericUriResolverError
+import org.hyperledger.identus.shared.json.JsonSchemaError
 import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 
 sealed trait PresentationError(
@@ -42,6 +42,12 @@ object PresentationError {
       extends PresentationError(
         StatusCode.BadRequest,
         s"Request Presentation with multi attachments: $presentationId"
+      )
+
+  final case class RequestPresentationMissingField(presentationId: String, field: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        s"Request Presentation missing $field field: $presentationId"
       )
 
   final case class IssuedCredentialNotFoundError(cause: String)
@@ -103,8 +109,18 @@ object PresentationError {
         StatusCode.InternalServerError,
         error
       )
+  object MissingConnectionIdForPresentationRequest
+      extends PresentationError(
+        StatusCode.BadRequest,
+        s"Presentation Request missing connectionId"
+      )
 
   final case class MissingAnoncredPresentationRequest(error: String)
+      extends PresentationError(
+        StatusCode.InternalServerError,
+        error
+      )
+  final case class MissingSDJWTPresentationRequest(error: String)
       extends PresentationError(
         StatusCode.InternalServerError,
         error
@@ -187,4 +203,35 @@ object PresentationError {
         StatusCode.InternalServerError,
         msg
       )
+
+  final case class RequestPresentationDecodingError(msg: String)
+      extends PresentationError(
+        StatusCode.InternalServerError,
+        msg
+      )
+
+  final case class InvitationParsingError(cause: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        cause
+      )
+
+  final case class InvitationExpired(msg: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        msg
+      )
+
+  final case class InvitationAlreadyReceived(msg: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        msg
+      )
+
+  final case class MissingInvitationAttachment(msg: String)
+      extends PresentationError(
+        StatusCode.BadRequest,
+        msg
+      )
+
 }

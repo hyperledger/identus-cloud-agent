@@ -3,7 +3,7 @@ package org.hyperledger.identus.pollux.sql.model
 import doobie._
 import doobie.postgres._
 import doobie.postgres.implicits._
-import io.getquill.{MappedEncoding, PostgresJdbcContext, SnakeCase}
+import io.getquill.MappedEncoding
 import io.getquill.doobie.DoobieContext
 import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.shared.models.WalletId

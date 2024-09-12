@@ -1,8 +1,9 @@
 package org.hyperledger.identus.pollux.core.model
 
-import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.presentproof.{Presentation, ProposePresentation, RequestPresentation}
-import org.hyperledger.identus.shared.models.Failure
+import org.hyperledger.identus.shared.models.{Failure, WalletAccessContext, WalletId}
+import zio.{URIO, ZIO}
 
 import java.time.temporal.ChronoUnit
 import java.time.Instant
@@ -18,9 +19,9 @@ final case class PresentationRecord(
     schemaId: Option[String],
     connectionId: Option[String],
     role: PresentationRecord.Role,
-    subjectId: DidId,
     protocolState: PresentationRecord.ProtocolState,
     credentialFormat: CredentialFormat,
+    invitation: Option[Invitation],
     requestPresentationData: Option[RequestPresentation],
     proposePresentationData: Option[ProposePresentation],
     presentationData: Option[Presentation],
@@ -32,6 +33,7 @@ final case class PresentationRecord(
     metaRetries: Int,
     metaNextRetry: Option[Instant],
     metaLastFailure: Option[Failure],
+    walletId: WalletId,
 ) {
   def withTruncatedTimestamp(unit: ChronoUnit = ChronoUnit.MICROS): PresentationRecord =
     copy(
@@ -42,6 +44,56 @@ final case class PresentationRecord(
 }
 
 object PresentationRecord {
+
+  def make(
+      id: DidCommID,
+      createdAt: Instant,
+      updatedAt: Option[Instant],
+      thid: DidCommID,
+      schemaId: Option[String],
+      connectionId: Option[String],
+      role: Role,
+      protocolState: ProtocolState,
+      credentialFormat: CredentialFormat,
+      invitation: Option[Invitation],
+      requestPresentationData: Option[RequestPresentation],
+      proposePresentationData: Option[ProposePresentation],
+      presentationData: Option[Presentation],
+      credentialsToUse: Option[List[String]],
+      anoncredCredentialsToUseJsonSchemaId: Option[String],
+      anoncredCredentialsToUse: Option[AnoncredCredentialProofs],
+      sdJwtClaimsToUseJsonSchemaId: Option[String],
+      sdJwtClaimsToDisclose: Option[SdJwtCredentialToDisclose],
+      metaRetries: Int,
+      metaNextRetry: Option[Instant],
+      metaLastFailure: Option[Failure]
+  ): URIO[WalletAccessContext, PresentationRecord] =
+    ZIO.serviceWith[WalletAccessContext] { walletAccessContext =>
+      PresentationRecord(
+        id,
+        createdAt,
+        updatedAt,
+        thid,
+        schemaId,
+        connectionId,
+        role,
+        protocolState,
+        credentialFormat,
+        invitation,
+        requestPresentationData,
+        proposePresentationData,
+        presentationData,
+        credentialsToUse,
+        anoncredCredentialsToUseJsonSchemaId,
+        anoncredCredentialsToUse,
+        sdJwtClaimsToUseJsonSchemaId,
+        sdJwtClaimsToDisclose,
+        metaRetries,
+        metaNextRetry,
+        metaLastFailure,
+        walletAccessContext.walletId,
+      )
+    }
 
   enum Role:
     case Verifier extends Role
@@ -89,5 +141,10 @@ object PresentationRecord {
     case PresentationAccepted extends ProtocolState
     // Verifier has rejected the presentation (proof) (Verifier DB)
     case PresentationRejected extends ProtocolState // TODO send problem report
+
+    // Verifier has created a OOB Presentation request  (in Verifier DB)
+    case InvitationGenerated extends ProtocolState
+    // Verifier receives a presentation from an expired OOB Presentation request (update Verifier DB) //TODO send problem report
+    case InvitationExpired extends ProtocolState
 
 }

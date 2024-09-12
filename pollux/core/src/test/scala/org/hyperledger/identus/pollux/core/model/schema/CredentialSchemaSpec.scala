@@ -4,9 +4,9 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.CredentialSchemaValidationError
 import org.hyperledger.identus.pollux.core.model.schema.`type`.{AnoncredSchemaType, CredentialJsonSchemaType}
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
-import org.hyperledger.identus.pollux.core.model.schema.validator.JsonSchemaError.JsonValidationErrors
 import org.hyperledger.identus.pollux.core.model.schema.AnoncredSchemaTypeSpec.test
 import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
+import org.hyperledger.identus.shared.json.JsonSchemaError.JsonValidationErrors
 import zio.json.*
 import zio.json.ast.Json
 import zio.json.ast.Json.*

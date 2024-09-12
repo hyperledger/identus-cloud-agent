@@ -23,16 +23,13 @@ spec:
         image: busybox
         command: ['sh', '-c', "until nc -z {{ .Values.database.postgres.managingTeam }}-{{ include "cloud-agent.name" . }}-postgres-cluster.{{ .Release.Namespace }} 5432; do echo waiting for postgress-operator; sleep 2; done;"]
       {{- if .Values.server.keycloak.enabled }}
-      - name: wait-keycloak-ready
-        image: badouralix/curl-jq:ubuntu
-        command: ['/bin/bash', '-c', 'until curl http://{{ .Release.Name }}-keycloak/health/ready; do sleep 2; done && echo "Keycloak is ready."']
       {{- if .Values.server.keycloak.bootstrap }}
       - name: keycloak-bootstrap
-        image: badouralix/curl-jq:ubuntu
-        command: ['/bin/bash', '-c', '/scripts/init.sh']
+        image: oven/bun:1
+        command: ['bun', 'run', '/scripts/init.ts']
         env:
         - name: KEYCLOAK_BASE_URL
-          value: http://{{ .Release.Name }}-keycloak
+          value: {{ .Values.server.keycloak.url }}
         - name: KEYCLOAK_ADMIN_USER
           value: {{ .Values.server.keycloak.admin.username }}
         - name: KEYCLOAK_ADMIN_PASSWORD
@@ -202,7 +199,7 @@ spec:
           - name: KEYCLOAK_ENABLED
             value: "true"
           - name: KEYCLOAK_URL
-            value: http://{{ .Release.Name }}-keycloak
+            value: {{ .Values.server.keycloak.url }}
           - name: KEYCLOAK_REALM
             value: {{ .Values.server.keycloak.realm }}
           - name: KEYCLOAK_CLIENT_ID
@@ -222,8 +219,8 @@ spec:
           name: keycloak-bootstrap-script
           defaultMode: 0500
           items:
-          - key: "init.sh"
-            path: "init.sh"
+          - key: "init.ts"
+            path: "init.ts"
       {{- end }}
       affinity:
         {{- toYaml .Values.affinity | nindent 8 }}

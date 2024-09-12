@@ -12,18 +12,21 @@ import org.hyperledger.identus.castor.core.model.did.{DIDUrl, PrismDID, Verifica
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.issue.controller.http.{
+  AcceptCredentialOfferInvitation,
   AcceptCredentialOfferRequest,
   CreateIssueCredentialRecordRequest,
   IssueCredentialRecord,
   IssueCredentialRecordPage
 }
+import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, ResourceResolutionMethod}
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import org.hyperledger.identus.pollux.core.service.{CredentialDefinitionService, CredentialService}
 import org.hyperledger.identus.shared.crypto.Sha256Hash
+import org.hyperledger.identus.shared.json.Json as JsonUtils
 import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
-import org.hyperledger.identus.shared.utils.{Base64Utils, Json as JsonUtils}
+import org.hyperledger.identus.shared.utils.Base64Utils
 import zio.*
 import zio.json.given
 
@@ -40,16 +43,24 @@ class IssueControllerImpl(
 ) extends IssueController
     with ControllerHelper {
 
-  override def createCredentialOffer(
-      request: CreateIssueCredentialRecordRequest
-  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
+  private case class OfferContext(
+      pairwiseIssuerDID: DidId,
+      pairwiseHolderDID: Option[DidId],
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration]
+  )
+
+  private def createCredentialOfferRecord(
+      request: CreateIssueCredentialRecordRequest,
+      offerContext: OfferContext
+  ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
 
     def getIssuingDidFromRequest(request: CreateIssueCredentialRecordRequest) = extractPrismDIDFromString(
       request.issuingDID
     )
 
     for {
-      didIdPair <- getPairwiseDIDs(request.connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
       jsonClaims <- ZIO // TODO: Get read of Circe and use zio-json all the way down
         .fromEither(io.circe.parser.parse(request.claims.toString()))
         .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
@@ -62,14 +73,18 @@ class IssueControllerImpl(
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
               record <- credentialService
                 .createJWTIssueCredentialRecord(
-                  pairwiseIssuerDID = didIdPair.myDID,
-                  pairwiseHolderDID = didIdPair.theirDid,
+                  pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
+                  pairwiseHolderDID = offerContext.pairwiseHolderDID,
                   thid = DidCommID(),
                   maybeSchemaId = request.schemaId,
                   claims = jsonClaims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-                  issuingDID = issuingDID.asCanonical
+                  issuingDID = issuingDID.asCanonical,
+                  goalCode = offerContext.goalCode,
+                  goal = offerContext.goal,
+                  expirationDuration = offerContext.expirationDuration,
+                  connectionId = request.connectionId
                 )
             } yield record
           case SDJWT =>
@@ -78,14 +93,18 @@ class IssueControllerImpl(
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
               record <- credentialService
                 .createSDJWTIssueCredentialRecord(
-                  pairwiseIssuerDID = didIdPair.myDID,
-                  pairwiseHolderDID = didIdPair.theirDid,
+                  pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
+                  pairwiseHolderDID = offerContext.pairwiseHolderDID,
                   thid = DidCommID(),
                   maybeSchemaId = request.schemaId,
                   claims = jsonClaims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-                  issuingDID = issuingDID.asCanonical
+                  issuingDID = issuingDID.asCanonical,
+                  goalCode = offerContext.goalCode,
+                  goal = offerContext.goal,
+                  expirationDuration = offerContext.expirationDuration,
+                  connectionId = request.connectionId
                 )
             } yield record
           case AnonCreds =>
@@ -135,17 +154,73 @@ class IssueControllerImpl(
               }
               record <- credentialService
                 .createAnonCredsIssueCredentialRecord(
-                  pairwiseIssuerDID = didIdPair.myDID,
-                  pairwiseHolderDID = didIdPair.theirDid,
+                  pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
+                  pairwiseHolderDID = offerContext.pairwiseHolderDID,
                   thid = DidCommID(),
                   credentialDefinitionGUID = credentialDefinitionGUID,
                   credentialDefinitionId = credentialDefinitionId,
                   claims = jsonClaims,
                   validityPeriod = request.validityPeriod,
-                  automaticIssuance = request.automaticIssuance.orElse(Some(true))
+                  automaticIssuance = request.automaticIssuance.orElse(Some(true)),
+                  goalCode = offerContext.goalCode,
+                  goal = offerContext.goal,
+                  expirationDuration = offerContext.expirationDuration,
+                  connectionId = request.connectionId
                 )
             } yield record
+
     } yield IssueCredentialRecord.fromDomain(outcome)
+  }
+
+  override def createCredentialOffer(
+      request: CreateIssueCredentialRecordRequest
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
+
+    for {
+      connectionId <- ZIO
+        .fromOption(request.connectionId)
+        .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing connectionId for credential offer")))
+      didIdPair <- getPairwiseDIDs(connectionId).provideSomeLayer(ZLayer.succeed(connectionService))
+      offerContext = OfferContext(
+        pairwiseIssuerDID = didIdPair.myDID,
+        pairwiseHolderDID = Some(didIdPair.theirDid),
+        goalCode = None,
+        goal = None,
+        expirationDuration = None
+      )
+      result <- createCredentialOfferRecord(request, offerContext)
+    } yield result
+  }
+
+  override def createCredentialOfferInvitation(
+      request: CreateIssueCredentialRecordRequest
+  )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
+    for {
+      peerDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
+      offerContext = OfferContext(
+        pairwiseIssuerDID = peerDid.did,
+        pairwiseHolderDID = None,
+        goalCode = request.goalCode,
+        goal = request.goal,
+        expirationDuration = Some(appConfig.pollux.issuanceInvitationExpiry)
+      )
+      result <- createCredentialOfferRecord(request, offerContext)
+    } yield result
+  }
+
+  def acceptCredentialOfferInvitation(
+      request: AcceptCredentialOfferInvitation
+  )(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
+    for {
+      peerDid <- managedDIDService.createAndStorePeerDID(appConfig.agent.didCommEndpoint.publicEndpointUrl)
+      credentialOffer <- credentialService.getCredentialOfferInvitation(
+        peerDid.did,
+        request.invitation
+      )
+      record <- credentialService.receiveCredentialOffer(credentialOffer)
+    } yield IssueCredentialRecord.fromDomain(record)
   }
 
   override def getCredentialRecords(paginationInput: PaginationInput, thid: Option[String])(implicit

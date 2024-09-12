@@ -21,15 +21,17 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       test("verify aud given valid") {
         for {
           svc <- ZIO.service[VcVerificationService]
-          verifier = DID("did:prism:verifier")
+          verifier = "did:prism:verifier"
           jwtCredentialPayload = W3cCredentialPayload(
             `@context` =
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -58,19 +60,19 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             ),
             maybeEvidence = Option.empty,
             maybeTermsOfUse = Option.empty,
-            aud = Set(verifier.value)
+            aud = Set(verifier)
           ).toJwtCredentialPayload
           signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
           result <-
             svc.verify(
               List(
-                VcVerificationRequest(signedJwtCredential.value, VcVerification.AudienceCheck(verifier.value))
+                VcVerificationRequest(signedJwtCredential.value, VcVerification.AudienceCheck(verifier))
               )
             )
         } yield {
           assertTrue(
             result.contains(
-              VcVerificationResult(signedJwtCredential.value, VcVerification.AudienceCheck(verifier.value), true)
+              VcVerificationResult(signedJwtCredential.value, VcVerification.AudienceCheck(verifier), true)
             )
           )
         }
@@ -84,16 +86,17 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       test("verify aud given invalid") {
         for {
           svc <- ZIO.service[VcVerificationService]
-          issuerDid = DID(issuerDidData.id.toString)
-          verifier = DID("did:prism:verifier")
+          verifier = "did:prism:verifier"
           jwtCredentialPayload = W3cCredentialPayload(
             `@context` =
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -122,19 +125,19 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             ),
             maybeEvidence = Option.empty,
             maybeTermsOfUse = Option.empty,
-            aud = Set(verifier.value)
+            aud = Set(verifier)
           ).toJwtCredentialPayload
           signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
           result <-
             svc.verify(
               List(
-                VcVerificationRequest(signedJwtCredential.value, VcVerification.AudienceCheck(issuer.did.value))
+                VcVerificationRequest(signedJwtCredential.value, VcVerification.AudienceCheck(issuer.did.toString))
               )
             )
         } yield {
           assertTrue(
             result.contains(
-              VcVerificationResult(signedJwtCredential.value, VcVerification.AudienceCheck(issuer.did.value), false)
+              VcVerificationResult(signedJwtCredential.value, VcVerification.AudienceCheck(issuer.did.toString), false)
             )
           )
         }
@@ -148,15 +151,17 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       test("verify signature given valid") {
         for {
           svc <- ZIO.service[VcVerificationService]
-          verifier = DID("did:prism:verifier")
+          verifier = "did:prism:verifier"
           jwtCredentialPayload = W3cCredentialPayload(
             `@context` =
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -185,7 +190,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             ),
             maybeEvidence = Option.empty,
             maybeTermsOfUse = Option.empty,
-            aud = Set(verifier.value)
+            aud = Set(verifier)
           ).toJwtCredentialPayload
           signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
           result <-
@@ -211,15 +216,17 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       test("verify issuer given valid") {
         for {
           svc <- ZIO.service[VcVerificationService]
-          verifier = DID("did:prism:verifier")
+          verifier = "did:prism:verifier"
           jwtCredentialPayload = W3cCredentialPayload(
             `@context` =
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -248,13 +255,16 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             ),
             maybeEvidence = Option.empty,
             maybeTermsOfUse = Option.empty,
-            aud = Set(verifier.value)
+            aud = Set(verifier)
           ).toJwtCredentialPayload
           signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
           result <-
             svc.verify(
               List(
-                VcVerificationRequest(signedJwtCredential.value, VcVerification.IssuerIdentification(issuer.did.value))
+                VcVerificationRequest(
+                  signedJwtCredential.value,
+                  VcVerification.IssuerIdentification(issuer.did.toString)
+                )
               )
             )
         } yield {
@@ -262,7 +272,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             result.contains(
               VcVerificationResult(
                 signedJwtCredential.value,
-                VcVerification.IssuerIdentification(issuer.did.value),
+                VcVerification.IssuerIdentification(issuer.did.toString),
                 true
               )
             )
@@ -278,16 +288,17 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       test("verify issuer given invalid") {
         for {
           svc <- ZIO.service[VcVerificationService]
-          issuerDid = DID(issuerDidData.id.toString)
-          verifier = DID("did:prism:verifier")
+          verifier = "did:prism:verifier"
           jwtCredentialPayload = W3cCredentialPayload(
             `@context` =
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -316,13 +327,13 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             ),
             maybeEvidence = Option.empty,
             maybeTermsOfUse = Option.empty,
-            aud = Set(verifier.value)
+            aud = Set(verifier)
           ).toJwtCredentialPayload
           signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
           result <-
             svc.verify(
               List(
-                VcVerificationRequest(signedJwtCredential.value, VcVerification.IssuerIdentification(verifier.value))
+                VcVerificationRequest(signedJwtCredential.value, VcVerification.IssuerIdentification(verifier))
               )
             )
         } yield {
@@ -330,7 +341,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             result.contains(
               VcVerificationResult(
                 signedJwtCredential.value,
-                VcVerification.IssuerIdentification(verifier.value),
+                VcVerification.IssuerIdentification(verifier),
                 false
               )
             )
@@ -346,16 +357,18 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       test("verify nbf given valid") {
         for {
           svc <- ZIO.service[VcVerificationService]
-          verifier = DID("did:prism:verifier")
+          verifier = "did:prism:verifier"
           currentTime = OffsetDateTime.parse("2010-01-01T00:00:00Z").toOption.get
           jwtCredentialPayload = W3cCredentialPayload(
             `@context` =
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -384,7 +397,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             ),
             maybeEvidence = Option.empty,
             maybeTermsOfUse = Option.empty,
-            aud = Set(verifier.value)
+            aud = Set(verifier)
           ).toJwtCredentialPayload
           signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
           result <-
@@ -410,16 +423,18 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       test("verify nbf given invalid") {
         for {
           svc <- ZIO.service[VcVerificationService]
-          verifier = DID("did:prism:verifier")
+          verifier = "did:prism:verifier"
           currentTime = OffsetDateTime.parse("2010-01-01T00:00:00Z").toOption.get.minusDays(2)
           jwtCredentialPayload = W3cCredentialPayload(
             `@context` =
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -448,7 +463,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             ),
             maybeEvidence = Option.empty,
             maybeTermsOfUse = Option.empty,
-            aud = Set(verifier.value)
+            aud = Set(verifier)
           ).toJwtCredentialPayload
           signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
           result <-
@@ -474,16 +489,18 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       test("verify exp given valid") {
         for {
           svc <- ZIO.service[VcVerificationService]
-          verifier = DID("did:prism:verifier")
+          verifier = "did:prism:verifier"
           currentTime = OffsetDateTime.parse("2010-01-01T00:00:00Z").toOption.get
           jwtCredentialPayload = W3cCredentialPayload(
             `@context` =
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -512,7 +529,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             ),
             maybeEvidence = Option.empty,
             maybeTermsOfUse = Option.empty,
-            aud = Set(verifier.value)
+            aud = Set(verifier)
           ).toJwtCredentialPayload
           signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
           result <-
@@ -538,16 +555,18 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       test("verify exp given invalid") {
         for {
           svc <- ZIO.service[VcVerificationService]
-          verifier = DID("did:prism:verifier")
+          verifier = "did:prism:verifier"
           currentTime = OffsetDateTime.parse("2010-01-12T00:00:00Z").toOption.get
           jwtCredentialPayload = W3cCredentialPayload(
             `@context` =
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = issuer.did,
+            issuer = Left(issuer.did.toString),
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
               CredentialSchema(
                 id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
@@ -576,7 +595,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             ),
             maybeEvidence = Option.empty,
             maybeTermsOfUse = Option.empty,
-            aud = Set(verifier.value)
+            aud = Set(verifier)
           ).toJwtCredentialPayload
           signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
           result <-

@@ -3,7 +3,7 @@ package org.hyperledger.identus.credentialstatus.controller.http
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.credentialstatus.controller.http.StatusListCredential.annotations
 import org.hyperledger.identus.pollux.core.model.CredentialStatusList
-import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose
+import org.hyperledger.identus.pollux.vc.jwt.{CredentialIssuer, StatusPurpose}
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
@@ -22,7 +22,7 @@ case class StatusListCredential(
     `type`: Set[String],
     @description(annotations.issuer.description)
     @encodedExample(annotations.issuer.example)
-    issuer: String,
+    issuer: Either[String, CredentialIssuer],
     @description(annotations.id.description)
     @encodedExample(annotations.id.example)
     id: String,
@@ -150,6 +150,18 @@ object StatusListCredential {
   given instantEncoder: JsonEncoder[Instant] =
     JsonEncoder[Long].contramap(_.getEpochSecond)
 
+  given credentialIssuerEncoder: JsonEncoder[CredentialIssuer] =
+    DeriveJsonEncoder.gen[CredentialIssuer]
+
+  given credentialIssuerDecoder: JsonDecoder[CredentialIssuer] =
+    DeriveJsonDecoder.gen[CredentialIssuer]
+
+  given eitherStringOrCredentialIssuerEncoder: JsonEncoder[Either[String, CredentialIssuer]] =
+    JsonEncoder[String].orElseEither(JsonEncoder[CredentialIssuer])
+
+  given eitherStringOrCredentialIssuerDecoder: JsonDecoder[Either[String, CredentialIssuer]] =
+    JsonDecoder[CredentialIssuer].map(Right(_)).orElse(JsonDecoder[String].map(Left(_)))
+
   given statusListCredentialEncoder: JsonEncoder[StatusListCredential] =
     DeriveJsonEncoder.gen[StatusListCredential]
 
@@ -165,6 +177,8 @@ object StatusListCredential {
   given credentialSubjectSchema: Schema[CredentialSubject] = Schema.derived
 
   given statusPurposeSchema: Schema[StatusPurpose] = Schema.derived
+
+  given credentialIssuerSchema: Schema[CredentialIssuer] = Schema.derived
 
   given statusListCredentialSchema: Schema[StatusListCredential] = Schema.derived
 

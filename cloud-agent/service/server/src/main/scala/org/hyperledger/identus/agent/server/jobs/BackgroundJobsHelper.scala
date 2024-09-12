@@ -15,7 +15,10 @@ import org.hyperledger.identus.castor.core.model.error.DIDResolutionError
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.{AgentPeerService, DidAgent}
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.pollux.core.model.error.PresentationError
+import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
+import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
+import org.hyperledger.identus.pollux.core.model.DidCommID
+import org.hyperledger.identus.pollux.core.service.CredentialService
 import org.hyperledger.identus.pollux.sdjwt.SDJWT.*
 import org.hyperledger.identus.pollux.vc.jwt.{
   DIDResolutionFailed,
@@ -29,6 +32,7 @@ import org.hyperledger.identus.shared.crypto.*
 import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
 import zio.{ZIO, ZLayer}
 
+import java.time.Instant
 import java.util.Base64
 
 trait BackgroundJobsHelper {
@@ -103,7 +107,7 @@ trait BackgroundJobsHelper {
           case Some(Secp256k1KeyPair(publicKey, privateKey)) =>
             ZIO.succeed(
               JwtIssuer(
-                org.hyperledger.identus.pollux.vc.jwt.DID(jwtIssuerDID.toString),
+                jwtIssuerDID.did,
                 ES256KSigner(privateKey.toJavaPrivateKey),
                 publicKey.toJavaPublicKey
               )
@@ -201,5 +205,20 @@ trait BackgroundJobsHelper {
         }
         .mapError(t => PresentationError.PublicKeyDecodingError(t.getMessage))
     } yield ed25519PublicKey
+  }
+
+  def checkInvitationExpiry(
+      id: DidCommID,
+      invitation: Option[Invitation]
+  ): ZIO[CredentialService & WalletAccessContext, CredentialServiceError, Unit] = {
+    invitation.flatMap(_.expires_time) match {
+      case Some(expiryTime) if Instant.now().getEpochSecond > expiryTime =>
+        for {
+          service <- ZIO.service[CredentialService]
+          _ <- service.markCredentialOfferInvitationExpired(id)
+          _ <- ZIO.fail(CredentialServiceError.InvitationExpired(expiryTime))
+        } yield ()
+      case _ => ZIO.unit
+    }
   }
 }

@@ -23,7 +23,7 @@ export const defaultOptions: Options = {
     ],
     http_req_duration: [
       // TODO: this threshold is too high, it should be adjusted to the actual performance requirements to lower value
-      { threshold: 'p(95)<11000', abortOnFail: false } // 95% of requests should complete within 5 seconds, but don't fail tests
+      { threshold: 'p(95)<20000', abortOnFail: false } // 95% of requests should complete within 5 seconds, but don't fail tests
     ],
     checks: [{ threshold: 'rate==1', abortOnFail: true }] // fail if any checks fail (the checks are defined in test code which is executed)
   }

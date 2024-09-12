@@ -19,7 +19,7 @@ trait VcVerificationServiceSpecHelper {
 
   protected val issuer =
     Issuer(
-      did = org.hyperledger.identus.pollux.vc.jwt.DID(issuerDidData.id.did.toString),
+      did = issuerDidData.id.did,
       signer = ES256KSigner(issuerKp.privateKey.toJavaPrivateKey),
       publicKey = issuerKp.publicKey.toJavaPublicKey
     )
@@ -29,7 +29,7 @@ trait VcVerificationServiceSpecHelper {
 
   protected val issuerManagedDIDServiceExpectations: Expectation[ManagedDIDService] =
     MockManagedDIDService.getManagedDIDStateExpectation(issuerOp)
-      ++ MockManagedDIDService.javaKeyPairWithDIDExpectation(issuerKp)
+      ++ MockManagedDIDService.findDIDKeyPairExpectation(issuerKp)
 
   protected val issuerDidResolverLayer: ZLayer[Any, Nothing, PrismDidResolver] = (issuerDidServiceExpectations ++
     issuerManagedDIDServiceExpectations).toLayer >>> ZLayer.fromFunction(PrismDidResolver(_))

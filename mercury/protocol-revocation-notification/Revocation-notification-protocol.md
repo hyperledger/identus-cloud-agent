@@ -1,6 +1,6 @@
 # Revocation notification protocol
 
-This Protocol for an Isuser to notify the revocation of a credential to the holder.
+This Protocol for an Issuer to notify the revocation of a credential to the holder.
 
 
 

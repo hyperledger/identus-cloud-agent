@@ -11,12 +11,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredential
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
-import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.{
-  RecordNotFound,
-  RecordNotFoundForThreadIdAndStates,
-  UnsupportedDidFormat,
-  *
-}
+import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
@@ -58,11 +53,11 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
 
   private val holderManagedDIDServiceExpectations =
     MockManagedDIDService.getManagedDIDStateExpectation(holderOp)
-      ++ MockManagedDIDService.javaKeyPairWithDIDExpectation(holderKp)
+      ++ MockManagedDIDService.findDIDKeyPairExpectation(holderKp)
 
   private val issuerManagedDIDServiceExpectations =
     MockManagedDIDService.getManagedDIDStateExpectation(issuerOp)
-      ++ MockManagedDIDService.javaKeyPairWithDIDExpectation(issuerKp)
+      ++ MockManagedDIDService.findDIDKeyPairExpectation(issuerKp)
 
   private val singleWalletJWTCredentialSpec =
     suite("Single Wallet JWT Credential")(
@@ -74,7 +69,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           for {
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
-            pairwiseHolderDid = DidId("did:peer:HOLDER")
+            pairwiseHolderDid = Some(DidId("did:peer:HOLDER"))
             thid = DidCommID(UUID.randomUUID().toString)
             record <- svc.createJWTIssueCredentialRecord(
               thid = thid,
@@ -133,7 +128,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           for {
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
-            pairwiseHolderDid = DidId("did:peer:HOLDER")
+            pairwiseHolderDid = Some(DidId("did:peer:HOLDER"))
             claims = io.circe.parser
               .parse("""
                 |{
@@ -195,7 +190,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           for {
             svc <- ZIO.service[CredentialService]
             pairwiseIssuerDid = DidId("did:peer:INVITER")
-            pairwiseHolderDid = DidId("did:peer:HOLDER")
+            pairwiseHolderDid = Some(DidId("did:peer:HOLDER"))
             claims = io.circe.parser
               .parse(
                 """

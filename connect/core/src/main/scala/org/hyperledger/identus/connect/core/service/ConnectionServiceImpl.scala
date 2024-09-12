@@ -1,9 +1,9 @@
 package org.hyperledger.identus.connect.core.service
 
 import org.hyperledger.identus.*
+import org.hyperledger.identus.connect.core.model.{ConnectionRecord, ConnectionRecordBeforeStored}
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.*
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.repository.ConnectionRepository
 import org.hyperledger.identus.mercury.model.DidId
@@ -32,9 +32,10 @@ private class ConnectionServiceImpl(
   ): ZIO[WalletAccessContext, UserInputValidationError, ConnectionRecord] =
     for {
       _ <- validateInputs(label, goalCode, goal)
+      wallet <- ZIO.service[WalletAccessContext]
       invitation <- ZIO.succeed(ConnectionInvitation.makeConnectionInvitation(pairwiseDID, goalCode, goal))
       record <- ZIO.succeed(
-        ConnectionRecord(
+        ConnectionRecordBeforeStored(
           id = UUID.fromString(invitation.id),
           createdAt = Instant.now,
           updatedAt = None,
@@ -53,7 +54,7 @@ private class ConnectionServiceImpl(
         )
       )
       count <- connectionRepository.create(record)
-    } yield record
+    } yield record.withWalletId(wallet.walletId)
 
   private def validateInputs(
       label: Option[String],
@@ -109,8 +110,9 @@ private class ConnectionServiceImpl(
         .mapError(err => InvitationParsingError(err.getMessage))
       maybeRecord <- connectionRepository.findByThreadId(invitation.id)
       _ <- ZIO.noneOrFailWith(maybeRecord)(_ => InvitationAlreadyReceived(invitation.id))
+      wallet <- ZIO.service[WalletAccessContext]
       record <- ZIO.succeed(
-        ConnectionRecord(
+        ConnectionRecordBeforeStored(
           id = UUID.randomUUID(),
           createdAt = Instant.now,
           updatedAt = None,
@@ -129,7 +131,7 @@ private class ConnectionServiceImpl(
         )
       )
       _ <- connectionRepository.create(record)
-    } yield record
+    } yield record.withWalletId(wallet.walletId)
 
   override def acceptConnectionInvitation(
       recordId: UUID,

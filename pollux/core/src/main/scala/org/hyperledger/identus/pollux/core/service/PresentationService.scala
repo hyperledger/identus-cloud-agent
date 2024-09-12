@@ -15,36 +15,44 @@ import zio.json.ast
 
 import java.time.Instant
 import java.util.UUID
-import java.util as ju
 
 trait PresentationService {
   def extractIdFromCredential(credential: W3cCredentialPayload): Option[UUID]
 
   def createJwtPresentationRecord(
       pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseProverDID: Option[DidId],
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def createSDJWTPresentationRecord(
       pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseProverDID: Option[DidId],
       thid: DidCommID,
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       claimsToDisclose: ast.Json.Obj,
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def createAnoncredPresentationRecord(
       pairwiseVerifierDID: DidId,
-      pairwiseProverDID: DidId,
+      pairwiseProverDID: Option[DidId],
       thid: DidCommID,
       connectionId: Option[String],
-      presentationRequest: AnoncredPresentationRequestV1
+      presentationRequest: AnoncredPresentationRequestV1,
+      goalCode: Option[String],
+      goal: Option[String],
+      expirationDuration: Option[Duration],
   ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 
   def getPresentationRecords(
@@ -171,4 +179,12 @@ trait PresentationService {
       failReason: Option[Failure]
   ): UIO[Unit]
 
+  def getRequestPresentationFromInvitation(
+      pairwiseProverDID: DidId,
+      invitation: String
+  ): ZIO[WalletAccessContext, PresentationError, RequestPresentation]
+
+  def markPresentationInvitationExpired(
+      recordId: DidCommID
+  ): ZIO[WalletAccessContext, PresentationError, PresentationRecord]
 }

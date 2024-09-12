@@ -81,7 +81,7 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
 
     val id = UUID.randomUUID()
     val issued = Instant.now()
-    val issuerDid = jwtIssuer.did.value
+    val issuerDid = jwtIssuer.did.toString
 
     val credentialWithEmbeddedProof = for {
       bitString <- BitString.getInstance().mapError {

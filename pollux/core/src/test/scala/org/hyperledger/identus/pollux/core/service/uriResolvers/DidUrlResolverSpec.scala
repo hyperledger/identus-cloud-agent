@@ -5,7 +5,8 @@ import io.lemonlabs.uri.Url
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.models.PrismEnvelopeData
-import org.hyperledger.identus.shared.utils.{Base64Utils, Json as JsonUtils}
+import org.hyperledger.identus.shared.utils.Base64Utils
+import org.hyperledger.identus.shared.json.Json as JsonUtils
 import zio.*
 import zio.json.*
 import zio.test.*

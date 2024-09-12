@@ -75,7 +75,7 @@ object OIDCCredentialIssuerServiceSpec
     MockDIDService.resolveDIDExpectation(issuerDidMetadata, issuerDidData)
 
   private val issuerManagedDIDServiceExpectations =
-    MockManagedDIDService.javaKeyPairWithDIDExpectation(issuerKp)
+    MockManagedDIDService.findDIDKeyPairExpectation(issuerKp)
 
   private val getIssuerPrismDidWalletIdExpectations =
     MockDIDNonSecretStorage.getPrismDidWalletIdExpectation(issuerDidData.id, WalletId.default)
@@ -140,7 +140,6 @@ object OIDCCredentialIssuerServiceSpec
               None,
               credentialDefinition
             )
-          _ <- zio.Console.printLine(jwt)
           jwtObject <- ZIO.fromTry(Try(JWSObject.parse(jwt.value)))
           payload <- ZIO.fromEither(Json.decoder.decodeJson(jwtObject.getPayload.toString).flatMap(_.as[Json.Obj]))
           vc <- ZIO.fromEither(payload.get("vc").get.as[Json.Obj])

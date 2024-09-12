@@ -14,9 +14,9 @@ import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.{
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.{ProtocolState, Role}
 import org.hyperledger.identus.connect.core.service.ConnectionService
-import org.hyperledger.identus.mercury.model.DidId
+import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.shared.models.WalletAccessContext
-import zio.{IO, ZIO}
+import zio.*
 
 import java.util.UUID
 import scala.util.Try

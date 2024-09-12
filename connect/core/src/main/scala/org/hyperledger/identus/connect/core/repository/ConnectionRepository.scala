@@ -1,6 +1,6 @@
 package org.hyperledger.identus.connect.core.repository
 
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
+import org.hyperledger.identus.connect.core.model.{ConnectionRecord, ConnectionRecordBeforeStored}
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.ProtocolState
 import org.hyperledger.identus.mercury.protocol.connection.*
 import org.hyperledger.identus.shared.models.{Failure, WalletAccessContext}
@@ -11,7 +11,7 @@ import java.util.UUID
 trait ConnectionRepository {
 
   def create(
-      record: ConnectionRecord
+      record: ConnectionRecordBeforeStored
   ): URIO[WalletAccessContext, Unit]
 
   def findAll: URIO[WalletAccessContext, Seq[ConnectionRecord]]

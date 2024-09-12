@@ -3,7 +3,7 @@ package org.hyperledger.identus.pollux.schema
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import org.hyperledger.identus.agent.walletapi.model.Entity
 import org.hyperledger.identus.container.util.MigrationAspects.*
-import org.hyperledger.identus.pollux.core.model.error.{CredentialSchemaGuidNotFoundError, CredentialSchemaUpdateError}
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaUpdateError
 import org.hyperledger.identus.pollux.core.model.schema.`type`.CredentialJsonSchemaType
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.service.{CredentialSchemaService, CredentialSchemaServiceImpl}

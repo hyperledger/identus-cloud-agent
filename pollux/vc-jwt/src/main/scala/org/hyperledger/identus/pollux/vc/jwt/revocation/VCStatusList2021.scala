@@ -61,7 +61,7 @@ object VCStatusList2021 {
         ),
         maybeId = Some(vcId),
         `type` = Set("VerifiableCredential", "StatusList2021Credential"),
-        issuer = jwtIssuer.did,
+        issuer = Left(jwtIssuer.did.toString),
         issuanceDate = Instant.now,
         maybeExpirationDate = None,
         maybeCredentialSchema = None,
@@ -69,7 +69,9 @@ object VCStatusList2021 {
         maybeCredentialStatus = None,
         maybeRefreshService = None,
         maybeEvidence = None,
-        maybeTermsOfUse = None
+        maybeTermsOfUse = None,
+        maybeValidFrom = None,
+        maybeValidUntil = None
       )
       VCStatusList2021(w3Credential, jwtIssuer)
     }
