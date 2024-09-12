@@ -1137,8 +1137,9 @@ class CredentialServiceImpl(
         issuer = Right(CredentialIssuer(jwtIssuer.did.toString, `type` = "Profile")),
         issuanceDate = issuanceDate,
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
-        maybeCredentialSchema =
-          record.schemaUri.map(id => org.hyperledger.identus.pollux.vc.jwt.CredentialSchema(id, VC_JSON_SCHEMA_TYPE)),
+        maybeCredentialSchema = record.schemaUri.map(id =>
+          Left(org.hyperledger.identus.pollux.vc.jwt.CredentialSchema(id, VC_JSON_SCHEMA_TYPE))
+        ),
         maybeCredentialStatus = Some(credentialStatus),
         credentialSubject = claims.add("id", jwtPresentation.iss.asJson).asJson,
         maybeRefreshService = None,

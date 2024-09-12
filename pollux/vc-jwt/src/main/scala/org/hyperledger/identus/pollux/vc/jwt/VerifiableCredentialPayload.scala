@@ -87,7 +87,7 @@ sealed trait CredentialPayload {
 
   def maybeTermsOfUse: Option[Json]
 
-  def maybeCredentialSchema: Option[CredentialSchema]
+  def maybeCredentialSchema: Option[Either[CredentialSchema, List[CredentialSchema]]]
 
   def credentialSubject: Json
 
@@ -137,7 +137,7 @@ sealed trait CredentialPayload {
 case class JwtVc(
     `@context`: Set[String],
     `type`: Set[String],
-    maybeCredentialSchema: Option[CredentialSchema],
+    maybeCredentialSchema: Option[Either[CredentialSchema, List[CredentialSchema]]],
     credentialSubject: Json,
     maybeValidFrom: Option[Instant],
     maybeValidUntil: Option[Instant],
@@ -177,7 +177,7 @@ case class W3cCredentialPayload(
     issuer: Either[String, CredentialIssuer],
     issuanceDate: Instant,
     maybeExpirationDate: Option[Instant],
-    override val maybeCredentialSchema: Option[CredentialSchema],
+    override val maybeCredentialSchema: Option[Either[CredentialSchema, List[CredentialSchema]]],
     override val credentialSubject: Json,
     override val maybeCredentialStatus: Option[CredentialStatus],
     override val maybeRefreshService: Option[RefreshService],
@@ -241,8 +241,10 @@ object CredentialPayload {
       case Right(issuer) => issuer.asJson
     }
 
-    implicit val eitherStringOrCredentialIssuerDecoder: Decoder[Either[String, CredentialIssuer]] =
-      Decoder[String].map(Left(_)).or(Decoder[CredentialIssuer].map(Right(_)))
+    implicit val eitherCredentialSchemaOrListEncoder: Encoder[Either[CredentialSchema, List[CredentialSchema]]] = {
+      case Left(credentialSchema)   => credentialSchema.asJson
+      case Right(credentialSchemas) => credentialSchemas.asJson
+    }
 
     implicit val w3cCredentialPayloadEncoder: Encoder[W3cCredentialPayload] =
       (w3cCredentialPayload: W3cCredentialPayload) =>
@@ -368,6 +370,14 @@ object CredentialPayload {
           )
         }
 
+    implicit val eitherStringOrCredentialIssuerDecoder: Decoder[Either[String, CredentialIssuer]] =
+      Decoder[String].map(Left(_)).or(Decoder[CredentialIssuer].map(Right(_)))
+
+    implicit val eitherCredentialSchemaOrListDecoder: Decoder[Either[CredentialSchema, List[CredentialSchema]]] =
+      Decoder[CredentialSchema]
+        .map(Left(_))
+        .or(Decoder[List[CredentialSchema]].map(Right(_)))
+
     implicit val w3cCredentialPayloadDecoder: Decoder[W3cCredentialPayload] =
       (c: HCursor) =>
         for {
@@ -385,7 +395,9 @@ object CredentialPayload {
           maybeExpirationDate <- c.downField("expirationDate").as[Option[Instant]]
           maybeValidFrom <- c.downField("validFrom").as[Option[Instant]]
           maybeValidUntil <- c.downField("validUntil").as[Option[Instant]]
-          maybeCredentialSchema <- c.downField("credentialSchema").as[Option[CredentialSchema]]
+          maybeCredentialSchema <- c
+            .downField("credentialSchema")
+            .as[Option[Either[CredentialSchema, List[CredentialSchema]]]]
           credentialSubject <- c.downField("credentialSubject").as[Json]
           maybeCredentialStatus <- c.downField("credentialStatus").as[Option[CredentialStatus]]
           maybeRefreshService <- c.downField("refreshService").as[Option[RefreshService]]
@@ -422,7 +434,9 @@ object CredentialPayload {
             .downField("type")
             .as[Set[String]]
             .orElse(c.downField("type").as[String].map(Set(_)))
-          maybeCredentialSchema <- c.downField("credentialSchema").as[Option[CredentialSchema]]
+          maybeCredentialSchema <- c
+            .downField("credentialSchema")
+            .as[Option[Either[CredentialSchema, List[CredentialSchema]]]]
           credentialSubject <- c.downField("credentialSubject").as[Json]
           maybeCredentialStatus <- c.downField("credentialStatus").as[Option[CredentialStatus]]
           maybeRefreshService <- c.downField("refreshService").as[Option[RefreshService]]
