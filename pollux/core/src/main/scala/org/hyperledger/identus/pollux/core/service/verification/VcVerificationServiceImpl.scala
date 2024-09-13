@@ -53,12 +53,18 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
           ZIO
             .fromOption(decodedJwt.maybeCredentialSchema)
             .mapError(error => VcVerificationServiceError.UnexpectedError(s"Missing Credential Schema: $error"))
-        result <- CredentialSchema
-          .validSchemaValidator(
-            credentialSchema.id,
-            uriDereferencer
+        credentialSchemas = credentialSchema.fold(List(_), identity)
+        result <-
+          ZIO.collectAll(
+            credentialSchemas.map(credentialSchema =>
+              CredentialSchema
+                .validSchemaValidator(
+                  credentialSchema.id,
+                  uriDereferencer
+                )
+                .mapError(error => VcVerificationServiceError.UnexpectedError(s"Schema Validator Failed: $error"))
+            )
           )
-          .mapError(error => VcVerificationServiceError.UnexpectedError(s"Schema Validator Failed: $error"))
       } yield result
 
     result
@@ -91,14 +97,20 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
           ZIO
             .fromOption(decodedJwt.maybeCredentialSchema)
             .mapError(error => VcVerificationServiceError.UnexpectedError(s"Missing Credential Schema: $error"))
-        result <- CredentialSchema
-          .validateJWTCredentialSubject(
-            credentialSchema.id,
-            decodedJwt.credentialSubject.noSpaces,
-            uriDereferencer
-          )
-          .mapError(error =>
-            VcVerificationServiceError.UnexpectedError(s"JWT Credential Subject Validation Failed: $error")
+        credentialSchemas = credentialSchema.fold(List(_), identity)
+        result <-
+          ZIO.collectAll(
+            credentialSchemas.map(credentialSchema =>
+              CredentialSchema
+                .validateJWTCredentialSubject(
+                  credentialSchema.id,
+                  decodedJwt.credentialSubject.noSpaces,
+                  uriDereferencer
+                )
+                .mapError(error =>
+                  VcVerificationServiceError.UnexpectedError(s"JWT Credential Subject Validation Failed: $error")
+                )
+            )
           )
       } yield result
 
