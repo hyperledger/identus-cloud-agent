@@ -239,7 +239,7 @@ private class PresentationServiceImpl(
       )
       presentationPayload <- createAnoncredPresentationPayloadFromCredential(
         issuedCredentials,
-        issuedValidCredentials.flatMap(_.schemaUri),
+        issuedValidCredentials.flatMap(_.schemaUris.getOrElse(List())),
         issuedValidCredentials.flatMap(_.credentialDefinitionUri),
         requestPresentation,
         anoncredCredentialProof.credentialProofs

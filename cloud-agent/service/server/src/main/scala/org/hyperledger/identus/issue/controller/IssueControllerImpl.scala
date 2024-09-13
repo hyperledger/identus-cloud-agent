@@ -1,5 +1,6 @@
 package org.hyperledger.identus.issue.controller
 
+import cats.Applicative
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.ControllerHelper
 import org.hyperledger.identus.agent.walletapi.model.PublicationState
@@ -11,13 +12,7 @@ import org.hyperledger.identus.api.util.PaginationUtils
 import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.core.service.ConnectionService
-import org.hyperledger.identus.issue.controller.http.{
-  AcceptCredentialOfferInvitation,
-  AcceptCredentialOfferRequest,
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecord,
-  IssueCredentialRecordPage
-}
+import org.hyperledger.identus.issue.controller.http.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
@@ -48,6 +43,7 @@ class IssueControllerImpl(
       request: CreateIssueCredentialRecordRequest,
       offerContext: OfferContext
   ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
+
     for {
       jsonClaims <- ZIO
         .fromEither(io.circe.parser.parse(request.claims.toString()))
@@ -69,7 +65,7 @@ class IssueControllerImpl(
                 pairwiseHolderDID = offerContext.pairwiseHolderDID,
                 kidIssuer = request.issuingKid,
                 thid = DidCommID(),
-                maybeSchemaId = request.schemaId,
+                maybeSchemaIds = Applicative[Option].map2(request.schemaIds, request.schemaId.map(List(_)))(_ ++ _),
                 claims = jsonClaims,
                 validityPeriod = request.validityPeriod,
                 automaticIssuance = request.automaticIssuance.orElse(Some(true)),
@@ -94,7 +90,7 @@ class IssueControllerImpl(
                 pairwiseHolderDID = offerContext.pairwiseHolderDID,
                 kidIssuer = request.issuingKid,
                 thid = DidCommID(),
-                maybeSchemaId = request.schemaId,
+                maybeSchemaIds = request.schemaId.map(List(_)),
                 claims = jsonClaims,
                 validityPeriod = request.validityPeriod,
                 automaticIssuance = request.automaticIssuance.orElse(Some(true)),

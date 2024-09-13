@@ -79,7 +79,7 @@ trait CredentialRepository {
       recordId: DidCommID,
       issue: IssueCredential,
       issuedRawCredential: String,
-      schemaUri: Option[String],
+      schemaUris: Option[List[String]],
       credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit]

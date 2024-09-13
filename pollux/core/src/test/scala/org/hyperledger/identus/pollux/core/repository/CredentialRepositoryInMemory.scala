@@ -104,7 +104,7 @@ class CredentialRepositoryInMemory(
       recordId: DidCommID,
       issue: IssueCredential,
       issuedRawCredential: String,
-      schemaUri: Option[String],
+      schemaUris: Option[List[String]],
       credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit] = {
@@ -117,7 +117,7 @@ class CredentialRepositoryInMemory(
           recordId,
           record.copy(
             updatedAt = Some(Instant.now),
-            schemaUri = schemaUri,
+            schemaUris = schemaUris,
             credentialDefinitionUri = credentialDefinitionUri,
             issueCredentialData = Some(issue),
             issuedCredentialRaw = Some(issuedRawCredential),
@@ -155,7 +155,7 @@ class CredentialRepositoryInMemory(
         recordId.contains(
           rec.id
         ) && rec.issueCredentialData.isDefined
-          && rec.schemaUri.isDefined
+          && rec.schemaUris.isDefined
           && rec.credentialDefinitionUri.isDefined
           && rec.credentialFormat == CredentialFormat.AnonCreds
       )
@@ -164,7 +164,7 @@ class CredentialRepositoryInMemory(
           rec.id,
           rec.issueCredentialData,
           rec.credentialFormat,
-          rec.schemaUri,
+          rec.schemaUris,
           rec.credentialDefinitionUri,
           rec.subjectId,
           rec.keyId,
