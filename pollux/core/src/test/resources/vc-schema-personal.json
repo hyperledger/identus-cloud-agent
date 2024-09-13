@@ -17,16 +17,10 @@
           "type": "integer"
         }
       },
-      "required": [
-        "email",
-        "userName",
-        "age"
-      ],
+      "required": ["email", "userName", "age"],
       "additionalProperties": false
     }
   },
-  "required": [
-    "credentialSubject"
-  ],
+  "required": ["credentialSubject"],
   "additionalProperties": false
 }
