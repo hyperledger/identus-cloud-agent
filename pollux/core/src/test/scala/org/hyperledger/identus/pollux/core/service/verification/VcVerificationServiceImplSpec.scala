@@ -33,9 +33,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              CredentialSchema(
-                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                `type` = "JsonSchemaValidator2018"
+              Left(
+                CredentialSchema(
+                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                  `type` = "JsonSchemaValidator2018"
+                )
               )
             ),
             credentialSubject = Json.obj(
@@ -98,9 +100,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              CredentialSchema(
-                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                `type` = "JsonSchemaValidator2018"
+              Left(
+                CredentialSchema(
+                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                  `type` = "JsonSchemaValidator2018"
+                )
               )
             ),
             credentialSubject = Json.obj(
@@ -163,9 +167,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              CredentialSchema(
-                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                `type` = "JsonSchemaValidator2018"
+              Left(
+                CredentialSchema(
+                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                  `type` = "JsonSchemaValidator2018"
+                )
               )
             ),
             credentialSubject = Json.obj(
@@ -228,9 +234,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              CredentialSchema(
-                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                `type` = "JsonSchemaValidator2018"
+              Left(
+                CredentialSchema(
+                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                  `type` = "JsonSchemaValidator2018"
+                )
               )
             ),
             credentialSubject = Json.obj(
@@ -300,9 +308,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              CredentialSchema(
-                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                `type` = "JsonSchemaValidator2018"
+              Left(
+                CredentialSchema(
+                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                  `type` = "JsonSchemaValidator2018"
+                )
               )
             ),
             credentialSubject = Json.obj(
@@ -354,6 +364,157 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
+      test("verify schema given single schema") {
+        for {
+          svc <- ZIO.service[VcVerificationService]
+          verifier = "did:prism:verifier"
+          jwtCredentialPayload = W3cCredentialPayload(
+            `@context` =
+              Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
+            maybeId = Some("http://example.edu/credentials/3732"),
+            `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
+            issuer = Left(issuer.did.toString),
+            issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
+            maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeCredentialSchema = Some(
+              Left(
+                CredentialSchema(
+                  id = "resource:///vc-schema-personal.json",
+                  `type` = "JsonSchemaValidator2018"
+                )
+              )
+            ),
+            credentialSubject = Json.obj(
+              "userName" -> Json.fromString("Alice"),
+              "age" -> Json.fromInt(42),
+              "email" -> Json.fromString("alice@wonderland.com")
+            ),
+            maybeCredentialStatus = Some(
+              CredentialStatus(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "StatusList2021Entry",
+                statusPurpose = StatusPurpose.Revocation,
+                statusListIndex = 0,
+                statusListCredential = "https://example.com/credentials/status/3"
+              )
+            ),
+            maybeRefreshService = Some(
+              RefreshService(
+                id = "https://example.edu/refresh/3732",
+                `type` = "ManualRefreshService2018"
+              )
+            ),
+            maybeEvidence = Option.empty,
+            maybeTermsOfUse = Option.empty,
+            aud = Set(verifier)
+          ).toJwtCredentialPayload
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          result <-
+            svc.verify(
+              List(
+                VcVerificationRequest(signedJwtCredential.value, VcVerification.SchemaCheck)
+              )
+            )
+        } yield {
+          assertTrue(
+            result.contains(
+              VcVerificationResult(
+                signedJwtCredential.value,
+                VcVerification.SchemaCheck,
+                true
+              )
+            )
+          )
+        }
+      }.provideSomeLayer(
+        MockDIDService.empty ++
+          MockManagedDIDService.empty ++
+          ResourceUrlResolver.layer >+>
+          someVcVerificationServiceLayer ++
+          ZLayer.succeed(WalletAccessContext(WalletId.random))
+      ),
+      test("verify schema given multiple schema") {
+        for {
+          svc <- ZIO.service[VcVerificationService]
+          verifier = "did:prism:verifier"
+          jwtCredentialPayload = W3cCredentialPayload(
+            `@context` =
+              Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
+            maybeId = Some("http://example.edu/credentials/3732"),
+            `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
+            issuer = Left(issuer.did.toString),
+            issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
+            maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
+            maybeCredentialSchema = Some(
+              Right(
+                List(
+                  CredentialSchema(
+                    id = "resource:///vc-schema-personal.json",
+                    `type` = "JsonSchemaValidator2018"
+                  ),
+                  CredentialSchema(
+                    id = "resource:///vc-schema-driver-license.json",
+                    `type` = "JsonSchemaValidator2018"
+                  )
+                )
+              )
+            ),
+            credentialSubject = Json.obj(
+              "userName" -> Json.fromString("Alice"),
+              "age" -> Json.fromInt(42),
+              "email" -> Json.fromString("alice@wonderland.com"),
+              "dateOfIssuance" -> Json.fromString("2000-01-01T10:00:00Z"),
+              "drivingLicenseID" -> Json.fromInt(12345),
+              "drivingClass" -> Json.fromString("5")
+            ),
+            maybeCredentialStatus = Some(
+              CredentialStatus(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "StatusList2021Entry",
+                statusPurpose = StatusPurpose.Revocation,
+                statusListIndex = 0,
+                statusListCredential = "https://example.com/credentials/status/3"
+              )
+            ),
+            maybeRefreshService = Some(
+              RefreshService(
+                id = "https://example.edu/refresh/3732",
+                `type` = "ManualRefreshService2018"
+              )
+            ),
+            maybeEvidence = Option.empty,
+            maybeTermsOfUse = Option.empty,
+            aud = Set(verifier)
+          ).toJwtCredentialPayload
+          signedJwtCredential = issuer.signer.encode(jwtCredentialPayload.asJson)
+          result <-
+            svc.verify(
+              List(
+                VcVerificationRequest(signedJwtCredential.value, VcVerification.SchemaCheck)
+              )
+            )
+        } yield {
+          assertTrue(
+            result.contains(
+              VcVerificationResult(
+                signedJwtCredential.value,
+                VcVerification.SchemaCheck,
+                true
+              )
+            )
+          )
+        }
+      }.provideSomeLayer(
+        MockDIDService.empty ++
+          MockManagedDIDService.empty ++
+          ResourceUrlResolver.layer >+>
+          someVcVerificationServiceLayer ++
+          ZLayer.succeed(WalletAccessContext(WalletId.random))
+      ),
       test("verify nbf given valid") {
         for {
           svc <- ZIO.service[VcVerificationService]
@@ -370,9 +531,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              CredentialSchema(
-                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                `type` = "JsonSchemaValidator2018"
+              Left(
+                CredentialSchema(
+                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                  `type` = "JsonSchemaValidator2018"
+                )
               )
             ),
             credentialSubject = Json.obj(
@@ -436,9 +599,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              CredentialSchema(
-                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                `type` = "JsonSchemaValidator2018"
+              Left(
+                CredentialSchema(
+                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                  `type` = "JsonSchemaValidator2018"
+                )
               )
             ),
             credentialSubject = Json.obj(
@@ -502,9 +667,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              CredentialSchema(
-                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                `type` = "JsonSchemaValidator2018"
+              Left(
+                CredentialSchema(
+                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                  `type` = "JsonSchemaValidator2018"
+                )
               )
             ),
             credentialSubject = Json.obj(
@@ -568,9 +735,11 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              CredentialSchema(
-                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                `type` = "JsonSchemaValidator2018"
+              Left(
+                CredentialSchema(
+                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                  `type` = "JsonSchemaValidator2018"
+                )
               )
             ),
             credentialSubject = Json.obj(

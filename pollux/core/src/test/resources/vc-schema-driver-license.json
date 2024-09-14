@@ -6,16 +6,6 @@
     "credentialSubject": {
       "type": "object",
       "properties": {
-        "emailAddress": {
-          "type": "string",
-          "format": "email"
-        },
-        "givenName": {
-          "type": "string"
-        },
-        "familyName": {
-          "type": "string"
-        },
         "dateOfIssuance": {
           "type": "string",
           "format": "date-time"
@@ -27,13 +17,7 @@
           "type": "integer"
         }
       },
-      "required": [
-        "emailAddress",
-        "familyName",
-        "dateOfIssuance",
-        "drivingLicenseID",
-        "drivingClass"
-      ],
+      "required": ["dateOfIssuance", "drivingLicenseID", "drivingClass"],
       "additionalProperties": false
     }
   },

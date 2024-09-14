@@ -47,17 +47,23 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriResolver: UriResolv
         decodedJwt <-
           JwtCredential
             .decodeJwt(JWT(credential))
-            .mapError(error => VcVerificationServiceError.UnexpectedError(s"Unable decode JWT: $error"))
+            .mapError(error => VcVerificationServiceError.UnexpectedError(s"Unable to decode JWT: $error"))
         credentialSchema <-
           ZIO
             .fromOption(decodedJwt.maybeCredentialSchema)
             .mapError(error => VcVerificationServiceError.UnexpectedError(s"Missing Credential Schema: $error"))
-        result <- CredentialSchema
-          .validSchemaValidator(
-            credentialSchema.id,
-            uriResolver
+        credentialSchemas = credentialSchema.fold(List(_), identity)
+        result <-
+          ZIO.collectAll(
+            credentialSchemas.map(credentialSchema =>
+              CredentialSchema
+                .validSchemaValidator(
+                  credentialSchema.id,
+                  uriResolver
+                )
+                .mapError(error => VcVerificationServiceError.UnexpectedError(s"Schema Validator Failed: $error"))
+            )
           )
-          .mapError(error => VcVerificationServiceError.UnexpectedError(s"Schema Validator Failed: $error"))
       } yield result
 
     result
@@ -90,14 +96,20 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriResolver: UriResolv
           ZIO
             .fromOption(decodedJwt.maybeCredentialSchema)
             .mapError(error => VcVerificationServiceError.UnexpectedError(s"Missing Credential Schema: $error"))
-        result <- CredentialSchema
-          .validateJWTCredentialSubject(
-            credentialSchema.id,
-            decodedJwt.credentialSubject.noSpaces,
-            uriResolver
-          )
-          .mapError(error =>
-            VcVerificationServiceError.UnexpectedError(s"JWT Credential Subject Validation Failed: $error")
+        credentialSchemas = credentialSchema.fold(List(_), identity)
+        result <-
+          ZIO.collectAll(
+            credentialSchemas.map(credentialSchema =>
+              CredentialSchema
+                .validateJWTCredentialSubject(
+                  credentialSchema.id,
+                  decodedJwt.credentialSubject.noSpaces,
+                  uriResolver
+                )
+                .mapError(error =>
+                  VcVerificationServiceError.UnexpectedError(s"JWT Credential Subject Validation Failed: $error")
+                )
+            )
           )
       } yield result
 
