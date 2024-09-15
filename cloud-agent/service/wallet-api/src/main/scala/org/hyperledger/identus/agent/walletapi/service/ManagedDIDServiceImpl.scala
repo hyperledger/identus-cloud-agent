@@ -8,6 +8,7 @@ import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService.DEFAULT
 import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.agent.walletapi.util.*
 import org.hyperledger.identus.castor.core.model.did.*
+import org.hyperledger.identus.castor.core.model.did.Service as DidDocumentService
 import org.hyperledger.identus.castor.core.model.error.DIDOperationError
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
@@ -24,6 +25,7 @@ import scala.language.implicitConversions
   * indy-wallet-sdk.
   */
 class ManagedDIDServiceImpl private[walletapi] (
+    defaultDidDocumentServices: Set[DidDocumentService],
     didService: DIDService,
     didOpValidator: DIDOperationValidator,
     private[walletapi] val secretStorage: DIDSecretStorage,
@@ -53,6 +55,8 @@ class ManagedDIDServiceImpl private[walletapi] (
 
   def syncUnconfirmedUpdateOperations: ZIO[WalletAccessContext, GetManagedDIDError, Unit] =
     syncUnconfirmedUpdateOperationsByDID(did = None)
+
+  override protected def getDefaultDidDocumentServices: Set[DidDocumentService] = defaultDidDocumentServices
 
   override def findDIDKeyPair(
       did: CanonicalPrismDID,
@@ -125,9 +129,10 @@ class ManagedDIDServiceImpl private[walletapi] (
   ): ZIO[WalletAccessContext, CreateManagedDIDError, LongFormPrismDID] = {
     val effect = for {
       _ <- ZIO
-        .fromEither(ManagedDIDTemplateValidator.validate(didTemplate))
+        .fromEither(ManagedDIDTemplateValidator.validate(didTemplate, defaultDidDocumentServices))
         .mapError(CreateManagedDIDError.InvalidArgument.apply)
-      material <- didCreateHandler.materialize(didTemplate)
+      newDidTemplate = didTemplate.copy(services = didTemplate.services ++ defaultDidDocumentServices)
+      material <- didCreateHandler.materialize(newDidTemplate)
       _ <- ZIO
         .fromEither(didOpValidator.validate(material.operation))
         .mapError(CreateManagedDIDError.InvalidOperation.apply)
@@ -361,11 +366,13 @@ class ManagedDIDServiceImpl private[walletapi] (
 object ManagedDIDServiceImpl {
 
   val layer: RLayer[
-    DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage & WalletSecretStorage & Apollo,
+    Set[DidDocumentService] & DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage &
+      WalletSecretStorage & Apollo,
     ManagedDIDService
   ] = {
     ZLayer.fromZIO {
       for {
+        defaultDidDocumentServices <- ZIO.service[Set[DidDocumentService]]
         didService <- ZIO.service[DIDService]
         didOpValidator <- ZIO.service[DIDOperationValidator]
         secretStorage <- ZIO.service[DIDSecretStorage]
@@ -374,6 +381,7 @@ object ManagedDIDServiceImpl {
         apollo <- ZIO.service[Apollo]
         createDIDSem <- Semaphore.make(1)
       } yield ManagedDIDServiceImpl(
+        defaultDidDocumentServices,
         didService,
         didOpValidator,
         secretStorage,

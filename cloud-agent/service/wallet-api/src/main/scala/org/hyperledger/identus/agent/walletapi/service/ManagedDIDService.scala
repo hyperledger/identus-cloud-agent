@@ -17,6 +17,8 @@ trait ManagedDIDService {
 
   private[walletapi] def nonSecretStorage: DIDNonSecretStorage
 
+  protected def getDefaultDidDocumentServices: Set[Service] = Set.empty
+
   def syncManagedDIDState: ZIO[WalletAccessContext, GetManagedDIDError, Unit]
 
   def syncUnconfirmedUpdateOperations: ZIO[WalletAccessContext, GetManagedDIDError, Unit]
