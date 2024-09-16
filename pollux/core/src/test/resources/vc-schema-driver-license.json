@@ -11,16 +11,16 @@
           "format": "date-time"
         },
         "drivingLicenseID": {
-          "type": "string"
+          "type": "integer"
         },
         "drivingClass": {
           "type": "integer"
         }
       },
       "required": ["dateOfIssuance", "drivingLicenseID", "drivingClass"],
-      "additionalProperties": false
+      "additionalProperties": true
     }
   },
   "required": ["credentialSubject"],
-  "additionalProperties": false
+  "additionalProperties": true
 }
