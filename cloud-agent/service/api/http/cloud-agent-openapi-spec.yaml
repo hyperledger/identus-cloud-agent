@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Identus Cloud Agent API Reference
-  version: 1.38.0
+  version: 1.39.0
   description: |2
 
     The Identus Cloud Agent API facilitates the integration and management of self-sovereign identity capabilities within applications.
@@ -270,6 +270,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -456,6 +462,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -501,6 +513,12 @@ paths:
                 $ref: '#/components/schemas/CredentialSchemaResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -574,6 +592,12 @@ paths:
                 $ref: '#/components/schemas/CredentialSchemaResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -741,6 +765,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -784,6 +814,12 @@ paths:
                 $ref: '#/components/schemas/VerificationPolicyResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -833,6 +869,12 @@ paths:
                 $ref: '#/components/schemas/VerificationPolicyResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -904,6 +946,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -950,6 +998,12 @@ paths:
           description: Verification policy deleted successfully
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -1329,6 +1383,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -1434,6 +1494,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -1491,6 +1557,12 @@ paths:
                 $ref: '#/components/schemas/DIDOperationResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -1676,6 +1748,115 @@ paths:
       responses:
         '201':
           description: The issue credential record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueCredentialRecord'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /issue-credentials/credential-offers/invitation:
+    post:
+      tags:
+      - Issue Credentials Protocol
+      summary: As a credential issuer, create a new credential offer Invitation that
+        will be delivered as out-of-band to a peer Agent.
+      description: "\nCreates a new credential offer invitation to be delivered as\
+        \ an out-of-band message. \nThe invitation message adheres to the OOB specification\
+        \ as outlined [here](https://identity.foundation/didcomm-messaging/spec/#invitation),\n\
+        with the credential offer message attached according to the [Issue Credential\
+        \ Protocol 3.0 - Offer Credential specification](https://github.com/decentralized-identity/waci-didcomm/tree/main/issue_credential#offer-credential).\n\
+        The created offer attachment can be of three types: 'JWT', 'AnonCreds', or\
+        \ 'SDJWT'.\n"
+      operationId: createCredentialOfferInvitation
+      requestBody:
+        description: The credential offer object.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIssueCredentialRecordRequest'
+        required: true
+      responses:
+        '201':
+          description: The issue credential record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueCredentialRecord'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /issue-credentials/credential-offers/accept-invitation:
+    post:
+      tags:
+      - Issue Credentials Protocol
+      summary: As a holder, accept a new credential offer invitation received from
+        another issuer Agent.
+      description: |2
+
+        As a holder, accept a new credential offer invitation received from an issuer Agent.
+        The credential offer request message from issuer is decoded and processed. New record with RequestReceived state is created.
+      operationId: acceptCredentialOfferInvitation
+      requestBody:
+        description: The accept credential offer Invitation OOB message.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptCredentialOfferInvitation'
+        required: true
+      responses:
+        '200':
+          description: The issue credential offer Invitation was successfully accepted,
+            and new record with RequestReceived state is returned in the response
+            body.
           content:
             application/json:
               schema:
@@ -2078,6 +2259,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -2124,6 +2311,12 @@ paths:
                 $ref: '#/components/schemas/PresentationStatus'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -2180,6 +2373,12 @@ paths:
                 $ref: '#/components/schemas/PresentationStatus'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -2246,6 +2445,142 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /present-proof/presentations/invitation:
+    post:
+      tags:
+      - Present Proof
+      summary: As a Verifier, create a new OOB Invitation as proof presentation request
+        that can be delivered out-of-band to a invitee/prover.
+      description: |2
+
+        Create a new presentation request invitation that can be delivered out-of-band to a peer Agent, regardless of whether it resides in Cloud Agent or edge environment.
+        The generated invitation adheres to the DIDComm Messaging v2.0 - [Out of Band Messages](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages) specification [section 9.5.4](https://identity.foundation/didcomm-messaging/spec/v2.0/#invitation).
+        The <b>from</b> field of the out-of-band invitation message contains a freshly generated Peer DID that complies with the [did:peer:2](https://identity.foundation/peer-did-method-spec/#generating-a-didpeer2) specification.
+        This Peer DID includes the 'uri' location of the DIDComm messaging service, essential for the prover's subsequent execution of the connection flow.
+        In the Agent database, the created presentation record has an initial state set to `InvitationGenerated`.
+        The invitation is in the form of a presentation request (as described https://github.com/decentralized-identity/waci-didcomm/blob/main/present_proof/present-proof-v3.md), which is included as an attachment in the OOB DIDComm message sent to the invitee/prover.
+      operationId: createOOBRequestPresentationInvitation
+      requestBody:
+        description: The present proof creation request.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestPresentationInput'
+        required: true
+      responses:
+        '201':
+          description: The proof presentation request invitation was created successfully
+            and that can be delivered as out-of-band to a peer Agent..
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentationStatus'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Resource could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unable to process the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - apiKeyAuth: []
+      - jwtAuth: []
+  /present-proof/presentations/accept-invitation:
+    post:
+      tags:
+      - Present Proof
+      summary: Decode the invitation extract Request Presentation and Create the proof
+        presentation record with RequestReceived state.
+      description: Accept Invitation for request presentation
+      operationId: acceptRequestPresentationInvitation
+      requestBody:
+        description: The action to perform on the proof presentation request invitation.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptRequestPresentationInvitation'
+        required: true
+      responses:
+        '200':
+          description: The proof presentation record was successfully updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentationStatus'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -2300,6 +2635,12 @@ paths:
                   $ref: '#/components/schemas/VcVerificationResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -2427,6 +2768,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -2471,6 +2818,12 @@ paths:
                 $ref: '#/components/schemas/EntityResponse'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -2536,6 +2889,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -2597,6 +2956,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -2652,6 +3017,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -2698,6 +3069,12 @@ paths:
           description: Entity deleted successfully
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -2752,6 +3129,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -2797,6 +3180,12 @@ paths:
           description: The new `apikey` is successfully unregistered for the entity
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -2866,6 +3255,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -2918,6 +3313,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -2964,6 +3365,12 @@ paths:
                 $ref: '#/components/schemas/WalletDetail'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -3029,6 +3436,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -3083,6 +3496,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -3124,6 +3543,12 @@ paths:
                 $ref: '#/components/schemas/WebhookNotificationPage'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -3222,6 +3647,12 @@ paths:
           description: Webhook notification has been deleted.
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -3346,6 +3777,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -3399,6 +3836,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -3445,6 +3888,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -3483,9 +3932,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CredentialIssuer'
+                $ref: '#/components/schemas/CredentialIssuer1'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -3537,6 +3992,12 @@ paths:
           description: Credential issuer deleted successfully
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -3594,9 +4055,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CredentialIssuer'
+                $ref: '#/components/schemas/CredentialIssuer1'
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -3666,6 +4133,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -3728,6 +4201,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
@@ -3781,6 +4260,12 @@ paths:
           description: Credential configuration deleted successfully
         '400':
           description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -3869,6 +4354,15 @@ components:
           type: string
           description: The base64-encoded raw out-of-band invitation.
           example: eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
+    AcceptCredentialOfferInvitation:
+      required:
+      - invitation
+      type: object
+      properties:
+        invitation:
+          type: string
+          description: The base64-encoded raw invitation.
+          example: eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
     AcceptCredentialOfferRequest:
       type: object
       properties:
@@ -3886,6 +4380,15 @@ components:
             The short-form subject Prism DID to which the JWT verifiable credential will be issued.
             This parameter only applies if the offer is of type 'JWT'.
           example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
+    AcceptRequestPresentationInvitation:
+      required:
+      - invitation
+      type: object
+      properties:
+        invitation:
+          type: string
+          description: The base64-encoded raw invitation.
+          example: eyJAaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYiLCJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvbXktZmFtaWx5LzEuMC9teS1tZXNzYWdlLXR5cGUiLCJkaWQiOiJXZ1d4cXp0ck5vb0c5MlJYdnhTVFd2IiwiaW1hZ2VVcmwiOiJodHRwOi8vMTkyLjE2OC41Ni4xMDEvaW1nL2xvZ28uanBnIiwibGFiZWwiOiJCb2IiLCJyZWNpcGllbnRLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInJvdXRpbmdLZXlzIjpbIkgzQzJBVnZMTXY2Z21NTmFtM3VWQWpacGZrY0pDd0R3blpuNnozd1htcVBWIl0sInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly8xOTIuMTY4LjU2LjEwMTo4MDIwIn0=
     ActionType:
       type: string
       enum:
@@ -4149,6 +4652,8 @@ components:
             record
           format: int32
           example: 5
+        metaLastFailure:
+          $ref: '#/components/schemas/ErrorResponse'
         self:
           type: string
           description: The reference to the connection resource.
@@ -4298,7 +4803,6 @@ components:
     CreateIssueCredentialRecordRequest:
       required:
       - claims
-      - connectionId
       type: object
       properties:
         validityPeriod:
@@ -4357,8 +4861,24 @@ components:
             The unique identifier of a DIDComm connection that already exists between the this issuer agent and the holder cloud or edeg agent.
             It should be the identifier of a connection that exists in the issuer agent's database.
             This connection will be used to execute the issue credential protocol.
+            Note: connectionId is only required when the offer is from existing connection.
+            connectionId is not required when the offer is from invitation for connectionless issuance.
           format: uuid
           example: d9569cec-c81e-4779-aa86-0d5994d82676
+        goalCode:
+          type: string
+          description: |2
+
+             A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.
+             goalcode is optional and can be provided when the offer is from invitation for connectionless issuance.
+          example: issue-vc
+        goal:
+          type: string
+          description: |2
+
+             A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.
+             goal is optional and can be provided when the offer is from invitation for connectionless issuance.
+          example: To issue a Faber College Graduate credential
     CreateManagedDIDResponse:
       required:
       - longFormDid
@@ -4705,6 +5225,13 @@ components:
     CredentialIssuer:
       required:
       - id
+      type: object
+      properties:
+        id:
+          type: string
+    CredentialIssuer1:
+      required:
+      - id
       - authorizationServerUrl
       type: object
       properties:
@@ -4733,7 +5260,7 @@ components:
         contents:
           type: array
           items:
-            $ref: '#/components/schemas/CredentialIssuer'
+            $ref: '#/components/schemas/CredentialIssuer1'
     CredentialOfferRequest:
       required:
       - credentialConfigurationId
@@ -5373,6 +5900,37 @@ components:
         c_nonce_expires_in:
           type: integer
           format: int32
+    IssueCredentialOfferInvitation:
+      required:
+      - id
+      - type
+      - from
+      - invitationUrl
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the invitation. It should be used
+            as parent thread ID (pthid) for the Connection Request message that follows.
+          format: uuid
+          example: 0527aea1-d131-3948-a34d-03af39aba8b4
+        type:
+          type: string
+          description: The DIDComm Message Type URI (MTURI) the invitation message
+            complies with.
+          example: https://didcomm.org/out-of-band/2.0/invitation
+        from:
+          type: string
+          description: The DID representing the sender to be used by recipients for
+            future interactions.
+          example: did:peer:1234457
+        invitationUrl:
+          type: string
+          description: The invitation message encoded as a URL. This URL follows the
+            Out of [Band 2.0 protocol](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages)
+            and can be used to generate a QR code for example.
+          example: https://my.domain.com/path?_oob=eyJpZCI6ImY5NmUzNjk5LTU5MWMtNGFlNy1iNWU2LTZlZmU2ZDI2MjU1YiIsInR5cGUiOiJodHRwczovL2RpZGNvbW0ub3JnL291dC1vZi1iYW5kLzIuMC9pbnZpdGF0aW9uIiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNmc0tNZTh2U1NXa1lkWkNwbjRZVmlQRVJmZEdBaGRMQUdIZ3gyTEdKd2ZtQS5WejZNa3B3MWtTYWJCTXprQTN2NTl0UUZuaDNGdGtLeTZ4TGhMeGQ5UzZCQW9hQmcyLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TXpjNk9EQTRNQzlrYVdSamIyMXRJaXdpY2lJNlcxMHNJbUVpT2xzaVpHbGtZMjl0YlM5Mk1pSmRmWDAiLCJib2R5Ijp7ImdvYWxfY29kZSI6Imlzc3VlLXZjIiwiZ29hbCI6IlRvIGlzc3VlIGEgRmFiZXIgQ29sbGVnZSBHcmFkdWF0ZSBjcmVkZW50aWFsIiwiYWNjZXB0IjpbImRpZGNvbW0vdjIiXX0sImF0dGFjaG1lbnRzIjpbeyJpZCI6IjcwY2RjOTBjLTlhOTktNGNkYS04N2ZlLTRmNGIyNTk1MTEyYSIsIm1lZGlhX3R5cGUiOiJhcHBsaWNhdGlvbi9qc29uIiwiZGF0YSI6eyJqc29uIjp7ImlkIjoiNjU1ZTlhMmMtNDhlZC00NTliLWIzZGEtNmIzNjg2NjU1NTY0IiwidHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvaXNzdWUtY3JlZGVudGlhbC8zLjAvb2ZmZXItY3JlZGVudGlhbCIsImJvZHkiOnsiZ29hbF9jb2RlIjoiT2ZmZXIgQ3JlZGVudGlhbCIsImNyZWRlbnRpYWxfcHJldmlldyI6eyJ0eXBlIjoiaHR0cHM6Ly9kaWRjb21tLm9yZy9pc3N1ZS1jcmVkZW50aWFsLzMuMC9jcmVkZW50aWFsLWNyZWRlbnRpYWwiLCJib2R5Ijp7ImF0dHJpYnV0ZXMiOlt7Im5hbWUiOiJmYW1pbHlOYW1lIiwidmFsdWUiOiJXb25kZXJsYW5kIn0seyJuYW1lIjoiZ2l2ZW5OYW1lIiwidmFsdWUiOiJBbGljZSJ9LHsibmFtZSI6ImRyaXZpbmdDbGFzcyIsInZhbHVlIjoiTXc9PSIsIm1lZGlhX3R5cGUiOiJhcHBsaWNhdGlvbi9qc29uIn0seyJuYW1lIjoiZGF0ZU9mSXNzdWFuY2UiLCJ2YWx1ZSI6IjIwMjAtMTEtMTNUMjA6MjA6MzkrMDA6MDAifSx7Im5hbWUiOiJlbWFpbEFkZHJlc3MiLCJ2YWx1ZSI6ImFsaWNlQHdvbmRlcmxhbmQuY29tIn0seyJuYW1lIjoiZHJpdmluZ0xpY2Vuc2VJRCIsInZhbHVlIjoiMTIzNDUifV19fX0sImF0dGFjaG1lbnRzIjpbeyJpZCI6Ijg0MDQ2NzhiLTlhMzYtNDk4OS1hZjFkLTBmNDQ1MzQ3ZTBlMyIsIm1lZGlhX3R5cGUiOiJhcHBsaWNhdGlvbi9qc29uIiwiZGF0YSI6eyJqc29uIjp7Im9wdGlvbnMiOnsiY2hhbGxlbmdlIjoiYWQwZjQzYWQtODUzOC00MWQ0LTljYjgtMjA5NjdiYzY4NWJjIiwiZG9tYWluIjoiZG9tYWluIn0sInByZXNlbnRhdGlvbl9kZWZpbml0aW9uIjp7ImlkIjoiNzQ4ZWZhNTgtMmJjZS00NDBkLTkyMWYtMjUyMGE4NDQ2NjYzIiwiaW5wdXRfZGVzY3JpcHRvcnMiOltdLCJmb3JtYXQiOnsiand0Ijp7ImFsZyI6WyJFUzI1NksiXSwicHJvb2ZfdHlwZSI6W119fX19fSwiZm9ybWF0IjoicHJpc20vand0In1dLCJ0aGlkIjoiZjk2ZTM2OTktNTkxYy00YWU3LWI1ZTYtNmVmZTZkMjYyNTViIiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNmc0tNZTh2U1NXa1lkWkNwbjRZVmlQRVJmZEdBaGRMQUdIZ3gyTEdKd2ZtQS5WejZNa3B3MWtTYWJCTXprQTN2NTl0UUZuaDNGdGtLeTZ4TGhMeGQ5UzZCQW9hQmcyLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TXpjNk9EQTRNQzlrYVdSamIyMXRJaXdpY2lJNlcxMHNJbUVpT2xzaVpHbGtZMjl0YlM5Mk1pSmRmWDAifX19XSwiY3JlYXRlZF90aW1lIjoxNzI0ODUxMTM5LCJleHBpcmVzX3RpbWUiOjE3MjQ4NTE0Mzl9=
+      description: The invitation for this Offer Credential
     IssueCredentialRecord:
       required:
       - recordId
@@ -5441,7 +5999,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2024-07-15T12:05:35.865441004Z'
+          example: '2024-09-11T13:22:27.796180424Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -5473,6 +6031,8 @@ components:
           - ProblemReportPending
           - ProblemReportSent
           - ProblemReportReceived
+          - InvitationExpired
+          - InvitationGenerated
         credential:
           type: string
           description: The base64-encoded credential that was issued by the issuer
@@ -5485,12 +6045,32 @@ components:
             The short-form issuer Prism DID by which the JWT verifiable credential will be or has been issued.
             Note that this parameter only applies when the offer is type 'JWT'.
           example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
+        goalCode:
+          type: string
+          description: A self-attested code the receiver may want to display to the
+            user or use in automatically deciding what to do with the out-of-band
+            message.
+          example: issue-vc
+        goal:
+          type: string
+          description: A self-attested string that the receiver may want to display
+            to the user about the context-specific goal of the out-of-band message.
+          example: To issue a Faber College Graduate credential
+        myDid:
+          type: string
+          description: The DID representing me as the inviter or invitee in this specific
+            connection.
+          example: did:peer:12345
+        invitation:
+          $ref: '#/components/schemas/IssueCredentialOfferInvitation'
         metaRetries:
           type: integer
           description: The maximum background processing attempts remaining for this
             record.
           format: int32
           example: 5
+        metaLastFailure:
+          $ref: '#/components/schemas/ErrorResponse'
     IssueCredentialRecordPage:
       required:
       - kind
@@ -5710,6 +6290,37 @@ components:
       properties:
         value:
           type: number
+    OOBPresentationInvitation:
+      required:
+      - id
+      - type
+      - from
+      - invitationUrl
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the invitation. It should be used
+            as parent thread ID (pthid) for the Connection Request message that follows.
+          format: uuid
+          example: 0527aea1-d131-3948-a34d-03af39aba8b4
+        type:
+          type: string
+          description: The DIDComm Message Type URI (MTURI) the invitation message
+            complies with.
+          example: https://didcomm.org/out-of-band/2.0/invitation
+        from:
+          type: string
+          description: The DID representing the sender to be used by recipients for
+            future interactions.
+          example: did:peer:1234457
+        invitationUrl:
+          type: string
+          description: The invitation message encoded as a URL. This URL follows the
+            Out of [Band 2.0 protocol](https://identity.foundation/didcomm-messaging/spec/v2.0/#out-of-band-messages)
+            and can be used to generate a QR code for example.
+          example: https://my.domain.com/path?_oob=eyJpZCI6IjViMjUwMjIzLWExNDItNDRmYi1hOWJkLWU1MjBlNGI0ZjQzMiIsInR5cGUiOiJodHRwczovL2RpZGNvbW0ub3JnL291dC1vZi1iYW5kLzIuMC9pbnZpdGF0aW9uIiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNkV0hWQ1BFOHc0NWZETjM4aUh0ZFJ6WGkyTFNqQmRSUjRGTmNOUm12VkNKcy5WejZNa2Z2aUI5S1F1OGlnNVZpeG1HZHM3dmdMNmoyUXNOUGFybkZaanBNQ0E5aHpQLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TXpjNk9EQTNNQzlrYVdSamIyMXRJaXdpY2lJNlcxMHNJbUVpT2xzaVpHbGtZMjl0YlM5Mk1pSmRmWDAiLCJib2R5Ijp7ImdvYWxfY29kZSI6InByZXNlbnQtdnAiLCJnb2FsIjoiUmVxdWVzdCBwcm9vZiBvZiB2YWNjaW5hdGlvbiBpbmZvcm1hdGlvbiIsImFjY2VwdCI6W119LCJhdHRhY2htZW50cyI6W3siaWQiOiIyYTZmOGM4NS05ZGE3LTRkMjQtOGRhNS0wYzliZDY5ZTBiMDEiLCJtZWRpYV90eXBlIjoiYXBwbGljYXRpb24vanNvbiIsImRhdGEiOnsianNvbiI6eyJpZCI6IjI1NTI5MTBiLWI0NmMtNDM3Yy1hNDdhLTlmODQ5OWI5ZTg0ZiIsInR5cGUiOiJodHRwczovL2RpZGNvbW0uYXRhbGFwcmlzbS5pby9wcmVzZW50LXByb29mLzMuMC9yZXF1ZXN0LXByZXNlbnRhdGlvbiIsImJvZHkiOnsiZ29hbF9jb2RlIjoiUmVxdWVzdCBQcm9vZiBQcmVzZW50YXRpb24iLCJ3aWxsX2NvbmZpcm0iOmZhbHNlLCJwcm9vZl90eXBlcyI6W119LCJhdHRhY2htZW50cyI6W3siaWQiOiJiYWJiNTJmMS05NDUyLTQzOGYtYjk3MC0yZDJjOTFmZTAyNGYiLCJtZWRpYV90eXBlIjoiYXBwbGljYXRpb24vanNvbiIsImRhdGEiOnsianNvbiI6eyJvcHRpb25zIjp7ImNoYWxsZW5nZSI6IjExYzkxNDkzLTAxYjMtNGM0ZC1hYzM2LWIzMzZiYWI1YmRkZiIsImRvbWFpbiI6Imh0dHBzOi8vcHJpc20tdmVyaWZpZXIuY29tIn0sInByZXNlbnRhdGlvbl9kZWZpbml0aW9uIjp7ImlkIjoiMGNmMzQ2ZDItYWY1Ny00Y2E1LTg2Y2EtYTA1NTE1NjZlYzZmIiwiaW5wdXRfZGVzY3JpcHRvcnMiOltdfX19LCJmb3JtYXQiOiJwcmlzbS9qd3QifV0sInRoaWQiOiI1YjI1MDIyMy1hMTQyLTQ0ZmItYTliZC1lNTIwZTRiNGY0MzIiLCJmcm9tIjoiZGlkOnBlZXI6Mi5FejZMU2RXSFZDUEU4dzQ1ZkROMzhpSHRkUnpYaTJMU2pCZFJSNEZOY05SbXZWQ0pzLlZ6Nk1rZnZpQjlLUXU4aWc1Vml4bUdkczd2Z0w2ajJRc05QYXJuRlpqcE1DQTloelAuU2V5SjBJam9pWkcwaUxDSnpJanA3SW5WeWFTSTZJbWgwZEhBNkx5OHhPVEl1TVRZNExqRXVNemM2T0RBM01DOWthV1JqYjIxdElpd2ljaUk2VzEwc0ltRWlPbHNpWkdsa1kyOXRiUzkyTWlKZGZYMCJ9fX1dLCJjcmVhdGVkX3RpbWUiOjE3MjQzMzkxNDQsImV4cGlyZXNfdGltZSI6MTcyNDMzOTQ0NH0=
+      description: The invitation for this Request Presentation
     Obj:
       type: object
     Options:
@@ -5807,6 +6418,8 @@ components:
           - ProblemReportPending
           - ProblemReportSent
           - ProblemReportReceived
+          - InvitationGenerated
+          - InvitationReceived
         proofs:
           type: array
           items:
@@ -5820,17 +6433,43 @@ components:
             type: string
           description: The list of proofs presented by the prover to the verifier.
           example: []
+        requestData:
+          type: array
+          items:
+            type: string
+          description: The list of request presented by the verifier to the prover.
+          example: []
         connectionId:
           type: string
           description: The unique identifier of an established connection between
             the verifier and the prover.
           example: bc528dc8-69f1-4c5a-a508-5f8019047900
+        goalCode:
+          type: string
+          description: A self-attested code the receiver may want to display to the
+            user or use in automatically deciding what to do with the out-of-band
+            message.
+          example: present-vp
+        goal:
+          type: string
+          description: A self-attested string that the receiver may want to display
+            to the user about the context-specific goal of the out-of-band message.
+          example: To verify a Peter College Graduate credential
+        myDid:
+          type: string
+          description: The DID representing me as the inviter or invitee in this specific
+            connection.
+          example: did:peer:12345
+        invitation:
+          $ref: '#/components/schemas/OOBPresentationInvitation'
         metaRetries:
           type: integer
           description: The maximum background processing attempts remaining for this
             record
           format: int32
           example: 5
+        metaLastFailure:
+          $ref: '#/components/schemas/ErrorResponse'
     PresentationStatusPage:
       required:
       - self
@@ -5850,6 +6489,7 @@ components:
             status: RequestSent
             proofs: []
             data: []
+            requestData: []
             connectionId: e0d81be9-47ca-4e0b-b8a7-325e8c3abc2f
             metaRetries: 5
           - presentationId: d22158b0-c650-48ea-be85-2920a845ef26
@@ -5858,6 +6498,7 @@ components:
             status: RequestReceived
             proofs: []
             data: []
+            requestData: []
             metaRetries: 5
           - presentationId: fd3f5e54-fae9-4f72-9413-ec66aab83a57
             thid: 6b42fd91-4c98-40ae-a371-a1fd1a39e05e
@@ -5865,6 +6506,7 @@ components:
             status: PresentationPending
             proofs: []
             data: []
+            requestData: []
             metaRetries: 5
           - presentationId: e56dd3e0-79d0-45f4-ba6c-ff857211b07b
             thid: 6b42fd91-4c98-40ae-a371-a1fd1a39e05e
@@ -5873,7 +6515,22 @@ components:
             proofs: []
             data:
             - '{"claimsToDisclose":{"emailAddress":{},"givenName":{}},"presentation":"{\"protected\":\"eyJhbGciOiJFZERTQSJ9\",\"payload\":\"eyJfc2QiOlsiMGl4d0tIV0dzbzFvZThFR0hQd2tGYW9EZE1TRFQ3SmgyNkZGSm1ZbGRnRSIsIjQ4VlFXZS1tcjBibHMyOWpicHFKeDNxX2dYY0k5N3dHcEpsZnRoNXQwMGciLCI0Wk9xanFNZVNUVHRKQTNJRExsc3ZXN0dTNzRIemNxY3N2NVFoZk1valE4IiwiUjhGRE0ydXB1V09mNmVJMVA5ckNPdG12c3puVWFFYXpncVNuN0JfeTE0MCIsIlU5MmpfUHlpcHN2TERNQTlDaVRWbnl3bUFzYTM4S2lDWm5TeVhyUE5mNG8iLCJldFB1Mmc5ajdRd01rZ3g5VnpEX1RnNTNUV3UydVpadk1KeHRnNEJ1WGJBIiwidGV3RG1LWklNcS10bUNrMkpqZU0wajNYbU1aUUFLN01heENVNlF4dm9OMCJdLCJfc2RfYWxnIjoic2hhLTI1NiIsImlzcyI6ImRpZDpwcmlzbToxMmEzOWI1YWEwZTcxODI3ZmMxYzYwMjg1ZDVlZWJjMTk0Yjg2NzFhYTJmY2QxZDM2NDBkMGYwMTBlMzliZmVlIiwiaWF0IjoxNzE3NDEwMzgzLCJleHAiOjE3MjAwMDIzODN9\",\"signature\":\"953FfSRU_0Y2q0ERrFPzbXJ_hkF0YQe5efwESaZwtXDCn8aanD3MUstp3lzqGZkhvcWRdtCCpIxzhy0zgKwLBg\",\"disclosures\":[\"WyI0SHF6MDZCeG5fRlJMb2hWX2lWNXp3IiwgImdpdmVuTmFtZSIsICJBbGljZSJd\",\"WyJLUnNYYU01c3NXZTl4UEhqQnNjT213IiwgImVtYWlsQWRkcmVzcyIsICJhbGljZUB3b25kZXJsYW5kLmNvbSJd\"],\"kb_jwt\":null}"}'
+            requestData: []
             connectionId: e0d81be9-47ca-4e0b-b8a7-325e8c3abc2f
+            metaRetries: 5
+          - presentationId: 938bfc23-f78d-4734-9bf3-6dccf300856f
+            thid: 04112f4d-e894-4bff-a706-85b3e7190a2c
+            role: Verifier
+            status: InvitationGenerated
+            proofs: []
+            data: []
+            requestData: []
+            myDid: did:peer:veriferPeerDID1234567890
+            invitation:
+              id: 04112f4d-e894-4bff-a706-85b3e7190a2c
+              type: didcomm/aip2;rfc0048/invitation
+              from: did:peer:veriferPeerDID1234567890
+              invitationUrl: http://localhost:8000/present-proof/invitation?_oob=eyJpZCI6ImU2M2JkNzQ1LWZjYzYtNGQ0My05NjgzLTY4MjUyOTNlYTgxNiIsInR5cGUiOiJodHRwczovL2RpZGNvbW0ub3JnL291dC1vZi1iYW5kLzIuMC9pbnZpdGF0aW9uIiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNoOWFSQmRFQlV6WkFRSzN5VnFBRnRYS0pVMVZ1cUZlMVd1U1ZRcnRvRGROZi5WejZNa3NCWmZkc3U4UmFxWjNmdjlBdkJ0elVGd1VyaW5td0xRODFNVjVoc29td2JZLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TVRrNU9qZ3dOekF2Wkdsa1kyOXRiU0lzSW5JaU9sdGRMQ0poSWpwYkltUnBaR052YlcwdmRqSWlYWDE5IiwiYm9keSI6eyJnb2FsX2NvZGUiOiJwcmVzZW50LXZwIiwiZ29hbCI6IlJlcXVlc3QgcHJvb2Ygb2YgdmFjY2luYXRpb24gaW5mb3JtYXRpb24iLCJhY2NlcHQiOltdfSwiYXR0YWNobWVudHMiOlt7ImlkIjoiZTE5ZjNkNmMtY2U2Ni00Y2EwLWI1ZWUtZDBiY2ZhOGI1MTc3IiwibWVkaWFfdHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJkYXRhIjp7Impzb24iOnsiaWQiOiIxYjMwYzRjZi05MmVjLTQwOTMtYWFlOC1hZDk3NmIzODljY2MiLCJ0eXBlIjoiaHR0cHM6Ly9kaWRjb21tLmF0YWxhcHJpc20uaW8vcHJlc2VudC1wcm9vZi8zLjAvcmVxdWVzdC1wcmVzZW50YXRpb24iLCJib2R5Ijp7ImdvYWxfY29kZSI6IlJlcXVlc3QgUHJvb2YgUHJlc2VudGF0aW9uIiwid2lsbF9jb25maXJtIjpmYWxzZSwicHJvb2ZfdHlwZXMiOltdfSwiYXR0YWNobWVudHMiOlt7ImlkIjoiNDBiZjcyNzUtMDNkNS00MjI1LWFlYjAtMzhhZDYyODhhMThkIiwibWVkaWFfdHlwZSI6ImFwcGxpY2F0aW9uL2pzb24iLCJkYXRhIjp7Impzb24iOnsib3B0aW9ucyI6eyJjaGFsbGVuZ2UiOiIxMWM5MTQ5My0wMWIzLTRjNGQtYWMzNi1iMzM2YmFiNWJkZGYiLCJkb21haW4iOiJodHRwczovL3ByaXNtLXZlcmlmaWVyLmNvbSJ9LCJwcmVzZW50YXRpb25fZGVmaW5pdGlvbiI6eyJpZCI6IjkyODkyMjJmLWY3ZmItNDk4Yi1iMmE0LTNlODdiNzdiMzk5ZiIsImlucHV0X2Rlc2NyaXB0b3JzIjpbXX19fSwiZm9ybWF0IjoicHJpc20vand0In1dLCJ0aGlkIjoiZTYzYmQ3NDUtZmNjNi00ZDQzLTk2ODMtNjgyNTI5M2VhODE2IiwiZnJvbSI6ImRpZDpwZWVyOjIuRXo2TFNoOWFSQmRFQlV6WkFRSzN5VnFBRnRYS0pVMVZ1cUZlMVd1U1ZRcnRvRGROZi5WejZNa3NCWmZkc3U4UmFxWjNmdjlBdkJ0elVGd1VyaW5td0xRODFNVjVoc29td2JZLlNleUowSWpvaVpHMGlMQ0p6SWpwN0luVnlhU0k2SW1oMGRIQTZMeTh4T1RJdU1UWTRMakV1TVRrNU9qZ3dOekF2Wkdsa1kyOXRiU0lzSW5JaU9sdGRMQ0poSWpwYkltUnBaR052YlcwdmRqSWlYWDE5In19fV19
             metaRetries: 5
         self:
           type: string
@@ -6120,16 +6777,33 @@ components:
           description: The credential format (default to 'JWT')
           example: JWT
     RequestPresentationInput:
-      required:
-      - connectionId
       type: object
       properties:
+        goalCode:
+          type: string
+          description: |2
+
+             A self-attested code the receiver may want to display to the user or use in automatically deciding what to do with the out-of-band message.
+             goalcode is optional and can be provided when the presentation request is from invitation for connectionless verification.
+          example: present-vp
+        goal:
+          type: string
+          description: |2
+
+             A self-attested string that the receiver may want to display to the user about the context-specific goal of the out-of-band message.
+             goal is optional and can be provided when the presentation request is from invitation for connectionless verification.
+          example: Request proof of vaccine
         connectionId:
           type: string
-          description: The unique identifier of an established connection between
-            the verifier and the prover.
+          description: |2
+
+            The unique identifier of a DIDComm connection that already exists between the this verifier agent and the prover cloud or edeg agent.
+            It should be the identifier of a connection that exists in the verifier agent's database.
+            This connection will be used to execute the present proof protocol.
+            Note: connectionId is only required when the presentation request is from existing connection.
+            connectionId is not required when the presentation request is from invitation for connectionless issuance.
           format: uuid
-          example: bc528dc8-69f1-4c5a-a508-5f8019047900
+          example: d9569cec-c81e-4779-aa86-0d5994d82676
         options:
           $ref: '#/components/schemas/Options'
         proofs:
@@ -6202,9 +6876,11 @@ components:
           - VerifiableCredential
           - StatusList2021Credential
         issuer:
-          type: string
           description: DID of the issuer of status list credential
           example: did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a
+          oneOf:
+          - $ref: '#/components/schemas/CredentialIssuer'
+          - type: string
         id:
           type: string
           description: Unique identifier of status list credential
@@ -6213,7 +6889,7 @@ components:
           type: string
           description: Issuance timestamp of status list credential
           format: date-time
-          example: '2024-07-15T12:05:35.908034143Z'
+          example: '2024-09-11T13:22:27.866328096Z'
         credentialSubject:
           $ref: '#/components/schemas/CredentialSubject'
         proof:

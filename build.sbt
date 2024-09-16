@@ -817,7 +817,7 @@ lazy val polluxPreX = project
   .in(file("pollux/prex"))
   .settings(commonSetttings)
   .settings(name := "pollux-prex")
-  .dependsOn(shared, sharedJson)
+  .dependsOn(shared, sharedJson, polluxVcJWT)
 
 // ########################
 // ### Pollux Anoncreds ###

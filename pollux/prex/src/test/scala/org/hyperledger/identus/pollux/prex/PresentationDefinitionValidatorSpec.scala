@@ -4,6 +4,7 @@ import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.*
 import org.hyperledger.identus.pollux.prex.PresentationDefinitionError.{
+  DuplicatedDescriptorId,
   InvalidFilterJsonPath,
   InvalidFilterJsonSchema,
   JsonSchemaOptionNotSupported
@@ -134,7 +135,34 @@ object PresentationDefinitionValidatorSpec extends ZIOSpecDefault {
           .map(_.presentation_definition)
         exit <- validator.validate(pd).exit
       } yield assert(exit)(failsWithA[InvalidFilterJsonPath])
-    }
+    },
+    test("reject when descriptor id is not unique") {
+      val pdJson =
+        """{
+          |  "presentation_definition": {
+          |    "id": "32f54163-7166-48f1-93d8-ff217bdb0653",
+          |    "input_descriptors": [
+          |      {
+          |        "id": "wa_driver_license",
+          |        "constraints": {}
+          |      },
+          |      {
+          |        "id": "wa_driver_license",
+          |        "constraints": {}
+          |      }
+          |    ]
+          |  }
+          |}
+          """.stripMargin
+
+      for {
+        validator <- ZIO.service[PresentationDefinitionValidator]
+        pd <- ZIO
+          .fromEither(decode[ExampleTransportEnvelope](pdJson))
+          .map(_.presentation_definition)
+        exit <- validator.validate(pd).exit
+      } yield assert(exit)(failsWithA[DuplicatedDescriptorId])
+    },
   )
     .provide(PresentationDefinitionValidatorImpl.layer)
 

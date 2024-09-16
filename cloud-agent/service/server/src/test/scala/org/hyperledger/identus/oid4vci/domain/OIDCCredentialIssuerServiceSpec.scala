@@ -215,6 +215,6 @@ object OIDCCredentialIssuerServiceSpec
         MockDIDNonSecretStorage.empty,
         getCredentialConfigurationExpectations.toLayer,
         layers
-      )
+      ),
     )
 }
