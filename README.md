@@ -34,8 +34,9 @@ As a result, you can concentrate on crafting self-sovereign identity solutions u
 * DIDComm V2
 * W3C-compliant `did:prism` and `did:peer` methods
 * Credential types
-  * JWT
-  * AnonCreds (coming soon)
+  * JWT-VC
+  * SD-JWT-VC
+  * AnonCreds
 * HTTP events notification
 * Cardano as a distributed ledger
 * Secrets management with Hashicorp vault
