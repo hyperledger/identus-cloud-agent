@@ -1,5 +1,6 @@
 package org.hyperledger.identus.agent.server.jobs
 
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, WalletManagementService}
 import org.hyperledger.identus.shared.messaging.{Message, MessagingService, Producer}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext, WalletId}
@@ -30,12 +31,16 @@ object DIDStateSyncBackgroundJobs {
       .fork
       .unit
 
-  val didPublicationStateSyncHandler = MessagingService.consume(
-    groupId = "identus-cloud-agent",
-    topicName = TOPIC_NAME,
-    consumerCount = 5,
-    DIDStateSyncBackgroundJobs.handleMessage
-  )
+  val didPublicationStateSyncHandler = for {
+    appConfig <- ZIO.service[AppConfig]
+    consumerCount = appConfig.agent.kafka.consumers.didStateSyncConsumerCount
+    _ <- MessagingService.consume(
+      groupId = "identus-cloud-agent",
+      topicName = TOPIC_NAME,
+      consumerCount = consumerCount,
+      DIDStateSyncBackgroundJobs.handleMessage
+    )
+  } yield ()
 
   private def handleMessage(message: Message[WalletId, WalletId]): RIO[ManagedDIDService, Unit] = {
     val effect = for {

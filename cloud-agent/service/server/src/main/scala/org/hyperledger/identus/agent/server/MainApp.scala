@@ -149,8 +149,16 @@ object MainApp extends ZIOAppDefault {
       appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
       messagingServiceLayer <-
         if (appConfig.agent.kafka.enabled) {
+          val kafkaConfig = appConfig.agent.kafka
           ZIO.succeed(
-            ZKafkaMessagingServiceImpl.layer(List("kafka:9092"))
+            ZKafkaMessagingServiceImpl.layer(
+              kafkaConfig.bootstrapServers.split(',').toList,
+              kafkaConfig.consumers.autoCreateTopics,
+              kafkaConfig.consumers.maxPollRecords,
+              kafkaConfig.consumers.maxPollInterval,
+              kafkaConfig.consumers.pollTimeout,
+              kafkaConfig.consumers.rebalanceSafeCommits
+            )
           )
         } else {
           ZIO.succeed(

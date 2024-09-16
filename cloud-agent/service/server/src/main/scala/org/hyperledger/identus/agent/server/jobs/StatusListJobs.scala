@@ -39,12 +39,16 @@ object StatusListJobs extends BackgroundJobsHelper {
     } yield ()).debug.fork
   }
 
-  val statusListSyncHandler = messaging.MessagingService.consume(
-    groupId = "identus-cloud-agent",
-    topicName = TOPIC_NAME,
-    consumerCount = 5,
-    StatusListJobs.handleMessage
-  )
+  val statusListSyncHandler = for {
+    appConfig <- ZIO.service[AppConfig]
+    consumerCount = appConfig.agent.kafka.consumers.statusListSyncConsumerCount
+    _ <- messaging.MessagingService.consume(
+      groupId = "identus-cloud-agent",
+      topicName = TOPIC_NAME,
+      consumerCount = consumerCount,
+      StatusListJobs.handleMessage
+    )
+  } yield ()
 
   private def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
     DIDService & ManagedDIDService & CredentialService & DidOps & DIDResolver & HttpClient &

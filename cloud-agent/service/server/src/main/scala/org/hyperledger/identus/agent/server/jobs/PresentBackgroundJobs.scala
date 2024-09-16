@@ -33,18 +33,15 @@ import org.hyperledger.identus.shared.http.*
 import org.hyperledger.identus.shared.messaging
 import org.hyperledger.identus.shared.messaging.{Message, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.messaging.MessagingService.RetryStep
-import org.hyperledger.identus.shared.models.*
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{Failure, *}
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
-import zio.json.*
-import zio.json.ast.Json
 import zio.metrics.*
 import zio.prelude.Validation
 import zio.prelude.ZValidation.{Failure as ZFailure, *}
 
-import java.time.{Clock, Instant, ZoneId}
+import java.time.{Instant, ZoneId}
 import java.util.UUID
 
 object PresentBackgroundJobs extends BackgroundJobsHelper {
@@ -62,17 +59,21 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
   private val TOPIC_NAME = "present"
 
-  val presentFlowsHandler = messaging.MessagingService.consumeWithRetryStrategy(
-    "identus-cloud-agent",
-    PresentBackgroundJobs.handleMessage,
-    Seq(
-      RetryStep(TOPIC_NAME, 5, 0.seconds, s"$TOPIC_NAME-retry-1"),
-      RetryStep(s"$TOPIC_NAME-retry-1", 5, 2.seconds, s"$TOPIC_NAME-retry-2"),
-      RetryStep(s"$TOPIC_NAME-retry-2", 5, 4.seconds, s"$TOPIC_NAME-retry-3"),
-      RetryStep(s"$TOPIC_NAME-retry-3", 5, 8.seconds, s"$TOPIC_NAME-retry-4"),
-      RetryStep(s"$TOPIC_NAME-retry-4", 5, 16.seconds, s"$TOPIC_NAME-DLQ")
+  val presentFlowsHandler = for {
+    appConfig <- ZIO.service[AppConfig]
+    consumerCount = appConfig.agent.kafka.consumers.presentConsumerCount
+    _ <- messaging.MessagingService.consumeWithRetryStrategy(
+      "identus-cloud-agent",
+      PresentBackgroundJobs.handleMessage,
+      Seq(
+        RetryStep(TOPIC_NAME, consumerCount, 0.seconds, s"$TOPIC_NAME-retry-1"),
+        RetryStep(s"$TOPIC_NAME-retry-1", consumerCount, 2.seconds, s"$TOPIC_NAME-retry-2"),
+        RetryStep(s"$TOPIC_NAME-retry-2", consumerCount, 4.seconds, s"$TOPIC_NAME-retry-3"),
+        RetryStep(s"$TOPIC_NAME-retry-3", consumerCount, 8.seconds, s"$TOPIC_NAME-retry-4"),
+        RetryStep(s"$TOPIC_NAME-retry-4", consumerCount, 16.seconds, s"$TOPIC_NAME-DLQ")
+      )
     )
-  )
+  } yield ()
 
   private def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
     RESOURCES,

@@ -4,7 +4,6 @@ import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.iam.authentication.AuthenticationConfig
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.db.DbConfig
-import zio.config.*
 import zio.config.magnolia.*
 import zio.Config
 
@@ -164,7 +163,29 @@ final case class DefaultWalletConfig(
     authApiKey: String
 )
 
-final case class DefaultKafkaConfig(enabled: Boolean)
+final case class KafkaConfig(enabled: Boolean, bootstrapServers: String, consumers: KafkaConsumersConfig)
+
+final case class KafkaConsumersConfig(
+    retryStrategy: KafkaConsumerRetryStrategy,
+    maxPollRecords: Int,
+    maxPollInterval: Duration,
+    pollTimeout: Duration,
+    rebalanceSafeCommits: Boolean,
+    connectConsumerCount: Int,
+    autoCreateTopics: Boolean,
+    issueConsumerCount: Int,
+    presentConsumerCount: Int,
+    didStateSyncConsumerCount: Int,
+    statusListSyncConsumerCount: Int,
+)
+
+final case class KafkaConsumerRetryStrategy(
+    maxRetries: Int,
+    initialDelay: Duration,
+    maxDelay: Duration,
+    maxRetryAttempts: Int,
+    backoffMultiplier: Int
+)
 
 final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
@@ -176,7 +197,7 @@ final case class AgentConfig(
     secretStorage: SecretStorageConfig,
     webhookPublisher: WebhookPublisherConfig,
     defaultWallet: DefaultWalletConfig,
-    kafka: DefaultKafkaConfig
+    kafka: KafkaConfig
 ) {
   def validate: Either[String, Unit] =
     for {

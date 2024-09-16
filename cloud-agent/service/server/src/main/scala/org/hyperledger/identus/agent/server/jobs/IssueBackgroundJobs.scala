@@ -4,9 +4,7 @@ import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.jobs.BackgroundJobError.ErrorResponseReceivedFromPeerAgent
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.mercury.*
-import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.service.CredentialService
@@ -15,7 +13,6 @@ import org.hyperledger.identus.shared.messaging
 import org.hyperledger.identus.shared.messaging.{Message, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.messaging.MessagingService.RetryStep
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import org.hyperledger.identus.shared.models.Failure
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
@@ -27,17 +24,21 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
 
   private val TOPIC_NAME = "issue"
 
-  val issueFlowsHandler = messaging.MessagingService.consumeWithRetryStrategy(
-    "identus-cloud-agent",
-    IssueBackgroundJobs.handleMessage,
-    Seq(
-      RetryStep(TOPIC_NAME, 5, 0.seconds, s"$TOPIC_NAME-retry-1"),
-      RetryStep(s"$TOPIC_NAME-retry-1", 5, 2.seconds, s"$TOPIC_NAME-retry-2"),
-      RetryStep(s"$TOPIC_NAME-retry-2", 5, 4.seconds, s"$TOPIC_NAME-retry-3"),
-      RetryStep(s"$TOPIC_NAME-retry-3", 5, 8.seconds, s"$TOPIC_NAME-retry-4"),
-      RetryStep(s"$TOPIC_NAME-retry-4", 5, 16.seconds, s"$TOPIC_NAME-DLQ")
+  val issueFlowsHandler = for {
+    appConfig <- ZIO.service[AppConfig]
+    consumerCount = appConfig.agent.kafka.consumers.issueConsumerCount
+    _ <- messaging.MessagingService.consumeWithRetryStrategy(
+      "identus-cloud-agent",
+      IssueBackgroundJobs.handleMessage,
+      Seq(
+        RetryStep(TOPIC_NAME, consumerCount, 0.seconds, s"$TOPIC_NAME-retry-1"),
+        RetryStep(s"$TOPIC_NAME-retry-1", consumerCount, 2.seconds, s"$TOPIC_NAME-retry-2"),
+        RetryStep(s"$TOPIC_NAME-retry-2", consumerCount, 4.seconds, s"$TOPIC_NAME-retry-3"),
+        RetryStep(s"$TOPIC_NAME-retry-3", consumerCount, 8.seconds, s"$TOPIC_NAME-retry-4"),
+        RetryStep(s"$TOPIC_NAME-retry-4", consumerCount, 16.seconds, s"$TOPIC_NAME-DLQ")
+      )
     )
-  )
+  } yield ()
 
   private def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
     HttpClient & DidOps & DIDResolver & (CredentialService & DIDNonSecretStorage & (ManagedDIDService & AppConfig)),
