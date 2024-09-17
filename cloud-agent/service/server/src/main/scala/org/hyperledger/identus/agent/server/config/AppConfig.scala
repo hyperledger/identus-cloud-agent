@@ -166,25 +166,27 @@ final case class DefaultWalletConfig(
 final case class KafkaConfig(enabled: Boolean, bootstrapServers: String, consumers: KafkaConsumersConfig)
 
 final case class KafkaConsumersConfig(
-    retryStrategy: KafkaConsumerRetryStrategy,
+    connectFlow: KafkaConsumerJobConfig,
+    issueFlow: KafkaConsumerJobConfig,
+    presentFlow: KafkaConsumerJobConfig,
+    didStateSync: KafkaConsumerJobConfig,
+    statusListSync: KafkaConsumerJobConfig,
     maxPollRecords: Int,
     maxPollInterval: Duration,
     pollTimeout: Duration,
     rebalanceSafeCommits: Boolean,
-    connectConsumerCount: Int,
     autoCreateTopics: Boolean,
-    issueConsumerCount: Int,
-    presentConsumerCount: Int,
-    didStateSyncConsumerCount: Int,
-    statusListSyncConsumerCount: Int,
+)
+
+final case class KafkaConsumerJobConfig(
+    consumerCount: Int,
+    retryStrategy: Option[KafkaConsumerRetryStrategy]
 )
 
 final case class KafkaConsumerRetryStrategy(
     maxRetries: Int,
     initialDelay: Duration,
     maxDelay: Duration,
-    maxRetryAttempts: Int,
-    backoffMultiplier: Int
 )
 
 final case class AgentConfig(

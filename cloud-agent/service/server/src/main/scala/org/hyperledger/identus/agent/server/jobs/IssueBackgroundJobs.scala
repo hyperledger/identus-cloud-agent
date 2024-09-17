@@ -11,7 +11,6 @@ import org.hyperledger.identus.pollux.core.service.CredentialService
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.messaging
 import org.hyperledger.identus.shared.messaging.{Message, WalletIdAndRecordId}
-import org.hyperledger.identus.shared.messaging.MessagingService.RetryStep
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
@@ -26,17 +25,10 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
 
   val issueFlowsHandler = for {
     appConfig <- ZIO.service[AppConfig]
-    consumerCount = appConfig.agent.kafka.consumers.issueConsumerCount
     _ <- messaging.MessagingService.consumeWithRetryStrategy(
       "identus-cloud-agent",
       IssueBackgroundJobs.handleMessage,
-      Seq(
-        RetryStep(TOPIC_NAME, consumerCount, 0.seconds, s"$TOPIC_NAME-retry-1"),
-        RetryStep(s"$TOPIC_NAME-retry-1", consumerCount, 2.seconds, s"$TOPIC_NAME-retry-2"),
-        RetryStep(s"$TOPIC_NAME-retry-2", consumerCount, 4.seconds, s"$TOPIC_NAME-retry-3"),
-        RetryStep(s"$TOPIC_NAME-retry-3", consumerCount, 8.seconds, s"$TOPIC_NAME-retry-4"),
-        RetryStep(s"$TOPIC_NAME-retry-4", consumerCount, 16.seconds, s"$TOPIC_NAME-DLQ")
-      )
+      retryStepsFromConfig(TOPIC_NAME, appConfig.agent.kafka.consumers.issueFlow)
     )
   } yield ()
 

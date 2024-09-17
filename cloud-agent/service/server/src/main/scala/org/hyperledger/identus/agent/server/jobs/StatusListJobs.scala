@@ -41,12 +41,10 @@ object StatusListJobs extends BackgroundJobsHelper {
 
   val statusListSyncHandler = for {
     appConfig <- ZIO.service[AppConfig]
-    consumerCount = appConfig.agent.kafka.consumers.statusListSyncConsumerCount
-    _ <- messaging.MessagingService.consume(
-      groupId = "identus-cloud-agent",
-      topicName = TOPIC_NAME,
-      consumerCount = consumerCount,
-      StatusListJobs.handleMessage
+    _ <- messaging.MessagingService.consumeWithRetryStrategy(
+      "identus-cloud-agent",
+      StatusListJobs.handleMessage,
+      retryStepsFromConfig(TOPIC_NAME, appConfig.agent.kafka.consumers.statusListSync)
     )
   } yield ()
 

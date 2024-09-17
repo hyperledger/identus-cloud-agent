@@ -1,5 +1,6 @@
 package org.hyperledger.identus.agent.server.jobs
 
+import org.hyperledger.identus.agent.server.config.KafkaConsumerJobConfig
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import org.hyperledger.identus.agent.walletapi.model.error.GetManagedDIDError
@@ -19,18 +20,18 @@ import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import org.hyperledger.identus.pollux.core.model.DidCommID
 import org.hyperledger.identus.pollux.core.service.CredentialService
-import org.hyperledger.identus.pollux.sdjwt.SDJWT.*
 import org.hyperledger.identus.pollux.vc.jwt.{
   DIDResolutionFailed,
   DIDResolutionSucceeded,
   DidResolver as JwtDidResolver,
   ES256KSigner,
-  Issuer as JwtIssuer,
-  *
+  Issuer as JwtIssuer
 }
 import org.hyperledger.identus.shared.crypto.*
+import org.hyperledger.identus.shared.messaging.MessagingService.RetryStep
 import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
-import zio.{ZIO, ZLayer}
+import zio.{durationInt, Duration, ZIO, ZLayer}
+import zio.prelude.OrdOps
 
 import java.time.Instant
 import java.util.Base64
@@ -220,5 +221,20 @@ trait BackgroundJobsHelper {
         } yield ()
       case _ => ZIO.unit
     }
+  }
+
+  def retryStepsFromConfig(topicName: String, jobConfig: KafkaConsumerJobConfig): Seq[RetryStep] = {
+    jobConfig.retryStrategy match
+      case None => Seq.empty
+      case Some(rs) =>
+        val topics = (1 to rs.maxRetries).map(i =>
+          (
+            s"$topicName-retry-$i",
+            rs.initialDelay.multipliedBy(Math.pow(2, i - 1).toLong).min(rs.maxDelay)
+          )
+        ) prepended (topicName, 0.seconds) appended (s"$topicName-DLQ", Duration.Infinity)
+        (0 until topics.size - 1).map { i =>
+          RetryStep(topics(i)._1, jobConfig.consumerCount, topics(i)._2, topics(i + 1)._1)
+        }
   }
 }

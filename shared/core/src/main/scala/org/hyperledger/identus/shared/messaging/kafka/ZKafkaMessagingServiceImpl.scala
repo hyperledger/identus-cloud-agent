@@ -3,12 +3,8 @@ package org.hyperledger.identus.shared.messaging.kafka
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.header.Headers
 import org.hyperledger.identus.shared.messaging.*
-import zio.{Duration, EnvironmentTag, RIO, RLayer, Task, ULayer, URIO, ZIO, ZLayer}
-import zio.kafka.consumer.{
-  Consumer as ZKConsumer,
-  ConsumerSettings as ZKConsumerSettings,
-  Subscription as ZKSubscription
-}
+import zio.{Duration, EnvironmentTag, RIO, RLayer, Task, ULayer, URIO, ZIO, ZLayer, durationInt}
+import zio.kafka.consumer.{Consumer as ZKConsumer, ConsumerSettings as ZKConsumerSettings, Subscription as ZKSubscription}
 import zio.kafka.producer.{Producer as ZKProducer, ProducerSettings as ZKProducerSettings}
 import zio.kafka.serde.{Deserializer as ZKDeserializer, Serializer as ZKSerializer}
 
@@ -42,11 +38,11 @@ class ZKafkaMessagingServiceImpl(
 object ZKafkaMessagingServiceImpl {
   def layer(
       bootstrapServers: List[String],
-      autoCreateTopics: Boolean,
-      maxPollRecords: Int,
-      maxPollInterval: Duration,
-      pollTimeout: Duration,
-      rebalanceSafeCommits: Boolean
+      autoCreateTopics: Boolean = false,
+      maxPollRecords: Int = 500,
+      maxPollInterval: Duration = 5.minutes,
+      pollTimeout: Duration = 50.millis,
+      rebalanceSafeCommits: Boolean = true
   ): ULayer[MessagingService] =
     ZLayer.succeed(
       new ZKafkaMessagingServiceImpl(

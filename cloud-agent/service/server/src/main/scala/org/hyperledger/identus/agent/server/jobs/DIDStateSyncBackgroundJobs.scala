@@ -8,7 +8,7 @@ import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
 import zio.metrics.Metric
 
-object DIDStateSyncBackgroundJobs {
+object DIDStateSyncBackgroundJobs extends BackgroundJobsHelper {
 
   private val TOPIC_NAME = "sync-did-state"
 
@@ -33,12 +33,10 @@ object DIDStateSyncBackgroundJobs {
 
   val didPublicationStateSyncHandler = for {
     appConfig <- ZIO.service[AppConfig]
-    consumerCount = appConfig.agent.kafka.consumers.didStateSyncConsumerCount
-    _ <- MessagingService.consume(
-      groupId = "identus-cloud-agent",
-      topicName = TOPIC_NAME,
-      consumerCount = consumerCount,
-      DIDStateSyncBackgroundJobs.handleMessage
+    _ <- MessagingService.consumeWithRetryStrategy(
+      "identus-cloud-agent",
+      DIDStateSyncBackgroundJobs.handleMessage,
+      retryStepsFromConfig(TOPIC_NAME, appConfig.agent.kafka.consumers.didStateSync)
     )
   } yield ()
 
