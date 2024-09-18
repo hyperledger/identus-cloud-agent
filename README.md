@@ -78,17 +78,6 @@ The next diagrams offer a concise architectural overview, depicting a Cloud Agen
 - SBT (latest version)
 - Git (for cloning the repository)
 - Docker (for running the PostgreSQL database, Hashicorp Vault, APISIX, and  PRISM Node)
-- [GITHUB_TOKEN](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) environment  variable (required for SBT plugins and access to the GitHub packages)
-
-#### Login to GitHub packages
-
-To login to GitHub packages, you need to create a personal access token and set it as an environment variable together with your GitHub username. Here is an example of how you can do this:
-
-```bash
-export GITHUB_TOKEN=your-personal-access-token
-export GITHUB_USER=your-github-username
-docker login ghcr.io -u $GITHUB_USER -p $GITHUB_TOKEN
-```
 
 #### Compile, Test, create the docker image of the Cloud Agent
 
