@@ -42,9 +42,11 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
           maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
           maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
           maybeCredentialSchema = Some(
-            CredentialSchema(
-              id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-              `type` = "JsonSchemaValidator2018"
+            Left(
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
+              )
             )
           ),
           credentialSubject = Json.obj(

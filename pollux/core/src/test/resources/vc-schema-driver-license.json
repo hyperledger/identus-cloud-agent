@@ -6,37 +6,21 @@
     "credentialSubject": {
       "type": "object",
       "properties": {
-        "emailAddress": {
-          "type": "string",
-          "format": "email"
-        },
-        "givenName": {
-          "type": "string"
-        },
-        "familyName": {
-          "type": "string"
-        },
         "dateOfIssuance": {
           "type": "string",
           "format": "date-time"
         },
         "drivingLicenseID": {
-          "type": "string"
+          "type": "integer"
         },
         "drivingClass": {
           "type": "integer"
         }
       },
-      "required": [
-        "emailAddress",
-        "familyName",
-        "dateOfIssuance",
-        "drivingLicenseID",
-        "drivingClass"
-      ],
-      "additionalProperties": false
+      "required": ["dateOfIssuance", "drivingLicenseID", "drivingClass"],
+      "additionalProperties": true
     }
   },
   "required": ["credentialSubject"],
-  "additionalProperties": false
+  "additionalProperties": true
 }
