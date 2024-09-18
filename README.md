@@ -122,34 +122,7 @@ System requirements can vary depending on the use case. The following are the mi
 
 #### Running locally in demo mode
 
-Here is a general example of running a Cloud Agent locally:
-```bash
-PORT=${PORT} AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=${PRISM_NODE_VERSION} \
-  docker compose \
-    -p "${AGENT_ROLE}" \
-    -f ./infrastructure/shared/docker-compose-demo.yml \
-    up --wait
-```
-
-The `PORT` variable is used to specify the port number for the Cloud Agent to listen on. The `AGENT_VERSION` and `PRISM_NODE_VERSION` variables are used to specify the versions of the Cloud Agent and  PRISM Node to use. The `AGENT_ROLE` variable is used to specify the role of the Cloud Agent. The `AGENT_ROLE` variable can be set to `issuer`, `verifier` or `holder`.
-
-In real life, you will need to start at least two Cloud Agent instances with different roles. For example, you can start one instance with the `issuer` role and another one with the `holder` role. The `issuer` instance will be used to issue verifiable credentials (VCs) and the `holder` instance will be used to hold VCs. Here is an example of how you can do this:
-
-```bash
-PORT=8080 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.3.0 \
-  docker compose \
-    -p "issuer" \
-    -f ./infrastructure/shared/docker-compose-demo.yml \
-    up --wait
-```
-
-```bash
-PORT=8090 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.3.0 \
-  docker compose \
-    -p "holder" \
-    -f ./infrastructure/shared/docker-compose-demo.yml \
-    up --wait
-```
+To run Identus locally you should follow the instructions in the [Quickstart guide](https://hyperledger.github.io/identus-docs/docs/quick-start/)
 
 If the Cloud Agent is started successfully, all the running containers should achieve `Healthy` state, and Cloud Agent Rest API should be available at the specified port, for example:
 * `http://localhost:8080/cloud-agent` for the `issuer` instance
@@ -160,8 +133,6 @@ You can check the status of the running containers using the [health endpoint](h
 $ curl http://localhost:8080/cloud-agent/_system/health
 {"version":"1.19.1"}
 ```
-
-> For more information about all available configuration parameters, please, check [Cloud Agent configuration](https://docs.atalaprism.io/docs/atala-prism/prism-cloud-agent/environment-variables) section at the documentation portal and edit the `docker-compose-demo.yml` file accordingly.
 
 #### Compatibility between Cloud Agent and  PRISM Node
 
