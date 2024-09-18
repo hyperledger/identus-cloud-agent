@@ -173,7 +173,7 @@ case class CredentialIssuerControllerImpl(
           nonce <- getNonceFromJwt(JWT(jwt))
             .mapError(throwable => badRequestInvalidProof(jwt, throwable.getMessage))
           session <- credentialIssuerService
-            .getIssuanceSessionByNonce(nonce)
+            .getPendingIssuanceSessionByNonce(nonce)
             .mapError(_ => badRequestInvalidProof(jwt, "nonce is not associated to the issuance session"))
           subjectDid <- parseDIDUrlFromKeyId(JWT(jwt))
             .map(_.did)
@@ -240,11 +240,14 @@ case class CredentialIssuerControllerImpl(
       request: NonceRequest
   ): IO[ErrorResponse, NonceResponse] = {
     credentialIssuerService
-      .getIssuanceSessionByIssuerState(request.issuerState)
+      .getPendingIssuanceSessionByIssuerState(request.issuerState)
       .map(session => NonceResponse(session.nonce))
       .mapError(ue =>
         internalServerError(detail = Some(s"Unexpected error while creating credential offer: ${ue.userFacingMessage}"))
       )
+      // Ideally we don't want this here, but this is used by keycloak plugin and error is not bubbled to the user.
+      // We log it manually to help with debugging until we find a better way.
+      .tapError(error => ZIO.logWarning(error.toString()))
   }
 
   override def createCredentialIssuer(
