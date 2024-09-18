@@ -9,6 +9,7 @@ import org.hyperledger.identus.castor.core.model.did.{
   VerificationRelationship
 }
 import org.hyperledger.identus.castor.core.util.GenUtils
+import org.hyperledger.identus.shared.models.KeyId
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -17,13 +18,13 @@ object W3CModelHelperSpec extends ZIOSpecDefault {
 
   import W3CModelHelper.*
 
-  private def generateInternalPublicKey(id: String, purpose: InternalKeyPurpose = InternalKeyPurpose.Master) =
+  private def generateInternalPublicKey(id: KeyId, purpose: InternalKeyPurpose = InternalKeyPurpose.Master) =
     GenUtils.internalPublicKey
       .map(_.copy(id = id, purpose = purpose))
       .runCollectN(1)
       .map(_.head)
 
-  private def generatePublicKey(id: String, purpose: VerificationRelationship) =
+  private def generatePublicKey(id: KeyId, purpose: VerificationRelationship) =
     GenUtils.publicKey.map(_.copy(id = id, purpose = purpose)).runCollectN(1).map(_.head)
 
   private def generateService(id: String) =
@@ -31,8 +32,8 @@ object W3CModelHelperSpec extends ZIOSpecDefault {
 
   private def generateDIDData(
       did: CanonicalPrismDID,
-      masterKeyId: String = "master-0",
-      keyIds: Seq[(String, VerificationRelationship)] = Seq.empty,
+      masterKeyId: KeyId = KeyId("master-0"),
+      keyIds: Seq[(KeyId, VerificationRelationship)] = Seq.empty,
       serviceIds: Seq[String] = Seq.empty,
       context: Seq[String] = Seq.empty
   ) =
@@ -49,11 +50,11 @@ object W3CModelHelperSpec extends ZIOSpecDefault {
         didData <- generateDIDData(
           did = did,
           keyIds = Seq(
-            "auth-0" -> VerificationRelationship.Authentication,
-            "iss-0" -> VerificationRelationship.AssertionMethod,
-            "comm-0" -> VerificationRelationship.KeyAgreement,
-            "capinv-0" -> VerificationRelationship.CapabilityInvocation,
-            "capdel-0" -> VerificationRelationship.CapabilityDelegation
+            KeyId("auth-0") -> VerificationRelationship.Authentication,
+            KeyId("iss-0") -> VerificationRelationship.AssertionMethod,
+            KeyId("comm-0") -> VerificationRelationship.KeyAgreement,
+            KeyId("capinv-0") -> VerificationRelationship.CapabilityInvocation,
+            KeyId("capdel-0") -> VerificationRelationship.CapabilityDelegation
           ),
           serviceIds = Seq("service-0")
         )
@@ -92,7 +93,7 @@ object W3CModelHelperSpec extends ZIOSpecDefault {
         longFormDID = PrismDID.buildLongFormFromOperation(PrismDIDOperation.Create(Nil, Nil, Nil))
         didData <- generateDIDData(
           did = did,
-          keyIds = Seq("auth-0" -> VerificationRelationship.Authentication)
+          keyIds = Seq(KeyId("auth-0") -> VerificationRelationship.Authentication)
         )
         didDoc = didData.toW3C(longFormDID)
       } yield assert(didDoc.id)(equalTo(longFormDID.toString)) &&
@@ -104,7 +105,7 @@ object W3CModelHelperSpec extends ZIOSpecDefault {
         did <- ZIO.fromEither(PrismDID.buildCanonicalFromSuffix("0" * 64))
         didData <- generateDIDData(
           did = did,
-          keyIds = Seq("auth-0" -> VerificationRelationship.Authentication),
+          keyIds = Seq(KeyId("auth-0") -> VerificationRelationship.Authentication),
           serviceIds = Seq("service-0"),
           context = Seq("user-defined-context")
         )

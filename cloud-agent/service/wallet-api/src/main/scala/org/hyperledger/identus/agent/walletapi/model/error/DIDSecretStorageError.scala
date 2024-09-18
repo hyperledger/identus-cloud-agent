@@ -11,7 +11,7 @@ sealed trait DIDSecretStorageError(
 }
 
 object DIDSecretStorageError {
-  case class KeyNotFoundError(didId: DidId, keyId: String)
+  case class KeyNotFoundError(didId: DidId, keyId: KeyId)
       extends DIDSecretStorageError(
         StatusCode.NotFound,
         s"The not found: keyId='$keyId', didId='$didId'"

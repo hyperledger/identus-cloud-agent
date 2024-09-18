@@ -4,6 +4,7 @@ import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.error
 import org.hyperledger.identus.shared.crypto.{Apollo, Secp256k1KeyPair}
 import org.hyperledger.identus.shared.models.Base64UrlString
+import org.hyperledger.identus.shared.models.KeyId
 import zio.{mock, IO, URLayer, ZIO, ZLayer}
 import zio.mock.{Expectation, Mock, Proxy}
 import zio.test.Assertion
@@ -47,7 +48,7 @@ object MockDIDService extends Mock[DIDService] {
     val createOperation = PrismDIDOperation.Create(
       publicKeys = Seq(
         InternalPublicKey(
-          id = "master-0",
+          id = KeyId("master-0"),
           purpose = InternalKeyPurpose.Master,
           publicKeyData = PublicKeyData.ECCompressedKeyData(
             crv = EllipticCurve.SECP256K1,
@@ -55,7 +56,7 @@ object MockDIDService extends Mock[DIDService] {
           )
         ),
         PublicKey(
-          id = "key-0",
+          id = KeyId("key-0"),
           purpose = verificationRelationship,
           publicKeyData = PublicKeyData.ECCompressedKeyData(
             crv = EllipticCurve.SECP256K1,

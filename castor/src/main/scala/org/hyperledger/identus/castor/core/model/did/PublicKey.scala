@@ -1,9 +1,10 @@
 package org.hyperledger.identus.castor.core.model.did
 
 import org.hyperledger.identus.shared.models.Base64UrlString
+import org.hyperledger.identus.shared.models.KeyId
 
 final case class PublicKey(
-    id: String,
+    id: KeyId,
     purpose: VerificationRelationship,
     publicKeyData: PublicKeyData
 )
@@ -14,7 +15,7 @@ enum InternalKeyPurpose {
 }
 
 final case class InternalPublicKey(
-    id: String,
+    id: KeyId,
     purpose: InternalKeyPurpose,
     publicKeyData: PublicKeyData
 )

@@ -4,6 +4,7 @@ import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.error.OperationValidationError
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator.Config
 import org.hyperledger.identus.shared.models.Base64UrlString
+import org.hyperledger.identus.shared.models.KeyId
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -95,7 +96,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         publicKeys: Seq[PublicKey] = Nil,
         internalKeys: Seq[InternalPublicKey] = Seq(
           InternalPublicKey(
-            id = "master0",
+            id = KeyId("master0"),
             purpose = InternalKeyPurpose.Master,
             publicKeyData = publicKeyData
           )
@@ -111,8 +112,8 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
       test("validates a Create operation successfully when using the provided ZLayer") {
         val operation = PrismDIDOperation.Create(
           publicKeys = Seq(
-            PublicKey("key1", VerificationRelationship.Authentication, publicKeyData),
-            InternalPublicKey("master0", InternalKeyPurpose.Master, publicKeyData)
+            PublicKey(KeyId("key1"), VerificationRelationship.Authentication, publicKeyData),
+            InternalPublicKey(KeyId("master0"), InternalKeyPurpose.Master, publicKeyData)
           ),
           services = Seq(
             Service("service1", ServiceType.Single("LinkedDomains"), "http://example.com/")
@@ -130,14 +131,14 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
       test("reject CreateOperation on too many DID publicKey access") {
         val publicKeys = (1 to 10).map(i =>
           PublicKey(
-            id = s"key$i",
+            id = KeyId(s"key$i"),
             purpose = VerificationRelationship.Authentication,
             publicKeyData = publicKeyData
           )
         )
         val internalKeys = (1 to 10).map(i =>
           InternalPublicKey(
-            id = s"master$i",
+            id = KeyId(s"master$i"),
             purpose = InternalKeyPurpose.Master,
             publicKeyData = publicKeyData
           )
@@ -150,14 +151,14 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
       test("reject CreateOperation on duplicated DID public key id") {
         val publicKeys = (1 to 10).map(i =>
           PublicKey(
-            id = s"key$i",
+            id = KeyId(s"key$i"),
             purpose = VerificationRelationship.Authentication,
             publicKeyData = publicKeyData
           )
         )
         val internalKeys = Seq(
           InternalPublicKey(
-            id = s"key1",
+            id = KeyId(s"key1"),
             purpose = InternalKeyPurpose.Master,
             publicKeyData = publicKeyData
           )
@@ -196,7 +197,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
       test("reject CreateOperation on invalid key-id") {
         val publicKeys = (1 to 2).map(i =>
           PublicKey(
-            id = s"key $i",
+            id = KeyId(s"key $i"),
             purpose = VerificationRelationship.Authentication,
             publicKeyData = publicKeyData
           )
@@ -221,7 +222,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
       },
       test("reject CreateOperation on too long key-id") {
         val publicKey = PublicKey(
-          id = s"key-${"0" * 100}",
+          id = KeyId(s"key-${"0" * 100}"),
           purpose = VerificationRelationship.Authentication,
           publicKeyData = publicKeyData
         )
@@ -313,12 +314,12 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val op = createPrismDIDOperation(
           publicKeys = Seq(
             PublicKey(
-              id = "key-0",
+              id = KeyId("key-0"),
               purpose = VerificationRelationship.Authentication,
               publicKeyData = publicKeyData
             ),
             PublicKey(
-              id = "key-1",
+              id = KeyId("key-1"),
               purpose = VerificationRelationship.AssertionMethod,
               publicKeyData = publicKeyData
             )
@@ -344,7 +345,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val op = createPrismDIDOperation(
           internalKeys = Seq(
             InternalPublicKey(
-              id = "master0",
+              id = KeyId("master0"),
               purpose = InternalKeyPurpose.Master,
               publicKeyData = PublicKeyData.ECKeyData(
                 crv = EllipticCurve.ED25519,
@@ -353,7 +354,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
               )
             ),
             InternalPublicKey(
-              id = "master1",
+              id = KeyId("master1"),
               purpose = InternalKeyPurpose.Master,
               publicKeyData = PublicKeyData.ECKeyData(
                 crv = EllipticCurve.SECP256K1,
@@ -364,7 +365,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
           )
         )
         assert(DIDOperationValidator(Config.default).validate(op))(
-          isLeft(equalTo(OperationValidationError.InvalidMasterKeyData(Seq("master0", "master1"))))
+          isLeft(equalTo(OperationValidationError.InvalidMasterKeyData(Seq(KeyId("master0"), KeyId("master1")))))
         )
       }
     ).provideLayer(testLayer)
@@ -400,8 +401,10 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
       test("accept valid UpdateOperation") {
         val op = updatePrismDIDOperation(
           Seq(
-            UpdateDIDAction.AddKey(PublicKey("key0", VerificationRelationship.Authentication, publicKeyData)),
-            UpdateDIDAction.AddInternalKey(InternalPublicKey("master0", InternalKeyPurpose.Master, publicKeyData)),
+            UpdateDIDAction.AddKey(PublicKey(KeyId("key0"), VerificationRelationship.Authentication, publicKeyData)),
+            UpdateDIDAction.AddInternalKey(
+              InternalPublicKey(KeyId("master0"), InternalKeyPurpose.Master, publicKeyData)
+            ),
             UpdateDIDAction.RemoveKey("key0"),
             UpdateDIDAction.AddService(
               Service("service0", ServiceType.Single("LinkedDomains"), "http://example.com/")
@@ -422,7 +425,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val addKeyActions = (1 to 10).map(i =>
           UpdateDIDAction.AddKey(
             PublicKey(
-              id = s"key$i",
+              id = KeyId(s"key$i"),
               purpose = VerificationRelationship.Authentication,
               publicKeyData = publicKeyData
             )
@@ -431,7 +434,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         val addInternalKeyActions = (1 to 10).map(i =>
           UpdateDIDAction.AddInternalKey(
             InternalPublicKey(
-              id = s"master$i",
+              id = KeyId(s"master$i"),
               purpose = InternalKeyPurpose.Master,
               publicKeyData = publicKeyData
             )
@@ -469,7 +472,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
       test("reject UpdateOperation on invalid key-id") {
         val action1 = UpdateDIDAction.AddKey(
           PublicKey(
-            id = "key 1",
+            id = KeyId("key 1"),
             purpose = VerificationRelationship.Authentication,
             publicKeyData = publicKeyData
           )
@@ -497,7 +500,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
       test("reject UpdateOperation on too long key-id") {
         val action1 = UpdateDIDAction.AddKey(
           PublicKey(
-            id = s"key-${"0" * 100}",
+            id = KeyId(s"key-${"0" * 100}"),
             purpose = VerificationRelationship.Authentication,
             publicKeyData = publicKeyData
           )
@@ -591,7 +594,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
       test("reject UpdateOperation when master key is not a secp256k1 key") {
         val action1 = UpdateDIDAction.AddInternalKey(
           InternalPublicKey(
-            id = "master0",
+            id = KeyId("master0"),
             purpose = InternalKeyPurpose.Master,
             publicKeyData = PublicKeyData.ECKeyData(
               crv = EllipticCurve.ED25519,
@@ -602,7 +605,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val action2 = UpdateDIDAction.AddInternalKey(
           InternalPublicKey(
-            id = "master1",
+            id = KeyId("master1"),
             purpose = InternalKeyPurpose.Master,
             publicKeyData = PublicKeyData.ECKeyData(
               crv = EllipticCurve.SECP256K1,
@@ -613,7 +616,7 @@ object DIDOperationValidatorSpec extends ZIOSpecDefault {
         )
         val op = updatePrismDIDOperation(Seq(action1, action2))
         assert(DIDOperationValidator(Config.default).validate(op))(
-          isLeft(equalTo(OperationValidationError.InvalidMasterKeyData(Seq("master0", "master1"))))
+          isLeft(equalTo(OperationValidationError.InvalidMasterKeyData(Seq(KeyId("master0"), KeyId("master1")))))
         )
       }
     )
