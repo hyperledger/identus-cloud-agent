@@ -12,6 +12,7 @@ import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DID
 import org.hyperledger.identus.agent.walletapi.util.OperationFactory
 import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
 import org.hyperledger.identus.shared.crypto.{Apollo, Ed25519KeyPair, X25519KeyPair}
+import org.hyperledger.identus.shared.models.KeyId
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
@@ -21,7 +22,7 @@ private[walletapi] class DIDCreateHandler(
     secretStorage: DIDSecretStorage,
     walletSecretStorage: WalletSecretStorage,
 )(
-    masterKeyId: String
+    masterKeyId: KeyId
 ) {
   def materialize(
       didTemplate: ManagedDIDTemplate
@@ -64,8 +65,8 @@ private[walletapi] class DIDCreateMaterialImpl(nonSecretStorage: DIDNonSecretSto
         .mapError(CreateManagedDIDError.WalletStorageError.apply)
       _ <- ZIO.foreach(keys.randKeys.toList) { case (keyId, key) =>
         key.keyPair match {
-          case kp: Ed25519KeyPair => secretStorage.insertPrismDIDKeyPair(did, keyId, operationHash, kp)
-          case kp: X25519KeyPair  => secretStorage.insertPrismDIDKeyPair(did, keyId, operationHash, kp)
+          case kp: Ed25519KeyPair => secretStorage.insertPrismDIDKeyPair(did, KeyId(keyId), operationHash, kp)
+          case kp: X25519KeyPair  => secretStorage.insertPrismDIDKeyPair(did, KeyId(keyId), operationHash, kp)
         }
       }
     } yield ()

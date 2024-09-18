@@ -17,6 +17,7 @@ import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.db.Implicits.given
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.KeyId
 import zio.*
 import zio.interop.catz.*
 
@@ -199,7 +200,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
 
   override def getKeyMeta(
       did: PrismDID,
-      keyId: String
+      keyId: KeyId
   ): RIO[WalletAccessContext, Option[(ManagedDIDKeyMeta, Array[Byte])]] = {
     val status: ScheduledDIDOperationStatus = ScheduledDIDOperationStatus.Confirmed
     val cxnIO =
@@ -216,7 +217,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
            |   LEFT JOIN public.prism_did_update_lineage ul ON hd.operation_hash = ul.operation_hash
            | WHERE
            |   hd.did = $did
-           |   AND hd.key_id = $keyId
+           |   AND hd.key_id = ${keyId.value}
            |   AND (ul.status = $status OR (ul.status IS NULL AND hd.operation_hash = sha256(ws.atala_operation_content)))
            """.stripMargin
         .query[
@@ -245,7 +246,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
 
   override def insertKeyMeta(
       did: PrismDID,
-      keyId: String,
+      keyId: KeyId,
       meta: ManagedDIDKeyMeta,
       operationHash: Array[Byte]
   ): RIO[WalletAccessContext, Unit] = {
@@ -258,7 +259,7 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
           | VALUES
           | (
           |  $did,
-          |  $keyId,
+          |  ${keyId.value},
           |  ${keyUsage},
           |  ${keyIndex},
           |  $now,
