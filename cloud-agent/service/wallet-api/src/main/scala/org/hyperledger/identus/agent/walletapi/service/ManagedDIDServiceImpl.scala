@@ -130,8 +130,14 @@ class ManagedDIDServiceImpl private[walletapi] (
     val effect = for {
       _ <- ZIO
         .fromEither(ManagedDIDTemplateValidator.validate(didTemplate, defaultDidDocumentServices))
-        .mapError(CreateManagedDIDError.InvalidArgument.apply)
+        .mapError { x =>
+          println("x: " + x)
+
+          CreateManagedDIDError.InvalidArgument(x)
+        }
+      _ <- ZIO.logInfo(s"Old did template after validation: $didTemplate")
       newDidTemplate = didTemplate.copy(services = didTemplate.services ++ defaultDidDocumentServices)
+      _ <- ZIO.logInfo(s"Creating managed DID with template2: $newDidTemplate")
       material <- didCreateHandler.materialize(newDidTemplate)
       _ <- ZIO
         .fromEither(didOpValidator.validate(material.operation))

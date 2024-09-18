@@ -11,6 +11,11 @@ import org.hyperledger.identus.agent.walletapi.sql.*
 import org.hyperledger.identus.agent.walletapi.storage.*
 import org.hyperledger.identus.agent.walletapi.vault.{VaultDIDSecretStorage, VaultWalletSecretStorage}
 import org.hyperledger.identus.castor.core.model.did.*
+import org.hyperledger.identus.castor.core.model.did.{
+  Service as DidDocumentService,
+  ServiceEndpoint as DidDocumentServiceEndpoint,
+  ServiceType as DidDocumentServiceType
+}
 import org.hyperledger.identus.castor.core.model.error
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
@@ -82,21 +87,38 @@ object ManagedDIDServiceSpec
     )
 
   private def serviceLayer =
-    ZLayer
-      .makeSome[
-        DIDSecretStorage & WalletSecretStorage,
-        WalletManagementService & ManagedDIDService & TestDIDService
-      ](
-        ManagedDIDServiceImpl.layer,
-        WalletManagementServiceImpl.layer,
-        DIDOperationValidator.layer(),
-        JdbcDIDNonSecretStorage.layer,
-        JdbcWalletNonSecretStorage.layer,
-        systemTransactorLayer,
-        contextAwareTransactorLayer,
-        testDIDServiceLayer,
-        apolloLayer
-      )
+    ZLayer.succeed(Set(defaultDidDocumentServiceFixture)) >>> serviceLayerWithoutDidDocumentServices
+
+  private def serviceLayerWithoutDidDocumentServices = ZLayer
+    .makeSome[
+      Set[DidDocumentService] & DIDSecretStorage & WalletSecretStorage,
+      WalletManagementService & ManagedDIDService & TestDIDService
+    ](
+      ManagedDIDServiceImpl.layer,
+      WalletManagementServiceImpl.layer,
+      DIDOperationValidator.layer(),
+      JdbcDIDNonSecretStorage.layer,
+      JdbcWalletNonSecretStorage.layer,
+      systemTransactorLayer,
+      contextAwareTransactorLayer,
+      testDIDServiceLayer,
+      apolloLayer
+    )
+
+  private val defaultDidDocumentServiceFixture = DidDocumentService(
+    id = "agent-base-url",
+    serviceEndpoint = DidDocumentServiceEndpoint
+      .Single(
+        DidDocumentServiceEndpoint.UriOrJsonEndpoint
+          .Uri(
+            DidDocumentServiceEndpoint.UriValue
+              .fromString("http://localhost:8085/")
+              .toOption
+              .get // This will fail if URL is invalid, which will prevent app from starting since public endpoint in config is invalid
+          )
+      ),
+    `type` = DidDocumentServiceType.Single(DidDocumentServiceType.Name.fromStringUnsafe("LinkedResourceV1"))
+  )
 
   private def generateDIDTemplate(
       publicKeys: Seq[DIDPublicKeyTemplate] = Nil,
@@ -233,6 +255,15 @@ object ManagedDIDServiceSpec
         didsAfter <- svc.nonSecretStorage.listManagedDID(None, None).map(_._1)
       } yield assert(didsBefore)(isEmpty) &&
         assert(didsAfter.map(_._1))(hasSameElements(Seq(did)))
+    },
+    test("will not create a DID if one of the provided servies includes default service") {
+      val template = generateDIDTemplate(
+        services = Seq(
+          defaultDidDocumentServiceFixture
+        )
+      )
+      val result = ZIO.serviceWithZIO[ManagedDIDService](_.createAndStoreDID(template))
+      assertZIO(result.exit)(fails(isSubtype[CreateManagedDIDError.InvalidArgument](anything)))
     },
     test("create and store DID secret in DIDSecretStorage") {
       val template = generateDIDTemplate(

@@ -19,9 +19,9 @@ import org.hyperledger.identus.agent.walletapi.sql.{
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
 import org.hyperledger.identus.castor.core.model.did.{
-  Service as DidService,
-  ServiceEndpoint as DidServiceEndpoint,
-  ServiceType as DidServiceType
+  Service as DidDocumentService,
+  ServiceEndpoint as DidDocumentServiceEndpoint,
+  ServiceType as DidDocumentServiceType
 }
 import org.hyperledger.identus.castor.core.service.DIDServiceImpl
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
@@ -147,33 +147,33 @@ object MainApp extends ZIOAppDefault {
       appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
       // these services are added to any DID document by default when they are created.
       defaultDidDocumentServices = Set(
-        DidService(
+        DidDocumentService(
           id = appConfig.agent.httpEndpoint.serviceName,
-          serviceEndpoint = DidServiceEndpoint
+          serviceEndpoint = DidDocumentServiceEndpoint
             .Single(
-              DidServiceEndpoint.UriOrJsonEndpoint
+              DidDocumentServiceEndpoint.UriOrJsonEndpoint
                 .Uri(
-                  DidServiceEndpoint.UriValue
+                  DidDocumentServiceEndpoint.UriValue
                     .fromString(appConfig.agent.httpEndpoint.publicEndpointUrl.toString)
                     .toOption
                     .get // This will fail if URL is invalid, which will prevent app from starting since public endpoint in config is invalid
                 )
             ),
-          `type` = DidServiceType.Single(DidServiceType.Name.fromStringUnsafe("LinkedResourceV1"))
+          `type` = DidDocumentServiceType.Single(DidDocumentServiceType.Name.fromStringUnsafe("LinkedResourceV1"))
         ),
-        DidService(
+        DidDocumentService(
           id = appConfig.pollux.statusListRegistry.serviceName,
-          serviceEndpoint = DidServiceEndpoint
+          serviceEndpoint = DidDocumentServiceEndpoint
             .Single(
-              DidServiceEndpoint.UriOrJsonEndpoint
+              DidDocumentServiceEndpoint.UriOrJsonEndpoint
                 .Uri(
-                  DidServiceEndpoint.UriValue
+                  DidDocumentServiceEndpoint.UriValue
                     .fromString(appConfig.pollux.statusListRegistry.publicEndpointUrl.toString)
                     .toOption
                     .get
                 )
             ),
-          `type` = DidServiceType.Single(DidServiceType.Name.fromStringUnsafe("LinkedResourceV1"))
+          `type` = DidDocumentServiceType.Single(DidDocumentServiceType.Name.fromStringUnsafe("LinkedResourceV1"))
         )
       )
       _ <- preMigrations
