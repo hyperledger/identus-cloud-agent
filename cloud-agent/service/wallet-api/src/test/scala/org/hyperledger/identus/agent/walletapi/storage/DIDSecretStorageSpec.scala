@@ -12,8 +12,7 @@ import org.hyperledger.identus.agent.walletapi.vault.{VaultDIDSecretStorage, Vau
 import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
 import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.shared.crypto.{Apollo, ApolloSpecHelper, Ed25519KeyPair, X25519KeyPair}
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
-import org.hyperledger.identus.shared.models.KeyId
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext, WalletAdministrationContext}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*

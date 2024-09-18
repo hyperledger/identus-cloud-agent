@@ -1,8 +1,7 @@
 package org.hyperledger.identus.didcomm.controller
 
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.shared.models.{Failure, StatusCode}
-import org.hyperledger.identus.shared.models.KeyId
+import org.hyperledger.identus.shared.models.{Failure, KeyId, StatusCode}
 
 sealed trait DIDCommControllerError extends Failure {
   override def namespace = "DIDCommControllerError"

@@ -24,10 +24,8 @@ import org.hyperledger.identus.castor.core.model.did.{
   UpdateDIDAction,
   VerificationRelationship
 }
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.value
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
-import org.hyperledger.identus.shared.models.Base64UrlString
-import org.hyperledger.identus.shared.models.KeyId
+import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.{value, UriOrJsonEndpoint}
+import org.hyperledger.identus.shared.models.{Base64UrlString, KeyId}
 import org.hyperledger.identus.shared.utils.Traverse.*
 import zio.*
 

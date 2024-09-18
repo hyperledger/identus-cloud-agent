@@ -3,8 +3,7 @@ package org.hyperledger.identus.agent.walletapi.storage
 import org.hyperledger.identus.agent.walletapi.model.*
 import org.hyperledger.identus.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
-import org.hyperledger.identus.shared.models.KeyId
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.{Expectation, Mock, Proxy}
 import zio.test.Assertion.equalTo

@@ -1,6 +1,6 @@
 package org.hyperledger.identus.shared.models
 
-import zio.json._
+import zio.json.*
 
 opaque type KeyId = String
 object KeyId:

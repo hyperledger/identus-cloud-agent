@@ -4,8 +4,7 @@ import org.hyperledger.identus.agent.walletapi.model.PublicationState
 import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
 import org.hyperledger.identus.pollux.core.model.DidCommID
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
-import org.hyperledger.identus.shared.models.{Failure, StatusCode}
-import org.hyperledger.identus.shared.models.KeyId
+import org.hyperledger.identus.shared.models.{Failure, KeyId, StatusCode}
 
 import java.util.UUID
 

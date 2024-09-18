@@ -22,8 +22,7 @@ import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.service.MockCredentialService
-import org.hyperledger.identus.shared.models.KeyId
-import org.hyperledger.identus.shared.models.WalletId
+import org.hyperledger.identus.shared.models.{KeyId, WalletId}
 import sttp.client3.{basicRequest, DeserializationException, UriContext}
 import sttp.client3.ziojson.*
 import sttp.model.StatusCode

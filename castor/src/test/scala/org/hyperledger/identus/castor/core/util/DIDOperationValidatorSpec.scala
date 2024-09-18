@@ -3,8 +3,7 @@ package org.hyperledger.identus.castor.core.util
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.error.OperationValidationError
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator.Config
-import org.hyperledger.identus.shared.models.Base64UrlString
-import org.hyperledger.identus.shared.models.KeyId
+import org.hyperledger.identus.shared.models.{Base64UrlString, KeyId}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
