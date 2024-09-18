@@ -189,11 +189,18 @@ private class PresentationServiceImpl(
             goal_code = requestPresentation.body.goal_code,
             comment = requestPresentation.body.comment
           ),
-          attachments = Seq(
+          attachments = requestPresentation.attachments.map(attachment =>
             AttachmentDescriptor
               .buildBase64Attachment(
-                payload = presentationPayload.compact.getBytes,
-                mediaType = Some(PresentCredentialFormat.SDJWT.name)
+                payload = presentationPayload.compact.getBytes(),
+                mediaType = attachment.media_type,
+                format = attachment.format.map {
+                  case PresentCredentialRequestFormat.SDJWT.name => PresentCredentialFormat.SDJWT.name
+                  case format =>
+                    throw throw RuntimeException(
+                      s"Unexpected PresentCredentialRequestFormat=$format. Expecting: ${PresentCredentialRequestFormat.SDJWT.name}"
+                    )
+                }
               )
           ),
           thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
@@ -259,12 +266,18 @@ private class PresentationServiceImpl(
             goal_code = requestPresentation.body.goal_code,
             comment = requestPresentation.body.comment
           ),
-          attachments = Seq(
+          attachments = requestPresentation.attachments.map(attachment =>
             AttachmentDescriptor
               .buildBase64Attachment(
                 payload = presentationPayload.data.getBytes(),
-                mediaType = Some(PresentCredentialFormat.Anoncred.name),
-                format = Some(PresentCredentialFormat.Anoncred.name),
+                mediaType = attachment.media_type,
+                format = attachment.format.map {
+                  case PresentCredentialRequestFormat.Anoncred.name => PresentCredentialFormat.Anoncred.name
+                  case format =>
+                    throw throw RuntimeException(
+                      s"Unexpected PresentCredentialRequestFormat=$format. Expecting: ${PresentCredentialRequestFormat.Anoncred.name}"
+                    )
+                }
               )
           ),
           thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
@@ -310,6 +323,7 @@ private class PresentationServiceImpl(
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+      presentationFormat: PresentCredentialRequestFormat,
       goalCode: Option[String] = None,
       goal: Option[String] = None,
       expirationDuration: Option[Duration] = None,
@@ -321,7 +335,7 @@ private class PresentationServiceImpl(
       connectionId,
       CredentialFormat.JWT,
       proofTypes,
-      options.map(o => Seq(toJWTAttachment(o))).getOrElse(Seq.empty),
+      options.map(o => Seq(toJWTAttachment(o, presentationFormat))).getOrElse(Seq.empty),
       goalCode,
       goal,
       expirationDuration
@@ -336,6 +350,7 @@ private class PresentationServiceImpl(
       proofTypes: Seq[ProofType],
       claimsToDisclose: ast.Json.Obj,
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+      presentationFormat: PresentCredentialRequestFormat,
       goalCode: Option[String] = None,
       goal: Option[String] = None,
       expirationDuration: Option[Duration] = None,
@@ -347,7 +362,7 @@ private class PresentationServiceImpl(
       connectionId,
       CredentialFormat.SDJWT,
       proofTypes,
-      attachments = Seq(toSDJWTAttachment(options, claimsToDisclose)),
+      attachments = Seq(toSDJWTAttachment(options, claimsToDisclose, presentationFormat)),
       goalCode,
       goal,
       expirationDuration
@@ -360,6 +375,7 @@ private class PresentationServiceImpl(
       thid: DidCommID,
       connectionId: Option[String],
       presentationRequest: AnoncredPresentationRequestV1,
+      presentationFormat: PresentCredentialRequestFormat,
       goalCode: Option[String] = None,
       goal: Option[String] = None,
       expirationDuration: Option[Duration] = None,
@@ -371,7 +387,7 @@ private class PresentationServiceImpl(
       connectionId,
       CredentialFormat.AnonCreds,
       Seq.empty,
-      Seq(toAnoncredAttachment(presentationRequest)),
+      Seq(toAnoncredAttachment(presentationRequest, presentationFormat)),
       goalCode,
       goal,
       expirationDuration
@@ -1160,30 +1176,36 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  private def toJWTAttachment(options: Options): AttachmentDescriptor = {
+  private def toJWTAttachment(
+      options: Options,
+      presentationFormat: PresentCredentialRequestFormat
+  ): AttachmentDescriptor = {
     AttachmentDescriptor.buildJsonAttachment(
       payload = PresentationAttachment.build(Some(options)),
-      format = Some(PresentCredentialRequestFormat.JWT.name)
+      format = Some(presentationFormat.name),
+      mediaType = Some("application/json")
     )
   }
 
   private def toSDJWTAttachment(
       options: Option[Options],
-      claimsToDsiclose: ast.Json.Obj
+      claimsToDsiclose: ast.Json.Obj,
+      presentationFormat: PresentCredentialRequestFormat
   ): AttachmentDescriptor = {
     AttachmentDescriptor.buildBase64Attachment(
       mediaType = Some("application/json"),
-      format = Some(PresentCredentialRequestFormat.SDJWT.name),
+      format = Some(presentationFormat.name),
       payload = SDJwtPresentation(options, claimsToDsiclose).toJson.getBytes
     )
   }
 
   private def toAnoncredAttachment(
-      presentationRequest: AnoncredPresentationRequestV1
+      presentationRequest: AnoncredPresentationRequestV1,
+      presentationFormat: PresentCredentialRequestFormat
   ): AttachmentDescriptor = {
     AttachmentDescriptor.buildBase64Attachment(
       mediaType = Some("application/json"),
-      format = Some(PresentCredentialRequestFormat.Anoncred.name),
+      format = Some(presentationFormat.name),
       payload = AnoncredPresentationRequestV1.schemaSerDes.serializeToJsonString(presentationRequest).getBytes()
     )
   }

@@ -703,11 +703,18 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
             goal_code = requestPresentation.body.goal_code,
             comment = requestPresentation.body.comment
           ),
-          attachments = Seq(
+          attachments = requestPresentation.attachments.map(attachment =>
             AttachmentDescriptor
               .buildBase64Attachment(
                 payload = signedJwtPresentation.value.getBytes(),
-                mediaType = Some(PresentCredentialFormat.JWT.name)
+                mediaType = attachment.media_type,
+                format = attachment.format.map {
+                  case PresentCredentialRequestFormat.JWT.name => PresentCredentialFormat.JWT.name
+                  case format =>
+                    throw throw RuntimeException(
+                      s"Unexpected PresentCredentialRequestFormat=$format. Expecting: ${PresentCredentialRequestFormat.JWT.name}"
+                    )
+                }
               )
           ),
           thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
