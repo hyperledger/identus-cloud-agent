@@ -67,6 +67,7 @@ class IssueControllerImpl(
               .createJWTIssueCredentialRecord(
                 pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
                 pairwiseHolderDID = offerContext.pairwiseHolderDID,
+                kidIssuer = request.issuingKid,
                 thid = DidCommID(),
                 maybeSchemaId = request.schemaId,
                 claims = jsonClaims,
@@ -91,6 +92,7 @@ class IssueControllerImpl(
               .createSDJWTIssueCredentialRecord(
                 pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
                 pairwiseHolderDID = offerContext.pairwiseHolderDID,
+                kidIssuer = request.issuingKid,
                 thid = DidCommID(),
                 maybeSchemaId = request.schemaId,
                 claims = jsonClaims,

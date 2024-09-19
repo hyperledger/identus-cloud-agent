@@ -10,7 +10,7 @@ import org.hyperledger.identus.shared.crypto.{
   Secp256k1PublicKey,
   X25519PublicKey
 }
-import org.hyperledger.identus.shared.models.Base64UrlString
+import org.hyperledger.identus.shared.models.{Base64UrlString, KeyId}
 import zio.*
 
 import scala.collection.immutable.ArraySeq
@@ -41,7 +41,7 @@ class OperationFactory(apollo: Apollo) {
     *   The index of the DID to be used for the key derivation
     */
   def makeCreateOperation(
-      masterKeyId: String,
+      masterKeyId: KeyId,
       seed: Array[Byte]
   )(
       didIndex: Int,
@@ -66,9 +66,9 @@ class OperationFactory(apollo: Apollo) {
         context = didTemplate.contexts
       )
       keys = CreateDIDKey(
-        hdKeys = hdKeysWithCounter._1.map(i => i.publicKey.id -> i.path).toMap ++
-          Map(masterKeyOutcome.publicKey.id -> masterKeyOutcome.path),
-        randKeys = randKeys.map(i => i.publicKey.id -> i.key).toMap,
+        hdKeys = hdKeysWithCounter._1.map(i => i.publicKey.id.value -> i.path).toMap ++
+          Map(masterKeyOutcome.publicKey.id.value -> masterKeyOutcome.path),
+        randKeys = randKeys.map(i => i.publicKey.id.value -> i.key).toMap,
       )
     } yield operation -> keys
   }
@@ -110,8 +110,8 @@ class OperationFactory(apollo: Apollo) {
       }
       keys = actionWithKey.collect { case (UpdateManagedDIDAction.AddKey(_), Some(secret)) => secret }
       (randKeys, hdKeys) = keys.partitionMap {
-        case (pk, hdPath: ManagedDIDHdKeyPath)    => Right(pk.id -> hdPath)
-        case (pk, keyPair: ManagedDIDRandKeyPair) => Left(pk.id -> keyPair)
+        case (pk, hdPath: ManagedDIDHdKeyPath)    => Right(pk.id.value -> hdPath)
+        case (pk, keyPair: ManagedDIDRandKeyPair) => Left(pk.id.value -> keyPair)
       }
       operation = PrismDIDOperation.Update(
         did = did,
@@ -163,7 +163,7 @@ class OperationFactory(apollo: Apollo) {
           toPublicKeyData(kp.publicKey) -> kp
       }
       KeyGenerationOutcome(
-        publicKey = PublicKey(template.id, template.purpose, publicKeyData),
+        publicKey = PublicKey(KeyId(template.id), template.purpose, publicKeyData),
         key = ManagedDIDRandKeyPair(template.purpose, keyPair)
       )
     }.orDie
@@ -177,12 +177,12 @@ class OperationFactory(apollo: Apollo) {
     val keyPath = keyCounter.path(purpose)
     for {
       keyPair <- deriveSecp256k1KeyPair(seed, keyPath)
-      publicKey = PublicKey(template.id, purpose, toPublicKeyData(keyPair.publicKey))
+      publicKey = PublicKey(KeyId(template.id), purpose, toPublicKeyData(keyPair.publicKey))
     } yield KeyDerivationOutcome(publicKey, keyPath, keyCounter.next(purpose))
   }
 
   private def deriveInternalPublicKey(seed: Array[Byte])(
-      id: String,
+      id: KeyId,
       purpose: InternalKeyPurpose,
       keyCounter: HdKeyIndexCounter
   ): UIO[KeyDerivationOutcome[InternalPublicKey]] = {

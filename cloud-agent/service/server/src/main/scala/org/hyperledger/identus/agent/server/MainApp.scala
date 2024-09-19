@@ -43,12 +43,15 @@ import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaControllerImpl,
   VerificationPolicyControllerImpl
 }
+import org.hyperledger.identus.pollux.prex.controller.PresentationExchangeControllerImpl
+import org.hyperledger.identus.pollux.prex.PresentationDefinitionValidatorImpl
 import org.hyperledger.identus.pollux.sql.repository.{
   JdbcCredentialDefinitionRepository,
   JdbcCredentialRepository,
   JdbcCredentialSchemaRepository,
   JdbcCredentialStatusListRepository,
   JdbcOID4VCIIssuerMetadataRepository,
+  JdbcPresentationExchangeRepository,
   JdbcPresentationRepository,
   JdbcVerificationPolicyRepository,
   Migrations as PolluxMigrations
@@ -213,12 +216,14 @@ object MainApp extends ZIOAppDefault {
           WalletManagementControllerImpl.layer,
           EventControllerImpl.layer,
           DIDCommControllerImpl.layer,
+          PresentationExchangeControllerImpl.layer,
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverLayer,
           DIDOperationValidator.layer(),
           DIDResolver.layer,
           HttpURIDereferencerImpl.layer,
+          PresentationDefinitionValidatorImpl.layer,
           // service
           ConnectionServiceImpl.layer >>> ConnectionServiceNotifier.layer,
           CredentialSchemaServiceImpl.layer,
@@ -232,6 +237,7 @@ object MainApp extends ZIOAppDefault {
           VerificationPolicyServiceImpl.layer,
           WalletManagementServiceImpl.layer,
           VcVerificationServiceImpl.layer,
+          PresentationExchangeServiceImpl.layer,
           // authentication
           AppModule.builtInAuthenticatorLayer,
           AppModule.keycloakAuthenticatorLayer,
@@ -255,6 +261,7 @@ object MainApp extends ZIOAppDefault {
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcOID4VCIIssuerMetadataRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcPresentationExchangeRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // oidc
           CredentialIssuerControllerImpl.layer,

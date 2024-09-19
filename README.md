@@ -28,14 +28,19 @@ In order to use the Cloud Agent, you establish a business logic controller respo
 
 As a result, you can concentrate on crafting self-sovereign identity solutions using well-known web development tools, without the need to delve into the intricacies of lower-level cryptography and identity protocol internals.
 
+## User documentation
+
+All documentation, tutorials and API references for the Identus ecosystem can be found at [https://hyperledger.github.io/identus-docs/](https://hyperledger.github.io/identus-docs/)
+
 ## Features
 
 * Rest API
 * DIDComm V2
 * W3C-compliant `did:prism` and `did:peer` methods
 * Credential types
-  * JWT
-  * AnonCreds (coming soon)
+  * JWT-VC
+  * SD-JWT-VC
+  * AnonCreds
 * HTTP events notification
 * Cardano as a distributed ledger
 * Secrets management with Hashicorp vault
@@ -177,10 +182,6 @@ The following tutorials will help you get started with the Cloud Agent and issue
 * [Setting up connections between agents using out-of-band (OOB) protocol](https://docs.atalaprism.io/tutorials/connections/connection)
 * [Issuing verifiable credentials (VCs)](https://docs.atalaprism.io/tutorials/credentials/issue)
 * [Presenting VC proofs](https://docs.atalaprism.io/tutorials/credentials/present-proof)
-
-## User documentation
-
-All extended documentation, tutorials and API references for the Identus ecosystem can be found at <https://docs.atalaprism.io/>
 
 ## Contributing
 

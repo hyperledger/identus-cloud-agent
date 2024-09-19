@@ -2,6 +2,7 @@ package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.presentproof.{
+  PresentCredentialRequestFormat,
   Presentation,
   ProofType,
   ProposePresentation,
@@ -33,6 +34,7 @@ object MockPresentationService extends Mock[PresentationService] {
             Option[String],
             Seq[ProofType],
             Option[Options],
+            PresentCredentialRequestFormat,
             Option[String],
             Option[String],
             Option[Duration]
@@ -50,6 +52,7 @@ object MockPresentationService extends Mock[PresentationService] {
             Seq[ProofType],
             ast.Json.Obj,
             Option[Options],
+            PresentCredentialRequestFormat,
             Option[String],
             Option[String],
             Option[Duration]
@@ -66,6 +69,7 @@ object MockPresentationService extends Mock[PresentationService] {
             DidCommID,
             Option[String],
             AnoncredPresentationRequestV1,
+            PresentCredentialRequestFormat,
             Option[String],
             Option[String],
             Option[Duration]
@@ -129,6 +133,7 @@ object MockPresentationService extends Mock[PresentationService] {
           connectionId: Option[String],
           proofTypes: Seq[ProofType],
           options: Option[Options],
+          presentationFormat: PresentCredentialRequestFormat,
           goalCode: Option[String],
           goal: Option[String],
           expirationTime: Option[Duration]
@@ -142,6 +147,7 @@ object MockPresentationService extends Mock[PresentationService] {
             connectionId,
             proofTypes,
             options,
+            presentationFormat,
             goalCode,
             goal,
             expirationTime
@@ -156,6 +162,7 @@ object MockPresentationService extends Mock[PresentationService] {
           proofTypes: Seq[ProofType],
           claimsToDisclose: ast.Json.Obj,
           options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+          presentationFormat: PresentCredentialRequestFormat,
           goalCode: Option[String],
           goal: Option[String],
           expirationTime: Option[Duration]
@@ -170,6 +177,7 @@ object MockPresentationService extends Mock[PresentationService] {
             proofTypes,
             claimsToDisclose,
             options,
+            presentationFormat,
             goalCode,
             goal,
             expirationTime
@@ -182,6 +190,7 @@ object MockPresentationService extends Mock[PresentationService] {
           thid: DidCommID,
           connectionId: Option[String],
           presentationRequest: AnoncredPresentationRequestV1,
+          presentationFormat: PresentCredentialRequestFormat,
           goalCode: Option[String],
           goal: Option[String],
           expirationTime: Option[Duration]
@@ -194,6 +203,7 @@ object MockPresentationService extends Mock[PresentationService] {
             thid,
             connectionId,
             presentationRequest,
+            presentationFormat,
             goalCode,
             goal,
             expirationTime

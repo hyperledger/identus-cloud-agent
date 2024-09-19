@@ -19,7 +19,7 @@ import org.hyperledger.identus.castor.core.model.did.{
 }
 import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation.Update
 import org.hyperledger.identus.shared.crypto.{Apollo, Ed25519KeyPair, X25519KeyPair}
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
 import zio.*
 
 import scala.collection.immutable.ArraySeq
@@ -103,16 +103,16 @@ private class HdKeyUpdateMaterial(nonSecretStorage: DIDNonSecretStorage, secretS
     for {
       _ <- ZIO.foreach(keys.hdKeys.toList) { case (keyId, keyPath) =>
         val meta = ManagedDIDKeyMeta.HD(keyPath)
-        nonSecretStorage.insertKeyMeta(did, keyId, meta, operationHash)
+        nonSecretStorage.insertKeyMeta(did, KeyId(keyId), meta, operationHash)
       }
       _ <- ZIO.foreach(keys.randKeyMeta.toList) { case (keyId, rand) =>
         val meta = ManagedDIDKeyMeta.Rand(rand)
-        nonSecretStorage.insertKeyMeta(did, keyId, meta, operationHash)
+        nonSecretStorage.insertKeyMeta(did, KeyId(keyId), meta, operationHash)
       }
       _ <- ZIO.foreach(keys.randKeys.toList) { case (keyId, key) =>
         key.keyPair match {
-          case kp: Ed25519KeyPair => secretStorage.insertPrismDIDKeyPair(did, keyId, operationHash, kp)
-          case kp: X25519KeyPair  => secretStorage.insertPrismDIDKeyPair(did, keyId, operationHash, kp)
+          case kp: Ed25519KeyPair => secretStorage.insertPrismDIDKeyPair(did, KeyId(keyId), operationHash, kp)
+          case kp: X25519KeyPair  => secretStorage.insertPrismDIDKeyPair(did, KeyId(keyId), operationHash, kp)
         }
       }
     } yield ()

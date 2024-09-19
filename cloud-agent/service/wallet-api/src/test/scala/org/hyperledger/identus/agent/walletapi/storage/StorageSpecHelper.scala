@@ -18,7 +18,7 @@ import org.hyperledger.identus.castor.core.model.did.{
   VerificationRelationship
 }
 import org.hyperledger.identus.shared.crypto.ApolloSpecHelper
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext, WalletAdministrationContext}
 import zio.*
 import zio.test.*
 
@@ -44,7 +44,7 @@ trait StorageSpecHelper extends ApolloSpecHelper {
   protected def generateKeyPair() = apollo.secp256k1.generateKeyPair
 
   protected def generateCreateOperation(keyIds: Seq[String], didIndex: Int) =
-    OperationFactory(apollo).makeCreateOperation("master0", Array.fill(64)(0))(
+    OperationFactory(apollo).makeCreateOperation(KeyId("master0"), Array.fill(64)(0))(
       didIndex,
       ManagedDIDTemplate(
         publicKeys =

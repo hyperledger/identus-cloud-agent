@@ -75,7 +75,7 @@ object StatusListJobs extends BackgroundJobsHelper {
         vcStatusListCredJson <- ZIO
           .fromEither(io.circe.parser.parse(vcStatusListCredString))
           .mapError(_.underlying)
-        issuer <- createJwtIssuer(statusListWithCreds.issuer, VerificationRelationship.AssertionMethod)
+        issuer <- createJwtVcIssuer(statusListWithCreds.issuer, VerificationRelationship.AssertionMethod, None)
         vcStatusListCred <- VCStatusList2021
           .decodeFromJson(vcStatusListCredJson, issuer)
           .mapError(x => new Throwable(x.msg))

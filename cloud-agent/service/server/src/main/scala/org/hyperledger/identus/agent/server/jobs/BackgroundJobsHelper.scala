@@ -25,7 +25,8 @@ import org.hyperledger.identus.pollux.vc.jwt.{
   DIDResolutionSucceeded,
   DidResolver as JwtDidResolver,
   ES256KSigner,
-  Issuer as JwtIssuer
+  Issuer as JwtIssuer,
+  *
 }
 import org.hyperledger.identus.shared.crypto.*
 import org.hyperledger.identus.shared.messaging.MessagingService.RetryStep
@@ -60,9 +61,10 @@ trait BackgroundJobsHelper {
     } yield longFormPrismDID
   }
 
-  def createJwtIssuer(
+  def createJwtVcIssuer(
       jwtIssuerDID: PrismDID,
-      verificationRelationship: VerificationRelationship
+      verificationRelationship: VerificationRelationship,
+      kidIssuer: Option[KeyId],
   ): ZIO[
     DIDService & ManagedDIDService & WalletAccessContext,
     BackgroundJobError | GetManagedDIDError | DIDResolutionError,
@@ -72,19 +74,23 @@ trait BackgroundJobsHelper {
       managedDIDService <- ZIO.service[ManagedDIDService]
       didService <- ZIO.service[DIDService]
       // Automatically infer keyId to use by resolving DID and choose the corresponding VerificationRelationship
-      issuingKeyId <- didService
-        .resolveDID(jwtIssuerDID)
-        .someOrFail(BackgroundJobError.InvalidState(s"Issuing DID resolution result is not found"))
-        .map { case (_, didData) =>
-          didData.publicKeys
-            .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.SECP256K1)
-            .map(_.id)
-        }
-        .someOrFail(
-          BackgroundJobError.InvalidState(
-            s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID"
+
+      // FIXME kidIssuer
+      issuingKeyId <-
+        // kidIssuer.orElse
+        didService
+          .resolveDID(jwtIssuerDID)
+          .someOrFail(BackgroundJobError.InvalidState(s"Issuing DID resolution result is not found"))
+          .map { case (_, didData) =>
+            didData.publicKeys
+              .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.SECP256K1)
+              .map(_.id)
+          }
+          .someOrFail(
+            BackgroundJobError.InvalidState(
+              s"Issuing DID doesn't have a key in ${verificationRelationship.name} to use: $jwtIssuerDID"
+            )
           )
-        )
       jwtIssuer <- managedDIDService
         .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
         .flatMap {
@@ -94,9 +100,12 @@ trait BackgroundJobsHelper {
                 .InvalidState(s"Issuer key-pair does not exist in the wallet: ${jwtIssuerDID.toString}#$issuingKeyId")
             )
           case Some(Ed25519KeyPair(publicKey, privateKey)) =>
-            ZIO.fail(
-              BackgroundJobError.InvalidState(
-                s"Issuer key-pair '$issuingKeyId' is of the type Ed25519. It's not supported by this feature in this version"
+            ZIO.succeed(
+              JwtIssuer(
+                jwtIssuerDID.did,
+                // org.hyperledger.identus.castor.core.model.did.DID.fromStringUnsafe(jwtIssuerDID.toString),
+                EdSigner(Ed25519KeyPair(publicKey, privateKey), Some(issuingKeyId)),
+                publicKey.toJava
               )
             )
           case Some(X25519KeyPair(publicKey, privateKey)) =>
@@ -109,7 +118,7 @@ trait BackgroundJobsHelper {
             ZIO.succeed(
               JwtIssuer(
                 jwtIssuerDID.did,
-                ES256KSigner(privateKey.toJavaPrivateKey),
+                ES256KSigner(privateKey.toJavaPrivateKey, Some(issuingKeyId)),
                 publicKey.toJavaPublicKey
               )
             )
@@ -162,7 +171,7 @@ trait BackgroundJobsHelper {
         .map { case (_, didData) =>
           didData.publicKeys
             .find(pk =>
-              pk.id == keyId.value
+              pk.id == keyId
                 && pk.purpose == verificationRelationship && pk.publicKeyData.crv == EllipticCurve.ED25519
             )
             .map(_.id)

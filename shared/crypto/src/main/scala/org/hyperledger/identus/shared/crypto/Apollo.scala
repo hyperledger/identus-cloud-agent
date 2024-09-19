@@ -163,6 +163,7 @@ trait Ed25519PublicKey extends PublicKey, Verifiable {
     case _ => false
   }
 
+  def toJava = Ed25519PublicKey.toJavaEd25519PublicKey(this.getEncoded)
 }
 trait Ed25519PrivateKey extends PrivateKey, Signable {
   type Pub = Ed25519PublicKey

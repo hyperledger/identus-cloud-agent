@@ -24,8 +24,8 @@ import org.hyperledger.identus.castor.core.model.did.{
   UpdateDIDAction,
   VerificationRelationship
 }
-import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.UriOrJsonEndpoint
-import org.hyperledger.identus.shared.models.Base64UrlString
+import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.{value, UriOrJsonEndpoint}
+import org.hyperledger.identus.shared.models.{Base64UrlString, KeyId}
 import org.hyperledger.identus.shared.utils.Traverse.*
 import zio.*
 
@@ -122,7 +122,7 @@ private[castor] trait ProtoModelHelper {
   extension (publicKey: PublicKey) {
     def toProto: node_models.PublicKey = {
       node_models.PublicKey(
-        id = publicKey.id,
+        id = publicKey.id.value,
         usage = publicKey.purpose match {
           case VerificationRelationship.Authentication       => node_models.KeyUsage.AUTHENTICATION_KEY
           case VerificationRelationship.AssertionMethod      => node_models.KeyUsage.ISSUING_KEY
@@ -140,7 +140,7 @@ private[castor] trait ProtoModelHelper {
   extension (internalPublicKey: InternalPublicKey) {
     def toProto: node_models.PublicKey = {
       node_models.PublicKey(
-        id = internalPublicKey.id,
+        id = internalPublicKey.id.value,
         usage = internalPublicKey.purpose match {
           case InternalKeyPurpose.Master     => node_models.KeyUsage.MASTER_KEY
           case InternalKeyPurpose.Revocation => node_models.KeyUsage.REVOCATION_KEY
@@ -313,13 +313,13 @@ private[castor] trait ProtoModelHelper {
       } yield purpose match {
         case purpose: VerificationRelationship =>
           PublicKey(
-            id = publicKey.id,
+            id = KeyId(publicKey.id),
             purpose = purpose,
             publicKeyData = keyData
           )
         case purpose: InternalKeyPurpose =>
           InternalPublicKey(
-            id = publicKey.id,
+            id = KeyId(publicKey.id),
             purpose = purpose,
             publicKeyData = keyData
           )

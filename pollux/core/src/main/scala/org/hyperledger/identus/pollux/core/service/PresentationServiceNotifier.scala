@@ -2,12 +2,7 @@ package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.event.notification.{Event, EventNotificationService}
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.presentproof.{
-  Presentation,
-  ProofType,
-  ProposePresentation,
-  RequestPresentation
-}
+import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.pollux.anoncreds.AnoncredPresentation
 import org.hyperledger.identus.pollux.core.model.{DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
@@ -39,6 +34,7 @@ class PresentationServiceNotifier(
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       options: Option[Options],
+      presentationFormat: PresentCredentialRequestFormat,
       goalCode: Option[String],
       goal: Option[String],
       expirationTime: Option[Duration],
@@ -51,6 +47,7 @@ class PresentationServiceNotifier(
         connectionId,
         proofTypes,
         options,
+        presentationFormat,
         goalCode,
         goal,
         expirationTime
@@ -65,6 +62,7 @@ class PresentationServiceNotifier(
       proofTypes: Seq[ProofType],
       claimsToDisclose: ast.Json.Obj,
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+      presentationFormat: PresentCredentialRequestFormat,
       goalCode: Option[String],
       goal: Option[String],
       expirationTime: Option[Duration],
@@ -78,6 +76,7 @@ class PresentationServiceNotifier(
         proofTypes,
         claimsToDisclose,
         options,
+        presentationFormat,
         goalCode,
         goal,
         expirationTime
@@ -90,6 +89,7 @@ class PresentationServiceNotifier(
       thid: DidCommID,
       connectionId: Option[String],
       presentationRequest: AnoncredPresentationRequestV1,
+      presentationFormat: PresentCredentialRequestFormat,
       goalCode: Option[String],
       goal: Option[String],
       expirationTime: Option[Duration],
@@ -101,6 +101,7 @@ class PresentationServiceNotifier(
         thid,
         connectionId,
         presentationRequest,
+        presentationFormat,
         goalCode,
         goal,
         expirationTime
