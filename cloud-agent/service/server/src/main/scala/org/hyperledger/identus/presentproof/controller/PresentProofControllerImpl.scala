@@ -8,7 +8,7 @@ import org.hyperledger.identus.api.http.model.PaginationInput
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.presentproof.ProofType
+import org.hyperledger.identus.mercury.protocol.presentproof.{PresentCredentialRequestFormat, ProofType}
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, PresentationRecord}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.model.presentation.Options
@@ -80,6 +80,7 @@ class PresentProofControllerImpl(
       request.options.map(o => Options(o.challenge, o.domain)),
       request.claims,
       request.anoncredPresentationRequest,
+      request.presentationFormat,
       request.goalCode,
       request.goal,
       expirationDuration
@@ -95,6 +96,7 @@ class PresentProofControllerImpl(
       options: Option[Options],
       claims: Option[zio.json.ast.Json.Obj],
       anoncredPresentationRequest: Option[AnoncredPresentationRequestV1],
+      presentationFormat: Option[PresentCredentialRequestFormat],
       goalCode: Option[String],
       goal: Option[String],
       expirationDuration: Option[Duration],
@@ -115,6 +117,7 @@ class PresentProofControllerImpl(
             )
           },
           options = options,
+          presentationFormat = presentationFormat.getOrElse(PresentCredentialRequestFormat.JWT),
           goalCode = goalCode,
           goal = goal,
           expirationDuration = expirationDuration,
@@ -136,6 +139,7 @@ class PresentProofControllerImpl(
               },
               claimsToDisclose = claimsToDisclose,
               options = options,
+              presentationFormat = presentationFormat.getOrElse(PresentCredentialRequestFormat.SDJWT),
               goalCode = goalCode,
               goal = goal,
               expirationDuration = expirationDuration,
@@ -156,6 +160,7 @@ class PresentProofControllerImpl(
               thid = DidCommID(),
               connectionId = connectionId,
               presentationRequest = presentationRequest,
+              presentationFormat = presentationFormat.getOrElse(PresentCredentialRequestFormat.Anoncred),
               goalCode = goalCode,
               goal = goal,
               expirationDuration = expirationDuration,

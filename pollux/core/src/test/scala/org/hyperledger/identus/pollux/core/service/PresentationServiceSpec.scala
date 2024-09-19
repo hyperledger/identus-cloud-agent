@@ -75,6 +75,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
               Some(connectionId),
               proofTypes,
               options,
+              PresentCredentialRequestFormat.JWT,
               None,
               None,
               None,
@@ -143,6 +144,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 thid,
                 Some(connectionId),
                 anoncredPresentationRequestV1,
+                PresentCredentialRequestFormat.Anoncred,
                 None,
                 None,
                 None
