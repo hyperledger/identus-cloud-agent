@@ -4,13 +4,10 @@ import io.circe.*
 import io.circe.generic.auto.*
 import io.circe.parser.*
 import org.hyperledger.identus.pollux.prex.PresentationDefinition
-import org.hyperledger.identus.shared.models.WalletAccessContext
-import org.hyperledger.identus.shared.models.WalletId
-import zio.durationInt
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio.{durationInt, ZIO, ZLayer}
 import zio.test.*
 import zio.test.Assertion.*
-import zio.ZIO
-import zio.ZLayer
 
 import java.util.UUID
 import scala.io.Source
