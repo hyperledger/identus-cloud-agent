@@ -25,6 +25,8 @@ in
         }
     ),
 
+  st-oid4vp = stack.makeAgentStack { name = "verifier", port = 8080 },
+
   mt =
     stack.makeAgentStack { name = "default", port = 8080, apikeyEnabled = true },
 
