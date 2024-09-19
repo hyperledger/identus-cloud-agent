@@ -117,6 +117,7 @@ object PresentationServiceNotifierSpec extends ZIOSpecDefault with PresentationS
             None,
             Seq.empty,
             None,
+            PresentCredentialRequestFormat.JWT,
             None,
             None,
             None
