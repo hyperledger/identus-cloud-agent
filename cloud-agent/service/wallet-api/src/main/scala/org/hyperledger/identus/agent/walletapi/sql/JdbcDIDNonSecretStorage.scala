@@ -109,11 +109,11 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
         _ <- insertHdKeyIO.updateMany(randKeyValues(now))
       } yield ()
 
-    for {
+    (for {
       walletCtx <- ZIO.service[WalletAccessContext]
       now <- Clock.instant
       _ <- txnIO(now, walletCtx.walletId).transactWallet(xa)
-    } yield ()
+    } yield ()).orDie
   }
 
   override def updateManagedDID(did: PrismDID, patch: ManagedDIDStatePatch): RIO[WalletAccessContext, Unit] = {
