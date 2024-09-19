@@ -25,6 +25,7 @@ trait CredentialService {
   def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: Option[DidId],
+      kidIssuer: Option[KeyId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: io.circe.Json,
@@ -40,6 +41,7 @@ trait CredentialService {
   def createSDJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: Option[DidId],
+      kidIssuer: Option[KeyId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: io.circe.Json,

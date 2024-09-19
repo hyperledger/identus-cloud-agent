@@ -18,9 +18,9 @@
         }
       },
       "required": ["email", "userName", "age"],
-      "additionalProperties": false
+      "additionalProperties": true
     }
   },
   "required": ["credentialSubject"],
-  "additionalProperties": false
+  "additionalProperties": true
 }

@@ -14,7 +14,7 @@ import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.shared.crypto.{Apollo, Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
 import zio.*
 
 import scala.collection.immutable.ArraySeq
@@ -33,13 +33,13 @@ class ManagedDIDServiceImpl private[walletapi] (
     createDIDSem: Semaphore
 ) extends ManagedDIDService {
 
-  private val AGREEMENT_KEY_ID = "agreement"
-  private val AUTHENTICATION_KEY_ID = "authentication"
+  private val AGREEMENT_KEY_ID = KeyId("agreement")
+  private val AUTHENTICATION_KEY_ID = KeyId("authentication")
 
   private val keyResolver = KeyResolver(apollo, nonSecretStorage, secretStorage, walletSecretStorage)
   private val publicationHandler = PublicationHandler(didService, keyResolver)(DEFAULT_MASTER_KEY_ID)
   private val didCreateHandler =
-    DIDCreateHandler(apollo, nonSecretStorage, secretStorage, walletSecretStorage)(DEFAULT_MASTER_KEY_ID)
+    DIDCreateHandler(apollo, nonSecretStorage, secretStorage, walletSecretStorage)(KeyId(DEFAULT_MASTER_KEY_ID))
   private val didUpdateHandler =
     DIDUpdateHandler(apollo, nonSecretStorage, secretStorage, walletSecretStorage, publicationHandler)
 
@@ -56,7 +56,7 @@ class ManagedDIDServiceImpl private[walletapi] (
 
   override def findDIDKeyPair(
       did: CanonicalPrismDID,
-      keyId: String
+      keyId: KeyId
   ): URIO[WalletAccessContext, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]] =
     nonSecretStorage
       .getManagedDIDState(did)

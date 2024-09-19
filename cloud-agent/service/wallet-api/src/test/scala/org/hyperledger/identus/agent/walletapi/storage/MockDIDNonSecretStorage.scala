@@ -3,7 +3,7 @@ package org.hyperledger.identus.agent.walletapi.storage
 import org.hyperledger.identus.agent.walletapi.model.*
 import org.hyperledger.identus.castor.core.model.did.{PrismDID, ScheduledDIDOperationStatus}
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.{Expectation, Mock, Proxy}
 import zio.test.Assertion.equalTo
@@ -54,13 +54,13 @@ case class MockDIDNonSecretStorage(proxy: Proxy) extends DIDNonSecretStorage {
 
   override def getKeyMeta(
       did: PrismDID,
-      keyId: String
+      keyId: KeyId
   ): RIO[WalletAccessContext, Option[(ManagedDIDKeyMeta, Array[Byte])]] =
     proxy(MockDIDNonSecretStorage.GetKeyMeta, (did, keyId))
 
   override def insertKeyMeta(
       did: PrismDID,
-      keyId: String,
+      keyId: KeyId,
       meta: ManagedDIDKeyMeta,
       operationHash: Array[Byte]
   ): RIO[WalletAccessContext, Unit] =
@@ -90,8 +90,8 @@ object MockDIDNonSecretStorage extends Mock[DIDNonSecretStorage] {
   object UpdateManagedDID extends Effect[(PrismDID, ManagedDIDStatePatch), Throwable, Unit]
   object GetMaxDIDIndex extends Effect[Unit, Throwable, Option[Int]]
   object GetHdKeyCounter extends Effect[PrismDID, Throwable, Option[HdKeyIndexCounter]]
-  object GetKeyMeta extends Effect[(PrismDID, String), Throwable, Option[(ManagedDIDKeyMeta, Array[Byte])]]
-  object InsertHdKeyMeta extends Effect[(PrismDID, String, ManagedDIDKeyMeta, Array[Byte]), Throwable, Unit]
+  object GetKeyMeta extends Effect[(PrismDID, KeyId), Throwable, Option[(ManagedDIDKeyMeta, Array[Byte])]]
+  object InsertHdKeyMeta extends Effect[(PrismDID, KeyId, ManagedDIDKeyMeta, Array[Byte]), Throwable, Unit]
   object ListHdKeyPath extends Effect[PrismDID, Throwable, Seq[(String, ArraySeq[Byte], ManagedDIDHdKeyPath)]]
   object ListManagedDID extends Effect[(Option[Int], Option[Int]), Throwable, (Seq[(PrismDID, ManagedDIDState)], Int)]
 

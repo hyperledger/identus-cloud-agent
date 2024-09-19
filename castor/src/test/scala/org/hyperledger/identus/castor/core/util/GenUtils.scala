@@ -4,7 +4,7 @@ import io.circe.Json
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.{UriOrJsonEndpoint, UriValue}
 import org.hyperledger.identus.shared.crypto.Apollo
-import org.hyperledger.identus.shared.models.Base64UrlString
+import org.hyperledger.identus.shared.models.{Base64UrlString, KeyId}
 import zio.*
 import zio.test.Gen
 
@@ -41,14 +41,14 @@ object GenUtils {
       id <- uriFragment
       purpose <- Gen.fromIterable(VerificationRelationship.values)
       keyData <- publicKeyData
-    } yield PublicKey(id, purpose, keyData)
+    } yield PublicKey(KeyId(id), purpose, keyData)
 
   val internalPublicKey: Gen[Any, InternalPublicKey] =
     for {
       id <- uriFragment
       purpose <- Gen.fromIterable(InternalKeyPurpose.values)
       keyData <- publicKeyData
-    } yield InternalPublicKey(id, purpose, keyData)
+    } yield InternalPublicKey(KeyId(id), purpose, keyData)
 
   val service: Gen[Any, Service] =
     for {
