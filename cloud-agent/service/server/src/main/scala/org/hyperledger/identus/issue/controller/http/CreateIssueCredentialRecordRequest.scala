@@ -9,6 +9,7 @@ import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID
+import scala.language.implicitConversions
 
 /** A class to represent an incoming request to create a new credential offer.
   *
@@ -33,10 +34,7 @@ final case class CreateIssueCredentialRecordRequest(
     validityPeriod: Option[Double] = None,
     @description(annotations.schemaId.description)
     @encodedExample(annotations.schemaId.example)
-    schemaId: Option[String] = None,
-    @description(annotations.schemaId.description)
-    @encodedExample(annotations.schemaId.example)
-    schemaIds: Option[List[String]] = None,
+    schemaId: Option[String | List[String]] = None,
     @description(annotations.credentialDefinitionId.description)
     @encodedExample(annotations.credentialDefinitionId.example)
     credentialDefinitionId: Option[UUID],
@@ -85,21 +83,6 @@ object CreateIssueCredentialRecordRequest {
           |""".stripMargin,
           example = Some(
             "https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema"
-          )
-        )
-
-    object schemaIds
-        extends Annotation[Option[List[String]]](
-          description = """
-            |The URL pointing to the JSON schema that will be used for this offer (should be 'http' or 'https').
-            |When dereferenced, the returned content should be a JSON schema compliant with the '[Draft 2020-12](https://json-schema.org/draft/2020-12/release-notes)' version of the specification.
-            |Note that this parameter only applies when the offer is of type 'JWT'.
-            |""".stripMargin,
-          example = Some(
-            List(
-              "https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema",
-              "https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema2"
-            )
           )
         )
 
@@ -196,6 +179,19 @@ object CreateIssueCredentialRecordRequest {
         )
   }
 
+  given schemaIdEncoder: JsonEncoder[String | List[String]] =
+    JsonEncoder[String]
+      .orElseEither(JsonEncoder[List[String]])
+      .contramap[String | List[String]] {
+        case schemaId: String        => Left(schemaId)
+        case schemaIds: List[String] => Right(schemaIds)
+      }
+
+  given schemaIdDecoder: JsonDecoder[String | List[String]] =
+    JsonDecoder[List[String]]
+      .map(schemaId => schemaId: String | List[String])
+      .orElse(JsonDecoder[String].map(schemaId => schemaId: String | List[String]))
+
   given encoder: JsonEncoder[CreateIssueCredentialRecordRequest] =
     DeriveJsonEncoder.gen[CreateIssueCredentialRecordRequest]
 
@@ -203,6 +199,17 @@ object CreateIssueCredentialRecordRequest {
     DeriveJsonDecoder.gen[CreateIssueCredentialRecordRequest]
 
   given schemaJson: Schema[KeyId] = Schema.schemaForString.map[KeyId](v => Some(KeyId(v)))(KeyId.value)
+
+  given schemaId: Schema[String | List[String]] = Schema
+    .schemaForEither(Schema.schemaForString, Schema.schemaForArray[String])
+    .map[String | List[String]] {
+      case Left(value)   => Some(value)
+      case Right(values) => Some(values.toList)
+    } {
+      case value: String        => Left(value)
+      case values: List[String] => Right(values.toArray)
+    }
+
   given schema: Schema[CreateIssueCredentialRecordRequest] = Schema.derived
 
 }

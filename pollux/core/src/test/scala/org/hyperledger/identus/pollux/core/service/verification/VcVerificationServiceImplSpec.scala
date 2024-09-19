@@ -33,11 +33,9 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -100,11 +98,9 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -167,11 +163,9 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -234,11 +228,9 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -308,11 +300,9 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -379,11 +369,9 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "resource:///vc-schema-personal.json",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "resource:///vc-schema-personal.json",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -450,16 +438,14 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Right(
-                List(
-                  CredentialSchema(
-                    id = "resource:///vc-schema-personal.json",
-                    `type` = "JsonSchemaValidator2018"
-                  ),
-                  CredentialSchema(
-                    id = "resource:///vc-schema-driver-license.json",
-                    `type` = "JsonSchemaValidator2018"
-                  )
+              List(
+                CredentialSchema(
+                  id = "resource:///vc-schema-personal.json",
+                  `type` = "JsonSchemaValidator2018"
+                ),
+                CredentialSchema(
+                  id = "resource:///vc-schema-driver-license.json",
+                  `type` = "JsonSchemaValidator2018"
                 )
               )
             ),
@@ -530,16 +516,14 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Right(
-                List(
-                  CredentialSchema(
-                    id = "resource:///vc-schema-personal.json",
-                    `type` = "JsonSchemaValidator2018"
-                  ),
-                  CredentialSchema(
-                    id = "resource:///vc-schema-driver-license.json",
-                    `type` = "JsonSchemaValidator2018"
-                  )
+              List(
+                CredentialSchema(
+                  id = "resource:///vc-schema-personal.json",
+                  `type` = "JsonSchemaValidator2018"
+                ),
+                CredentialSchema(
+                  id = "resource:///vc-schema-driver-license.json",
+                  `type` = "JsonSchemaValidator2018"
                 )
               )
             ),
@@ -611,11 +595,9 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -679,11 +661,9 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -747,11 +727,9 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -815,11 +793,9 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(

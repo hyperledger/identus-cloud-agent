@@ -1,6 +1,5 @@
 package org.hyperledger.identus.issue.controller
 
-import cats.Applicative
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.ControllerHelper
 import org.hyperledger.identus.agent.walletapi.model.PublicationState
@@ -65,7 +64,10 @@ class IssueControllerImpl(
                 pairwiseHolderDID = offerContext.pairwiseHolderDID,
                 kidIssuer = request.issuingKid,
                 thid = DidCommID(),
-                maybeSchemaIds = Applicative[Option].map2(request.schemaIds, request.schemaId.map(List(_)))(_ ++ _),
+                maybeSchemaIds = request.schemaId.map {
+                  case schemaId: String        => List(schemaId)
+                  case schemaIds: List[String] => schemaIds
+                },
                 claims = jsonClaims,
                 validityPeriod = request.validityPeriod,
                 automaticIssuance = request.automaticIssuance.orElse(Some(true)),
@@ -90,7 +92,10 @@ class IssueControllerImpl(
                 pairwiseHolderDID = offerContext.pairwiseHolderDID,
                 kidIssuer = request.issuingKid,
                 thid = DidCommID(),
-                maybeSchemaIds = request.schemaId.map(List(_)),
+                maybeSchemaIds = request.schemaId.map {
+                  case schemaId: String        => List(schemaId)
+                  case schemaIds: List[String] => schemaIds
+                },
                 claims = jsonClaims,
                 validityPeriod = request.validityPeriod,
                 automaticIssuance = request.automaticIssuance.orElse(Some(true)),
