@@ -18,6 +18,11 @@ import org.hyperledger.identus.agent.walletapi.sql.{
 }
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
+import org.hyperledger.identus.castor.core.model.did.{
+  Service as DidDocumentService,
+  ServiceEndpoint as DidDocumentServiceEndpoint,
+  ServiceType as DidDocumentServiceType
+}
 import org.hyperledger.identus.castor.core.service.DIDServiceImpl
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.connect.controller.ConnectionControllerImpl
@@ -139,6 +144,38 @@ object MainApp extends ZIOAppDefault {
       |""".stripMargin)
         .ignore
 
+      appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
+      // these services are added to any DID document by default when they are created.
+      defaultDidDocumentServices = Set(
+        DidDocumentService(
+          id = appConfig.agent.httpEndpoint.serviceName,
+          serviceEndpoint = DidDocumentServiceEndpoint
+            .Single(
+              DidDocumentServiceEndpoint.UriOrJsonEndpoint
+                .Uri(
+                  DidDocumentServiceEndpoint.UriValue
+                    .fromString(appConfig.agent.httpEndpoint.publicEndpointUrl.toString)
+                    .toOption
+                    .get // This will fail if URL is invalid, which will prevent app from starting since public endpoint in config is invalid
+                )
+            ),
+          `type` = DidDocumentServiceType.Single(DidDocumentServiceType.Name.fromStringUnsafe("LinkedResourceV1"))
+        ),
+        DidDocumentService(
+          id = appConfig.pollux.statusListRegistry.serviceName,
+          serviceEndpoint = DidDocumentServiceEndpoint
+            .Single(
+              DidDocumentServiceEndpoint.UriOrJsonEndpoint
+                .Uri(
+                  DidDocumentServiceEndpoint.UriValue
+                    .fromString(appConfig.pollux.statusListRegistry.publicEndpointUrl.toString)
+                    .toOption
+                    .get
+                )
+            ),
+          `type` = DidDocumentServiceType.Single(DidDocumentServiceType.Name.fromStringUnsafe("LinkedResourceV1"))
+        )
+      )
       _ <- preMigrations
       _ <- migrations
 
@@ -183,7 +220,7 @@ object MainApp extends ZIOAppDefault {
           LinkSecretServiceImpl.layer >>> CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
           EntityServiceImpl.layer,
-          ManagedDIDServiceWithEventNotificationImpl.layer,
+          ZLayer.succeed(defaultDidDocumentServices) >>> ManagedDIDServiceWithEventNotificationImpl.layer,
           LinkSecretServiceImpl.layer >>> PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
           VerificationPolicyServiceImpl.layer,
           WalletManagementServiceImpl.layer,
