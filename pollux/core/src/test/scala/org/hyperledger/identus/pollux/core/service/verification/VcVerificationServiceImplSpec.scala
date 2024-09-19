@@ -591,7 +591,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),

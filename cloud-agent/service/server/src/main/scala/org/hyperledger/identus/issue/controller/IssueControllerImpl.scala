@@ -93,20 +93,20 @@ class IssueControllerImpl(
               issuingDID <- getIssuingDidFromRequest(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
               record <- credentialService
-              .createSDJWTIssueCredentialRecord(
-                pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
-                pairwiseHolderDID = offerContext.pairwiseHolderDID,
-                kidIssuer = request.issuingKid,
-                thid = DidCommID(),
-                maybeSchemaId = request.schemaId,
-                claims = jsonClaims,
-                validityPeriod = request.validityPeriod,
-                automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-                issuingDID = issuingDID.asCanonical,
-                goalCode = offerContext.goalCode,
-                goal = offerContext.goal,
-                expirationDuration = offerContext.expirationDuration,
-                connectionId = request.connectionId
+                .createSDJWTIssueCredentialRecord(
+                  pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
+                  pairwiseHolderDID = offerContext.pairwiseHolderDID,
+                  kidIssuer = request.issuingKid,
+                  thid = DidCommID(),
+                  maybeSchemaId = request.schemaId,
+                  claims = jsonClaims,
+                  validityPeriod = request.validityPeriod,
+                  automaticIssuance = request.automaticIssuance.orElse(Some(true)),
+                  issuingDID = issuingDID.asCanonical,
+                  goalCode = offerContext.goalCode,
+                  goal = offerContext.goal,
+                  expirationDuration = offerContext.expirationDuration,
+                  connectionId = request.connectionId
                 )
             } yield record
           case AnonCreds =>

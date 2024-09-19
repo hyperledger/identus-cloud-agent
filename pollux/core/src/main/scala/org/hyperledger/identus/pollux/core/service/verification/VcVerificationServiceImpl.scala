@@ -1,8 +1,8 @@
 package org.hyperledger.identus.pollux.core.service.verification
 
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
-import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.pollux.vc.jwt.{CredentialPayload, DidResolver, JWT, JWTVerification, JwtCredential}
+import org.hyperledger.identus.shared.http.UriResolver
 // import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits //TODO: might not be necessary
 import zio.*
 
