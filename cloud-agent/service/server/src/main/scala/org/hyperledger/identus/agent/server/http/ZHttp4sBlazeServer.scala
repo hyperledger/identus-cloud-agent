@@ -93,9 +93,9 @@ class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNam
     options <- ZIO.attempt {
       Http4sServerOptions
         .customiseInterceptors[Task]
-        .exceptionHandler(CustomServerInterceptors.exceptionHandler)
-        .rejectHandler(CustomServerInterceptors.rejectHandler)
-        .decodeFailureHandler(CustomServerInterceptors.decodeFailureHandler)
+        .exceptionHandler(CustomServerInterceptors.tapirExceptionHandler)
+        .rejectHandler(CustomServerInterceptors.tapirRejectHandler)
+        .decodeFailureHandler(CustomServerInterceptors.tapirDecodeFailureHandler)
         .serverLog(None)
         .metricsInterceptor(
           srv.metricsInterceptor(
@@ -123,6 +123,7 @@ class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNam
         ZIO.executor.flatMap(executor =>
           BlazeServerBuilder[Task]
             .withExecutionContext(executor.asExecutionContext)
+            .withServiceErrorHandler(CustomServerInterceptors.http4sServiceErrorHandler)
             .bindHttp(port, "0.0.0.0")
             .withHttpApp(Router("/" -> http4sEndpoints).orNotFound)
             .serve

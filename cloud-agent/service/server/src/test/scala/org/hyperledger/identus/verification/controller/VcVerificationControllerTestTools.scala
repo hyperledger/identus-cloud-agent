@@ -69,9 +69,9 @@ trait VcVerificationControllerTestTools extends PostgresTestContainerSupport {
 
   def bootstrapOptions[F[_]](monadError: MonadError[F]): CustomiseInterceptors[F, Any] = {
     new CustomiseInterceptors[F, Any](_ => ())
-      .exceptionHandler(CustomServerInterceptors.exceptionHandler)
-      .rejectHandler(CustomServerInterceptors.rejectHandler)
-      .decodeFailureHandler(CustomServerInterceptors.decodeFailureHandler)
+      .exceptionHandler(CustomServerInterceptors.tapirExceptionHandler)
+      .rejectHandler(CustomServerInterceptors.tapirRejectHandler)
+      .decodeFailureHandler(CustomServerInterceptors.tapirDecodeFailureHandler)
   }
 
   def httpBackend(controller: VcVerificationController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {
