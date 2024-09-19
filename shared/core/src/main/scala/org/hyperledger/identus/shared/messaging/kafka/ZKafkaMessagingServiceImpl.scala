@@ -3,8 +3,12 @@ package org.hyperledger.identus.shared.messaging.kafka
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.header.Headers
 import org.hyperledger.identus.shared.messaging.*
-import zio.{Duration, EnvironmentTag, RIO, RLayer, Task, ULayer, URIO, ZIO, ZLayer, durationInt}
-import zio.kafka.consumer.{Consumer as ZKConsumer, ConsumerSettings as ZKConsumerSettings, Subscription as ZKSubscription}
+import zio.{durationInt, Duration, EnvironmentTag, RIO, RLayer, Task, ULayer, URIO, ZIO, ZLayer}
+import zio.kafka.consumer.{
+  Consumer as ZKConsumer,
+  ConsumerSettings as ZKConsumerSettings,
+  Subscription as ZKSubscription
+}
 import zio.kafka.producer.{Producer as ZKProducer, ProducerSettings as ZKProducerSettings}
 import zio.kafka.serde.{Deserializer as ZKDeserializer, Serializer as ZKSerializer}
 
