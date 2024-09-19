@@ -1,8 +1,9 @@
 package org.hyperledger.identus.pollux.core.service.verification
 
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
-import org.hyperledger.identus.pollux.vc.jwt.{DidResolver, JWT, JWTVerification, JwtCredential}
 import org.hyperledger.identus.shared.http.UriResolver
+import org.hyperledger.identus.pollux.vc.jwt.{CredentialPayload, DidResolver, JWT, JWTVerification, JwtCredential}
+// import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits //TODO: might not be necessary
 import zio.*
 
 import java.time.OffsetDateTime
@@ -103,7 +104,7 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriResolver: UriResolv
               CredentialSchema
                 .validateJWTCredentialSubject(
                   credentialSchema.id,
-                  decodedJwt.credentialSubject.noSpaces,
+                  CredentialPayload.Implicits.jwtVcEncoder(decodedJwt.vc).noSpaces,
                   uriResolver
                 )
                 .mapError(error =>

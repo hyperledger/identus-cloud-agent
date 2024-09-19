@@ -173,6 +173,7 @@ trait PresentationServiceSpecHelper {
         connectionId = Some("connectionId"),
         proofTypes = Seq(proofType),
         options = options,
+        presentationFormat = PresentCredentialRequestFormat.JWT,
         goalCode = None,
         goal = None,
         expirationDuration = None
@@ -217,7 +218,8 @@ trait PresentationServiceSpecHelper {
         pairwiseVerifierDID = pairwiseVerifierDID,
         pairwiseProverDID = Some(pairwiseProverDID),
         connectionId = Some("connectionId"),
-        anoncredPresentationRequestV1,
+        presentationRequest = anoncredPresentationRequestV1,
+        presentationFormat = PresentCredentialRequestFormat.Anoncred,
         goalCode = None,
         goal = None,
         expirationDuration = None

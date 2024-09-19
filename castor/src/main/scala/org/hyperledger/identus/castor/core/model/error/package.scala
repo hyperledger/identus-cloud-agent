@@ -1,5 +1,7 @@
 package org.hyperledger.identus.castor.core.model
 
+import org.hyperledger.identus.shared.models.KeyId
+
 package object error {
 
   sealed trait DIDOperationError
@@ -27,7 +29,7 @@ package object error {
     final case class TooManyDidPublicKeyAccess(limit: Int, access: Option[Int]) extends OperationValidationError
     final case class TooManyDidServiceAccess(limit: Int, access: Option[Int]) extends OperationValidationError
     final case class InvalidArgument(msg: String) extends OperationValidationError
-    final case class InvalidMasterKeyData(ids: Seq[String]) extends OperationValidationError
+    final case class InvalidMasterKeyData(ids: Seq[KeyId]) extends OperationValidationError
   }
 
 }

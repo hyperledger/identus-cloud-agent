@@ -4,7 +4,7 @@ import org.hyperledger.identus.agent.walletapi.model.PublicationState
 import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
 import org.hyperledger.identus.pollux.core.model.DidCommID
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState
-import org.hyperledger.identus.shared.models.{Failure, StatusCode}
+import org.hyperledger.identus.shared.models.{Failure, KeyId, StatusCode}
 
 import java.util.UUID
 
@@ -97,7 +97,7 @@ object CredentialServiceError {
         s"The requested DID does not exist in the wallet: did=${did.toString}"
       )
 
-  final case class KeyPairNotFoundInWallet(did: PrismDID, keyId: String, algo: String)
+  final case class KeyPairNotFoundInWallet(did: PrismDID, keyId: KeyId, algo: String)
       extends CredentialServiceError(
         StatusCode.NotFound,
         s"The requested key pair does not exist in the wallet: did=${did.toString}, keyId=$keyId, algo=$algo"

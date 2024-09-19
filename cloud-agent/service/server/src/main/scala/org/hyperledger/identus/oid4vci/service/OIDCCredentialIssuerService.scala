@@ -63,7 +63,9 @@ trait OIDCCredentialIssuerService {
 
   def getIssuanceSessionByIssuerState(issuerState: String): IO[Error, IssuanceSession]
 
-  def getIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession]
+  def getPendingIssuanceSessionByIssuerState(issuerState: String): IO[Error, IssuanceSession]
+
+  def getPendingIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession]
 
   def updateIssuanceSession(issuanceSession: IssuanceSession): IO[Error, IssuanceSession]
 }
@@ -83,6 +85,11 @@ object OIDCCredentialIssuerService {
     case class CredentialConfigurationNotFound(issuerId: UUID, credentialConfigurationId: String) extends Error {
       override def userFacingMessage: String =
         s"Credential configuration with id $credentialConfigurationId not found for issuer $issuerId"
+    }
+
+    case class IssuanceSessionAlreadyIssued(issuerState: String) extends Error {
+      override def userFacingMessage: String =
+        s"Issuance session with issuerState $issuerState is already issued"
     }
 
     case class CredentialSchemaError(cause: org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError)
@@ -230,6 +237,10 @@ case class OIDCCredentialIssuerServiceImpl(
       .mapError(e => ServiceError(s"Failed to get issuance session: ${e.message}"))
       .someOrFail(ServiceError(s"The IssuanceSession with the issuerState $issuerState does not exist"))
 
+  override def getPendingIssuanceSessionByIssuerState(
+      issuerState: String
+  ): IO[Error, IssuanceSession] = getIssuanceSessionByIssuerState(issuerState).ensurePendingSession
+
   override def createCredentialOffer(
       credentialIssuerBaseUrl: URL,
       issuerId: UUID,
@@ -261,11 +272,12 @@ case class OIDCCredentialIssuerServiceImpl(
       )
     )
 
-  def getIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession] = {
+  def getPendingIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession] = {
     issuanceSessionStorage
       .getByNonce(nonce)
       .mapError(e => ServiceError(s"Failed to get issuance session: ${e.message}"))
       .someOrFail(ServiceError(s"The IssuanceSession with the nonce $nonce does not exist"))
+      .ensurePendingSession
   }
 
   override def updateIssuanceSession(issuanceSession: IssuanceSession): IO[Error, IssuanceSession] = {
@@ -294,6 +306,15 @@ case class OIDCCredentialIssuerServiceImpl(
       subjectDid = None, // FIXME: populate correct value
       issuingDid = issuerDid,
     )
+  }
+
+  extension [R, A](result: ZIO[R, Error, IssuanceSession]) {
+    def ensurePendingSession: ZIO[R, Error, IssuanceSession] =
+      result.flatMap { session =>
+        if session.subjectDid.isEmpty
+        then ZIO.succeed(session)
+        else ZIO.fail(IssuanceSessionAlreadyIssued(session.issuerState))
+      }
   }
 }
 

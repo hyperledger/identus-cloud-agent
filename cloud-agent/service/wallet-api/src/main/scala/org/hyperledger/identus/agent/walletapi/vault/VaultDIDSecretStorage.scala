@@ -6,14 +6,14 @@ import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.shared.crypto.jwk.{FromJWK, JWK}
 import org.hyperledger.identus.shared.crypto.Sha256Hash
-import org.hyperledger.identus.shared.models.{HexString, WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{HexString, KeyId, WalletAccessContext, WalletId}
 import zio.*
 
 import java.nio.charset.StandardCharsets
 
 class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) extends DIDSecretStorage {
 
-  override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): RIO[WalletAccessContext, Int] = {
+  override def insertKey(did: DidId, keyId: KeyId, keyPair: OctetKeyPair): RIO[WalletAccessContext, Int] = {
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       (path, metadata) = peerDidKeyPath(walletId)(did, keyId)
@@ -25,7 +25,7 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) ex
     } yield 1
   }
 
-  override def getKey(did: DidId, keyId: String): RIO[WalletAccessContext, Option[OctetKeyPair]] = {
+  override def getKey(did: DidId, keyId: KeyId): RIO[WalletAccessContext, Option[OctetKeyPair]] = {
     for {
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       (path, _) = peerDidKeyPath(walletId)(did, keyId)
@@ -35,7 +35,7 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) ex
 
   override def insertPrismDIDKeyPair[K](
       did: PrismDID,
-      keyId: String,
+      keyId: KeyId,
       operationHash: Array[Byte],
       keyPair: K
   )(using c: Conversion[K, JWK]): URIO[WalletAccessContext, Unit] = {
@@ -51,7 +51,7 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) ex
     } yield ()
   }.orDie
 
-  override def getPrismDIDKeyPair[K](did: PrismDID, keyId: String, operationHash: Array[Byte])(using
+  override def getPrismDIDKeyPair[K](did: PrismDID, keyId: KeyId, operationHash: Array[Byte])(using
       c: FromJWK[K]
   ): URIO[WalletAccessContext, Option[K]] = {
     for {
@@ -65,9 +65,9 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) ex
   }.orDie
 
   /** @return A tuple of secret path and a secret custom_metadata */
-  private def peerDidKeyPath(walletId: WalletId)(did: DidId, keyId: String): (String, Map[String, String]) = {
+  private def peerDidKeyPath(walletId: WalletId)(did: DidId, keyId: KeyId): (String, Map[String, String]) = {
     val basePath = s"${walletBasePath(walletId)}/dids/peer"
-    val relativePath = s"${did.value}/keys/$keyId"
+    val relativePath = s"${did.value}/keys/${keyId.value}"
     if (useSemanticPath) {
       s"$basePath/$relativePath" -> Map.empty
     } else {
@@ -79,9 +79,9 @@ class VaultDIDSecretStorage(vaultKV: VaultKVClient, useSemanticPath: Boolean) ex
   /** @return A tuple of secret path and a secret custom_metadata */
   private def prismDIDKeyPath(
       walletId: WalletId
-  )(did: PrismDID, keyId: String, operationHash: Array[Byte]): (String, Map[String, String]) = {
+  )(did: PrismDID, keyId: KeyId, operationHash: Array[Byte]): (String, Map[String, String]) = {
     val basePath = s"${walletBasePath(walletId)}/dids/prism"
-    val relativePath = s"${did.asCanonical}/keys/$keyId/${HexString.fromByteArray(operationHash)}"
+    val relativePath = s"${did.asCanonical}/keys/${keyId.value}/${HexString.fromByteArray(operationHash)}"
     if (useSemanticPath) {
       s"$basePath/$relativePath" -> Map.empty
     } else {

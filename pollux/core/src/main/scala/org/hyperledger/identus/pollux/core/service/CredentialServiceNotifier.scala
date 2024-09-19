@@ -26,6 +26,7 @@ class CredentialServiceNotifier(
   override def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: Option[DidId],
+      kidIssuer: Option[KeyId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: Json,
@@ -41,6 +42,7 @@ class CredentialServiceNotifier(
       svc.createJWTIssueCredentialRecord(
         pairwiseIssuerDID,
         pairwiseHolderDID,
+        kidIssuer,
         thid,
         maybeSchemaId,
         claims,
@@ -57,6 +59,7 @@ class CredentialServiceNotifier(
   override def createSDJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: Option[DidId],
+      kidIssuer: Option[KeyId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: io.circe.Json,
@@ -72,6 +75,7 @@ class CredentialServiceNotifier(
       svc.createSDJWTIssueCredentialRecord(
         pairwiseIssuerDID,
         pairwiseHolderDID,
+        kidIssuer,
         thid,
         maybeSchemaId,
         claims,

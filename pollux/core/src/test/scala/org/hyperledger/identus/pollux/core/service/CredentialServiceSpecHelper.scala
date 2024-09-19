@@ -129,6 +129,7 @@ trait CredentialServiceSpecHelper {
       record <- svc.createJWTIssueCredentialRecord(
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
+        kidIssuer = None,
         thid = thid,
         maybeSchemaId = maybeSchemaId,
         claims = claims,

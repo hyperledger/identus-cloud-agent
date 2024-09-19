@@ -11,7 +11,7 @@ import org.hyperledger.identus.castor.core.model.did.{
 import org.hyperledger.identus.castor.core.model.error.DIDOperationError
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.shared.crypto.Secp256k1KeyPair
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
 import zio.*
 
 import scala.collection.immutable.ArraySeq
@@ -25,7 +25,7 @@ class PublicationHandler(didService: DIDService, keyResolver: KeyResolver)(maste
     for {
       masterKeyPair <-
         keyResolver
-          .getKey(state.did, masterKeyId)
+          .getKey(state.did, KeyId(masterKeyId))
           .someOrFail(Exception("master-key must exists in the wallet for signing DID operation and submit to Node"))
           .collect(Exception("master-key must be secp256k1 key")) { case keyPair: Secp256k1KeyPair => keyPair }
           .orDie

@@ -26,6 +26,7 @@ import org.hyperledger.identus.pollux.credentialschema.{
   SchemaRegistryServerEndpoints,
   VerificationPolicyServerEndpoints
 }
+import org.hyperledger.identus.pollux.prex.PresentationExchangeServerEndpoints
 import org.hyperledger.identus.pollux.vc.jwt.DidResolver as JwtDidResolver
 import org.hyperledger.identus.presentproof.controller.PresentProofServerEndpoints
 import org.hyperledger.identus.resolvers.DIDResolver
@@ -48,7 +49,7 @@ object CloudAgentApp {
     _ <- syncRevocationStatusListsJob.debug.fork
     _ <- AgentHttpServer.run.tapDefect(e => ZIO.logErrorCause("Agent HTTP Server failure", e)).fork
     fiber <- DidCommHttpServer.run.tapDefect(e => ZIO.logErrorCause("DIDComm HTTP Server failure", e)).fork
-    _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.debug.fork)
+    _ <- WebhookPublisher.layer.build.map(_.get[WebhookPublisher]).flatMap(_.run.fork)
     _ <- fiber.join *> ZIO.log(s"Server End")
     _ <- ZIO.never
   } yield ()
@@ -138,6 +139,7 @@ object AgentHttpServer {
     allWalletManagementEndpoints <- WalletManagementServerEndpoints.all
     allEventEndpoints <- EventServerEndpoints.all
     allOIDCEndpoints <- CredentialIssuerServerEndpoints.all
+    allPresentationExchangeEndpoints <- PresentationExchangeServerEndpoints.all
   } yield allCredentialDefinitionRegistryEndpoints ++
     allSchemaRegistryEndpoints ++
     allVerificationPolicyEndpoints ++
@@ -148,11 +150,13 @@ object AgentHttpServer {
     allStatusListEndpoints ++
     allPresentProofEndpoints ++
     allVcVerificationEndpoints ++
+    allPresentationExchangeEndpoints ++
     allSystemEndpoints ++
     allEntityEndpoints ++
     allWalletManagementEndpoints ++
     allEventEndpoints ++
     allOIDCEndpoints
+
   def run =
     for {
       allEndpoints <- agentRESTServiceEndpoints

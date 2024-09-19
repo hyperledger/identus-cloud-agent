@@ -28,7 +28,7 @@ import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, Cre
 import org.hyperledger.identus.pollux.prex.{ClaimFormat, Jwt, PresentationDefinition}
 import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer as JwtIssuer, *}
-import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, Secp256k1KeyPair}
+import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair}
 import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
@@ -126,6 +126,7 @@ class CredentialServiceImpl(
 
   private def createIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
+      kidIssuer: Option[KeyId],
       thid: DidCommID,
       schemaUri: Option[String],
       validityPeriod: Option[Double],
@@ -168,7 +169,7 @@ class CredentialServiceImpl(
           invitation = invitation,
           role = IssueCredentialRecord.Role.Issuer,
           subjectId = None,
-          keyId = None,
+          keyId = kidIssuer,
           validityPeriod = validityPeriod,
           automaticIssuance = automaticIssuance,
           protocolState = invitation.fold(IssueCredentialRecord.ProtocolState.OfferPending)(_ =>
@@ -194,6 +195,7 @@ class CredentialServiceImpl(
   override def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: Option[DidId],
+      kidIssuer: Option[KeyId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: Json,
@@ -220,6 +222,7 @@ class CredentialServiceImpl(
       )
       record <- createIssueCredentialRecord(
         pairwiseIssuerDID = pairwiseIssuerDID,
+        kidIssuer = kidIssuer,
         thid = thid,
         schemaUri = maybeSchemaId,
         validityPeriod = validityPeriod,
@@ -240,6 +243,7 @@ class CredentialServiceImpl(
   override def createSDJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: Option[DidId],
+      kidIssuer: Option[KeyId],
       thid: DidCommID,
       maybeSchemaId: Option[String],
       claims: io.circe.Json,
@@ -266,6 +270,7 @@ class CredentialServiceImpl(
       )
       record <- createIssueCredentialRecord(
         pairwiseIssuerDID = pairwiseIssuerDID,
+        kidIssuer = kidIssuer,
         thid = thid,
         schemaUri = maybeSchemaId,
         validityPeriod = validityPeriod,
@@ -318,6 +323,7 @@ class CredentialServiceImpl(
       )
       record <- createIssueCredentialRecord(
         pairwiseIssuerDID = pairwiseIssuerDID,
+        kidIssuer = None,
         thid = thid,
         schemaUri = Some(credentialDefinition.schemaId),
         validityPeriod = validityPeriod,
@@ -537,7 +543,7 @@ class CredentialServiceImpl(
       did: PrismDID,
       verificationRelationship: VerificationRelationship,
       ellipticCurve: EllipticCurve
-  ): UIO[String] = {
+  ): UIO[KeyId] = {
     for {
       maybeDidData <- didService
         .resolveDID(did)
@@ -617,7 +623,7 @@ class CredentialServiceImpl(
       JwtIssuer(
         jwtIssuerDID.did,
         EdSigner(ed25519keyPair, keyId),
-        Ed25519PublicKey.toJavaEd25519PublicKey(ed25519keyPair.publicKey.getEncoded)
+        ed25519keyPair.publicKey.toJava
       )
     }
   }

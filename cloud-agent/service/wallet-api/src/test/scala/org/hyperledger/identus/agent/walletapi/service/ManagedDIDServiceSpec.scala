@@ -20,7 +20,7 @@ import org.hyperledger.identus.castor.core.model.error
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.shared.crypto.{ApolloSpecHelper, Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletAdministrationContext}
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext, WalletAdministrationContext}
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.{DBTestUtils, VaultTestContainerSupport}
 import zio.*
@@ -277,16 +277,16 @@ object ManagedDIDServiceSpec
       for {
         svc <- ZIO.service[ManagedDIDService]
         did <- svc.createAndStoreDID(template).map(_.asCanonical)
-        masterKey <- svc.nonSecretStorage.getKeyMeta(did, ManagedDIDService.DEFAULT_MASTER_KEY_ID).some.map(_._1)
-        key1 <- svc.nonSecretStorage.getKeyMeta(did, "key1").some.map(_._1)
-        key2 <- svc.nonSecretStorage.getKeyMeta(did, "key2").some.map(_._1)
-        key3 <- svc.nonSecretStorage.getKeyMeta(did, "key3").some.map(_._1)
-        key4 <- svc.nonSecretStorage.getKeyMeta(did, "key4").some.map(_._1)
-        masterKeyPair <- svc.findDIDKeyPair(did, ManagedDIDService.DEFAULT_MASTER_KEY_ID).some
-        key1KeyPair <- svc.findDIDKeyPair(did, "key1").some
-        key2KeyPair <- svc.findDIDKeyPair(did, "key2").some
-        key3KeyPair <- svc.findDIDKeyPair(did, "key3").some
-        key4KeyPair <- svc.findDIDKeyPair(did, "key4").some
+        masterKey <- svc.nonSecretStorage.getKeyMeta(did, KeyId(ManagedDIDService.DEFAULT_MASTER_KEY_ID)).some.map(_._1)
+        key1 <- svc.nonSecretStorage.getKeyMeta(did, KeyId("key1")).some.map(_._1)
+        key2 <- svc.nonSecretStorage.getKeyMeta(did, KeyId("key2")).some.map(_._1)
+        key3 <- svc.nonSecretStorage.getKeyMeta(did, KeyId("key3")).some.map(_._1)
+        key4 <- svc.nonSecretStorage.getKeyMeta(did, KeyId("key4")).some.map(_._1)
+        masterKeyPair <- svc.findDIDKeyPair(did, KeyId(ManagedDIDService.DEFAULT_MASTER_KEY_ID)).some
+        key1KeyPair <- svc.findDIDKeyPair(did, KeyId("key1")).some
+        key2KeyPair <- svc.findDIDKeyPair(did, KeyId("key2")).some
+        key3KeyPair <- svc.findDIDKeyPair(did, KeyId("key3")).some
+        key4KeyPair <- svc.findDIDKeyPair(did, KeyId("key4")).some
       } yield assert(masterKey)(isSubtype[ManagedDIDKeyMeta.HD](anything)) &&
         assert(key1)(isSubtype[ManagedDIDKeyMeta.HD](anything)) &&
         assert(key2)(isSubtype[ManagedDIDKeyMeta.HD](anything)) &&
@@ -456,9 +456,9 @@ object ManagedDIDServiceSpec
           )
           _ <- svc.updateManagedDID(did, actions)
           _ <- svc.syncUnconfirmedUpdateOperations
-          key1KeyPair <- svc.findDIDKeyPair(did, "key-1").some
-          key2KeyPair <- svc.findDIDKeyPair(did, "key-2").some
-          key3KeyPair <- svc.findDIDKeyPair(did, "key-3").some
+          key1KeyPair <- svc.findDIDKeyPair(did, KeyId("key-1")).some
+          key2KeyPair <- svc.findDIDKeyPair(did, KeyId("key-2")).some
+          key3KeyPair <- svc.findDIDKeyPair(did, KeyId("key-3")).some
         } yield assert(key1KeyPair)(isSubtype[Secp256k1KeyPair](anything)) &&
           assert(key2KeyPair)(isSubtype[Ed25519KeyPair](anything)) &&
           assert(key3KeyPair)(isSubtype[X25519KeyPair](anything))
@@ -480,13 +480,13 @@ object ManagedDIDServiceSpec
           _ <- svc.updateManagedDID(did, actions) // 1st update
           _ <- testDIDSvc.setOperationStatus(ScheduledDIDOperationStatus.Confirmed)
           _ <- svc.syncUnconfirmedUpdateOperations
-          key1KeyPair1 <- svc.findDIDKeyPair(did, "key-1").some
-          key2KeyPair1 <- svc.findDIDKeyPair(did, "key-2").some
+          key1KeyPair1 <- svc.findDIDKeyPair(did, KeyId("key-1")).some
+          key2KeyPair1 <- svc.findDIDKeyPair(did, KeyId("key-2")).some
           _ <- svc.updateManagedDID(did, actions) // 2nd update
           _ <- testDIDSvc.setOperationStatus(ScheduledDIDOperationStatus.Rejected)
           _ <- svc.syncUnconfirmedUpdateOperations
-          key1KeyPair2 <- svc.findDIDKeyPair(did, "key-1").some
-          key2KeyPair2 <- svc.findDIDKeyPair(did, "key-2").some
+          key1KeyPair2 <- svc.findDIDKeyPair(did, KeyId("key-1")).some
+          key2KeyPair2 <- svc.findDIDKeyPair(did, KeyId("key-2")).some
         } yield assert(key1KeyPair1)(isSubtype[Secp256k1KeyPair](anything)) &&
           assert(key2KeyPair1)(isSubtype[Ed25519KeyPair](anything)) &&
           // 2nd update with rejected status does not update the key pair
