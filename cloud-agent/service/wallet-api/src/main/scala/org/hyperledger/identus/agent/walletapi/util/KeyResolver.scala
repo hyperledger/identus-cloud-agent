@@ -9,7 +9,7 @@ import org.hyperledger.identus.agent.walletapi.model.{
 import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.castor.core.model.did.{EllipticCurve, PrismDID}
 import org.hyperledger.identus.shared.crypto.{Apollo, Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
 import zio.*
 
 class KeyResolver(
@@ -20,7 +20,7 @@ class KeyResolver(
 ) {
   def getKey(
       did: PrismDID,
-      keyId: String
+      keyId: KeyId,
   ): RIO[WalletAccessContext, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]] =
     nonSecretStorage.getKeyMeta(did, keyId).flatMap {
       case None                                   => ZIO.none
@@ -36,7 +36,7 @@ class KeyResolver(
 
   private def getRandKey(
       did: PrismDID,
-      keyId: String,
+      keyId: KeyId,
       meta: ManagedDIDRandKeyMeta,
       operationHash: Array[Byte]
   ): RIO[WalletAccessContext, Option[Ed25519KeyPair | X25519KeyPair]] = {

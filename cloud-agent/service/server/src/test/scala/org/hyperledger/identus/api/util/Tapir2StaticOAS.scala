@@ -16,6 +16,7 @@ import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaController,
   VerificationPolicyController
 }
+import org.hyperledger.identus.pollux.prex.controller.PresentationExchangeController
 import org.hyperledger.identus.presentproof.controller.PresentProofController
 import org.hyperledger.identus.system.controller.SystemController
 import org.hyperledger.identus.verification.controller.VcVerificationController
@@ -58,6 +59,7 @@ object Tapir2StaticOAS extends ZIOAppDefault {
         ZLayer.succeed(mock[DefaultAuthenticator]) ++
         ZLayer.succeed(mock[EventController]) ++
         ZLayer.succeed(mock[CredentialIssuerController]) ++
+        ZLayer.succeed(mock[PresentationExchangeController]) ++
         ZLayer.succeed(mock[Oid4vciAuthenticatorFactory])
     )
   }

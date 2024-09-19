@@ -1,6 +1,7 @@
 package org.hyperledger.identus.presentproof.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
+import org.hyperledger.identus.mercury.protocol.presentproof.PresentCredentialRequestFormat
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.presentproof.controller.http.RequestPresentationInput.annotations
 import sttp.tapir.{Schema, Validator}
@@ -29,6 +30,9 @@ final case class RequestPresentationInput(
     @description(annotations.anoncredPresentationRequest.description)
     @encodedExample(annotations.anoncredPresentationRequest.example)
     anoncredPresentationRequest: Option[AnoncredPresentationRequestV1],
+    @description(annotations.presentationFormat.description)
+    @encodedExample(annotations.presentationFormat.example)
+    presentationFormat: Option[PresentCredentialRequestFormat],
     @description(annotations.claims.description)
     @encodedExample(annotations.claims.example)
     claims: Option[zio.json.ast.Json.Obj],
@@ -128,6 +132,20 @@ object RequestPresentationInput {
             )
           )
         )
+
+    object presentationFormat
+        extends Annotation[Option[String]](
+          description =
+            "The presentation format to display in Didcomm messages (default to 'prism/jwt', vc+sd-jwt or anoncreds/proof-request@v1.0)",
+          example = Some("prism/jwt"),
+          validator = Validator.enumeration(
+            List(
+              Some("prism/jwt"),
+              Some("vc+sd-jwt"),
+              Some("anoncreds/proof-request@v1.0")
+            )
+          )
+        )
     object claims
         extends Annotation[Option[zio.json.ast.Json.Obj]](
           description = """
@@ -162,6 +180,8 @@ object RequestPresentationInput {
     DeriveJsonDecoder.gen[RequestPresentationInput]
 
   import AnoncredPresentationRequestV1.given
+
+  given Schema[PresentCredentialRequestFormat] = Schema.derivedEnumeration.defaultStringBased
 
   given Schema[AnoncredPresentationRequestV1] = Schema.derived
 

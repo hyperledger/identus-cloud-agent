@@ -3,7 +3,7 @@ package org.hyperledger.identus.agent.walletapi.util
 import org.hyperledger.identus.agent.walletapi.model.*
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.shared.crypto.{ApolloSpecHelper, Ed25519KeyPair, X25519KeyPair}
-import org.hyperledger.identus.shared.models.HexString
+import org.hyperledger.identus.shared.models.{HexString, KeyId}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -31,9 +31,9 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
     test("make CrateOperation from same seed is deterministic") {
       val didTemplate = ManagedDIDTemplate(Nil, Nil, Nil)
       for {
-        result1 <- operationFactory.makeCreateOperation("master0", seed)(0, didTemplate)
+        result1 <- operationFactory.makeCreateOperation(KeyId("master0"), seed)(0, didTemplate)
         (op1, hdKey1) = result1
-        result2 <- operationFactory.makeCreateOperation("master0", seed)(0, didTemplate)
+        result2 <- operationFactory.makeCreateOperation(KeyId("master0"), seed)(0, didTemplate)
         (op2, hdKey2) = result2
       } yield assert(op1)(equalTo(op2)) &&
         assert(hdKey1)(equalTo(hdKey2))
@@ -41,7 +41,7 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
     test("make CreateOperation must contain 1 master key") {
       val didTemplate = ManagedDIDTemplate(Nil, Nil, Nil)
       for {
-        result <- operationFactory.makeCreateOperation("master-0", seed)(0, didTemplate)
+        result <- operationFactory.makeCreateOperation(KeyId("master-0"), seed)(0, didTemplate)
         (op, hdKey) = result
         pk = op.publicKeys.head.asInstanceOf[InternalPublicKey]
       } yield assert(op.publicKeys)(hasSize(equalTo(1))) &&
@@ -59,7 +59,7 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
         Nil
       )
       for {
-        result <- operationFactory.makeCreateOperation("master-0", seed)(0, didTemplate)
+        result <- operationFactory.makeCreateOperation(KeyId("master-0"), seed)(0, didTemplate)
         (op, keys) = result
       } yield assert(op.publicKeys.length)(equalTo(4)) &&
         assert(keys.hdKeys.size)(equalTo(4)) &&
@@ -80,26 +80,26 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
         Nil
       )
       for {
-        result <- operationFactory.makeCreateOperation("master-0", seed)(0, didTemplate)
+        result <- operationFactory.makeCreateOperation(KeyId("master-0"), seed)(0, didTemplate)
         (op, keys) = result
         publicKeyData = op.publicKeys.map {
           case PublicKey(id, _, publicKeyData)         => id -> publicKeyData
           case InternalPublicKey(id, _, publicKeyData) => id -> publicKeyData
         }.toMap
       } yield assert(publicKeyData.size)(equalTo(4)) &&
-        assert(publicKeyData.get("auth-0").get)(
+        assert(publicKeyData.get(KeyId("auth-0")).get)(
           isSubtype[PublicKeyData.ECCompressedKeyData](
             hasField[PublicKeyData.ECCompressedKeyData, Int]("data", _.data.toByteArray.length, equalTo(33)) &&
               hasField("crv", _.crv, equalTo(EllipticCurve.SECP256K1))
           )
         ) &&
-        assert(publicKeyData.get("auth-1").get)(
+        assert(publicKeyData.get(KeyId("auth-1")).get)(
           isSubtype[PublicKeyData.ECCompressedKeyData](
             hasField[PublicKeyData.ECCompressedKeyData, Int]("data", _.data.toByteArray.length, equalTo(32)) &&
               hasField("crv", _.crv, equalTo(EllipticCurve.ED25519))
           )
         ) &&
-        assert(publicKeyData.get("comm-0").get)(
+        assert(publicKeyData.get(KeyId("comm-0")).get)(
           isSubtype[PublicKeyData.ECCompressedKeyData](
             hasField[PublicKeyData.ECCompressedKeyData, Int]("data", _.data.toByteArray.length, equalTo(32)) &&
               hasField("crv", _.crv, equalTo(EllipticCurve.X25519))
@@ -212,13 +212,13 @@ object OperationFactorySpec extends ZIOSpecDefault, ApolloSpecHelper {
         assert(keys.randKeys.get("comm-42").get.keyPair)(isSubtype[X25519KeyPair](anything)) &&
         // operation is correct
         assert(op.actions)(hasSize(equalTo(2))) &&
-        assert(addKeyActions.find(_.id == "auth-42").get.publicKeyData)(
+        assert(addKeyActions.find(_.id == KeyId("auth-42")).get.publicKeyData)(
           isSubtype[PublicKeyData.ECCompressedKeyData](
             hasField[PublicKeyData.ECCompressedKeyData, Int]("data", _.data.toByteArray.length, equalTo(32)) &&
               hasField("crv", _.crv, equalTo(EllipticCurve.ED25519))
           )
         ) &&
-        assert(addKeyActions.find(_.id == "comm-42").get.publicKeyData)(
+        assert(addKeyActions.find(_.id == KeyId("comm-42")).get.publicKeyData)(
           isSubtype[PublicKeyData.ECCompressedKeyData](
             hasField[PublicKeyData.ECCompressedKeyData, Int]("data", _.data.toByteArray.length, equalTo(32)) &&
               hasField("crv", _.crv, equalTo(EllipticCurve.X25519))

@@ -2,6 +2,7 @@ package org.hyperledger.identus.issue.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.issue.controller.http.CreateIssueCredentialRecordRequest.annotations
+import org.hyperledger.identus.shared.models.KeyId
 import sttp.tapir.{Schema, Validator}
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema.annotations.{description, encodedExample}
@@ -48,6 +49,9 @@ final case class CreateIssueCredentialRecordRequest(
     @description(annotations.issuingDID.description)
     @encodedExample(annotations.issuingDID.example)
     issuingDID: Option[String],
+    @description(annotations.issuingKid.description)
+    @encodedExample(annotations.issuingKid.example)
+    issuingKid: Option[KeyId],
     @description(annotations.connectionId.description)
     @encodedExample(annotations.connectionId.example)
     connectionId: Option[UUID],
@@ -133,6 +137,16 @@ object CreateIssueCredentialRecordRequest {
           example = Some("did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f")
         )
 
+    object issuingKid
+        extends Annotation[Option[String]](
+          description = """
+          |Specified the key ID (kid) of the DID, it will be used to sign credential.
+          |User should specify just the partial identifier of the key. The full id of the kid MUST be "<issuingDID>#<kid>"
+          |Note the cryto algorithm used with depend type of the key.
+          |""".stripMargin,
+          example = Some("kid1") // TODO 20240902 get the defualt name of the key we generete.
+        )
+
     object connectionId
         extends Annotation[Option[UUID]](
           description = """
@@ -170,6 +184,7 @@ object CreateIssueCredentialRecordRequest {
   given decoder: JsonDecoder[CreateIssueCredentialRecordRequest] =
     DeriveJsonDecoder.gen[CreateIssueCredentialRecordRequest]
 
+  given schemaJson: Schema[KeyId] = Schema.schemaForString.map[KeyId](v => Some(KeyId(v)))(KeyId.value)
   given schema: Schema[CreateIssueCredentialRecordRequest] = Schema.derived
 
 }

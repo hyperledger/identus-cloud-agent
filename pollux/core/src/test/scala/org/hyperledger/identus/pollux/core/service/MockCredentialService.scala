@@ -128,6 +128,7 @@ object MockCredentialService extends Mock[CredentialService] {
       override def createJWTIssueCredentialRecord(
           pairwiseIssuerDID: DidId,
           pairwiseHolderDID: Option[DidId],
+          kidIssuer: Option[KeyId],
           thid: DidCommID,
           maybeSchemaId: Option[String],
           claims: Json,
@@ -158,6 +159,7 @@ object MockCredentialService extends Mock[CredentialService] {
       override def createSDJWTIssueCredentialRecord(
           pairwiseIssuerDID: DidId,
           pairwiseHolderDID: Option[DidId],
+          kidIssuer: Option[KeyId],
           thid: DidCommID,
           maybeSchemaId: Option[String],
           claims: Json,

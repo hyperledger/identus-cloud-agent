@@ -6,7 +6,7 @@ import org.hyperledger.identus.mercury.*
 import org.hyperledger.identus.mercury.protocol.revocationnotificaiton.RevocationNotification
 import org.hyperledger.identus.pollux.core.service.{CredentialService, CredentialStatusListService}
 import org.hyperledger.identus.pollux.vc.jwt.revocation.{VCStatusList2021, VCStatusList2021Error}
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
 import zio.metrics.Metric
@@ -30,7 +30,11 @@ object StatusListJobs extends BackgroundJobsHelper {
           vcStatusListCredJson <- ZIO
             .fromEither(io.circe.parser.parse(vcStatusListCredString))
             .mapError(_.underlying)
-          issuer <- createJwtIssuer(statusListWithCreds.issuer, VerificationRelationship.AssertionMethod)
+          issuer <- createJwtVcIssuer(
+            statusListWithCreds.issuer,
+            VerificationRelationship.AssertionMethod,
+            None
+          )
           vcStatusListCred <- VCStatusList2021
             .decodeFromJson(vcStatusListCredJson, issuer)
             .mapError(x => new Throwable(x.msg))

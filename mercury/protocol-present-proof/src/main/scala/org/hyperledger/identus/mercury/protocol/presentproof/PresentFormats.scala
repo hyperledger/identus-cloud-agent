@@ -2,6 +2,7 @@ package org.hyperledger.identus.mercury.protocol.presentproof
 
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 /*
 Present Credential Formats:
@@ -72,8 +73,6 @@ object PresentCredentialProposeFormat {
   *   - dif/presentation-exchange/definitions@v1.0
   */
 enum PresentCredentialRequestFormat(val name: String) {
-  case Unsupported(other: String) extends PresentCredentialRequestFormat(other)
-  // case JWT extends PresentCredentialRequestFormat("jwt/proof-request@v1.0") // TODO FOLLOW specs for JWT VC
   case JWT extends PresentCredentialRequestFormat("prism/jwt") // TODO REMOVE
   case SDJWT extends PresentCredentialRequestFormat("vc+sd-jwt")
   case Anoncred extends PresentCredentialRequestFormat("anoncreds/proof-request@v1.0")
@@ -82,6 +81,13 @@ enum PresentCredentialRequestFormat(val name: String) {
 object PresentCredentialRequestFormat {
   given Encoder[PresentCredentialRequestFormat] = deriveEncoder[PresentCredentialRequestFormat]
   given Decoder[PresentCredentialRequestFormat] = deriveDecoder[PresentCredentialRequestFormat]
+
+  given JsonEncoder[PresentCredentialRequestFormat] =
+    DeriveJsonEncoder.gen[PresentCredentialRequestFormat]
+
+  given JsonDecoder[PresentCredentialRequestFormat] =
+    DeriveJsonDecoder.gen[PresentCredentialRequestFormat]
+
 }
 
 /** Present Credential:
@@ -98,7 +104,6 @@ object PresentCredentialRequestFormat {
   *   - dif/presentation-exchange/submission@v1.0
   */
 enum PresentCredentialFormat(val name: String) {
-  case Unsupported(other: String) extends PresentCredentialFormat(other)
   // case JWT extends PresentCredentialFormat("jwt/proof-request@v1.0") // TODO FOLLOW specs for JWT VC
   case JWT extends PresentCredentialFormat("prism/jwt") // TODO REMOVE
   case SDJWT extends PresentCredentialFormat("vc+sd-jwt")

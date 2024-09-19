@@ -161,15 +161,15 @@ final case class ManagedDIDRandKeyMeta(
 }
 
 private[walletapi] final case class CreateDIDKey(
-    hdKeys: Map[String, ManagedDIDHdKeyPath],
-    randKeys: Map[String, ManagedDIDRandKeyPair]
+    hdKeys: Map[String, ManagedDIDHdKeyPath], // TODO use type KeyId
+    randKeys: Map[String, ManagedDIDRandKeyPair] // TODO use type KeyId
 ) {
   def randKeyMeta: Map[String, ManagedDIDRandKeyMeta] = randKeys.map { case (k, v) => k -> v.meta }
 }
 
 private[walletapi] final case class UpdateDIDKey(
-    hdKeys: Map[String, ManagedDIDHdKeyPath],
-    randKeys: Map[String, ManagedDIDRandKeyPair],
+    hdKeys: Map[String, ManagedDIDHdKeyPath], // TODO use type KeyId
+    randKeys: Map[String, ManagedDIDRandKeyPair], // TODO use type KeyId
     counter: HdKeyIndexCounter
 ) {
   def randKeyMeta: Map[String, ManagedDIDRandKeyMeta] = randKeys.map { case (k, v) => k -> v.meta }

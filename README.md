@@ -28,14 +28,19 @@ In order to use the Cloud Agent, you establish a business logic controller respo
 
 As a result, you can concentrate on crafting self-sovereign identity solutions using well-known web development tools, without the need to delve into the intricacies of lower-level cryptography and identity protocol internals.
 
+## User documentation
+
+All documentation, tutorials and API references for the Identus ecosystem can be found at [https://hyperledger.github.io/identus-docs/](https://hyperledger.github.io/identus-docs/)
+
 ## Features
 
 * Rest API
 * DIDComm V2
 * W3C-compliant `did:prism` and `did:peer` methods
 * Credential types
-  * JWT
-  * AnonCreds (coming soon)
+  * JWT-VC
+  * SD-JWT-VC
+  * AnonCreds
 * HTTP events notification
 * Cardano as a distributed ledger
 * Secrets management with Hashicorp vault
@@ -77,17 +82,6 @@ The next diagrams offer a concise architectural overview, depicting a Cloud Agen
 - SBT (latest version)
 - Git (for cloning the repository)
 - Docker (for running the PostgreSQL database, Hashicorp Vault, APISIX, and  PRISM Node)
-- [GITHUB_TOKEN](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) environment  variable (required for SBT plugins and access to the GitHub packages)
-
-#### Login to GitHub packages
-
-To login to GitHub packages, you need to create a personal access token and set it as an environment variable together with your GitHub username. Here is an example of how you can do this:
-
-```bash
-export GITHUB_TOKEN=your-personal-access-token
-export GITHUB_USER=your-github-username
-docker login ghcr.io -u $GITHUB_USER -p $GITHUB_TOKEN
-```
 
 #### Compile, Test, create the docker image of the Cloud Agent
 
@@ -128,34 +122,7 @@ System requirements can vary depending on the use case. The following are the mi
 
 #### Running locally in demo mode
 
-Here is a general example of running a Cloud Agent locally:
-```bash
-PORT=${PORT} AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=${PRISM_NODE_VERSION} \
-  docker compose \
-    -p "${AGENT_ROLE}" \
-    -f ./infrastructure/shared/docker-compose-demo.yml \
-    up --wait
-```
-
-The `PORT` variable is used to specify the port number for the Cloud Agent to listen on. The `AGENT_VERSION` and `PRISM_NODE_VERSION` variables are used to specify the versions of the Cloud Agent and  PRISM Node to use. The `AGENT_ROLE` variable is used to specify the role of the Cloud Agent. The `AGENT_ROLE` variable can be set to `issuer`, `verifier` or `holder`.
-
-In real life, you will need to start at least two Cloud Agent instances with different roles. For example, you can start one instance with the `issuer` role and another one with the `holder` role. The `issuer` instance will be used to issue verifiable credentials (VCs) and the `holder` instance will be used to hold VCs. Here is an example of how you can do this:
-
-```bash
-PORT=8080 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.3.0 \
-  docker compose \
-    -p "issuer" \
-    -f ./infrastructure/shared/docker-compose-demo.yml \
-    up --wait
-```
-
-```bash
-PORT=8090 AGENT_VERSION=${AGENT_VERSION} PRISM_NODE_VERSION=2.3.0 \
-  docker compose \
-    -p "holder" \
-    -f ./infrastructure/shared/docker-compose-demo.yml \
-    up --wait
-```
+To run Identus locally you should follow the instructions in the [Quickstart guide](https://hyperledger.github.io/identus-docs/docs/quick-start/)
 
 If the Cloud Agent is started successfully, all the running containers should achieve `Healthy` state, and Cloud Agent Rest API should be available at the specified port, for example:
 * `http://localhost:8080/cloud-agent` for the `issuer` instance
@@ -166,8 +133,6 @@ You can check the status of the running containers using the [health endpoint](h
 $ curl http://localhost:8080/cloud-agent/_system/health
 {"version":"1.19.1"}
 ```
-
-> For more information about all available configuration parameters, please, check [Cloud Agent configuration](https://docs.atalaprism.io/docs/atala-prism/prism-cloud-agent/environment-variables) section at the documentation portal and edit the `docker-compose-demo.yml` file accordingly.
 
 #### Compatibility between Cloud Agent and  PRISM Node
 
@@ -188,10 +153,6 @@ The following tutorials will help you get started with the Cloud Agent and issue
 * [Setting up connections between agents using out-of-band (OOB) protocol](https://docs.atalaprism.io/tutorials/connections/connection)
 * [Issuing verifiable credentials (VCs)](https://docs.atalaprism.io/tutorials/credentials/issue)
 * [Presenting VC proofs](https://docs.atalaprism.io/tutorials/credentials/present-proof)
-
-## User documentation
-
-All extended documentation, tutorials and API references for the Identus ecosystem can be found at <https://docs.atalaprism.io/>
 
 ## Contributing
 
