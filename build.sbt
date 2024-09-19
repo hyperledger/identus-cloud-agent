@@ -792,7 +792,7 @@ lazy val polluxCore = project
     polluxAnoncreds,
     polluxVcJWT,
     polluxSDJWT,
-    polluxPreX
+    polluxPreX % "compile->compile;test->test", // Test is for example resources
   )
 
 lazy val polluxDoobie = project
