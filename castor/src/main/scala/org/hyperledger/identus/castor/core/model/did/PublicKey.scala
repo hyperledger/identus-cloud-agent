@@ -1,7 +1,6 @@
 package org.hyperledger.identus.castor.core.model.did
 
-import org.hyperledger.identus.shared.models.Base64UrlString
-import org.hyperledger.identus.shared.models.KeyId
+import org.hyperledger.identus.shared.models.{Base64UrlString, KeyId}
 
 final case class PublicKey(
     id: KeyId,

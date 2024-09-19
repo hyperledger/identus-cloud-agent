@@ -3,8 +3,7 @@ package org.hyperledger.identus.castor.core.service
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.error
 import org.hyperledger.identus.shared.crypto.{Apollo, Secp256k1KeyPair}
-import org.hyperledger.identus.shared.models.Base64UrlString
-import org.hyperledger.identus.shared.models.KeyId
+import org.hyperledger.identus.shared.models.{Base64UrlString, KeyId}
 import zio.{mock, IO, URLayer, ZIO, ZLayer}
 import zio.mock.{Expectation, Mock, Proxy}
 import zio.test.Assertion

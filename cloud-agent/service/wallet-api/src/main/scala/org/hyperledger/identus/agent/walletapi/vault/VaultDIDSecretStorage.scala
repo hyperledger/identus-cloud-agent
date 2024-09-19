@@ -6,8 +6,7 @@ import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.shared.crypto.jwk.{FromJWK, JWK}
 import org.hyperledger.identus.shared.crypto.Sha256Hash
-import org.hyperledger.identus.shared.models.{HexString, WalletAccessContext, WalletId}
-import org.hyperledger.identus.shared.models.KeyId
+import org.hyperledger.identus.shared.models.{HexString, KeyId, WalletAccessContext, WalletId}
 import zio.*
 
 import java.nio.charset.StandardCharsets

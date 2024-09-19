@@ -7,8 +7,7 @@ import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
-import org.hyperledger.identus.shared.models.KeyId
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
 import zio.*
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in

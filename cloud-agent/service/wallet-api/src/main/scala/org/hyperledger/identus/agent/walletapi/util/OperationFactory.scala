@@ -10,8 +10,7 @@ import org.hyperledger.identus.shared.crypto.{
   Secp256k1PublicKey,
   X25519PublicKey
 }
-import org.hyperledger.identus.shared.models.Base64UrlString
-import org.hyperledger.identus.shared.models.KeyId
+import org.hyperledger.identus.shared.models.{Base64UrlString, KeyId}
 import zio.*
 
 import scala.collection.immutable.ArraySeq

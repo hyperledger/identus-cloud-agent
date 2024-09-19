@@ -56,10 +56,11 @@ trait PresentationDefinitionValidator {
 }
 
 object PresentationDefinitionValidatorImpl {
-  def layer: Layer[JsonSchemaError, PresentationDefinitionValidator] =
+  def layer: ULayer[PresentationDefinitionValidator] =
     ZLayer.scoped {
       JsonSchemaValidatorImpl.draft7Meta
         .map(PresentationDefinitionValidatorImpl(_))
+        .orDieWith(e => Exception(s"Failed to load JSON schema draft-7 meta schema: $e"))
     }
 }
 
