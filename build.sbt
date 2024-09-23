@@ -41,7 +41,7 @@ inThisBuild(
 )
 
 lazy val V = new {
-  val munit = "1.0.1" // "0.7.29"
+  val munit = "1.0.2" // "0.7.29"
   val munitZio = "0.2.0"
 
   // https://mvnrepository.com/artifact/dev.zio/zio
@@ -49,7 +49,7 @@ lazy val V = new {
   val zioConfig = "4.0.2"
   val zioLogging = "2.3.1"
   val zioJson = "0.7.3"
-  val zioHttp = "3.0.0-RC10"
+  val zioHttp = "3.0.0"
   val zioCatsInterop = "3.3.0" // TODO "23.1.0.2" // https://mvnrepository.com/artifact/dev.zio/zio-interop-cats
   val zioMetricsConnector = "2.3.1"
   val zioMock = "1.0.0-RC12"
@@ -798,7 +798,7 @@ lazy val polluxCore = project
     polluxAnoncreds,
     polluxVcJWT,
     polluxSDJWT,
-    polluxPreX
+    polluxPreX % "compile->compile;test->test", // Test is for example resources
   )
 
 lazy val polluxDoobie = project
