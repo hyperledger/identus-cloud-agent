@@ -16,9 +16,16 @@
 package org.hyperledger.identus.client.models
 
 import com.google.gson.Gson
-import org.hyperledger.identus.client.models.Json
+import com.google.gson.TypeAdapter
+import com.google.gson.annotations.JsonAdapter
 
 import com.google.gson.annotations.SerializedName
+import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonWriter
+import org.hyperledger.identus.client.custom.parse
+import org.hyperledger.identus.client.custom.types.JsonType
+import org.hyperledger.identus.client.custom.types.ServiceType
 
 /**
  * A service expressed in the DID document. https://www.w3.org/TR/did-core/#services
@@ -28,36 +35,9 @@ import com.google.gson.annotations.SerializedName
  * @param serviceEndpoint
  */
 
-class Service {
-    constructor(id: String, type: String, serviceEndpoint: String) {
-        this.id = id
-        this.type = type
-        this.serviceEndpoint = serviceEndpoint
-    }
-
-    constructor(id: String, type: List<String>, serviceEndpoint: String) {
-        this.id = id
-        this.type = type
-        this.serviceEndpoint = serviceEndpoint
-    }
-
-
+class Service(
     /* The id of the service. Requires a URI fragment when use in create / update DID. Returns the full ID (with DID prefix) when resolving DID */
-    @SerializedName("id")
-    val id: kotlin.String
-
-    @SerializedName("type")
-    val type: Any?
-
-    @SerializedName("serviceEndpoint")
-    val serviceEndpoint: Json
-}
-
-fun main() {
-    val list = Service("", listOf(""), "")
-    val string = Service("", "", "")
-
-    println(Gson().toJson(list))
-    println()
-    println(Gson().toJson(string))
-}
+    @SerializedName("id") val id: String,
+    @SerializedName("type") val type: ServiceType,
+    @SerializedName("serviceEndpoint") val serviceEndpoint: JsonType
+)

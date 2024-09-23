@@ -6,7 +6,7 @@ wrapper {
 }
 
 buildscript {
-    ext.kotlin_version = '1.7.21'
+    ext.kotlin_version = '2.0.20'
 
     repositories {
         mavenLocal()
@@ -20,6 +20,7 @@ buildscript {
 apply plugin: 'kotlin'
 apply plugin: 'maven-publish'
 apply plugin: 'java'
+apply plugin: 'idea'
 
 repositories {
     mavenLocal()
@@ -31,10 +32,10 @@ test {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "com.google.code.gson:gson:2.9.0"
-    implementation "com.squareup.okhttp3:okhttp:4.10.0"
-    testImplementation "io.kotlintest:kotlintest-runner-junit5:3.4.2"
+    implementation "com.squareup.okhttp3:okhttp:4.12.0"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    testImplementation "org.jetbrains.kotlin:kotlin-test-junit5:$kotlin_version"
 }
 
 java {
