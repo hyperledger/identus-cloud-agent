@@ -7,6 +7,7 @@ import io.circe.*
 import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.{DID, VerificationRelationship}
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
+import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose.Revocation
 import org.hyperledger.identus.shared.http.*
 import zio.*
 import zio.prelude.Validation
@@ -62,7 +63,11 @@ object JWTVerificationTest extends ZIOSpecDefault {
                                               |}
                                               |""".stripMargin
 
-  private def createJwtCredential(issuer: IssuerWithKey, issuerAsObject: Boolean = false): JWT = {
+  private def createJwtCredential(
+      issuer: IssuerWithKey,
+      issuerAsObject: Boolean = false,
+      credentialStatus: Option[CredentialStatus | List[CredentialStatus]] = None
+  ): JWT = {
     val validFrom = Instant.parse("2010-01-05T00:00:00Z") // ISSUANCE DATE
     val jwtCredentialNbf = Instant.parse("2010-01-01T00:00:00Z") // ISSUANCE DATE
     val validUntil = Instant.parse("2010-01-09T00:00:00Z") // EXPIRATION DATE
@@ -75,7 +80,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
         `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
         maybeCredentialSchema = None,
         credentialSubject = Json.obj("id" -> Json.fromString("1")),
-        maybeCredentialStatus = None,
+        maybeCredentialStatus = credentialStatus,
         maybeRefreshService = None,
         maybeEvidence = None,
         maybeTermsOfUse = None,
@@ -221,6 +226,29 @@ object JWTVerificationTest extends ZIOSpecDefault {
         }
       } yield assertTrue(
         jwtWithObjectIssuerIssuer.equals(jwtIssuer)
+      )
+    },
+    test("validate credential status list") {
+      val issuer = createUser("did:prism:issuer")
+      val status = CredentialStatus(id = "id", `type` = "type", statusPurpose = Revocation, 1, "1")
+      val encodedJwtWithStatusList = createJwtCredential(
+        issuer,
+        false,
+        Some(List(status))
+      )
+      val econdedJwtWithStatusObject = createJwtCredential(issuer, true, Some(status))
+      for {
+        decodeJwtWithStatusList <- JwtCredential
+          .decodeJwt(encodedJwtWithStatusList)
+        decodeJwtWithStatusObject <- JwtCredential
+          .decodeJwt(econdedJwtWithStatusObject)
+        statusFromList = decodeJwtWithStatusList.vc.maybeCredentialStatus.map {
+          case list: List[CredentialStatus] => list.head
+          case _: CredentialStatus          => throw new IllegalStateException("List expected")
+        }.get
+        statusFromObjet = decodeJwtWithStatusObject.vc.maybeCredentialStatus.get
+      } yield assertTrue(
+        statusFromList.equals(statusFromObjet)
       )
     },
     test("validate dates should fail given after valid until") {

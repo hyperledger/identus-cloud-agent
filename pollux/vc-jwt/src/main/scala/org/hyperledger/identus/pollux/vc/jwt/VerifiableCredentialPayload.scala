@@ -240,7 +240,7 @@ object CredentialPayload {
           )
 
     implicit val credentialStatusOrListEncoder: Encoder[CredentialStatus | List[CredentialStatus]] = Encoder.instance {
-      case status: CredentialStatus => Encoder[CredentialStatus].apply(status)
+      case status: CredentialStatus           => Encoder[CredentialStatus].apply(status)
       case statusList: List[CredentialStatus] => Encoder[List[CredentialStatus]].apply(statusList)
     }
 
@@ -414,7 +414,7 @@ object CredentialPayload {
             .downField("credentialSchema")
             .as[Option[CredentialSchema | List[CredentialSchema]]]
           credentialSubject <- c.downField("credentialSubject").as[Json]
-          maybeCredentialStatus <- c.downField("credentialStatus").as[Option[CredentialStatus]]
+          maybeCredentialStatus <- c.downField("credentialStatus").as[Option[CredentialStatus | List[CredentialStatus]]]
           maybeRefreshService <- c.downField("refreshService").as[Option[RefreshService]]
           maybeEvidence <- c.downField("evidence").as[Option[Json]]
           maybeTermsOfUse <- c.downField("termsOfUse").as[Option[Json]]
@@ -453,7 +453,7 @@ object CredentialPayload {
             .downField("credentialSchema")
             .as[Option[CredentialSchema | List[CredentialSchema]]]
           credentialSubject <- c.downField("credentialSubject").as[Json]
-          maybeCredentialStatus <- c.downField("credentialStatus").as[Option[CredentialStatus]]
+          maybeCredentialStatus <- c.downField("credentialStatus").as[Option[CredentialStatus | List[CredentialStatus]]]
           maybeRefreshService <- c.downField("refreshService").as[Option[RefreshService]]
           maybeEvidence <- c.downField("evidence").as[Option[Json]]
           maybeTermsOfUse <- c.downField("termsOfUse").as[Option[Json]]
