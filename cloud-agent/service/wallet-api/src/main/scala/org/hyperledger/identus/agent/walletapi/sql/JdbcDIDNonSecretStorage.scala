@@ -1,5 +1,6 @@
 package org.hyperledger.identus.agent.walletapi.sql
 
+import cats.implicits.toFunctorOps
 import doobie.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
@@ -149,6 +150,38 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
         .option
 
     cxnIO.transactWallet(xa).map(_.flatten)
+  }
+
+  override def incrementAndGetNextDIDIndex: URIO[WalletAccessContext, Int] = {
+    def acquireAdvisoryLock(walletId: WalletId): ConnectionIO[Unit] = {
+      sql"SELECT pg_advisory_xact_lock(${walletId.hashCode})".query[Unit].unique.void
+    }
+
+    def insertWalletDIDIndexIfNotExists(walletId: WalletId): ConnectionIO[Int] = {
+      sql"""
+           | INSERT INTO public.last_did_index_per_wallet (wallet_id, last_used_index)
+           | VALUES ($walletId, -1)
+           | ON CONFLICT (wallet_id) DO NOTHING""".stripMargin.update.run
+    }
+
+    def incrementWalletDIDIndex(walletId: WalletId): ConnectionIO[Int] = {
+      sql"""
+           | UPDATE public.last_did_index_per_wallet
+           | SET last_used_index = last_used_index + 1
+           | WHERE wallet_id = $walletId
+           | RETURNING last_used_index""".stripMargin.query[Int].unique
+    }
+
+    for {
+      walletCtx <- ZIO.service[WalletAccessContext]
+      walletId = walletCtx.walletId
+      cnxIO = for {
+        _ <- acquireAdvisoryLock(walletId)
+        _ <- insertWalletDIDIndexIfNotExists(walletId)
+        index <- incrementWalletDIDIndex(walletId)
+      } yield index
+      index <- cnxIO.transactWallet(xa).orDie
+    } yield index
   }
 
   override def getHdKeyCounter(did: PrismDID): RIO[WalletAccessContext, Option[HdKeyIndexCounter]] = {

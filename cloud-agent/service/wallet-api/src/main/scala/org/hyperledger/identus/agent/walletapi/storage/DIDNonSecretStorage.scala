@@ -21,6 +21,8 @@ trait DIDNonSecretStorage {
 
   def getMaxDIDIndex(): RIO[WalletAccessContext, Option[Int]]
 
+  def incrementAndGetNextDIDIndex: URIO[WalletAccessContext, Int]
+
   def getHdKeyCounter(did: PrismDID): RIO[WalletAccessContext, Option[HdKeyIndexCounter]]
 
   /** Return a tuple of key metadata and the operation hash */
