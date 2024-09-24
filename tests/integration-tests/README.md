@@ -116,10 +116,6 @@ The configuration files are divided into the following sections:
 * `agents`: contains the configuration for the agents (ICA) that will be started. By default, all agents will be destroyed after the test run is finished.
 * `roles`: contains the configuration for the roles (Issuer, Holder, Verifier, Admin). A role can be assigned to one or more agents that we set in `agents` section or already running locally or in the cloud.
 
-> You could keep services and agents running for debugging purposes
-> by specifying `keep_running = true` for the service or agent
-> in the configuration file and setting `TESTCONTAINERS_RYUK_DISABLED` variable to `true`.
-
 Please, check [test/resources/configs/basic.conf](./src/test/resources/configs/basic.conf) for a quick example of a basic configuration.
 
 You could explore the `configs` directory for more complex examples.

@@ -1,7 +1,12 @@
 package steps.oid4vci
 
-import interactions.*
-import io.cucumber.java.en.*
+import interactions.Delete
+import interactions.Get
+import interactions.Patch
+import interactions.Post
+import io.cucumber.java.en.Given
+import io.cucumber.java.en.Then
+import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import net.serenitybdd.rest.SerenityRest
@@ -9,7 +14,14 @@ import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
 import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
-import org.hyperledger.identus.client.models.*
+import org.hyperledger.identus.client.models.AuthorizationServer
+import org.hyperledger.identus.client.models.CreateCredentialIssuerRequest
+import org.hyperledger.identus.client.models.CredentialIssuer
+import org.hyperledger.identus.client.models.CredentialIssuer1
+import org.hyperledger.identus.client.models.CredentialIssuerPage
+import org.hyperledger.identus.client.models.IssuerMetadata
+import org.hyperledger.identus.client.models.PatchAuthorizationServer
+import org.hyperledger.identus.client.models.PatchCredentialIssuerRequest
 
 class ManageIssuerSteps {
     private val UPDATE_AUTH_SERVER_URL = "http://example.com"
@@ -44,7 +56,7 @@ class ManageIssuerSteps {
 
     @Then("{actor} sees the oid4vci issuer exists on the agent")
     fun issuerSeesCredentialIssuerExists(issuer: Actor) {
-        val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
+        val credentialIssuer = issuer.recall<CredentialIssuer1>("oid4vciCredentialIssuer")
         issuer.attemptsTo(
             Get("/oid4vci/issuers"),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
@@ -94,9 +106,26 @@ class ManageIssuerSteps {
         )
     }
 
+    @When("{actor} tries to create oid4vci issuer with '{}', '{}', '{}' and '{}'")
+    fun issuerTriesToCreateOIDCIssuer(
+        issuer: Actor,
+        id: String?,
+        url: String?,
+        clientId: String?,
+        clientSecret: String?
+    ) {
+        println("$issuer $id $url $clientId $clientSecret")
+        println(url == null)
+    }
+
+    @Then("{actor} should see the oid4vci error '{}'")
+    fun issuerShouldSeeTheOIDC4VCIError(issuer: Actor, error: String) {
+
+    }
+
     @Then("{actor} sees the oid4vci issuer updated with new values")
     fun issuerSeesUpdatedCredentialIssuer(issuer: Actor) {
-        val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
+        val credentialIssuer = issuer.recall<CredentialIssuer1>("oid4vciCredentialIssuer")
         issuer.attemptsTo(
             Get("/oid4vci/issuers"),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
@@ -123,7 +152,7 @@ class ManageIssuerSteps {
 
     @Then("{actor} cannot see the oid4vci issuer on the agent")
     fun issuerCannotSeeCredentialIssuer(issuer: Actor) {
-        val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
+        val credentialIssuer = issuer.recall<CredentialIssuer1>("oid4vciCredentialIssuer")
         issuer.attemptsTo(
             Get("/oid4vci/issuers"),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
