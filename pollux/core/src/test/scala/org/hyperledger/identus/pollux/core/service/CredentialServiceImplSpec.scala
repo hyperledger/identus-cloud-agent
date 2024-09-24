@@ -538,11 +538,9 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           _ <- holderSvc.receiveCredentialIssue(issueCredential)
         } yield assertTrue(
           decodedJWT.issuer ==
-            Right(
-              CredentialIssuer(
-                id = decodedJWT.iss,
-                `type` = "Profile"
-              )
+            CredentialIssuer(
+              id = decodedJWT.iss,
+              `type` = "Profile"
             )
         )
       }.provideSomeLayer(

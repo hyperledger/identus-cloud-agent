@@ -22,7 +22,7 @@ case class StatusListCredential(
     `type`: Set[String],
     @description(annotations.issuer.description)
     @encodedExample(annotations.issuer.example)
-    issuer: Either[String, CredentialIssuer],
+    issuer: String | CredentialIssuer,
     @description(annotations.id.description)
     @encodedExample(annotations.id.example)
     id: String,
@@ -156,11 +156,18 @@ object StatusListCredential {
   given credentialIssuerDecoder: JsonDecoder[CredentialIssuer] =
     DeriveJsonDecoder.gen[CredentialIssuer]
 
-  given eitherStringOrCredentialIssuerEncoder: JsonEncoder[Either[String, CredentialIssuer]] =
-    JsonEncoder[String].orElseEither(JsonEncoder[CredentialIssuer])
+  given stringOrCredentialIssuerEncoder: JsonEncoder[String | CredentialIssuer] =
+    JsonEncoder[String]
+      .orElseEither(JsonEncoder[CredentialIssuer])
+      .contramap[String | CredentialIssuer] {
+        case string: String                     => Left(string)
+        case credentialIssuer: CredentialIssuer => Right(credentialIssuer)
+      }
 
-  given eitherStringOrCredentialIssuerDecoder: JsonDecoder[Either[String, CredentialIssuer]] =
-    JsonDecoder[CredentialIssuer].map(Right(_)).orElse(JsonDecoder[String].map(Left(_)))
+  given stringOrCredentialIssuerDecoder: JsonDecoder[String | CredentialIssuer] =
+    JsonDecoder[CredentialIssuer]
+      .map(issuer => issuer: String | CredentialIssuer)
+      .orElse(JsonDecoder[String].map(schemaId => schemaId: String | CredentialIssuer))
 
   given statusListCredentialEncoder: JsonEncoder[StatusListCredential] =
     DeriveJsonEncoder.gen[StatusListCredential]
@@ -179,6 +186,16 @@ object StatusListCredential {
   given statusPurposeSchema: Schema[StatusPurpose] = Schema.derived
 
   given credentialIssuerSchema: Schema[CredentialIssuer] = Schema.derived
+
+  given schemaIssuer: Schema[String | CredentialIssuer] = Schema
+    .schemaForEither(Schema.schemaForString, Schema.derived[CredentialIssuer])
+    .map[String | CredentialIssuer] {
+      case Left(string)            => Some(string)
+      case Right(credentialIssuer) => Some(credentialIssuer)
+    } {
+      case string: String                     => Left(string)
+      case credentialIssuer: CredentialIssuer => Right(credentialIssuer)
+    }
 
   given statusListCredentialSchema: Schema[StatusListCredential] = Schema.derived
 
