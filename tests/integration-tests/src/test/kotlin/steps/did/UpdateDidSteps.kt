@@ -189,7 +189,7 @@ class UpdateDidSteps {
                         Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
                     )
                     val service = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.service!!
-                    service.any { it.serviceEndpoint.value.contains(serviceUrl) }
+                    service.any { it.serviceEndpoint.getString().contains(serviceUrl) }
                 },
                 equalTo(true),
             ),
