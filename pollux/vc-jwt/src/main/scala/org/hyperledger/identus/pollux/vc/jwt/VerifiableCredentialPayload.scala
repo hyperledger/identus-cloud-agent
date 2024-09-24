@@ -79,7 +79,7 @@ sealed trait CredentialPayload {
 
   def issuer: String | CredentialIssuer
 
-  def maybeCredentialStatus: Option[CredentialStatus]
+  def maybeCredentialStatus: Option[CredentialStatus | List[CredentialStatus]]
 
   def maybeRefreshService: Option[RefreshService]
 
@@ -145,7 +145,7 @@ case class JwtVc(
     maybeValidFrom: Option[Instant],
     maybeValidUntil: Option[Instant],
     maybeIssuer: Option[String | CredentialIssuer],
-    maybeCredentialStatus: Option[CredentialStatus],
+    maybeCredentialStatus: Option[CredentialStatus | List[CredentialStatus]],
     maybeRefreshService: Option[RefreshService],
     maybeEvidence: Option[Json],
     maybeTermsOfUse: Option[Json]
@@ -182,7 +182,7 @@ case class W3cCredentialPayload(
     maybeExpirationDate: Option[Instant],
     override val maybeCredentialSchema: Option[CredentialSchema | List[CredentialSchema]],
     override val credentialSubject: Json,
-    override val maybeCredentialStatus: Option[CredentialStatus],
+    override val maybeCredentialStatus: Option[CredentialStatus | List[CredentialStatus]],
     override val maybeRefreshService: Option[RefreshService],
     override val maybeEvidence: Option[Json],
     override val maybeTermsOfUse: Option[Json],
@@ -238,6 +238,11 @@ object CredentialPayload {
             ("statusListIndex", credentialStatus.statusListIndex.asJson),
             ("statusListCredential", credentialStatus.statusListCredential.asJson)
           )
+
+    implicit val credentialStatusOrListEncoder: Encoder[CredentialStatus | List[CredentialStatus]] = Encoder.instance {
+      case status: CredentialStatus => Encoder[CredentialStatus].apply(status)
+      case statusList: List[CredentialStatus] => Encoder[List[CredentialStatus]].apply(statusList)
+    }
 
     implicit val stringOrCredentialIssuerEncoder: Encoder[String | CredentialIssuer] = Encoder.instance {
       case string: String                     => Encoder[String].apply(string)
@@ -382,6 +387,11 @@ object CredentialPayload {
       Decoder[CredentialSchema]
         .map(schema => schema: CredentialSchema | List[CredentialSchema])
         .or(Decoder[List[CredentialSchema]].map(schema => schema: CredentialSchema | List[CredentialSchema]))
+
+    implicit val credentialStatusOrListDecoder: Decoder[CredentialStatus | List[CredentialStatus]] =
+      Decoder[CredentialStatus]
+        .map(status => status: CredentialStatus | List[CredentialStatus])
+        .or(Decoder[List[CredentialStatus]].map(status => status: CredentialStatus | List[CredentialStatus]))
 
     implicit val w3cCredentialPayloadDecoder: Decoder[W3cCredentialPayload] =
       (c: HCursor) =>
@@ -847,12 +857,19 @@ object JwtCredential {
       decodedJWT <- decodeJWT
       jwtCredentialPayload <- ZIO.fromEither(decode[JwtCredentialPayload](decodedJWT)).mapError(_.getMessage)
       credentialStatus = jwtCredentialPayload.vc.maybeCredentialStatus
-      result = credentialStatus.fold(ZIO.succeed(Validation.unit))(status =>
-        CredentialVerification.verifyCredentialStatus(status)(uriResolver)
+        .map {
+          {
+            case status: CredentialStatus           => List(status)
+            case statusList: List[CredentialStatus] => statusList
+          }
+        }
+        .getOrElse(List.empty)
+      results <- ZIO.collectAll(
+        credentialStatus.map(status => CredentialVerification.verifyCredentialStatus(status)(uriResolver))
       )
+      result = Validation.validateAll(results).flatMap(_ => Validation.unit)
     } yield result
-
-    res.flatten
+    res
   }
 }
 
@@ -927,11 +944,20 @@ object W3CCredential {
   private def verifyRevocationStatusW3c(
       w3cPayload: W3cVerifiableCredentialPayload,
   )(uriResolver: UriResolver): IO[String, Validation[String, Unit]] = {
-    // If credential does not have credential status list, it does not support revocation
-    // and we assume revocation status is valid.
-    w3cPayload.payload.maybeCredentialStatus.fold(ZIO.succeed(Validation.unit))(status =>
-      CredentialVerification.verifyCredentialStatus(status)(uriResolver)
-    )
+    val credentialStatus = w3cPayload.payload.maybeCredentialStatus
+      .map {
+        {
+          case status: CredentialStatus           => List(status)
+          case statusList: List[CredentialStatus] => statusList
+        }
+      }
+      .getOrElse(List.empty)
+    for {
+      results <- ZIO.collectAll(
+        credentialStatus.map(status => CredentialVerification.verifyCredentialStatus(status)(uriResolver))
+      )
+      result = Validation.validateAll(results).flatMap(_ => Validation.unit)
+    } yield result
   }
 
   def verify(w3cPayload: W3cVerifiableCredentialPayload, options: CredentialVerification.CredentialVerificationOptions)(
