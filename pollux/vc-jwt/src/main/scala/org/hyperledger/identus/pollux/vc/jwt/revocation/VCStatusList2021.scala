@@ -52,7 +52,7 @@ object VCStatusList2021 {
     } yield {
       val claims = JsonObject()
         .add("type", "StatusList2021".asJson)
-        .add("statusPurpose", purpose.str.asJson)
+        .add("statusPurpose", purpose.toString.asJson)
         .add("encodedList", encodedBitString.asJson)
       val w3Credential = W3cCredentialPayload(
         `@context` = Set(

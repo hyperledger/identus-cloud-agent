@@ -15,9 +15,9 @@
 
 package org.hyperledger.identus.client.models
 
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonElement
 import com.google.gson.annotations.SerializedName
-import com.google.gson.JsonElement
-import com.google.gson.JsonPrimitive
 
 
 /**
