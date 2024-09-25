@@ -2,14 +2,14 @@ package org.hyperledger.identus.pollux.credentialschema.http
 
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.pollux.core.model
-import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod.*
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponse.annotations
 import sttp.model.Uri
-import sttp.model.Uri.*
-import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{default, description, encodedExample, encodedName}
+import sttp.tapir.json.zio.schemaForZioJsonValue
 import zio.json.*
 import zio.json.ast.Json
 
@@ -93,7 +93,6 @@ object CredentialSchemaResponse {
   given decoder: zio.json.JsonDecoder[CredentialSchemaResponse] =
     DeriveJsonDecoder.gen[CredentialSchemaResponse]
 
-  given resourceResolutionMethodSchema: Schema[ResourceResolutionMethod] = Schema.derived
   given schema: Schema[CredentialSchemaResponse] = Schema.derived
 
   object annotations {

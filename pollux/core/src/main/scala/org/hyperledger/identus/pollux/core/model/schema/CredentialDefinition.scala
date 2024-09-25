@@ -1,8 +1,7 @@
 package org.hyperledger.identus.pollux.core.model.schema
 
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.*
 import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod.*
 import zio.*
 import zio.json.*
 
