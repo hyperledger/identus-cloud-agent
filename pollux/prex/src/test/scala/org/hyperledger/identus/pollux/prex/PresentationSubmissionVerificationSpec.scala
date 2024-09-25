@@ -74,7 +74,7 @@ object PresentationSubmissionVerificationSpec extends ZIOSpecDefault {
         maybeTermsOfUse = None,
         maybeValidFrom = None,
         maybeValidUntil = None,
-        maybeIssuer = Some(Left(iss))
+        maybeIssuer = Some(iss)
       ),
       nbf = jwtCredentialNbf,
       aud = Set.empty,
