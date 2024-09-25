@@ -10,7 +10,7 @@
     "ArrayInDataClass",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "UnusedImport",
 )
 
 package org.hyperledger.identus.client.models
@@ -18,17 +18,6 @@ package org.hyperledger.identus.client.models
 import com.google.gson.*
 import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
-
-
-/**
- * A service expressed in the DID document. https://www.w3.org/TR/did-core/#services
- *
- * @param id The id of the service. Requires a URI fragment when use in create / update DID. Returns the full ID (with DID prefix) when resolving DID
- * @param type 
- * @param serviceEndpoint 
- */
-
-import com.google.gson.*
 import java.lang.reflect.Type
 
 class StringOrStringArrayAdapter : JsonSerializer<List<String>>, JsonDeserializer<List<String>> {
@@ -50,15 +39,13 @@ class StringOrStringArrayAdapter : JsonSerializer<List<String>>, JsonDeserialize
     override fun serialize(src: List<String>?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
         return when {
             src == null -> JsonNull.INSTANCE
-            src.size == 1 -> JsonPrimitive(src[0])  // If only one string, serialize as a single string
-            else -> context!!.serialize(src)  // Otherwise, serialize as a list
+            src.size == 1 -> JsonPrimitive(src[0]) // If only one string, serialize as a single string
+            else -> context!!.serialize(src) // Otherwise, serialize as a list
         }
     }
 }
 
-
-
-data class Service (
+data class Service(
 
     /* The id of the service. Requires a URI fragment when use in create / update DID. Returns the full ID (with DID prefix) when resolving DID */
     @SerializedName("id")
@@ -69,7 +56,7 @@ data class Service (
     val type: kotlin.collections.List<kotlin.String>? = null,
 
     @SerializedName("serviceEndpoint")
-    val serviceEndpoint: JsonElement? = null
+    val serviceEndpoint: JsonElement? = null,
 
 )
 
@@ -77,7 +64,7 @@ fun main() {
     val service = Service(
         id = "id",
         type = listOf("type"),
-        serviceEndpoint = JsonPrimitive("https://example.com") as JsonElement
+        serviceEndpoint = JsonPrimitive("https://example.com") as JsonElement,
     )
     println(service)
 
@@ -87,8 +74,7 @@ fun main() {
     val service2 = Service(
         id = "id",
         type = listOf("type"),
-        serviceEndpoint = endpoints as JsonElement
+        serviceEndpoint = endpoints as JsonElement,
     )
     println(service2)
 }
-

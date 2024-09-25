@@ -28,7 +28,7 @@ open class ListenToEvents(
     private val gson = GsonBuilder()
         .registerTypeAdapter(
             OffsetDateTime::class.java,
-            CustomGsonObjectMapperFactory.OffsetDateTimeTypeAdapter()
+            CustomGsonObjectMapperFactory.OffsetDateTimeTypeAdapter(),
         )
         .create()
 
@@ -47,29 +47,29 @@ open class ListenToEvents(
                     TestConstants.EVENT_TYPE_CONNECTION_UPDATED -> connectionEvents.add(
                         gson.fromJson(
                             eventString,
-                            ConnectionEvent::class.java
-                        )
+                            ConnectionEvent::class.java,
+                        ),
                     )
 
                     TestConstants.EVENT_TYPE_ISSUE_CREDENTIAL_RECORD_UPDATED -> credentialEvents.add(
                         gson.fromJson(
                             eventString,
-                            CredentialEvent::class.java
-                        )
+                            CredentialEvent::class.java,
+                        ),
                     )
 
                     TestConstants.EVENT_TYPE_PRESENTATION_UPDATED -> presentationEvents.add(
                         gson.fromJson(
                             eventString,
-                            PresentationEvent::class.java
-                        )
+                            PresentationEvent::class.java,
+                        ),
                     )
 
                     TestConstants.EVENT_TYPE_DID_STATUS_UPDATED -> didEvents.add(
                         gson.fromJson(
                             eventString,
-                            DidEvent::class.java
-                        )
+                            DidEvent::class.java,
+                        ),
                     )
 
                     else -> {

@@ -198,7 +198,9 @@ class UpdateDidSteps {
                             serviceEndpoint.asString.contains(serviceUrl)
                         } else if (serviceEndpoint.isJsonArray) {
                             serviceEndpoint.asJsonArray.any { it.asString.contains(serviceUrl) }
-                        } else false
+                        } else {
+                            false
+                        }
                     }
                 },
                 equalTo(true),
