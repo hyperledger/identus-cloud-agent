@@ -144,7 +144,7 @@ object CredentialSchemaSql
       nameOpt: Option[String] = None,
       versionOpt: Option[String] = None,
       tagOpt: Option[String] = None,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ) = run {
     val q =
       idOpt.fold(quote(query[CredentialSchema]))(id =>
@@ -174,7 +174,7 @@ object CredentialSchemaSql
       tagOpt: Option[String] = None,
       offset: Int = 0,
       limit: Int = 1000,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ) = run {
     val q =
       idOpt.fold(quote(query[CredentialSchema]))(id =>

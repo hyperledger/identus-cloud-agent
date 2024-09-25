@@ -15,9 +15,8 @@
 
 package org.hyperledger.identus.client.models
 
-import org.hyperledger.identus.client.models.Json
-
 import com.google.gson.annotations.SerializedName
+import com.google.gson.JsonElement
 
 /**
  * A patch to existing Service. 'type' and 'serviceEndpoint' cannot both be empty.
@@ -38,7 +37,7 @@ data class UpdateManagedDIDServiceAction (
     val type: kotlin.collections.List<kotlin.String>? = null,
 
     @SerializedName("serviceEndpoint")
-    val serviceEndpoint: Json? = null
+    val serviceEndpoint: JsonElement? = null
 
 )
 

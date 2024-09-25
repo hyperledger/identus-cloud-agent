@@ -41,7 +41,7 @@ class CredentialDefinitionServiceImpl(
 
   override def create(
       in: CredentialDefinition.Input,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ): Result[CredentialDefinition] = {
     for {
       content <- uriResolver.resolve(in.schemaId).orDieAsUnmanagedFailure

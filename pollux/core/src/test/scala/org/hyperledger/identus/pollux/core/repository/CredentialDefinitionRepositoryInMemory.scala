@@ -40,7 +40,7 @@ class CredentialDefinitionRepositoryInMemory(
 
   override def findByGuid(
       guid: UUID,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ): UIO[Option[CredentialDefinition]] = {
     for {
       storeRefs <- walletRefs.get

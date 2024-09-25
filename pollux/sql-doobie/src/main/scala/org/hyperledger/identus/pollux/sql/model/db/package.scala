@@ -17,12 +17,12 @@ package object db {
   given MappedEncoding[UUID, WalletId] = MappedEncoding(WalletId.fromUUID)
 
   given mappedDecoderResourceResolutionMethod: MappedEncoding[ResourceResolutionMethod, String] =
-    MappedEncoding[ResourceResolutionMethod, String](_.str)
+    MappedEncoding[ResourceResolutionMethod, String](_.toString)
 
   given mappedEncoderResourceResolutionMethod: MappedEncoding[String, ResourceResolutionMethod] =
     MappedEncoding[String, ResourceResolutionMethod] {
-      case "did"  => ResourceResolutionMethod.DID
-      case "http" => ResourceResolutionMethod.HTTP
+      case "did"  => ResourceResolutionMethod.did
+      case "http" => ResourceResolutionMethod.http
       case other  => throw new IllegalArgumentException(s"Unknown ResourceResolutionMethod: $other")
     }
 
@@ -34,7 +34,7 @@ package object db {
       (index: Index, value: ResourceResolutionMethod, row: PrepareRow) => {
         val pgObj = new PGobject()
         pgObj.setType("resolution_method_enum")
-        pgObj.setValue(value.str)
+        pgObj.setValue(value.toString)
         row.setObject(index, pgObj, java.sql.Types.OTHER)
       }
     )
@@ -42,8 +42,8 @@ package object db {
     given decoderResourceResolutionMethod: Decoder[ResourceResolutionMethod] = decoder(row =>
       index =>
         row.getObject(index).toString match {
-          case "did"  => ResourceResolutionMethod.DID
-          case "http" => ResourceResolutionMethod.HTTP
+          case "did"  => ResourceResolutionMethod.did
+          case "http" => ResourceResolutionMethod.http
         }
     )
   }

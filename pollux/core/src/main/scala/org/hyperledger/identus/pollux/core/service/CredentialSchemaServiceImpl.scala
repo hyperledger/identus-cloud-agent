@@ -22,7 +22,7 @@ class CredentialSchemaServiceImpl(
 ) extends CredentialSchemaService {
   override def create(
       in: CredentialSchema.Input,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ): Result[CredentialSchema] = {
     for {
       credentialSchema <- CredentialSchema.make(in, resolutionMethod)
@@ -35,7 +35,7 @@ class CredentialSchemaServiceImpl(
 
   override def getByGUID(
       guid: UUID,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ): IO[CredentialSchemaServiceError, CredentialSchema] = {
     for {
       resultOpt <- credentialSchemaRepository.findByGuid(guid, resolutionMethod)
@@ -47,7 +47,7 @@ class CredentialSchemaServiceImpl(
       author: String,
       id: UUID,
       version: String,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ): Result[CredentialSchema] = {
     getByGUID(CredentialSchema.makeGUID(author, id, version), resolutionMethod)
   }
@@ -55,7 +55,7 @@ class CredentialSchemaServiceImpl(
   override def update(
       id: UUID,
       in: CredentialSchema.Input,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ): Result[CredentialSchema] = {
 
     for {

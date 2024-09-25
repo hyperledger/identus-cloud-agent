@@ -86,7 +86,7 @@ object CredentialSchemaResponse {
       proof = None
     )
 
-  given scala.Conversion[CredentialSchema, CredentialSchemaResponse] = fromDomain
+  // import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod.schema
 
   given encoder: zio.json.JsonEncoder[CredentialSchemaResponse] =
     DeriveJsonEncoder.gen[CredentialSchemaResponse]
@@ -143,9 +143,9 @@ object CredentialSchemaResponse {
         )
 
     object resolutionMethod
-        extends Annotation[ResourceResolutionMethod](
+        extends Annotation[String](
           description = s"The method used to resolve the schema. It can be either HTTP or DID.",
-          example = ResourceResolutionMethod.HTTP
+          example = ResourceResolutionMethod.http.toString
         )
 
     object proof

@@ -30,7 +30,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
       tags = Seq("tag1", "tag2"),
       description = "Json Schema",
       `type` = CredentialJsonSchemaType.VC_JSON_SCHEMA_URI,
-      resolutionMethod = ResourceResolutionMethod.HTTP,
+      resolutionMethod = ResourceResolutionMethod.http,
       schema = innerJsonSchema.fromJson[Json].getOrElse(Json.Null)
     )
   }
@@ -46,7 +46,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
       tags = Seq("tag1", "tag2"),
       description = "Anoncred Schema",
       `type` = AnoncredSchemaSerDesV1.version,
-      resolutionMethod = ResourceResolutionMethod.HTTP,
+      resolutionMethod = ResourceResolutionMethod.http,
       schema = innerJsonSchema.fromJson[Json].getOrElse(Json.Null)
     )
   }

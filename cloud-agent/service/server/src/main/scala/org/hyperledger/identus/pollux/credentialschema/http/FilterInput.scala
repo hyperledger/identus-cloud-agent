@@ -22,7 +22,7 @@ case class FilterInput(
     @example(annotations.tags.example.headOption)
     tags: Option[String] = Option.empty[String]
 ) {
-  def toDomain(resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP) =
+  def toDomain(resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http) =
     CredentialSchema.Filter(author, name, version, tags, resolutionMethod)
 }
 

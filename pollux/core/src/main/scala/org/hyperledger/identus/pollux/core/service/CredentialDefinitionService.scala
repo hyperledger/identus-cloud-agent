@@ -19,7 +19,7 @@ trait CredentialDefinitionService {
     */
   def create(
       in: Input,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ): Result[CredentialDefinition]
 
   /** @param guid
@@ -29,7 +29,7 @@ trait CredentialDefinitionService {
     */
   def getByGUID(
       guid: UUID,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ): IO[CredentialDefinitionServiceError, CredentialDefinition]
 
   def lookup(filter: Filter, skip: Int, limit: Int): Result[FilteredEntries]

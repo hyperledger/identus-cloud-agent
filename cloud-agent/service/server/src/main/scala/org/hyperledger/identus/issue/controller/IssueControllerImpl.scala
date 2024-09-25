@@ -121,7 +121,7 @@ class IssueControllerImpl(
               credentialDefinitionId <- {
 
                 credentialDefinition.resolutionMethod match
-                  case ResourceResolutionMethod.DID =>
+                  case ResourceResolutionMethod.`did` =>
                     val publicEndpointServiceName = appConfig.agent.httpEndpoint.serviceName
                     val didUrlResourcePath =
                       s"credential-definition-registry/definitions/did-url/${credentialDefinitionGUID.toString}/definition"
@@ -146,13 +146,12 @@ class IssueControllerImpl(
                       .fromEither(didUrl)
                       .mapError(_ => ErrorResponse.badRequest(detail = Some("Could not parse credential definition")))
 
-                  case ResourceResolutionMethod.HTTP =>
+                  case ResourceResolutionMethod.`http` =>
                     val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl.toExternalForm
                     val httpUrlSuffix =
                       s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
                     val urlPrefix = if (publicEndpointUrl.endsWith("/")) publicEndpointUrl else publicEndpointUrl + "/"
                     ZIO.succeed(s"$urlPrefix$httpUrlSuffix")
-
               }
               record <- credentialService
                 .createAnonCredsIssueCredentialRecord(

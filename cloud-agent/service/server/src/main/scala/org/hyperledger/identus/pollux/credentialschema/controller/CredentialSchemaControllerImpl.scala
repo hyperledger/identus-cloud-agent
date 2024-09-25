@@ -53,7 +53,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
   ): ZIO[WalletAccessContext, ErrorResponse, PrismEnvelopeResponse] = {
     val res = for {
       validated <- validatePrismDID(in.author)
-      result <- service.create(toDomain(in), ResourceResolutionMethod.DID)
+      result <- service.create(toDomain(in), ResourceResolutionMethod.did)
       response <- ZIO
         .fromEither(CredentialSchemaDidUrlResponse.asPrismEnvelopeResponse(result, baseUrlServiceName))
         .mapError(parsingCredentialSchemaError)
@@ -80,7 +80,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
     val res = for {
       _ <- validatePrismDID(in.author)
       cs <- service
-        .update(id, toDomain(in), ResourceResolutionMethod.DID)
+        .update(id, toDomain(in), ResourceResolutionMethod.did)
       result <- ZIO
         .fromEither(CredentialSchemaDidUrlResponse.asPrismEnvelopeResponse(cs, baseUrlServiceName))
         .mapError(parsingCredentialSchemaError)
@@ -105,7 +105,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
       rc: RequestContext
   ): IO[ErrorResponse, PrismEnvelopeResponse] = {
     val res: IO[ErrorResponse, PrismEnvelopeResponse] = for {
-      cs <- service.getByGUID(guid, ResourceResolutionMethod.DID)
+      cs <- service.getByGUID(guid, ResourceResolutionMethod.did)
       response <- ZIO
         .fromEither(CredentialSchemaDidUrlResponse.asPrismEnvelopeResponse(cs, baseUrlServiceName))
         .mapError(parsingCredentialSchemaError)
@@ -128,7 +128,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
       rc: RequestContext
   ): IO[ErrorResponse, PrismEnvelopeResponse] = {
     val res = for {
-      cs <- service.getByGUID(id, ResourceResolutionMethod.DID)
+      cs <- service.getByGUID(id, ResourceResolutionMethod.did)
       authorDid <- ZIO
         .fromEither(PrismDID.fromString(cs.author))
         .mapError(_ => ErrorResponse.internalServerError(detail = Some("Invalid schema author DID")))
@@ -173,7 +173,7 @@ class CredentialSchemaControllerImpl(service: CredentialSchemaService, managedDI
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialSchemaDidUrlResponsePage] = {
     for {
       filteredEntries: FilteredEntries <- service.lookup(
-        filter.toDomain(ResourceResolutionMethod.DID),
+        filter.toDomain(ResourceResolutionMethod.did),
         pagination.offset,
         pagination.limit
       )

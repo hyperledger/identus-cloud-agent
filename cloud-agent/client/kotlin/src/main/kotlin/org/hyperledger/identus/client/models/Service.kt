@@ -15,9 +15,10 @@
 
 package org.hyperledger.identus.client.models
 
-import org.hyperledger.identus.client.models.Json
-
 import com.google.gson.annotations.SerializedName
+import com.google.gson.JsonElement
+import com.google.gson.JsonPrimitive
+
 
 /**
  * A service expressed in the DID document. https://www.w3.org/TR/did-core/#services
@@ -38,7 +39,16 @@ data class Service (
     val type: kotlin.collections.List<kotlin.String>? = null,
 
     @SerializedName("serviceEndpoint")
-    val serviceEndpoint: Json
+    val serviceEndpoint: JsonElement? = null
 
 )
+
+fun main() {
+    val service = Service(
+        id = "id",
+        type = listOf("type"),
+        serviceEndpoint = JsonPrimitive("https://example.com")
+    )
+    println(service)
+}
 

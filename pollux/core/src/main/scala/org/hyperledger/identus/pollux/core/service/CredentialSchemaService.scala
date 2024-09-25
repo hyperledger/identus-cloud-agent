@@ -18,7 +18,7 @@ trait CredentialSchemaService {
     */
   def create(
       in: Input,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ): Result[CredentialSchema]
 
   /** @param guid
@@ -28,13 +28,13 @@ trait CredentialSchemaService {
     */
   def getByGUID(
       guid: UUID,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ): IO[CredentialSchemaServiceError, CredentialSchema]
 
   def update(
       id: UUID,
       in: Input,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ): Result[CredentialSchema]
 
   def lookup(filter: Filter, skip: Int, limit: Int): Result[FilteredEntries]

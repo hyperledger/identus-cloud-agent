@@ -207,10 +207,10 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault with Postgr
 
         totalCount <- CredentialDefinitionSql.totalCount.transactWallet(tx)
         lookupCountHttpCredDef <- CredentialDefinitionSql
-          .lookupCount(resolutionMethod = ResourceResolutionMethod.HTTP)
+          .lookupCount(resolutionMethod = ResourceResolutionMethod.http)
           .transactWallet(tx)
         lookupCountDidCredDef <- CredentialDefinitionSql
-          .lookupCount(resolutionMethod = ResourceResolutionMethod.DID)
+          .lookupCount(resolutionMethod = ResourceResolutionMethod.did)
           .transactWallet(tx)
 
         totalCountIsN = assert(totalCount)(equalTo(generatedCredentialDefinitions.length))
