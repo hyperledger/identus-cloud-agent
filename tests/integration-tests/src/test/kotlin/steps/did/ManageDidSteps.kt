@@ -6,6 +6,7 @@ import interactions.body
 import io.cucumber.java.en.*
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
+import kotlinx.serialization.json.JsonPrimitive
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus.*
@@ -148,7 +149,7 @@ class ManageDidSteps {
             CreateManagedDidRequestDocumentTemplate(
                 publicKeys = listOf(ManagedDIDKeyTemplate("auth-1", purpose, curve)),
                 services = listOf(
-                    Service("https://foo.bar.com", listOf("LinkedDomains"), Json("https://foo.bar.com/")),
+                    Service("https://foo.bar.com", listOf("LinkedDomains"), JsonPrimitive("https://foo.bar.com/")),
                 ),
             ),
         )
