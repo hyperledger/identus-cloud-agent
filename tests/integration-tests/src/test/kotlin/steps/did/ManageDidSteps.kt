@@ -1,12 +1,12 @@
 package steps.did
 
+import com.google.gson.JsonPrimitive
 import interactions.Get
 import interactions.Post
 import interactions.body
 import io.cucumber.java.en.*
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
-import kotlinx.serialization.json.JsonPrimitive
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus.*

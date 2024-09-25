@@ -15,8 +15,8 @@
 
 package org.hyperledger.identus.client.models
 
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.JsonElement
+import com.google.gson.*
+import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 
 
@@ -28,6 +28,18 @@ import com.google.gson.annotations.SerializedName
  * @param serviceEndpoint 
  */
 
+import java.lang.reflect.Type
+
+class StringOrStringArrayDeserializer : JsonDeserializer<List<String>> {
+    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): List<String> {
+        return when {
+            json?.isJsonArray == true -> context!!.deserialize(json, typeOfT)
+            json?.isJsonPrimitive == true -> listOf(json.asString)
+            else -> throw JsonParseException("Unexpected type for field")
+        }
+    }
+}
+
 
 data class Service (
 
@@ -36,6 +48,7 @@ data class Service (
     val id: kotlin.String,
 
     @SerializedName("type")
+    @JsonAdapter(StringOrStringArrayDeserializer::class)
     val type: kotlin.collections.List<kotlin.String>? = null,
 
     @SerializedName("serviceEndpoint")
@@ -47,8 +60,18 @@ fun main() {
     val service = Service(
         id = "id",
         type = listOf("type"),
-        serviceEndpoint = JsonPrimitive("https://example.com")
+        serviceEndpoint = JsonPrimitive("https://example.com") as JsonElement
     )
     println(service)
+
+    val endpoints = JsonArray()
+    endpoints.add("https://example.com")
+    endpoints.add("https://example.org")
+    val service2 = Service(
+        id = "id",
+        type = listOf("type"),
+        serviceEndpoint = endpoints as JsonElement
+    )
+    println(service2)
 }
 
