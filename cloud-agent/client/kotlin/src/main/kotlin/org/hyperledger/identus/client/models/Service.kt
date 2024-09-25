@@ -28,17 +28,34 @@ import com.google.gson.annotations.SerializedName
  * @param serviceEndpoint 
  */
 
+import com.google.gson.*
 import java.lang.reflect.Type
 
-class StringOrStringArrayDeserializer : JsonDeserializer<List<String>> {
+class StringOrStringArrayAdapter : JsonSerializer<List<String>>, JsonDeserializer<List<String>> {
+
+    // Deserialize logic: String or Array of Strings to List<String>
     override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): List<String> {
         return when {
-            json?.isJsonArray == true -> context!!.deserialize(json, typeOfT)
-            json?.isJsonPrimitive == true -> listOf(json.asString)
+            json?.isJsonArray == true -> {
+                context!!.deserialize(json, typeOfT)
+            }
+            json?.isJsonPrimitive == true -> {
+                listOf(json.asString)
+            }
             else -> throw JsonParseException("Unexpected type for field")
         }
     }
+
+    // Serialize logic: List<String> to String or Array of Strings
+    override fun serialize(src: List<String>?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+        return when {
+            src == null -> JsonNull.INSTANCE
+            src.size == 1 -> JsonPrimitive(src[0])  // If only one string, serialize as a single string
+            else -> context!!.serialize(src)  // Otherwise, serialize as a list
+        }
+    }
 }
+
 
 
 data class Service (
@@ -48,7 +65,7 @@ data class Service (
     val id: kotlin.String,
 
     @SerializedName("type")
-    @JsonAdapter(StringOrStringArrayDeserializer::class)
+    @JsonAdapter(StringOrStringArrayAdapter::class)
     val type: kotlin.collections.List<kotlin.String>? = null,
 
     @SerializedName("serviceEndpoint")
