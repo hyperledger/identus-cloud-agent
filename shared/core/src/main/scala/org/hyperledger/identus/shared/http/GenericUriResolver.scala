@@ -8,6 +8,7 @@ import zio.*
 import zio.json.*
 
 import scala.util
+import scala.util.Try
 
 trait UriResolver {
 
@@ -20,24 +21,30 @@ class GenericUriResolver(resolvers: Map[String, UriResolver]) extends UriResolve
   override def resolve(uri: String): IO[GenericUriResolverError, String] = {
     val parsedUri = Uri.parseTry(uri)
 
-    ZIO.fromTry(parsedUri).mapError(_ => InvalidUri(uri)).flatMap {
-      case url: Url =>
-        url.schemeOption.fold(ZIO.fail(InvalidUri(uri)))(schema =>
-          resolvers.get(schema).fold(ZIO.fail(UnsupportedUriSchema(schema))) { resolver =>
-            resolver.resolve(uri).flatMap { res =>
-              schema match
-                case "did" =>
-                  val envelope = res.fromJson[PrismEnvelopeData].left.map(_ => DidUriResponseNotEnvelope(url.toString))
-                  ZIO.fromEither(
-                    envelope.map(env => Base64Utils.decodeUrlToString(env.resource))
-                  )
-                case _ => ZIO.succeed(res)
+    ZIO.debug(s"Resolving resource from uri: $uri") *>
+      ZIO.fromTry(parsedUri).mapError(_ => InvalidUri(uri)).flatMap {
+        case url: Url =>
+          url.schemeOption.fold(ZIO.fail(InvalidUri(uri)))(schema =>
+            resolvers.get(schema).fold(ZIO.fail(UnsupportedUriSchema(schema))) { resolver =>
+              resolver.resolve(uri).flatMap { res =>
+                schema match
+                  case "did" =>
+                    res.fromJson[PrismEnvelopeData] match
+                      case Right(env) =>
+                        ZIO
+                          .fromTry(Try(Base64Utils.decodeUrlToString(env.resource)))
+                          .mapError(_ => DidUriResponseNotEnvelope(uri))
+                      case Left(err) =>
+                        ZIO.debug(s"Failed to parse response as PrismEnvelope: $err") *>
+                          ZIO.debug("Falling back to returning the response as is") *>
+                          ZIO.succeed(res)
+                  case _ => ZIO.succeed(res)
+              }
             }
-          }
-        )
+          )
 
-      case Urn(path) => ZIO.fail(InvalidUri(uri)) // Must be a URL
-    }
+        case Urn(path) => ZIO.fail(InvalidUri(uri)) // Must be a URL
+      }
 
   }
 

@@ -20,10 +20,7 @@ given statusPurposeGet: Get[StatusPurpose] = Get[String].map {
   case purpose      => throw RuntimeException(s"Invalid status purpose - $purpose")
 }
 
-given statusPurposePut: Put[StatusPurpose] = Put[String].contramap {
-  case StatusPurpose.Revocation => StatusPurpose.Revocation.str
-  case StatusPurpose.Suspension => StatusPurpose.Suspension.str
-}
+given statusPurposePut: Put[StatusPurpose] = Put[String].contramap(_.toString)
 
 given urlGet: Get[URL] = Get[String].map(s => URI.create(s).toURL())
 given urlPut: Put[URL] = Put[String].contramap(_.toString())

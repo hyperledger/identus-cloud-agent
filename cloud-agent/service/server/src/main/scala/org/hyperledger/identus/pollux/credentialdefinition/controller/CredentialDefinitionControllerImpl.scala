@@ -53,7 +53,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
     for {
       _ <- validatePrismDID(in.author)
       result <- service
-        .create(toDomain(in), ResourceResolutionMethod.DID)
+        .create(toDomain(in), ResourceResolutionMethod.did)
         .map(cs => CredentialDefinitionResponse.fromDomain(cs).withBaseUri(rc.request.uri))
     } yield result
   }
@@ -76,7 +76,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
   )(implicit rc: RequestContext): IO[ErrorResponse, PrismEnvelopeResponse] = {
 
     val res = for {
-      cd <- service.getByGUID(guid, ResourceResolutionMethod.DID)
+      cd <- service.getByGUID(guid, ResourceResolutionMethod.did)
       response <- ZIO
         .fromEither(CredentialDefinitionDidUrlResponse.asPrismEnvelopeResponse(cd, baseUrlServiceName))
         .mapError(couldNotParseCredDefResponse)
@@ -98,7 +98,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
       rc: RequestContext
   ): IO[ErrorResponse, PrismEnvelopeResponse] = {
     val res = for {
-      cd <- service.getByGUID(guid, ResourceResolutionMethod.DID)
+      cd <- service.getByGUID(guid, ResourceResolutionMethod.did)
       authorDid <- ZIO
         .fromEither(PrismDID.fromString(cd.author))
         .mapError(_ => ErrorResponse.internalServerError(detail = Some("Invalid credential definition author DID")))
@@ -145,7 +145,7 @@ class CredentialDefinitionControllerImpl(service: CredentialDefinitionService, m
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionDidUrlResponsePage] = {
     for {
       filteredEntries: FilteredEntries <- service.lookup(
-        filter.toDomain(ResourceResolutionMethod.DID),
+        filter.toDomain(ResourceResolutionMethod.did),
         pagination.offset,
         pagination.limit
       )

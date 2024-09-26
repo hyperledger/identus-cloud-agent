@@ -93,7 +93,7 @@ final case class PrismNodeConfig(service: GrpcServiceConfig)
 
 final case class GrpcServiceConfig(host: String, port: Int, usePlainText: Boolean)
 
-final case class StatusListRegistryConfig(serviceName: String, publicEndpointUrl: java.net.URL)
+final case class StatusListRegistryConfig(publicEndpointUrl: java.net.URL)
 
 final case class DatabaseConfig(
     host: String,

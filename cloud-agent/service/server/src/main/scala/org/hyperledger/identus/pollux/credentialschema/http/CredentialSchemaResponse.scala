@@ -4,9 +4,9 @@ import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod.*
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponse.annotations
 import sttp.model.Uri
-import sttp.model.Uri.*
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{default, description, encodedExample, encodedName}
@@ -86,14 +86,11 @@ object CredentialSchemaResponse {
       proof = None
     )
 
-  given scala.Conversion[CredentialSchema, CredentialSchemaResponse] = fromDomain
-
   given encoder: zio.json.JsonEncoder[CredentialSchemaResponse] =
     DeriveJsonEncoder.gen[CredentialSchemaResponse]
   given decoder: zio.json.JsonDecoder[CredentialSchemaResponse] =
     DeriveJsonDecoder.gen[CredentialSchemaResponse]
 
-  given resourceResolutionMethodSchema: Schema[ResourceResolutionMethod] = Schema.derived
   given schema: Schema[CredentialSchemaResponse] = Schema.derived
 
   object annotations {
@@ -143,9 +140,9 @@ object CredentialSchemaResponse {
         )
 
     object resolutionMethod
-        extends Annotation[ResourceResolutionMethod](
+        extends Annotation[String](
           description = s"The method used to resolve the schema. It can be either HTTP or DID.",
-          example = ResourceResolutionMethod.HTTP
+          example = ResourceResolutionMethod.http.toString
         )
 
     object proof

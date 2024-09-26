@@ -163,20 +163,6 @@ object MainApp extends ZIOAppDefault {
                 )
             ),
           `type` = DidDocumentServiceType.Single(DidDocumentServiceType.Name.fromStringUnsafe("LinkedResourceV1"))
-        ),
-        DidDocumentService(
-          id = appConfig.pollux.statusListRegistry.serviceName,
-          serviceEndpoint = DidDocumentServiceEndpoint
-            .Single(
-              DidDocumentServiceEndpoint.UriOrJsonEndpoint
-                .Uri(
-                  DidDocumentServiceEndpoint.UriValue
-                    .fromString(appConfig.pollux.statusListRegistry.publicEndpointUrl.toString)
-                    .toOption
-                    .get
-                )
-            ),
-          `type` = DidDocumentServiceType.Single(DidDocumentServiceType.Name.fromStringUnsafe("LinkedResourceV1"))
         )
       )
       _ <- preMigrations

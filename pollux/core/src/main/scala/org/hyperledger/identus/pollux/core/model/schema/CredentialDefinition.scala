@@ -1,8 +1,7 @@
 package org.hyperledger.identus.pollux.core.model.schema
 
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.*
 import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod.*
 import zio.*
 import zio.json.*
 
@@ -149,7 +148,7 @@ object CredentialDefinition {
       name: Option[String] = None,
       version: Option[String] = None,
       tag: Option[String] = None,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   )
 
   case class FilteredEntries(entries: Seq[CredentialDefinition], count: Long, totalCount: Long)

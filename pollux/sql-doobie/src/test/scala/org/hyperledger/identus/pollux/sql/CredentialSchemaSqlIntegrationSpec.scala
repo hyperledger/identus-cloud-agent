@@ -242,10 +242,10 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
 
         totalCount <- CredentialSchemaSql.totalCount.transactWallet(tx)
         lookupCountHttpSchemas <- CredentialSchemaSql
-          .lookupCount(resolutionMethod = ResourceResolutionMethod.HTTP)
+          .lookupCount(resolutionMethod = ResourceResolutionMethod.http)
           .transactWallet(tx)
         lookupCountDidSchemas <- CredentialSchemaSql
-          .lookupCount(resolutionMethod = ResourceResolutionMethod.DID)
+          .lookupCount(resolutionMethod = ResourceResolutionMethod.did)
           .transactWallet(tx)
 
         totalCountIsN = assert(totalCount)(equalTo(generatedSchemas.length))

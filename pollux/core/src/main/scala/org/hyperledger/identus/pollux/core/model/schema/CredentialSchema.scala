@@ -112,7 +112,7 @@ object CredentialSchema {
       name: Option[String] = None,
       version: Option[String] = None,
       tags: Option[String] = None,
-      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.HTTP
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   )
 
   case class FilteredEntries(entries: Seq[CredentialSchema], count: Long, totalCount: Long)
