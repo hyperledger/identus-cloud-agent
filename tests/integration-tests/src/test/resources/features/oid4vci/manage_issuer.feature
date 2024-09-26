@@ -18,7 +18,6 @@ Feature: Manage OID4VCI credential issuer
     Then Issuer cannot see the oid4vci issuer on the agent
     And Issuer cannot see the oid4vci IssuerMetadata endpoint
 
-  @test
   Scenario Outline: Create issuer with <description> expect <httpStatus> response
     When Issuer tries to create oid4vci issuer with '<id>', '<url>', '<clientId>' and '<clientSecret>'
     Then Issuer should see the oid4vci '<httpStatus>' http status response with '<errorDetail>' detail
@@ -32,7 +31,6 @@ Feature: Manage OID4VCI credential issuer
       | 4048ef76-749d-4296-8c6c-07c8a20733a0 | http://example.com | id       | secret       | 201        |                                  | right values       |
       | 4048ef76-749d-4296-8c6c-07c8a20733a0 | http://example.com | id       | secret       | 500        |                                  | duplicated id      |
 
-  @test
   Scenario Outline: Update issuer with <description> expect <httpStatus> response
     Given Issuer has an existing oid4vci issuer
     When Issuer tries to update the oid4vci issuer '<property>' property using '<value>' value
