@@ -1,10 +1,7 @@
 package steps.oid4vci
 
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.google.gson.JsonNull
 import com.google.gson.JsonObject
-import com.google.gson.JsonPrimitive
 import interactions.Delete
 import interactions.Get
 import interactions.Patch
@@ -14,7 +11,6 @@ import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
-import io.iohk.atala.automation.extensions.toJsonPath
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import net.serenitybdd.rest.SerenityRest
 import net.serenitybdd.screenplay.Actor
@@ -98,7 +94,7 @@ class ManageIssuerSteps {
                     ),
                 ),
             ),
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK)
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
         )
     }
 
@@ -111,7 +107,7 @@ class ManageIssuerSteps {
 
         val gson = GsonBuilder().serializeNulls().create()
         issuer.attemptsTo(
-            Patch.to("/oid4vci/issuers/${credentialIssuer.id}").body(gson.toJson(body))
+            Patch.to("/oid4vci/issuers/${credentialIssuer.id}").body(gson.toJson(body)),
         )
     }
 
@@ -130,7 +126,7 @@ class ManageIssuerSteps {
         id: String,
         url: String,
         clientId: String,
-        clientSecret: String
+        clientSecret: String,
     ) {
         val idProperty = if (id == "null") {
             null
@@ -165,7 +161,7 @@ class ManageIssuerSteps {
 
         val gson = GsonBuilder().serializeNulls().create()
         issuer.attemptsTo(
-            Post.to("/oid4vci/issuers").body(gson.toJson(body))
+            Post.to("/oid4vci/issuers").body(gson.toJson(body)),
         )
     }
 
@@ -174,7 +170,7 @@ class ManageIssuerSteps {
         SerenityRest.lastResponse().body.prettyPrint()
         issuer.attemptsTo(
             Ensure.that(SerenityRest.lastResponse().statusCode).isEqualTo(httpStatus),
-            Ensure.that(SerenityRest.lastResponse().body.asString()).contains(errorDetail)
+            Ensure.that(SerenityRest.lastResponse().body.asString()).contains(errorDetail),
         )
     }
 

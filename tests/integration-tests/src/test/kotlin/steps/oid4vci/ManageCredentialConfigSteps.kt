@@ -39,7 +39,7 @@ class ManageCredentialConfigSteps {
                     configurationId = configurationId,
                     format = CredentialFormat.JWT_VC_JSON,
                     schemaId = "$baseUrl/schema-registry/schemas/$schemaGuid/schema",
-                )
+                ),
             ),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_CREATED),
         )
@@ -58,7 +58,7 @@ class ManageCredentialConfigSteps {
     fun issuerDeletesANonExistentCredentialConfiguration(issuer: Actor, configurationId: String) {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
         issuer.attemptsTo(
-            Delete("/oid4vci/issuers/${credentialIssuer.id}/credential-configurations/$configurationId")
+            Delete("/oid4vci/issuers/${credentialIssuer.id}/credential-configurations/$configurationId"),
         )
     }
 
@@ -102,7 +102,6 @@ class ManageCredentialConfigSteps {
 
     @When("{actor} adds '{}' schemaId for credential configuration request")
     fun issuerAddsSchemaIdToCredentialConfigurationRequest(issuer: Actor, schema: String) {
-
         val credentialIssuer = issuer.recall<JsonObject>("credentialConfiguration")
         val schemaIdProperty = if (schema == "null") {
             null
@@ -119,7 +118,7 @@ class ManageCredentialConfigSteps {
         val credentialConfiguration = issuer.recall<JsonObject>("credentialConfiguration")
         val credentialIssuerId = issuer.recall<UUID>("credentialConfigurationId").toString()
         issuer.attemptsTo(
-            Post.to("/oid4vci/issuers/${credentialIssuerId}/credential-configurations").body(credentialConfiguration)
+            Post.to("/oid4vci/issuers/$credentialIssuerId/credential-configurations").body(credentialConfiguration),
         )
     }
 
@@ -155,7 +154,7 @@ class ManageCredentialConfigSteps {
         SerenityRest.lastResponse().body.prettyPrint()
         issuer.attemptsTo(
             Ensure.thatTheLastResponse().statusCode().isEqualTo(statusCode),
-            Ensure.that(SerenityRest.lastResponse().body.asString()).contains(errorDetail)
+            Ensure.that(SerenityRest.lastResponse().body.asString()).contains(errorDetail),
         )
     }
 }
