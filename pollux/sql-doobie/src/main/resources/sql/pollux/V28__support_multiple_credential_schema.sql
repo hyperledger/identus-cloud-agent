@@ -1,5 +1,5 @@
 ALTER TABLE public.issue_credential_records
-    ADD COLUMN schema_uris VARCHAR(36)[];
+    ADD COLUMN schema_uris VARCHAR(500)[];
 
 UPDATE public.issue_credential_records
 SET schema_uris = ARRAY[schema_uri]
