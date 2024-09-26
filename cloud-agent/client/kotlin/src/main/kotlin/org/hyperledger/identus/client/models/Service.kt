@@ -73,22 +73,3 @@ data class Service (
 
 )
 
-fun main() {
-    val service = Service(
-        id = "id",
-        type = listOf("type"),
-        serviceEndpoint = JsonPrimitive("https://example.com") as JsonElement
-    )
-    println(service)
-
-    val endpoints = JsonArray()
-    endpoints.add("https://example.com")
-    endpoints.add("https://example.org")
-    val service2 = Service(
-        id = "id",
-        type = listOf("type"),
-        serviceEndpoint = endpoints as JsonElement
-    )
-    println(service2)
-}
-

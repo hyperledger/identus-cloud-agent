@@ -86,8 +86,6 @@ object CredentialSchemaResponse {
       proof = None
     )
 
-  // import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod.schema
-
   given encoder: zio.json.JsonEncoder[CredentialSchemaResponse] =
     DeriveJsonEncoder.gen[CredentialSchemaResponse]
   given decoder: zio.json.JsonDecoder[CredentialSchemaResponse] =
