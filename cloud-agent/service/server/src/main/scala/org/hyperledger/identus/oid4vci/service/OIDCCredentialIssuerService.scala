@@ -199,7 +199,7 @@ case class OIDCCredentialIssuerServiceImpl(
       `type` = Set(
         "VerifiableCredential"
       ) ++ credentialDefinition.`type`, // TODO: This information should come from Schema registry by record.schemaId
-      issuer = Left(issuerDid.toString),
+      issuer = issuerDid.toString,
       issuanceDate = Instant.now(),
       maybeExpirationDate = None, // TODO: Add expiration date
       maybeCredentialSchema = None, // TODO: Add schema from schema registry
