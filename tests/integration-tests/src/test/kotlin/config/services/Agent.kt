@@ -3,7 +3,6 @@ package config.services
 import com.sksamuel.hoplite.ConfigAlias
 import config.VaultAuthType
 import org.testcontainers.containers.ComposeContainer
-import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.*
 
