@@ -2,7 +2,14 @@ package org.hyperledger.identus.pollux.core.service.verification
 
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.service.URIDereferencer
-import org.hyperledger.identus.pollux.vc.jwt.{CredentialPayload, DidResolver, JWT, JWTVerification, JwtCredential}
+import org.hyperledger.identus.pollux.vc.jwt.{
+  CredentialPayload,
+  CredentialSchema as JwtCredentialSchema,
+  DidResolver,
+  JWT,
+  JWTVerification,
+  JwtCredential
+}
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits
 import zio.*
 
@@ -54,7 +61,10 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
           ZIO
             .fromOption(decodedJwt.maybeCredentialSchema)
             .mapError(error => VcVerificationServiceError.UnexpectedError(s"Missing Credential Schema: $error"))
-        credentialSchemas = credentialSchema.fold(List(_), identity)
+        credentialSchemas = credentialSchema match {
+          case schema: JwtCredentialSchema           => List(schema)
+          case schemaList: List[JwtCredentialSchema] => schemaList
+        }
         result <-
           ZIO.collectAll(
             credentialSchemas.map(credentialSchema =>
@@ -98,7 +108,10 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
           ZIO
             .fromOption(decodedJwt.maybeCredentialSchema)
             .mapError(error => VcVerificationServiceError.UnexpectedError(s"Missing Credential Schema: $error"))
-        credentialSchemas = credentialSchema.fold(List(_), identity)
+        credentialSchemas = credentialSchema match {
+          case schema: JwtCredentialSchema           => List(schema)
+          case schemaList: List[JwtCredentialSchema] => schemaList
+        }
         result <-
           ZIO.collectAll(
             credentialSchemas.map(credentialSchema =>

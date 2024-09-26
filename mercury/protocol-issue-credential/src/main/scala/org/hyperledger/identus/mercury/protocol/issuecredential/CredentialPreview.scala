@@ -27,14 +27,20 @@ import io.circe.generic.semiauto.*
   */
 final case class CredentialPreview(
     `type`: String = "https://didcomm.org/issue-credential/3.0/credential-credential",
+    schema_ids: Option[List[String]] = None,
     schema_id: Option[String] = None,
     body: CredentialPreviewBody,
 )
 
 object CredentialPreview {
   def apply(attributes: Seq[Attribute]) = new CredentialPreview(body = CredentialPreviewBody(attributes))
-  def apply(schema_id: Option[String], attributes: Seq[Attribute]) =
-    new CredentialPreview(schema_id = schema_id, body = CredentialPreviewBody(attributes))
+  def apply(schema_ids: Option[List[String]], attributes: Seq[Attribute]) =
+    new CredentialPreview(
+      schema_ids = schema_ids,
+      // Done for backward compatibility
+      schema_id = schema_ids.flatMap(s => s.headOption),
+      body = CredentialPreviewBody(attributes)
+    )
 
   given Encoder[CredentialPreview] = deriveEncoder[CredentialPreview]
   given Decoder[CredentialPreview] = deriveDecoder[CredentialPreview]

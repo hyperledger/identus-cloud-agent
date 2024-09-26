@@ -107,7 +107,7 @@ trait CredentialServiceSpecHelper {
         pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
         pairwiseHolderDID: Option[DidId] = Some(DidId("did:prism:holder-pairwise")),
         thid: DidCommID = DidCommID(),
-        maybeSchemaId: Option[String] = None,
+        maybeSchemaIds: Option[List[String]] = None,
         claims: Json = io.circe.parser
           .parse("""
               |{
@@ -130,7 +130,7 @@ trait CredentialServiceSpecHelper {
         pairwiseHolderDID = pairwiseHolderDID,
         kidIssuer = None,
         thid = thid,
-        maybeSchemaId = maybeSchemaId,
+        maybeSchemaIds = maybeSchemaIds,
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
