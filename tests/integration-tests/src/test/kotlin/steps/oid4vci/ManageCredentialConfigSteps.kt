@@ -41,9 +41,8 @@ class ManageCredentialConfigSteps {
                     schemaId = "$baseUrl/schema-registry/schemas/$schemaGuid/schema",
                 )
             ),
-//            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_CREATED),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_CREATED),
         )
-        SerenityRest.lastResponse().body.prettyPrint()
     }
 
     @When("{actor} deletes {string} credential configuration")
