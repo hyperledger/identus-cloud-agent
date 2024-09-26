@@ -3,6 +3,7 @@ build.gradle
 docs
 
 # ignore broken files
+
 src/main/kotlin/org/hyperledger/identus/client/models/UpdateManagedDIDServiceAction.kt
 src/main/kotlin/org/hyperledger/identus/client/models/UpdateManagedDIDServiceActionType.kt
 
