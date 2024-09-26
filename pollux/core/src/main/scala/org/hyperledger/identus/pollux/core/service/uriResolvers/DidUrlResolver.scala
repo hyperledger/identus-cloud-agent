@@ -58,14 +58,18 @@ class DidUrlResolver(httpUrlResolver: HttpUrlResolver, didResolver: DidResolver)
 
       validatedResult <- result.fromJson[PrismEnvelopeData] match {
         case Right(env) => validateResourceIntegrity(env, maybeResourceHash)
-        case Left(err) => ZIO.debug("Error parsing response as PrismEnvelope. Falling back to plain json") *> ZIO.succeed(result)
+        case Left(err) =>
+          ZIO.debug("Error parsing response as PrismEnvelope. Falling back to plain json") *> ZIO.succeed(result)
       }
 
     } yield validatedResult
 
   }
 
-  private def validateResourceIntegrity(envelope: PrismEnvelopeData, maybeResourceHash: Option[String]): IO[DidUrlResolverError, String] = {
+  private def validateResourceIntegrity(
+      envelope: PrismEnvelopeData,
+      maybeResourceHash: Option[String]
+  ): IO[DidUrlResolverError, String] = {
     val envelopeAsStr = envelope.toJson
     maybeResourceHash.fold(ZIO.succeed(envelopeAsStr)) { hash =>
       val computedHash = Sha256Hash.compute(envelope.resource.getBytes()).hexEncoded
