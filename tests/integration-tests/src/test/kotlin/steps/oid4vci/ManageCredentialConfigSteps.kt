@@ -142,6 +142,7 @@ class ManageCredentialConfigSteps {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
         issuer.attemptsTo(
             Get("/oid4vci/issuers/${credentialIssuer.id}/.well-known/openid-credential-issuer"),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
         )
         val metadata = SerenityRest.lastResponse().get<IssuerMetadata>()
         issuer.attemptsTo(
