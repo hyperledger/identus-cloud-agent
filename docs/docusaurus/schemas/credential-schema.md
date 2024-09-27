@@ -219,14 +219,56 @@ A valid [ANONCRED-SCHEMA](https://hyperledger.github.io/anoncreds-spec/#term:sch
 
 ```json
 {
-  "name": "Birth Certificate Schema",
-  "version": "1.0",
-  "attrNames": [
-    "location",
-    "birthday"
-  ],
-  "issuerId": "did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff"
-}
+    "name":"anoncred-birthday-cert",
+    "version":"1.0.0",
+    "description":"Birthday certificate",
+    "type":"AnoncredSchemaV1",
+    "author":"did:prism:e0266ee8d80a00163e5f922dc2567ab9611724a00db92423301154282169dff9",
+    "tags":[
+       "birth",
+       "certificate"
+    ],
+    "schema":{
+       "$schema":"https://json-schema.org/draft/2020-12/schema",
+       "type":"object",
+       "properties":{
+          "name":{
+             "type":"string",
+             "minLength":1
+          },
+          "version":{
+             "type":"string",
+             "minLength":1
+          },
+          "attrNames":{
+             "type":"array",
+             "items":{
+                "type":"string",
+                "minLength":1
+             },
+             "minItems":1,
+             "maxItems":125,
+             "uniqueItems":true
+          },
+          "issuerId":{
+             "type":"string",
+             "minLength":1
+          }
+       },
+       "name":"Birth Certificate Schema",
+       "version":"1.0",
+       "attrNames":[
+          "location",
+          "birthday"
+       ],
+       "issuerId":"did:prism:e0266ee8d80a00163e5f922dc2567ab9611724a00db92423301154282169dff9"
+    },
+    "required":[
+       "name",
+       "version"
+    ],
+    "additionalProperties":true
+ }
 ```
 
 ---
