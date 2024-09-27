@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.model.error
 
 import org.hyperledger.identus.pollux.core.model.DidCommID
-import org.hyperledger.identus.pollux.core.service.URIDereferencerError
+import org.hyperledger.identus.shared.http.GenericUriResolverError
 import org.hyperledger.identus.shared.json.JsonSchemaError
 import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 
@@ -56,25 +56,13 @@ object PresentationError {
         "Issued credential not found"
       )
 
-  final case class InvalidSchemaURIError(schemaUri: String, error: Throwable)
-      extends PresentationError(
-        StatusCode.BadRequest,
-        s"Invalid Schema Uri: $schemaUri, Error: ${error.getMessage}"
-      )
-
-  final case class InvalidCredentialDefinitionURIError(credentialDefinitionUri: String, error: Throwable)
-      extends PresentationError(
-        StatusCode.BadRequest,
-        s"Invalid Credential Definition Uri: $credentialDefinitionUri, Error: ${error.getMessage}"
-      )
-
-  final case class SchemaURIDereferencingError(error: URIDereferencerError)
+  final case class SchemaURIDereferencingError(error: GenericUriResolverError)
       extends PresentationError(
         error.statusCode,
         error.userFacingMessage
       )
 
-  final case class CredentialDefinitionURIDereferencingError(error: URIDereferencerError)
+  final case class CredentialDefinitionURIDereferencingError(error: GenericUriResolverError)
       extends PresentationError(
         error.statusCode,
         error.userFacingMessage

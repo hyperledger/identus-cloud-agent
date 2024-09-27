@@ -4,6 +4,7 @@ import cats.implicits.*
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
+import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
@@ -27,7 +28,7 @@ import org.hyperledger.identus.pollux.prex.{ClaimFormat, Jwt, PresentationDefini
 import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer as JwtIssuer, *}
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair}
-import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.Base64Utils
@@ -35,14 +36,13 @@ import zio.*
 import zio.json.*
 import zio.prelude.ZValidation
 
-import java.net.URI
 import java.time.{Instant, ZoneId}
 import java.util.UUID
 import scala.language.implicitConversions
 
 object CredentialServiceImpl {
   val layer: URLayer[
-    CredentialRepository & CredentialStatusListRepository & DidResolver & URIDereferencer & GenericSecretStorage &
+    CredentialRepository & CredentialStatusListRepository & DidResolver & UriResolver & GenericSecretStorage &
       CredentialDefinitionService & LinkSecretService & DIDService & ManagedDIDService,
     CredentialService
   ] = {
@@ -51,7 +51,7 @@ object CredentialServiceImpl {
         credentialRepo <- ZIO.service[CredentialRepository]
         credentialStatusListRepo <- ZIO.service[CredentialStatusListRepository]
         didResolver <- ZIO.service[DidResolver]
-        uriDereferencer <- ZIO.service[URIDereferencer]
+        uriResolver <- ZIO.service[UriResolver]
         genericSecretStorage <- ZIO.service[GenericSecretStorage]
         credDefenitionService <- ZIO.service[CredentialDefinitionService]
         linkSecretService <- ZIO.service[LinkSecretService]
@@ -62,7 +62,7 @@ object CredentialServiceImpl {
         credentialRepo,
         credentialStatusListRepo,
         didResolver,
-        uriDereferencer,
+        uriResolver,
         genericSecretStorage,
         credDefenitionService,
         linkSecretService,
@@ -82,7 +82,7 @@ class CredentialServiceImpl(
     credentialRepository: CredentialRepository,
     credentialStatusListRepository: CredentialStatusListRepository,
     didResolver: DidResolver,
-    uriDereferencer: URIDereferencer,
+    uriResolver: UriResolver,
     genericSecretStorage: GenericSecretStorage,
     credentialDefinitionService: CredentialDefinitionService,
     linkSecretService: LinkSecretService,
@@ -304,7 +304,11 @@ class CredentialServiceImpl(
     for {
       credentialDefinition <- getCredentialDefinition(credentialDefinitionGUID)
       _ <- CredentialSchema
-        .validateAnonCredsClaims(credentialDefinition.schemaId, claims.noSpaces, uriDereferencer)
+        .validateAnonCredsClaims(
+          credentialDefinition.schemaId,
+          claims.noSpaces,
+          uriResolver,
+        )
         .orDieAsUnmanagedFailure
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
       offer <- createAnonCredsDidCommOfferCredential(
@@ -446,7 +450,7 @@ class CredentialServiceImpl(
           .collectAll(
             schemaIds.map(schemaId =>
               CredentialSchema
-                .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriDereferencer)
+                .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriResolver)
             )
           )
           .orDieAsUnmanagedFailure
@@ -724,8 +728,8 @@ class CredentialServiceImpl(
         )
         .orDieWith(_ => RuntimeException(s"No AnonCreds attachment found in the offer"))
       credentialOffer = anoncreds.AnoncredCredentialOffer(attachmentData)
-      credDefContent <- uriDereferencer
-        .dereference(new URI(credentialOffer.getCredDefId))
+      credDefContent <- uriResolver
+        .resolve(credentialOffer.getCredDefId)
         .orDieAsUnmanagedFailure
       credentialDefinition = anoncreds.AnoncredCredentialDefinition(credDefContent)
       linkSecret <- linkSecretService.fetchOrCreate()
@@ -849,8 +853,8 @@ class CredentialServiceImpl(
   ): URIO[WalletAccessContext, anoncreds.AnoncredCredential] = {
     for {
       credential <- ZIO.succeed(anoncreds.AnoncredCredential(new String(credentialBytes)))
-      credDefContent <- uriDereferencer
-        .dereference(new URI(credential.getCredDefId))
+      credDefContent <- uriResolver
+        .resolve(credential.getCredDefId)
         .orDieAsUnmanagedFailure
       credentialDefinition = anoncreds.AnoncredCredentialDefinition(credDefContent)
       metadata <- ZIO
@@ -1432,12 +1436,6 @@ class CredentialServiceImpl(
               ZIO.fail(CredentialRequestValidationFailed("domain/challenge proof validation failed"))
 
       clock = java.time.Clock.system(ZoneId.systemDefault)
-
-      genericUriResolver = GenericUriResolver(
-        Map(
-          "data" -> DataUrlResolver(),
-        )
-      )
       verificationResult <- JwtPresentation
         .verify(
           jwt,
@@ -1447,7 +1445,7 @@ class CredentialServiceImpl(
             verifyDates = false,
             leeway = Duration.Zero
           )
-        )(didResolver, genericUriResolver)(clock)
+        )(didResolver, uriResolver)(clock)
         .mapError(errors => CredentialRequestValidationFailed(errors*))
 
       result <- verificationResult match

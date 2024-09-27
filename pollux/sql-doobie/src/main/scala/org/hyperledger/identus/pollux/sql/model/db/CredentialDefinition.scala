@@ -5,6 +5,7 @@ import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.doobie.DoobieContext
 import io.getquill.idiom.*
 import org.hyperledger.identus.pollux.core.model.schema.{CorrectnessProof, Definition}
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.shared.models.WalletId
 
 import java.time.temporal.ChronoUnit
@@ -27,6 +28,7 @@ case class CredentialDefinition(
     keyCorrectnessProof: JsonValue[CorrectnessProof],
     signatureType: String,
     supportRevocation: Boolean,
+    resolutionMethod: ResourceResolutionMethod,
     walletId: WalletId
 ) {
   lazy val uniqueConstraintKey = author + name + version
@@ -56,6 +58,7 @@ object CredentialDefinition {
       schemaId = m.schemaId,
       signatureType = m.signatureType,
       supportRevocation = m.supportRevocation,
+      resolutionMethod = m.resolutionMethod,
       walletId = walletId
     )
 
@@ -77,12 +80,17 @@ object CredentialDefinition {
       keyCorrectnessProof = db.keyCorrectnessProof.value,
       schemaId = db.schemaId,
       signatureType = db.signatureType,
-      supportRevocation = db.supportRevocation
+      supportRevocation = db.supportRevocation,
+      resolutionMethod = db.resolutionMethod
     )
   }
 }
 
-object CredentialDefinitionSql extends DoobieContext.Postgres(SnakeCase) with PostgresJsonExtensions {
+object CredentialDefinitionSql
+    extends DoobieContext.Postgres(SnakeCase)
+    with PostgresJsonExtensions
+    with PostgresEnumEncoders {
+
   def insert(credentialDefinition: CredentialDefinition) = run {
     quote(
       query[CredentialDefinition]
@@ -90,8 +98,13 @@ object CredentialDefinitionSql extends DoobieContext.Postgres(SnakeCase) with Po
     ).returning(cs => cs)
   }
 
-  def findByGUID(guid: UUID) = run {
-    quote(query[CredentialDefinition].filter(_.guid == lift(guid)).take(1))
+  def findByGUID(guid: UUID, resolutionMethod: ResourceResolutionMethod) = run {
+    quote(
+      query[CredentialDefinition]
+        .filter(_.guid == lift(guid))
+        .filter(_.resolutionMethod == lift(resolutionMethod))
+        .take(1)
+    )
   }
 
   def findByID(id: UUID) = run {
@@ -143,7 +156,8 @@ object CredentialDefinitionSql extends DoobieContext.Postgres(SnakeCase) with Po
       authorOpt: Option[String] = None,
       nameOpt: Option[String] = None,
       versionOpt: Option[String] = None,
-      tagOpt: Option[String] = None
+      tagOpt: Option[String] = None,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ) = run {
     val q =
       idOpt.fold(quote(query[CredentialDefinition]))(id =>
@@ -158,6 +172,7 @@ object CredentialDefinitionSql extends DoobieContext.Postgres(SnakeCase) with Po
         tagOpt
           .fold(quote(true))(tag => quote(cs.tags.contains(lift(tag))))
       )
+      .filter(_.resolutionMethod == lift(resolutionMethod))
       .size
   }
 
@@ -168,7 +183,8 @@ object CredentialDefinitionSql extends DoobieContext.Postgres(SnakeCase) with Po
       versionOpt: Option[String] = None,
       tagOpt: Option[String] = None,
       offset: Int = 0,
-      limit: Int = 1000
+      limit: Int = 1000,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ) = run {
     val q =
       idOpt.fold(quote(query[CredentialDefinition]))(id =>
@@ -183,6 +199,7 @@ object CredentialDefinitionSql extends DoobieContext.Postgres(SnakeCase) with Po
         tagOpt
           .fold(quote(true))(tag => quote(cs.tags.contains(lift(tag))))
       )
+      .filter(_.resolutionMethod == lift(resolutionMethod))
       .sortBy(cs => cs.id)
       .drop(offset)
       .take(limit)

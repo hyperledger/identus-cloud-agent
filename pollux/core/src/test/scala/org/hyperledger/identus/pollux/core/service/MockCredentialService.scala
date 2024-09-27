@@ -252,9 +252,9 @@ object MockCredentialService extends Mock[CredentialService] {
 
       override def generateJWTCredential(
           recordId: DidCommID,
-          statusListRegistryUrl: String,
+          statusListRegistryServiceName: String,
       ): ZIO[WalletAccessContext, RecordNotFound | CredentialRequestValidationFailed, IssueCredentialRecord] =
-        proxy(GenerateJWTCredential, recordId, statusListRegistryUrl)
+        proxy(GenerateJWTCredential, recordId, statusListRegistryServiceName)
 
       override def generateSDJWTCredential(
           recordId: DidCommID,

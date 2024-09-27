@@ -4,6 +4,7 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.*
 import doobie.util.transactor.Transactor
 import io.getquill.*
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.sql.model.db.{CredentialSchema, CredentialSchemaSql}
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
@@ -75,6 +76,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
       authored = OffsetDateTime.now(ZoneOffset.UTC)
       id = UUID.randomUUID()
       walletId <- Gen.fromZIO(ZIO.serviceWith[WalletAccessContext](_.walletId))
+      resolutionMethod <- Gen.fromIterable(ResourceResolutionMethod.values)
     } yield CredentialSchema(
       guid = id,
       id = id,
@@ -86,7 +88,8 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
       author = author,
       authored = authored,
       tags = tags,
-      walletId = walletId
+      walletId = walletId,
+      resolutionMethod = resolutionMethod
     ).withTruncatedTimestamp()
 
     private val unique = mutable.Set.empty[String]
@@ -123,12 +126,12 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
         record <- Generators.schema.runCollectN(1).map(_.head).provide(wallet1)
         _ <- CredentialSchemaSql.insert(record).transactWallet(tx).provide(wallet1)
         ownRecord <- CredentialSchemaSql
-          .findByGUID(record.guid)
+          .findByGUID(record.guid, record.resolutionMethod)
           .transactWallet(tx)
           .map(_.headOption)
           .provide(wallet1)
         crossRecord <- CredentialSchemaSql
-          .findByGUID(record.guid)
+          .findByGUID(record.guid, record.resolutionMethod)
           .transactWallet(tx)
           .map(_.headOption)
           .provide(wallet2)
@@ -173,7 +176,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
         expected <- Generators.schema.runCollectN(1).map(_.head)
         _ <- CredentialSchemaSql.insert(expected).transactWallet(tx)
         actual <- CredentialSchemaSql
-          .findByGUID(expected.guid)
+          .findByGUID(expected.guid, expected.resolutionMethod)
           .transactWallet(tx)
           .map(_.headOption)
 
@@ -184,7 +187,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
           .update(updatedExpected)
           .transactWallet(tx)
         updatedActual2 <- CredentialSchemaSql
-          .findByGUID(expected.id)
+          .findByGUID(expected.id, expected.resolutionMethod)
           .transactWallet(tx)
           .map(_.headOption)
 
@@ -194,7 +197,7 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
 
         deleted <- CredentialSchemaSql.delete(expected.guid).transactWallet(tx)
         notFound <- CredentialSchemaSql
-          .findByGUID(expected.guid)
+          .findByGUID(expected.guid, expected.resolutionMethod)
           .transactWallet(tx)
           .map(_.headOption)
 
@@ -231,17 +234,22 @@ object CredentialSchemaSqlIntegrationSpec extends ZIOSpecDefault, PostgresTestCo
 
         firstActual = generatedSchemas.head
         firstExpected <- CredentialSchemaSql
-          .findByGUID(firstActual.guid)
+          .findByGUID(firstActual.guid, firstActual.resolutionMethod)
           .transactWallet(tx)
           .map(_.headOption)
 
         schemaCreated = assert(firstActual)(equalTo(firstExpected.get))
 
         totalCount <- CredentialSchemaSql.totalCount.transactWallet(tx)
-        lookupCount <- CredentialSchemaSql.lookupCount().transactWallet(tx)
+        lookupCountHttpSchemas <- CredentialSchemaSql
+          .lookupCount(resolutionMethod = ResourceResolutionMethod.http)
+          .transactWallet(tx)
+        lookupCountDidSchemas <- CredentialSchemaSql
+          .lookupCount(resolutionMethod = ResourceResolutionMethod.did)
+          .transactWallet(tx)
 
         totalCountIsN = assert(totalCount)(equalTo(generatedSchemas.length))
-        lookupCountIsN = assert(lookupCount)(equalTo(generatedSchemas.length))
+        lookupCountIsN = assert(lookupCountHttpSchemas + lookupCountDidSchemas)(equalTo(generatedSchemas.length))
 
       } yield allSchemasHaveUniqueId &&
         allSchemasHaveUniqueConstraint &&
