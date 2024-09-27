@@ -134,11 +134,11 @@ curl -X 'POST' \
 1. `claims`: The data stored in a verifiable credential. AnonCreds claims get expressed in a flat, "string -> string", key-value pair format. The claims contain the data that the issuer attests to, such as name, address, date of birth, and so on.
 2. `connectionId`: The unique ID of the connection between the holder and the issuer to offer this credential over.
 3. `credentialDefinitionId`: The unique ID of the [credential definition](../credentialdefinition/credential-definition.md) that has been created by the issuer as a prerequisite. Please refer to the [Create AnonCreds Credential Definition](../credentialdefinition/credential-definition.md) doc for details on how to create a credential definition.
-    1. 📌 Note: If the credential definition was created via HTTP URL endpoint, then this credential definition will be referenced to that credential via HTTP URL, and if this credential definition was created via DID URL endpoint, then it will be referenced via DID URL, How to create credential definition for HTTP URL or DID URL is explained in [credential definition creation guide](../credentialdefinition/create.md)
+:::note
+📌 Note: If the credential definition was created via HTTP URL endpoint, then this credential definition will be referenced to that credential via HTTP URL, and if this credential definition was created via DID URL endpoint, then it will be referenced via DID URL, How to create credential definition for HTTP URL or DID URL is explained in [credential definition creation guide](../credentialdefinition/create.md)
+:::
 4. `credentialFormat`: The format of the credential that will be issued - `AnonCreds` in this case.  
 5. `issuingDID`: The DID referring to the issuer to issue this credential from
-
-
 :::note
 The `connectionId` and `credentialDefinitionId` properties come from completing the pre-requisite steps listed above
 :::
