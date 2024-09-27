@@ -10,25 +10,23 @@
     "ArrayInDataClass",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "UnusedImport",
 )
 
 package org.hyperledger.identus.client.models
 
-import org.hyperledger.identus.client.models.Json
-
+import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 
 /**
  * A patch to existing Service. 'type' and 'serviceEndpoint' cannot both be empty.
  *
  * @param id The id of the service to update
- * @param type 
- * @param serviceEndpoint 
+ * @param type
+ * @param serviceEndpoint
  */
 
-
-data class UpdateManagedDIDServiceAction (
+data class UpdateManagedDIDServiceAction(
 
     /* The id of the service to update */
     @SerializedName("id")
@@ -38,7 +36,6 @@ data class UpdateManagedDIDServiceAction (
     val type: kotlin.collections.List<kotlin.String>? = null,
 
     @SerializedName("serviceEndpoint")
-    val serviceEndpoint: Json? = null
+    val serviceEndpoint: JsonElement? = null,
 
 )
-

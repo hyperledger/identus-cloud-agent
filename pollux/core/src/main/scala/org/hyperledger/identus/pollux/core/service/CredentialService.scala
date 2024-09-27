@@ -133,7 +133,7 @@ trait CredentialService {
 
   def generateJWTCredential(
       recordId: DidCommID,
-      statusListRegistryUrl: String,
+      statusListRegistryServiceName: String,
   ): ZIO[WalletAccessContext, RecordNotFound | CredentialRequestValidationFailed, IssueCredentialRecord]
 
   def generateSDJWTCredential(

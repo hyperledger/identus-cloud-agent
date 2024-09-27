@@ -5,6 +5,7 @@ import io.getquill.context.json.PostgresJsonExtensions
 import io.getquill.doobie.DoobieContext
 import io.getquill.idiom.*
 import org.hyperledger.identus.pollux.core.model.schema.Schema
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.shared.models.WalletId
 
 import java.time.temporal.ChronoUnit
@@ -22,6 +23,7 @@ case class CredentialSchema(
     description: String,
     `type`: String,
     schema: JsonValue[Schema],
+    resolutionMethod: ResourceResolutionMethod,
     walletId: WalletId
 ) {
   lazy val uniqueConstraintKey = author + name + version
@@ -47,6 +49,7 @@ object CredentialSchema {
       description = m.description,
       `type` = m.`type`,
       schema = JsonValue(m.schema),
+      resolutionMethod = m.resolutionMethod,
       walletId = walletId
     )
 
@@ -63,12 +66,17 @@ object CredentialSchema {
       tags = db.tags,
       description = db.description,
       `type` = db.`type`,
+      resolutionMethod = db.resolutionMethod,
       schema = db.schema.value
     )
   }
 }
 
-object CredentialSchemaSql extends DoobieContext.Postgres(SnakeCase) with PostgresJsonExtensions {
+object CredentialSchemaSql
+    extends DoobieContext.Postgres(SnakeCase)
+    with PostgresJsonExtensions
+    with PostgresEnumEncoders {
+
   def insert(schema: CredentialSchema) = run {
     quote(
       query[CredentialSchema]
@@ -76,21 +84,27 @@ object CredentialSchemaSql extends DoobieContext.Postgres(SnakeCase) with Postgr
     ).returning(cs => cs)
   }
 
-  def findByGUID(guid: UUID) = run {
-    quote(query[CredentialSchema].filter(_.guid == lift(guid)).take(1))
+  def findByGUID(guid: UUID, resolutionMethod: ResourceResolutionMethod) = run {
+    quote(
+      query[CredentialSchema]
+        .filter(_.guid == lift(guid))
+        .filter(_.resolutionMethod == lift(resolutionMethod))
+        .take(1)
+    )
   }
 
+  // NOTE: this function is not used
   def findByID(id: UUID) = run {
     quote(query[CredentialSchema].filter(_.id == lift(id)))
   }
 
-  def getAllVersions(id: UUID, author: String) = run {
+  def getAllVersions(id: UUID, author: String, resolutionMethod: ResourceResolutionMethod) = run {
     quote(
       query[CredentialSchema]
         .filter(_.id == lift(id))
         .filter(_.author == lift(author))
+        .filter(_.resolutionMethod == lift(resolutionMethod))
         .sortBy(_.version)(ord = Ord.asc)
-        .map(_.version)
     )
   }
 
@@ -129,10 +143,16 @@ object CredentialSchemaSql extends DoobieContext.Postgres(SnakeCase) with Postgr
       authorOpt: Option[String] = None,
       nameOpt: Option[String] = None,
       versionOpt: Option[String] = None,
-      tagOpt: Option[String] = None
+      tagOpt: Option[String] = None,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ) = run {
     val q =
-      idOpt.fold(quote(query[CredentialSchema]))(id => quote(query[CredentialSchema].filter(cs => cs.id == lift(id))))
+      idOpt.fold(quote(query[CredentialSchema]))(id =>
+        quote(
+          query[CredentialSchema]
+            .filter(cs => cs.id == lift(id))
+        )
+      )
 
     q.dynamic
       .filterOpt(authorOpt)((cs, author) => quote(cs.author.like(author)))
@@ -142,6 +162,7 @@ object CredentialSchemaSql extends DoobieContext.Postgres(SnakeCase) with Postgr
         tagOpt
           .fold(quote(true))(tag => quote(cs.tags.contains(lift(tag))))
       )
+      .filter(_.resolutionMethod == lift(resolutionMethod))
       .size
   }
 
@@ -152,10 +173,16 @@ object CredentialSchemaSql extends DoobieContext.Postgres(SnakeCase) with Postgr
       versionOpt: Option[String] = None,
       tagOpt: Option[String] = None,
       offset: Int = 0,
-      limit: Int = 1000
+      limit: Int = 1000,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   ) = run {
     val q =
-      idOpt.fold(quote(query[CredentialSchema]))(id => quote(query[CredentialSchema].filter(cs => cs.id == lift(id))))
+      idOpt.fold(quote(query[CredentialSchema]))(id =>
+        quote(
+          query[CredentialSchema]
+            .filter(cs => cs.id == lift(id))
+        )
+      )
 
     q.dynamic
       .filterOpt(authorOpt)((cs, author) => quote(cs.author.like(author)))
@@ -165,6 +192,7 @@ object CredentialSchemaSql extends DoobieContext.Postgres(SnakeCase) with Postgr
         tagOpt
           .fold(quote(true))(tag => quote(cs.tags.contains(lift(tag))))
       )
+      .filter(_.resolutionMethod == lift(resolutionMethod))
       .sortBy(cs => cs.id)
       .drop(offset)
       .take(limit)

@@ -17,6 +17,7 @@ import org.hyperledger.identus.pollux.core.repository.{
 }
 import org.hyperledger.identus.pollux.prex.{ClaimFormat, Ldp, PresentationDefinition}
 import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
@@ -32,8 +33,8 @@ trait CredentialServiceSpecHelper {
     CredentialDefinitionRepositoryInMemory.layer >>> CredentialDefinitionServiceImpl.layer
 
   protected val credentialServiceLayer
-      : URLayer[DIDService & ManagedDIDService & URIDereferencer, CredentialService & CredentialDefinitionService] =
-    ZLayer.makeSome[DIDService & ManagedDIDService & URIDereferencer, CredentialService & CredentialDefinitionService](
+      : URLayer[DIDService & ManagedDIDService & UriResolver, CredentialService & CredentialDefinitionService] =
+    ZLayer.makeSome[DIDService & ManagedDIDService & UriResolver, CredentialService & CredentialDefinitionService](
       CredentialRepositoryInMemory.layer,
       CredentialStatusListRepositoryInMemory.layer,
       ZLayer.fromFunction(PrismDidResolver(_)),

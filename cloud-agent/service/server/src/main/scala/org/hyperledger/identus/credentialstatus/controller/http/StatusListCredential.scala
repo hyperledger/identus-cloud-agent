@@ -136,11 +136,9 @@ object StatusListCredential {
       |""".stripMargin
 
   given StatusPurposeCodec: JsonCodec[StatusPurpose] = JsonCodec[StatusPurpose](
-    JsonEncoder[String].contramap[StatusPurpose](_.str),
-    JsonDecoder[String].mapOrFail {
-      case StatusPurpose.Revocation.str => Right(StatusPurpose.Revocation)
-      case StatusPurpose.Suspension.str => Right(StatusPurpose.Suspension)
-      case str                          => Left(s"no enum value matched for \"$str\"")
+    JsonEncoder[String].contramap[StatusPurpose](_.toString),
+    JsonDecoder[String].mapOrFail { input =>
+      StatusPurpose.values.find(_.toString.compareToIgnoreCase(input) == 0).toRight("Unknown StatusPurpose")
     },
   )
 
@@ -183,7 +181,7 @@ object StatusListCredential {
 
   given credentialSubjectSchema: Schema[CredentialSubject] = Schema.derived
 
-  given statusPurposeSchema: Schema[StatusPurpose] = Schema.derived
+  given statusPurposeSchema: Schema[StatusPurpose] = Schema.derivedEnumeration.defaultStringBased
 
   given credentialIssuerSchema: Schema[CredentialIssuer] = Schema.derived
 

@@ -1,6 +1,7 @@
 package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.repository.Repository.SearchCapability
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.{UIO, URIO}
@@ -12,7 +13,7 @@ trait CredentialDefinitionRepository
     with SearchCapability[WalletTask, CredentialDefinition.Filter, CredentialDefinition] {
   def create(cs: CredentialDefinition): URIO[WalletAccessContext, CredentialDefinition]
 
-  def findByGuid(guid: UUID): UIO[Option[CredentialDefinition]]
+  def findByGuid(guid: UUID, resolutionMethod: ResourceResolutionMethod): UIO[Option[CredentialDefinition]]
 
   def update(cs: CredentialDefinition): URIO[WalletAccessContext, CredentialDefinition]
 

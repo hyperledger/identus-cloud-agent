@@ -14,6 +14,7 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.vc.jwt.{CredentialIssuer, JWT, JwtCredential, JwtCredentialPayload}
 import org.hyperledger.identus.shared.models.{KeyId, UnmanagedFailureException, WalletAccessContext, WalletId}
 import zio.*
@@ -33,7 +34,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
   ).provideSomeLayer(
     MockDIDService.empty ++
       MockManagedDIDService.empty ++
-      ResourceURIDereferencerImpl.layer >+>
+      ResourceUrlResolver.layer >+>
       credentialServiceLayer ++
       ZLayer.succeed(WalletAccessContext(WalletId.random))
   )
@@ -522,7 +523,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           // Issuer generates credential
           credentialGenerateRecord <- issuerSvc.generateJWTCredential(
             issuerRecordId,
-            "https://test-status-list.registry"
+            "status-list-registry"
           )
           decodedJWT <- credentialGenerateRecord.issueCredentialData.get.attachments.head.data match {
             case MyBase64(value) =>
@@ -590,7 +591,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
             .service[CredentialService]
             .provideSomeLayer(
               holderCredDefResolverLayer >>>
-                ResourceURIDereferencerImpl.layerWithExtraResources >>>
+                ResourceUrlResolver.layerWithExtraResources >>>
                 credentialServiceLayer
             )
           offerCredential <- ZIO.fromEither(OfferCredential.readFromMessage(msg))

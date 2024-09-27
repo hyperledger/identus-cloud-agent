@@ -30,9 +30,9 @@ case class W3cVerifiableCredentialPayload(payload: W3cCredentialPayload, proof: 
 
 case class JwtVerifiableCredentialPayload(jwt: JWT) extends VerifiableCredentialPayload
 
-enum StatusPurpose(val str: String) {
-  case Revocation extends StatusPurpose("Revocation")
-  case Suspension extends StatusPurpose("Suspension")
+enum StatusPurpose {
+  case Revocation
+  case Suspension
 }
 
 case class CredentialStatus(
