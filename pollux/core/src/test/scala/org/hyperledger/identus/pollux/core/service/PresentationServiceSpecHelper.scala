@@ -135,7 +135,7 @@ trait PresentationServiceSpecHelper {
     createdAt = Instant.now,
     updatedAt = None,
     thid = DidCommID(),
-    schemaUri = None,
+    schemaUris = None,
     credentialDefinitionId = None,
     credentialDefinitionUri = None,
     credentialFormat = credentialFormat,

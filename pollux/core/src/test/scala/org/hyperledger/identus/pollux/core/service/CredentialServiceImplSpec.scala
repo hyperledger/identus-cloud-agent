@@ -76,14 +76,14 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
               thid = thid,
               pairwiseIssuerDID = pairwiseIssuerDid,
               pairwiseHolderDID = pairwiseHolderDid,
-              maybeSchemaId = None,
+              maybeSchemaIds = None,
               validityPeriod = validityPeriod,
               automaticIssuance = automaticIssuance
             )
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
-            assertTrue(record.schemaUri.isEmpty) &&
+            assertTrue(record.schemaUris.getOrElse(List.empty).isEmpty) &&
             assertTrue(record.validityPeriod == validityPeriod) &&
             assertTrue(record.automaticIssuance == automaticIssuance) &&
             assertTrue(record.role == Role.Issuer) &&
@@ -149,7 +149,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
               thid = thid,
               pairwiseIssuerDID = pairwiseIssuerDid,
               pairwiseHolderDID = pairwiseHolderDid,
-              maybeSchemaId = Some("resource:///vc-schema-example.json"),
+              maybeSchemaIds = Some(List("resource:///vc-schema-example.json")),
               claims = claims,
               validityPeriod = validityPeriod,
               automaticIssuance = automaticIssuance
@@ -159,7 +159,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
             assertTrue(
-              record.schemaUri.contains("resource:///vc-schema-example.json")
+              record.schemaUris.getOrElse(List.empty).contains("resource:///vc-schema-example.json")
             ) &&
             assertTrue(record.validityPeriod == validityPeriod) &&
             assertTrue(record.automaticIssuance == automaticIssuance) &&
@@ -209,7 +209,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
                 thid = thid,
                 pairwiseIssuerDID = pairwiseIssuerDid,
                 pairwiseHolderDID = pairwiseHolderDid,
-                maybeSchemaId = Some("resource:///vc-schema-example.json"),
+                maybeSchemaIds = Some(List("resource:///vc-schema-example.json")),
                 claims = claims,
                 validityPeriod = validityPeriod,
                 automaticIssuance = automaticIssuance
@@ -288,7 +288,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
         } yield {
           assertTrue(holderRecord.thid.toString == offer.thid.get) &&
           assertTrue(holderRecord.updatedAt.isEmpty) &&
-          assertTrue(holderRecord.schemaUri.isEmpty) &&
+          assertTrue(holderRecord.schemaUris.getOrElse(List.empty).isEmpty) &&
           assertTrue(holderRecord.validityPeriod.isEmpty) &&
           assertTrue(holderRecord.automaticIssuance.isEmpty) &&
           assertTrue(holderRecord.role == Role.Holder) &&

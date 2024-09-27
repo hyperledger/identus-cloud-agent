@@ -21,7 +21,7 @@ object CredentialRepositorySpecSuite {
     createdAt = Instant.now,
     updatedAt = None,
     thid = DidCommID(),
-    schemaUri = None,
+    schemaUris = None,
     credentialDefinitionId = None,
     credentialDefinitionUri = None,
     credentialFormat = credentialFormat,
@@ -373,7 +373,7 @@ object CredentialRepositorySpecSuite {
           aRecord.id,
           issueCredential,
           "RAW_CREDENTIAL_DATA",
-          Some("schemaUri"),
+          Some(List("schemaUri")),
           Some("credentialDefinitionUri"),
           ProtocolState.CredentialReceived
         )
@@ -383,7 +383,7 @@ object CredentialRepositorySpecSuite {
         assertTrue(updatedRecord.get.issueCredentialData.contains(issueCredential)) &&
         assertTrue(updatedRecord.get.issuedCredentialRaw.contains("RAW_CREDENTIAL_DATA"))
         assertTrue(updatedRecord.get.credentialDefinitionUri.contains("credentialDefinitionUri"))
-        assertTrue(updatedRecord.get.schemaUri.contains("schemaUri"))
+        assertTrue(updatedRecord.get.schemaUris.getOrElse(List.empty).contains("schemaUri"))
       }
     },
     test("updateFail (fail one retry) updates record") {

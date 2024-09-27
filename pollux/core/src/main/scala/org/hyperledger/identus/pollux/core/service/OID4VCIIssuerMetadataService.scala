@@ -68,7 +68,7 @@ trait OID4VCIIssuerMetadataService {
       format: CredentialFormat,
       configurationId: String,
       schemaId: String
-  ): ZIO[WalletAccessContext, InvalidSchemaId | UnsupportedCredentialFormat, CredentialConfiguration]
+  ): ZIO[WalletAccessContext, InvalidSchemaId | UnsupportedCredentialFormat | IssuerIdNotFound, CredentialConfiguration]
   def getCredentialConfigurations(
       issuerId: UUID
   ): IO[IssuerIdNotFound, Seq[CredentialConfiguration]]
@@ -128,8 +128,13 @@ class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataReposito
       format: CredentialFormat,
       configurationId: String,
       schemaId: String
-  ): ZIO[WalletAccessContext, InvalidSchemaId | UnsupportedCredentialFormat, CredentialConfiguration] = {
+  ): ZIO[
+    WalletAccessContext,
+    InvalidSchemaId | UnsupportedCredentialFormat | IssuerIdNotFound,
+    CredentialConfiguration
+  ] = {
     for {
+      _ <- getCredentialIssuer(issuerId)
       _ <- format match {
         case CredentialFormat.JWT => ZIO.unit
         case f                    => ZIO.fail(UnsupportedCredentialFormat(f))

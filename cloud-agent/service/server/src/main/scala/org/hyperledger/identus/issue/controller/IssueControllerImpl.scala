@@ -11,13 +11,7 @@ import org.hyperledger.identus.api.util.PaginationUtils
 import org.hyperledger.identus.castor.core.model.did.{DIDUrl, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.core.service.ConnectionService
-import org.hyperledger.identus.issue.controller.http.{
-  AcceptCredentialOfferInvitation,
-  AcceptCredentialOfferRequest,
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecord,
-  IssueCredentialRecordPage
-}
+import org.hyperledger.identus.issue.controller.http.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, ResourceResolutionMethod}
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
@@ -77,7 +71,10 @@ class IssueControllerImpl(
                   pairwiseHolderDID = offerContext.pairwiseHolderDID,
                   kidIssuer = request.issuingKid,
                   thid = DidCommID(),
-                  maybeSchemaId = request.schemaId,
+                  maybeSchemaIds = request.schemaId.map {
+                    case schemaId: String        => List(schemaId)
+                    case schemaIds: List[String] => schemaIds
+                  },
                   claims = jsonClaims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
@@ -98,7 +95,10 @@ class IssueControllerImpl(
                   pairwiseHolderDID = offerContext.pairwiseHolderDID,
                   kidIssuer = request.issuingKid,
                   thid = DidCommID(),
-                  maybeSchemaId = request.schemaId,
+                  maybeSchemaIds = request.schemaId.map {
+                    case schemaId: String        => List(schemaId)
+                    case schemaIds: List[String] => schemaIds
+                  },
                   claims = jsonClaims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
@@ -121,7 +121,7 @@ class IssueControllerImpl(
               credentialDefinitionId <- {
 
                 credentialDefinition.resolutionMethod match
-                  case ResourceResolutionMethod.`did` =>
+                  case ResourceResolutionMethod.did =>
                     val publicEndpointServiceName = appConfig.agent.httpEndpoint.serviceName
                     val didUrlResourcePath =
                       s"credential-definition-registry/definitions/did-url/${credentialDefinitionGUID.toString}/definition"
@@ -146,7 +146,7 @@ class IssueControllerImpl(
                       .fromEither(didUrl)
                       .mapError(_ => ErrorResponse.badRequest(detail = Some("Could not parse credential definition")))
 
-                  case ResourceResolutionMethod.`http` =>
+                  case ResourceResolutionMethod.http =>
                     val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl.toExternalForm
                     val httpUrlSuffix =
                       s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
