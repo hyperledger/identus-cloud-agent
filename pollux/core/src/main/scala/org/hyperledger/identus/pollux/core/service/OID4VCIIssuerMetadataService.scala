@@ -1,6 +1,10 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{CredentialSchemaParsingError, InvalidURI}
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{
+  CredentialSchemaParsingError,
+  InvalidURI,
+  SchemaDereferencingError
+}
 import org.hyperledger.identus.pollux.core.model.oid4vci.{CredentialConfiguration, CredentialIssuer}
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
@@ -157,6 +161,7 @@ class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataReposito
         .validSchemaValidator(schemaUri.toString(), uriResolver)
         .catchAll {
           case e: InvalidURI                   => ZIO.fail(InvalidSchemaId(schemaId, e.userFacingMessage))
+          case e: SchemaDereferencingError     => ZIO.fail(InvalidSchemaId(schemaId, e.userFacingMessage))
           case e: CredentialSchemaParsingError => ZIO.fail(InvalidSchemaId(schemaId, e.cause))
         }
       now <- ZIO.clockWith(_.instant)
