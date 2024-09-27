@@ -8,7 +8,7 @@ In this document, you can find step-by-step instructions for creating the creden
 
 ## Prerequisites
 
-Before creating a credential definition, one must first create and then publish [prism DID](../dids/create.md), and then [create a credential schema](../schemas/create.md) to be used for the credential definition. Credential schema for credential definition **MUST** have a type of `AnoncredSchemaV1` as shown in [this](../schemas/credential-schema#schema-anoncred-schema) example.
+Before creating a credential definition, one must first create and then publish [prism DID](../dids/create.md), and then [create a credential schema](../schemas/create.md) to be used for the credential definition. Credential schema for credential definition **must** have a type of `AnoncredSchemaV1` as shown in [this](../schemas/credential-schema#schema-anoncred-schema) example.
 
 ## Step-by-step guide
 
