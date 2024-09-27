@@ -125,10 +125,12 @@ case class CredentialIssuerControllerImpl(
   import CredentialIssuerController.Errors.*
   import OIDCCredentialIssuerService.Errors.*
 
-  private def parseURL(url: String): IO[ErrorResponse, URL] =
+  private def parseAbsoluteURL(url: String): IO[ErrorResponse, URL] =
     ZIO
-      .attempt(URI.create(url).toURL())
+      .attempt(URI.create(url))
       .mapError(ue => badRequest(detail = Some(s"Invalid URL: $url")))
+      .filterOrFail(_.isAbsolute())(badRequest(detail = Some(s"Relative URL '$url' is not allowed")))
+      .map(_.toURL())
 
   private def baseCredentialIssuerUrl(issuerId: UUID): URL =
     URI(s"$agentBaseUrl/oid4vci/issuers/$issuerId").toURL()
@@ -255,7 +257,7 @@ case class CredentialIssuerControllerImpl(
       request: CreateCredentialIssuerRequest
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuer] =
     for {
-      authServerUrl <- parseURL(request.authorizationServer.url)
+      authServerUrl <- parseAbsoluteURL(request.authorizationServer.url)
       id = request.id.getOrElse(UUID.randomUUID())
       issuerToCreate = PolluxCredentialIssuer(
         id,
@@ -287,7 +289,7 @@ case class CredentialIssuerControllerImpl(
       maybeAuthServerUrl <- ZIO
         .succeed(request.authorizationServer.flatMap(_.url))
         .flatMap {
-          case Some(url) => parseURL(url).asSome
+          case Some(url) => parseAbsoluteURL(url).asSome
           case None      => ZIO.none
         }
       issuer <- issuerMetadataService.updateCredentialIssuer(
