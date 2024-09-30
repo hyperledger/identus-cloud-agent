@@ -17,10 +17,10 @@ import org.hyperledger.identus.pollux.core.repository.{
 }
 import org.hyperledger.identus.pollux.prex.{ClaimFormat, Ldp, PresentationDefinition}
 import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.messaging.kafka.InMemoryMessagingService
 import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
 import org.hyperledger.identus.shared.models.*
-import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
