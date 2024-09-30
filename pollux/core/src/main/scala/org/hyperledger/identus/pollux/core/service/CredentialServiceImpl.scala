@@ -59,7 +59,6 @@ object CredentialServiceImpl {
         linkSecretService <- ZIO.service[LinkSecretService]
         didService <- ZIO.service[DIDService]
         manageDidService <- ZIO.service[ManagedDIDService]
-        issueCredentialSem <- Semaphore.make(1)
         messageProducer <- ZIO.service[Producer[UUID, WalletIdAndRecordId]]
       } yield CredentialServiceImpl(
         credentialRepo,
@@ -72,7 +71,6 @@ object CredentialServiceImpl {
         didService,
         manageDidService,
         5,
-        issueCredentialSem,
         messageProducer
       )
     }
@@ -93,7 +91,6 @@ class CredentialServiceImpl(
     didService: DIDService,
     managedDIDService: ManagedDIDService,
     maxRetries: Int = 5, // TODO move to config
-    issueCredentialSem: Semaphore,
     messageProducer: Producer[UUID, WalletIdAndRecordId],
 ) extends CredentialService {
 
@@ -1311,32 +1308,26 @@ class CredentialServiceImpl(
       record: IssueCredentialRecord,
       statusListRegistryUrl: String,
       jwtIssuer: JwtIssuer
-  ): URIO[WalletAccessContext, CredentialStatus] = {
-    val effect = for {
-      lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet
-      currentStatusList <- lastStatusList
-        .fold(credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl))(
-          ZIO.succeed(_)
-        )
-      size = currentStatusList.size
-      lastUsedIndex = currentStatusList.lastUsedIndex
-      statusListToBeUsed <-
-        if lastUsedIndex < size then ZIO.succeed(currentStatusList)
-        else credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl)
+  ): URIO[WalletAccessContext, CredentialStatus] =
+    for {
+      cslAndIndex <- credentialStatusListRepository.incrementAndGetStatusListIndex(
+        jwtIssuer,
+        statusListRegistryUrl
+      )
+      statusListId = cslAndIndex._1
+      indexInStatusList = cslAndIndex._2
       _ <- credentialStatusListRepository.allocateSpaceForCredential(
         issueCredentialRecordId = record.id,
-        credentialStatusListId = statusListToBeUsed.id,
-        statusListIndex = statusListToBeUsed.lastUsedIndex + 1
+        credentialStatusListId = statusListId,
+        statusListIndex = indexInStatusList
       )
     } yield CredentialStatus(
-      id = s"$statusListRegistryUrl/credential-status/${statusListToBeUsed.id}#${statusListToBeUsed.lastUsedIndex + 1}",
+      id = s"$statusListRegistryUrl/credential-status/$statusListId#$indexInStatusList",
       `type` = "StatusList2021Entry",
       statusPurpose = StatusPurpose.Revocation,
-      statusListIndex = lastUsedIndex + 1,
-      statusListCredential = s"$statusListRegistryUrl/credential-status/${statusListToBeUsed.id}"
+      statusListIndex = indexInStatusList,
+      statusListCredential = s"$statusListRegistryUrl/credential-status/$statusListId"
     )
-    issueCredentialSem.withPermit(effect)
-  }
 
   override def generateAnonCredsCredential(
       recordId: DidCommID

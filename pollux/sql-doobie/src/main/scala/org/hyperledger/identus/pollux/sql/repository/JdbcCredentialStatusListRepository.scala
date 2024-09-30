@@ -1,6 +1,8 @@
 package org.hyperledger.identus.pollux.sql.repository
 
+import cats.implicits.toFunctorOps
 import doobie.*
+import doobie.free.connection.ConnectionOp
 import doobie.implicits.*
 import doobie.postgres.*
 import doobie.postgres.implicits.*
@@ -8,8 +10,7 @@ import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer, StatusPurpose}
-import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021}
-import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.*
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitString
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
 import org.hyperledger.identus.shared.db.Implicits.given
@@ -47,9 +48,15 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       .orDie
   }
 
-  def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]] = {
+  override def incrementAndGetStatusListIndex(
+      jwtIssuer: Issuer,
+      statusListRegistryUrl: String
+  ): URIO[WalletAccessContext, (UUID, Int)] = {
 
-    val cxnIO =
+    def acquireAdvisoryLock(walletId: WalletId): ConnectionIO[Unit] =
+      sql"SELECT pg_advisory_xact_lock(${walletId.hashCode})".query[Unit].unique.void
+
+    def getLatestOfTheWallet: ConnectionIO[Option[CredentialStatusList]] =
       sql"""
            | SELECT
            |   id,
@@ -62,74 +69,70 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
            |   last_used_index,
            |   created_at,
            |   updated_at
-           |  FROM public.credential_status_lists order by created_at DESC limit 1
+           |  FROM public.credential_status_lists
+           |  ORDER BY created_at DESC limit 1
            |""".stripMargin
         .query[CredentialStatusList]
         .option
 
-    cxnIO
-      .transactWallet(xa)
-      .orDie
+    def createNewForTheWallet(
+        id: UUID,
+        issuerDid: String,
+        issued: Instant,
+        credentialStr: String
+    ): ConnectionIO[CredentialStatusList] =
+      sql"""
+           |INSERT INTO public.credential_status_lists (
+           |  id,
+           |  issuer,
+           |  issued,
+           |  purpose,
+           |  status_list_credential,
+           |  size,
+           |  last_used_index,
+           |  wallet_id
+           | )
+           |VALUES (
+           |  $id,
+           |  $issuerDid,
+           |  $issued,
+           |  ${StatusPurpose.Revocation}::public.enum_credential_status_list_purpose,
+           |  $credentialStr::JSON,
+           |  ${BitString.MIN_SL2021_SIZE},
+           |  0,
+           |  current_setting('app.current_wallet_id')::UUID
+           | )
+           |RETURNING id, wallet_id, issuer, issued, purpose, status_list_credential, size, last_used_index, created_at, updated_at
+             """.stripMargin
+        .query[CredentialStatusList]
+        .unique
 
-  }
-
-  def createNewForTheWallet(
-      jwtIssuer: Issuer,
-      statusListRegistryUrl: String
-  ): URIO[WalletAccessContext, CredentialStatusList] = {
-
-    val id = UUID.randomUUID()
-    val issued = Instant.now()
-    val issuerDid = jwtIssuer.did.toString
-
-    val credentialWithEmbeddedProof = for {
-      bitString <- BitString.getInstance().mapError {
-        case InvalidSize(message)      => new Throwable(message)
-        case EncodingError(message)    => new Throwable(message)
-        case DecodingError(message)    => new Throwable(message)
-        case IndexOutOfBounds(message) => new Throwable(message)
-      }
-      resourcePath =
-        s"credential-status/$id"
-      emptyStatusListCredential <- VCStatusList2021
-        .build(
-          vcId = s"$statusListRegistryUrl/credential-status/$id",
-          revocationData = bitString,
-          jwtIssuer = jwtIssuer
-        )
-        .mapError(x => new Throwable(x.msg))
-
-      credentialWithEmbeddedProof <- emptyStatusListCredential.toJsonWithEmbeddedProof
-    } yield credentialWithEmbeddedProof.spaces2
+    def updateLastUsedIndex(statusListId: UUID, lastUsedIndex: Int): ConnectionIO[Int] =
+      sql"""
+           | UPDATE public.credential_status_lists
+           | SET
+           |   last_used_index = $lastUsedIndex,
+           |   updated_at = ${Instant.now()}
+           | WHERE
+           |   id = $statusListId
+           |""".stripMargin.update.run
 
     (for {
-      credentialStr <- credentialWithEmbeddedProof
-      query = sql"""
-                   |INSERT INTO public.credential_status_lists (
-                   |  id,
-                   |  issuer,
-                   |  issued,
-                   |  purpose,
-                   |  status_list_credential,
-                   |  size,
-                   |  last_used_index,
-                   |  wallet_id
-                   | )
-                   |VALUES (
-                   |  $id,
-                   |  $issuerDid,
-                   |  $issued,
-                   |  ${StatusPurpose.Revocation}::public.enum_credential_status_list_purpose,
-                   |  $credentialStr::JSON,
-                   |  ${BitString.MIN_SL2021_SIZE},
-                   |  0,
-                   |  current_setting('app.current_wallet_id')::UUID
-                   | )
-                   |RETURNING id, wallet_id, issuer, issued, purpose, status_list_credential, size, last_used_index, created_at, updated_at
-             """.stripMargin.query[CredentialStatusList].unique
-      newStatusList <- query.transactWallet(xa)
-    } yield newStatusList).orDie
-
+      id <- ZIO.succeed(UUID.randomUUID())
+      newStatusListVC <- createStatusListVC(jwtIssuer, statusListRegistryUrl, id)
+      walletCtx <- ZIO.service[WalletAccessContext]
+      walletId = walletCtx.walletId
+      cnxIO = for {
+        _ <- acquireAdvisoryLock(walletId)
+        maybeStatusList <- getLatestOfTheWallet
+        statusList <- maybeStatusList match
+          case Some(csl) if csl.lastUsedIndex < csl.size => cats.free.Free.pure[ConnectionOp, CredentialStatusList](csl)
+          case _ => createNewForTheWallet(id, jwtIssuer.did.toString, Instant.now(), newStatusListVC)
+        newIndex = statusList.lastUsedIndex + 1
+        _ <- updateLastUsedIndex(statusList.id, newIndex)
+      } yield (statusList.id, newIndex)
+      result <- cnxIO.transactWallet(xa)
+    } yield result).orDie
   }
 
   def allocateSpaceForCredential(
