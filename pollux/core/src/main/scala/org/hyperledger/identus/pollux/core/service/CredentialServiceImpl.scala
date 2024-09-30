@@ -4,7 +4,6 @@ import cats.implicits.*
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
-import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage

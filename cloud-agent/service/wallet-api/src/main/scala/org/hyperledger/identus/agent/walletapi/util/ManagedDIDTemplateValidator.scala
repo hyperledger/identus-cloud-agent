@@ -2,8 +2,11 @@ package org.hyperledger.identus.agent.walletapi.util
 
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDTemplate
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import org.hyperledger.identus.castor.core.model.did.{EllipticCurve, VerificationRelationship}
-import org.hyperledger.identus.castor.core.model.did.Service as DidDocumentService
+import org.hyperledger.identus.castor.core.model.did.{
+  EllipticCurve,
+  Service as DidDocumentService,
+  VerificationRelationship
+}
 
 object ManagedDIDTemplateValidator {
 

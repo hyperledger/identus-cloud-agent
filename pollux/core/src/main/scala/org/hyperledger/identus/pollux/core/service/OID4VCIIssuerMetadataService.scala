@@ -1,12 +1,17 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{CredentialSchemaParsingError, InvalidURI}
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{
+  CredentialSchemaParsingError,
+  InvalidURI,
+  SchemaDereferencingError
+}
 import org.hyperledger.identus.pollux.core.model.oid4vci.{CredentialConfiguration, CredentialIssuer}
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
 import org.hyperledger.identus.pollux.core.repository.OID4VCIIssuerMetadataRepository
 import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.{
   CredentialConfigurationNotFound,
+  DuplicateCredentialConfigId,
   InvalidSchemaId,
   IssuerIdNotFound,
   UnsupportedCredentialFormat
@@ -45,6 +50,12 @@ object OID4VCIIssuerMetadataServiceError {
         s"Invalid schemaId $schemaId. $msg"
       )
 
+  final case class DuplicateCredentialConfigId(id: String)
+      extends OID4VCIIssuerMetadataServiceError(
+        StatusCode.Conflict,
+        s"Duplicated credential configuration id: $id"
+      )
+
   final case class UnsupportedCredentialFormat(format: CredentialFormat)
       extends OID4VCIIssuerMetadataServiceError(
         StatusCode.BadRequest,
@@ -68,7 +79,11 @@ trait OID4VCIIssuerMetadataService {
       format: CredentialFormat,
       configurationId: String,
       schemaId: String
-  ): ZIO[WalletAccessContext, InvalidSchemaId | UnsupportedCredentialFormat | IssuerIdNotFound, CredentialConfiguration]
+  ): ZIO[
+    WalletAccessContext,
+    InvalidSchemaId | UnsupportedCredentialFormat | IssuerIdNotFound | DuplicateCredentialConfigId,
+    CredentialConfiguration
+  ]
   def getCredentialConfigurations(
       issuerId: UUID
   ): IO[IssuerIdNotFound, Seq[CredentialConfiguration]]
@@ -130,11 +145,13 @@ class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataReposito
       schemaId: String
   ): ZIO[
     WalletAccessContext,
-    InvalidSchemaId | UnsupportedCredentialFormat | IssuerIdNotFound,
+    InvalidSchemaId | UnsupportedCredentialFormat | IssuerIdNotFound | DuplicateCredentialConfigId,
     CredentialConfiguration
   ] = {
     for {
       _ <- getCredentialIssuer(issuerId)
+      _ <- getCredentialConfigurationById(issuerId, configurationId).flip
+        .mapError(_ => DuplicateCredentialConfigId(configurationId))
       _ <- format match {
         case CredentialFormat.JWT => ZIO.unit
         case f                    => ZIO.fail(UnsupportedCredentialFormat(f))
@@ -144,6 +161,7 @@ class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataReposito
         .validSchemaValidator(schemaUri.toString(), uriResolver)
         .catchAll {
           case e: InvalidURI                   => ZIO.fail(InvalidSchemaId(schemaId, e.userFacingMessage))
+          case e: SchemaDereferencingError     => ZIO.fail(InvalidSchemaId(schemaId, e.userFacingMessage))
           case e: CredentialSchemaParsingError => ZIO.fail(InvalidSchemaId(schemaId, e.cause))
         }
       now <- ZIO.clockWith(_.instant)

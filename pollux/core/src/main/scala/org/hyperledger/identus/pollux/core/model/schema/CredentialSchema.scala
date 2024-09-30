@@ -120,9 +120,14 @@ object CredentialSchema {
   given JsonEncoder[CredentialSchema] = DeriveJsonEncoder.gen[CredentialSchema]
   given JsonDecoder[CredentialSchema] = DeriveJsonDecoder.gen[CredentialSchema]
 
-  def resolveJWTSchema(uri: URI, uriResolver: UriResolver): IO[CredentialSchemaParsingError, Json] = {
+  def resolveJWTSchema(
+      uri: URI,
+      uriResolver: UriResolver
+  ): IO[CredentialSchemaParsingError | SchemaDereferencingError, Json] = {
     for {
-      content <- uriResolver.resolve(uri.toString).orDieAsUnmanagedFailure
+      content <- uriResolver
+        .resolve(uri.toString)
+        .mapError(SchemaDereferencingError(_))
       json <- ZIO
         .fromEither(content.fromJson[Json])
         .mapError(error => CredentialSchemaParsingError(error))
@@ -132,7 +137,7 @@ object CredentialSchema {
   def validSchemaValidator(
       schemaId: String,
       uriResolver: UriResolver
-  ): IO[InvalidURI | CredentialSchemaParsingError, JsonSchemaValidator] = {
+  ): IO[InvalidURI | CredentialSchemaParsingError | SchemaDereferencingError, JsonSchemaValidator] = {
     for {
       uri <- ZIO.attempt(new URI(schemaId)).mapError(_ => InvalidURI(schemaId))
       json <- resolveJWTSchema(uri, uriResolver)
@@ -153,7 +158,10 @@ object CredentialSchema {
       schemaId: String,
       credentialSubject: String,
       uriResolver: UriResolver
-  ): IO[InvalidURI | CredentialSchemaParsingError | CredentialSchemaValidationError, Unit] = {
+  ): IO[
+    InvalidURI | CredentialSchemaParsingError | CredentialSchemaValidationError | SchemaDereferencingError,
+    Unit
+  ] = {
     for {
       schemaValidator <- validSchemaValidator(schemaId, uriResolver)
       _ <- schemaValidator.validate(credentialSubject).mapError(CredentialSchemaValidationError.apply)

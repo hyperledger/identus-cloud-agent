@@ -1,8 +1,7 @@
 package org.hyperledger.identus.shared.http
 
 import io.lemonlabs.uri.{Uri, Url, Urn}
-import org.hyperledger.identus.shared.models.{Failure, StatusCode}
-import org.hyperledger.identus.shared.models.PrismEnvelopeData
+import org.hyperledger.identus.shared.models.{Failure, PrismEnvelopeData, StatusCode}
 import org.hyperledger.identus.shared.utils.Base64Utils
 import zio.*
 import zio.json.*
