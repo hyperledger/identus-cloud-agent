@@ -847,7 +847,7 @@ object JwtCredential {
     } yield Validation.validateWith(signatureValidation, dateVerification, revocationVerification)((a, _, _) => a)
   }
 
-  private def verifyRevocationStatusJwt(jwt: JWT)(uriResolver: UriResolver): IO[String, Validation[String, Unit]] = {
+  def verifyRevocationStatusJwt(jwt: JWT)(uriResolver: UriResolver): IO[String, Validation[String, Unit]] = {
     val decodeJWT =
       ZIO
         .fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))

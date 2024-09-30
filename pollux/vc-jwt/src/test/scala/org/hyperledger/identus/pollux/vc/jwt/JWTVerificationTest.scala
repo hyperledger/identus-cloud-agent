@@ -195,6 +195,51 @@ object JWTVerificationTest extends ZIOSpecDefault {
         )
       )
     },
+    test("fail verification if proof is valid but credential is revoked at the give status list index given list") {
+      val revokedStatus: List[CredentialStatus] = List(
+        org.hyperledger.identus.pollux.vc.jwt.CredentialStatus(
+          id = "http://localhost:8085/credential-status/664382dc-9e6d-4d0c-99d1-85e2c74eb5e9#1",
+          statusPurpose = StatusPurpose.Revocation,
+          `type` = "StatusList2021Entry",
+          statusListCredential = "http://localhost:8085/credential-status/664382dc-9e6d-4d0c-99d1-85e2c74eb5e9",
+          statusListIndex = 1
+        ),
+        org.hyperledger.identus.pollux.vc.jwt.CredentialStatus(
+          id = "http://localhost:8085/credential-status/664382dc-9e6d-4d0c-99d1-85e2c74eb5e9#2",
+          statusPurpose = StatusPurpose.Suspension,
+          `type` = "StatusList2021Entry",
+          statusListCredential = "http://localhost:8085/credential-status/664382dc-9e6d-4d0c-99d1-85e2c74eb5e9",
+          statusListIndex = 1
+        )
+      )
+
+      val urlResolver = new UriResolver {
+        override def resolve(uri: String): IO[GenericUriResolverError, String] = {
+          ZIO.succeed(statusListCredentialString)
+        }
+      }
+
+      val genericUriResolver = GenericUriResolver(
+        Map(
+          "data" -> DataUrlResolver(),
+          "http" -> urlResolver,
+          "https" -> urlResolver
+        )
+      )
+      val issuer = createUser("did:prism:issuer")
+      val jwtCredential = createJwtCredential(issuer, credentialStatus = Some(revokedStatus))
+
+      for {
+        validation <- JwtCredential.verifyRevocationStatusJwt(jwtCredential)(genericUriResolver)
+      } yield assertTrue(
+        validation.fold(
+          chunk =>
+            chunk.length == 2 && chunk.head.contentEquals("Credential is revoked") && chunk.tail.head
+              .contentEquals("Credential is revoked"),
+          _ => false
+        )
+      )
+    },
     test("validate dates happy path") {
       val issuer = createUser("did:prism:issuer")
       val jwtCredential = createJwtCredential(issuer)
