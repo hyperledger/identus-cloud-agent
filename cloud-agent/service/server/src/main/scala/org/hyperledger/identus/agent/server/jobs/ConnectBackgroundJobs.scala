@@ -23,7 +23,7 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
 
   private val TOPIC_NAME = "connect"
 
-  def connectFlowsHandler = for {
+  val connectFlowsHandler = for {
     appConfig <- ZIO.service[AppConfig]
     _ <- messaging.MessagingService.consumeWithRetryStrategy(
       "identus-cloud-agent",

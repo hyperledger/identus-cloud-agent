@@ -69,22 +69,13 @@ final case class PolluxConfig(
     database: DatabaseConfig,
     credentialSdJwtExpirationTime: Duration,
     statusListRegistry: StatusListRegistryConfig,
-    issueBgJobRecordsLimit: Int,
-    issueBgJobRecurrenceDelay: Duration,
-    issueBgJobProcessingParallelism: Int,
-    presentationBgJobRecordsLimit: Int,
-    presentationBgJobRecurrenceDelay: Duration,
-    presentationBgJobProcessingParallelism: Int,
-    syncRevocationStatusesBgJobRecurrenceDelay: Duration,
-    syncRevocationStatusesBgJobProcessingParallelism: Int,
+    statusListSyncTriggerRecurrenceDelay: Duration,
+    didStateSyncTriggerRecurrenceDelay: Duration,
     presentationInvitationExpiry: Duration,
     issuanceInvitationExpiry: Duration,
 )
 final case class ConnectConfig(
     database: DatabaseConfig,
-    connectBgJobRecordsLimit: Int,
-    connectBgJobRecurrenceDelay: Duration,
-    connectBgJobProcessingParallelism: Int,
     connectInvitationExpiry: Duration,
 )
 
