@@ -1,14 +1,20 @@
 package org.hyperledger.identus.pollux.core.service.verification
 
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
-import org.hyperledger.identus.pollux.core.service.URIDereferencer
-import org.hyperledger.identus.pollux.vc.jwt.{DidResolver, JWT, JWTVerification, JwtCredential}
+import org.hyperledger.identus.pollux.vc.jwt.{
+  CredentialPayload,
+  CredentialSchema as JwtCredentialSchema,
+  DidResolver,
+  JWT,
+  JWTVerification,
+  JwtCredential
+}
+import org.hyperledger.identus.shared.http.UriResolver
 import zio.*
 
 import java.time.OffsetDateTime
 
-class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDereferencer)
-    extends VcVerificationService {
+class VcVerificationServiceImpl(didResolver: DidResolver, uriResolver: UriResolver) extends VcVerificationService {
   override def verify(
       vcVerificationRequests: List[VcVerificationRequest]
   ): IO[VcVerificationServiceError, List[VcVerificationResult]] = {
@@ -48,17 +54,26 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
         decodedJwt <-
           JwtCredential
             .decodeJwt(JWT(credential))
-            .mapError(error => VcVerificationServiceError.UnexpectedError(s"Unable decode JWT: $error"))
+            .mapError(error => VcVerificationServiceError.UnexpectedError(s"Unable to decode JWT: $error"))
         credentialSchema <-
           ZIO
             .fromOption(decodedJwt.maybeCredentialSchema)
             .mapError(error => VcVerificationServiceError.UnexpectedError(s"Missing Credential Schema: $error"))
-        result <- CredentialSchema
-          .validSchemaValidator(
-            credentialSchema.id,
-            uriDereferencer
+        credentialSchemas = credentialSchema match {
+          case schema: JwtCredentialSchema           => List(schema)
+          case schemaList: List[JwtCredentialSchema] => schemaList
+        }
+        result <-
+          ZIO.collectAll(
+            credentialSchemas.map(credentialSchema =>
+              CredentialSchema
+                .validSchemaValidator(
+                  credentialSchema.id,
+                  uriResolver
+                )
+                .mapError(error => VcVerificationServiceError.UnexpectedError(s"Schema Validator Failed: $error"))
+            )
           )
-          .mapError(error => VcVerificationServiceError.UnexpectedError(s"Schema Validator Failed: $error"))
       } yield result
 
     result
@@ -91,14 +106,23 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
           ZIO
             .fromOption(decodedJwt.maybeCredentialSchema)
             .mapError(error => VcVerificationServiceError.UnexpectedError(s"Missing Credential Schema: $error"))
-        result <- CredentialSchema
-          .validateJWTCredentialSubject(
-            credentialSchema.id,
-            decodedJwt.credentialSubject.noSpaces,
-            uriDereferencer
-          )
-          .mapError(error =>
-            VcVerificationServiceError.UnexpectedError(s"JWT Credential Subject Validation Failed: $error")
+        credentialSchemas = credentialSchema match {
+          case schema: JwtCredentialSchema           => List(schema)
+          case schemaList: List[JwtCredentialSchema] => schemaList
+        }
+        result <-
+          ZIO.collectAll(
+            credentialSchemas.map(credentialSchema =>
+              CredentialSchema
+                .validateJWTCredentialSubject(
+                  credentialSchema.id,
+                  CredentialPayload.Implicits.jwtVcEncoder(decodedJwt.vc).noSpaces,
+                  uriResolver
+                )
+                .mapError(error =>
+                  VcVerificationServiceError.UnexpectedError(s"JWT Credential Subject Validation Failed: $error")
+                )
+            )
           )
       } yield result
 
@@ -255,6 +279,6 @@ class VcVerificationServiceImpl(didResolver: DidResolver, uriDereferencer: URIDe
 }
 
 object VcVerificationServiceImpl {
-  val layer: URLayer[DidResolver & URIDereferencer, VcVerificationService] =
+  val layer: URLayer[DidResolver & UriResolver, VcVerificationService] =
     ZLayer.fromFunction(VcVerificationServiceImpl(_, _))
 }

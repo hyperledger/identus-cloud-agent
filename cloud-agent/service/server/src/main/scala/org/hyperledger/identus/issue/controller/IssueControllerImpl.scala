@@ -8,27 +8,28 @@ import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.api.http.{ErrorResponse, RequestContext}
 import org.hyperledger.identus.api.http.model.{CollectionStats, PaginationInput}
 import org.hyperledger.identus.api.util.PaginationUtils
-import org.hyperledger.identus.castor.core.model.did.{PrismDID, VerificationRelationship}
+import org.hyperledger.identus.castor.core.model.did.{DIDUrl, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.connect.core.service.ConnectionService
-import org.hyperledger.identus.issue.controller.http.{
-  AcceptCredentialOfferInvitation,
-  AcceptCredentialOfferRequest,
-  CreateIssueCredentialRecordRequest,
-  IssueCredentialRecord,
-  IssueCredentialRecordPage
-}
+import org.hyperledger.identus.issue.controller.http.*
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID}
+import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, ResourceResolutionMethod}
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
-import org.hyperledger.identus.pollux.core.service.CredentialService
+import org.hyperledger.identus.pollux.core.service.{CredentialDefinitionService, CredentialService}
+import org.hyperledger.identus.shared.crypto.Sha256Hash
+import org.hyperledger.identus.shared.json.Json as JsonUtils
 import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
-import zio.{Duration, URLayer, ZIO, ZLayer}
+import org.hyperledger.identus.shared.utils.Base64Utils
+import zio.*
+import zio.json.given
 
+import scala.collection.immutable.ListMap
 import scala.language.implicitConversions
+
 class IssueControllerImpl(
     credentialService: CredentialService,
+    credentialDefinitionService: CredentialDefinitionService,
     connectionService: ConnectionService,
     didService: DIDService,
     managedDIDService: ManagedDIDService,
@@ -48,98 +49,134 @@ class IssueControllerImpl(
       request: CreateIssueCredentialRecordRequest,
       offerContext: OfferContext
   ): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
+
+    def getIssuingDidFromRequest(request: CreateIssueCredentialRecordRequest) = extractPrismDIDFromString(
+      request.issuingDID
+    )
+
     for {
-      jsonClaims <- ZIO
+      jsonClaims <- ZIO // TODO: Get read of Circe and use zio-json all the way down
         .fromEither(io.circe.parser.parse(request.claims.toString()))
-        .mapError(e => ErrorResponse.badRequest(detail = Some(s"Invalid claims JSON: ${e.getMessage}")))
-
+        .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
       credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+      outcome <-
+        credentialFormat match
+          case JWT =>
+            for {
+              issuingDID <- getIssuingDidFromRequest(request)
+              _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
+              record <- credentialService
+                .createJWTIssueCredentialRecord(
+                  pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
+                  pairwiseHolderDID = offerContext.pairwiseHolderDID,
+                  kidIssuer = request.issuingKid,
+                  thid = DidCommID(),
+                  maybeSchemaIds = request.schemaId.map {
+                    case schemaId: String        => List(schemaId)
+                    case schemaIds: List[String] => schemaIds
+                  },
+                  claims = jsonClaims,
+                  validityPeriod = request.validityPeriod,
+                  automaticIssuance = request.automaticIssuance.orElse(Some(true)),
+                  issuingDID = issuingDID.asCanonical,
+                  goalCode = offerContext.goalCode,
+                  goal = offerContext.goal,
+                  expirationDuration = offerContext.expirationDuration,
+                  connectionId = request.connectionId
+                )
+            } yield record
+          case SDJWT =>
+            for {
+              issuingDID <- getIssuingDidFromRequest(request)
+              _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
+              record <- credentialService
+                .createSDJWTIssueCredentialRecord(
+                  pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
+                  pairwiseHolderDID = offerContext.pairwiseHolderDID,
+                  kidIssuer = request.issuingKid,
+                  thid = DidCommID(),
+                  maybeSchemaIds = request.schemaId.map {
+                    case schemaId: String        => List(schemaId)
+                    case schemaIds: List[String] => schemaIds
+                  },
+                  claims = jsonClaims,
+                  validityPeriod = request.validityPeriod,
+                  automaticIssuance = request.automaticIssuance.orElse(Some(true)),
+                  issuingDID = issuingDID.asCanonical,
+                  goalCode = offerContext.goalCode,
+                  goal = offerContext.goal,
+                  expirationDuration = offerContext.expirationDuration,
+                  connectionId = request.connectionId
+                )
+            } yield record
+          case AnonCreds =>
+            for {
+              issuingDID <- getIssuingDidFromRequest(request)
+              credentialDefinitionGUID <- ZIO
+                .fromOption(request.credentialDefinitionId)
+                .mapError(_ =>
+                  ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
+                )
+              credentialDefinition <- credentialDefinitionService.getByGUID(credentialDefinitionGUID)
+              credentialDefinitionId <- {
 
-      outcome <- credentialFormat match {
-        case JWT =>
-          for {
-            issuingDID <- ZIO
-              .fromOption(request.issuingDID)
-              .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
-              .flatMap(extractPrismDIDFromString)
-            _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
-            record <- credentialService
-              .createJWTIssueCredentialRecord(
-                pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
-                pairwiseHolderDID = offerContext.pairwiseHolderDID,
-                thid = DidCommID(),
-                maybeSchemaId = request.schemaId,
-                claims = jsonClaims,
-                validityPeriod = request.validityPeriod,
-                automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-                issuingDID = issuingDID.asCanonical,
-                goalCode = offerContext.goalCode,
-                goal = offerContext.goal,
-                expirationDuration = offerContext.expirationDuration,
-                connectionId = request.connectionId
-              )
-          } yield record
+                credentialDefinition.resolutionMethod match
+                  case ResourceResolutionMethod.did =>
+                    val publicEndpointServiceName = appConfig.agent.httpEndpoint.serviceName
+                    val didUrlResourcePath =
+                      s"credential-definition-registry/definitions/did-url/${credentialDefinitionGUID.toString}/definition"
+                    val didUrl = for {
+                      canonicalized <- JsonUtils.canonicalizeToJcs(credentialDefinition.definition.toJson)
+                      encoded = Base64Utils.encodeURL(canonicalized.getBytes)
+                      hash = Sha256Hash.compute(encoded.getBytes).hexEncoded
+                      didUrl = DIDUrl(
+                        issuingDID.did,
+                        Seq(),
+                        ListMap(
+                          "resourceService" -> Seq(publicEndpointServiceName),
+                          "resourcePath" -> Seq(
+                            s"$didUrlResourcePath?resourceHash=$hash"
+                          ),
+                        ),
+                        None
+                      ).toString
+                    } yield didUrl
 
-        case SDJWT =>
-          for {
-            issuingDID <- ZIO
-              .fromOption(request.issuingDID)
-              .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: issuingDID")))
-              .flatMap(extractPrismDIDFromString)
-            _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
-            record <- credentialService
-              .createSDJWTIssueCredentialRecord(
-                pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
-                pairwiseHolderDID = offerContext.pairwiseHolderDID,
-                thid = DidCommID(),
-                maybeSchemaId = request.schemaId,
-                claims = jsonClaims,
-                validityPeriod = request.validityPeriod,
-                automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-                issuingDID = issuingDID.asCanonical,
-                goalCode = offerContext.goalCode,
-                goal = offerContext.goal,
-                expirationDuration = offerContext.expirationDuration,
-                connectionId = request.connectionId
-              )
-          } yield record
+                    ZIO
+                      .fromEither(didUrl)
+                      .mapError(_ => ErrorResponse.badRequest(detail = Some("Could not parse credential definition")))
 
-        case AnonCreds =>
-          for {
-            credentialDefinitionGUID <- ZIO
-              .fromOption(request.credentialDefinitionId)
-              .mapError(_ =>
-                ErrorResponse.badRequest(detail = Some("Missing request parameter: credentialDefinitionId"))
-              )
-            credentialDefinitionId = {
-              val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl.toExternalForm
-              val urlSuffix =
-                s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
-              val urlPrefix = if (publicEndpointUrl.endsWith("/")) publicEndpointUrl else publicEndpointUrl + "/"
-              s"$urlPrefix$urlSuffix"
-            }
-            record <- credentialService
-              .createAnonCredsIssueCredentialRecord(
-                pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
-                pairwiseHolderDID = offerContext.pairwiseHolderDID,
-                thid = DidCommID(),
-                credentialDefinitionGUID = credentialDefinitionGUID,
-                credentialDefinitionId = credentialDefinitionId,
-                claims = jsonClaims,
-                validityPeriod = request.validityPeriod,
-                automaticIssuance = request.automaticIssuance.orElse(Some(true)),
-                goalCode = offerContext.goalCode,
-                goal = offerContext.goal,
-                expirationDuration = offerContext.expirationDuration,
-                connectionId = request.connectionId
-              )
-          } yield record
-      }
+                  case ResourceResolutionMethod.http =>
+                    val publicEndpointUrl = appConfig.agent.httpEndpoint.publicEndpointUrl.toExternalForm
+                    val httpUrlSuffix =
+                      s"credential-definition-registry/definitions/${credentialDefinitionGUID.toString}/definition"
+                    val urlPrefix = if (publicEndpointUrl.endsWith("/")) publicEndpointUrl else publicEndpointUrl + "/"
+                    ZIO.succeed(s"$urlPrefix$httpUrlSuffix")
+              }
+              record <- credentialService
+                .createAnonCredsIssueCredentialRecord(
+                  pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
+                  pairwiseHolderDID = offerContext.pairwiseHolderDID,
+                  thid = DidCommID(),
+                  credentialDefinitionGUID = credentialDefinitionGUID,
+                  credentialDefinitionId = credentialDefinitionId,
+                  claims = jsonClaims,
+                  validityPeriod = request.validityPeriod,
+                  automaticIssuance = request.automaticIssuance.orElse(Some(true)),
+                  goalCode = offerContext.goalCode,
+                  goal = offerContext.goal,
+                  expirationDuration = offerContext.expirationDuration,
+                  connectionId = request.connectionId
+                )
+            } yield record
+
     } yield IssueCredentialRecord.fromDomain(outcome)
   }
+
   override def createCredentialOffer(
       request: CreateIssueCredentialRecordRequest
   )(implicit rc: RequestContext): ZIO[WalletAccessContext, ErrorResponse, IssueCredentialRecord] = {
+
     for {
       connectionId <- ZIO
         .fromOption(request.connectionId)
@@ -171,6 +208,7 @@ class IssueControllerImpl(
       result <- createCredentialOfferRecord(request, offerContext)
     } yield result
   }
+
   def acceptCredentialOfferInvitation(
       request: AcceptCredentialOfferInvitation
   )(implicit
@@ -312,7 +350,9 @@ class IssueControllerImpl(
 }
 
 object IssueControllerImpl {
-  val layer
-      : URLayer[CredentialService & ConnectionService & DIDService & ManagedDIDService & AppConfig, IssueController] =
-    ZLayer.fromFunction(IssueControllerImpl(_, _, _, _, _))
+  val layer: URLayer[
+    CredentialService & CredentialDefinitionService & ConnectionService & DIDService & ManagedDIDService & AppConfig,
+    IssueController
+  ] =
+    ZLayer.fromFunction(IssueControllerImpl(_, _, _, _, _, _))
 }

@@ -40,7 +40,6 @@ trait Signer {
   def encode(claim: Json): JWT
 
   def generateProofForJson(payload: Json, pk: PublicKey): Task[Proof]
-
 }
 
 // works with java 7, 8, 11 & bouncycastle provider

@@ -17,6 +17,7 @@ import org.hyperledger.identus.pollux.core.repository.{
   CredentialStatusListRepositoryInMemory
 }
 import org.hyperledger.identus.pollux.core.service.*
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.vc.jwt.PrismDidResolver
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.{Clock, Random, URLayer, ZIO, ZLayer}
@@ -48,7 +49,7 @@ object OIDCCredentialIssuerServiceSpec
       CredentialRepositoryInMemory.layer,
       CredentialStatusListRepositoryInMemory.layer,
       PrismDidResolver.layer,
-      ResourceURIDereferencerImpl.layer,
+      ResourceUrlResolver.layer,
       credentialDefinitionServiceLayer,
       GenericSecretStorageInMemory.layer,
       LinkSecretServiceImpl.layer,
@@ -211,6 +212,6 @@ object OIDCCredentialIssuerServiceSpec
         MockDIDNonSecretStorage.empty,
         getCredentialConfigurationExpectations.toLayer,
         layers
-      )
+      ),
     )
 }

@@ -62,7 +62,7 @@ object JWTVerificationTest extends ZIOSpecDefault {
                                               |}
                                               |""".stripMargin
 
-  private def createJwtCredential(issuer: IssuerWithKey): JWT = {
+  private def createJwtCredential(issuer: IssuerWithKey, issuerAsObject: Boolean = false): JWT = {
     val validFrom = Instant.parse("2010-01-05T00:00:00Z") // ISSUANCE DATE
     val jwtCredentialNbf = Instant.parse("2010-01-01T00:00:00Z") // ISSUANCE DATE
     val validUntil = Instant.parse("2010-01-09T00:00:00Z") // EXPIRATION DATE
@@ -81,7 +81,10 @@ object JWTVerificationTest extends ZIOSpecDefault {
         maybeTermsOfUse = None,
         maybeValidFrom = Some(validFrom),
         maybeValidUntil = Some(validUntil),
-        maybeIssuer = Some(Left(issuer.issuer.did.toString))
+        maybeIssuer = Some(
+          if (issuerAsObject) CredentialIssuer(issuer.issuer.did.toString, "Profile")
+          else issuer.issuer.did.toString
+        )
       ),
       nbf = jwtCredentialNbf, // ISSUANCE DATE
       aud = Set.empty,
@@ -198,6 +201,27 @@ object JWTVerificationTest extends ZIOSpecDefault {
             )
         )
       } yield assertTrue(validation.fold(_ => false, _ => true))
+    },
+    test("validate issuer happy path") {
+      val issuer = createUser("did:prism:issuer")
+      val jwtCredential = createJwtCredential(issuer, false)
+      val jwtCredentialWithObjectIssuer = createJwtCredential(issuer, true)
+      for {
+        jwt <- JwtCredential
+          .decodeJwt(jwtCredential)
+        jwtWithObjectIssuer <- JwtCredential
+          .decodeJwt(jwtCredentialWithObjectIssuer)
+        jwtWithObjectIssuerIssuer = jwtWithObjectIssuer.vc.maybeIssuer.get match {
+          case string: String                     => string
+          case credentialIssuer: CredentialIssuer => credentialIssuer.id
+        }
+        jwtIssuer = jwt.vc.maybeIssuer.get match {
+          case string: String                     => string
+          case credentialIssuer: CredentialIssuer => credentialIssuer.id
+        }
+      } yield assertTrue(
+        jwtWithObjectIssuerIssuer.equals(jwtIssuer)
+      )
     },
     test("validate dates should fail given after valid until") {
       val issuer = createUser("did:prism:issuer")

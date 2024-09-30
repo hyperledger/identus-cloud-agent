@@ -10,7 +10,7 @@ import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.shared.crypto.jwk.{FromJWK, JWK}
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
 import zio.*
 
 import java.time.Instant
@@ -28,13 +28,13 @@ class JdbcDIDSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDSecretSt
 
   given didIdPut: Put[DidId] = Put[String].contramap(_.value)
 
-  override def getKey(did: DidId, keyId: String): RIO[WalletAccessContext, Option[OctetKeyPair]] = {
+  override def getKey(did: DidId, keyId: KeyId): RIO[WalletAccessContext, Option[OctetKeyPair]] = {
     val cxnIO = sql"""
          | SELECT key_pair
          | FROM public.peer_did_rand_key
          | WHERE
          |   did = $did
-         |   AND key_id = $keyId
+         |   AND key_id = ${keyId.value}
         """.stripMargin
       .query[OctetKeyPair]
       .option
@@ -42,7 +42,7 @@ class JdbcDIDSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDSecretSt
     cxnIO.transactWallet(xa)
   }
 
-  override def insertKey(did: DidId, keyId: String, keyPair: OctetKeyPair): RIO[WalletAccessContext, Int] = {
+  override def insertKey(did: DidId, keyId: KeyId, keyPair: OctetKeyPair): RIO[WalletAccessContext, Int] = {
     val cxnIO = (now: InstantAsBigInt) => sql"""
         | INSERT INTO public.peer_did_rand_key(
         |   did,
@@ -52,7 +52,7 @@ class JdbcDIDSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDSecretSt
         | ) values (
         |   ${did},
         |   ${now},
-        |   ${keyId},
+        |   ${keyId.value},
         |   ${keyPair}
         | )
         """.stripMargin.update
@@ -65,7 +65,7 @@ class JdbcDIDSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDSecretSt
 
   override def insertPrismDIDKeyPair[K](
       did: PrismDID,
-      keyId: String,
+      keyId: KeyId,
       operationHash: Array[Byte],
       keyPair: K
   )(using c: Conversion[K, JWK]): URIO[WalletAccessContext, Unit] = {
@@ -80,7 +80,7 @@ class JdbcDIDSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDSecretSt
         | ) values (
         |   ${did},
         |   ${now},
-        |   ${keyId},
+        |   ${keyId.value},
         |   ${operationHash},
         |   ${jwk}
         | )
@@ -92,7 +92,7 @@ class JdbcDIDSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDSecretSt
     } yield ()
   }
 
-  override def getPrismDIDKeyPair[K](did: PrismDID, keyId: String, operationHash: Array[Byte])(using
+  override def getPrismDIDKeyPair[K](did: PrismDID, keyId: KeyId, operationHash: Array[Byte])(using
       c: FromJWK[K]
   ): URIO[WalletAccessContext, Option[K]] = {
     val cxnIO = sql"""
@@ -101,7 +101,7 @@ class JdbcDIDSecretStorage(xa: Transactor[ContextAwareTask]) extends DIDSecretSt
          | WHERE
          |   did = $did
          |   AND operation_hash = $operationHash
-         |   AND key_id = $keyId
+         |   AND key_id = ${keyId.value}
         """.stripMargin
       .query[JWK]
       .option

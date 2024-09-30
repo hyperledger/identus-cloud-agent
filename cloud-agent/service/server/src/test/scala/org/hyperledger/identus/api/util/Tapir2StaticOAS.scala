@@ -1,5 +1,7 @@
 package org.hyperledger.identus.api.util
 
+import com.typesafe.config.ConfigFactory
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.http.DocModels
 import org.hyperledger.identus.agent.server.AgentHttpServer
 import org.hyperledger.identus.castor.controller.{DIDController, DIDRegistrarController}
@@ -16,12 +18,14 @@ import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaController,
   VerificationPolicyController
 }
+import org.hyperledger.identus.pollux.prex.controller.PresentationExchangeController
 import org.hyperledger.identus.presentproof.controller.PresentProofController
 import org.hyperledger.identus.system.controller.SystemController
 import org.hyperledger.identus.verification.controller.VcVerificationController
 import org.scalatestplus.mockito.MockitoSugar.*
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
+import zio.config.typesafe.TypesafeConfigProvider
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
@@ -41,6 +45,11 @@ object Tapir2StaticOAS extends ZIOAppDefault {
       val path = Path.of(args.head)
       Using(Files.newBufferedWriter(path, StandardCharsets.UTF_8)) { writer => writer.write(yaml) }
     }
+    val configLayer = ZLayer.fromZIO(
+      TypesafeConfigProvider
+        .fromTypesafeConfig(ConfigFactory.load())
+        .load(AppConfig.config)
+    )
     effect.provideSomeLayer(
       ZLayer.succeed(mock[ConnectionController]) ++
         ZLayer.succeed(mock[CredentialDefinitionController]) ++
@@ -58,7 +67,9 @@ object Tapir2StaticOAS extends ZIOAppDefault {
         ZLayer.succeed(mock[DefaultAuthenticator]) ++
         ZLayer.succeed(mock[EventController]) ++
         ZLayer.succeed(mock[CredentialIssuerController]) ++
-        ZLayer.succeed(mock[Oid4vciAuthenticatorFactory])
+        ZLayer.succeed(mock[PresentationExchangeController]) ++
+        ZLayer.succeed(mock[Oid4vciAuthenticatorFactory]) ++
+        configLayer
     )
   }
 

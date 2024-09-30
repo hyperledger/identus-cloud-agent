@@ -75,6 +75,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
               Some(connectionId),
               proofTypes,
               options,
+              PresentCredentialRequestFormat.JWT,
               None,
               None,
               None,
@@ -143,6 +144,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
                 thid,
                 Some(connectionId),
                 anoncredPresentationRequestV1,
+                PresentCredentialRequestFormat.Anoncred,
                 None,
                 None,
                 None
@@ -519,7 +521,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
             aIssueCredentialRecord.id,
             issueCredential,
             rawCredentialData,
-            Some("SchemaId"),
+            Some(List("SchemaId")),
             Some("CredDefId"),
             IssueCredentialRecord.ProtocolState.CredentialReceived
           )
@@ -863,7 +865,7 @@ object PresentationServiceSpec extends ZIOSpecDefault with PresentationServiceSp
           createdAt = Instant.now,
           updatedAt = None,
           thid = DidCommID(),
-          schemaUri = Some(schemaId),
+          schemaUris = Some(List(schemaId)),
           credentialDefinitionId = Some(credentialDefinitionDb.guid),
           credentialDefinitionUri = Some(credentialDefinitionId),
           credentialFormat = CredentialFormat.AnonCreds,

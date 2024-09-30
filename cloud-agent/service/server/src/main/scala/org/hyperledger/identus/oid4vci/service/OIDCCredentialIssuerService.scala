@@ -11,8 +11,7 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.service.{
   CredentialService,
   OID4VCIIssuerMetadataService,
-  OID4VCIIssuerMetadataServiceError,
-  URIDereferencer
+  OID4VCIIssuerMetadataServiceError
 }
 import org.hyperledger.identus.pollux.vc.jwt.{
   DidResolver,
@@ -23,6 +22,7 @@ import org.hyperledger.identus.pollux.vc.jwt.{
   W3cCredentialPayload,
   *
 }
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.*
 import zio.*
 
@@ -63,7 +63,9 @@ trait OIDCCredentialIssuerService {
 
   def getIssuanceSessionByIssuerState(issuerState: String): IO[Error, IssuanceSession]
 
-  def getIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession]
+  def getPendingIssuanceSessionByIssuerState(issuerState: String): IO[Error, IssuanceSession]
+
+  def getPendingIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession]
 
   def updateIssuanceSession(issuanceSession: IssuanceSession): IO[Error, IssuanceSession]
 }
@@ -85,6 +87,11 @@ object OIDCCredentialIssuerService {
         s"Credential configuration with id $credentialConfigurationId not found for issuer $issuerId"
     }
 
+    case class IssuanceSessionAlreadyIssued(issuerState: String) extends Error {
+      override def userFacingMessage: String =
+        s"Issuance session with issuerState $issuerState is already issued"
+    }
+
     case class CredentialSchemaError(cause: org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError)
         extends Error {
       override def userFacingMessage: String = cause.userFacingMessage
@@ -104,7 +111,7 @@ case class OIDCCredentialIssuerServiceImpl(
     issuerMetadataService: OID4VCIIssuerMetadataService,
     issuanceSessionStorage: IssuanceSessionStorage,
     didResolver: DidResolver,
-    uriDereferencer: URIDereferencer,
+    uriResolver: UriResolver,
 ) extends OIDCCredentialIssuerService
     with Openid4VCIProofJwtOps {
 
@@ -192,7 +199,7 @@ case class OIDCCredentialIssuerServiceImpl(
       `type` = Set(
         "VerifiableCredential"
       ) ++ credentialDefinition.`type`, // TODO: This information should come from Schema registry by record.schemaId
-      issuer = Left(issuerDid.toString),
+      issuer = issuerDid.toString,
       issuanceDate = Instant.now(),
       maybeExpirationDate = None, // TODO: Add expiration date
       maybeCredentialSchema = None, // TODO: Add schema from schema registry
@@ -230,6 +237,10 @@ case class OIDCCredentialIssuerServiceImpl(
       .mapError(e => ServiceError(s"Failed to get issuance session: ${e.message}"))
       .someOrFail(ServiceError(s"The IssuanceSession with the issuerState $issuerState does not exist"))
 
+  override def getPendingIssuanceSessionByIssuerState(
+      issuerState: String
+  ): IO[Error, IssuanceSession] = getIssuanceSessionByIssuerState(issuerState).ensurePendingSession
+
   override def createCredentialOffer(
       credentialIssuerBaseUrl: URL,
       issuerId: UUID,
@@ -245,7 +256,7 @@ case class OIDCCredentialIssuerServiceImpl(
         }
         .map(_.schemaId)
       _ <- CredentialSchema
-        .validateJWTCredentialSubject(schemaId.toString(), simpleZioToCirce(claims).noSpaces, uriDereferencer)
+        .validateJWTCredentialSubject(schemaId.toString(), simpleZioToCirce(claims).noSpaces, uriResolver)
         .mapError(e => CredentialSchemaError(e))
       session <- buildNewIssuanceSession(issuerId, issuingDID, claims, schemaId)
       _ <- issuanceSessionStorage
@@ -261,11 +272,12 @@ case class OIDCCredentialIssuerServiceImpl(
       )
     )
 
-  def getIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession] = {
+  def getPendingIssuanceSessionByNonce(nonce: String): IO[Error, IssuanceSession] = {
     issuanceSessionStorage
       .getByNonce(nonce)
       .mapError(e => ServiceError(s"Failed to get issuance session: ${e.message}"))
       .someOrFail(ServiceError(s"The IssuanceSession with the nonce $nonce does not exist"))
+      .ensurePendingSession
   }
 
   override def updateIssuanceSession(issuanceSession: IssuanceSession): IO[Error, IssuanceSession] = {
@@ -295,11 +307,20 @@ case class OIDCCredentialIssuerServiceImpl(
       issuingDid = issuerDid,
     )
   }
+
+  extension [R, A](result: ZIO[R, Error, IssuanceSession]) {
+    def ensurePendingSession: ZIO[R, Error, IssuanceSession] =
+      result.flatMap { session =>
+        if session.subjectDid.isEmpty
+        then ZIO.succeed(session)
+        else ZIO.fail(IssuanceSessionAlreadyIssued(session.issuerState))
+      }
+  }
 }
 
 object OIDCCredentialIssuerServiceImpl {
   val layer: URLayer[
-    DIDNonSecretStorage & CredentialService & IssuanceSessionStorage & DidResolver & URIDereferencer &
+    DIDNonSecretStorage & CredentialService & IssuanceSessionStorage & DidResolver & UriResolver &
       OID4VCIIssuerMetadataService,
     OIDCCredentialIssuerService
   ] =

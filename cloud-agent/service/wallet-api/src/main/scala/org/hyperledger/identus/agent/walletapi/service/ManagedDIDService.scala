@@ -7,7 +7,7 @@ import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.PeerDID
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair, X25519KeyPair}
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
 import zio.*
 
 /** A wrapper around Castor's DIDService providing key-management capability. Analogous to the secretAPI in
@@ -17,13 +17,15 @@ trait ManagedDIDService {
 
   private[walletapi] def nonSecretStorage: DIDNonSecretStorage
 
+  protected def getDefaultDidDocumentServices: Set[Service] = Set.empty
+
   def syncManagedDIDState: ZIO[WalletAccessContext, GetManagedDIDError, Unit]
 
   def syncUnconfirmedUpdateOperations: ZIO[WalletAccessContext, GetManagedDIDError, Unit]
 
   def findDIDKeyPair(
       did: CanonicalPrismDID,
-      keyId: String
+      keyId: KeyId
   ): URIO[WalletAccessContext, Option[Secp256k1KeyPair | Ed25519KeyPair | X25519KeyPair]]
 
   def getManagedDIDState(did: CanonicalPrismDID): ZIO[WalletAccessContext, GetManagedDIDError, Option[ManagedDIDState]]

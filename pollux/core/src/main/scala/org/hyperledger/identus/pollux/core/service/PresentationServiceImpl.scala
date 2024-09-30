@@ -19,13 +19,13 @@ import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, Pre
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.pollux.sdjwt.{CredentialCompact, HolderPrivateKey, PresentationCompact, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.Base64Utils
 import zio.*
 import zio.json.*
 
-import java.net.URI
 import java.time.Instant
 import java.util.{Base64 as JBase64, UUID}
 import java.util as ju
@@ -33,7 +33,7 @@ import scala.util.chaining.*
 import scala.util.Try
 
 private class PresentationServiceImpl(
-    uriDereferencer: URIDereferencer,
+    uriResolver: UriResolver,
     linkSecretService: LinkSecretService,
     presentationRepository: PresentationRepository,
     credentialRepository: CredentialRepository,
@@ -189,11 +189,18 @@ private class PresentationServiceImpl(
             goal_code = requestPresentation.body.goal_code,
             comment = requestPresentation.body.comment
           ),
-          attachments = Seq(
+          attachments = requestPresentation.attachments.map(attachment =>
             AttachmentDescriptor
               .buildBase64Attachment(
-                payload = presentationPayload.compact.getBytes,
-                mediaType = Some(PresentCredentialFormat.SDJWT.name)
+                payload = presentationPayload.compact.getBytes(),
+                mediaType = attachment.media_type,
+                format = attachment.format.map {
+                  case PresentCredentialRequestFormat.SDJWT.name => PresentCredentialFormat.SDJWT.name
+                  case format =>
+                    throw throw RuntimeException(
+                      s"Unexpected PresentCredentialRequestFormat=$format. Expecting: ${PresentCredentialRequestFormat.SDJWT.name}"
+                    )
+                }
               )
           ),
           thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
@@ -232,7 +239,7 @@ private class PresentationServiceImpl(
       )
       presentationPayload <- createAnoncredPresentationPayloadFromCredential(
         issuedCredentials,
-        issuedValidCredentials.flatMap(_.schemaUri),
+        issuedValidCredentials.flatMap(_.schemaUris.getOrElse(List())),
         issuedValidCredentials.flatMap(_.credentialDefinitionUri),
         requestPresentation,
         anoncredCredentialProof.credentialProofs
@@ -259,12 +266,18 @@ private class PresentationServiceImpl(
             goal_code = requestPresentation.body.goal_code,
             comment = requestPresentation.body.comment
           ),
-          attachments = Seq(
+          attachments = requestPresentation.attachments.map(attachment =>
             AttachmentDescriptor
               .buildBase64Attachment(
                 payload = presentationPayload.data.getBytes(),
-                mediaType = Some(PresentCredentialFormat.Anoncred.name),
-                format = Some(PresentCredentialFormat.Anoncred.name),
+                mediaType = attachment.media_type,
+                format = attachment.format.map {
+                  case PresentCredentialRequestFormat.Anoncred.name => PresentCredentialFormat.Anoncred.name
+                  case format =>
+                    throw throw RuntimeException(
+                      s"Unexpected PresentCredentialRequestFormat=$format. Expecting: ${PresentCredentialRequestFormat.Anoncred.name}"
+                    )
+                }
               )
           ),
           thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
@@ -310,6 +323,7 @@ private class PresentationServiceImpl(
       connectionId: Option[String],
       proofTypes: Seq[ProofType],
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+      presentationFormat: PresentCredentialRequestFormat,
       goalCode: Option[String] = None,
       goal: Option[String] = None,
       expirationDuration: Option[Duration] = None,
@@ -321,7 +335,7 @@ private class PresentationServiceImpl(
       connectionId,
       CredentialFormat.JWT,
       proofTypes,
-      options.map(o => Seq(toJWTAttachment(o))).getOrElse(Seq.empty),
+      options.map(o => Seq(toJWTAttachment(o, presentationFormat))).getOrElse(Seq.empty),
       goalCode,
       goal,
       expirationDuration
@@ -336,6 +350,7 @@ private class PresentationServiceImpl(
       proofTypes: Seq[ProofType],
       claimsToDisclose: ast.Json.Obj,
       options: Option[org.hyperledger.identus.pollux.core.model.presentation.Options],
+      presentationFormat: PresentCredentialRequestFormat,
       goalCode: Option[String] = None,
       goal: Option[String] = None,
       expirationDuration: Option[Duration] = None,
@@ -347,7 +362,7 @@ private class PresentationServiceImpl(
       connectionId,
       CredentialFormat.SDJWT,
       proofTypes,
-      attachments = Seq(toSDJWTAttachment(options, claimsToDisclose)),
+      attachments = Seq(toSDJWTAttachment(options, claimsToDisclose, presentationFormat)),
       goalCode,
       goal,
       expirationDuration
@@ -360,6 +375,7 @@ private class PresentationServiceImpl(
       thid: DidCommID,
       connectionId: Option[String],
       presentationRequest: AnoncredPresentationRequestV1,
+      presentationFormat: PresentCredentialRequestFormat,
       goalCode: Option[String] = None,
       goal: Option[String] = None,
       expirationDuration: Option[Duration] = None,
@@ -371,7 +387,7 @@ private class PresentationServiceImpl(
       connectionId,
       CredentialFormat.AnonCreds,
       Seq.empty,
-      Seq(toAnoncredAttachment(presentationRequest)),
+      Seq(toAnoncredAttachment(presentationRequest, presentationFormat)),
       goalCode,
       goal,
       expirationDuration
@@ -749,8 +765,7 @@ private class PresentationServiceImpl(
 
   private def resolveSchema(schemaUri: String): IO[PresentationError, (String, AnoncredSchemaDef)] = {
     for {
-      uri <- ZIO.attempt(new URI(schemaUri)).mapError(e => InvalidSchemaURIError(schemaUri, e))
-      content <- uriDereferencer.dereference(uri).mapError(e => SchemaURIDereferencingError(e))
+      content <- uriResolver.resolve(schemaUri).mapError(e => SchemaURIDereferencingError(e))
       anoncredSchema <-
         AnoncredSchemaSerDesV1.schemaSerDes
           .deserialize(content)
@@ -769,10 +784,9 @@ private class PresentationServiceImpl(
       credentialDefinitionUri: String
   ): IO[PresentationError, (String, AnoncredCredentialDefinition)] = {
     for {
-      uri <- ZIO
-        .attempt(new URI(credentialDefinitionUri))
-        .mapError(e => InvalidCredentialDefinitionURIError(credentialDefinitionUri, e))
-      content <- uriDereferencer.dereference(uri).mapError(e => CredentialDefinitionURIDereferencingError(e))
+      content <- uriResolver
+        .resolve(credentialDefinitionUri)
+        .mapError(e => CredentialDefinitionURIDereferencingError(e))
       _ <-
         PublicCredentialDefinitionSerDesV1.schemaSerDes
           .validate(content)
@@ -1160,30 +1174,36 @@ private class PresentationServiceImpl(
     } yield record
   }
 
-  private def toJWTAttachment(options: Options): AttachmentDescriptor = {
+  private def toJWTAttachment(
+      options: Options,
+      presentationFormat: PresentCredentialRequestFormat
+  ): AttachmentDescriptor = {
     AttachmentDescriptor.buildJsonAttachment(
       payload = PresentationAttachment.build(Some(options)),
-      format = Some(PresentCredentialRequestFormat.JWT.name)
+      format = Some(presentationFormat.name),
+      mediaType = Some("application/json")
     )
   }
 
   private def toSDJWTAttachment(
       options: Option[Options],
-      claimsToDsiclose: ast.Json.Obj
+      claimsToDsiclose: ast.Json.Obj,
+      presentationFormat: PresentCredentialRequestFormat
   ): AttachmentDescriptor = {
     AttachmentDescriptor.buildBase64Attachment(
       mediaType = Some("application/json"),
-      format = Some(PresentCredentialRequestFormat.SDJWT.name),
+      format = Some(presentationFormat.name),
       payload = SDJwtPresentation(options, claimsToDsiclose).toJson.getBytes
     )
   }
 
   private def toAnoncredAttachment(
-      presentationRequest: AnoncredPresentationRequestV1
+      presentationRequest: AnoncredPresentationRequestV1,
+      presentationFormat: PresentCredentialRequestFormat
   ): AttachmentDescriptor = {
     AttachmentDescriptor.buildBase64Attachment(
       mediaType = Some("application/json"),
-      format = Some(PresentCredentialRequestFormat.Anoncred.name),
+      format = Some(presentationFormat.name),
       payload = AnoncredPresentationRequestV1.schemaSerDes.serializeToJsonString(presentationRequest).getBytes()
     )
   }
@@ -1285,7 +1305,7 @@ private class PresentationServiceImpl(
 
 object PresentationServiceImpl {
   val layer: URLayer[
-    URIDereferencer & LinkSecretService & PresentationRepository & CredentialRepository,
+    UriResolver & LinkSecretService & PresentationRepository & CredentialRepository,
     PresentationService
   ] =
     ZLayer.fromFunction(PresentationServiceImpl(_, _, _, _))

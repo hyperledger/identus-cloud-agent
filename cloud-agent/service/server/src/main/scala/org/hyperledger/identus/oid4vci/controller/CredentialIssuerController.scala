@@ -125,10 +125,12 @@ case class CredentialIssuerControllerImpl(
   import CredentialIssuerController.Errors.*
   import OIDCCredentialIssuerService.Errors.*
 
-  private def parseURL(url: String): IO[ErrorResponse, URL] =
+  private def parseAbsoluteURL(url: String): IO[ErrorResponse, URL] =
     ZIO
-      .attempt(URI.create(url).toURL())
+      .attempt(URI.create(url))
       .mapError(ue => badRequest(detail = Some(s"Invalid URL: $url")))
+      .filterOrFail(_.isAbsolute())(badRequest(detail = Some(s"Relative URL '$url' is not allowed")))
+      .map(_.toURL())
 
   private def baseCredentialIssuerUrl(issuerId: UUID): URL =
     URI(s"$agentBaseUrl/oid4vci/issuers/$issuerId").toURL()
@@ -173,7 +175,7 @@ case class CredentialIssuerControllerImpl(
           nonce <- getNonceFromJwt(JWT(jwt))
             .mapError(throwable => badRequestInvalidProof(jwt, throwable.getMessage))
           session <- credentialIssuerService
-            .getIssuanceSessionByNonce(nonce)
+            .getPendingIssuanceSessionByNonce(nonce)
             .mapError(_ => badRequestInvalidProof(jwt, "nonce is not associated to the issuance session"))
           subjectDid <- parseDIDUrlFromKeyId(JWT(jwt))
             .map(_.did)
@@ -240,11 +242,14 @@ case class CredentialIssuerControllerImpl(
       request: NonceRequest
   ): IO[ErrorResponse, NonceResponse] = {
     credentialIssuerService
-      .getIssuanceSessionByIssuerState(request.issuerState)
+      .getPendingIssuanceSessionByIssuerState(request.issuerState)
       .map(session => NonceResponse(session.nonce))
       .mapError(ue =>
         internalServerError(detail = Some(s"Unexpected error while creating credential offer: ${ue.userFacingMessage}"))
       )
+      // Ideally we don't want this here, but this is used by keycloak plugin and error is not bubbled to the user.
+      // We log it manually to help with debugging until we find a better way.
+      .tapError(error => ZIO.logWarning(error.toString()))
   }
 
   override def createCredentialIssuer(
@@ -252,7 +257,7 @@ case class CredentialIssuerControllerImpl(
       request: CreateCredentialIssuerRequest
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialIssuer] =
     for {
-      authServerUrl <- parseURL(request.authorizationServer.url)
+      authServerUrl <- parseAbsoluteURL(request.authorizationServer.url)
       id = request.id.getOrElse(UUID.randomUUID())
       issuerToCreate = PolluxCredentialIssuer(
         id,
@@ -284,7 +289,7 @@ case class CredentialIssuerControllerImpl(
       maybeAuthServerUrl <- ZIO
         .succeed(request.authorizationServer.flatMap(_.url))
         .flatMap {
-          case Some(url) => parseURL(url).asSome
+          case Some(url) => parseAbsoluteURL(url).asSome
           case None      => ZIO.none
         }
       issuer <- issuerMetadataService.updateCredentialIssuer(

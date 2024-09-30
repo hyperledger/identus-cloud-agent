@@ -48,8 +48,8 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
     /*DIDSecretStorageError | PresentationError | CredentialServiceError | BackgroundJobError | TransportError | */
     CastorDIDResolutionError | GetManagedDIDError | Failure
 
-  private type RESOURCES = COMMON_RESOURCES & CredentialService & JwtDidResolver & DIDService & AppConfig &
-    MESSAGING_RESOURCES
+  private type RESOURCES = COMMON_RESOURCES & CredentialService & JwtDidResolver & UriResolver & DIDService &
+    AppConfig & MESSAGING_RESOURCES
 
   private type COMMON_RESOURCES = PresentationService & DIDNonSecretStorage & ManagedDIDService
 
@@ -639,14 +639,15 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       ] = {
         val result =
           credentialFormat match {
-            case CredentialFormat.JWT       => handleJWT(id, credentialsToUse, requestPresentation)
-            case CredentialFormat.SDJWT     => handleSDJWT(id, credentialsToUse, requestPresentation)
+            case CredentialFormat.JWT       => handle_JWT_VC(id, credentialsToUse, requestPresentation)
+            case CredentialFormat.SDJWT     => handle_SD_JWT_VC(id, credentialsToUse, requestPresentation)
             case CredentialFormat.AnonCreds => handleAnoncred(id, maybeCredentialsToUseJson, requestPresentation)
           }
         result @@ metric
       }
 
-      private def handleJWT(
+      /** prover presentation pending to generated flow */
+      private def handle_JWT_VC(
           id: DidCommID,
           credentialsToUse: Option[List[String]],
           requestPresentation: RequestPresentation
@@ -654,40 +655,36 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         CredentialService & DIDService & COMMON_RESOURCES,
         ERROR,
         Unit
-      ] = {
-        val proverPresentationPendingToGeneratedFlow = for {
-          walletAccessContext <- ZIO
-            .fromOption(requestPresentation.to)
-            .flatMap(buildWalletAccessContextLayer)
-            .mapError(_ => PresentationError.RequestPresentationMissingField(id.value, "recipient"))
-          _ <- for {
-            presentationService <- ZIO.service[PresentationService]
-            prover <- createPrismDIDIssuerFromPresentationCredentials(id, credentialsToUse.getOrElse(Nil))
-              .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-            presentation <-
-              for {
-                presentationPayload <-
-                  presentationService
-                    .createJwtPresentationPayloadFromRecord(
-                      id,
-                      prover,
-                      Instant.now()
-                    )
-                    .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-                signedJwtPresentation = JwtPresentation.toEncodedJwt(
-                  presentationPayload.toW3CPresentationPayload,
-                  prover
-                )
-                presentation <- createPresentation(id, requestPresentation, signedJwtPresentation)
-              } yield presentation
-            _ <- presentationService
-              .markPresentationGenerated(id, presentation)
-              .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-          } yield ()
+      ] = for {
+        walletAccessContext <- ZIO
+          .fromOption(requestPresentation.to)
+          .flatMap(buildWalletAccessContextLayer)
+          .mapError(_ => PresentationError.RequestPresentationMissingField(id.value, "recipient"))
+        _ <- for {
+          presentationService <- ZIO.service[PresentationService]
+          prover <- createPrismDIDIssuerFromPresentationCredentials(id, credentialsToUse.getOrElse(Nil))
+            .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+          presentation <-
+            for {
+              presentationPayload <-
+                presentationService
+                  .createJwtPresentationPayloadFromRecord(
+                    id,
+                    prover,
+                    Instant.now()
+                  )
+                  .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+              signedJwtPresentation = JwtPresentation.toEncodedJwt(
+                presentationPayload.toW3CPresentationPayload,
+                prover
+              )
+              presentation <- createPresentation(id, requestPresentation, signedJwtPresentation)
+            } yield presentation
+          _ <- presentationService
+            .markPresentationGenerated(id, presentation)
+            .provideSomeLayer(ZLayer.succeed(walletAccessContext))
         } yield ()
-
-        proverPresentationPendingToGeneratedFlow
-      }
+      } yield ()
 
       private def createPresentation(
           id: DidCommID,
@@ -706,11 +703,18 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
             goal_code = requestPresentation.body.goal_code,
             comment = requestPresentation.body.comment
           ),
-          attachments = Seq(
+          attachments = requestPresentation.attachments.map(attachment =>
             AttachmentDescriptor
               .buildBase64Attachment(
                 payload = signedJwtPresentation.value.getBytes(),
-                mediaType = Some(PresentCredentialFormat.JWT.name)
+                mediaType = attachment.media_type,
+                format = attachment.format.map {
+                  case PresentCredentialRequestFormat.JWT.name => PresentCredentialFormat.JWT.name
+                  case format =>
+                    throw throw RuntimeException(
+                      s"Unexpected PresentCredentialRequestFormat=$format. Expecting: ${PresentCredentialRequestFormat.JWT.name}"
+                    )
+                }
               )
           ),
           thid = requestPresentation.thid.orElse(Some(requestPresentation.id)),
@@ -719,7 +723,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         )
       }
 
-      private def handleSDJWT(
+      private def handle_SD_JWT_VC(
           id: DidCommID,
           credentialsToUse: Option[List[String]],
           requestPresentation: RequestPresentation
@@ -810,16 +814,18 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           credentialRecordUuid <- ZIO
             .attempt(DidCommID(credentialRecordId))
             .mapError(_ => PresentationError.NotValidDidCommID(credentialRecordId))
-          vcSubjectId <- credentialService
+          issueCredentialRecord <- credentialService
             .findById(credentialRecordUuid)
             .someOrFail(CredentialServiceError.RecordNotFound(credentialRecordUuid))
-            .map(_.subjectId)
-            .someOrElseZIO(ZIO.dieMessage(s"VC SubjectId not found in credential record: $credentialRecordUuid"))
+          vcSubjectId <- issueCredentialRecord.subjectId match
+            case None        => ZIO.dieMessage(s"VC SubjectId not found in credential record: $credentialRecordUuid")
+            case Some(value) => ZIO.succeed(value)
           proverDID <- ZIO
             .fromEither(PrismDID.fromString(vcSubjectId))
             .mapError(e => CredentialServiceError.UnsupportedDidFormat(vcSubjectId))
           longFormPrismDID <- getLongForm(proverDID, true)
-          jwtIssuer <- createJwtIssuer(longFormPrismDID, VerificationRelationship.Authentication)
+          mKidIssuer = issueCredentialRecord.keyId
+          jwtIssuer <- createJwtVcIssuer(longFormPrismDID, VerificationRelationship.Authentication, mKidIssuer)
         } yield jwtIssuer
       }
 
@@ -1029,7 +1035,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           credentialFormat: CredentialFormat,
           invitation: Option[Invitation]
       ): ZIO[
-        AppConfig & JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
+        AppConfig & JwtDidResolver & UriResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
         Failure,
         Unit
       ] = {
@@ -1063,7 +1069,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           presentation: Presentation,
           invitation: Option[Invitation]
       ): ZIO[
-        AppConfig & JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
+        AppConfig & JwtDidResolver & UriResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
         Failure,
         Unit
       ] = {
@@ -1108,28 +1114,12 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                   // https://www.w3.org/TR/vc-data-model/#proofs-signatures-0
                   // A proof is typically attached to a verifiable presentation for authentication purposes
                   // and to a verifiable credential as a method of assertion.
-                  httpLayer <- ZIO.service[HttpClient]
-                  httpUrlResolver = new UriResolver {
-                    override def resolve(uri: String): IO[GenericUriResolverError, String] = {
-                      val res = HttpClient
-                        .get(uri)
-                        .map(x => x.bodyAsString)
-                        .provideSomeLayer(ZLayer.succeed(httpLayer))
-                      res.mapError(err => SchemaSpecificResolutionError("http", err))
-                    }
-                  }
-                  genericUriResolver = GenericUriResolver(
-                    Map(
-                      "data" -> DataUrlResolver(),
-                      "http" -> httpUrlResolver,
-                      "https" -> httpUrlResolver
-                    )
-                  )
+                  uriResolver <- ZIO.service[UriResolver]
                   result <- JwtPresentation
                     .verify(
                       JWT(base64Decoded),
                       verificationConfig.toPresentationVerificationOptions()
-                    )(didResolverService, genericUriResolver)(clock)
+                    )(didResolverService, uriResolver)(clock)
                     .mapError(error => PresentationError.PresentationVerificationError(error.mkString))
                 } yield result
 

@@ -18,6 +18,11 @@ import org.hyperledger.identus.agent.walletapi.sql.{
 }
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.controller.{DIDControllerImpl, DIDRegistrarControllerImpl}
+import org.hyperledger.identus.castor.core.model.did.{
+  Service as DidDocumentService,
+  ServiceEndpoint as DidDocumentServiceEndpoint,
+  ServiceType as DidDocumentServiceType
+}
 import org.hyperledger.identus.castor.core.service.DIDServiceImpl
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
 import org.hyperledger.identus.connect.controller.ConnectionControllerImpl
@@ -46,12 +51,15 @@ import org.hyperledger.identus.pollux.credentialschema.controller.{
   CredentialSchemaControllerImpl,
   VerificationPolicyControllerImpl
 }
+import org.hyperledger.identus.pollux.prex.controller.PresentationExchangeControllerImpl
+import org.hyperledger.identus.pollux.prex.PresentationDefinitionValidatorImpl
 import org.hyperledger.identus.pollux.sql.repository.{
   JdbcCredentialDefinitionRepository,
   JdbcCredentialRepository,
   JdbcCredentialSchemaRepository,
   JdbcCredentialStatusListRepository,
   JdbcOID4VCIIssuerMetadataRepository,
+  JdbcPresentationExchangeRepository,
   JdbcPresentationRepository,
   JdbcVerificationPolicyRepository,
   Migrations as PolluxMigrations
@@ -139,6 +147,24 @@ object MainApp extends ZIOAppDefault {
       |""".stripMargin)
         .ignore
 
+      appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
+      // these services are added to any DID document by default when they are created.
+      defaultDidDocumentServices = Set(
+        DidDocumentService(
+          id = appConfig.agent.httpEndpoint.serviceName,
+          serviceEndpoint = DidDocumentServiceEndpoint
+            .Single(
+              DidDocumentServiceEndpoint.UriOrJsonEndpoint
+                .Uri(
+                  DidDocumentServiceEndpoint.UriValue
+                    .fromString(appConfig.agent.httpEndpoint.publicEndpointUrl.toString)
+                    .toOption
+                    .get // This will fail if URL is invalid, which will prevent app from starting since public endpoint in config is invalid
+                )
+            ),
+          `type` = DidDocumentServiceType.Single(DidDocumentServiceType.Name.fromStringUnsafe("LinkedResourceV1"))
+        )
+      )
       _ <- preMigrations
       _ <- migrations
 
@@ -169,12 +195,14 @@ object MainApp extends ZIOAppDefault {
           WalletManagementControllerImpl.layer,
           EventControllerImpl.layer,
           DIDCommControllerImpl.layer,
+          PresentationExchangeControllerImpl.layer,
           // domain
           AppModule.apolloLayer,
           AppModule.didJwtResolverLayer,
           DIDOperationValidator.layer(),
           DIDResolver.layer,
-          HttpURIDereferencerImpl.layer,
+          GenericUriResolverImpl.layer,
+          PresentationDefinitionValidatorImpl.layer,
           // service
           ConnectionServiceImpl.layer >>> ConnectionServiceNotifier.layer,
           CredentialSchemaServiceImpl.layer,
@@ -183,11 +211,12 @@ object MainApp extends ZIOAppDefault {
           LinkSecretServiceImpl.layer >>> CredentialServiceImpl.layer >>> CredentialServiceNotifier.layer,
           DIDServiceImpl.layer,
           EntityServiceImpl.layer,
-          ManagedDIDServiceWithEventNotificationImpl.layer,
+          ZLayer.succeed(defaultDidDocumentServices) >>> ManagedDIDServiceWithEventNotificationImpl.layer,
           LinkSecretServiceImpl.layer >>> PresentationServiceImpl.layer >>> PresentationServiceNotifier.layer,
           VerificationPolicyServiceImpl.layer,
           WalletManagementServiceImpl.layer,
           VcVerificationServiceImpl.layer,
+          PresentationExchangeServiceImpl.layer,
           // authentication
           AppModule.builtInAuthenticatorLayer,
           AppModule.keycloakAuthenticatorLayer,
@@ -211,6 +240,7 @@ object MainApp extends ZIOAppDefault {
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcCredentialDefinitionRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcPresentationRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcOID4VCIIssuerMetadataRepository.layer,
+          RepoModule.polluxContextAwareTransactorLayer ++ RepoModule.polluxTransactorLayer >>> JdbcPresentationExchangeRepository.layer,
           RepoModule.polluxContextAwareTransactorLayer >>> JdbcVerificationPolicyRepository.layer,
           // oidc
           CredentialIssuerControllerImpl.layer,

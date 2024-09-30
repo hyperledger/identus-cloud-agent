@@ -1,7 +1,13 @@
 package org.hyperledger.identus.shared.http
 
-import io.lemonlabs.uri.{DataUrl, Uri, Url, Urn}
+import io.lemonlabs.uri.{Uri, Url, Urn}
+import org.hyperledger.identus.shared.models.{Failure, PrismEnvelopeData, StatusCode}
+import org.hyperledger.identus.shared.utils.Base64Utils
 import zio.*
+import zio.json.*
+
+import scala.util
+import scala.util.Try
 
 trait UriResolver {
 
@@ -12,41 +18,54 @@ trait UriResolver {
 class GenericUriResolver(resolvers: Map[String, UriResolver]) extends UriResolver {
 
   override def resolve(uri: String): IO[GenericUriResolverError, String] = {
-    val parsedUri = Uri.parse(uri)
-    parsedUri match
-      case url: Url =>
-        url.schemeOption.fold(ZIO.fail(InvalidUri(uri)))(schema =>
-          resolvers.get(schema).fold(ZIO.fail(UnsupportedUriSchema(schema)))(resolver => resolver.resolve(uri))
-        )
+    val parsedUri = Uri.parseTry(uri)
 
-      case Urn(path) => ZIO.fail(InvalidUri(uri)) // Must be a URL
+    ZIO.debug(s"Resolving resource from uri: $uri") *>
+      ZIO.fromTry(parsedUri).mapError(_ => InvalidUri(uri)).flatMap {
+        case url: Url =>
+          url.schemeOption.fold(ZIO.fail(InvalidUri(uri)))(schema =>
+            resolvers.get(schema).fold(ZIO.fail(UnsupportedUriSchema(schema))) { resolver =>
+              resolver.resolve(uri).flatMap { res =>
+                schema match
+                  case "did" =>
+                    res.fromJson[PrismEnvelopeData] match
+                      case Right(env) =>
+                        ZIO
+                          .fromTry(Try(Base64Utils.decodeUrlToString(env.resource)))
+                          .mapError(_ => DidUriResponseNotEnvelope(uri))
+                      case Left(err) =>
+                        ZIO.debug(s"Failed to parse response as PrismEnvelope: $err") *>
+                          ZIO.debug("Falling back to returning the response as is") *>
+                          ZIO.succeed(res)
+                  case _ => ZIO.succeed(res)
+              }
+            }
+          )
+
+        case Urn(path) => ZIO.fail(InvalidUri(uri)) // Must be a URL
+      }
+
   }
 
 }
 
-class DataUrlResolver extends UriResolver {
-  override def resolve(dataUrl: String): IO[GenericUriResolverError, String] = {
-
-    DataUrl.parseOption(dataUrl).fold(ZIO.fail(InvalidUri(dataUrl))) { url =>
-      ZIO.succeed(String(url.data, url.mediaType.charset))
-    }
-
-  }
-
-}
-
-sealed trait GenericUriResolverError {
+trait GenericUriResolverError(val statusCode: StatusCode, val userFacingMessage: String) extends Failure {
+  override val namespace: String = "UriResolver"
   def toThrowable: Throwable = {
     this match
       case InvalidUri(uri)              => new RuntimeException(s"Invalid URI: $uri")
       case UnsupportedUriSchema(schema) => new RuntimeException(s"Unsupported URI schema: $schema")
-      case SchemaSpecificResolutionError(schema, error) =>
-        new RuntimeException(s"Error resolving ${schema} URL: ${error.getMessage}")
   }
 }
 
-case class InvalidUri(uri: String) extends GenericUriResolverError
+case class DidUriResponseNotEnvelope(uri: String)
+    extends GenericUriResolverError(
+      StatusCode.UnprocessableContent,
+      s"The response of DID uri resolution was not prism envelope: uri=[$uri]"
+    )
 
-case class UnsupportedUriSchema(schema: String) extends GenericUriResolverError
+case class InvalidUri(uri: String)
+    extends GenericUriResolverError(StatusCode.UnprocessableContent, s"The URI to dereference is invalid: uri=[$uri]")
 
-case class SchemaSpecificResolutionError(schema: String, error: Throwable) extends GenericUriResolverError
+case class UnsupportedUriSchema(schema: String)
+    extends GenericUriResolverError(StatusCode.UnprocessableContent, s"Unsupported URI schema: $schema")

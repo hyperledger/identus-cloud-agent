@@ -50,7 +50,7 @@ class ManageIssuerSteps {
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
         )
         val matchedIssuers = SerenityRest.lastResponse().get<CredentialIssuerPage>().contents!!
-            .filter { it.id == credentialIssuer.id }
+            .filter { it.id.toString() == credentialIssuer.id }
         issuer.attemptsTo(
             Ensure.that(matchedIssuers).hasSize(1),
         )
@@ -102,7 +102,7 @@ class ManageIssuerSteps {
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
         )
         val updatedIssuer = SerenityRest.lastResponse().get<CredentialIssuerPage>().contents!!
-            .find { it.id == credentialIssuer.id }!!
+            .find { it.id.toString() == credentialIssuer.id }!!
         issuer.attemptsTo(
             Ensure.that(updatedIssuer.authorizationServerUrl).isEqualTo(UPDATE_AUTH_SERVER_URL),
         )
@@ -129,7 +129,7 @@ class ManageIssuerSteps {
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
         )
         val matchedIssuers = SerenityRest.lastResponse().get<CredentialIssuerPage>().contents!!
-            .filter { it.id == credentialIssuer.id }
+            .filter { it.id.toString() == credentialIssuer.id }
         issuer.attemptsTo(
             Ensure.that(matchedIssuers).isEmpty(),
         )

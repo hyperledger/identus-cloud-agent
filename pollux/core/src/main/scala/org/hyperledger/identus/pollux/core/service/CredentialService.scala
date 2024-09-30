@@ -25,8 +25,9 @@ trait CredentialService {
   def createJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: Option[DidId],
+      kidIssuer: Option[KeyId],
       thid: DidCommID,
-      maybeSchemaId: Option[String],
+      maybeSchemaIds: Option[List[String]],
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
@@ -40,8 +41,9 @@ trait CredentialService {
   def createSDJWTIssueCredentialRecord(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: Option[DidId],
+      kidIssuer: Option[KeyId],
       thid: DidCommID,
-      maybeSchemaId: Option[String],
+      maybeSchemaIds: Option[List[String]],
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
@@ -131,7 +133,7 @@ trait CredentialService {
 
   def generateJWTCredential(
       recordId: DidCommID,
-      statusListRegistryUrl: String,
+      statusListRegistryServiceName: String,
   ): ZIO[WalletAccessContext, RecordNotFound | CredentialRequestValidationFailed, IssueCredentialRecord]
 
   def generateSDJWTCredential(

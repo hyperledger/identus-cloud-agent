@@ -44,7 +44,7 @@ case class DIDDocumentMetadata(
     created: Option[Instant] = Option.empty,
     updated: Option[Instant] = Option.empty,
     deactivated: Option[Boolean] = Option.empty,
-    versionId: Option[Instant] = Option.empty,
+    versionId: Option[Instant] = Option.empty, // TODO: this probably should not be an instant, it should be a string
     nextUpdate: Option[Instant] = Option.empty,
     nextVersionId: Option[Instant] = Option.empty,
     equivalentId: Option[Instant] = Option.empty,

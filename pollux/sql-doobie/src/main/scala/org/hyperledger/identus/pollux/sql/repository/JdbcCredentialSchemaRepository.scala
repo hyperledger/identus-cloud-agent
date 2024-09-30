@@ -3,6 +3,7 @@ package org.hyperledger.identus.pollux.sql.repository
 import doobie.*
 import doobie.implicits.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.core.repository.{CredentialSchemaRepository, Repository}
 import org.hyperledger.identus.pollux.core.repository.Repository.*
 import org.hyperledger.identus.pollux.sql.model.db.{CredentialSchema as CredentialSchemaRow, CredentialSchemaSql}
@@ -27,9 +28,9 @@ case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: 
     )
   }
 
-  override def findByGuid(guid: UUID): UIO[Option[CredentialSchema]] = {
+  override def findByGuid(guid: UUID, resolutionMethod: ResourceResolutionMethod): UIO[Option[CredentialSchema]] = {
     CredentialSchemaSql
-      .findByGUID(guid)
+      .findByGUID(guid, resolutionMethod)
       .transact(xb)
       .orDie
       .map(
@@ -38,6 +39,7 @@ case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: 
       )
   }
 
+  // NOTE: this function is not used anywhere
   override def update(cs: CredentialSchema): URIO[WalletAccessContext, CredentialSchema] = {
     ZIO.serviceWithZIO[WalletAccessContext](ctx =>
       CredentialSchemaSql
@@ -48,13 +50,19 @@ case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: 
     )
   }
 
-  def getAllVersions(id: UUID, author: String): URIO[WalletAccessContext, List[String]] = {
+  def getAllVersions(
+      id: UUID,
+      author: String,
+      resolutionMethod: ResourceResolutionMethod
+  ): URIO[WalletAccessContext, List[CredentialSchema]] = {
     CredentialSchemaSql
-      .getAllVersions(id, author)
+      .getAllVersions(id, author, resolutionMethod)
       .transactWallet(xa)
       .orDie
+      .map(_.map(CredentialSchemaRow.toModel))
   }
 
+  // NOTE: this function is not used anywhere
   override def delete(guid: UUID): URIO[WalletAccessContext, CredentialSchema] = {
     CredentialSchemaSql
       .delete(guid)
@@ -81,7 +89,8 @@ case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: 
           versionOpt = query.filter.version,
           tagOpt = query.filter.tags,
           offset = query.skip,
-          limit = query.limit
+          limit = query.limit,
+          resolutionMethod = query.filter.resolutionMethod
         )
         .transactWallet(xa)
         .orDie
@@ -92,7 +101,8 @@ case class JdbcCredentialSchemaRepository(xa: Transactor[ContextAwareTask], xb: 
           authorOpt = query.filter.author,
           nameOpt = query.filter.name,
           versionOpt = query.filter.version,
-          tagOpt = query.filter.tags
+          tagOpt = query.filter.tags,
+          resolutionMethod = query.filter.resolutionMethod
         )
         .transactWallet(xa)
         .orDie

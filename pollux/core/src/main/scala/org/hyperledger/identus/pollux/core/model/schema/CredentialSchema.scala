@@ -8,7 +8,8 @@ import org.hyperledger.identus.pollux.core.model.schema.`type`.{
   CredentialSchemaType
 }
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
-import org.hyperledger.identus.pollux.core.service.URIDereferencer
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.json.{JsonSchemaValidator, JsonSchemaValidatorImpl}
 import zio.*
 import zio.json.*
@@ -52,6 +53,7 @@ case class CredentialSchema(
     tags: Seq[String],
     description: String,
     `type`: String,
+    resolutionMethod: ResourceResolutionMethod,
     schema: Schema
 ) {
   def longId = CredentialSchema.makeLongId(author, id, version)
@@ -65,13 +67,13 @@ object CredentialSchema {
   def makeGUID(author: String, id: UUID, version: String) =
     UUID.nameUUIDFromBytes(makeLongId(author, id, version).getBytes)
 
-  def make(in: Input): UIO[CredentialSchema] = {
+  def make(in: Input, resolutionMethod: ResourceResolutionMethod): UIO[CredentialSchema] = {
     for {
       id <- zio.Random.nextUUID
-      cs <- make(id, in)
+      cs <- make(id, in, resolutionMethod)
     } yield cs
   }
-  def make(id: UUID, in: Input): UIO[CredentialSchema] = {
+  def make(id: UUID, in: Input, resolutionMethod: ResourceResolutionMethod): UIO[CredentialSchema] = {
     for {
       ts <- zio.Clock.currentDateTime.map(
         _.atZoneSameInstant(ZoneOffset.UTC).toOffsetDateTime
@@ -87,6 +89,7 @@ object CredentialSchema {
       tags = in.tags,
       description = in.description,
       `type` = in.`type`,
+      resolutionMethod = resolutionMethod,
       schema = in.schema
     )
   }
@@ -108,7 +111,8 @@ object CredentialSchema {
       author: Option[String] = None,
       name: Option[String] = None,
       version: Option[String] = None,
-      tags: Option[String] = None
+      tags: Option[String] = None,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   )
 
   case class FilteredEntries(entries: Seq[CredentialSchema], count: Long, totalCount: Long)
@@ -116,9 +120,14 @@ object CredentialSchema {
   given JsonEncoder[CredentialSchema] = DeriveJsonEncoder.gen[CredentialSchema]
   given JsonDecoder[CredentialSchema] = DeriveJsonDecoder.gen[CredentialSchema]
 
-  def resolveJWTSchema(uri: URI, uriDereferencer: URIDereferencer): IO[CredentialSchemaParsingError, Json] = {
+  def resolveJWTSchema(
+      uri: URI,
+      uriResolver: UriResolver
+  ): IO[CredentialSchemaParsingError | SchemaDereferencingError, Json] = {
     for {
-      content <- uriDereferencer.dereference(uri).orDieAsUnmanagedFailure
+      content <- uriResolver
+        .resolve(uri.toString)
+        .mapError(SchemaDereferencingError(_))
       json <- ZIO
         .fromEither(content.fromJson[Json])
         .mapError(error => CredentialSchemaParsingError(error))
@@ -127,11 +136,11 @@ object CredentialSchema {
 
   def validSchemaValidator(
       schemaId: String,
-      uriDereferencer: URIDereferencer
-  ): IO[InvalidURI | CredentialSchemaParsingError, JsonSchemaValidator] = {
+      uriResolver: UriResolver
+  ): IO[InvalidURI | CredentialSchemaParsingError | SchemaDereferencingError, JsonSchemaValidator] = {
     for {
       uri <- ZIO.attempt(new URI(schemaId)).mapError(_ => InvalidURI(schemaId))
-      json <- resolveJWTSchema(uri, uriDereferencer)
+      json <- resolveJWTSchema(uri, uriResolver)
       schemaValidator <- JsonSchemaValidatorImpl
         .from(json)
         .orElse(
@@ -148,10 +157,13 @@ object CredentialSchema {
   def validateJWTCredentialSubject(
       schemaId: String,
       credentialSubject: String,
-      uriDereferencer: URIDereferencer
-  ): IO[InvalidURI | CredentialSchemaParsingError | CredentialSchemaValidationError, Unit] = {
+      uriResolver: UriResolver
+  ): IO[
+    InvalidURI | CredentialSchemaParsingError | CredentialSchemaValidationError | SchemaDereferencingError,
+    Unit
+  ] = {
     for {
-      schemaValidator <- validSchemaValidator(schemaId, uriDereferencer)
+      schemaValidator <- validSchemaValidator(schemaId, uriResolver)
       _ <- schemaValidator.validate(credentialSubject).mapError(CredentialSchemaValidationError.apply)
     } yield ()
   }
@@ -159,11 +171,10 @@ object CredentialSchema {
   def validateAnonCredsClaims(
       schemaId: String,
       claims: String,
-      uriDereferencer: URIDereferencer
+      uriResolver: UriResolver
   ): IO[InvalidURI | CredentialSchemaParsingError | VCClaimsParsingError | VCClaimValidationError, Unit] = {
     for {
-      uri <- ZIO.attempt(new URI(schemaId)).mapError(_ => InvalidURI(schemaId))
-      content <- uriDereferencer.dereference(uri).orDieAsUnmanagedFailure
+      content <- uriResolver.resolve(schemaId).orDieAsUnmanagedFailure
       validAttrNames <-
         AnoncredSchemaSerDesV1.schemaSerDes
           .deserialize(content)

@@ -1,7 +1,7 @@
 package org.hyperledger.identus.didcomm.controller
 
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.shared.models.{Failure, StatusCode}
+import org.hyperledger.identus.shared.models.{Failure, KeyId, StatusCode}
 
 sealed trait DIDCommControllerError extends Failure {
   override def namespace = "DIDCommControllerError"
@@ -34,8 +34,9 @@ object DIDCommControllerError {
     override def userFacingMessage: String = s"The Peer DID was not found in this agent: ${did.value}"
   }
 
-  final case class PeerDIDKeyNotFoundError(did: DidId, keyId: String) extends DIDCommControllerError {
+  final case class PeerDIDKeyNotFoundError(did: DidId, keyId: KeyId) extends DIDCommControllerError {
     override def statusCode: StatusCode = StatusCode.UnprocessableContent
-    override def userFacingMessage: String = s"The Peer DID does not contain the required key: DID=$did, keyId=$keyId"
+    override def userFacingMessage: String =
+      s"The Peer DID does not contain the required key: DID=${did.value}, keyId=${keyId.value}"
   }
 }

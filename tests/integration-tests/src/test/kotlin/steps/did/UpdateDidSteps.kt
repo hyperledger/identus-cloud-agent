@@ -1,5 +1,7 @@
 package steps.did
 
+import com.google.gson.JsonElement
+import com.google.gson.JsonPrimitive
 import interactions.Get
 import interactions.Post
 import interactions.body
@@ -51,7 +53,7 @@ class UpdateDidSteps {
             addService = Service(
                 id = serviceId,
                 type = listOf("LinkedDomains"),
-                serviceEndpoint = Json("https://service.com/"),
+                serviceEndpoint = JsonPrimitive("https://service.com/") as JsonElement,
             ),
         )
         actor.remember("newServiceId", serviceId)
@@ -77,7 +79,7 @@ class UpdateDidSteps {
             updateService = UpdateManagedDIDServiceAction(
                 id = serviceId,
                 type = listOf("LinkedDomains"),
-                serviceEndpoint = Json(newServiceUrl),
+                serviceEndpoint = JsonPrimitive(newServiceUrl) as JsonElement,
             ),
         )
 
@@ -124,7 +126,8 @@ class UpdateDidSteps {
                     )
                     val didKey = "${actor.recall<String>("shortFormDid")}#$newDidKeyId"
                     val didDocument = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!
-                    val verificationMethodNotPresent = didDocument.verificationMethod!!.map { it.id }.none { it == didKey }
+                    val verificationMethodNotPresent =
+                        didDocument.verificationMethod!!.map { it.id }.none { it == didKey }
 
                     verificationMethodNotPresent && when (purpose) {
                         Purpose.ASSERTION_METHOD -> didDocument.assertionMethod!!.none { it == didKey }
@@ -189,7 +192,16 @@ class UpdateDidSteps {
                         Get.resource("/dids/${actor.recall<String>("shortFormDid")}"),
                     )
                     val service = SerenityRest.lastResponse().get<DIDResolutionResult>().didDocument!!.service!!
-                    service.any { it.serviceEndpoint.value.contains(serviceUrl) }
+                    service.any { serviceEntry ->
+                        val serviceEndpoint = serviceEntry.serviceEndpoint!!
+                        if (serviceEndpoint.isJsonPrimitive) {
+                            serviceEndpoint.asString.contains(serviceUrl)
+                        } else if (serviceEndpoint.isJsonArray) {
+                            serviceEndpoint.asJsonArray.any { it.asString.contains(serviceUrl) }
+                        } else {
+                            false
+                        }
+                    }
                 },
                 equalTo(true),
             ),

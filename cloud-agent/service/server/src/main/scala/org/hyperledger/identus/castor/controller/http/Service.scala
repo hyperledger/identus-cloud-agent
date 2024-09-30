@@ -1,15 +1,15 @@
 package org.hyperledger.identus.castor.controller.http
 
-import io.circe.Json
-import org.hyperledger.identus.api.http.codec.CirceJsonInterop
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.castor.controller.http.Service.annotations
 import org.hyperledger.identus.castor.core.model.{did as castorDomain, ProtoModelHelper}
 import org.hyperledger.identus.castor.core.model.did.w3c
+import org.hyperledger.identus.shared.json.JsonInterop
 import org.hyperledger.identus.shared.utils.Traverse.*
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{description, encodedExample}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
+import zio.json.ast.Json
 
 import scala.language.implicitConversions
 
@@ -48,7 +48,7 @@ object Service {
         extends Annotation[Json](
           description =
             "The service endpoint. Can contain multiple possible values as described in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did)",
-          example = Json.fromString("https://example.com")
+          example = Json.Str("https://example.com")
         )
   }
 
@@ -62,7 +62,7 @@ object Service {
     Service(
       id = service.id,
       `type` = service.`type`,
-      serviceEndpoint = ServiceEndpoint.fromJson(service.serviceEndpoint)
+      serviceEndpoint = ServiceEndpoint.fromJson(JsonInterop.toZioJsonAst(service.serviceEndpoint))
     )
 
   extension (service: Service) {
@@ -93,12 +93,13 @@ object ServiceType {
       case Single(value)    => Left(value)
       case Multiple(values) => Right(values.toArray)
     }
-  given decoder: JsonDecoder[ServiceType] = JsonDecoder.string
-    .orElseEither(JsonDecoder.array[String])
-    .map[ServiceType] {
-      case Left(value)   => Single(value)
-      case Right(values) => Multiple(values.toSeq)
-    }
+
+  given decoder: JsonDecoder[ServiceType] = JsonDecoder[String]
+    .map(Single.apply)
+    .orElse(
+      JsonDecoder[Seq[String]].map(Multiple.apply)
+    )
+
   given schema: Schema[ServiceType] = Schema
     .schemaForEither(Schema.schemaForString, Schema.schemaForArray[String])
     .map[ServiceType] {
@@ -139,9 +140,9 @@ object ServiceType {
 opaque type ServiceEndpoint = Json
 
 object ServiceEndpoint {
-  given encoder: JsonEncoder[ServiceEndpoint] = CirceJsonInterop.encodeJson
-  given decoder: JsonDecoder[ServiceEndpoint] = CirceJsonInterop.decodeJson
-  given schema: Schema[ServiceEndpoint] = CirceJsonInterop.schemaJson
+  given encoder: JsonEncoder[ServiceEndpoint] = Json.encoder
+  given decoder: JsonDecoder[ServiceEndpoint] = Json.decoder
+  given schema: Schema[ServiceEndpoint] = Schema.any[ServiceEndpoint]
 
   def fromJson(json: Json): ServiceEndpoint = json
 
@@ -149,7 +150,7 @@ object ServiceEndpoint {
     def toDomain: Either[String, castorDomain.ServiceEndpoint] = {
       val stringEncoded = serviceEndpoint.asString match {
         case Some(s) => s
-        case None    => serviceEndpoint.noSpaces
+        case None    => serviceEndpoint.toJson
       }
       ProtoModelHelper.parseServiceEndpoint(stringEncoded)
     }

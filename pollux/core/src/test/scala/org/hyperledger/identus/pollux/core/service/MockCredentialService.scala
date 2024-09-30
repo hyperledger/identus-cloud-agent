@@ -22,7 +22,7 @@ object MockCredentialService extends Mock[CredentialService] {
             DidId,
             Option[DidId],
             DidCommID,
-            Option[String],
+            Option[List[String]],
             Json,
             Option[Double],
             Option[Boolean],
@@ -41,7 +41,7 @@ object MockCredentialService extends Mock[CredentialService] {
             DidId,
             Option[DidId],
             DidCommID,
-            Option[String],
+            Option[List[String]],
             Json,
             Option[Double],
             Option[Boolean],
@@ -128,8 +128,9 @@ object MockCredentialService extends Mock[CredentialService] {
       override def createJWTIssueCredentialRecord(
           pairwiseIssuerDID: DidId,
           pairwiseHolderDID: Option[DidId],
+          kidIssuer: Option[KeyId],
           thid: DidCommID,
-          maybeSchemaId: Option[String],
+          maybeSchemaIds: Option[List[String]],
           claims: Json,
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
@@ -144,7 +145,7 @@ object MockCredentialService extends Mock[CredentialService] {
           pairwiseIssuerDID,
           pairwiseHolderDID,
           thid,
-          maybeSchemaId,
+          maybeSchemaIds,
           claims,
           validityPeriod,
           automaticIssuance,
@@ -158,8 +159,9 @@ object MockCredentialService extends Mock[CredentialService] {
       override def createSDJWTIssueCredentialRecord(
           pairwiseIssuerDID: DidId,
           pairwiseHolderDID: Option[DidId],
+          kidIssuer: Option[KeyId],
           thid: DidCommID,
-          maybeSchemaId: Option[String],
+          maybeSchemaIds: Option[List[String]],
           claims: Json,
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
@@ -174,7 +176,7 @@ object MockCredentialService extends Mock[CredentialService] {
           pairwiseIssuerDID,
           pairwiseHolderDID,
           thid,
-          maybeSchemaId,
+          maybeSchemaIds,
           claims,
           validityPeriod,
           automaticIssuance,
@@ -250,9 +252,9 @@ object MockCredentialService extends Mock[CredentialService] {
 
       override def generateJWTCredential(
           recordId: DidCommID,
-          statusListRegistryUrl: String,
+          statusListRegistryServiceName: String,
       ): ZIO[WalletAccessContext, RecordNotFound | CredentialRequestValidationFailed, IssueCredentialRecord] =
-        proxy(GenerateJWTCredential, recordId, statusListRegistryUrl)
+        proxy(GenerateJWTCredential, recordId, statusListRegistryServiceName)
 
       override def generateSDJWTCredential(
           recordId: DidCommID,
