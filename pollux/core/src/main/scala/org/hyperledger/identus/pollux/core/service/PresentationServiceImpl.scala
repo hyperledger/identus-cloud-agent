@@ -19,6 +19,7 @@ import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, Pre
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.pollux.sdjwt.{CredentialCompact, HolderPrivateKey, PresentationCompact, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.messaging.{Producer, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
@@ -26,7 +27,6 @@ import org.hyperledger.identus.shared.utils.Base64Utils
 import zio.*
 import zio.json.*
 
-import java.net.URI
 import java.time.Instant
 import java.util.{Base64 as JBase64, UUID}
 import java.util as ju
@@ -34,7 +34,7 @@ import scala.util.chaining.*
 import scala.util.Try
 
 private class PresentationServiceImpl(
-    uriDereferencer: URIDereferencer,
+    uriResolver: UriResolver,
     linkSecretService: LinkSecretService,
     presentationRepository: PresentationRepository,
     credentialRepository: CredentialRepository,
@@ -247,7 +247,7 @@ private class PresentationServiceImpl(
       )
       presentationPayload <- createAnoncredPresentationPayloadFromCredential(
         issuedCredentials,
-        issuedValidCredentials.flatMap(_.schemaUri),
+        issuedValidCredentials.flatMap(_.schemaUris.getOrElse(List())),
         issuedValidCredentials.flatMap(_.credentialDefinitionUri),
         requestPresentation,
         anoncredCredentialProof.credentialProofs
@@ -781,8 +781,7 @@ private class PresentationServiceImpl(
 
   private def resolveSchema(schemaUri: String): IO[PresentationError, (String, AnoncredSchemaDef)] = {
     for {
-      uri <- ZIO.attempt(new URI(schemaUri)).mapError(e => InvalidSchemaURIError(schemaUri, e))
-      content <- uriDereferencer.dereference(uri).mapError(e => SchemaURIDereferencingError(e))
+      content <- uriResolver.resolve(schemaUri).mapError(e => SchemaURIDereferencingError(e))
       anoncredSchema <-
         AnoncredSchemaSerDesV1.schemaSerDes
           .deserialize(content)
@@ -801,10 +800,9 @@ private class PresentationServiceImpl(
       credentialDefinitionUri: String
   ): IO[PresentationError, (String, AnoncredCredentialDefinition)] = {
     for {
-      uri <- ZIO
-        .attempt(new URI(credentialDefinitionUri))
-        .mapError(e => InvalidCredentialDefinitionURIError(credentialDefinitionUri, e))
-      content <- uriDereferencer.dereference(uri).mapError(e => CredentialDefinitionURIDereferencingError(e))
+      content <- uriResolver
+        .resolve(credentialDefinitionUri)
+        .mapError(e => CredentialDefinitionURIDereferencingError(e))
       _ <-
         PublicCredentialDefinitionSerDesV1.schemaSerDes
           .validate(content)
@@ -1347,7 +1345,7 @@ private class PresentationServiceImpl(
 
 object PresentationServiceImpl {
   val layer: URLayer[
-    URIDereferencer & LinkSecretService & PresentationRepository & CredentialRepository &
+    UriResolver & LinkSecretService & PresentationRepository & CredentialRepository &
       Producer[UUID, WalletIdAndRecordId],
     PresentationService
   ] =

@@ -17,6 +17,7 @@ import org.hyperledger.identus.pollux.core.repository.{
   CredentialStatusListRepositoryInMemory
 }
 import org.hyperledger.identus.pollux.core.service.*
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.vc.jwt.PrismDidResolver
 import org.hyperledger.identus.shared.messaging.kafka.InMemoryMessagingService
 import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
@@ -50,7 +51,7 @@ object OIDCCredentialIssuerServiceSpec
       CredentialRepositoryInMemory.layer,
       CredentialStatusListRepositoryInMemory.layer,
       PrismDidResolver.layer,
-      ResourceURIDereferencerImpl.layer,
+      ResourceUrlResolver.layer,
       credentialDefinitionServiceLayer,
       GenericSecretStorageInMemory.layer,
       LinkSecretServiceImpl.layer,

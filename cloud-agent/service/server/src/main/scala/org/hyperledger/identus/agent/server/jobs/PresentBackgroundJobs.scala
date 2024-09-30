@@ -49,8 +49,8 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
     /*DIDSecretStorageError | PresentationError | CredentialServiceError | BackgroundJobError | TransportError | */
     CastorDIDResolutionError | GetManagedDIDError | Failure
 
-  private type RESOURCES = COMMON_RESOURCES & CredentialService & JwtDidResolver & DIDService & AppConfig &
-    MESSAGING_RESOURCES
+  private type RESOURCES = COMMON_RESOURCES & CredentialService & JwtDidResolver & UriResolver & DIDService &
+    AppConfig & MESSAGING_RESOURCES
 
   private type COMMON_RESOURCES = PresentationService & DIDNonSecretStorage & ManagedDIDService
 
@@ -1041,7 +1041,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           credentialFormat: CredentialFormat,
           invitation: Option[Invitation]
       ): ZIO[
-        AppConfig & JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
+        AppConfig & JwtDidResolver & UriResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
         Failure,
         Unit
       ] = {
@@ -1075,7 +1075,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           presentation: Presentation,
           invitation: Option[Invitation]
       ): ZIO[
-        AppConfig & JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
+        AppConfig & JwtDidResolver & UriResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
         Failure,
         Unit
       ] = {
@@ -1120,28 +1120,12 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                   // https://www.w3.org/TR/vc-data-model/#proofs-signatures-0
                   // A proof is typically attached to a verifiable presentation for authentication purposes
                   // and to a verifiable credential as a method of assertion.
-                  httpLayer <- ZIO.service[HttpClient]
-                  httpUrlResolver = new UriResolver {
-                    override def resolve(uri: String): IO[GenericUriResolverError, String] = {
-                      val res = HttpClient
-                        .get(uri)
-                        .map(x => x.bodyAsString)
-                        .provideSomeLayer(ZLayer.succeed(httpLayer))
-                      res.mapError(err => SchemaSpecificResolutionError("http", err))
-                    }
-                  }
-                  genericUriResolver = GenericUriResolver(
-                    Map(
-                      "data" -> DataUrlResolver(),
-                      "http" -> httpUrlResolver,
-                      "https" -> httpUrlResolver
-                    )
-                  )
+                  uriResolver <- ZIO.service[UriResolver]
                   result <- JwtPresentation
                     .verify(
                       JWT(base64Decoded),
                       verificationConfig.toPresentationVerificationOptions()
-                    )(didResolverService, genericUriResolver)(clock)
+                    )(didResolverService, uriResolver)(clock)
                     .mapError(error => PresentationError.PresentationVerificationError(error.mkString))
                 } yield result
 

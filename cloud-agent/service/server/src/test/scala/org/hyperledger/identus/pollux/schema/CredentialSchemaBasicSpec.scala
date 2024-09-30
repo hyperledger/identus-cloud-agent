@@ -1,6 +1,7 @@
 package org.hyperledger.identus.pollux.schema
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.api.http.ErrorResponse
@@ -69,7 +70,8 @@ object CredentialSchemaBasicSpec extends ZIOSpecDefault with CredentialSchemaTes
       for {
         controller <- ZIO.service[CredentialSchemaController]
         authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-      } yield httpBackend(controller, authenticator)
+        config <- ZIO.service[AppConfig]
+      } yield httpBackend(config, controller, authenticator)
 
     def createSchemaResponseZIO = for {
       backend <- backendZIO

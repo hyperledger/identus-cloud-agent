@@ -99,7 +99,7 @@ class IssueCredentialSteps {
         val issuer = holder.recall<Issuer>("eudiIssuer")
         val authorizedRequest = holder.recall<AuthorizedRequest>("eudiAuthorizedRequest")
         val requestPayload = IssuanceRequestPayload.ConfigurationBased(credentialOffer.credentialConfigurationIdentifiers.first(), null)
-        val submissionOutcome = with(issuer) {
+        val authRequestAndsubmissionOutcome = with(issuer) {
             when (authorizedRequest) {
                 is AuthorizedRequest.NoProofRequired -> throw Exception("Not supported yet")
                 is AuthorizedRequest.ProofRequired -> runBlocking {
@@ -110,7 +110,7 @@ class IssueCredentialSteps {
                 }
             }.getOrThrow()
         }
-        holder.remember("eudiSubmissionOutcome", submissionOutcome)
+        holder.remember("eudiSubmissionOutcome", authRequestAndsubmissionOutcome.second)
     }
 
     @Then("{actor} sees credential issued successfully from CredentialEndpoint")

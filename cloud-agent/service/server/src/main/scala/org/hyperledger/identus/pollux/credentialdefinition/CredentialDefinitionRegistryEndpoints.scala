@@ -9,11 +9,13 @@ import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityL
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
 import org.hyperledger.identus.iam.authentication.oidc.JwtSecurityLogic.jwtAuthHeader
 import org.hyperledger.identus.pollux.credentialdefinition.http.{
+  CredentialDefinitionDidUrlResponsePage,
   CredentialDefinitionInput,
   CredentialDefinitionResponse,
   CredentialDefinitionResponsePage,
   FilterInput
 }
+import org.hyperledger.identus.pollux.PrismEnvelopeResponse
 import sttp.apispec.{ExternalDocumentation, Tag}
 import sttp.model.StatusCode
 import sttp.tapir.{
@@ -52,7 +54,7 @@ object CredentialDefinitionRegistryEndpoints {
 
   val tag = Tag(name = tagName, description = Option(tagDescription), externalDocs = Option(tagExternalDocumentation))
 
-  val createCredentialDefinitionEndpoint: Endpoint[
+  val createCredentialDefinitionHttpUrlEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (RequestContext, CredentialDefinitionInput),
     ErrorResponse,
@@ -79,15 +81,52 @@ object CredentialDefinitionRegistryEndpoints {
       .out(jsonBody[http.CredentialDefinitionResponse])
       .description("Credential definition record")
       .errorOut(basicFailureAndNotFoundAndForbidden)
-      .name("createCredentialDefinition")
-      .summary("Publish new definition to the definition registry")
+      .name("createCredentialDefinitionHttpUrl")
+      .summary("Publish new definition to the definition registry, resolvable by HTTP url")
       .description(
         "Create the new credential definition record with metadata and internal JSON Schema on behalf of Cloud Agent. " +
           "The credential definition will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it."
       )
       .tag(tagName)
 
-  val getCredentialDefinitionByIdEndpoint: PublicEndpoint[
+  val createCredentialDefinitionDidUrlEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (RequestContext, CredentialDefinitionInput),
+    ErrorResponse,
+    CredentialDefinitionResponse,
+    Any
+  ] =
+    endpoint.post
+      .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in("credential-definition-registry" / "definitions" / "did-url")
+      .in(
+        jsonBody[CredentialDefinitionInput]
+          .description(
+            "JSON object required for the credential definition creation"
+          )
+      )
+      .out(
+        statusCode(StatusCode.Created)
+          .description(
+            "The new credential definition record is successfully created"
+          )
+      )
+      .out(
+        jsonBody[http.CredentialDefinitionResponse]
+      ) // We use same response as for HTTP url on DID url for definitions
+      .description("Credential definition record")
+      .errorOut(basicFailureAndNotFoundAndForbidden)
+      .name("createCredentialDefinitionDidUrl")
+      .summary("Publish new definition to the definition registry, resolvable by DID url")
+      .description(
+        "Create the new credential definition record with metadata and internal JSON Schema on behalf of the Cloud Agent. " +
+          "The credential definition will be signed by the keys of Cloud Agent and issued by the DID that corresponds to it."
+      )
+      .tag(tagName)
+
+  val getCredentialDefinitionByIdHttpUrlEndpoint: PublicEndpoint[
     (RequestContext, UUID),
     ErrorResponse,
     CredentialDefinitionResponse,
@@ -102,14 +141,40 @@ object CredentialDefinitionRegistryEndpoints {
       )
       .out(jsonBody[CredentialDefinitionResponse].description("CredentialDefinition found by `guid`"))
       .errorOut(basicFailuresAndNotFound)
-      .name("getCredentialDefinitionById")
+      .name("getCredentialDefinitionByIdHttpUrl")
       .summary("Fetch the credential definition from the registry by `guid`")
       .description(
         "Fetch the credential definition by the unique identifier"
       )
       .tag(tagName)
 
-  val getCredentialDefinitionInnerDefinitionByIdEndpoint: PublicEndpoint[
+  val getCredentialDefinitionByIdDidUrlEndpoint: PublicEndpoint[
+    (RequestContext, UUID),
+    ErrorResponse,
+    PrismEnvelopeResponse,
+    Any
+  ] =
+    endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in(
+        "credential-definition-registry" / "definitions" / "did-url" / path[UUID]("guid").description(
+          "Globally unique identifier of the credential definition record"
+        )
+      )
+      .out(
+        jsonBody[PrismEnvelopeResponse].description(
+          "CredentialDefinition found by `guid`, wrapped in an envelope"
+        )
+      )
+      .errorOut(basicFailuresAndNotFound)
+      .name("getCredentialDefinitionByIdDidUrl")
+      .summary("Fetch the credential definition from the registry by `guid`, wrapped in an envelope")
+      .description(
+        "Fetch the credential definition by the unique identifier, it should have been crated via DID url, otherwise not found error is returned."
+      )
+      .tag(tagName)
+
+  val getCredentialDefinitionInnerDefinitionByIdHttpUrlEndpoint: PublicEndpoint[
     (RequestContext, UUID),
     ErrorResponse,
     zio.json.ast.Json,
@@ -124,16 +189,42 @@ object CredentialDefinitionRegistryEndpoints {
       )
       .out(jsonBody[zio.json.ast.Json].description("CredentialDefinition found by `guid`"))
       .errorOut(basicFailuresAndNotFound)
-      .name("getCredentialDefinitionInnerDefinitionById")
+      .name("getCredentialDefinitionInnerDefinitionByIdHttpUrl")
       .summary("Fetch the inner definition field of the credential definition from the registry by `guid`")
       .description(
         "Fetch the inner definition fields of the credential definition by the unique identifier"
       )
       .tag(tagName)
 
+  val getCredentialDefinitionInnerDefinitionByIdDidUrlEndpoint: PublicEndpoint[
+    (RequestContext, UUID),
+    ErrorResponse,
+    PrismEnvelopeResponse,
+    Any
+  ] =
+    endpoint.get
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in(
+        "credential-definition-registry" / "definitions" / "did-url" / path[UUID]("guid") / "definition".description(
+          "Globally unique identifier of the credential definition record"
+        )
+      )
+      .out(
+        jsonBody[PrismEnvelopeResponse].description("CredentialDefinition found by `guid`")
+      )
+      .errorOut(basicFailuresAndNotFound)
+      .name("getCredentialDefinitionInnerDefinitionByIdDidUrl")
+      .summary(
+        "Fetch the inner definition field of the credential definition from the registry by `guid`, wrapped in an envelope"
+      )
+      .description(
+        "Fetch the inner definition fields of the credential definition by the unique identifier, it should have been crated via DID url, otherwise not found error is returned."
+      )
+      .tag(tagName)
+
   private val credentialDefinitionFilterInput: EndpointInput[http.FilterInput] = EndpointInput.derived[http.FilterInput]
   private val paginationInput: EndpointInput[PaginationInput] = EndpointInput.derived[PaginationInput]
-  val lookupCredentialDefinitionsByQueryEndpoint: Endpoint[
+  val lookupCredentialDefinitionsByQueryHttpUrlEndpoint: Endpoint[
     (ApiKeyCredentials, JwtCredentials),
     (
         RequestContext,
@@ -159,10 +250,43 @@ object CredentialDefinitionRegistryEndpoints {
       .in(query[Option[Order]]("order"))
       .out(jsonBody[CredentialDefinitionResponsePage].description("Collection of CredentialDefinitions records."))
       .errorOut(basicFailures)
-      .name("lookupCredentialDefinitionsByQuery")
+      .name("lookupCredentialDefinitionsByQueryHttpUrl")
       .summary("Lookup credential definitions by indexed fields")
       .description(
         "Lookup credential definitions by `author`, `name`, `tag` parameters and control the pagination by `offset` and `limit` parameters "
+      )
+      .tag(tagName)
+
+  val lookupCredentialDefinitionsByQueryDidUrlEndpoint: Endpoint[
+    (ApiKeyCredentials, JwtCredentials),
+    (
+        RequestContext,
+        FilterInput,
+        PaginationInput,
+        Option[Order]
+    ),
+    ErrorResponse,
+    CredentialDefinitionDidUrlResponsePage,
+    Any
+  ] =
+    endpoint.get
+      .securityIn(apiKeyHeader)
+      .securityIn(jwtAuthHeader)
+      .in(extractFromRequest[RequestContext](RequestContext.apply))
+      .in(
+        "credential-definition-registry" / "definitions" / "did-url".description(
+          "Lookup credential definitions by query"
+        )
+      )
+      .in(credentialDefinitionFilterInput)
+      .in(paginationInput)
+      .in(query[Option[Order]]("order"))
+      .out(jsonBody[CredentialDefinitionDidUrlResponsePage].description("Collection of CredentialDefinitions records."))
+      .errorOut(basicFailures)
+      .name("lookupCredentialDefinitionsByQueryDidUrl")
+      .summary("Lookup credential definitions by indexed fields")
+      .description(
+        "Lookup DID url resolvable credential definitions by `author`, `name`, `tag` parameters and control the pagination by `offset` and `limit` parameters "
       )
       .tag(tagName)
 }

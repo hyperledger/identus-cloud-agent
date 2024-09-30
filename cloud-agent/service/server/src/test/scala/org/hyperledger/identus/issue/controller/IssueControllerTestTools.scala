@@ -61,7 +61,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
 
   lazy val testEnvironmentLayer =
     ZLayer.makeSome[
-      ManagedDIDService & DIDService & CredentialService & ConnectionService,
+      ManagedDIDService & DIDService & CredentialService & CredentialDefinitionService & ConnectionService,
       IssueController & AppConfig & PostgreSQLContainer & AuthenticatorWithAuthZ[BaseEntity]
     ](IssueControllerImpl.layer, configLayer, pgContainerLayer, DefaultEntityAuthenticator.layer)
 

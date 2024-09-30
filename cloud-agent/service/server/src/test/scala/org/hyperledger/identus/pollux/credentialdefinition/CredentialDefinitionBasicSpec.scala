@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.credentialdefinition
 
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, Entity}
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.api.http.ErrorResponse
@@ -69,7 +70,8 @@ object CredentialDefinitionBasicSpec extends ZIOSpecDefault with CredentialDefin
       for {
         controller <- ZIO.service[CredentialDefinitionController]
         authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-      } yield httpBackend(controller, authenticator)
+        config <- ZIO.service[AppConfig]
+      } yield httpBackend(config, controller, authenticator)
 
     def createCredentialDefinitionResponseZIO = for {
       backend <- backendZIO

@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.schema
 
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.container.util.MigrationAspects.*
@@ -51,7 +52,9 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
       + wrapSpec(unsupportedSchemaSpec)
       + wrapSpec(wrongSchemaSpec)
 
-  private def wrapSpec(spec: Spec[CredentialSchemaController & AuthenticatorWithAuthZ[BaseEntity], Throwable]) = {
+  private def wrapSpec(
+      spec: Spec[CredentialSchemaController & AppConfig & AuthenticatorWithAuthZ[BaseEntity], Throwable]
+  ) = {
     (spec
       @@ nondeterministic @@ sequential @@ timed @@ migrateEach(
         schema = "public",
@@ -65,7 +68,8 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
     def getSchemaZIO(uuid: UUID) = for {
       controller <- ZIO.service[CredentialSchemaController]
       authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-      backend = httpBackend(controller, authenticator)
+      config <- ZIO.service[AppConfig]
+      backend = httpBackend(config, controller, authenticator)
       response <- basicRequest
         .get(credentialSchemaUriBase.addPath(uuid.toString))
         .response(asJsonAlways[CredentialSchemaResponse])
@@ -142,7 +146,8 @@ object CredentialSchemaAnoncredSpec extends ZIOSpecDefault with CredentialSchema
     for {
       controller <- ZIO.service[CredentialSchemaController]
       authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-      backend = httpBackend(controller, authenticator)
+      config <- ZIO.service[AppConfig]
+      backend = httpBackend(config, controller, authenticator)
       response <-
         basicRequest
           .post(credentialSchemaUriBase)

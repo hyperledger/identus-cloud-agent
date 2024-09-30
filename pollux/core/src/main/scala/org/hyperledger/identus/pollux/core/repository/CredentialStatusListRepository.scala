@@ -24,7 +24,7 @@ trait CredentialStatusListRepository {
 
   def createNewForTheWallet(
       jwtIssuer: Issuer,
-      statusListRegistryUrl: String
+      statusListRegistryServiceName: String
   ): URIO[WalletAccessContext, CredentialStatusList]
 
   def allocateSpaceForCredential(

@@ -20,6 +20,7 @@ import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.messaging.kafka.InMemoryMessagingService
 import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
 import org.hyperledger.identus.shared.models.*
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
@@ -35,8 +36,8 @@ trait CredentialServiceSpecHelper {
     CredentialDefinitionRepositoryInMemory.layer >>> CredentialDefinitionServiceImpl.layer
 
   protected val credentialServiceLayer
-      : URLayer[DIDService & ManagedDIDService & URIDereferencer, CredentialService & CredentialDefinitionService] =
-    ZLayer.makeSome[DIDService & ManagedDIDService & URIDereferencer, CredentialService & CredentialDefinitionService](
+      : URLayer[DIDService & ManagedDIDService & UriResolver, CredentialService & CredentialDefinitionService] =
+    ZLayer.makeSome[DIDService & ManagedDIDService & UriResolver, CredentialService & CredentialDefinitionService](
       CredentialRepositoryInMemory.layer,
       CredentialStatusListRepositoryInMemory.layer,
       ZLayer.fromFunction(PrismDidResolver(_)),
@@ -112,7 +113,7 @@ trait CredentialServiceSpecHelper {
         pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
         pairwiseHolderDID: Option[DidId] = Some(DidId("did:prism:holder-pairwise")),
         thid: DidCommID = DidCommID(),
-        maybeSchemaId: Option[String] = None,
+        maybeSchemaIds: Option[List[String]] = None,
         claims: Json = io.circe.parser
           .parse("""
               |{
@@ -135,7 +136,7 @@ trait CredentialServiceSpecHelper {
         pairwiseHolderDID = pairwiseHolderDID,
         kidIssuer = None,
         thid = thid,
-        maybeSchemaId = maybeSchemaId,
+        maybeSchemaIds = maybeSchemaIds,
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
