@@ -1,6 +1,7 @@
 package org.hyperledger.identus.pollux.schema
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.api.http.ErrorResponse
@@ -27,7 +28,8 @@ object CredentialSchemaFailureSpec extends ZIOSpecDefault with CredentialSchemaT
       for {
         controller <- ZIO.service[CredentialSchemaController]
         authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-        backend = httpBackend(controller, authenticator)
+        config <- ZIO.service[AppConfig]
+        backend = httpBackend(config, controller, authenticator)
         response: SchemaBadRequestResponse <- basicRequest
           .post(credentialSchemaUriBase)
           .body("""{"foo":"bar"}""")

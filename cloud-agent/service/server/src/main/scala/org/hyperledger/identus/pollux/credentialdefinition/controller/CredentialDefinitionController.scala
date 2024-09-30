@@ -3,11 +3,13 @@ package org.hyperledger.identus.pollux.credentialdefinition.controller
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.api.http.model.{Order, Pagination}
 import org.hyperledger.identus.pollux.credentialdefinition.http.{
+  CredentialDefinitionDidUrlResponsePage,
   CredentialDefinitionInput,
   CredentialDefinitionResponse,
   CredentialDefinitionResponsePage,
   FilterInput
 }
+import org.hyperledger.identus.pollux.PrismEnvelopeResponse
 import org.hyperledger.identus.shared.models.WalletAccessContext
 import zio.*
 
@@ -19,17 +21,25 @@ trait CredentialDefinitionController {
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponse]
 
-  def getCredentialDefinitionByGuid(id: UUID)(implicit
+  def createCredentialDefinitionDidUrl(in: CredentialDefinitionInput)(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponse]
+
+  def getCredentialDefinitionByGuid(guid: UUID)(implicit
       rc: RequestContext
   ): IO[ErrorResponse, CredentialDefinitionResponse]
+
+  def getCredentialDefinitionByGuidDidUrl(baseUrlServiceName: String, guid: UUID)(implicit
+      rc: RequestContext
+  ): IO[ErrorResponse, PrismEnvelopeResponse]
 
   def getCredentialDefinitionInnerDefinitionByGuid(id: UUID)(implicit
       rc: RequestContext
   ): IO[ErrorResponse, zio.json.ast.Json]
 
-  def delete(guid: UUID)(implicit
+  def getCredentialDefinitionInnerDefinitionByGuidDidUrl(baseUrlServiceName: String, guid: UUID)(implicit
       rc: RequestContext
-  ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponse]
+  ): IO[ErrorResponse, PrismEnvelopeResponse]
 
   def lookupCredentialDefinitions(
       filter: FilterInput,
@@ -38,5 +48,14 @@ trait CredentialDefinitionController {
   )(implicit
       rc: RequestContext
   ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionResponsePage]
+
+  def lookupCredentialDefinitionsDidUrl(
+      baseUrlServiceName: String,
+      filter: FilterInput,
+      pagination: Pagination,
+      order: Option[Order]
+  )(implicit
+      rc: RequestContext
+  ): ZIO[WalletAccessContext, ErrorResponse, CredentialDefinitionDidUrlResponsePage]
 
 }

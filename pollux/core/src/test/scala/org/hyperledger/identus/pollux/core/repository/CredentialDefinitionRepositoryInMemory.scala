@@ -38,15 +38,20 @@ class CredentialDefinitionRepositoryInMemory(
     } yield record
   }
 
-  override def findByGuid(guid: UUID): UIO[Option[CredentialDefinition]] = {
+  override def findByGuid(
+      guid: UUID,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
+  ): UIO[Option[CredentialDefinition]] = {
     for {
       storeRefs <- walletRefs.get
-      storeRefOption <- ZIO.filter(storeRefs.values)(storeRef => storeRef.get.map(_.contains(guid))).map(_.headOption)
+      storeRefOption <- ZIO
+        .filter(storeRefs.values)(storeRef => storeRef.get.map(x => x.contains(guid)))
+        .map(_.headOption)
       record <- storeRefOption match {
         case Some(storeRef) => storeRef.get.map(_.get(guid))
         case None           => ZIO.none
       }
-    } yield record
+    } yield record.fold(None)(x => if x.resolutionMethod == resolutionMethod then Some(x) else None)
   }
 
   override def update(cs: CredentialDefinition): URIO[WalletAccessContext, CredentialDefinition] = {

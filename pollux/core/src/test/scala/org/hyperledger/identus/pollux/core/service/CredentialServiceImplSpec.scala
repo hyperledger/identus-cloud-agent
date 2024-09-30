@@ -14,6 +14,7 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialDefinition
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.vc.jwt.{CredentialIssuer, JWT, JwtCredential, JwtCredentialPayload}
 import org.hyperledger.identus.shared.models.{KeyId, UnmanagedFailureException, WalletAccessContext, WalletId}
 import zio.*
@@ -33,7 +34,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
   ).provideSomeLayer(
     MockDIDService.empty ++
       MockManagedDIDService.empty ++
-      ResourceURIDereferencerImpl.layer >+>
+      ResourceUrlResolver.layer >+>
       credentialServiceLayer ++
       ZLayer.succeed(WalletAccessContext(WalletId.random))
   )
@@ -75,14 +76,14 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
               thid = thid,
               pairwiseIssuerDID = pairwiseIssuerDid,
               pairwiseHolderDID = pairwiseHolderDid,
-              maybeSchemaId = None,
+              maybeSchemaIds = None,
               validityPeriod = validityPeriod,
               automaticIssuance = automaticIssuance
             )
           } yield {
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
-            assertTrue(record.schemaUri.isEmpty) &&
+            assertTrue(record.schemaUris.getOrElse(List.empty).isEmpty) &&
             assertTrue(record.validityPeriod == validityPeriod) &&
             assertTrue(record.automaticIssuance == automaticIssuance) &&
             assertTrue(record.role == Role.Issuer) &&
@@ -148,7 +149,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
               thid = thid,
               pairwiseIssuerDID = pairwiseIssuerDid,
               pairwiseHolderDID = pairwiseHolderDid,
-              maybeSchemaId = Some("resource:///vc-schema-example.json"),
+              maybeSchemaIds = Some(List("resource:///vc-schema-example.json")),
               claims = claims,
               validityPeriod = validityPeriod,
               automaticIssuance = automaticIssuance
@@ -158,7 +159,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
             assertTrue(record.thid == thid) &&
             assertTrue(record.updatedAt.isEmpty) &&
             assertTrue(
-              record.schemaUri.contains("resource:///vc-schema-example.json")
+              record.schemaUris.getOrElse(List.empty).contains("resource:///vc-schema-example.json")
             ) &&
             assertTrue(record.validityPeriod == validityPeriod) &&
             assertTrue(record.automaticIssuance == automaticIssuance) &&
@@ -208,7 +209,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
                 thid = thid,
                 pairwiseIssuerDID = pairwiseIssuerDid,
                 pairwiseHolderDID = pairwiseHolderDid,
-                maybeSchemaId = Some("resource:///vc-schema-example.json"),
+                maybeSchemaIds = Some(List("resource:///vc-schema-example.json")),
                 claims = claims,
                 validityPeriod = validityPeriod,
                 automaticIssuance = automaticIssuance
@@ -287,7 +288,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
         } yield {
           assertTrue(holderRecord.thid.toString == offer.thid.get) &&
           assertTrue(holderRecord.updatedAt.isEmpty) &&
-          assertTrue(holderRecord.schemaUri.isEmpty) &&
+          assertTrue(holderRecord.schemaUris.getOrElse(List.empty).isEmpty) &&
           assertTrue(holderRecord.validityPeriod.isEmpty) &&
           assertTrue(holderRecord.automaticIssuance.isEmpty) &&
           assertTrue(holderRecord.role == Role.Holder) &&
@@ -522,7 +523,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           // Issuer generates credential
           credentialGenerateRecord <- issuerSvc.generateJWTCredential(
             issuerRecordId,
-            "https://test-status-list.registry"
+            "status-list-registry"
           )
           decodedJWT <- credentialGenerateRecord.issueCredentialData.get.attachments.head.data match {
             case MyBase64(value) =>
@@ -590,7 +591,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
             .service[CredentialService]
             .provideSomeLayer(
               holderCredDefResolverLayer >>>
-                ResourceURIDereferencerImpl.layerWithExtraResources >>>
+                ResourceUrlResolver.layerWithExtraResources >>>
                 credentialServiceLayer
             )
           offerCredential <- ZIO.fromEither(OfferCredential.readFromMessage(msg))

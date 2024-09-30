@@ -1,6 +1,7 @@
 package org.hyperledger.identus.oid4vci
 
 import org.hyperledger.identus.api.http.{EndpointOutputs, ErrorResponse, RequestContext}
+import org.hyperledger.identus.api.http.EndpointOutputs.FailureVariant
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyCredentials
 import org.hyperledger.identus.iam.authentication.apikey.ApiKeyEndpointSecurityLogic.apiKeyHeader
 import org.hyperledger.identus.iam.authentication.oidc.JwtCredentials
@@ -197,7 +198,14 @@ object CredentialIssuerEndpoints {
       statusCode(StatusCode.Created).description("Credential configuration created successfully")
     )
     .out(jsonBody[CredentialConfiguration])
-    .errorOut(EndpointOutputs.basicFailureAndNotFoundAndForbidden)
+    .errorOut(
+      EndpointOutputs.basicFailuresWith(
+        FailureVariant.notFound,
+        FailureVariant.unauthorized,
+        FailureVariant.forbidden,
+        FailureVariant.conflict
+      )
+    )
     .name("createCredentialConfiguration")
     .summary("Create a new  credential configuration")
     .description(

@@ -89,6 +89,8 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
         case DecodingError(message)    => new Throwable(message)
         case IndexOutOfBounds(message) => new Throwable(message)
       }
+      resourcePath =
+        s"credential-status/$id"
       emptyStatusListCredential <- VCStatusList2021
         .build(
           vcId = s"$statusListRegistryUrl/credential-status/$id",

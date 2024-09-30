@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.core.model.schema
 
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.*
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod.*
 import zio.*
 import zio.json.*
 
@@ -56,7 +56,8 @@ case class CredentialDefinition(
     keyCorrectnessProofJsonSchemaId: String,
     keyCorrectnessProof: CorrectnessProof,
     signatureType: String,
-    supportRevocation: Boolean
+    supportRevocation: Boolean,
+    resolutionMethod: ResourceResolutionMethod
 ) {
   def longId = CredentialDefinition.makeLongId(author, guid, version)
 }
@@ -85,11 +86,12 @@ object CredentialDefinition {
       definitionSchemaId: String,
       definition: Definition,
       proofSchemaId: String,
-      proof: CorrectnessProof
+      proof: CorrectnessProof,
+      resolutionMethod: ResourceResolutionMethod
   ): UIO[CredentialDefinition] = {
     for {
       id <- zio.Random.nextUUID
-      cs <- make(id, in, definitionSchemaId, definition, proofSchemaId, proof)
+      cs <- make(id, in, definitionSchemaId, definition, proofSchemaId, proof, resolutionMethod)
     } yield cs
   }
 
@@ -99,7 +101,8 @@ object CredentialDefinition {
       definitionSchemaId: String,
       definition: Definition,
       keyCorrectnessProofSchemaId: String,
-      keyCorrectnessProof: CorrectnessProof
+      keyCorrectnessProof: CorrectnessProof,
+      resolutionMethod: ResourceResolutionMethod
   ): UIO[CredentialDefinition] = {
     for {
       ts <- zio.Clock.currentDateTime.map(
@@ -121,7 +124,8 @@ object CredentialDefinition {
       keyCorrectnessProofJsonSchemaId = keyCorrectnessProofSchemaId,
       keyCorrectnessProof = keyCorrectnessProof,
       signatureType = in.signatureType,
-      supportRevocation = in.supportRevocation
+      supportRevocation = in.supportRevocation,
+      resolutionMethod = resolutionMethod
     )
   }
 
@@ -143,7 +147,8 @@ object CredentialDefinition {
       author: Option[String] = None,
       name: Option[String] = None,
       version: Option[String] = None,
-      tag: Option[String] = None
+      tag: Option[String] = None,
+      resolutionMethod: ResourceResolutionMethod = ResourceResolutionMethod.http
   )
 
   case class FilteredEntries(entries: Seq[CredentialDefinition], count: Long, totalCount: Long)

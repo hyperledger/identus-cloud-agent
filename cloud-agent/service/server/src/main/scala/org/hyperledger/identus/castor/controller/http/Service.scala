@@ -93,12 +93,13 @@ object ServiceType {
       case Single(value)    => Left(value)
       case Multiple(values) => Right(values.toArray)
     }
-  given decoder: JsonDecoder[ServiceType] = JsonDecoder.string
-    .orElseEither(JsonDecoder.array[String])
-    .map[ServiceType] {
-      case Left(value)   => Single(value)
-      case Right(values) => Multiple(values.toSeq)
-    }
+
+  given decoder: JsonDecoder[ServiceType] = JsonDecoder[String]
+    .map(Single.apply)
+    .orElse(
+      JsonDecoder[Seq[String]].map(Multiple.apply)
+    )
+
   given schema: Schema[ServiceType] = Schema
     .schemaForEither(Schema.schemaForString, Schema.schemaForArray[String])
     .map[ServiceType] {

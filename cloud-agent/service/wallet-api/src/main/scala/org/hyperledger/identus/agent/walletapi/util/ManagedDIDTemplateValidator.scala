@@ -2,15 +2,34 @@ package org.hyperledger.identus.agent.walletapi.util
 
 import org.hyperledger.identus.agent.walletapi.model.ManagedDIDTemplate
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import org.hyperledger.identus.castor.core.model.did.{EllipticCurve, VerificationRelationship}
+import org.hyperledger.identus.castor.core.model.did.{
+  EllipticCurve,
+  Service as DidDocumentService,
+  VerificationRelationship
+}
 
 object ManagedDIDTemplateValidator {
 
-  def validate(template: ManagedDIDTemplate): Either[String, Unit] =
+  def validate(
+      template: ManagedDIDTemplate,
+      defaultDidDocumentServices: Set[DidDocumentService] = Set.empty
+  ): Either[String, Unit] =
     for {
       _ <- validateReservedKeyId(template)
       _ <- validateCurveUsage(template)
+      _ <- validatePresenceOfDefaultDidServices(template.services, defaultDidDocumentServices)
     } yield ()
+
+  private def validatePresenceOfDefaultDidServices(
+      services: Seq[DidDocumentService],
+      defaultDidDocumentServices: Set[DidDocumentService]
+  ): Either[String, Unit] = {
+
+    services.map(_.id).intersect(defaultDidDocumentServices.toSeq.map(_.id)) match {
+      case Nil => Right(())
+      case x   => Left(s"Default DID services cannot be overridden: ${x.mkString("[", ", ", "]")}")
+    }
+  }
 
   private def validateReservedKeyId(template: ManagedDIDTemplate): Either[String, Unit] = {
     val keyIds = template.publicKeys.map(_.id)
