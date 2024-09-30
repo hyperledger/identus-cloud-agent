@@ -26,16 +26,16 @@ object StatusListJobs extends BackgroundJobsHelper {
   val statusListsSyncTrigger = {
     (for {
       config <- ZIO.service[AppConfig]
+      producer <- ZIO.service[Producer[UUID, WalletIdAndRecordId]]
       trigger = for {
         credentialStatusListService <- ZIO.service[CredentialStatusListService]
         walletAndStatusListIds <- credentialStatusListService.getCredentialStatusListIds
         _ <- ZIO.logInfo(s"Triggering status list revocation sync for '${walletAndStatusListIds.size}' status lists")
-        producer <- ZIO.service[Producer[UUID, WalletIdAndRecordId]]
         _ <- ZIO.foreach(walletAndStatusListIds) { (walletId, statusListId) =>
           producer.produce(TOPIC_NAME, walletId.toUUID, WalletIdAndRecordId(walletId.toUUID, statusListId))
         }
       } yield ()
-      _ <- trigger.repeat(Schedule.spaced(config.pollux.syncRevocationStatusesBgJobRecurrenceDelay))
+      _ <- trigger.repeat(Schedule.spaced(config.pollux.statusListSyncTriggerRecurrenceDelay))
     } yield ()).debug.fork
   }
 

@@ -34,8 +34,8 @@ object CloudAgentApp {
     _ <- ConnectBackgroundJobs.connectFlowsHandler
     _ <- IssueBackgroundJobs.issueFlowsHandler
     _ <- PresentBackgroundJobs.presentFlowsHandler
-    _ <- DIDStateSyncBackgroundJobs.didPublicationStateSyncTrigger
-    _ <- DIDStateSyncBackgroundJobs.didPublicationStateSyncHandler
+    _ <- DIDStateSyncBackgroundJobs.didStateSyncTrigger
+    _ <- DIDStateSyncBackgroundJobs.didStateSyncHandler
     _ <- StatusListJobs.statusListsSyncTrigger
     _ <- StatusListJobs.statusListSyncHandler
     _ <- AgentHttpServer.run.tapDefect(e => ZIO.logErrorCause("Agent HTTP Server failure", e)).fork

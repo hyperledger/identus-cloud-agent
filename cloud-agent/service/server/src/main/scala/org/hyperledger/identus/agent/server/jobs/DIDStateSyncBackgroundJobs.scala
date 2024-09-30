@@ -12,26 +12,24 @@ object DIDStateSyncBackgroundJobs extends BackgroundJobsHelper {
 
   private val TOPIC_NAME = "sync-did-state"
 
-  val didPublicationStateSyncTrigger
-      : URIO[ManagedDIDService & WalletManagementService & Producer[WalletId, WalletId], Unit] =
-    ZIO
-      .serviceWithZIO[WalletManagementService](_.listWallets().map(_._1))
-      .flatMap { wallets =>
-        ZIO.foreach(wallets) { wallet =>
-          for {
-            producer <- ZIO.service[Producer[WalletId, WalletId]]
-            _ <- producer.produce(TOPIC_NAME, wallet.id, wallet.id)
-          } yield ()
-        }
-      }
-      .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
-      .repeat(Schedule.spaced(10.seconds))
-      .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
-      .debug
-      .fork
-      .unit
+  val didStateSyncTrigger = {
+    (for {
+      config <- ZIO.service[AppConfig]
+      producer <- ZIO.service[Producer[WalletId, WalletId]]
+      trigger = for {
+        walletManagementService <- ZIO.service[WalletManagementService]
+        wallets <- walletManagementService.listWallets().map(_._1)
+        _ <- ZIO.logInfo(s"Triggering DID state sync for '${wallets.size}' wallets")
+        _ <- ZIO.foreach(wallets)(w => producer.produce(TOPIC_NAME, w.id, w.id))
+      } yield ()
+      _ <- trigger
+        .catchAll(e => ZIO.logError(s"error while syncing DID publication state: $e"))
+        .provideSomeLayer(ZLayer.succeed(WalletAdministrationContext.Admin()))
+        .repeat(Schedule.spaced(config.pollux.didStateSyncTriggerRecurrenceDelay))
+    } yield ()).debug.fork
+  }
 
-  val didPublicationStateSyncHandler = for {
+  val didStateSyncHandler = for {
     appConfig <- ZIO.service[AppConfig]
     _ <- MessagingService.consumeWithRetryStrategy(
       "identus-cloud-agent",
