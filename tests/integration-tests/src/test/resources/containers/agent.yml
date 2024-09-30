@@ -42,6 +42,8 @@ services:
       REST_SERVICE_URL:
       POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL:
       API_KEY_ENABLED:
+      STATUS_LIST_SYNC_TRIGGER_RECURRENCE_DELAY: 5 seconds
+      DID_STATE_SYNC_TRIGGER_RECURRENCE_DELAY: 5 seconds
       # Secret storage configuration
       SECRET_STORAGE_BACKEND:
       VAULT_ADDR: "http://host.docker.internal:${VAULT_HTTP_PORT}"
