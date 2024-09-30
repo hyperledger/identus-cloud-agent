@@ -5,8 +5,7 @@ import org.hyperledger.identus.pollux.vc.jwt
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.http.{GenericUriResolverError, UriResolver}
-import org.hyperledger.identus.shared.models.PrismEnvelopeData
-import org.hyperledger.identus.shared.models.StatusCode
+import org.hyperledger.identus.shared.models.{PrismEnvelopeData, StatusCode}
 import zio.*
 import zio.json.*
 
