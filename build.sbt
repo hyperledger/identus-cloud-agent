@@ -36,7 +36,8 @@ inThisBuild(
     // scalacOptions += "-Yexplicit-nulls",
     // scalacOptions += "-Ysafe-init",
     // scalacOptions +=  "-Werror", // <=> "-Xfatal-warnings"
-    scalacOptions += "-Dquill.macro.log=false", // disable quill macro logs // TODO https://github.com/zio/zio-protoquill/issues/470
+    scalacOptions += "-Dquill.macro.log=false", // disable quill macro logs // TODO https://github.com/zio/zio-protoquill/issues/470,
+    scalacOptions ++= Seq("-Xmax-inlines", "50") // manually increase max-inlines above 32 (https://github.com/circe/circe/issues/2162)
   )
 )
 
