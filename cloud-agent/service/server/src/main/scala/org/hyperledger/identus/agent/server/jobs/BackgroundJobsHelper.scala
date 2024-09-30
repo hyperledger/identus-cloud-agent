@@ -233,17 +233,18 @@ trait BackgroundJobsHelper {
   }
 
   def retryStepsFromConfig(topicName: String, jobConfig: KafkaConsumerJobConfig): Seq[RetryStep] = {
-    jobConfig.retryStrategy match
+    val retryTopics = jobConfig.retryStrategy match
       case None => Seq.empty
       case Some(rs) =>
-        val topics = (1 to rs.maxRetries).map(i =>
+        (1 to rs.maxRetries).map(i =>
           (
             s"$topicName-retry-$i",
             rs.initialDelay.multipliedBy(Math.pow(2, i - 1).toLong).min(rs.maxDelay)
           )
-        ) prepended (topicName, 0.seconds) appended (s"$topicName-DLQ", Duration.Infinity)
-        (0 until topics.size - 1).map { i =>
-          RetryStep(topics(i)._1, jobConfig.consumerCount, topics(i)._2, topics(i + 1)._1)
-        }
+        )
+    val topics = retryTopics prepended (topicName, 0.seconds) appended (s"$topicName-DLQ", Duration.Infinity)
+    (0 until topics.size - 1).map { i =>
+      RetryStep(topics(i)._1, jobConfig.consumerCount, topics(i)._2, topics(i + 1)._1)
+    }
   }
 }
