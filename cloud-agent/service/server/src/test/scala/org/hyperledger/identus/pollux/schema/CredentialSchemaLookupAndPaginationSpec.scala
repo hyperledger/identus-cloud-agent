@@ -1,6 +1,7 @@
 package org.hyperledger.identus.pollux.schema
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.container.util.MigrationAspects.migrate
 import org.hyperledger.identus.iam.authentication.AuthenticatorWithAuthZ
@@ -28,13 +29,14 @@ object CredentialSchemaLookupAndPaginationSpec
 
   def fetchAllPages(
       uri: Uri
-  ): ZIO[CredentialSchemaController & AuthenticatorWithAuthZ[BaseEntity], Throwable, List[
+  ): ZIO[CredentialSchemaController & AppConfig & AuthenticatorWithAuthZ[BaseEntity], Throwable, List[
     CredentialSchemaResponsePage
   ]] = {
     for {
       controller <- ZIO.service[CredentialSchemaController]
       authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-      backend = httpBackend(controller, authenticator)
+      config <- ZIO.service[AppConfig]
+      backend = httpBackend(config, controller, authenticator)
       response: SchemaPageResponse <- basicRequest
         .get(uri)
         .response(asJsonAlways[CredentialSchemaResponsePage])
@@ -77,7 +79,8 @@ object CredentialSchemaLookupAndPaginationSpec
         _ <- deleteAllCredentialSchemas
         controller <- ZIO.service[CredentialSchemaController]
         authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-        backend = httpBackend(controller, authenticator)
+        config <- ZIO.service[AppConfig]
+        backend = httpBackend(config, controller, authenticator)
 
         inputs <- Generator.schemaInput.runCollectN(101)
         _ <- inputs

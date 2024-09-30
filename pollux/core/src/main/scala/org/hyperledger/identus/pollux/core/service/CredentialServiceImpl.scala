@@ -4,6 +4,7 @@ import cats.implicits.*
 import io.circe.*
 import io.circe.parser.*
 import io.circe.syntax.*
+import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
@@ -27,7 +28,7 @@ import org.hyperledger.identus.pollux.prex.{ClaimFormat, Jwt, PresentationDefini
 import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer as JwtIssuer, *}
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair}
-import org.hyperledger.identus.shared.http.{DataUrlResolver, GenericUriResolver}
+import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.Base64Utils
@@ -35,14 +36,13 @@ import zio.*
 import zio.json.*
 import zio.prelude.ZValidation
 
-import java.net.URI
 import java.time.{Instant, ZoneId}
 import java.util.UUID
 import scala.language.implicitConversions
 
 object CredentialServiceImpl {
   val layer: URLayer[
-    CredentialRepository & CredentialStatusListRepository & DidResolver & URIDereferencer & GenericSecretStorage &
+    CredentialRepository & CredentialStatusListRepository & DidResolver & UriResolver & GenericSecretStorage &
       CredentialDefinitionService & LinkSecretService & DIDService & ManagedDIDService,
     CredentialService
   ] = {
@@ -51,7 +51,7 @@ object CredentialServiceImpl {
         credentialRepo <- ZIO.service[CredentialRepository]
         credentialStatusListRepo <- ZIO.service[CredentialStatusListRepository]
         didResolver <- ZIO.service[DidResolver]
-        uriDereferencer <- ZIO.service[URIDereferencer]
+        uriResolver <- ZIO.service[UriResolver]
         genericSecretStorage <- ZIO.service[GenericSecretStorage]
         credDefenitionService <- ZIO.service[CredentialDefinitionService]
         linkSecretService <- ZIO.service[LinkSecretService]
@@ -62,7 +62,7 @@ object CredentialServiceImpl {
         credentialRepo,
         credentialStatusListRepo,
         didResolver,
-        uriDereferencer,
+        uriResolver,
         genericSecretStorage,
         credDefenitionService,
         linkSecretService,
@@ -82,7 +82,7 @@ class CredentialServiceImpl(
     credentialRepository: CredentialRepository,
     credentialStatusListRepository: CredentialStatusListRepository,
     didResolver: DidResolver,
-    uriDereferencer: URIDereferencer,
+    uriResolver: UriResolver,
     genericSecretStorage: GenericSecretStorage,
     credentialDefinitionService: CredentialDefinitionService,
     linkSecretService: LinkSecretService,
@@ -127,7 +127,7 @@ class CredentialServiceImpl(
       pairwiseIssuerDID: DidId,
       kidIssuer: Option[KeyId],
       thid: DidCommID,
-      schemaUri: Option[String],
+      schemaUris: Option[List[String]],
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
       issuingDID: Option[CanonicalPrismDID],
@@ -161,7 +161,7 @@ class CredentialServiceImpl(
           createdAt = Instant.now,
           updatedAt = None,
           thid = thid,
-          schemaUri = schemaUri,
+          schemaUris = schemaUris,
           credentialDefinitionId = credentialDefinitionGUID,
           credentialDefinitionUri = credentialDefinitionId,
           credentialFormat = credentialFormat,
@@ -196,7 +196,7 @@ class CredentialServiceImpl(
       pairwiseHolderDID: Option[DidId],
       kidIssuer: Option[KeyId],
       thid: DidCommID,
-      maybeSchemaId: Option[String],
+      maybeSchemaIds: Option[List[String]],
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
@@ -207,12 +207,12 @@ class CredentialServiceImpl(
       connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord] = {
     for {
-      _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaId)
+      _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaIds)
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
       offer <- createDidCommOfferCredential(
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
-        maybeSchemaId = maybeSchemaId,
+        maybeSchemaIds = maybeSchemaIds,
         claims = attributes,
         thid = thid,
         UUID.randomUUID().toString,
@@ -223,7 +223,7 @@ class CredentialServiceImpl(
         pairwiseIssuerDID = pairwiseIssuerDID,
         kidIssuer = kidIssuer,
         thid = thid,
-        schemaUri = maybeSchemaId,
+        schemaUris = maybeSchemaIds,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
         issuingDID = Some(issuingDID),
@@ -244,7 +244,7 @@ class CredentialServiceImpl(
       pairwiseHolderDID: Option[DidId],
       kidIssuer: Option[KeyId],
       thid: DidCommID,
-      maybeSchemaId: Option[String],
+      maybeSchemaIds: Option[List[String]],
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
@@ -255,12 +255,12 @@ class CredentialServiceImpl(
       connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord] = {
     for {
-      _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaId)
+      _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaIds)
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
       offer <- createDidCommOfferCredential(
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
-        maybeSchemaId = maybeSchemaId,
+        maybeSchemaIds = maybeSchemaIds,
         claims = attributes,
         thid = thid,
         UUID.randomUUID().toString,
@@ -271,7 +271,7 @@ class CredentialServiceImpl(
         pairwiseIssuerDID = pairwiseIssuerDID,
         kidIssuer = kidIssuer,
         thid = thid,
-        schemaUri = maybeSchemaId,
+        schemaUris = maybeSchemaIds,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
         issuingDID = Some(issuingDID),
@@ -304,7 +304,11 @@ class CredentialServiceImpl(
     for {
       credentialDefinition <- getCredentialDefinition(credentialDefinitionGUID)
       _ <- CredentialSchema
-        .validateAnonCredsClaims(credentialDefinition.schemaId, claims.noSpaces, uriDereferencer)
+        .validateAnonCredsClaims(
+          credentialDefinition.schemaId,
+          claims.noSpaces,
+          uriResolver,
+        )
         .orDieAsUnmanagedFailure
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
       offer <- createAnonCredsDidCommOfferCredential(
@@ -320,7 +324,7 @@ class CredentialServiceImpl(
         pairwiseIssuerDID = pairwiseIssuerDID,
         kidIssuer = None,
         thid = thid,
-        schemaUri = Some(credentialDefinition.schemaId),
+        schemaUris = Some(List(credentialDefinition.schemaId)),
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
         issuingDID = None,
@@ -375,7 +379,7 @@ class CredentialServiceImpl(
           createdAt = Instant.now,
           updatedAt = None,
           thid = DidCommID(offer.thid.getOrElse(offer.id)),
-          schemaUri = None,
+          schemaUris = None,
           credentialDefinitionId = None,
           credentialDefinitionUri = None,
           credentialFormat = credentialFormat,
@@ -438,12 +442,19 @@ class CredentialServiceImpl(
 
   private[this] def validateClaimsAgainstSchemaIfAny(
       claims: Json,
-      maybeSchemaId: Option[String]
-  ): UIO[Unit] = maybeSchemaId match
-    case Some(schemaId) =>
-      CredentialSchema
-        .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriDereferencer)
-        .orDieAsUnmanagedFailure
+      maybeSchemaIds: Option[List[String]]
+  ): UIO[Unit] = maybeSchemaIds match
+    case Some(schemaIds) =>
+      for {
+        _ <- ZIO
+          .collectAll(
+            schemaIds.map(schemaId =>
+              CredentialSchema
+                .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriResolver)
+            )
+          )
+          .orDieAsUnmanagedFailure
+      } yield ZIO.unit
     case None =>
       ZIO.unit
 
@@ -717,8 +728,8 @@ class CredentialServiceImpl(
         )
         .orDieWith(_ => RuntimeException(s"No AnonCreds attachment found in the offer"))
       credentialOffer = anoncreds.AnoncredCredentialOffer(attachmentData)
-      credDefContent <- uriDereferencer
-        .dereference(new URI(credentialOffer.getCredDefId))
+      credDefContent <- uriResolver
+        .resolve(credentialOffer.getCredDefId)
         .orDieAsUnmanagedFailure
       credentialDefinition = anoncreds.AnoncredCredentialDefinition(credDefContent)
       linkSecret <- linkSecretService.fetchOrCreate()
@@ -806,7 +817,7 @@ class CredentialServiceImpl(
                   processedIssuedCredential,
                   record,
                   attachment,
-                  Some(processedCredential.getSchemaId),
+                  Some(List(processedCredential.getSchemaId)),
                   Some(processedCredential.getCredDefId)
                 )
             } yield result
@@ -822,7 +833,7 @@ class CredentialServiceImpl(
       issueCredential: IssueCredential,
       record: IssueCredentialRecord,
       attachment: AttachmentDescriptor,
-      schemaId: Option[String],
+      schemaId: Option[List[String]],
       credDefId: Option[String]
   ) = {
     credentialRepository
@@ -842,8 +853,8 @@ class CredentialServiceImpl(
   ): URIO[WalletAccessContext, anoncreds.AnoncredCredential] = {
     for {
       credential <- ZIO.succeed(anoncreds.AnoncredCredential(new String(credentialBytes)))
-      credDefContent <- uriDereferencer
-        .dereference(new URI(credential.getCredDefId))
+      credDefContent <- uriResolver
+        .resolve(credential.getCredDefId)
         .orDieAsUnmanagedFailure
       credentialDefinition = anoncreds.AnoncredCredentialDefinition(credDefContent)
       metadata <- ZIO
@@ -957,7 +968,7 @@ class CredentialServiceImpl(
   private def createDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: Option[DidId],
-      maybeSchemaId: Option[String],
+      maybeSchemaIds: Option[List[String]],
       claims: Seq[Attribute],
       thid: DidCommID,
       challenge: String,
@@ -965,7 +976,7 @@ class CredentialServiceImpl(
       offerFormat: IssueCredentialOfferFormat
   ): UIO[OfferCredential] = {
     for {
-      credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = maybeSchemaId, attributes = claims))
+      credentialPreview <- ZIO.succeed(CredentialPreview(schema_ids = maybeSchemaIds, attributes = claims))
       body = OfferCredential.Body(
         goal_code = Some("Offer Credential"),
         credential_preview = credentialPreview,
@@ -1001,7 +1012,7 @@ class CredentialServiceImpl(
       thid: DidCommID
   ): URIO[WalletAccessContext, OfferCredential] = {
     for {
-      credentialPreview <- ZIO.succeed(CredentialPreview(schema_id = Some(schemaUri), attributes = claims))
+      credentialPreview <- ZIO.succeed(CredentialPreview(schema_ids = Some(List(schemaUri)), attributes = claims))
       body = OfferCredential.Body(
         goal_code = Some("Offer Credential"),
         credential_preview = credentialPreview,
@@ -1140,11 +1151,11 @@ class CredentialServiceImpl(
         maybeId = None,
         `type` =
           Set("VerifiableCredential"), // TODO: This information should come from Schema registry by record.schemaId
-        issuer = Right(CredentialIssuer(jwtIssuer.did.toString, `type` = "Profile")),
+        issuer = CredentialIssuer(jwtIssuer.did.toString, `type` = "Profile"),
         issuanceDate = issuanceDate,
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
-        maybeCredentialSchema = record.schemaUri.map(id =>
-          Left(org.hyperledger.identus.pollux.vc.jwt.CredentialSchema(id, VC_JSON_SCHEMA_TYPE))
+        maybeCredentialSchema = record.schemaUris.map(ids =>
+          ids.map(id => org.hyperledger.identus.pollux.vc.jwt.CredentialSchema(id, VC_JSON_SCHEMA_TYPE))
         ),
         maybeCredentialStatus = Some(credentialStatus),
         credentialSubject = claims.add("id", jwtPresentation.iss.asJson).asJson,
@@ -1425,12 +1436,6 @@ class CredentialServiceImpl(
               ZIO.fail(CredentialRequestValidationFailed("domain/challenge proof validation failed"))
 
       clock = java.time.Clock.system(ZoneId.systemDefault)
-
-      genericUriResolver = GenericUriResolver(
-        Map(
-          "data" -> DataUrlResolver(),
-        )
-      )
       verificationResult <- JwtPresentation
         .verify(
           jwt,
@@ -1440,7 +1445,7 @@ class CredentialServiceImpl(
             verifyDates = false,
             leeway = Duration.Zero
           )
-        )(didResolver, genericUriResolver)(clock)
+        )(didResolver, uriResolver)(clock)
         .mapError(errors => CredentialRequestValidationFailed(errors*))
 
       result <- verificationResult match

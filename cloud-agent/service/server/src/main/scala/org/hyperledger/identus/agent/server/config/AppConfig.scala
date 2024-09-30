@@ -109,7 +109,7 @@ final case class DatabaseConfig(
     DbConfig(
       username = if (appUser) appUsername else username,
       password = if (appUser) appPassword else password,
-      jdbcUrl = s"jdbc:postgresql://${host}:${port}/${databaseName}",
+      jdbcUrl = s"jdbc:postgresql://$host:$port/${databaseName}",
       awaitConnectionThreads = awaitConnectionThreads
     )
   }
@@ -187,7 +187,7 @@ final case class AgentConfig(
 
 }
 
-final case class HttpEndpointConfig(http: HttpConfig, publicEndpointUrl: java.net.URL)
+final case class HttpEndpointConfig(http: HttpConfig, serviceName: String, publicEndpointUrl: java.net.URL)
 
 final case class DidCommEndpointConfig(http: HttpConfig, publicEndpointUrl: java.net.URL)
 

@@ -82,8 +82,8 @@ object JWTVerificationTest extends ZIOSpecDefault {
         maybeValidFrom = Some(validFrom),
         maybeValidUntil = Some(validUntil),
         maybeIssuer = Some(
-          if (issuerAsObject) Right(CredentialIssuer(issuer.issuer.did.toString, "Profile"))
-          else Left(issuer.issuer.did.toString)
+          if (issuerAsObject) CredentialIssuer(issuer.issuer.did.toString, "Profile")
+          else issuer.issuer.did.toString
         )
       ),
       nbf = jwtCredentialNbf, // ISSUANCE DATE
@@ -211,8 +211,14 @@ object JWTVerificationTest extends ZIOSpecDefault {
           .decodeJwt(jwtCredential)
         jwtWithObjectIssuer <- JwtCredential
           .decodeJwt(jwtCredentialWithObjectIssuer)
-        jwtWithObjectIssuerIssuer = jwtWithObjectIssuer.vc.maybeIssuer.get.toOption.get.id
-        jwtIssuer = jwt.vc.maybeIssuer.get.left.toOption.get
+        jwtWithObjectIssuerIssuer = jwtWithObjectIssuer.vc.maybeIssuer.get match {
+          case string: String                     => string
+          case credentialIssuer: CredentialIssuer => credentialIssuer.id
+        }
+        jwtIssuer = jwt.vc.maybeIssuer.get match {
+          case string: String                     => string
+          case credentialIssuer: CredentialIssuer => credentialIssuer.id
+        }
       } yield assertTrue(
         jwtWithObjectIssuerIssuer.equals(jwtIssuer)
       )

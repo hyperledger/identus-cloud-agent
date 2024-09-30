@@ -72,7 +72,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   created_at,
         |   updated_at,
         |   thid,
-        |   schema_uri,
+        |   schema_uris,
         |   credential_definition_id,
         |   credential_definition_uri,
         |   credential_format,
@@ -98,7 +98,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   ${record.createdAt},
         |   ${record.updatedAt},
         |   ${record.thid},
-        |   ${record.schemaUri},
+        |   ${record.schemaUris},
         |   ${record.credentialDefinitionId},
         |   ${record.credentialDefinitionUri},
         |   ${record.credentialFormat},
@@ -142,7 +142,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
            |   created_at,
            |   updated_at,
            |   thid,
-           |   schema_uri,
+           |   schema_uris,
            |   credential_definition_id,
            |   credential_definition_uri,
            |   credential_format,
@@ -214,7 +214,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
             |   created_at,
             |   updated_at,
             |   thid,
-            |   schema_uri,
+            |   schema_uris,
             |   credential_definition_id,
             |   credential_definition_uri,
             |   credential_format,
@@ -278,7 +278,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   created_at,
         |   updated_at,
         |   thid,
-        |   schema_uri,
+        |   schema_uris,
         |   credential_definition_id,
         |   credential_definition_uri,
         |   credential_format,
@@ -323,7 +323,7 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
         |   created_at,
         |   updated_at,
         |   thid,
-        |   schema_uri,
+        |   schema_uris,
         |   credential_definition_id,
         |   credential_definition_uri,
         |   credential_format,
@@ -502,13 +502,13 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
                      |   id,
                      |   issue_credential_data,
                      |   credential_format,
-                     |   schema_uri,
+                     |   schema_uris,
                      |   credential_definition_uri,
                      |   subject_id
                      | FROM public.issue_credential_records
                      | WHERE 1=1
                      |   AND issue_credential_data IS NOT NULL
-                     |   AND schema_uri IS NOT NULL
+                     |   AND schema_uris IS NOT NULL
                      |   AND credential_definition_uri IS NOT NULL
                      |   AND credential_format = 'AnonCreds'
                      |   AND $inClauseFragment
@@ -538,14 +538,14 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
       recordId: DidCommID,
       issue: IssueCredential,
       issuedRawCredential: String,
-      schemaUri: Option[String],
+      schemaUris: Option[List[String]],
       credentialDefinitionUri: Option[String],
       protocolState: ProtocolState
   ): URIO[WalletAccessContext, Unit] = {
     val cxnIO = sql"""
         | UPDATE public.issue_credential_records
         | SET
-        |   schema_uri = $schemaUri,
+        |   schema_uris = $schemaUris,
         |   credential_definition_uri = $credentialDefinitionUri,
         |   issue_credential_data = $issue,
         |   issued_credential_raw = $issuedRawCredential,

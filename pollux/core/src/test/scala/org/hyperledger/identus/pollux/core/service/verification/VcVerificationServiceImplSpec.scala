@@ -4,7 +4,7 @@ import io.circe.*
 import io.circe.syntax.*
 import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.castor.core.service.MockDIDService
-import org.hyperledger.identus.pollux.core.service.ResourceURIDereferencerImpl
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
@@ -27,17 +27,15 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did.toString),
+            issuer = issuer.did.toString,
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -81,7 +79,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -94,17 +92,15 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did.toString),
+            issuer = issuer.did.toString,
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -148,7 +144,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -161,17 +157,15 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did.toString),
+            issuer = issuer.did.toString,
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -215,7 +209,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         issuerDidServiceExpectations.toLayer ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -228,17 +222,15 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did.toString),
+            issuer = issuer.did.toString,
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -289,7 +281,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -302,17 +294,15 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did.toString),
+            issuer = issuer.did.toString,
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -360,7 +350,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -373,17 +363,15 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did.toString),
+            issuer = issuer.did.toString,
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "resource:///vc-schema-personal.json",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "resource:///vc-schema-personal.json",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -431,7 +419,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -444,22 +432,20 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did.toString),
+            issuer = issuer.did.toString,
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Right(
-                List(
-                  CredentialSchema(
-                    id = "resource:///vc-schema-personal.json",
-                    `type` = "JsonSchemaValidator2018"
-                  ),
-                  CredentialSchema(
-                    id = "resource:///vc-schema-driver-license.json",
-                    `type` = "JsonSchemaValidator2018"
-                  )
+              List(
+                CredentialSchema(
+                  id = "resource:///vc-schema-personal.json",
+                  `type` = "JsonSchemaValidator2018"
+                ),
+                CredentialSchema(
+                  id = "resource:///vc-schema-driver-license.json",
+                  `type` = "JsonSchemaValidator2018"
                 )
               )
             ),
@@ -511,7 +497,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -524,22 +510,20 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did.toString),
+            issuer = issuer.did.toString,
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Right(
-                List(
-                  CredentialSchema(
-                    id = "resource:///vc-schema-personal.json",
-                    `type` = "JsonSchemaValidator2018"
-                  ),
-                  CredentialSchema(
-                    id = "resource:///vc-schema-driver-license.json",
-                    `type` = "JsonSchemaValidator2018"
-                  )
+              List(
+                CredentialSchema(
+                  id = "resource:///vc-schema-personal.json",
+                  `type` = "JsonSchemaValidator2018"
+                ),
+                CredentialSchema(
+                  id = "resource:///vc-schema-driver-license.json",
+                  `type` = "JsonSchemaValidator2018"
                 )
               )
             ),
@@ -591,7 +575,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -605,17 +589,15 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did.toString),
+            issuer = issuer.did.toString,
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -659,7 +641,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -673,17 +655,15 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did.toString),
+            issuer = issuer.did.toString,
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -727,7 +707,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -741,17 +721,15 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did.toString),
+            issuer = issuer.did.toString,
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -795,7 +773,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       ),
@@ -809,17 +787,15 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
               Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
             maybeId = Some("http://example.edu/credentials/3732"),
             `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-            issuer = Left(issuer.did.toString),
+            issuer = issuer.did.toString,
             issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
             maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
             maybeCredentialSchema = Some(
-              Left(
-                CredentialSchema(
-                  id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                  `type` = "JsonSchemaValidator2018"
-                )
+              CredentialSchema(
+                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+                `type` = "JsonSchemaValidator2018"
               )
             ),
             credentialSubject = Json.obj(
@@ -863,7 +839,7 @@ object VcVerificationServiceImplSpec extends ZIOSpecDefault with VcVerificationS
       }.provideSomeLayer(
         MockDIDService.empty ++
           MockManagedDIDService.empty ++
-          ResourceURIDereferencerImpl.layer >+>
+          ResourceUrlResolver.layer >+>
           someVcVerificationServiceLayer ++
           ZLayer.succeed(WalletAccessContext(WalletId.random))
       )

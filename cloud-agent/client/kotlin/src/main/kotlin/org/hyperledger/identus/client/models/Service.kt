@@ -10,35 +10,52 @@
     "ArrayInDataClass",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "UnusedImport",
 )
 
 package org.hyperledger.identus.client.models
 
-import org.hyperledger.identus.client.models.Json
-
+import com.google.gson.*
+import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
+import java.lang.reflect.Type
 
-/**
- * A service expressed in the DID document. https://www.w3.org/TR/did-core/#services
- *
- * @param id The id of the service. Requires a URI fragment when use in create / update DID. Returns the full ID (with DID prefix) when resolving DID
- * @param type 
- * @param serviceEndpoint 
- */
+class StringOrStringArrayAdapter : JsonSerializer<List<String>>, JsonDeserializer<List<String>> {
 
+    // Deserialize logic: String or Array of Strings to List<String>
+    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): List<String> {
+        return when {
+            json?.isJsonArray == true -> {
+                context!!.deserialize(json, typeOfT)
+            }
+            json?.isJsonPrimitive == true -> {
+                listOf(json.asString)
+            }
+            else -> throw JsonParseException("Unexpected type for field")
+        }
+    }
 
-data class Service (
+    // Serialize logic: List<String> to String or Array of Strings
+    override fun serialize(src: List<String>?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+        return when {
+            src == null -> JsonNull.INSTANCE
+            src.size == 1 -> JsonPrimitive(src[0]) // If only one string, serialize as a single string
+            else -> context!!.serialize(src) // Otherwise, serialize as a list
+        }
+    }
+}
+
+data class Service(
 
     /* The id of the service. Requires a URI fragment when use in create / update DID. Returns the full ID (with DID prefix) when resolving DID */
     @SerializedName("id")
     val id: kotlin.String,
 
     @SerializedName("type")
+    @JsonAdapter(StringOrStringArrayAdapter::class)
     val type: kotlin.collections.List<kotlin.String>? = null,
 
     @SerializedName("serviceEndpoint")
-    val serviceEndpoint: Json
+    val serviceEndpoint: JsonElement? = null,
 
 )
-

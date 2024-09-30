@@ -99,6 +99,8 @@ class CredentialStatusListRepositoryInMemory(
         case DecodingError(message)    => new Throwable(message)
         case IndexOutOfBounds(message) => new Throwable(message)
       }
+      resourcePath =
+        s"credential-status/$id"
       emptyJwtCredential <- VCStatusList2021
         .build(
           vcId = s"$statusListRegistryUrl/credential-status/$id",

@@ -3,9 +3,10 @@ package org.hyperledger.identus.pollux.credentialschema.http
 import org.hyperledger.identus.api.http.*
 import org.hyperledger.identus.pollux.core.model
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod.*
 import org.hyperledger.identus.pollux.credentialschema.http.CredentialSchemaResponse.annotations
 import sttp.model.Uri
-import sttp.model.Uri.*
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema
 import sttp.tapir.Schema.annotations.{default, description, encodedExample, encodedName}
@@ -52,6 +53,9 @@ case class CredentialSchemaResponse(
     @description(annotations.proof.description)
     @encodedExample(annotations.proof.example.toJson)
     proof: Option[Proof],
+    @description(annotations.resolutionMethod.description)
+    @encodedExample(annotations.resolutionMethod.example)
+    resolutionMethod: ResourceResolutionMethod,
     @description(annotations.kind.description)
     @encodedExample(annotations.kind.example)
     kind: String = "CredentialSchema",
@@ -78,15 +82,15 @@ object CredentialSchemaResponse {
       schema = cs.schema,
       author = cs.author,
       authored = cs.authored,
+      resolutionMethod = cs.resolutionMethod,
       proof = None
     )
-
-  given scala.Conversion[CredentialSchema, CredentialSchemaResponse] = fromDomain
 
   given encoder: zio.json.JsonEncoder[CredentialSchemaResponse] =
     DeriveJsonEncoder.gen[CredentialSchemaResponse]
   given decoder: zio.json.JsonDecoder[CredentialSchemaResponse] =
     DeriveJsonDecoder.gen[CredentialSchemaResponse]
+
   given schema: Schema[CredentialSchemaResponse] = Schema.derived
 
   object annotations {
@@ -134,6 +138,13 @@ object CredentialSchemaResponse {
           description = "A string that identifies the type of resource being returned in the response.",
           example = "CredentialSchema"
         )
+
+    object resolutionMethod
+        extends Annotation[String](
+          description = s"The method used to resolve the schema. It can be either HTTP or DID.",
+          example = ResourceResolutionMethod.http.toString
+        )
+
     object proof
         extends Annotation[Proof](
           description = "A digital signature over the Credential Schema for the sake of asserting authorship. " +

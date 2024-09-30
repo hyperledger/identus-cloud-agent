@@ -19,6 +19,12 @@ final case class CredentialSchemaGuidNotFoundError(guid: UUID)
       s"Credential Schema record cannot be found by `guid`=$guid"
     )
 
+final case class CredentialSchemaIdNotFoundError(id: UUID)
+    extends CredentialSchemaServiceError(
+      StatusCode.NotFound,
+      s"Credential Schema record cannot be found by `id`=$id"
+    )
+
 final case class CredentialSchemaUpdateError(id: UUID, version: String, author: String, message: String)
     extends CredentialSchemaServiceError(
       StatusCode.BadRequest,
