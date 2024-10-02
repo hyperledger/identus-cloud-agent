@@ -24,7 +24,7 @@ Feature: Manage OID4VCI credential issuer
     Examples:
       | id                                   | url                | clientId | clientSecret | httpStatus | errorDetail                      | description        |
       | null                                 | null               | null     | null         | 400        | authorizationServer.url          | null values        |
-      | null                                 | malformed          | id       | secret       | 400        | Invalid URL                      | malformed url      |
+      | null                                 | malformed          | id       | secret       | 400        | Relative URL 'malformed' is not  | malformed url      |
       | null                                 | http://example.com | id       | null         | 400        | authorizationServer.clientSecret | null client secret |
       | null                                 | http://example.com | null     | secret       | 400        | authorizationServer.clientId     | null client id     |
       | null                                 | null               | id       | secret       | 400        | authorizationServer.url          | null url           |
@@ -37,4 +37,4 @@ Feature: Manage OID4VCI credential issuer
     Then Issuer should see the oid4vci '<httpStatus>' http status response with '<errorDetail>' detail
     Examples:
       | property | value     | httpStatus | errorDetail | description |
-      | url      | malformed | 200        |             | Invalid URL |
+      | url      | malformed | 404        |             | Invalid URL |

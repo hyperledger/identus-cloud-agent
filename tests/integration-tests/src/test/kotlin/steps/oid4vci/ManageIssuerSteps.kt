@@ -30,9 +30,11 @@ import org.hyperledger.identus.client.models.PatchAuthorizationServer
 import org.hyperledger.identus.client.models.PatchCredentialIssuerRequest
 
 class ManageIssuerSteps {
-    private val UPDATE_AUTH_SERVER_URL = "http://example.com"
-    private val UPDATE_AUTH_SERVER_CLIENT_ID = "foo"
-    private val UPDATE_AUTH_SERVER_CLIENT_SECRET = "bar"
+    companion object {
+        private const val UPDATE_AUTH_SERVER_URL = "http://example.com"
+        private const val UPDATE_AUTH_SERVER_CLIENT_ID = "foo"
+        private const val UPDATE_AUTH_SERVER_CLIENT_SECRET = "bar"
+    }
 
     @Given("{actor} has an existing oid4vci issuer")
     fun issuerHasExistingCredentialIssuer(issuer: Actor) {
@@ -229,8 +231,9 @@ class ManageIssuerSteps {
     }
 
     @Then("{actor} should see the update oid4vci issuer returned '{}' http status")
-    fun issuerShouldSeeTheUpdateOID4VCIIssuerReturnedHttpStatus(issuer: Actor, httpStatus: Int) {
-        println("STATUS: ${SerenityRest.lastResponse().statusCode}")
-        SerenityRest.lastResponse().body.prettyPrint()
+    fun issuerShouldSeeTheUpdateOID4VCIIssuerReturnedHttpStatus(issuer: Actor, statusCode: Int) {
+        issuer.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(statusCode),
+        )
     }
 }
