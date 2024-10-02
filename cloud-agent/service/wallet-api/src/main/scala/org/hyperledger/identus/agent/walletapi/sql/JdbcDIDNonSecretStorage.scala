@@ -6,23 +6,16 @@ import doobie.implicits.*
 import doobie.postgres.implicits.*
 import org.hyperledger.identus.agent.walletapi.model.*
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.castor.core.model.did.{
-  EllipticCurve,
-  InternalKeyPurpose,
-  PrismDID,
-  ScheduledDIDOperationStatus,
-  VerificationRelationship
-}
+import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.shared.db.ContextAwareTask
-import org.hyperledger.identus.shared.db.Implicits.*
-import org.hyperledger.identus.shared.db.Implicits.given
+import org.hyperledger.identus.shared.db.Implicits.{*, given}
 import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext, WalletId}
 import zio.*
 import zio.interop.catz.*
 
 import java.time.Instant
-import scala.collection.immutable.ArraySeq
+import java.util.Objects
 
 class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[Task]) extends DIDNonSecretStorage {
 
@@ -154,7 +147,10 @@ class JdbcDIDNonSecretStorage(xa: Transactor[ContextAwareTask], xb: Transactor[T
 
   override def incrementAndGetNextDIDIndex: URIO[WalletAccessContext, Int] = {
     def acquireAdvisoryLock(walletId: WalletId): ConnectionIO[Unit] = {
-      sql"SELECT pg_advisory_xact_lock(${walletId.hashCode})".query[Unit].unique.void
+      // Should be specific to this process
+      val PROCESS_UNIQUE_ID = 465263
+      val hashCode = Objects.hash(walletId.hashCode(), PROCESS_UNIQUE_ID)
+      sql"SELECT pg_advisory_xact_lock($hashCode)".query[Unit].unique.void
     }
 
     def insertWalletDIDIndexIfNotExists(walletId: WalletId): ConnectionIO[Int] = {

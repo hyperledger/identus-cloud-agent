@@ -19,7 +19,7 @@ import zio.*
 import zio.interop.catz.*
 
 import java.time.Instant
-import java.util.UUID
+import java.util.{Objects, UUID}
 
 class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: Transactor[Task])
     extends CredentialStatusListRepository {
@@ -53,8 +53,12 @@ class JdbcCredentialStatusListRepository(xa: Transactor[ContextAwareTask], xb: T
       statusListRegistryUrl: String
   ): URIO[WalletAccessContext, (UUID, Int)] = {
 
-    def acquireAdvisoryLock(walletId: WalletId): ConnectionIO[Unit] =
-      sql"SELECT pg_advisory_xact_lock(${walletId.hashCode})".query[Unit].unique.void
+    def acquireAdvisoryLock(walletId: WalletId): ConnectionIO[Unit] = {
+      // Should be specific to this process
+      val PROCESS_UNIQUE_ID = 235457
+      val hashCode = Objects.hash(walletId.hashCode(), PROCESS_UNIQUE_ID)
+      sql"SELECT pg_advisory_xact_lock($hashCode)".query[Unit].unique.void
+    }
 
     def getLatestOfTheWallet: ConnectionIO[Option[CredentialStatusList]] =
       sql"""
