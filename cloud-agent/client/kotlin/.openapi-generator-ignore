@@ -18,6 +18,7 @@ src/main/kotlin/org/hyperledger/identus/client/models/DidParameter.kt
 src/main/kotlin/org/hyperledger/identus/client/models/VcVerificationParameter.kt
 
 src/main/kotlin/org/hyperledger/identus/client/models/CreateIssueCredentialRecordRequest.kt
+src/main/kotlin/org/hyperledger/identus/client/models/CreateIssueCredentialRecordRequestSchemaId.kt
 
 src/test/kotlin/org/hyperledger/identus/client/models/UpdateManagedDIDServiceActionTest.kt
 src/test/kotlin/org/hyperledger/identus/client/models/UpdateManagedDIDServiceActionTypeTest.kt
@@ -29,4 +30,5 @@ src/test/kotlin/org/hyperledger/identus/client/models/StatusPurposeTest.kt
 src/test/kotlin/org/hyperledger/identus/client/models/CredentialSubjectTest.kt
 
 src/test/kotlin/org/hyperledger/identus/client/models/CreateIssueCredentialRecordRequestTest.kt
+src/test/kotlin/org/hyperledger/identus/client/models/CreateIssueCredentialRecordRequestSchemaIdTest.kt
 
