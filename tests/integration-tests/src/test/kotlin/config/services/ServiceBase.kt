@@ -15,7 +15,6 @@ abstract class ServiceBase : Startable {
     }
 
     abstract val container: ComposeContainer
-    abstract val keepRunning: Boolean
 
     open val logServices: List<String> = emptyList()
     private val logWriters: MutableList<Writer> = mutableListOf()
@@ -41,8 +40,6 @@ abstract class ServiceBase : Startable {
         logWriters.forEach {
             it.close()
         }
-        if (!keepRunning) {
-            container.stop()
-        }
+        container.stop()
     }
 }

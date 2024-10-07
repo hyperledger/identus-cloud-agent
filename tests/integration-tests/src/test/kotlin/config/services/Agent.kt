@@ -16,7 +16,6 @@ data class Agent(
     @ConfigAlias("prism_node") val prismNode: VerifiableDataRegistry?,
     val keycloak: Keycloak?,
     val vault: Vault?,
-    @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
 ) : ServiceBase() {
 
     override val logServices = listOf("identus-cloud-agent")
