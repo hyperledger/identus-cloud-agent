@@ -46,7 +46,7 @@ trait PresentationServiceSpecHelper {
     linkSecretLayer,
     PresentationRepositoryInMemory.layer,
     CredentialRepositoryInMemory.layer,
-    (InMemoryMessagingService.messagingServiceLayer >>>
+    (ZLayer.succeed(100) >>> InMemoryMessagingService.messagingServiceLayer >>>
       InMemoryMessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
   ) ++ defaultWalletLayer
 

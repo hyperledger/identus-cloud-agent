@@ -190,6 +190,7 @@ final case class AgentConfig(
     secretStorage: SecretStorageConfig,
     webhookPublisher: WebhookPublisherConfig,
     defaultWallet: DefaultWalletConfig,
+    inMemoryQueueCapacity: Int,
     kafka: KafkaConfig
 ) {
   def validate: Either[String, Unit] =

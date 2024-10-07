@@ -8,7 +8,7 @@ import zio.test.*
 import zio.test.Assertion.*
 
 object InMemoryMessagingServiceSpec extends ZIOSpecDefault {
-  val testLayer = InMemoryMessagingService.messagingServiceLayer >+>
+  val testLayer = ZLayer.succeed(100) >+> InMemoryMessagingService.messagingServiceLayer >+>
     InMemoryMessagingService.producerLayer[String, String] >+>
     InMemoryMessagingService.consumerLayer[String, String]("test-group")
 

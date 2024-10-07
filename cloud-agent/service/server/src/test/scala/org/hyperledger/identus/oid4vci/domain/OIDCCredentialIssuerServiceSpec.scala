@@ -56,7 +56,7 @@ object OIDCCredentialIssuerServiceSpec
       GenericSecretStorageInMemory.layer,
       LinkSecretServiceImpl.layer,
       CredentialServiceImpl.layer,
-      (InMemoryMessagingService.messagingServiceLayer >>>
+      (ZLayer.succeed(100) >>> InMemoryMessagingService.messagingServiceLayer >>>
         InMemoryMessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
       OIDCCredentialIssuerServiceImpl.layer
     )

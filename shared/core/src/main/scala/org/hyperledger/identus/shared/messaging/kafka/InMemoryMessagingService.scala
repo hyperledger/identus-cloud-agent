@@ -109,12 +109,12 @@ object InMemoryMessagingService {
     def apply(value: Long): TimeStamp = value
     extension (ts: TimeStamp) def value: Long = ts
 
-  val messagingServiceLayer: ULayer[MessagingService] =
+  val messagingServiceLayer: URLayer[Int, MessagingService] =
     ZLayer.fromZIO {
       for {
+        queueCapacity <- ZIO.service[Int]
         queueMap <- ConcurrentMap.empty[Topic, (Queue[Message[_, _]], Ref[Offset])]
         processedMessagesMap <- ConcurrentMap.empty[ConsumerGroupKey, ConcurrentMap[Offset, TimeStamp]]
-        queueCapacity = 100 // queue capacity
         _ <- cleanupTaskForProcessedMessages(processedMessagesMap)
       } yield new InMemoryMessagingService(queueMap, queueCapacity, processedMessagesMap)
     }

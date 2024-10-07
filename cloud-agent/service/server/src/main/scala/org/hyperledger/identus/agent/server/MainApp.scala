@@ -188,7 +188,7 @@ object MainApp extends ZIOAppDefault {
           )
         } else {
           ZIO.succeed(
-            InMemoryMessagingService.messagingServiceLayer
+            ZLayer.succeed(appConfig.agent.inMemoryQueueCapacity) >>> InMemoryMessagingService.messagingServiceLayer
           )
         }
       messageProducerLayer <-

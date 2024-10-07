@@ -315,7 +315,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
       }
     ).provide(
       connectionServiceLayer,
-      InMemoryMessagingService.messagingServiceLayer,
+      ZLayer.succeed(100) >>> InMemoryMessagingService.messagingServiceLayer,
       InMemoryMessagingService.producerLayer[UUID, WalletIdAndRecordId],
       ZLayer.succeed(WalletAccessContext(WalletId.random)),
     )

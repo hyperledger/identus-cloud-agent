@@ -44,7 +44,7 @@ trait CredentialServiceSpecHelper {
       credentialDefinitionServiceLayer,
       GenericSecretStorageInMemory.layer,
       LinkSecretServiceImpl.layer,
-      (InMemoryMessagingService.messagingServiceLayer >>>
+      (ZLayer.succeed(100) >>> InMemoryMessagingService.messagingServiceLayer >>>
         InMemoryMessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
       CredentialServiceImpl.layer
     )
