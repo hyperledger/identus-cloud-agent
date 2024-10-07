@@ -43,7 +43,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
       record <- credentialService
         .findById(DidCommID(message.value.recordId.toString))
         .provideSome(ZLayer.succeed(walletAccessContext))
-        .someOrElseZIO(ZIO.dieMessage("Record Not Found"))
+        .someOrElseZIO(ZIO.dieMessage(s"Record Not Found: ${message.value.recordId}"))
       _ <- performIssueCredentialExchange(record)
         .tapSomeError { case (walletAccessContext, errorResponse) =>
           for {
