@@ -37,7 +37,7 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
     Unit
   ] = {
     (for {
-      _ <- ZIO.logInfo(s"!!! Handling recordId: ${message.value} via Kafka queue")
+      _ <- ZIO.logDebug(s"!!! Handling recordId: ${message.value} via Kafka queue")
       credentialService <- ZIO.service[CredentialService]
       walletAccessContext = WalletAccessContext(WalletId.fromUUID(message.value.walletId))
       record <- credentialService

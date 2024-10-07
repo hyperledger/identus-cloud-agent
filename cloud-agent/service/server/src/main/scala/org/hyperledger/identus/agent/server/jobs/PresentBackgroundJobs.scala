@@ -72,7 +72,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
     Unit
   ] = {
     (for {
-      _ <- ZIO.logInfo(s"!!! Present Proof Handling recordId: ${message.value} via Kafka queue")
+      _ <- ZIO.logDebug(s"!!! Present Proof Handling recordId: ${message.value} via Kafka queue")
       presentationService <- ZIO.service[PresentationService]
       walletAccessContext = WalletAccessContext(WalletId.fromUUID(message.value.walletId))
       record <- presentationService
