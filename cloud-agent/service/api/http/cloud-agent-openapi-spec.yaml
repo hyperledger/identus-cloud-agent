@@ -152,13 +152,6 @@ tags:
     These API keys can then be used for authorization to access specific wallets.
 
     For more detailed information related to the agent IAM and its usage, please refer to this [documentation](https://docs.atalaprism.io/docs/atala-prism/prism-cloud-agent/authentication).
-- name: Presentation Exchange
-  description: |2
-
-    The __Presentation Exchange__ endpoints offers a way to manage resources related to [presentation exchange protocol](https://identity.foundation/presentation-exchange/spec/v2.1.1/).
-
-    The verifier can create the resources such as `presentation-definition` that can be publicly referenced
-    in various protocols such as [OpenID for Verificable Presentation](https://openid.net/specs/openid-4-verifiable-presentations-1_0.html).
 servers:
 - url: http://localhost:8085
   description: The local instance of the Cloud Agent
@@ -174,7 +167,7 @@ paths:
       summary: Lookup credential definitions by indexed fields
       description: 'Lookup credential definitions by `author`, `name`, `tag` parameters
         and control the pagination by `offset` and `limit` parameters '
-      operationId: lookupCredentialDefinitionsByQueryHttpUrl
+      operationId: lookupCredentialDefinitionsByQuery
       parameters:
       - name: author
         in: query
@@ -252,12 +245,11 @@ paths:
     post:
       tags:
       - Credential Definition Registry
-      summary: Publish new definition to the definition registry, resolvable by HTTP
-        url
+      summary: Publish new definition to the definition registry
       description: Create the new credential definition record with metadata and internal
         JSON Schema on behalf of Cloud Agent. The credential definition will be signed
         by the keys of Cloud Agent and issued by the DID that corresponds to it.
-      operationId: createCredentialDefinitionHttpUrl
+      operationId: createCredentialDefinition
       requestBody:
         description: JSON object required for the credential definition creation
         content:
@@ -311,127 +303,30 @@ paths:
       security:
       - apiKeyAuth: []
       - jwtAuth: []
-  /credential-definition-registry/definitions/did-url:
+  /credential-definition-registry/definitions/{guid}:
     get:
       tags:
       - Credential Definition Registry
-      summary: Lookup credential definitions by indexed fields
-      description: 'Lookup DID url resolvable credential definitions by `author`,
-        `name`, `tag` parameters and control the pagination by `offset` and `limit`
-        parameters '
-      operationId: lookupCredentialDefinitionsByQueryDidUrl
+      summary: Fetch the credential definition from the registry by `guid`
+      description: Fetch the credential definition by the unique identifier
+      operationId: getCredentialDefinitionById
       parameters:
-      - name: author
-        in: query
-        required: false
+      - name: guid
+        in: path
+        description: Globally unique identifier of the credential definition record
+        required: true
         schema:
           type: string
-        example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
-      - name: name
-        in: query
-        required: false
-        schema:
-          type: string
-        example: DrivingLicense
-      - name: version
-        in: query
-        required: false
-        schema:
-          type: string
-        example: 1.0.0
-      - name: tag
-        in: query
-        required: false
-        schema:
-          type: string
-        example: licence
-      - name: offset
-        in: query
-        description: The number of items to skip before returning results. Default
-          is 0 if not specified.
-        required: false
-        schema:
-          type: integer
-          format: int32
-      - name: limit
-        in: query
-        description: The maximum number of items to return. Defaults to 100 if not
-          specified.
-        required: false
-        schema:
-          type: integer
-          format: int32
-      - name: order
-        in: query
-        required: false
-        schema:
-          type: string
+          format: uuid
       responses:
         '200':
-          description: Collection of CredentialDefinitions records.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CredentialDefinitionDidUrlResponsePage'
-        '400':
-          description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Unable to process the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-      - apiKeyAuth: []
-      - jwtAuth: []
-    post:
-      tags:
-      - Credential Definition Registry
-      summary: Publish new definition to the definition registry, resolvable by DID
-        url
-      description: Create the new credential definition record with metadata and internal
-        JSON Schema on behalf of the Cloud Agent. The credential definition will be
-        signed by the keys of Cloud Agent and issued by the DID that corresponds to
-        it.
-      operationId: createCredentialDefinitionDidUrl
-      requestBody:
-        description: JSON object required for the credential definition creation
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CredentialDefinitionInput'
-        required: true
-      responses:
-        '201':
-          description: The new credential definition record is successfully created
+          description: CredentialDefinition found by `guid`
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CredentialDefinitionResponse'
         '400':
           description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden
           content:
             application/json:
               schema:
@@ -454,9 +349,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-      security:
-      - apiKeyAuth: []
-      - jwtAuth: []
   /credential-definition-registry/definitions/{guid}/definition:
     get:
       tags:
@@ -465,7 +357,7 @@ paths:
         the registry by `guid`
       description: Fetch the inner definition fields of the credential definition
         by the unique identifier
-      operationId: getCredentialDefinitionInnerDefinitionByIdHttpUrl
+      operationId: getCredentialDefinitionInnerDefinitionById
       parameters:
       - name: guid
         in: path
@@ -479,148 +371,6 @@ paths:
           content:
             application/json:
               schema: {}
-        '400':
-          description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Resource could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Unable to process the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /credential-definition-registry/definitions/did-url/{guid}/definition:
-    get:
-      tags:
-      - Credential Definition Registry
-      summary: Fetch the inner definition field of the credential definition from
-        the registry by `guid`, wrapped in an envelope
-      description: Fetch the inner definition fields of the credential definition
-        by the unique identifier, it should have been crated via DID url, otherwise
-        not found error is returned.
-      operationId: getCredentialDefinitionInnerDefinitionByIdDidUrl
-      parameters:
-      - name: guid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: CredentialDefinition found by `guid`
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PrismEnvelopeResponse'
-        '400':
-          description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Resource could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Unable to process the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /credential-definition-registry/definitions/{guid}:
-    get:
-      tags:
-      - Credential Definition Registry
-      summary: Fetch the credential definition from the registry by `guid`
-      description: Fetch the credential definition by the unique identifier
-      operationId: getCredentialDefinitionByIdHttpUrl
-      parameters:
-      - name: guid
-        in: path
-        description: Globally unique identifier of the credential definition record
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: CredentialDefinition found by `guid`
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CredentialDefinitionResponse'
-        '400':
-          description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Resource could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Unable to process the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /credential-definition-registry/definitions/did-url/{guid}:
-    get:
-      tags:
-      - Credential Definition Registry
-      summary: Fetch the credential definition from the registry by `guid`, wrapped
-        in an envelope
-      description: Fetch the credential definition by the unique identifier, it should
-        have been crated via DID url, otherwise not found error is returned.
-      operationId: getCredentialDefinitionByIdDidUrl
-      parameters:
-      - name: guid
-        in: path
-        description: Globally unique identifier of the credential definition record
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: CredentialDefinition found by `guid`, wrapped in an envelope
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PrismEnvelopeResponse'
         '400':
           description: Invalid request parameters
           content:
@@ -742,7 +492,7 @@ paths:
     post:
       tags:
       - Schema Registry
-      summary: Publish new schema to the schema registry, http url resolvable
+      summary: Publish new schema to the schema registry
       description: Create the new credential schema record with metadata and internal
         JSON Schema on behalf of Cloud Agent. The credential schema will be signed
         by the keys of Cloud Agent and issued by the DID that corresponds to it.
@@ -800,162 +550,7 @@ paths:
       security:
       - apiKeyAuth: []
       - jwtAuth: []
-  /schema-registry/schemas/did-url:
-    get:
-      tags:
-      - Schema Registry
-      summary: Lookup schemas by indexed fields
-      description: 'Lookup schemas by `author`, `name`, `tags` parameters and control
-        the pagination by `offset` and `limit` parameters '
-      operationId: lookupSchemasByQueryDidUrl
-      parameters:
-      - name: author
-        in: query
-        required: false
-        schema:
-          type: string
-        example: did:prism:4a5b5cf0a513e83b598bbea25cd6196746747f361a73ef77068268bc9bd732ff
-      - name: name
-        in: query
-        required: false
-        schema:
-          type: string
-        example: DrivingLicense
-      - name: version
-        in: query
-        required: false
-        schema:
-          type: string
-        example: 1.0.0
-      - name: tags
-        in: query
-        required: false
-        schema:
-          type: string
-        example: driving
-      - name: offset
-        in: query
-        description: The number of items to skip before returning results. Default
-          is 0 if not specified.
-        required: false
-        schema:
-          type: integer
-          format: int32
-      - name: limit
-        in: query
-        description: The maximum number of items to return. Defaults to 100 if not
-          specified.
-        required: false
-        schema:
-          type: integer
-          format: int32
-      - name: order
-        in: query
-        required: false
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Collection of CredentialSchema records each wrapped in an envelope.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CredentialSchemaDidUrlResponsePage'
-        '400':
-          description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Unable to process the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-      - apiKeyAuth: []
-      - jwtAuth: []
-    post:
-      tags:
-      - Schema Registry
-      summary: Publish new schema to the schema registry, did url resolvable
-      description: Create the new credential schema record with metadata and internal
-        JSON Schema on behalf of Cloud Agent. The credential schema will be signed
-        by the keys of Cloud Agent and issued by the DID that corresponds to it.
-      operationId: createSchemaDidUrl
-      requestBody:
-        description: JSON object required for the credential schema creation
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CredentialSchemaInput'
-        required: true
-      responses:
-        '201':
-          description: The new credential schema record is successfully created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PrismEnvelopeResponse'
-        '400':
-          description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Resource could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Unable to process the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-      - apiKeyAuth: []
-      - jwtAuth: []
-  /schema-registry/schemas/{id}:
+  /schema-registry/{author}/{id}:
     put:
       tags:
       - Schema Registry
@@ -966,6 +561,13 @@ paths:
         to it.
       operationId: updateSchema
       parameters:
+      - name: author
+        in: path
+        description: DID of the identity which authored the credential schema. A piece
+          of Metadata.
+        required: true
+        schema:
+          type: string
       - name: id
         in: path
         description: A locally unique identifier to address the schema. UUID is generated
@@ -1027,167 +629,6 @@ paths:
       security:
       - apiKeyAuth: []
       - jwtAuth: []
-  /schema-registry/schemas/did-url/{id}:
-    put:
-      tags:
-      - Schema Registry
-      summary: Publish the new version of the credential schema to the schema registry
-      description: Publish the new version of the credential schema record with metadata
-        and internal JSON Schema on behalf of Cloud Agent. The credential schema will
-        be signed by the keys of Cloud Agent and issued by the DID that corresponds
-        to it.
-      operationId: updateSchemaDidUrl
-      parameters:
-      - name: id
-        in: path
-        description: A locally unique identifier to address the schema. UUID is generated
-          by the backend.
-        required: true
-        schema:
-          type: string
-          format: uuid
-      requestBody:
-        description: JSON object required for the credential schema update
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CredentialSchemaInput'
-        required: true
-      responses:
-        '200':
-          description: The credential schema record is successfully updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PrismEnvelopeResponse'
-        '400':
-          description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Resource could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Unable to process the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-      - apiKeyAuth: []
-      - jwtAuth: []
-  /schema-registry/schemas/{guid}/schema:
-    get:
-      tags:
-      - Schema Registry
-      summary: Fetch the schema from the registry by `guid`
-      description: Fetch the credential schema by the unique identifier
-      operationId: getRawSchemaById
-      parameters:
-      - name: guid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: Raw JSON response of the CredentialSchema
-          content:
-            application/json:
-              schema: {}
-        '400':
-          description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Resource could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Unable to process the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /schema-registry/schemas/did-url/{guid}/schema:
-    get:
-      tags:
-      - Schema Registry
-      summary: Fetch the schema from the registry by `guid`
-      description: Fetch the credential schema by the unique identifier
-      operationId: getRawSchemaByIdDidUrl
-      parameters:
-      - name: guid
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: Raw JSON response of the CredentialSchema
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PrismEnvelopeResponse'
-        '400':
-          description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Resource could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Unable to process the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /schema-registry/schemas/{guid}:
     get:
       tags:
@@ -1234,28 +675,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /schema-registry/schemas/did-url/{guid}:
+  /schema-registry/schemas/{guid}/schema:
     get:
       tags:
       - Schema Registry
       summary: Fetch the schema from the registry by `guid`
       description: Fetch the credential schema by the unique identifier
-      operationId: getSchemaByIdDidUrl
+      operationId: getRawSchemaById
       parameters:
       - name: guid
         in: path
-        description: Globally unique identifier of the credential schema record
         required: true
         schema:
           type: string
           format: uuid
       responses:
         '200':
-          description: CredentialSchema found by `guid`, wrapped in an envelope
+          description: Raw JSON response of the CredentialSchema
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/PrismEnvelopeResponse'
+              schema: {}
         '400':
           description: Invalid request parameters
           content:
@@ -3227,176 +2666,6 @@ paths:
       security:
       - apiKeyAuth: []
       - jwtAuth: []
-  /presentation-exchange/presentation-definitions/{id}:
-    get:
-      tags:
-      - Presentation Exchange
-      summary: Get a presentation-definition
-      operationId: getPresentationDefinition
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: Presentation Definition retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PresentationDefinition'
-        '400':
-          description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Resource could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Unable to process the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  /presentation-exchange/presentation-definitions:
-    get:
-      tags:
-      - Presentation Exchange
-      summary: List all presentation-definitions
-      description: |-
-        List all `presentation-definitions` in the wallet.
-        Return a paginated items ordered by created timestamp.
-      operationId: listPresentationDefinition
-      parameters:
-      - name: offset
-        in: query
-        description: The number of items to skip before returning results. Default
-          is 0 if not specified.
-        required: false
-        schema:
-          type: integer
-          format: int32
-      - name: limit
-        in: query
-        description: The maximum number of items to return. Defaults to 100 if not
-          specified.
-        required: false
-        schema:
-          type: integer
-          format: int32
-      responses:
-        '200':
-          description: Presentation Definitions retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PresentationDefinitionPage'
-        '400':
-          description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Unable to process the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-      - apiKeyAuth: []
-      - jwtAuth: []
-    post:
-      tags:
-      - Presentation Exchange
-      summary: Create a new presentation-definition
-      description: |-
-        Create a `presentation-definition` object according to the [presentation exchange protocol](https://identity.foundation/presentation-exchange/spec/v2.1.1/).
-        The `POST` endpoint is restricted to the owner of the wallet. The `presentation-definition` object, however can be referenced by publicly by `id` returned in the response.
-      operationId: createPresentationDefinition
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreatePresentationDefinition'
-        required: true
-      responses:
-        '201':
-          description: Presentation Definition created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PresentationDefinition'
-        '400':
-          description: Invalid request parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Resource could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          description: Unable to process the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-      security:
-      - apiKeyAuth: []
-      - jwtAuth: []
   /_system/health:
     get:
       tags:
@@ -4882,12 +4151,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Cannot process due to conflict with current state of the resource
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
         '422':
           description: Unable to process the request
           content:
@@ -5262,6 +4525,12 @@ components:
           example: dkflks3DflkFmkllnDfde
           minLength: 16
           maxLength: 128
+    Arr:
+      type: object
+      properties:
+        elements:
+          type: array
+          items: {}
     AuthorizationServer:
       required:
       - url
@@ -5275,6 +4544,13 @@ components:
           type: string
         clientSecret:
           type: string
+    Bool:
+      required:
+      - value
+      type: object
+      properties:
+        value:
+          type: boolean
     ClaimDescriptor:
       type: object
       properties:
@@ -5286,17 +4562,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Localization'
-    ClaimFormat:
-      type: object
-      properties:
-        jwt:
-          $ref: '#/components/schemas/Jwt'
-        jwt_vc:
-          $ref: '#/components/schemas/Jwt'
-        jwt_vp:
-          $ref: '#/components/schemas/Jwt'
-        ldp:
-          $ref: '#/components/schemas/Ldp'
     Connection:
       required:
       - connectionId
@@ -5470,13 +4735,6 @@ components:
             page of results. If the API response is the first page of results, this
             field should be set to None.
           example: /cloud-agent/connections?offset=0&limit=10
-    Constraints:
-      type: object
-      properties:
-        fields:
-          type: array
-          items:
-            $ref: '#/components/schemas/Field'
     CreateConnectionRequest:
       type: object
       properties:
@@ -5545,7 +4803,6 @@ components:
     CreateIssueCredentialRecordRequest:
       required:
       - claims
-      - issuingDID
       type: object
       properties:
         validityPeriod:
@@ -5555,17 +4812,13 @@ components:
           format: double
           example: 3600.0
         schemaId:
+          type: string
           description: |2
 
             The URL pointing to the JSON schema that will be used for this offer (should be 'http' or 'https').
             When dereferenced, the returned content should be a JSON schema compliant with the '[Draft 2020-12](https://json-schema.org/draft/2020-12/release-notes)' version of the specification.
             Note that this parameter only applies when the offer is of type 'JWT'.
           example: https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema
-          oneOf:
-          - type: array
-            items:
-              type: string
-          - type: string
         credentialDefinitionId:
           type: string
           description: |2
@@ -5598,16 +4851,9 @@ components:
           type: string
           description: |2
 
-            The issuer Prism DID by which the verifiable credential will be issued. DID can be short for or long form.
+            The short-form issuer Prism DID by which the JWT verifiable credential will be issued.
+            Note that this parameter only applies when the offer is type 'JWT'.
           example: did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f
-        issuingKid:
-          type: string
-          description: |2
-
-            Specified the key ID (kid) of the DID, it will be used to sign credential.
-            User should specify just the partial identifier of the key. The full id of the kid MUST be "<issuingDID>#<kid>"
-            Note the cryto algorithm used with depend type of the key.
-          example: kid1
         connectionId:
           type: string
           description: |2
@@ -5666,19 +4912,6 @@ components:
             type: string
             description: The JSON-LD context describing the JSON document
             example: https://didcomm.org/messaging/contexts/v2
-    CreatePresentationDefinition:
-      type: object
-      properties:
-        input_descriptors:
-          type: array
-          items:
-            $ref: '#/components/schemas/InputDescriptor'
-        name:
-          type: string
-        purpose:
-          type: string
-        format:
-          $ref: '#/components/schemas/ClaimFormat'
     CreateWalletRequest:
       required:
       - name
@@ -5755,46 +4988,6 @@ components:
             type: string
         credentialSubject:
           $ref: '#/components/schemas/Map_ClaimDescriptor'
-    CredentialDefinitionDidUrlResponsePage:
-      required:
-      - kind
-      - self
-      - pageOf
-      type: object
-      properties:
-        contents:
-          type: array
-          items:
-            $ref: '#/components/schemas/PrismEnvelopeResponse'
-          description: A sequence of CredentialDefinitionResponse objects representing
-            the list of credential definitions that the API response contains
-          example: []
-        kind:
-          type: string
-          description: A string field indicating the type of the API response. In
-            this case, it will always be set to `CredentialDefinitionPage`
-          example: CredentialDefinitionPage
-        self:
-          type: string
-          description: A string field containing the URL of the current API endpoint
-          example: /cloud-agent/credential-definition-registry/definitions?skip=10&limit=10
-        pageOf:
-          type: string
-          description: A string field indicating the type of resource that the contents
-            field contains
-          example: /cloud-agent/credential-definition-registry/definitions
-        next:
-          type: string
-          description: An optional string field containing the URL of the next page
-            of results. If the API response does not contain any more pages, this
-            field should be set to None.
-          example: /cloud-agent/credential-definition-registry/definitions?skip=20&limit=10
-        previous:
-          type: string
-          description: An optional string field containing the URL of the previous
-            page of results. If the API response is the first page of results, this
-            field should be set to None.
-          example: /cloud-agent/credential-definition-registry/definitions?skip=0&limit=10
     CredentialDefinitionInput:
       required:
       - name
@@ -6032,12 +5225,9 @@ components:
     CredentialIssuer:
       required:
       - id
-      - type
       type: object
       properties:
         id:
-          type: string
-        type:
           type: string
     CredentialIssuer1:
       required:
@@ -6116,46 +5306,6 @@ components:
           type: string
         enc:
           type: string
-    CredentialSchemaDidUrlResponsePage:
-      required:
-      - kind
-      - self
-      - pageOf
-      type: object
-      properties:
-        contents:
-          type: array
-          items:
-            $ref: '#/components/schemas/PrismEnvelopeResponse'
-          description: A sequence of PrismEnvelopeResponse objects representing the
-            list of credential schemas wrapped in an envelope
-          example: []
-        kind:
-          type: string
-          description: A string field indicating the type of the API response. In
-            this case, it will always be set to `CredentialSchemaPage`
-          example: CredentialSchemaPage
-        self:
-          type: string
-          description: A string field containing the URL of the current API endpoint
-          example: /cloud-agent/schema-registry/schemas/did-url?skip=10&limit=10
-        pageOf:
-          type: string
-          description: A string field indicating the type of resource that the contents
-            field contains
-          example: /cloud-agent/schema-registry/schemas/did-url
-        next:
-          type: string
-          description: An optional string field containing the URL of the next page
-            of results. If the API response does not contain any more pages, this
-            field should be set to None.
-          example: /cloud-agent/schema-registry/schemas/did-url?skip=20&limit=10
-        previous:
-          type: string
-          description: An optional string field containing the URL of the previous
-            page of results. If the API response is the first page of results, this
-            field should be set to None.
-          example: /cloud-agent/schema-registry/schemas/did-url?skip=0&limit=10
     CredentialSchemaInput:
       required:
       - name
@@ -6245,7 +5395,6 @@ components:
       - schema
       - author
       - authored
-      - resolutionMethod
       - kind
       - self
       type: object
@@ -6340,8 +5489,6 @@ components:
           example: 2022-03-10T12:00Z
         proof:
           $ref: '#/components/schemas/Proof1'
-        resolutionMethod:
-          $ref: '#/components/schemas/ResourceResolutionMethod'
         kind:
           type: string
           description: A string that identifies the type of resource being returned
@@ -6732,22 +5879,6 @@ components:
       oneOf:
       - $ref: '#/components/schemas/CredentialErrorResponse'
       - $ref: '#/components/schemas/ErrorResponse'
-    Field:
-      type: object
-      properties:
-        id:
-          type: string
-        path:
-          type: array
-          items:
-            type: string
-        name:
-          type: string
-        purpose:
-          type: string
-        filter: {}
-        optional:
-          type: boolean
     HealthInfo:
       required:
       - version
@@ -6769,22 +5900,6 @@ components:
         c_nonce_expires_in:
           type: integer
           format: int32
-    InputDescriptor:
-      required:
-      - id
-      - constraints
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        purpose:
-          type: string
-        format:
-          $ref: '#/components/schemas/ClaimFormat'
-        constraints:
-          $ref: '#/components/schemas/Constraints'
     IssueCredentialOfferInvitation:
       required:
       - id
@@ -6884,7 +5999,7 @@ components:
           type: string
           description: The date and time when the issue credential record was created.
           format: date-time
-          example: '2024-09-30T18:25:40.642419+07:00'
+          example: '2024-09-11T13:22:27.796180424Z'
         updatedAt:
           type: string
           description: The date and time when the issue credential record was last
@@ -7015,13 +6130,17 @@ components:
           type: string
         credential_configurations_supported:
           $ref: '#/components/schemas/Map_SupportedCredentialConfiguration'
-    Jwt:
-      type: object
-      properties:
-        alg:
-          type: array
-          items:
-            type: string
+    Json:
+      description: The service endpoint. Can contain multiple possible values as described
+        in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did)
+      example: https://example.com
+      oneOf:
+      - $ref: '#/components/schemas/Arr'
+      - $ref: '#/components/schemas/Bool'
+      - $ref: '#/components/schemas/Null'
+      - $ref: '#/components/schemas/Num'
+      - $ref: '#/components/schemas/Obj'
+      - $ref: '#/components/schemas/Str'
     JwtCredentialRequest:
       required:
       - format
@@ -7047,13 +6166,6 @@ components:
           $ref: '#/components/schemas/ProofType'
         jwt:
           type: string
-    Ldp:
-      type: object
-      properties:
-        proof_type:
-          type: array
-          items:
-            type: string
     LdpProof:
       required:
       - proof_type
@@ -7169,6 +6281,15 @@ components:
         nonceExpiresIn:
           type: integer
           format: int64
+    'Null':
+      type: object
+    Num:
+      required:
+      - value
+      type: object
+      properties:
+        value:
+          type: number
     OOBPresentationInvitation:
       required:
       - id
@@ -7202,13 +6323,6 @@ components:
       description: The invitation for this Request Presentation
     Obj:
       type: object
-      description: |2
-
-        The set of claims to be disclosed from the  issued credential.
-        The JSON object should comply with the schema applicable for this offer (i.e. 'schemaId' or 'credentialDefinitionId').
-      example:
-        firstname: Alice
-        lastname: Wonderland
     Options:
       required:
       - challenge
@@ -7257,55 +6371,6 @@ components:
       properties:
         authorizationServer:
           $ref: '#/components/schemas/PatchAuthorizationServer'
-    PresentCredentialRequestFormat:
-      type: string
-      description: The presentation format to display in Didcomm messages (default
-        to 'prism/jwt', vc+sd-jwt or anoncreds/proof-request@v1.0)
-      example: prism/jwt
-      enum:
-      - Anoncred
-      - JWT
-      - SDJWT
-    PresentationDefinition:
-      required:
-      - id
-      type: object
-      properties:
-        id:
-          type: string
-        input_descriptors:
-          type: array
-          items:
-            $ref: '#/components/schemas/InputDescriptor'
-        name:
-          type: string
-        purpose:
-          type: string
-        format:
-          $ref: '#/components/schemas/ClaimFormat'
-      description: '*Presentation Definition* object according to the [PresentationExchange
-        spec](https://identity.foundation/presentation-exchange/spec/v2.1.1/#presentation-definition)'
-    PresentationDefinitionPage:
-      required:
-      - self
-      - kind
-      - pageOf
-      type: object
-      properties:
-        self:
-          type: string
-        kind:
-          type: string
-        pageOf:
-          type: string
-        next:
-          type: string
-        previous:
-          type: string
-        contents:
-          type: array
-          items:
-            $ref: '#/components/schemas/PresentationDefinition'
     PresentationStatus:
       required:
       - presentationId
@@ -7491,20 +6556,6 @@ components:
             page of results. If the API response is the first page of results, this
             field should be set to None.
           example: /present-proof/presentations?offset=0&limit=10
-    PrismEnvelopeResponse:
-      required:
-      - resource
-      - url
-      type: object
-      properties:
-        resource:
-          type: string
-          description: JCS normalized and base64url encoded json of the resource
-          example: ''
-        url:
-          type: string
-          description: JCS normalized and base64url encoded json of the resource
-          example: did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a?resourceService=agent-base-url&resourcePath=credential-definition-registry/definitions/did-url/ef3e4135-8fcf-3ce7-b5bb-df37defc13f6?resourceHash=4074bb1a8e0ea45437ad86763cd7e12de3fe8349ef19113df773b0d65c8a9c46
     Proof:
       required:
       - type
@@ -7764,22 +6815,14 @@ components:
           example: []
         anoncredPresentationRequest:
           $ref: '#/components/schemas/AnoncredPresentationRequestV1'
-        presentationFormat:
-          $ref: '#/components/schemas/PresentCredentialRequestFormat'
         claims:
           $ref: '#/components/schemas/Obj'
         credentialFormat:
           type: string
           description: The credential format (default to 'JWT')
           example: JWT
-    ResourceResolutionMethod:
-      type: string
-      description: The method used to resolve the schema. It can be either HTTP or
-        DID.
-      example: http
-      enum:
-      - did
-      - http
+    Revocation:
+      type: object
     Service:
       required:
       - id
@@ -7805,9 +6848,7 @@ components:
               type: string
           - type: string
         serviceEndpoint:
-          description: The service endpoint. Can contain multiple possible values
-            as described in the [Create DID operation](https://github.com/input-output-hk/prism-did-method-spec/blob/main/w3c-spec/PRISM-method.md#create-did)
-          example: https://example.com
+          $ref: '#/components/schemas/Json'
       description: A service that should appear in the DID document. https://www.w3.org/TR/did-core/#services
     StatusListCredential:
       required:
@@ -7848,7 +6889,7 @@ components:
           type: string
           description: Issuance timestamp of status list credential
           format: date-time
-          example: '2024-09-30T11:25:40.709793Z'
+          example: '2024-09-11T13:22:27.866328096Z'
         credentialSubject:
           $ref: '#/components/schemas/CredentialSubject'
         proof:
@@ -7863,12 +6904,18 @@ components:
             proofValue: zAN1rKq8npnByRqPRxhjHEkivhN8AhA8V6MqDJga1zcCUEvPDUoqJB5Rj6ZJHTCnBZ98VXTEVd1rprX2wvP1MAaTEi7Pm241qm
             cryptoSuite: eddsa-jcs-2022
     StatusPurpose:
-      type: string
       description: type of status list credential, either revocation or suspension
       example: Revocation
-      enum:
-      - Revocation
-      - Suspension
+      oneOf:
+      - $ref: '#/components/schemas/Revocation'
+      - $ref: '#/components/schemas/Suspension'
+    Str:
+      required:
+      - value
+      type: object
+      properties:
+        value:
+          type: string
     SupportProofType:
       required:
       - jwt
@@ -7900,6 +6947,8 @@ components:
             type: string
         proof_types_supported:
           $ref: '#/components/schemas/SupportProofType'
+    Suspension:
+      type: object
     UpdateEntityNameRequest:
       required:
       - name
@@ -7968,7 +7017,8 @@ components:
             items:
               type: string
           - type: string
-        serviceEndpoint: {}
+        serviceEndpoint:
+          $ref: '#/components/schemas/Json'
       description: A patch to existing Service. 'type' and 'serviceEndpoint' cannot
         both be empty.
     VcVerification:
