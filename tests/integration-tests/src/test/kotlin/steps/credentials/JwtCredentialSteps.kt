@@ -35,7 +35,7 @@ class JwtCredentialSteps {
         }
 
         val credentialOfferRequest = CreateIssueCredentialRecordRequest(
-            schemaId = schemaId,
+            schemaId = schemaId?.let { listOf(it) },
             claims = claims,
             issuingDID = did,
             connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId,
