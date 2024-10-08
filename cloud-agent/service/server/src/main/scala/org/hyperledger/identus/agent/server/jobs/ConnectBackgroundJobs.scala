@@ -28,7 +28,7 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
     _ <- messaging.MessagingService.consumeWithRetryStrategy(
       "identus-cloud-agent",
       ConnectBackgroundJobs.handleMessage,
-      retryStepsFromConfig(TOPIC_NAME, appConfig.agent.kafka.consumers.connectFlow)
+      retryStepsFromConfig(TOPIC_NAME, appConfig.agent.messagingService.connectFlow)
     )
   } yield ()
 

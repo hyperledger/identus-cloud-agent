@@ -34,7 +34,7 @@ object DIDStateSyncBackgroundJobs extends BackgroundJobsHelper {
     _ <- MessagingService.consumeWithRetryStrategy(
       "identus-cloud-agent",
       DIDStateSyncBackgroundJobs.handleMessage,
-      retryStepsFromConfig(TOPIC_NAME, appConfig.agent.kafka.consumers.didStateSync)
+      retryStepsFromConfig(TOPIC_NAME, appConfig.agent.messagingService.didStateSync)
     )
   } yield ()
 

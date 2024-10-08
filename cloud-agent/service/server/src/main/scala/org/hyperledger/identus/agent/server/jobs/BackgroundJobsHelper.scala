@@ -1,6 +1,5 @@
 package org.hyperledger.identus.agent.server.jobs
 
-import org.hyperledger.identus.agent.server.config.KafkaConsumerJobConfig
 import org.hyperledger.identus.agent.walletapi.model.{ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import org.hyperledger.identus.agent.walletapi.model.error.GetManagedDIDError
@@ -29,6 +28,7 @@ import org.hyperledger.identus.pollux.vc.jwt.{
   *
 }
 import org.hyperledger.identus.shared.crypto.*
+import org.hyperledger.identus.shared.messaging.ConsumerJobConfig
 import org.hyperledger.identus.shared.messaging.MessagingService.RetryStep
 import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext}
 import zio.{durationInt, Duration, ZIO, ZLayer}
@@ -232,7 +232,7 @@ trait BackgroundJobsHelper {
     }
   }
 
-  def retryStepsFromConfig(topicName: String, jobConfig: KafkaConsumerJobConfig): Seq[RetryStep] = {
+  def retryStepsFromConfig(topicName: String, jobConfig: ConsumerJobConfig): Seq[RetryStep] = {
     val retryTopics = jobConfig.retryStrategy match
       case None => Seq.empty
       case Some(rs) =>

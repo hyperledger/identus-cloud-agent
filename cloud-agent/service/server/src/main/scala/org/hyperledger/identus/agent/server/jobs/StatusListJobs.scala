@@ -44,7 +44,7 @@ object StatusListJobs extends BackgroundJobsHelper {
     _ <- messaging.MessagingService.consumeWithRetryStrategy(
       "identus-cloud-agent",
       StatusListJobs.handleMessage,
-      retryStepsFromConfig(TOPIC_NAME, appConfig.agent.kafka.consumers.statusListSync)
+      retryStepsFromConfig(TOPIC_NAME, appConfig.agent.messagingService.statusListSync)
     )
   } yield ()
 

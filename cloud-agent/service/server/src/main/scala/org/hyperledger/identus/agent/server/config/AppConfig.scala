@@ -4,6 +4,7 @@ import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.iam.authentication.AuthenticationConfig
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.db.DbConfig
+import org.hyperledger.identus.shared.messaging.MessagingServiceConfig
 import zio.config.magnolia.*
 import zio.Config
 
@@ -154,32 +155,6 @@ final case class DefaultWalletConfig(
     authApiKey: String
 )
 
-final case class KafkaConfig(enabled: Boolean, bootstrapServers: String, consumers: KafkaConsumersConfig)
-
-final case class KafkaConsumersConfig(
-    connectFlow: KafkaConsumerJobConfig,
-    issueFlow: KafkaConsumerJobConfig,
-    presentFlow: KafkaConsumerJobConfig,
-    didStateSync: KafkaConsumerJobConfig,
-    statusListSync: KafkaConsumerJobConfig,
-    maxPollRecords: Int,
-    maxPollInterval: Duration,
-    pollTimeout: Duration,
-    rebalanceSafeCommits: Boolean,
-    autoCreateTopics: Boolean,
-)
-
-final case class KafkaConsumerJobConfig(
-    consumerCount: Int,
-    retryStrategy: Option[KafkaConsumerRetryStrategy]
-)
-
-final case class KafkaConsumerRetryStrategy(
-    maxRetries: Int,
-    initialDelay: Duration,
-    maxDelay: Duration,
-)
-
 final case class AgentConfig(
     httpEndpoint: HttpEndpointConfig,
     didCommEndpoint: DidCommEndpointConfig,
@@ -191,7 +166,7 @@ final case class AgentConfig(
     webhookPublisher: WebhookPublisherConfig,
     defaultWallet: DefaultWalletConfig,
     inMemoryQueueCapacity: Int,
-    kafka: KafkaConfig
+    messagingService: MessagingServiceConfig
 ) {
   def validate: Either[String, Unit] =
     for {

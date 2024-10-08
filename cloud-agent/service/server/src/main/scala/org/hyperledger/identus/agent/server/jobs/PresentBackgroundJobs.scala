@@ -63,7 +63,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
     _ <- messaging.MessagingService.consumeWithRetryStrategy(
       "identus-cloud-agent",
       PresentBackgroundJobs.handleMessage,
-      retryStepsFromConfig(TOPIC_NAME, appConfig.agent.kafka.consumers.presentFlow)
+      retryStepsFromConfig(TOPIC_NAME, appConfig.agent.messagingService.presentFlow)
     )
   } yield ()
 
