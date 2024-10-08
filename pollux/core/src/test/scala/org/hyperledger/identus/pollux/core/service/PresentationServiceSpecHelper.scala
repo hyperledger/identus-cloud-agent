@@ -2,9 +2,9 @@ package org.hyperledger.identus.pollux.core.service
 
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.castor.core.model.did.DID
+import org.hyperledger.identus.mercury.{AgentPeerService, PeerDID}
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.presentproof.*
-import org.hyperledger.identus.mercury.{AgentPeerService, PeerDID}
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.repository.*

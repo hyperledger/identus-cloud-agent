@@ -5,8 +5,8 @@ import org.hyperledger.identus.iam.authentication.AuthenticationConfig
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.db.DbConfig
 import org.hyperledger.identus.shared.messaging.MessagingServiceConfig
-import zio.Config
 import zio.config.magnolia.*
+import zio.Config
 
 import java.net.URL
 import java.time.Duration
