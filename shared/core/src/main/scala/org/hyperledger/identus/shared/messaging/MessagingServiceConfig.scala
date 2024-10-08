@@ -1,5 +1,7 @@
 package org.hyperledger.identus.shared.messaging
 
+import zio.{ULayer, ZLayer}
+
 import java.time.Duration
 
 case class MessagingServiceConfig(
@@ -8,6 +10,7 @@ case class MessagingServiceConfig(
     presentFlow: ConsumerJobConfig,
     didStateSync: ConsumerJobConfig,
     statusListSync: ConsumerJobConfig,
+    inMemoryQueueCapacity: Int,
     kafkaEnabled: Boolean,
     kafka: Option[KafkaConfig]
 )
@@ -35,3 +38,21 @@ final case class KafkaConsumersConfig(
     pollTimeout: Duration,
     rebalanceSafeCommits: Boolean
 )
+
+object MessagingServiceConfig {
+
+  val inMemoryLayer: ULayer[MessagingServiceConfig] =
+    ZLayer.succeed(
+      MessagingServiceConfig(
+        ConsumerJobConfig(1, None),
+        ConsumerJobConfig(1, None),
+        ConsumerJobConfig(1, None),
+        ConsumerJobConfig(1, None),
+        ConsumerJobConfig(1, None),
+        100,
+        false,
+        None
+      )
+    )
+
+}

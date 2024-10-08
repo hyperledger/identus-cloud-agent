@@ -1,22 +1,19 @@
 package org.hyperledger.identus.connect.core.service
 
 import io.circe.syntax.*
+import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.InvalidStateForOperation
-import org.hyperledger.identus.connect.core.model.ConnectionRecord
-import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.repository.ConnectionRepositoryInMemory
 import org.hyperledger.identus.mercury.model.{DidId, Message}
 import org.hyperledger.identus.mercury.protocol.connection.ConnectionResponse
-import org.hyperledger.identus.shared.messaging.kafka.InMemoryMessagingService
+import org.hyperledger.identus.shared.messaging
 import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
-import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-import java.time.Instant
 import java.util.UUID
 
 object ConnectionServiceImplSpec extends ZIOSpecDefault {
@@ -315,8 +312,9 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
       }
     ).provide(
       connectionServiceLayer,
-      ZLayer.succeed(100) >>> InMemoryMessagingService.messagingServiceLayer,
-      InMemoryMessagingService.producerLayer[UUID, WalletIdAndRecordId],
+      messaging.MessagingServiceConfig.inMemoryLayer,
+      messaging.MessagingService.serviceLayer,
+      messaging.MessagingService.producerLayer[UUID, WalletIdAndRecordId],
       ZLayer.succeed(WalletAccessContext(WalletId.random)),
     )
   }

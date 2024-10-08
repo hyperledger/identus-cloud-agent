@@ -1,6 +1,7 @@
 package org.hyperledger.identus.shared.messaging
 
-import zio.{durationInt, Cause, Duration, EnvironmentTag, RIO, Task, URIO, ZIO}
+import org.hyperledger.identus.shared.messaging.kafka.{InMemoryMessagingService, ZKafkaMessagingServiceImpl}
+import zio.{durationInt, Cause, Duration, EnvironmentTag, RIO, RLayer, Task, URIO, URLayer, ZIO, ZLayer}
 
 import java.time.Instant
 trait MessagingService {
@@ -68,6 +69,30 @@ object MessagingService {
       handler: Message[K, V] => RIO[HR, Unit]
   )(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[HR & Producer[K, V] & MessagingService, Unit] =
     consumeWithRetryStrategy(groupId, handler, Seq(RetryStep(topicName, consumerCount, 0.seconds, None)))
+
+  val serviceLayer: URLayer[MessagingServiceConfig, MessagingService] =
+    ZLayer
+      .service[MessagingServiceConfig]
+      .flatMap(config =>
+        if (config.get.kafkaEnabled) ZKafkaMessagingServiceImpl.layer
+        else InMemoryMessagingService.layer
+      )
+
+  def producerLayer[K: EnvironmentTag, V: EnvironmentTag](implicit
+      kSerde: Serde[K],
+      vSerde: Serde[V]
+  ): RLayer[MessagingService, Producer[K, V]] = ZLayer.fromZIO(for {
+    messagingService <- ZIO.service[MessagingService]
+    producer <- messagingService.makeProducer[K, V]()
+  } yield producer)
+
+  def consumerLayer[K: EnvironmentTag, V: EnvironmentTag](groupId: String)(implicit
+      kSerde: Serde[K],
+      vSerde: Serde[V]
+  ): RLayer[MessagingService, Consumer[K, V]] = ZLayer.fromZIO(for {
+    messagingService <- ZIO.service[MessagingService]
+    consumer <- messagingService.makeConsumer[K, V](groupId)
+  } yield consumer)
 
 }
 

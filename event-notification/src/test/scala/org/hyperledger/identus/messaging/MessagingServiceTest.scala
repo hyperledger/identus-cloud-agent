@@ -1,9 +1,9 @@
 package org.hyperledger.identus.messaging
 
+import org.hyperledger.identus.shared.messaging
 import org.hyperledger.identus.shared.messaging.{Message, MessagingService, Serde}
-import org.hyperledger.identus.shared.messaging.kafka.ZKafkaMessagingServiceImpl
-import zio.{durationInt, Random, Schedule, Scope, URIO, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 import zio.json.{DecoderOps, DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
+import zio.{Random, Schedule, Scope, URIO, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer, durationInt}
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID
@@ -36,7 +36,8 @@ object MessagingServiceTest extends ZIOAppDefault {
       _ <- ZIO.never
     } yield ()
     effect.provide(
-      ZKafkaMessagingServiceImpl.layer(List("localhost:29092")),
+      messaging.MessagingServiceConfig.inMemoryLayer,
+      messaging.MessagingService.serviceLayer,
       ZLayer.succeed("Sample 'R' passed to handler")
     )
   }

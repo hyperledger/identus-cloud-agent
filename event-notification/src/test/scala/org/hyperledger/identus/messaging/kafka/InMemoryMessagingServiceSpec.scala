@@ -1,16 +1,14 @@
 package org.hyperledger.identus.messaging.kafka
 
-import org.hyperledger.identus.messaging.*
-import org.hyperledger.identus.shared.messaging.{Consumer, Message, Producer}
-import org.hyperledger.identus.shared.messaging.kafka.InMemoryMessagingService
+import org.hyperledger.identus.shared.messaging.*
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
 object InMemoryMessagingServiceSpec extends ZIOSpecDefault {
-  val testLayer = ZLayer.succeed(100) >+> InMemoryMessagingService.messagingServiceLayer >+>
-    InMemoryMessagingService.producerLayer[String, String] >+>
-    InMemoryMessagingService.consumerLayer[String, String]("test-group")
+  val testLayer = MessagingServiceConfig.inMemoryLayer >+> MessagingService.serviceLayer >+>
+    MessagingService.producerLayer[String, String] >+>
+    MessagingService.consumerLayer[String, String]("test-group")
 
   def spec = suite("InMemoryMessagingServiceSpec")(
     test("should produce and consume messages") {

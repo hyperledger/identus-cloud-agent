@@ -63,11 +63,7 @@ import org.hyperledger.identus.pollux.sql.repository.{
 }
 import org.hyperledger.identus.presentproof.controller.PresentProofControllerImpl
 import org.hyperledger.identus.resolvers.DIDResolver
-import org.hyperledger.identus.shared.messaging.kafka.{
-  InMemoryMessagingService,
-  ZKafkaMessagingServiceImpl,
-  ZKafkaProducerImpl
-}
+import org.hyperledger.identus.shared.messaging
 import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
 import org.hyperledger.identus.shared.models.WalletId
 import org.hyperledger.identus.system.controller.SystemControllerImpl
@@ -172,46 +168,6 @@ object MainApp extends ZIOAppDefault {
       )
       _ <- preMigrations
       _ <- migrations
-      appConfig <- ZIO.service[AppConfig].provide(SystemModule.configLayer)
-      messagingServiceLayer <-
-        if (appConfig.agent.messagingService.kafkaEnabled) {
-          val kafkaConfig = appConfig.agent.messagingService.kafka.get
-          ZIO.succeed(
-            ZKafkaMessagingServiceImpl.layer(
-              kafkaConfig.bootstrapServers.split(',').toList,
-              kafkaConfig.consumers.autoCreateTopics,
-              kafkaConfig.consumers.maxPollRecords,
-              kafkaConfig.consumers.maxPollInterval,
-              kafkaConfig.consumers.pollTimeout,
-              kafkaConfig.consumers.rebalanceSafeCommits
-            )
-          )
-        } else {
-          ZIO.succeed(
-            ZLayer.succeed(appConfig.agent.inMemoryQueueCapacity) >>> InMemoryMessagingService.messagingServiceLayer
-          )
-        }
-      messageProducerLayer <-
-        if (appConfig.agent.messagingService.kafkaEnabled) {
-          ZIO.succeed(
-            ZKafkaProducerImpl.layer[UUID, WalletIdAndRecordId]
-          )
-        } else {
-          ZIO.succeed(
-            InMemoryMessagingService.producerLayer[UUID, WalletIdAndRecordId]
-          )
-        }
-      syncDIDStateProducerLayer <-
-        if (appConfig.agent.messagingService.kafkaEnabled) {
-          ZIO.succeed(
-            ZKafkaProducerImpl.layer[WalletId, WalletId]
-          )
-        } else {
-          ZIO.succeed(
-            InMemoryMessagingService.producerLayer[WalletId, WalletId]
-          )
-        }
-
       app <- CloudAgentApp.run
         .provide(
           DidCommX.liveLayer,
@@ -296,9 +252,11 @@ object MainApp extends ZIOAppDefault {
           // HTTP client
           SystemModule.zioHttpClientLayer,
           Scope.default,
-          messagingServiceLayer,
-          messageProducerLayer,
-          syncDIDStateProducerLayer
+          // Messaging Service
+          ZLayer.fromZIO(ZIO.service[AppConfig].map(_.agent.messagingService)),
+          messaging.MessagingService.serviceLayer,
+          messaging.MessagingService.producerLayer[UUID, WalletIdAndRecordId],
+          messaging.MessagingService.producerLayer[WalletId, WalletId]
         )
     } yield app
 

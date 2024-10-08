@@ -3,7 +3,7 @@ package org.hyperledger.identus.shared.messaging.kafka
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.header.Headers
 import org.hyperledger.identus.shared.messaging.*
-import zio.{durationInt, Duration, EnvironmentTag, RIO, RLayer, Task, ULayer, URIO, ZIO, ZLayer}
+import zio.{Duration, RIO, Task, URIO, URLayer, ZIO, ZLayer}
 import zio.kafka.consumer.{
   Consumer as ZKConsumer,
   ConsumerSettings as ZKConsumerSettings,
@@ -40,24 +40,22 @@ class ZKafkaMessagingServiceImpl(
 }
 
 object ZKafkaMessagingServiceImpl {
-  def layer(
-      bootstrapServers: List[String],
-      autoCreateTopics: Boolean = false,
-      maxPollRecords: Int = 500,
-      maxPollInterval: Duration = 5.minutes,
-      pollTimeout: Duration = 50.millis,
-      rebalanceSafeCommits: Boolean = true
-  ): ULayer[MessagingService] =
-    ZLayer.succeed(
-      new ZKafkaMessagingServiceImpl(
-        bootstrapServers,
-        autoCreateTopics,
-        maxPollRecords,
-        maxPollInterval,
-        pollTimeout,
-        rebalanceSafeCommits
+  val layer: URLayer[MessagingServiceConfig, MessagingService] =
+    ZLayer.fromZIO {
+      for {
+        config <- ZIO.service[MessagingServiceConfig]
+        kafkaConfig <- config.kafka match
+          case Some(cfg) => ZIO.succeed(cfg)
+          case None      => ZIO.dieMessage("Kafka config is undefined")
+      } yield new ZKafkaMessagingServiceImpl(
+        kafkaConfig.bootstrapServers.split(',').toList,
+        kafkaConfig.consumers.autoCreateTopics,
+        kafkaConfig.consumers.maxPollRecords,
+        kafkaConfig.consumers.maxPollInterval,
+        kafkaConfig.consumers.pollTimeout,
+        kafkaConfig.consumers.rebalanceSafeCommits
       )
-    )
+    }
 }
 
 class ZKafkaConsumerImpl[K, V](
@@ -110,16 +108,6 @@ class ZKafkaConsumerImpl[K, V](
       .runDrain
 }
 
-object ZKafkaConsumerImpl {
-  def layer[K: EnvironmentTag, V: EnvironmentTag](groupId: String)(implicit
-      kSerde: Serde[K],
-      vSerde: Serde[V]
-  ): RLayer[MessagingService, Consumer[K, V]] = ZLayer.fromZIO(for {
-    messagingService <- ZIO.service[MessagingService]
-    consumer <- messagingService.makeConsumer[K, V](groupId)
-  } yield consumer)
-}
-
 class ZKafkaProducerImpl[K, V](bootstrapServers: List[String], kSerde: Serde[K], vSerde: Serde[V])
     extends Producer[K, V] {
   private val zkProducer = ZLayer.scoped(
@@ -145,14 +133,4 @@ class ZKafkaProducerImpl[K, V](bootstrapServers: List[String], kSerde: Serde[K],
       .map(_ => ())
       .provideSome(zkProducer)
 
-}
-
-object ZKafkaProducerImpl {
-  def layer[K: EnvironmentTag, V: EnvironmentTag](implicit
-      kSerde: Serde[K],
-      vSerde: Serde[V]
-  ): RLayer[MessagingService, Producer[K, V]] = ZLayer.fromZIO(for {
-    messagingService <- ZIO.service[MessagingService]
-    producer <- messagingService.makeProducer[K, V]()
-  } yield producer)
 }

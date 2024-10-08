@@ -1,12 +1,10 @@
 package org.hyperledger.identus.shared.messaging.kafka
 
-import org.hyperledger.identus.shared.messaging.{Consumer, Message, MessagingService, Producer, Serde}
+import org.hyperledger.identus.shared.messaging.*
+import org.hyperledger.identus.shared.messaging.kafka.InMemoryMessagingService.*
 import zio.*
 import zio.concurrent.ConcurrentMap
 import zio.stream.*
-import zio.Clock
-import zio.Task
-import InMemoryMessagingService.*
 
 import java.util.concurrent.TimeUnit
 
@@ -109,35 +107,14 @@ object InMemoryMessagingService {
     def apply(value: Long): TimeStamp = value
     extension (ts: TimeStamp) def value: Long = ts
 
-  val messagingServiceLayer: URLayer[Int, MessagingService] =
+  val layer: URLayer[MessagingServiceConfig, MessagingService] =
     ZLayer.fromZIO {
       for {
-        queueCapacity <- ZIO.service[Int]
+        config <- ZIO.service[MessagingServiceConfig]
         queueMap <- ConcurrentMap.empty[Topic, (Queue[Message[_, _]], Ref[Offset])]
         processedMessagesMap <- ConcurrentMap.empty[ConsumerGroupKey, ConcurrentMap[Offset, TimeStamp]]
         _ <- cleanupTaskForProcessedMessages(processedMessagesMap)
-      } yield new InMemoryMessagingService(queueMap, queueCapacity, processedMessagesMap)
-    }
-
-  def producerLayer[K: EnvironmentTag, V: EnvironmentTag](using
-      kSerde: Serde[K],
-      vSerde: Serde[V]
-  ): RLayer[MessagingService, Producer[K, V]] =
-    ZLayer.fromZIO {
-      for {
-        messagingService <- ZIO.service[MessagingService]
-        producer <- messagingService.makeProducer[K, V]()
-      } yield producer
-    }
-
-  def consumerLayer[K: EnvironmentTag, V: EnvironmentTag](
-      groupId: String
-  )(using kSerde: Serde[K], vSerde: Serde[V]): RLayer[MessagingService, Consumer[K, V]] =
-    ZLayer.fromZIO {
-      for {
-        messagingService <- ZIO.service[MessagingService]
-        consumer <- messagingService.makeConsumer[K, V](groupId)
-      } yield consumer
+      } yield new InMemoryMessagingService(queueMap, config.inMemoryQueueCapacity, processedMessagesMap)
     }
 
   private def cleanupTaskForProcessedMessages(

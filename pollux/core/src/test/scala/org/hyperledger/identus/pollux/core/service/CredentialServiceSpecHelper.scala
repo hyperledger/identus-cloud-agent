@@ -3,24 +3,17 @@ package org.hyperledger.identus.pollux.core.service
 import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.issuecredential.*
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.presentation.Options
-import org.hyperledger.identus.pollux.core.repository.{
-  CredentialDefinitionRepositoryInMemory,
-  CredentialRepositoryInMemory,
-  CredentialStatusListRepositoryInMemory
-}
+import org.hyperledger.identus.pollux.core.repository.{CredentialDefinitionRepositoryInMemory, CredentialRepositoryInMemory, CredentialStatusListRepositoryInMemory}
 import org.hyperledger.identus.pollux.prex.{ClaimFormat, Ldp, PresentationDefinition}
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.http.UriResolver
-import org.hyperledger.identus.shared.messaging.kafka.InMemoryMessagingService
-import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
-import org.hyperledger.identus.shared.models.*
+import org.hyperledger.identus.shared.messaging.{MessagingService, MessagingServiceConfig, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
@@ -44,8 +37,8 @@ trait CredentialServiceSpecHelper {
       credentialDefinitionServiceLayer,
       GenericSecretStorageInMemory.layer,
       LinkSecretServiceImpl.layer,
-      (ZLayer.succeed(100) >>> InMemoryMessagingService.messagingServiceLayer >>>
-        InMemoryMessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
+      (MessagingServiceConfig.inMemoryLayer >>> MessagingService.serviceLayer >>>
+        MessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
       CredentialServiceImpl.layer
     )
 

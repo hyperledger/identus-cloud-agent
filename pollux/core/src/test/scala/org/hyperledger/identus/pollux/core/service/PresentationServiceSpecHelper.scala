@@ -1,11 +1,10 @@
 package org.hyperledger.identus.pollux.core.service
 
-import com.nimbusds.jose.jwk.*
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.castor.core.model.did.DID
-import org.hyperledger.identus.mercury.{AgentPeerService, PeerDID}
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
 import org.hyperledger.identus.mercury.protocol.presentproof.*
+import org.hyperledger.identus.mercury.{AgentPeerService, PeerDID}
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.repository.*
@@ -14,9 +13,7 @@ import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResol
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
 import org.hyperledger.identus.shared.http.UriResolver
-import org.hyperledger.identus.shared.messaging.kafka.InMemoryMessagingService
-import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
-import org.hyperledger.identus.shared.models.*
+import org.hyperledger.identus.shared.messaging.{MessagingService, MessagingServiceConfig, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
@@ -46,8 +43,8 @@ trait PresentationServiceSpecHelper {
     linkSecretLayer,
     PresentationRepositoryInMemory.layer,
     CredentialRepositoryInMemory.layer,
-    (ZLayer.succeed(100) >>> InMemoryMessagingService.messagingServiceLayer >>>
-      InMemoryMessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
+    (MessagingServiceConfig.inMemoryLayer >>> MessagingService.serviceLayer >>>
+      MessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
   ) ++ defaultWalletLayer
 
   def createIssuer(did: String): Issuer = {
