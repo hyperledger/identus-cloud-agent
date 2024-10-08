@@ -15,7 +15,7 @@
 
 package org.hyperledger.identus.client.models
 
-import com.google.gson.*
+import com.google.gson.JsonElement
 import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
 import org.hyperledger.identus.client.adapters.StringOrStringArrayAdapter
@@ -33,4 +33,4 @@ data class Service(
     @SerializedName("serviceEndpoint")
     val serviceEndpoint: JsonElement? = null,
 
-)
+    )
