@@ -8,7 +8,7 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServi
 }
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import org.hyperledger.identus.pollux.core.repository.CredentialStatusListRepository
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.util.UUID
@@ -18,8 +18,11 @@ class CredentialStatusListServiceImpl(
     credentialStatusListRepository: CredentialStatusListRepository,
 ) extends CredentialStatusListService {
 
-  def getCredentialsAndItsStatuses: UIO[Seq[CredentialStatusListWithCreds]] =
-    credentialStatusListRepository.getCredentialStatusListsWithCreds
+  def getCredentialStatusListIds: UIO[Seq[(WalletId, UUID)]] =
+    credentialStatusListRepository.getCredentialStatusListIds
+
+  def getCredentialStatusListWithCreds(statusListId: UUID): URIO[WalletAccessContext, CredentialStatusListWithCreds] =
+    credentialStatusListRepository.getCredentialStatusListsWithCreds(statusListId)
 
   def getById(id: UUID): IO[StatusListNotFound, CredentialStatusList] =
     for {

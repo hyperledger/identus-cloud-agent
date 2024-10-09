@@ -7,11 +7,12 @@ import org.hyperledger.identus.event.notification.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.{ConnectionRequest, ConnectionResponse}
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
+import org.hyperledger.identus.shared.messaging
+import org.hyperledger.identus.shared.messaging.WalletIdAndRecordId
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 import zio.mock.Expectation
 import zio.test.*
-import zio.ZIO.*
 
 import java.time.Instant
 import java.util.UUID
@@ -151,7 +152,10 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
           ConnectionRepositoryInMemory.layer ++
             inviteeExpectations.toLayer
         ) >>> ConnectionServiceNotifier.layer,
-        ZLayer.succeed(WalletAccessContext(WalletId.random))
+        ZLayer.succeed(WalletAccessContext(WalletId.random)),
+        messaging.MessagingServiceConfig.inMemoryLayer,
+        messaging.MessagingService.serviceLayer,
+        messaging.MessagingService.producerLayer[UUID, WalletIdAndRecordId]
       )
     )
   }

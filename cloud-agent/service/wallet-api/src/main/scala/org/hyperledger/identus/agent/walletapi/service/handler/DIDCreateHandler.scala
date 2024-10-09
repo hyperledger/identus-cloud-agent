@@ -31,12 +31,7 @@ private[walletapi] class DIDCreateHandler(
       walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
       seed <- walletSecretStorage.findWalletSeed
         .someOrElseZIO(ZIO.dieMessage(s"Wallet seed for wallet $walletId does not exist"))
-      didIndex <- nonSecretStorage
-        .getMaxDIDIndex()
-        .mapBoth(
-          CreateManagedDIDError.WalletStorageError.apply,
-          maybeIdx => maybeIdx.map(_ + 1).getOrElse(0)
-        )
+      didIndex <- nonSecretStorage.incrementAndGetNextDIDIndex
       generated <- operationFactory.makeCreateOperation(masterKeyId, seed.toByteArray)(didIndex, didTemplate)
       (createOperation, keys) = generated
       state = ManagedDIDState(createOperation, didIndex, PublicationState.Created())
