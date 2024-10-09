@@ -6,7 +6,7 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialStatusListServi
   StatusListNotFound,
   StatusListNotFoundForIssueCredentialRecord
 }
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.util.UUID
@@ -20,7 +20,9 @@ trait CredentialStatusListService {
       id: DidCommID
   ): ZIO[WalletAccessContext, StatusListNotFoundForIssueCredentialRecord | InvalidRoleForOperation, Unit]
 
-  def getCredentialsAndItsStatuses: UIO[Seq[CredentialStatusListWithCreds]]
+  def getCredentialStatusListIds: UIO[Seq[(WalletId, UUID)]]
+
+  def getCredentialStatusListWithCreds(statusListId: UUID): URIO[WalletAccessContext, CredentialStatusListWithCreds]
 
   def updateStatusListCredential(
       id: UUID,

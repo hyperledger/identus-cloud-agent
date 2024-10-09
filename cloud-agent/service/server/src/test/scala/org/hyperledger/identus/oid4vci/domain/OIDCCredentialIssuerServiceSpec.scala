@@ -12,16 +12,15 @@ import org.hyperledger.identus.oid4vci.storage.InMemoryIssuanceSessionService
 import org.hyperledger.identus.pollux.core.model.oid4vci.CredentialConfiguration
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
 import org.hyperledger.identus.pollux.core.repository.{
-  CredentialRepository,
   CredentialRepositoryInMemory,
   CredentialStatusListRepositoryInMemory
 }
 import org.hyperledger.identus.pollux.core.service.*
 import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.vc.jwt.PrismDidResolver
+import org.hyperledger.identus.shared.messaging.{MessagingService, MessagingServiceConfig, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.{Clock, Random, URLayer, ZIO, ZLayer}
-import zio.json.*
 import zio.json.ast.Json
 import zio.mock.MockSpecDefault
 import zio.test.*
@@ -54,6 +53,8 @@ object OIDCCredentialIssuerServiceSpec
       GenericSecretStorageInMemory.layer,
       LinkSecretServiceImpl.layer,
       CredentialServiceImpl.layer,
+      (MessagingServiceConfig.inMemoryLayer >>> MessagingService.serviceLayer >>>
+        MessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
       OIDCCredentialIssuerServiceImpl.layer
     )
 
