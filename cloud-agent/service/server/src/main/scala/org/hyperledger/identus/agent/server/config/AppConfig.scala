@@ -4,7 +4,7 @@ import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.iam.authentication.AuthenticationConfig
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.db.DbConfig
-import zio.config.*
+import org.hyperledger.identus.shared.messaging.MessagingServiceConfig
 import zio.config.magnolia.*
 import zio.Config
 
@@ -70,22 +70,13 @@ final case class PolluxConfig(
     database: DatabaseConfig,
     credentialSdJwtExpirationTime: Duration,
     statusListRegistry: StatusListRegistryConfig,
-    issueBgJobRecordsLimit: Int,
-    issueBgJobRecurrenceDelay: Duration,
-    issueBgJobProcessingParallelism: Int,
-    presentationBgJobRecordsLimit: Int,
-    presentationBgJobRecurrenceDelay: Duration,
-    presentationBgJobProcessingParallelism: Int,
-    syncRevocationStatusesBgJobRecurrenceDelay: Duration,
-    syncRevocationStatusesBgJobProcessingParallelism: Int,
+    statusListSyncTriggerRecurrenceDelay: Duration,
+    didStateSyncTriggerRecurrenceDelay: Duration,
     presentationInvitationExpiry: Duration,
     issuanceInvitationExpiry: Duration,
 )
 final case class ConnectConfig(
     database: DatabaseConfig,
-    connectBgJobRecordsLimit: Int,
-    connectBgJobRecurrenceDelay: Duration,
-    connectBgJobProcessingParallelism: Int,
     connectInvitationExpiry: Duration,
 )
 
@@ -109,7 +100,7 @@ final case class DatabaseConfig(
     DbConfig(
       username = if (appUser) appUsername else username,
       password = if (appUser) appPassword else password,
-      jdbcUrl = s"jdbc:postgresql://${host}:${port}/${databaseName}",
+      jdbcUrl = s"jdbc:postgresql://$host:$port/${databaseName}",
       awaitConnectionThreads = awaitConnectionThreads
     )
   }
@@ -173,7 +164,8 @@ final case class AgentConfig(
     verification: VerificationConfig,
     secretStorage: SecretStorageConfig,
     webhookPublisher: WebhookPublisherConfig,
-    defaultWallet: DefaultWalletConfig
+    defaultWallet: DefaultWalletConfig,
+    messagingService: MessagingServiceConfig
 ) {
   def validate: Either[String, Unit] =
     for {
@@ -187,7 +179,7 @@ final case class AgentConfig(
 
 }
 
-final case class HttpEndpointConfig(http: HttpConfig, publicEndpointUrl: java.net.URL)
+final case class HttpEndpointConfig(http: HttpConfig, serviceName: String, publicEndpointUrl: java.net.URL)
 
 final case class DidCommEndpointConfig(http: HttpConfig, publicEndpointUrl: java.net.URL)
 

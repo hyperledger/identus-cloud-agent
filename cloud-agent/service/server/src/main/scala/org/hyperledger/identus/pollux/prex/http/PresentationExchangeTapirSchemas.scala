@@ -1,9 +1,7 @@
 package org.hyperledger.identus.pollux.prex.http
 
 import org.hyperledger.identus.pollux.prex.*
-import sttp.tapir.json.zio.*
 import sttp.tapir.Schema
-import zio.json.ast.Json
 
 import scala.language.implicitConversions
 
@@ -20,5 +18,5 @@ object PresentationExchangeTapirSchemas {
   given Schema[Ldp] = Schema.derived
   given Schema[Field] = Schema.derived
   given Schema[JsonPathValue] = Schema.schemaForString.map[JsonPathValue](Some(_))(_.value)
-  given Schema[FieldFilter] = Schema.derived[Json].map[FieldFilter](Some(_))(_.asJsonZio)
+  given Schema[FieldFilter] = Schema.any[FieldFilter]
 }

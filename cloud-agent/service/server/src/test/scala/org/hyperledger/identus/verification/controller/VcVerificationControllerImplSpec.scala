@@ -36,17 +36,15 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
           `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
           maybeId = Some("http://example.edu/credentials/3732"),
           `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
-          issuer = Left(issuer.did.toString),
+          issuer = issuer.did.toString,
           issuanceDate = Instant.parse("2010-01-01T00:00:00Z"),
           maybeExpirationDate = Some(Instant.parse("2010-01-12T00:00:00Z")),
           maybeValidFrom = Some(Instant.parse("2010-01-12T00:00:00Z")),
           maybeValidUntil = Some(Instant.parse("2010-01-12T00:00:00Z")),
           maybeCredentialSchema = Some(
-            Left(
-              CredentialSchema(
-                id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
-                `type` = "JsonSchemaValidator2018"
-              )
+            CredentialSchema(
+              id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",
+              `type` = "JsonSchemaValidator2018"
             )
           ),
           credentialSubject = Json.obj(

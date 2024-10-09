@@ -96,7 +96,7 @@ object OID4VCIIssuerMetadataServiceSpecSuite {
         exit1 <- createCredConfig("not a uri").exit
         exit2 <- createCredConfig("http://localhost/schema").exit
       } yield assert(exit1)(failsWithA[InvalidSchemaId]) &&
-        assert(exit2)(dies(anything))
+        assert(exit2)(failsWithA[InvalidSchemaId])
     },
     test("list credential configurations for non-existing issuer should fail") {
       for {

@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.credentialdefinition
 
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.walletapi.model.BaseEntity
 import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.api.http.ErrorResponse
@@ -28,7 +29,8 @@ object CredentialDefinitionFailureSpec extends ZIOSpecDefault with CredentialDef
       for {
         credentialDefinitionRegistryService <- ZIO.service[CredentialDefinitionController]
         authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-        backend = httpBackend(credentialDefinitionRegistryService, authenticator)
+        config <- ZIO.service[AppConfig]
+        backend = httpBackend(config, credentialDefinitionRegistryService, authenticator)
         response: CredentialDefinitionBadRequestResponse <- basicRequest
           .post(credentialDefinitionUriBase)
           .body("""{"foo":"bar"}""")

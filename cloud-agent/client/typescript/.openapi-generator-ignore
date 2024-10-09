@@ -6,3 +6,4 @@ models/CredentialRequest.ts
 models/Proof2.ts
 models/Service.ts
 models/UpdateManagedDIDServiceAction.ts
+models/CreateIssueCredentialRecordRequest.ts

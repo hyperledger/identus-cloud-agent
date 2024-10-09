@@ -1,0 +1,256 @@
+---
+services:
+  ##########################
+  # Database
+  ##########################
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: "pollux,connect,agent,node_db"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pg_data_db:/var/lib/postgresql/data
+      - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+      - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
+    ports:
+      - "127.0.0.1:${PG_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "agent"]
+
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - debug
+
+  ##########################
+  # Services
+  ##########################
+
+  prism-node:
+    image: ghcr.io/input-output-hk/prism-node:${PRISM_NODE_VERSION}
+    environment:
+      NODE_PSQL_HOST: db:5432
+      NODE_REFRESH_AND_SUBMIT_PERIOD:
+      NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD:
+      NODE_WALLET_MAX_TPS:
+    depends_on:
+      db:
+        condition: service_healthy
+
+  vault-server:
+    image: hashicorp/vault:latest
+    #    ports:
+    #      - "8200:8200"
+    environment:
+      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN_ID}
+    command: server -dev -dev-root-token-id=${VAULT_DEV_ROOT_TOKEN_ID}
+    cap_add:
+      - IPC_LOCK
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cloud-agent:
+    image: ghcr.io/hyperledger/identus-cloud-agent:${AGENT_VERSION}
+    environment:
+      POLLUX_DB_HOST: db
+      POLLUX_DB_PORT: 5432
+      POLLUX_DB_NAME: pollux
+      POLLUX_DB_USER: postgres
+      POLLUX_DB_PASSWORD: postgres
+      CONNECT_DB_HOST: db
+      CONNECT_DB_PORT: 5432
+      CONNECT_DB_NAME: connect
+      CONNECT_DB_USER: postgres
+      CONNECT_DB_PASSWORD: postgres
+      AGENT_DB_HOST: db
+      AGENT_DB_PORT: 5432
+      AGENT_DB_NAME: agent
+      AGENT_DB_USER: postgres
+      AGENT_DB_PASSWORD: postgres
+      POLLUX_STATUS_LIST_REGISTRY_PUBLIC_URL: http://${DOCKERHOST}:${PORT}/cloud-agent
+      DIDCOMM_SERVICE_URL: http://${DOCKERHOST}:${PORT}/didcomm
+      REST_SERVICE_URL: http://${DOCKERHOST}:${PORT}/cloud-agent
+      PRISM_NODE_HOST: prism-node
+      PRISM_NODE_PORT: 50053
+      VAULT_ADDR: ${VAULT_ADDR:-http://vault-server:8200}
+      VAULT_TOKEN: ${VAULT_DEV_ROOT_TOKEN_ID:-root}
+      SECRET_STORAGE_BACKEND: postgres
+      DEV_MODE: true
+      DEFAULT_WALLET_ENABLED:
+      DEFAULT_WALLET_SEED:
+      DEFAULT_WALLET_WEBHOOK_URL:
+      DEFAULT_WALLET_WEBHOOK_API_KEY:
+      DEFAULT_WALLET_AUTH_API_KEY:
+      DEFAULT_KAFKA_ENABLED: true
+      GLOBAL_WEBHOOK_URL:
+      GLOBAL_WEBHOOK_API_KEY:
+      WEBHOOK_PARALLELISM:
+      ADMIN_TOKEN:
+      API_KEY_SALT:
+      API_KEY_ENABLED:
+      API_KEY_AUTHENTICATE_AS_DEFAULT_USER:
+      API_KEY_AUTO_PROVISIONING:
+    depends_on:
+      db:
+        condition: service_healthy
+      prism-node:
+        condition: service_started
+      vault-server:
+        condition: service_healthy
+      init-kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://cloud-agent:8085/_system/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui:v5.1.0
+    environment:
+      - 'URLS=[
+        { name: "Cloud Agent", url: "/docs/cloud-agent/api/docs.yaml" }
+        ]'
+
+  #  apisix:
+  #    image: apache/apisix:2.15.0-alpine
+  #    volumes:
+  #      - ./apisix/conf/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+  #      - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+  #    ports:
+  #      - "${PORT}:9080/tcp"
+  #    depends_on:
+  #      - cloud-agent
+  #      - swagger-ui
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "${PORT}:80/tcp"
+    depends_on:
+      - cloud-agent
+      - swagger-ui
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+  #    ports:
+  #      - 22181:2181
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    #    ports:
+    #      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "kafka-topics",
+          "--list",
+          "--bootstrap-server",
+          "localhost:9092",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  init-kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:9092 --list
+      echo -e 'Creating kafka topics'
+
+      # Connect
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic connect --replication-factor 1 --partitions 20
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic connect-retry-1 --replication-factor 1 --partitions 20
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic connect-retry-2 --replication-factor 1 --partitions 20
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic connect-retry-3 --replication-factor 1 --partitions 20
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic connect-retry-4 --replication-factor 1 --partitions 20
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic connect-DLQ --replication-factor 1 --partitions 1
+
+      # Issue
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic issue --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic issue-retry-1 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic issue-retry-2 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic issue-retry-3 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic issue-retry-4 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic issue-DLQ --replication-factor 1 --partitions 1
+
+      # Present
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic present --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic present-retry-1 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic present-retry-2 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic present-retry-3 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic present-retry-4 --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic present-DLQ --replication-factor 1 --partitions 1
+
+      # DID Publication State Sync
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic sync-did-state --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic sync-did-state-DLQ --replication-factor 1 --partitions 5
+
+      # Status List Sync
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic sync-status-list --replication-factor 1 --partitions 5
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic sync-status-list-DLQ --replication-factor 1 --partitions 5
+
+      tail -f /dev/null
+      "
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "kafka-topics --bootstrap-server kafka:9092 --list | grep -q 'sync-status-list'",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  pg_data_db:
+  pgadmin:
+# Temporary commit network setting due to e2e CI bug
+# to be enabled later after debugging
+#networks:
+#  default:
+#    name: ${NETWORK}

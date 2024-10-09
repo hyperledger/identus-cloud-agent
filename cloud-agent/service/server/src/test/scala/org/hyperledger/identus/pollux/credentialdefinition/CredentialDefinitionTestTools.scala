@@ -1,6 +1,8 @@
 package org.hyperledger.identus.pollux.credentialdefinition
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import com.typesafe.config.ConfigFactory
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.http.CustomServerInterceptors
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, ManagedDIDState, PublicationState}
@@ -10,11 +12,8 @@ import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.castor.core.model.did.PrismDIDOperation
 import org.hyperledger.identus.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
 import org.hyperledger.identus.pollux.core.repository.CredentialDefinitionRepository
-import org.hyperledger.identus.pollux.core.service.{
-  CredentialDefinitionService,
-  CredentialDefinitionServiceImpl,
-  ResourceURIDereferencerImpl
-}
+import org.hyperledger.identus.pollux.core.service.{CredentialDefinitionService, CredentialDefinitionServiceImpl}
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.credentialdefinition.controller.{
   CredentialDefinitionController,
   CredentialDefinitionControllerImpl
@@ -35,6 +34,7 @@ import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
 import zio.*
+import zio.config.typesafe.TypesafeConfigProvider
 import zio.json.EncoderOps
 import zio.mock.Expectation
 import zio.test.{Assertion, Gen, ZIOSpecDefault}
@@ -56,7 +56,7 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
   private val controllerLayer =
     GenericSecretStorageInMemory.layer >+>
       systemTransactorLayer >+> contextAwareTransactorLayer >+> JdbcCredentialDefinitionRepository.layer >+>
-      ResourceURIDereferencerImpl.layer >+>
+      ResourceUrlResolver.layer >+>
       CredentialDefinitionServiceImpl.layer >+>
       CredentialDefinitionControllerImpl.layer
 
@@ -76,43 +76,52 @@ trait CredentialDefinitionTestTools extends PostgresTestContainerSupport {
 
   val authenticatorLayer: TaskLayer[AuthenticatorWithAuthZ[BaseEntity]] = DefaultEntityAuthenticator.layer
 
+  val configLayer = ZLayer.fromZIO(
+    TypesafeConfigProvider
+      .fromTypesafeConfig(ConfigFactory.load())
+      .load(AppConfig.config)
+  )
+
   lazy val testEnvironmentLayer = ZLayer.makeSome[
     ManagedDIDService,
     CredentialDefinitionController & CredentialDefinitionRepository & CredentialDefinitionService &
-      PostgreSQLContainer & AuthenticatorWithAuthZ[BaseEntity] & GenericSecretStorage
+      PostgreSQLContainer & AuthenticatorWithAuthZ[BaseEntity] & GenericSecretStorage & AppConfig
   ](
     controllerLayer,
     pgContainerLayer,
-    authenticatorLayer
+    authenticatorLayer,
+    configLayer
   )
 
   val credentialDefinitionUriBase = uri"http://test.com/credential-definition-registry/definitions"
 
   def bootstrapOptions[F[_]](monadError: MonadError[F]) = {
     new CustomiseInterceptors[F, Any](_ => ())
-      .exceptionHandler(CustomServerInterceptors.exceptionHandler)
-      .rejectHandler(CustomServerInterceptors.rejectHandler)
-      .decodeFailureHandler(CustomServerInterceptors.decodeFailureHandler)
+      .exceptionHandler(CustomServerInterceptors.tapirExceptionHandler)
+      .rejectHandler(CustomServerInterceptors.tapirRejectHandler)
+      .decodeFailureHandler(CustomServerInterceptors.tapirDecodeFailureHandler)
   }
 
   def httpBackend(
+      config: AppConfig,
       controller: CredentialDefinitionController,
       authenticator: AuthenticatorWithAuthZ[BaseEntity]
   ) = {
+
     val credentialDefinitionRegistryEndpoints =
-      CredentialDefinitionRegistryServerEndpoints(controller, authenticator, authenticator)
+      CredentialDefinitionRegistryServerEndpoints(config, controller, authenticator, authenticator)
 
     val backend =
       TapirStubInterpreter(
         bootstrapOptions(new RIOMonadError[Any]),
         SttpBackendStub(new RIOMonadError[Any])
       )
-        .whenServerEndpoint(credentialDefinitionRegistryEndpoints.createCredentialDefinitionServerEndpoint)
+        .whenServerEndpoint(credentialDefinitionRegistryEndpoints.create.http)
         .thenRunLogic()
-        .whenServerEndpoint(credentialDefinitionRegistryEndpoints.getCredentialDefinitionByIdServerEndpoint)
+        .whenServerEndpoint(credentialDefinitionRegistryEndpoints.get.http)
         .thenRunLogic()
         .whenServerEndpoint(
-          credentialDefinitionRegistryEndpoints.lookupCredentialDefinitionsByQueryServerEndpoint
+          credentialDefinitionRegistryEndpoints.getMany.http
         )
         .thenRunLogic()
         .backend()
@@ -188,13 +197,14 @@ trait CredentialDefinitionGen {
 
   def generateCredentialDefinitionsN(
       count: Int
-  ): ZIO[CredentialDefinitionController & AuthenticatorWithAuthZ[BaseEntity], Throwable, List[
+  ): ZIO[CredentialDefinitionController & AppConfig & AuthenticatorWithAuthZ[BaseEntity], Throwable, List[
     CredentialDefinitionInput
   ]] =
     for {
       controller <- ZIO.service[CredentialDefinitionController]
       authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-      backend = httpBackend(controller, authenticator)
+      config <- ZIO.service[AppConfig]
+      backend = httpBackend(config, controller, authenticator)
       inputs <- Generator.credentialDefinitionInput.runCollectN(count)
       _ <- inputs
         .map(in =>

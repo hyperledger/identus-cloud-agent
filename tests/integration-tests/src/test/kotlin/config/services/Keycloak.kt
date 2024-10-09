@@ -17,7 +17,6 @@ data class Keycloak(
     val realm: String = "atala-demo",
     @ConfigAlias("client_id") val clientId: String = "cloud-agent",
     @ConfigAlias("client_secret") val clientSecret: String = "cloud-agent-secret",
-    @ConfigAlias("keep_running") override val keepRunning: Boolean = false,
     @ConfigAlias("compose_file") val keycloakComposeFile: String = "src/test/resources/containers/keycloak.yml",
     @ConfigAlias("logger_name") val loggerName: String = "keycloak",
     @ConfigAlias("extra_envs") val extraEnvs: Map<String, String> = emptyMap(),

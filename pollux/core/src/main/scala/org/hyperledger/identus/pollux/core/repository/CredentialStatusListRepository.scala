@@ -1,29 +1,60 @@
 package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021}
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{
+  DecodingError,
+  EncodingError,
+  IndexOutOfBounds,
+  InvalidSize
+}
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
 import java.util.UUID
 
 trait CredentialStatusListRepository {
-  def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]]
+  def createStatusListVC(
+      jwtIssuer: Issuer,
+      statusListRegistryUrl: String,
+      id: UUID
+  ): IO[Throwable, String] = {
+    for {
+      bitString <- BitString.getInstance().mapError {
+        case InvalidSize(message)      => new Throwable(message)
+        case EncodingError(message)    => new Throwable(message)
+        case DecodingError(message)    => new Throwable(message)
+        case IndexOutOfBounds(message) => new Throwable(message)
+      }
+      emptyStatusListCredential <- VCStatusList2021
+        .build(
+          vcId = s"$statusListRegistryUrl/credential-status/$id",
+          revocationData = bitString,
+          jwtIssuer = jwtIssuer
+        )
+        .mapError(x => new Throwable(x.msg))
+
+      credentialWithEmbeddedProof <- emptyStatusListCredential.toJsonWithEmbeddedProof
+    } yield credentialWithEmbeddedProof.spaces2
+  }
+
+  def getCredentialStatusListIds: UIO[Seq[(WalletId, UUID)]]
+
+  def getCredentialStatusListsWithCreds(statusListId: UUID): URIO[WalletAccessContext, CredentialStatusListWithCreds]
 
   def findById(
       id: UUID
   ): UIO[Option[CredentialStatusList]]
 
-  def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]]
+  def incrementAndGetStatusListIndex(
+      jwtIssuer: Issuer,
+      statusListRegistryUrl: String
+  ): URIO[WalletAccessContext, (UUID, Int)]
 
   def existsForIssueCredentialRecordId(
       id: DidCommID
   ): URIO[WalletAccessContext, Boolean]
-
-  def createNewForTheWallet(
-      jwtIssuer: Issuer,
-      statusListRegistryUrl: String
-  ): URIO[WalletAccessContext, CredentialStatusList]
 
   def allocateSpaceForCredential(
       issueCredentialRecordId: DidCommID,

@@ -1,6 +1,8 @@
 package org.hyperledger.identus.pollux.schema
 
 import com.dimafeng.testcontainers.PostgreSQLContainer
+import com.typesafe.config.ConfigFactory
+import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.http.CustomServerInterceptors
 import org.hyperledger.identus.agent.walletapi.model.{BaseEntity, ManagedDIDState, PublicationState}
 import org.hyperledger.identus.agent.walletapi.service.{ManagedDIDService, MockManagedDIDService}
@@ -31,6 +33,7 @@ import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.ztapir.RIOMonadError
 import zio.*
+import zio.config.typesafe.TypesafeConfigProvider
 import zio.json.{DecoderOps, EncoderOps}
 import zio.json.ast.Json
 import zio.json.ast.Json.*
@@ -65,13 +68,19 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
       )
     )
 
+  val configLayer = ZLayer.fromZIO(
+    TypesafeConfigProvider
+      .fromTypesafeConfig(ConfigFactory.load())
+      .load(AppConfig.config)
+  )
+
   val authenticatorLayer: TaskLayer[AuthenticatorWithAuthZ[BaseEntity]] = DefaultEntityAuthenticator.layer
 
   lazy val testEnvironmentLayer =
     ZLayer.makeSome[
       ManagedDIDService,
       CredentialSchemaController & CredentialSchemaRepository & CredentialSchemaService & PostgreSQLContainer &
-        AuthenticatorWithAuthZ[BaseEntity]
+        AuthenticatorWithAuthZ[BaseEntity] & AppConfig
     ](
       CredentialSchemaControllerImpl.layer,
       CredentialSchemaServiceImpl.layer,
@@ -79,34 +88,39 @@ trait CredentialSchemaTestTools extends PostgresTestContainerSupport {
       contextAwareTransactorLayer,
       systemTransactorLayer,
       pgContainerLayer,
-      authenticatorLayer
+      authenticatorLayer,
+      configLayer
     )
 
   val credentialSchemaUriBase = uri"http://test.com/schema-registry/schemas"
 
   def bootstrapOptions[F[_]](monadError: MonadError[F]) = {
     new CustomiseInterceptors[F, Any](_ => ())
-      .exceptionHandler(CustomServerInterceptors.exceptionHandler)
-      .rejectHandler(CustomServerInterceptors.rejectHandler)
-      .decodeFailureHandler(CustomServerInterceptors.decodeFailureHandler)
+      .exceptionHandler(CustomServerInterceptors.tapirExceptionHandler)
+      .rejectHandler(CustomServerInterceptors.tapirRejectHandler)
+      .decodeFailureHandler(CustomServerInterceptors.tapirDecodeFailureHandler)
   }
 
-  def httpBackend(controller: CredentialSchemaController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {
-    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(controller, authenticator, authenticator)
+  def httpBackend(
+      config: AppConfig,
+      controller: CredentialSchemaController,
+      authenticator: AuthenticatorWithAuthZ[BaseEntity]
+  ) = {
+    val schemaRegistryEndpoints = SchemaRegistryServerEndpoints(config, controller, authenticator, authenticator)
 
     val backend =
       TapirStubInterpreter(
         bootstrapOptions(new RIOMonadError[Any]),
         SttpBackendStub(new RIOMonadError[Any])
       )
-        .whenServerEndpoint(schemaRegistryEndpoints.createSchemaServerEndpoint)
+        .whenServerEndpoint(schemaRegistryEndpoints.create.http)
         .thenRunLogic()
-        .whenServerEndpoint(schemaRegistryEndpoints.getSchemaByIdServerEndpoint)
+        .whenServerEndpoint(schemaRegistryEndpoints.get.http)
         .thenRunLogic()
-        .whenServerEndpoint(schemaRegistryEndpoints.getRawSchemaByIdServerEndpoint)
+        .whenServerEndpoint(schemaRegistryEndpoints.getRaw.http)
         .thenRunLogic()
         .whenServerEndpoint(
-          schemaRegistryEndpoints.lookupSchemasByQueryServerEndpoint
+          schemaRegistryEndpoints.getMany.http
         )
         .thenRunLogic()
         .backend()
@@ -179,11 +193,14 @@ trait CredentialSchemaGen {
 
   def generateSchemasN(
       count: Int
-  ): ZIO[CredentialSchemaController & AuthenticatorWithAuthZ[BaseEntity], Throwable, List[CredentialSchemaInput]] =
+  ): ZIO[CredentialSchemaController & AppConfig & AuthenticatorWithAuthZ[BaseEntity], Throwable, List[
+    CredentialSchemaInput
+  ]] =
     for {
       controller <- ZIO.service[CredentialSchemaController]
       authenticator <- ZIO.service[AuthenticatorWithAuthZ[BaseEntity]]
-      backend = httpBackend(controller, authenticator)
+      config <- ZIO.service[AppConfig]
+      backend = httpBackend(config, controller, authenticator)
       inputs <- Generator.schemaInput.runCollectN(count)
       _ <- inputs
         .map(in =>
