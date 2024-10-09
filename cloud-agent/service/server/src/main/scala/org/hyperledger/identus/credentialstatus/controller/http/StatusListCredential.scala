@@ -22,7 +22,7 @@ case class StatusListCredential(
     `type`: Set[String],
     @description(annotations.issuer.description)
     @encodedExample(annotations.issuer.example)
-    issuer: Either[String, CredentialIssuer],
+    issuer: String | CredentialIssuer,
     @description(annotations.id.description)
     @encodedExample(annotations.id.example)
     id: String,
@@ -136,11 +136,9 @@ object StatusListCredential {
       |""".stripMargin
 
   given StatusPurposeCodec: JsonCodec[StatusPurpose] = JsonCodec[StatusPurpose](
-    JsonEncoder[String].contramap[StatusPurpose](_.str),
-    JsonDecoder[String].mapOrFail {
-      case StatusPurpose.Revocation.str => Right(StatusPurpose.Revocation)
-      case StatusPurpose.Suspension.str => Right(StatusPurpose.Suspension)
-      case str                          => Left(s"no enum value matched for \"$str\"")
+    JsonEncoder[String].contramap[StatusPurpose](_.toString),
+    JsonDecoder[String].mapOrFail { input =>
+      StatusPurpose.values.find(_.toString.compareToIgnoreCase(input) == 0).toRight("Unknown StatusPurpose")
     },
   )
 
@@ -156,11 +154,18 @@ object StatusListCredential {
   given credentialIssuerDecoder: JsonDecoder[CredentialIssuer] =
     DeriveJsonDecoder.gen[CredentialIssuer]
 
-  given eitherStringOrCredentialIssuerEncoder: JsonEncoder[Either[String, CredentialIssuer]] =
-    JsonEncoder[String].orElseEither(JsonEncoder[CredentialIssuer])
+  given stringOrCredentialIssuerEncoder: JsonEncoder[String | CredentialIssuer] =
+    JsonEncoder[String]
+      .orElseEither(JsonEncoder[CredentialIssuer])
+      .contramap[String | CredentialIssuer] {
+        case string: String                     => Left(string)
+        case credentialIssuer: CredentialIssuer => Right(credentialIssuer)
+      }
 
-  given eitherStringOrCredentialIssuerDecoder: JsonDecoder[Either[String, CredentialIssuer]] =
-    JsonDecoder[CredentialIssuer].map(Right(_)).orElse(JsonDecoder[String].map(Left(_)))
+  given stringOrCredentialIssuerDecoder: JsonDecoder[String | CredentialIssuer] =
+    JsonDecoder[CredentialIssuer]
+      .map(issuer => issuer: String | CredentialIssuer)
+      .orElse(JsonDecoder[String].map(schemaId => schemaId: String | CredentialIssuer))
 
   given statusListCredentialEncoder: JsonEncoder[StatusListCredential] =
     DeriveJsonEncoder.gen[StatusListCredential]
@@ -176,9 +181,19 @@ object StatusListCredential {
 
   given credentialSubjectSchema: Schema[CredentialSubject] = Schema.derived
 
-  given statusPurposeSchema: Schema[StatusPurpose] = Schema.derived
+  given statusPurposeSchema: Schema[StatusPurpose] = Schema.derivedEnumeration.defaultStringBased
 
   given credentialIssuerSchema: Schema[CredentialIssuer] = Schema.derived
+
+  given schemaIssuer: Schema[String | CredentialIssuer] = Schema
+    .schemaForEither(Schema.schemaForString, Schema.derived[CredentialIssuer])
+    .map[String | CredentialIssuer] {
+      case Left(string)            => Some(string)
+      case Right(credentialIssuer) => Some(credentialIssuer)
+    } {
+      case string: String                     => Left(string)
+      case credentialIssuer: CredentialIssuer => Right(credentialIssuer)
+    }
 
   given statusListCredentialSchema: Schema[StatusListCredential] = Schema.derived
 

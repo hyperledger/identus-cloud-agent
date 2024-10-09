@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.core.service
 
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.sql.repository.JdbcOID4VCIIssuerMetadataRepository
 import org.hyperledger.identus.sharedtest.containers.PostgresTestContainerSupport
 import org.hyperledger.identus.test.container.MigrationAspects
@@ -16,7 +17,7 @@ object OID4VCIIssuerMetadataServiceSpec extends ZIOSpecDefault, PostgresTestCont
   private val testEnvironmentLayer = ZLayer.make[OID4VCIIssuerMetadataService](
     OID4VCIIssuerMetadataServiceImpl.layer,
     JdbcOID4VCIIssuerMetadataRepository.layer,
-    ResourceURIDereferencerImpl.layer,
+    ResourceUrlResolver.layer,
     contextAwareTransactorLayer,
     systemTransactorLayer
   )

@@ -1,7 +1,15 @@
 package steps.oid4vci
 
-import interactions.*
-import io.cucumber.java.en.*
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonObject
+import interactions.Delete
+import interactions.Get
+import interactions.Patch
+import interactions.Post
+import interactions.body
+import io.cucumber.java.en.Given
+import io.cucumber.java.en.Then
+import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import net.serenitybdd.rest.SerenityRest
@@ -9,16 +17,26 @@ import net.serenitybdd.screenplay.Actor
 import org.apache.http.HttpStatus
 import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
-import org.hyperledger.identus.client.models.*
+import org.hyperledger.identus.client.models.AuthorizationServer
+import org.hyperledger.identus.client.models.CreateCredentialIssuerRequest
+import org.hyperledger.identus.client.models.CredentialIssuer
+import org.hyperledger.identus.client.models.CredentialIssuerPage
+import org.hyperledger.identus.client.models.IssuerMetadata
+import org.hyperledger.identus.client.models.PatchAuthorizationServer
+import org.hyperledger.identus.client.models.PatchCredentialIssuerRequest
 
 class ManageIssuerSteps {
-    private val UPDATE_AUTH_SERVER_URL = "http://example.com"
-    private val UPDATE_AUTH_SERVER_CLIENT_ID = "foo"
-    private val UPDATE_AUTH_SERVER_CLIENT_SECRET = "bar"
+    companion object {
+        private const val UPDATE_AUTH_SERVER_URL = "http://example.com"
+        private const val UPDATE_AUTH_SERVER_CLIENT_ID = "foo"
+        private const val UPDATE_AUTH_SERVER_CLIENT_SECRET = "bar"
+    }
 
     @Given("{actor} has an existing oid4vci issuer")
     fun issuerHasExistingCredentialIssuer(issuer: Actor) {
-        issuerCreateCredentialIssuer(issuer)
+        if (!issuer.recallAll().containsKey("oid4vciCredentialIssuer")) {
+            issuerCreateCredentialIssuer(issuer)
+        }
     }
 
     @When("{actor} creates an oid4vci issuer")
@@ -50,7 +68,7 @@ class ManageIssuerSteps {
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
         )
         val matchedIssuers = SerenityRest.lastResponse().get<CredentialIssuerPage>().contents!!
-            .filter { it.id == credentialIssuer.id }
+            .filter { it.id.toString() == credentialIssuer.id }
         issuer.attemptsTo(
             Ensure.that(matchedIssuers).hasSize(1),
         )
@@ -69,19 +87,29 @@ class ManageIssuerSteps {
     fun issuerUpdateCredentialIssuer(issuer: Actor) {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
         issuer.attemptsTo(
-            Patch.to("/oid4vci/issuers/${credentialIssuer.id}")
-                .with {
-                    it.body(
-                        PatchCredentialIssuerRequest(
-                            authorizationServer = PatchAuthorizationServer(
-                                url = UPDATE_AUTH_SERVER_URL,
-                                clientId = UPDATE_AUTH_SERVER_CLIENT_ID,
-                                clientSecret = UPDATE_AUTH_SERVER_CLIENT_SECRET,
-                            ),
-                        ),
-                    )
-                },
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
+            Patch.to("/oid4vci/issuers/${credentialIssuer.id}").body(
+                PatchCredentialIssuerRequest(
+                    authorizationServer = PatchAuthorizationServer(
+                        url = UPDATE_AUTH_SERVER_URL,
+                        clientId = UPDATE_AUTH_SERVER_CLIENT_ID,
+                        clientSecret = UPDATE_AUTH_SERVER_CLIENT_SECRET,
+                    ),
+                ),
+            ),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
+        )
+    }
+
+    @When("{actor} tries to update the oid4vci issuer '{}' property using '{}' value")
+    fun issuerTriesToUpdateTheOID4VCIIssuer(issuer: Actor, property: String, value: String) {
+        val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
+        val body = JsonObject()
+        val propertyValue = if (value == "null") { null } else { value }
+        body.addProperty(property, propertyValue)
+
+        val gson = GsonBuilder().serializeNulls().create()
+        issuer.attemptsTo(
+            Patch.to("/oid4vci/issuers/${credentialIssuer.id}").body(gson.toJson(body)),
         )
     }
 
@@ -94,6 +122,60 @@ class ManageIssuerSteps {
         )
     }
 
+    @When("{actor} tries to create oid4vci issuer with '{}', '{}', '{}' and '{}'")
+    fun issuerTriesToCreateOIDCIssuer(
+        issuer: Actor,
+        id: String,
+        url: String,
+        clientId: String,
+        clientSecret: String,
+    ) {
+        val idProperty = if (id == "null") {
+            null
+        } else {
+            id
+        }
+        val urlProperty = if (url == "null") {
+            null
+        } else {
+            url
+        }
+        val clientIdProperty = if (clientId == "null") {
+            null
+        } else {
+            clientId
+        }
+        val clientSecretProperty = if (clientSecret == "null") {
+            null
+        } else {
+            clientSecret
+        }
+
+        val body = JsonObject()
+        val authorizationServer = JsonObject()
+
+        body.addProperty("id", idProperty)
+        body.add("authorizationServer", authorizationServer)
+
+        authorizationServer.addProperty("url", urlProperty)
+        authorizationServer.addProperty("clientId", clientIdProperty)
+        authorizationServer.addProperty("clientSecret", clientSecretProperty)
+
+        val gson = GsonBuilder().serializeNulls().create()
+        issuer.attemptsTo(
+            Post.to("/oid4vci/issuers").body(gson.toJson(body)),
+        )
+    }
+
+    @Then("{actor} should see the oid4vci '{}' http status response with '{}' detail")
+    fun issuerShouldSeeTheOIDC4VCIError(issuer: Actor, httpStatus: Int, errorDetail: String) {
+        SerenityRest.lastResponse().body.prettyPrint()
+        issuer.attemptsTo(
+            Ensure.that(SerenityRest.lastResponse().statusCode).isEqualTo(httpStatus),
+            Ensure.that(SerenityRest.lastResponse().body.asString()).contains(errorDetail),
+        )
+    }
+
     @Then("{actor} sees the oid4vci issuer updated with new values")
     fun issuerSeesUpdatedCredentialIssuer(issuer: Actor) {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
@@ -102,7 +184,7 @@ class ManageIssuerSteps {
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
         )
         val updatedIssuer = SerenityRest.lastResponse().get<CredentialIssuerPage>().contents!!
-            .find { it.id == credentialIssuer.id }!!
+            .find { it.id.toString() == credentialIssuer.id }!!
         issuer.attemptsTo(
             Ensure.that(updatedIssuer.authorizationServerUrl).isEqualTo(UPDATE_AUTH_SERVER_URL),
         )
@@ -129,7 +211,7 @@ class ManageIssuerSteps {
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
         )
         val matchedIssuers = SerenityRest.lastResponse().get<CredentialIssuerPage>().contents!!
-            .filter { it.id == credentialIssuer.id }
+            .filter { it.id.toString() == credentialIssuer.id }
         issuer.attemptsTo(
             Ensure.that(matchedIssuers).isEmpty(),
         )
@@ -141,6 +223,13 @@ class ManageIssuerSteps {
         issuer.attemptsTo(
             Get("/oid4vci/issuers/${credentialIssuer.id}/.well-known/openid-credential-issuer"),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_NOT_FOUND),
+        )
+    }
+
+    @Then("{actor} should see the update oid4vci issuer returned '{}' http status")
+    fun issuerShouldSeeTheUpdateOID4VCIIssuerReturnedHttpStatus(issuer: Actor, statusCode: Int) {
+        issuer.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(statusCode),
         )
     }
 }

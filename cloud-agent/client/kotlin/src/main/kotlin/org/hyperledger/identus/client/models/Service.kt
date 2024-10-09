@@ -10,35 +10,27 @@
     "ArrayInDataClass",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "UnusedImport",
 )
 
 package org.hyperledger.identus.client.models
 
-import org.hyperledger.identus.client.models.Json
-
+import com.google.gson.JsonElement
+import com.google.gson.annotations.JsonAdapter
 import com.google.gson.annotations.SerializedName
+import org.hyperledger.identus.client.adapters.StringOrStringArrayAdapter
 
-/**
- * A service expressed in the DID document. https://www.w3.org/TR/did-core/#services
- *
- * @param id The id of the service. Requires a URI fragment when use in create / update DID. Returns the full ID (with DID prefix) when resolving DID
- * @param type 
- * @param serviceEndpoint 
- */
-
-
-data class Service (
+data class Service(
 
     /* The id of the service. Requires a URI fragment when use in create / update DID. Returns the full ID (with DID prefix) when resolving DID */
     @SerializedName("id")
     val id: kotlin.String,
 
     @SerializedName("type")
+    @JsonAdapter(StringOrStringArrayAdapter::class)
     val type: kotlin.collections.List<kotlin.String>? = null,
 
     @SerializedName("serviceEndpoint")
-    val serviceEndpoint: Json
+    val serviceEndpoint: JsonElement? = null,
 
-)
-
+    )

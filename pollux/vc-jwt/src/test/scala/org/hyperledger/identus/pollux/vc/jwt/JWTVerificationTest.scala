@@ -7,6 +7,7 @@ import io.circe.*
 import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.{DID, VerificationRelationship}
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
+import org.hyperledger.identus.pollux.vc.jwt.StatusPurpose.Revocation
 import org.hyperledger.identus.shared.http.*
 import zio.*
 import zio.prelude.Validation
@@ -62,7 +63,11 @@ object JWTVerificationTest extends ZIOSpecDefault {
                                               |}
                                               |""".stripMargin
 
-  private def createJwtCredential(issuer: IssuerWithKey, issuerAsObject: Boolean = false): JWT = {
+  private def createJwtCredential(
+      issuer: IssuerWithKey,
+      issuerAsObject: Boolean = false,
+      credentialStatus: Option[CredentialStatus | List[CredentialStatus]] = None
+  ): JWT = {
     val validFrom = Instant.parse("2010-01-05T00:00:00Z") // ISSUANCE DATE
     val jwtCredentialNbf = Instant.parse("2010-01-01T00:00:00Z") // ISSUANCE DATE
     val validUntil = Instant.parse("2010-01-09T00:00:00Z") // EXPIRATION DATE
@@ -75,15 +80,15 @@ object JWTVerificationTest extends ZIOSpecDefault {
         `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
         maybeCredentialSchema = None,
         credentialSubject = Json.obj("id" -> Json.fromString("1")),
-        maybeCredentialStatus = None,
+        maybeCredentialStatus = credentialStatus,
         maybeRefreshService = None,
         maybeEvidence = None,
         maybeTermsOfUse = None,
         maybeValidFrom = Some(validFrom),
         maybeValidUntil = Some(validUntil),
         maybeIssuer = Some(
-          if (issuerAsObject) Right(CredentialIssuer(issuer.issuer.did.toString, "Profile"))
-          else Left(issuer.issuer.did.toString)
+          if (issuerAsObject) CredentialIssuer(issuer.issuer.did.toString, "Profile")
+          else issuer.issuer.did.toString
         )
       ),
       nbf = jwtCredentialNbf, // ISSUANCE DATE
@@ -190,6 +195,51 @@ object JWTVerificationTest extends ZIOSpecDefault {
         )
       )
     },
+    test("fail verification if proof is valid but credential is revoked at the give status list index given list") {
+      val revokedStatus: List[CredentialStatus] = List(
+        org.hyperledger.identus.pollux.vc.jwt.CredentialStatus(
+          id = "http://localhost:8085/credential-status/664382dc-9e6d-4d0c-99d1-85e2c74eb5e9#1",
+          statusPurpose = StatusPurpose.Revocation,
+          `type` = "StatusList2021Entry",
+          statusListCredential = "http://localhost:8085/credential-status/664382dc-9e6d-4d0c-99d1-85e2c74eb5e9",
+          statusListIndex = 1
+        ),
+        org.hyperledger.identus.pollux.vc.jwt.CredentialStatus(
+          id = "http://localhost:8085/credential-status/664382dc-9e6d-4d0c-99d1-85e2c74eb5e9#2",
+          statusPurpose = StatusPurpose.Suspension,
+          `type` = "StatusList2021Entry",
+          statusListCredential = "http://localhost:8085/credential-status/664382dc-9e6d-4d0c-99d1-85e2c74eb5e9",
+          statusListIndex = 1
+        )
+      )
+
+      val urlResolver = new UriResolver {
+        override def resolve(uri: String): IO[GenericUriResolverError, String] = {
+          ZIO.succeed(statusListCredentialString)
+        }
+      }
+
+      val genericUriResolver = GenericUriResolver(
+        Map(
+          "data" -> DataUrlResolver(),
+          "http" -> urlResolver,
+          "https" -> urlResolver
+        )
+      )
+      val issuer = createUser("did:prism:issuer")
+      val jwtCredential = createJwtCredential(issuer, credentialStatus = Some(revokedStatus))
+
+      for {
+        validation <- JwtCredential.verifyRevocationStatusJwt(jwtCredential)(genericUriResolver)
+      } yield assertTrue(
+        validation.fold(
+          chunk =>
+            chunk.length == 2 && chunk.head.contentEquals("Credential is revoked") && chunk.tail.head
+              .contentEquals("Credential is revoked"),
+          _ => false
+        )
+      )
+    },
     test("validate dates happy path") {
       val issuer = createUser("did:prism:issuer")
       val jwtCredential = createJwtCredential(issuer)
@@ -211,10 +261,39 @@ object JWTVerificationTest extends ZIOSpecDefault {
           .decodeJwt(jwtCredential)
         jwtWithObjectIssuer <- JwtCredential
           .decodeJwt(jwtCredentialWithObjectIssuer)
-        jwtWithObjectIssuerIssuer = jwtWithObjectIssuer.vc.maybeIssuer.get.toOption.get.id
-        jwtIssuer = jwt.vc.maybeIssuer.get.left.toOption.get
+        jwtWithObjectIssuerIssuer = jwtWithObjectIssuer.vc.maybeIssuer.get match {
+          case string: String                     => string
+          case credentialIssuer: CredentialIssuer => credentialIssuer.id
+        }
+        jwtIssuer = jwt.vc.maybeIssuer.get match {
+          case string: String                     => string
+          case credentialIssuer: CredentialIssuer => credentialIssuer.id
+        }
       } yield assertTrue(
         jwtWithObjectIssuerIssuer.equals(jwtIssuer)
+      )
+    },
+    test("validate credential status list") {
+      val issuer = createUser("did:prism:issuer")
+      val status = CredentialStatus(id = "id", `type` = "type", statusPurpose = Revocation, 1, "1")
+      val encodedJwtWithStatusList = createJwtCredential(
+        issuer,
+        false,
+        Some(List(status))
+      )
+      val econdedJwtWithStatusObject = createJwtCredential(issuer, true, Some(status))
+      for {
+        decodeJwtWithStatusList <- JwtCredential
+          .decodeJwt(encodedJwtWithStatusList)
+        decodeJwtWithStatusObject <- JwtCredential
+          .decodeJwt(econdedJwtWithStatusObject)
+        statusFromList = decodeJwtWithStatusList.vc.maybeCredentialStatus.map {
+          case list: List[CredentialStatus] => list.head
+          case _: CredentialStatus          => throw new IllegalStateException("List expected")
+        }.get
+        statusFromObjet = decodeJwtWithStatusObject.vc.maybeCredentialStatus.get
+      } yield assertTrue(
+        statusFromList.equals(statusFromObjet)
       )
     },
     test("validate dates should fail given after valid until") {

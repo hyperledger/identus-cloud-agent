@@ -4,6 +4,7 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import doobie.*
 import doobie.util.transactor.Transactor
 import io.getquill.*
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.pollux.sql.model.db.{CredentialDefinition, CredentialDefinitionSql}
 import org.hyperledger.identus.shared.db.ContextAwareTask
 import org.hyperledger.identus.shared.db.Implicits.*
@@ -93,6 +94,7 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault with Postgr
       signatureType <- credentialDefinitionSignatureType
       supportRevocation <- credentialDefinitionSupportRevocation
       walletId <- Gen.fromZIO(ZIO.serviceWith[WalletAccessContext](_.walletId))
+      resolutionMethod <- Gen.fromIterable(ResourceResolutionMethod.values)
     } yield CredentialDefinition(
       guid = id,
       id = id,
@@ -109,6 +111,7 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault with Postgr
       schemaId = schemaId,
       signatureType = signatureType,
       supportRevocation = supportRevocation,
+      resolutionMethod = resolutionMethod,
       walletId = walletId
     ).withTruncatedTimestamp()
 
@@ -136,7 +139,7 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault with Postgr
         expected <- Generators.credentialDefinition.runCollectN(1).map(_.head)
         _ <- CredentialDefinitionSql.insert(expected).transactWallet(tx)
         actual <- CredentialDefinitionSql
-          .findByGUID(expected.guid)
+          .findByGUID(expected.guid, expected.resolutionMethod)
           .transactWallet(tx)
           .map(_.headOption)
 
@@ -147,7 +150,7 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault with Postgr
           .update(updatedExpected)
           .transactWallet(tx)
         updatedActual2 <- CredentialDefinitionSql
-          .findByGUID(expected.id)
+          .findByGUID(expected.id, expected.resolutionMethod)
           .transactWallet(tx)
           .map(_.headOption)
 
@@ -157,7 +160,7 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault with Postgr
 
         deleted <- CredentialDefinitionSql.delete(expected.guid).transactWallet(tx)
         notFound <- CredentialDefinitionSql
-          .findByGUID(expected.guid)
+          .findByGUID(expected.guid, expected.resolutionMethod)
           .transactWallet(tx)
           .map(_.headOption)
 
@@ -196,17 +199,24 @@ object CredentialDefinitionSqlIntegrationSpec extends ZIOSpecDefault with Postgr
 
         firstActual = generatedCredentialDefinitions.head
         firstExpected <- CredentialDefinitionSql
-          .findByGUID(firstActual.guid)
+          .findByGUID(firstActual.guid, firstActual.resolutionMethod)
           .transactWallet(tx)
           .map(_.headOption)
 
         credentialDefinitionCreated = assert(firstActual)(equalTo(firstExpected.get))
 
         totalCount <- CredentialDefinitionSql.totalCount.transactWallet(tx)
-        lookupCount <- CredentialDefinitionSql.lookupCount().transactWallet(tx)
+        lookupCountHttpCredDef <- CredentialDefinitionSql
+          .lookupCount(resolutionMethod = ResourceResolutionMethod.http)
+          .transactWallet(tx)
+        lookupCountDidCredDef <- CredentialDefinitionSql
+          .lookupCount(resolutionMethod = ResourceResolutionMethod.did)
+          .transactWallet(tx)
 
         totalCountIsN = assert(totalCount)(equalTo(generatedCredentialDefinitions.length))
-        lookupCountIsN = assert(lookupCount)(equalTo(generatedCredentialDefinitions.length))
+        lookupCountIsN = assert(lookupCountHttpCredDef + lookupCountDidCredDef)(
+          equalTo(generatedCredentialDefinitions.length)
+        )
 
       } yield allCredentialDefinitionsHaveUniqueId &&
         allCredentialDefinitionsHaveUniqueConstraint &&

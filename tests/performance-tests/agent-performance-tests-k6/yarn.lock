@@ -993,10 +993,10 @@
   resolved "https://registry.yarnpkg.com/@discoveryjs/json-ext/-/json-ext-0.5.7.tgz#1d572bfbbe14b7704e0ba0f39b74815b84870d70"
   integrity sha512-dBVuXR082gk3jsFp7Rd/JI4kytwGHecnCoTtXFb7DB6CNHp4rg5k1bhg0nWdLGLnOV71lmDzGQaLMy8iPLY0pw==
 
-"@hyperledger/identus-cloud-agent-client-ts@^1.39.0-e077cdd":
-  version "1.39.0-e077cdd"
-  resolved "https://npm.pkg.github.com/download/@hyperledger/identus-cloud-agent-client-ts/1.39.0-e077cdd/06803b9bd2fa7d63805f83df22250882e84c94dd#06803b9bd2fa7d63805f83df22250882e84c94dd"
-  integrity sha512-3FSz2WlrykyF5LqnrI+wcbrY33i8CeyBNQmEYZ9fp84JL3qhWvnF92dBIS9qpgAQY/qIg5vHvL7RIRNrAxQfOw==
+"@hyperledger/identus-cloud-agent-client-ts@^1.39.1-bbcedb1":
+  version "1.39.1-bbcedb1"
+  resolved "https://npm.pkg.github.com/download/@hyperledger/identus-cloud-agent-client-ts/1.39.1-bbcedb1/88aaeabfc4d2d8949e21014c2a5c9297ed055d42#88aaeabfc4d2d8949e21014c2a5c9297ed055d42"
+  integrity sha512-FjYV4HN5H/LD/v6dOw/vMaqU3f8v1IKzEMtUfj9qmLHVmr1FwxkZWSj6wE27I+sY/0sGAPCF/rPbvO27UWdtYQ==
   dependencies:
     es6-promise "^4.2.4"
     url-parse "^1.4.3"

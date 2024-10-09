@@ -1,5 +1,6 @@
 package steps.did
 
+import com.google.gson.JsonPrimitive
 import interactions.Get
 import interactions.Post
 import interactions.body
@@ -148,7 +149,7 @@ class ManageDidSteps {
             CreateManagedDidRequestDocumentTemplate(
                 publicKeys = listOf(ManagedDIDKeyTemplate("auth-1", purpose, curve)),
                 services = listOf(
-                    Service("https://foo.bar.com", listOf("LinkedDomains"), Json("https://foo.bar.com/")),
+                    Service("https://foo.bar.com", listOf("LinkedDomains"), JsonPrimitive("https://foo.bar.com/")),
                 ),
             ),
         )

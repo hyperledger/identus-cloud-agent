@@ -1,15 +1,9 @@
 package org.hyperledger.identus.pollux.core.repository
 
-import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID}
+import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.pollux.core.model.*
-import org.hyperledger.identus.pollux.vc.jwt.{revocation, Issuer, StatusPurpose}
-import org.hyperledger.identus.pollux.vc.jwt.revocation.{BitString, VCStatusList2021}
-import org.hyperledger.identus.pollux.vc.jwt.revocation.BitStringError.{
-  DecodingError,
-  EncodingError,
-  IndexOutOfBounds,
-  InvalidSize
-}
+import org.hyperledger.identus.pollux.vc.jwt.{Issuer, StatusPurpose}
+import org.hyperledger.identus.pollux.vc.jwt.revocation.BitString
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
@@ -73,63 +67,69 @@ class CredentialStatusListRepositoryInMemory(
     exists = stores.flatMap(_.values).exists(_.issueCredentialRecordId == id)
   } yield exists
 
-  def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]] = for {
-    storageRef <- walletToStatusListStorageRefs
-    storage <- storageRef.get
-    latest = storage.toSeq
-      .sortBy(_._2.createdAt) { (x, y) => if x.isAfter(y) then -1 else 1 /* DESC */ }
-      .headOption
-      .map(_._2)
-  } yield latest
-
-  def createNewForTheWallet(
+  override def incrementAndGetStatusListIndex(
       jwtIssuer: Issuer,
       statusListRegistryUrl: String
-  ): URIO[WalletAccessContext, CredentialStatusList] = {
+  ): URIO[WalletAccessContext, (UUID, Int)] =
+    def getLatestOfTheWallet: URIO[WalletAccessContext, Option[CredentialStatusList]] = for {
+      storageRef <- walletToStatusListStorageRefs
+      storage <- storageRef.get
+      latest = storage.toSeq
+        .sortBy(_._2.createdAt) { (x, y) => if x.isAfter(y) then -1 else 1 /* DESC */ }
+        .headOption
+        .map(_._2)
+    } yield latest
 
-    val id = UUID.randomUUID()
-    val issued = Instant.now()
-    val issuerDid = jwtIssuer.did
-    val canonical = PrismDID.fromString(issuerDid.toString).fold(e => throw RuntimeException(e), _.asCanonical)
+    def createNewForTheWallet(
+        id: UUID,
+        jwtIssuer: Issuer,
+        issued: Instant,
+        credentialStr: String
+    ): URIO[WalletAccessContext, CredentialStatusList] = {
+      val issuerDid = jwtIssuer.did
+      val canonical = PrismDID.fromString(issuerDid.toString).fold(e => throw RuntimeException(e), _.asCanonical)
 
-    val embeddedProofCredential = for {
-      bitString <- BitString.getInstance().mapError {
-        case InvalidSize(message)      => new Throwable(message)
-        case EncodingError(message)    => new Throwable(message)
-        case DecodingError(message)    => new Throwable(message)
-        case IndexOutOfBounds(message) => new Throwable(message)
-      }
-      emptyJwtCredential <- VCStatusList2021
-        .build(
-          vcId = s"$statusListRegistryUrl/credential-status/$id",
-          revocationData = bitString,
-          jwtIssuer = jwtIssuer
+      for {
+        storageRef <- walletToStatusListStorageRefs
+        walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
+        newCredentialStatusList = CredentialStatusList(
+          id = id,
+          walletId = walletId,
+          issuer = canonical,
+          issued = issued,
+          purpose = StatusPurpose.Revocation,
+          statusListCredential = credentialStr,
+          size = BitString.MIN_SL2021_SIZE,
+          lastUsedIndex = 0,
+          createdAt = Instant.now(),
+          updatedAt = None
         )
-        .mapError(x => new Throwable(x.msg))
+        _ <- storageRef.update(r => r + (newCredentialStatusList.id -> newCredentialStatusList))
+      } yield newCredentialStatusList
+    }
 
-      credentialWithEmbeddedProof <- emptyJwtCredential.toJsonWithEmbeddedProof
-    } yield credentialWithEmbeddedProof.spaces2
+    def updateLastUsedIndex(statusListId: UUID, lastUsedIndex: Int) =
+      for {
+        walletToStatusListStorageRef <- walletToStatusListStorageRefs
+        _ <- walletToStatusListStorageRef.update(r => {
+          val value = r.get(statusListId)
+          value.fold(r) { v =>
+            val updated = v.copy(lastUsedIndex = lastUsedIndex, updatedAt = Some(Instant.now))
+            r.updated(statusListId, updated)
+          }
+        })
+      } yield ()
 
     for {
-      credential <- embeddedProofCredential.orDie
-      storageRef <- walletToStatusListStorageRefs
-      walletId <- ZIO.serviceWith[WalletAccessContext](_.walletId)
-      newCredentialStatusList = CredentialStatusList(
-        id = id,
-        walletId = walletId,
-        issuer = canonical,
-        issued = issued,
-        purpose = StatusPurpose.Revocation,
-        statusListCredential = credential,
-        size = BitString.MIN_SL2021_SIZE,
-        lastUsedIndex = 0,
-        createdAt = Instant.now(),
-        updatedAt = None
-      )
-      _ <- storageRef.update(r => r + (newCredentialStatusList.id -> newCredentialStatusList))
-    } yield newCredentialStatusList
-
-  }
+      id <- ZIO.succeed(UUID.randomUUID())
+      newStatusListVC <- createStatusListVC(jwtIssuer, statusListRegistryUrl, id).orDie
+      maybeStatusList <- getLatestOfTheWallet
+      statusList <- maybeStatusList match
+        case Some(csl) if csl.lastUsedIndex < csl.size => ZIO.succeed(csl)
+        case _ => createNewForTheWallet(id, jwtIssuer, Instant.now(), newStatusListVC)
+      newIndex = statusList.lastUsedIndex + 1
+      _ <- updateLastUsedIndex(statusList.id, newIndex)
+    } yield (statusList.id, newIndex)
 
   def allocateSpaceForCredential(
       issueCredentialRecordId: DidCommID,
@@ -150,14 +150,6 @@ class CredentialStatusListRepositoryInMemory(
     for {
       credentialInStatusListStorageRef <- statusListToCredInStatusListStorageRefs(credentialStatusListId)
       _ <- credentialInStatusListStorageRef.update(r => r + (newCredentialInStatusList.id -> newCredentialInStatusList))
-      walletToStatusListStorageRef <- walletToStatusListStorageRefs
-      _ <- walletToStatusListStorageRef.update(r => {
-        val value = r.get(credentialStatusListId)
-        value.fold(r) { v =>
-          val updated = v.copy(lastUsedIndex = statusListIndex, updatedAt = Some(Instant.now))
-          r.updated(credentialStatusListId, updated)
-        }
-      })
     } yield ()
 
   }
@@ -186,37 +178,39 @@ class CredentialStatusListRepositoryInMemory(
     } yield ()
   }
 
-  def getCredentialStatusListsWithCreds: UIO[List[CredentialStatusListWithCreds]] = {
+  override def getCredentialStatusListIds: UIO[Seq[(WalletId, UUID)]] =
     for {
       statusListsRefs <- allStatusListsStorageRefs
       statusLists <- statusListsRefs.get
-      statusListWithCredEffects = statusLists.map { (id, statusList) =>
-        val credsinStatusListEffect = statusListToCredInStatusListStorageRefs(id).flatMap(_.get.map(_.values.toList))
-        credsinStatusListEffect.map { credsInStatusList =>
-          CredentialStatusListWithCreds(
-            id = id,
-            walletId = statusList.walletId,
-            issuer = statusList.issuer,
-            issued = statusList.issued,
-            purpose = statusList.purpose,
-            statusListCredential = statusList.statusListCredential,
-            size = statusList.size,
-            lastUsedIndex = statusList.lastUsedIndex,
-            credentials = credsInStatusList.map { cred =>
-              CredInStatusList(
-                id = cred.id,
-                issueCredentialRecordId = cred.issueCredentialRecordId,
-                statusListIndex = cred.statusListIndex,
-                isCanceled = cred.isCanceled,
-                isProcessed = cred.isProcessed,
-              )
-            }
-          )
-        }
+    } yield statusLists.values.toList.map(csl => (csl.walletId, csl.id))
 
-      }.toList
-      res <- ZIO.collectAll(statusListWithCredEffects)
-    } yield res
+  def getCredentialStatusListsWithCreds(
+      statusListId: UUID
+  ): URIO[WalletAccessContext, CredentialStatusListWithCreds] = {
+    for {
+      statusListsRefs <- allStatusListsStorageRefs
+      statusLists <- statusListsRefs.get
+      statusList = statusLists(statusListId)
+      credsInStatusList <- statusListToCredInStatusListStorageRefs(statusList.id).flatMap(_.get.map(_.values.toList))
+    } yield CredentialStatusListWithCreds(
+      id = statusList.id,
+      walletId = statusList.walletId,
+      issuer = statusList.issuer,
+      issued = statusList.issued,
+      purpose = statusList.purpose,
+      statusListCredential = statusList.statusListCredential,
+      size = statusList.size,
+      lastUsedIndex = statusList.lastUsedIndex,
+      credentials = credsInStatusList.map { cred =>
+        CredInStatusList(
+          id = cred.id,
+          issueCredentialRecordId = cred.issueCredentialRecordId,
+          statusListIndex = cred.statusListIndex,
+          isCanceled = cred.isCanceled,
+          isProcessed = cred.isProcessed,
+        )
+      }
+    )
   }
 
   def updateStatusListCredential(

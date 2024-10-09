@@ -5,6 +5,7 @@ import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.JWK
 import eu.europa.ec.eudi.openid4vci.*
 import interactions.Post
+import interactions.body
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
@@ -40,16 +41,13 @@ class IssueCredentialSteps {
             issuer.recall("longFormDid")
         }
         issuer.attemptsTo(
-            Post.to("/oid4vci/issuers/${credentialIssuer.id}/credential-offers")
-                .with {
-                    it.body(
-                        CredentialOfferRequest(
-                            credentialConfigurationId = configurationId,
-                            issuingDID = did,
-                            claims = claims,
-                        ),
-                    )
-                },
+            Post.to("/oid4vci/issuers/${credentialIssuer.id}/credential-offers").body(
+                CredentialOfferRequest(
+                    credentialConfigurationId = configurationId,
+                    issuingDID = did,
+                    claims = claims,
+                ),
+            ),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_CREATED),
         )
         val offerUri = SerenityRest.lastResponse().get<CredentialOfferResponse>().credentialOffer
@@ -99,7 +97,7 @@ class IssueCredentialSteps {
         val issuer = holder.recall<Issuer>("eudiIssuer")
         val authorizedRequest = holder.recall<AuthorizedRequest>("eudiAuthorizedRequest")
         val requestPayload = IssuanceRequestPayload.ConfigurationBased(credentialOffer.credentialConfigurationIdentifiers.first(), null)
-        val submissionOutcome = with(issuer) {
+        val authRequestAndsubmissionOutcome = with(issuer) {
             when (authorizedRequest) {
                 is AuthorizedRequest.NoProofRequired -> throw Exception("Not supported yet")
                 is AuthorizedRequest.ProofRequired -> runBlocking {
@@ -110,7 +108,7 @@ class IssueCredentialSteps {
                 }
             }.getOrThrow()
         }
-        holder.remember("eudiSubmissionOutcome", submissionOutcome)
+        holder.remember("eudiSubmissionOutcome", authRequestAndsubmissionOutcome.second)
     }
 
     @Then("{actor} sees credential issued successfully from CredentialEndpoint")

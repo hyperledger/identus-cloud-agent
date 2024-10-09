@@ -61,7 +61,7 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
 
   lazy val testEnvironmentLayer =
     ZLayer.makeSome[
-      ManagedDIDService & DIDService & CredentialService & ConnectionService,
+      ManagedDIDService & DIDService & CredentialService & CredentialDefinitionService & ConnectionService,
       IssueController & AppConfig & PostgreSQLContainer & AuthenticatorWithAuthZ[BaseEntity]
     ](IssueControllerImpl.layer, configLayer, pgContainerLayer, DefaultEntityAuthenticator.layer)
 
@@ -69,9 +69,9 @@ trait IssueControllerTestTools extends PostgresTestContainerSupport {
 
   def bootstrapOptions[F[_]](monadError: MonadError[F]): CustomiseInterceptors[F, Any] = {
     new CustomiseInterceptors[F, Any](_ => ())
-      .exceptionHandler(CustomServerInterceptors.exceptionHandler)
-      .rejectHandler(CustomServerInterceptors.rejectHandler)
-      .decodeFailureHandler(CustomServerInterceptors.decodeFailureHandler)
+      .exceptionHandler(CustomServerInterceptors.tapirExceptionHandler)
+      .rejectHandler(CustomServerInterceptors.tapirRejectHandler)
+      .decodeFailureHandler(CustomServerInterceptors.tapirDecodeFailureHandler)
   }
 
   def httpBackend(controller: IssueController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {

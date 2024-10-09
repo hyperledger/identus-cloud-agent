@@ -9,6 +9,7 @@ import sttp.tapir.Schema.annotations.{description, encodedExample}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 import java.util.UUID
+import scala.language.implicitConversions
 
 /** A class to represent an incoming request to create a new credential offer.
   *
@@ -33,7 +34,7 @@ final case class CreateIssueCredentialRecordRequest(
     validityPeriod: Option[Double] = None,
     @description(annotations.schemaId.description)
     @encodedExample(annotations.schemaId.example)
-    schemaId: Option[String],
+    schemaId: Option[String | List[String]] = None,
     @description(annotations.credentialDefinitionId.description)
     @encodedExample(annotations.credentialDefinitionId.example)
     credentialDefinitionId: Option[UUID],
@@ -48,7 +49,7 @@ final case class CreateIssueCredentialRecordRequest(
     automaticIssuance: Option[Boolean] = None,
     @description(annotations.issuingDID.description)
     @encodedExample(annotations.issuingDID.example)
-    issuingDID: Option[String],
+    issuingDID: String,
     @description(annotations.issuingKid.description)
     @encodedExample(annotations.issuingKid.example)
     issuingKid: Option[KeyId],
@@ -129,12 +130,11 @@ object CreateIssueCredentialRecordRequest {
         )
 
     object issuingDID
-        extends Annotation[Option[String]](
+        extends Annotation[String](
           description = """
-          |The short-form issuer Prism DID by which the JWT verifiable credential will be issued.
-          |Note that this parameter only applies when the offer is type 'JWT'.
+          |The issuer Prism DID by which the verifiable credential will be issued. DID can be short for or long form.
           |""".stripMargin,
-          example = Some("did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f")
+          example = "did:prism:3bb0505d13fcb04d28a48234edb27b0d4e6d7e18a81e2c1abab58f3bbc21ce6f"
         )
 
     object issuingKid
@@ -178,6 +178,19 @@ object CreateIssueCredentialRecordRequest {
         )
   }
 
+  given schemaIdEncoder: JsonEncoder[String | List[String]] =
+    JsonEncoder[String]
+      .orElseEither(JsonEncoder[List[String]])
+      .contramap[String | List[String]] {
+        case schemaId: String        => Left(schemaId)
+        case schemaIds: List[String] => Right(schemaIds)
+      }
+
+  given schemaIdDecoder: JsonDecoder[String | List[String]] =
+    JsonDecoder[List[String]]
+      .map(schemaId => schemaId: String | List[String])
+      .orElse(JsonDecoder[String].map(schemaId => schemaId: String | List[String]))
+
   given encoder: JsonEncoder[CreateIssueCredentialRecordRequest] =
     DeriveJsonEncoder.gen[CreateIssueCredentialRecordRequest]
 
@@ -185,6 +198,17 @@ object CreateIssueCredentialRecordRequest {
     DeriveJsonDecoder.gen[CreateIssueCredentialRecordRequest]
 
   given schemaJson: Schema[KeyId] = Schema.schemaForString.map[KeyId](v => Some(KeyId(v)))(KeyId.value)
+
+  given schemaId: Schema[String | List[String]] = Schema
+    .schemaForEither(Schema.schemaForString, Schema.schemaForArray[String])
+    .map[String | List[String]] {
+      case Left(value)   => Some(value)
+      case Right(values) => Some(values.toList)
+    } {
+      case value: String        => Left(value)
+      case values: List[String] => Right(values.toArray)
+    }
+
   given schema: Schema[CreateIssueCredentialRecordRequest] = Schema.derived
 
 }

@@ -1,13 +1,13 @@
 package org.hyperledger.identus.agent.walletapi.service
 
 import org.hyperledger.identus.agent.walletapi.model.*
-import org.hyperledger.identus.agent.walletapi.model.error.*
-import org.hyperledger.identus.agent.walletapi.model.error.given
+import org.hyperledger.identus.agent.walletapi.model.error.{*, given}
 import org.hyperledger.identus.agent.walletapi.service.handler.{DIDCreateHandler, DIDUpdateHandler, PublicationHandler}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
 import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage, WalletSecretStorage}
 import org.hyperledger.identus.agent.walletapi.util.*
 import org.hyperledger.identus.castor.core.model.did.*
+import org.hyperledger.identus.castor.core.model.did.Service as DidDocumentService
 import org.hyperledger.identus.castor.core.model.error.DIDOperationError
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.castor.core.util.DIDOperationValidator
@@ -24,13 +24,13 @@ import scala.language.implicitConversions
   * indy-wallet-sdk.
   */
 class ManagedDIDServiceImpl private[walletapi] (
+    defaultDidDocumentServices: Set[DidDocumentService],
     didService: DIDService,
     didOpValidator: DIDOperationValidator,
     private[walletapi] val secretStorage: DIDSecretStorage,
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
     walletSecretStorage: WalletSecretStorage,
     apollo: Apollo,
-    createDIDSem: Semaphore
 ) extends ManagedDIDService {
 
   private val AGREEMENT_KEY_ID = KeyId("agreement")
@@ -53,6 +53,8 @@ class ManagedDIDServiceImpl private[walletapi] (
 
   def syncUnconfirmedUpdateOperations: ZIO[WalletAccessContext, GetManagedDIDError, Unit] =
     syncUnconfirmedUpdateOperationsByDID(did = None)
+
+  override protected def getDefaultDidDocumentServices: Set[DidDocumentService] = defaultDidDocumentServices
 
   override def findDIDKeyPair(
       did: CanonicalPrismDID,
@@ -123,25 +125,23 @@ class ManagedDIDServiceImpl private[walletapi] (
   def createAndStoreDID(
       didTemplate: ManagedDIDTemplate
   ): ZIO[WalletAccessContext, CreateManagedDIDError, LongFormPrismDID] = {
-    val effect = for {
+    for {
       _ <- ZIO
-        .fromEither(ManagedDIDTemplateValidator.validate(didTemplate))
-        .mapError(CreateManagedDIDError.InvalidArgument.apply)
-      material <- didCreateHandler.materialize(didTemplate)
+        .fromEither(ManagedDIDTemplateValidator.validate(didTemplate, defaultDidDocumentServices))
+        .mapError { x =>
+          println("x: " + x)
+
+          CreateManagedDIDError.InvalidArgument(x)
+        }
+      _ <- ZIO.logInfo(s"Old did template after validation: $didTemplate")
+      newDidTemplate = didTemplate.copy(services = didTemplate.services ++ defaultDidDocumentServices)
+      _ <- ZIO.logInfo(s"Creating managed DID with template2: $newDidTemplate")
+      material <- didCreateHandler.materialize(newDidTemplate)
       _ <- ZIO
         .fromEither(didOpValidator.validate(material.operation))
         .mapError(CreateManagedDIDError.InvalidOperation.apply)
       _ <- material.persist.mapError(CreateManagedDIDError.WalletStorageError.apply)
     } yield PrismDID.buildLongFormFromOperation(material.operation)
-
-    // This synchronizes createDID effect to only allow 1 execution at a time
-    // to avoid concurrent didIndex update. Long-term solution should be
-    // solved at the DB level.
-    //
-    // Performance may be improved by not synchronizing the whole operation,
-    // but only the counter increment part allowing multiple in-flight create operations
-    // once didIndex is acquired.
-    createDIDSem.withPermit(effect)
   }
 
   def updateManagedDID(
@@ -361,26 +361,27 @@ class ManagedDIDServiceImpl private[walletapi] (
 object ManagedDIDServiceImpl {
 
   val layer: RLayer[
-    DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage & WalletSecretStorage & Apollo,
+    Set[DidDocumentService] & DIDOperationValidator & DIDService & DIDSecretStorage & DIDNonSecretStorage &
+      WalletSecretStorage & Apollo,
     ManagedDIDService
   ] = {
     ZLayer.fromZIO {
       for {
+        defaultDidDocumentServices <- ZIO.service[Set[DidDocumentService]]
         didService <- ZIO.service[DIDService]
         didOpValidator <- ZIO.service[DIDOperationValidator]
         secretStorage <- ZIO.service[DIDSecretStorage]
         nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
         walletSecretStorage <- ZIO.service[WalletSecretStorage]
         apollo <- ZIO.service[Apollo]
-        createDIDSem <- Semaphore.make(1)
       } yield ManagedDIDServiceImpl(
+        defaultDidDocumentServices,
         didService,
         didOpValidator,
         secretStorage,
         nonSecretStorage,
         walletSecretStorage,
-        apollo,
-        createDIDSem
+        apollo
       )
     }
   }

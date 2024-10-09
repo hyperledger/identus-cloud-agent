@@ -1,6 +1,5 @@
 package org.hyperledger.identus.pollux.core.service
 
-import com.nimbusds.jose.jwk.*
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.castor.core.model.did.DID
 import org.hyperledger.identus.mercury.{AgentPeerService, PeerDID}
@@ -10,8 +9,11 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.PresentationError
 import org.hyperledger.identus.pollux.core.repository.*
 import org.hyperledger.identus.pollux.core.service.serdes.*
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.crypto.KmpSecp256k1KeyOps
+import org.hyperledger.identus.shared.http.UriResolver
+import org.hyperledger.identus.shared.messaging.{MessagingService, MessagingServiceConfig, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
@@ -26,21 +28,23 @@ trait PresentationServiceSpecHelper {
     AgentPeerService.makeLayer(PeerDID.makePeerDid(serviceEndpoint = Some("http://localhost:9099")))
 
   val genericSecretStorageLayer = GenericSecretStorageInMemory.layer
-  val uriDereferencerLayer = ResourceURIDereferencerImpl.layer
+  val uriResolverLayer = ResourceUrlResolver.layer
   val credentialDefLayer =
-    CredentialDefinitionRepositoryInMemory.layer ++ uriDereferencerLayer >>> CredentialDefinitionServiceImpl.layer
+    CredentialDefinitionRepositoryInMemory.layer ++ uriResolverLayer >>> CredentialDefinitionServiceImpl.layer
   val linkSecretLayer = genericSecretStorageLayer >+> LinkSecretServiceImpl.layer
 
   val presentationServiceLayer = ZLayer.make[
-    PresentationService & CredentialDefinitionService & URIDereferencer & LinkSecretService & PresentationRepository &
+    PresentationService & CredentialDefinitionService & UriResolver & LinkSecretService & PresentationRepository &
       CredentialRepository
   ](
     PresentationServiceImpl.layer,
     credentialDefLayer,
-    uriDereferencerLayer,
+    uriResolverLayer,
     linkSecretLayer,
     PresentationRepositoryInMemory.layer,
-    CredentialRepositoryInMemory.layer
+    CredentialRepositoryInMemory.layer,
+    (MessagingServiceConfig.inMemoryLayer >>> MessagingService.serviceLayer >>>
+      MessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
   ) ++ defaultWalletLayer
 
   def createIssuer(did: String): Issuer = {
@@ -133,7 +137,7 @@ trait PresentationServiceSpecHelper {
     createdAt = Instant.now,
     updatedAt = None,
     thid = DidCommID(),
-    schemaUri = None,
+    schemaUris = None,
     credentialDefinitionId = None,
     credentialDefinitionUri = None,
     credentialFormat = credentialFormat,

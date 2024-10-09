@@ -19,13 +19,14 @@ import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, Pre
 import org.hyperledger.identus.pollux.core.service.serdes.*
 import org.hyperledger.identus.pollux.sdjwt.{CredentialCompact, HolderPrivateKey, PresentationCompact, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.shared.http.UriResolver
+import org.hyperledger.identus.shared.messaging.{Producer, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.Base64Utils
 import zio.*
 import zio.json.*
 
-import java.net.URI
 import java.time.Instant
 import java.util.{Base64 as JBase64, UUID}
 import java.util as ju
@@ -33,14 +34,17 @@ import scala.util.chaining.*
 import scala.util.Try
 
 private class PresentationServiceImpl(
-    uriDereferencer: URIDereferencer,
+    uriResolver: UriResolver,
     linkSecretService: LinkSecretService,
     presentationRepository: PresentationRepository,
     credentialRepository: CredentialRepository,
-    maxRetries: Int = 5, // TODO move to config
+    messageProducer: Producer[UUID, WalletIdAndRecordId],
+    maxRetries: Int = 5, // TODO move to config,
 ) extends PresentationService {
 
   import PresentationRecord.*
+
+  private val TOPIC_NAME = "present"
 
   override def markPresentationGenerated(
       recordId: DidCommID,
@@ -57,6 +61,10 @@ private class PresentationServiceImpl(
           ) @@ CustomMetricsAspect.startRecordingTime(
             s"${record.id}_present_proof_flow_prover_presentation_generated_to_sent_ms_gauge"
           )
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- getRecord(recordId)
     } yield record
   }
@@ -239,7 +247,7 @@ private class PresentationServiceImpl(
       )
       presentationPayload <- createAnoncredPresentationPayloadFromCredential(
         issuedCredentials,
-        issuedValidCredentials.flatMap(_.schemaUri),
+        issuedValidCredentials.flatMap(_.schemaUris.getOrElse(List())),
         issuedValidCredentials.flatMap(_.credentialDefinitionUri),
         requestPresentation,
         anoncredCredentialProof.credentialProofs
@@ -298,7 +306,7 @@ private class PresentationServiceImpl(
 
   override def findPresentationRecord(
       recordId: DidCommID
-  ): ZIO[WalletAccessContext, PresentationError, Option[PresentationRecord]] =
+  ): URIO[WalletAccessContext, Option[PresentationRecord]] =
     presentationRepository.findPresentationRecord(recordId)
 
   override def findPresentationRecordByThreadId(
@@ -459,6 +467,10 @@ private class PresentationServiceImpl(
         @@ CustomMetricsAspect.startRecordingTime(
           s"${record.id}_present_proof_flow_verifier_req_pending_to_sent_ms_gauge"
         )
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
     } yield record
   }
 
@@ -531,6 +543,10 @@ private class PresentationServiceImpl(
       )
       _ <- presentationRepository.createPresentationRecord(record)
       _ <- ZIO.logDebug(s"Received and created the RequestPresentation: $request")
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
     } yield record
   }
 
@@ -765,8 +781,7 @@ private class PresentationServiceImpl(
 
   private def resolveSchema(schemaUri: String): IO[PresentationError, (String, AnoncredSchemaDef)] = {
     for {
-      uri <- ZIO.attempt(new URI(schemaUri)).mapError(e => InvalidSchemaURIError(schemaUri, e))
-      content <- uriDereferencer.dereference(uri).mapError(e => SchemaURIDereferencingError(e))
+      content <- uriResolver.resolve(schemaUri).mapError(e => SchemaURIDereferencingError(e))
       anoncredSchema <-
         AnoncredSchemaSerDesV1.schemaSerDes
           .deserialize(content)
@@ -785,10 +800,9 @@ private class PresentationServiceImpl(
       credentialDefinitionUri: String
   ): IO[PresentationError, (String, AnoncredCredentialDefinition)] = {
     for {
-      uri <- ZIO
-        .attempt(new URI(credentialDefinitionUri))
-        .mapError(e => InvalidCredentialDefinitionURIError(credentialDefinitionUri, e))
-      content <- uriDereferencer.dereference(uri).mapError(e => CredentialDefinitionURIDereferencingError(e))
+      content <- uriResolver
+        .resolve(credentialDefinitionUri)
+        .mapError(e => CredentialDefinitionURIDereferencingError(e))
       _ <-
         PublicCredentialDefinitionSerDesV1.schemaSerDes
           .validate(content)
@@ -815,6 +829,10 @@ private class PresentationServiceImpl(
         @@ CustomMetricsAspect.startRecordingTime(
           s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
         )
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- getRecord(recordId)
     } yield record
   }
@@ -843,6 +861,10 @@ private class PresentationServiceImpl(
           ) @@ CustomMetricsAspect.startRecordingTime(
           s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
         )
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- getRecord(recordId)
     } yield record
   }
@@ -877,6 +899,10 @@ private class PresentationServiceImpl(
         ) @@ CustomMetricsAspect.startRecordingTime(
         s"${record.id}_present_proof_flow_prover_presentation_pending_to_generated_ms_gauge"
       )
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- getRecord(record.id)
     } yield record
   }
@@ -963,6 +989,10 @@ private class PresentationServiceImpl(
         .startRecordingTime(
           s"${record.id}_present_proof_flow_verifier_presentation_received_to_verification_success_or_failure_ms_gauge"
         )
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- getRecord(record.id)
     } yield record
   }
@@ -979,6 +1009,10 @@ private class PresentationServiceImpl(
       requestPresentation = createDidCommRequestPresentationFromProposal(request)
       _ <- presentationRepository
         .updateWithRequestPresentation(recordId, requestPresentation, ProtocolState.PresentationPending)
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- getRecord(recordId)
     } yield record
   }
@@ -995,6 +1029,10 @@ private class PresentationServiceImpl(
       record <- getRecordFromThreadId(thid)
       _ <- presentationRepository
         .updateWithProposePresentation(record.id, proposePresentation, ProtocolState.ProposalReceived)
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- getRecord(record.id)
     } yield record
   }
@@ -1307,8 +1345,9 @@ private class PresentationServiceImpl(
 
 object PresentationServiceImpl {
   val layer: URLayer[
-    URIDereferencer & LinkSecretService & PresentationRepository & CredentialRepository,
+    UriResolver & LinkSecretService & PresentationRepository & CredentialRepository &
+      Producer[UUID, WalletIdAndRecordId],
     PresentationService
   ] =
-    ZLayer.fromFunction(PresentationServiceImpl(_, _, _, _))
+    ZLayer.fromFunction(PresentationServiceImpl(_, _, _, _, _))
 }

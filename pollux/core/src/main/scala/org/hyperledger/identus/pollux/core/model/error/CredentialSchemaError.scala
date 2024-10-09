@@ -1,5 +1,6 @@
 package org.hyperledger.identus.pollux.core.model.error
 
+import org.hyperledger.identus.shared.http.GenericUriResolverError
 import org.hyperledger.identus.shared.json.JsonSchemaError
 import org.hyperledger.identus.shared.models.{Failure, StatusCode}
 
@@ -45,5 +46,11 @@ object CredentialSchemaError {
       extends CredentialSchemaError(
         StatusCode.BadRequest,
         s"Unsupported credential schema type: ${`type`}"
+      )
+
+  final case class SchemaDereferencingError(cause: GenericUriResolverError)
+      extends CredentialSchemaError(
+        StatusCode.InternalServerError,
+        s"The schema was not successfully dereferenced: cause=[${cause.userFacingMessage}]"
       )
 }

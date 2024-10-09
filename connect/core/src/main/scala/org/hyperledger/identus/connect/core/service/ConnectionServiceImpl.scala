@@ -1,14 +1,13 @@
 package org.hyperledger.identus.connect.core.service
 
-import org.hyperledger.identus.*
 import org.hyperledger.identus.connect.core.model.{ConnectionRecord, ConnectionRecordBeforeStored}
-import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError
 import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.*
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.repository.ConnectionRepository
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.mercury.protocol.connection.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
+import org.hyperledger.identus.shared.messaging.{Producer, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.Base64Utils
@@ -21,8 +20,11 @@ import java.util.UUID
 
 private class ConnectionServiceImpl(
     connectionRepository: ConnectionRepository,
+    messageProducer: Producer[UUID, WalletIdAndRecordId],
     maxRetries: Int = 5, // TODO move to config
 ) extends ConnectionService {
+
+  private val TOPIC_NAME = "connect"
 
   override def createConnectionInvitation(
       label: Option[String],
@@ -147,6 +149,11 @@ private class ConnectionServiceImpl(
         @@ CustomMetricsAspect.startRecordingTime(
           s"${record.id}_invitee_pending_to_req_sent"
         )
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      // TODO Should we use a singleton producer or create a new one each time?? (underlying Kafka Producer is thread safe)
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id))
+        .orDie
       maybeRecord <- connectionRepository
         .findById(record.id)
       record <- ZIO.getOrFailWith(RecordIdNotFound(recordId))(maybeRecord)
@@ -220,6 +227,10 @@ private class ConnectionServiceImpl(
         @@ CustomMetricsAspect.startRecordingTime(
           s"${record.id}_inviter_pending_to_res_sent"
         )
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id))
+        .orDie
       record <- connectionRepository.getById(record.id)
     } yield record
 
@@ -306,6 +317,6 @@ private class ConnectionServiceImpl(
 }
 
 object ConnectionServiceImpl {
-  val layer: URLayer[ConnectionRepository, ConnectionService] =
-    ZLayer.fromFunction(ConnectionServiceImpl(_))
+  val layer: URLayer[ConnectionRepository & Producer[UUID, WalletIdAndRecordId], ConnectionService] =
+    ZLayer.fromFunction(ConnectionServiceImpl(_, _))
 }

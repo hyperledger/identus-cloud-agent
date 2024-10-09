@@ -38,6 +38,7 @@ object StatusCode {
   val Unauthorized: StatusCode = StatusCode(401)
   val Forbidden: StatusCode = StatusCode(403)
   val NotFound: StatusCode = StatusCode(404)
+  val Conflict: StatusCode = StatusCode(409)
   val UnprocessableContent: StatusCode = StatusCode(422)
 
   val InternalServerError: StatusCode = StatusCode(500)

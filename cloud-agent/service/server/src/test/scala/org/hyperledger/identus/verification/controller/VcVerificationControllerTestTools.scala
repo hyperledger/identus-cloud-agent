@@ -7,6 +7,7 @@ import org.hyperledger.identus.castor.core.model.did.VerificationRelationship
 import org.hyperledger.identus.castor.core.service.MockDIDService
 import org.hyperledger.identus.iam.authentication.{AuthenticatorWithAuthZ, DefaultEntityAuthenticator}
 import org.hyperledger.identus.pollux.core.service.*
+import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.core.service.verification.{VcVerificationService, VcVerificationServiceImpl}
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
@@ -59,7 +60,7 @@ trait VcVerificationControllerTestTools extends PostgresTestContainerSupport {
       VcVerificationController & VcVerificationService & AuthenticatorWithAuthZ[BaseEntity]
     ](
       didResolverLayer,
-      ResourceURIDereferencerImpl.layer,
+      ResourceUrlResolver.layer,
       VcVerificationControllerImpl.layer,
       VcVerificationServiceImpl.layer,
       DefaultEntityAuthenticator.layer
@@ -69,9 +70,9 @@ trait VcVerificationControllerTestTools extends PostgresTestContainerSupport {
 
   def bootstrapOptions[F[_]](monadError: MonadError[F]): CustomiseInterceptors[F, Any] = {
     new CustomiseInterceptors[F, Any](_ => ())
-      .exceptionHandler(CustomServerInterceptors.exceptionHandler)
-      .rejectHandler(CustomServerInterceptors.rejectHandler)
-      .decodeFailureHandler(CustomServerInterceptors.decodeFailureHandler)
+      .exceptionHandler(CustomServerInterceptors.tapirExceptionHandler)
+      .rejectHandler(CustomServerInterceptors.tapirRejectHandler)
+      .decodeFailureHandler(CustomServerInterceptors.tapirDecodeFailureHandler)
   }
 
   def httpBackend(controller: VcVerificationController, authenticator: AuthenticatorWithAuthZ[BaseEntity]) = {

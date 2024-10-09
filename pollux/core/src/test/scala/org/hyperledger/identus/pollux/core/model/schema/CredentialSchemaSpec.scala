@@ -5,6 +5,7 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.Cre
 import org.hyperledger.identus.pollux.core.model.schema.`type`.{AnoncredSchemaType, CredentialJsonSchemaType}
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.schema.AnoncredSchemaTypeSpec.test
+import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
 import org.hyperledger.identus.shared.json.JsonSchemaError.JsonValidationErrors
 import zio.json.*
 import zio.json.ast.Json
@@ -29,6 +30,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
       tags = Seq("tag1", "tag2"),
       description = "Json Schema",
       `type` = CredentialJsonSchemaType.VC_JSON_SCHEMA_URI,
+      resolutionMethod = ResourceResolutionMethod.http,
       schema = innerJsonSchema.fromJson[Json].getOrElse(Json.Null)
     )
   }
@@ -44,6 +46,7 @@ object CredentialSchemaSpec extends ZIOSpecDefault {
       tags = Seq("tag1", "tag2"),
       description = "Anoncred Schema",
       `type` = AnoncredSchemaSerDesV1.version,
+      resolutionMethod = ResourceResolutionMethod.http,
       schema = innerJsonSchema.fromJson[Json].getOrElse(Json.Null)
     )
   }

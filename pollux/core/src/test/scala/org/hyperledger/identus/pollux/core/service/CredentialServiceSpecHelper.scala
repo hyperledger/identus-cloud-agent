@@ -3,7 +3,6 @@ package org.hyperledger.identus.pollux.core.service
 import io.circe.Json
 import org.hyperledger.identus.agent.walletapi.memory.GenericSecretStorageInMemory
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
-import org.hyperledger.identus.agent.walletapi.storage.GenericSecretStorage
 import org.hyperledger.identus.castor.core.model.did.PrismDID
 import org.hyperledger.identus.castor.core.service.DIDService
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
@@ -17,6 +16,8 @@ import org.hyperledger.identus.pollux.core.repository.{
 }
 import org.hyperledger.identus.pollux.prex.{ClaimFormat, Ldp, PresentationDefinition}
 import org.hyperledger.identus.pollux.vc.jwt.*
+import org.hyperledger.identus.shared.http.UriResolver
+import org.hyperledger.identus.shared.messaging.{MessagingService, MessagingServiceConfig, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import zio.*
 
@@ -32,14 +33,16 @@ trait CredentialServiceSpecHelper {
     CredentialDefinitionRepositoryInMemory.layer >>> CredentialDefinitionServiceImpl.layer
 
   protected val credentialServiceLayer
-      : URLayer[DIDService & ManagedDIDService & URIDereferencer, CredentialService & CredentialDefinitionService] =
-    ZLayer.makeSome[DIDService & ManagedDIDService & URIDereferencer, CredentialService & CredentialDefinitionService](
+      : URLayer[DIDService & ManagedDIDService & UriResolver, CredentialService & CredentialDefinitionService] =
+    ZLayer.makeSome[DIDService & ManagedDIDService & UriResolver, CredentialService & CredentialDefinitionService](
       CredentialRepositoryInMemory.layer,
       CredentialStatusListRepositoryInMemory.layer,
       ZLayer.fromFunction(PrismDidResolver(_)),
       credentialDefinitionServiceLayer,
       GenericSecretStorageInMemory.layer,
       LinkSecretServiceImpl.layer,
+      (MessagingServiceConfig.inMemoryLayer >>> MessagingService.serviceLayer >>>
+        MessagingService.producerLayer[UUID, WalletIdAndRecordId]).orDie,
       CredentialServiceImpl.layer
     )
 
@@ -107,7 +110,7 @@ trait CredentialServiceSpecHelper {
         pairwiseIssuerDID: DidId = DidId("did:prism:issuer"),
         pairwiseHolderDID: Option[DidId] = Some(DidId("did:prism:holder-pairwise")),
         thid: DidCommID = DidCommID(),
-        maybeSchemaId: Option[String] = None,
+        maybeSchemaIds: Option[List[String]] = None,
         claims: Json = io.circe.parser
           .parse("""
               |{
@@ -130,7 +133,7 @@ trait CredentialServiceSpecHelper {
         pairwiseHolderDID = pairwiseHolderDID,
         kidIssuer = None,
         thid = thid,
-        maybeSchemaId = maybeSchemaId,
+        maybeSchemaIds = maybeSchemaIds,
         claims = claims,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,

@@ -49,6 +49,9 @@ case class MockDIDNonSecretStorage(proxy: Proxy) extends DIDNonSecretStorage {
   override def getMaxDIDIndex(): RIO[WalletAccessContext, Option[Int]] =
     proxy(MockDIDNonSecretStorage.GetMaxDIDIndex)
 
+  override def incrementAndGetNextDIDIndex: URIO[WalletAccessContext, RuntimeFlags] =
+    proxy(MockDIDNonSecretStorage.IncrementAndGetNextDIDIndex)
+
   override def getHdKeyCounter(did: PrismDID): RIO[WalletAccessContext, Option[HdKeyIndexCounter]] =
     proxy(MockDIDNonSecretStorage.GetHdKeyCounter, did)
 
@@ -89,6 +92,7 @@ object MockDIDNonSecretStorage extends Mock[DIDNonSecretStorage] {
       ]
   object UpdateManagedDID extends Effect[(PrismDID, ManagedDIDStatePatch), Throwable, Unit]
   object GetMaxDIDIndex extends Effect[Unit, Throwable, Option[Int]]
+  object IncrementAndGetNextDIDIndex extends Effect[Unit, Nothing, Int]
   object GetHdKeyCounter extends Effect[PrismDID, Throwable, Option[HdKeyIndexCounter]]
   object GetKeyMeta extends Effect[(PrismDID, KeyId), Throwable, Option[(ManagedDIDKeyMeta, Array[Byte])]]
   object InsertHdKeyMeta extends Effect[(PrismDID, KeyId, ManagedDIDKeyMeta, Array[Byte]), Throwable, Unit]
