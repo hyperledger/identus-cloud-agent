@@ -59,7 +59,7 @@ lazy val V = new {
   val monocle = "3.3.0"
 
   // https://mvnrepository.com/artifact/io.circe/circe-core
-  val circe = "0.14.7"
+  val circe = "0.14.10"
 
   val tapir = "1.6.4" // scala-steward:off // TODO "1.10.5"
   val http4sBlaze = "0.23.15" // scala-steward:off  // TODO "0.23.16"
