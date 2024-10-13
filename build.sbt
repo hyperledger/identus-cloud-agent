@@ -68,7 +68,7 @@ lazy val V = new {
   val protobuf = "3.1.9"
   val grpcOkHttp = "1.63.0"
 
-  val testContainersScala = "0.41.3"
+  val testContainersScala = "0.41.4"
   val testContainersJavaKeycloak = "3.2.0" // scala-steward:off
 
   val doobie = "1.0.0-RC5"
