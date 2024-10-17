@@ -1,0 +1,7 @@
+I, Shailesh Patil, retroactively sign off on these commits:
+commit 0c42a62 fix(prism-agent):  update didcomm peerdid library to support latest spec (#877)
+commit 71c776b feat: Accept goal and goalCode to create connection invitation  (#785)
+commit 8e39d0b fix: operation id repeated error (#1306)
+commit 594f7c9 feat: connection less issuance (#1301)
+
+Signed-off-by: Shailesh Patil <shailesh.patil@iohk.io>
