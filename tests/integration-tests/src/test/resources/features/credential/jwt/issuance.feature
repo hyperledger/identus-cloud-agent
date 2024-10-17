@@ -41,7 +41,6 @@ Feature: Issue JWT credential
     And Issuer issues the credential
     Then Holder receives the issued credential
 
-  @RunThis
   Scenario: Connectionless issuance of JWT credential using OOB invitation
     Given Issuer has a published DID for JWT
     And Holder has an unpublished DID for JWT

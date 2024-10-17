@@ -23,7 +23,6 @@ Feature: Issue SD-JWT credential
     Then Holder receives the issued credential
     Then Holder checks the sd-jwt credential contents with holder binding
 
-  @RunThis
   Scenario: Connectionless issuance of sd-jwt credential with holder binding
     And Issuer has a published DID for SD_JWT
     And Holder has an unpublished DID for SD_JWT
