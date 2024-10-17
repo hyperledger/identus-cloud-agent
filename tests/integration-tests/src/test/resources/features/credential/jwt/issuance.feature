@@ -1,6 +1,7 @@
 @jwt @issuance
 Feature: Issue JWT credential
 
+
   Scenario: Issuing jwt credential with published PRISM DID
     Given Issuer and Holder have an existing connection
     And Issuer has a published DID for JWT
@@ -36,6 +37,16 @@ Feature: Issue JWT credential
     And Holder has an unpublished DID for JWT
     And Issuer offers a jwt credential to Holder with "long" form DID
     And Holder receives the credential offer
+    And Holder accepts jwt credential offer
+    And Issuer issues the credential
+    Then Holder receives the issued credential
+
+  @RunThis
+  Scenario: Connectionless issuance of JWT credential using OOB invitation
+    Given Issuer has a published DID for JWT
+    And Holder has an unpublished DID for JWT
+    When Issuer creates a "JWT" credential offer invitation with "short" form DID
+    And Holder accepts the credential offer invitation from Issuer
     And Holder accepts jwt credential offer
     And Issuer issues the credential
     Then Holder receives the issued credential
