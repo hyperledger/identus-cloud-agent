@@ -1,6 +1,5 @@
 package steps.connectionless
 
-
 import interactions.Post
 import interactions.body
 import io.cucumber.java.en.*
@@ -15,7 +14,7 @@ import org.hyperledger.identus.client.models.*
 class ConnectionLessSteps {
 
     @When("{actor} creates a {string} credential offer invitation with {string} form DID")
-    fun inviterGeneratesACredentialOfferInvitation(issuer: Actor, credentialFormat:String, didForm:String) {
+    fun inviterGeneratesACredentialOfferInvitation(issuer: Actor, credentialFormat: String, didForm: String) {
         val claims = linkedMapOf(
             "firstName" to "Automation",
             "lastName" to "Execution",
@@ -52,7 +51,6 @@ class ConnectionLessSteps {
         // Acme remembers connection to send it out of band to Bob
         issuer.remember("credentialRecord", credentialRecord)
         issuer.remember("thid", credentialRecord.thid)
-
     }
 
     @And("{actor} accepts the credential offer invitation from {actor}")
@@ -65,7 +63,7 @@ class ConnectionLessSteps {
                     it.body(
                         AcceptCredentialOfferInvitation(
                             credentialOfferInvitationRecord.invitation?.invitationUrl?.split("=")?.getOrNull(1)
-    ?: throw IllegalStateException("Invalid invitation URL format"),
+                                ?: throw IllegalStateException("Invalid invitation URL format"),
                         ),
                     )
                 },
@@ -80,5 +78,4 @@ class ConnectionLessSteps {
         holder.remember("recordId", holderIssueCredentialRecord.recordId)
         holder.remember("thid", holderIssueCredentialRecord.thid)
     }
-
 }
