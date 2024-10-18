@@ -1,0 +1,37 @@
+# See https://github.com/marketplace/actions/sbt-dependency-submission
+name: Update Dependency Graph
+on:
+  # push:
+  #   branches:
+  #     - master # default branch of the project
+  schedule:
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+jobs:
+  dependency-graph:
+    name: Update Dependency Graph
+    runs-on: ubuntu-latest # or windows-latest, or macOS-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Java and Scala
+        uses: olafurpg/setup-scala@v14
+        with:
+          java-version: adopt@1.11
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18" # or whatever
+      # - name: Setup Scala.JS
+      #   uses: japgolly/setup-scalajs@v1
+      - name: Cache sbt
+        uses: coursier/cache-action@v6.3
+      # - name: npm install
+      #   run: npm install
+      - uses: scalacenter/sbt-dependency-submission@v2
+        with:
+          working-directory: ./
+         #  modules-ignore:
+         #    identus-mediator_3
+         #    mediator_3
+         #    webapp_sjs1_3
+          configs-ignore: test scala-tool scala-doc-tool
