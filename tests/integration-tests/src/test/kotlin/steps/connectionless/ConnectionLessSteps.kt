@@ -1,5 +1,6 @@
 package steps.connectionless
 
+import com.google.gson.JsonObject
 import interactions.Post
 import interactions.body
 import io.cucumber.java.en.*
@@ -77,5 +78,96 @@ class ConnectionLessSteps {
         )
         holder.remember("recordId", holderIssueCredentialRecord.recordId)
         holder.remember("thid", holderIssueCredentialRecord.thid)
+    }
+
+
+    @When("{actor} creates a OOB Invitation request for JWT proof presentation")
+    fun verifierCreatesARequestForJwtProofPresentationOfferInvitation(verifier: Actor) {
+        val presentationRequest = RequestPresentationInput(
+            goalCode = "present-vp",
+            goal = "Request proof of vaccine",
+            options = Options(
+                challenge = "11c91493-01b3-4c4d-ac36-b336bab5bddf",
+                domain = "https://example-verifier.com",
+            ),
+            proofs = listOf(
+                ProofRequestAux(
+                    schemaId = "https://schema.org/Person",
+                    trustIssuers = listOf("did:web:atalaprism.io/users/testUser"),
+                ),
+            ),
+        )
+
+        verifier.attemptsTo(
+            Post.to("/present-proof/presentations/invitation").body(presentationRequest),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
+        )
+        val presentationStatus = SerenityRest.lastResponse().get<PresentationStatus>()
+
+        verifier.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
+            Ensure.that(presentationStatus.status).isEqualTo(PresentationStatus.Status.INVITATION_GENERATED),
+            Ensure.that(presentationStatus.role).isEqualTo(PresentationStatus.Role.VERIFIER),
+        )
+
+        verifier.remember("presentationStatus", presentationStatus)
+        verifier.remember("thid", presentationStatus.thid)
+    }
+
+    @And("{actor} accepts the OOB invitation request for JWT proof presentation from {actor}")
+    fun holderAcceptsJwtProofPresentationOfferInvitation(holder: Actor, verifier: Actor) {
+        val verifierPresentationStatusRecord = verifier.recall<PresentationStatus>("presentationStatus")
+        holder.attemptsTo(
+            Post.to("/present-proof/presentations/accept-invitation")
+                .with {
+                    it.body(
+                        AcceptRequestPresentationInvitation(
+                            verifierPresentationStatusRecord.invitation?.invitationUrl?.split("=")?.getOrNull(1)
+                                ?: throw IllegalStateException("Invalid invitation URL format"),
+                        ),
+                    )
+                },
+        )
+        val holderPresentationStatusRecord = SerenityRest.lastResponse().get<PresentationStatus>()
+
+        holder.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
+            Ensure.that(holderPresentationStatusRecord.status).isEqualTo(PresentationStatus.Status.REQUEST_RECEIVED),
+            Ensure.that(holderPresentationStatusRecord.role).isEqualTo(PresentationStatus.Role.PROVER),
+        )
+        holder.remember("recordId", holderPresentationStatusRecord.presentationId)
+        holder.remember("thid", holderPresentationStatusRecord.thid)
+    }
+
+    @When("{actor} creates a OOB Invitation request for sd-jwt proof presentation requesting [{}] claims")
+    fun verifierCreatesARequestForSdJwtProofPresentationInvitation(verifier: Actor, keys: String) {
+        val claims = JsonObject()
+        for (key in keys.split(",")) {
+            claims.addProperty(key, "{}")
+        }
+        val presentationRequest = RequestPresentationInput(
+            options = Options(
+                challenge = "11c91493-01b3-4c4d-ac36-b336bab5bddf",
+                domain = "https://example-verifier.com",
+            ),
+            proofs = listOf(),
+            credentialFormat = "SDJWT",
+            claims = claims,
+        )
+
+        verifier.attemptsTo(
+            Post.to("/present-proof/presentations/invitation").body(presentationRequest),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
+        )
+        val presentationStatus = SerenityRest.lastResponse().get<PresentationStatus>()
+
+        verifier.attemptsTo(
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
+            Ensure.that(presentationStatus.status).isEqualTo(PresentationStatus.Status.INVITATION_GENERATED),
+            Ensure.that(presentationStatus.role).isEqualTo(PresentationStatus.Role.VERIFIER),
+        )
+
+        verifier.remember("presentationStatus", presentationStatus)
+        verifier.remember("thid", presentationStatus.thid)
     }
 }
