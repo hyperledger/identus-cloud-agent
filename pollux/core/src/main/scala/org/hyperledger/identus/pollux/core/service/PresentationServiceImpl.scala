@@ -885,11 +885,15 @@ private class PresentationServiceImpl(
         record,
         issuedCredentials
       )
+      _ <- ZIO.log(s"****************************issuedCredentials: $issuedCredentials")
+
       anoncredCredentialProofsV1AsJson <- ZIO
         .fromEither(
           AnoncredCredentialProofsV1.schemaSerDes.serialize(credentialsToUse)
         )
         .mapError(error => PresentationError.AnoncredCredentialProofParsingError(error))
+      _ <- ZIO.log(s"****************************anoncredCredentialProofsV1AsJson: $anoncredCredentialProofsV1AsJson")
+
       count <- presentationRepository
         .updateAnoncredPresentationWithCredentialsToUse(
           recordId,
@@ -903,6 +907,7 @@ private class PresentationServiceImpl(
       _ <- messageProducer
         .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
         .orDie
+      _ <- ZIO.log(s"****************************getRecord(record.id): ${record.id}")
       record <- getRecord(record.id)
     } yield record
   }
