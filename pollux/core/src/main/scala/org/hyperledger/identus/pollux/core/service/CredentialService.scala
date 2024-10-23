@@ -27,7 +27,9 @@ trait CredentialService {
       pairwiseHolderDID: Option[DidId],
       kidIssuer: Option[KeyId],
       thid: DidCommID,
+      @deprecated("Use credentialSchema instead", "2.0.0")
       maybeSchemaIds: Option[List[String]],
+      credentialSchema: ???,
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
