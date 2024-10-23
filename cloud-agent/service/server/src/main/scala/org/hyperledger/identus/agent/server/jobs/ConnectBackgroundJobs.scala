@@ -2,49 +2,63 @@ package org.hyperledger.identus.agent.server.jobs
 
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.jobs.BackgroundJobError.ErrorResponseReceivedFromPeerAgent
-import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError
-import org.hyperledger.identus.agent.walletapi.model.error.DIDSecretStorageError.{KeyNotFoundError, WalletNotFoundError}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
-import org.hyperledger.identus.connect.core.model.error.ConnectionServiceError.{
-  InvalidStateForOperation,
-  RecordIdNotFound
-}
 import org.hyperledger.identus.connect.core.model.ConnectionRecord
 import org.hyperledger.identus.connect.core.model.ConnectionRecord.*
 import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.mercury.*
-import org.hyperledger.identus.mercury.model.error.SendMessageError
 import org.hyperledger.identus.resolvers.DIDResolver
-import org.hyperledger.identus.shared.models.WalletAccessContext
+import org.hyperledger.identus.shared.messaging
+import org.hyperledger.identus.shared.messaging.{Message, WalletIdAndRecordId}
+import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
 import zio.metrics.*
 
+import java.util.UUID
+
 object ConnectBackgroundJobs extends BackgroundJobsHelper {
 
-  val didCommExchanges = {
-    for {
-      connectionService <- ZIO.service[ConnectionService]
-      config <- ZIO.service[AppConfig]
-      records <- connectionService
-        .findRecordsByStatesForAllWallets(
-          ignoreWithZeroRetries = true,
-          limit = config.connect.connectBgJobRecordsLimit,
-          ConnectionRecord.ProtocolState.ConnectionRequestPending,
-          ConnectionRecord.ProtocolState.ConnectionResponsePending
-        )
-      _ <- ZIO.foreachPar(records)(performExchange).withParallelism(config.connect.connectBgJobProcessingParallelism)
-    } yield ()
-  }
+  private val TOPIC_NAME = "connect"
 
-  private def performExchange(
-      record: ConnectionRecord
-  ): URIO[
+  val connectFlowsHandler = for {
+    appConfig <- ZIO.service[AppConfig]
+    _ <- messaging.MessagingService.consumeWithRetryStrategy(
+      "identus-cloud-agent",
+      ConnectBackgroundJobs.handleMessage,
+      retryStepsFromConfig(TOPIC_NAME, appConfig.agent.messagingService.connectFlow)
+    )
+  } yield ()
+
+  private def handleMessage(message: Message[UUID, WalletIdAndRecordId]): RIO[
     DidOps & DIDResolver & HttpClient & ConnectionService & ManagedDIDService & DIDNonSecretStorage & AppConfig,
     Unit
-  ] = {
+  ] =
+    (for {
+      _ <- ZIO.logDebug(s"!!! Handling recordId: ${message.value} via Kafka queue")
+      connectionService <- ZIO.service[ConnectionService]
+      walletAccessContext = WalletAccessContext(WalletId.fromUUID(message.value.walletId))
+      record <- connectionService
+        .findRecordById(message.value.recordId)
+        .provideSome(ZLayer.succeed(walletAccessContext))
+        .someOrElseZIO(ZIO.dieMessage("Record Not Found"))
+      _ <- performExchange(record)
+        .tapSomeError { case (walletAccessContext, errorResponse) =>
+          for {
+            connectService <- ZIO.service[ConnectionService]
+            _ <- connectService
+              .reportProcessingFailure(record.id, Some(errorResponse))
+              .provideSomeLayer(ZLayer.succeed(walletAccessContext))
+          } yield ()
+        }
+        .catchAll { e => ZIO.fail(RuntimeException(s"Attempt failed with: ${e}")) }
+    } yield ()) @@ Metric
+      .gauge("connection_flow_did_com_exchange_job_ms_gauge")
+      .trackDurationWith(_.toMetricsSeconds)
+
+  private def performExchange(record: ConnectionRecord) = {
     import ProtocolState.*
     import Role.*
 
@@ -179,26 +193,10 @@ object ConnectBackgroundJobs extends BackgroundJobsHelper {
           @@ Metric
             .gauge("connection_flow_inviter_process_connection_record_ms_gauge")
             .trackDurationWith(_.toMetricsSeconds)
-      case _ => ZIO.unit
+      case r => ZIO.logWarning(s"Invalid candidate record received for processing: $r") *> ZIO.unit
     }
 
     exchange
-      .tapError({
-        case walletNotFound: WalletNotFoundError =>
-          ZIO.logErrorCause(
-            s"Connect - Error processing record: ${record.id}",
-            Cause.fail(walletNotFound)
-          )
-        case ((walletAccessContext, errorResponse)) =>
-          for {
-            connectService <- ZIO.service[ConnectionService]
-            _ <- connectService
-              .reportProcessingFailure(record.id, Some(errorResponse))
-              .provideSomeLayer(ZLayer.succeed(walletAccessContext))
-          } yield ()
-      })
-      .catchAll(e => ZIO.logErrorCause(s"Connect - Error processing record: ${record.id} ", Cause.fail(e)))
-      .catchAllDefect(d => ZIO.logErrorCause(s"Connect - Defect processing record: ${record.id}", Cause.fail(d)))
   }
 
 }

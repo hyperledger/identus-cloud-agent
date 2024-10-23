@@ -28,6 +28,7 @@ import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer as JwtIssuer, *}
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair}
 import org.hyperledger.identus.shared.http.UriResolver
+import org.hyperledger.identus.shared.messaging.{Producer, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.*
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.Base64Utils
@@ -42,7 +43,8 @@ import scala.language.implicitConversions
 object CredentialServiceImpl {
   val layer: URLayer[
     CredentialRepository & CredentialStatusListRepository & DidResolver & UriResolver & GenericSecretStorage &
-      CredentialDefinitionService & LinkSecretService & DIDService & ManagedDIDService,
+      CredentialDefinitionService & LinkSecretService & DIDService & ManagedDIDService &
+      Producer[UUID, WalletIdAndRecordId],
     CredentialService
   ] = {
     ZLayer.fromZIO {
@@ -56,7 +58,7 @@ object CredentialServiceImpl {
         linkSecretService <- ZIO.service[LinkSecretService]
         didService <- ZIO.service[DIDService]
         manageDidService <- ZIO.service[ManagedDIDService]
-        issueCredentialSem <- Semaphore.make(1)
+        messageProducer <- ZIO.service[Producer[UUID, WalletIdAndRecordId]]
       } yield CredentialServiceImpl(
         credentialRepo,
         credentialStatusListRepo,
@@ -68,7 +70,7 @@ object CredentialServiceImpl {
         didService,
         manageDidService,
         5,
-        issueCredentialSem
+        messageProducer
       )
     }
   }
@@ -88,11 +90,13 @@ class CredentialServiceImpl(
     didService: DIDService,
     managedDIDService: ManagedDIDService,
     maxRetries: Int = 5, // TODO move to config
-    issueCredentialSem: Semaphore
+    messageProducer: Producer[UUID, WalletIdAndRecordId],
 ) extends CredentialService {
 
   import CredentialServiceImpl.*
   import IssueCredentialRecord.*
+
+  private val TOPIC_NAME = "issue"
 
   override def getIssueCredentialRecords(
       ignoreWithZeroRetries: Boolean,
@@ -187,6 +191,10 @@ class CredentialServiceImpl(
       count <- credentialRepository
         .create(record) @@ CustomMetricsAspect
         .startRecordingTime(s"${record.id}_issuer_offer_pending_to_sent_ms_gauge")
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
     } yield record
   }
 
@@ -500,6 +508,10 @@ class CredentialServiceImpl(
             )
         case (format, maybeSubjectId) =>
           ZIO.dieMessage(s"Invalid subjectId input for $format offer acceptance: $maybeSubjectId")
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- credentialRepository.getById(record.id)
     } yield record
   }
@@ -661,6 +673,10 @@ class CredentialServiceImpl(
           s"${record.id}_issuance_flow_holder_req_pending_to_generated",
           "issuance_flow_holder_req_pending_to_generated_ms_gauge"
         ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- credentialRepository.getById(record.id)
     } yield record
   }
@@ -707,6 +723,10 @@ class CredentialServiceImpl(
           s"${record.id}_issuance_flow_holder_req_pending_to_generated",
           "issuance_flow_holder_req_pending_to_generated_ms_gauge"
         ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_holder_req_generated_to_sent")
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- credentialRepository.getById(record.id)
     } yield record
   }
@@ -751,6 +771,10 @@ class CredentialServiceImpl(
         ProtocolState.OfferSent
       )
       _ <- credentialRepository.updateWithJWTRequestCredential(record.id, request, ProtocolState.RequestReceived)
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- credentialRepository.getById(record.id)
     } yield record
   }
@@ -769,6 +793,10 @@ class CredentialServiceImpl(
         @@ CustomMetricsAspect.startRecordingTime(
           s"${record.id}_issuance_flow_issuer_credential_pending_to_generated"
         )
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- credentialRepository.getById(record.id)
     } yield record
   }
@@ -913,6 +941,10 @@ class CredentialServiceImpl(
           s"${record.id}_issuance_flow_issuer_credential_pending_to_generated",
           "issuance_flow_issuer_credential_pending_to_generated_ms_gauge"
         ) @@ CustomMetricsAspect.startRecordingTime(s"${record.id}_issuance_flow_issuer_credential_generated_to_sent")
+      walletAccessContext <- ZIO.service[WalletAccessContext]
+      _ <- messageProducer
+        .produce(TOPIC_NAME, record.id.uuid, WalletIdAndRecordId(walletAccessContext.walletId.toUUID, record.id.uuid))
+        .orDie
       record <- credentialRepository.getById(record.id)
     } yield record
   }
@@ -1275,32 +1307,26 @@ class CredentialServiceImpl(
       record: IssueCredentialRecord,
       statusListRegistryUrl: String,
       jwtIssuer: JwtIssuer
-  ): URIO[WalletAccessContext, CredentialStatus] = {
-    val effect = for {
-      lastStatusList <- credentialStatusListRepository.getLatestOfTheWallet
-      currentStatusList <- lastStatusList
-        .fold(credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl))(
-          ZIO.succeed(_)
-        )
-      size = currentStatusList.size
-      lastUsedIndex = currentStatusList.lastUsedIndex
-      statusListToBeUsed <-
-        if lastUsedIndex < size then ZIO.succeed(currentStatusList)
-        else credentialStatusListRepository.createNewForTheWallet(jwtIssuer, statusListRegistryUrl)
+  ): URIO[WalletAccessContext, CredentialStatus] =
+    for {
+      cslAndIndex <- credentialStatusListRepository.incrementAndGetStatusListIndex(
+        jwtIssuer,
+        statusListRegistryUrl
+      )
+      statusListId = cslAndIndex._1
+      indexInStatusList = cslAndIndex._2
       _ <- credentialStatusListRepository.allocateSpaceForCredential(
         issueCredentialRecordId = record.id,
-        credentialStatusListId = statusListToBeUsed.id,
-        statusListIndex = statusListToBeUsed.lastUsedIndex + 1
+        credentialStatusListId = statusListId,
+        statusListIndex = indexInStatusList
       )
     } yield CredentialStatus(
-      id = s"$statusListRegistryUrl/credential-status/${statusListToBeUsed.id}#${statusListToBeUsed.lastUsedIndex + 1}",
+      id = s"$statusListRegistryUrl/credential-status/$statusListId#$indexInStatusList",
       `type` = "StatusList2021Entry",
       statusPurpose = StatusPurpose.Revocation,
-      statusListIndex = lastUsedIndex + 1,
-      statusListCredential = s"$statusListRegistryUrl/credential-status/${statusListToBeUsed.id}"
+      statusListIndex = indexInStatusList,
+      statusListCredential = s"$statusListRegistryUrl/credential-status/$statusListId"
     )
-    issueCredentialSem.withPermit(effect)
-  }
 
   override def generateAnonCredsCredential(
       recordId: DidCommID

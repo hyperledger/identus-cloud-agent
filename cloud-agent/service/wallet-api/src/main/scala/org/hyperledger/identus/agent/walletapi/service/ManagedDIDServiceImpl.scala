@@ -1,8 +1,7 @@
 package org.hyperledger.identus.agent.walletapi.service
 
 import org.hyperledger.identus.agent.walletapi.model.*
-import org.hyperledger.identus.agent.walletapi.model.error.*
-import org.hyperledger.identus.agent.walletapi.model.error.given
+import org.hyperledger.identus.agent.walletapi.model.error.{*, given}
 import org.hyperledger.identus.agent.walletapi.service.handler.{DIDCreateHandler, DIDUpdateHandler, PublicationHandler}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService.DEFAULT_MASTER_KEY_ID
 import org.hyperledger.identus.agent.walletapi.storage.{DIDNonSecretStorage, DIDSecretStorage, WalletSecretStorage}
@@ -32,7 +31,6 @@ class ManagedDIDServiceImpl private[walletapi] (
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
     walletSecretStorage: WalletSecretStorage,
     apollo: Apollo,
-    createDIDSem: Semaphore
 ) extends ManagedDIDService {
 
   private val AGREEMENT_KEY_ID = KeyId("agreement")
@@ -127,7 +125,7 @@ class ManagedDIDServiceImpl private[walletapi] (
   def createAndStoreDID(
       didTemplate: ManagedDIDTemplate
   ): ZIO[WalletAccessContext, CreateManagedDIDError, LongFormPrismDID] = {
-    val effect = for {
+    for {
       _ <- ZIO
         .fromEither(ManagedDIDTemplateValidator.validate(didTemplate, defaultDidDocumentServices))
         .mapError { x =>
@@ -144,15 +142,6 @@ class ManagedDIDServiceImpl private[walletapi] (
         .mapError(CreateManagedDIDError.InvalidOperation.apply)
       _ <- material.persist.mapError(CreateManagedDIDError.WalletStorageError.apply)
     } yield PrismDID.buildLongFormFromOperation(material.operation)
-
-    // This synchronizes createDID effect to only allow 1 execution at a time
-    // to avoid concurrent didIndex update. Long-term solution should be
-    // solved at the DB level.
-    //
-    // Performance may be improved by not synchronizing the whole operation,
-    // but only the counter increment part allowing multiple in-flight create operations
-    // once didIndex is acquired.
-    createDIDSem.withPermit(effect)
   }
 
   def updateManagedDID(
@@ -385,7 +374,6 @@ object ManagedDIDServiceImpl {
         nonSecretStorage <- ZIO.service[DIDNonSecretStorage]
         walletSecretStorage <- ZIO.service[WalletSecretStorage]
         apollo <- ZIO.service[Apollo]
-        createDIDSem <- Semaphore.make(1)
       } yield ManagedDIDServiceImpl(
         defaultDidDocumentServices,
         didService,
@@ -393,8 +381,7 @@ object ManagedDIDServiceImpl {
         secretStorage,
         nonSecretStorage,
         walletSecretStorage,
-        apollo,
-        createDIDSem
+        apollo
       )
     }
   }

@@ -20,7 +20,6 @@ class ManagedDIDServiceWithEventNotificationImpl(
     override private[walletapi] val nonSecretStorage: DIDNonSecretStorage,
     walletSecretStorage: WalletSecretStorage,
     apollo: Apollo,
-    createDIDSem: Semaphore,
     eventNotificationService: EventNotificationService
 ) extends ManagedDIDServiceImpl(
       defaultDidDocumentServices,
@@ -29,8 +28,7 @@ class ManagedDIDServiceWithEventNotificationImpl(
       secretStorage,
       nonSecretStorage,
       walletSecretStorage,
-      apollo,
-      createDIDSem
+      apollo
     ) {
 
   private val didStatusUpdatedEventName = "DIDStatusUpdated"
@@ -81,7 +79,6 @@ object ManagedDIDServiceWithEventNotificationImpl {
       nonSecretStorage,
       walletSecretStorage,
       apollo,
-      createDIDSem,
       eventNotificationService
     )
   }

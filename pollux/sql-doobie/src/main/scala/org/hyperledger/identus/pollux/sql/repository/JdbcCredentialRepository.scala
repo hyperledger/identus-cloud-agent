@@ -504,7 +504,8 @@ class JdbcCredentialRepository(xa: Transactor[ContextAwareTask], xb: Transactor[
                      |   credential_format,
                      |   schema_uris,
                      |   credential_definition_uri,
-                     |   subject_id
+                     |   subject_id,
+                     |   key_id
                      | FROM public.issue_credential_records
                      | WHERE 1=1
                      |   AND issue_credential_data IS NOT NULL
