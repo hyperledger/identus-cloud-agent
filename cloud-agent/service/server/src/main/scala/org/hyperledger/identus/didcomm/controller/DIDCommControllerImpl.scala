@@ -184,8 +184,8 @@ class DIDCommControllerImpl(
   /*
    * Unknown Message
    */
-  private val handleUnknownMessage: PartialFunction[Message, UIO[String]] = { case _ =>
-    ZIO.succeed("Unknown Message Type")
+  private val handleUnknownMessage: PartialFunction[Message, IO[UnsupportedPIURI, String]] = { case msg =>
+    ZIO.fail(UnsupportedPIURI(msg.piuri))
   }
 }
 

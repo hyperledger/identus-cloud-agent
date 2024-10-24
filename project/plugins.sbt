@@ -21,3 +21,15 @@ if (sys.env.get("GITHUB_TOKEN").isDefined) {
     Defaults.sbtPluginExtra(dependency, sbtV, scalaV)
   }
 } else libraryDependencies ++= Seq[ModuleID]()
+
+// See file in .github/workflows/sbt-dependency-submission.yml
+if (sys.env.get("DEPEDABOT").isDefined) {
+  println(s"Adding plugin sbt-github-dependency-submission since env DEPEDABOT is defined.")
+  // The reason for this is that the plugin needs the variable to be defined. We don't want to have that requirement.
+  libraryDependencies += {
+    val dependency = "ch.epfl.scala" % "sbt-github-dependency-submission" % "3.1.0"
+    val sbtV = (pluginCrossBuild / sbtBinaryVersion).value
+    val scalaV = (update / scalaBinaryVersion).value
+    Defaults.sbtPluginExtra(dependency, sbtV, scalaV)
+  }
+} else libraryDependencies ++= Seq[ModuleID]()
