@@ -5,7 +5,9 @@ export default {
         { name: 'beta', prerelease: true }
     ],
     plugins: [
-        '@semantic-release/commit-analyzer',
+        ['@semantic-release/commit-analyzer', {
+            "preset": "conventionalcommits"
+        }],
         ["@semantic-release/exec", {
             "prepareCmd": "echo ${nextRelease.version} > .release-version"
         }],
