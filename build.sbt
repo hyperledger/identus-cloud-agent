@@ -61,7 +61,7 @@ lazy val V = new {
   // https://mvnrepository.com/artifact/io.circe/circe-core
   val circe = "0.14.7"
 
-  val tapir = "1.6.4" // scala-steward:off // TODO "1.10.5"
+  val tapir = "1.11.7" // scala-steward:off // TODO "1.10.5"
   val http4sBlaze = "0.23.15" // scala-steward:off  // TODO "0.23.16"
 
   val typesafeConfig = "1.4.3"
@@ -90,7 +90,7 @@ lazy val V = new {
   // [error] 	org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaSpec
 
   val vaultDriver = "6.2.0"
-  val micrometer = "1.11.11"
+  val micrometer = "1.13.6"
 
   val nimbusJwt = "9.37.3"
   val keycloak = "23.0.7" // scala-steward:off //TODO 24.0.3 // update all quay.io/keycloak/keycloak
@@ -114,7 +114,9 @@ lazy val D = new {
   val tapirPrometheusMetrics: ModuleID = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % V.tapir
   val micrometer: ModuleID = "io.micrometer" % "micrometer-registry-prometheus" % V.micrometer
   val micrometerPrometheusRegistry = "io.micrometer" % "micrometer-core" % V.micrometer
-  val scalaUri = "io.lemonlabs" %% "scala-uri" % V.scalaUri
+  val scalaUri = "io.lemonlabs" %% "scala-uri" % V.scalaUri excludeAll (
+    ExclusionRule("org.typelevel", "cats-parse_3")
+  )
 
   val zioConfig: ModuleID = "dev.zio" %% "zio-config" % V.zioConfig
   val zioConfigMagnolia: ModuleID = "dev.zio" %% "zio-config-magnolia" % V.zioConfig
