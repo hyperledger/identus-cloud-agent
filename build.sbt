@@ -114,8 +114,9 @@ lazy val D = new {
   val tapirPrometheusMetrics: ModuleID = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % V.tapir
   val micrometer: ModuleID = "io.micrometer" % "micrometer-registry-prometheus" % V.micrometer
   val micrometerPrometheusRegistry = "io.micrometer" % "micrometer-core" % V.micrometer
-  val scalaUri = "io.lemonlabs" %% "scala-uri" % V.scalaUri excludeAll (
-    ExclusionRule("org.typelevel", "cats-parse_3")
+  val scalaUri = Seq(
+    "io.lemonlabs" %% "scala-uri" % V.scalaUri exclude ("org.typelevel", "cats-parse_3"), // Exclude cats-parse to avoid deps conflict
+    "org.typelevel" % "cats-parse_3" % "1.0.0", // Replace with version 1.0.0
   )
 
   val zioConfig: ModuleID = "dev.zio" %% "zio-config" % V.zioConfig
@@ -196,13 +197,12 @@ lazy val D_Shared = new {
       D.zioConcurrent,
       D.zioHttp,
       D.zioKafka,
-      D.scalaUri,
       D.zioPrelude,
       // FIXME: split shared DB stuff as subproject?
       D.doobieHikari,
       D.doobiePostgres,
       D.zioCatsInterop,
-    )
+    ) ++ D.scalaUri
 }
 
 lazy val D_SharedJson = new {
