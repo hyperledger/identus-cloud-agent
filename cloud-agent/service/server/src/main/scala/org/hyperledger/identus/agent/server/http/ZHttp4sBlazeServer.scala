@@ -11,10 +11,10 @@ import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.json.Json
 import org.hyperledger.identus.system.controller.SystemEndpoints
 import sttp.tapir.model.ServerRequest
-import sttp.tapir.server.http4s.Http4sServerOptions
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
-import sttp.tapir.server.metrics.MetricLabels
+import sttp.tapir.server.http4s.Http4sServerOptions
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
+import sttp.tapir.server.metrics.MetricLabels
 import sttp.tapir.ztapir.ZServerEndpoint
 import zio.*
 import zio.interop.catz.*
