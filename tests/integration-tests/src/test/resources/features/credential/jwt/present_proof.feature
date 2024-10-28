@@ -25,3 +25,10 @@ Feature: Present Proof Protocol
     And Holder rejects the proof
     Then Holder sees the proof is rejected
 
+  Scenario: Connectionless Verification Holder presents jwt credential proof to verifier
+    Given Holder has a jwt issued credential from Issuer
+    When Verifier creates a OOB Invitation request for JWT proof presentation
+    And Holder accepts the OOB invitation request for JWT proof presentation from Verifier
+    And Holder receives the presentation proof request
+    And Holder makes the jwt presentation of the proof
+    Then Verifier has the proof verified
