@@ -80,7 +80,6 @@ class ConnectionLessSteps {
         holder.remember("thid", holderIssueCredentialRecord.thid)
     }
 
-
     @When("{actor} creates a OOB Invitation request for JWT proof presentation")
     fun verifierCreatesARequestForJwtProofPresentationOfferInvitation(verifier: Actor) {
         val presentationRequest = RequestPresentationInput(
