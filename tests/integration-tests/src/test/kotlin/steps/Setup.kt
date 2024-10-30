@@ -206,6 +206,6 @@ fun init() {
 
 @AfterAll
 fun clearStage() {
-     Setup.stopActors()
-     Setup.stopServices()
+    Setup.stopActors()
+    Setup.stopServices()
 }
