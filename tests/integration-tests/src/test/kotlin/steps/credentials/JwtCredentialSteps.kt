@@ -38,6 +38,7 @@ class JwtCredentialSteps {
             schemaId = schemaId?.let { listOf(it) },
             claims = claims,
             issuingDID = did,
+            issuingKid = "assertion-1",
             connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId,
             validityPeriod = 3600.0,
             credentialFormat = "JWT",
@@ -103,7 +104,7 @@ class JwtCredentialSteps {
         val recordId = holder.recall<String>("recordId")
         holder.attemptsTo(
             Post.to("/issue-credentials/records/$recordId/accept-offer")
-                .body(AcceptCredentialOfferRequest(holder.recall("longFormDid"))),
+                .body(AcceptCredentialOfferRequest(holder.recall("longFormDid"),holder.recall("kidSecp256K1"))),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
         )
     }
