@@ -1170,8 +1170,6 @@ class CredentialServiceImpl(
       statusListRegistryUrl: String,
   ): ZIO[WalletAccessContext, RecordNotFound | CredentialRequestValidationFailed, IssueCredentialRecord] = {
     for {
-      _ <- ZIO.log(s"!!! *****generateJWTCredential*****JWT********** Handling recordId via Kafka queue $recordId")
-
       record <- getRecordWithState(recordId, ProtocolState.CredentialPending)
       issuingDID <- ZIO
         .fromOption(record.issuingDID)
