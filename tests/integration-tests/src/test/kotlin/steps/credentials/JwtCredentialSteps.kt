@@ -104,7 +104,7 @@ class JwtCredentialSteps {
         val recordId = holder.recall<String>("recordId")
         holder.attemptsTo(
             Post.to("/issue-credentials/records/$recordId/accept-offer")
-                .body(AcceptCredentialOfferRequest(holder.recall("longFormDid"),holder.recall("kidSecp256K1"))),
+                .body(AcceptCredentialOfferRequest(holder.recall("longFormDid"), holder.recall("kidSecp256K1"))),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
         )
     }
