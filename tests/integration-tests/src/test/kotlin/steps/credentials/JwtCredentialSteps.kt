@@ -20,7 +20,7 @@ class JwtCredentialSteps {
         didForm: String,
         schemaGuid: String?,
         claims: Map<String, Any>,
-        issuingKid :String?
+        issuingKid: String?,
     ) {
         val did: String = if (didForm == "short") {
             issuer.recall("shortFormDid")
