@@ -20,6 +20,7 @@ class JwtCredentialSteps {
         didForm: String,
         schemaGuid: String?,
         claims: Map<String, Any>,
+        issuingKid :String?
     ) {
         val did: String = if (didForm == "short") {
             issuer.recall("shortFormDid")
@@ -38,7 +39,7 @@ class JwtCredentialSteps {
             schemaId = schemaId?.let { listOf(it) },
             claims = claims,
             issuingDID = did,
-            issuingKid = "assertion-1",
+            issuingKid = issuingKid,
             connectionId = issuer.recall<Connection>("connection-with-${holder.name}").connectionId,
             validityPeriod = 3600.0,
             credentialFormat = "JWT",
@@ -67,7 +68,17 @@ class JwtCredentialSteps {
             "firstName" to "FirstName",
             "lastName" to "LastName",
         )
-        sendCredentialOffer(issuer, holder, format, null, claims)
+        sendCredentialOffer(issuer, holder, format, null, claims, "assertion-1")
+        saveCredentialOffer(issuer, holder)
+    }
+
+    @When("{actor} offers a jwt credential to {actor} with {string} form DID using issuingKid {string}")
+    fun issuerOffersAJwtCredentialWithIssuingKeyId(issuer: Actor, holder: Actor, format: String, issuingKid: String?) {
+        val claims = linkedMapOf(
+            "firstName" to "FirstName",
+            "lastName" to "LastName",
+        )
+        sendCredentialOffer(issuer, holder, format, null, claims, issuingKid)
         saveCredentialOffer(issuer, holder)
     }
 
@@ -80,7 +91,7 @@ class JwtCredentialSteps {
     ) {
         val schemaGuid = issuer.recall<String>(schema.name)
         val claims = schema.claims
-        sendCredentialOffer(issuer, holder, format, schemaGuid, claims)
+        sendCredentialOffer(issuer, holder, format, schemaGuid, claims, "assertion-1")
         saveCredentialOffer(issuer, holder)
     }
 
@@ -96,7 +107,7 @@ class JwtCredentialSteps {
             "name" to "Name",
             "surname" to "Surname",
         )
-        sendCredentialOffer(issuer, holder, format, schemaGuid, claims)
+        sendCredentialOffer(issuer, holder, format, schemaGuid, claims, "assertion-1")
     }
 
     @When("{actor} accepts jwt credential offer")
@@ -105,6 +116,16 @@ class JwtCredentialSteps {
         holder.attemptsTo(
             Post.to("/issue-credentials/records/$recordId/accept-offer")
                 .body(AcceptCredentialOfferRequest(holder.recall("longFormDid"), holder.recall("kidSecp256K1"))),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
+        )
+    }
+
+    @When("{actor} accepts jwt credential offer with keyId {string}")
+    fun holderAcceptsJwtCredentialOfferForJwtWithKeyId(holder: Actor, keyId: String?) {
+        val recordId = holder.recall<String>("recordId")
+        holder.attemptsTo(
+            Post.to("/issue-credentials/records/$recordId/accept-offer")
+                .body(AcceptCredentialOfferRequest(holder.recall("longFormDid"), keyId)),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
         )
     }
