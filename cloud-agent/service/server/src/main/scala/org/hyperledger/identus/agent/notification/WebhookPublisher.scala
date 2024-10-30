@@ -101,7 +101,7 @@ class WebhookPublisher(
       _ <- ZIO.logDebug(s"Sending event: $event to HTTP webhook URL: $url.")
       url <- ZIO.fromEither(URL.decode(url)).orDie
       response <- Client
-        .request(
+        .streaming(
           Request(
             url = url,
             method = Method.POST,
