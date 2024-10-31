@@ -26,12 +26,12 @@ You can start by `cd docker` and running `./run.sh <cloud-agent-version>` script
 
 ### Environment variables
 
-| variable         | description                         | default                             |
-| ---------------- | ----------------------------------- | ----------------------------------- |
-| CLOUD_AGENT_URL  | Url for cloud-agent                 | http://localhost:8090               |
-| MEDIATOR_OOB_URL | Url for mediator oob invitation     | http://localhost:8080/invitationOOB |
-| WEBHOOK_PORT     | Port for the local server listen to | 3000                                |
-| WEBHOOK_URL      | Url for webhook url                 | http://host.docker.internal:3000    |
+| variable         | description                         | default                               |
+|------------------|-------------------------------------|---------------------------------------|
+| CLOUD_AGENT_URL  | Url for cloud-agent                 | <http://localhost:8090>               |
+| MEDIATOR_OOB_URL | Url for mediator oob invitation     | <http://localhost:8080/invitationOOB> |
+| WEBHOOK_PORT     | Port for the local server listen to | 3000                                  |
+| WEBHOOK_URL      | Url for webhook url                 | <http://host.docker.internal:3000>    |
 
 ### Running tests
 
