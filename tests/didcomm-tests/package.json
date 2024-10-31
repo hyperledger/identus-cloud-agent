@@ -1,0 +1,30 @@
+{
+  "name": "didcomm-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "files": [
+    "dist/suite.spec.js"
+  ],
+  "scripts": {
+    "build": "tsx generate-suite",
+    "test": "npx tsx --test --test-reporter spec --test-reporter junit --test-reporter-destination=stdout --test-reporter-destination=junit.xml  \"./test/*.ts\"",
+    "test:dist": "node dist/suite.spec.js"
+  },
+  "author": "Allain Magyar",
+  "license": "ISC",
+  "devDependencies": {
+    "@hyperledger/identus-edge-agent-sdk": "file:hyperledger-identus-edge-agent-sdk-3.1.0.tgz",
+    "@types/chai": "^5.0.0",
+    "@types/node": "^22.7.6",
+    "chai": "^5.1.1",
+    "esbuild": "^0.24.0",
+    "fastify": "^5.0.0",
+    "tsc": "^2.0.4",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "glob": "^10.4.5"
+  }
+}
