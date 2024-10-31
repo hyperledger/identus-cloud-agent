@@ -169,5 +169,5 @@ jobs:
         run: |
           ./docker/run.sh "$AGENT_VERSION"
           npm i
-          node ./dist/suite.spec.js
+          npm test
           ./docker/stop.sh
