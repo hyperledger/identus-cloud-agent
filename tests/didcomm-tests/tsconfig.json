@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "lib": ["ESNext"],
-    "module": "CommonJS",
+    "module": "CommonJS"
     // "moduleResolution": "node",
     // "emitDecoratorMetadata": true,
     // "esModuleInterop": true,
@@ -10,9 +10,6 @@
     // "sourceMap": true,
     // "declaration": false
   },
-  "include": [
-    "src/**/*.ts",
-    "test/**/*.ts"  
-  ],
+  "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": ["node_modules"]
 }

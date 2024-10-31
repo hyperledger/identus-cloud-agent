@@ -64,7 +64,7 @@ services:
 
   prism-agent:
     container_name: didcomm-stack
-    image:  ghcr.io/hyperledger/identus-cloud-agent:${CLOUD_AGENT_VERSION}
+    image: ghcr.io/hyperledger/identus-cloud-agent:${CLOUD_AGENT_VERSION}
     ports:
       - "8080:8080"
       - "8090:8090"
