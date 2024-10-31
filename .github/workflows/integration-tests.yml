@@ -166,5 +166,5 @@ jobs:
           AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.agent_version }}
         run: |
           ./docker/run.sh "$AGENT_VERSION"
-          node dist/suite.spec.js 
+          node ./dist/suite.spec.js
           ./docker/stop.sh
