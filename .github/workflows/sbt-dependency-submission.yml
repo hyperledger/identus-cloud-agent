@@ -7,6 +7,11 @@ on:
   schedule:
     - cron: "0 20 * * *"
   workflow_dispatch:
+
+# Permission can be added at job level or workflow level
+permissions:
+  contents: write # This is required to upload for the dependency-submission
+
 jobs:
   dependency-graph:
     name: Update Dependency Graph
