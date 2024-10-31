@@ -82,6 +82,7 @@ jobs:
           ./gradlew test --tests "IntegrationTestsRunner"
 
       - name: Make report of integration tests
+        working-directory: "tests/integration-tests"
         if: always()
         env:
           PRISM_NODE_VERSION: ${{ steps.build_local_cloud_agent.outputs.prism_node_version }}
@@ -92,6 +93,7 @@ jobs:
           ./gradlew reports
 
       - name: Extract test results
+        working-directory: "tests/integration-tests"
         id: analyze_test_results
         if: github.ref_name == 'main' && always()
         run: |
