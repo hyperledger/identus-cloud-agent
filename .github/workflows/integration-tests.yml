@@ -81,15 +81,6 @@ jobs:
         run: |
           ./gradlew test --tests "IntegrationTestsRunner"
 
-      - name: Run didcomm tests
-        working-directory: "tests/didcomm-tests"
-        env:
-          AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.agent_version }}
-        run: |
-          ./docker/run.sh "$AGENT_VERSION"
-          node dist/suite.spec.js 
-          ./docker/stop.sh
-
       - name: Make report of integration tests
         if: always()
         env:
@@ -168,3 +159,12 @@ jobs:
           SLACK_TITLE: "Identus Cloud Agent Integration Tests: ${{ steps.analyze_test_results.outputs.conclusion }}"
           SLACK_USERNAME: circleci
           SLACK_WEBHOOK: ${{ secrets.E2E_TESTS_SLACK_WEBHOOK }}
+
+      - name: Run didcomm tests
+        working-directory: "tests/didcomm-tests"
+        env:
+          AGENT_VERSION: ${{ steps.build_local_cloud_agent.outputs.agent_version }}
+        run: |
+          ./docker/run.sh "$AGENT_VERSION"
+          node dist/suite.spec.js 
+          ./docker/stop.sh
