@@ -70,6 +70,8 @@ class PublishDidSteps {
         val did = SerenityRest.lastResponse().get<ManagedDID>()
 
         actor.remember("longFormDid", managedDid.longFormDid)
+        actor.remember("kidSecp256K1", "auth-1")
+        actor.remember("kidEd25519", "auth-2")
         actor.remember("shortFormDid", did.did)
         actor.remember("didPurpose", didPurpose)
         actor.forget<String>("hasPublishedDid")

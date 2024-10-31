@@ -29,6 +29,7 @@ class ConnectionLessSteps {
         val credentialOfferRequest = CreateIssueCredentialRecordRequest(
             claims = claims,
             issuingDID = did,
+            issuingKid = "assertion-1",
             validityPeriod = 3600.0,
             credentialFormat = credentialFormat,
             automaticIssuance = false,
