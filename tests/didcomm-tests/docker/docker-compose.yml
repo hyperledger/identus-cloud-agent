@@ -49,7 +49,7 @@ services:
       - MONGODB_DB_NAME=mediator
     depends_on:
       - "mongo"
-      - "prism-agent"
+      - "agent"
 
   ##########################
   # Building-blocks
