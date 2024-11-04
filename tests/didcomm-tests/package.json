@@ -9,6 +9,6 @@
   "author": "Allain Magyar",
   "license": "ISC",
   "dependencies": {
-    "@amagyar-iohk/didcomm-test": "^1.0.2"
+    "@amagyar-iohk/didcomm-test": "^1.0.4"
   }
 }
