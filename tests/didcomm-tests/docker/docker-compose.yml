@@ -62,7 +62,7 @@ services:
       db:
         condition: service_healthy
 
-  prism-agent:
+  agent:
     container_name: didcomm-stack
     image: ghcr.io/hyperledger/identus-cloud-agent:${CLOUD_AGENT_VERSION}
     ports:
@@ -124,3 +124,5 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
