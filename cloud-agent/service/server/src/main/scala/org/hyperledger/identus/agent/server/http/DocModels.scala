@@ -55,7 +55,6 @@ object DocModels {
 
   val customiseDocsModel: OpenAPI => OpenAPI = { oapi =>
     oapi
-      .openapi("3.0.3")
       .info(
         Info(
           title = "Identus Cloud Agent API Reference",
