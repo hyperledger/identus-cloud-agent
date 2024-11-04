@@ -41,7 +41,7 @@ object Tapir2StaticOAS extends ZIOAppDefault {
     } yield {
       import sttp.apispec.openapi.circe.yaml.*
       val model = DocModels.customiseDocsModel(OpenAPIDocsInterpreter().toOpenAPI(allEndpoints.map(_.endpoint), "", ""))
-      val yaml = model.info(model.info.copy(version = args(1))).toYaml
+      val yaml = model.info(model.info.copy(version = args(1))).toYaml3_0_3
       val path = Path.of(args.head)
       Using(Files.newBufferedWriter(path, StandardCharsets.UTF_8)) { writer => writer.write(yaml) }
     }
