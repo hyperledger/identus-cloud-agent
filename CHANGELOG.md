@@ -1,3 +1,34 @@
+# [1.40.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.39.0...cloud-agent-v1.40.0) (2024-11-05)
+
+
+### Bug Fixes
+
+* Add key_id missing field ([#1403](https://github.com/hyperledger/identus-cloud-agent/issues/1403)) ([cbd1a03](https://github.com/hyperledger/identus-cloud-agent/commit/cbd1a03a8aa91c5a5487c54046e4d9305f9d9241))
+* adjust Kotlin and TypeScript HTTP client to use the `schemaId` f… ([#1388](https://github.com/hyperledger/identus-cloud-agent/issues/1388)) ([c2da492](https://github.com/hyperledger/identus-cloud-agent/commit/c2da492131e5c545b0fefb101246c48684bc9433))
+* cannot reuse the same credential-offer in oid4vci ([#1361](https://github.com/hyperledger/identus-cloud-agent/issues/1361)) ([6a0a3ea](https://github.com/hyperledger/identus-cloud-agent/commit/6a0a3ea3deef712479420ac23ef58aaafa7df78a))
+* handle unsupported PIURI found in DIDComm messages accordingly ([#1399](https://github.com/hyperledger/identus-cloud-agent/issues/1399)) ([9b64793](https://github.com/hyperledger/identus-cloud-agent/commit/9b64793ee7939860973108a8b30bc0b48a840518))
+* key id for jwt and sdjwt ([#1420](https://github.com/hyperledger/identus-cloud-agent/issues/1420)) ([5830a7e](https://github.com/hyperledger/identus-cloud-agent/commit/5830a7e17a72abae98faa81594421aa577eaeb24))
+* oas to use any schema for json ast node ([#1372](https://github.com/hyperledger/identus-cloud-agent/issues/1372)) ([95d328e](https://github.com/hyperledger/identus-cloud-agent/commit/95d328e3420d4731817a1f91c720e2833e9de362))
+* oid4vci endpoints error statuses and negative input validation ([#1384](https://github.com/hyperledger/identus-cloud-agent/issues/1384)) ([65cc9a7](https://github.com/hyperledger/identus-cloud-agent/commit/65cc9a712af722f5cb3dd36e78b088c20723097b))
+* Preserve Presentation Format ([#1363](https://github.com/hyperledger/identus-cloud-agent/issues/1363)) ([c18385c](https://github.com/hyperledger/identus-cloud-agent/commit/c18385c8fdbbb0e5dbde9a03e21f4600bf5e6890))
+* return 404 when create credConfig on non-existing issuer ([#1379](https://github.com/hyperledger/identus-cloud-agent/issues/1379)) ([e532ba6](https://github.com/hyperledger/identus-cloud-agent/commit/e532ba604c4e8e820345226d842d3b27813f5e66))
+
+
+### Features
+
+* Add KID to the credential-offers API - ATL-7704 ([#1320](https://github.com/hyperledger/identus-cloud-agent/issues/1320)) ([56200cf](https://github.com/hyperledger/identus-cloud-agent/commit/56200cfae6f62b823a74e67eb060face2ee3ecbc))
+* add presentation-exchange endpoints ([#1365](https://github.com/hyperledger/identus-cloud-agent/issues/1365)) ([49f7ab3](https://github.com/hyperledger/identus-cloud-agent/commit/49f7ab3d0473d820c37dc7f4f944cf1c2cae2a25))
+* ATL-6983 ZIO Stream Kafka PoC in background jobs ([#1339](https://github.com/hyperledger/identus-cloud-agent/issues/1339)) ([19ab426](https://github.com/hyperledger/identus-cloud-agent/commit/19ab426a191eec575ffebe6a2417f3fce538969c))
+* Default Backend API to Array Of Credential Schema ([#1366](https://github.com/hyperledger/identus-cloud-agent/issues/1366)) ([693dcc4](https://github.com/hyperledger/identus-cloud-agent/commit/693dcc45274044ac9bebffe2a8dbe0b85b45b452))
+* Default Object As Issuer ([#1349](https://github.com/hyperledger/identus-cloud-agent/issues/1349)) ([d29eebb](https://github.com/hyperledger/identus-cloud-agent/commit/d29eebbef29773103814528c382a3000c4f3b29b))
+* Implement prism anoncreds method for schemas and credential definitions ([#1385](https://github.com/hyperledger/identus-cloud-agent/issues/1385)) ([fbee055](https://github.com/hyperledger/identus-cloud-agent/commit/fbee0554bf424acf8007c9b7088cdb0654f0d6b2))
+* Issuer Replace Either By Union Type ([#1374](https://github.com/hyperledger/identus-cloud-agent/issues/1374)) ([8fc2fe3](https://github.com/hyperledger/identus-cloud-agent/commit/8fc2fe3dbed8856d21c18b7fedf89454661b34d6))
+* presentation_submission validation logic ([#1332](https://github.com/hyperledger/identus-cloud-agent/issues/1332)) ([f80b3c3](https://github.com/hyperledger/identus-cloud-agent/commit/f80b3c34588437b131ce872fd86f93e75dcd035f))
+* Support Array Of Credential Schema ([#1351](https://github.com/hyperledger/identus-cloud-agent/issues/1351)) ([948e314](https://github.com/hyperledger/identus-cloud-agent/commit/948e3149466b327686273825ce7858adaf8d7555))
+* Test JWT OBJECT as Issuer ([#1343](https://github.com/hyperledger/identus-cloud-agent/issues/1343)) ([7208d95](https://github.com/hyperledger/identus-cloud-agent/commit/7208d955b56375b0c79c20a0237df9890ecd3580))
+* VC support for Array of credential Status ([#1383](https://github.com/hyperledger/identus-cloud-agent/issues/1383)) ([ad946cf](https://github.com/hyperledger/identus-cloud-agent/commit/ad946cf3f635b882d772a00b0202b957a1cb82cb))
+* VCVerification API support ARRAY or OBJECT as Credential Sc… ([#1355](https://github.com/hyperledger/identus-cloud-agent/issues/1355)) ([91cb4e7](https://github.com/hyperledger/identus-cloud-agent/commit/91cb4e7f4371a651617265279a27fefe9551887c))
+
 # [1.39.0](https://github.com/hyperledger/identus-cloud-agent/compare/cloud-agent-v1.38.0...cloud-agent-v1.39.0) (2024-09-11)
 
 
