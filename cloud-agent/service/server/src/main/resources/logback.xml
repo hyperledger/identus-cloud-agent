@@ -13,6 +13,9 @@
   <logger name="io.getquill" level="WARN">
     <appender-ref ref="STDOUT" />
   </logger>
+  <logger name="org.apache.kafka.clients" level="WARN">
+    <appender-ref ref="STDOUT" />
+  </logger>
   <root level="info">
     <appender-ref ref="STDOUT"/>
   </root>
