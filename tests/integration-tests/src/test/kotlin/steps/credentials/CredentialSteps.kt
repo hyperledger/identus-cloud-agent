@@ -48,14 +48,12 @@ class CredentialSteps {
 
         issuer.attemptsTo(
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
-        )
-
-        issuer.attemptsTo(
             PollingWait.until(
                 ListenToEvents.credentialState(issuer),
                 equalTo(CREDENTIAL_SENT),
             ),
         )
+        println("new issued credential: ${ListenToEvents.with(issuer).credentialEvents.last().data}")
         issuer.remember("issuedCredential", ListenToEvents.with(issuer).credentialEvents.last().data)
     }
 
@@ -67,6 +65,7 @@ class CredentialSteps {
                 equalTo(CREDENTIAL_RECEIVED),
             ),
         )
+        println("new received credential: ${ListenToEvents.with(holder).credentialEvents.last().data}")
         holder.remember("issuedCredential", ListenToEvents.with(holder).credentialEvents.last().data)
     }
 

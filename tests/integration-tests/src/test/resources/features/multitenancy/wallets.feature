@@ -2,8 +2,8 @@
 Feature: Wallets management
 
 Scenario Outline: Successful creation of a new wallet
-  When Admin creates new wallet with name <name>
-  Then Admin should have a wallet with name <name>
+  When Admin creates new wallet with name '<name>'
+  Then Admin should have a wallet with name '<name>'
 Examples:
   | name       |
   | "wallet-1" |

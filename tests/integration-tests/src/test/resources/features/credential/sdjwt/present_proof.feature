@@ -25,7 +25,7 @@ Feature: Present SD-JWT Proof Protocol
       | Verifier |
       | Issuer   |
 
-  Scenario Outline: Holder presents sd-jwt proof to <verifier>
+  Scenario Outline: Holder presents sd-jwt out-of-band proof to <verifier>
     Given Holder has a sd-jwt issued credential from Issuer
     When <verifier> creates a OOB Invitation request for sd-jwt proof presentation requesting [firstName] claims
     And Holder accepts the OOB invitation request for JWT proof presentation from <verifier>
