@@ -148,6 +148,9 @@ object Setup {
             holderActor.remember("OID4VCI_AUTH_SERVER_CLIENT_ID", "holder")
         }
         OnStage.setTheStage(cast)
+
+        // FIXME: workaround for connection issue
+//        Thread.sleep(10000)
     }
 
     /**

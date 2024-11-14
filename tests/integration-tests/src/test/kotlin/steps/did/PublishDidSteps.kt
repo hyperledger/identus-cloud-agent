@@ -1,11 +1,15 @@
 package steps.did
 
 import abilities.ListenToEvents
-import common.DidPurpose
+import common.DidDocumentTemplate
+import common.DidType
+import common.DidType.CUSTOM
 import interactions.Get
 import interactions.Post
 import interactions.body
-import io.cucumber.java.en.*
+import io.cucumber.java.en.Given
+import io.cucumber.java.en.Then
+import io.cucumber.java.en.When
 import io.iohk.atala.automation.extensions.get
 import io.iohk.atala.automation.serenity.ensure.Ensure
 import io.iohk.atala.automation.serenity.interactions.PollingWait
@@ -15,84 +19,64 @@ import org.apache.http.HttpStatus
 import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
 import org.hamcrest.CoreMatchers.equalTo
-import org.hyperledger.identus.client.models.*
+import org.hyperledger.identus.client.models.CreateManagedDidRequest
+import org.hyperledger.identus.client.models.CreateManagedDidRequestDocumentTemplate
+import org.hyperledger.identus.client.models.Curve
+import org.hyperledger.identus.client.models.DIDOperationResponse
+import org.hyperledger.identus.client.models.DIDResolutionResult
+import org.hyperledger.identus.client.models.ManagedDID
+import org.hyperledger.identus.client.models.ManagedDIDKeyTemplate
+import org.hyperledger.identus.client.models.Purpose
 
 class PublishDidSteps {
 
     @Given("{actor} has a published DID for {}")
-    fun agentHasAPublishedDID(agent: Actor, didPurpose: DidPurpose) {
-        if (agent.recallAll().containsKey("hasPublishedDid") && actualDidHasSamePurpose(agent, didPurpose)) {
+    fun agentHasAPublishedDID(agent: Actor, didType: DidType) {
+        if (agent.recallAll().containsKey("hasPublishedDid") && actualDidHasSamePurpose(agent, didType)) {
             return
         }
-        agentHasAnUnpublishedDID(agent, didPurpose)
+        agentHasAnUnpublishedDID(agent, didType)
         hePublishesDidToLedger(agent)
     }
 
     @Given("{actor} has an unpublished DID for {}")
-    fun agentHasAnUnpublishedDID(agent: Actor, didPurpose: DidPurpose) {
+    fun agentHasAnUnpublishedDID(agent: Actor, didType: DidType) {
         if (agent.recallAll().containsKey("shortFormDid") || agent.recallAll().containsKey("longFormDid")) {
             // is not published and has the same purpose
-            if (!agent.recallAll().containsKey("hasPublishedDid") && actualDidHasSamePurpose(agent, didPurpose)) {
+            if (!agent.recallAll().containsKey("hasPublishedDid") && actualDidHasSamePurpose(agent, didType)) {
                 return
             }
         }
-        agentCreatesUnpublishedDid(agent, didPurpose)
+        agentCreatesUnpublishedDid(agent, didType)
     }
 
-    private fun actualDidHasSamePurpose(agent: Actor, didPurpose: DidPurpose): Boolean {
-        val actualPurpose: DidPurpose = agent.recall<DidPurpose?>("didPurpose") ?: return false
-        return actualPurpose == didPurpose
-    }
-
-    @Given("{actor} creates unpublished DID")
+    @Given("{actor} creates empty unpublished DID")
     fun agentCreatesEmptyUnpublishedDid(actor: Actor) {
-        agentCreatesUnpublishedDid(actor, DidPurpose.CUSTOM)
+        agentCreatesUnpublishedDid(actor, CUSTOM)
     }
 
     @Given("{actor} creates unpublished DID for {}")
-    fun agentCreatesUnpublishedDid(actor: Actor, didPurpose: DidPurpose) {
-        val createDidRequest = CreateManagedDidRequest(
-            CreateManagedDidRequestDocumentTemplate(didPurpose.publicKeys, services = didPurpose.services),
-        )
-        actor.attemptsTo(
-            Post.to("/did-registrar/dids").body(createDidRequest),
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
-        )
-
-        val managedDid = SerenityRest.lastResponse().get<ManagedDID>()
-
-        actor.attemptsTo(
-            Ensure.that(managedDid.longFormDid!!).isNotEmpty(),
-            Get.resource("/did-registrar/dids/${managedDid.longFormDid}"),
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
-        )
-
-        val did = SerenityRest.lastResponse().get<ManagedDID>()
-
-        actor.remember("longFormDid", managedDid.longFormDid)
-        actor.remember("kidSecp256K1", "auth-1")
-        actor.remember("kidEd25519", "auth-2")
-        actor.remember("shortFormDid", did.did)
-        actor.remember("didPurpose", didPurpose)
-        actor.forget<String>("hasPublishedDid")
+    fun agentCreatesUnpublishedDid(actor: Actor, didType: DidType) {
+        createDid(actor, didType, didType.documentTemplate)
     }
 
     @When("{actor} prepares a custom PRISM DID")
     fun actorPreparesCustomDid(actor: Actor) {
-        val customDid = DidPurpose.CUSTOM
+        val customDid = CUSTOM.documentTemplate
         actor.remember("customDid", customDid)
     }
 
     @When("{actor} adds a '{curve}' key for '{purpose}' purpose with '{}' name to the custom PRISM DID")
     fun actorAddsKeyToCustomDid(actor: Actor, curve: Curve, purpose: Purpose, name: String) {
-        val customDid = actor.recall<DidPurpose>("customDid")
-        customDid.publicKeys.add(ManagedDIDKeyTemplate(name, purpose, curve))
+        val documentTemplate = actor.recall<DidDocumentTemplate>("customDid")
+        documentTemplate.publicKeys.add(ManagedDIDKeyTemplate(name, purpose, curve))
+        actor.remember("customDid", documentTemplate)
     }
 
     @When("{actor} creates the custom PRISM DID")
     fun actorCreatesTheCustomPrismDid(actor: Actor) {
-        val customDid = actor.recall<DidPurpose>("customDid")
-        agentCreatesUnpublishedDid(actor, customDid)
+        val documentTemplate = actor.recall<DidDocumentTemplate>("customDid")
+        createDid(actor, CUSTOM, documentTemplate)
     }
 
     @When("{actor} publishes DID to ledger")
@@ -130,5 +114,44 @@ class PublishDidSteps {
             Ensure.that(didDocument.id).isEqualTo(shortFormDid),
             Ensure.that(didResolutionResult.didDocumentMetadata.deactivated!!).isFalse(),
         )
+    }
+
+    private fun actualDidHasSamePurpose(agent: Actor, didType: DidType): Boolean {
+        val actualPurpose: DidType = agent.recall<DidType>("didPurpose") ?: return false
+        return actualPurpose == didType
+    }
+
+    private fun createDid(actor: Actor, didType: DidType, documentTemplate: DidDocumentTemplate) {
+        val createDidRequest = CreateManagedDidRequest(
+            CreateManagedDidRequestDocumentTemplate(
+                publicKeys = documentTemplate.publicKeys,
+                services = documentTemplate.services
+            )
+        )
+        try {
+            actor.attemptsTo(
+                Post.to("/did-registrar/dids").body(createDidRequest),
+                Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
+            )
+        } catch (e: Error) {
+            // FIXME: remove
+            println("REMOVE MEEEEEEE")
+            SerenityRest.lastResponse().body.prettyPrint()
+        }
+
+        val managedDid = SerenityRest.lastResponse().get<ManagedDID>()
+
+        actor.attemptsTo(
+            Ensure.that(managedDid.longFormDid!!).isNotEmpty(),
+            Get.resource("/did-registrar/dids/${managedDid.longFormDid}"),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
+        )
+
+        val did = SerenityRest.lastResponse().get<ManagedDID>()
+
+        actor.remember("longFormDid", managedDid.longFormDid)
+        actor.remember("shortFormDid", did.did)
+        actor.remember("didPurpose", didType)
+        actor.forget<String>("hasPublishedDid")
     }
 }

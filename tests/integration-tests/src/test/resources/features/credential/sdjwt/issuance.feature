@@ -1,16 +1,23 @@
 @sdjwt @issuance
 Feature: Issue SD-JWT credential
 
-  Scenario: Issuing sd-jwt credential
+  Scenario Outline: Issuing sd-jwt credential
     Given Issuer and Holder have an existing connection
-    And Issuer has a published DID for SD_JWT
     And Holder has an unpublished DID for SD_JWT
+    When Issuer prepares a custom PRISM DID
+    And Issuer adds a '<assertionMethod>' key for 'assertionMethod' purpose with '<assertionName>' name to the custom PRISM DID
+    And Issuer adds a '<authentication>' key for 'authentication' purpose with '<authenticationName>' name to the custom PRISM DID
+    And Issuer creates the custom PRISM DID
+    And Issuer publishes DID to ledger
     When Issuer offers a sd-jwt credential to Holder
     And Holder receives the credential offer
     And Holder accepts credential offer for sd-jwt
     And Issuer issues the credential
     Then Holder receives the issued credential
     And Holder checks the sd-jwt credential contents
+    Examples:
+      | assertionMethod | assertionName | authentication | authenticationName |
+      | ed25519         | assert-1      | ed25519        | auth-1             |
 
   Scenario: Issuing sd-jwt credential with holder binding
     Given Issuer and Holder have an existing connection
@@ -32,17 +39,3 @@ Feature: Issue SD-JWT credential
     And Issuer issues the credential
     Then Holder receives the issued credential
     Then Holder checks the sd-jwt credential contents with holder binding
-
-
-#  Scenario: Issuing sd-jwt with wrong algorithm
-#    Given Issuer and Holder have an existing connection
-#    When Issuer prepares a custom PRISM DID
-#    And Issuer adds a 'secp256k1' key for 'assertionMethod' purpose with 'assert-1' name to the custom PRISM DID
-#    And Issuer adds a 'secp256k1' key for 'authentication' purpose with 'auth-1' name to the custom PRISM DID
-#    And Issuer creates the custom PRISM DID
-#    And Holder has an unpublished DID for SD_JWT
-#    And Issuer offers a sd-jwt credential to Holder
-#    And Holder receives the credential offer
-#    And Holder accepts credential offer for sd-jwt
-#    And Issuer tries to issue the credential
-#    Then Issuer should see that credential issuance has failed

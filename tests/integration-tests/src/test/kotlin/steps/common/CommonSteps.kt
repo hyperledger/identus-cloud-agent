@@ -1,7 +1,7 @@
 package steps.common
 
 import common.CredentialSchema
-import common.DidPurpose
+import common.DidType
 import interactions.Get
 import io.cucumber.java.en.Given
 import io.iohk.atala.automation.extensions.get
@@ -22,15 +22,15 @@ class CommonSteps {
         actorsHaveExistingConnection(issuer, holder)
 
         val publishDidSteps = PublishDidSteps()
-        publishDidSteps.agentHasAnUnpublishedDID(holder, DidPurpose.JWT)
-        publishDidSteps.agentHasAPublishedDID(issuer, DidPurpose.JWT)
+        publishDidSteps.agentHasAnUnpublishedDID(holder, DidType.JWT)
+        publishDidSteps.agentHasAPublishedDID(issuer, DidType.JWT)
 
         val jwtCredentialSteps = JwtCredentialSteps()
         val credentialSteps = CredentialSteps()
 
         jwtCredentialSteps.issuerOffersAJwtCredential(issuer, holder, "short")
         credentialSteps.holderReceivesCredentialOffer(holder)
-        jwtCredentialSteps.holderAcceptsJwtCredentialOfferForJwt(holder)
+        jwtCredentialSteps.holderAcceptsJwtCredentialOfferForJwt(holder, "auth-1")
         credentialSteps.issuerIssuesTheCredential(issuer)
         credentialSteps.holderReceivesTheIssuedCredential(holder)
     }
@@ -44,8 +44,8 @@ class CommonSteps {
         actorsHaveExistingConnection(issuer, holder)
 
         val publishDidSteps = PublishDidSteps()
-        publishDidSteps.agentHasAnUnpublishedDID(holder, DidPurpose.JWT)
-        publishDidSteps.agentHasAPublishedDID(issuer, DidPurpose.JWT)
+        publishDidSteps.agentHasAnUnpublishedDID(holder, DidType.JWT)
+        publishDidSteps.agentHasAPublishedDID(issuer, DidType.JWT)
 
         val schemaSteps = CredentialSchemasSteps()
         schemaSteps.agentHasAPublishedSchema(issuer, schema)
@@ -54,7 +54,7 @@ class CommonSteps {
         val credentialSteps = CredentialSteps()
         jwtCredentialSteps.issuerOffersJwtCredentialToHolderUsingSchema(issuer, holder, "short", schema)
         credentialSteps.holderReceivesCredentialOffer(holder)
-        jwtCredentialSteps.holderAcceptsJwtCredentialOfferForJwt(holder)
+        jwtCredentialSteps.holderAcceptsJwtCredentialOfferForJwt(holder, "auth-1")
         credentialSteps.issuerIssuesTheCredential(issuer)
         credentialSteps.holderReceivesTheIssuedCredential(holder)
     }
@@ -64,8 +64,8 @@ class CommonSteps {
         actorsHaveExistingConnection(issuer, holder)
 
         val publishDidSteps = PublishDidSteps()
-        publishDidSteps.agentHasAnUnpublishedDID(holder, DidPurpose.SD_JWT)
-        publishDidSteps.agentHasAPublishedDID(issuer, DidPurpose.SD_JWT)
+        publishDidSteps.agentHasAnUnpublishedDID(holder, DidType.SD_JWT)
+        publishDidSteps.agentHasAPublishedDID(issuer, DidType.SD_JWT)
 
         val sdJwtCredentialSteps = SdJwtCredentialSteps()
         val credentialSteps = CredentialSteps()
@@ -81,8 +81,8 @@ class CommonSteps {
         actorsHaveExistingConnection(issuer, holder)
 
         val publishDidSteps = PublishDidSteps()
-        publishDidSteps.agentHasAnUnpublishedDID(holder, DidPurpose.SD_JWT)
-        publishDidSteps.agentHasAPublishedDID(issuer, DidPurpose.SD_JWT)
+        publishDidSteps.agentHasAnUnpublishedDID(holder, DidType.SD_JWT)
+        publishDidSteps.agentHasAPublishedDID(issuer, DidType.SD_JWT)
 
         val sdJwtCredentialSteps = SdJwtCredentialSteps()
         val credentialSteps = CredentialSteps()
@@ -97,8 +97,6 @@ class CommonSteps {
     fun actorsHaveExistingConnection(inviter: Actor, invitee: Actor) {
         inviter.attemptsTo(
             Get.resource("/connections"),
-        )
-        inviter.attemptsTo(
             Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
         )
         val inviterConnection = SerenityRest.lastResponse().get<ConnectionsPage>().contents!!.firstOrNull {
@@ -109,8 +107,6 @@ class CommonSteps {
         if (inviterConnection != null) {
             invitee.attemptsTo(
                 Get.resource("/connections"),
-            )
-            invitee.attemptsTo(
                 Ensure.thatTheLastResponse().statusCode().isEqualTo(HttpStatus.SC_OK),
             )
             inviteeConnection = SerenityRest.lastResponse().get<ConnectionsPage>().contents!!.firstOrNull {

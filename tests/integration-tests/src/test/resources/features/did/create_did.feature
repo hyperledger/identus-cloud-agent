@@ -23,6 +23,6 @@ Feature: Create and publish DID
       | X25519  | assertionMethod |
 
   Scenario: Successfully publish DID to ledger
-    Given Issuer creates unpublished DID
+    Given Issuer creates empty unpublished DID
     When He publishes DID to ledger
     Then He resolves DID document corresponds to W3C standard

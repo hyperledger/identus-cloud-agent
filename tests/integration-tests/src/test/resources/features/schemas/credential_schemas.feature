@@ -2,7 +2,7 @@
 Feature: Credential schemas
 
   Background:
-    Given Issuer creates unpublished DID
+    Given Issuer creates empty unpublished DID
 
   Scenario: Successful schema creation
     When Issuer creates a new credential STUDENT_SCHEMA schema

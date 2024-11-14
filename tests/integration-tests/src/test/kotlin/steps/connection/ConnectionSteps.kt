@@ -15,9 +15,14 @@ import org.apache.http.HttpStatus.SC_CREATED
 import org.apache.http.HttpStatus.SC_OK
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers
-import org.hyperledger.identus.client.models.*
+import org.hyperledger.identus.client.models.AcceptConnectionInvitationRequest
+import org.hyperledger.identus.client.models.Connection
+import org.hyperledger.identus.client.models.Connection.State.CONNECTION_REQUEST_RECEIVED
 import org.hyperledger.identus.client.models.Connection.State.CONNECTION_RESPONSE_RECEIVED
 import org.hyperledger.identus.client.models.Connection.State.CONNECTION_RESPONSE_SENT
+import org.hyperledger.identus.client.models.Connection.State.INVITATION_GENERATED
+import org.hyperledger.identus.client.models.CreateConnectionRequest
+import kotlin.time.Duration.Companion.seconds
 
 class ConnectionSteps {
 
@@ -29,12 +34,11 @@ class ConnectionSteps {
 
         inviter.attemptsTo(
             Post.to("/connections").body(CreateConnectionRequest(label = connectionLabel)),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
         )
 
         val connection = SerenityRest.lastResponse().get<Connection>()
-
         inviter.attemptsTo(
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
             Ensure.that(connection.label!!).isEqualTo(connectionLabel),
             Ensure.that(connection.state).isEqualTo(Connection.State.INVITATION_GENERATED),
             Ensure.that(connection.role).isEqualTo(Connection.Role.INVITER),
@@ -48,20 +52,14 @@ class ConnectionSteps {
     fun inviteeSendsAConnectionRequestToInviter(invitee: Actor, inviter: Actor) {
         // Bob accepts connection using achieved out-of-band invitation
         val inviterConnection = inviter.recall<Connection>("connection")
+        val body = AcceptConnectionInvitationRequest(inviterConnection.invitation.invitationUrl.split("=")[1])
         invitee.attemptsTo(
-            Post.to("/connection-invitations")
-                .with {
-                    it.body(
-                        AcceptConnectionInvitationRequest(
-                            inviterConnection.invitation.invitationUrl.split("=")[1],
-                        ),
-                    )
-                },
-        )
-        val inviteeConnection = SerenityRest.lastResponse().get<Connection>()
-
-        invitee.attemptsTo(
+            Post.to("/connection-invitations").body(body),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
+        )
+
+        val inviteeConnection = SerenityRest.lastResponse().get<Connection>()
+        invitee.attemptsTo(
             Ensure.that(inviteeConnection.invitation.from).isEqualTo(inviterConnection.invitation.from),
             Ensure.that(inviteeConnection.invitation.id).isEqualTo(inviterConnection.invitation.id),
             Ensure.that(inviteeConnection.invitation.invitationUrl)
