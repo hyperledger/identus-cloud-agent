@@ -41,7 +41,7 @@ class WalletsSteps {
         return SerenityRest.lastResponse().get<WalletDetail>()
     }
 
-    @When("{actor} creates new wallet with name {string}")
+    @When("{actor} creates new wallet with name '{}'")
     fun iCreateNewWalletWithName(acme: Actor, name: String) {
         val wallet = createNewWallet(acme, name)
         acme.attemptsTo(
@@ -88,7 +88,7 @@ class WalletsSteps {
         )
     }
 
-    @Then("{actor} should have a wallet with name {string}")
+    @Then("{actor} should have a wallet with name '{}'")
     fun iShouldHaveAWalletWithName(acme: Actor, name: String) {
         acme.attemptsTo(
             Get.resource("/wallets/${acme.recall<String>("walletId")}")

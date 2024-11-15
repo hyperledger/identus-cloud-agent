@@ -62,7 +62,7 @@ class JwtCredentialSteps {
         holder.remember("thid", credentialRecord.thid)
     }
 
-    @When("{actor} offers a jwt credential to {actor} with {string} form DID")
+    @When("{actor} offers a jwt credential to {actor} with '{}' form DID")
     fun issuerOffersAJwtCredential(issuer: Actor, holder: Actor, format: String) {
         val claims = linkedMapOf(
             "firstName" to "FirstName",
@@ -72,7 +72,7 @@ class JwtCredentialSteps {
         saveCredentialOffer(issuer, holder)
     }
 
-    @When("{actor} offers a jwt credential to {actor} with {string} form DID using issuingKid {string}")
+    @When("{actor} offers a jwt credential to {actor} with '{}' form DID using issuingKid '{}'")
     fun issuerOffersAJwtCredentialWithIssuingKeyId(issuer: Actor, holder: Actor, format: String, issuingKid: String?) {
         val claims = linkedMapOf(
             "firstName" to "FirstName",
@@ -82,7 +82,7 @@ class JwtCredentialSteps {
         saveCredentialOffer(issuer, holder)
     }
 
-    @When("{actor} offers a jwt credential to {actor} with {} form using {} schema")
+    @When("{actor} offers a jwt credential to {actor} with '{}' form using '{}' schema")
     fun issuerOffersJwtCredentialToHolderUsingSchema(
         issuer: Actor,
         holder: Actor,
@@ -95,7 +95,7 @@ class JwtCredentialSteps {
         saveCredentialOffer(issuer, holder)
     }
 
-    @When("{actor} offers a jwt credential to {actor} with {} form DID with wrong claims structure using {} schema")
+    @When("{actor} offers a jwt credential to {actor} with '{}' form DID with wrong claims structure using '{}' schema")
     fun issuerOffersJwtCredentialToHolderWithWrongClaimStructure(
         issuer: Actor,
         holder: Actor,

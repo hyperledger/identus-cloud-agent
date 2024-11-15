@@ -7,6 +7,7 @@ import com.sksamuel.hoplite.ConfigLoader
 import common.TestConstants
 import config.*
 import io.cucumber.java.AfterAll
+import io.cucumber.java.Before
 import io.cucumber.java.BeforeAll
 import io.ktor.server.util.url
 import io.restassured.RestAssured
@@ -148,9 +149,6 @@ object Setup {
             holderActor.remember("OID4VCI_AUTH_SERVER_CLIENT_ID", "holder")
         }
         OnStage.setTheStage(cast)
-
-        // FIXME: workaround for connection issue
-//        Thread.sleep(10000)
     }
 
     /**
@@ -198,6 +196,12 @@ object Setup {
         config.services?.prismNode?.stop()
         config.services?.vault?.stop()
     }
+}
+
+@Before
+fun clearScenario() {
+//    Setup.stopActors()
+//    Setup.initActors()
 }
 
 @BeforeAll

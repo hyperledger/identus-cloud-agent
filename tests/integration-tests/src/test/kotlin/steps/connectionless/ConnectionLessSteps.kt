@@ -14,7 +14,7 @@ import org.hyperledger.identus.client.models.*
 
 class ConnectionLessSteps {
 
-    @When("{actor} creates a {string} credential offer invitation with {string} form DID")
+    @When("{actor} creates a '{}' credential offer invitation with '{}' form DID")
     fun inviterGeneratesACredentialOfferInvitation(issuer: Actor, credentialFormat: String, didForm: String) {
         val claims = linkedMapOf(
             "firstName" to "Automation",
