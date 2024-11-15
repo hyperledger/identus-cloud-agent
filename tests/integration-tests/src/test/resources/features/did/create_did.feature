@@ -1,7 +1,7 @@
 @DLT @did @create
 Feature: Create and publish DID
 
-  Scenario Outline: Create PRISM DID
+  Scenario Outline: Create PRISM DID with <curve> for <purpose>
     When Issuer creates PRISM DID with <curve> key having <purpose> purpose
     Then He sees PRISM DID was created successfully
     And He sees PRISM DID data was stored correctly with <curve> and <purpose>
@@ -13,7 +13,7 @@ Feature: Create and publish DID
       | Ed25519   | assertionMethod |
       | X25519    | keyAgreement    |
 
-  Scenario Outline: Create PRISM DID with disallowed key purpose
+  Scenario Outline: Create PRISM DID with <curve> for <purpose> should not work
     When Issuer creates PRISM DID with <curve> key having <purpose> purpose
     Then He sees PRISM DID was not successfully created
     Examples:

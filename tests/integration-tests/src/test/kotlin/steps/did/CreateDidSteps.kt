@@ -28,9 +28,9 @@ import org.hyperledger.identus.client.models.ManagedDID
 import org.hyperledger.identus.client.models.ManagedDIDKeyTemplate
 import org.hyperledger.identus.client.models.Purpose
 
-class PublishDidSteps {
+class CreateDidSteps {
 
-    @Given("{actor} has a published DID for {}")
+    @Given("{actor} has a published DID for '{}'")
     fun agentHasAPublishedDID(agent: Actor, didType: DidType) {
         if (agent.recallAll().containsKey("hasPublishedDid") && actualDidHasSamePurpose(agent, didType)) {
             return
@@ -39,7 +39,7 @@ class PublishDidSteps {
         hePublishesDidToLedger(agent)
     }
 
-    @Given("{actor} has an unpublished DID for {}")
+    @Given("{actor} has an unpublished DID for '{}'")
     fun agentHasAnUnpublishedDID(agent: Actor, didType: DidType) {
         if (agent.recallAll().containsKey("shortFormDid") || agent.recallAll().containsKey("longFormDid")) {
             // is not published and has the same purpose
@@ -55,7 +55,7 @@ class PublishDidSteps {
         agentCreatesUnpublishedDid(actor, CUSTOM)
     }
 
-    @Given("{actor} creates unpublished DID for {}")
+    @Given("{actor} creates unpublished DID for '{}'")
     fun agentCreatesUnpublishedDid(actor: Actor, didType: DidType) {
         createDid(actor, didType, didType.documentTemplate)
     }
@@ -128,16 +128,11 @@ class PublishDidSteps {
                 services = documentTemplate.services
             )
         )
-        try {
-            actor.attemptsTo(
-                Post.to("/did-registrar/dids").body(createDidRequest),
-                Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
-            )
-        } catch (e: Error) {
-            // FIXME: remove
-            println("REMOVE MEEEEEEE")
-            SerenityRest.lastResponse().body.prettyPrint()
-        }
+
+        actor.attemptsTo(
+            Post.to("/did-registrar/dids").body(createDidRequest),
+            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_CREATED),
+        )
 
         val managedDid = SerenityRest.lastResponse().get<ManagedDID>()
 

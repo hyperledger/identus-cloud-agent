@@ -2,7 +2,7 @@
 Feature: Update DID
 
   Background: Published DID is created
-    Given Issuer has a published DID for JWT
+    Given Issuer has a published DID for 'JWT'
 
   Scenario: Update PRISM DID services
     When Issuer updates PRISM DID with new services
@@ -17,7 +17,7 @@ Feature: Update DID
     Then He sees the PRISM DID should have been updated successfully
     And He sees the PRISM DID should have the service removed
 
-  Scenario Outline: Update PRISM DID keys
+  Scenario Outline: Update PRISM DID keys using <curve> for <purpose>
     When Issuer updates PRISM DID by adding new key with <curve> curve and <purpose> purpose
     Then He sees PRISM DID was successfully updated with new keys of <purpose> purpose
 

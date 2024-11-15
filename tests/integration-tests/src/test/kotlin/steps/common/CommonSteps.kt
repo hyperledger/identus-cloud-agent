@@ -13,7 +13,7 @@ import org.hyperledger.identus.client.models.Connection
 import org.hyperledger.identus.client.models.ConnectionsPage
 import steps.connection.ConnectionSteps
 import steps.credentials.*
-import steps.did.PublishDidSteps
+import steps.did.CreateDidSteps
 import steps.schemas.CredentialSchemasSteps
 
 class CommonSteps {
@@ -21,9 +21,9 @@ class CommonSteps {
     fun holderHasIssuedJwtCredentialFromIssuer(holder: Actor, issuer: Actor) {
         actorsHaveExistingConnection(issuer, holder)
 
-        val publishDidSteps = PublishDidSteps()
-        publishDidSteps.agentHasAnUnpublishedDID(holder, DidType.JWT)
-        publishDidSteps.agentHasAPublishedDID(issuer, DidType.JWT)
+        val createDidSteps = CreateDidSteps()
+        createDidSteps.agentHasAnUnpublishedDID(holder, DidType.JWT)
+        createDidSteps.agentHasAPublishedDID(issuer, DidType.JWT)
 
         val jwtCredentialSteps = JwtCredentialSteps()
         val credentialSteps = CredentialSteps()
@@ -35,7 +35,7 @@ class CommonSteps {
         credentialSteps.holderReceivesTheIssuedCredential(holder)
     }
 
-    @Given("{actor} has a jwt issued credential with {} schema from {actor}")
+    @Given("{actor} has a jwt issued credential with '{}' schema from {actor}")
     fun holderHasIssuedJwtCredentialFromIssuerWithSchema(
         holder: Actor,
         schema: CredentialSchema,
@@ -43,9 +43,9 @@ class CommonSteps {
     ) {
         actorsHaveExistingConnection(issuer, holder)
 
-        val publishDidSteps = PublishDidSteps()
-        publishDidSteps.agentHasAnUnpublishedDID(holder, DidType.JWT)
-        publishDidSteps.agentHasAPublishedDID(issuer, DidType.JWT)
+        val createDidSteps = CreateDidSteps()
+        createDidSteps.agentHasAnUnpublishedDID(holder, DidType.JWT)
+        createDidSteps.agentHasAPublishedDID(issuer, DidType.JWT)
 
         val schemaSteps = CredentialSchemasSteps()
         schemaSteps.agentHasAPublishedSchema(issuer, schema)
@@ -63,9 +63,9 @@ class CommonSteps {
     fun holderHasIssuedSdJwtCredentialFromIssuer(holder: Actor, issuer: Actor) {
         actorsHaveExistingConnection(issuer, holder)
 
-        val publishDidSteps = PublishDidSteps()
-        publishDidSteps.agentHasAnUnpublishedDID(holder, DidType.SD_JWT)
-        publishDidSteps.agentHasAPublishedDID(issuer, DidType.SD_JWT)
+        val createDidSteps = CreateDidSteps()
+        createDidSteps.agentHasAnUnpublishedDID(holder, DidType.SD_JWT)
+        createDidSteps.agentHasAPublishedDID(issuer, DidType.SD_JWT)
 
         val sdJwtCredentialSteps = SdJwtCredentialSteps()
         val credentialSteps = CredentialSteps()
@@ -80,9 +80,9 @@ class CommonSteps {
     fun holderHasIssuedSdJwtCredentialFromIssuerWithKeyBind(holder: Actor, issuer: Actor) {
         actorsHaveExistingConnection(issuer, holder)
 
-        val publishDidSteps = PublishDidSteps()
-        publishDidSteps.agentHasAnUnpublishedDID(holder, DidType.SD_JWT)
-        publishDidSteps.agentHasAPublishedDID(issuer, DidType.SD_JWT)
+        val createDidSteps = CreateDidSteps()
+        createDidSteps.agentHasAnUnpublishedDID(holder, DidType.SD_JWT)
+        createDidSteps.agentHasAPublishedDID(issuer, DidType.SD_JWT)
 
         val sdJwtCredentialSteps = SdJwtCredentialSteps()
         val credentialSteps = CredentialSteps()

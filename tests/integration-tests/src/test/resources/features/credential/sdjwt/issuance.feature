@@ -3,7 +3,7 @@ Feature: Issue SD-JWT credential
 
   Scenario Outline: Issuing sd-jwt credential
     Given Issuer and Holder have an existing connection
-    And Holder has an unpublished DID for SD_JWT
+    And Holder has an unpublished DID for 'SD_JWT'
     When Issuer prepares a custom PRISM DID
     And Issuer adds a '<assertionMethod>' key for 'assertionMethod' purpose with '<assertionName>' name to the custom PRISM DID
     And Issuer adds a '<authentication>' key for 'authentication' purpose with '<authenticationName>' name to the custom PRISM DID
@@ -21,8 +21,8 @@ Feature: Issue SD-JWT credential
 
   Scenario: Issuing sd-jwt credential with holder binding
     Given Issuer and Holder have an existing connection
-    And Issuer has a published DID for SD_JWT
-    And Holder has an unpublished DID for SD_JWT
+    And Issuer has a published DID for 'SD_JWT'
+    And Holder has an unpublished DID for 'SD_JWT'
     When Issuer offers a sd-jwt credential to Holder
     And Holder receives the credential offer
     And Holder accepts credential offer for sd-jwt with 'auth-1' key binding
@@ -31,9 +31,9 @@ Feature: Issue SD-JWT credential
     Then Holder checks the sd-jwt credential contents with holder binding
 
   Scenario: Connectionless issuance of sd-jwt credential with holder binding
-    And Issuer has a published DID for SD_JWT
-    And Holder has an unpublished DID for SD_JWT
-    When Issuer creates a "SDJWT" credential offer invitation with "short" form DID
+    And Issuer has a published DID for 'SD_JWT'
+    And Holder has an unpublished DID for 'SD_JWT'
+    When Issuer creates a 'SDJWT' credential offer invitation with 'short' form DID
     And Holder accepts the credential offer invitation from Issuer
     And Holder accepts credential offer for sd-jwt with 'auth-1' key binding
     And Issuer issues the credential

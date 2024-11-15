@@ -5,7 +5,7 @@ Feature: Credential schemas
     Given Issuer creates empty unpublished DID
 
   Scenario: Successful schema creation
-    When Issuer creates a new credential STUDENT_SCHEMA schema
+    When Issuer creates a new credential 'STUDENT_SCHEMA' schema
     Then He sees new credential schema is available
 
   Scenario Outline: Multiple schema creation
@@ -15,7 +15,7 @@ Feature: Credential schemas
       | schemas |
       | 4       |
 
-  Scenario Outline: Schema creation should fail for cases
+  Scenario Outline: Schema creation should fail for <schema_issue>
     When Issuer creates a schema containing '<schema_issue>' issue
     Then Issuer should see the schema creation failed
     Examples:

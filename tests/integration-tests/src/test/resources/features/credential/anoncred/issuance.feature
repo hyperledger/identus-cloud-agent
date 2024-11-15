@@ -3,8 +3,8 @@ Feature: Issue Anoncred credential
 
   Background:
     Given Issuer and Holder have an existing connection
-    And Issuer has a published DID for ANONCRED
-    And Holder has an unpublished DID for ANONCRED
+    And Issuer has a published DID for 'ANONCRED'
+    And Holder has an unpublished DID for 'ANONCRED'
 
   Scenario: Issuing anoncred with published PRISM DID
     Given Issuer has an anoncred schema definition

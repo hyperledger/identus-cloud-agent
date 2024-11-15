@@ -1,7 +1,6 @@
 @connection @create
 Feature: Agents connection
 
-  @test
   Scenario: Establish a connection between two agents
     When Issuer generates a connection invitation to Holder
     And Holder sends a connection request to Issuer
