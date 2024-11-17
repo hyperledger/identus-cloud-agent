@@ -23,24 +23,24 @@ Before using the Issuing Credentials protocol, the following conditions must be 
 <TabItem value="jwt" label="JWT">
 
 1. Issuer and Holder Cloud Agents up and running
-2. A connection must be established between the Issuer and Holder Cloud Agents (see [Connections](../connections/connection.md))
-3. The Issuer must have a published PRISM DID, and the [DID document](/docs/concepts/glossary#did-document) must have at least one `assertionMethod` key for issuing credentials (see [Create DID](../dids/create.md) and [Publish DID](../dids/publish.md))
+2. A connection must be established between the Issuer and Holder Cloud Agents (see [Connections](../../connections/connection.md))
+3. The Issuer must have a published PRISM DID, and the [DID document](/docs/concepts/glossary#did-document) must have at least one `assertionMethod` key for issuing credentials (see [Create DID](../../dids/create.md) and [Publish DID](../../dids/publish.md))
 4. The Holder must have a PRISM DID, and the DID document must have at least one `authentication` key for presenting the proof.
 
 </TabItem>
 <TabItem value="anoncreds" label="AnonCreds">
 
 1. Issuer and Holder Cloud Agents up and running
-2. A connection must be established between the Issuer and Holder Cloud Agents (see [Connections](../connections/connection.md))
-3. The Issuer must have created an AnonCreds Credential Definition as described [here](../credentialdefinition/create.md).
+2. A connection must be established between the Issuer and Holder Cloud Agents (see [Connections](../../connections/connection.md))
+3. The Issuer must have created an AnonCreds Credential Definition as described [here](../../credentialdefinition/create.md).
 
 </TabItem>
 <TabItem value="sdjwt" label="SDJWT">
 
 - 📌 **Note:** Currently we only support `Ed25519` curve
 1. Issuer and Holder Cloud Agents up and running
-2. A connection must be established between the Issuer and Holder Cloud Agents (see [Connections](../connections/connection.md))
-3. The Issuer must have a published PRISM DID, and the [DID document](/docs/concepts/glossary#did-document) must have at least one `assertionMethod` key for issuing credentials and the curve must be `Ed25519` (see [Create DID](../dids/create.md) and [Publish DID](../dids/publish.md))
+2. A connection must be established between the Issuer and Holder Cloud Agents (see [Connections](../../connections/connection.md))
+3. The Issuer must have a published PRISM DID, and the [DID document](/docs/concepts/glossary#did-document) must have at least one `assertionMethod` key for issuing credentials and the curve must be `Ed25519` (see [Create DID](../../dids/create.md) and [Publish DID](../../dids/publish.md))
 4. The Holder must have a PRISM DID, and the DID document must have at least one `authentication` key for presenting the proof and the curve must be `Ed25519`.
 
 </TabItem>
@@ -95,7 +95,7 @@ To do this, make a `POST` request to the [`/issue-credentials/credential-offers`
 4. `schemaId`: An optional field that, if specified, contains a valid URL to an existing VC schema.
    The Cloud Agent must be able to dereference the specified URL (i.e. fetch the VC schema content from it), in order to validate the provided claims against it.
    When not specified, the claims fields is not validated and can be any valid JSON object.
-   Please refer to the [Create VC schema](../schemas/create.md) doc for details on how to create a VC schema.
+   Please refer to the [Create VC schema](../../schemas/create.md) doc for details on how to create a VC schema.
 5. `credentialFormat`: The format of the credential that will be issued - `JWT` in this case. When not specified, the default value is `JWT`.
 
 
@@ -133,9 +133,9 @@ curl -X 'POST' \
 
 1. `claims`: The data stored in a verifiable credential. AnonCreds claims get expressed in a flat, "string -> string", key-value pair format. The claims contain the data that the issuer attests to, such as name, address, date of birth, and so on.
 2. `connectionId`: The unique ID of the connection between the holder and the issuer to offer this credential over.
-3. `credentialDefinitionId`: The unique ID of the [credential definition](../credentialdefinition/credential-definition.md) that has been created by the issuer as a prerequisite. Please refer to the [Create AnonCreds Credential Definition](../credentialdefinition/credential-definition.md) doc for details on how to create a credential definition.
+3. `credentialDefinitionId`: The unique ID of the [credential definition](../../credentialdefinition/credential-definition.md) that has been created by the issuer as a prerequisite. Please refer to the [Create AnonCreds Credential Definition](../../credentialdefinition/credential-definition.md) doc for details on how to create a credential definition.
 :::note
-📌 Note: If the credential definition was created via HTTP URL endpoint, then this credential definition will be referenced to that credential via HTTP URL, and if this credential definition was created via DID URL endpoint, then it will be referenced via DID URL, How to create credential definition for HTTP URL or DID URL is explained in [credential definition creation guide](../credentialdefinition/create.md)
+📌 Note: If the credential definition was created via HTTP URL endpoint, then this credential definition will be referenced to that credential via HTTP URL, and if this credential definition was created via DID URL endpoint, then it will be referenced via DID URL, How to create credential definition for HTTP URL or DID URL is explained in [credential definition creation guide](../../credentialdefinition/create.md)
 :::
 4. `credentialFormat`: The format of the credential that will be issued - `AnonCreds` in this case.  
 5. `issuingDID`: The DID referring to the issuer to issue this credential from
@@ -178,7 +178,7 @@ curl -X 'POST' \
 4. `schemaId`: An optional field that, if specified, contains a valid URL to an existing VC schema.
    The Cloud Agent must be able to dereference the specified URL (i.e. fetch the VC schema content from it), in order to validate the provided claims against it.
    When not specified, the claims fields is not validated and can be any valid JSON object.
-   Please refer to the [Create VC schema](../schemas/create.md) doc for details on how to create a VC schema.
+   Please refer to the [Create VC schema](../../schemas/create.md) doc for details on how to create a VC schema.
 5. `credentialFormat`: The format of the credential that will be issued - `SDJWT` in this case.
 
 
@@ -435,12 +435,12 @@ The following diagram shows the end-to-end flow for an issuer to issue a VC to a
 <Tabs groupId="vc-formats">
 <TabItem value="jwt" label="JWT">
 
-![](issue-flow.png)
+![](issue-flow.jwt.png)
 
 </TabItem>
 <TabItem value="anoncreds" label="AnonCreds">
 
-![](anoncreds-issue-flow.png)
+![](issue-flow.anoncreds.png)
 
 </TabItem>
 </Tabs>

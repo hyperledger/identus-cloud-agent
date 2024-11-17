@@ -19,9 +19,9 @@ const sidebars = {
         description: 'Credentials tutorials'
       },
       items: [
-        'credentials/issue',
-        'credentials/oid4vci',
-        'credentials/present-proof',
+        'credentials/didcomm/issue',
+        'credentials/oid4ci/issue',
+        'credentials/didcomm/present-proof',
         'credentials/revocation'
       ]
     },
