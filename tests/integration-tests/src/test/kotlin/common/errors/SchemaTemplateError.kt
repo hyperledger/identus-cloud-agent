@@ -1,12 +1,12 @@
-package common
+package common.errors
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import common.CredentialSchema.STUDENT_SCHEMA
 import net.serenitybdd.screenplay.Actor
 
-enum class SchemaErrorTemplate {
-    TYPE_AND_PROPERTIES_WITHOUT_SCHEMA_TYPE {
+enum class SchemaTemplateError {
+    TYPE_AND_PROPERTIES_WITHOUT_SCHEMA_TYPEError {
         override fun inner_schema(): String {
             return """
                 {
