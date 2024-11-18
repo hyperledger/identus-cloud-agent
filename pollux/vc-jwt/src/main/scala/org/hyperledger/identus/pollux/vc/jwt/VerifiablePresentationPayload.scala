@@ -408,10 +408,94 @@ object JwtPresentation {
     val validateJwtPresentation = Validation.fromTry(decodeJwt(jwt)).mapError(_.toString)
     for {
       decodeJwtPresentation <- validateJwtPresentation
-      aud <- validateAudience(decodeJwtPresentation, domain)
+      aud <- validateAudience(decodeJwtPresentation, Some(domain))
       result <- validateNonce(decodeJwtPresentation, Some(challenge))
     } yield result
+  }
 
+  def validatePresentation(
+      jwt: JWT,
+      domain: Option[String],
+      challenge: Option[String],
+      schemaIdAndTrustedIssuers: Seq[CredentialSchemaAndTrustedIssuersConstraint]
+  ): Validation[String, Unit] = {
+    val validateJwtPresentation = Validation.fromTry(decodeJwt(jwt)).mapError(_.toString)
+    for {
+      decodeJwtPresentation <- validateJwtPresentation
+      aud <- validateAudience(decodeJwtPresentation, domain)
+      nonce <- validateNonce(decodeJwtPresentation, challenge)
+      result <- validateSchemaIdAndTrustedIssuers(decodeJwtPresentation, schemaIdAndTrustedIssuers)
+    } yield {
+      result
+    }
+  }
+
+  def validateSchemaIdAndTrustedIssuers(
+      decodedJwtPresentation: JwtPresentationPayload,
+      schemaIdAndTrustedIssuers: Seq[CredentialSchemaAndTrustedIssuersConstraint]
+  ): Validation[String, Unit] = {
+    import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
+
+    val vcList = decodedJwtPresentation.vp.verifiableCredential
+    val expectedSchemaIds = schemaIdAndTrustedIssuers.map(_.schemaId)
+    val trustedIssuers = schemaIdAndTrustedIssuers.flatMap(_.trustedIssuers).flatten
+    ZValidation
+      .validateAll(
+        vcList.map {
+          case (w3cVerifiableCredentialPayload: W3cVerifiableCredentialPayload) =>
+            val credentialSchemas = w3cVerifiableCredentialPayload.payload.maybeCredentialSchema
+            val issuer = w3cVerifiableCredentialPayload.payload.issuer
+            for {
+              s <- validateSchemaIds(credentialSchemas, expectedSchemaIds)
+              i <- validateIsTrustedIssuer(issuer, trustedIssuers)
+            } yield i
+
+          case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
+            val decodeJWT = (jwt: JWT) =>
+              Validation
+                .fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))
+                .mapError(_.getMessage)
+            for {
+              jwtCredentialDecoded <- decodeJWT(jwtVerifiableCredentialPayload.jwt)
+              jwtCredentialPayload <- Validation
+                .fromEither(decode[JwtCredentialPayload](jwtCredentialDecoded))
+                .mapError(_.getMessage)
+              issuer = jwtCredentialPayload.issuer
+              credentialSchemas = jwtCredentialPayload.maybeCredentialSchema
+              s <- validateSchemaIds(credentialSchemas, expectedSchemaIds)
+              i <- validateIsTrustedIssuer(issuer, trustedIssuers)
+            } yield i
+        }
+      )
+      .map(_ => ())
+  }
+  def validateSchemaIds(
+      credentialSchemas: Option[CredentialSchema | List[CredentialSchema]],
+      expectedSchemaIds: Seq[String]
+  ): Validation[String, Unit] = {
+    val isValidSchema = credentialSchemas match {
+      case Some(schema: CredentialSchema)           => expectedSchemaIds.contains(schema.id)
+      case Some(schemaList: List[CredentialSchema]) => expectedSchemaIds.intersect(schemaList.map(_.id)).nonEmpty
+      case _                                        => false
+    }
+    println(s"*********************isValidSchema = $isValidSchema")
+    if (!isValidSchema) {
+      Validation.fail(s"SchemaId expected =$expectedSchemaIds actual found =$credentialSchemas")
+    } else Validation.unit
+  }
+
+  def validateIsTrustedIssuer(
+      credentialIssuer: String | CredentialIssuer,
+      trustedIssuers: Seq[String]
+  ): Validation[String, Unit] = {
+    val isValidIssuer = credentialIssuer match
+      case issuer: String           => trustedIssuers.contains(issuer)
+      case issuer: CredentialIssuer => trustedIssuers.contains(issuer.id)
+
+    println(s"*********************isValidIssuer = $isValidIssuer")
+    if (!isValidIssuer) {
+      Validation.fail(s"TrustedIssuers = ${trustedIssuers.mkString(",")} actual issuer = $credentialIssuer")
+    } else Validation.unit
   }
 
   def validateNonce(
@@ -424,9 +508,9 @@ object JwtPresentation {
   }
   def validateAudience(
       decodedJwtPresentation: JwtPresentationPayload,
-      domain: String
+      domain: Option[String]
   ): Validation[String, Unit] = {
-    if (!decodedJwtPresentation.aud.contains(domain)) {
+    if (!domain.forall(domain => decodedJwtPresentation.aud.contains(domain))) {
       Validation.fail(s"domain/Audience dont match doamin=$domain, exp=${decodedJwtPresentation.aud}")
     } else Validation.unit
   }
