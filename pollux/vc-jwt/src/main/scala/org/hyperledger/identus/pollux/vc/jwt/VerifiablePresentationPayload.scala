@@ -478,7 +478,6 @@ object JwtPresentation {
       case Some(schemaList: List[CredentialSchema]) => expectedSchemaIds.intersect(schemaList.map(_.id)).nonEmpty
       case _                                        => false
     }
-    println(s"*********************isValidSchema = $isValidSchema")
     if (!isValidSchema) {
       Validation.fail(s"SchemaId expected =$expectedSchemaIds actual found =$credentialSchemas")
     } else Validation.unit
@@ -491,8 +490,6 @@ object JwtPresentation {
     val isValidIssuer = credentialIssuer match
       case issuer: String           => trustedIssuers.contains(issuer)
       case issuer: CredentialIssuer => trustedIssuers.contains(issuer.id)
-
-    println(s"*********************isValidIssuer = $isValidIssuer")
     if (!isValidIssuer) {
       Validation.fail(s"TrustedIssuers = ${trustedIssuers.mkString(",")} actual issuer = $credentialIssuer")
     } else Validation.unit
