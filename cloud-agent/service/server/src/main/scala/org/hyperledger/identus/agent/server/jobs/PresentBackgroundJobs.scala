@@ -948,7 +948,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
   object Verifier {
 
-    def handleRequestPending(id: DidCommID, record: RequestPresentation): ZIO[
+    def handleRequestPending(id: DidCommID, requestPresentation: RequestPresentation): ZIO[
       JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
       Failure,
       Unit
@@ -979,17 +979,20 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
       val verifierReqPendingToSentFlow = for {
         _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Message)")
-        walletAccessContext <- buildWalletAccessContextLayer(
-          record.from.getOrElse(throw new RuntimeException("from is None is not possible"))
-        )
+        walletAccessContext <- ZIO
+          .fromOption(requestPresentation.from)
+          .mapError(_ => RequestPresentationMissingField(id.value, "sender"))
+          .flatMap(buildWalletAccessContextLayer)
+
         result <- for {
           didOps <- ZIO.service[DidOps]
-          didCommAgent <- buildDIDCommAgent(
-            record.from.getOrElse(throw new RuntimeException("from is None is not possible"))
-          ).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+          didCommAgent <- ZIO
+            .fromOption(requestPresentation.from)
+            .mapError(_ => RequestPresentationMissingField(id.value, "sender"))
+            .flatMap(buildDIDCommAgent(_).provideSomeLayer(ZLayer.succeed(walletAccessContext)))
           resp <-
             MessagingService
-              .send(record.makeMessage)
+              .send(requestPresentation.makeMessage)
               .provideSomeLayer(didCommAgent)
               @@ Metric
                 .gauge("present_proof_flow_verifier_send_presentation_request_msg_ms_gauge")
