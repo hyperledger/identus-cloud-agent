@@ -6,7 +6,7 @@ import common.CredentialSchema.STUDENT_SCHEMA
 import net.serenitybdd.screenplay.Actor
 
 enum class SchemaTemplateError {
-    TYPE_AND_PROPERTIES_WITHOUT_SCHEMA_TYPEError {
+    TYPE_AND_PROPERTIES_WITHOUT_SCHEMA_TYPE {
         override fun inner_schema(): String {
             return """
                 {
