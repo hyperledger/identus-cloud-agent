@@ -125,8 +125,8 @@ class CreateDidSteps {
         val createDidRequest = CreateManagedDidRequest(
             CreateManagedDidRequestDocumentTemplate(
                 publicKeys = documentTemplate.publicKeys,
-                services = documentTemplate.services
-            )
+                services = documentTemplate.services,
+            ),
         )
 
         actor.attemptsTo(

@@ -6,16 +6,16 @@ enum class DidType {
     CUSTOM {
         override val documentTemplate get() = DidDocumentTemplate(
             publicKeys = mutableListOf(),
-            services = mutableListOf()
+            services = mutableListOf(),
         )
     },
     SD_JWT {
         override val documentTemplate get() = DidDocumentTemplate(
-            publicKeys =  mutableListOf(
+            publicKeys = mutableListOf(
                 ManagedDIDKeyTemplate("auth-1", Purpose.AUTHENTICATION, Curve.ED25519),
                 ManagedDIDKeyTemplate("assertion-1", Purpose.ASSERTION_METHOD, Curve.ED25519),
             ),
-            services = mutableListOf()
+            services = mutableListOf(),
         )
     },
     JWT {
@@ -26,7 +26,7 @@ enum class DidType {
                 ManagedDIDKeyTemplate("assertion-1", Purpose.ASSERTION_METHOD, Curve.SECP256K1),
                 ManagedDIDKeyTemplate("assertion-2", Purpose.ASSERTION_METHOD, Curve.ED25519),
             ),
-            services = mutableListOf()
+            services = mutableListOf(),
         )
     },
     OIDC_JWT {
@@ -36,13 +36,13 @@ enum class DidType {
                 ManagedDIDKeyTemplate("auth-2", Purpose.AUTHENTICATION, Curve.ED25519),
                 ManagedDIDKeyTemplate("assertion-1", Purpose.ASSERTION_METHOD, Curve.SECP256K1),
             ),
-            services = mutableListOf()
+            services = mutableListOf(),
         )
     },
     ANONCRED {
         override val documentTemplate get() = DidDocumentTemplate(
             publicKeys = mutableListOf(),
-            services = mutableListOf()
+            services = mutableListOf(),
         )
     }, ;
 

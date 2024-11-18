@@ -32,7 +32,8 @@ import java.time.OffsetDateTime
 open class ListenToEvents(
     private val url: URL,
     webhookPort: Int?,
-) : Ability, HasTeardown {
+) : Ability,
+    HasTeardown {
 
     private val server: ApplicationEngine
     private val gson = GsonBuilder()
@@ -98,48 +99,36 @@ open class ListenToEvents(
     }
 
     companion object {
-        fun at(url: URL, webhookPort: Int?): ListenToEvents {
-            return ListenToEvents(url, webhookPort)
-        }
+        fun at(url: URL, webhookPort: Int?): ListenToEvents = ListenToEvents(url, webhookPort)
 
-        fun with(actor: Actor): ListenToEvents {
-            return actor.abilityTo(ListenToEvents::class.java)
-        }
+        fun with(actor: Actor): ListenToEvents = actor.abilityTo(ListenToEvents::class.java)
 
-        fun presentationProofStatus(actor: Actor): Question<PresentationStatusAdapter.Status?> {
-            return Question.about("presentation status").answeredBy {
-                val proofEvent = with(actor).presentationEvents.lastOrNull {
-                    it.data.thid == actor.recall<String>("thid")
-                }
-                proofEvent?.data?.status
+        fun presentationProofStatus(actor: Actor): Question<PresentationStatusAdapter.Status?> = Question.about("presentation status").answeredBy {
+            val proofEvent = with(actor).presentationEvents.lastOrNull {
+                it.data.thid == actor.recall<String>("thid")
             }
+            proofEvent?.data?.status
         }
 
-        fun connectionState(actor: Actor): Question<Connection.State?> {
-            return Question.about("connection state").answeredBy {
-                val lastEvent = with(actor).connectionEvents.lastOrNull {
-                    it.data.thid == actor.recall<Connection>("connection").thid
-                }
-                lastEvent?.data?.state
+        fun connectionState(actor: Actor): Question<Connection.State?> = Question.about("connection state").answeredBy {
+            val lastEvent = with(actor).connectionEvents.lastOrNull {
+                it.data.thid == actor.recall<Connection>("connection").thid
             }
+            lastEvent?.data?.state
         }
 
-        fun credentialState(actor: Actor): Question<IssueCredentialRecord.ProtocolState?> {
-            return Question.about("credential state").answeredBy {
-                val credentialEvent = ListenToEvents.with(actor).credentialEvents.lastOrNull {
-                    it.data.thid == actor.recall<String>("thid")
-                }
-                credentialEvent?.data?.protocolState
+        fun credentialState(actor: Actor): Question<IssueCredentialRecord.ProtocolState?> = Question.about("credential state").answeredBy {
+            val credentialEvent = ListenToEvents.with(actor).credentialEvents.lastOrNull {
+                it.data.thid == actor.recall<String>("thid")
             }
+            credentialEvent?.data?.protocolState
         }
 
-        fun didStatus(actor: Actor): Question<String> {
-            return Question.about("did status").answeredBy {
-                val didEvent = ListenToEvents.with(actor).didEvents.lastOrNull {
-                    it.data.did == actor.recall<String>("shortFormDid")
-                }
-                didEvent?.data?.status
+        fun didStatus(actor: Actor): Question<String> = Question.about("did status").answeredBy {
+            val didEvent = ListenToEvents.with(actor).didEvents.lastOrNull {
+                it.data.did == actor.recall<String>("shortFormDid")
             }
+            didEvent?.data?.status
         }
     }
 
@@ -153,9 +142,7 @@ open class ListenToEvents(
             .start(wait = false)
     }
 
-    override fun toString(): String {
-        return "Listen HTTP port at $url"
-    }
+    override fun toString(): String = "Listen HTTP port at $url"
 
     override fun tearDown() {
         server.stop()

@@ -17,12 +17,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.CoreMatchers
 import org.hyperledger.identus.client.models.AcceptConnectionInvitationRequest
 import org.hyperledger.identus.client.models.Connection
-import org.hyperledger.identus.client.models.Connection.State.CONNECTION_REQUEST_RECEIVED
 import org.hyperledger.identus.client.models.Connection.State.CONNECTION_RESPONSE_RECEIVED
 import org.hyperledger.identus.client.models.Connection.State.CONNECTION_RESPONSE_SENT
 import org.hyperledger.identus.client.models.Connection.State.INVITATION_GENERATED
 import org.hyperledger.identus.client.models.CreateConnectionRequest
-import kotlin.time.Duration.Companion.seconds
 
 class ConnectionSteps {
 
