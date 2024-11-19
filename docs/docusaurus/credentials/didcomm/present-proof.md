@@ -1,7 +1,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Present proof
+# Present proof (DIDComm)
 
 The [Present Proof Protocol](/docs/concepts/glossary#present-proof-protocol) allows:
 - a [Verifier](/docs/concepts/glossary#verifier) to request a verifiable credential presentation from a Holder/Prover
@@ -21,7 +21,7 @@ The present proof protocol has two roles:
 Before using the Proof Presentation protocol, the following conditions must be present:
 
 1. Holder/Prover and Verifier Cloud Agents must be up and running
-2. A connection must be established between the Holder/Prover and Verifier Cloud Agents (see [Connections](../connections/connection.md))
+2. A connection must be established between the Holder/Prover and Verifier Cloud Agents (see [Connections](../../connections/connection.md))
 3. The Holder/Prover should hold a [verifiable credential (VC)](/docs/concepts/glossary#verifiable-credential) received from an [Issuer](/docs/concepts/glossary#issuer) see [Issue](./issue.md).
 
 ## Overview
@@ -323,20 +323,15 @@ stateDiagram-v2
 
 The following diagram shows the end-to-end flow for a verifier to request and verify a proof presentation from a Holder/prover.
 
-### JWT Present Proof Flow Diagram
-![](present-proof-flow.png)
-### Anoncreds Present Proof Flow Diagram
-![](anoncreds-present-proof-flow.png)
-
 <Tabs groupId="vc-formats">
 <TabItem value="jwt" label="JWT">
 
-![](present-proof-flow.png)
+![](present-proof-flow.jwt.png)
 
 </TabItem>
 <TabItem value="anoncreds" label="AnonCreds">
 
-![](anoncreds-present-proof-flow.png)
+![](present-proof-flow.anoncreds.png)
 
 </TabItem>
 </Tabs>
