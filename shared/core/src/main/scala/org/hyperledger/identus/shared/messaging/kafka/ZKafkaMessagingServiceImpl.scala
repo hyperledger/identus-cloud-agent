@@ -3,12 +3,8 @@ package org.hyperledger.identus.shared.messaging.kafka
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.header.Headers
 import org.hyperledger.identus.shared.messaging.*
-import zio.{Duration, RIO, Task, URIO, URLayer, ZIO, ZLayer}
-import zio.kafka.consumer.{
-  Consumer as ZKConsumer,
-  ConsumerSettings as ZKConsumerSettings,
-  Subscription as ZKSubscription
-}
+import zio.{Duration, RIO, Scope, Task, URIO, URLayer, ZIO, ZLayer}
+import zio.kafka.consumer.{Consumer as ZKConsumer, ConsumerSettings as ZKConsumerSettings, Subscription as ZKSubscription}
 import zio.kafka.consumer.Consumer.{AutoOffsetStrategy, OffsetRetrieval}
 import zio.kafka.producer.{Producer as ZKProducer, ProducerSettings as ZKProducerSettings}
 import zio.kafka.serde.{Deserializer as ZKDeserializer, Serializer as ZKSerializer}
@@ -36,8 +32,10 @@ class ZKafkaMessagingServiceImpl(
       )
     )
 
-  override def makeProducer[K, V]()(implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Producer[K, V]] =
-    ZIO.succeed(new ZKafkaProducerImpl[K, V](bootstrapServers, kSerde, vSerde))
+  override def makeProducer[K, V]()(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[Scope, Producer[K, V]] =
+    for {
+      zkProducer <- ZKProducer.make(ZKProducerSettings(bootstrapServers))
+    } yield new ZKafkaProducerImpl[K, V](zkProducer, kSerde, vSerde)
 }
 
 object ZKafkaMessagingServiceImpl {
@@ -109,13 +107,7 @@ class ZKafkaConsumerImpl[K, V](
       .runDrain
 }
 
-class ZKafkaProducerImpl[K, V](bootstrapServers: List[String], kSerde: Serde[K], vSerde: Serde[V])
-    extends Producer[K, V] {
-  private val zkProducer = ZLayer.scoped(
-    ZKProducer.make(
-      ZKProducerSettings(bootstrapServers)
-    )
-  )
+class ZKafkaProducerImpl[K, V](zkProducer: ZKProducer, kSerde: Serde[K], vSerde: Serde[V]) extends Producer[K, V] {
 
   private val zkKeySerializer = new ZKSerializer[Any, K] {
     override def serialize(topic: String, headers: Headers, value: K): RIO[Any, Array[Byte]] =
@@ -128,10 +120,9 @@ class ZKafkaProducerImpl[K, V](bootstrapServers: List[String], kSerde: Serde[K],
   }
 
   override def produce(topic: String, key: K, value: V): Task[Unit] =
-    ZKProducer
+    zkProducer
       .produce(topic, key, value, zkKeySerializer, zkValueSerializer)
       .tap(metadata => ZIO.logInfo(s"Message produced: ${metadata.offset()}"))
       .map(_ => ())
-      .provideSome(zkProducer)
 
 }
