@@ -198,12 +198,6 @@ object Setup {
     }
 }
 
-@Before
-fun clearScenario() {
-//    Setup.stopActors()
-//    Setup.initActors()
-}
-
 @BeforeAll
 fun init() {
     Security.insertProviderAt(BouncyCastleProviderSingleton.getInstance(), 2)
