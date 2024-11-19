@@ -32,3 +32,21 @@ Feature: Present Proof Protocol
     And Holder receives the presentation proof request
     And Holder makes the jwt presentation of the proof
     Then Verifier has the proof verified
+
+
+  Scenario: Verifier request for jwt proof presentation to Holder from trusted issuer using specified schema
+    Given Verifier and Holder have an existing connection
+    And Holder has a jwt issued credential with STUDENT_SCHEMA schema from Issuer
+    When Verifier sends a request for jwt proof from trustedIssuer Issuer using STUDENT_SCHEMA schema presentation to Holder
+    And Holder receives the presentation proof request
+    And Holder makes the jwt presentation of the proof
+    Then Verifier has the proof verified
+
+  Scenario: Verifier request for jwt proof presentation to Holder from trusted issuer using specified schema
+    Given Verifier and Holder have an existing connection
+    And Holder has a jwt issued credential with STUDENT_SCHEMA schema from Issuer
+    And Holder has a jwt issued credential with EMPLOYEE_SCHEMA schema from Issuer
+    When Verifier sends a request for jwt proof from trustedIssuer Issuer using STUDENT_SCHEMA schema presentation to Holder
+    And Holder receives the presentation proof request
+    And Holder makes the jwt presentation of the proof
+    Then Verifier sees the proof returned verification failed

@@ -473,26 +473,32 @@ object JwtPresentation {
       credentialSchemas: Option[CredentialSchema | List[CredentialSchema]],
       expectedSchemaIds: Seq[String]
   ): Validation[String, Unit] = {
-    val isValidSchema = credentialSchemas match {
-      case Some(schema: CredentialSchema)           => expectedSchemaIds.contains(schema.id)
-      case Some(schemaList: List[CredentialSchema]) => expectedSchemaIds.intersect(schemaList.map(_.id)).nonEmpty
-      case _                                        => false
-    }
-    if (!isValidSchema) {
-      Validation.fail(s"SchemaId expected =$expectedSchemaIds actual found =$credentialSchemas")
+    if (expectedSchemaIds.nonEmpty) {
+      val isValidSchema = credentialSchemas match {
+        case Some(schema: CredentialSchema)           => expectedSchemaIds.contains(schema.id)
+        case Some(schemaList: List[CredentialSchema]) => expectedSchemaIds.intersect(schemaList.map(_.id)).nonEmpty
+        case _                                        => false
+      }
+      if (!isValidSchema) {
+        Validation.fail(s"SchemaId expected =$expectedSchemaIds actual found =$credentialSchemas")
+      } else Validation.unit
     } else Validation.unit
+
   }
 
   def validateIsTrustedIssuer(
       credentialIssuer: String | CredentialIssuer,
       trustedIssuers: Seq[String]
   ): Validation[String, Unit] = {
-    val isValidIssuer = credentialIssuer match
-      case issuer: String           => trustedIssuers.contains(issuer)
-      case issuer: CredentialIssuer => trustedIssuers.contains(issuer.id)
-    if (!isValidIssuer) {
-      Validation.fail(s"TrustedIssuers = ${trustedIssuers.mkString(",")} actual issuer = $credentialIssuer")
+    if (trustedIssuers.nonEmpty) {
+      val isValidIssuer = credentialIssuer match
+        case issuer: String           => trustedIssuers.contains(issuer)
+        case issuer: CredentialIssuer => trustedIssuers.contains(issuer.id)
+      if (!isValidIssuer) {
+        Validation.fail(s"TrustedIssuers = ${trustedIssuers.mkString(",")} actual issuer = $credentialIssuer")
+      } else Validation.unit
     } else Validation.unit
+
   }
 
   def validateNonce(
