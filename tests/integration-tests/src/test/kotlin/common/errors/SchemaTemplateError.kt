@@ -7,8 +7,7 @@ import net.serenitybdd.screenplay.Actor
 
 enum class SchemaTemplateError {
     TYPE_AND_PROPERTIES_WITHOUT_SCHEMA_TYPE {
-        override fun inner_schema(): String {
-            return """
+        override fun inner_schema(): String = """
                 {
                     "type": "object",
                     "properties": {
@@ -21,12 +20,10 @@ enum class SchemaTemplateError {
                     },
                     "required": ["name"]
                 }
-            """.trimIndent()
-        }
+        """.trimIndent()
     },
     CUSTOM_WORDS_NOT_DEFINED {
-        override fun inner_schema(): String {
-            return """
+        override fun inner_schema(): String = """
                 {
                   "${"$"}schema": "http://json-schema.org/draft-2020-12/schema#",
                   "type": "object",
@@ -40,12 +37,10 @@ enum class SchemaTemplateError {
                   },
                   "customKeyword": "value"
                 }
-            """.trimIndent()
-        }
+        """.trimIndent()
     },
     MISSING_REQUIRED_FOR_MANDATORY_PROPERTY {
-        override fun inner_schema(): String {
-            return """
+        override fun inner_schema(): String = """
             {
               "${"$"}schema": "http://json-schema.org/draft-2020-12/schema#",
               "type": "object",
@@ -59,7 +54,6 @@ enum class SchemaTemplateError {
               }
             }
             """
-        }
     }, ;
 
     abstract fun inner_schema(): String
