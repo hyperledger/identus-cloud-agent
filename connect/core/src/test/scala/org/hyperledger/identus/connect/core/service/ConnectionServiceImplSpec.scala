@@ -316,6 +316,7 @@ object ConnectionServiceImplSpec extends ZIOSpecDefault {
       messaging.MessagingService.serviceLayer,
       messaging.MessagingService.producerLayer[UUID, WalletIdAndRecordId],
       ZLayer.succeed(WalletAccessContext(WalletId.random)),
+      zio.Scope.default
     )
   }
 
