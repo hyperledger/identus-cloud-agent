@@ -3,15 +3,13 @@ package org.hyperledger.identus.agent.server.http
 import io.circe.*
 import io.circe.generic.semiauto.*
 import io.circe.syntax.*
-import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.http4s.*
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Router
-import org.hyperledger.identus.api.http.ErrorResponse
 import org.hyperledger.identus.shared.crypto.Sha256Hash
 import org.hyperledger.identus.shared.json.Json
 import org.hyperledger.identus.system.controller.SystemEndpoints
-import sttp.tapir.*
 import sttp.tapir.model.ServerRequest
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.server.http4s.Http4sServerOptions

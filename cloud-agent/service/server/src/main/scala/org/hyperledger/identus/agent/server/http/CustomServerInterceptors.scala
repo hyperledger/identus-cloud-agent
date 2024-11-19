@@ -66,7 +66,7 @@ object CustomServerInterceptors {
     )
   )
 
-  def tapirDecodeFailureHandler: DecodeFailureHandler = (ctx: DecodeFailureContext) => {
+  def tapirDecodeFailureHandler[F[_]]: DecodeFailureHandler[F] = DecodeFailureHandler.pure[F](ctx => {
 
     /** As per the Tapir Decode Failures documentation:
       *
@@ -100,7 +100,7 @@ object CustomServerInterceptors {
           )
         )
       case None => None
-  }
+  })
 
   def http4sServiceErrorHandler: ServiceErrorHandler[Task] = (req: Request[Task]) => { case t: Throwable =>
     val res = tapirDefectHandler(

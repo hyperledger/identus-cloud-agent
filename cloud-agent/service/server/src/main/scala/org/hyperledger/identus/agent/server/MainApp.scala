@@ -1,7 +1,7 @@
 package org.hyperledger.identus.agent.server
 
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton
-import io.micrometer.prometheus.{PrometheusConfig, PrometheusMeterRegistry}
+import io.micrometer.prometheusmetrics.{PrometheusConfig, PrometheusMeterRegistry}
 import org.hyperledger.identus.agent.server.config.AppConfig
 import org.hyperledger.identus.agent.server.http.ZioHttpClient
 import org.hyperledger.identus.agent.server.sql.Migrations as AgentMigrations

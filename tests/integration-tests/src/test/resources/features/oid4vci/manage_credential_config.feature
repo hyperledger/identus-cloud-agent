@@ -2,7 +2,7 @@
 Feature: Manage OID4VCI credential configuration
 
   Background:
-    Given Issuer has a published DID for JWT
+    Given Issuer has a published DID for OIDC_JWT
     And Issuer has published STUDENT_SCHEMA schema
     And Issuer has an existing oid4vci issuer
 
