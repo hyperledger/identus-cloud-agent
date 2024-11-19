@@ -337,6 +337,12 @@ object JwtPresentation {
       .flatMap(decode[JwtPresentationPayload](_).toTry)
   }
 
+  def decodeJwt[A](jwt: JWT)(using decoder: io.circe.Decoder[A]): Try[A] = {
+    JwtCirce
+      .decodeRaw(jwt.value, options = JwtOptions(signature = false, expiration = false, notBefore = false))
+      .flatMap(decode[A](_).toTry)
+  }
+
   def decodeJwt(jwt: JWT, publicKey: PublicKey): Try[JwtPresentationPayload] = {
     JwtCirce
       .decodeRaw(jwt.value, publicKey, JwtOptions(expiration = false, notBefore = false))
@@ -370,7 +376,7 @@ object JwtPresentation {
   )(didResolver: DidResolver, uriResolver: UriResolver)(implicit
       clock: Clock
   ): IO[List[String], Validation[String, Unit]] = {
-    val validateJwtPresentation = Validation.fromTry(decodeJwt(jwt)).mapError(_.toString)
+    val validateJwtPresentation = Validation.fromTry(decodeJwt[JwtPresentationPayload](jwt)).mapError(_.toString)
 
     val credentialValidationZIO =
       ValidationUtils.foreach(
@@ -405,7 +411,7 @@ object JwtPresentation {
       domain: String,
       challenge: String
   ): Validation[String, Unit] = {
-    val validateJwtPresentation = Validation.fromTry(decodeJwt(jwt)).mapError(_.toString)
+    val validateJwtPresentation = Validation.fromTry(decodeJwt[JwtPresentationPayload](jwt)).mapError(_.toString)
     for {
       decodeJwtPresentation <- validateJwtPresentation
       aud <- validateAudience(decodeJwtPresentation, Some(domain))
@@ -419,7 +425,7 @@ object JwtPresentation {
       challenge: Option[String],
       schemaIdAndTrustedIssuers: Seq[CredentialSchemaAndTrustedIssuersConstraint]
   ): Validation[String, Unit] = {
-    val validateJwtPresentation = Validation.fromTry(decodeJwt(jwt)).mapError(_.toString)
+    val validateJwtPresentation = Validation.fromTry(decodeJwt[JwtPresentationPayload](jwt)).mapError(_.toString)
     for {
       decodeJwtPresentation <- validateJwtPresentation
       aud <- validateAudience(decodeJwtPresentation, domain)
@@ -451,15 +457,10 @@ object JwtPresentation {
             } yield i
 
           case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
-            val decodeJWT = (jwt: JWT) =>
-              Validation
-                .fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))
-                .mapError(_.getMessage)
             for {
-              jwtCredentialDecoded <- decodeJWT(jwtVerifiableCredentialPayload.jwt)
               jwtCredentialPayload <- Validation
-                .fromEither(decode[JwtCredentialPayload](jwtCredentialDecoded))
-                .mapError(_.getMessage)
+                .fromTry(decodeJwt[JwtCredentialPayload](jwtVerifiableCredentialPayload.jwt))
+                .mapError(_.toString)
               issuer = jwtCredentialPayload.issuer
               credentialSchemas = jwtCredentialPayload.maybeCredentialSchema
               s <- validateSchemaIds(credentialSchemas, expectedSchemaIds)
@@ -520,10 +521,6 @@ object JwtPresentation {
 
   def verifyHolderBinding(jwt: JWT): Validation[String, Unit] = {
     import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
-    val decodeJWT = (jwt: JWT) =>
-      Validation
-        .fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))
-        .mapError(_.getMessage)
 
     def validateCredentialSubjectId(
         vcList: IndexedSeq[VerifiableCredentialPayload],
@@ -546,10 +543,9 @@ object JwtPresentation {
 
             case (jwtVerifiableCredentialPayload: JwtVerifiableCredentialPayload) =>
               for {
-                jwtCredentialDecoded <- decodeJWT(jwtVerifiableCredentialPayload.jwt)
                 jwtCredentialPayload <- Validation
-                  .fromEither(decode[JwtCredentialPayload](jwtCredentialDecoded))
-                  .mapError(_.getMessage)
+                  .fromTry(decodeJwt[JwtCredentialPayload](jwtVerifiableCredentialPayload.jwt))
+                  .mapError(_.toString)
                 mayBeSubjectDid = jwtCredentialPayload.maybeSub
                 x <-
                   if (mayBeSubjectDid.contains(iss)) {
@@ -564,20 +560,15 @@ object JwtPresentation {
         .map(_ => ())
     }
     for {
-      decodedJWT <- decodeJWT(jwt)
-      jwtPresentationPayload <- Validation.fromEither(decode[JwtPresentationPayload](decodedJWT)).mapError(_.getMessage)
+      jwtPresentationPayload <- Validation
+        .fromTry(decodeJwt[JwtPresentationPayload](jwt))
+        .mapError(_.toString)
       result <- validateCredentialSubjectId(jwtPresentationPayload.vp.verifiableCredential, jwtPresentationPayload.iss)
     } yield result
   }
 
   def verifyDates(jwt: JWT, leeway: TemporalAmount)(implicit clock: Clock): Validation[String, Unit] = {
     val now = clock.instant()
-
-    val decodeJWT =
-      Validation
-        .fromTry(JwtCirce.decodeRaw(jwt.value, options = JwtOptions(false, false, false)))
-        .mapError(_.getMessage)
-
     def validateNbfNotAfterExp(maybeNbf: Option[Instant], maybeExp: Option[Instant]): Validation[String, Unit] = {
       val maybeResult =
         for {
@@ -612,8 +603,9 @@ object JwtPresentation {
     }
 
     for {
-      decodedJWT <- decodeJWT
-      jwtCredentialPayload <- Validation.fromEither(decode[JwtPresentationPayload](decodedJWT)).mapError(_.getMessage)
+      jwtCredentialPayload <- Validation
+        .fromTry(decodeJwt[JwtPresentationPayload](jwt))
+        .mapError(_.toString)
       maybeNbf = jwtCredentialPayload.maybeNbf
       maybeExp = jwtCredentialPayload.maybeExp
       result <- Validation.validateWith(
