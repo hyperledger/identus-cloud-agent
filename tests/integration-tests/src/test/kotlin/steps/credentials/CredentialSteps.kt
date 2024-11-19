@@ -53,7 +53,6 @@ class CredentialSteps {
                 equalTo(CREDENTIAL_SENT),
             ),
         )
-        println("new issued credential: ${ListenToEvents.with(issuer).credentialEvents.last().data}")
         issuer.remember("issuedCredential", ListenToEvents.with(issuer).credentialEvents.last().data)
     }
 
