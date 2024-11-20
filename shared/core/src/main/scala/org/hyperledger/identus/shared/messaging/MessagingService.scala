@@ -5,7 +5,7 @@ import zio.{Cause, Duration, EnvironmentTag, RIO, RLayer, Scope, Task, URIO, URL
 
 import java.time.Instant
 trait MessagingService {
-  def makeConsumer[K, V](groupId: String)(implicit kSerde: Serde[K], vSerde: Serde[V]): Task[Consumer[K, V]]
+  def makeConsumer[K, V](groupId: String)(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[Scope, Consumer[K, V]]
   def makeProducer[K, V]()(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[Scope, Producer[K, V]]
 }
 
@@ -22,7 +22,7 @@ object MessagingService {
       groupId: String,
       handler: Message[K, V] => RIO[HR, Unit],
       steps: Seq[RetryStep]
-  )(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[HR & Producer[K, V] & MessagingService, Unit] = {
+  )(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[HR & Producer[K, V] & Scope & MessagingService, Unit] = {
     for {
       messagingService <- ZIO.service[MessagingService]
       messageProducer <- ZIO.service[Producer[K, V]]
@@ -67,7 +67,7 @@ object MessagingService {
       topicName: String,
       consumerCount: Int,
       handler: Message[K, V] => RIO[HR, Unit]
-  )(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[HR & Producer[K, V] & MessagingService, Unit] =
+  )(implicit kSerde: Serde[K], vSerde: Serde[V]): RIO[HR & Producer[K, V] & Scope & MessagingService, Unit] =
     consumeWithRetryStrategy(groupId, handler, Seq(RetryStep(topicName, consumerCount, 0.seconds, None)))
 
   val serviceLayer: URLayer[MessagingServiceConfig, MessagingService] =
@@ -90,7 +90,7 @@ object MessagingService {
   def consumerLayer[K: EnvironmentTag, V: EnvironmentTag](groupId: String)(implicit
       kSerde: Serde[K],
       vSerde: Serde[V]
-  ): RLayer[MessagingService, Consumer[K, V]] = ZLayer.fromZIO(for {
+  ): RLayer[Scope & MessagingService, Consumer[K, V]] = ZLayer.fromZIO(for {
     messagingService <- ZIO.service[MessagingService]
     consumer <- messagingService.makeConsumer[K, V](groupId)
   } yield consumer)
