@@ -18,10 +18,11 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.presentation.*
-import org.hyperledger.identus.pollux.core.model.schema.{CredentialDefinition, CredentialSchema}
+import org.hyperledger.identus.pollux.core.model.schema.{CredentialDefinition, CredentialSchema, CredentialSchemaRef}
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
+import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
 import org.hyperledger.identus.pollux.prex.{ClaimFormat, Jwt, PresentationDefinition}
 import org.hyperledger.identus.pollux.sdjwt.*
@@ -30,6 +31,7 @@ import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair}
 import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.messaging.{Producer, WalletIdAndRecordId}
 import org.hyperledger.identus.shared.models.*
+import org.hyperledger.identus.shared.models.Failure.orDieAsUnmanagedFailure
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.Base64Utils
 import zio.*
@@ -130,7 +132,7 @@ class CredentialServiceImpl(
       pairwiseIssuerDID: DidId,
       kidIssuer: Option[KeyId],
       thid: DidCommID,
-      schemaUris: Option[List[String]],
+      schemaUris: Option[List[UriString]],
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
       issuingDID: Option[CanonicalPrismDID],
@@ -159,12 +161,12 @@ class CredentialServiceImpl(
         )(_ => None)
       )
       record <- ZIO.succeed(
-        IssueCredentialRecord(
+         IssueCredentialRecord(
           id = DidCommID(),
           createdAt = Instant.now,
           updatedAt = None,
           thid = thid,
-          schemaUris = schemaUris,
+          schemaUris = schemaUris.map(uris => uris.map(uri =>uri.toString)),
           credentialDefinitionId = credentialDefinitionGUID,
           credentialDefinitionUri = credentialDefinitionId,
           credentialFormat = credentialFormat,
@@ -203,7 +205,7 @@ class CredentialServiceImpl(
       pairwiseHolderDID: Option[DidId],
       kidIssuer: Option[KeyId],
       thid: DidCommID,
-      maybeSchemaIds: Option[List[String]],
+      credentialSchemaRef: Option[CredentialSchemaRef],
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
@@ -214,12 +216,12 @@ class CredentialServiceImpl(
       connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord] = {
     for {
-      _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaIds)
+      _ <- validateClaimsAgainstSchemaIfAny(claims, credentialSchemaRef.map(List(_)))
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
       offer <- createDidCommOfferCredential(
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
-        maybeSchemaIds = maybeSchemaIds,
+        credentialSchemaRef = credentialSchemaRef.map(List(_)),
         claims = attributes,
         thid = thid,
         UUID.randomUUID().toString,
@@ -230,7 +232,7 @@ class CredentialServiceImpl(
         pairwiseIssuerDID = pairwiseIssuerDID,
         kidIssuer = kidIssuer,
         thid = thid,
-        schemaUris = maybeSchemaIds,
+        schemaUris = credentialSchemaRef.map(ref => List(ref.id)),
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
         issuingDID = Some(issuingDID),
@@ -251,7 +253,7 @@ class CredentialServiceImpl(
       pairwiseHolderDID: Option[DidId],
       kidIssuer: Option[KeyId],
       thid: DidCommID,
-      maybeSchemaIds: Option[List[String]],
+      credentialSchemaRef: Option[CredentialSchemaRef],
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
@@ -261,13 +263,15 @@ class CredentialServiceImpl(
       expirationDuration: Option[Duration],
       connectionId: Option[UUID],
   ): URIO[WalletAccessContext, IssueCredentialRecord] = {
+    val maybeSchemaIds = credentialSchemaRef.map(ref => List(ref.id))
     for {
-      _ <- validateClaimsAgainstSchemaIfAny(claims, maybeSchemaIds)
+      _ <- validateClaimsAgainstSchemaIfAny(claims, credentialSchemaRef.map(List(_)))
       attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
+        .orDieAsUnmanagedFailure
       offer <- createDidCommOfferCredential(
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
-        maybeSchemaIds = maybeSchemaIds,
+        credentialSchemaRef = credentialSchemaRef.map(List(_)),
         claims = attributes,
         thid = thid,
         UUID.randomUUID().toString,
@@ -327,11 +331,14 @@ class CredentialServiceImpl(
         claims = attributes,
         thid = thid,
       )
+      schemaUris <- UriString.make(credentialDefinition.schemaId).toZIO
+        .orDieWith(error => RuntimeException(s"The schemaIs is not a valid URI: $error"))
+        .map(uri => Option(List(uri)))
       record <- createIssueCredentialRecord(
         pairwiseIssuerDID = pairwiseIssuerDID,
         kidIssuer = None,
         thid = thid,
-        schemaUris = Some(List(credentialDefinition.schemaId)),
+        schemaUris = schemaUris,
         validityPeriod = validityPeriod,
         automaticIssuance = automaticIssuance,
         issuingDID = None,
@@ -447,15 +454,16 @@ class CredentialServiceImpl(
     .fromEither(PrismDID.fromString(did))
     .mapError(_ => UnsupportedDidFormat(did))
 
+  //TODO: Refactor this method in order to use more strict signatures
   private[this] def validateClaimsAgainstSchemaIfAny(
       claims: Json,
-      maybeSchemaIds: Option[List[String]]
+      maybeSchemaIds: Option[List[CredentialSchemaRef]]
   ): UIO[Unit] = maybeSchemaIds match
     case Some(schemaIds) =>
       for {
         _ <- ZIO
           .collectAll(
-            schemaIds.map(schemaId =>
+            schemaIds.map(_.id).map(schemaId =>
               CredentialSchema
                 .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriResolver)
             )
@@ -999,13 +1007,14 @@ class CredentialServiceImpl(
   private def createDidCommOfferCredential(
       pairwiseIssuerDID: DidId,
       pairwiseHolderDID: Option[DidId],
-      maybeSchemaIds: Option[List[String]],
+      credentialSchemaRef: Option[List[CredentialSchemaRef]],
       claims: Seq[Attribute],
       thid: DidCommID,
       challenge: String,
       domain: String,
       offerFormat: IssueCredentialOfferFormat
   ): UIO[OfferCredential] = {
+    val maybeSchemaIds = credentialSchemaRef.map(_.map(_.id.toString))
     for {
       credentialPreview <- ZIO.succeed(CredentialPreview(schema_ids = maybeSchemaIds, attributes = claims))
       body = OfferCredential.Body(

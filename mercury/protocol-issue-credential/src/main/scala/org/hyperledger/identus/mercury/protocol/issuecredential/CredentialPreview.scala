@@ -25,6 +25,7 @@ import io.circe.generic.semiauto.*
   * }
   * }}}
   */
+//TODO: Discuss with Fabio or Shailesh if we can change the preview by adding credentialSchema property
 final case class CredentialPreview(
     `type`: String = "https://didcomm.org/issue-credential/3.0/credential-credential",
     schema_ids: Option[List[String]] = None,

@@ -4,15 +4,11 @@ import io.circe.{Json, JsonObject}
 import io.circe.syntax.*
 import org.hyperledger.identus.castor.core.model.did.{CanonicalPrismDID, PrismDID, VerificationRelationship}
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.issuecredential.{
-  Attribute,
-  IssueCredential,
-  OfferCredential,
-  RequestCredential
-}
+import org.hyperledger.identus.mercury.protocol.issuecredential.{Attribute, IssueCredential, OfferCredential, RequestCredential}
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaRef
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
 import org.hyperledger.identus.shared.models.*
 import zio.{Duration, IO, UIO, URIO, ZIO}
@@ -27,9 +23,7 @@ trait CredentialService {
       pairwiseHolderDID: Option[DidId],
       kidIssuer: Option[KeyId],
       thid: DidCommID,
-      @deprecated("Use credentialSchema instead", "2.0.0")
-      maybeSchemaIds: Option[List[String]],
-      credentialSchema: ???,
+      credentialSchemaRef: Option[CredentialSchemaRef],
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
@@ -45,7 +39,7 @@ trait CredentialService {
       pairwiseHolderDID: Option[DidId],
       kidIssuer: Option[KeyId],
       thid: DidCommID,
-      maybeSchemaIds: Option[List[String]],
+      credentialSchemaRef: Option[CredentialSchemaRef],
       claims: io.circe.Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
