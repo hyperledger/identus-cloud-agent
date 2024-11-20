@@ -65,5 +65,5 @@ YAML_PRETTIER_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*|cloud-agent/s
 YAML_V8R_FILTER_REGEX_EXCLUDE: "infrastructure/charts/agent/*"
 JAVASCRIPT_STANDARD_FILTER_REGEX_EXCLUDE:
   "tests/performance-tests/agent-performance-tests-k6/src/k6chaijs.js\
-  |tests/performance-tests/agent-performance-tests-k6/src/common/*|tests/didcomm-tests/docker/initdb.js"
+  |tests/performance-tests/agent-performance-tests-k6/src/common/ProofsService.ts|tests/didcomm-tests/docker/initdb.js"
 BASH_SHELLCHECK_FILTER_REGEX_EXCLUDE: "infrastructure/*"
