@@ -1,7 +1,7 @@
 package org.hyperledger.identus.shared.messaging
 
 import org.hyperledger.identus.shared.messaging.kafka.{InMemoryMessagingService, ZKafkaMessagingServiceImpl}
-import zio.{Cause, Duration, EnvironmentTag, RIO, RLayer, Scope, Task, URIO, URLayer, ZIO, ZLayer, durationInt}
+import zio.{durationInt, Cause, Duration, EnvironmentTag, RIO, RLayer, Scope, Task, URIO, URLayer, ZIO, ZLayer}
 
 import java.time.Instant
 trait MessagingService {
