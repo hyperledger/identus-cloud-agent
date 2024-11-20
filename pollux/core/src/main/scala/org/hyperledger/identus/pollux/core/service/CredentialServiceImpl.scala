@@ -225,7 +225,7 @@ class CredentialServiceImpl(
         claims = attributes,
         thid = thid,
         UUID.randomUUID().toString,
-        "domain",
+        "domain", // TODO remove the hardcoded domain
         IssueCredentialOfferFormat.JWT
       )
       record <- createIssueCredentialRecord(
@@ -567,8 +567,8 @@ class CredentialServiceImpl(
   private[this] def getKeyId(
       did: PrismDID,
       verificationRelationship: VerificationRelationship,
-      ellipticCurve: EllipticCurve
-  ): UIO[KeyId] = {
+      keyId: Option[KeyId]
+  ): UIO[PublicKey] = {
     for {
       maybeDidData <- didService
         .resolveDID(did)
@@ -577,15 +577,25 @@ class CredentialServiceImpl(
         .fromOption(maybeDidData)
         .mapError(_ => DIDNotResolved(did))
         .orDieAsUnmanagedFailure
-      keyId <- ZIO
-        .fromOption(
-          didData._2.publicKeys
-            .find(pk => pk.purpose == verificationRelationship && pk.publicKeyData.crv == ellipticCurve)
-            .map(_.id)
-        )
-        .mapError(_ => KeyNotFoundInDID(did, verificationRelationship))
-        .orDieAsUnmanagedFailure
-    } yield keyId
+      matchingKeys = didData._2.publicKeys.filter(pk => pk.purpose == verificationRelationship)
+      result <- (matchingKeys, keyId) match {
+        case (Seq(), _) =>
+          ZIO.fail(KeyNotFoundInDID(did, verificationRelationship)).orDieAsUnmanagedFailure
+        case (Seq(singleKey), None) =>
+          ZIO.succeed(singleKey)
+        case (multipleKeys, Some(kid)) =>
+          ZIO
+            .fromOption(multipleKeys.find(_.id.value.endsWith(kid.value)))
+            .mapError(_ => KeyNotFoundInDID(did, verificationRelationship))
+            .orDieAsUnmanagedFailure
+        case (multipleKeys, None) =>
+          ZIO
+            .fail(
+              MultipleKeysWithSamePurposeFoundInDID(did, verificationRelationship)
+            )
+            .orDieAsUnmanagedFailure
+      }
+    } yield result
   }
 
   override def getJwtIssuer(
@@ -594,34 +604,46 @@ class CredentialServiceImpl(
       keyId: Option[KeyId] = None
   ): URIO[WalletAccessContext, JwtIssuer] = {
     for {
-      issuingKeyId <- getKeyId(jwtIssuerDID, verificationRelationship, EllipticCurve.SECP256K1)
-      ecKeyPair <- managedDIDService
-        .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
+      issuingPublicKey <- getKeyId(jwtIssuerDID, verificationRelationship, keyId)
+      jwtIssuer <- managedDIDService
+        .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingPublicKey.id)
         .flatMap {
-          case Some(keyPair: Secp256k1KeyPair) => ZIO.some(keyPair)
-          case _                               => ZIO.none
+          case Some(keyPair: Secp256k1KeyPair) => {
+            val jwtIssuer = JwtIssuer(
+              jwtIssuerDID.did,
+              ES256KSigner(keyPair.privateKey.toJavaPrivateKey, keyId),
+              keyPair.publicKey.toJavaPublicKey
+            )
+            ZIO.some(jwtIssuer)
+          }
+          case Some(keyPair: Ed25519KeyPair) => {
+            val jwtIssuer = JwtIssuer(
+              jwtIssuerDID.did,
+              EdSigner(keyPair, keyId),
+              keyPair.publicKey.toJava
+            )
+            ZIO.some(jwtIssuer)
+          }
+          case _ => ZIO.none
         }
-        .someOrFail(KeyPairNotFoundInWallet(jwtIssuerDID, issuingKeyId, "Secp256k1"))
+        .someOrFail(
+          KeyPairNotFoundInWallet(jwtIssuerDID, issuingPublicKey.id, issuingPublicKey.publicKeyData.crv.name)
+        )
         .orDieAsUnmanagedFailure
-      Secp256k1KeyPair(publicKey, privateKey) = ecKeyPair
-      jwtIssuer = JwtIssuer(
-        jwtIssuerDID.did,
-        ES256KSigner(privateKey.toJavaPrivateKey, keyId),
-        publicKey.toJavaPublicKey
-      )
     } yield jwtIssuer
   }
 
   private def getEd25519SigningKeyPair(
       jwtIssuerDID: PrismDID,
-      verificationRelationship: VerificationRelationship
+      verificationRelationship: VerificationRelationship,
+      keyId: Option[KeyId] = None
   ): URIO[WalletAccessContext, Ed25519KeyPair] = {
     for {
-      issuingKeyId <- getKeyId(jwtIssuerDID, verificationRelationship, EllipticCurve.ED25519)
+      issuingPublicKey <- getKeyId(jwtIssuerDID, verificationRelationship, keyId)
       ed25519keyPair <- managedDIDService
-        .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingKeyId)
+        .findDIDKeyPair(jwtIssuerDID.asCanonical, issuingPublicKey.id)
         .map(_.collect { case keyPair: Ed25519KeyPair => keyPair })
-        .someOrFail(KeyPairNotFoundInWallet(jwtIssuerDID, issuingKeyId, "Ed25519"))
+        .someOrFail(KeyPairNotFoundInWallet(jwtIssuerDID, issuingPublicKey.id, issuingPublicKey.publicKeyData.crv.name))
         .orDieAsUnmanagedFailure
     } yield ed25519keyPair
   }
@@ -643,7 +665,7 @@ class CredentialServiceImpl(
       keyId: Option[KeyId]
   ): URIO[WalletAccessContext, JwtIssuer] = {
     for {
-      ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship)
+      ed25519keyPair <- getEd25519SigningKeyPair(jwtIssuerDID, verificationRelationship, keyId)
     } yield {
       JwtIssuer(
         jwtIssuerDID.did,
@@ -1172,7 +1194,7 @@ class CredentialServiceImpl(
         .orElse(ZIO.dieMessage(s"Offer credential data not found in record: ${recordId.value}"))
       preview = offerCredentialData.body.credential_preview
       claims <- CredentialService.convertAttributesToJsonClaims(preview.body.attributes).orDieAsUnmanagedFailure
-      jwtIssuer <- getJwtIssuer(longFormPrismDID, VerificationRelationship.AssertionMethod)
+      jwtIssuer <- getJwtIssuer(longFormPrismDID, VerificationRelationship.AssertionMethod, record.keyId)
       jwtPresentation <- validateRequestCredentialDataProof(maybeOfferOptions, requestJwt)
         .tapError(error =>
           credentialRepository
@@ -1252,7 +1274,11 @@ class CredentialServiceImpl(
         case ZValidation.Success(log, header) => ZIO.succeed(header)
         case ZValidation.Failure(log, failure) =>
           ZIO.fail(VCJwtHeaderParsingError(s"Extraction of JwtHeader failed ${failure.toChunk.toString}"))
-      ed25519KeyPair <- getEd25519SigningKeyPair(longFormPrismDID, VerificationRelationship.AssertionMethod)
+      ed25519KeyPair <- getEd25519SigningKeyPair(
+        longFormPrismDID,
+        VerificationRelationship.AssertionMethod,
+        record.keyId
+      )
       sdJwtPrivateKey = sdjwt.IssuerPrivateKey(ed25519KeyPair.privateKey)
       jsonWebKey <- didResolver.resolve(jwtPresentation.iss) flatMap {
         case failed: DIDResolutionFailed =>

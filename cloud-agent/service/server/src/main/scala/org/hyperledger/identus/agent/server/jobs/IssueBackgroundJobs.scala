@@ -160,6 +160,33 @@ object IssueBackgroundJobs extends BackgroundJobsHelper {
     val exchange = for {
       _ <- ZIO.logDebug(s"Running action with records => $record")
       _ <- record match {
+        case IssueCredentialRecord(
+              id,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              Role.Issuer,
+              _,
+              _,
+              _,
+              _,
+              InvitationGenerated,
+              Some(offer),
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+              _,
+            ) =>
+          ZIO.debug(s" Connectionless InvitationGenerated record received no processing required") *> ZIO.unit
         // Offer should be sent from Issuer to Holder
         case IssueCredentialRecord(
               id,

@@ -15,7 +15,7 @@ import org.hyperledger.identus.pollux.prex.{ClaimFormat, Ldp, PresentationDefini
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.messaging.{MessagingService, MessagingServiceConfig, WalletIdAndRecordId}
-import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import org.hyperledger.identus.shared.models.{KeyId, WalletAccessContext, WalletId}
 import zio.*
 
 import java.util.UUID
@@ -120,7 +120,8 @@ trait CredentialServiceSpecHelper {
               |""".stripMargin)
           .getOrElse(Json.Null),
         validityPeriod: Option[Double] = None,
-        automaticIssuance: Option[Boolean] = None
+        automaticIssuance: Option[Boolean] = None,
+        kidIssuer: Option[KeyId] = None
     ) = for {
       issuingDID <- ZIO.fromEither(
         PrismDID.buildCanonicalFromSuffix("5c2576867a5544e5ad05cdc94f02c664b99ff65c28e8b62aada767244c2199fe")
@@ -128,7 +129,7 @@ trait CredentialServiceSpecHelper {
       record <- svc.createJWTIssueCredentialRecord(
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
-        kidIssuer = None,
+        kidIssuer = kidIssuer,
         thid = thid,
         credentialSchemaRef = credentialSchemaRef,
         claims = claims,

@@ -2,6 +2,7 @@ package org.hyperledger.identus.pollux.core.service
 
 import io.circe.syntax.*
 import io.circe.Json
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.hyperledger.identus.agent.walletapi.service.MockManagedDIDService
 import org.hyperledger.identus.castor.core.model.did.*
 import org.hyperledger.identus.castor.core.model.did.VerificationRelationship.AssertionMethod
@@ -15,6 +16,7 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.schema.{CredentialDefinition, CredentialSchemaRef}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
+import org.hyperledger.identus.pollux.core.service.CredentialServiceImplSpec.test
 import org.hyperledger.identus.pollux.vc.jwt.{CredentialIssuer, JWT, JwtCredential, JwtCredentialPayload}
 import org.hyperledger.identus.shared.models.{KeyId, UnmanagedFailureException, WalletAccessContext, WalletId}
 import zio.*
@@ -28,10 +30,11 @@ import org.hyperledger.identus.pollux.core.model.primitives.UriString.toUriStrin
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaRefType
 
 import java.nio.charset.StandardCharsets
+import java.security.Security
 import java.util.{Base64, UUID}
 
 object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceSpecHelper {
-
+  Security.addProvider(new BouncyCastleProvider());
   override def spec = suite("CredentialServiceImpl")(
     singleWalletJWTCredentialSpec,
     singleWalletAnonCredsCredentialSpec,
@@ -457,7 +460,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId), Some(KeyId("my-key-id")))
+          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId), Some(KeyId("key-0")))
           _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           _ <- holderSvc.markRequestSent(offerReceivedRecord.id)
           issue = issueCredential(thid = Some(offerReceivedRecord.thid))
@@ -473,7 +476,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId), Some(KeyId("my-key-id")))
+          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId), Some(KeyId("key-0")))
           _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           _ <- holderSvc.markRequestSent(offerReceivedRecord.id)
           issue = issueCredential(thid = Some(offerReceivedRecord.thid))
@@ -492,7 +495,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           offer = offerCredential()
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           offerReceivedRecord <- holderSvc.receiveCredentialOffer(offer)
-          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId), Some(KeyId("my-key-id")))
+          _ <- holderSvc.acceptCredentialOffer(offerReceivedRecord.id, Some(subjectId), Some(KeyId("key-0")))
           _ <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           _ <- holderSvc.markRequestSent(offerReceivedRecord.id)
           issue = issueCredential(thid = Some(DidCommID()))
@@ -509,7 +512,7 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           issuerSvc <- ZIO.service[CredentialService].provideSomeLayer(credentialServiceLayer)
           holderSvc <- ZIO.service[CredentialService].provideSomeLayer(credentialServiceLayer)
           // Issuer creates offer
-          offerCreatedRecord <- issuerSvc.createJWTIssueCredentialRecord()
+          offerCreatedRecord <- issuerSvc.createJWTIssueCredentialRecord(kidIssuer = Some(KeyId("key-0")))
           issuerRecordId = offerCreatedRecord.id
           // Issuer sends offer
           _ <- issuerSvc.markOfferSent(issuerRecordId)
@@ -520,7 +523,62 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
           holderRecordId = offerReceivedRecord.id
           subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
           // Holder accepts offer
-          _ <- holderSvc.acceptCredentialOffer(holderRecordId, Some(subjectId), Some(KeyId("my-key-id")))
+          _ <- holderSvc.acceptCredentialOffer(holderRecordId, Some(subjectId), Some(KeyId("key-0")))
+          // Holder generates proof
+          requestGeneratedRecord <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
+          // Holder sends offer
+          _ <- holderSvc.markRequestSent(holderRecordId)
+          msg <- ZIO.fromEither(requestGeneratedRecord.requestCredentialData.get.makeMessage.asJson.as[Message])
+          // Issuer receives request
+          requestCredential <- ZIO.fromEither(RequestCredential.readFromMessage(msg))
+          requestReceivedRecord <- issuerSvc.receiveCredentialRequest(requestCredential)
+          // Issuer accepts request
+          requestAcceptedRecord <- issuerSvc.acceptCredentialRequest(issuerRecordId)
+          // Issuer generates credential
+          credentialGenerateRecord <- issuerSvc.generateJWTCredential(
+            issuerRecordId,
+            "status-list-registry"
+          )
+          decodedJWT <- credentialGenerateRecord.issueCredentialData.get.attachments.head.data match {
+            case MyBase64(value) =>
+              val ba = new String(Base64.getUrlDecoder.decode(value))
+              JwtCredential.decodeJwt(JWT(ba))
+            case _ => ZIO.fail("Error")
+          }
+          // Issuer sends credential
+          _ <- issuerSvc.markCredentialSent(issuerRecordId)
+          msg <- ZIO.fromEither(credentialGenerateRecord.issueCredentialData.get.makeMessage.asJson.as[Message])
+          // Holder receives credential
+          issueCredential <- ZIO.fromEither(IssueCredential.readFromMessage(msg))
+          _ <- holderSvc.receiveCredentialIssue(issueCredential)
+        } yield assertTrue(
+          decodedJWT.issuer ==
+            CredentialIssuer(
+              id = decodedJWT.iss,
+              `type` = "Profile"
+            )
+        )
+      }.provideSomeLayer(
+        (holderDidServiceExpectations ++ issuerDidServiceExpectations).toLayer
+          ++ (holderManagedDIDServiceExpectations ++ issuerManagedDIDServiceExpectations).toLayer
+      ),
+      test("Happy flow is successfully executed with ED25519") {
+        for {
+          issuerSvc <- ZIO.service[CredentialService].provideSomeLayer(credentialServiceLayer)
+          holderSvc <- ZIO.service[CredentialService].provideSomeLayer(credentialServiceLayer)
+          // Issuer creates offer
+          offerCreatedRecord <- issuerSvc.createJWTIssueCredentialRecord(kidIssuer = Some(KeyId("key-1")))
+          issuerRecordId = offerCreatedRecord.id
+          // Issuer sends offer
+          _ <- issuerSvc.markOfferSent(issuerRecordId)
+          msg <- ZIO.fromEither(offerCreatedRecord.offerCredentialData.get.makeMessage.asJson.as[Message])
+          // Holder receives offer
+          offerCredential <- ZIO.fromEither(OfferCredential.readFromMessage(msg))
+          offerReceivedRecord <- holderSvc.receiveCredentialOffer(offerCredential)
+          holderRecordId = offerReceivedRecord.id
+          subjectId = "did:prism:60821d6833158c93fde5bb6a40d69996a683bf1fa5cdf32c458395b2887597c3"
+          // Holder accepts offer
+          _ <- holderSvc.acceptCredentialOffer(holderRecordId, Some(subjectId), Some(KeyId("key-1")))
           // Holder generates proof
           requestGeneratedRecord <- holderSvc.generateJWTCredentialRequest(offerReceivedRecord.id)
           // Holder sends offer

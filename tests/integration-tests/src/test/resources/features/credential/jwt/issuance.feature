@@ -12,6 +12,16 @@ Feature: Issue JWT credential
     And Issuer issues the credential
     Then Holder receives the issued credential
 
+  Scenario: Issuing jwt credential with published PRISM DID using Ed25519
+    Given Issuer and Holder have an existing connection
+    And Issuer has a published DID for JWT
+    And Holder has an unpublished DID for JWT
+    When Issuer offers a jwt credential to Holder with "short" form DID using issuingKid "assertion-2"
+    And Holder receives the credential offer
+    And Holder accepts jwt credential offer with keyId "auth-2"
+    And Issuer issues the credential
+    Then Holder receives the issued credential
+
   Scenario: Issuing jwt credential with a schema
     Given Issuer and Holder have an existing connection
     And Issuer has a published DID for JWT

@@ -2,7 +2,7 @@
 Feature: Issue JWT Credentials using OID4VCI authorization code flow
 
   Background:
-    Given Issuer has a published DID for JWT
+    Given Issuer has a published DID for OIDC_JWT
     And Issuer has published STUDENT_SCHEMA schema
     And Issuer has an existing oid4vci issuer
     And Issuer has "StudentProfile" credential configuration created from STUDENT_SCHEMA
