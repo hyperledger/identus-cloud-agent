@@ -50,7 +50,7 @@ object ReportProblem {
   given Encoder[ReportProblem] = deriveEncoder[ReportProblem]
   given Decoder[ReportProblem] = deriveDecoder[ReportProblem]
 
-  def readFromMessage(message: Message): ReportProblem =
+  def fromMessage(message: Message): ReportProblem =
     val body = message.body.asJson.as[ReportProblem.Body].toOption.get // TODO get
     ReportProblem(
       id = message.id,
