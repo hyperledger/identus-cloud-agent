@@ -36,7 +36,7 @@ class JwtProofSteps {
     @When("{actor} sends a request for jwt proof from trustedIssuer {actor} using {} schema presentation to {actor}")
     fun verifierSendsARequestForJwtProofPresentationToHolderUsingSchemaFromTrustedIssuer(verifier: Actor, issuer: Actor, schema: CredentialSchema, holder: Actor) {
         val verifierConnectionToHolder = verifier.recall<Connection>("connection-with-${holder.name}").connectionId
-        val trustIssuer = issuer.recall<String>("longFormDid")
+        val trustIssuer = issuer.recall<String>("shortFormDid")
         val baseUrl = issuer.recall<String>("baseUrl")
         val schemaGuid = issuer.recall<String>(schema.name)!!
         val schemaId = "$baseUrl/schema-registry/schemas/$schemaGuid"
