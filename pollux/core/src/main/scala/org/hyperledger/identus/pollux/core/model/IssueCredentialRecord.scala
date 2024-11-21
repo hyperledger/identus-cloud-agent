@@ -2,7 +2,14 @@ package org.hyperledger.identus.pollux.core.model
 
 import org.hyperledger.identus.castor.core.model.did.CanonicalPrismDID
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
-import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential, IssueCredentialIssuedFormat, IssueCredentialOfferFormat, IssueCredentialRequestFormat, OfferCredential, RequestCredential}
+import org.hyperledger.identus.mercury.protocol.issuecredential.{
+  IssueCredential,
+  IssueCredentialIssuedFormat,
+  IssueCredentialOfferFormat,
+  IssueCredentialRequestFormat,
+  OfferCredential,
+  RequestCredential
+}
 import org.hyperledger.identus.pollux.anoncreds.AnoncredCredentialRequestMetadata
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.*
 import org.hyperledger.identus.shared.models.*

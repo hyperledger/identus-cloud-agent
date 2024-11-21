@@ -18,11 +18,11 @@ import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.presentation.*
+import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.pollux.core.model.schema.{CredentialDefinition, CredentialSchema, CredentialSchemaRef}
 import org.hyperledger.identus.pollux.core.model.secret.CredentialDefinitionSecret
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.AnonCreds
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.ProtocolState.OfferReceived
-import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, CredentialStatusListRepository}
 import org.hyperledger.identus.pollux.prex.{ClaimFormat, Jwt, PresentationDefinition}
 import org.hyperledger.identus.pollux.sdjwt.*
@@ -161,12 +161,12 @@ class CredentialServiceImpl(
         )(_ => None)
       )
       record <- ZIO.succeed(
-         IssueCredentialRecord(
+        IssueCredentialRecord(
           id = DidCommID(),
           createdAt = Instant.now,
           updatedAt = None,
           thid = thid,
-          schemaUris = schemaUris.map(uris => uris.map(uri =>uri.toString)),
+          schemaUris = schemaUris.map(uris => uris.map(uri => uri.toString)),
           credentialDefinitionId = credentialDefinitionGUID,
           credentialDefinitionUri = credentialDefinitionId,
           credentialFormat = credentialFormat,
@@ -266,8 +266,7 @@ class CredentialServiceImpl(
     val maybeSchemaIds = credentialSchemaRef.map(ref => List(ref.id))
     for {
       _ <- validateClaimsAgainstSchemaIfAny(claims, credentialSchemaRef.map(List(_)))
-      attributes <- CredentialService.convertJsonClaimsToAttributes(claims)
-        .orDieAsUnmanagedFailure
+      attributes <- CredentialService.convertJsonClaimsToAttributes(claims).orDieAsUnmanagedFailure
       offer <- createDidCommOfferCredential(
         pairwiseIssuerDID = pairwiseIssuerDID,
         pairwiseHolderDID = pairwiseHolderDID,
@@ -331,7 +330,9 @@ class CredentialServiceImpl(
         claims = attributes,
         thid = thid,
       )
-      schemaUris <- UriString.make(credentialDefinition.schemaId).toZIO
+      schemaUris <- UriString
+        .make(credentialDefinition.schemaId)
+        .toZIO
         .orDieWith(error => RuntimeException(s"The schemaIs is not a valid URI: $error"))
         .map(uri => Option(List(uri)))
       record <- createIssueCredentialRecord(
@@ -454,7 +455,7 @@ class CredentialServiceImpl(
     .fromEither(PrismDID.fromString(did))
     .mapError(_ => UnsupportedDidFormat(did))
 
-  //TODO: Refactor this method in order to use more strict signatures
+  // TODO: Refactor this method in order to use more strict signatures
   private[this] def validateClaimsAgainstSchemaIfAny(
       claims: Json,
       maybeSchemaIds: Option[List[CredentialSchemaRef]]
@@ -463,10 +464,12 @@ class CredentialServiceImpl(
       for {
         _ <- ZIO
           .collectAll(
-            schemaIds.map(_.id).map(schemaId =>
-              CredentialSchema
-                .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriResolver)
-            )
+            schemaIds
+              .map(_.id)
+              .map(schemaId =>
+                CredentialSchema
+                  .validateJWTCredentialSubject(schemaId, claims.noSpaces, uriResolver)
+              )
           )
           .orDieAsUnmanagedFailure
       } yield ZIO.unit

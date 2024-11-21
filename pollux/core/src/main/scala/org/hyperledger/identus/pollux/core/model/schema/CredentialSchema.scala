@@ -2,10 +2,14 @@ package org.hyperledger.identus.pollux.core.model.schema
 
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError
 import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.*
-import org.hyperledger.identus.pollux.core.model.schema.`type`.{AnoncredSchemaType, CredentialJsonSchemaType, CredentialSchemaType}
+import org.hyperledger.identus.pollux.core.model.primitives.UriString
+import org.hyperledger.identus.pollux.core.model.schema.`type`.{
+  AnoncredSchemaType,
+  CredentialJsonSchemaType,
+  CredentialSchemaType
+}
 import org.hyperledger.identus.pollux.core.model.schema.`type`.anoncred.AnoncredSchemaSerDesV1
 import org.hyperledger.identus.pollux.core.model.ResourceResolutionMethod
-import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.json.{JsonSchemaValidator, JsonSchemaValidatorImpl}
 import zio.*

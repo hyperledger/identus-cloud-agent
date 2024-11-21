@@ -7,6 +7,8 @@ import org.hyperledger.identus.castor.core.model.did.{DID, DIDUrl, PrismDID, Ver
 import org.hyperledger.identus.oid4vci.domain.{IssuanceSession, Openid4VCIProofJwtOps}
 import org.hyperledger.identus.oid4vci.http.*
 import org.hyperledger.identus.oid4vci.storage.IssuanceSessionStorage
+import org.hyperledger.identus.pollux.core.model.primitives.UriString
+import org.hyperledger.identus.pollux.core.model.primitives.UriString.toUriString
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.service.{
   CredentialService,
@@ -249,16 +251,16 @@ case class OIDCCredentialIssuerServiceImpl(
       claims: zio.json.ast.Json
   ): ZIO[WalletAccessContext, Error, CredentialOffer] =
     for {
-      schemaId <- issuerMetadataService
+      credentialSchemaUri <- issuerMetadataService
         .getCredentialConfigurationById(issuerId, credentialConfigurationId)
         .mapError { case _: OID4VCIIssuerMetadataServiceError.CredentialConfigurationNotFound =>
           CredentialConfigurationNotFound(issuerId, credentialConfigurationId)
         }
         .map(_.schemaId)
       _ <- CredentialSchema
-        .validateJWTCredentialSubject(schemaId.toString(), simpleZioToCirce(claims).noSpaces, uriResolver)
+        .validateJWTCredentialSubject(credentialSchemaUri.toUriString, simpleZioToCirce(claims).noSpaces, uriResolver)
         .mapError(e => CredentialSchemaError(e))
-      session <- buildNewIssuanceSession(issuerId, issuingDID, claims, schemaId)
+      session <- buildNewIssuanceSession(issuerId, issuingDID, claims, credentialSchemaUri)
       _ <- issuanceSessionStorage
         .start(session)
         .mapError(e => ServiceError(s"Failed to start issuance session: ${e.message}"))

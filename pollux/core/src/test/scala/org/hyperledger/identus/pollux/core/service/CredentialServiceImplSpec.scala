@@ -13,7 +13,10 @@ import org.hyperledger.identus.pollux.anoncreds.AnoncredCredential
 import org.hyperledger.identus.pollux.core.model.*
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.model.primitives.UriString
+import org.hyperledger.identus.pollux.core.model.primitives.UriString.toUriString
 import org.hyperledger.identus.pollux.core.model.schema.{CredentialDefinition, CredentialSchemaRef}
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaRefType
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.{ProtocolState, Role}
 import org.hyperledger.identus.pollux.core.service.uriResolvers.ResourceUrlResolver
 import org.hyperledger.identus.pollux.core.service.CredentialServiceImplSpec.test
@@ -25,10 +28,6 @@ import zio.test.*
 import zio.test.Assertion.*
 
 import java.net.URI
-import org.hyperledger.identus.pollux.core.model.primitives.UriString
-import org.hyperledger.identus.pollux.core.model.primitives.UriString.toUriString
-import org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaRefType
-
 import java.nio.charset.StandardCharsets
 import java.security.Security
 import java.util.{Base64, UUID}
@@ -157,10 +156,12 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
               thid = thid,
               pairwiseIssuerDID = pairwiseIssuerDid,
               pairwiseHolderDID = pairwiseHolderDid,
-              credentialSchemaRef = Some(CredentialSchemaRef(
-                `type` = CredentialSchemaRefType.JsonSchemaValidator2018,
-                id = new URI("resource:///vc-schema-example.json").toUriString
-              )),
+              credentialSchemaRef = Some(
+                CredentialSchemaRef(
+                  `type` = CredentialSchemaRefType.JsonSchemaValidator2018,
+                  id = new URI("resource:///vc-schema-example.json").toUriString
+                )
+              ),
               claims = claims,
               validityPeriod = validityPeriod,
               automaticIssuance = automaticIssuance
@@ -220,10 +221,12 @@ object CredentialServiceImplSpec extends MockSpecDefault with CredentialServiceS
                 thid = thid,
                 pairwiseIssuerDID = pairwiseIssuerDid,
                 pairwiseHolderDID = pairwiseHolderDid,
-                credentialSchemaRef = Some(CredentialSchemaRef(
-                  `type` = CredentialSchemaRefType.JsonSchemaValidator2018,
-                  id = new URI("resource:///vc-schema-example.json").toUriString
-                )),
+                credentialSchemaRef = Some(
+                  CredentialSchemaRef(
+                    `type` = CredentialSchemaRefType.JsonSchemaValidator2018,
+                    id = new URI("resource:///vc-schema-example.json").toUriString
+                  )
+                ),
                 claims = claims,
                 validityPeriod = validityPeriod,
                 automaticIssuance = automaticIssuance

@@ -14,7 +14,6 @@ import org.hyperledger.identus.connect.core.service.ConnectionService
 import org.hyperledger.identus.issue.controller.http.*
 import org.hyperledger.identus.mercury.model.DidId
 import org.hyperledger.identus.pollux.core.model.{CredentialFormat, DidCommID, ResourceResolutionMethod}
-import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.pollux.core.model.CredentialFormat.{AnonCreds, JWT, SDJWT}
 import org.hyperledger.identus.pollux.core.model.IssueCredentialRecord.Role
 import org.hyperledger.identus.pollux.core.service.{CredentialDefinitionService, CredentialService}
@@ -36,7 +35,8 @@ class IssueControllerImpl(
     managedDIDService: ManagedDIDService,
     appConfig: AppConfig
 ) extends IssueController
-    with ControllerHelper {
+    with ControllerHelper
+    with CredentialSchemaReferenceParsingLogic {
 
   private case class OfferContext(
       pairwiseIssuerDID: DidId,
@@ -45,18 +45,6 @@ class IssueControllerImpl(
       goal: Option[String],
       expirationDuration: Option[Duration]
   )
-
-  import org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaRefType
-  private def fallbackCredentialSchemaFrom(
-      schemaId: Option[List[String]]
-  ): IO[String, Option[List[UriString]]] = {
-    schemaId match {
-      case None => ZIO.succeed(Option.empty[List[UriString]])
-      case Some(schemaIdList: List[String]) =>
-        val schemaIdListUriString = schemaIdList.map(schemaId => UriString.make(schemaId).toZIO)
-        ZIO.collectAll(schemaIdListUriString).map(Some(_))
-    }
-  }
 
   private def createCredentialOfferRecord(
       request: CreateIssueCredentialRecordRequest,
@@ -71,7 +59,7 @@ class IssueControllerImpl(
       deprecatedJsonClaims <- ZIO // TODO: Get read of Circe and use zio-json all the way down
         .fromEither(io.circe.parser.parse(request.claims.toString()))
         .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
-      deprecatedSchemaId = request.schemaId //TODO: this field is too complex and is trying to cover 3 cases: none, single, multiple schemas
+      deprecatedSchemaId = request.schemaId
       credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
       outcome <-
         credentialFormat match
@@ -79,16 +67,17 @@ class IssueControllerImpl(
             for {
               issuingDID <- getIssuingDidFromRequest(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
-              jwtCredentialSchema = request.jwtVcPropertiesV1.map(_.credentialschema)
-              credentialSchema <- ZIO.fromOption(jwtCredentialSchema)
-                .mapError(_ => ErrorResponse.badRequest(detail = Some("Missing request parameter: jwtVcPropertiesV1")))
+              credentialSchemaRef <- parseCredentialSchemaRef_VCDM1_1(
+                deprecatedSchemaId,
+                request.jwtVcPropertiesV1.map(_.credentialSchema)
+              )
               record <- credentialService
                 .createJWTIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
                   pairwiseHolderDID = offerContext.pairwiseHolderDID,
                   kidIssuer = request.issuingKid,
                   thid = DidCommID(),
-                  maybeSchemaIds = deprecatedSchemaId,
+                  credentialSchemaRef = Some(credentialSchemaRef),
                   claims = deprecatedJsonClaims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
@@ -103,16 +92,17 @@ class IssueControllerImpl(
             for {
               issuingDID <- getIssuingDidFromRequest(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
+              credentialSchemaRef <- parseCredentialSchemaRef_VCDM1_1(
+                deprecatedSchemaId,
+                request.sdJwtVcPropertiesV1.map(_.credentialSchema)
+              )
               record <- credentialService
                 .createSDJWTIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
                   pairwiseHolderDID = offerContext.pairwiseHolderDID,
                   kidIssuer = request.issuingKid,
                   thid = DidCommID(),
-                  maybeSchemaIds = request.schemaId.map {
-                    case schemaId: String        => List(schemaId)
-                    case schemaIds: List[String] => schemaIds
-                  },
+                  credentialSchemaRef = Option(credentialSchemaRef),
                   claims = deprecatedJsonClaims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),

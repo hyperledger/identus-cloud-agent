@@ -1,12 +1,21 @@
 package org.hyperledger.identus.pollux.core.service
 
-import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{CredentialSchemaParsingError, SchemaDereferencingError}
+import org.hyperledger.identus.pollux.core.model.error.CredentialSchemaError.{
+  CredentialSchemaParsingError,
+  SchemaDereferencingError
+}
 import org.hyperledger.identus.pollux.core.model.oid4vci.{CredentialConfiguration, CredentialIssuer}
+import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchema
 import org.hyperledger.identus.pollux.core.model.CredentialFormat
-import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.pollux.core.repository.OID4VCIIssuerMetadataRepository
-import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.{CredentialConfigurationNotFound, DuplicateCredentialConfigId, InvalidSchemaId, IssuerIdNotFound, UnsupportedCredentialFormat}
+import org.hyperledger.identus.pollux.core.service.OID4VCIIssuerMetadataServiceError.{
+  CredentialConfigurationNotFound,
+  DuplicateCredentialConfigId,
+  InvalidSchemaId,
+  IssuerIdNotFound,
+  UnsupportedCredentialFormat
+}
 import org.hyperledger.identus.shared.db.Errors.UnexpectedAffectedRow
 import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.models.{Failure, StatusCode, WalletAccessContext}
@@ -147,8 +156,7 @@ class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataReposito
         case CredentialFormat.JWT => ZIO.unit
         case f                    => ZIO.fail(UnsupportedCredentialFormat(f))
       }
-      schemaUri <- UriString.make(schemaId)
-        .toZIO.mapError(msg => InvalidSchemaId(schemaId, msg))
+      schemaUri <- UriString.make(schemaId).toZIO.mapError(msg => InvalidSchemaId(schemaId, msg))
       _ <- CredentialSchema
         .validSchemaValidator(schemaUri, uriResolver)
         .catchAll {
@@ -159,7 +167,7 @@ class OID4VCIIssuerMetadataServiceImpl(repository: OID4VCIIssuerMetadataReposito
       config = CredentialConfiguration(
         configurationId = configurationId,
         format = CredentialFormat.JWT,
-        schemaId =  schemaUri.toUri, //TODO: stopped refactoring here
+        schemaId = schemaUri.toUri, // TODO: stopped refactoring here
         createdAt = now
       )
       _ <- repository.createCredentialConfiguration(issuerId, config)

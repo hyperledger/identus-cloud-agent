@@ -2,8 +2,8 @@ package org.hyperledger.identus.issue.controller.http
 
 import org.hyperledger.identus.api.http.Annotation
 import org.hyperledger.identus.issue.controller.http.CreateIssueCredentialRecordRequest.annotations
+import org.hyperledger.identus.pollux.core.model.primitives.UriString
 import org.hyperledger.identus.shared.models.KeyId
-import sttp.model.Uri
 import sttp.tapir.{Schema, Validator}
 import sttp.tapir.json.zio.schemaForZioJsonValue
 import sttp.tapir.Schema.annotations.{description, encodedExample, validate}
@@ -108,17 +108,17 @@ object CredentialSchemaRef {
         )
   }
   import org.hyperledger.identus.pollux.core.model.schema as domain
-  
+
   def toDomain(ref: CredentialSchemaRef): Either[String, domain.CredentialSchemaRef] = {
     domain.CredentialSchemaRefType.values
     for {
       `type` <- ref.`type` match {
-        case "JsonSchema"              => Right(schema.CredentialSchemaRefType.JsonSchema)
-        case "JsonSchemaValidator2018" => Right(schema.CredentialSchemaRefType.JsonSchemaValidator2018)
+        case "JsonSchema"              => Right(domain.CredentialSchemaRefType.JsonSchema)
+        case "JsonSchemaValidator2018" => Right(domain.CredentialSchemaRefType.JsonSchemaValidator2018)
         case _                         => Left("Invalid CredentialSchemaRefType")
       }
-      id <- UriString
-    } yield schema.CredentialSchemaRef(`type`, Uri.unsafeParse(ref.id))
+      id <- UriString.make(ref.id).toEither.left.map(nec => nec.mkString(", "))
+    } yield domain.CredentialSchemaRef(`type`, id)
   }
 
 }
@@ -133,7 +133,7 @@ case class JwtVCPropertiesV1(
     @description(JwtVCPropertiesV1.annotations.claims.description)
     @encodedExample(JwtVCPropertiesV1.annotations.claims.example)
     claims: zio.json.ast.Json,
-    credentialschema: CredentialSchemaRef
+    credentialSchema: CredentialSchemaRef
 )
 
 object JwtVCPropertiesV1 {
@@ -190,7 +190,7 @@ case class AnonCredsVCPropertiesV1(
     credentialDefinitionId: String,
     @description(AnonCredsVCPropertiesV1.annotations.claims.description)
     @encodedExample(AnonCredsVCPropertiesV1.annotations.claims.example)
-    claims: Map[String, Any]
+    claims: zio.json.ast.Json
 )
 
 object AnonCredsVCPropertiesV1 {
@@ -209,7 +209,7 @@ object AnonCredsVCPropertiesV1 {
             "https://agent-host.com/cloud-agent/schema-registry/schemas/d9569cec-c81e-4779-aa86-0d5994d82676/schema"
         )
     object credentialDefinitionId
-        extends Annotation[String](
+        extends Annotation[UUID](
           description = """
           |The unique identifier (UUID) of the credential definition that will be used for this offer.
           |It should be the identifier of a credential definition that exists in the issuer agent's database.
@@ -217,14 +217,14 @@ object AnonCredsVCPropertiesV1 {
           example = UUID.fromString("d9569cec-c81e-4779-aa86-0d5994d82676")
         )
     object claims
-        extends Annotation[Map[String, Any]](
+        extends Annotation[zio.json.ast.Json](
           description = """
           |The set of claims that will be included in the issued credential.
           |The object should comply with the schema applicable for this offer (i.e. 'schemaId' or 'credentialDefinitionId').
           |""".stripMargin,
-          example = Map(
-            "firstname" -> "Alice",
-            "lastname" -> "Wonderland"
+          example = zio.json.ast.Json.Obj.apply(
+            "firstname" -> zio.json.ast.Json.Str("Alice"),
+            "lastname" -> zio.json.ast.Json.Str("Wonderland")
           )
         )
   }
