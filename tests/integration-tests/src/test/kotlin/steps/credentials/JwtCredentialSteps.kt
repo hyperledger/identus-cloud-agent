@@ -62,7 +62,7 @@ class JwtCredentialSteps {
         holder.remember("thid", credentialRecord.thid)
     }
 
-    @When("{actor} offers a jwt credential to {actor} with {string} form DID")
+    @When("{actor} offers a jwt credential to {actor} with '{}' form DID")
     fun issuerOffersAJwtCredential(issuer: Actor, holder: Actor, format: String) {
         val claims = linkedMapOf(
             "firstName" to "FirstName",
@@ -72,7 +72,7 @@ class JwtCredentialSteps {
         saveCredentialOffer(issuer, holder)
     }
 
-    @When("{actor} offers a jwt credential to {actor} with {string} form DID using issuingKid {string}")
+    @When("{actor} offers a jwt credential to {actor} with '{}' form DID using issuingKid '{}'")
     fun issuerOffersAJwtCredentialWithIssuingKeyId(issuer: Actor, holder: Actor, format: String, issuingKid: String?) {
         val claims = linkedMapOf(
             "firstName" to "FirstName",
@@ -82,7 +82,7 @@ class JwtCredentialSteps {
         saveCredentialOffer(issuer, holder)
     }
 
-    @When("{actor} offers a jwt credential to {actor} with {} form using {} schema")
+    @When("{actor} offers a jwt credential to {actor} with '{}' form using '{}' schema")
     fun issuerOffersJwtCredentialToHolderUsingSchema(
         issuer: Actor,
         holder: Actor,
@@ -95,7 +95,7 @@ class JwtCredentialSteps {
         saveCredentialOffer(issuer, holder)
     }
 
-    @When("{actor} offers a jwt credential to {actor} with {} form DID with wrong claims structure using {} schema")
+    @When("{actor} offers a jwt credential to {actor} with '{}' form DID with wrong claims structure using '{}' schema")
     fun issuerOffersJwtCredentialToHolderWithWrongClaimStructure(
         issuer: Actor,
         holder: Actor,
@@ -110,22 +110,13 @@ class JwtCredentialSteps {
         sendCredentialOffer(issuer, holder, format, schemaGuid, claims, "assertion-1")
     }
 
-    @When("{actor} accepts jwt credential offer")
-    fun holderAcceptsJwtCredentialOfferForJwt(holder: Actor) {
+    @When("{actor} accepts jwt credential offer using '{}' key id")
+    fun holderAcceptsJwtCredentialOfferForJwt(holder: Actor, keyId: String) {
         val recordId = holder.recall<String>("recordId")
+        val longFormDid = holder.recall<String>("longFormDid")
+        val acceptRequest = AcceptCredentialOfferRequest(longFormDid, keyId)
         holder.attemptsTo(
-            Post.to("/issue-credentials/records/$recordId/accept-offer")
-                .body(AcceptCredentialOfferRequest(holder.recall("longFormDid"), holder.recall("kidSecp256K1"))),
-            Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
-        )
-    }
-
-    @When("{actor} accepts jwt credential offer with keyId {string}")
-    fun holderAcceptsJwtCredentialOfferForJwtWithKeyId(holder: Actor, keyId: String?) {
-        val recordId = holder.recall<String>("recordId")
-        holder.attemptsTo(
-            Post.to("/issue-credentials/records/$recordId/accept-offer")
-                .body(AcceptCredentialOfferRequest(holder.recall("longFormDid"), keyId)),
+            Post.to("/issue-credentials/records/$recordId/accept-offer").body(acceptRequest),
             Ensure.thatTheLastResponse().statusCode().isEqualTo(SC_OK),
         )
     }

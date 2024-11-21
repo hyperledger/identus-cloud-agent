@@ -28,7 +28,7 @@ import java.net.URI
 import java.net.URL
 
 class IssueCredentialSteps {
-    @When("{actor} creates an offer using {string} configuration with {string} form DID")
+    @When("{actor} creates an offer using '{}' configuration with '{}' form DID")
     fun issuerCreateCredentialOffer(issuer: Actor, configurationId: String, didForm: String) {
         val credentialIssuer = issuer.recall<CredentialIssuer>("oid4vciCredentialIssuer")
         val claims = linkedMapOf(
