@@ -32,7 +32,7 @@ function startAgent() {
 
 function startPrismNode() {
 	echo "Starting [$NAME]"
-		NODE_REFRESH_AND_SUBMIT_PERIOD="${NODE_REFRESH_AND_SUBMIT_PERIOD}" \
+	NODE_REFRESH_AND_SUBMIT_PERIOD="${NODE_REFRESH_AND_SUBMIT_PERIOD}" \
 		NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="${NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD}" \
 		NODE_WALLET_MAX_TPS="${NODE_WALLET_MAX_TPS}" \
 		docker compose -p "${NAME}" -f "${DOCKERFILE_NODE}" \
@@ -53,7 +53,7 @@ function stopAgent() {
 
 function stopPrismNode() {
 	echo "Stopping [${NAME}] agent"
-		docker compose \
+	docker compose \
 		-p "${NAME}" \
 		-f "${DOCKERFILE}" \
 		--env-file "${ENV_FILE}" down -v 2>/dev/null
@@ -61,25 +61,25 @@ function stopPrismNode() {
 }
 
 function createPrismNode1() {
-    local NAME="prism-node"
-    local PG_PORT=5432
-    local NODE_REFRESH_AND_SUBMIT_PERIOD="1s"
-    local NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="1s"
-    local NODE_WALLET_MAX_TPS="1000"
+	local NAME="prism-node"
+	local PG_PORT=5432
+	local NODE_REFRESH_AND_SUBMIT_PERIOD="1s"
+	local NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="1s"
+	local NODE_WALLET_MAX_TPS="1000"
 
-    echo "Creating PrismNode with Name: $NAME"
-    docker network create agent-network || echo "Network agent-network already exists"
-    echo "Starting Docker compose for PrismNode"
-    NODE_REFRESH_AND_SUBMIT_PERIOD="${NODE_REFRESH_AND_SUBMIT_PERIOD}" \
-    NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="${NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD}" \
-    NODE_WALLET_MAX_TPS="${NODE_WALLET_MAX_TPS}" \
-    docker compose -p "${NAME}" -f "${DOCKERFILE_NODE}" \
-    --env-file "${ENV_FILE}" up -d --wait 2>/dev/null || {
-        echo "Failed to start PrismNode Docker containers"
-        exit 1
-    }
+	echo "Creating PrismNode with Name: $NAME"
+	docker network create agent-network || echo "Network agent-network already exists"
+	echo "Starting Docker compose for PrismNode"
+	NODE_REFRESH_AND_SUBMIT_PERIOD="${NODE_REFRESH_AND_SUBMIT_PERIOD}" \
+		NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="${NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD}" \
+		NODE_WALLET_MAX_TPS="${NODE_WALLET_MAX_TPS}" \
+		docker compose -p "${NAME}" -f "${DOCKERFILE_NODE}" \
+		--env-file "${ENV_FILE}" up -d --wait 2>/dev/null || {
+		echo "Failed to start PrismNode Docker containers"
+		exit 1
+	}
 
-    echo "PrismNode [$NAME] is now healthy"
+	echo "PrismNode [$NAME] is now healthy"
 }
 
 function createPrismNode() {
@@ -173,28 +173,28 @@ function removePrismNode() {
 
 # clean up on finish
 function cleanup() {
-  local exit_code=$?
-  if [[ $exit_code -eq 0 ]]; then
-      echo "Script exited normally with code $exit_code."
-  else
-      echo "Script exited with error code $exit_code."
-  fi
+	local exit_code=$?
+	if [[ $exit_code -eq 0 ]]; then
+		echo "Script exited normally with code $exit_code."
+	else
+		echo "Script exited with error code $exit_code."
+	fi
 	echo "Removing K6 binaries"
 	rm k6
 	rm "$K6_ZIP_FILE"
 
-  removePrismNode &
+	removePrismNode &
 	removeIssuer &
 	removeVerifier &
 	removeHolder &
 	wait
-  # Ensure no containers are left connected to the network
-  echo "Forcefully stopping all containers on agent-network"
-  docker ps -q --filter network=agent-network | xargs -r docker stop || echo "No containers to stop"
-  docker ps -a -q --filter network=agent-network | xargs -r docker rm || echo "No containers to remove"
+	# Ensure no containers are left connected to the network
+	echo "Forcefully stopping all containers on agent-network"
+	docker ps -q --filter network=agent-network | xargs -r docker stop || echo "No containers to stop"
+	docker ps -a -q --filter network=agent-network | xargs -r docker rm || echo "No containers to remove"
 
-  echo "Removing agent-network"
-  docker network rm agent-network || echo "Failed to remove agent-network"
+	echo "Removing agent-network"
+	docker network rm agent-network || echo "Failed to remove agent-network"
 }
 
 trap 'cleanup' EXIT
@@ -247,4 +247,3 @@ export VERIFIER_AGENT_API_KEY=default
 ./k6 run -e SCENARIO_LABEL=connection-flow-smoke ./dist/connection-flow-test.js
 ./k6 run -e SCENARIO_LABEL=issuance-flow-smoke ./dist/issuance-flow-test.js
 ./k6 run -e SCENARIO_LABEL=present-proof-flow-smoke ./dist/present-proof-flow-test.js
-

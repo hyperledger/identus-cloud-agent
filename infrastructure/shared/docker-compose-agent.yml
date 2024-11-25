@@ -5,54 +5,54 @@ services:
   ##########################
   # Database
   ##########################
-#  db:
-#    image: postgres:13
-#    environment:
-#      POSTGRES_MULTIPLE_DATABASES: "pollux,connect,agent,node_db"
-#      POSTGRES_USER: postgres
-#      POSTGRES_PASSWORD: postgres
-#    volumes:
-#      - pg_data_db:/var/lib/postgresql/data
-#      - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
-#      - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
-#    ports:
-#      - "127.0.0.1:${PG_PORT:-5432}:5432"
-#    healthcheck:
-#      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "agent"]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
+  #  db:
+  #    image: postgres:13
+  #    environment:
+  #      POSTGRES_MULTIPLE_DATABASES: "pollux,connect,agent,node_db"
+  #      POSTGRES_USER: postgres
+  #      POSTGRES_PASSWORD: postgres
+  #    volumes:
+  #      - pg_data_db:/var/lib/postgresql/data
+  #      - ./postgres/init-script.sh:/docker-entrypoint-initdb.d/init-script.sh
+  #      - ./postgres/max_conns.sql:/docker-entrypoint-initdb.d/max_conns.sql
+  #    ports:
+  #      - "127.0.0.1:${PG_PORT:-5432}:5432"
+  #    healthcheck:
+  #      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "agent"]
+  #      interval: 10s
+  #      timeout: 5s
+  #      retries: 5
 
-#  pgadmin:
-#    image: dpage/pgadmin4
-#    environment:
-#      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-#      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-#      PGADMIN_CONFIG_SERVER_MODE: "False"
-#    volumes:
-#      - pgadmin:/var/lib/pgadmin
-#    ports:
-#      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
-#    depends_on:
-#      db:
-#        condition: service_healthy
-#    profiles:
-#      - debug
+  #  pgadmin:
+  #    image: dpage/pgadmin4
+  #    environment:
+  #      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+  #      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+  #      PGADMIN_CONFIG_SERVER_MODE: "False"
+  #    volumes:
+  #      - pgadmin:/var/lib/pgadmin
+  #    ports:
+  #      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
+  #    depends_on:
+  #      db:
+  #        condition: service_healthy
+  #    profiles:
+  #      - debug
 
   ##########################
   # Services
   ##########################
 
-#  prism-node:
-#    image: ghcr.io/input-output-hk/prism-node:${PRISM_NODE_VERSION}
-#    environment:
-#      NODE_PSQL_HOST: db:5432
-#      NODE_REFRESH_AND_SUBMIT_PERIOD:
-#      NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD:
-#      NODE_WALLET_MAX_TPS:
-#    depends_on:
-#      db:
-#        condition: service_healthy
+  #  prism-node:
+  #    image: ghcr.io/input-output-hk/prism-node:${PRISM_NODE_VERSION}
+  #    environment:
+  #      NODE_PSQL_HOST: db:5432
+  #      NODE_REFRESH_AND_SUBMIT_PERIOD:
+  #      NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD:
+  #      NODE_WALLET_MAX_TPS:
+  #    depends_on:
+  #      db:
+  #        condition: service_healthy
 
   vault-server:
     image: hashicorp/vault:latest
@@ -112,10 +112,10 @@ services:
       API_KEY_AUTHENTICATE_AS_DEFAULT_USER:
       API_KEY_AUTO_PROVISIONING:
     depends_on:
-#      db:
-#        condition: service_healthy
-#      prism-node:
-#        condition: service_started
+      #      db:
+      #        condition: service_healthy
+      #      prism-node:
+      #        condition: service_started
       vault-server:
         condition: service_healthy
     networks:

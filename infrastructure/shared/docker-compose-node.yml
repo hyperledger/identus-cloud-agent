@@ -22,7 +22,6 @@ services:
       timeout: 5s
       retries: 5
 
-
   pgadmin:
     image: dpage/pgadmin4
     environment:
@@ -58,5 +57,5 @@ volumes:
   pg_data_db:
 
 networks:
-    agent-network:
-      external: true
+  agent-network:
+    external: true
