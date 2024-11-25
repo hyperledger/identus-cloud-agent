@@ -6,7 +6,8 @@ set -e
 ENV_FILE=".env"
 PERF_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 AGENT_DIR="$PERF_DIR/../../.."
-DOCKERFILE="$AGENT_DIR/infrastructure/shared/docker-compose.yml"
+DOCKERFILE_NODE="$AGENT_DIR/infrastructure/shared/docker-compose-node.yml"
+DOCKERFILE_AGENT="$AGENT_DIR/infrastructure/shared/docker-compose-agent.yml"
 K6_URL="https://github.com/grafana/k6/releases/download/v0.45.0/k6-v0.45.0-macos-arm64.zip"
 K6_ZIP_FILE="$(basename ${K6_URL})"
 
@@ -24,9 +25,19 @@ function startAgent() {
 		NODE_REFRESH_AND_SUBMIT_PERIOD="${NODE_REFRESH_AND_SUBMIT_PERIOD}" \
 		NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="${NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD}" \
 		NODE_WALLET_MAX_TPS="${NODE_WALLET_MAX_TPS}" \
-		docker compose -p "${NAME}" -f "${DOCKERFILE}" \
+		docker compose -p "${NAME}" -f "${DOCKERFILE_AGENT}" \
 		--env-file "${ENV_FILE}" up -d --wait 2>/dev/null
 	echo "Agent [$NAME] healthy"
+}
+
+function startPrismNode() {
+	echo "Starting [$NAME]"
+		NODE_REFRESH_AND_SUBMIT_PERIOD="${NODE_REFRESH_AND_SUBMIT_PERIOD}" \
+		NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="${NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD}" \
+		NODE_WALLET_MAX_TPS="${NODE_WALLET_MAX_TPS}" \
+		docker compose -p "${NAME}" -f "${DOCKERFILE_NODE}" \
+		--env-file "${ENV_FILE}" up -d --wait 2>/dev/null
+	echo "[$NAME] healthy"
 }
 
 function stopAgent() {
@@ -38,6 +49,46 @@ function stopAgent() {
 		-f "${DOCKERFILE}" \
 		--env-file "${ENV_FILE}" down -v 2>/dev/null
 	echo "Agent [${NAME}] stopped"
+}
+
+function stopPrismNode() {
+	echo "Stopping [${NAME}] agent"
+		docker compose \
+		-p "${NAME}" \
+		-f "${DOCKERFILE}" \
+		--env-file "${ENV_FILE}" down -v 2>/dev/null
+	echo "Agent [${NAME}] stopped"
+}
+
+function createPrismNode1() {
+    local NAME="prism-node"
+    local PG_PORT=5432
+    local NODE_REFRESH_AND_SUBMIT_PERIOD="1s"
+    local NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="1s"
+    local NODE_WALLET_MAX_TPS="1000"
+
+    echo "Creating PrismNode with Name: $NAME"
+    docker network create agent-network || echo "Network agent-network already exists"
+    echo "Starting Docker compose for PrismNode"
+    NODE_REFRESH_AND_SUBMIT_PERIOD="${NODE_REFRESH_AND_SUBMIT_PERIOD}" \
+    NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="${NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD}" \
+    NODE_WALLET_MAX_TPS="${NODE_WALLET_MAX_TPS}" \
+    docker compose -p "${NAME}" -f "${DOCKERFILE_NODE}" \
+    --env-file "${ENV_FILE}" up -d --wait 2>/dev/null || {
+        echo "Failed to start PrismNode Docker containers"
+        exit 1
+    }
+
+    echo "PrismNode [$NAME] is now healthy"
+}
+
+function createPrismNode() {
+	local NAME="prism-node"
+	local PG_PORT=5432
+	local NODE_REFRESH_AND_SUBMIT_PERIOD="1s"
+	local NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="1s"
+	local NODE_WALLET_MAX_TPS="1000"
+	startPrismNode
 }
 
 function createIssuer() {
@@ -59,14 +110,14 @@ function createIssuer() {
 
 function createHolder() {
 	local NAME="holder"
-	local PORT=8090
+	local PORT=8200
 	local ADMIN_TOKEN=admin
 	local DEFAULT_WALLET_ENABLED=true
 	local DEFAULT_WALLET_AUTH_API_KEY=default
 	local API_KEY_AUTO_PROVISIONING=false
 	local API_KEY_ENABLED=true
 	local DOCKERHOST="host.docker.internal"
-	local PG_PORT=5433
+	local PG_PORT=5432
 	local NODE_REFRESH_AND_SUBMIT_PERIOD="1s"
 	local NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="1s"
 	local NODE_WALLET_MAX_TPS="1000"
@@ -83,7 +134,7 @@ function createVerifier() {
 	local API_KEY_AUTO_PROVISIONING=false
 	local API_KEY_ENABLED=true
 	local DOCKERHOST="host.docker.internal"
-	local PG_PORT=5434
+	local PG_PORT=5432
 	local NODE_REFRESH_AND_SUBMIT_PERIOD="1s"
 	local NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="1s"
 	local NODE_WALLET_MAX_TPS="1000"
@@ -109,22 +160,41 @@ function removeVerifier() {
 
 function removeHolder() {
 	local NAME="holder"
-	local PORT=8090
+	local PORT=8200
 	local DOCKERHOST="host.docker.internal"
 
 	stopAgent
 }
 
+function removePrismNode() {
+	local NAME="prism-node"
+	stopPrismNode
+}
+
 # clean up on finish
 function cleanup() {
+  local exit_code=$?
+  if [[ $exit_code -eq 0 ]]; then
+      echo "Script exited normally with code $exit_code."
+  else
+      echo "Script exited with error code $exit_code."
+  fi
 	echo "Removing K6 binaries"
 	rm k6
 	rm "$K6_ZIP_FILE"
 
+  removePrismNode &
 	removeIssuer &
 	removeVerifier &
 	removeHolder &
 	wait
+  # Ensure no containers are left connected to the network
+  echo "Forcefully stopping all containers on agent-network"
+  docker ps -q --filter network=agent-network | xargs -r docker stop || echo "No containers to stop"
+  docker ps -a -q --filter network=agent-network | xargs -r docker rm || echo "No containers to remove"
+
+  echo "Removing agent-network"
+  docker network rm agent-network || echo "Failed to remove agent-network"
 }
 
 trap 'cleanup' EXIT
@@ -147,11 +217,14 @@ cd "$PERF_DIR"
 # set version to env file
 sed -i.bak "s/AGENT_VERSION=.*/AGENT_VERSION=${AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
 
-# create agents in parallel
-createIssuer &
-createHolder &
-createVerifier &
-wait
+# create docker  agent-network
+docker network create agent-network
+# create Prism Node
+createPrismNode
+
+createIssuer
+createHolder
+createVerifier
 
 # yarn install
 echo "Installing dependencies"
@@ -174,3 +247,4 @@ export VERIFIER_AGENT_API_KEY=default
 ./k6 run -e SCENARIO_LABEL=connection-flow-smoke ./dist/connection-flow-test.js
 ./k6 run -e SCENARIO_LABEL=issuance-flow-smoke ./dist/issuance-flow-test.js
 ./k6 run -e SCENARIO_LABEL=present-proof-flow-smoke ./dist/present-proof-flow-test.js
+
