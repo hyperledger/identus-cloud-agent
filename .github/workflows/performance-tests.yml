@@ -80,7 +80,7 @@ jobs:
           DEFAULT_WALLET_AUTH_API_KEY: default
           API_KEY_AUTO_PROVISIONING: false
           API_KEY_ENABLED: true
-          DOCKERHOST: "host.docker.internal"
+          DOCKERHOST: "cloud-agent"
           PG_PORT: 5432
           NODE_REFRESH_AND_SUBMIT_PERIOD: 1s
           NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD: 1s
@@ -100,7 +100,7 @@ jobs:
           DEFAULT_WALLET_AUTH_API_KEY: default
           API_KEY_AUTO_PROVISIONING: false
           API_KEY_ENABLED: true
-          DOCKERHOST: "host.docker.internal"
+          DOCKERHOST: "cloud-agent"
           PG_PORT: 5433
         uses: isbang/compose-action@v1.4.1
         with:
@@ -117,7 +117,7 @@ jobs:
           DEFAULT_WALLET_AUTH_API_KEY: default
           API_KEY_AUTO_PROVISIONING: false
           API_KEY_ENABLED: true
-          DOCKERHOST: "host.docker.internal"
+          DOCKERHOST: "cloud-agent"
           PG_PORT: 5434
         uses: isbang/compose-action@v1.4.1
         with:
