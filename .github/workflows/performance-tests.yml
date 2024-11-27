@@ -55,24 +55,7 @@ jobs:
           sed -i.bak "s/AGENT_VERSION=.*/AGENT_VERSION=${AGENT_VERSION}/" "${ENV_FILE}" && rm -f "${ENV_FILE}.bak"
           cat "${ENV_FILE}"
 
-      - name: Create Docker Network
-        run: |
-          docker network create agent-network || echo "Network already exists"
-
-      - name: Start services for prism node & postgres
-        env:
-          PG_PORT: 5432
-          NODE_REFRESH_AND_SUBMIT_PERIOD: 1s
-          NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD: 1s
-          NODE_WALLET_MAX_TPS: 1000
-        uses: hoverkraft-tech/compose-action@v2.0.0
-        with:
-          compose-file: "./infrastructure/shared/docker-compose-node.yml"
-          compose-flags: "--env-file ./infrastructure/local/.env -p prism-node"
-          up-flags: "--wait"
-          down-flags: "--volumes"
-
-      - name: Start services for issuer
+      - name: Start services for issuer holder and verifier
         env:
           PORT: 8080
           ADMIN_TOKEN: admin
@@ -81,48 +64,16 @@ jobs:
           API_KEY_AUTO_PROVISIONING: false
           API_KEY_ENABLED: true
           DOCKERHOST: "host.docker.internal"
-          PG_PORT: 5432
+          ISSUER_PORT: 8080
+          HOLDER_PORT: 8090
+          VERIFIER_PORT: 8100
           NODE_REFRESH_AND_SUBMIT_PERIOD: 1s
           NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD: 1s
           NODE_WALLET_MAX_TPS: 1000
         uses: hoverkraft-tech/compose-action@v2.0.0
         with:
-          compose-file: "./infrastructure/shared/docker-compose-agent.yml"
-          compose-flags: "--env-file ./infrastructure/local/.env -p issuer"
-          up-flags: "--wait"
-          down-flags: "--volumes"
-
-      - name: Start services for holder
-        env:
-          PORT: 8090
-          ADMIN_TOKEN: admin
-          DEFAULT_WALLET_ENABLED: true
-          DEFAULT_WALLET_AUTH_API_KEY: default
-          API_KEY_AUTO_PROVISIONING: false
-          API_KEY_ENABLED: true
-          DOCKERHOST: "host.docker.internal"
-          PG_PORT: 5433
-        uses: isbang/compose-action@v1.4.1
-        with:
-          compose-file: "./infrastructure/shared/docker-compose-agent.yml"
-          compose-flags: "--env-file ./infrastructure/local/.env -p holder"
-          up-flags: "--wait"
-          down-flags: "--volumes"
-
-      - name: Start services for verifier
-        env:
-          PORT: 8100
-          ADMIN_TOKEN: admin
-          DEFAULT_WALLET_ENABLED: true
-          DEFAULT_WALLET_AUTH_API_KEY: default
-          API_KEY_AUTO_PROVISIONING: false
-          API_KEY_ENABLED: true
-          DOCKERHOST: "host.docker.internal"
-          PG_PORT: 5434
-        uses: isbang/compose-action@v1.4.1
-        with:
-          compose-file: "./infrastructure/shared/docker-compose-agent.yml"
-          compose-flags: "--env-file ./infrastructure/local/.env -p verifier"
+          compose-file: "./infrastructure/shared/docker-compose-combined.yml"
+          compose-flags: "--env-file ./infrastructure/local/.env"
           up-flags: "--wait"
           down-flags: "--volumes"
 
@@ -162,11 +113,3 @@ jobs:
           ./k6 run -e SCENARIO_LABEL=connection-flow-smoke ${{ env.BENCHMARKING_DIR }}/dist/connection-flow-test.js
           ./k6 run -e SCENARIO_LABEL=issuance-flow-smoke ${{ env.BENCHMARKING_DIR }}/dist/issuance-flow-test.js
           ./k6 run -e SCENARIO_LABEL=present-proof-flow-smoke ${{ env.BENCHMARKING_DIR }}/dist/present-proof-flow-test.js
-
-      - name: Remove Docker Network
-        if: always()
-        run: |
-          echo "Forcefully stopping all containers on agent-network"
-          docker ps -q --filter network=agent-network | xargs -r docker stop || echo "No containers to stop"
-          docker ps -a -q --filter network=agent-network | xargs -r docker rm || echo "No containers to remove"
-          docker network rm agent-network || echo "Network not found"
