@@ -351,10 +351,9 @@ volumes:
   pg_data_issuer_db:
   pg_data_holder_db:
   pg_data_verifier_db:
-#  pgadmin:
-# Temporary commit network setting due to e2e CI bug
-# to be enabled later after debugging
-#networks:
-#  default:
-#    name: ${NETWORK}
-
+  #  pgadmin:
+  # Temporary commit network setting due to e2e CI bug
+  # to be enabled later after debugging
+  #networks:
+  #  default:
+  #    name: ${NETWORK}

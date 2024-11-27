@@ -41,4 +41,4 @@ upstreams:
     nodes:
       "swagger-ui-holder:8080": 1
     type: roundrobin
-#END
+ #END
