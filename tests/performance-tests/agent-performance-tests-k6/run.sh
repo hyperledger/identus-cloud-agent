@@ -15,20 +15,20 @@ function startAllAgents() {
 	echo "Starting agents"
 
 	local DOCKERHOST="host.docker.internal"
-  local NODE_REFRESH_AND_SUBMIT_PERIOD="1s"
-  local NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="1s"
-  local NODE_WALLET_MAX_TPS="1000"
+	local NODE_REFRESH_AND_SUBMIT_PERIOD="1s"
+	local NODE_MOVE_SCHEDULED_TO_PENDING_PERIOD="1s"
+	local NODE_WALLET_MAX_TPS="1000"
 	local ADMIN_TOKEN=admin
 	local DEFAULT_WALLET_ENABLED=true
 	local DEFAULT_WALLET_AUTH_API_KEY=default
 	local API_KEY_AUTO_PROVISIONING=false
 	local API_KEY_ENABLED=true
 
-  echo "Issuer Port [$ISSUER_PORT]"
-  echo "Holder Port [$HOLDER_PORT]"
-  echo "VerifierPort [$VERIFIER_PORT]"
+	echo "Issuer Port [$ISSUER_PORT]"
+	echo "Holder Port [$HOLDER_PORT]"
+	echo "VerifierPort [$VERIFIER_PORT]"
 
-		ADMIN_TOKEN="${ADMIN_TOKEN}" \
+	ADMIN_TOKEN="${ADMIN_TOKEN}" \
 		DEFAULT_WALLET_ENABLED="${DEFAULT_WALLET_ENABLED}" \
 		DEFAULT_WALLET_AUTH_API_KEY="${DEFAULT_WALLET_AUTH_API_KEY}" \
 		API_KEY_AUTO_PROVISIONING="${API_KEY_AUTO_PROVISIONING}" \
@@ -45,27 +45,26 @@ function startAllAgents() {
 
 function stopAllAgents() {
 	echo "Stopping  agents"
-		docker compose \
+	docker compose \
 		-f "${DOCKERFILE}" \
 		--env-file "${ENV_FILE}" down -v 2>/dev/null
 	echo "Agents  stopped"
 }
 
-
 # clean up on finish
 function cleanup() {
-  local exit_code=$?
-  if [[ $exit_code -eq 0 ]]; then
-      echo "Script exited normally with code $exit_code."
-  else
-      echo "Script exited with error code $exit_code."
-  fi
+	local exit_code=$?
+	if [[ $exit_code -eq 0 ]]; then
+		echo "Script exited normally with code $exit_code."
+	else
+		echo "Script exited with error code $exit_code."
+	fi
 	echo "Removing K6 binaries"
 	rm k6
 	rm "$K6_ZIP_FILE"
 	echo "Stopping All Agents"
-  stopAllAgents
-  echo "cleanup complete"
+	stopAllAgents
+	echo "cleanup complete"
 }
 
 trap 'cleanup' EXIT
@@ -101,7 +100,6 @@ export HOLDER_AGENT_URL="http://localhost:${HOLDER_PORT}/cloud-agent"
 export VERIFIER_AGENT_URL="http://localhost:${VERIFIER_PORT}/cloud-agent"
 
 startAllAgents
-
 
 # yarn install
 echo "Installing dependencies"

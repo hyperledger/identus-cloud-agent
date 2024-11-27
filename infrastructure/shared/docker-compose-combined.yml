@@ -18,7 +18,7 @@ services:
     ports:
       - "127.0.0.1:5431:5432"
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "node_db" ]
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "node_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -77,21 +77,21 @@ services:
       timeout: 5s
       retries: 5
 
-#  pgadmin:
-#    image: dpage/pgadmin4
-#    environment:
-#      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-#      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-#      PGADMIN_CONFIG_SERVER_MODE: "False"
-#    volumes:
-#      - pgadmin:/var/lib/pgadmin
-#    ports:
-#      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
-#    depends_on:
-#      db:
-#        condition: service_healthy
-#    profiles:
-#      - debug
+  #  pgadmin:
+  #    image: dpage/pgadmin4
+  #    environment:
+  #      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+  #      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+  #      PGADMIN_CONFIG_SERVER_MODE: "False"
+  #    volumes:
+  #      - pgadmin:/var/lib/pgadmin
+  #    ports:
+  #      - "127.0.0.1:${PGADMIN_PORT:-5050}:80"
+  #    depends_on:
+  #      db:
+  #        condition: service_healthy
+  #    profiles:
+  #      - debug
 
   ##########################
   # Services
@@ -172,7 +172,8 @@ services:
       vault-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://cloud-agent-issuer:8085/_system/health"]
+      test:
+        ["CMD", "curl", "-f", "http://cloud-agent-issuer:8085/_system/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -245,7 +246,8 @@ services:
       vault-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://cloud-agent-holder:8085/_system/health"]
+      test:
+        ["CMD", "curl", "-f", "http://cloud-agent-holder:8085/_system/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -318,7 +320,8 @@ services:
       vault-server:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://cloud-agent-verifier:8085/_system/health"]
+      test:
+        ["CMD", "curl", "-f", "http://cloud-agent-verifier:8085/_system/health"]
       interval: 30s
       timeout: 10s
       retries: 5
