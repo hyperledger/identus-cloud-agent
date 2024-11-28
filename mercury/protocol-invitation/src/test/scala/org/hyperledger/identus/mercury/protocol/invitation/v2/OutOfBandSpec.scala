@@ -2,7 +2,6 @@ package org.hyperledger.identus.mercury.protocol.invitation.v2
 
 import munit.*
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.invitation.v2.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation.Body
 import org.hyperledger.identus.mercury.protocol.invitation.OutOfBand
 class OutOfBandSpec extends FunSuite {
