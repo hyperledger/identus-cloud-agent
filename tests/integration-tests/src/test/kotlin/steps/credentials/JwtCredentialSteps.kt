@@ -78,7 +78,7 @@ class JwtCredentialSteps {
         holder: Actor,
         format: String,
         issuingKid: String?,
-        schema: CredentialSchema
+        schema: CredentialSchema,
     ) {
         val claims = schema.claims
         val schemaGuid = issuer.recall<String>(schema.name)

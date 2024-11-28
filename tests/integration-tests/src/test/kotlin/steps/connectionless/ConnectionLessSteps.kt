@@ -20,7 +20,7 @@ class ConnectionLessSteps {
         issuer: Actor,
         credentialFormat: String,
         didForm: String,
-        schema: CredentialSchema
+        schema: CredentialSchema,
     ) {
         val claims = schema.claims
         val schemaGuid = issuer.recall<String>(schema.name)
