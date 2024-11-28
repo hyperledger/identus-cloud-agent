@@ -35,10 +35,11 @@ object MessagingServiceTest extends ZIOAppDefault {
         .fork
       _ <- ZIO.never
     } yield ()
-    effect.provide(
+    effect.provideSome(
       messaging.MessagingServiceConfig.inMemoryLayer,
       messaging.MessagingService.serviceLayer,
-      ZLayer.succeed("Sample 'R' passed to handler")
+      ZLayer.succeed("Sample 'R' passed to handler"),
+      zio.Scope.default
     )
   }
 

@@ -155,7 +155,8 @@ object ConnectionServiceNotifierSpec extends ZIOSpecDefault {
         ZLayer.succeed(WalletAccessContext(WalletId.random)),
         messaging.MessagingServiceConfig.inMemoryLayer,
         messaging.MessagingService.serviceLayer,
-        messaging.MessagingService.producerLayer[UUID, WalletIdAndRecordId]
+        messaging.MessagingService.producerLayer[UUID, WalletIdAndRecordId],
+        zio.Scope.default
       )
     )
   }

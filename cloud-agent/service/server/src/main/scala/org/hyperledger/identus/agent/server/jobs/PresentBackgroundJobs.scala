@@ -20,7 +20,7 @@ import org.hyperledger.identus.mercury.model.*
 import org.hyperledger.identus.mercury.protocol.invitation.v2.Invitation
 import org.hyperledger.identus.mercury.protocol.presentproof.*
 import org.hyperledger.identus.mercury.protocol.reportproblem.v2.{ProblemCode, ReportProblem}
-import org.hyperledger.identus.pollux.core.model.*
+import org.hyperledger.identus.pollux.core.model.{presentation, *}
 import org.hyperledger.identus.pollux.core.model.error.{CredentialServiceError, PresentationError}
 import org.hyperledger.identus.pollux.core.model.error.PresentationError.*
 import org.hyperledger.identus.pollux.core.model.presentation.Options
@@ -28,6 +28,7 @@ import org.hyperledger.identus.pollux.core.service.{CredentialService, Presentat
 import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
 import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, IssuerPublicKey, PresentationCompact, SDJWT}
 import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, Issuer as JwtIssuer, JWT, JwtPresentation}
+import org.hyperledger.identus.pollux.vc.jwt.CredentialSchemaAndTrustedIssuersConstraint
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.http.*
 import org.hyperledger.identus.shared.messaging
@@ -37,7 +38,7 @@ import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
 import zio.metrics.*
-import zio.prelude.Validation
+import zio.prelude.{Validation, ZValidation}
 import zio.prelude.ZValidation.{Failure as ZFailure, *}
 
 import java.time.{Instant, ZoneId}
@@ -947,7 +948,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
   object Verifier {
 
-    def handleRequestPending(id: DidCommID, record: RequestPresentation): ZIO[
+    def handleRequestPending(id: DidCommID, requestPresentation: RequestPresentation): ZIO[
       JwtDidResolver & COMMON_RESOURCES & MESSAGING_RESOURCES,
       Failure,
       Unit
@@ -978,17 +979,20 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
 
       val verifierReqPendingToSentFlow = for {
         _ <- ZIO.log(s"PresentationRecord: RequestPending (Send Message)")
-        walletAccessContext <- buildWalletAccessContextLayer(
-          record.from.getOrElse(throw new RuntimeException("from is None is not possible"))
-        )
+        walletAccessContext <- ZIO
+          .fromOption(requestPresentation.from)
+          .mapError(_ => RequestPresentationMissingField(id.value, "sender"))
+          .flatMap(buildWalletAccessContextLayer)
+
         result <- for {
           didOps <- ZIO.service[DidOps]
-          didCommAgent <- buildDIDCommAgent(
-            record.from.getOrElse(throw new RuntimeException("from is None is not possible"))
-          ).provideSomeLayer(ZLayer.succeed(walletAccessContext))
+          didCommAgent <- ZIO
+            .fromOption(requestPresentation.from)
+            .mapError(_ => RequestPresentationMissingField(id.value, "sender"))
+            .flatMap(buildDIDCommAgent(_).provideSomeLayer(ZLayer.succeed(walletAccessContext)))
           resp <-
             MessagingService
-              .send(record.makeMessage)
+              .send(requestPresentation.makeMessage)
               .provideSomeLayer(didCommAgent)
               @@ Metric
                 .gauge("present_proof_flow_verifier_send_presentation_request_msg_ms_gauge")
@@ -1069,6 +1073,16 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
         }
       }
 
+      private def buildReportProblem(presentation: Presentation, error: String): ReportProblem = {
+        ReportProblem.build(
+          fromDID = presentation.to,
+          toDID = presentation.from,
+          pthid = presentation.thid.getOrElse(presentation.id),
+          code = ProblemCode("e.p.presentation-verification-failed"),
+          comment = Some(error)
+        )
+      }
+
       private def handleJWT(
           id: DidCommID,
           requestPresentation: RequestPresentation,
@@ -1085,7 +1099,7 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
           _ <- checkInvitationExpiry(id, invitation).provideSomeLayer(ZLayer.succeed(walletAccessContext))
           result <- for {
             didResolverService <- ZIO.service[JwtDidResolver]
-            credentialsClaimsValidationResult <- presentation.attachments.head.data match {
+            claimsValidationResult <- presentation.attachments.head.data match {
               case Base64(data) =>
                 val base64Decoded = new String(java.util.Base64.getUrlDecoder.decode(data))
                 val maybePresentationOptions: Either[PresentationError, Option[Options]] =
@@ -1103,17 +1117,33 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                         )
                     )
                     .getOrElse(Right(None))
+                val schemaIdAndTrustedIssuers = requestPresentation.body.proof_types.map { proofType =>
+                  CredentialSchemaAndTrustedIssuersConstraint(
+                    proofType.schema,
+                    proofType.trustIssuers.map(_.map(_.value))
+                  )
+                }
 
                 val presentationClaimsValidationResult = for {
-                  _ <- ZIO.fromEither(maybePresentationOptions.map {
+                  validationResult: Validation[String, Unit] <- ZIO.fromEither(maybePresentationOptions.map {
                     case Some(options) =>
-                      JwtPresentation.validatePresentation(
-                        JWT(base64Decoded),
-                        options.domain,
-                        options.challenge
-                      )
-                    case _ => Validation.unit
+                      JwtPresentation
+                        .validatePresentation(
+                          JWT(base64Decoded),
+                          Some(options.domain),
+                          Some(options.challenge),
+                          schemaIdAndTrustedIssuers
+                        )
+                    case _ =>
+                      JwtPresentation
+                        .validatePresentation(
+                          JWT(base64Decoded),
+                          None,
+                          None,
+                          schemaIdAndTrustedIssuers
+                        )
                   })
+
                   verificationConfig <- ZIO.service[AppConfig].map(_.agent.verification)
                   _ <- ZIO.log(s"VerificationConfig: ${verificationConfig}")
 
@@ -1121,18 +1151,21 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                   // A proof is typically attached to a verifiable presentation for authentication purposes
                   // and to a verifiable credential as a method of assertion.
                   uriResolver <- ZIO.service[UriResolver]
-                  result <- JwtPresentation
+                  result: Validation[String, Unit] <- JwtPresentation
                     .verify(
                       JWT(base64Decoded),
                       verificationConfig.toPresentationVerificationOptions()
                     )(didResolverService, uriResolver)(clock)
                     .mapError(error => PresentationError.PresentationVerificationError(error.mkString))
-                } yield result
 
+                } yield Seq(validationResult, result)
                 presentationClaimsValidationResult
 
               case any => ZIO.fail(PresentationReceivedError("Only Base64 Supported"))
             }
+            credentialsClaimsValidationResult = ZValidation
+              .validateAll(claimsValidationResult)
+              .map(_ => ())
             _ <- credentialsClaimsValidationResult match
               case l @ ZFailure(_, _) => ZIO.logError(s"CredentialsClaimsValidationResult: $l")
               case l @ Success(_, _)  => ZIO.logInfo(s"CredentialsClaimsValidationResult: $l")
@@ -1151,19 +1184,13 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                   _ <- service
                     .markPresentationVerificationFailed(id)
                     .provideSomeLayer(ZLayer.succeed(walletAccessContext)) @@ presReceivedToProcessedAspect
-                  didCommAgent <- buildDIDCommAgent(presentation.from).provideSomeLayer(
+                  didCommAgent <- buildDIDCommAgent(presentation.to).provideSomeLayer(
                     ZLayer.succeed(walletAccessContext)
                   )
-                  reportproblem = ReportProblem.build(
-                    fromDID = presentation.to,
-                    toDID = presentation.from,
-                    pthid = presentation.thid.getOrElse(presentation.id),
-                    code = ProblemCode("e.p.presentation-verification-failed"),
-                    comment = Some(error.mkString)
-                  )
+                  reportProblem = buildReportProblem(presentation, error.mkString)
                   _ <-
                     MessagingService
-                      .send(reportproblem.toMessage)
+                      .send(reportProblem.toMessage)
                       .provideSomeLayer(didCommAgent)
                   _ <- ZIO.log(s"CredentialsClaimsValidationResult: $error")
                 } yield ()
@@ -1219,19 +1246,13 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                   _ <- service
                     .markPresentationVerificationFailed(id)
                     .provideSomeLayer(ZLayer.succeed(walletAccessContext)) @@ presReceivedToProcessedAspect
-                  didCommAgent <- buildDIDCommAgent(presentation.from).provideSomeLayer(
+                  didCommAgent <- buildDIDCommAgent(presentation.to).provideSomeLayer(
                     ZLayer.succeed(walletAccessContext)
                   )
-                  reportproblem = ReportProblem.build(
-                    fromDID = presentation.to,
-                    toDID = presentation.from,
-                    pthid = presentation.thid.getOrElse(presentation.id),
-                    code = ProblemCode("e.p.presentation-verification-failed"),
-                    comment = Some(invalid.toString)
-                  )
+                  reportProblem = buildReportProblem(presentation, invalid.toString)
                   resp <-
                     MessagingService
-                      .send(reportproblem.toMessage)
+                      .send(reportProblem.toMessage)
                       .provideSomeLayer(didCommAgent)
                   _ <- ZIO.log(s"CredentialsClaimsValidationResult: ${invalid.toString}")
                 } yield ()
@@ -1263,19 +1284,13 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
               .provideSomeLayer(ZLayer.succeed(walletAccessContext)) @@ presReceivedToProcessedAspect)
               .flatMapError(e =>
                 for {
-                  didCommAgent <- buildDIDCommAgent(presentation.from).provideSomeLayer(
+                  didCommAgent <- buildDIDCommAgent(presentation.to).provideSomeLayer(
                     ZLayer.succeed(walletAccessContext)
                   )
-                  reportproblem = ReportProblem.build(
-                    fromDID = presentation.to,
-                    toDID = presentation.from,
-                    pthid = presentation.thid.getOrElse(presentation.id),
-                    code = ProblemCode("e.p.presentation-verification-failed"),
-                    comment = Some(e.toString)
-                  )
+                  reportProblem = buildReportProblem(presentation, e.toString)
                   _ <-
                     MessagingService
-                      .send(reportproblem.toMessage)
+                      .send(reportProblem.toMessage)
                       .provideSomeLayer(didCommAgent)
                   _ <- ZIO.log(s"CredentialsClaimsValidationResult: ${e.toString}")
                 } yield ()
@@ -1286,12 +1301,4 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
       }
     }
   }
-
-//  val syncDIDPublicationStateFromDlt: ZIO[WalletAccessContext & ManagedDIDService, GetManagedDIDError, Unit] =
-//    for {
-//      managedDidService <- ZIO.service[ManagedDIDService]
-//      _ <- managedDidService.syncManagedDIDState
-//      _ <- managedDidService.syncUnconfirmedUpdateOperations
-//    } yield ()
-
 }

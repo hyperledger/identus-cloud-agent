@@ -27,6 +27,7 @@ import org.hyperledger.identus.pollux.core.repository.{CredentialRepository, Cre
 import org.hyperledger.identus.pollux.prex.{ClaimFormat, Jwt, PresentationDefinition}
 import org.hyperledger.identus.pollux.sdjwt.*
 import org.hyperledger.identus.pollux.vc.jwt.{Issuer as JwtIssuer, *}
+import org.hyperledger.identus.pollux.vc.jwt.PresentationPayload.Implicits.*
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Secp256k1KeyPair}
 import org.hyperledger.identus.shared.http.UriResolver
 import org.hyperledger.identus.shared.messaging.{Producer, WalletIdAndRecordId}
@@ -1517,7 +1518,7 @@ class CredentialServiceImpl(
           ZIO.fail(CredentialRequestValidationFailed(s"JWT presentation verification failed: $error"))
 
       jwtPresentation <- ZIO
-        .fromTry(JwtPresentation.decodeJwt(jwt))
+        .fromTry(JwtPresentation.decodeJwt[JwtPresentationPayload](jwt))
         .mapError(t => CredentialRequestValidationFailed(s"JWT presentation decoding failed: ${t.getMessage}"))
     } yield jwtPresentation
   }

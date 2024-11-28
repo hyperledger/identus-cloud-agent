@@ -102,12 +102,7 @@ class ConnectionLessSteps {
                 challenge = "11c91493-01b3-4c4d-ac36-b336bab5bddf",
                 domain = "https://example-verifier.com",
             ),
-            proofs = listOf(
-                ProofRequestAux(
-                    schemaId = "https://schema.org/Person",
-                    trustIssuers = listOf("did:web:atalaprism.io/users/testUser"),
-                ),
-            ),
+            proofs = emptyList(),
         )
 
         verifier.attemptsTo(

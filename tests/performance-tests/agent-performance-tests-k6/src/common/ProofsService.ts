@@ -24,14 +24,7 @@ export class ProofsService extends HttpService {
               "challenge": "11c91493-01b3-4c4d-ac36-b336bab5bddf",
               "domain": "https://example-verifier.com"
           },
-          "proofs":[
-              {
-                  "schemaId": "https://schema.org/${vu.vu.idInInstance}-${vu.vu.idInTest}-${vu.vu.iterationInScenario}",
-                  "trustIssuers": [
-                      "did:web:atalaprism.io/users/testUser"
-                  ]
-              }
-          ]
+          "proofs":[]
       }`
     const res = this.post("present-proof/presentations", payload);
     try {

@@ -13,7 +13,7 @@ import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.{
   JsonPathNotFound,
   SubmissionNotSatisfyInputDescriptors
 }
-import org.hyperledger.identus.pollux.vc.jwt.{JWT, JwtCredential, JwtPresentation}
+import org.hyperledger.identus.pollux.vc.jwt.{JWT, JwtCredential, JwtPresentation, JwtPresentationPayload}
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.pollux.vc.jwt.PresentationPayload.Implicits.*
 import org.hyperledger.identus.shared.json.{JsonInterop, JsonPath, JsonPathError, JsonSchemaValidatorImpl}
@@ -220,7 +220,7 @@ object PresentationSubmissionVerification {
         .map(JWT(_))
         .mapError(_ => InvalidDataTypeForClaimFormat(format, path, "string"))
       payload <- ZIO
-        .fromTry(JwtPresentation.decodeJwt(jwt))
+        .fromTry(JwtPresentation.decodeJwt[JwtPresentationPayload](jwt))
         .mapError(e => ClaimDecodeFailure(format, path, e.getMessage()))
       _ <- formatVerification(jwt)
         .mapError(errors => ClaimFormatVerificationFailure(format, path, errors.mkString))
