@@ -1,9 +1,7 @@
 package org.hyperledger.identus.mercury.protocol.presentproof
 
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
 import org.hyperledger.identus.mercury.model.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 final case class RequestPresentation(
     id: String = java.util.UUID.randomUUID.toString(),
@@ -22,17 +20,15 @@ final case class RequestPresentation(
     from = this.from,
     to = this.to.toSeq,
     thid = this.thid,
-    body = this.body.asJson.asObject.get, // TODO get
+    body = this.body.toJsonAST.toOption.flatMap(_.asObject).get, // TODO get
     attachments = Some(this.attachments),
   )
 }
 object RequestPresentation {
 
   import AttachmentDescriptor.attachmentDescriptorEncoderV2
-
-  given Encoder[RequestPresentation] = deriveEncoder[RequestPresentation]
-
-  given Decoder[RequestPresentation] = deriveDecoder[RequestPresentation]
+  given JsonEncoder[RequestPresentation] = DeriveJsonEncoder.gen
+  given JsonDecoder[RequestPresentation] = DeriveJsonDecoder.gen
 
   // def `type`: PIURI = "https://didcomm.org/present-proof/3.0/request-presentation"
   def `type`: PIURI = "https://didcomm.atalaprism.io/present-proof/3.0/request-presentation"
@@ -48,8 +44,8 @@ object RequestPresentation {
   )
 
   object Body {
-    given Encoder[Body] = deriveEncoder[Body]
-    given Decoder[Body] = deriveDecoder[Body]
+    given JsonEncoder[Body] = DeriveJsonEncoder.gen
+    given JsonDecoder[Body] = DeriveJsonDecoder.gen
   }
 
   def makePresentProofRequest(msg: Message): RequestPresentation = {
@@ -71,7 +67,7 @@ object RequestPresentation {
   }
 
   def readFromMessage(message: Message): RequestPresentation =
-    val body = message.body.asJson.as[RequestPresentation.Body].toOption.get // TODO get
+    val body = message.body.as[RequestPresentation.Body].toOption.get // TODO get
 
     RequestPresentation(
       id = message.id,
