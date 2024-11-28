@@ -1,11 +1,9 @@
 package org.hyperledger.identus.mercury.protocol.reportproblem.v2
 
-import io.circe.*
-import io.circe.parser.*
-import io.circe.syntax.*
 import munit.*
 import org.hyperledger.identus.mercury.model.DidId
-import org.hyperledger.identus.mercury.protocol.reportproblem.v2.*
+import zio.json.{DecoderOps, EncoderOps}
+import zio.json.ast.{Json, JsonCursor}
 class ReportProblemSpec extends ZSuite {
 
   test("ReportProblem") {
@@ -30,7 +28,7 @@ class ReportProblemSpec extends ZSuite {
       body = body
     )
 
-    val expectedProposalJson = parse(s"""{
+    val expectedProposalJson = s"""{
   "from" : "did:prism:test1",      
   "to" : "did:prism:test2", 
   "type": "https://didcomm.org/report-problem/2.0/problem-report",
@@ -46,8 +44,8 @@ class ReportProblemSpec extends ZSuite {
     ],
     "escalate_to": "mailto:admin@foo.org"
   }
-}""".stripMargin).getOrElse(Json.Null)
-    val result = reportproblem.asJson.deepDropNullValues
+}""".stripMargin.fromJson[Json]
+    val result = reportproblem.toJsonAST
 
     assertEquals(result, expectedProposalJson)
   }
@@ -57,7 +55,7 @@ class ReportProblemSpec extends ZSuite {
     val fromDid = DidId("did:prism:test1")
     val toDid = DidId("did:prism:test2")
 
-    val reportproblem = ReportProblem.build(
+    val reportProblem = ReportProblem.build(
       fromDID = fromDid,
       toDID = toDid,
       pthid = "1e513ad4-48c9-444e-9e7e-5b8b45c5e325",
@@ -65,21 +63,32 @@ class ReportProblemSpec extends ZSuite {
       comment = Some("Unable to use the {1} endpoint for {2}.")
     )
 
-    val result = reportproblem.asJson.deepDropNullValues
+    val result = reportProblem.toJsonAST
 
-    assertEquals(result.hcursor.get[String]("pthid").toOption, Some("1e513ad4-48c9-444e-9e7e-5b8b45c5e325"))
-    assertEquals(result.hcursor.get[String]("from").toOption, Some("did:prism:test1"))
-    assertEquals(result.hcursor.get[String]("to").toOption, Some("did:prism:test2"))
     assertEquals(
-      result.hcursor.get[String]("type").toOption,
-      Some("https://didcomm.org/report-problem/2.0/problem-report")
+      result.flatMap(_.get(JsonCursor.field("pthid").isString)).map(_.value),
+      Right("1e513ad4-48c9-444e-9e7e-5b8b45c5e325")
     )
-    assertEquals(result.hcursor.downField("body").get[String]("code").toOption, Some("e.p.xfer.cant-use-endpoint"))
     assertEquals(
-      result.hcursor.downField("body").get[String]("comment").toOption,
-      Some("Unable to use the {1} endpoint for {2}.")
+      result.flatMap(_.get(JsonCursor.field("from").isString)).map(_.value),
+      Right("did:prism:test1")
     )
-
+    assertEquals(
+      result.flatMap(_.get(JsonCursor.field("to").isString)).map(_.value),
+      Right("did:prism:test2")
+    )
+    assertEquals(
+      result.flatMap(_.get(JsonCursor.field("type").isString)).map(_.value),
+      Right("https://didcomm.org/report-problem/2.0/problem-report")
+    )
+    assertEquals(
+      result.flatMap(_.get(JsonCursor.field("body").isObject >>> JsonCursor.field("code").isString)).map(_.value),
+      Right("e.p.xfer.cant-use-endpoint")
+    )
+    assertEquals(
+      result.flatMap(_.get(JsonCursor.field("body").isObject >>> JsonCursor.field("comment").isString)).map(_.value),
+      Right("Unable to use the {1} endpoint for {2}.")
+    )
   }
 
 }
