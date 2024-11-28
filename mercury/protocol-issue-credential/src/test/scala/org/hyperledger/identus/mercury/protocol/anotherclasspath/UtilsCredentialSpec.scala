@@ -1,26 +1,14 @@
 package org.hyperledger.identus.mercury.protocol.anotherclasspath
 
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
 import munit.*
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, DidId}
-import org.hyperledger.identus.mercury.protocol.issuecredential.{
-  CredentialPreview,
-  IssueCredential,
-  IssueCredentialIssuedFormat,
-  IssueCredentialOfferFormat,
-  IssueCredentialProposeFormat,
-  IssueCredentialRequestFormat,
-  OfferCredential,
-  ProposeCredential,
-  RequestCredential
-}
+import org.hyperledger.identus.mercury.protocol.issuecredential.{CredentialPreview, IssueCredential, IssueCredentialIssuedFormat, IssueCredentialOfferFormat, IssueCredentialProposeFormat, IssueCredentialRequestFormat, OfferCredential, ProposeCredential, RequestCredential}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 private case class TestCredentialType(a: String, b: Int, x: Long, name: String, dob: String)
 private object TestCredentialType {
-  given Encoder[TestCredentialType] = deriveEncoder[TestCredentialType]
-  given Decoder[TestCredentialType] = deriveDecoder[TestCredentialType]
+  given JsonEncoder[TestCredentialType] = DeriveJsonEncoder.gen
+  given JsonDecoder[TestCredentialType] = DeriveJsonDecoder.gen
 }
 
 /** testOnly org.hyperledger.identus.mercury.protocol.anotherclasspath.UtilsCredentialSpec
@@ -50,7 +38,7 @@ class UtilsCredentialSpec extends ZSuite {
         fromDID = DidId("did:prism:test123from"),
         toDID = DidId("did:prism:test123to"),
         credentials =
-          Seq(IssueCredentialIssuedFormat.Unsupported(nameCredentialType) -> credential.asJson.noSpaces.getBytes()),
+          Seq(IssueCredentialIssuedFormat.Unsupported(nameCredentialType) -> credential.toJson.getBytes()),
       )
       .makeMessage
 
@@ -74,7 +62,7 @@ class UtilsCredentialSpec extends ZSuite {
         toDID = DidId("did:prism:test123to"),
         credential_preview = credentialPreview,
         credentials =
-          Seq(IssueCredentialOfferFormat.Unsupported(nameCredentialType) -> credential.asJson.noSpaces.getBytes()),
+          Seq(IssueCredentialOfferFormat.Unsupported(nameCredentialType) -> credential.toJson.getBytes()),
       )
       .makeMessage
 
@@ -98,7 +86,7 @@ class UtilsCredentialSpec extends ZSuite {
         toDID = DidId("did:prism:test123to"),
         credential_preview = Some(credentialPreview),
         credentials =
-          Seq(IssueCredentialProposeFormat.Unsupported(nameCredentialType) -> credential.asJson.noSpaces.getBytes()),
+          Seq(IssueCredentialProposeFormat.Unsupported(nameCredentialType) -> credential.toJson.getBytes()),
       )
       .makeMessage
 
@@ -120,7 +108,7 @@ class UtilsCredentialSpec extends ZSuite {
         fromDID = DidId("did:prism:test123from"),
         toDID = DidId("did:prism:test123to"),
         credentials =
-          Seq(IssueCredentialRequestFormat.Unsupported(nameCredentialType) -> credential.asJson.noSpaces.getBytes()),
+          Seq(IssueCredentialRequestFormat.Unsupported(nameCredentialType) -> credential.toJson.getBytes()),
       )
       .makeMessage
 

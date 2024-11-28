@@ -1,9 +1,8 @@
 package org.hyperledger.identus.mercury.protocol.issuecredential
 
-import io.circe.parser.*
-import io.circe.syntax.*
-import io.circe.Decoder
 import org.hyperledger.identus.mercury.model.{AttachmentDescriptor, Base64, JsonData, JwsData, LinkData}
+import zio.json.{DecoderOps, JsonDecoder}
+import zio.json.EncoderOps
 
 private trait ReadAttachmentsUtils {
 
@@ -24,7 +23,7 @@ private trait ReadAttachmentsUtils {
                 formatName,
                 java.util.Base64
                   .getUrlEncoder()
-                  .encode(obj.json.asJson.noSpaces.getBytes())
+                  .encode(obj.json.toJson.getBytes())
               )
           }
         }
@@ -33,12 +32,12 @@ private trait ReadAttachmentsUtils {
   /** @return
     *   credential data (of a certain format type) in an array of Bytes encoded in base 64
     */
-  def getCredential[A](credentialFormatName: String)(using decodeA: Decoder[A]): Seq[A] =
+  def getCredential[A](credentialFormatName: String)(using decoder: JsonDecoder[A]): Seq[A] =
     getCredentialFormatAndCredential
       .filter(_._2 == credentialFormatName)
       .map(e => java.util.Base64.getUrlDecoder().decode(e._3))
       .map(String(_))
-      .map(e => decode[A](e))
+      .map(e => e.fromJson[A])
       .flatMap(_.toOption)
 
 }
