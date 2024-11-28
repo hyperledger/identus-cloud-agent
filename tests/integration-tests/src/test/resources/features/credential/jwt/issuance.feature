@@ -5,10 +5,11 @@ Feature: Issue JWT credential
     Given Issuer and Holder have an existing connection
     And Holder creates unpublished DID for 'JWT'
     When Issuer prepares a custom PRISM DID
+    And Issuer has published 'STUDENT_SCHEMA' schema
     And Issuer adds a '<assertionMethod>' key for 'assertionMethod' purpose with '<assertionName>' name to the custom PRISM DID
     And Issuer creates the custom PRISM DID
     And Issuer publishes DID to ledger
-    When Issuer offers a jwt credential to Holder with 'short' form DID using issuingKid '<assertionName>'
+    When Issuer offers a jwt credential to Holder with 'short' form DID using issuingKid '<assertionName>' and STUDENT_SCHEMA schema
     And Holder receives the credential offer
     And Holder accepts jwt credential offer using 'auth-1' key id
     And Issuer issues the credential
@@ -27,6 +28,7 @@ Feature: Issue JWT credential
   Scenario: Issuing jwt credential with published PRISM DID
     Given Issuer and Holder have an existing connection
     And Issuer has a published DID for 'JWT'
+    And Issuer has published 'STUDENT_SCHEMA' schema
     And Holder has an unpublished DID for 'JWT'
     When Issuer offers a jwt credential to Holder with 'short' form DID
     And Holder receives the credential offer
@@ -56,6 +58,7 @@ Feature: Issue JWT credential
   Scenario: Issuing jwt credential with unpublished PRISM DID
     Given Issuer and Holder have an existing connection
     And Issuer has an unpublished DID for 'JWT'
+    And Issuer has published 'STUDENT_SCHEMA' schema
     And Holder has an unpublished DID for 'JWT'
     And Issuer offers a jwt credential to Holder with 'long' form DID
     And Holder receives the credential offer
@@ -65,8 +68,9 @@ Feature: Issue JWT credential
 
   Scenario: Connectionless issuance of JWT credential using OOB invitation
     Given Issuer has a published DID for 'JWT'
+    And Issuer has published 'STUDENT_SCHEMA' schema
     And Holder has an unpublished DID for 'JWT'
-    When Issuer creates a 'JWT' credential offer invitation with 'short' form DID
+    When Issuer creates a 'JWT' credential offer invitation with 'short' form DID and STUDENT_SCHEMA schema
     And Holder accepts the credential offer invitation from Issuer
     And Holder accepts jwt credential offer using 'auth-1' key id
     And Issuer issues the credential
