@@ -1,9 +1,8 @@
 package org.hyperledger.identus.mercury.model
 
-import cats.syntax.functor.*
-import io.circe.{Decoder, Encoder, Json, JsonObject}
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
+import zio.json.ast.Json
+import zio.json.internal.Write
 
 import java.util.Base64 as JBase64
 
@@ -14,57 +13,59 @@ sealed trait AttachmentData
 
 final case class Header(kid: String)
 object Header {
-  given Encoder[Header] = deriveEncoder[Header]
-
-  given Decoder[Header] = deriveDecoder[Header]
+  given JsonEncoder[Header] = DeriveJsonEncoder.gen
+  given JsonDecoder[Header] = DeriveJsonDecoder.gen
 }
+
 final case class Jws(header: Header, `protected`: String, signature: String)
 object Jws {
-  given Encoder[Jws] = deriveEncoder[Jws]
-
-  given Decoder[Jws] = deriveDecoder[Jws]
+  given JsonEncoder[Jws] = DeriveJsonEncoder.gen
+  given JsonDecoder[Jws] = DeriveJsonDecoder.gen
 }
+
 final case class JwsData(base64: String, jws: Jws) extends AttachmentData
 object JwsData {
-  given Encoder[JwsData] = deriveEncoder[JwsData]
-
-  given Decoder[JwsData] = deriveDecoder[JwsData]
+  given JsonEncoder[JwsData] = DeriveJsonEncoder.gen
+  given JsonDecoder[JwsData] = DeriveJsonDecoder.gen
 }
+
 final case class Base64(base64: String) extends AttachmentData
 object Base64 {
-  given Encoder[Base64] = deriveEncoder[Base64]
-  given Decoder[Base64] = deriveDecoder[Base64]
+  given JsonEncoder[Base64] = DeriveJsonEncoder.gen
+  given JsonDecoder[Base64] = DeriveJsonDecoder.gen
 
 }
 
 final case class LinkData(links: Seq[String], hash: String) extends AttachmentData
 object LinkData {
-  given Encoder[LinkData] = deriveEncoder[LinkData]
-  given Decoder[LinkData] = deriveDecoder[LinkData]
+  given JsonEncoder[LinkData] = DeriveJsonEncoder.gen
+  given JsonDecoder[LinkData] = DeriveJsonDecoder.gen
 
 }
 
-final case class JsonData(json: JsonObject) extends AttachmentData
+final case class JsonData(json: Json.Obj) extends AttachmentData
 object JsonData {
-  given Encoder[JsonData] = deriveEncoder[JsonData]
-  given Decoder[JsonData] = deriveDecoder[JsonData]
+  given JsonEncoder[JsonData] = DeriveJsonEncoder.gen
+  given JsonDecoder[JsonData] = DeriveJsonDecoder.gen
 }
-object AttachmentData {
-  // given Encoder[AttachmentData] = deriveEncoder[AttachmentData]
-  given Encoder[AttachmentData] = (a: AttachmentData) => {
-    a match
-      case data @ JsonData(_)    => data.asJson
-      case data @ Base64(_)      => data.asJson
-      case data @ JwsData(_, _)  => data.asJson
-      case data @ LinkData(_, _) => data.asJson
-  }
 
-  given Decoder[AttachmentData] = List[Decoder[AttachmentData]](
-    Decoder[JsonData].widen,
-    Decoder[Base64].widen,
-    Decoder[JwsData].widen,
-    Decoder[LinkData].widen
-  ).reduceLeft(_ or _)
+object AttachmentData {
+  given JsonEncoder[AttachmentData] = (a: AttachmentData, indent: Option[Int], out: Write) => {
+    a match
+      case data @ JwsData(_, _)  => JsonEncoder[JwsData].unsafeEncode(data, indent, out)
+      case data @ Base64(_)      => JsonEncoder[Base64].unsafeEncode(data, indent, out)
+      case data @ LinkData(_, _) => JsonEncoder[LinkData].unsafeEncode(data, indent, out)
+      case data @ JsonData(_)    => JsonEncoder[JsonData].unsafeEncode(data, indent, out)
+  }
+  given JsonDecoder[AttachmentData] = JsonDecoder[Json].mapOrFail { json =>
+    json
+      .as[JwsData]
+      .orElse(json.as[Base64])
+      .orElse(json.as[LinkData])
+      .orElse(json.as[JsonData])
+      .left
+      .map(error => s"Failed to decode AttachmentData: $error")
+  }
 }
 
 /** https://identity.foundation/didcomm-messaging/spec/#attachments
@@ -119,21 +120,26 @@ object AttachmentDescriptor {
       payload: A,
       mediaType: Option[String] = Some("application/json"),
       format: Option[String] = None,
-  )(using Encoder[A]): AttachmentDescriptor = {
-    val jsonObject = payload.asJson.asObject.getOrElse(JsonObject.empty)
+  )(using JsonEncoder[A]): AttachmentDescriptor = {
+    val jsonObject = payload.toJsonAST.toOption.flatMap(_.asObject).getOrElse(Json.Obj())
     AttachmentDescriptor(id, mediaType, JsonData(jsonObject), format = format) // use JsonData or Base64 by default?
   }
 
-  given attachmentDescriptorEncoderV1: Encoder[AttachmentDescriptor] = (a: AttachmentDescriptor) => {
-    Json.obj(
-      "@id" -> a.id.asJson,
-      "mime_type" -> a.media_type.asJson,
-      "data" -> a.data.asJson
-    )
-  }
+  given attachmentDescriptorEncoderV1: JsonEncoder[AttachmentDescriptor] =
+    (a: AttachmentDescriptor, indent: Option[Int], out: Write) => {
+      out.write("{")
+      out.write("\"@id\":")
+      JsonEncoder[String].unsafeEncode(a.id, indent, out)
+      a.media_type.foreach { mt =>
+        out.write(",\"mime_type\":")
+        JsonEncoder[String].unsafeEncode(mt, indent, out)
+      }
+      out.write(",\"data\":")
+      JsonEncoder[AttachmentData].unsafeEncode(a.data, indent, out)
+      out.write("}")
+    }
 
-  given attachmentDescriptorEncoderV2: Encoder[AttachmentDescriptor] = deriveEncoder[AttachmentDescriptor]
-
-  given Decoder[AttachmentDescriptor] = deriveDecoder[AttachmentDescriptor]
+  given attachmentDescriptorEncoderV2: JsonEncoder[AttachmentDescriptor] = DeriveJsonEncoder.gen
+  given JsonDecoder[AttachmentDescriptor] = DeriveJsonDecoder.gen
 
 }
