@@ -4,6 +4,7 @@ Feature: Issue SD-JWT credential
   Scenario: Issuing sd-jwt credential
     Given Issuer and Holder have an existing connection
     And Issuer has a published DID for SD_JWT
+    And Issuer has published ID_SCHEMA schema
     And Holder has an unpublished DID for SD_JWT
     When Issuer offers a sd-jwt credential to Holder
     And Holder receives the credential offer
@@ -15,6 +16,7 @@ Feature: Issue SD-JWT credential
   Scenario: Issuing sd-jwt credential with holder binding
     Given Issuer and Holder have an existing connection
     And Issuer has a published DID for SD_JWT
+    And Issuer has published ID_SCHEMA schema
     And Holder has an unpublished DID for SD_JWT
     When Issuer offers a sd-jwt credential to Holder
     And Holder receives the credential offer
@@ -25,8 +27,9 @@ Feature: Issue SD-JWT credential
 
   Scenario: Connectionless issuance of sd-jwt credential with holder binding
     And Issuer has a published DID for SD_JWT
+    And Issuer has published ID_SCHEMA schema
     And Holder has an unpublished DID for SD_JWT
-    When Issuer creates a "SDJWT" credential offer invitation with "short" form DID
+    When Issuer creates a "SDJWT" credential offer invitation with "short" form DID and ID_SCHEMA schema
     And Holder accepts the credential offer invitation from Issuer
     And Holder accepts credential offer for sd-jwt with 'auth-1' key binding
     And Issuer issues the credential

@@ -39,14 +39,6 @@ trait CredentialSchemaReferenceParsingLogic {
       .getOrElse(handleDeprecatedSchemaId(deprecatedSchemaIdProperty).flatMap(makeUriStringOrErrorResponse))
   }
 
-  def ensureCredentialSchemaRefIsNotUsedInSDJWT(
-      deprecatedSchemaIdProperty: Option[String | List[String]]
-  ): IO[ErrorResponse, Unit] = {
-    deprecatedSchemaIdProperty.fold(ZIO.unit) { _ =>
-      ZIO.fail(ErrorResponse.badRequest(detail = Some("Credential schema reference is not supported yet in SD-JWT.")))
-    }
-  }
-
   private def handleDeprecatedSchemaId(
       deprecatedSchemaIdProperty: Option[String | List[String]]
   ): IO[ErrorResponse, String] = {
@@ -54,9 +46,9 @@ trait CredentialSchemaReferenceParsingLogic {
       case Some(schemaId: String) =>
         ZIO.succeed(schemaId)
       case Some(_: List[String]) =>
-        ZIO.fail(ErrorResponse.badRequest(detail = Some("Multiple schemas are not allowed.")))
+        ZIO.fail(ErrorResponse.badRequest(detail = Some("Multiple credential schemas are not allowed.")))
       case None =>
-        ZIO.fail(ErrorResponse.badRequest(detail = Some("schemaId property is required.")))
+        ZIO.fail(ErrorResponse.badRequest(detail = Some("Credential schema property missed.")))
     }
   }
 

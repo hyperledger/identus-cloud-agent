@@ -1,6 +1,7 @@
 package steps.connectionless
 
 import com.google.gson.JsonObject
+import common.CredentialSchema
 import interactions.Post
 import interactions.body
 import io.cucumber.java.en.*
@@ -14,19 +15,30 @@ import org.hyperledger.identus.client.models.*
 
 class ConnectionLessSteps {
 
-    @When("{actor} creates a {string} credential offer invitation with {string} form DID")
-    fun inviterGeneratesACredentialOfferInvitation(issuer: Actor, credentialFormat: String, didForm: String) {
-        val claims = linkedMapOf(
-            "firstName" to "Automation",
-            "lastName" to "Execution",
-            "email" to "email@example.com",
-        )
+    @When("{actor} creates a {string} credential offer invitation with {string} form DID and {} schema")
+    fun inviterGeneratesACredentialOfferInvitation(
+        issuer: Actor,
+        credentialFormat: String,
+        didForm: String,
+        schema: CredentialSchema
+    ) {
+        val claims = schema.claims
+        val schemaGuid = issuer.recall<String>(schema.name)
+
+        val schemaId: String? = if (schemaGuid != null) {
+            val baseUrl = issuer.recall<String>("baseUrl")
+            "$baseUrl/schema-registry/schemas/$schemaGuid"
+        } else {
+            null
+        }
+
         val did: String = if (didForm == "short") {
             issuer.recall("shortFormDid")
         } else {
             issuer.recall("longFormDid")
         }
         val credentialOfferRequest = CreateIssueCredentialRecordRequest(
+            schemaId = schemaId?.let { listOf(it) },
             claims = claims,
             issuingDID = did,
             issuingKid = "assertion-1",
