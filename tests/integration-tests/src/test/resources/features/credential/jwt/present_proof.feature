@@ -32,7 +32,8 @@ Feature: Present Proof Protocol
     When Issuer prepares a custom PRISM DID
     And Issuer adds a '<assertionMethod>' key for 'assertionMethod' purpose with '<assertionName>' name to the custom PRISM DID
     And Issuer creates the custom PRISM DID
-    When Issuer offers a jwt credential to Holder with 'long' form DID using issuingKid '<assertionName>' and STUDENT_SCHEMA schema
+    And Issuer publishes DID to ledger
+    When Issuer offers a jwt credential to Holder with 'short' form DID using issuingKid '<assertionName>' and STUDENT_SCHEMA
     And Holder receives the credential offer
     And Holder accepts jwt credential offer using 'auth-1' key id
     And Issuer issues the credential
