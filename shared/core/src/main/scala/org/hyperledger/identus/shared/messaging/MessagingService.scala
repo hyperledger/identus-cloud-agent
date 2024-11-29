@@ -83,7 +83,6 @@ object MessagingService {
       vSerde: Serde[V]
   ): RLayer[Scope & MessagingService, Producer[K, V]] = ZLayer.fromZIO(for {
     messagingService <- ZIO.service[MessagingService]
-    _ <- ZIO.logInfo("Producer layer invoked!!")
     producer <- messagingService.makeProducer[K, V]()
   } yield producer)
 

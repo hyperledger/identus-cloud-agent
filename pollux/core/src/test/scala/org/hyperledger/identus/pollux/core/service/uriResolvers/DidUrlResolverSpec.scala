@@ -1,14 +1,14 @@
 package org.hyperledger.identus.pollux.core.service.uriResolvers
 
-import io.circe.*
 import io.lemonlabs.uri.Url
 import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.crypto.Sha256Hash
-import org.hyperledger.identus.shared.json.Json as JsonUtils
+import org.hyperledger.identus.shared.json.{Json as JsonUtils, JsonInterop}
 import org.hyperledger.identus.shared.models.PrismEnvelopeData
 import org.hyperledger.identus.shared.utils.Base64Utils
 import zio.*
 import zio.json.*
+import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -155,7 +155,7 @@ object DidUrlResolverSpec extends ZIOSpecDefault {
             Service(
               id = "did:prism:462c4811bf61d7de25b3baf86c5d2f0609b4debe53792d297bf612269bf8593a#agent-base-url",
               `type` = "LinkedResourceV1",
-              serviceEndpoint = Json.fromString("https://agent-url.com")
+              serviceEndpoint = JsonInterop.toCirceJsonAst(Json.Str("https://agent-url.com"))
             )
           )
         ),
