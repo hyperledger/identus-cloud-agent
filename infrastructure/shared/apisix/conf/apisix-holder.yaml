@@ -1,0 +1,44 @@
+plugins:
+  - name: proxy-rewrite
+  - name: cors
+
+routes:
+  - uri: /cloud-agent/*
+    upstream_id: 4
+    plugins:
+      cors:
+        allow_origins: "*"
+      proxy-rewrite:
+        regex_uri: ["^/cloud-agent/(.*)", "/$1"]
+  - uri: /docs/cloud-agent/api/*
+    upstream_id: 4
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/docs/cloud-agent/api/(.*)", "/docs/$1"]
+  - uri: /didcomm*
+    upstream_id: 3
+    plugins:
+      cors:
+        allow_origins: "*"
+      proxy-rewrite:
+        regex_uri: ["^/didcomm(.*)", "/$1"]
+  - uri: /apidocs/*
+    upstream_id: 5
+    plugins:
+      proxy-rewrite:
+        regex_uri: ["^/apidocs/(.*)", "/$1"]
+
+upstreams:
+  - id: 3
+    nodes:
+      "cloud-agent-holder:8090": 1 # didcom and system
+    type: roundrobin
+  - id: 4
+    nodes:
+      "cloud-agent-holder:8085": 1 # tapir
+    type: roundrobin
+  - id: 5
+    nodes:
+      "swagger-ui-holder:8080": 1
+    type: roundrobin
+  #END
