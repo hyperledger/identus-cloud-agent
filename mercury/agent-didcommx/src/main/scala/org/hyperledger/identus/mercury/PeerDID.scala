@@ -2,11 +2,9 @@ package org.hyperledger.identus.mercury
 
 import com.nimbusds.jose.jwk.*
 import com.nimbusds.jose.jwk.gen.*
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
 import org.didcommx.peerdid.*
 import org.hyperledger.identus.mercury.model.DidId
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 import scala.jdk.CollectionConverters.*
 
@@ -56,8 +54,8 @@ object PeerDID {
 
   case class ServiceEndpoint(uri: String, r: Seq[String] = Seq.empty, a: Seq[String] = Seq("didcomm/v2"))
   object ServiceEndpoint {
-    implicit val encoder: Encoder[ServiceEndpoint] = deriveEncoder[ServiceEndpoint]
-    implicit val decoder: Decoder[ServiceEndpoint] = deriveDecoder[ServiceEndpoint]
+    implicit val encoder: JsonEncoder[ServiceEndpoint] = DeriveJsonEncoder.gen
+    implicit val decoder: JsonDecoder[ServiceEndpoint] = DeriveJsonDecoder.gen
     def apply(endpoint: String) = new ServiceEndpoint(uri = endpoint)
   }
 
@@ -71,8 +69,8 @@ object PeerDID {
     def accept = s.a
   }
   object Service {
-    implicit val encoder: Encoder[Service] = deriveEncoder[Service]
-    implicit val decoder: Decoder[Service] = deriveDecoder[Service]
+    implicit val encoder: JsonEncoder[Service] = DeriveJsonEncoder.gen
+    implicit val decoder: JsonDecoder[Service] = DeriveJsonDecoder.gen
     def apply(endpoint: String) = new Service(s = ServiceEndpoint(endpoint))
   }
 
@@ -102,7 +100,7 @@ object PeerDID {
       List(keyAgreemenFromPublicJWK(jwkForKeyAgreement)).asJava,
       List(keyAuthenticationFromPublicJWK(jwkForKeyAuthentication)).asJava,
       serviceEndpoint match {
-        case Some(endpoint) => Service(endpoint).asJson.noSpaces
+        case Some(endpoint) => Service(endpoint).toJson
         case None           => null
       }
     )
