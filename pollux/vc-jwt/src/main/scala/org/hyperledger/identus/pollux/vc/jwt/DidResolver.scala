@@ -1,16 +1,9 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
 import io.circe.Json
-import org.hyperledger.identus.castor.core.model.did.w3c.{
-  makeW3CResolver,
-  DIDDocumentRepr,
-  DIDResolutionErrorRepr,
-  PublicKeyJwk,
-  PublicKeyRepr,
-  PublicKeyReprOrRef,
-  ServiceRepr
-}
+import org.hyperledger.identus.castor.core.model.did.w3c.{DIDDocumentRepr, DIDResolutionErrorRepr, PublicKeyJwk, PublicKeyRepr, PublicKeyReprOrRef, ServiceRepr, makeW3CResolver}
 import org.hyperledger.identus.castor.core.service.DIDService
+import org.hyperledger.identus.shared.json.JsonInterop
 import zio.*
 
 import java.time.Instant
@@ -134,7 +127,7 @@ class PrismDidResolver(didService: DIDService) extends DidResolver {
     Service(
       id = service.id,
       `type` = service.`type`,
-      serviceEndpoint = service.serviceEndpoint
+      serviceEndpoint = JsonInterop.toCirceJsonAst(service.serviceEndpoint)
     )
   }
 
