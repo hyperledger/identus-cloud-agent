@@ -25,18 +25,7 @@ Feature: Issue JWT credential
       | secp256k1       | assert-1      |
       | ed25519         | assert-1      |
 
-  Scenario: Issuing jwt credential with published PRISM DID
-    Given Issuer and Holder have an existing connection
-    And Issuer has a published DID for 'JWT'
-    And Issuer has published 'STUDENT_SCHEMA' schema
-    And Holder has an unpublished DID for 'JWT'
-    When Issuer offers a jwt credential to Holder with 'short' form DID
-    And Holder receives the credential offer
-    And Holder accepts jwt credential offer using 'auth-1' key id
-    And Issuer issues the credential
-    Then Holder receives the issued credential
-
-  Scenario: Issuing jwt credential with a schema
+  Scenario: Issuing jwt credential with published PRISM DID and student schema
     Given Issuer and Holder have an existing connection
     And Issuer has a published DID for 'JWT'
     And Issuer has published 'STUDENT_SCHEMA' schema
