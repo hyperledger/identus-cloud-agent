@@ -1,8 +1,5 @@
 package org.hyperledger.identus.agent.server.http
 
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.syntax.*
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.http4s.*
 import org.http4s.blaze.server.BlazeServerBuilder
@@ -18,6 +15,7 @@ import sttp.tapir.server.metrics.MetricLabels
 import sttp.tapir.ztapir.ZServerEndpoint
 import zio.*
 import zio.interop.catz.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, EncoderOps, JsonDecoder, JsonEncoder}
 
 class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNamespace: String) {
 
@@ -34,9 +32,8 @@ class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNam
         secChUaPlatform: Option[String],
     )
     object FingerPrintData {
-      given encoder: Encoder[FingerPrintData] = deriveEncoder[FingerPrintData]
-
-      given decoder: Decoder[FingerPrintData] = deriveDecoder[FingerPrintData]
+      given encoder: JsonEncoder[FingerPrintData] = DeriveJsonEncoder.gen
+      given decoder: JsonDecoder[FingerPrintData] = DeriveJsonDecoder.gen
     }
 
     val headers = sr.headers
@@ -52,7 +49,7 @@ class ZHttp4sBlazeServer(micrometerRegistry: PrometheusMeterRegistry, metricsNam
       headers.find(_.name.toLowerCase == "sec-ch-ua-platform").map(_.value),
     )
 
-    val jsonStr = fingerPrintData.asJson.dropNullValues.spaces2
+    val jsonStr = fingerPrintData.toJson
     val canonicalized = Json.canonicalizeToJcs(jsonStr).toOption
 
     canonicalized.map(x => Sha256Hash.compute(x.getBytes))

@@ -1,14 +1,8 @@
 package org.hyperledger.identus.agent.server.jobs
 
 import cats.syntax.all.*
-import io.circe.parser.*
-import io.circe.syntax.*
 import org.hyperledger.identus.agent.server.config.AppConfig
-import org.hyperledger.identus.agent.server.jobs.BackgroundJobError.{
-  ErrorResponseReceivedFromPeerAgent,
-  InvalidState,
-  NotImplemented
-}
+import org.hyperledger.identus.agent.server.jobs.BackgroundJobError.{ErrorResponseReceivedFromPeerAgent, InvalidState, NotImplemented}
 import org.hyperledger.identus.agent.walletapi.model.error.{DIDSecretStorageError, GetManagedDIDError}
 import org.hyperledger.identus.agent.walletapi.service.ManagedDIDService
 import org.hyperledger.identus.agent.walletapi.storage.DIDNonSecretStorage
@@ -27,7 +21,7 @@ import org.hyperledger.identus.pollux.core.model.presentation.Options
 import org.hyperledger.identus.pollux.core.service.{CredentialService, PresentationService}
 import org.hyperledger.identus.pollux.core.service.serdes.AnoncredCredentialProofsV1
 import org.hyperledger.identus.pollux.sdjwt.{HolderPrivateKey, IssuerPublicKey, PresentationCompact, SDJWT}
-import org.hyperledger.identus.pollux.vc.jwt.{DidResolver as JwtDidResolver, Issuer as JwtIssuer, JWT, JwtPresentation}
+import org.hyperledger.identus.pollux.vc.jwt.{JWT, JwtPresentation, DidResolver as JwtDidResolver, Issuer as JwtIssuer}
 import org.hyperledger.identus.pollux.vc.jwt.CredentialSchemaAndTrustedIssuersConstraint
 import org.hyperledger.identus.resolvers.DIDResolver
 import org.hyperledger.identus.shared.http.*
@@ -37,6 +31,7 @@ import org.hyperledger.identus.shared.models.{Failure, *}
 import org.hyperledger.identus.shared.utils.aspects.CustomMetricsAspect
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
+import zio.json.{DecoderOps, EncoderOps}
 import zio.metrics.*
 import zio.prelude.{Validation, ZValidation}
 import zio.prelude.ZValidation.{Failure as ZFailure, *}
@@ -1105,13 +1100,11 @@ object PresentBackgroundJobs extends BackgroundJobsHelper {
                 val maybePresentationOptions: Either[PresentationError, Option[Options]] =
                   requestPresentation.attachments.headOption
                     .map(attachment =>
-                      decode[JsonData](
-                        attachment.data.asJson.noSpaces
-                      )
+                      attachment.data.toJson.fromJson[JsonData]
                         .leftMap(err => PresentationDecodingError(s"JsonData decoding error: $err"))
                         .flatMap(data =>
-                          org.hyperledger.identus.pollux.core.model.presentation.PresentationAttachment.given_Decoder_PresentationAttachment
-                            .decodeJson(data.json.asJson)
+                          org.hyperledger.identus.pollux.core.model.presentation.PresentationAttachment.given_JsonDecoder_PresentationAttachment
+                            .decodeJson(data.json.toJson)
                             .map(_.options)
                             .leftMap(err => PresentationDecodingError(s"PresentationAttachment decoding error: $err"))
                         )

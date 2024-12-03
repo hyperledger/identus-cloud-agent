@@ -55,10 +55,9 @@ class IssueControllerImpl(
     )
 
     for {
-      jsonClaims <- ZIO // TODO: Get read of Circe and use zio-json all the way down
-        .fromEither(io.circe.parser.parse(request.claims.toString()))
-        .mapError(e => ErrorResponse.badRequest(detail = Some(e.getMessage)))
-      credentialFormat = request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+      credentialFormat <- ZIO.succeed(
+        request.credentialFormat.map(CredentialFormat.valueOf).getOrElse(CredentialFormat.JWT)
+      )
       outcome <-
         credentialFormat match
           case JWT =>
@@ -75,7 +74,7 @@ class IssueControllerImpl(
                     case schemaId: String        => List(schemaId)
                     case schemaIds: List[String] => schemaIds
                   },
-                  claims = jsonClaims,
+                  claims = request.claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   issuingDID = issuingDID.asCanonical,
@@ -99,7 +98,7 @@ class IssueControllerImpl(
                     case schemaId: String        => List(schemaId)
                     case schemaIds: List[String] => schemaIds
                   },
-                  claims = jsonClaims,
+                  claims = request.claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   issuingDID = issuingDID.asCanonical,
@@ -160,7 +159,7 @@ class IssueControllerImpl(
                   thid = DidCommID(),
                   credentialDefinitionGUID = credentialDefinitionGUID,
                   credentialDefinitionId = credentialDefinitionId,
-                  claims = jsonClaims,
+                  claims = request.claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
                   goalCode = offerContext.goalCode,
