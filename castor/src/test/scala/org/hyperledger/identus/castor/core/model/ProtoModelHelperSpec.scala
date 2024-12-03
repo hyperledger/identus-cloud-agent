@@ -1,13 +1,13 @@
 package org.hyperledger.identus.castor.core.model
 
 import com.google.protobuf.timestamp.Timestamp
-import io.circe.{Json, JsonObject}
 import io.iohk.atala.prism.protos.common_models.Ledger
 import io.iohk.atala.prism.protos.node_models
 import org.hyperledger.identus.castor.core.model.did.{ServiceEndpoint, ServiceType}
 import org.hyperledger.identus.castor.core.model.did.ServiceEndpoint.{UriOrJsonEndpoint, UriValue}
 import org.hyperledger.identus.castor.core.util.GenUtils
 import zio.*
+import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -20,9 +20,9 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
 
   given Conversion[String, ServiceType.Name] = ServiceType.Name.fromStringUnsafe
   given Conversion[String, UriOrJsonEndpoint] = s => UriOrJsonEndpoint.Uri(UriValue.fromString(s).toOption.get)
-  given Conversion[JsonObject, UriOrJsonEndpoint] = UriOrJsonEndpoint.Json(_)
+  given Conversion[Json.Obj, UriOrJsonEndpoint] = UriOrJsonEndpoint.Json(_)
   given Conversion[String, ServiceEndpoint] = s => ServiceEndpoint.Single(s)
-  given Conversion[JsonObject, ServiceEndpoint] = json => ServiceEndpoint.Single(UriOrJsonEndpoint.Json(json))
+  given Conversion[Json.Obj, ServiceEndpoint] = json => ServiceEndpoint.Single(UriOrJsonEndpoint.Json(json))
 
   private def makePublicKey(id: String, revokedOn: Option[node_models.LedgerData] = None): node_models.PublicKey =
     node_models.PublicKey(
@@ -351,7 +351,7 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
     test("parse valid json object") {
       val serviceEndpoint = """{"uri": "https://example.com"}"""
       val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
-      val expected: ServiceEndpoint = Json.obj("uri" -> Json.fromString("https://example.com")).asObject.get
+      val expected: ServiceEndpoint = Json.Obj("uri" -> Json.Str("https://example.com")).asObject.get
       assert(result)(isRight(equalTo(expected)))
     },
     test("parse invalid endpoint that is not a string or object") {
@@ -362,7 +362,7 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
     test("parse empty json object") {
       val serviceEndpoint = "{}"
       val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
-      val expected: ServiceEndpoint = Json.obj().asObject.get
+      val expected: ServiceEndpoint = Json.Obj().asObject.get
       assert(result)(isRight(equalTo(expected)))
     },
     test("parse empty json array") {
@@ -389,9 +389,9 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
       val serviceEndpoint = """[{"uri": "https://example.com"}, {"uri": "https://example2.com"}]"""
       val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
       val expected = ServiceEndpoint.Multiple(
-        Json.obj("uri" -> Json.fromString("https://example.com")).asObject.get,
+        Json.Obj("uri" -> Json.Str("https://example.com")).asObject.get,
         Seq(
-          Json.obj("uri" -> Json.fromString("https://example2.com")).asObject.get
+          Json.Obj("uri" -> Json.Str("https://example2.com")).asObject.get
         )
       )
       assert(result)(isRight(equalTo(expected)))
@@ -400,7 +400,7 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
       val serviceEndpoint = """[{"uri": "https://example.com"}, "https://example2.com"]"""
       val result = ProtoModelHelper.parseServiceEndpoint(serviceEndpoint)
       val expected = ServiceEndpoint.Multiple(
-        Json.obj("uri" -> Json.fromString("https://example.com")).asObject.get,
+        Json.Obj("uri" -> Json.Str("https://example.com")).asObject.get,
         Seq("https://example2.com")
       )
       assert(result)(isRight(equalTo(expected)))
@@ -428,7 +428,7 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
       assert(encoded)(equalTo("http://example.com"))
     },
     test("encode single endoint JSON object") {
-      val uri: UriOrJsonEndpoint = JsonObject("uri" -> Json.fromString("http://example.com"))
+      val uri: UriOrJsonEndpoint = Json.Obj("uri" -> Json.Str("http://example.com"))
       val serviceEndpoint = ServiceEndpoint.Single(uri)
       val encoded = serviceEndpoint.toProto
       assert(encoded)(equalTo("""{"uri":"http://example.com"}"""))
@@ -441,8 +441,8 @@ object ProtoModelHelperSpec extends ZIOSpecDefault {
       assert(encoded)(equalTo("""["http://example.com","http://example2.com"]"""))
     },
     test("encode multiple endoints JSON object") {
-      val uri: UriOrJsonEndpoint = JsonObject("uri" -> Json.fromString("http://example.com"))
-      val uri2: UriOrJsonEndpoint = JsonObject("uri" -> Json.fromString("http://example2.com"))
+      val uri: UriOrJsonEndpoint = Json.Obj("uri" -> Json.Str("http://example.com"))
+      val uri2: UriOrJsonEndpoint = Json.Obj("uri" -> Json.Str("http://example2.com"))
       val serviceEndpoint = ServiceEndpoint.Multiple(uri, Seq(uri2))
       val encoded = serviceEndpoint.toProto
       assert(encoded)(equalTo("""[{"uri":"http://example.com"},{"uri":"http://example2.com"}]"""))
