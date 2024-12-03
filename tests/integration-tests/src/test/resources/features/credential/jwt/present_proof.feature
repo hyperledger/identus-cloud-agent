@@ -25,6 +25,7 @@ Feature: Present Proof Protocol
     And Holder rejects the proof
     Then Holder sees the proof is rejected
 
+  @RunThis
   Scenario Outline: Verifying jwt credential using <assertionMethod> assertion
     Given Issuer and Holder have an existing connection
     And Verifier and Holder have an existing connection
@@ -32,7 +33,8 @@ Feature: Present Proof Protocol
     When Issuer prepares a custom PRISM DID
     And Issuer adds a '<assertionMethod>' key for 'assertionMethod' purpose with '<assertionName>' name to the custom PRISM DID
     And Issuer creates the custom PRISM DID
-    When Issuer offers a jwt credential to Holder with 'long' form DID using issuingKid '<assertionName>'
+    And Issuer publishes DID to ledger
+    When Issuer offers a jwt credential to Holder with 'short' form DID using issuingKid '<assertionName>'
     And Holder receives the credential offer
     And Holder accepts jwt credential offer using 'auth-1' key id
     And Issuer issues the credential

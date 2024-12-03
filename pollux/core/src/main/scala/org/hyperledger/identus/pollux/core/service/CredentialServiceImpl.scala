@@ -1200,7 +1200,7 @@ class CredentialServiceImpl(
         maybeId = None,
         `type` =
           Set("VerifiableCredential"), // TODO: This information should come from Schema registry by record.schemaId
-        issuer = CredentialIssuer(jwtIssuer.did.toString, `type` = "Profile"),
+        issuer = CredentialIssuer(issuingDID.did.toString, `type` = "Profile"),
         issuanceDate = issuanceDate,
         maybeExpirationDate = record.validityPeriod.map(sec => issuanceDate.plusSeconds(sec.toLong)),
         maybeCredentialSchema = record.schemaUris.map(ids =>
