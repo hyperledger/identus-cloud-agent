@@ -1,31 +1,13 @@
 package org.hyperledger.identus.pollux.prex
 
-import io.circe.*
-import io.circe.parser.*
 import org.hyperledger.identus.castor.core.model.did.DID
-import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.{
-  ClaimFormatVerificationFailure,
-  ClaimNotSatisfyInputConstraint,
-  InvalidNestedPathDescriptorId,
-  InvalidSubmissionId,
-  SubmissionNotSatisfyInputDescriptors
-}
-import org.hyperledger.identus.pollux.vc.jwt.{
-  ES256KSigner,
-  Issuer,
-  JWT,
-  JwtCredential,
-  JwtCredentialPayload,
-  JwtPresentation,
-  JwtPresentationPayload,
-  JwtVc,
-  JwtVerifiableCredentialPayload,
-  JwtVp,
-  VerifiableCredentialPayload
-}
+import org.hyperledger.identus.pollux.prex.PresentationSubmissionError.*
+import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.shared.crypto.Apollo
+import org.hyperledger.identus.shared.json.JsonInterop
 import zio.*
-import zio.json.ast.Json as ZioJson
+import zio.json.{DecoderOps, JsonDecoder}
+import zio.json.ast.Json
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -33,8 +15,8 @@ import java.time.Instant
 
 object PresentationSubmissionVerificationSpec extends ZIOSpecDefault {
 
-  private def decodeUnsafe[T: Decoder](json: String): T = decode[T](json).toOption.get
-  private def parseUnsafe(json: String): Json = parse(json).toOption.get
+  private def decodeUnsafe[T](json: String)(using JsonDecoder[T]): T = json.fromJson[T].toOption.get
+  private def parseUnsafe(json: String): Json = json.fromJson[Json].toOption.get
 
   private val noopFormatVerification = ClaimFormatVerification(jwtVp = _ => ZIO.unit, jwtVc = _ => ZIO.unit)
   private val basePd: PresentationDefinition =
@@ -67,7 +49,7 @@ object PresentationSubmissionVerificationSpec extends ZIOSpecDefault {
         `@context` = Set("https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"),
         `type` = Set("VerifiableCredential", "UniversityDegreeCredential"),
         maybeCredentialSchema = None,
-        credentialSubject = subject,
+        credentialSubject = JsonInterop.toCirceJsonAst(subject),
         maybeCredentialStatus = None,
         maybeRefreshService = None,
         maybeEvidence = None,
@@ -139,7 +121,7 @@ object PresentationSubmissionVerificationSpec extends ZIOSpecDefault {
     val ps = basePs.copy(descriptor_map = descriptorMap)
     for {
       result <- PresentationSubmissionVerification
-        .verify(pd, ps, ZioJson.Str(jwt.value))(formatVerification)
+        .verify(pd, ps, Json.Str(jwt.value))(formatVerification)
         .exit
     } yield assert(result)(assertion)
   }
@@ -151,7 +133,7 @@ object PresentationSubmissionVerificationSpec extends ZIOSpecDefault {
       val jwtVc = generateJwtVc(payload)
       for {
         result <- PresentationSubmissionVerification
-          .verify(basePd, ps, ZioJson.Str(jwtVc.value))(noopFormatVerification)
+          .verify(basePd, ps, Json.Str(jwtVc.value))(noopFormatVerification)
           .exit
       } yield assert(result)(failsWithA[InvalidSubmissionId])
     },
