@@ -1455,7 +1455,7 @@ class CredentialServiceImpl(
         .fromOption(offer.attachments.headOption)
         .orElse(ZIO.dieMessage(s"Attachments not found in record: ${record.id}"))
       json <- attachmentDescriptor.data match
-        case JsonData(json) => ZIO.succeed(json.toJsonAST.toOption.get)
+        case JsonData(json) => ZIO.succeed(json)
         case _              => ZIO.dieMessage(s"Attachment doesn't contain JsonData: ${record.id}")
       maybeOptions <- ZIO
         .fromEither(json.as[PresentationAttachment].map(_.options))
