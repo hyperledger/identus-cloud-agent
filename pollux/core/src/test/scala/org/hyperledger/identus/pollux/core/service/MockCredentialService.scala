@@ -6,6 +6,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaRef
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
 import org.hyperledger.identus.shared.models.*
 import zio.json.ast.Json
@@ -22,7 +23,7 @@ object MockCredentialService extends Mock[CredentialService] {
             DidId,
             Option[DidId],
             DidCommID,
-            Option[List[String]],
+            Option[CredentialSchemaRef],
             Json,
             Option[Double],
             Option[Boolean],
@@ -41,7 +42,7 @@ object MockCredentialService extends Mock[CredentialService] {
             DidId,
             Option[DidId],
             DidCommID,
-            Option[List[String]],
+            Option[CredentialSchemaRef],
             Json,
             Option[Double],
             Option[Boolean],
@@ -130,7 +131,7 @@ object MockCredentialService extends Mock[CredentialService] {
           pairwiseHolderDID: Option[DidId],
           kidIssuer: Option[KeyId],
           thid: DidCommID,
-          maybeSchemaIds: Option[List[String]],
+          credentialSchemaRef: Option[CredentialSchemaRef],
           claims: Json,
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
@@ -145,7 +146,7 @@ object MockCredentialService extends Mock[CredentialService] {
           pairwiseIssuerDID,
           pairwiseHolderDID,
           thid,
-          maybeSchemaIds,
+          credentialSchemaRef,
           claims,
           validityPeriod,
           automaticIssuance,
@@ -161,7 +162,7 @@ object MockCredentialService extends Mock[CredentialService] {
           pairwiseHolderDID: Option[DidId],
           kidIssuer: Option[KeyId],
           thid: DidCommID,
-          maybeSchemaIds: Option[List[String]],
+          credentialSchemaRef: Option[CredentialSchemaRef],
           claims: Json,
           validityPeriod: Option[Double],
           automaticIssuance: Option[Boolean],
@@ -176,7 +177,7 @@ object MockCredentialService extends Mock[CredentialService] {
           pairwiseIssuerDID,
           pairwiseHolderDID,
           thid,
-          maybeSchemaIds,
+          credentialSchemaRef,
           claims,
           validityPeriod,
           automaticIssuance,

@@ -1,6 +1,6 @@
 /*global __ENV*/
 
-import { Connection, ConnectionInvitation, ConnectionStateEnum } from "@input-output-hk/prism-typescript-client";
+import { Connection, ConnectionInvitation, ConnectionStateEnum } from "@hyperledger/identus-cloud-agent-client-ts";
 import { WAITING_LOOP_MAX_ITERATIONS, WAITING_LOOP_PAUSE_INTERVAL } from "./Config";
 import { HttpService, statusChangeTimeouts } from "./HttpService";
 import { sleep, fail } from "k6";

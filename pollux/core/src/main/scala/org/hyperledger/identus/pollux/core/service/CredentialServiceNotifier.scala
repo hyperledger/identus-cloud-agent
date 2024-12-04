@@ -7,6 +7,7 @@ import org.hyperledger.identus.mercury.protocol.issuecredential.{IssueCredential
 import org.hyperledger.identus.pollux.core.model.{DidCommID, IssueCredentialRecord}
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError
 import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
+import org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaRef
 import org.hyperledger.identus.pollux.core.repository.CredentialRepository
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
 import org.hyperledger.identus.shared.models.*
@@ -28,7 +29,7 @@ class CredentialServiceNotifier(
       pairwiseHolderDID: Option[DidId],
       kidIssuer: Option[KeyId],
       thid: DidCommID,
-      maybeSchemaIds: Option[List[String]],
+      credentialSchemaRef: Option[CredentialSchemaRef],
       claims: Json,
       validityPeriod: Option[Double],
       automaticIssuance: Option[Boolean],
@@ -44,7 +45,7 @@ class CredentialServiceNotifier(
         pairwiseHolderDID,
         kidIssuer,
         thid,
-        maybeSchemaIds,
+        credentialSchemaRef,
         claims,
         validityPeriod,
         automaticIssuance,
@@ -61,7 +62,7 @@ class CredentialServiceNotifier(
       pairwiseHolderDID: Option[DidId],
       kidIssuer: Option[KeyId],
       thid: DidCommID,
-      maybeSchemaIds: Option[List[String]],
+      credentialSchemaRef: Option[CredentialSchemaRef],
       claims: Json,
       validityPeriod: Option[Double] = None,
       automaticIssuance: Option[Boolean],
@@ -77,7 +78,7 @@ class CredentialServiceNotifier(
         pairwiseHolderDID,
         kidIssuer,
         thid,
-        maybeSchemaIds,
+        credentialSchemaRef,
         claims,
         validityPeriod,
         automaticIssuance,

@@ -1,6 +1,6 @@
 import { Options } from 'k6/options';
 import { Issuer, Holder } from '../../actors';
-import { Connection, CredentialSchemaResponse } from '@input-output-hk/prism-typescript-client';
+import { Connection, CredentialSchemaResponse } from '@hyperledger/identus-cloud-agent-client-ts';
 import { defaultOptions } from "../../scenarios/default";
 import merge from "ts-deepmerge";
 import { describe } from "../../k6chaijs.js";

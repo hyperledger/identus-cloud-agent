@@ -35,7 +35,8 @@ class IssueControllerImpl(
     managedDIDService: ManagedDIDService,
     appConfig: AppConfig
 ) extends IssueController
-    with ControllerHelper {
+    with ControllerHelper
+    with CredentialSchemaReferenceParsingLogic {
 
   private case class OfferContext(
       pairwiseIssuerDID: DidId,
@@ -64,16 +65,17 @@ class IssueControllerImpl(
             for {
               issuingDID <- getIssuingDidFromRequest(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
+              credentialSchemaRef <- parseCredentialSchemaRef_VCDM1_1(
+                request.schemaId,
+                request.jwtVcPropertiesV1.map(_.credentialSchema)
+              )
               record <- credentialService
                 .createJWTIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
                   pairwiseHolderDID = offerContext.pairwiseHolderDID,
                   kidIssuer = request.issuingKid,
                   thid = DidCommID(),
-                  maybeSchemaIds = request.schemaId.map {
-                    case schemaId: String        => List(schemaId)
-                    case schemaIds: List[String] => schemaIds
-                  },
+                  credentialSchemaRef = Some(credentialSchemaRef),
                   claims = request.claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
@@ -88,16 +90,17 @@ class IssueControllerImpl(
             for {
               issuingDID <- getIssuingDidFromRequest(request)
               _ <- validatePrismDID(issuingDID, allowUnpublished = true, Role.Issuer)
+              credentialSchemaRef <- parseCredentialSchemaRef_VCDM1_1(
+                request.schemaId,
+                request.sdJwtVcPropertiesV1.map(_.credentialSchema)
+              )
               record <- credentialService
                 .createSDJWTIssueCredentialRecord(
                   pairwiseIssuerDID = offerContext.pairwiseIssuerDID,
                   pairwiseHolderDID = offerContext.pairwiseHolderDID,
                   kidIssuer = request.issuingKid,
                   thid = DidCommID(),
-                  maybeSchemaIds = request.schemaId.map {
-                    case schemaId: String        => List(schemaId)
-                    case schemaIds: List[String] => schemaIds
-                  },
+                  credentialSchemaRef = Option(credentialSchemaRef),
                   claims = request.claims,
                   validityPeriod = request.validityPeriod,
                   automaticIssuance = request.automaticIssuance.orElse(Some(true)),
