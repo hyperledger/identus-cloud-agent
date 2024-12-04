@@ -7,7 +7,7 @@ import {
   DIDDocument,
   DidOperationSubmission,
   ManagedDID
-} from "@input-output-hk/prism-typescript-client";
+} from "@hyperledger/identus-cloud-agent-client-ts";
 import {fail, sleep} from "k6";
 
 

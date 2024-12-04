@@ -64,21 +64,26 @@ class JwtCredentialSteps {
 
     @When("{actor} offers a jwt credential to {actor} with '{}' form DID")
     fun issuerOffersAJwtCredential(issuer: Actor, holder: Actor, format: String) {
-        val claims = linkedMapOf(
-            "firstName" to "FirstName",
-            "lastName" to "LastName",
-        )
-        sendCredentialOffer(issuer, holder, format, null, claims, "assertion-1")
+        val claims = CredentialSchema.STUDENT_SCHEMA.claims
+
+        val schemaGuid = issuer.recall<String>(CredentialSchema.STUDENT_SCHEMA.name)
+
+        sendCredentialOffer(issuer, holder, format, schemaGuid, claims, "assertion-1")
         saveCredentialOffer(issuer, holder)
     }
 
-    @When("{actor} offers a jwt credential to {actor} with '{}' form DID using issuingKid '{}'")
-    fun issuerOffersAJwtCredentialWithIssuingKeyId(issuer: Actor, holder: Actor, format: String, issuingKid: String?) {
-        val claims = linkedMapOf(
-            "firstName" to "FirstName",
-            "lastName" to "LastName",
-        )
-        sendCredentialOffer(issuer, holder, format, null, claims, issuingKid)
+    @When("{actor} offers a jwt credential to {actor} with {string} form DID using issuingKid {string} and {} schema")
+    fun issuerOffersAJwtCredentialWithIssuingKeyId(
+        issuer: Actor,
+        holder: Actor,
+        format: String,
+        issuingKid: String?,
+        schema: CredentialSchema,
+    ) {
+        val claims = schema.claims
+        val schemaGuid = issuer.recall<String>(schema.name)
+
+        sendCredentialOffer(issuer, holder, format, schemaGuid, claims, issuingKid)
         saveCredentialOffer(issuer, holder)
     }
 
