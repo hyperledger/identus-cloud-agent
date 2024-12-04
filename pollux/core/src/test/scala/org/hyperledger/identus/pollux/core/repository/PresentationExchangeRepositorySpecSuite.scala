@@ -2,8 +2,8 @@ package org.hyperledger.identus.pollux.core.repository
 
 import org.hyperledger.identus.pollux.prex.PresentationDefinition
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
+import zio.{durationInt, ZIO, ZLayer}
 import zio.json.{DecoderOps, DeriveJsonDecoder, JsonDecoder}
-import zio.{ZIO, ZLayer, durationInt}
 import zio.test.*
 import zio.test.Assertion.*
 

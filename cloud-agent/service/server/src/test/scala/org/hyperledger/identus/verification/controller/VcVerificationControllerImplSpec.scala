@@ -8,15 +8,15 @@ import org.hyperledger.identus.pollux.vc.jwt.*
 import org.hyperledger.identus.pollux.vc.jwt.CredentialPayload.Implicits.*
 import org.hyperledger.identus.shared.json.JsonInterop
 import org.hyperledger.identus.verification.controller.http.*
-import sttp.client3.{DeserializationException, Response, UriContext, basicRequest}
+import sttp.client3.{basicRequest, DeserializationException, Response, UriContext}
 import sttp.client3.ziojson.*
 import sttp.model.StatusCode
 import zio.*
+import zio.json.ast.Json
 import zio.json.EncoderOps
 import zio.test.*
 import zio.test.Assertion.*
 import zio.Config.OffsetDateTime
-import zio.json.ast.Json
 
 import java.time.Instant
 
@@ -47,11 +47,13 @@ object VcVerificationControllerImplSpec extends ZIOSpecDefault with VcVerificati
               `type` = "JsonSchemaValidator2018"
             )
           ),
-          credentialSubject = JsonInterop.toCirceJsonAst(Json.Obj(
-            "userName" -> Json.Str("Bob"),
-            "age" -> Json.Num(42),
-            "email" -> Json.Str("email")
-          )),
+          credentialSubject = JsonInterop.toCirceJsonAst(
+            Json.Obj(
+              "userName" -> Json.Str("Bob"),
+              "age" -> Json.Num(42),
+              "email" -> Json.Str("email")
+            )
+          ),
           maybeCredentialStatus = Some(
             CredentialStatus(
               id = "did:work:MDP8AsFhHzhwUvGNuYkX7T;id=06e126d1-fa44-4882-a243-1e326fbe21db;version=1.0",

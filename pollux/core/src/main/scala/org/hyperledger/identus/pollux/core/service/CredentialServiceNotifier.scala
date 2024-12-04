@@ -11,8 +11,8 @@ import org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaRef
 import org.hyperledger.identus.pollux.core.repository.CredentialRepository
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
 import org.hyperledger.identus.shared.models.*
-import zio.json.ast.Json
 import zio.{Duration, UIO, URIO, URLayer, ZIO, ZLayer}
+import zio.json.ast.Json
 
 import java.util.UUID
 

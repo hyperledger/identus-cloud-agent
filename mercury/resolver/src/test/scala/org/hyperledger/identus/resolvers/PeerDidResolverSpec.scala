@@ -1,8 +1,8 @@
 package org.hyperledger.identus.resolvers
 import munit.*
 import org.didcommx.peerdid.*
-import zio.json.DecoderOps
 import zio.json.ast.Json
+import zio.json.DecoderOps
 
 import scala.jdk.CollectionConverters.*
 

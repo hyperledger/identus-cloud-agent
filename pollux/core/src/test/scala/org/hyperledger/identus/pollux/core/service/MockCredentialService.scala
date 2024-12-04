@@ -9,8 +9,8 @@ import org.hyperledger.identus.pollux.core.model.error.CredentialServiceError.*
 import org.hyperledger.identus.pollux.core.model.schema.CredentialSchemaRef
 import org.hyperledger.identus.pollux.vc.jwt.Issuer
 import org.hyperledger.identus.shared.models.*
+import zio.{mock, Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer}
 import zio.json.ast.Json
-import zio.{Duration, IO, UIO, URIO, URLayer, ZIO, ZLayer, mock}
 import zio.mock.{Mock, Proxy}
 
 import java.util.UUID

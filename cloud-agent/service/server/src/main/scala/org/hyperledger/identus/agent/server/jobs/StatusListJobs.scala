@@ -16,8 +16,8 @@ import org.hyperledger.identus.shared.messaging.{Message, Producer, WalletIdAndR
 import org.hyperledger.identus.shared.models.{WalletAccessContext, WalletId}
 import org.hyperledger.identus.shared.utils.DurationOps.toMetricsSeconds
 import zio.*
-import zio.json.DecoderOps
 import zio.json.ast.Json
+import zio.json.DecoderOps
 import zio.metrics.Metric
 
 import java.util.UUID
