@@ -5,14 +5,14 @@ import com.nimbusds.jose.{JWSAlgorithm, JWSHeader, JWSObject, Payload}
 import com.nimbusds.jose.crypto.ECDSASigner
 import com.nimbusds.jwt.SignedJWT
 import io.circe.*
-import io.circe.syntax.*
+import io.circe.syntax.EncoderOps
 import org.hyperledger.identus.shared.crypto.{Ed25519KeyPair, Ed25519PublicKey, KmpEd25519KeyOps}
 import org.hyperledger.identus.shared.json.Json as JsonUtils
 import org.hyperledger.identus.shared.utils.Base64Utils
 import scodec.bits.ByteVector
 import zio.*
+import zio.json.EncoderOps
 
-import java.security.*
 import java.security.interfaces.ECPublicKey
 import java.time.{Instant, ZoneOffset}
 import scala.jdk.CollectionConverters.*
@@ -79,7 +79,7 @@ object EcdsaSecp256k1Signature2019ProofGenerator {
         publicKeyJwk = jwk
       )
       verificationMethodUrl = Base64Utils.createDataUrl(
-        ecdaSecp256k1VerificationKey2019.asJson.dropNullValues.noSpaces.getBytes,
+        ecdaSecp256k1VerificationKey2019.toJson.getBytes,
         "application/json"
       )
     } yield EcdsaSecp256k1Signature2019Proof(
@@ -152,7 +152,7 @@ object EddsaJcs2022ProofGenerator {
       created = Instant.now()
       multiKey = pkToMultiKey(ed25519KeyPair.publicKey)
       verificationMethod = Base64Utils.createDataUrl(
-        multiKey.asJson.dropNullValues.noSpaces.getBytes,
+        multiKey.toJson.getBytes,
         "application/json"
       )
     } yield EddsaJcs2022Proof(

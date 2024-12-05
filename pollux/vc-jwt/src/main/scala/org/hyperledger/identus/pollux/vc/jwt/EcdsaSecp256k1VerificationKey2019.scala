@@ -1,7 +1,7 @@
 package org.hyperledger.identus.pollux.vc.jwt
 
-import io.circe.*
-import io.circe.syntax.*
+import zio.json.{EncoderOps, JsonDecoder, JsonEncoder}
+import zio.json.ast.{Json, JsonCursor}
 
 import java.time.{Instant, ZoneOffset}
 
@@ -12,38 +12,40 @@ case class EcdsaSecp256k1VerificationKey2019(
     expires: Option[Instant] = None
 ) {
   val `type`: String = "EcdsaSecp256k1VerificationKey2019"
-  val `@context`: Set[String] =
-    Set("https://w3id.org/security/v1")
+  val `@context`: Set[String] = Set("https://w3id.org/security/v1")
 }
 
 object EcdsaSecp256k1VerificationKey2019 {
-  given ecdsaSecp256k1VerificationKey2019Encoder: Encoder[EcdsaSecp256k1VerificationKey2019] =
-    (key: EcdsaSecp256k1VerificationKey2019) =>
-      Json
-        .obj(
-          ("@context", key.`@context`.asJson),
-          ("type", key.`type`.asJson),
-          ("id", key.id.asJson),
-          ("controller", key.controller.asJson),
-          ("publicKeyJwk", key.publicKeyJwk.asJson.dropNullValues),
-          ("expires", key.expires.map(_.atOffset(ZoneOffset.UTC)).asJson)
-        )
+  given JsonEncoder[EcdsaSecp256k1VerificationKey2019] = JsonEncoder[Json].contramap { key =>
+    (for {
+      context <- key.`@context`.toJsonAST
+      typ <- key.`type`.toJsonAST
+      id <- key.id.toJsonAST
+      controller <- key.controller.toJsonAST
+      publicKeyJwk <- key.publicKeyJwk.toJsonAST
+      expires <- key.expires.map(_.atOffset(ZoneOffset.UTC)).toJsonAST
+    } yield Json.Obj(
+      "@context" -> context,
+      "type" -> typ,
+      "id" -> id,
+      "controller" -> controller,
+      "publicKeyJwk" -> publicKeyJwk,
+      "expires" -> expires
+    )).getOrElse(UnexpectedCodeExecutionPath)
+  }
 
-  given ecdsaSecp256k1VerificationKey2019Decoder: Decoder[EcdsaSecp256k1VerificationKey2019] =
-    (c: HCursor) =>
-      for {
-        id <- c.downField("id").as[Option[String]]
-        `type` <- c.downField("type").as[String]
-        controller <- c.downField("controller").as[Option[String]]
-        publicKeyJwk <- c.downField("publicKeyJwk").as[JsonWebKey]
-        expires <- c.downField("expires").as[Option[Instant]]
-      } yield {
-        EcdsaSecp256k1VerificationKey2019(
-          id = id,
-          publicKeyJwk = publicKeyJwk,
-          controller = controller,
-          expires = expires
-        )
-      }
+  given JsonDecoder[EcdsaSecp256k1VerificationKey2019] = JsonDecoder[Json].mapOrFail { json =>
+    for {
+      id <- json.get(JsonCursor.field("id")).flatMap(_.as[Option[String]])
+      controller <- json.get(JsonCursor.field("controller")).flatMap(_.as[Option[String]])
+      publicKeyJwk <- json.get(JsonCursor.field("publicKeyJwk")).flatMap(_.as[JsonWebKey])
+      expires <- json.get(JsonCursor.field("expires")).flatMap(_.as[Option[Instant]])
+    } yield EcdsaSecp256k1VerificationKey2019(
+      id = id,
+      publicKeyJwk = publicKeyJwk,
+      controller = controller,
+      expires = expires
+    )
+  }
 
 }
